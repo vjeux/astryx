@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "status": "pass",
+  "generatedAt": "2026-09-19T21:59:24.179Z",
+  "context": {
+    "sha": "ed180bfb975960937f8e8fa0aee3b55532310533",
+    "runId": "35468278854",
+    "runAttempt": "1",
+    "headSha": "ed180bfb975960937f8e8fa0aee3b55532310533",
+    "baseSha": "2414712631a54f5951ab868ab68a18be040fdc5a",
+    "ref": "refs/heads/main",
+    "trustedScope": {
+      "hasStableVisual": true,
+      "broadStableVisual": false,
+      "stableComponents": [
+        "Selector"
+      ],
+      "stableCoreFiles": [
+        "packages/core/src/Selector/__tests__/Listbox.a11y.chromium.spec.ts",
+        "packages/core/src/Selector/__tests__/Listbox.a11y.dom.ts",
+        "packages/core/src/Selector/__tests__/Listbox.a11y.states.ts"
+      ],
+      "stableThemes": [],
+      "canaryPackages": []
+    }
+  },
+  "platform": "linux-arm64",
+  "baseline": {
+    "capturedAt": "2026-09-12T01:13:50.430Z",
+    "sha": "e72a3662fd6dbdaf226dfba41a90a70b6827a6a4",
+    "platform": "linux-arm64"
+  },
+  "counts": {
+    "total": 2,
+    "unchanged": 2,
+    "changed": 0,
+    "added": 0,
+    "removed": 0,
+    "failed": 0
+  },
+  "changes": [],
+  "added": [],
+  "removed": [],
+  "failures": [],
+  "targeting": {
+    "unexercisedOverrides": [],
+    "undeclaredTargets": [],
+    "uncoveredTargets": []
+  }
+}
