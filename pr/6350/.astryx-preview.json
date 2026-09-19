@@ -3,15 +3,15 @@
   "repository": "facebook/astryx",
   "pullRequest": {
     "number": 6350,
-    "headSha": "2948ec6644a473887a34cc57206674c40a62db84",
+    "headSha": "9ea2ef6abfcdf9e3bafcb23db605fe82ea8f5853",
     "headRef": "a11y-disclosure-spec-20260916-1428",
     "headRepository": "facebook/astryx",
     "headRepositoryId": "1131202426"
   },
   "sourceRun": {
-    "id": 35109806825,
+    "id": 35468861770,
     "attempt": 1,
-    "conclusion": "failure"
+    "conclusion": "success"
   },
   "targets": {
     "storybook": {
