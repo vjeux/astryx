@@ -189,9 +189,10 @@ visibility helper.
 | Touch divider                      | Separates groups in the touch action list.                                    | `component:Divider`            | Supporting        | FR1, FR3           |
 
 The `dropdown-menu` target intentionally appears on both alternative menu
-surfaces. The radio element also carries Indicator's shared radio target, and
-the pointer divider also carries Divider's target; their local targets remain
-valid distinct contracts. Touch headings retain the shared `heading` target documented by Text rather
+surfaces. The radio element also carries Indicator's shared radio target (in a
+radio group with `indicator="check"` the part is instead the check glyph, which
+carries Icon's `astryx-icon`), and the pointer divider also carries Divider's
+target; their local targets remain valid distinct contracts. Touch headings retain the shared `heading` target documented by Text rather
 than adding a DropdownMenu-owned heading target.
 
 ### Theming anatomy
