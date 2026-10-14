@@ -64,8 +64,9 @@ import {
 } from '../DropdownMenu/menuItemRoles';
 import {useMenuOverflow} from '../DropdownMenu/useMenuOverflow';
 import {useMenuDrillIn} from '../DropdownMenu/useMenuDrillIn';
+import {resolveSheetLevel} from '../DropdownMenu/menuSheetPath';
 import {useListFocus} from '../hooks/useListFocus';
-import {useMenuPress} from '../hooks/useMenuPress';
+import {MENU_PRESS_SURFACE_ATTR, useMenuPress} from '../hooks/useMenuPress';
 import {useTypeahead} from '../hooks/useTypeahead';
 import {useLongPress} from '../hooks/useLongPress';
 import {layerAnimations} from '../Layer/layerAnimations.stylex';
@@ -77,7 +78,7 @@ import {
   easeVars,
   shadowVars,
 } from '../theme/tokens.stylex';
-import {mergeProps, isImeKeyEvent, rtlStyles} from '../utils';
+import {isRenderable, mergeProps, isImeKeyEvent, rtlStyles} from '../utils';
 import type {BaseProps} from '../BaseProps';
 import type {StyleXStyles} from '../theme/types';
 import {themeProps} from '../utils/themeProps';
@@ -155,6 +156,22 @@ const styles = stylex.create({
   popover: {
     minWidth: '160px',
   },
+  // Where a sub-menu with a header or footer renders its surface: beside the
+  // menu, never inside it. It owns no box until such a sub-menu's drilled-in
+  // view shows there; then it paints the menu's surface in the menu's place.
+  surfaceHost: {
+    display: 'contents',
+  },
+  surfaceHostShowingView: {
+    display: 'block',
+    boxSizing: 'border-box',
+    borderRadius: radiusVars['--radius-container'],
+    backgroundColor: colorVars['--color-background-popover'],
+    boxShadow: shadowVars['--shadow-low'],
+  },
+  hiddenPart: {
+    display: 'none',
+  },
   popoverCustomWidth: (width: string | number) => ({
     minWidth: typeof width === 'number' ? `${width}px` : width,
   }),
@@ -171,6 +188,13 @@ const styles = stylex.create({
     backgroundColor: colorVars['--color-background-surface'],
     outline: 'none',
     userSelect: 'none',
+  },
+  // A sub-level's header or footer: caller content, so text inside it stays
+  // selectable and editable under the sheet's no-select rows.
+  sheetRegion: {
+    paddingInline: spacingVars['--spacing-3'],
+    paddingBlock: spacingVars['--spacing-2'],
+    userSelect: 'auto',
   },
   sheetHeader: {
     display: 'flex',
@@ -350,8 +374,13 @@ export function ContextMenu({
 
   const [isOpen, setIsOpen] = useState(false);
   const [submenuPath, setSubmenuPath] = useState<ContextMenuItemData[]>([]);
-  const currentSubmenu = submenuPath.at(-1);
+  // The opened level as the caller renders it now: its rows, header and
+  // footer stay live while it shows.
+  const currentSubmenu = resolveSheetLevel(items, submenuPath);
   const currentItems = currentSubmenu?.items ?? items;
+  // A level whose row has a header or footer shows them around its actions.
+  const levelHeader = currentSubmenu?.header;
+  const levelFooter = currentSubmenu?.footer;
   const currentTitle = currentSubmenu?.label ?? label;
   const sheetLabel = typeof currentTitle === 'string' ? currentTitle : label;
 
@@ -622,10 +651,13 @@ export function ContextMenu({
 
   // The drill-in view stack for sub-menus on a phone; the bottom sheet has
   // its own drill-in.
-  const {drillIn, wrapContent} = useMenuDrillIn(isOpen && !usesBottomSheet);
+  const {drillIn, wrapContent, isRegionViewShown} = useMenuDrillIn(
+    isOpen && !usesBottomSheet,
+  );
+  const [surfaceHost, setSurfaceHost] = useState<HTMLElement | null>(null);
   const contextValue = useMemo<DropdownMenuContextValue>(
-    () => ({closeMenu, menuSize: size, drillIn, menuLabel: label}),
-    [closeMenu, size, drillIn, label],
+    () => ({closeMenu, menuSize: size, drillIn, menuLabel: label, surfaceHost}),
+    [closeMenu, size, drillIn, label, surfaceHost],
   );
 
   const resolvedMenuContent = wrapContent(
@@ -653,6 +685,8 @@ export function ContextMenu({
       ref={listRef}
       id={menuId}
       role="menu"
+      hidden={isRegionViewShown}
+      inert={isRegionViewShown}
       data-autofocus={usesBottomSheet ? '' : undefined}
       tabIndex={usesBottomSheet ? 0 : -1}
       aria-label={label}
@@ -666,6 +700,7 @@ export function ContextMenu({
           !usesBottomSheet &&
             (hasOverflow ? styles.touchPanYPinchZoom : styles.touchPinchZoom),
           xstyle,
+          isRegionViewShown && styles.hiddenPart,
         ),
         className,
         style,
@@ -712,11 +747,17 @@ export function ContextMenu({
             {currentTitle}
           </Heading>
         </div>
+        {isRenderable(levelHeader) && (
+          <div {...stylex.props(styles.sheetRegion)}>{levelHeader}</div>
+        )}
         <MenuBottomSheetActionList
           items={currentItems}
           onSelect={handleBottomSheetSelect}
           onOpenSubmenu={item => setSubmenuPath(path => [...path, item])}
         />
+        {isRenderable(levelFooter) && (
+          <div {...stylex.props(styles.sheetRegion)}>{levelFooter}</div>
+        )}
       </div>
     ) : (
       renderedMenu
@@ -768,11 +809,26 @@ export function ContextMenu({
           </LazyMenuBottomSheet>
         </Suspense>
       ) : (
-        layer.render(renderedMenu, {
-          placement: 'below',
-          alignment: 'start',
-          xstyle: [popoverXstyle, layerAnimations.below],
-        })
+        layer.render(
+          <>
+            {renderedMenu}
+            <div
+              ref={setSurfaceHost}
+              // A press that starts in the menu and ends on a row of a
+              // sub-menu rendered here still lands inside the menu.
+              {...{[MENU_PRESS_SURFACE_ATTR]: menuId}}
+              {...stylex.props(
+                styles.surfaceHost,
+                isRegionViewShown && styles.surfaceHostShowingView,
+              )}
+            />
+          </>,
+          {
+            placement: 'below',
+            alignment: 'start',
+            xstyle: [popoverXstyle, layerAnimations.below],
+          },
+        )
       )}
     </>
   );

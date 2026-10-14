@@ -565,44 +565,40 @@ describe('ContextMenu dividers', () => {
 });
 
 describe('ContextMenu compound mode', () => {
-  it('shows a sub-menu with a header or footer as its rows alone, and says why in development', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      render(
-        <ContextMenu
-          menuContent={
-            <>
-              <DropdownMenuItem label="Rename" onClick={() => {}} />
-              <DropdownMenuSubMenu
-                label="Labels"
-                header={<input aria-label="Filter labels" />}
-                footer={<button type="button">Create label</button>}>
-                <DropdownMenuItem label="Bug" onClick={() => {}} />
-              </DropdownMenuSubMenu>
-            </>
-          }>
-          <div>Right-click me</div>
-        </ContextMenu>,
-      );
-      fireEvent.contextMenu(screen.getByText('Right-click me'));
-      const row = screen.getByRole('menuitem', {name: /Labels/, hidden: true});
-      // No region can sit outside this menu, so none renders inside it.
-      expect(row).toHaveAttribute('aria-haspopup', 'menu');
-      fireEvent.click(row, {detail: 1});
-      await waitFor(() => expect(row).toHaveAttribute('aria-expanded', 'true'));
-      expect(screen.queryByRole('dialog', {hidden: true})).toBeNull();
-      expect(
-        screen.queryByRole('textbox', {name: 'Filter labels', hidden: true}),
-      ).toBeNull();
-      expect(
-        screen.getByRole('menuitem', {name: 'Bug', hidden: true}),
-      ).toBeInTheDocument();
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('DropdownMenuSubMenu: header and footer'),
-      );
-    } finally {
-      warn.mockRestore();
-    }
+  it('renders a sub-menu with a header and footer beside the menu, in a dialog named by its row', async () => {
+    render(
+      <ContextMenu
+        menuContent={
+          <>
+            <DropdownMenuItem label="Rename" onClick={() => {}} />
+            <DropdownMenuSubMenu
+              label="Labels"
+              header={<input aria-label="Filter labels" />}
+              footer={<button type="button">Create label</button>}>
+              <DropdownMenuItem label="Bug" onClick={() => {}} />
+            </DropdownMenuSubMenu>
+          </>
+        }>
+        <div>Right-click me</div>
+      </ContextMenu>,
+    );
+    fireEvent.contextMenu(screen.getByText('Right-click me'));
+    const row = screen.getByRole('menuitem', {name: /Labels/, hidden: true});
+    const menu = row.closest<HTMLElement>('[role="menu"]')!;
+    expect(row).toHaveAttribute('aria-haspopup', 'dialog');
+    fireEvent.click(row, {detail: 1});
+    const dialog = await screen.findByRole('dialog', {
+      name: /Labels/,
+      hidden: true,
+    });
+    expect(menu).not.toContainElement(dialog);
+    expect(menu.closest('[popover]')).toContainElement(dialog);
+    expect(dialog).toContainElement(
+      screen.getByRole('textbox', {name: 'Filter labels', hidden: true}),
+    );
+    expect(dialog).toContainElement(
+      screen.getByRole('button', {name: 'Create label', hidden: true}),
+    );
   });
 
   it('renders menuContent as menu items', () => {
