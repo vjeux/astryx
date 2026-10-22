@@ -47,10 +47,9 @@ npm install -D @stylexjs/unplugin
 
 Under Turbopack, the default bundler since Next.js 16, `withAstryx()` compiles the
 Astryx modules your app imports from source as the prebuilt stylesheets are compiled,
-and `@astryxdesign/build/next/postcss` emits each source-built package's prebuilt
-stylesheet from that source: the same rules and selectors, in the same order, inside
-`@layer astryx-base`. Installed and workspace-linked packages both work; Astryx needs
-no Babel config.
+and `@astryxdesign/build/next/postcss` emits the rules each prebuilt stylesheet holds
+for them, with the same selectors in the same order, inside `@layer astryx-base`.
+Installed and workspace-linked packages both work; Astryx needs no Babel config.
 
 1. `next.config.mjs`, around your config and its own `turbopack.rules`:
 
@@ -64,6 +63,9 @@ no Babel config.
    ```js
    module.exports = {plugins: {'@astryxdesign/build/next/postcss': {}}};
    ```
+
+   `include` takes globs of the files whose Astryx imports count; the default is
+   every JS, TS and MDX file outside `node_modules` and `.next`.
 
 3. Your global stylesheet, with `@astryx;` in place of `astryx.css` and `lab.css` (only Core and Lab build from source, so keep any `richtext.css` or `charts.css` import):
 

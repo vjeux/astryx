@@ -6,8 +6,10 @@
  * @astryxdesign/build/next/postcss — for a Next.js app that builds Astryx from
  * source with `withAstryx()` under Turbopack. It replaces an `@astryx;` rule,
  * written in place of the source-built packages' prebuilt stylesheets, with
- * every rule of those packages, as their prebuilt stylesheets print them
- * (spec:AST-080 FR7). Option: `cwd`, the app root (default: process.cwd()).
+ * the rules of the Astryx modules the app reaches, as those stylesheets print
+ * them (spec:AST-080 FR7). Options: `include`, globs relative to `cwd` of the
+ * files whose Astryx imports count (default: every JS, TS and MDX file outside
+ * node_modules and .next), and `cwd`, the app root (default: process.cwd()).
  */
 
 const fs = require('fs');
@@ -16,7 +18,7 @@ const {sourceStylesheet} = require('./source-stylesheet');
 const PLUGIN_NAME = '@astryxdesign/build/next/postcss';
 
 function astryxSourcePlugin(options = {}) {
-  const {cwd = process.cwd()} = options;
+  const {cwd = process.cwd(), include} = options;
   return {
     postcssPlugin: PLUGIN_NAME,
     async Once(root, {result}) {
@@ -32,7 +34,7 @@ function astryxSourcePlugin(options = {}) {
           'Only one @astryx rule is allowed per stylesheet.',
         );
       }
-      const {css, packages} = await sourceStylesheet({cwd});
+      const {css, packages, watch} = await sourceStylesheet({cwd, include});
       if (packages.length === 0) {
         throw markers[0].error(
           'No Astryx package with `source` entries is installed, so there is ' +
@@ -54,6 +56,15 @@ function astryxSourcePlugin(options = {}) {
           parent: result.opts.from,
           dir: fs.realpathSync.native(srcDir),
           glob: '**/*.{ts,tsx}',
+        });
+      }
+      for (const {dir, glob} of watch) {
+        result.messages.push({
+          type: 'dir-dependency',
+          plugin: PLUGIN_NAME,
+          parent: result.opts.from,
+          dir,
+          glob,
         });
       }
     },
