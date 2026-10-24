@@ -61,7 +61,9 @@ installed); rows marked † also on iOS 18 for the pre-glass delta. iPhone
 Done (UIKit lab, iOS 26.2 simulator, Oct 23 2026; values in `uikit/` tagged
 `measured:`): M-S1, M-NB1, M-K2, M-CA1 (underdamped grid matched to the last
 digit; critically damped within 0.02 %), M-K1 (ratios 0.1–1 in 0.05 steps),
-M-N1, M-N2, M-N3. Findings that shape the math: every spring UIKit attaches
+M-N1, M-N2, M-N3; and the springs of M-SH07, M-SH08, M-SH09, M-A1, M-AS1 and
+M-CM1 (their non-spring values are the components' to record). Findings that
+shape the math: every spring UIKit attaches
 has `allowsOverdamping` off (clamped to critical) except
 `UIView.animate(springDuration:bounce:)`; with it on, Core Animation renders
 "overdamped" springs with the two exponentials' coefficients swapped and the
