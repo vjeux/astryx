@@ -6,11 +6,14 @@
  *   query-aware matchMedia stub
  * @output The touch presentation's answers: touch from the primary pointer,
  *   compact from the width, both for presentations; the server default and
- *   hints; live updates; the one-moment read; the motion choice; the StyleX
- *   keys carrying the same queries; the adaptive presentation reading them
+ *   hints; live updates; the one-moment read; the motion choice; core's
+ *   compact-touch media keys spelled as the shared query; the adaptive
+ *   presentation reading it
  * @position Unit tests of packages/core/src/utils/touchPresentation.ts
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import {act, renderHook} from '@testing-library/react';
 import {createElement} from 'react';
 import {renderToString} from 'react-dom/server';
@@ -27,7 +30,6 @@ import {
   useMotionPresentation,
   useTouchPresentation,
 } from './touchPresentation';
-import {touchMedia} from './touchPresentation.stylex';
 
 /** A device: what its primary pointer is and how big its viewport is. */
 const device = {coarse: false, width: 1280, height: 800};
@@ -171,10 +173,43 @@ describe('touch presentation', () => {
     expect(result.current).toBe('uikit');
   });
 
-  it('gives the StyleX keys the same queries', () => {
-    expect(touchMedia.touch).toBe(`@media ${TOUCH_QUERY}`);
-    expect(touchMedia.compact).toBe(`@media ${COMPACT_QUERY}`);
-    expect(touchMedia.compactTouch).toBe(`@media ${COMPACT_TOUCH_QUERY}`);
+  it('keeps every compact-touch media key in core spelled as the resolver', () => {
+    // A style key that joins a coarse pointer with a width or height is a
+    // presentation decision: it must be the shared query, not its own.
+    const root = path.resolve(__dirname, '..');
+    const found: string[] = [];
+    const walk = (dir: string): void => {
+      for (const entry of fs.readdirSync(dir, {withFileTypes: true})) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name !== '__tests__' && entry.name !== 'node_modules') {
+            walk(full);
+          }
+        } else if (
+          /\.(ts|tsx)$/.test(entry.name) &&
+          !/\.test\.|\.spec\./.test(entry.name)
+        ) {
+          const source = fs.readFileSync(full, 'utf8');
+          for (const match of source.matchAll(/'@media ([^']*)'/g)) {
+            const query = match[1];
+            if (
+              query.includes('pointer: coarse') &&
+              /\b(width|height)\b/.test(query)
+            ) {
+              found.push(`${path.relative(root, full)}: ${query}`);
+            }
+          }
+        }
+      }
+    };
+    walk(root);
+    for (const entry of found) {
+      expect(entry.slice(entry.indexOf(': ') + 2), entry).toBe(
+        COMPACT_TOUCH_QUERY,
+      );
+    }
+    expect(TOUCH_QUERY).toBe('(pointer: coarse)');
+    expect(COMPACT_QUERY).toBe('(width < 744px), (height < 500px)');
   });
 
   it('is the query the adaptive popover-or-sheet presentation reads', () => {

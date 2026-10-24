@@ -9,8 +9,7 @@
  *   (UIKit) way: TOUCH_QUERY, COMPACT_QUERY, COMPACT_TOUCH_QUERY; the hooks
  *   useTouchPresentation and useMotionPresentation; readTouchPresentation for
  *   a decision taken at one moment
- * @position Internal shared resolver beside interactionModality.ts; its StyleX
- *   twin is touchPresentation.stylex.ts
+ * @position Internal shared resolver beside interactionModality.ts
  *
  * Three questions, answered once:
  *
@@ -34,14 +33,17 @@
  * reads the touch answer to choose its timing: UIKit's on touch, the theme's
  * duration and easing tokens otherwise (`useMotionPresentation`).
  *
- * CSS first: a style that changes with these conditions uses the media keys
- * of touchPresentation.stylex.ts, so the right rule paints before hydration.
- * The hooks are for behaviour. They answer the server default (not touch,
+ * CSS first: a style that changes with these conditions writes the same
+ * query as a StyleX media key, spelled exactly as here (`@media` followed by
+ * the constant's text), so the right rule paints before hydration; a test
+ * keeps core's compact-touch keys identical to COMPACT_TOUCH_QUERY. The keys
+ * are literal because the Astryx StyleX build does not resolve a media key
+ * shared across files through `defineConsts`. The hooks are for behaviour. They answer the server default (not touch,
  * not compact) until hydrated unless the caller passes a server hint, and
  * follow the conditions when they change (a tablet docking a mouse).
  *
- * SYNC: When modified, update touchPresentation.stylex.ts (the same queries as
- * media keys) and touchPresentation.test.ts.
+ * SYNC: When modified, update touchPresentation.test.ts and every StyleX
+ * media key that spells these queries.
  */
 
 import {useMemo} from 'react';

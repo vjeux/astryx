@@ -310,9 +310,10 @@ in `../utils/touchPresentation.ts`:
 - a presentation that needs both, a sheet in place of a popover, asks for
   both (`COMPACT_TOUCH_QUERY`).
 
-Styles switch on the same conditions with the StyleX keys in
-`touchPresentation.stylex.ts` (`touchMedia.touch`, `.compact`,
-`.compactTouch`), so the first paint is right. Behaviour reads
+Styles switch on the same conditions by writing the same query as a StyleX
+media key (`'@media (pointer: coarse)'`, and the compact-touch query spelled
+exactly as `COMPACT_TOUCH_QUERY`, which a test enforces), so the first paint
+is right. Behaviour reads
 `useTouchPresentation()` (SSR-safe), a decision taken once reads
 `readTouchPresentation()`, and a component with no interaction to infer
 from reads `useMotionPresentation()`: UIKit timings under a finger, theme
