@@ -51,9 +51,11 @@ import {
 import type {GestureEventContext, GestureTouch, Point} from './types';
 import {VelocityTracker, type VelocityStrategy} from './VelocityTracker';
 
+/** @experimental */
 export type PanDirection =
   'any' | 'horizontal' | 'vertical' | 'left' | 'right' | 'up' | 'down';
 
+/** @experimental */
 export interface PanGestureRecognizerOptions extends GestureRecognizerOptions<PanGestureRecognizer> {
   /** @default 1 */
   minimumNumberOfTouches?: number;
@@ -92,6 +94,7 @@ const DIRECTION_VECTORS: Partial<Record<PanDirection, Point>> = {
   down: {x: 0, y: 1},
 };
 
+/** @experimental */
 export class PanGestureRecognizer extends GestureRecognizer {
   minimumNumberOfTouches: number;
   maximumNumberOfTouches: number;

@@ -124,13 +124,23 @@ import {
 import {scroll} from './uikit/scroll';
 import {timing} from './uikit/timing';
 
-/** A value the animator can drive. */
+/**
+ * A value the animator can drive.
+ * @experimental
+ */
 export type MotionProperty =
   'x' | 'y' | 'rotate' | 'scaleX' | 'scaleY' | 'opacity';
 
-/** Values by property; `scale` sets `scaleX` and `scaleY` together. */
+/**
+ * Values by property; `scale` sets `scaleX` and `scaleY` together.
+ * @experimental
+ */
 export type MotionValues = Partial<Record<MotionProperty | 'scale', number>>;
 
+/**
+ * A spring and the velocity it starts with.
+ * @experimental
+ */
 export interface SpringTransition {
   /** The spring, in any vocabulary of the constants table. */
   spring: SpringDescription;
@@ -142,6 +152,10 @@ export interface SpringTransition {
   velocity?: MotionValues;
 }
 
+/**
+ * A momentum coast: UIScrollView's deceleration, with optional edges.
+ * @experimental
+ */
 export interface DecayOptions {
   /** Per-millisecond velocity factor; UIScrollView's normal rate by default. */
   rate?: number;
@@ -151,6 +165,11 @@ export interface DecayOptions {
   bounce?: SpringDescription;
 }
 
+/**
+ * Options of `animate` and `play`: the spring, a release velocity, the Reduced
+ * Motion handling.
+ * @experimental
+ */
 export interface AnimateOptions {
   /**
    * Start time on the document timeline (ms, `performance.now()` clock).
@@ -184,6 +203,7 @@ export interface AnimateOptions {
  * Times are seconds from the curve's start; the value at `duration` is the
  * end state. Start it at the property's presentation value (`get`) to
  * continue without a jump.
+ * @experimental
  */
 export interface MotionCurve {
   /** Length, s. */
@@ -194,6 +214,10 @@ export interface MotionCurve {
   velocity(t: number): number;
 }
 
+/**
+ * Options of `createAnimator`.
+ * @experimental
+ */
 export interface AnimatorOptions {
   /**
    * Animates a pseudo-element of the element instead (`'::backdrop'` of a
@@ -214,7 +238,10 @@ export interface AnimatorOptions {
   requestFrame?: (callback: () => void) => void;
 }
 
-/** One `animate` / `decay` call's animations. */
+/**
+ * One `animate` / `decay` call's animations.
+ * @experimental
+ */
 export interface MotionHandle {
   /** The properties this call drives. */
   readonly properties: ReadonlyArray<MotionProperty>;
@@ -243,6 +270,10 @@ export interface MotionHandle {
   stop(): void;
 }
 
+/**
+ * A compositor animator bound to one element (see the file header).
+ * @experimental
+ */
 export interface Animator {
   /** The element the animator writes to, if attached. */
   readonly element: HTMLElement | null;
@@ -515,6 +546,7 @@ function defaultPrefersReducedMotion(): boolean {
  * const y = animator.get('y', event.timeStamp);
  * animator.stop(['y']);
  * ```
+ * @experimental
  */
 export function createAnimator(
   element: HTMLElement | null,
