@@ -90,10 +90,11 @@ const PRESS_MEASUREMENT =
 
 /**
  * Safari page scroll is a UIScrollView: the distance at which it claims a
- * slow drag (its `pointercancel`) is UIKit's pan start.
+ * slow drag is where a press becomes a scroll, and the last moment a page
+ * can still cancel the scroll.
  */
 const SAFARI_SCROLL_CLAIM =
-  'measured: Safari page scroll, iOS 26.2 simulator, slow HID drag got pointercancel after ~12 px (utils/pressGesture.ts)';
+  'measured: Mobile Safari 26.2, iOS 26.2 simulator, slow HID drag on a scrollable page (1 pt steps): last cancelable touchmove at 10 px, pointercancel and the first uncancelable touchmove at 11 px';
 
 export const UIKIT_GESTURES = {
   tap: {

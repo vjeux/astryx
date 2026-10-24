@@ -57,10 +57,10 @@ describe('UIKIT_GESTURES', () => {
     expect(UIKIT_GESTURES.velocity.currentWeight.value).toBe(0.2);
   });
 
-  it('keeps the pan decision under the distance WebKit claims a scroll at', () => {
-    // WebKit claims a slow drag after ~12 px; a pan that must cancel the
-    // native scroll has to decide while touchmove is still cancelable.
-    expect(UIKIT_GESTURES.pan.hysteresis.value).toBeLessThan(12);
+  it('keeps the pan decision within the distance WebKit claims a scroll at', () => {
+    // Mobile Safari's last cancelable touchmove of a slow drag is at 10 px; a
+    // pan that must cancel the native scroll decides by then.
+    expect(UIKIT_GESTURES.pan.hysteresis.value).toBeLessThanOrEqual(10);
   });
 
   it('has a vibration pattern for every feedback kind', () => {
