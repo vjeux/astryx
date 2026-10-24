@@ -43,27 +43,37 @@
  * can be handed in explicitly instead.
  *
  * End state without a flicker frame: the element's inline style always holds
- * the values the animations END on, and every animation fills backwards
- * only. While an animation runs it overrides the inline style; the frame it
- * ends, the compositor drops it and the inline style already shows the same
- * values, with no main-thread work involved.
+ * the values the animations END on, and the keyframes hold that end state for
+ * a while after the curve ends (END_HOLD_MS). The main thread drops a finished
+ * animation as soon as it runs after the curve's end; the inline style already
+ * shows the same values, so nothing moves. The hold matters when the curve
+ * ends during a main-thread block: WebKit's compositor ends an animation by
+ * falling back to the value its main thread last committed, which is
+ * mid-flight.
  *
  * Shared clock: every animation an `animate` / `decay` call starts gets the
  * same explicit `startTime` (the call time, or `options.at` to line several
  * animators up). Keyframes are sampled from that time, so a value that keeps
  * moving through a rebuild stays on its curve to the frame.
  *
- * Reduced Motion (law M5): UIKit replaces travel with a cross-fade. With
- * `prefers-reduced-motion: reduce`, an `animate` that moves something
- * (x, y, rotate, scale) by default (`reducedMotion: 'crossfade'`):
+ * Reduced Motion (law M5): with `prefers-reduced-motion: reduce`, UIKit's
+ * Reduce Motion with Prefer Cross-Fade Transitions replaces travel with a
+ * cross-fade. An `animate` or `play` that moves something (x, y, rotate,
+ * scale) by default (`reducedMotion: 'crossfade'`):
  * - entering (opacity rises in the same call): jumps to the new place and
  *   fades in;
  * - leaving (opacity falls): fades out in place, then jumps;
  * - otherwise: dips (fades out, jumps at the midpoint, fades back in).
- * The fade runs `timing.reducedMotionCrossFadeMs` on `timing.curves.easeInOut`.
+ * The fade runs `timing.reducedMotionCrossFadeMs` on `timing.curves.easeInOut`
+ * (a navigation push or pop), or on the spring given as `crossfade` (a sheet,
+ * a full-screen modal or an alert fades on its presentation spring).
  * `'instant'` jumps without a fade; `'keep'` plays the motion unchanged (for
  * direct manipulation that UIKit keeps under Reduce Motion). Decays keep their
  * motion: they follow a finger's throw.
+ *
+ * A pseudo-element (`options.pseudoElement`, a dialog's `::backdrop`) has no
+ * inline style: its animations fill both ways and stay in effect until the
+ * next one replaces them, and `set` holds a value with a static animation.
  *
  * SSR-safe: nothing touches `window` or `document` at module scope, and an
  * animator created without an element only keeps state until one is attached.
@@ -76,7 +86,12 @@
 
 import {cubicBezier} from './bezier';
 import {solveDecay} from './decay';
-import {solveSpring, toSpring, type SpringDescription} from './spring';
+import {
+  solveSpring,
+  toSpring,
+  type SpringCurve,
+  type SpringDescription,
+} from './spring';
 import {scroll} from './uikit/scroll';
 import {timing} from './uikit/timing';
 
@@ -116,6 +131,13 @@ export interface AnimateOptions {
   at?: number;
   /** Reduced Motion substitution; see the file header. */
   reducedMotion?: 'crossfade' | 'instant' | 'keep';
+  /**
+   * The substituted cross-fade's curve. By default a timed fade
+   * (`timing.reducedMotionCrossFadeMs` on easeInOut: UIKit's navigation
+   * cross-fade); with a spring the fade follows it, as UIKit fades a sheet, a
+   * full-screen modal or an alert on the presentation's own spring.
+   */
+  crossfade?: SpringDescription;
 }
 
 /**
@@ -135,6 +157,13 @@ export interface MotionCurve {
 }
 
 export interface AnimatorOptions {
+  /**
+   * Animates a pseudo-element of the element instead (`'::backdrop'` of a
+   * native dialog). A pseudo-element has no inline style, so every animation
+   * fills both ways and stays in effect until the next one replaces it, and
+   * `set` holds its value with a static animation.
+   */
+  pseudoElement?: string;
   /** Starting values; identity by default. Never read from the DOM. */
   initial?: MotionValues;
   /** Clock in ms on the document timeline's time base. */
@@ -283,6 +312,14 @@ const SAMPLE_TOLERANCE: Record<MotionProperty, number> = {
 const MAX_DURATION_MS = 30_000;
 /** Above this many keyframes the tolerance is relaxed. */
 const MAX_KEYFRAMES = 1200;
+/**
+ * The keyframes hold the end state this long after a curve ends. An engine
+ * whose compositor ends an animation while the main thread is blocked falls
+ * back to the value its main thread last committed, mid-flight (WebKit); the
+ * hold keeps the end state on screen through such a block. The main thread
+ * drops the animation as soon as it runs after the curve's end.
+ */
+export const END_HOLD_MS = 5000;
 
 const TRAVEL: ReadonlyArray<MotionProperty> = [
   'x',
@@ -376,6 +413,7 @@ export function createAnimator(
   options: AnimatorOptions = {},
 ): Animator {
   const now = options.now ?? defaultNow;
+  const pseudoElement = options.pseudoElement;
   const prefersReducedMotion =
     options.prefersReducedMotion ?? defaultPrefersReducedMotion;
   const resting: Record<MotionProperty, number> = {
@@ -384,6 +422,8 @@ export function createAnimator(
   };
   const segments = new Map<MotionProperty, Segment>();
   const running = new Map<Channel, Animation>();
+  /** Drops a finished, still-filling animation once the main thread runs. */
+  const retireTimers = new Map<Channel, ReturnType<typeof setTimeout>>();
   const touched = new Set<Channel>();
   let target: HTMLElement | null = null;
 
@@ -435,7 +475,7 @@ export function createAnimator(
     channel: Channel,
     value: (property: MotionProperty) => number,
   ) => {
-    if (target == null) {
+    if (target == null || pseudoElement != null) {
       return;
     }
     touched.add(channel);
@@ -496,9 +536,32 @@ export function createAnimator(
     return times;
   };
 
+  /** A pseudo-element's resting value, held by a static filling animation. */
+  const hold = (channel: Channel, time: number) => {
+    if (target == null) {
+      return;
+    }
+    const value = format(channel, finalValue);
+    const animation = target.animate([{[channel]: value}, {[channel]: value}], {
+      duration: 1,
+      fill: 'both',
+      pseudoElement,
+    });
+    animation.startTime = time;
+    running.set(channel, animation);
+  };
+
   const rebuild = (channel: Channel, time: number) => {
-    running.get(channel)?.cancel();
+    const previous = running.get(channel);
     running.delete(channel);
+    clearTimeout(retireTimers.get(channel));
+    retireTimers.delete(channel);
+    // An element's inline style holds the end state, so its old animation can
+    // go first. A pseudo-element has none: its old animation keeps holding the
+    // value until the new one exists (same task, no frame in between).
+    if (pseudoElement == null) {
+      previous?.cancel();
+    }
     const properties = CHANNELS[channel];
     // Settled curves become resting values.
     for (const property of properties) {
@@ -510,11 +573,15 @@ export function createAnimator(
     }
     writeInline(channel, finalValue);
     const moving = properties.filter(p => segments.has(p));
-    if (
-      target == null ||
-      moving.length === 0 ||
-      typeof target.animate !== 'function'
-    ) {
+    if (target == null || typeof target.animate !== 'function') {
+      previous?.cancel();
+      return;
+    }
+    if (moving.length === 0) {
+      if (pseudoElement != null) {
+        hold(channel, time);
+      }
+      previous?.cancel();
       return;
     }
     const end = Math.min(
@@ -528,6 +595,10 @@ export function createAnimator(
       ),
     );
     if (end <= time) {
+      if (pseudoElement != null) {
+        hold(channel, time);
+      }
+      previous?.cancel();
       return;
     }
     const collect = (scale: number) => {
@@ -564,7 +635,7 @@ export function createAnimator(
       }
     }
     const times = [...all].sort((a, b) => a - b);
-    const span = end - time;
+    const span = end - time + END_HOLD_MS;
     const keyframes: Keyframe[] = [];
     for (const t of times) {
       const offset = (t - time) / span;
@@ -581,14 +652,37 @@ export function createAnimator(
         ),
       });
     }
+    keyframes.push({offset: 1, [channel]: format(channel, finalValue)});
     const animation = target.animate(keyframes, {
       duration: span,
-      fill: 'backwards',
+      // The last keyframes hold the end state (END_HOLD_MS); filling both
+      // ways also keeps it where an engine honors the fill on its compositor.
+      // The main thread drops the animation once it runs after the end; the
+      // inline style already holds the same values, so that changes no pixel.
+      fill: 'both',
       easing: 'linear',
+      ...(pseudoElement != null ? {pseudoElement} : {}),
     });
     // One clock: the keyframes were sampled from `time`.
     animation.startTime = time;
     running.set(channel, animation);
+    previous?.cancel();
+    if (pseudoElement != null) {
+      return; // stays in effect: nothing else holds the end state
+    }
+    retireTimers.set(
+      channel,
+      setTimeout(
+        () => {
+          retireTimers.delete(channel);
+          if (running.get(channel) === animation) {
+            animation.cancel();
+            running.delete(channel);
+          }
+        },
+        Math.max(0, end - now()),
+      ),
+    );
   };
 
   // -- handles --------------------------------------------------------------
@@ -773,41 +867,89 @@ export function createAnimator(
     targets: Partial<Record<MotionProperty, number>>,
     properties: MotionProperty[],
     mode: 'crossfade' | 'instant',
+    fadeSpring?: SpringDescription,
   ): Partial<Record<MotionProperty, Segment | null>> => {
     const next: Partial<Record<MotionProperty, Segment | null>> = {};
-    const fade = timing.reducedMotionCrossFadeMs;
     const opacityNow = valueAt('opacity', time);
     const opacityTo = targets.opacity ?? opacityNow;
     const entering = opacityTo > opacityNow + 1e-6;
     const leaving = opacityTo < opacityNow - 1e-6;
+    // The fade, and when the travel lands (ms after `time`): at once for an
+    // entrance, after the fade out for an exit, at the bottom of a dip.
+    let opacity: Segment | null = null;
+    let landsAt = 0;
+    if (mode === 'crossfade' && fadeSpring == null) {
+      const fade = timing.reducedMotionCrossFadeMs;
+      if (entering || leaving) {
+        opacity = fadeSegment(owner, time, [
+          {at: 0, value: opacityNow},
+          {at: fade, value: opacityTo},
+        ]);
+        landsAt = entering ? 0 : fade;
+      } else {
+        opacity = fadeSegment(owner, time, [
+          {at: 0, value: opacityNow},
+          {at: fade / 2, value: 0},
+          {at: fade, value: opacityTo},
+        ]);
+        landsAt = fade / 2;
+      }
+    } else if (mode === 'crossfade' && fadeSpring != null) {
+      const spring = toSpring(fadeSpring);
+      const settle = (curve: SpringCurve) =>
+        Math.min(
+          MAX_DURATION_MS / 2,
+          curve.settleTime(SETTLE_THRESHOLD.opacity) * 1000,
+        );
+      if (entering || leaving) {
+        const curve = solveSpring(spring, {from: opacityNow, to: opacityTo});
+        const duration = settle(curve);
+        opacity = {
+          start: time,
+          duration,
+          target: opacityTo,
+          at: t => curve.value(t / 1000),
+          speed: t => curve.velocity(t / 1000),
+          jumps: [],
+          owner,
+        };
+        landsAt = entering ? 0 : duration;
+      } else {
+        const out = solveSpring(spring, {from: opacityNow, to: 0});
+        const back = solveSpring(spring, {from: 0, to: opacityTo});
+        const half = settle(out);
+        opacity = {
+          start: time,
+          duration: half + settle(back),
+          target: opacityTo,
+          at: t =>
+            t < half ? out.value(t / 1000) : back.value((t - half) / 1000),
+          speed: t =>
+            t < half
+              ? out.velocity(t / 1000)
+              : back.velocity((t - half) / 1000),
+          jumps: [],
+          owner,
+        };
+        landsAt = half;
+      }
+    }
     for (const property of properties) {
       if (!TRAVEL.includes(property)) {
         continue;
       }
-      const from = valueAt(property, time);
-      const toValue = targets[property] as number;
-      if (mode === 'instant' || entering) {
-        next[property] = null; // in place at once (and fade in)
-      } else if (leaving) {
-        next[property] = jumpSegment(owner, time, from, toValue, fade); // fade out, then move
-      } else {
-        next[property] = jumpSegment(owner, time, from, toValue, fade / 2); // dip
-      }
+      next[property] =
+        landsAt === 0
+          ? null // in place at once
+          : jumpSegment(
+              owner,
+              time,
+              valueAt(property, time),
+              targets[property] as number,
+              landsAt,
+            );
     }
-    if (mode === 'instant') {
-      next.opacity = null;
-    } else if (entering || leaving) {
-      next.opacity = fadeSegment(owner, time, [
-        {at: 0, value: opacityNow},
-        {at: fade, value: opacityTo},
-      ]);
-    } else {
-      next.opacity = fadeSegment(owner, time, [
-        {at: 0, value: opacityNow},
-        {at: fade / 2, value: 0},
-        {at: fade, value: opacityTo},
-      ]);
-    }
+    next.opacity = opacity;
     return next;
   };
 
@@ -824,6 +966,10 @@ export function createAnimator(
         animation.cancel();
       }
       running.clear();
+      for (const timer of retireTimers.values()) {
+        clearTimeout(timer);
+      }
+      retireTimers.clear();
       target = next;
       if (target == null) {
         return;
@@ -888,6 +1034,7 @@ export function createAnimator(
             targets,
             properties,
             mode === 'instant' ? 'instant' : 'crossfade',
+            animateOptions.crossfade,
           ),
         );
       } else {
@@ -963,6 +1110,7 @@ export function createAnimator(
               targets,
               properties,
               mode === 'instant' ? 'instant' : 'crossfade',
+              playOptions.crossfade,
             )
           : {};
       for (const property of properties) {
@@ -1124,6 +1272,10 @@ export function createAnimator(
         animation.cancel();
       }
       running.clear();
+      for (const timer of retireTimers.values()) {
+        clearTimeout(timer);
+      }
+      retireTimers.clear();
       target = null;
     },
   };
