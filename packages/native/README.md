@@ -20,10 +20,12 @@ rests on evidence.
 | Native theme   | `defineNativeTheme`               | Durable theme intent (`material: 'opaque' \| 'translucent'`) plus platform entries scoped by OS version, such as Liquid Glass from iOS 26. Never sets tokens.                                                                                |
 | Icons          | `NATIVE_ICON_DEFAULTS`            | Astryx's built-in icon names mapped to SF Symbols on Apple platforms and Material Symbols on Android.                                                                                                                                        |
 | Wire           | `AstryxNode`, `AstryxAction`      | Each component as JSON a TypeScript core sends a native host (arm C), and the action a host sends back when a view calls a callback. Swift decodes `<Name>Node` and turns it into `<Name>Props` with `viewProps(send:)`.                     |
+| Logic core     | `@astryxdesign/native/logic`      | `createLogicCore` holds a screen's state, builds its node tree, and reduces actions; `connectBridge` carries it to a native host as JSON. ECMAScript built-ins only, so it runs in Hermes. Shaped after EJ Campbell's astryx-swift spike.    |
+| Logic host     | `AstryxLogicHost` (Swift)         | Runs a logic core bundle in JavaScriptCore, decodes each tree into `AstryxNode`, and sends views' actions back. A Hermes host speaks the same bridge.                                                                                        |
 
-Contracts cover Button, Card, Divider, Heading, HStack, ProgressBar, Selector,
-Switch, Text, TextInput, and VStack. React Native and Android bindings are not built yet; see
-[the experiment matrix](#experiment-matrix).
+Contracts cover Badge, Button, Card, Divider, Heading, HStack, ProgressBar,
+Selector, Switch, Text, TextInput, and VStack. React Native and Android
+bindings are not built yet; see [the experiment matrix](#experiment-matrix).
 
 ```ts
 // tsconfig.json for an iOS app: "customConditions": ["ios"]
@@ -89,16 +91,43 @@ const action: AstryxAction = {
 ```
 
 ```swift
-let node = try JSONDecoder().decode(AstryxNode.self, from: snapshot)
-if case .switch(let wifi) = node {
-  let props = wifi.viewProps { action in core.dispatch(action.json) }
+let host = AstryxLogicHost(bundle: bundleSource) // calls the bundle's global astryxStart(host)
+if case .switch(let wifi) = host.root {
+  let props = wifi.viewProps(send: host.send)
 }
+```
+
+```ts
+// tsconfig: "customConditions": ["ios"]
+import type {AstryxAction, AstryxNode} from '@astryxdesign/native/components';
+import {connectBridge, createLogicCore} from '@astryxdesign/native/logic';
+import type {Bridge, BridgeHost} from '@astryxdesign/native/logic';
+
+const core = createLogicCore<{wifi: boolean}, AstryxNode, AstryxAction>({
+  initial: {wifi: true},
+  view: state => ({
+    component: 'Switch',
+    key: 'wifi',
+    props: {label: 'Wi-Fi', value: state.wifi},
+    events: ['onChange'],
+  }),
+  reduce: (state, action) =>
+    action.component === 'Switch' && action.event === 'onChange'
+      ? {wifi: action.args[0]}
+      : state,
+});
+// The bundle's entry: the native host calls it with its two calls in and
+// gets back the bridge it reads snapshots from and dispatches actions to.
+(globalThis as {astryxStart?: (host: BridgeHost) => Bridge}).astryxStart =
+  host => connectBridge(core, host);
 ```
 
 ## Working on it
 
 ```sh
+pnpm -F @astryxdesign/native typecheck        # source and tests
 pnpm -F @astryxdesign/native build            # dist/, including platform types
+pnpm -F @astryxdesign/native typecheck:types  # every platform's types, after build
 pnpm -F @astryxdesign/native generate:apple   # regenerate apple/Sources/.../Generated
 pnpm vitest run --project node packages/native
 ```

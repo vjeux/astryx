@@ -18,13 +18,21 @@
  * measurement of a real UIKit app on the iOS simulator, named with the app,
  * the iOS version and the method) or a GUESS. A guess says what it rests on
  * and what to measure to replace it; `gestures.test.ts` fails if an entry
- * carries neither. Safari on iOS runs UIKit's own recognizers for
+ * carries neither. The table's shared rules hold here too (uikit.test.ts): a
+ * source starts with its kind (`apple-docs <URL>`, `wwdc <year>-<session>`,
+ * `webkit Source/…`, `measured: …`), and a guess's `measure` starts with
+ * the ID of its row in ../MEASUREMENTS.md. The press clocks are the same
+ * entries as `scroll.delaysContentTouchesMs` and `timing.press`, read from
+ * there. Safari on iOS runs UIKit's own recognizers for
  * tap-to-click, long press, double tap and the start of a page scroll, so
  * many guesses can be settled by measuring Safari itself.
  *
  * SYNC: When modified, update packages/core/src/gestures/README.md (the
  * thresholds section) and packages/core/src/motion/uikit/gestures.test.ts.
  */
+
+import {scroll} from './scroll';
+import {timing} from './timing';
 
 export type GestureConstantUnit =
   'px' | 'ms' | 'px/s' | 'rad' | 'ratio' | 'count';
@@ -122,13 +130,13 @@ export const UIKIT_GESTURES = {
     minimumPressDuration: {
       value: 500,
       unit: 'ms',
-      source: `${APPLE}/uilongpressgesturerecognizer/minimumpressduration; ${UIKIT_LAB}: _minimumPressDuration 0.5`,
+      source: `apple-docs ${APPLE}/uilongpressgesturerecognizer/minimumpressduration; ${UIKIT_LAB}: _minimumPressDuration 0.5`,
     },
     /** UILongPressGestureRecognizer.allowableMovement default, a distance. */
     allowableMovement: {
       value: 10,
       unit: 'px',
-      source: `${APPLE}/uilongpressgesturerecognizer/allowablemovement; ${UIKIT_LAB}: a (7, 7) drift begins, (7.2, 7.2) fails`,
+      source: `apple-docs ${APPLE}/uilongpressgesturerecognizer/allowablemovement; ${UIKIT_LAB}: a (7, 7) drift begins, (7.2, 7.2) fails`,
     },
   },
   pan: {
@@ -194,7 +202,7 @@ export const UIKIT_GESTURES = {
       guess:
         'UIRotationGestureRecognizer has no scalar threshold among its ivars; 5 degrees.',
       measure:
-        'The simulator HID cannot rotate two fingers: a device run (or an XCUITest rotate) logging the angle at .began.',
+        'M-G10: The simulator HID cannot rotate two fingers: a device run (or an XCUITest rotate) logging the angle at .began.',
     },
   },
   screenEdgePan: {
@@ -224,13 +232,25 @@ export const UIKIT_GESTURES = {
   },
   press: {
     /** UIScrollView.delaysContentTouches: a touch in a scroller highlights after this. */
-    contentTouchDelay: {value: 150, unit: 'ms', source: PRESS_MEASUREMENT},
+    contentTouchDelay: {
+      value: scroll.delaysContentTouchesMs,
+      unit: 'ms',
+      source: PRESS_MEASUREMENT,
+    },
     /** A tap shorter than the delay shows the highlight at the lift for this long. */
-    quickTapFlash: {value: 100, unit: 'ms', source: PRESS_MEASUREMENT},
+    quickTapFlash: {
+      value: timing.press.flashMs,
+      unit: 'ms',
+      source: PRESS_MEASUREMENT,
+    },
     /** Travel at which a press is a scroll, not a press. */
     slop: {value: 10, unit: 'px', source: SAFARI_SCROLL_CLAIM},
     /** A touch this soon after a finger-driven scroll moved is a brake, not a press. */
-    scrollBrake: {value: 150, unit: 'ms', source: PRESS_MEASUREMENT},
+    scrollBrake: {
+      value: timing.press.scrollBrakeMs,
+      unit: 'ms',
+      source: PRESS_MEASUREMENT,
+    },
     /**
      * How long after a finger was down a scroll can still be that finger's
      * momentum (the brake only counts scrolls a finger drove).
@@ -241,7 +261,7 @@ export const UIKIT_GESTURES = {
       guess:
         'The press model bound (utils/pressFeedback.ts): iOS momentum runs for a second or two after the lift.',
       measure:
-        'Safari page, hardest HID flick: time from the lift to the last scroll event.',
+        'M-G19: Safari page, hardest HID flick: time from the lift to the last scroll event.',
     },
   },
   scroll: {
@@ -257,7 +277,7 @@ export const UIKIT_GESTURES = {
       guess:
         'The BottomSheet value (useSheetGestures.ts): enough to ignore a fling coming to rest on the last pixel.',
       measure:
-        'None for parity: UIKit decides sheet versus scroll when the drag begins (lab batch G, sheet over a scrolled list).',
+        'M-G13: None for parity: UIKit decides sheet versus scroll when the drag begins (a sheet over a scrolled list leaves the whole drag to the list).',
     },
   },
   velocity: {
@@ -280,14 +300,14 @@ export const UIKIT_GESTURES = {
       unit: 'ms',
       guess:
         "Android's VelocityTracker and Flutter's fit the last 100 ms (least squares, degree 2); UIKit itself uses currentWeight.",
-      measure: 'Not a parity value: UIKit uses the two-event filter.',
+      measure: 'M-G14: Not a parity value: UIKit uses the two-event filter.',
     },
     /** For the least-squares alternative: at most this many samples. */
     maxSamples: {
       value: 20,
       unit: 'count',
       guess: 'Android VelocityTracker and Flutter VelocityTracker keep 20.',
-      measure: 'Not a parity value: UIKit uses the two-event filter.',
+      measure: 'M-G15: Not a parity value: UIKit uses the two-event filter.',
     },
     /**
      * For the least-squares alternative: a gap this long between samples
@@ -297,7 +317,7 @@ export const UIKIT_GESTURES = {
       value: 40,
       unit: 'ms',
       guess: 'Android VelocityTracker and Flutter VelocityTracker use 40 ms.',
-      measure: 'Not a parity value: UIKit uses the two-event filter.',
+      measure: 'M-G16: Not a parity value: UIKit uses the two-event filter.',
     },
   },
   click: {
@@ -311,7 +331,7 @@ export const UIKIT_GESTURES = {
       unit: 'ms',
       guess: 'A safety bound, not a UIKit number.',
       measure:
-        'Not a parity value: confirm in Safari and Chromium that the click follows touchend within one frame.',
+        'M-G17: Not a parity value: confirm in Safari and Chromium that the click follows touchend within one frame.',
     },
   },
 } as const satisfies Record<string, Record<string, GestureConstant>>;
@@ -366,6 +386,6 @@ function vibration(
     guess:
       'No UIKit equivalent exists for a vibration motor; durations only order the strengths.',
     measure:
-      'On an Android device, compare against the platform HapticFeedbackConstants for the same moments.',
+      'M-G18: On an Android device, compare against the platform HapticFeedbackConstants for the same moments.',
   };
 }
