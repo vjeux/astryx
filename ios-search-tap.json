@@ -1,0 +1,64 @@
+{
+ "searchTap": {
+  "events": [
+   [
+    10632,
+    "focus Search"
+   ],
+   [
+    10672,
+    "focus Search"
+   ],
+   [
+    10673,
+    "searching"
+   ],
+   [
+    10858,
+    "viewport 377"
+   ]
+  ],
+  "after": {
+   "active": "Search",
+   "viewport": 377,
+   "inner": 714,
+   "field": "active"
+  },
+  "ua": "Version/26.2"
+ },
+ "searchTapBlockedLate": {
+  "events": [
+   [
+    5375,
+    "focus Search"
+   ],
+   [
+    5412,
+    "focus Search"
+   ],
+   [
+    5413,
+    "searching"
+   ],
+   [
+    5535,
+    "blockStart"
+   ],
+   [
+    6136,
+    "blockEnd"
+   ],
+   [
+    6138,
+    "viewport 377"
+   ]
+  ],
+  "after": {
+   "active": "Search",
+   "viewport": 377,
+   "inner": 714,
+   "field": "active"
+  },
+  "ua": "Version/26.2"
+ }
+}
