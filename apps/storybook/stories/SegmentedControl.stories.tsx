@@ -378,7 +378,7 @@ export const SelectionMotion: Story = {
     docs: {
       description: {
         story:
-          'On a touch screen the selection slides between segments on UIKit’s spring and the titles cross-fade, for taps, arrow keys and programmatic changes alike (the button changes the value from outside). Under Reduce Motion the selection moves without travel. Segments never change width when the selection moves.',
+          'On a touch screen the selection slides between segments on UIKit’s spring and the titles cross-fade, for taps, arrow keys and programmatic changes alike (the button changes the value from outside). Hold the selected segment to lift it, drag it to another segment, and let go: the segment nearest the finger is chosen. Under Reduce Motion the selection moves without travel and never lifts. Segments never change width when the selection moves.',
       },
     },
   },
