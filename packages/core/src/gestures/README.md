@@ -351,6 +351,7 @@ tokens under a mouse.
   UIKit reported on recorded touch streams, and each strategy against the
   true velocity.
 - `__tests__/delegatedPress.test.ts`: delegated press tracking.
+- `__tests__/haptics.test.ts`: vibration patterns and the hidden switch.
 - `__tests__/browser/`: the browser proof on a phone-sized touch screen, in
   Chromium (CDP touches with timestamps) and WebKit (its own touch input).
   Run it with
