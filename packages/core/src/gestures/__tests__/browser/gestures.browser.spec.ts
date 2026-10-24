@@ -343,6 +343,26 @@ test('a vertical drag on the same element fails the pan and is never cancelled',
   expect(entries.some(entry => entry.name.startsWith('click:'))).toBe(false);
 });
 
+test('a horizontal drag on a passive pan-y control keeps its press: uncancelable moves the browser cannot pan are not a claim', async ({
+  page,
+  browserName,
+}) => {
+  const driver = await open(page, browserName);
+  await page.evaluate(() => {
+    document.getElementById('passive')?.scrollIntoView({block: 'center'});
+  });
+  const start = await center(page, 'passive');
+  await driver.play(
+    drag({x: start.x - 120, y: start.y}, {x: start.x + 120, y: start.y + 6}),
+  );
+  const consumed = (await log(page))
+    .filter(entry => entry.name === 'passive')
+    .map(entry => entry.state);
+  expect(consumed[0]).toBe('began');
+  expect(consumed).not.toContain('cancelled');
+  expect(consumed.at(-1)).toBe('ended');
+});
+
 test('a tap recognizer replaces the click: no ghost click, no compatibility mouse events', async ({
   page,
   browserName,

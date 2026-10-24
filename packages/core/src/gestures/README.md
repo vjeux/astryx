@@ -220,9 +220,12 @@ component can call the hook.
   vertical travel reaches about 10 px. A pan that competes with native
   scrolling therefore decides at 10 px or less (the toast's swipe decides at
   8).
-- **The browser's claim.** `pointercancel` on a finger, a `touchmove` that
-  can no longer be cancelled, or a scroll above the touch means the browser
-  took the finger. Possible recognizers that share it fail, active ones are
+- **The browser's claim.** `pointercancel` on a finger, or a scroll above
+  the touch, means the browser took the finger; so does its first `touchmove`
+  that can no longer be cancelled, when the browser could pan along the
+  finger's main axis. (Chromium also stops asking after one unconsumed
+  `touchmove` when `touch-action` keeps it from panning that way, as for a
+  horizontal drag under `pan-y`; that is not a claim.) Possible recognizers that share it fail, active ones are
   cancelled, and the view's press is cancelled. The exception is a pan with
   `scrollHandoff`, which keeps watching.
 - **Clicks.** When a touch's gesture cancelled the view's touches, its

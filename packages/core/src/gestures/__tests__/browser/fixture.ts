@@ -5,8 +5,9 @@
  * @input Nothing: bundled by esbuild and injected into a blank page
  * @output A page of gesture hosts (a horizontal pan inside a scroller, a tap
  *   target, a long press, a pinch, a sheet body that hands its scroll to a
- *   pan) that records every recognizer transition and every click on
- *   `window.__gestures`
+ *   pan, a passive control: a press consumer under `pan-y` with no
+ *   recognizer) that records every recognizer transition, every consumer
+ *   event and every click on `window.__gestures`
  * @position Browser fixture of gestures.chromium.spec.ts; test-only
  */
 
@@ -53,6 +54,7 @@ document.body.innerHTML = `
     <div id="sheetBody" style="height: 240px; overflow-y: auto; overscroll-behavior: contain; background: #eee">
       <div style="height: 1200px">sheet content</div>
     </div>
+    <div id="passive" style="height: 60px; background: #dfd; touch-action: pan-y pinch-zoom">passive control</div>
     <div style="height: 1600px">page</div>
   </div>`;
 
@@ -114,6 +116,17 @@ record(sheet, () => ({
   handoff: sheet.isHandoff,
 }));
 host.attach(element('sheetBody'), sheet);
+
+// A control with no recognizer of its own (no blocking listener): only a
+// press consumer, under pan-y, as a passive switch is.
+const passiveEvent = (state: string) =>
+  window.__gestures.push({name: 'passive', state, time: performance.now()});
+host.attachConsumer(element('passive'), {
+  touchBegan: () => passiveEvent('began'),
+  touchMoved: () => passiveEvent('moved'),
+  touchEnded: () => passiveEvent('ended'),
+  touchCancelled: () => passiveEvent('cancelled'),
+});
 
 for (const type of ['click', 'mousedown']) {
   document.addEventListener(
