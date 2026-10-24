@@ -1,0 +1,127 @@
+{
+ "run": "c14-close-before1-mvlvdlxp",
+ "sbPath": "sb-main",
+ "duringMs": 230,
+ "afterMs": 900,
+ "open": {
+  "open": true,
+  "modal": true,
+  "drawerX": 82,
+  "drawerW": 320,
+  "duration": "0.3s",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1"
+ },
+ "backdrop": {
+  "x": 41,
+  "y": 428
+ },
+ "injections": [
+  {
+   "startedAt": 1792814374718,
+   "endedAt": 1792814376842,
+   "code": 0
+  },
+  {
+   "startedAt": 1792814374958,
+   "endedAt": 1792814377083,
+   "code": 0
+  },
+  {
+   "startedAt": 1792814375866,
+   "endedAt": 1792814378162,
+   "code": 0
+  }
+ ],
+ "touches": [
+  {
+   "ts": 8799,
+   "target": "path"
+  },
+  {
+   "ts": 16080,
+   "target": "dialog#_r_2_[Navigation]"
+  },
+  {
+   "ts": 16307,
+   "target": "dialog#_r_2_[Navigation]"
+  },
+  {
+   "ts": 17386,
+   "target": "body"
+  }
+ ],
+ "closedAt": 16320,
+ "clicks": [
+  {
+   "type": "click",
+   "t": 16134,
+   "inDialog": true,
+   "onBackdrop": true,
+   "inDrawer": false
+  },
+  {
+   "type": "click",
+   "t": 16329,
+   "inDialog": true,
+   "onBackdrop": true,
+   "inDrawer": false
+  },
+  {
+   "type": "click",
+   "t": 17431,
+   "inDialog": false,
+   "onBackdrop": false,
+   "inDrawer": false
+  }
+ ],
+ "focus": [
+  {
+   "type": "focus",
+   "t": 16133,
+   "name": "Navigation"
+  }
+ ],
+ "stateAtTouches": [
+  {
+   "touch": 16080,
+   "state": [
+    2226,
+    true,
+    false,
+    82,
+    1,
+    true
+   ]
+  },
+  {
+   "touch": 16307,
+   "state": [
+    2460,
+    true,
+    false,
+    392.7,
+    0.028958,
+    true
+   ]
+  },
+  {
+   "touch": 17386,
+   "state": [
+    3553,
+    false,
+    false,
+    0,
+    0,
+    false
+   ]
+  }
+ ],
+ "sampleColumns": [
+  "t",
+  "modal",
+  "drawerInert",
+  "drawerX",
+  "scrim",
+  "open"
+ ]
+}

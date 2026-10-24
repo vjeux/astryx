@@ -1,0 +1,17 @@
+  ✘  1 [chromium] › packages/core/src/MobileNav/__tests__/MobileNavClose.a11y.chromium.spec.ts:170:1 › the dialog stays modal while the drawer slides out, then closes and returns focus (1.5s)
+  ✘  2 [chromium] › packages/core/src/MobileNav/__tests__/MobileNavClose.a11y.chromium.spec.ts:209:1 › a tap on the leaving drawer does nothing (1.6s)
+  ✘  3 [chromium] › packages/core/src/MobileNav/__tests__/MobileNavClose.a11y.chromium.spec.ts:227:1 › the page takes taps again only once the slide-out has ended (1.5s)
+  ✓  4 [chromium] › packages/core/src/MobileNav/__tests__/MobileNavClose.a11y.chromium.spec.ts:255:3 › with reduced motion › the drawer closes at once and focus returns (899ms)
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: true
+    Received: false
+    Error: expect(received).toHaveLength(expected)
+    Expected length: 1
+    Received length: 2
+    Received array:  [{"inDialog": true, "inDrawer": true, "onBackdrop": false, "t": 983.7000002861023, "type": "click"}, {"inDialog": true, "inDrawer": true, "onBackdrop": false, "t": 1017.8000001907349, "type": "click"}]
+    Error: expect(received).toHaveLength(expected)
+    Expected length: 1
+    Received length: 2
+    Received array:  [{"inDialog": false, "inDrawer": false, "onBackdrop": false, "t": 1160.7000002861023, "type": "click"}, {"inDialog": false, "inDrawer": false, "onBackdrop": false, "t": 1443.8000001907349, "type": "click"}]
+  3 failed
+  1 passed (8.0s)
