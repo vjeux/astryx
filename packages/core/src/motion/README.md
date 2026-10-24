@@ -74,10 +74,12 @@ await handle.finished; // true if it ran to the end, false if interrupted
 - Everything one call starts shares one start time; `{at}` puts several
   animators on one clock.
 - Reduced Motion (`prefers-reduced-motion: reduce`): travel becomes UIKit's
-  cross-fade. An entrance lands and fades in, an exit fades out then moves,
-  any other move dips (fade out, move, fade in), over
-  `timing.reducedMotionCrossFadeMs`. `{reducedMotion: 'keep'}` keeps the
-  motion (direct manipulation), `'instant'` jumps.
+  cross-fade (Reduce Motion with Prefer Cross-Fade Transitions). An entrance
+  lands and fades in, an exit fades out then moves, any other move dips (fade
+  out, move, fade in), over `timing.reducedMotionCrossFadeMs` (a navigation
+  push or pop) or on the spring passed as `{crossfade}` (a sheet, a modal or
+  an alert fades on its presentation spring). `{reducedMotion: 'keep'}` keeps
+  the motion (direct manipulation), `'instant'` jumps.
 - `createAnimator(dialog, {pseudoElement: '::backdrop'})` drives a
   pseudo-element; with no inline style to hold it, each animation stays in
   effect until the next one replaces it.

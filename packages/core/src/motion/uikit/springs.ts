@@ -263,6 +263,14 @@ export const springs = {
    *   iPhone 17 Pro, the same hook (0.85, 0.35, not tracking), Oct 23 2026
    */
   contextMenuDismiss: MENU_CLOSE_SPRING,
+  /**
+   * Menus opening and closing under Reduce Motion: critically damped,
+   * slower, no overshoot.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, `_animateUsingSpringWithDampingRatio:response:tracking:`
+   *   hooked with Reduce Motion on (1.0, 0.4), Oct 23 2026
+   */
+  menuReducedMotion: {response: 0.4, dampingRatio: 1},
 
   // ---------------------------------------------------------------------
   // Controls

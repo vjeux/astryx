@@ -56,14 +56,17 @@
  * animators up). Keyframes are sampled from that time, so a value that keeps
  * moving through a rebuild stays on its curve to the frame.
  *
- * Reduced Motion (law M5): UIKit replaces travel with a cross-fade. With
- * `prefers-reduced-motion: reduce`, an `animate` that moves something
- * (x, y, rotate, scale) by default (`reducedMotion: 'crossfade'`):
+ * Reduced Motion (law M5): with `prefers-reduced-motion: reduce`, UIKit's
+ * Reduce Motion with Prefer Cross-Fade Transitions replaces travel with a
+ * cross-fade. An `animate` or `play` that moves something (x, y, rotate,
+ * scale) by default (`reducedMotion: 'crossfade'`):
  * - entering (opacity rises in the same call): jumps to the new place and
  *   fades in;
  * - leaving (opacity falls): fades out in place, then jumps;
  * - otherwise: dips (fades out, jumps at the midpoint, fades back in).
- * The fade runs `timing.reducedMotionCrossFadeMs` on `timing.curves.easeInOut`.
+ * The fade runs `timing.reducedMotionCrossFadeMs` on `timing.curves.easeInOut`
+ * (a navigation push or pop), or on the spring given as `crossfade` (a sheet,
+ * a full-screen modal or an alert fades on its presentation spring).
  * `'instant'` jumps without a fade; `'keep'` plays the motion unchanged (for
  * direct manipulation that UIKit keeps under Reduce Motion). Decays keep their
  * motion: they follow a finger's throw.
@@ -83,7 +86,12 @@
 
 import {cubicBezier} from './bezier';
 import {solveDecay} from './decay';
-import {solveSpring, toSpring, type SpringDescription} from './spring';
+import {
+  solveSpring,
+  toSpring,
+  type SpringCurve,
+  type SpringDescription,
+} from './spring';
 import {scroll} from './uikit/scroll';
 import {timing} from './uikit/timing';
 
@@ -123,6 +131,13 @@ export interface AnimateOptions {
   at?: number;
   /** Reduced Motion substitution; see the file header. */
   reducedMotion?: 'crossfade' | 'instant' | 'keep';
+  /**
+   * The substituted cross-fade's curve. By default a timed fade
+   * (`timing.reducedMotionCrossFadeMs` on easeInOut: UIKit's navigation
+   * cross-fade); with a spring the fade follows it, as UIKit fades a sheet, a
+   * full-screen modal or an alert on the presentation's own spring.
+   */
+  crossfade?: SpringDescription;
 }
 
 /**
@@ -852,41 +867,89 @@ export function createAnimator(
     targets: Partial<Record<MotionProperty, number>>,
     properties: MotionProperty[],
     mode: 'crossfade' | 'instant',
+    fadeSpring?: SpringDescription,
   ): Partial<Record<MotionProperty, Segment | null>> => {
     const next: Partial<Record<MotionProperty, Segment | null>> = {};
-    const fade = timing.reducedMotionCrossFadeMs;
     const opacityNow = valueAt('opacity', time);
     const opacityTo = targets.opacity ?? opacityNow;
     const entering = opacityTo > opacityNow + 1e-6;
     const leaving = opacityTo < opacityNow - 1e-6;
+    // The fade, and when the travel lands (ms after `time`): at once for an
+    // entrance, after the fade out for an exit, at the bottom of a dip.
+    let opacity: Segment | null = null;
+    let landsAt = 0;
+    if (mode === 'crossfade' && fadeSpring == null) {
+      const fade = timing.reducedMotionCrossFadeMs;
+      if (entering || leaving) {
+        opacity = fadeSegment(owner, time, [
+          {at: 0, value: opacityNow},
+          {at: fade, value: opacityTo},
+        ]);
+        landsAt = entering ? 0 : fade;
+      } else {
+        opacity = fadeSegment(owner, time, [
+          {at: 0, value: opacityNow},
+          {at: fade / 2, value: 0},
+          {at: fade, value: opacityTo},
+        ]);
+        landsAt = fade / 2;
+      }
+    } else if (mode === 'crossfade' && fadeSpring != null) {
+      const spring = toSpring(fadeSpring);
+      const settle = (curve: SpringCurve) =>
+        Math.min(
+          MAX_DURATION_MS / 2,
+          curve.settleTime(SETTLE_THRESHOLD.opacity) * 1000,
+        );
+      if (entering || leaving) {
+        const curve = solveSpring(spring, {from: opacityNow, to: opacityTo});
+        const duration = settle(curve);
+        opacity = {
+          start: time,
+          duration,
+          target: opacityTo,
+          at: t => curve.value(t / 1000),
+          speed: t => curve.velocity(t / 1000),
+          jumps: [],
+          owner,
+        };
+        landsAt = entering ? 0 : duration;
+      } else {
+        const out = solveSpring(spring, {from: opacityNow, to: 0});
+        const back = solveSpring(spring, {from: 0, to: opacityTo});
+        const half = settle(out);
+        opacity = {
+          start: time,
+          duration: half + settle(back),
+          target: opacityTo,
+          at: t =>
+            t < half ? out.value(t / 1000) : back.value((t - half) / 1000),
+          speed: t =>
+            t < half
+              ? out.velocity(t / 1000)
+              : back.velocity((t - half) / 1000),
+          jumps: [],
+          owner,
+        };
+        landsAt = half;
+      }
+    }
     for (const property of properties) {
       if (!TRAVEL.includes(property)) {
         continue;
       }
-      const from = valueAt(property, time);
-      const toValue = targets[property] as number;
-      if (mode === 'instant' || entering) {
-        next[property] = null; // in place at once (and fade in)
-      } else if (leaving) {
-        next[property] = jumpSegment(owner, time, from, toValue, fade); // fade out, then move
-      } else {
-        next[property] = jumpSegment(owner, time, from, toValue, fade / 2); // dip
-      }
+      next[property] =
+        landsAt === 0
+          ? null // in place at once
+          : jumpSegment(
+              owner,
+              time,
+              valueAt(property, time),
+              targets[property] as number,
+              landsAt,
+            );
     }
-    if (mode === 'instant') {
-      next.opacity = null;
-    } else if (entering || leaving) {
-      next.opacity = fadeSegment(owner, time, [
-        {at: 0, value: opacityNow},
-        {at: fade, value: opacityTo},
-      ]);
-    } else {
-      next.opacity = fadeSegment(owner, time, [
-        {at: 0, value: opacityNow},
-        {at: fade / 2, value: 0},
-        {at: fade, value: opacityTo},
-      ]);
-    }
+    next.opacity = opacity;
     return next;
   };
 
@@ -971,6 +1034,7 @@ export function createAnimator(
             targets,
             properties,
             mode === 'instant' ? 'instant' : 'crossfade',
+            animateOptions.crossfade,
           ),
         );
       } else {
@@ -1046,6 +1110,7 @@ export function createAnimator(
               targets,
               properties,
               mode === 'instant' ? 'instant' : 'crossfade',
+              playOptions.crossfade,
             )
           : {};
       for (const property of properties) {

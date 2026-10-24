@@ -458,6 +458,50 @@ describe('Reduced Motion (M5): UIKit cross-fades instead of travel', () => {
     expect(b.animator.getVelocity('x', 1010)).toBeGreaterThan(0);
   });
 
+  it('a cross-fade can follow the presentation\u2019s own spring', () => {
+    const {animator} = reduced();
+    // An exit: fades out on the spring, then moves once the fade settles.
+    animator.set({y: 0, opacity: 1});
+    animator.animate(
+      {y: 400, opacity: 0},
+      {spring: springs.sheetDismiss},
+      {crossfade: springs.sheetDismiss},
+    );
+    const curve = solveSpring(toSpring(springs.sheetDismiss), {from: 1, to: 0});
+    const settle = curve.settleTime(0.001) * 1000;
+    for (const t of [0, 50, 120, 250]) {
+      expect(animator.get('opacity', 1000 + t)).toBeCloseTo(
+        curve.value(t / 1000),
+        9,
+      );
+      expect(animator.get('y', 1000 + t)).toBe(0);
+    }
+    expect(animator.get('y', 1000 + settle + 1)).toBe(400);
+  });
+
+  it('a dip on a spring fades out, moves at the bottom, fades back in', () => {
+    const {animator} = reduced();
+    animator.animate(
+      {x: 100},
+      {spring: springs.alertPresent},
+      {crossfade: springs.alertPresent},
+    );
+    const spring = toSpring(springs.alertPresent);
+    const out = solveSpring(spring, {from: 1, to: 0});
+    const half = out.settleTime(0.001) * 1000;
+    expect(animator.get('opacity', 1000 + half / 2)).toBeCloseTo(
+      out.value(half / 2000),
+      9,
+    );
+    expect(animator.get('x', 1000 + half - 1)).toBe(0);
+    expect(animator.get('x', 1000 + half)).toBe(100);
+    const back = solveSpring(spring, {from: 0, to: 1});
+    expect(animator.get('opacity', 1000 + half + 60)).toBeCloseTo(
+      back.value(0.06),
+      9,
+    );
+  });
+
   it('an opacity-only change is not travel and keeps its spring', () => {
     const {animator} = reduced();
     animator.animate({opacity: 0}, {spring: springs.smooth});
