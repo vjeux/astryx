@@ -7,7 +7,9 @@
  *   (duration, bounce), SwiftUI/WWDC (response, damping ratio),
  *   CASpringAnimation (mass, stiffness, damping) and UIKit's legacy
  *   `usingSpringWithDamping:initialSpringVelocity:` parameters, the closed-form
- *   solution of the spring (`solveSpring`), and `settlingDuration`
+ *   solution of the spring (`solveSpring`) and of a spring chasing a target
+ *   that moves at a constant speed (`solveSpringTowardRamp`), and
+ *   `settlingDuration`
  * @position Pure math under the motion animator; no DOM, no React
  *
  * One model, the damped harmonic oscillator m·x″ + c·x′ + k·x = 0, solved in
@@ -407,6 +409,52 @@ export function solveSpring(
     value: t => to + displacement(t),
     velocity: t => speed(t),
     settleTime,
+  };
+}
+
+/** A spring chasing a target that moves at a constant speed. */
+export interface SpringRampCurve {
+  readonly spring: Spring;
+  /** Value at `t` seconds after the start. */
+  value(t: number): number;
+  /** Velocity at `t` seconds after the start, units/s. */
+  velocity(t: number): number;
+  /**
+   * How far behind the moving target the spring settles: c·slope ÷ k
+   * (it then moves at the target's speed).
+   */
+  readonly lag: number;
+}
+
+/**
+ * A spring whose target moves at a constant speed, `target + slope · t`: the
+ * "tracking" springs UIKit drives per frame (a press that keeps deepening, a
+ * lift that follows the finger). Closed form: the spring settles `lag` behind
+ * the moving target, and what is left is a free spring around that point,
+ * solved by `solveSpring`. Chain pieces (a new slope, a fixed target) by
+ * starting each from the previous piece's value and velocity.
+ */
+export function solveSpringTowardRamp(
+  spring: Spring,
+  {
+    from,
+    velocity: initialVelocity = 0,
+    target,
+    slope,
+  }: {from: number; velocity?: number; target: number; slope: number},
+): SpringRampCurve {
+  const lag = (spring.damping * slope) / spring.stiffness;
+  // x(t) = target + slope·t − lag + h(t), with h a free spring around 0.
+  const free = solveSpring(spring, {
+    from: from - target + lag,
+    to: 0,
+    velocity: initialVelocity - slope,
+  });
+  return {
+    spring,
+    lag,
+    value: t => target + slope * t - lag + free.value(t),
+    velocity: t => slope + free.velocity(t),
   };
 }
 

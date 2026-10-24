@@ -30,6 +30,7 @@ package entry point; components import it by path.
 
 ```
 import {createAnimator} from '../motion/animator';
+import {solveSpringTowardRamp, toSpring} from '../motion/spring';
 import {springs} from '../motion/uikit';
 
 const animator = createAnimator(sheet);
@@ -48,6 +49,15 @@ animator.stop(['y']); // freezes at the value on screen
 // A throw on a scroll-like surface, with an edge:
 animator.decay({x: velocityX}, {bounds: {x: {min: -maxScroll, max: 0}}});
 
+// Any closed-form curve, here a press that keeps deepening: the target
+// scale falls at 0.16/s and the platter follows it on a spring.
+const ramp = solveSpringTowardRamp(toSpring(springs.contextMenuLift), {
+  from: 1,
+  target: 1,
+  slope: -0.16,
+});
+animator.play({scale: {duration: 0.266, at: ramp.value, velocity: ramp.velocity}});
+
 await handle.finished; // true if it ran to the end, false if interrupted
 ```
 
@@ -55,6 +65,9 @@ await handle.finished; // true if it ran to the end, false if interrupted
   `opacity`, through the individual CSS properties `translate`, `rotate`,
   `scale` and `opacity`. The element's `transform` stays the component's.
 - `get` / `getVelocity` evaluate the curves; the DOM is never read.
+- `play` bakes any curve given as value and velocity functions of time (a
+  spring chasing a moving target from `solveSpringTowardRamp`, a fitted UIKit
+  curve) exactly like a spring.
 - `animate` always starts from the presentation value with the presentation
   velocity unless a velocity is handed in, so retargeting is continuous
   (`handle.retarget(to)` keeps the call's spring).
