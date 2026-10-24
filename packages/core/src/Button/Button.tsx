@@ -60,6 +60,8 @@ import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
 import {usePressFeedback} from '../hooks/usePressFeedback';
+import {useTouchPresentation} from '../utils/touchPresentation';
+import {attachButtonTouch} from '#touch/Button/ButtonTouch';
 import {useTranslator} from '../i18n';
 import type {ButtonVariantMap} from './index';
 
@@ -581,6 +583,13 @@ export function Button({
   ...props
 }: ButtonProps): ReactNode {
   const pressFeedback = usePressFeedback();
+  // The touch layer runs only behind the touch presentation (spike).
+  const {isTouch} = useTouchPresentation();
+  const touchRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const element = touchRef.current;
+    return isTouch && element != null ? attachButtonTouch(element) : undefined;
+  }, [isTouch]);
   const t = useTranslator();
   const size = useSize(sizeProp, 'md');
   const buttonGroup = useButtonGroup();
@@ -821,6 +830,7 @@ export function Button({
   const mergedButtonRef = useMergedRefs(
     ref,
     tooltip != null ? tooltipHook.ref : undefined,
+    touchRef,
   );
 
   let element: ReactNode;

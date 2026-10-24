@@ -834,5 +834,15 @@
   },
   "dependencies": {
     "intl-messageformat": "^11.2.9"
+  },
+  "imports": {
+    "#touch/*": {
+      "astryx-desktop": {
+        "source": "./src/touch-stubs/*.ts",
+        "default": "./dist/touch-stubs/*.js"
+      },
+      "source": "./src/*.ts",
+      "default": "./dist/*.js"
+    }
   }
 }
