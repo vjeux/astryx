@@ -686,7 +686,7 @@ describe('decay: UIScrollView coasts', () => {
 });
 
 describe('pseudoElement: a dialog\u2019s ::backdrop', () => {
-  it('targets the pseudo-element, writes no inline style and keeps the end state in effect', async () => {
+  it('targets the pseudo-element, writes no inline style and holds the end state', async () => {
     const {animator, element} = setup({pseudoElement: '::backdrop'});
     animator.set({opacity: 0});
     const [held] = live('opacity');
@@ -708,8 +708,14 @@ describe('pseudoElement: a dialog\u2019s ::backdrop', () => {
     expect(fade.keyframes[fade.keyframes.length - 1].opacity).toBe('1');
     expect(element.style.opacity).toBe('');
     await advance(Number(fade.options.duration) + 1000);
-    // Nothing else holds the end state: the animation stays.
-    expect(fade.cancelled).toBe(false);
+    // Past the curve's end, a static animation holds the end value.
+    expect(fade.cancelled).toBe(true);
+    const [rest] = live('opacity');
+    expect(rest.options).toMatchObject({
+      fill: 'both',
+      pseudoElement: '::backdrop',
+    });
+    expect(rest.keyframes.map(k => k.opacity)).toEqual(['1', '1']);
     expect(animator.get('opacity')).toBe(1);
   });
 
@@ -721,10 +727,10 @@ describe('pseudoElement: a dialog\u2019s ::backdrop', () => {
     animator.animate({opacity: 0}, {spring: springs.alertDismiss});
     const [fade] = live('opacity');
     await advance(Number(fade.options.duration) + 1000);
-    expect(fade.cancelled).toBe(false);
-    expect(fade.keyframes[fade.keyframes.length - 1].opacity).toBe('0');
+    const [rest] = live('opacity');
+    expect(rest.keyframes.map(k => k.opacity)).toEqual(['0', '0']);
     animator.animate({opacity: 1}, {spring: springs.alertPresent});
-    expect(fade.cancelled).toBe(true);
+    expect(rest.cancelled).toBe(true);
     expect(live('opacity')).toHaveLength(1);
   });
 });

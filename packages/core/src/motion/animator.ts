@@ -72,8 +72,8 @@
  * motion: they follow a finger's throw.
  *
  * A pseudo-element (`options.pseudoElement`, a dialog's `::backdrop`) has no
- * inline style: its animations fill both ways and stay in effect until the
- * next one replaces them, and `set` holds a value with a static animation.
+ * inline style: its end value is held by a static filling animation (after a
+ * curve ends, and after `set`) until the next animation replaces it.
  *
  * SSR-safe: nothing touches `window` or `document` at module scope, and an
  * animator created without an element only keeps state until one is attached.
@@ -667,18 +667,23 @@ export function createAnimator(
     animation.startTime = time;
     running.set(channel, animation);
     previous?.cancel();
-    if (pseudoElement != null) {
-      return; // stays in effect: nothing else holds the end state
-    }
+    // Once the main thread runs after the curve's end, the animation leaves
+    // the running state: an element's inline style already shows the end
+    // values; a pseudo-element's end value moves to a static holding
+    // animation, created before the long one goes.
     retireTimers.set(
       channel,
       setTimeout(
         () => {
           retireTimers.delete(channel);
-          if (running.get(channel) === animation) {
-            animation.cancel();
-            running.delete(channel);
+          if (running.get(channel) !== animation) {
+            return;
           }
+          running.delete(channel);
+          if (pseudoElement != null) {
+            hold(channel, now());
+          }
+          animation.cancel();
         },
         Math.max(0, end - now()),
       ),
