@@ -38,6 +38,13 @@
  * synthesizes swallowed) and leaves a pinch to the page: a second finger
  * before the claim fails the pan, after it is ignored.
  *
+ * An open row (resting, or settling to rest open: UIKit counts a row open
+ * from the release that opens it) closes on a pointer landing outside it, on
+ * a scroll of anything that holds it, on Escape with focus inside it, and on
+ * a tap on its own content. That tap activates nothing on the row, as in
+ * UIKit: a foundation tap recognizer takes it at the lift, so the browser
+ * never clicks.
+ *
  * Motion is UIKit's, on the compositor. Every move of the finger starts a
  * spring toward the finger's offset from the row's presentation value and
  * velocity, so the row trails a moving finger and catches up when it stops;
@@ -61,7 +68,11 @@
 
 import {useCallback, useEffect, useRef, useState} from 'react';
 import type {KeyboardEvent as ReactKeyboardEvent} from 'react';
-import {PanGestureRecognizer, useGestureRecognizer} from '../gestures';
+import {
+  PanGestureRecognizer,
+  TapGestureRecognizer,
+  useGestureRecognizer,
+} from '../gestures';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {isRtlElement} from '../hooks/isRtlElement';
 import {createAnimator, type Animator} from '../motion/animator';
@@ -262,6 +273,21 @@ export function useSwipeAction({
   /** The layout of the side that moved last: where the row is, and how to move it. */
   const layoutRef = useRef<SwipeLayout | null>(null);
   const dragRef = useRef<Drag | null>(null);
+  /** Where the settle in progress lands. */
+  const landingRef = useRef<'idle' | 'resting' | 'held' | null>(null);
+  /**
+   * The row is open: resting, or settling to rest open. An open row closes
+   * on a tap on its content, a pointer outside it, a scroll or Escape; UIKit
+   * counts a row open from the release that opens it, not from when its
+   * spring comes to rest.
+   */
+  const isOpen = useCallback(
+    () =>
+      stateRef.current.phase === 'resting' ||
+      (stateRef.current.phase === 'settling' &&
+        landingRef.current === 'resting'),
+    [],
+  );
 
   // The row root: the gesture's target and the element that translates. A
   // panel is its child, and a panel's ref is set before this hook's layout
@@ -345,6 +371,7 @@ export function useSwipeAction({
       phase: 'idle' | 'resting' | 'held',
       afterSettle?: () => boolean,
     ) => {
+      landingRef.current = phase;
       setSwipeState({isArmed: false, phase: 'settling', side: layout.side});
       void springTo(layout, travel, SWIPE.settle).then(finished => {
         if (!finished) {
@@ -388,7 +415,7 @@ export function useSwipeAction({
 
   const close = useCallback(() => {
     const layout = layoutRef.current;
-    if (stateRef.current.phase !== 'resting' || layout == null) {
+    if (!isOpen() || layout == null) {
       return;
     }
     const root = rootRef.current;
@@ -396,7 +423,7 @@ export function useSwipeAction({
       focusRowContent(root);
     }
     settle(layout, 0, 'idle');
-  }, [rootRef, settle]);
+  }, [isOpen, rootRef, settle]);
 
   const activateEntry = useCallback(
     (fire: () => boolean) => {
@@ -417,11 +444,13 @@ export function useSwipeAction({
     [outTravel, rootRef, settle],
   );
 
-  // A resting row closes on a pointer landing anywhere outside it, which is
+  // An open row closes on a pointer landing anywhere outside it, which is
   // also how a drag on a neighbour closes it: one row rests open at a time
-  // with no shared state.
+  // with no shared state. It also closes when anything scrolling it moves
+  // (the list, the page), as a UIKit row closes when its table scrolls: a
+  // scroll that starts on the row itself lands no pointer outside it.
   useEffect(() => {
-    if (state.phase !== 'resting') {
+    if (!isOpen()) {
       return undefined;
     }
     const onOutside = (event: PointerEvent) => {
@@ -434,11 +463,27 @@ export function useSwipeAction({
         close();
       }
     };
+    const onScroll = (event: Event) => {
+      const root = rootRef.current;
+      const {target} = event;
+      if (
+        root != null &&
+        (target === document ||
+          (target instanceof Element && target.contains(root)))
+      ) {
+        close();
+      }
+    };
     document.addEventListener('pointerdown', onOutside, true);
+    document.addEventListener('scroll', onScroll, {
+      capture: true,
+      passive: true,
+    });
     return () => {
       document.removeEventListener('pointerdown', onOutside, true);
+      document.removeEventListener('scroll', onScroll, true);
     };
-  }, [close, rootRef, state.phase]);
+  }, [close, isOpen, rootRef, state.phase]);
 
   // ---------------------------------------------------------------------------
   // The pan
@@ -625,14 +670,38 @@ export function useSwipeAction({
     },
   );
 
+  // A tap on an open row's own content closes it and activates nothing,
+  // as UIKit's dismissal does: the tap recognizes at the lift, and taking the
+  // touch cancels the click it would have made. The panel's entries keep
+  // their own taps, and a closed row never offers this recognizer a touch.
+  useGestureRecognizer(
+    rootRef,
+    () =>
+      new TapGestureRecognizer({
+        allowedPointerTypes: ['touch'],
+        name: 'item-swipe-dismiss',
+        shouldReceiveTouch: (_tap, touch) =>
+          isOpen() &&
+          !(
+            touch.target instanceof Element &&
+            touch.target.closest('[data-swipe-panel]') != null
+          ),
+      }),
+    tap => {
+      if (tap.state === 'ended') {
+        close();
+      }
+    },
+  );
+
   const onKeyDown = useCallback(
     (event: ReactKeyboardEvent) => {
-      if (event.key === 'Escape' && stateRef.current.phase === 'resting') {
+      if (event.key === 'Escape' && isOpen()) {
         event.stopPropagation();
         close();
       }
     },
-    [close],
+    [close, isOpen],
   );
 
   return {activateEntry, close, onKeyDown, panelRefs, state};

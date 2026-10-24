@@ -333,7 +333,9 @@ export interface ItemProps extends BaseProps<HTMLElement> {
    * a touch accelerator and never a row's only path to a verb: a verb
    * reachable only by swipe is unreachable by keyboard and by mouse, so every
    * entry must also be reachable through the row's own content (a menu or a
-   * button in `endContent`).
+   * button in `endContent`). An open row closes on a tap on its own content,
+   * which activates nothing, on a touch elsewhere, when the list or page
+   * scrolls, and on Escape.
    *
    * Available on a row whose role permits interactive descendants — a
    * `listitem`, a row with no role — and not served on one whose role forbids
