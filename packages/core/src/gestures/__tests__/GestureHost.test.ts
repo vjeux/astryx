@@ -210,6 +210,71 @@ describe('GestureHost', () => {
     expect(cancelled).toHaveBeenCalledTimes(1);
   });
 
+  it("pairs a finger's pointer with its touch: pointermoves inside the browser's touchmove slop count", () => {
+    const {box} = mount('<div id="box"></div>');
+    const pan = new PanGestureRecognizer({name: 'pan'});
+    const states: string[] = [];
+    pan.addListener(r => states.push(`${r.state}:${r.translation().x}`));
+    detachers.push(host.attach(box, pan));
+    // Chromium's order: pointerdown, then touchstart, at the same spot.
+    pointer('pointerdown', box, {
+      id: 21,
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    const finger = {id: 0, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    // No touchmove yet (inside the slop), but the pointer moved 12 px.
+    pointer('pointermove', box, {
+      id: 21,
+      pointerType: 'touch',
+      x: 16,
+      y: 10,
+      buttons: 1,
+      time: 16,
+    });
+    pointer('pointermove', box, {
+      id: 21,
+      pointerType: 'touch',
+      x: 22,
+      y: 10,
+      buttons: 1,
+      time: 32,
+    });
+    expect(states).toEqual(['began:12']);
+    // The first touchmove (the same input as a pointermove) is cancelled
+    // and not read twice.
+    pointer('pointermove', box, {
+      id: 21,
+      pointerType: 'touch',
+      x: 26,
+      y: 10,
+      buttons: 1,
+      time: 48,
+    });
+    const first = touch(
+      'touchmove',
+      box,
+      [{...finger, x: 26}],
+      [{...finger, x: 26}],
+      48,
+    );
+    expect(first.defaultPrevented).toBe(true);
+    expect(states).toEqual(['began:12', 'changed:16']);
+    // pointercancel names the finger exactly, whatever its coordinates say.
+    pointer('pointercancel', box, {
+      id: 21,
+      pointerType: 'touch',
+      x: 0,
+      y: 0,
+      time: 60,
+    });
+    expect(host.arena.getTouch(1)?.takenByBrowser).toBe(true);
+  });
+
   it('reads a touchmove that can no longer be cancelled as the browser taking it', () => {
     const {box} = mount('<div id="box"></div>');
     const tap = new TapGestureRecognizer({name: 'tap'});

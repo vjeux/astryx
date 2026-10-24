@@ -11,16 +11,22 @@
  *
  * INPUT CHANNELS
  *
- * - Fingers come from Touch Events: they are the only cancelable channel
- *   (a pointer event's preventDefault cannot stop a scroll), they keep
- *   arriving after the browser takes a pan (which a scroll handoff needs),
- *   and every event lists all the fingers at once.
+ * - Fingers begin and end with Touch Events: they are the only cancelable
+ *   channel (a pointer event's preventDefault cannot stop a scroll or a
+ *   click), they keep arriving after the browser takes a pan (which a scroll
+ *   handoff needs), and every event lists all the fingers at once. A
+ *   finger's movement comes from BOTH its `touchmove`s and its
+ *   `pointermove`s (paired at touchstart by target and position), the echo
+ *   of one in the other dropped: Chromium sends no `touchmove` until a
+ *   finger has travelled about 16 px, while a tap fails and a pan begins at
+ *   10.
  * - Mice and pens come from Pointer Events, with coalesced samples for
  *   velocity. A pen on an iPad also produces `stylus` touches; those are left
  *   to the pointer path.
- * - `pointercancel` on a finger is the browser saying it took the touch for
- *   its own pan or zoom; so is a `touchmove` that can no longer be cancelled
- *   where `touch-action` let the browser pan, and a scroll above the touch.
+ * - `pointercancel` on a finger is the browser saying it took that finger
+ *   for its own pan or zoom; so is a `touchmove` that can no longer be
+ *   cancelled where `touch-action` let the browser pan, and a scroll above
+ *   the touch.
  *
  * WHAT THE BROWSER IS TOLD
  *
@@ -64,6 +70,7 @@ import type {
   GestureTouch,
   PointerKind,
   TouchConsumer,
+  TouchInput,
   TouchSample,
 } from './types';
 
@@ -106,6 +113,21 @@ const ACTIVE_CAPTURE = {capture: true, passive: false} as const;
 
 type StylusTouch = Touch & {touchType?: string};
 
+interface PlacedContact {
+  readonly x: number;
+  readonly y: number;
+  readonly target: unknown;
+}
+
+/** A touchstart and a pointerdown describe one finger: same target, same spot. */
+function isSamePlace(a: PlacedContact, b: PlacedContact): boolean {
+  return (
+    a.target === b.target &&
+    Math.abs(a.x - b.x) <= 1 &&
+    Math.abs(a.y - b.y) <= 1
+  );
+}
+
 function isPointerKind(type: string): type is PointerKind {
   return type === 'touch' || type === 'mouse' || type === 'pen';
 }
@@ -118,6 +140,20 @@ export class GestureHost {
   private readonly touchIds = new Map<number, number>();
   /** pointerId → arena id, for live mouse and pen contacts. */
   private readonly pointerIds = new Map<number, number>();
+  /**
+   * A finger's pointerId → its arena id, once its pointerdown and its
+   * touchstart are paired. Chromium sends no `touchmove` until a finger has
+   * travelled its slop (about 16 px), but sends every `pointermove`, so the
+   * finger's movement comes from both channels; and its `pointercancel` is
+   * the browser's claim of exactly that finger.
+   */
+  private readonly fingerPointers = new Map<number, number>();
+  /** Finger pointerdowns still waiting for their touchstart. */
+  private readonly pendingPointers = new Map<number, PlacedContact>();
+  /** Fingers still waiting for their pointerdown, by arena id. */
+  private readonly unpairedTouches = new Map<number, PlacedContact>();
+  /** The last position fed per contact, so one channel's echo is dropped. */
+  private readonly lastFed = new Map<number, TouchSample>();
   private readonly hovered = new Map<number, Set<HoverGestureRecognizer>>();
   private nextId = 1;
   private isInstalled = false;
@@ -385,6 +421,12 @@ export class GestureHost {
       }
       const id = this.nextId++;
       this.touchIds.set(touch.identifier, id);
+      this.lastFed.set(id, {
+        x: touch.clientX,
+        y: touch.clientY,
+        time: event.timeStamp,
+      });
+      this.pairTouch(id, {x: touch.clientX, y: touch.clientY, target});
       inputs.push({
         id,
         x: touch.clientX,
@@ -399,6 +441,60 @@ export class GestureHost {
     }
     this.arena.began(inputs);
   };
+
+  private pairTouch(id: number, place: PlacedContact): void {
+    for (const [pointerId, pending] of this.pendingPointers) {
+      if (isSamePlace(pending, place)) {
+        this.pendingPointers.delete(pointerId);
+        this.fingerPointers.set(pointerId, id);
+        return;
+      }
+    }
+    this.unpairedTouches.set(id, place);
+  }
+
+  private pairPointer(pointerId: number, place: PlacedContact): void {
+    for (const [id, unpaired] of this.unpairedTouches) {
+      if (isSamePlace(unpaired, place)) {
+        this.unpairedTouches.delete(id);
+        this.fingerPointers.set(pointerId, id);
+        return;
+      }
+    }
+    this.pendingPointers.set(pointerId, place);
+  }
+
+  /** Feed moves, dropping the echo of a move the other channel delivered. */
+  private feedMoves(inputs: ReadonlyArray<TouchInput>): void {
+    const fresh = inputs.filter(input => {
+      const last = this.lastFed.get(input.id);
+      if (
+        last != null &&
+        (input.time < last.time ||
+          (input.time === last.time &&
+            input.x === last.x &&
+            input.y === last.y))
+      ) {
+        return false;
+      }
+      this.lastFed.set(input.id, {x: input.x, y: input.y, time: input.time});
+      return true;
+    });
+    if (fresh.length > 0) {
+      this.arena.moved(fresh);
+    }
+  }
+
+  /** Forget a contact's pairing and echo state. */
+  private forgetContact(id: number): void {
+    this.lastFed.delete(id);
+    this.unpairedTouches.delete(id);
+    for (const [pointerId, paired] of this.fingerPointers) {
+      if (paired === id) {
+        this.fingerPointers.delete(pointerId);
+      }
+    }
+  }
 
   private readonly onTouchMove = (event: TouchEvent): void => {
     const ids: number[] = [];
@@ -435,7 +531,7 @@ export class GestureHost {
         this.arena.browserTookOver(taken, event.timeStamp);
       }
     }
-    this.arena.moved(inputs);
+    this.feedMoves(inputs);
   };
 
   /** The per-element listener: cancel only while a recognizer owns a touch. */
@@ -467,6 +563,7 @@ export class GestureHost {
         continue;
       }
       this.touchIds.delete(touch.identifier);
+      this.forgetContact(id);
       inputs.push({
         id,
         x: touch.clientX,
@@ -492,6 +589,7 @@ export class GestureHost {
       const id = this.touchIds.get(touch.identifier);
       if (id != null) {
         this.touchIds.delete(touch.identifier);
+        this.forgetContact(id);
         ids.push(id);
       }
     }
@@ -510,6 +608,11 @@ export class GestureHost {
     }
     this.exitHover(event.pointerId);
     if (event.pointerType === 'touch' && this.usesTouchEvents) {
+      this.pairPointer(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+        target: event.target,
+      });
       return;
     }
     if (event.pointerType === 'mouse' && event.button !== 0) {
@@ -538,6 +641,18 @@ export class GestureHost {
 
   private readonly onPointerMove = (event: PointerEvent): void => {
     if (event.pointerType === 'touch' && this.usesTouchEvents) {
+      const id = this.fingerPointers.get(event.pointerId);
+      if (id != null) {
+        this.feedMoves([
+          {
+            id,
+            x: event.clientX,
+            y: event.clientY,
+            time: event.timeStamp,
+            history: coalescedHistory(event),
+          },
+        ]);
+      }
       return;
     }
     const id = this.pointerIds.get(event.pointerId);
@@ -560,6 +675,9 @@ export class GestureHost {
 
   private readonly onPointerUp = (event: PointerEvent): void => {
     if (event.pointerType === 'touch' && this.usesTouchEvents) {
+      // The lift itself is the touchend's: it alone can cancel the click.
+      this.fingerPointers.delete(event.pointerId);
+      this.pendingPointers.delete(event.pointerId);
       return;
     }
     const id = this.pointerIds.get(event.pointerId);
@@ -577,7 +695,11 @@ export class GestureHost {
 
   private readonly onPointerCancel = (event: PointerEvent): void => {
     if (event.pointerType === 'touch' && this.usesTouchEvents) {
-      const id = this.touchForCancelledPointer(event);
+      const id =
+        this.fingerPointers.get(event.pointerId) ??
+        this.touchForCancelledPointer(event);
+      this.fingerPointers.delete(event.pointerId);
+      this.pendingPointers.delete(event.pointerId);
       if (id != null) {
         this.arena.browserTookOver([id], event.timeStamp);
       }
@@ -773,6 +895,10 @@ export class GestureHost {
     const ids = [...this.touchIds.values(), ...this.pointerIds.values()];
     this.touchIds.clear();
     this.pointerIds.clear();
+    this.fingerPointers.clear();
+    this.pendingPointers.clear();
+    this.unpairedTouches.clear();
+    this.lastFed.clear();
     if (ids.length > 0) {
       this.arena.cancelled(ids, time);
     }
