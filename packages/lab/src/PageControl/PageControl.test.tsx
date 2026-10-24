@@ -5,8 +5,8 @@
  * @input vitest (jsdom), Testing Library, PageControl
  * @output Proves the control's semantics (one named slider reading "Page N
  *   of M"), its keyboard (arrows mirrored in RTL, Home, End), its measured
- *   geometry and alphas, the width cap, hidesForSinglePage, and a tap's step
- *   to either side of the current indicator
+ *   geometry and alphas, the width cap and the window it renders, and
+ *   hidesForSinglePage
  * @position Testing; the real-touch proofs are
  *   __tests__/PageControl.interaction.browser.spec.ts
  */
@@ -90,8 +90,8 @@ describe('PageControl', () => {
     expect(slider.style.height).toBe('25.67px');
     expect(slider.style.width).toBe('108.35px');
     const indicators = Array.from(
-      slider.firstElementChild?.children ?? [],
-    ) as HTMLElement[];
+      slider.querySelectorAll<HTMLElement>('[data-page]'),
+    );
     expect(indicators).toHaveLength(5);
     expect(indicators[0].style.width).toBe('9.67px');
     expect(indicators.map(i => i.style.opacity)).toEqual([
@@ -103,14 +103,19 @@ describe('PageControl', () => {
     ]);
   });
 
-  it('never grows wider than 161.3 px; past that the row shifts to keep the current page in view', () => {
+  it('never grows wider than 161.3 px; with more than ten pages it renders the window around the current page', () => {
     renderControl({count: 50, value: 25});
     const slider = screen.getByRole('slider');
     expect(slider.style.width).toBe('161.3px');
-    const strip = slider.firstElementChild as HTMLElement;
-    expect(
-      Number.parseFloat(strip.style.getPropertyValue('--_page-control-offset')),
-    ).toBeGreaterThan(0);
+    // From page 0, page 25 sits in the window's last full slot: the window
+    // starts at page 18 (pages 20–25 full); three slots on each side render
+    // for the slide.
+    const pages = Array.from(
+      slider.querySelectorAll<HTMLElement>('[data-page]'),
+      i => Number(i.dataset.page),
+    );
+    expect(pages[0]).toBe(15);
+    expect(pages[pages.length - 1]).toBe(30);
   });
 
   it('with hidesForSinglePage, renders nothing for one page', () => {
