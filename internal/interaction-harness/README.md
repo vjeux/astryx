@@ -74,7 +74,12 @@ inside it, the last frame it presents.
 
 **Busy main thread.** Mark the element, start the screencast, start the
 animation, wait until it runs (`waitForAnimation`: an animation cannot start
-while the thread is held), block the main thread 500–1000 ms, stop. The
+while the thread is held), block the main thread 500–1000 ms, stop. Always
+start the gesture or animation first and block mid-flight, never before:
+in headless Chromium a touch that starts while the main thread is busy does
+not scroll or start a gesture even with only passive listeners (the input
+waits for the main thread). Tracking a finger under a busy main thread is
+therefore proven on the iOS simulator, not here. The
 screencast is captured off the main thread, so a compositor animation shows a
 new position every frame of the block, and a main-thread animation shows none
 (nothing changed, so no frame is sent at all: `busyWindowProof` counts the
