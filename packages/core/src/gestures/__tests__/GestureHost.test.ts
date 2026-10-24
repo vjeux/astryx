@@ -18,9 +18,8 @@ import {GestureHost} from '../GestureHost';
 import {HoverGestureRecognizer} from '../HoverGestureRecognizer';
 import {LongPressGestureRecognizer} from '../LongPressGestureRecognizer';
 import {PanGestureRecognizer} from '../PanGestureRecognizer';
-import {PressTracker} from '../PressTracker';
 import {TapGestureRecognizer} from '../TapGestureRecognizer';
-import {ManualClock} from './harness';
+import {ManualClock, RecordingConsumer} from './harness';
 
 interface Contact {
   id: number;
@@ -191,11 +190,9 @@ describe('GestureHost', () => {
   it('reads pointercancel on a finger as the browser taking it', () => {
     const {box} = mount('<div id="box"></div>');
     const pan = new PanGestureRecognizer({name: 'pan'});
-    const press = new PressTracker({getBounds: () => null});
-    const cancelled = vi.fn();
+    const view = new RecordingConsumer();
     const events: string[] = [];
-    press.touchCancelled = cancelled;
-    detachers.push(host.attach(box, pan), host.attachConsumer(box, press));
+    detachers.push(host.attach(box, pan), host.attachConsumer(box, view));
     pan.addTransitionListener((_r, _from, to) => events.push(to));
     const finger = {id: 3, x: 10, y: 10};
     touch('touchstart', box, [finger], [finger], 0);
@@ -207,7 +204,11 @@ describe('GestureHost', () => {
       time: 20,
     });
     expect(events).toEqual(['failed', 'possible']);
-    expect(cancelled).toHaveBeenCalledTimes(1);
+    // The view's touch is cancelled, with no release.
+    expect(view.events.map(event => event.split(':')[0])).toEqual([
+      'began',
+      'cancelled',
+    ]);
   });
 
   it("pairs a finger's pointer with its touch: pointermoves inside the browser's touchmove slop count", () => {
