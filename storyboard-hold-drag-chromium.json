@@ -1,0 +1,137 @@
+{
+  "name": "switch-hold-drag",
+  "browser": "chromium",
+  "viewport": {
+    "width": 402,
+    "height": 714
+  },
+  "clip": {
+    "x": 4,
+    "y": 6,
+    "width": 64,
+    "height": 44
+  },
+  "frames": [
+    {
+      "label": "before",
+      "t": 0,
+      "data": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "on": 0,
+        "fill": 1,
+        "offset": 1.7031124999999996
+      }
+    },
+    {
+      "label": "touchStart t=0 @29,28",
+      "t": 0,
+      "data": {
+        "scaleX": 1.27475,
+        "scaleY": 1.2891,
+        "on": 0,
+        "fill": 0.515888,
+        "offset": 1.703113453674316
+      }
+    },
+    {
+      "label": "touchMove t=350 @33,28",
+      "t": 350,
+      "data": {
+        "scaleX": 1.63695,
+        "scaleY": 1.67021,
+        "on": 0,
+        "fill": 0,
+        "offset": 1.7031144073486324
+      }
+    },
+    {
+      "label": "touchMove t=400 @36,28",
+      "t": 400,
+      "data": {
+        "scaleX": 1.56191,
+        "scaleY": 1.59126,
+        "on": 0,
+        "fill": 0.00987607,
+        "offset": 2.369112866210937
+      }
+    },
+    {
+      "label": "touchMove t=450 @39,28",
+      "t": 450,
+      "data": {
+        "scaleX": 1.56578,
+        "scaleY": 1.59533,
+        "on": 0,
+        "fill": 0.00314196,
+        "offset": 3.9651125839233394
+      }
+    },
+    {
+      "label": "touchMove t=500 @42,28",
+      "t": 500,
+      "data": {
+        "scaleX": 1.56837,
+        "scaleY": 1.59805,
+        "on": 0,
+        "fill": 0,
+        "offset": 6.220112698364257
+      }
+    },
+    {
+      "label": "touchMove t=550 @45,28",
+      "t": 550,
+      "data": {
+        "scaleX": 1.56742,
+        "scaleY": 1.59706,
+        "on": 0,
+        "fill": 0,
+        "offset": 8.864113705444336
+      }
+    },
+    {
+      "label": "touchMove t=600 @48,28",
+      "t": 600,
+      "data": {
+        "scaleX": 1.56757,
+        "scaleY": 1.59721,
+        "on": 0,
+        "fill": 0,
+        "offset": 13.573668377685546
+      }
+    },
+    {
+      "label": "touchMove t=650 @51,28",
+      "t": 650,
+      "data": {
+        "scaleX": 1.56757,
+        "scaleY": 1.59721,
+        "on": 0.227566,
+        "fill": 0,
+        "offset": 16.523447888183593
+      }
+    },
+    {
+      "label": "touchMove t=700 @54,28",
+      "t": 700,
+      "data": {
+        "scaleX": 1.56757,
+        "scaleY": 1.59721,
+        "on": 0.54417,
+        "fill": 0,
+        "offset": 18.118092434692382
+      }
+    },
+    {
+      "label": "touchEnd t=800 @54,28",
+      "t": 800,
+      "data": {
+        "scaleX": 1.23217,
+        "scaleY": 1.24429,
+        "on": 0.731319,
+        "fill": 0.590888,
+        "offset": 15.583725827026367
+      }
+    }
+  ]
+}
