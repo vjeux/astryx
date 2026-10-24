@@ -1,0 +1,206 @@
+[
+ {
+  "label": "v3a",
+  "delay": 30,
+  "lag": 330,
+  "verdict": "lands at its end",
+  "first": [
+   125,
+   125,
+   125,
+   125,
+   125,
+   125,
+   125,
+   125
+  ],
+  "block": [
+   11379,
+   11679
+  ],
+  "code": 0
+ },
+ {
+  "label": "v3a",
+  "delay": 40,
+  "lag": 336,
+  "verdict": "lands at its end",
+  "first": [
+   125,
+   125,
+   125,
+   125,
+   125,
+   125,
+   125,
+   125
+  ],
+  "block": [
+   9096,
+   9396
+  ],
+  "code": 0
+ },
+ {
+  "label": "v3a",
+  "delay": 50,
+  "lag": 30,
+  "verdict": "animates",
+  "first": [
+   199,
+   185,
+   172,
+   161,
+   153,
+   146,
+   141,
+   136
+  ],
+  "block": [
+   9130,
+   9430
+  ],
+  "code": 0
+ },
+ {
+  "label": "v3a",
+  "delay": 120,
+  "lag": 29,
+  "verdict": "animates",
+  "first": [
+   203,
+   189,
+   175,
+   165,
+   155,
+   148,
+   142,
+   137
+  ],
+  "block": [
+   8622,
+   8922
+  ],
+  "code": 0
+ },
+ {
+  "label": "v3a",
+  "delay": 0,
+  "lag": 38,
+  "verdict": "animates",
+  "first": [
+   213,
+   197,
+   185,
+   172,
+   160,
+   153,
+   146,
+   140
+  ],
+  "block": null,
+  "code": 0
+ },
+ {
+  "label": "v3b",
+  "delay": 30,
+  "lag": 18,
+  "verdict": "animates",
+  "first": [
+   225,
+   210,
+   195,
+   181,
+   169,
+   159,
+   153,
+   146
+  ],
+  "block": [
+   10804,
+   11104
+  ],
+  "code": 0
+ },
+ {
+  "label": "v3b",
+  "delay": 40,
+  "lag": 11,
+  "verdict": "animates",
+  "first": [
+   218,
+   204,
+   189,
+   175,
+   164,
+   154,
+   148,
+   142
+  ],
+  "block": [
+   9218,
+   9518
+  ],
+  "code": 0
+ },
+ {
+  "label": "v3b",
+  "delay": 50,
+  "lag": 11,
+  "verdict": "animates",
+  "first": [
+   227,
+   213,
+   184,
+   171,
+   171,
+   160,
+   153,
+   145
+  ],
+  "block": [
+   9198,
+   9498
+  ],
+  "code": 0
+ },
+ {
+  "label": "v3b",
+  "delay": 120,
+  "lag": 10,
+  "verdict": "animates",
+  "first": [
+   226,
+   215,
+   200,
+   185,
+   173,
+   162,
+   153,
+   146
+  ],
+  "block": [
+   9199,
+   9499
+  ],
+  "code": 0
+ },
+ {
+  "label": "v3b",
+  "delay": 0,
+  "lag": 22,
+  "verdict": "animates",
+  "first": [
+   224,
+   213,
+   198,
+   184,
+   172,
+   160,
+   152,
+   146
+  ],
+  "block": null,
+  "code": 0
+ }
+]
