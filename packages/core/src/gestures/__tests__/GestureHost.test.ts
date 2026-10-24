@@ -429,6 +429,96 @@ describe('GestureHost', () => {
     expect(states).toEqual(['began', 'cancelled']);
   });
 
+  it('finishes a gesture whose target left the document mid-gesture', () => {
+    const {box, child} = mount('<div id="box"><span id="child">x</span></div>');
+    const pan = new PanGestureRecognizer({name: 'pan'});
+    const states: string[] = [];
+    pan.addListener(r => states.push(r.state));
+    detachers.push(host.attach(box, pan));
+    const finger = {id: 1, x: 10, y: 10};
+    touch('touchstart', child, [finger], [finger], 0);
+    touch('touchmove', child, [{...finger, x: 40}], [{...finger, x: 40}], 16);
+    // A re-render replaces the span: its events no longer reach the document.
+    child.remove();
+    const move = touch(
+      'touchmove',
+      child,
+      [{...finger, x: 60}],
+      [{...finger, x: 60}],
+      32,
+    );
+    expect(move.defaultPrevented).toBe(true);
+    touch('touchend', child, [{...finger, x: 60}], [], 48);
+    // The move and the lift after the removal still reached the pan.
+    expect(states).toEqual(['began', 'changed', 'ended']);
+    expect(host.arena.touches).toEqual([]);
+  });
+
+  it('cancels a finger the events say is no longer down', () => {
+    const {box} = mount('<div id="box"></div>');
+    const pan = new PanGestureRecognizer({name: 'pan'});
+    const states: string[] = [];
+    pan.addListener(r => states.push(r.state));
+    detachers.push(host.attach(box, pan));
+    const first = {id: 1, x: 10, y: 10};
+    touch('touchstart', box, [first], [first], 0);
+    touch('touchmove', box, [{...first, x: 40}], [{...first, x: 40}], 16);
+    // Its touchend went to a node outside the document; the next event for
+    // another finger no longer lists it.
+    const other = {id: 2, x: 300, y: 300};
+    touch('touchmove', document.body, [other], [other], 32);
+    expect(states).toEqual(['began', 'cancelled']);
+  });
+
+  it('treats a reused finger number as a new touch', () => {
+    const {box} = mount('<div id="box"></div>');
+    const tap = new TapGestureRecognizer({name: 'tap'});
+    const states: string[] = [];
+    tap.addListener(r => states.push(r.state));
+    detachers.push(host.attach(box, tap));
+    const finger = {id: 4, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    // No touchend reached us; the same identifier lands again.
+    touch('touchstart', box, [finger], [finger], 500);
+    touch('touchend', box, [finger], [], 560);
+    expect(states).toEqual(['ended']);
+  });
+
+  it('cancels every finger on a touchcancel that names none', () => {
+    const {box} = mount('<div id="box"></div>');
+    const pan = new PanGestureRecognizer({name: 'pan'});
+    const states: string[] = [];
+    pan.addListener(r => states.push(r.state));
+    detachers.push(host.attach(box, pan));
+    const finger = {id: 1, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    touch('touchmove', box, [{...finger, x: 40}], [{...finger, x: 40}], 16);
+    box.dispatchEvent(new Event('touchcancel', {bubbles: true}));
+    expect(states).toEqual(['began', 'cancelled']);
+  });
+
+  it('reads epoch-stamped events on the arena clock', () => {
+    const {box} = mount('<div id="box"></div>');
+    const pan = new PanGestureRecognizer({name: 'pan'});
+    let released = {x: 0, y: 0};
+    pan.addListener(r => {
+      if (r.state === 'ended') {
+        released = r.velocity();
+      }
+    });
+    detachers.push(host.attach(box, pan));
+    const epoch = performance.timeOrigin + 5000;
+    const finger = {id: 1, x: 0, y: 10};
+    touch('touchstart', box, [finger], [finger], epoch);
+    for (let t = 8; t <= 96; t += 8) {
+      const at = {...finger, x: t};
+      touch('touchmove', box, [at], [at], epoch + t);
+    }
+    touch('touchend', box, [{...finger, x: 96}], [], epoch + 100);
+    expect(released.x).toBeCloseTo(1000, 0);
+    expect(host.arena.now()).toBeLessThan(1e9);
+  });
+
   it('ignores touches that land outside every attached element', () => {
     const {box, elsewhere} = mount(
       '<div id="box"></div><div id="elsewhere"></div>',

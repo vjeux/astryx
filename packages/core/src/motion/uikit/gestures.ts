@@ -229,6 +229,18 @@ export const UIKIT_GESTURES = {
     slop: {value: 10, unit: 'px', source: SAFARI_SCROLL_CLAIM},
     /** A touch this soon after a finger-driven scroll moved is a brake, not a press. */
     scrollBrake: {value: 150, unit: 'ms', source: PRESS_MEASUREMENT},
+    /**
+     * How long after a finger was down a scroll can still be that finger's
+     * momentum (the brake only counts scrolls a finger drove).
+     */
+    momentumMemory: {
+      value: 3000,
+      unit: 'ms',
+      guess:
+        'The press model bound (utils/pressFeedback.ts): iOS momentum runs for a second or two after the lift.',
+      measure:
+        'Safari page, hardest HID flick: time from the lift to the last scroll event.',
+    },
   },
   scroll: {
     /**

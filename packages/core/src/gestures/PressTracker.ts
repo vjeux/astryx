@@ -71,6 +71,12 @@ export interface PressTrackerOptions {
   vetoesAncestorRecognizer?: (recognizer: GestureRecognizer) => boolean;
   /** @default () => true */
   isEnabled?: () => boolean;
+  /**
+   * Whether this touch is braking a scroll the finger set moving (see
+   * GestureHost.isScrollBraking): a native list highlights nothing for one,
+   * and the control does not track it at all.
+   */
+  isBraking?: (touch: GestureTouch) => boolean;
 }
 
 const PRESS = UIKIT_GESTURES.press;
@@ -106,7 +112,11 @@ export class PressTracker implements TouchConsumer {
   }
 
   touchBegan(touch: GestureTouch): void {
-    if (this.touchId != null || this.options.isEnabled?.() === false) {
+    if (
+      this.touchId != null ||
+      this.options.isEnabled?.() === false ||
+      this.options.isBraking?.(touch) === true
+    ) {
       return;
     }
     this.clearFlash();

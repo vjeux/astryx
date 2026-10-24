@@ -268,6 +268,79 @@ describe('PanGestureRecognizer', () => {
     expect(down.state).toBe('failed');
   });
 
+  it('waits between the lines of an axisRatio above 1, and fails past the diagonal', () => {
+    const begin = createHarness();
+    const pan = new PanGestureRecognizer({
+      name: 'pan',
+      direction: 'vertical',
+      axisRatio: 2,
+    });
+    begin
+      .finger(1)
+      .down(0, 0, 0, {recognizers: [pan]})
+      .move(8, 12, 16);
+    expect(pan.state).toBe('possible'); // 12 is not more than 2 x 8
+    begin.finger(1).move(8, 17, 32);
+    expect(pan.state).toBe('began'); // 17 > 16
+
+    const diagonal = createHarness();
+    const side = new PanGestureRecognizer({
+      name: 'side',
+      direction: 'vertical',
+      axisRatio: 2,
+    });
+    diagonal
+      .finger(1)
+      .down(0, 0, 0, {recognizers: [side]})
+      .move(10, 9, 16);
+    expect(side.state).toBe('failed'); // more across than along
+  });
+
+  it('claims drags up to atan(1 / axisRatio) off its axis below 1', () => {
+    const steep = createHarness();
+    const pan = new PanGestureRecognizer({
+      name: 'pan',
+      direction: 'horizontal',
+      axisRatio: 0.5,
+    });
+    // 60 degrees off horizontal: 10 across 17 along y; 10 > 0.5 x 17.
+    steep
+      .finger(1)
+      .down(0, 0, 0, {recognizers: [pan]})
+      .move(10, 17, 16);
+    expect(pan.state).toBe('began');
+
+    const steeper = createHarness();
+    const other = new PanGestureRecognizer({
+      name: 'other',
+      direction: 'horizontal',
+      axisRatio: 0.5,
+    });
+    // 68 degrees: 8 < 0.5 x 20.
+    steeper
+      .finger(1)
+      .down(0, 0, 0, {recognizers: [other]})
+      .move(8, 20, 16);
+    expect(other.state).toBe('failed');
+  });
+
+  it('decides the sign of a one-way pan once its axis is decided', () => {
+    const h = createHarness();
+    const down = new PanGestureRecognizer({
+      name: 'down',
+      direction: 'down',
+      axisRatio: 1.2,
+    });
+    // 9 along, 8 across: not 1.2 times more, not less either: wait.
+    h.finger(1)
+      .down(0, 100, 0, {recognizers: [down]})
+      .move(8, 109, 16);
+    expect(down.state).toBe('possible');
+    // The axis is now clearly vertical, and the movement is up.
+    h.finger(1).move(8, 70, 32);
+    expect(down.state).toBe('failed');
+  });
+
   it('locks to the dominant axis when asked', () => {
     const h = createHarness();
     const pan = new PanGestureRecognizer({name: 'pan', lockAxis: true});
