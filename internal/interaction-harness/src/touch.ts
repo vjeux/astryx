@@ -172,7 +172,7 @@ interface WebKitPageProxySession {
 
 /**
  * Playwright's server-side WebKit page session, reached through the in-process
- * connection. Exported for the frame helpers (WebKit's screencast).
+ * connection. Exported for helpers that use WebKit's own inspector protocol.
  */
 export function webkitPageSession(page: Page): WebKitPageProxySession {
   const connection = (

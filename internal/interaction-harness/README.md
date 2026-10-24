@@ -50,6 +50,7 @@ committed: a pull request links or attaches it.
 | `curves.ts`     | `holdAnimations`, `seekAnimations`, `sampleCurve` (presented transform / opacity at any t), `waitForAnimation`, `waitForRest`, `releaseAnimations`.                                                                           |
 | `math.ts`       | Oracles independent of the code under test: `cubicBezier`, `timingFunction`, `springStep` (SwiftUI response / dampingFraction, initial velocity), `projectDecay`, `rubberBand`, `parseTransform`, `compareCurve`, `timeline`. |
 | `storyboard.ts` | `animationStoryboard` (seek to t = 0, 16.7, 33.3 … ms), `touchStoryboard` (a frame per scripted event), `castStoryboard` (real screencast frames): PNG contact sheet + JSON trace.                                            |
+| `output.ts`     | `evidenceDir`, `writeEvidence`: where evidence goes and how it is attached to the report.                                                                                                                                     |
 | `story.ts`      | `phone`, `withStorybook`, `openStory`, `frames`, and the timer gate (`installTimerGate`, `freezeTimers`, `thawTimers`).                                                                                                       |
 
 ## The proofs
@@ -114,8 +115,8 @@ photographing.
 | Rendering trace, long tasks                            | yes          | no (Playwright exposes neither)                                                     |
 
 What WebKit cannot show here — native scroll hand-off, flings, finger
-tracking under a busy main thread, and anything iOS-only — is proven on the
-iOS simulator, in Mobile Safari, with 60 fps recordings.
+tracking under a busy main thread, and anything iOS-only — needs Mobile Safari
+itself, on a device or the iOS simulator.
 
 The WebKit input command is reached through Playwright's in-process server
 object, so it needs a locally launched browser (the default), not `connect()`.
