@@ -59,7 +59,9 @@
  */
 
 import {
+  cloneElement,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -80,6 +82,7 @@ import {
 import {
   PanGestureRecognizer,
   ScreenEdgePanGestureRecognizer,
+  readTouchPresentation,
   useGestureRecognizer,
 } from '@astryxdesign/core/gestures/experimental';
 import {useTranslator} from '@astryxdesign/core/i18n';
@@ -98,6 +101,13 @@ import {
   progressFromTravel,
   shouldFinishPop,
 } from './navigationTransition';
+import {
+  SEARCH_ACTIVATION_S,
+  searchBarItemOpacity,
+  searchCurve,
+  searchLargeTitleOpacity,
+  searchLargeTitleReturnOpacity,
+} from './navigationSearch';
 
 const {navigation, springs, UIKIT_GESTURES} = uikit;
 
@@ -134,8 +144,32 @@ export interface NavigationScreenProps {
    * @default 'inline'
    */
   titleDisplayMode?: 'large' | 'inline';
+  /**
+   * A search field in the screen's bar area (UISearchController in a
+   * navigation item): under the large title, scrolling with the content.
+   * While `isActive`, the stack hands the bar to the field: the back button,
+   * the titles and the bar items fade on the field's activation clock, and
+   * the content rides up with the field into the bar.
+   */
+  search?: NavigationSearch;
   /** The screen's content; it scrolls on its own. */
   children?: ReactNode;
+}
+
+export interface NavigationSearch {
+  /**
+   * The field: a SearchField. The stack passes it `lift`, the distance it
+   * rises into the bar, unless the element sets its own.
+   */
+  field: ReactNode;
+  /** Whether search is active: the field's controlled `isActive`. */
+  isActive: boolean;
+  /**
+   * Whether the field scrolls away with the content; false keeps it pinned
+   * under the bar.
+   * @default true
+   */
+  hidesWhenScrolling?: boolean;
 }
 
 export interface NavigationStackProps<T> {
@@ -200,17 +234,26 @@ const BAR_HEIGHT = 44;
 const styles = stylex.create({
   stack: {
     position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
     width: '100%',
     height: '100%',
     overflow: 'hidden',
     backgroundColor: colorVars['--color-background-body'],
   },
+  // The bar overlays the screens, which scroll under it (as UIKit's content
+  // extends under its bar), so a search field can rise into the bar's row.
   bar: {
-    position: 'relative',
-    flexShrink: 0,
+    position: 'absolute',
+    top: 0,
+    insetInline: 0,
     height: BAR_HEIGHT,
+    zIndex: 1,
+  },
+  barSearching: {
+    pointerEvents: 'none',
+  },
+  barBackground: {
+    position: 'absolute',
+    inset: 0,
     backgroundColor: colorVars['--color-background-surface'],
     borderBottomWidth: 1,
     borderBottomStyle: 'solid',
@@ -288,21 +331,37 @@ const styles = stylex.create({
     },
   },
   cards: {
-    position: 'relative',
-    flexGrow: 1,
-    minHeight: 0,
+    position: 'absolute',
+    inset: 0,
   },
   card: {
     position: 'absolute',
     inset: 0,
+    overflow: 'hidden',
     backgroundColor: colorVars['--color-background-body'],
+  },
+  scroller: {
+    position: 'absolute',
+    inset: 0,
+    boxSizing: 'border-box',
+    paddingTop: BAR_HEIGHT,
+    scrollPaddingTop: BAR_HEIGHT,
     overflowY: 'auto',
     overscrollBehavior: 'contain',
     outline: 'none',
-    // The card scrolls vertically; a sideways drag is the back swipe's. A
+    // The screen scrolls vertically; a sideways drag is the back swipe's. A
     // horizontal scroller inside the content is its own scroll container
     // and keeps its native sideways scrolling.
     touchAction: 'pan-y pinch-zoom',
+  },
+  search: {
+    paddingBottom: spacingVars['--spacing-2'],
+  },
+  searchPinned: {
+    position: 'sticky',
+    top: BAR_HEIGHT,
+    zIndex: 1,
+    backgroundColor: colorVars['--color-background-body'],
   },
   cardHidden: {
     contentVisibility: 'hidden',
@@ -344,6 +403,12 @@ interface ScreenLayers {
   largeTitleElement: HTMLElement | null;
   /** The bar title's text, hidden while the large title shows. */
   titleText: Animator;
+  /** The large title, which rides up and fades as search activates. */
+  largeTitle: Animator;
+  /** The content under the search field, which rides up with it. */
+  content: Animator;
+  /** The search field's wrapper, for its lift. */
+  searchElement: HTMLElement | null;
 }
 
 type Registry = Map<string, Partial<ScreenLayers>>;
@@ -362,6 +427,7 @@ function CardLayer({
   isCovered,
   isHidden,
   onLargeTitleCollapse,
+  lift,
 }: {
   model: ScreenModel;
   registry: Registry;
@@ -369,35 +435,56 @@ function CardLayer({
   isCovered: boolean;
   isHidden: boolean;
   onLargeTitleCollapse: (key: string, isCollapsed: boolean) => void;
+  /** How far the screen's search field rises into the bar, px. */
+  lift: number;
 }) {
-  const isLarge = model.element.props.titleDisplayMode === 'large';
+  const props = model.element.props;
+  const isLarge = props.titleDisplayMode === 'large';
+  const search = props.search;
+  const isSearching = search?.isActive === true;
   const largeTitleRef = useRef<HTMLHeadingElement | null>(null);
   // The large title has collapsed once it has scrolled entirely under the
   // bar: the bar's own title takes over. An observer, not a scroll handler:
   // it reports the crossing only.
   useEffect(() => {
     const title = largeTitleRef.current;
-    const card = title?.parentElement ?? null;
+    const scroller = title?.parentElement ?? null;
     if (
       !isLarge ||
       title == null ||
-      card == null ||
+      scroller == null ||
       typeof IntersectionObserver === 'undefined'
     ) {
       return undefined;
     }
     const observer = new IntersectionObserver(
       ([entry]) => onLargeTitleCollapse(model.key, !entry.isIntersecting),
-      {root: card, threshold: 0},
+      // The screen scrolls under the bar: what is left below it.
+      {
+        root: scroller,
+        rootMargin: `-${BAR_HEIGHT}px 0px 0px 0px`,
+        threshold: 0,
+      },
     );
     observer.observe(title);
     return () => observer.disconnect();
   }, [isLarge, model.key, onLargeTitleCollapse]);
+  const largeTitle = useAnimator();
+  const content = useAnimator();
   const largeTitleCallback = useCallback(
     (element: HTMLHeadingElement | null) => {
+      largeTitle.ref(element);
       largeTitleRef.current = element;
       const entry = registry.get(model.key) ?? {};
       entry.largeTitleElement = element;
+      registry.set(model.key, entry);
+    },
+    [largeTitle, registry, model.key],
+  );
+  const searchRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      const entry = registry.get(model.key) ?? {};
+      entry.searchElement = element;
       registry.set(model.key, entry);
     },
     [registry, model.key],
@@ -408,8 +495,25 @@ function CardLayer({
     const entry = registry.get(model.key) ?? {};
     entry.card = card.animator;
     entry.dim = dim.animator;
+    entry.largeTitle = largeTitle.animator;
+    entry.content = content.animator;
     registry.set(model.key, entry);
-  }, [registry, model.key, card.animator, dim.animator]);
+  }, [
+    registry,
+    model.key,
+    card.animator,
+    dim.animator,
+    largeTitle.animator,
+    content.animator,
+  ]);
+  // The field rises by the stack's measured lift, unless it sets its own.
+  const field =
+    search == null
+      ? null
+      : isValidElement<{lift?: number}>(search.field) &&
+          search.field.props.lift === undefined
+        ? cloneElement(search.field, {lift})
+        : search.field;
   // Stable: a new callback each render would detach and reattach the
   // animator, restarting a running transition.
   const cardRef = useCallback(
@@ -428,15 +532,29 @@ function CardLayer({
       data-navigation-top={isTop || undefined}
       inert={isCovered || undefined}
       {...stylex.props(styles.card, isHidden && styles.cardHidden)}>
-      {isLarge ? (
-        <h1
-          ref={largeTitleCallback}
-          tabIndex={-1}
-          {...stylex.props(styles.largeTitle)}>
-          {model.element.props.title}
-        </h1>
-      ) : null}
-      {model.element.props.children}
+      <div {...stylex.props(styles.scroller)}>
+        {isLarge ? (
+          <h1
+            ref={largeTitleCallback}
+            tabIndex={-1}
+            aria-hidden={isSearching || undefined}
+            {...stylex.props(styles.largeTitle)}>
+            {props.title}
+          </h1>
+        ) : null}
+        {search != null ? (
+          <div
+            ref={searchRef}
+            data-navigation-search
+            {...stylex.props(
+              styles.search,
+              search.hidesWhenScrolling === false && styles.searchPinned,
+            )}>
+            {field}
+          </div>
+        ) : null}
+        <div ref={content.ref}>{props.children}</div>
+      </div>
       <div
         ref={dim.ref}
         aria-hidden
@@ -464,27 +582,44 @@ function BarLayer({
   isCovered: boolean;
   isLargeTitleShown: boolean;
 }) {
+  // While the screen's search is active its bar items are the search
+  // motion's (the stack's), and out of reach.
+  const isSearchActive = model.element.props.search?.isActive === true;
   const titleText = useAnimator();
   // The bar's title is hidden while the screen's large title shows, and
   // fades in when the large title has scrolled under the bar.
   const wasShownRef = useRef<boolean | null>(null);
+  const wasSearchingRef = useRef(false);
   useLayoutEffect(() => {
     const entry = registry.get(model.key) ?? {};
     entry.titleText = titleText.animator;
     registry.set(model.key, entry);
+    if (isSearchActive) {
+      wasSearchingRef.current = true;
+      wasShownRef.current = isLargeTitleShown;
+      return;
+    }
     const target = {
       opacity: isLargeTitleShown ? 0 : 1,
       y: isLargeTitleShown ? navigation.inlineTitleRise : 0,
     };
-    if (wasShownRef.current == null) {
+    if (wasShownRef.current == null || wasSearchingRef.current) {
+      // First layout, or a cancelled search: the title is back at once.
       titleText.animator.set(target);
     } else if (wasShownRef.current !== isLargeTitleShown) {
       titleText.animator.animate(target, {
         spring: springs.navigationBarElements,
       });
     }
+    wasSearchingRef.current = false;
     wasShownRef.current = isLargeTitleShown;
-  }, [registry, model.key, titleText.animator, isLargeTitleShown]);
+  }, [
+    registry,
+    model.key,
+    titleText.animator,
+    isLargeTitleShown,
+    isSearchActive,
+  ]);
   const title = useAnimator();
   const back = useAnimator();
   const trailing = useAnimator();
@@ -510,7 +645,10 @@ function BarLayer({
       data-navigation-bar={model.key}
       inert={isCovered || undefined}
       {...stylex.props(styles.barLayer, isCovered && styles.barLayerCovered)}>
-      <div ref={back.ref} {...stylex.props(styles.barLeading)}>
+      <div
+        ref={back.ref}
+        inert={isSearchActive || undefined}
+        {...stylex.props(styles.barLeading)}>
         {backLabel != null ? (
           <button
             type="button"
@@ -527,13 +665,16 @@ function BarLayer({
       <h2
         ref={titleRef}
         tabIndex={-1}
-        aria-hidden={isLargeTitleShown || undefined}
+        aria-hidden={isLargeTitleShown || isSearchActive || undefined}
         {...stylex.props(styles.barTitle)}>
         <span ref={titleText.ref} {...stylex.props(styles.barTitleText)}>
           {props.title}
         </span>
       </h2>
-      <div ref={trailing.ref} {...stylex.props(styles.barTrailing)}>
+      <div
+        ref={trailing.ref}
+        inert={isSearchActive || undefined}
+        {...stylex.props(styles.barTrailing)}>
         {props.trailing}
       </div>
     </div>
@@ -584,6 +725,8 @@ function startsInEdgeBand(x: number, direction: 'ltr' | 'rtl'): boolean {
     : x <= band;
 }
 
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+
 function writingDirection(element: Element | null): 'ltr' | 'rtl' {
   if (element == null || typeof window === 'undefined') {
     return 'ltr';
@@ -609,6 +752,12 @@ export function NavigationStack<T>({
   const containerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const [registry] = useState<Registry>(() => new Map());
+  // Screens whose search is active, or settling back from a cancel: their
+  // bar items belong to the search motion.
+  const searchingRef = useRef(new Set<string>());
+  // While a screen's search moves its large title, the large title's
+  // crossings are kept aside and applied once the motion is over.
+  const heldCollapsesRef = useRef(new Map<string, boolean | null>());
   // Screens whose large title has scrolled under the bar.
   const [collapsedTitles, setCollapsedTitles] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -617,6 +766,11 @@ export function NavigationStack<T>({
   collapsedRef.current = collapsedTitles;
   const onLargeTitleCollapse = useCallback(
     (key: string, isCollapsed: boolean) => {
+      const held = heldCollapsesRef.current;
+      if (held.has(key)) {
+        held.set(key, isCollapsed);
+        return;
+      }
       setCollapsedTitles(current => {
         if (current.has(key) === isCollapsed) {
           return current;
@@ -857,14 +1011,19 @@ export function NavigationStack<T>({
   const fadeItems = useCallback(
     (kind: 'push' | 'pop', top: string, under: string | null) => {
       const at = performance.now();
-      const incoming = layersOf(kind === 'push' ? top : under);
+      const incomingKey = kind === 'push' ? top : under;
+      const incoming = layersOf(incomingKey);
       const outgoing = layersOf(kind === 'push' ? under : top);
+      // A screen returning with its search still active keeps its bar items
+      // out of the way.
+      const shown =
+        incomingKey != null && searchingRef.current.has(incomingKey) ? 0 : 1;
       if (kind === 'push') {
         incoming?.back?.set({opacity: 0});
         incoming?.trailing?.set({opacity: 0});
       }
       incoming?.back?.animate(
-        {opacity: 1},
+        {opacity: shown},
         {spring: springs.navigationBackButton},
         {at},
       );
@@ -874,7 +1033,7 @@ export function NavigationStack<T>({
         {at},
       );
       incoming?.trailing?.animate(
-        {opacity: 1},
+        {opacity: shown},
         {spring: springs.navigationBarElements},
         {at},
       );
@@ -895,11 +1054,12 @@ export function NavigationStack<T>({
       const direction = writingDirection(containerRef.current);
       const values = layersAt(0, width, direction);
       if (role === 'top') {
+        const shown = searchingRef.current.has(key) ? 0 : 1;
         layers?.card?.set({x: 0, opacity: 1});
         layers?.dim?.set({opacity: 0});
         layers?.title?.set({x: 0, opacity: 1});
-        layers?.back?.set({opacity: 1});
-        layers?.trailing?.set({opacity: 1});
+        layers?.back?.set({opacity: shown});
+        layers?.trailing?.set({opacity: shown});
       } else {
         // A covered screen's title is removed once it has slid away.
         layers?.card?.set({x: values.underX, opacity: 1});
@@ -1268,6 +1428,251 @@ export function NavigationStack<T>({
   // Render
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // Search (UISearchController in the top screen's navigation item)
+  // ---------------------------------------------------------------------------
+
+  const barBackground = useAnimator();
+  // How far each screen's search field rises into the bar's row, px, as
+  // measured when it activates. The field reads it when `isActive` flips.
+  const [lifts, setLifts] = useState<ReadonlyMap<string, number>>(
+    () => new Map(),
+  );
+  const liftsRef = useRef(lifts);
+  liftsRef.current = lifts;
+  // Screens whose lift was measured for the activation under way.
+  const freshLiftsRef = useRef(new Set<string>());
+  // The lift each active search moved its screen by, and the bar title's
+  // opacity before it: what a cancel returns to.
+  const searchRestRef = useRef(
+    new Map<string, {lift: number; titleOpacity: number}>(),
+  );
+
+  const measureLift = useCallback(
+    (key: string): number | null => {
+      const field = layersOf(key)?.searchElement;
+      const container = containerRef.current;
+      if (field == null || container == null) {
+        return null;
+      }
+      // From the field's place to the bar's row, at the stack's top.
+      return Math.max(
+        0,
+        Math.round(
+          field.getBoundingClientRect().top -
+            container.getBoundingClientRect().top,
+        ),
+      );
+    },
+    [layersOf],
+  );
+
+  const storeLift = useCallback((key: string, lift: number) => {
+    freshLiftsRef.current.add(key);
+    setLifts(current =>
+      current.get(key) === lift ? current : new Map(current).set(key, lift),
+    );
+  }, []);
+
+  // A field takes focus as it activates: measure its lift in that event, so
+  // the commit that activates it hands the field the right distance.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container == null) {
+      return undefined;
+    }
+    const onFocusIn = (event: FocusEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const key = target
+        ?.closest('[data-navigation-search]')
+        ?.closest('[data-navigation-screen]')
+        ?.getAttribute('data-navigation-screen');
+      if (key == null || searchingRef.current.has(key)) {
+        return;
+      }
+      const lift = measureLift(key);
+      if (lift != null) {
+        storeLift(key, lift);
+      }
+    };
+    container.addEventListener('focusin', onFocusIn, true);
+    return () => container.removeEventListener('focusin', onFocusIn, true);
+  }, [measureLift, storeLift]);
+
+  const holdCollapses = useCallback((key: string) => {
+    if (!heldCollapsesRef.current.has(key)) {
+      heldCollapsesRef.current.set(key, null);
+    }
+  }, []);
+  const releaseCollapses = useCallback(
+    (key: string) => {
+      const held = heldCollapsesRef.current.get(key);
+      heldCollapsesRef.current.delete(key);
+      if (held != null) {
+        onLargeTitleCollapse(key, held);
+      }
+    },
+    [onLargeTitleCollapse],
+  );
+
+  /**
+   * Hands the bar to the top screen's search field, or back. The field's own
+   * motion is SearchField's, on the same clock: both start in the commit
+   * that flips `isActive`.
+   */
+  const runSearch = useCallback(
+    (key: string, isActive: boolean, isImmediate: boolean) => {
+      const layers = layersOf(key);
+      if (layers == null) {
+        return;
+      }
+      // Under a mouse the field takes its place at once; so does the bar.
+      const isMoving = !isImmediate && readTouchPresentation().isTouch;
+      const options = {reducedMotion: 'keep' as const};
+      if (isActive) {
+        let lift = freshLiftsRef.current.has(key)
+          ? (liftsRef.current.get(key) ?? null)
+          : null;
+        if (lift == null) {
+          lift = measureLift(key) ?? 0;
+          storeLift(key, lift);
+        }
+        const rest = searchRestRef.current.get(key);
+        const titleOpacity =
+          rest?.titleOpacity ?? layers.titleText?.get('opacity') ?? 1;
+        searchRestRef.current.set(key, {lift, titleOpacity});
+        searchingRef.current.add(key);
+        holdCollapses(key);
+        // From where the parts are (a cancel may be under way).
+        const p0 =
+          lift > 0 ? clamp01(-(layers.content?.get('y') ?? 0) / lift) : 0;
+        const from = {
+          back: layers.back?.get('opacity') ?? 1,
+          trailing: layers.trailing?.get('opacity') ?? 1,
+          title: layers.titleText?.get('opacity') ?? 0,
+          large: layers.largeTitle?.get('opacity') ?? 1,
+          background: barBackground.animator.get('opacity'),
+        };
+        if (!isMoving) {
+          layers.back?.set({opacity: 0});
+          layers.trailing?.set({opacity: 0});
+          layers.titleText?.set({opacity: 0});
+          layers.largeTitle?.set({y: -lift, opacity: 0});
+          layers.content?.set({y: -lift});
+          barBackground.animator.set({opacity: 0});
+          return;
+        }
+        const duration = SEARCH_ACTIVATION_S * (1 - p0);
+        const progress = (r: number) => p0 + (1 - p0) * r;
+        const fade = (start: number) =>
+          searchCurve(duration, r =>
+            Math.min(start, searchBarItemOpacity(progress(r))),
+          );
+        const rise = searchCurve(duration, r => -lift * progress(r));
+        layers.back?.play({opacity: fade(from.back)}, options);
+        layers.trailing?.play({opacity: fade(from.trailing)}, options);
+        layers.titleText?.play({opacity: fade(from.title)}, options);
+        // The bar has no background of its own on iOS 26; this one clears
+        // the row before the field reaches it.
+        barBackground.animator.play({opacity: fade(from.background)}, options);
+        layers.largeTitle?.play(
+          {
+            y: rise,
+            opacity: searchCurve(duration, r =>
+              Math.min(from.large, searchLargeTitleOpacity(progress(r))),
+            ),
+          },
+          options,
+        );
+        layers.content?.play({y: rise}, options);
+        return;
+      }
+      const rest = searchRestRef.current.get(key);
+      const lift = rest?.lift ?? 0;
+      const finish = () => {
+        searchingRef.current.delete(key);
+        freshLiftsRef.current.delete(key);
+        searchRestRef.current.delete(key);
+        releaseCollapses(key);
+      };
+      // The back button, bar items and inline title are back at once.
+      layers.back?.set({opacity: 1});
+      layers.trailing?.set({opacity: 1});
+      layers.titleText?.set({opacity: rest?.titleOpacity ?? 1});
+      const p0 =
+        lift > 0 ? clamp01(-(layers.content?.get('y') ?? 0) / lift) : 0;
+      const duration = SEARCH_ACTIVATION_S * p0;
+      if (!isMoving || duration <= 0) {
+        layers.largeTitle?.set({y: 0, opacity: 1});
+        layers.content?.set({y: 0});
+        barBackground.animator.set({opacity: 1});
+        finish();
+        return;
+      }
+      const large0 = layers.largeTitle?.get('opacity') ?? 0;
+      const background0 = barBackground.animator.get('opacity');
+      const fall = searchCurve(duration, r => -lift * p0 * (1 - r));
+      // The large title returns over the last 35 %; anything still showing
+      // from an interrupted activation fades along the way.
+      const returning = (start: number) =>
+        searchCurve(duration, r =>
+          Math.max(start * (1 - r), searchLargeTitleReturnOpacity(r)),
+        );
+      layers.largeTitle?.play({y: fall, opacity: returning(large0)}, options);
+      layers.content?.play({y: fall}, options);
+      void barBackground.animator
+        .play({opacity: returning(background0)}, options)
+        .finished.then(done => {
+          if (done) {
+            finish();
+          }
+        });
+    },
+    [
+      layersOf,
+      measureLift,
+      storeLift,
+      holdCollapses,
+      releaseCollapses,
+      barBackground,
+    ],
+  );
+
+  // The top screen's search: hand the bar over or back as it flips, and
+  // follow it when the top screen changes.
+  const topModel = view.models.at(-1) ?? null;
+  const topKeyNow = topModel?.key ?? null;
+  const isTopSearching = topModel?.element.props.search?.isActive === true;
+  const searchStateRef = useRef<{key: string | null; isActive: boolean} | null>(
+    null,
+  );
+  useLayoutEffect(() => {
+    const previous = searchStateRef.current;
+    searchStateRef.current = {key: topKeyNow, isActive: isTopSearching};
+    if (topKeyNow == null) {
+      return;
+    }
+    if (previous == null) {
+      // First layout: a search that starts active is in place at once.
+      if (isTopSearching) {
+        runSearch(topKeyNow, true, true);
+      } else {
+        barBackground.animator.set({opacity: 1});
+      }
+      return;
+    }
+    if (previous.key !== topKeyNow) {
+      barBackground.animator.animate(
+        {opacity: searchingRef.current.has(topKeyNow) ? 0 : 1},
+        {spring: springs.navigationBarElements},
+      );
+      return;
+    }
+    if (previous.isActive !== isTopSearching) {
+      runSearch(topKeyNow, isTopSearching, false);
+    }
+  }, [topKeyNow, isTopSearching, runSearch, barBackground]);
+
   const backLabelFor = (index: number) => {
     if (index === 0) {
       return null;
@@ -1288,7 +1693,13 @@ export function NavigationStack<T>({
         aria-label={label}
         data-testid={testId}
         {...stylex.props(styles.stack)}>
-        <div {...stylex.props(styles.bar)}>
+        <div
+          {...stylex.props(styles.bar, isTopSearching && styles.barSearching)}>
+          <div
+            ref={barBackground.ref}
+            aria-hidden
+            {...stylex.props(styles.barBackground)}
+          />
           {rendered.map((model, index) =>
             model.key === topKey || model.key === underKey ? (
               <BarLayer
@@ -1316,6 +1727,7 @@ export function NavigationStack<T>({
               isCovered={model.key !== topKey || view.leaving != null}
               isHidden={model.key !== topKey && model.key !== underKey}
               onLargeTitleCollapse={onLargeTitleCollapse}
+              lift={lifts.get(model.key) ?? 0}
             />
           ))}
         </div>

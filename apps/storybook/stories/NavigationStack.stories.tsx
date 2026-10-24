@@ -5,6 +5,7 @@ import type {Meta, StoryObj} from '@storybook/react';
 import {
   NavigationScreen,
   NavigationStack,
+  SearchField,
   useNavigationStack,
 } from '@astryxdesign/lab';
 import {List, ListItem} from '@astryxdesign/core/List';
@@ -151,4 +152,53 @@ function LargeTitleStack() {
 export const LargeTitle: Story = {
   name: 'Large title',
   render: () => <LargeTitleStack />,
+};
+
+/**
+ * Search in the bar (UISearchController in a navigation item): every screen
+ * has a large title and a SearchField under it. Focusing the field hands
+ * the bar to it; Cancel hands it back.
+ */
+function SearchStack() {
+  const [path, setPath] = useState<string[]>([]);
+  const [active, setActive] = useState<Record<string, boolean>>({});
+  const [queries, setQueries] = useState<Record<string, string>>({});
+  const screenFor = (title: string) => (
+    <NavigationScreen
+      title={title}
+      titleDisplayMode="large"
+      search={{
+        field: (
+          <SearchField
+            label="Search"
+            value={queries[title] ?? ''}
+            onChange={query => setQueries(all => ({...all, [title]: query}))}
+            isActive={active[title] === true}
+            onActiveChange={isActive =>
+              setActive(all => ({...all, [title]: isActive}))
+            }
+          />
+        ),
+        isActive: active[title] === true,
+      }}>
+      <Rows title={title} />
+    </NavigationScreen>
+  );
+  return (
+    <div style={{height: '100vh'}}>
+      <NavigationStack
+        label="Settings"
+        root={screenFor('Settings')}
+        path={path}
+        onPathChange={setPath}
+        getKey={entry => entry}
+        renderScreen={entry => screenFor(entry)}
+        data-testid="navigation-stack"
+      />
+    </div>
+  );
+}
+
+export const Search: Story = {
+  render: () => <SearchStack />,
 };

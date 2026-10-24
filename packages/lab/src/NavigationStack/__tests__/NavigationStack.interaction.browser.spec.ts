@@ -26,6 +26,7 @@ import {
   busyWindowProof,
   castStoryboard,
   countBetween,
+  cubicBezier,
   drag,
   flick,
   holdAnimations,
@@ -67,7 +68,7 @@ interface Stack {
  */
 async function openStack(
   page: Page,
-  story: 'settings' | 'pushed' | 'large-title',
+  story: 'settings' | 'pushed' | 'large-title' | 'search',
   {standalone = false}: {standalone?: boolean} = {},
 ) {
   if (standalone) {
@@ -408,7 +409,8 @@ test('a push keeps advancing every frame while the main thread is blocked', asyn
   const top = card(page, 'screen-General');
   const cast = await startScreencast(page);
   await driver.tap(await rowCenter(page, 'General'));
-  await markElement(top);
+  // Below the bar, which overlays the screens.
+  await markElement(top, {inset: 60});
   const [push] = await waitForAnimation(top, {minProgressMs: 16});
   const block = await blockMainThread(page, 600);
   await page.waitForTimeout(150);
@@ -519,7 +521,9 @@ test('a large title scrolls under the bar, which then shows the title; scrolling
 
   // Scrolled under the bar (the scroll itself is the browser's): the bar's
   // title rises into place as it fades in.
-  await rootCard.evaluate(element => element.scrollTo({top: 300}));
+  await rootCard.evaluate(element =>
+    (element.firstElementChild as HTMLElement).scrollTo({top: 300}),
+  );
   await expect
     .poll(async () => (await read()).opacity, {timeout: 3000})
     .toBe(1);
@@ -527,7 +531,9 @@ test('a large title scrolls under the bar, which then shows the title; scrolling
   expect(hidden.top - (await read()).top).toBeCloseTo(15, 0);
   await expect(barText.locator('..')).not.toHaveAttribute('aria-hidden');
 
-  await rootCard.evaluate(element => element.scrollTo({top: 0}));
+  await rootCard.evaluate(element =>
+    (element.firstElementChild as HTMLElement).scrollTo({top: 0}),
+  );
   await expect
     .poll(async () => (await read()).opacity, {timeout: 3000})
     .toBe(0);
@@ -546,6 +552,257 @@ test('a pushed large title rides in with its screen', async ({page}) => {
   const box = await rootTitle.boundingBox();
   const rootBox = await card(page, 'root').boundingBox();
   expect(box && rootBox && Math.abs(box.x - rootBox.x)).toBeLessThan(2);
+});
+
+/** UIKit's search activation curve, cubic-bezier(0.42, 0, 0.58, 1). */
+const activationEase = cubicBezier(0.42, 0, 0.58, 1);
+const ACTIVATION_MS = 383.3;
+const barItemOpacity = (p: number) => Math.min(1, Math.max(0, 1 - p / 0.35));
+const largeTitleReturn = (q: number) =>
+  Math.min(1, Math.max(0, (q - 0.65) / 0.35));
+
+/**
+ * Lets every held animation finish. One that cannot finish (an endless
+ * holding animation) plays on instead, so the rest still finish.
+ */
+const finishHeld = (page: Page) =>
+  page.evaluate(() => {
+    const scope = window as unknown as {__harnessHeld?: Animation[]};
+    for (const animation of scope.__harnessHeld ?? []) {
+      try {
+        animation.finish();
+      } catch {
+        animation.play();
+      }
+    }
+    scope.__harnessHeld = [];
+  });
+
+/**
+ * WebKit's Linux build stops rendering frames while a SearchField's input
+ * has focus (SearchField alone does it too), so nothing started from rest
+ * can begin. Ending editing resumes the frames (the search stays active), by
+ * which time the motions, timed from the commit, are over. Resolves whether
+ * frames were flowing, i.e. whether the motion can be sampled.
+ */
+const resumeFramesIfStalled = async (page: Page): Promise<boolean> => {
+  const hasFrames = await page.evaluate(
+    () =>
+      new Promise<boolean>(resolve => {
+        const timer = setTimeout(() => resolve(false), 250);
+        requestAnimationFrame(() => {
+          clearTimeout(timer);
+          resolve(true);
+        });
+      }),
+  );
+  if (!hasFrames) {
+    await page.evaluate(() =>
+      (document.activeElement as HTMLElement | null)?.blur(),
+    );
+  }
+  return hasFrames;
+};
+
+/** Whether the page presents for a finger (`pointer: coarse`). */
+const isTouchPresentation = (page: Page) =>
+  page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+
+/** Seeks every held animation to `ms` from its start. */
+const seekHeld = (page: Page, ms: number) =>
+  page.evaluate(t => {
+    const held =
+      (window as unknown as {__harnessHeld?: Animation[]}).__harnessHeld ?? [];
+    for (const animation of held) {
+      const end = Number(
+        animation.effect?.getComputedTiming().endTime ?? Infinity,
+      );
+      animation.currentTime = Math.min(t, end - 0.5);
+    }
+  }, ms);
+
+/** The search motion's parts on screen `key`. */
+const readSearch = (page: Page, key: string) =>
+  page.evaluate(k => {
+    const card = document.querySelector(`[data-navigation-screen="${k}"]`);
+    const scroller = card?.firstElementChild as HTMLElement;
+    const title = scroller.querySelector('h1');
+    const field = scroller.querySelector('[data-navigation-search]');
+    const content = field?.nextElementSibling ?? null;
+    const bar = document.querySelector(`[data-navigation-bar="${k}"]`);
+    const background = bar?.parentElement?.firstElementChild ?? null;
+    const y = (element: Element | null) => {
+      if (element == null) {
+        return NaN;
+      }
+      const value = getComputedStyle(element).translate;
+      return value === 'none' ? 0 : parseFloat(value.split(' ')[1] ?? '0');
+    };
+    const opacity = (element: Element | null | undefined) =>
+      element == null ? NaN : Number(getComputedStyle(element).opacity);
+    return {
+      largeY: y(title),
+      largeOpacity: opacity(title),
+      contentY: y(content),
+      backOpacity: opacity(bar?.firstElementChild),
+      backgroundOpacity: opacity(background),
+    };
+  }, key);
+
+const centerOf = async (locator: Locator) => {
+  const box = await locator.boundingBox();
+  if (box == null) {
+    throw new Error('not on screen');
+  }
+  return {x: box.x + box.width / 2, y: box.y + box.height / 2};
+};
+
+test.describe('search in the bar', () => {
+  // A WebKit page stops presenting frames for about a second when its first
+  // composited animation starts (the engine setting up compositing), long
+  // enough to swallow a 383 ms activation. One throwaway activation on the
+  // same page pays that cost before the proof reopens the story.
+  test.beforeEach(async ({page, browserName}) => {
+    if (browserName !== 'webkit') {
+      return;
+    }
+    await openStory(page, storybook(), 'lab-navigationstack--search');
+    await page.getByRole('searchbox', {name: 'Search'}).first().click();
+    await page.waitForTimeout(1500);
+  });
+
+  test('activating hands the bar to the field: the content rides up with it, the large title fades as (1 − p / 0.35)²', async ({
+    page,
+  }) => {
+    await openStack(page, 'search');
+    const rootCard = card(page, 'root');
+    const field = rootCard.getByRole('searchbox', {name: 'Search'});
+    await expect(field).toBeVisible();
+    const lift = await page.evaluate(() => {
+      const stack = document
+        .querySelector('[data-testid="navigation-stack"]')
+        ?.getBoundingClientRect();
+      const wrapper = document
+        .querySelector(
+          '[data-navigation-screen="root"] [data-navigation-search]',
+        )
+        ?.getBoundingClientRect();
+      return Math.round((wrapper?.top ?? 0) - (stack?.top ?? 0));
+    });
+    expect(lift).toBeGreaterThan(44);
+
+    const isTouch = await isTouchPresentation(page);
+    // The field activates on focus (a click here: the bar's handover, not the
+    // gesture, is under test).
+    await field.click();
+    const canSample = isTouch && (await resumeFramesIfStalled(page));
+    const content = rootCard.locator('[data-navigation-search] + div');
+    if (canSample) {
+      await waitForAnimation(content);
+      await holdAnimations(page);
+      for (const ms of [0, 60, 120, 190, 260, 340]) {
+        await seekHeld(page, ms);
+        const v = await readSearch(page, 'root');
+        const p = activationEase(Math.min(1, ms / ACTIVATION_MS));
+        const at = JSON.stringify({ms, p, ...v});
+        expect(Math.abs(v.contentY + lift * p), at).toBeLessThan(1.5);
+        expect(Math.abs(v.largeY + lift * p), at).toBeLessThan(1.5);
+        expect(
+          Math.abs(v.largeOpacity - barItemOpacity(p) ** 2),
+          at,
+        ).toBeLessThan(0.03);
+        expect(
+          Math.abs(v.backgroundOpacity - barItemOpacity(p)),
+          at,
+        ).toBeLessThan(0.03);
+      }
+      await finishHeld(page);
+    }
+    // With a mouse the field and the bar take their places at once, as
+    // SearchField does; either way they end in the bar's row.
+    await expect
+      .poll(async () => (await readSearch(page, 'root')).contentY)
+      .toBeCloseTo(-lift, 0);
+    const searchRoot = rootCard.locator('[data-search-field-active]');
+    const stackBox = await page.getByTestId('navigation-stack').boundingBox();
+    await expect
+      .poll(async () =>
+        Math.abs(
+          ((await searchRoot.boundingBox())?.y ?? 0) - (stackBox?.y ?? 0),
+        ),
+      )
+      .toBeLessThan(2);
+    // The bar takes none of the field's taps.
+    const hit = await page.evaluate(
+      ({x, y}) =>
+        document
+          .elementFromPoint(x, y)
+          ?.closest('[data-search-field-active]') != null,
+      await centerOf(field),
+    );
+    expect(hit).toBe(true);
+  });
+
+  test('on a pushed screen the back button fades by 1 − p / 0.35, and a cancel brings it back at once', async ({
+    page,
+  }) => {
+    const {driver} = await openStack(page, 'search');
+    await driver.tap(await rowCenter(page, 'General'));
+    const top = card(page, 'screen-General');
+    await waitForAnimation(top);
+    await waitForRest(top);
+    const content = top.locator('[data-navigation-search] + div');
+    const isTouch = await isTouchPresentation(page);
+
+    await top.getByRole('searchbox', {name: 'Search'}).click();
+    const canSample = isTouch && (await resumeFramesIfStalled(page));
+    if (canSample) {
+      await waitForAnimation(content);
+      await holdAnimations(page);
+      for (const ms of [0, 40, 80, 120, 160]) {
+        await seekHeld(page, ms);
+        const v = await readSearch(page, 'screen-General');
+        const p = activationEase(ms / ACTIVATION_MS);
+        expect(
+          Math.abs(v.backOpacity - barItemOpacity(p)),
+          JSON.stringify({ms, p, ...v}),
+        ).toBeLessThan(0.03);
+      }
+      await finishHeld(page);
+    }
+    await expect
+      .poll(async () => (await readSearch(page, 'screen-General')).backOpacity)
+      .toBe(0);
+
+    // Once the activation's parts have settled (their animations retired).
+    await expect
+      .poll(() => content.evaluate(element => element.getAnimations().length))
+      .toBe(0);
+    await top.getByRole('button', {name: 'Cancel'}).click();
+    if (isTouch) {
+      await waitForAnimation(content);
+      await holdAnimations(page);
+      for (const ms of [0, 120, 240, 300, 360]) {
+        await seekHeld(page, ms);
+        const v = await readSearch(page, 'screen-General');
+        const q = activationEase(ms / ACTIVATION_MS);
+        const at = JSON.stringify({ms, q, ...v});
+        expect(v.backOpacity, at).toBe(1);
+        expect(Math.abs(v.largeOpacity - largeTitleReturn(q)), at).toBeLessThan(
+          0.04,
+        );
+      }
+      await finishHeld(page);
+    }
+    await expect
+      .poll(async () => (await readSearch(page, 'screen-General')).contentY)
+      .toBeCloseTo(0, 0);
+    await expect(
+      page.locator(
+        '[data-navigation-bar="screen-General"] [data-navigation-back]',
+      ),
+    ).toBeVisible();
+  });
 });
 
 test('storyboard: a push', {tag: '@storyboard'}, async ({page}, testInfo) => {
