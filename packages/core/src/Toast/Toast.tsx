@@ -262,7 +262,7 @@ export function ToastSurface({
   const dismissFromGesture = useCallback(() => {
     onDismissRef.current('manual');
   }, []);
-  const {rootRef, bindings: gestureBindings} = useToastGesture({
+  const {rootRef} = useToastGesture({
     direction: gestureDirection,
     enabled: !isExiting,
     canPauseTimer: isAutoHide,
@@ -294,7 +294,6 @@ export function ToastSurface({
       onMouseLeave={resumeTimer}
       onFocusCapture={pauseTimer}
       onBlurCapture={resumeTimer}
-      {...gestureBindings}
       {...mergeProps(
         themeProps('toast', {type}),
         stylex.props(
