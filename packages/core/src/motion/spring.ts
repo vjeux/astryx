@@ -46,7 +46,13 @@
  * damped ones land within 0.02 % of the duration UIKit picks (it stops 0.0016
  * later in ω₀·t). Core Animation's `settlingDuration` PROPERTY additionally
  * rounds critically damped and overdamped springs up to the next 0.1 s; that
- * rounding is not modeled. The bound also reproduces Apple's
+ * rounding is not modeled. Nor is Core Animation's overdamped rendering: with
+ * `allowsOverdamping` on (only `UIView.animate(springDuration:bounce:)` with a
+ * negative bounce turns it on) Core Animation swaps the two exponentials'
+ * coefficients and flips the initial velocity's sign, so its "overdamped"
+ * curve overshoots (stiffness 100, damping 40: 104.5 % at 200 ms); every other
+ * UIKit spring has it off and is clamped to critical, as `springFromPhysics`
+ * does. The bound also reproduces Apple's
  * CASpringAnimation documentation example (stiffness 100, damping 5 →
  * "approximately 2.85 seconds"; damping 15 → "just over 1 second") and
  * WebKit's iOS switch durations, the settling durations of its UIKit-matched
@@ -429,29 +435,48 @@ export function settlingDuration(
 
 /**
  * ω₀ · duration that UIKit's legacy spring derivation lands on, by damping
- * ratio, read from UIKit (`UIView.animate(withDuration:usingSpringWithDamping:
- * initialSpringVelocity:)` and `UIViewPropertyAnimator(duration:dampingRatio:)`
- * give identical springs): measured: UIKit lab (injected host app), iOS 26.2
- * sim iPhone 17 Pro, CAAnimation read, Oct 23 2026.
+ * ratio, for a release at rest. Read from UIKit
+ * (`UIView.animate(withDuration: 1, usingSpringWithDamping: ζ,
+ * initialSpringVelocity: 0)`; `UIViewPropertyAnimator(duration:dampingRatio:)`
+ * gives identical springs, and ω₀ scales as 1 ÷ duration): measured: UIKit
+ * lab (injected host app), iOS 26.2 sim iPhone 17 Pro, CAAnimation read,
+ * Oct 23 2026.
  */
 const UIKIT_LEGACY_OMEGA_DURATION: ReadonlyArray<readonly [number, number]> = [
-  [0.5, 12.717],
-  [0.8, 8.994],
-  [1, 9.233],
+  [0.1, 46.102],
+  [0.15, 33.4801],
+  [0.2, 26.5936],
+  [0.25, 22.2149],
+  [0.3, 19.1698],
+  [0.35, 16.9236],
+  [0.4, 15.1966],
+  [0.45, 13.8275],
+  [0.5, 12.7169],
+  [0.55, 11.8001],
+  [0.6, 11.0335],
+  [0.65, 10.3869],
+  [0.7, 9.8396],
+  [0.75, 9.3779],
+  [0.8, 8.9943],
+  [0.85, 8.6897],
+  [0.9, 8.4808],
+  [0.95, 8.4425],
+  [1, 9.2334],
 ];
 
 /**
  * UIKit's legacy `animate(withDuration:delay:usingSpringWithDamping:
  * initialSpringVelocity:…)`: the caller fixes the total duration and the
  * damping ratio, and UIKit derives the spring: mass 1, the given damping
- * ratio, and ω₀ = c(ζ) ÷ duration with c read from UIKit (12.717 at ζ 0.5,
- * 8.994 at ζ 0.8, 9.233 at ζ 1, where the spring settles exactly at the
- * duration). The animation is cut at the duration.
+ * ratio, and ω₀ = c(ζ) ÷ duration with c read from UIKit every 0.05 of ζ from
+ * 0.1 to 1 (at ζ 1 the spring settles exactly at the duration). The animation
+ * is cut at the duration.
  *
- * GUESS between and outside the measured ratios: c is interpolated linearly
- * (held flat past the ends), and the small shift a non-zero initial velocity
- * causes (about 3 % in stiffness at velocity 2) is not modeled. Measurement
- * task M-K1 extends the grid.
+ * GUESS between the measured ratios (linear interpolation, within 0.05 of a
+ * read) and below 0.1 (extrapolated as c ∝ 1 ÷ ζ). A non-zero initial
+ * velocity shifts UIKit's root slightly, and at low ratios makes its solver
+ * jump to a far smaller one (ζ 0.1, velocity 1 → ω₀·D 9.74); neither is
+ * modeled. Measurement task M-K1.
  */
 export function springFromUIKitDampingDuration({
   duration,
@@ -464,17 +489,13 @@ export function springFromUIKitDampingDuration({
   // UIKit's ratio is clamped to (0, 1]: it has no overdamped springs.
   const zeta = Math.min(1, Math.max(1e-3, dampingRatio));
   const table = UIKIT_LEGACY_OMEGA_DURATION;
-  let c = table[0][1];
-  if (zeta >= table[table.length - 1][0]) {
-    c = table[table.length - 1][1];
-  } else {
-    for (let i = 0; i + 1 < table.length; i++) {
-      const [z0, c0] = table[i];
-      const [z1, c1] = table[i + 1];
-      if (zeta >= z0 && zeta <= z1) {
-        c = c0 + ((c1 - c0) * (zeta - z0)) / (z1 - z0);
-        break;
-      }
+  let c = (table[0][1] * table[0][0]) / zeta;
+  for (let i = 0; i + 1 < table.length; i++) {
+    const [z0, c0] = table[i];
+    const [z1, c1] = table[i + 1];
+    if (zeta >= z0 && zeta <= z1) {
+      c = c0 + ((c1 - c0) * (zeta - z0)) / (z1 - z0);
+      break;
     }
   }
   const omega0 = c / duration;

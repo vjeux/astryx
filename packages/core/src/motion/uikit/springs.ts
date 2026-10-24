@@ -97,27 +97,37 @@ export const springs = {
   // ---------------------------------------------------------------------
 
   /**
-   * Push: incoming view slides in from the trailing edge, outgoing parallax.
-   * @source GUESS — provisional recording fit of Settings ▸ General on the
-   *   iOS 26.2 simulator (about 400 ms for 402 pt, overdamped: response
-   *   ≈ 0.12–0.14 s, damping ratio ≈ 1.7–1.8, rms 1.6–2 %; the page
-   *   underneath shifts about −106 pt), pending averaged captures
-   * @measure M-N1
+   * Push (programmatic or a row tap): the incoming card slides in from the
+   * trailing edge, the outgoing card shifts by `navigation.parallax`. The
+   * spring does not start from rest: it starts at
+   * `navigation.pushVelocity` × the travel per second.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, time-free fit of the (value, velocity) pairs UIKit
+   *   writes to the cards' CAPresentationModifiers every frame (rms 5e-4 of
+   *   the travel), Oct 23 2026
    */
-  navigationPush: {response: 0.13, dampingRatio: 1.75},
+  navigationPush: {response: 0.3, dampingRatio: 1},
   /**
-   * Pop (back button).
-   * @source GUESS — assumed symmetric with the push until measured
-   * @measure M-N2
+   * Pop (back button or programmatic): identical to the push.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, CAPresentationModifier fit as for the push, Oct 23 2026
    */
-  navigationPop: {response: 0.13, dampingRatio: 1.75},
+  navigationPop: {response: 0.3, dampingRatio: 1},
   /**
-   * Interactive pop (edge swipe) finishing or cancelling after the finger
-   * lifts; the release velocity is handed to it.
-   * @source GUESS — UIKit's default spring
-   * @measure M-N3
+   * Interactive pop finishing or cancelling after the finger lifts, starting
+   * from the finger's velocity; which one is `navigation.interactivePop*`.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, CAPresentationModifier fit over released swipes,
+   *   Oct 23 2026
    */
-  navigationInteractivePopFinish: UIKIT_DEFAULT_SPRING,
+  navigationInteractivePopFinish: {response: 0.3, dampingRatio: 0.85},
+  /**
+   * Navigation bar elements (Liquid Glass) moving during a push or pop.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, UIView.animate(springDuration: 0.6, bounce: 0,
+   *   .beginFromCurrentState) calls hooked during transitions, Oct 23 2026
+   */
+  navigationBarElements: {duration: 0.6, bounce: 0},
 
   // ---------------------------------------------------------------------
   // Sheets (UISheetPresentationController)

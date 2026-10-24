@@ -4,7 +4,7 @@
  * @file index.ts
  * @input The domain files of the UIKit constants table
  * @output Re-exports `springs`, `scroll`, `timing` and the component domains
- *   (`switchControl`)
+ *   (`navigation`, `switchControl`)
  * @position Entry of the UIKit constants table (motion/uikit). Internal to
  *   core: not exported from the package entry point
  *
@@ -18,6 +18,7 @@
  * /packages/core/src/motion/README.md.
  */
 
+export {navigation} from './navigation';
 export {scroll} from './scroll';
 export {springs} from './springs';
 export {switchControl} from './switch';

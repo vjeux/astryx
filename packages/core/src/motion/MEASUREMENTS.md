@@ -60,14 +60,14 @@ installed); rows marked † also on iOS 18 for the pre-glass delta. iPhone
 
 Done (UIKit lab, iOS 26.2 simulator, Oct 23 2026; values in `uikit/` tagged
 `measured:`): M-S1, M-NB1, M-K2, M-CA1 (underdamped grid matched to the last
-digit; critically damped within 0.02 %), M-K1 at damping ratios 0.5, 0.8 and 1
-(still wanted: ratios 0.1–1 in 0.05 steps at D = 1 s and velocities 0, 1, 2,
-−1, to replace the interpolation). Also wanted under M-CA1: per-frame
-presentation values of an overdamped `CASpringAnimation` with
-`allowsOverdamping` on (mass 1, stiffness 100, damping 40, velocities 0, 5,
-−5) and of `UIView.animate(springDuration: 0.5, bounce: -0.3)`: Core
-Animation's `settlingDuration` there (1.7 / 2.1 / 1.6 s) does not follow the
-overdamped envelope, so the rendered curve has to be compared directly.
+digit; critically damped within 0.02 %), M-K1 (ratios 0.1–1 in 0.05 steps),
+M-N1, M-N2, M-N3. Findings that shape the math: every spring UIKit attaches
+has `allowsOverdamping` off (clamped to critical) except
+`UIView.animate(springDuration:bounce:)`; with it on, Core Animation renders
+"overdamped" springs with the two exponentials' coefficients swapped and the
+initial velocity's sign flipped, a curve that overshoots. Push and pop are
+not Core Animation animations on iOS 26.2: UIKit writes presentation
+modifiers every frame from the main thread.
 
 ## Switch (UISwitch)
 

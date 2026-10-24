@@ -514,10 +514,29 @@ describe('springFromUIKitDampingDuration (legacy damping/duration API)', () => {
     expect(settlingDuration(spring)).toBeCloseTo(0.4, 3);
   });
 
+  it.each([
+    {dampingRatio: 0.1, omega: 46.1019536228216},
+    {dampingRatio: 0.3, omega: 19.1698},
+    {dampingRatio: 0.65, omega: 10.3869},
+    {dampingRatio: 0.95, omega: 8.4425},
+  ])(
+    'reproduces the wide read at D 1, ζ $dampingRatio',
+    ({dampingRatio, omega}) => {
+      const spring = springFromUIKitDampingDuration({
+        duration: 1,
+        dampingRatio,
+      });
+      expect(Math.sqrt(spring.stiffness)).toBeCloseTo(omega, 3);
+    },
+  );
+
   it('interpolates between the measured ratios', () => {
-    const a = springFromUIKitDampingDuration({duration: 1, dampingRatio: 0.5});
-    const b = springFromUIKitDampingDuration({duration: 1, dampingRatio: 0.65});
-    const c = springFromUIKitDampingDuration({duration: 1, dampingRatio: 0.8});
+    const a = springFromUIKitDampingDuration({duration: 1, dampingRatio: 0.6});
+    const b = springFromUIKitDampingDuration({
+      duration: 1,
+      dampingRatio: 0.625,
+    });
+    const c = springFromUIKitDampingDuration({duration: 1, dampingRatio: 0.65});
     expect(Math.sqrt(b.stiffness)).toBeCloseTo(
       (Math.sqrt(a.stiffness) + Math.sqrt(c.stiffness)) / 2,
       9,
