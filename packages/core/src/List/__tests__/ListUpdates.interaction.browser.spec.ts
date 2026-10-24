@@ -9,7 +9,8 @@
  *   after a removal the rows below start where they were and slide up on the
  *   table spring; after an insert the new row fades in and the rows below
  *   slide down; a reorder moves rows to their new places; content below the
- *   list moves with its rows; the rows keep
+ *   list moves with its rows, the button a finger tapped included; the rows
+ *   keep
  *   moving while the main thread is blocked, with no Layout or Paint; a
  *   storyboard of a removal
  * @position Interaction evidence for List/useListUpdateMotion.ts
@@ -28,7 +29,9 @@ import {
   releaseAnimations,
   seekAnimations,
   startScreencast,
+  tap,
   timeline,
+  touchDriver,
   trackMarker,
   traceRendering,
   waitForAnimation,
@@ -182,6 +185,35 @@ test('content below the list moves with its rows and lands with no jump', async 
   // In step with the last row.
   await seekAnimations(page, SETTLE_MS / 4);
   expect(await translateY(button)).toBeCloseTo(await translateY(spam), 1);
+  await releaseAnimations(page, {finish: true});
+  await expect.poll(async () => translateY(button)).toBe(0);
+});
+
+test('the button a finger taps below the list moves with it too', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== 'chromium',
+    "Playwright's WebKit touch taps do not synthesize the click; Chromium's do",
+  );
+  await open(page);
+  const driver = await touchDriver(page);
+  const button = page.getByRole('button', {name: 'Remove the second row'});
+  const box = await button.boundingBox();
+  if (box == null) {
+    throw new Error('no button');
+  }
+  // A real touch: the button runs its own press feedback while the list
+  // changes, which must not leave it behind.
+  await driver.play(
+    tap({x: box.x + box.width / 2, y: box.y + box.height / 2}, {holdMs: 80}),
+  );
+  await expect(row(page, 'Sent')).toHaveCount(0);
+  await holdAnimations(page);
+  await seekAnimations(page, 0);
+  const start = await translateY(button);
+  expect(start).toBeGreaterThan(1);
   await releaseAnimations(page, {finish: true});
   await expect.poll(async () => translateY(button)).toBe(0);
 });
