@@ -12,8 +12,9 @@
  *   centered; a card near the bottom gets its menu above; a card at the left
  *   edge lifts 16 px in with its menu flush; the copy grows on from the
  *   press, and the backdrop fades in, on springs.contextMenuLift frame by
- *   frame; the menu enters from a blur on morphSpring; closing returns the
- *   copy and clears the backdrop; a storyboard of the lift
+ *   frame; the menu's glass grows out of the finger with its content
+ *   following from a blur, then settles as the menu itself; closing returns
+ *   the copy and clears the backdrop; a storyboard of the lift
  * @position Interaction specs of packages/core/src/ContextMenu, beside
  *   ContextMenuLongPress.interaction.browser.spec.ts (the press timeline)
  */
@@ -292,45 +293,74 @@ test('the copy grows on from the press, and the backdrop fades in, on springs.co
   expect(Math.max(...samples.map(s => s.scale))).toBeGreaterThan(1.13);
 });
 
-test('the menu enters from a blur, on morphSpring, and settles sharp', async ({
+test('the menu’s glass grows out of the finger, its content following from a blur, and settles as the menu itself', async ({
   page,
 }) => {
   const {driver, center} = await openLiftStory(page);
-  const playing = driver.play(tap(center, {holdMs: menuDisplayMs + 600}));
+  const playing = driver.play(tap(center, {holdMs: menuDisplayMs + 900}));
   await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeVisible();
   await holdAnimations(page);
   const read = async (t: number) => {
     await seekAnimations(page, t);
     return page.evaluate(() => {
-      const popover = document
-        .querySelector('[role="menu"]')
-        ?.closest('[popover]');
-      if (popover == null) {
+      const list = document.querySelector('[role="menu"]');
+      const glass = document.querySelector('[data-astryx-context-menu-glass]');
+      if (list == null) {
         return null;
       }
-      const style = getComputedStyle(popover);
+      const style = getComputedStyle(list);
       const blur = /blur\(([\d.]+)px\)/u.exec(style.filter);
+      const box = glass?.getBoundingClientRect();
       return {
         opacity: Number(style.opacity),
         blur: blur == null ? 0 : Number(blur[1]),
+        glass:
+          box == null || glass == null
+            ? null
+            : {
+                x: box.x + box.width / 2,
+                y: box.y + box.height / 2,
+                width: box.width,
+                height: box.height,
+                opacity: Number(getComputedStyle(glass).opacity),
+              },
       };
     });
   };
   const start = await read(0);
   const middle = await read(100);
-  const end = await read(600);
   await releaseAnimations(page);
+  // Settled: the glass is gone and the menu wears its own again.
+  await page.waitForTimeout(700);
+  const settled = await page.evaluate(() => {
+    const list = document.querySelector('[role="menu"]');
+    return {
+      glass: document.querySelector('[data-astryx-context-menu-glass]') != null,
+      inline: list?.getAttribute('style') ?? '',
+      opacity: list == null ? null : getComputedStyle(list).opacity,
+    };
+  });
   await playing;
   const curve = solveSpring(toSpring(contextMenu.lift.morphSpring), {
     from: 0,
     to: 1,
   });
-  const detail = JSON.stringify({start, middle, end});
+  const detail = JSON.stringify({center, start, middle, settled});
+  const {morphStart, menuEntranceBlur} = contextMenu.lift;
+  // A blob the morph's start size, at the finger.
+  expect(start?.glass?.x, detail).toBeCloseTo(center.x, 0);
+  expect(start?.glass?.y, detail).toBeCloseTo(center.y, 0);
+  expect(start?.glass?.width, detail).toBeCloseTo(morphStart.width, 0);
+  expect(start?.glass?.height, detail).toBeCloseTo(morphStart.height, 0);
+  // It starts clear, as UIKit's starts as the view under the finger.
+  expect(start?.glass?.opacity, detail).toBeCloseTo(0, 2);
+  expect(middle?.glass?.opacity, detail).toBeCloseTo(curve.value(0.1), 1);
   expect(start?.opacity, detail).toBeCloseTo(0, 2);
-  expect(start?.blur, detail).toBeCloseTo(contextMenu.lift.menuEntranceBlur, 1);
+  expect(start?.blur, detail).toBeCloseTo(menuEntranceBlur, 1);
   expect(middle?.opacity, detail).toBeCloseTo(curve.value(0.1), 1);
-  expect(end?.opacity, detail).toBeCloseTo(1, 2);
-  expect(end?.blur, detail).toBeCloseTo(0, 1);
+  expect(settled.glass, detail).toBe(false);
+  expect(settled.inline, detail).not.toMatch(/background|box-shadow|overflow/u);
+  expect(settled.opacity, detail).toBe('1');
 });
 
 test('closing returns the copy to the card and clears the backdrop', async ({
