@@ -1,0 +1,7 @@
+  ✘  1 [chromium] › packages/core/src/MobileNav/__tests__/MobileNavWidth.a11y.chromium.spec.ts › on a 320 px phone › the drawer leaves a strip of the page, and a tap on it closes the drawer
+  ✓  2 [chromium] › packages/core/src/MobileNav/__tests__/MobileNavWidth.a11y.chromium.spec.ts › on a 402 px phone › the drawer keeps its 320 px width
+    Error: expect(received).toBeCloseTo(expected, precision)
+    Expected: 272
+    Received: 320
+  1 failed
+  1 passed
