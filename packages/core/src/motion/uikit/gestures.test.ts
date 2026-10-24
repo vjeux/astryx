@@ -36,11 +36,11 @@ describe('UIKIT_GESTURES', () => {
     (_, constant) => {
       if (isGuess(constant)) {
         expect(constant.guess.length).toBeGreaterThan(10);
-        expect(constant.measure.length).toBeGreaterThan(10);
+        expect(constant.measure).toMatch(/^M-G\d\d: .{10,}/);
         expect('source' in constant).toBe(false);
       } else {
         expect(constant.source).toMatch(
-          /^(https:\/\/developer\.apple\.com\/|WWDC|measured: )/,
+          /^(apple-docs https:\/\/developer\.apple\.com\/|wwdc \d{4}-\d+ |measured: )/,
         );
       }
     },

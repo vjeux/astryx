@@ -22,13 +22,21 @@ import {
 } from '../../utils/pressGesture';
 import {settlingDuration, toSpring, type SpringDescription} from '../spring';
 import {scroll, springs, timing} from '.';
+import {HAPTIC_VIBRATION_PATTERNS, UIKIT_GESTURES} from './gestures';
 
-// Every domain file of the table: a new one is enforced the moment it lands.
+// Domain files whose entries are typed constants ({value, unit, source} or
+// {value, unit, guess, measure}); the same rules are checked on the values.
+const TYPED_TABLE_FILES = ['gestures.ts'];
+// Every other domain file carries its sources as JSDoc tags: a new one is
+// enforced the moment it lands.
 const TABLE_FILES = fs
   .readdirSync(__dirname)
   .filter(
     file =>
-      file.endsWith('.ts') && file !== 'index.ts' && !file.endsWith('.test.ts'),
+      file.endsWith('.ts') &&
+      file !== 'index.ts' &&
+      !file.endsWith('.test.ts') &&
+      !TYPED_TABLE_FILES.includes(file),
   )
   .sort();
 const SOURCE_KINDS =
@@ -149,6 +157,53 @@ describe('UIKit constants table: every value is sourced (law P2)', () => {
       }
     });
   }
+});
+
+describe('UIKit constants table: typed domains follow the same rules', () => {
+  const constants: [
+    string,
+    {source?: string; guess?: string; measure?: string},
+  ][] = [
+    ...Object.entries(UIKIT_GESTURES).flatMap(([group, values]) =>
+      Object.entries(values).map(
+        ([name, constant]) =>
+          [`gestures.${group}.${name}`, constant] as [
+            string,
+            {source?: string; guess?: string; measure?: string},
+          ],
+      ),
+    ),
+    ...Object.entries(HAPTIC_VIBRATION_PATTERNS).map(
+      ([kind, constant]) =>
+        [`haptics.${kind}`, constant] as [
+          string,
+          {source?: string; guess?: string; measure?: string},
+        ],
+    ),
+  ];
+
+  it('finds the gesture constants', () => {
+    expect(constants.length).toBeGreaterThan(20);
+  });
+
+  it.each(constants)('%s', (name, constant) => {
+    if (constant.source != null) {
+      expect(`@source ${constant.source}`, name).toMatch(SOURCE_KINDS);
+    } else {
+      expect(
+        constant.guess,
+        `${name} has neither a source nor a guess`,
+      ).toBeTruthy();
+      const id = /^(M-[A-Z0-9]+): /.exec(constant.measure ?? '')?.[1];
+      expect(
+        id,
+        `${name}: measure must start with its MEASUREMENTS.md ID`,
+      ).toBeDefined();
+      expect(MEASUREMENTS, `${id} is not in motion/MEASUREMENTS.md`).toMatch(
+        new RegExp(`^\\| ${id} +\\|`, 'm'),
+      );
+    }
+  });
 });
 
 describe('UIKit constants table: values', () => {

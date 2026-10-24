@@ -3,21 +3,32 @@
 /**
  * @file index.ts
  * @input The domain files of the UIKit constants table
- * @output Re-exports `springs`, `scroll`, `timing` and the component domains
+ * @output Re-exports `springs`, `scroll`, `timing`, the gesture thresholds
+ *   (`UIKIT_GESTURES` and the haptic tables) and the component domains
  *   (`navigation`, `switchControl`)
  * @position Entry of the UIKit constants table (motion/uikit). Internal to
  *   core: not exported from the package entry point
  *
  * THE table (law P1): every spring, duration, deceleration rate, rubber-band
- * constant and timing curve a touch presentation uses comes from here, with
- * its source next to it. Components never carry their own numbers. Gesture
- * thresholds live in the sibling `gestures.ts`, owned by the gesture
- * foundation.
+ * constant, timing curve and gesture threshold a touch presentation uses
+ * comes from here, with its source next to it. Components never carry their
+ * own numbers.
  *
  * SYNC: When a domain file is added, re-export it here and list it in
  * /packages/core/src/motion/README.md.
  */
 
+export {
+  HAPTIC_FEEDBACK_KINDS,
+  HAPTIC_VIBRATION_PATTERNS,
+  isGuess,
+  UIKIT_GESTURES,
+  type GestureConstant,
+  type GestureConstantUnit,
+  type GuessedGestureConstant,
+  type HapticFeedbackKind,
+  type SourcedGestureConstant,
+} from './gestures';
 export {navigation} from './navigation';
 export {scroll} from './scroll';
 export {springs} from './springs';

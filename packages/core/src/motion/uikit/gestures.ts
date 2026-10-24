@@ -18,13 +18,21 @@
  * measurement of a real UIKit app on the iOS simulator, named with the app,
  * the iOS version and the method) or a GUESS. A guess says what it rests on
  * and what to measure to replace it; `gestures.test.ts` fails if an entry
- * carries neither. Safari on iOS runs UIKit's own recognizers for
+ * carries neither. The table's shared rules hold here too (uikit.test.ts): a
+ * source starts with its kind (`apple-docs <URL>`, `wwdc <year>-<session>`,
+ * `webkit Source/…`, `measured: …`), and a guess's `measure` starts with
+ * the ID of its row in ../MEASUREMENTS.md. The press clocks are the same
+ * entries as `scroll.delaysContentTouchesMs` and `timing.press`, read from
+ * there. Safari on iOS runs UIKit's own recognizers for
  * tap-to-click, long press, double tap and the start of a page scroll, so
  * many guesses can be settled by measuring Safari itself.
  *
  * SYNC: When modified, update packages/core/src/gestures/README.md (the
  * thresholds section) and packages/core/src/motion/uikit/gestures.test.ts.
  */
+
+import {scroll} from './scroll';
+import {timing} from './timing';
 
 export type GestureConstantUnit =
   'px' | 'ms' | 'px/s' | 'rad' | 'ratio' | 'count';
@@ -90,7 +98,7 @@ export const UIKIT_GESTURES = {
       guess:
         'UITapGestureRecognizer does not document it; matches the long-press tolerance and the press slop the repository measured.',
       measure:
-        'Safari (UIKit tap -> click): on a touch-action:none box, HID touch down, move N px over 100 ms, lift; binary-search the largest N that still fires click.',
+        'M-G01: Safari (UIKit tap -> click): on a touch-action:none box, HID touch down, move N px over 100 ms, lift; binary-search the largest N that still fires click.',
     },
     /** Longest interval between one tap lifting and the next landing. */
     maximumIntervalBetweenTaps: {
@@ -99,7 +107,7 @@ export const UIKIT_GESTURES = {
       guess:
         'UITapGestureRecognizer does not document its multi-tap interval; 350 ms is the commonly reported UIKit default.',
       measure:
-        'Safari with user-scalable=no (UIKit double-tap -> dblclick): two HID taps T ms apart; binary-search the largest T that fires dblclick.',
+        'M-G02: Safari with user-scalable=no (UIKit double-tap -> dblclick): two HID taps T ms apart; binary-search the largest T that fires dblclick.',
     },
     /** How far a later tap may land from the first one of the sequence. */
     allowableSeparation: {
@@ -108,7 +116,7 @@ export const UIKIT_GESTURES = {
       guess:
         'Undocumented; roughly one fingertip, so a double tap need not land on the same pixel.',
       measure:
-        'Safari with user-scalable=no: two HID taps 150 ms apart, the second D px away; binary-search the largest D that fires dblclick.',
+        'M-G03: Safari with user-scalable=no: two HID taps 150 ms apart, the second D px away; binary-search the largest D that fires dblclick.',
     },
     /** Longest a finger may stay down and still tap. */
     maximumTapDuration: {
@@ -117,7 +125,7 @@ export const UIKIT_GESTURES = {
       guess:
         'Safari fires click after a long hold on a button, which suggests no limit for a single tap.',
       measure:
-        'Safari: HID hold on a <button> for 0.5, 1, 2, 4 s then lift; record which fire click.',
+        'M-G04: Safari: HID hold on a <button> for 0.5, 1, 2, 4 s then lift; record which fire click.',
     },
   },
   longPress: {
@@ -125,13 +133,13 @@ export const UIKIT_GESTURES = {
     minimumPressDuration: {
       value: 500,
       unit: 'ms',
-      source: `${APPLE}/uilongpressgesturerecognizer/minimumpressduration`,
+      source: `apple-docs ${APPLE}/uilongpressgesturerecognizer/minimumpressduration`,
     },
     /** UILongPressGestureRecognizer.allowableMovement default. */
     allowableMovement: {
       value: 10,
       unit: 'px',
-      source: `${APPLE}/uilongpressgesturerecognizer/allowablemovement`,
+      source: `apple-docs ${APPLE}/uilongpressgesturerecognizer/allowablemovement`,
     },
   },
   pan: {
@@ -145,7 +153,7 @@ export const UIKIT_GESTURES = {
       unit: 'px',
       guess: `UIPanGestureRecognizer does not document it. ${SAFARI_SCROLL_CLAIM}; the pan has to decide before that.`,
       measure:
-        'Settings list (UIScrollView pan): slow HID drag at 20 px/s filmed at 60 fps; touch travel at the first frame the content moves.',
+        'M-G05: Settings list (UIScrollView pan): slow HID drag at 20 px/s filmed at 60 fps; touch travel at the first frame the content moves.',
     },
   },
   swipe: {
@@ -156,7 +164,7 @@ export const UIKIT_GESTURES = {
       guess:
         'UISwipeGestureRecognizer does not document it; 50 pt is the commonly reported primary-movement minimum.',
       measure:
-        'Needs a UIKit app that uses UISwipeGestureRecognizer (no built-in candidate known): HID swipes of increasing length at 600 px/s.',
+        'M-G06: Needs a UIKit app that uses UISwipeGestureRecognizer (no built-in candidate known): HID swipes of increasing length at 600 px/s.',
     },
     /** Longest a swipe may take before it fails. */
     maximumDuration: {
@@ -164,7 +172,7 @@ export const UIKIT_GESTURES = {
       unit: 'ms',
       guess: 'Undocumented; a swipe slower than half a second reads as a drag.',
       measure:
-        'Same rig as minimumDistance: 120 px swipes at decreasing speed; longest duration that still recognizes.',
+        'M-G07: Same rig as minimumDistance: 120 px swipes at decreasing speed; longest duration that still recognizes.',
     },
     /** Off-axis travel allowed, as a fraction of the travel along the axis. */
     maximumOffAxisRatio: {
@@ -172,7 +180,7 @@ export const UIKIT_GESTURES = {
       unit: 'ratio',
       guess: 'Undocumented; about 27 degrees off the axis.',
       measure:
-        'Same rig: 120 px swipes at increasing angles; largest angle that still recognizes.',
+        'M-G08: Same rig: 120 px swipes at increasing angles; largest angle that still recognizes.',
     },
   },
   pinch: {
@@ -182,7 +190,7 @@ export const UIKIT_GESTURES = {
       unit: 'px',
       guess: 'UIPinchGestureRecognizer does not document it.',
       measure:
-        'Photos (zoomable image): two HID touches spreading at 20 px/s filmed at 60 fps; span change at the first frame the image scales.',
+        'M-G09: Photos (zoomable image): two HID touches spreading at 20 px/s filmed at 60 fps; span change at the first frame the image scales.',
     },
   },
   rotation: {
@@ -192,7 +200,7 @@ export const UIKIT_GESTURES = {
       unit: 'rad',
       guess: 'UIRotationGestureRecognizer does not document it; 5 degrees.',
       measure:
-        'Maps: two HID touches rotating at 10 deg/s filmed at 60 fps; angle at the first frame the map turns.',
+        'M-G10: Maps: two HID touches rotating at 10 deg/s filmed at 60 fps; angle at the first frame the map turns.',
     },
   },
   screenEdgePan: {
@@ -203,7 +211,7 @@ export const UIKIT_GESTURES = {
       guess:
         'UIScreenEdgePanGestureRecognizer does not document it; the interactive pop gesture is reported to start within about 20 pt.',
       measure:
-        'Settings > General (UINavigationController pop): HID drags inward starting at x = 5, 10 ... 40 pt; largest x that still pops.',
+        'M-G11: Settings > General (UINavigationController pop): HID drags inward starting at x = 5, 10 ... 40 pt; largest x that still pops.',
     },
   },
   control: {
@@ -217,18 +225,30 @@ export const UIKIT_GESTURES = {
       guess:
         'Undocumented; UIButton is widely reported to stay highlighted about 70 pt outside its frame.',
       measure:
-        'Calculator (UIButton): HID press, drag away at 20 px/s filmed at 60 fps; distance from the frame at which the highlight turns off, then back on.',
+        'M-G12: Calculator (UIButton): HID press, drag away at 20 px/s filmed at 60 fps; distance from the frame at which the highlight turns off, then back on.',
     },
   },
   press: {
     /** UIScrollView.delaysContentTouches: a touch in a scroller highlights after this. */
-    contentTouchDelay: {value: 150, unit: 'ms', source: PRESS_MEASUREMENT},
+    contentTouchDelay: {
+      value: scroll.delaysContentTouchesMs,
+      unit: 'ms',
+      source: PRESS_MEASUREMENT,
+    },
     /** A tap shorter than the delay shows the highlight at the lift for this long. */
-    quickTapFlash: {value: 100, unit: 'ms', source: PRESS_MEASUREMENT},
+    quickTapFlash: {
+      value: timing.press.flashMs,
+      unit: 'ms',
+      source: PRESS_MEASUREMENT,
+    },
     /** Travel at which a press is a scroll, not a press. */
     slop: {value: 10, unit: 'px', source: SAFARI_SCROLL_CLAIM},
     /** A touch this soon after a finger-driven scroll moved is a brake, not a press. */
-    scrollBrake: {value: 150, unit: 'ms', source: PRESS_MEASUREMENT},
+    scrollBrake: {
+      value: timing.press.scrollBrakeMs,
+      unit: 'ms',
+      source: PRESS_MEASUREMENT,
+    },
   },
   scroll: {
     /**
@@ -241,7 +261,7 @@ export const UIKIT_GESTURES = {
       guess:
         'The BottomSheet value (useSheetGestures.ts): enough to ignore a fling coming to rest on the last pixel.',
       measure:
-        'A UIKit sheet (Maps place card at the medium detent) over a scrolled list: HID drag down from mid-list; finger travel between the list reaching its top and the sheet moving.',
+        'M-G13: A UIKit sheet (Maps place card at the medium detent) over a scrolled list: HID drag down from mid-list; finger travel between the list reaching its top and the sheet moving.',
     },
   },
   velocity: {
@@ -252,14 +272,14 @@ export const UIKIT_GESTURES = {
       guess:
         "UIKit's estimator is private. Android's VelocityTracker and Flutter's both fit the last 100 ms (least squares, degree 2).",
       measure:
-        'Safari page scroll (UIScrollView): HID flings with known speed profiles; back out the release velocity from the coast distance (0.998/ms decay) and compare with this estimator on the same samples.',
+        'M-G14: Safari page scroll (UIScrollView): HID flings with known speed profiles; back out the release velocity from the coast distance (0.998/ms decay) and compare with this estimator on the same samples.',
     },
     /** At most this many samples are kept. */
     maxSamples: {
       value: 20,
       unit: 'count',
       guess: 'Android VelocityTracker and Flutter VelocityTracker keep 20.',
-      measure: 'Same comparison as horizon.',
+      measure: 'M-G15: Same comparison as horizon (M-G14).',
     },
     /** A finger that has not moved for this long before lifting released nothing in motion. */
     assumeStopped: {
@@ -267,7 +287,7 @@ export const UIKIT_GESTURES = {
       unit: 'ms',
       guess: 'Android VelocityTracker and Flutter VelocityTracker use 40 ms.',
       measure:
-        'Safari page scroll: HID drag, pause P ms, lift; smallest P after which the page does not coast.',
+        'M-G16: Safari page scroll: HID drag, pause P ms, lift; smallest P after which the page does not coast.',
     },
   },
   click: {
@@ -281,7 +301,7 @@ export const UIKIT_GESTURES = {
       unit: 'ms',
       guess: 'A safety bound, not a UIKit number.',
       measure:
-        'Not a parity value: confirm in Safari and Chromium that the click follows touchend within one frame.',
+        'M-G17: Not a parity value: confirm in Safari and Chromium that the click follows touchend within one frame.',
     },
   },
 } as const satisfies Record<string, Record<string, GestureConstant>>;
@@ -336,6 +356,6 @@ function vibration(
     guess:
       'No UIKit equivalent exists for a vibration motor; durations only order the strengths.',
     measure:
-      'On an Android device, compare against the platform HapticFeedbackConstants for the same moments.',
+      'M-G18: On an Android device, compare against the platform HapticFeedbackConstants for the same moments.',
   };
 }

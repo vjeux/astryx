@@ -124,9 +124,12 @@ Allowed source kinds:
 A `GUESS` or `webkit` value also names the measurement that will confirm or
 replace it (`@measure M-…`, listed in MEASUREMENTS.md). An entry may carry
 several sources when different parts come from different places.
-`uikit/uikit.test.ts` enforces all of it: an unsourced value, an unknown kind,
-a guess without a task, or a task missing from MEASUREMENTS.md fails the
-build.
+`uikit/gestures.ts` carries the same information as typed fields that the
+gesture system reads at run time: `{value, unit, source}` with a source of one
+of the kinds above, or `{value, unit, guess, measure}` with a `measure` that
+starts with its MEASUREMENTS.md ID. `uikit/uikit.test.ts` enforces all of it,
+in both forms: an unsourced value, an unknown kind, a guess without a task, or
+a task missing from MEASUREMENTS.md fails the build.
 
 **Browser proofs.** `__tests__/animator.compositor.spec.ts` drives the real
 animator, bundled from source, in Chromium (Pixel 7 emulation) and WebKit
