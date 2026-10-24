@@ -11,7 +11,10 @@
  * `minimumPressDuration` without any of them travelling further than
  * `allowableMovement` (after `numberOfTapsRequired` quick taps, when set).
  * After it begins, movement is unlimited and reports `changed`; lifting a
- * finger ends it. Lifting or travelling before the duration fails it.
+ * finger ends it. Lifting or travelling before the duration fails it. With a
+ * duration of zero it begins on the touch itself, in the same event, as
+ * UIKit's does: the selection tracker of an alert's, a menu's or an action
+ * sheet's actions (highlight under the finger, act on the lift).
  *
  * The begin time is exact: the duration is a deadline on the event clock, so
  * a blocked main thread delays the callback, not the moment it reports.
@@ -92,6 +95,13 @@ export class LongPressGestureRecognizer extends GestureRecognizer {
       this.numberOfTouches === this.numberOfTouchesRequired &&
       this.tapsDone >= this.numberOfTapsRequired
     ) {
+      if (this.minimumPressDuration <= 0) {
+        // UIKit's zero-duration press begins on the touch itself, in the
+        // same event (a selection tracker over a group of actions).
+        this.beganAt = event.time;
+        this.setState('began');
+        return;
+      }
       this.isPressTimerArmed = true;
       this.setTimer(event.time + this.minimumPressDuration, () => {
         this.isPressTimerArmed = false;

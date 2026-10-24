@@ -45,7 +45,11 @@ export class ScreenEdgePanGestureRecognizer extends PanGestureRecognizer {
   activeEdge: 'left' | 'right' | 'top' | 'bottom' | null = null;
 
   constructor(options: ScreenEdgePanGestureRecognizerOptions = {}) {
-    super({maximumNumberOfTouches: 1, ...options});
+    super({
+      maximumNumberOfTouches: 1,
+      hysteresis: UIKIT_GESTURES.screenEdgePan.hysteresis.value,
+      ...options,
+    });
     this.edges = options.edges ?? ['leading'];
     this.edgeRegion =
       options.edgeRegion ?? UIKIT_GESTURES.screenEdgePan.edgeRegion.value;

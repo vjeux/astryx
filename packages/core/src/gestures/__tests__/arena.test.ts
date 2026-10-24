@@ -149,20 +149,22 @@ describe('conflict matrix', () => {
     finger.move(0, 140, 80); // 10 px past: the sheet takes the rest
     expect(sheet.state).toBe('began');
     expect(sheet.isHandoff).toBe(true);
-    expect(sheet.translation()).toEqual({x: 0, y: 10});
-    finger.move(0, 170, 96);
-    expect(sheet.translation()).toEqual({x: 0, y: 40});
-    // The finger comes back past the point: the translation clamps at zero
-    // while the content scrolls again.
-    finger.move(0, 125, 112);
+    // The slop is left out of the translation, as UIKit's hysteresis is.
     expect(sheet.translation()).toEqual({x: 0, y: 0});
+    expect(sheet.travelAtBegan).toEqual({x: 0, y: 10});
+    finger.move(0, 170, 96);
+    expect(sheet.translation()).toEqual({x: 0, y: 30});
+    // The finger comes back past the point: the surface returns to where
+    // the content ran out while the content scrolls again.
+    finger.move(0, 125, 112);
+    expect(sheet.totalTranslation()).toEqual({x: 0, y: 0});
     scrollTop = 5;
     finger.move(0, 120, 128);
-    expect(sheet.translation()).toEqual({x: 0, y: 0});
+    expect(sheet.totalTranslation()).toEqual({x: 0, y: 0});
     scrollTop = 0;
     // 5 px of content were left at y = 120, so they ran out at y = 125.
     finger.move(0, 150, 144);
-    expect(sheet.translation()).toEqual({x: 0, y: 25});
+    expect(sheet.totalTranslation()).toEqual({x: 0, y: 25});
     finger.up(160);
     expect(h.log.at(-2)).toBe('sheet:ended@160');
   });
@@ -201,8 +203,11 @@ describe('conflict matrix', () => {
     h.finger(1).move(80, 120, 16);
     h.finger(2).move(240, 120, 16);
     expect(h.log.slice(0, 2)).toEqual(['pinch:began@16', 'pan:began@16']);
-    expect(pinch.scale).toBeCloseTo(1.6, 5);
-    expect(pan.translation()).toEqual({x: 10, y: 20});
+    // Span 100 -> 160, measured against 100 + 8.
+    expect(pinch.scale).toBeCloseTo(160 / 108, 5);
+    // The pan began at the first finger's move, centroid (-10, 10), which
+    // the hysteresis swallows; the second finger's move brought it to (10, 20).
+    expect(pan.translation()).toEqual({x: 20, y: 10});
   });
 
   it('pinch vs pan without permission: the first to recognize wins', () => {
@@ -226,7 +231,8 @@ describe('conflict matrix', () => {
     inner.requireToFail(edge);
     band.finger(1).down(8, 300, 0, {recognizers: [inner, edge]});
     band.finger(1).drag(60, 2, 60, 6);
-    expect(band.log.slice(0, 2)).toEqual(['edge:began@10', 'inner:failed@10']);
+    // The edge pan's own hysteresis is 15 px: the second 10 px step.
+    expect(band.log.slice(0, 2)).toEqual(['edge:began@20', 'inner:failed@20']);
 
     const middle = createHarness();
     const edge2 = new ScreenEdgePanGestureRecognizer({name: 'edge'});

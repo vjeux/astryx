@@ -26,7 +26,9 @@
  * - a recognizer that takes the touch, or the browser taking it to scroll,
  *   removes the paint with no fade;
  * - a disabled control takes the press and paints nothing, so the row around
- *   it does not light.
+ *   it does not light;
+ * - a value the consumer did not write (a row kept `held` through a
+ *   navigation push) is never overwritten or cleared by a press.
  *
  * Install it once per attribute (installs are counted, and the first one's
  * options hold); do not install it on the same attribute as the older
@@ -120,6 +122,12 @@ function addPressType(
   const pointerTypes = options.pointerTypes ?? ['touch', 'pen'];
   const fades = new WeakMap<Element, ReturnType<typeof setTimeout>>();
 
+  /** Whether the element's value is absent or one this consumer wrote. */
+  const isOurs = (element: Element): boolean => {
+    const value = element.getAttribute(pressed);
+    return value == null || value === 'on' || value === 'fading';
+  };
+
   const paint = (
     element: Element,
     isOn: boolean,
@@ -129,6 +137,10 @@ function addPressType(
     if (fade != null) {
       clearTimeout(fade);
       fades.delete(element);
+    }
+    if (!isOurs(element)) {
+      // Another owner holds the surface's state (a row kept selected).
+      return;
     }
     if (isOn) {
       element.setAttribute(pressed, 'on');
@@ -141,7 +153,9 @@ function addPressType(
         element,
         setTimeout(() => {
           fades.delete(element);
-          element.removeAttribute(pressed);
+          if (element.getAttribute(pressed) === 'fading') {
+            element.removeAttribute(pressed);
+          }
         }, fadeMs),
       );
       return;

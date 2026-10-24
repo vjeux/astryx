@@ -81,13 +81,14 @@ describe('useGestureRecognizer', () => {
       touch('touchmove', surface, {id: 1, x, y: 0}, x * 2);
     }
     touch('touchend', surface, {id: 1, x: 36, y: 0}, 80, true);
+    // The 10 px hysteresis is left out of the translation, as in UIKit.
     expect(seen).toEqual([
-      'began:12',
-      'changed:18',
-      'changed:24',
-      'changed:30',
-      'changed:36',
-      'ended:36',
+      'began:2',
+      'changed:8',
+      'changed:14',
+      'changed:20',
+      'changed:26',
+      'ended:26',
     ]);
     expect(renders).toBe(1);
   });

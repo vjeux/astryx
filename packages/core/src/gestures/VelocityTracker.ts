@@ -8,25 +8,26 @@
  * @position Pure math under packages/core/src/gestures; no DOM
  *
  * What a release hands to a spring or a deceleration: the finger's velocity
- * at the moment it lifted, in px per SECOND (UIKit's unit for
- * `velocity(in:)`).
+ * when it lifted, in px per SECOND (UIKit's unit for `velocity(in:)`).
  *
- * UIKit's own estimator is private. Three strategies are offered:
- *
- * - `lsq2` (default): a least-squares quadratic fit over the last 100 ms
- *   (20 samples at most), differentiated at the newest sample. It is the
- *   default strategy of Android's VelocityTracker and of Flutter's, and the
- *   fit smooths per-sample noise without lagging a real acceleration.
- * - `iosFling`: Flutter's `IOSScrollViewFlingVelocityTracker`, documented as
- *   a close approximation of what an iOS scroll view hands its deceleration:
- *   a weighted average of the last three instantaneous velocities, weighted
- *   0.6 / 0.35 / 0.05 from the oldest to the newest.
+ * - `uikit` (default): UIPanGestureRecognizer's own filter, measured. Each
+ *   event's instantaneous velocity is the position change over the timestamp
+ *   change since the previous event (the touch-down counts as the first),
+ *   and the velocity is 0.2 times the newest one plus 0.8 times the one
+ *   before. Fitted to every value UIKit reported on six HID streams, exactly.
+ *   It reacts a frame late to an acceleration, includes a hold before the
+ *   first move, and never decays: a finger at rest sends no events, so a
+ *   release after a pause reports the last moving value, as UIKit does.
+ * - `lsq2`: a least-squares quadratic fit over the last 100 ms (20 samples at
+ *   most), differentiated at the newest sample (Android's and Flutter's
+ *   default). Smoother; not UIKit.
+ * - `iosFling`: Flutter's `IOSScrollViewFlingVelocityTracker` (weights 0.6 /
+ *   0.35 / 0.05 on the last three instantaneous velocities, oldest first).
  * - `window`: the two-point speed over the last 100 ms that BottomSheet's
  *   gesture used, kept for comparison.
  *
- * All three answer zero when the newest sample is older than the
- * assume-stopped window at the moment asked: a finger that rested before
- * lifting released nothing in motion.
+ * Feed the `uikit` filter one sample per input event (coalesced samples
+ * would change its timing); the others take every sample.
  *
  * SYNC: When modified, update VelocityTracker.test.ts.
  */
@@ -34,16 +35,16 @@
 import {UIKIT_GESTURES} from '../motion/uikit/gestures';
 import type {Point, TouchSample} from './types';
 
-export type VelocityStrategy = 'lsq2' | 'iosFling' | 'window';
+export type VelocityStrategy = 'uikit' | 'lsq2' | 'iosFling' | 'window';
 
 export interface VelocityTrackerOptions {
-  /** @default 'lsq2' */
+  /** @default 'uikit' */
   strategy?: VelocityStrategy;
   /** Samples older than this (ms) relative to the newest are ignored. */
   horizon?: number;
   /** At most this many samples are kept. */
   maxSamples?: number;
-  /** A gap this long (ms) before the moment asked means the finger had stopped. */
+  /** For `lsq2`: a gap this long (ms) between samples separates two motions. */
   assumeStopped?: number;
 }
 
@@ -57,7 +58,7 @@ export class VelocityTracker {
   private samples: TouchSample[] = [];
 
   constructor(options: VelocityTrackerOptions = {}) {
-    this.strategy = options.strategy ?? 'lsq2';
+    this.strategy = options.strategy ?? 'uikit';
     this.horizon = options.horizon ?? UIKIT_GESTURES.velocity.horizon.value;
     this.maxSamples =
       options.maxSamples ?? UIKIT_GESTURES.velocity.maxSamples.value;
@@ -100,26 +101,21 @@ export class VelocityTracker {
     return this.samples[this.samples.length - 1] ?? null;
   }
 
-  /**
-   * The velocity in px/s as of `time` (default: the newest sample). Zero
-   * when the newest sample is older than the assume-stopped window.
-   */
-  velocity(time?: number): Point {
+  /** The velocity in px/s at the newest sample. */
+  velocity(): Point {
     const newest = this.samples[this.samples.length - 1];
     if (newest == null) {
       return ZERO;
     }
-    if (time != null && time - newest.time > this.assumeStopped) {
-      return ZERO;
-    }
-    const recent = this.recentSamples(newest);
     switch (this.strategy) {
+      case 'uikit':
+        return uikitVelocity(this.samples);
       case 'iosFling':
-        return iosFlingVelocity(recent);
+        return iosFlingVelocity(this.recentSamples(newest));
       case 'window':
         return windowVelocity(this.samples, newest, this.horizon);
       case 'lsq2':
-        return leastSquaresVelocity(recent, newest.time);
+        return leastSquaresVelocity(this.recentSamples(newest), newest.time);
     }
   }
 
@@ -252,6 +248,30 @@ function solveLinearSystem(matrix: number[][]): number[] | null {
     solution[row] = sum / matrix[row][row];
   }
   return solution;
+}
+
+const UIKIT_CURRENT_WEIGHT = UIKIT_GESTURES.velocity.currentWeight.value;
+
+/** UIPanGestureRecognizer's filter: 0.2 x newest + 0.8 x previous event velocity. */
+function uikitVelocity(samples: ReadonlyArray<TouchSample>): Point {
+  const n = samples.length;
+  if (n < 2) {
+    return ZERO;
+  }
+  const current = pairVelocity(samples[n - 2], samples[n - 1]);
+  if (n === 2) {
+    // One interval so far: UIKit reports it whole (a pinch's first value).
+    return current;
+  }
+  const previous = pairVelocity(samples[n - 3], samples[n - 2]);
+  return {
+    x:
+      UIKIT_CURRENT_WEIGHT * current.x +
+      (1 - UIKIT_CURRENT_WEIGHT) * previous.x,
+    y:
+      UIKIT_CURRENT_WEIGHT * current.y +
+      (1 - UIKIT_CURRENT_WEIGHT) * previous.y,
+  };
 }
 
 /** Instantaneous velocity (px/s) between two samples, zero across no time. */
