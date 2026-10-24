@@ -100,7 +100,13 @@ export function curveError({frames, spring, curveValue, settleMs, toTop}) {
     f => f.t >= spring.t - 20 && f.t <= spring.t + settleMs + 100,
   );
   let best = null;
-  for (let lag = 0; lag <= 40; lag += 0.5) {
+  // The recording's clock bar reads behind the document timeline by a
+  // constant (its own animation became ready a frame or two after its phase
+  // was set), and the spring's t = 0 is the frame after it was created: the
+  // lag absorbs both.
+  // The bar's lag differs per page load (how long its own animation took to
+  // become ready), so search wide; within a run it is one constant.
+  for (let lag = -400; lag <= 200; lag += 0.5) {
     let max = 0;
     let sumSq = 0;
     let n = 0;
@@ -120,6 +126,73 @@ export function curveError({frames, spring, curveValue, settleMs, toTop}) {
     }
   }
   return best;
+}
+
+/** Last sample at or before t (sample-and-hold), or the first sample. */
+export function holdAt(series, t) {
+  let v = series[0][1];
+  for (const [ts, y] of series) {
+    if (ts > t) {
+      break;
+    }
+    v = y;
+  }
+  return v;
+}
+
+/**
+ * Tracking against a sample-and-hold finger (the simulator's injected touches
+ * arrive every ~50 ms in 10 px steps; the browser can only follow those
+ * samples). One latency L and one offset are fitted for the whole touch: the
+ * sheet at frame time t should sit at finger(t − L) − offset. Errors are
+ * reported over all frames of the touch and over the frames inside busy
+ * windows. A main-thread recognizer stops during a busy block, so its error
+ * there grows to the distance the finger travelled; nothing L can absorb.
+ */
+export function trackingStep({frames, finger, from, to, busy = []}) {
+  const window = frames.filter(f => f.t >= from && f.t <= to && f.y != null);
+  if (window.length < 3 || finger.length < 2) {
+    return null;
+  }
+  let best = null;
+  for (let L = -300; L <= 300; L += 2) {
+    const deltas = window.map(f => holdAt(finger, f.t - L) - f.y);
+    const offset = [...deltas].sort((a, b) => a - b)[Math.floor(deltas.length / 2)];
+    const abs = deltas.map(d => Math.abs(d - offset));
+    const p95 = percentile(abs, 0.95);
+    if (best == null || p95 < best.p95) {
+      best = {L, offset, p95, abs};
+    }
+  }
+  // Displacement error from the press: the sheet should have moved as far as
+  // the finger (a scroll view's slop shows up here as a constant few px).
+  const pressFrame = window[0];
+  const offset0 = holdAt(finger, pressFrame.t - best.L) - pressFrame.y;
+  const err0 = window.map(f => Math.abs(holdAt(finger, f.t - best.L) - offset0 - f.y));
+  const inBusy = f => busy.some(([a, b]) => f.t >= a && f.t <= b);
+  const busyIdx = window.map((f, i) => (inBusy(f) ? i : -1)).filter(i => i >= 0);
+  const busyAbs = busyIdx.map(i => best.abs[i]);
+  const busyFrames = busyIdx.map(i => window[i]);
+  const fingerInBusy = finger.filter(([t]) => busy.some(([a, b]) => t >= a && t <= b));
+  const span = arr => (arr.length ? Math.max(...arr) - Math.min(...arr) : 0);
+  const err0Busy = busyIdx.map(i => err0[i]);
+  return {
+    frames: window.length,
+    pressOffset: offset0,
+    slopPx: offset0 - best.offset,
+    maxDispErr: Math.max(...err0),
+    maxDispErrBusy: err0Busy.length ? Math.max(...err0Busy) : null,
+    latencyMs: best.L,
+    offset: best.offset,
+    p95Abs: best.p95,
+    medianAbs: percentile(best.abs, 0.5),
+    maxAbs: Math.max(...best.abs),
+    busyFrames: busyFrames.length,
+    busyMaxAbs: busyAbs.length ? Math.max(...busyAbs) : null,
+    busyP95Abs: busyAbs.length ? percentile(busyAbs, 0.95) : null,
+    sheetTravelInBusy: span(busyFrames.map(f => f.y)),
+    fingerTravelInBusy: span(fingerInBusy.map(([, y]) => y)),
+  };
 }
 
 /** Sheet speed (px/s of the top edge) by least squares over frames in [a, b]. */

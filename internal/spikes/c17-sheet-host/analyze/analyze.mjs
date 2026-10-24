@@ -13,6 +13,7 @@ import {createRequire} from 'node:module';
 import {basename, dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
+  trackingStep,
   curveError,
   frameVelocity,
   maxStep,
@@ -43,9 +44,77 @@ const {solveSpring, toSpring} = await import(
     Buffer.from(bundled.outputFiles[0].text).toString('base64')
 );
 
-export function analyzeRun(run) {
+/** De-duplicated [ts, y] finger samples the page logged (coalesced events included). */
+function pageMoves(trace) {
+  const seen = new Set();
+  const out = [];
+  for (const [ts, y] of trace.moves ?? []) {
+    const key = `${ts}:${y}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push([ts, y]);
+    }
+  }
+  return out.sort((a, b) => a[0] - b[0]);
+}
+
+/**
+ * The finger path of a run's first touch, on the page clock. While the main
+ * thread is blocked WebKit coalesces touch moves, so a hybrid run (touch
+ * listeners) sees only the press, one move and the lift. The same injected
+ * gesture is complete in the JS run (pointer events with
+ * getCoalescedEvents), so that path is the template: warped linearly so its
+ * press and last move land on this run's press and (coalesced) last move.
+ */
+export function fingerPath(run, templates) {
+  const touches = run.touches ?? [];
+  const first = touches[0] ?? [];
+  const moves = pageMoves(run.trace);
+  const down = first[0];
+  if (down == null) {
+    return {path: [], source: 'none'};
+  }
+  if (moves.length >= 6) {
+    return {path: [down, ...moves, first.at(-1)].filter(Boolean), source: 'page-moves'};
+  }
+  if (first.length >= 6) {
+    return {path: first, source: 'probe'};
+  }
+  const key = JSON.stringify(run.meta?.spec?.gesture ?? null);
+  const tpl = templates.get(key);
+  const lastMove = first.length >= 3 ? first[first.length - 2] : null;
+  if (tpl == null || lastMove == null) {
+    return {path: first, source: 'probe-coalesced'};
+  }
+  const [t0, y0] = tpl.path[0];
+  const tplLast = tpl.path[tpl.path.length - 2];
+  const k = (lastMove[0] - down[0]) / (tplLast[0] - t0);
+  const dy = down[1] - y0;
+  const warped = tpl.path
+    .slice(0, -1)
+    .map(([t, y]) => [down[0] + (t - t0) * k, y + dy]);
+  warped.push(first.at(-1));
+  return {path: warped, source: `template:${tpl.id} (time scale ${k.toFixed(3)})`};
+}
+
+export function buildTemplates(runs) {
+  const templates = new Map();
+  for (const run of runs) {
+    const key = JSON.stringify(run.meta?.spec?.gesture ?? null);
+    const fp = fingerPath(run, new Map());
+    if (fp.source === 'page-moves' || fp.source === 'probe') {
+      if (!templates.has(key) || templates.get(key).path.length < fp.path.length) {
+        templates.set(key, {id: run.id, path: fp.path});
+      }
+    }
+  }
+  return templates;
+}
+
+export function analyzeRun(run, templates = new Map()) {
   const {trace, frames} = run;
-  const touchList = run.touches ?? (run.finger ? [run.finger] : []);
+  const fp = fingerPath(run, templates);
+  const touchList = [fp.path, ...(run.touches ?? []).slice(1)];
   const finger = touchList[0] ?? [];
   const g = trace.meta.geometry;
   const toTop = s => g.H - s;
@@ -64,6 +133,7 @@ export function analyzeRun(run) {
   const ends = events.filter(e => /^(touchend|pointerup)$/.test(e.type));
   const springs = events.filter(e => e.type === 'spring');
   const result = {
+    fingerSource: fp.source,
     id: run.id,
     mode: trace.meta.params.mode,
     params: trace.meta.params,
@@ -75,7 +145,7 @@ export function analyzeRun(run) {
   result.tracking = touchList
     .filter(samples => samples.length > 2)
     .map(samples =>
-      trackingError({
+      trackingStep({
         frames,
         finger: samples,
         from: samples[0][0],
@@ -123,6 +193,11 @@ export function analyzeRun(run) {
       settleMs: release.settle,
       toTop,
     });
+    // The recording clock's offset from the page clock: the spring's t = 0
+    // is the first frame after it was created (0-17 ms after spring.t).
+    if (result.curve != null) {
+      result.clockOffsetMs = -result.curve.lag + 8;
+    }
     const end = ends[ends.length - 1];
     if (end != null) {
       // Continuity at the handoff: the sheet's speed just before the lift
@@ -218,23 +293,15 @@ if (isMain) {
     (a, i) => !a.startsWith('--') && args[i - 1] !== '--out',
   );
   const summary = [];
-  for (const file of files) {
-    const run = JSON.parse(readFileSync(file, 'utf8'));
-    const r = analyzeRun(run);
+  const runs = files.map(file => JSON.parse(readFileSync(file, 'utf8')));
+  const templates = buildTemplates(runs);
+  for (const [i, file] of files.entries()) {
+    const run = runs[i];
+    const r = analyzeRun(run, templates);
     writeFileSync(join(outDir, `${basename(file, '.json')}.svg`), r.svg);
     delete r.svg;
     summary.push(r);
-    console.log(
-      JSON.stringify({
-        id: r.id,
-        tracking: r.tracking,
-        curve: r.curve,
-        handoff: r.handoff,
-        regrab: r.regrab,
-        settledAt: r.settledAt,
-        restsAt: r.restsAt,
-      }),
-    );
+    console.log(JSON.stringify({id: r.id, finger: r.fingerSource, tracking: r.tracking, curve: r.curve, handoff: r.handoff, regrab: r.regrab, settledAt: r.settledAt, restsAt: r.restsAt}));
   }
   writeFileSync(join(outDir, 'summary.json'), JSON.stringify(summary, null, 1));
 }
