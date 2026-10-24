@@ -67,7 +67,7 @@ interface Stack {
  */
 async function openStack(
   page: Page,
-  story: 'settings' | 'pushed',
+  story: 'settings' | 'pushed' | 'large-title',
   {standalone = false}: {standalone?: boolean} = {},
 ) {
   if (standalone) {
@@ -495,6 +495,57 @@ test.describe('with Reduce Motion', () => {
     expect(midway.opacity).toBeLessThan(1);
     expect(await translateX(top)).toBe(0);
   });
+});
+
+test('a large title scrolls under the bar, which then shows the title; scrolling back hides it again', async ({
+  page,
+}) => {
+  await openStack(page, 'large-title');
+  const rootCard = card(page, 'root');
+  const barText = page.locator('[data-navigation-bar="root"] h2 > span');
+  await expect(
+    page.getByRole('heading', {level: 1, name: 'Settings'}),
+  ).toBeVisible();
+  // The text's offset inside the bar title, which the rise moves.
+  const read = async () =>
+    barText.evaluate(element => ({
+      opacity: Number(getComputedStyle(element).opacity),
+      top:
+        element.getBoundingClientRect().top -
+        (element.parentElement as HTMLElement).getBoundingClientRect().top,
+    }));
+  const hidden = await read();
+  expect(hidden.opacity).toBe(0);
+
+  // Scrolled under the bar (the scroll itself is the browser's): the bar's
+  // title rises into place as it fades in.
+  await rootCard.evaluate(element => element.scrollTo({top: 300}));
+  await expect
+    .poll(async () => (await read()).opacity, {timeout: 3000})
+    .toBe(1);
+  // It rose 15 px into place (navigation.inlineTitleRise).
+  expect(hidden.top - (await read()).top).toBeCloseTo(15, 0);
+  await expect(barText.locator('..')).not.toHaveAttribute('aria-hidden');
+
+  await rootCard.evaluate(element => element.scrollTo({top: 0}));
+  await expect
+    .poll(async () => (await read()).opacity, {timeout: 3000})
+    .toBe(0);
+  await expect(barText.locator('..')).toHaveAttribute('aria-hidden', 'true');
+});
+
+test('a pushed large title rides in with its screen', async ({page}) => {
+  const {driver} = await openStack(page, 'large-title');
+  await driver.tap(await rowCenter(page, 'General'));
+  const top = card(page, 'screen-General');
+  await waitForAnimation(top);
+  await waitForRest(top);
+  // The pushed screen here is inline; the root's large title stays with the
+  // root card, under it and to the left.
+  const rootTitle = page.getByRole('heading', {level: 1, name: 'Settings'});
+  const box = await rootTitle.boundingBox();
+  const rootBox = await card(page, 'root').boundingBox();
+  expect(box && rootBox && Math.abs(box.x - rootBox.x)).toBeLessThan(2);
 });
 
 test('storyboard: a push', {tag: '@storyboard'}, async ({page}, testInfo) => {
