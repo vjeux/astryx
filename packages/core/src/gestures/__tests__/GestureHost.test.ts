@@ -321,6 +321,59 @@ describe('GestureHost', () => {
     expect(host.arena.getTouch(1)?.takenByBrowser).toBe(true);
   });
 
+  it('gives the blocking touchmove listener only to elements whose recognizers claim while moving', () => {
+    const {taps, pan, press, both, row} = mount(
+      '<div id="taps"></div><div id="pan"></div><div id="press"></div><div id="both"></div><div id="row"></div>',
+    );
+    const blocking = (element: HTMLElement) => {
+      const added = vi.spyOn(element, 'addEventListener');
+      const removed = vi.spyOn(element, 'removeEventListener');
+      return {
+        added: () =>
+          added.mock.calls.filter(([type, , options]) => {
+            const flags = options as AddEventListenerOptions | undefined;
+            return type === 'touchmove' && flags?.passive === false;
+          }).length,
+        removed: () =>
+          removed.mock.calls.filter(([type]) => type === 'touchmove').length,
+      };
+    };
+    // Taps claim only at the lift: a scroll starting on them never waits.
+    const onTaps = blocking(taps);
+    detachers.push(host.attach(taps, new TapGestureRecognizer({name: 'tap'})));
+    detachers.push(
+      host.attach(
+        taps,
+        new TapGestureRecognizer({name: 'double', numberOfTapsRequired: 2}),
+      ),
+    );
+    expect(onTaps.added()).toBe(0);
+    // A press consumer adds none either.
+    const onRow = blocking(row);
+    detachers.push(host.attachConsumer(row, new RecordingConsumer()));
+    expect(onRow.added()).toBe(0);
+    // A pan and a long press can take a moving touch: they get one.
+    const onPan = blocking(pan);
+    detachers.push(host.attach(pan, new PanGestureRecognizer({name: 'pan'})));
+    expect(onPan.added()).toBe(1);
+    const onPress = blocking(press);
+    detachers.push(
+      host.attach(press, new LongPressGestureRecognizer({name: 'press'})),
+    );
+    expect(onPress.added()).toBe(1);
+    // A tap beside a pan: the listener comes with the pan and leaves with it.
+    const onBoth = blocking(both);
+    detachers.push(host.attach(both, new TapGestureRecognizer({name: 'tap2'})));
+    expect(onBoth.added()).toBe(0);
+    const detachPan = host.attach(
+      both,
+      new PanGestureRecognizer({name: 'pan2', direction: 'horizontal'}),
+    );
+    expect(onBoth.added()).toBe(1);
+    detachPan();
+    expect(onBoth.removed()).toBe(1);
+  });
+
   it('names the pointer a finger, a pen or a mouse is driven by', () => {
     const {box} = mount('<div id="box"></div>');
     const press = new LongPressGestureRecognizer({name: 'press'});

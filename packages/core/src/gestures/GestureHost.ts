@@ -39,11 +39,16 @@
  * - Each element gets the `touch-action` its recognizers leave the browser
  *   (touchAction.ts), set inline when they attach and restored when they
  *   detach.
- * - Each element with touch recognizers gets a NON-passive `touchmove`
- *   listener that cancels the event only while a recognizer owns one of its
- *   touches. Nothing else is ever cancelled, so a touch nobody claims scrolls
- *   exactly as it would without the system; only touches that begin on such
- *   an element wait for the main thread before scrolling.
+ * - Each element with a recognizer that can claim a touch while it moves (a
+ *   pan, a swipe, a long press that then drags, a pinch, a rotation) gets a
+ *   NON-passive `touchmove` listener that cancels the event only while a
+ *   recognizer owns one of its touches. Nothing else is ever cancelled, so a
+ *   touch nobody claims scrolls exactly as it would without the system. The
+ *   known cost: a scroll that BEGINS on such an element waits for a busy main
+ *   thread (measured in iOS Safari; a passive listener would hand every
+ *   diagonal to the scroll instead). Elements whose recognizers only claim
+ *   at the lift (taps) and press consumers get no blocking listener, so a
+ *   scroll starting on them never waits.
  * - A lift whose click must not happen cancels its `touchend` (no click, no
  *   compatibility mouse events) and arms a one-shot swallower for the next
  *   trusted click; a click held for a recognizer that may still recognize is
@@ -74,6 +79,7 @@ import {
 import type {GestureRecognizer} from './GestureRecognizer';
 import {HAPTIC_SWITCH_ATTRIBUTE} from './haptics';
 import {HoverGestureRecognizer} from './HoverGestureRecognizer';
+import {TapGestureRecognizer} from './TapGestureRecognizer';
 import {createNativeScrollProbe, parentAcrossShadow} from './nativeScroll';
 import {gestureHostStyle, type GestureHostStyle} from './touchAction';
 import type {
@@ -133,6 +139,18 @@ const STYLE_PROPERTIES: Record<keyof GestureHostStyle, string> = {
   WebkitUserSelect: '-webkit-user-select',
   userSelect: 'user-select',
 };
+
+/**
+ * Whether a recognizer can take a touch while it moves, and so needs the
+ * blocking `touchmove` listener that stops the browser's pan. A tap claims
+ * only at the lift (it fails once the finger travels), so it needs none.
+ */
+function claimsWhileMoving(recognizer: GestureRecognizer): boolean {
+  return (
+    recognizer.acceptsTouchInput &&
+    !(recognizer instanceof TapGestureRecognizer)
+  );
+}
 
 const PASSIVE_CAPTURE = {capture: true, passive: true} as const;
 const ACTIVE_CAPTURE = {capture: true, passive: false} as const;
@@ -376,9 +394,7 @@ export class GestureHost {
     if (registration.manageStyle && element instanceof HTMLElement) {
       this.applyStyle(element, registration);
     }
-    const needsListener = registration.recognizers.some(
-      recognizer => recognizer.acceptsTouchInput,
-    );
+    const needsListener = registration.recognizers.some(claimsWhileMoving);
     if (needsListener && registration.touchMoveListener == null) {
       const listener: EventListener = event =>
         this.cancelIfClaimed(event as TouchEvent);
