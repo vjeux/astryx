@@ -220,12 +220,7 @@ test('the settle follows its timing function, sampled frame by frame', async ({
 
 test('the settle keeps advancing every frame while the main thread is blocked', async ({
   page,
-  browserName,
 }, testInfo) => {
-  test.skip(
-    browserName !== 'chromium',
-    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
-  );
   const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
   await markElement(sheet);
   const cast = await startScreencast(page);

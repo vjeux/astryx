@@ -191,12 +191,7 @@ test.describe('touch input', () => {
 test.describe('frame evidence', () => {
   test('a compositor animation advances every frame through a blocked main thread; a rAF one freezes', async ({
     page,
-    browserName,
   }) => {
-    test.skip(
-      browserName !== 'chromium',
-      'screencast frame timing is proven in Chromium (README: engine limits)',
-    );
     await fixture(page);
     const box = page.locator('#box');
     await markElement(box, {mode: 'outline'});

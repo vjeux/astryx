@@ -48,8 +48,11 @@ export interface ScreencastOptions {
 
 /**
  * Starts capturing composited frames. Chromium delivers one per presented
- * frame (16.7 ms at 60 Hz), timestamped by the compositor, including while the
- * main thread is blocked.
+ * frame (16.7 ms at 60 Hz), timestamped by the compositor; WebKit's own
+ * screencast delivers one per composited update (about every 14 ms in the
+ * Linux build), stamped on its monotonic clock and rebased here onto the wall
+ * clock. Both keep delivering while the page's main thread is blocked, and
+ * neither sends a frame when nothing on screen changed.
  */
 export async function startScreencast(
   page: Page,

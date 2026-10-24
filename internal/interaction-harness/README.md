@@ -110,10 +110,11 @@ photographing.
 | Native scroll, fling, pinch-zoom from injected touches | yes          | no                                                                                  |
 | Click synthesised from a touch                         | yes          | only from `driver.tap` (WebKit's tap gesture), not from a raw touch sequence        |
 | Curve sampling, storyboards, input log                 | yes          | yes                                                                                 |
-| Screencast frame evidence, rendering trace, long tasks | yes          | no (Playwright exposes neither)                                                     |
+| Screencast frame evidence (busy main thread)           | yes          | yes (WebKit's own screencast; frames keep coming while the main thread is blocked)  |
+| Rendering trace, long tasks                            | yes          | no (Playwright exposes neither)                                                     |
 
-What WebKit cannot show here — native scroll hand-off, flings, the
-busy-main-thread proof in Safari, and anything iOS-only — is proven on the
+What WebKit cannot show here — native scroll hand-off, flings, finger
+tracking under a busy main thread, and anything iOS-only — is proven on the
 iOS simulator, in Mobile Safari, with 60 fps recordings.
 
 The WebKit input command is reached through Playwright's in-process server
