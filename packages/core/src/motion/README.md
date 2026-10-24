@@ -142,7 +142,7 @@ await handle.finished; // true if it ran to the end, false if interrupted
 ### How it stays on the compositor
 
 Each curve is baked into keyframes, sampled adaptively until linear
-interpolation is within 0.05 px, and played with `easing: linear` on one
+interpolation is within a quarter of a pixel, and played with `easing: linear` on one
 start time. While it runs, the element's inline style holds the value the
 curve starts from, so a frame painted before the compositor has the curve
 shows the element where it is. The keyframes hold the end state for a minute
@@ -205,7 +205,8 @@ Chromium and WebKit on the phone profile.
 - A spring that ends inside the block keeps showing its end state. Without the
   animator's end-state hold, WebKit falls back to a mid-flight value.
 - No Layout or Paint runs while it animates (Chromium trace).
-- Seeked to fixed times, the engine plays the analytic curve within 0.05 px,
+- Seeked to fixed times, the engine plays the analytic curve within a quarter
+  of a pixel,
   with every channel on one start time.
 - A finished animation leaves the element within a frame or two of the curve's
   end.
