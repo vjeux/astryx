@@ -1,0 +1,79 @@
+{
+  "name": "bottomsheet-drag-to-detent",
+  "browser": "chromium",
+  "viewport": {
+    "width": 402,
+    "height": 714
+  },
+  "clip": {
+    "x": 0,
+    "y": 0,
+    "width": 402,
+    "height": 714
+  },
+  "frames": [
+    {
+      "label": "before",
+      "t": 0,
+      "data": {
+        "top": 57.125
+      }
+    },
+    {
+      "label": "touchStart t=0 @201,69",
+      "t": 0,
+      "data": {
+        "top": 57.125
+      }
+    },
+    {
+      "label": "touchMove t=33.3 @201,102",
+      "t": 33.333,
+      "data": {
+        "top": 79.58499908447266
+      }
+    },
+    {
+      "label": "touchMove t=66.7 @201,135",
+      "t": 66.667,
+      "data": {
+        "top": 123.125
+      }
+    },
+    {
+      "label": "touchMove t=100 @201,168",
+      "t": 100,
+      "data": {
+        "top": 156.125
+      }
+    },
+    {
+      "label": "touchMove t=133.3 @201,201",
+      "t": 133.333,
+      "data": {
+        "top": 189.125
+      }
+    },
+    {
+      "label": "touchMove t=166.7 @201,234",
+      "t": 166.667,
+      "data": {
+        "top": 222.125
+      }
+    },
+    {
+      "label": "touchMove t=200 @201,267",
+      "t": 200,
+      "data": {
+        "top": 255.125
+      }
+    },
+    {
+      "label": "touchEnd t=350 @201,267",
+      "t": 350,
+      "data": {
+        "top": 284.67877197265625
+      }
+    }
+  ]
+}
