@@ -344,16 +344,23 @@ in `../utils/touchPresentation.ts`:
   UIKit's compact size class (a Max-size iPhone in landscape is its one
   known miss);
 - a presentation that needs both, a sheet in place of a popover, asks for
-  both (`COMPACT_TOUCH_QUERY`).
+  both (`COMPACT_TOUCH_QUERY`);
+- iOS's own look and motion (UIKit's springs and timings, rubber band,
+  glass, wheels, edge swipe-back) key on the iOS idiom: WebKit on iOS or
+  iPadOS under a coarse pointer, the only engine that implements
+  `-webkit-touch-callout`. Everywhere else, Android included, the idiom is
+  `default` and keeps today's Astryx behaviour.
 
 Styles switch on the same conditions by writing the same query as a StyleX
 media key (`'@media (pointer: coarse)'`, and the compact-touch query spelled
-exactly as `COMPACT_TOUCH_QUERY`, which a test enforces), so the first paint
-is right. Behaviour reads
-`useTouchPresentation()` (SSR-safe), a decision taken once reads
+exactly as `COMPACT_TOUCH_QUERY`), so the first paint is right. The iOS gate
+is `'@supports (-webkit-touch-callout: none)'` nested inside
+`'@media (pointer: coarse)'` (`IOS_TOUCH_STYLE_KEYS`); a test enforces the
+spellings and the nesting. Behaviour reads `useTouchPresentation()` or
+`useTouchIdiom()` (SSR-safe), a decision taken once reads
 `readTouchPresentation()`, and a component with no interaction to infer
-from reads `useMotionPresentation()`: UIKit timings under a finger, theme
-tokens under a mouse.
+from reads `useMotionPresentation()`: UIKit timings in the iOS idiom, theme
+tokens everywhere else.
 
 ## Known limits
 
