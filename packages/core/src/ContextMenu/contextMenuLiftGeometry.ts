@@ -3,9 +3,10 @@
 /**
  * @file contextMenuLiftGeometry.ts
  * @input The context-menu constants
- * @output Exports liftScale, liftedBox, menuPlacement and menuMorph: where
- *   UIKit's lifted preview lands when the menu shows, where the menu sits
- *   against it, and how the menu's glass grows out of the finger
+ * @output Exports liftScale, liftedBox, menuPlacement, menuMorph and
+ *   menuExit: where UIKit's lifted preview lands when the menu shows, where
+ *   the menu sits against it, how the menu's glass grows out of the finger,
+ *   and how it shrinks back into it when the menu closes
  * @position The geometry of ContextMenu's lift presentation (touch);
  *   ContextMenu.tsx renders it
  *
@@ -184,6 +185,61 @@ export function menuMorph(
         height: morphStart.height + (menu.height - morphStart.height) * s,
         contentScale: morphContentScale + (1 - morphContentScale) * p,
         fade: p,
+      };
+    },
+  };
+}
+
+/**
+ * The menu's exit into the finger: the glass shrinks from `menu` to
+ * `contextMenu.lift.exitEnd` at `press`, its centre on `morphSpring` and
+ * its width and height on `exitWidthSpring` / `exitHeightSpring`; the
+ * content follows the centre, shrinking to `exitContentScale` as it fades
+ * (`fade` goes 1 → 0) on `morphSpring`. Reduced Motion takes
+ * `springs.menuReducedMotion`.
+ */
+export function menuExit(
+  menu: LiftBox,
+  press: {readonly x: number; readonly y: number},
+  {reduced = false}: {reduced?: boolean} = {},
+): MenuMorph {
+  const {
+    morphSpring,
+    exitWidthSpring,
+    exitHeightSpring,
+    exitEnd,
+    exitContentScale,
+  } = contextMenu.lift;
+  const curve = (description: Parameters<typeof toSpring>[0]) =>
+    solveSpring(toSpring(reduced ? springs.menuReducedMotion : description), {
+      from: 0,
+      to: 1,
+    });
+  const move = curve(morphSpring);
+  const wide = curve(exitWidthSpring);
+  const tall = curve(exitHeightSpring);
+  const duration = Math.max(
+    move.settleTime(SETTLING_EPSILON),
+    wide.settleTime(SETTLING_EPSILON),
+    tall.settleTime(SETTLING_EPSILON),
+  );
+  const centerX = menu.x + menu.width / 2;
+  const centerY = menu.y + menu.height / 2;
+  return {
+    duration,
+    at(t) {
+      const done = t >= duration;
+      const time = Math.max(t, 0);
+      const p = done ? 1 : move.value(time);
+      const w = done ? 1 : wide.value(time);
+      const h = done ? 1 : tall.value(time);
+      return {
+        centerX: centerX + (press.x - centerX) * p,
+        centerY: centerY + (press.y - centerY) * p,
+        width: menu.width + (exitEnd.width - menu.width) * w,
+        height: menu.height + (exitEnd.height - menu.height) * h,
+        contentScale: 1 + (exitContentScale - 1) * p,
+        fade: 1 - p,
       };
     },
   };

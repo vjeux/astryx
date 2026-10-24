@@ -17,9 +17,11 @@ import {contextMenu, springs} from '../motion/uikit';
 import {
   liftedBox,
   liftScale,
+  menuExit,
   menuMorph,
   menuPlacement,
 } from './contextMenuLiftGeometry';
+import {UIKIT_EXIT_CASES} from './__tests__/uikitExitFrames';
 import {UIKIT_MORPH_CASES} from './__tests__/uikitMorphFrames';
 import {
   UIKIT_LIFT_FRAMES,
@@ -213,4 +215,47 @@ describe('menuMorph against UIKit’s glass (iOS 26.2, 3-action menu)', () => {
       fade: 1,
     });
   });
+});
+
+describe('the exit against UIKit’s dismissal (iOS 26.2, 3-action menu)', () => {
+  for (const [name, uikit] of Object.entries(UIKIT_EXIT_CASES)) {
+    const where = name === 'middle' ? 'in the middle' : 'at the left edge';
+    it(`shrinks the glass back into the press point, held ${where} (rms < 0.75 pt)`, () => {
+      const exit = menuExit(uikit.menu, uikit.press);
+      const errors = uikit.frames.flatMap(([ms, x, y, width, height]) => {
+        const m = exit.at((ms - uikit.startMs) / 1000);
+        return [
+          m.centerX - x,
+          m.centerY - y,
+          m.width - width,
+          m.height - height,
+        ].map(Math.abs);
+      });
+      const rms = Math.sqrt(
+        errors.reduce((sum, e) => sum + e * e, 0) / errors.length,
+      );
+      expect(rms).toBeLessThan(0.75);
+      expect(Math.max(...errors)).toBeLessThan(3.5);
+    });
+
+    it(`returns the copy on morphSpring, held ${where} (rms < 0.05 pt)`, () => {
+      const curve = solveSpring(toSpring(contextMenu.lift.morphSpring), {
+        from: 226,
+        to: 200,
+      });
+      const errors = uikit.frames.flatMap(([ms, , , , , copyWidth]) =>
+        copyWidth == null
+          ? []
+          : [
+              Math.abs(
+                curve.value((ms - uikit.copyStartMs) / 1000) - copyWidth,
+              ),
+            ],
+      );
+      const rms = Math.sqrt(
+        errors.reduce((sum, e) => sum + e * e, 0) / errors.length,
+      );
+      expect(rms).toBeLessThan(0.05);
+    });
+  }
 });

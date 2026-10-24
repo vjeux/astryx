@@ -17,7 +17,8 @@
  * press gave it to its lifted size, a shadow rising under it, above a backdrop
  * that tints the page (no blur, no zoom); the view itself stays where it is,
  * under the copy. The menu's glass grows out of the finger, the content
- * following it in from a blur (`morphMenu`). When the menu closes, the copy returns to the view's
+ * following it in from a blur (`morphMenu`), and shrinks back into it when
+ * the menu closes (`dismissMenu`), as the copy returns to its place. When the menu closes, the copy returns to the view's
  * place on the dismissal spring while the backdrop and the shadow clear.
  *
  * Here the copy is a clone of the trigger (inert, hidden from assistive
@@ -43,10 +44,12 @@ import {contextMenu, springs} from '../motion/uikit';
 import {colorVars, shadowVars} from '../theme/tokens.stylex';
 import {
   liftedBox,
+  menuExit,
   menuMorph,
   type LiftBox,
   type LiftViewport,
 } from './contextMenuLiftGeometry';
+import {solveSpring, toSpring, type SpringDescription} from '../motion/spring';
 
 const LIFT = contextMenu.lift;
 
@@ -111,6 +114,12 @@ export interface ContextMenuLift {
    * follows it in from a blur (`menuMorph`).
    */
   morphMenu(menu: HTMLElement, press: {x: number; y: number}): void;
+  /**
+   * The menu is closing: a copy of it shrinks back into the finger, its glass
+   * fading, before the menu itself hides (`menuExit`). Call it while the menu
+   * still shows; a no-op when nothing is lifted.
+   */
+  dismissMenu(menu: HTMLElement): void;
   /** Return the preview to its place and show the trigger again. */
   drop(): void;
 }
@@ -210,6 +219,16 @@ export function useContextMenuLift(
   const previewAnimatorRef = useRef<Animator | null>(null);
   const backdropAnimatorRef = useRef<Animator | null>(null);
   const shadowAnimatorRef = useRef<Animator | null>(null);
+  // The press point the menu grew out of, which it shrinks back into.
+  const pressRef = useRef<{x: number; y: number} | null>(null);
+  const exitRef = useRef<{
+    glass: HTMLElement;
+    glassAnimator: Animator;
+    content: HTMLElement;
+    animation: Animation;
+    /** When the exit is over, `performance.now()` ms. */
+    endsAt: number;
+  } | null>(null);
   const morphRef = useRef<{
     menu: HTMLElement;
     glass: HTMLElement;
@@ -233,8 +252,21 @@ export function useContextMenuLift(
     }
   }, []);
 
+  const endExit = useCallback(() => {
+    const exit = exitRef.current;
+    if (exit == null) {
+      return;
+    }
+    exitRef.current = null;
+    exit.animation.cancel();
+    exit.glassAnimator.dispose();
+    exit.glass.remove();
+    exit.content.remove();
+  }, []);
+
   const cleanUp = useCallback(() => {
     endMorph();
+    endExit();
     shadowAnimatorRef.current?.dispose();
     shadowAnimatorRef.current = null;
     previewAnimatorRef.current?.dispose();
@@ -245,7 +277,7 @@ export function useContextMenuLift(
     if (layerEl?.matches(':popover-open')) {
       layerEl.hidePopover();
     }
-  }, [endMorph]);
+  }, [endMorph, endExit]);
 
   useEffect(
     () => () => {
@@ -355,21 +387,39 @@ export function useContextMenuLift(
       return;
     }
     const generation = generationRef.current;
-    const spring = prefersReducedMotion()
-      ? springs.menuReducedMotion
-      : springs.contextMenuDismiss;
-    backdropAnimator?.animate({opacity: 0}, {spring}, {reducedMotion: 'keep'});
+    const reduced = prefersReducedMotion();
+    // As measured: the backdrop clears on the dismissal spring, the copy
+    // returns on the morph spring and its shadow fades on its own.
+    backdropAnimator?.animate(
+      {opacity: 0},
+      {
+        spring: reduced
+          ? springs.menuReducedMotion
+          : springs.contextMenuDismiss,
+      },
+      {reducedMotion: 'keep'},
+    );
     shadowAnimatorRef.current?.animate(
       {opacity: 0},
-      {spring},
+      {spring: reduced ? springs.menuReducedMotion : LIFT.shadowExitSpring},
       {reducedMotion: 'keep'},
     );
     const {finished} = previewAnimator.animate(
       {x: 0, y: 0, scale: 1},
-      {spring},
+      {spring: reduced ? springs.menuReducedMotion : LIFT.morphSpring},
       {reducedMotion: 'keep'},
     );
-    void finished.then(() => {
+    // The layer hides once the copy is back and the menu's exit is done (on
+    // a timer: an animation's `finished` can stall in some engines, e.g.
+    // WebKit right after a filter animation is cancelled).
+    const exit = exitRef.current;
+    const exitDone =
+      exit == null
+        ? undefined
+        : new Promise<void>(resolve => {
+            setTimeout(resolve, Math.max(exit.endsAt - performance.now(), 0));
+          });
+    void Promise.all([finished, exitDone]).then(() => {
       if (generationRef.current === generation) {
         cleanUp();
       }
@@ -379,6 +429,7 @@ export function useContextMenuLift(
   const morphMenu = useCallback(
     (menu: HTMLElement, press: {x: number; y: number}) => {
       endMorph();
+      pressRef.current = {x: press.x, y: press.y};
       const layerEl = layerRef.current;
       if (layerEl == null || typeof menu.animate !== 'function') {
         return;
@@ -463,16 +514,161 @@ export function useContextMenuLift(
       const animation = menu.animate(keyframes, {duration});
       const entry = {menu, glass, glassAnimator, animation};
       morphRef.current = entry;
-      animation.finished.then(
-        () => {
-          if (morphRef.current === entry) {
-            endMorph();
-          }
-        },
-        () => {},
-      );
+      // It ends when the entrance does, by its promise or (should the engine
+      // stall it) by the clock.
+      const end = () => {
+        if (morphRef.current === entry) {
+          endMorph();
+        }
+      };
+      animation.finished.then(end, () => {});
+      setTimeout(end, duration + 50);
     },
     [endMorph],
+  );
+
+  const dismissMenu = useCallback(
+    (menu: HTMLElement) => {
+      const layerEl = layerRef.current;
+      const preview = previewRef.current;
+      if (
+        layerEl == null ||
+        preview == null ||
+        typeof menu.animate !== 'function'
+      ) {
+        return;
+      }
+      // The menu as it shows now (its entrance ends where it is).
+      endMorph();
+      endExit();
+      const rect = menu.getBoundingClientRect();
+      const box: LiftBox = {
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+      };
+      if (box.width <= 0 || box.height <= 0) {
+        return;
+      }
+      const copy = preview.getBoundingClientRect();
+      const press = pressRef.current ?? {
+        x: copy.left + copy.width / 2,
+        y: copy.top + copy.height / 2,
+      };
+      const style = getComputedStyle(menu);
+      const radius = Number.parseFloat(style.borderTopLeftRadius) || 0;
+      const reduced = prefersReducedMotion();
+      const exit = menuExit(box, press, {reduced});
+      const centerX = box.x + box.width / 2;
+      const centerY = box.y + box.height / 2;
+      const doc = menu.ownerDocument;
+      // The glass shrinks back into the finger, fading as UIKit's menu view
+      // does.
+      const glass = doc.createElement('span');
+      glass.setAttribute('data-astryx-context-menu-glass', 'exit');
+      Object.assign(glass.style, {
+        position: 'fixed',
+        left: `${box.x}px`,
+        top: `${box.y}px`,
+        width: `${box.width}px`,
+        height: `${box.height}px`,
+        borderRadius: style.borderRadius,
+        backgroundColor: style.backgroundColor,
+        boxShadow: style.boxShadow,
+        pointerEvents: 'none',
+      });
+      // A copy of the menu's content (inert, unnamed), on a bare surface.
+      const content = menu.cloneNode(true) as HTMLElement;
+      for (const el of [
+        content,
+        ...content.querySelectorAll<HTMLElement>('[id]'),
+      ]) {
+        el.removeAttribute('id');
+      }
+      content.setAttribute('aria-hidden', 'true');
+      content.setAttribute('data-astryx-context-menu-exit', '');
+      content.inert = true;
+      Object.assign(content.style, {
+        position: 'fixed',
+        left: `${box.x}px`,
+        top: `${box.y}px`,
+        width: `${box.width}px`,
+        height: `${box.height}px`,
+        margin: '0',
+        boxSizing: 'border-box',
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        pointerEvents: 'none',
+      });
+      layerEl.append(glass, content);
+      const at = doc.timeline?.currentTime;
+      const startAt = typeof at === 'number' ? at : performance.now();
+      const glassAnimator = createAnimator(glass);
+      const {exitEnd, exitWidthSpring, exitHeightSpring, morphSpring} = LIFT;
+      const spring = (description: SpringDescription) =>
+        reduced ? springs.menuReducedMotion : description;
+      glassAnimator.animate(
+        {x: press.x - centerX, y: press.y - centerY},
+        {spring: spring(morphSpring)},
+        {reducedMotion: 'keep', at: startAt},
+      );
+      glassAnimator.animate(
+        {scaleX: exitEnd.width / box.width},
+        {spring: spring(exitWidthSpring)},
+        {reducedMotion: 'keep', at: startAt},
+      );
+      glassAnimator.animate(
+        {scaleY: exitEnd.height / box.height},
+        {spring: spring(exitHeightSpring)},
+        {reducedMotion: 'keep', at: startAt},
+      );
+      glassAnimator.animate(
+        {opacity: 0},
+        {
+          spring: reduced
+            ? springs.menuReducedMotion
+            : springs.contextMenuDismiss,
+        },
+        {reducedMotion: 'keep', at: startAt},
+      );
+      // The content follows the glass's centre, clipped to it, shrinking and
+      // blurring out as it fades (with the menu view's own fade on top).
+      const fadeOut = solveSpring(
+        toSpring(
+          reduced ? springs.menuReducedMotion : springs.contextMenuDismiss,
+        ),
+        {from: 1, to: 0},
+      );
+      const blur = LIFT.menuEntranceBlur;
+      const {keyframes, duration} = sampleKeyframes(exit.duration, t => {
+        const m = exit.at(t);
+        const scale = m.contentScale;
+        const insetX = box.width / 2 - m.width / (2 * scale);
+        const insetY = box.height / 2 - m.height / (2 * scale);
+        const radiusX = (radius * m.width) / box.width / scale;
+        const radiusY = (radius * m.height) / box.height / scale;
+        const opacity = Math.min(Math.max(m.fade * fadeOut.value(t), 0), 1);
+        return {
+          transform: `translate(${(m.centerX - centerX).toFixed(3)}px, ${(m.centerY - centerY).toFixed(3)}px) scale(${scale.toFixed(5)})`,
+          clipPath: `inset(${insetY.toFixed(3)}px ${insetX.toFixed(3)}px round ${radiusX.toFixed(3)}px / ${radiusY.toFixed(3)}px)`,
+          opacity: String(opacity),
+          filter: `blur(${(blur * Math.max(1 - m.fade, 0)).toFixed(3)}px)`,
+        };
+      });
+      const animation = content.animate(keyframes, {
+        duration,
+        fill: 'forwards',
+      });
+      exitRef.current = {
+        glass,
+        glassAnimator,
+        content,
+        animation,
+        endsAt: performance.now() + duration,
+      };
+    },
+    [endExit, endMorph],
   );
 
   const layer = (
@@ -502,5 +698,5 @@ export function useContextMenuLift(
     </span>
   );
 
-  return {layer, lift, morphMenu, drop};
+  return {layer, lift, morphMenu, dismissMenu, drop};
 }

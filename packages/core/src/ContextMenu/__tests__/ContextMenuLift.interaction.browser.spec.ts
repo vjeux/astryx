@@ -13,8 +13,10 @@
  *   edge lifts 16 px in with its menu flush; the copy grows on from the
  *   press, and the backdrop fades in, on springs.contextMenuLift frame by
  *   frame; the menu's glass grows out of the finger with its content
- *   following from a blur, then settles as the menu itself; closing returns
- *   the copy and clears the backdrop; a storyboard of the lift
+ *   following from a blur, then settles as the menu itself; closing shrinks
+ *   the menu back into the finger as its glass fades and returns the copy on
+ *   the morph spring; closing clears the backdrop; storyboards of the lift
+ *   and of the exit
  * @position Interaction specs of packages/core/src/ContextMenu, beside
  *   ContextMenuLongPress.interaction.browser.spec.ts (the press timeline)
  */
@@ -363,6 +365,94 @@ test('the menu’s glass grows out of the finger, its content following from a b
   expect(settled.opacity, detail).toBe('1');
 });
 
+test('closing shrinks the menu back into the finger as its glass fades, and returns the copy on the morph spring', async ({
+  page,
+}) => {
+  const story = await openLiftStory(page);
+  await liftAndSettle(page, story);
+  // The menu's frame as laid out (its popover's box).
+  const menuBox = await page.evaluate(() => {
+    const r = document
+      .querySelector('[role="menu"]')
+      ?.closest('[popover]')
+      ?.getBoundingClientRect();
+    return r == null
+      ? null
+      : {x: r.x + r.width / 2, y: r.y + r.height / 2, width: r.width};
+  });
+  await page.keyboard.press('Escape');
+  await holdAnimations(page);
+  const read = async (t: number) => {
+    await seekAnimations(page, t);
+    return page.evaluate(() => {
+      const glass = document.querySelector(
+        '[data-astryx-context-menu-glass="exit"]',
+      );
+      const content = document.querySelector('[data-astryx-context-menu-exit]');
+      const copy = document.querySelector('[data-astryx-context-menu-preview]');
+      const box = glass?.getBoundingClientRect();
+      const scale = copy == null ? 'none' : getComputedStyle(copy).scale;
+      return {
+        glass:
+          box == null || glass == null
+            ? null
+            : {
+                x: box.x + box.width / 2,
+                y: box.y + box.height / 2,
+                width: box.width,
+                opacity: Number(getComputedStyle(glass).opacity),
+              },
+        contentOpacity:
+          content == null ? null : Number(getComputedStyle(content).opacity),
+        copyScale: scale === 'none' ? 1 : Number.parseFloat(scale),
+      };
+    });
+  };
+  const start = await read(0);
+  const middle = await read(120);
+  await releaseAnimations(page);
+  await page.waitForTimeout(900);
+  const after = await page.evaluate(() => ({
+    exit:
+      document.querySelector('[data-astryx-context-menu-exit]') != null ||
+      document.querySelector('[data-astryx-context-menu-glass]') != null,
+    layerOpen:
+      document
+        .querySelector('[data-astryx-context-menu-lift]')
+        ?.matches(':popover-open') ?? false,
+  }));
+  const returning = solveSpring(toSpring(contextMenu.lift.morphSpring), {
+    from: 1.13,
+    to: 1,
+  });
+  const detail = JSON.stringify({
+    menuBox,
+    center: story.center,
+    start,
+    middle,
+    after,
+  });
+  // It starts as the menu, glass and content opaque.
+  expect(start.glass?.x, detail).toBeCloseTo(menuBox?.x ?? NaN, 0);
+  expect(start.glass?.y, detail).toBeCloseTo(menuBox?.y ?? NaN, 0);
+  expect(start.glass?.width, detail).toBeCloseTo(menuBox?.width ?? NaN, 0);
+  expect(start.contentOpacity, detail).toBeCloseTo(1, 2);
+  // Partway, smaller, nearer the finger, fading.
+  expect(middle.glass?.width ?? Infinity, detail).toBeLessThan(
+    (menuBox?.width ?? 0) * 0.8,
+  );
+  expect(
+    Math.abs((middle.glass?.y ?? NaN) - story.center.y),
+    detail,
+  ).toBeLessThan(Math.abs((menuBox?.y ?? NaN) - story.center.y));
+  expect(middle.glass?.opacity ?? 1, detail).toBeLessThan(1);
+  expect(middle.contentOpacity ?? 1, detail).toBeLessThan(0.5);
+  expect(middle.copyScale, detail).toBeCloseTo(returning.value(0.12), 2);
+  // Done: the copies are gone and the lift layer hides.
+  expect(after.exit, detail).toBe(false);
+  expect(after.layerOpen, detail).toBe(false);
+});
+
 test('closing returns the copy to the card and clears the backdrop', async ({
   page,
 }) => {
@@ -458,5 +548,49 @@ test(
     await storyboard.write(testInfo);
     const widths = storyboard.frames.map(f => Number(f.data.width));
     expect(widths.at(-1)).toBeCloseTo(226, 0);
+  },
+);
+
+test(
+  'storyboard: the exit, from the close',
+  {tag: '@storyboard'},
+  async ({page}, testInfo) => {
+    const story = await openLiftStory(page);
+    await liftAndSettle(page, story);
+    await page.keyboard.press('Escape');
+    const viewport = page.viewportSize();
+    const {storyboard} = await animationStoryboard(page, {
+      name: 'contextmenu-exit',
+      clip: {
+        x: 0,
+        y: Math.max(0, story.center.y - 120),
+        width: viewport?.width ?? 402,
+        height: 400,
+      },
+      times: timeline(450, 1000 / 30),
+      measure: async () =>
+        page.evaluate(() => {
+          const glass = document.querySelector(
+            '[data-astryx-context-menu-glass="exit"]',
+          );
+          const copy = document.querySelector(
+            '[data-astryx-context-menu-preview]',
+          );
+          return {
+            glass: glass?.getBoundingClientRect().width.toFixed(1) ?? '-',
+            copy: copy?.getBoundingClientRect().width.toFixed(1) ?? '-',
+          };
+        }),
+      columns: 5,
+      cellScale: 0.5,
+    });
+    await releaseAnimations(page);
+    await storyboard.write(testInfo);
+    // Until the copies are cleared away, at the end.
+    const copies = storyboard.frames
+      .map(f => Number(f.data.copy))
+      .filter(Number.isFinite);
+    expect(copies[0]).toBeCloseTo(226, 0);
+    expect(copies.at(-1)).toBeCloseTo(200, 0);
   },
 );
