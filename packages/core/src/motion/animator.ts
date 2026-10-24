@@ -42,27 +42,32 @@
  * current value with the current velocity (M3). A gesture's release velocity
  * can be handed in explicitly instead.
  *
- * End state without a flicker frame: the element's inline style always holds
- * the values the animations END on, and the keyframes hold that end state for
- * a while after the curve ends (END_HOLD_MS). The main thread drops a finished
- * animation as soon as it runs after the curve's end; the inline style already
- * shows the same values, so nothing moves. The hold matters when the curve
- * ends during a main-thread block: WebKit's compositor ends an animation by
- * falling back to the value its main thread last committed, which is
- * mid-flight.
+ * No frame shows a value the element is not at. While a curve runs, the
+ * element's inline style holds the value the curve starts from (the value on
+ * screen when it was built), so a frame painted before the compositor has the
+ * curve (WebKit can receive a new curve a few updates late) shows the element
+ * where it is, never where it is going. The keyframes hold the end state for a
+ * while after the curve ends (END_HOLD_MS); the main thread retires a finished
+ * animation as soon as it runs after the curve's end, writing the end values
+ * inline in the same task that cancels it, so nothing moves. The hold matters
+ * when the curve ends during a main-thread block: WebKit's compositor ends an
+ * animation by falling back to the value its main thread last committed.
  *
  * Start time: a call that starts from rest (nothing on its channels moving,
- * no `options.at`) promotes its element in the calling task, holds the
- * current value, and creates its animations in the next animation frame,
- * without a start time: the browser starts them when it commits that frame,
- * as Core Animation starts an animation at its transaction's commit. Work
- * that follows the call in the same task (a React commit, layout effects)
- * delays the motion instead of skipping into it; WebKit would otherwise date
- * an animation created before that work to the frame before it. Everything
- * the call starts, and every call from rest in the same task, starts at that
- * one time, which `handle.started` reports; until then the curves read from
- * the call time. Anything else that changes the animator before that frame (`set`,
- * `stop`, an explicit start, `rebase`, `attach`, `dispose`) creates the held
+ * no `options.at`) starts on a frame that is presented. In the calling task
+ * it promotes its element and writes its start value inline; the next
+ * animation frame commits that, the layer at rest; the frame after it, which
+ * WebKit runs only once the UI process has applied that commit, creates the
+ * animations without a start time, so the browser starts them when it
+ * commits that frame, as Core Animation starts an animation at its
+ * transaction's commit. Work that follows the call in the same task (a React
+ * commit, layout effects), a new layer's first presentation and a busy UI
+ * process (the keyboard coming up) all delay the motion instead of skipping
+ * into it. The cost is one frame before an idle start. Everything the call
+ * starts, and every call from rest in the same task, starts at that one time,
+ * which `handle.started` reports; until then the curves read from the call
+ * time. Anything else that changes the animator before then (`set`, `stop`,
+ * an explicit start, `rebase`, `attach`, `dispose`) creates the held
  * animations first, in call order. A call that continues motion on
  * screen (a retarget, a catch) keeps an explicit start at the call time, or
  * `options.at` to line several animators up, so the new curve continues
@@ -87,18 +92,12 @@
  * PROMOTION_LINGER_MS after the last motion.
  *
  * Known limits, iOS Safari (measured on the iOS 26.2 simulator):
- * - a block in the task that starts a motion delays it: it starts when the
- *   browser commits it, after the block;
- * - an animation created in the task that first displays a dialog stays on
- *   the main thread: start it in the next animation frame;
  * - after a long block, an animation frame's timestamp is when the frame was
  *   due, so passing it as `at` starts the curve in the past: keep the default
  *   clock;
  * - WebKit does not promote the siblings a moving layer will cross, so a
  *   moving layer below content can paint over it: give it `z-index: -1`
- *   inside a parent with `isolation: isolate`;
- * - a tap-driven start can show its first moving frame two to four frames
- *   into the curve (simulator, not yet confirmed on a device).
+ *   inside a parent with `isolation: isolate`.
  *
  * Reduced Motion (law M5): with `prefers-reduced-motion: reduce`, UIKit's
  * Reduce Motion with Prefer Cross-Fade Transitions replaces travel with a
@@ -278,9 +277,10 @@ export interface MotionHandle {
   readonly finished: Promise<boolean>;
   /**
    * When the motion started on the document timeline (ms): for a call from
-   * rest, the time the browser committed its animations, which it creates in
-   * the next animation frame (work or a block before that frame moves it
-   * later); otherwise the call time, or `at`.
+   * rest, the time the browser committed its animations, which it creates on
+   * a presented frame, two animation frames after the call (work, a block or
+   * a late presentation before then moves it later); otherwise the call time,
+   * or `at`.
    */
   readonly started: Promise<number>;
   /** Presentation value of a property at `time` (default now). */
@@ -391,13 +391,14 @@ interface Segment {
 }
 
 /**
- * A call started from rest. Its animations are created in the next animation
- * frame (`deferred` until then; the element shows its current value) without a start
+ * A call started from rest. Its animations are created two animation frames
+ * later (`deferred` until then; the element shows its start value), once the
+ * commit that carries the layer at rest has been applied, without a start
  * time, so the browser starts them when it commits that frame, as Core
- * Animation starts an animation at its transaction's commit: work or a block
- * before that frame delays the motion instead of skipping into it. Until then
- * the curves read from the call time; once the browser's start is known they
- * move to it.
+ * Animation starts an animation at its transaction's commit: work, a block or
+ * a late presentation before then delays the motion instead of skipping into
+ * it. Until then the curves read from the call time; once the browser's start
+ * is known they move to it.
  */
 interface StartGroup {
   readonly provisional: number;
@@ -462,11 +463,12 @@ const MAX_KEYFRAMES = 1200;
 /**
  * The keyframes hold the end state this long after a curve ends. An engine
  * whose compositor ends an animation while the main thread is blocked falls
- * back to the value its main thread last committed, mid-flight (WebKit); the
- * hold keeps the end state on screen through such a block. The main thread
- * drops the animation as soon as it runs after the curve's end.
+ * back to the value its main thread last committed, the curve's start
+ * (WebKit); the hold keeps the end state on screen through any such block. It
+ * only stretches the last keyframe. The main thread retires the animation as
+ * soon as it runs after the curve's end.
  */
-export const END_HOLD_MS = 5000;
+export const END_HOLD_MS = 60_000;
 
 /** How often a paused animation is looked at again for retiring, ms. */
 const RETIRE_RECHECK_MS = 100;
@@ -630,7 +632,9 @@ export function createAnimator(
   const pendingGroups = new Set<StartGroup>();
   /** The call being committed, when it starts from rest. */
   let callGroup: StartGroup | null = null;
-  /** Calls from rest whose animations wait for the next frame (StartGroup). */
+  /** The pending two-frame wait; a newer one supersedes it. */
+  let deferredChain = 0;
+  /** Calls from rest whose animations wait for a presented frame (StartGroup). */
   const deferredCalls: {
     group: StartGroup;
     changed: MotionProperty[];
@@ -699,7 +703,13 @@ export function createAnimator(
       return;
     }
     touched.add(channel);
-    target.style.setProperty(channel, format(channel, value));
+    const text = format(channel, value);
+    // An unchanged value is not written: a style write invalidates the
+    // element, and WebKit can repaint sticky content stale when that lands in
+    // the frame a scroll commits.
+    if (target.style.getPropertyValue(channel) !== text) {
+      target.style.setProperty(channel, text);
+    }
   };
 
   const sampleTimes = (
@@ -776,9 +786,10 @@ export function createAnimator(
     running.delete(channel);
     clearTimeout(retireTimers.get(channel));
     retireTimers.delete(channel);
-    // An element's inline style holds the end state, so its old animation can
-    // go first. A pseudo-element has none: its old animation keeps holding the
-    // value until the new one exists (same task, no frame in between).
+    // An element's inline style takes the value on screen below, so its old
+    // animation can go first. A pseudo-element has none: its old animation
+    // keeps holding the value until the new one exists (same task, no frame in
+    // between).
     if (pseudoElement == null) {
       previous?.cancel();
     }
@@ -791,8 +802,18 @@ export function createAnimator(
         segments.delete(property);
       }
     }
-    writeInline(channel, finalValue);
     const moving = properties.filter(p => segments.has(p));
+    if (
+      moving.length === 0 ||
+      target == null ||
+      typeof target.animate !== 'function'
+    ) {
+      writeInline(channel, finalValue);
+    } else {
+      // The value on screen as the curve starts: what a frame painted before
+      // the compositor has the curve shows. The end is written at retire.
+      writeInline(channel, p => valueAt(p, time));
+    }
     if (target == null || typeof target.animate !== 'function') {
       previous?.cancel();
       return;
@@ -891,8 +912,8 @@ export function createAnimator(
       duration: span,
       // The last keyframes hold the end state (END_HOLD_MS); filling both
       // ways also keeps it where an engine honors the fill on its compositor.
-      // The main thread drops the animation once it runs after the end; the
-      // inline style already holds the same values, so that changes no pixel.
+      // The main thread retires the animation once it runs after the end,
+      // writing the end inline in that task, so that changes no pixel.
       fill: 'both',
       easing: 'linear',
       ...(pseudoElement != null ? {pseudoElement} : {}),
@@ -914,9 +935,9 @@ export function createAnimator(
 
   /**
    * Once the main thread runs after the curve's end, the animation leaves the
-   * running state: an element's inline style already shows the end values; a
-   * pseudo-element's end value moves to a static holding animation, created
-   * before the long one goes.
+   * running state: an element's end values are written inline in the task
+   * that cancels it; a pseudo-element's end value moves to a static holding
+   * animation, created before the long one goes.
    */
   const scheduleRetire = (
     channel: Channel,
@@ -945,10 +966,22 @@ export function createAnimator(
       running.delete(channel);
       if (pseudoElement != null) {
         hold(channel, now());
+      } else {
+        writeInline(channel, finalValue);
       }
       animation.cancel();
     };
     retireTimers.set(channel, setTimeout(retire, Math.max(0, end - now())));
+  };
+
+  /**
+   * Before running animations go with no successor (attach, dispose): an
+   * element's inline style takes the value on screen.
+   */
+  const freezeInline = (time: number) => {
+    for (const channel of running.keys()) {
+      writeInline(channel, p => valueAt(p, time));
+    }
   };
 
   /**
@@ -1120,16 +1153,28 @@ export function createAnimator(
       }
     }
     if (group != null && group.segments.length > 0 && requestFrame != null) {
-      // From rest: promote now, hold the current value, and create the
-      // animations in the next animation frame (StartGroup).
+      // From rest: promote now, hold the start value, and create the
+      // animations on a presented frame (StartGroup).
       group.deferred = true;
       pendingGroups.add(group);
-      for (const property of changed) {
-        promote(CHANNEL_OF[property]);
+      for (const channel of new Set(changed.map(p => CHANNEL_OF[p]))) {
+        promote(channel);
+        // The frame it waits through shows exactly where it starts.
+        writeInline(channel, p => valueAt(p, time));
       }
       deferredCalls.push({group, changed, time});
       if (deferredCalls.length === 1) {
-        requestFrame(flushDeferred);
+        // One frame commits the promoted layer at its start; the next, which
+        // WebKit runs only once that commit has been applied, creates the
+        // animations, so their start is a frame that is presented.
+        const chain = ++deferredChain;
+        requestFrame(() =>
+          requestFrame(() => {
+            if (chain === deferredChain) {
+              flushDeferred();
+            }
+          }),
+        );
       }
       return;
     }
@@ -1589,6 +1634,7 @@ export function createAnimator(
         return;
       }
       demote();
+      freezeInline(now());
       for (const animation of running.values()) {
         animation.cancel();
       }
@@ -2030,6 +2076,7 @@ export function createAnimator(
       for (const property of PROPERTIES) {
         interrupt(property, time);
       }
+      freezeInline(time);
       for (const animation of running.values()) {
         animation.cancel();
       }

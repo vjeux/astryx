@@ -12,7 +12,8 @@
  *   state; no Layout or Paint runs while it animates (Chromium trace); the
  *   engine plays the analytic curve when seeked; a finished animation leaves
  *   within a frame or two of the curve's end; a dialog's ::backdrop follows
- *   the curve and holds its end state; a theme that retunes a table spring
+ *   the curve and holds its end state; a frame painted before the compositor
+ *   has a curve shows the element where it is; a theme that retunes a table spring
  *   changes the curve the engine plays
  * @position Browser proof for animator.ts, run by `pnpm test:interaction`;
  *   jsdom runs no animations
@@ -238,6 +239,115 @@ test('a spring started right before a block plays in full after it', async ({
   expect(firstMoving?.x ?? Infinity).toBeLessThan(30);
 });
 
+test('a frame painted before the compositor has the curve shows the element where it is', async ({
+  page,
+}) => {
+  await open(page);
+  // What a frame shows without the curve is the element's own style: drop the
+  // curve right after it is created and read it. A present from rest, then a
+  // retarget mid-flight.
+  const result = await page.evaluate(
+    async ({travel}) => {
+      const fresh = () => {
+        const element = document.createElement('div');
+        element.className = 'probe';
+        element.style.cssText =
+          'position:absolute;top:120px;left:0;width:48px;height:48px;background:#c63';
+        document.body.append(element);
+        return {element, animator: Motion.createAnimator(element)};
+      };
+      const x = (element: HTMLElement) =>
+        Number.parseFloat(getComputedStyle(element).translate.split(' ')[0]) ||
+        0;
+      const present = fresh();
+      await present.animator.animate(
+        {x: travel},
+        {spring: Motion.springs.smooth},
+      ).started;
+      for (const animation of present.element.getAnimations()) {
+        animation.cancel();
+      }
+      const presentX = x(present.element);
+
+      const retarget = fresh();
+      await retarget.animator.animate(
+        {x: travel},
+        {spring: Motion.springs.smooth},
+      ).started;
+      await new Promise(resolve => setTimeout(resolve, 150));
+      const onScreen = retarget.animator.get('x');
+      retarget.animator.animate({x: 0}, {spring: Motion.springs.smooth});
+      for (const animation of retarget.element.getAnimations()) {
+        animation.cancel();
+      }
+      return {presentX, onScreen, retargetX: x(retarget.element)};
+    },
+    {travel: TRAVEL},
+  );
+  test.info().annotations.push({
+    type: 'without the curve',
+    description: JSON.stringify(result),
+  });
+  expect(result.presentX).toBeCloseTo(0, 1);
+  expect(result.onScreen).toBeGreaterThan(20);
+  expect(Math.abs(result.retargetX - result.onScreen)).toBeLessThan(1);
+});
+
+test('runs nothing on the main thread per frame while a curve plays', async ({
+  page,
+}) => {
+  await open(page);
+  // Counts the animator's main-thread work (style writes, animation
+  // creation, animation frames it asks for) in every frame of a running curve.
+  const perFrame = await page.evaluate(
+    async ({travel}) => {
+      const counts = {writes: 0, animations: 0, frames: 0};
+      const setProperty = CSSStyleDeclaration.prototype.setProperty;
+      CSSStyleDeclaration.prototype.setProperty = function (...args) {
+        counts.writes++;
+        return setProperty.apply(this, args);
+      };
+      const animate = Element.prototype.animate;
+      Element.prototype.animate = function (...args) {
+        counts.animations++;
+        return animate.apply(this, args);
+      };
+      const raf = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = callback => {
+        counts.frames++;
+        return raf(callback);
+      };
+      const handle = window.animator.animate(
+        {x: travel},
+        {spring: {response: 2, dampingRatio: 1}},
+      );
+      await handle.started;
+      // Let the start settle (the browser's start time is read once), then
+      // watch 30 frames of the running curve.
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const samples: number[] = [];
+      for (let i = 0; i < 30; i++) {
+        const before = counts.writes + counts.animations + counts.frames;
+        await new Promise(resolve => raf(() => resolve(null)));
+        samples.push(
+          counts.writes + counts.animations + counts.frames - before - 1,
+        );
+      }
+      CSSStyleDeclaration.prototype.setProperty = setProperty;
+      Element.prototype.animate = animate;
+      window.requestAnimationFrame = raf;
+      return {samples, moving: window.animator.getVelocity('x') > 0};
+    },
+    {travel: TRAVEL},
+  );
+  test.info().annotations.push({
+    type: 'main-thread work per frame',
+    description: JSON.stringify(perFrame),
+  });
+  expect(perFrame.moving).toBe(true);
+  expect(perFrame.samples.every(n => n <= 0)).toBe(true);
+});
+
 test('no Layout or Paint runs while it animates', async ({
   page,
   browserName,
@@ -394,20 +504,28 @@ test('a finished animation leaves the element once the curve ends', async ({
   const result = await page.evaluate(
     async spring =>
       new Promise<{curveEnd: number; leftAt: number}>(resolve => {
-        const start = performance.now();
-        window.animator.animate({x: 120}, {spring});
+        const handle = window.animator.animate({x: 120}, {spring});
         const box = document.getElementById('box') as HTMLElement;
         const solved = Motion.solveSpring(Motion.toSpring(spring), {
           from: 0,
           to: 120,
         });
         const curveEnd = solved.settleTime(0.05) * 1000;
+        // From the curve's own start (the animator creates it on a later
+        // frame), until its animation has come and gone.
+        let start: number | null = null;
+        void handle.started.then(time => {
+          start = time;
+        });
+        let seen = false;
         const tick = () => {
-          if (box.getAnimations().length === 0) {
+          if (box.getAnimations().length > 0) {
+            seen = true;
+          } else if (seen && start != null) {
             resolve({curveEnd, leftAt: performance.now() - start});
-          } else {
-            requestAnimationFrame(tick);
+            return;
           }
+          requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
       }),

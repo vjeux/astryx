@@ -128,17 +128,26 @@ function frame() {
   }
 }
 
-/**
- * The browser renders a frame at `at`: its animation-frame callbacks run,
- * then it commits, and pending animations start there.
- */
-async function commitFrame(at: number) {
-  frame();
+/** Starts every pending animation, as the browser does when it commits. */
+function commitPending(at: number) {
   for (const animation of recorded) {
     if (animation.startTime == null && !animation.cancelled) {
       animation.commit(at);
     }
   }
+}
+
+/**
+ * The browser renders frames at `at` until nothing waits for one: each runs
+ * its animation-frame callbacks, then commits, starting pending animations.
+ * A call from rest creates its animations on the second of them.
+ */
+async function commitFrame(at: number) {
+  for (let i = 0; i < 4 && frameQueue.length > 0; i++) {
+    frame();
+    commitPending(at);
+  }
+  commitPending(at);
   await Promise.resolve();
   await Promise.resolve();
 }
@@ -153,9 +162,11 @@ async function advance(ms: number) {
   await vi.advanceTimersByTimeAsync(ms);
 }
 
-/** The animations on a channel, as the next frame sees them (`frame`). */
+/** The animations on a channel, once every held call has created its own. */
 function live(channel: string): Recorded[] {
-  frame();
+  for (let i = 0; i < 4 && frameQueue.length > 0; i++) {
+    frame();
+  }
   return recorded.filter(
     a => !a.cancelled && channel in (a.keyframes[0] ?? {}),
   );
@@ -241,23 +252,53 @@ describe('animate: keyframes on the compositor', () => {
     expect(live('translate')[0].keyframes.length).toBeLessThan(200);
   });
 
-  it('writes the end values inline with the animations, so the last frame needs no main thread', () => {
+  it('holds the value on screen inline while the curves run, and writes the end as each retires', async () => {
     const {animator, element} = setup();
     animator.animate(
       {x: 120, y: -40, scale: 1.1, rotate: 12, opacity: 0.25},
       {spring: springs.snappy},
     );
-    frame(); // the frame that creates the animations
-    expect(element.style.translate).toBe('120px -40px');
-    expect(element.style.scale).toBe('1.1 1.1');
-    expect(element.style.rotate).toBe('12deg');
-    expect(element.style.opacity).toBe('0.25');
-    for (const channel of ['translate', 'scale', 'rotate', 'opacity']) {
-      const [animation] = live(channel);
+    const inline = (channel: string) =>
+      (element.style as unknown as Record<string, string>)[channel];
+    const channels = ['translate', 'scale', 'rotate', 'opacity'];
+    const animations = channels.map(channel => live(channel)[0]);
+    // A frame painted before the compositor has a curve shows the element
+    // where it is: the curve's first keyframe, not its end.
+    expect(inline('translate')).toBe('0px 0px');
+    expect(inline('opacity')).toBe('1');
+    channels.forEach((channel, i) => {
+      expect(animations[i].keyframes[0][channel]).toBe(inline(channel));
+    });
+    await commitFrame(1000);
+    const longest = Math.max(
+      ...animations.map(a => Number(a.options.duration) - END_HOLD_MS),
+    );
+    await advance(longest + 1);
+    expect(inline('translate')).toBe('120px -40px');
+    expect(inline('scale')).toBe('1.1 1.1');
+    expect(inline('rotate')).toBe('12deg');
+    expect(inline('opacity')).toBe('0.25');
+    channels.forEach((channel, i) => {
+      const animation = animations[i];
+      expect(animation.cancelled).toBe(true);
       expect(animation.keyframes[animation.keyframes.length - 1][channel]).toBe(
-        (element.style as unknown as Record<string, string>)[channel],
+        inline(channel),
       );
-    }
+    });
+  });
+
+  it('a retarget mid-flight holds the value on screen inline, not its new end', async () => {
+    const {animator, element} = setup();
+    animator.animate({x: 300}, {spring: springs.smooth});
+    await commitFrame(1000);
+    await advance(100);
+    const onScreen = animator.get('x');
+    expect(onScreen).toBeGreaterThan(50);
+    animator.animate({x: 0}, {spring: springs.smooth});
+    expect(parse(element.style.translate)[0]).toBeCloseTo(onScreen, 2);
+    expect(live('translate')[0].keyframes[0].translate).toBe(
+      element.style.translate,
+    );
   });
 
   it('keeps the end state in effect until the main thread drops the finished animation', async () => {
@@ -403,8 +444,8 @@ describe('a call from rest starts at the commit, as Core Animation does', () => 
   });
 });
 
-describe('a call from rest creates its animations in the next frame', () => {
-  it('promotes in the calling task and creates the animations in the next frame', async () => {
+describe('a call from rest creates its animations on a presented frame', () => {
+  it('promotes in the calling task and creates the animations on a presented frame', async () => {
     const {animator, element} = setup();
     animator.set({x: 40});
     const handle = animator.animate({x: 300}, {spring: springs.smooth});
@@ -415,13 +456,22 @@ describe('a call from rest creates its animations in the next frame', () => {
     ).toHaveLength(0);
     expect(element.style.willChange).toContain('translate');
     expect(element.style.translate).toBe('40px 0px');
-    // The busy work ends; the next frame creates and commits the animation.
+    // The busy work ends; the first frame commits the layer at rest.
     clock = 1300;
-    await commitFrame(1300);
+    frame();
+    commitPending(1300);
+    expect(
+      recorded.filter(a => 'translate' in (a.keyframes[0] ?? {})),
+    ).toHaveLength(0);
+    // The next frame, once that commit is applied, creates and commits it.
+    clock = 1317;
+    frame();
+    commitPending(1317);
     const [animation] = live('translate');
-    expect(animation.createdAt).toBe(1300);
-    await expect(handle.started).resolves.toBe(1300);
-    expect(element.style.translate).toBe('300px 0px');
+    expect(animation.createdAt).toBe(1317);
+    await expect(handle.started).resolves.toBe(1317);
+    // The element shows its start until the curve retires.
+    expect(element.style.translate).toBe('40px 0px');
   });
 
   it('a set, a stop or an explicit start before that frame creates the held call first', async () => {
@@ -808,7 +858,8 @@ describe('Reduced Motion (M5): UIKit cross-fades instead of travel', () => {
       translate: '100px 0px',
     });
     expect(sampleAt(translate, 'translate', 1000 + fade / 2 - 2)[0]).toBe(0);
-    expect(element.style.translate).toBe('100px 0px');
+    // Inline, the value on screen until the curves retire.
+    expect(element.style.translate).toBe('0px 0px');
     expect(element.style.opacity).toBe('1');
   });
 
@@ -1025,6 +1076,9 @@ describe('play: any closed-form curve', () => {
     const end = press.value(0.266);
     expect(animator.get('scale', 1266)).toBeCloseTo(end, 12);
     expect(animator.getVelocity('scale', 1266)).toBe(0);
+    // Inline: the value on screen while it runs, the end once it retires.
+    expect(parse(element.style.scale)).toEqual([1, 1]);
+    await advance(300);
     for (const axis of parse(element.style.scale)) {
       expect(axis).toBeCloseTo(end, 4);
     }
@@ -1173,9 +1227,10 @@ describe('pseudoElement: a dialog\u2019s ::backdrop', () => {
     expect(element.style.opacity).toBe('');
 
     animator.animate({opacity: 1}, {spring: springs.alertPresent});
-    expect(held.cancelled).toBe(false); // it holds until the next frame
     frame();
-    // That frame creates the new animation before the hold goes.
+    expect(held.cancelled).toBe(false); // it holds through the layer's frame
+    frame();
+    // The next frame creates the new animation before the hold goes.
     expect(held.cancelled).toBe(true);
     const [fade] = live('opacity');
     expect(fade.options).toMatchObject({
@@ -1208,6 +1263,7 @@ describe('pseudoElement: a dialog\u2019s ::backdrop', () => {
     expect(rest.keyframes.map(k => k.opacity)).toEqual(['0', '0']);
     animator.animate({opacity: 1}, {spring: springs.alertPresent});
     frame();
+    frame();
     expect(rest.cancelled).toBe(true);
     expect(live('opacity')).toHaveLength(1);
   });
@@ -1231,7 +1287,8 @@ describe('attach', () => {
       curve.value(0.1),
       1,
     );
-    expect(element.style.translate).toBe('300px 0px');
+    // Inline, the value on screen as it attaches.
+    expect(parse(element.style.translate)[0]).toBeCloseTo(curve.value(0.1), 2);
   });
 
   it('detaching cancels the running animations', () => {

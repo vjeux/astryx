@@ -143,12 +143,21 @@ await handle.finished; // true if it ran to the end, false if interrupted
 
 Each curve is baked into keyframes, sampled adaptively until linear
 interpolation is within 0.05 px, and played with `easing: linear` on one
-start time. The element's inline style already holds the end values,
-and the keyframes hold the end state for a few seconds past the curve's end;
-the main thread drops the animation as soon as it runs after that end. So the
-frame an animation ends needs no main thread and shows no flicker, even when
-the main thread is blocked as the curve ends (WebKit's compositor otherwise
-falls back to the last value its main thread committed, mid-flight).
+start time. While it runs, the element's inline style holds the value the
+curve starts from, so a frame painted before the compositor has the curve
+shows the element where it is. The keyframes hold the end state for a minute
+past the curve's end; the main thread retires the animation as soon as it runs
+after that end, writing the end values inline in the same task. So the frame
+an animation ends needs no main thread and shows no flicker, even when the
+main thread is blocked as the curve ends. Nothing runs on the main thread per
+frame while a curve plays.
+
+A call from rest starts on a presented frame: the next animation frame commits
+the promoted layer at its start, and the frame after it, which WebKit runs
+only once that commit has been applied, creates the animations. Busy work
+after the call, a new layer's first presentation or a busy UI process then
+delays the motion instead of skipping into it, at the cost of one frame before
+an idle start.
 
 Keyframes rather than one `linear()` easing: measured in Chromium, both are
 composited and, for the same samples, equally precise; but WebKit's Core
@@ -187,7 +196,12 @@ Chromium and WebKit on the phone profile.
   thread is blocked for 1 s, and every frame sits on the analytic curve with
   one consistent time offset.
 - A spring started right before a 400 ms block, in the same task, plays its
-  whole curve after the block: the animator creates it in the next frame.
+  whole curve after the block.
+- A frame painted before the compositor has a curve shows the element where it
+  is: on a present from rest and on a retarget mid-flight, the element's own
+  style holds the value on screen, not the end.
+- Nothing runs on the main thread per frame while a curve plays: no style
+  write, no animation created, no animation frame requested.
 - A spring that ends inside the block keeps showing its end state. Without the
   animator's end-state hold, WebKit falls back to a mid-flight value.
 - No Layout or Paint runs while it animates (Chromium trace).
