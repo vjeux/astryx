@@ -8,8 +8,9 @@
  * @output Browser evidence that a pinch which starts on, or reaches, a reorder
  *   grip zooms the page and leaves the order as it was, while a one-finger
  *   drag on the grip still reorders (WCAG 1.4.4)
- * @position Chromium proof for the shared Lab reorder grip's `touch-action`
- *   (packages/lab/src/reorderStyles.ts)
+ * @position Chromium proof for the Lab reorder grips' `touch-action`: the
+ *   shared Lab grip (packages/lab/src/reorderStyles.ts, ListInput) and core
+ *   List's reorder handle (TransferList)
  */
 
 import {expect, test, type CDPSession, type Page} from '@playwright/test';
@@ -50,6 +51,8 @@ interface Surface {
   grip: string;
   /** Every reorderable row, in display order, keyed by this attribute. */
   rowAttribute: string;
+  /** How long a finger rests on the grip before a drag claims it. */
+  holdMs?: number;
 }
 
 const SURFACES: Surface[] = [
@@ -62,8 +65,11 @@ const SURFACES: Surface[] = [
   {
     name: 'TransferList',
     story: 'lab-transferlist--default',
-    grip: '[data-transfer-list-row]:not([data-transfer-list-row=""]) button[aria-pressed]',
+    grip: '[data-transfer-list-row] button[data-astryx-list-reorder]',
     rowAttribute: 'data-transfer-list-row',
+    // Core List's handle claims a still finger after 150 ms, as UIKit's
+    // reorder control does.
+    holdMs: 250,
   },
 ];
 
@@ -159,6 +165,9 @@ for (const surface of SURFACES) {
       // Past the second row's centre: the first row lands second or later.
       const distance = (rows[2] - rows[0]) * 0.9;
       await touch(cdp, 'touchStart', [center]);
+      if (surface.holdMs != null) {
+        await sleep(surface.holdMs);
+      }
       for (let i = 1; i <= 20; i++) {
         await sleep(16);
         await touch(cdp, 'touchMove', [
