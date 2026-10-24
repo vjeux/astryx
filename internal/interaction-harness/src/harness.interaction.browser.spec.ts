@@ -26,21 +26,28 @@ import {
   curveOf,
   drag,
   flick,
+  freezeTimers,
   holdAnimations,
   installInputLog,
+  installTimerGate,
   markElement,
   merge,
+  parseTransform,
   pinch,
   readInputLog,
   sampleCurve,
+  sampleRects,
   springStep,
   startScreencast,
   tap,
+  thawTimers,
   timeline,
   touchDriver,
   touchStoryboard,
   traceRendering,
   trackMarker,
+  waitForAnimation,
+  waitForRest,
   withFinger,
 } from './index';
 
@@ -241,6 +248,36 @@ test.describe('frame evidence', () => {
     expect(raf.longestStallMs).toBeGreaterThan(600);
   });
 
+  test('rect sampling reads one rect per animation frame while the main thread is free', async ({
+    page,
+    browserName,
+  }) => {
+    await fixture(page);
+    const box = page.locator('#box');
+    await box.evaluate(el => {
+      el.animate(
+        [{transform: 'translateX(0px)'}, {transform: 'translateX(200px)'}],
+        {duration: 600, easing: 'linear'},
+      );
+    });
+    const samples = await sampleRects(box, 400);
+    const xs = samples.map(s => s.box?.x ?? NaN);
+    const gaps = samples
+      .slice(1)
+      .map((s, i) => s.t - samples[i].t)
+      .sort((a, b) => a - b);
+    const cadence = gaps[Math.floor(gaps.length / 2)];
+    expect(cadence).toBeLessThan(34);
+    expect(samples.length).toBeGreaterThanOrEqual(10);
+    if (browserName === 'chromium') {
+      // One sample per presented frame at 60 Hz. (Headless WebKit's animation
+      // frames are irregular, so only the cadence is checked there.)
+      expect(samples.length).toBeGreaterThanOrEqual(20);
+    }
+    expect(xs.every((x, i) => i === 0 || x >= xs[i - 1])).toBe(true);
+    expect(xs.at(-1) ?? 0).toBeGreaterThan(xs[0] + 80);
+  });
+
   test('the trace counts no Layout for a transform animation and one per frame for `top`', async ({
     page,
     browserName,
@@ -344,6 +381,32 @@ test.describe('curve sampling', () => {
   });
 });
 
+test.describe('animation state', () => {
+  test('waitForAnimation reports a running transition and waitForRest resolves after it', async ({
+    page,
+  }) => {
+    await fixture(page);
+    const box = page.locator('#box');
+    await box.evaluate(el => {
+      el.style.transition = 'transform 300ms linear';
+      void (el as HTMLElement).offsetWidth;
+      el.style.transform = 'translateY(100px)';
+    });
+    const [running] = await waitForAnimation(box);
+    expect(running.kind).toBe('CSSTransition');
+    expect(running.name).toBe('transform');
+    expect(running.durationMs).toBe(300);
+    expect(running.to - running.from).toBeCloseTo(300, 0);
+    await waitForRest(box);
+    const settledAt = await page.evaluate(
+      () => performance.timeOrigin + performance.now(),
+    );
+    expect(settledAt).toBeGreaterThanOrEqual(running.to);
+    const transform = await box.evaluate(el => getComputedStyle(el).transform);
+    expect(parseTransform(transform).translateY).toBeCloseTo(100, 1);
+  });
+});
+
 test.describe('storyboards', () => {
   test('an animation filmstrip records every frame and its trace follows the curve', async ({
     page,
@@ -411,5 +474,46 @@ test.describe('storyboards', () => {
     // before + touchStart + 6 moves + touchEnd
     expect(storyboard.frames).toHaveLength(9);
     expect(storyboard.frames.at(-2)?.data.x).toBeCloseTo(300, 0);
+  });
+
+  test('the timer gate holds a component timer until the filmstrip is done', async ({
+    page,
+  }, testInfo) => {
+    await fixture(page);
+    await installTimerGate(page);
+    const box = page.locator('#box');
+    // A component that ends its own animation from a timer (a transitionend
+    // backstop): without the gate it would finish behind the held storyboard.
+    await box.evaluate(el => {
+      const animation = el.animate(
+        [{transform: 'translateX(0px)'}, {transform: 'translateX(200px)'}],
+        {duration: 300, easing: 'linear'},
+      );
+      setTimeout(() => {
+        animation.finish();
+        (window as unknown as {timerRan?: boolean}).timerRan = true;
+      }, 40);
+    });
+    await freezeTimers(page);
+    await page.waitForTimeout(120); // the timer is due now, and held
+    const {storyboard} = await animationStoryboard(page, {
+      name: 'harness-self-test-timer-gate',
+      clip: {x: 0, y: 340, width: 402, height: 120},
+      measure: async () => ({
+        x: await box.evaluate(el => el.getBoundingClientRect().x),
+      }),
+      columns: 6,
+    });
+    const timerRan = () =>
+      page.evaluate(
+        () => (window as unknown as {timerRan?: boolean}).timerRan === true,
+      );
+    expect(await timerRan()).toBe(false);
+    await thawTimers(page);
+    expect(await timerRan()).toBe(true);
+    await storyboard.write(testInfo);
+    const xs = storyboard.frames.map(f => f.data.x as number);
+    expect(xs).toHaveLength(19); // t = 0 … 300 ms every 16.7 ms
+    expect(xs.every((x, i) => i === 0 || x > xs[i - 1])).toBe(true);
   });
 });

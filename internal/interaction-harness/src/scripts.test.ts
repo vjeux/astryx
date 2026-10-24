@@ -4,7 +4,9 @@ import {describe, expect, it} from 'vitest';
 import {
   drag,
   flick,
+  holdThenDrag,
   merge,
+  path,
   pinch,
   releaseVelocity,
   rotate,
@@ -111,6 +113,25 @@ describe('touch scripts', () => {
     expect(ends[0].fingers.map(f => f.id)).toEqual([0]);
     expect(ends.at(-1)!.fingers).toEqual([]);
     expect(() => merge(first, first)).toThrow(/two scripts/);
+  });
+
+  it('path follows any curve; holdThenDrag holds before the first move', () => {
+    const arc = path(
+      p => ({x: 100 * Math.cos(p * Math.PI), y: 100 * Math.sin(p * Math.PI)}),
+      {durationMs: 100, hz: 40},
+    );
+    const last = arc.at(-2)!.fingers[0];
+    expect(last.x).toBeCloseTo(-100, 6);
+    expect(last.y).toBeCloseTo(0, 6);
+    expect(arc.at(-1)!.fingers).toEqual([]);
+    const held = holdThenDrag(
+      {x: 0, y: 0},
+      {x: 30, y: 0},
+      {durationMs: 50, hz: 20, holdMs: 500},
+    );
+    const moves = toTouchEvents(held).filter(e => e.type === 'touchMove');
+    expect(moves[0].t).toBeCloseTo(550, 6);
+    expect(moves.at(-1)!.fingers[0].x).toBeCloseTo(30, 6);
   });
 
   it('refuses a script that leaves a finger down', () => {
