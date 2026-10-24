@@ -194,6 +194,8 @@ export class GestureHost {
   private readonly processed = new WeakSet<Event>();
   /** pointerId → arena id, for live mouse and pen contacts. */
   private readonly pointerIds = new Map<number, number>();
+  /** Fingers whose first uncancelable `touchmove` was already judged. */
+  private readonly judgedUncancelable = new Set<number>();
   /**
    * A finger's pointerId → its arena id, once its pointerdown and its
    * touchstart are paired. Chromium sends no `touchmove` until a finger has
@@ -629,16 +631,36 @@ export class GestureHost {
       return;
     }
     if (!event.cancelable) {
-      // The browser is panning or zooming with these fingers and no longer
-      // asks the page; take that as its claim before the move is read.
+      // The browser no longer asks the page about these fingers. WebKit
+      // stops asking when it takes the touch to pan (its pointercancel comes
+      // with it); Chromium also stops after one unconsumed touchmove, even
+      // when `touch-action` keeps it from panning the way the finger went (a
+      // horizontal drag under pan-y). So a finger's FIRST uncancelable move
+      // counts as the browser's claim only if the browser could pan along
+      // the finger's main axis since touch-down; later ones add nothing, and
+      // pointercancel or a scroll still report any real pan.
+      const placed = new Map(inputs.map(input => [input.id, input]));
       const taken = ids.filter(id => {
         const touch = this.arena.getTouch(id);
-        return (
-          touch != null &&
-          !touch.takenByBrowser &&
-          !this.arena.isClaimed(id) &&
-          touch.scroll?.allowsNativePan !== false
-        );
+        if (
+          touch == null ||
+          touch.takenByBrowser ||
+          this.arena.isClaimed(id) ||
+          touch.scroll?.allowsNativePan === false ||
+          this.judgedUncancelable.has(id)
+        ) {
+          return false;
+        }
+        this.judgedUncancelable.add(id);
+        const input = placed.get(id);
+        if (input == null || touch.scroll == null) {
+          return true;
+        }
+        const dx = input.x - touch.startX;
+        const dy = input.y - touch.startY;
+        return Math.abs(dx) >= Math.abs(dy)
+          ? touch.scroll.canScroll(dx, 0)
+          : touch.scroll.canScroll(0, dy);
       });
       if (taken.length > 0) {
         this.arena.browserTookOver(taken, time);
@@ -863,6 +885,7 @@ export class GestureHost {
   /** Forget a contact's pairing and echo state. */
   private forgetContact(id: number): void {
     this.lastFed.delete(id);
+    this.judgedUncancelable.delete(id);
     this.unpairedTouches.delete(id);
     for (const [pointerId, paired] of this.fingerPointers) {
       if (paired === id) {

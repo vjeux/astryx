@@ -82,6 +82,50 @@ let host: GestureHost;
 let clock: ManualClock;
 let detachers: (() => void)[];
 
+/** jsdom computes no layout: give a scroller its metrics. */
+function scrollable(
+  element: HTMLElement,
+  metrics: {scrollTop?: number; scrollHeight?: number; clientHeight?: number},
+): void {
+  for (const [key, value] of Object.entries(metrics)) {
+    Object.defineProperty(element, key, {configurable: true, value});
+  }
+}
+
+/**
+ * jsdom drops `touch-action` from styles: elements under test carry it in
+ * `data-touch-action`, and computed style reports it from there.
+ */
+function touchActionFromData(): () => void {
+  const original = window.getComputedStyle.bind(window);
+  const spy = vi
+    .spyOn(window, 'getComputedStyle')
+    .mockImplementation((element: Element, pseudo?: string | null) => {
+      const style = original(element, pseudo);
+      const touchAction = element.getAttribute('data-touch-action');
+      if (touchAction == null) {
+        return style;
+      }
+      return new Proxy(style, {
+        get(target, key): string | number | object | null | undefined {
+          if (key === 'touchAction') {
+            return touchAction;
+          }
+          if (key === 'getPropertyValue') {
+            return (name: string) =>
+              name === 'touch-action'
+                ? touchAction
+                : target.getPropertyValue(name);
+          }
+          const value = Reflect.get(target, key) as
+            string | number | object | null | undefined;
+          return typeof value === 'function' ? value.bind(target) : value;
+        },
+      });
+    });
+  return () => spy.mockRestore();
+}
+
 function mount(html: string): Record<string, HTMLElement> {
   document.body.innerHTML = html;
   const elements: Record<string, HTMLElement> = {};
@@ -317,13 +361,16 @@ describe('GestureHost', () => {
     expect(host.pointerIdOf(pen)).toBeNull();
   });
 
-  it('reads a touchmove that can no longer be cancelled as the browser taking it', () => {
-    const {box} = mount('<div id="box"></div>');
+  it('reads a touchmove that can no longer be cancelled as the browser taking it, where it could pan', () => {
+    const {list, box} = mount(
+      '<div id="list" style="overflow-y: auto"><div id="box"></div></div>',
+    );
+    scrollable(list, {scrollTop: 0, scrollHeight: 1000, clientHeight: 400});
     const tap = new TapGestureRecognizer({name: 'tap'});
     const events: string[] = [];
     tap.addTransitionListener((_r, _from, to) => events.push(to));
     detachers.push(host.attach(box, tap));
-    const finger = {id: 1, x: 10, y: 10};
+    const finger = {id: 1, x: 10, y: 30};
     touch('touchstart', box, [finger], [finger], 0);
     touch(
       'touchmove',
@@ -334,6 +381,86 @@ describe('GestureHost', () => {
       false,
     );
     expect(events).toEqual(['failed', 'possible']);
+  });
+
+  it('keeps a horizontal drag under pan-y when Chromium stops asking after one unconsumed move', () => {
+    const restore = touchActionFromData();
+    try {
+      const {list, row} = mount(
+        '<div id="list" style="overflow-y: auto"><div id="row" data-touch-action="pan-y pinch-zoom"></div></div>',
+      );
+      scrollable(list, {scrollTop: 0, scrollHeight: 1000, clientHeight: 400});
+      const consumer = new RecordingConsumer();
+      detachers.push(host.attachConsumer(row, consumer));
+      const finger = {id: 1, x: 100, y: 30};
+      touch('touchstart', row, [finger], [finger], 0);
+      // The first move goes unconsumed; Chromium sends the rest uncancelable
+      // although pan-y keeps it from panning sideways.
+      touch('touchmove', row, [{...finger, x: 120}], [{...finger, x: 120}], 16);
+      touch(
+        'touchmove',
+        row,
+        [{...finger, x: 140, y: 33}],
+        [{...finger, x: 140, y: 33}],
+        32,
+        false,
+      );
+      touch(
+        'touchmove',
+        row,
+        [{...finger, x: 160, y: 35}],
+        [{...finger, x: 160, y: 35}],
+        48,
+        false,
+      );
+      expect(consumer.events).toEqual([
+        'began:1',
+        'moved:1',
+        'moved:1',
+        'moved:1',
+      ]);
+    } finally {
+      restore();
+    }
+  });
+
+  it("judges only the first uncancelable move: a sideways drag that turns vertical stays the page's", () => {
+    const restore = touchActionFromData();
+    try {
+      const {list, row} = mount(
+        '<div id="list" style="overflow-y: auto"><div id="row" data-touch-action="pan-y pinch-zoom"></div></div>',
+      );
+      scrollable(list, {scrollTop: 0, scrollHeight: 1000, clientHeight: 400});
+      const consumer = new RecordingConsumer();
+      detachers.push(host.attachConsumer(row, consumer));
+      const finger = {id: 1, x: 100, y: 100};
+      touch('touchstart', row, [finger], [finger], 0);
+      touch('touchmove', row, [{...finger, x: 120}], [{...finger, x: 120}], 16);
+      touch(
+        'touchmove',
+        row,
+        [{...finger, x: 130, y: 98}],
+        [{...finger, x: 130, y: 98}],
+        32,
+        false,
+      );
+      // Chromium dropped the scroll when it began sideways; the finger
+      // turning upward later does not make it a pan.
+      touch(
+        'touchmove',
+        row,
+        [{...finger, x: 132, y: 40}],
+        [{...finger, x: 132, y: 40}],
+        48,
+        false,
+      );
+      expect(
+        consumer.events.filter(event => event.startsWith('cancelled')),
+      ).toEqual([]);
+      expect(consumer.events.at(-1)).toBe('moved:1');
+    } finally {
+      restore();
+    }
   });
 
   it('reads a scroll above an unclaimed touch as the browser taking it', () => {
