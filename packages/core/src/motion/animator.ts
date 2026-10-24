@@ -71,7 +71,10 @@
  * animations first, in call order. A call that continues motion on
  * screen (a retarget, a catch) keeps an explicit start at the call time, or
  * `options.at` to line several animators up, so the new curve continues
- * from the frame on screen. Keyframes are sampled from the call's start, so
+ * from the frame on screen. Where the compositor applies a change late (iOS
+ * WebKit), a retarget plays the curve it replaces for RETARGET_HANDOFF_MS
+ * before its new spring takes over from that curve's value and velocity, so
+ * the element never steps back while the change is in flight. Keyframes are sampled from the call's start, so
  * a value that keeps moving through a rebuild stays on its curve to the
  * frame.
  *
@@ -261,6 +264,12 @@ export interface AnimatorOptions {
    * default. A call from rest reads the start the browser gave it there.
    */
   requestFrame?: (callback: () => void) => void;
+  /**
+   * How long (ms) a retarget keeps playing the curve it replaces before its
+   * new spring takes over (RETARGET_HANDOFF_MS where the compositor applies
+   * a change late, iOS WebKit; 0 elsewhere).
+   */
+  retargetHandoffMs?: number;
 }
 
 /**
@@ -468,6 +477,31 @@ const SAMPLE_TOLERANCE: Record<MotionProperty, number> = {
 /** Keyframes start on this grid (ms) and are split where the curve needs it. */
 const SAMPLE_GRID_MS = 1000 / 30;
 
+/**
+ * A retarget keeps playing the curve it replaces this long (ms), then its new
+ * spring takes over from that curve's value and velocity. iOS WebKit applies
+ * the change a frame or two after its start time while the old animation keeps
+ * moving on screen; the new animation shows exactly the old curve over that
+ * time, so the element never steps back. Only there: elsewhere it is 0.
+ */
+export const RETARGET_HANDOFF_MS = 48;
+
+/** iOS and iPadOS WebKit, whose compositor applies a retarget late. */
+const LATE_APPLY_SUPPORTS = '(-webkit-touch-callout: none)';
+
+let lateApply: boolean | null = null;
+
+/** RETARGET_HANDOFF_MS where the compositor applies a change late, else 0. */
+function defaultRetargetHandoffMs(): number {
+  if (lateApply == null) {
+    lateApply =
+      typeof CSS !== 'undefined' &&
+      typeof CSS.supports === 'function' &&
+      CSS.supports(LATE_APPLY_SUPPORTS);
+  }
+  return lateApply ? RETARGET_HANDOFF_MS : 0;
+}
+
 /** A curve that has not settled by then (an undamped spring) snaps. */
 const MAX_DURATION_MS = 30_000;
 /** Above this many keyframes the tolerance is relaxed. */
@@ -630,6 +664,8 @@ export function createAnimator(
   const pseudoElement = options.pseudoElement;
   const prefersReducedMotion =
     options.prefersReducedMotion ?? defaultPrefersReducedMotion;
+  const handoffMs = () =>
+    options.retargetHandoffMs ?? defaultRetargetHandoffMs();
   const resting: Record<MotionProperty, number> = {
     ...IDENTITY,
     ...expand(options.initial ?? {}),
@@ -1433,28 +1469,66 @@ export function createAnimator(
     to: number,
     spring: SpringDescription,
     velocity: number,
+    handoff: Segment | null = null,
   ): Segment | null => {
-    const from = valueAt(property, start);
-    if (from === to && velocity === 0) {
+    // A retarget keeps the curve it replaces for its handoff (see
+    // RETARGET_HANDOFF_MS), then springs from that curve's state.
+    const lead =
+      handoff == null
+        ? 0
+        : Math.max(
+            0,
+            Math.min(handoffMs(), handoff.start + handoff.duration - start),
+          );
+    const old = handoff as Segment;
+    const oldAt = (t: number) => old.at(t + start - old.start);
+    const oldSpeed = (t: number) => old.speed(t + start - old.start);
+    const from = lead > 0 ? oldAt(lead) : valueAt(property, start);
+    const v = lead > 0 ? oldSpeed(lead) : velocity;
+    if (lead === 0 && from === to && v === 0) {
       return null;
     }
     // A table spring takes its theme's value, read once here, at the start.
     const resolved = resolveMotion(target, spring);
-    const curve = solveSpring(toSpring(resolved), {from, to, velocity});
+    const curve = solveSpring(toSpring(resolved), {from, to, velocity: v});
     const duration = Math.min(
       MAX_DURATION_MS,
-      curve.settleTime(SETTLE_THRESHOLD[property]) * 1000,
+      lead + curve.settleTime(SETTLE_THRESHOLD[property]) * 1000,
     );
     return {
       start,
       duration,
       target: to,
-      at: t => curve.value(t / 1000),
-      speed: t => curve.velocity(t / 1000),
-      jumps: [],
+      at: t => (t < lead ? oldAt(t) : curve.value((t - lead) / 1000)),
+      speed: t => (t < lead ? oldSpeed(t) : curve.velocity((t - lead) / 1000)),
+      jumps:
+        lead > 0
+          ? old.jumps
+              .map(j => j + old.start - start)
+              .filter(j => j > 0 && j < lead)
+          : [],
       owner,
       spring: resolved,
     };
+  };
+
+  /**
+   * The curve a retarget of `property` at `time` hands off from: the one on
+   * screen, moving, and not still waiting for its first frame.
+   */
+  const handoffFrom = (
+    property: MotionProperty,
+    time: number,
+  ): Segment | null => {
+    const segment = segments.get(property);
+    if (
+      segment == null ||
+      time >= segment.start + segment.duration ||
+      segment.group?.deferred === true
+    ) {
+      return null;
+    }
+    return segment;
   };
 
   const fadeSegment = (
@@ -1745,7 +1819,8 @@ export function createAnimator(
         );
       } else {
         for (const property of properties) {
-          const velocity = velocities[property] ?? velocityAt(property, time);
+          const given = velocities[property];
+          const velocity = given ?? velocityAt(property, time);
           next[property] = springSegment(
             owner,
             property,
@@ -1753,6 +1828,10 @@ export function createAnimator(
             targets[property] as number,
             transition.spring,
             velocity,
+            // An explicit clock or velocity means: from this state, now.
+            given == null && animateOptions.at == null
+              ? handoffFrom(property, time)
+              : null,
           );
         }
       }

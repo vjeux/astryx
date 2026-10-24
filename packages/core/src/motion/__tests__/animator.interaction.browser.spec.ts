@@ -293,6 +293,63 @@ test('a frame painted before the compositor has the curve shows the element wher
   expect(Math.abs(result.retargetX - result.onScreen)).toBeLessThan(1);
 });
 
+test('a retarget with a handoff plays the old curve until its new spring takes over', async ({
+  page,
+}) => {
+  await open(page);
+  // The handoff is on only where a compositor applies changes late (iOS);
+  // here it is asked for explicitly, and the engine is seeked through it.
+  const result = await page.evaluate(
+    async ({travel}) => {
+      const element = document.createElement('div');
+      element.style.cssText =
+        'position:absolute;top:120px;left:0;width:48px;height:48px;background:#c63';
+      document.body.append(element);
+      const animator = Motion.createAnimator(element, {retargetHandoffMs: 48});
+      const spring = Motion.springs.smooth;
+      const handle = animator.animate({x: travel}, {spring});
+      const start = await handle.started;
+      await new Promise(resolve => setTimeout(resolve, 120));
+      const at = performance.now();
+      animator.animate({x: 0}, {spring});
+      const first = Motion.solveSpring(Motion.toSpring(spring), {
+        from: 0,
+        to: travel,
+      });
+      const [animation] = element.getAnimations();
+      // A paused animation has no start time: read it first.
+      const startTime = Number(animation.startTime);
+      animation.pause();
+      let worst = 0;
+      let previous = -Infinity;
+      let backwards = 0;
+      for (let t = 0; t <= 48; t += 4) {
+        animation.currentTime = at - startTime + t;
+        const x =
+          Number.parseFloat(
+            getComputedStyle(element).translate.split(' ')[0],
+          ) || 0;
+        worst = Math.max(
+          worst,
+          Math.abs(x - first.value((at - start + t) / 1000)),
+        );
+        if (x < previous - 0.01) {
+          backwards++;
+        }
+        previous = x;
+      }
+      return {worst, backwards};
+    },
+    {travel: TRAVEL},
+  );
+  test.info().annotations.push({
+    type: 'handoff',
+    description: JSON.stringify(result),
+  });
+  expect(result.worst).toBeLessThan(0.3);
+  expect(result.backwards).toBe(0);
+});
+
 test('runs nothing on the main thread per frame while a curve plays', async ({
   page,
 }) => {

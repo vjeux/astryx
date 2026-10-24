@@ -159,6 +159,11 @@ after the call, a new layer's first presentation or a busy UI process then
 delays the motion instead of skipping into it, at the cost of one frame before
 an idle start.
 
+A retarget of a moving element, on iOS WebKit where the compositor applies
+the change a frame or two late, plays the curve it replaces for a short
+handoff (`RETARGET_HANDOFF_MS`) and then its new spring from that curve's
+value and velocity, so a reversal turns around instead of stepping back.
+
 Keyframes rather than one `linear()` easing: measured in Chromium, both are
 composited and, for the same samples, equally precise; but WebKit's Core
 Animation path does not accelerate an effect whose easing is `linear()` with

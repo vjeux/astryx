@@ -764,6 +764,83 @@ describe('presentation values, retargeting, velocity (M2, M3)', () => {
   });
 });
 
+describe('a retarget hands off from the curve on screen', () => {
+  const H = 48;
+  const first = solveSpring(toSpring(springs.smooth), {from: 0, to: 300});
+
+  it('keeps the old curve for the handoff, then springs from its value and velocity', async () => {
+    const {animator} = setup({retargetHandoffMs: H});
+    animator.animate({x: 300}, {spring: springs.smooth});
+    await commitFrame(1000);
+    await advance(100);
+    animator.animate({x: 0}, {spring: springs.smooth});
+    // Whenever the compositor applies the change within the handoff, it
+    // shows exactly what the old animation would have shown.
+    for (let t = 0; t < H; t += 4) {
+      expect(animator.get('x', 1100 + t)).toBeCloseTo(
+        first.value((100 + t) / 1000),
+        9,
+      );
+    }
+    const turn = solveSpring(toSpring(springs.smooth), {
+      from: first.value(0.148),
+      to: 0,
+      velocity: first.velocity(0.148),
+    });
+    for (const t of [H, H + 30, H + 200]) {
+      expect(animator.get('x', 1100 + t)).toBeCloseTo(
+        turn.value((t - H) / 1000),
+        9,
+      );
+    }
+    // Continuous in value and velocity across the handoff.
+    expect(animator.get('x', 1100 + H - 1e-6)).toBeCloseTo(
+      animator.get('x', 1100 + H),
+      4,
+    );
+    expect(animator.getVelocity('x', 1100 + H - 1e-6)).toBeCloseTo(
+      animator.getVelocity('x', 1100 + H),
+      1,
+    );
+    // The compositor plays the same: its keyframes follow the old curve.
+    const [animation] = live('translate');
+    for (let t = 0; t < H; t += 4) {
+      expect(
+        Math.abs(
+          sampleAt(animation, 'translate', 1100 + t)[0] -
+            first.value((100 + t) / 1000),
+        ),
+      ).toBeLessThan(0.26);
+    }
+  });
+
+  it('an explicit velocity or clock starts the new spring at once', async () => {
+    const {animator} = setup({retargetHandoffMs: H});
+    animator.animate({x: 300}, {spring: springs.smooth});
+    await commitFrame(1000);
+    await advance(100);
+    animator.animate({x: 0}, {spring: springs.smooth, velocity: {x: 0}});
+    expect(animator.getVelocity('x', 1100)).toBeCloseTo(0, 6);
+    animator.animate({x: 300}, {spring: springs.smooth}, {at: clock});
+    expect(animator.get('x', 1110)).not.toBeCloseTo(first.value(0.11), 3);
+  });
+
+  it('is off where the compositor applies changes on time', async () => {
+    const {animator} = setup();
+    animator.animate({x: 300}, {spring: springs.smooth});
+    await commitFrame(1000);
+    await advance(100);
+    const v = animator.getVelocity('x');
+    animator.animate({x: 0}, {spring: springs.smooth});
+    const turn = solveSpring(toSpring(springs.smooth), {
+      from: first.value(0.1),
+      to: 0,
+      velocity: v,
+    });
+    expect(animator.get('x', 1120)).toBeCloseTo(turn.value(0.02), 9);
+  });
+});
+
 describe('set: direct manipulation (M4)', () => {
   it('writes one inline style per move and starts no animation', () => {
     const {animator, element} = setup();
