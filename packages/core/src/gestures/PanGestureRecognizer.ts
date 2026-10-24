@@ -381,9 +381,17 @@ export class PanGestureRecognizer extends GestureRecognizer {
    */
   private startFromHere(): void {
     if (this.isHandoff) {
+      // The same rule past the content's end: leave out at most the slop
+      // and keep the overshoot, so the surface's travel does not depend on
+      // which moves the browser delivered (Chromium coalesces them while it
+      // scrolls).
       const base = this.handoffTravel();
-      this.travelAtBegan = base;
-      this.offset = {x: -base.x, y: -base.y};
+      const slop = UIKIT_GESTURES.scroll.contentEndHandoffSlop.value;
+      const along = Math.hypot(base.x, base.y);
+      const kept = along > 0 ? Math.min(along, slop) / along : 0;
+      const swallowed = {x: base.x * kept, y: base.y * kept};
+      this.travelAtBegan = swallowed;
+      this.offset = {x: -swallowed.x, y: -swallowed.y};
       return;
     }
     const limit = this.hysteresis;

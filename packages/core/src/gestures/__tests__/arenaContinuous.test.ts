@@ -89,11 +89,12 @@ describe('conflict matrix', () => {
     finger.move(0, 140, 80); // 10 px past: the sheet takes the rest
     expect(sheet.state).toBe('began');
     expect(sheet.isHandoff).toBe(true);
-    // The slop is left out of the translation, as UIKit's hysteresis is.
-    expect(sheet.translation()).toEqual({x: 0, y: 0});
-    expect(sheet.travelAtBegan).toEqual({x: 0, y: 10});
+    // The slop is left out of the translation and the overshoot kept, as
+    // UIKit's hysteresis is.
+    expect(sheet.translation()).toEqual({x: 0, y: 6});
+    expect(sheet.travelAtBegan).toEqual({x: 0, y: 4});
     finger.move(0, 170, 96);
-    expect(sheet.translation()).toEqual({x: 0, y: 30});
+    expect(sheet.translation()).toEqual({x: 0, y: 36});
     // The finger comes back past the point: the surface returns to where
     // the content ran out while the content scrolls again.
     finger.move(0, 125, 112);
@@ -107,6 +108,42 @@ describe('conflict matrix', () => {
     expect(sheet.totalTranslation()).toEqual({x: 0, y: 25});
     finger.up(160);
     expect(h.log.at(-2)).toBe('sheet:ended@160');
+  });
+
+  it('a handoff keeps the travel past the slop, whichever moves the browser delivered', () => {
+    const run = (samples: number[]) => {
+      const h = createHarness();
+      const sheet = new PanGestureRecognizer({
+        name: 'sheet',
+        direction: 'down',
+        scrollEdge: true,
+        scrollHandoff: true,
+      });
+      let scrollTop = 20;
+      const probe = {
+        ...scrollProbe((_dx, dy) => (dy > 0 ? scrollTop > 0 : true)),
+        distanceToEdge: (_dx: number, dy: number) => (dy > 0 ? scrollTop : 100),
+      };
+      const finger = h.finger(1).down(0, 100, 0, {
+        recognizers: [sheet],
+        scroll: probe,
+      });
+      finger.move(0, 112, 16);
+      finger.takenByBrowser(20);
+      // The content scrolls one to one: it runs out at y = 132.
+      let time = 32;
+      for (const y of samples) {
+        scrollTop = Math.max(0, 132 - y);
+        finger.move(0, y, time);
+        time += 16;
+      }
+      return sheet.translation();
+    };
+    const every = run([124, 132, 140, 148, 180]);
+    // Chromium coalesces the move just past the edge while it scrolls.
+    const coalesced = run([124, 132, 148, 180]);
+    expect(coalesced).toEqual(every);
+    expect(every).toEqual({x: 0, y: 180 - 132 - 4});
   });
 
   it('long press vs pan: holding still wins for the long press', () => {
