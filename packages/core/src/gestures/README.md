@@ -339,9 +339,9 @@ tokens under a mouse.
 
 ## Tests
 
-- `__tests__/recognizers.test.ts`: each recognizer's state machine on
+- `__tests__/<Recognizer>.test.ts`: each recognizer's state machine on
   synthetic touches with explicit timestamps.
-- `__tests__/arena.test.ts`: the conflict matrix, delivery to the view,
+- `__tests__/arena*.test.ts`: the conflict matrix, delivery to the view,
   click dispositions, cancellation, and multiple fingers.
 - `__tests__/GestureHost.test.ts`: the DOM integration through real
   listeners in jsdom.

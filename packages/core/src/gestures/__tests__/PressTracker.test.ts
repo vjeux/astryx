@@ -12,6 +12,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {UIKIT_GESTURES} from '../../motion/uikit/gestures';
 import {PanGestureRecognizer} from '../PanGestureRecognizer';
 import {PressTracker, type ControlEvent} from '../PressTracker';
+import {TapGestureRecognizer} from '../TapGestureRecognizer';
 import {createHarness, scrollProbe} from './harness';
 
 const BOUNDS = {left: 100, top: 100, right: 200, bottom: 140};
@@ -137,5 +138,23 @@ describe('PressTracker', () => {
     h.finger(2).up(20);
     h.finger(1).up(30);
     expect(events).toEqual(['touchDown', 'touchUpInside']);
+  });
+});
+
+describe('PressTracker in the arena', () => {
+  it("lets a control veto an ancestor's single tap (UIControl's rule)", () => {
+    const h = createHarness();
+    const button = new PressTracker({getBounds: () => null, view: 'button'});
+    const tap = new TapGestureRecognizer({name: 'tap'});
+    tap.view = 'row';
+    const double = new TapGestureRecognizer({
+      name: 'double',
+      numberOfTapsRequired: 2,
+    });
+    double.view = 'row';
+    h.finger(1).down(0, 0, 0, {recognizers: [tap, double], consumer: button});
+    expect(h.finger(1).up(50)).toBe('defer');
+    expect(h.log[0]).toBe('tap:failed@50');
+    expect(double.state).toBe('possible');
   });
 });
