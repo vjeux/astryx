@@ -92,8 +92,6 @@ import {
   fontWeightVars,
   typeScaleVars,
   typographyVars,
-  durationVars,
-  easeVars,
 } from '../theme/tokens.stylex';
 import {useTooltip} from '../Tooltip';
 import {VisuallyHidden} from '../VisuallyHidden';
@@ -124,7 +122,11 @@ import {
   fromMonthIndex,
   monthIndexOf,
 } from './monthGeometry';
-import {dateInputTouchSizes, dateInputTouchGeometry} from './tokens.stylex';
+import {
+  dateInputTouchSizes,
+  dateInputTouchGeometry,
+  monthYearToggleMotion,
+} from './tokens.stylex';
 
 /**
  * The comfortable minimum tap target on both iOS and Android, honoured by
@@ -133,23 +135,19 @@ import {dateInputTouchSizes, dateInputTouchGeometry} from './tokens.stylex';
 const TOUCH_TARGET = dateInputTouchSizes.daySize;
 
 /**
- * The whole surface swap, in one leg.
+ * The whole surface swap, in one leg: UIDatePicker's month/year toggle
+ * (motion/uikit/datePicker.ts `calendar.monthYearToggle`), where the wheels
+ * fade in as the grid, the weekday row and the chevrons fade out, all at once,
+ * 0.25 s on UIKit's default ease-in-ease-out, and the title's chevron turns a
+ * quarter turn on the same clock.
  *
- * It used to be two: the outgoing surface faded out, then the incoming one
- * faded in, 110ms each. The sequencing existed for one reason — the wheels'
- * panel was transparent, so overlapping the two put the wheels' translucent
- * selection band over the calendar grid and tinted a band-shaped strip of it,
- * which read as "the grey area animates differently from the content".
- *
- * Giving the wheels an opaque background removes the reason. Nothing shows
- * through them, so they can simply fade in ON TOP of a calendar that does not
- * move at all — no empty middle, no outgoing animation, and one duration
- * instead of a wait plus a fade.
- *
- * `--duration-fast` rather than a literal now that this is a whole duration
- * and not half of one.
+ * The wheels' panel is opaque, so it can simply fade in ON TOP of a calendar
+ * that does not move: nothing shows through it, and the arrows and the
+ * weekday row (above the panel's reach) fade out beneath it on the same
+ * timing, so the change reads as one motion.
  */
-const SWAP_DURATION = durationVars['--duration-fast'];
+const SWAP_DURATION = monthYearToggleMotion.duration;
+const SWAP_CURVE = monthYearToggleMotion.curve;
 
 const sizeStyles = stylex.create({
   sm: {
@@ -271,7 +269,7 @@ const styles = stylex.create({
     // blinking out a beat before the grid is covered.
     transitionProperty: 'opacity, visibility',
     transitionDuration: SWAP_DURATION,
-    transitionTimingFunction: 'linear',
+    transitionTimingFunction: SWAP_CURVE,
     '@media (prefers-reduced-motion: reduce)': {
       transitionDuration: '0.01s',
     },
@@ -328,7 +326,7 @@ const styles = stylex.create({
     alignItems: 'center',
     transitionProperty: 'opacity, visibility',
     transitionDuration: SWAP_DURATION,
-    transitionTimingFunction: 'linear',
+    transitionTimingFunction: SWAP_CURVE,
     '@media (prefers-reduced-motion: reduce)': {
       transitionDuration: '0.01s',
     },
@@ -384,19 +382,22 @@ const styles = stylex.create({
   titleChevron: {
     display: 'inline-flex',
     flexShrink: 0,
-    // The one part of the swap that keeps `--ease-standard`, because it is
-    // the one part that travels: a rotation has a distance to cover, and
-    // fast-out-slow-in is what that curve is for. Same duration as the
-    // surface it announces, so the two land together.
+    // It points along the reading direction while the calendar shows and
+    // turns a quarter turn to point down while the wheels show, on the
+    // toggle's own clock.
     transitionProperty: 'transform',
     transitionDuration: SWAP_DURATION,
-    transitionTimingFunction: easeVars['--ease-standard'],
+    transitionTimingFunction: SWAP_CURVE,
     '@media (prefers-reduced-motion: reduce)': {
       transitionDuration: '0.01s',
     },
   },
   titleChevronOpen: {
-    transform: 'rotate(180deg)',
+    transform: `rotate(${monthYearToggleMotion.chevronTurn})`,
+  },
+  titleChevronMirror: {
+    display: 'inline-flex',
+    flexShrink: 0,
   },
   weekdays: {
     display: 'grid',
@@ -407,7 +408,7 @@ const styles = stylex.create({
     // timing rather than clearing on its own.
     transitionProperty: 'opacity, visibility',
     transitionDuration: SWAP_DURATION,
-    transitionTimingFunction: 'linear',
+    transitionTimingFunction: SWAP_CURVE,
     '@media (prefers-reduced-motion: reduce)': {
       transitionDuration: '0.01s',
     },
@@ -509,7 +510,7 @@ const styles = stylex.create({
     isolation: 'isolate',
     transitionProperty: 'opacity, visibility',
     transitionDuration: SWAP_DURATION,
-    transitionTimingFunction: 'linear',
+    transitionTimingFunction: SWAP_CURVE,
     '@media (prefers-reduced-motion: reduce)': {
       transitionDuration: '0.01s',
     },
@@ -1006,17 +1007,21 @@ export function TouchDateField({
             focusOutlineStyles.focusVisible,
           )}>
           <span {...stylex.props(styles.titleText)}>{monthYearLabel}</span>
-          <Icon
-            icon="chevronDown"
-            size="sm"
-            color="secondary"
-            // The transform rides on the Icon itself, not a wrapper span, so
-            // the element a theme can target is the element that moves.
-            xstyle={[
-              styles.titleChevron,
-              isWheelOpen && styles.titleChevronOpen,
-            ]}
-          />
+          {/* Mirrored under RTL so it points along the reading direction;
+              the turn rides on the Icon itself, so the element a theme can
+              target is the element that moves (mirrored, the same turn still
+              ends pointing down). */}
+          <span {...stylex.props(styles.titleChevronMirror, rtlStyles.mirror)}>
+            <Icon
+              icon="chevronRight"
+              size="sm"
+              color="secondary"
+              xstyle={[
+                styles.titleChevron,
+                isWheelOpen && styles.titleChevronOpen,
+              ]}
+            />
+          </span>
         </button>
         {/* Both arrows at the trailing corner, as a pair — and only while the
             calendar is the surface they step. `IconButton` gives them
