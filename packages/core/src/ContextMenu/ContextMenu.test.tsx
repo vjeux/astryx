@@ -567,6 +567,17 @@ const advance = (ms: number) =>
 // so every case moves the faked clock past the ones before it.
 let clockEpoch = 0;
 
+/**
+ * How many times the menu's popover was shown (a touch-opened menu also shows
+ * the lift layer, its preview and backdrop).
+ */
+const menuShows = () =>
+  vi
+    .mocked(HTMLElement.prototype.showPopover)
+    .mock.contexts.filter(
+      el => !(el as HTMLElement).hasAttribute('data-astryx-context-menu-lift'),
+    ).length;
+
 describe('ContextMenu touch: UIKit’s long-press timeline', () => {
   beforeEach(() => {
     vi.useFakeTimers({
@@ -609,9 +620,68 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     const press = finger(trigger);
     press.down();
     advance(contextMenu.press.menuDisplayMs - 1);
-    expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    expect(menuShows()).toBe(0);
     advance(1);
-    expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
+    expect(menuShows()).toBe(1);
+    press.up();
+  });
+
+  it('lifts a block trigger’s copy, and closes when a finger lifts on the backdrop (UIKit ends at that lift)', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <ContextMenu
+        items={[{label: 'Item 1'}]}
+        data-testid="ctx"
+        onOpenChange={onOpenChange}>
+        <div>Long-press me</div>
+      </ContextMenu>,
+    );
+    const press = finger(screen.getByTestId('ctx'));
+    press.down();
+    advance(contextMenu.press.menuDisplayMs);
+    press.up();
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    const preview = document.querySelector(
+      '[data-astryx-context-menu-preview]',
+    );
+    expect(preview).not.toBeNull();
+    expect(preview?.getAttribute('aria-hidden')).toBe('true');
+    expect(preview?.hasAttribute('data-testid')).toBe(false);
+    const backdrop = document.querySelector(
+      '[data-astryx-context-menu-lift] > span',
+    );
+    if (backdrop == null) {
+      throw new Error('no backdrop');
+    }
+    // A lift there of a finger that went down elsewhere is not a tap there.
+    fireEvent.pointerUp(backdrop, {
+      isPrimary: true,
+      pointerId: 7,
+      pointerType: 'touch',
+    });
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    fireEvent.pointerDown(backdrop, {
+      isPrimary: true,
+      pointerId: 8,
+      pointerType: 'touch',
+    });
+    fireEvent.pointerUp(backdrop, {
+      isPrimary: true,
+      pointerId: 8,
+      pointerType: 'touch',
+    });
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('keeps an inline trigger’s menu at the finger: no lift', () => {
+    const trigger = renderMenu({triggerAs: 'span'});
+    const press = finger(trigger);
+    press.down();
+    advance(contextMenu.press.menuDisplayMs);
+    expect(menuShows()).toBe(1);
+    expect(
+      document.querySelector('[data-astryx-context-menu-lift]'),
+    ).toBeNull();
     press.up();
   });
 
@@ -620,9 +690,9 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     const press = finger(trigger);
     press.down();
     advance(529);
-    expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    expect(menuShows()).toBe(0);
     press.up();
-    expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
+    expect(menuShows()).toBe(1);
   });
 
   it('opens nothing for a drag past the tolerance after the commit, before the menu', () => {
@@ -634,7 +704,7 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     advance(500);
     press.up();
     advance(100);
-    expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    expect(menuShows()).toBe(0);
   });
 
   it('keeps the menu open as the finger lifts: the lift sends no click or compatibility mouse events', () => {
@@ -658,7 +728,7 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     const lift = press.up();
     expect(lift.defaultPrevented).toBe(false);
     advance(1000);
-    expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    expect(menuShows()).toBe(0);
   });
 
   it('cancels when the finger drifts past the tolerance on one axis (11.5 px)', () => {
@@ -668,7 +738,7 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     advance(50);
     press.moveTo(20, 31.6);
     advance(1000);
-    expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    expect(menuShows()).toBe(0);
     press.up();
   });
 
@@ -679,7 +749,7 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     advance(50);
     press.moveTo(31, 31); // 15.6 px away, 11 px on each axis
     advance(contextMenu.press.menuDisplayMs);
-    expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
+    expect(menuShows()).toBe(1);
     press.up();
   });
 
@@ -691,7 +761,7 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     advance(100);
     dispatchTouch('touchstart', trigger, [second], [first, second]);
     advance(1000);
-    expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    expect(menuShows()).toBe(0);
     dispatchTouch('touchend', trigger, [first, second], []);
   });
 
@@ -709,9 +779,9 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     });
     trigger.dispatchEvent(native);
     expect(native.defaultPrevented).toBe(true);
-    expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    expect(menuShows()).toBe(0);
     advance(contextMenu.press.menuDisplayMs - 380);
-    expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
+    expect(menuShows()).toBe(1);
     press.up();
   });
 
@@ -737,7 +807,7 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
       advance(1);
       // At the commit, before the menu shows.
       expect(vibrate).toHaveBeenCalledTimes(1);
-      expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+      expect(menuShows()).toBe(0);
       expect(vibrate).toHaveBeenCalledWith([
         ...HAPTIC_VIBRATION_PATTERNS[contextMenu.commitHaptic].value,
       ]);
@@ -769,7 +839,7 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
   it('leaves the page alone for a menu a right-click opened', () => {
     const trigger = renderMenu();
     fireEvent.contextMenu(trigger, {clientX: 20, clientY: 20});
-    expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
+    expect(menuShows()).toBe(1);
     expect(document.body.style.position).toBe('');
   });
 
@@ -789,7 +859,7 @@ describe('ContextMenu touch: UIKit’s long-press timeline', () => {
     const press = finger(trigger);
     press.down();
     advance(1000);
-    expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    expect(menuShows()).toBe(0);
     press.up();
   });
 });
