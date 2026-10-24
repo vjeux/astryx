@@ -14,6 +14,7 @@ package entry point; components import it by path.
 | `uikit/scroll.ts`                       | UIScrollView: deceleration rates, rubber band, bounce-back spring, paging, `delaysContentTouches`.                       |
 | `uikit/timing.ts`                       | Non-spring clocks and curves: press highlight, Core Animation's named curves, keyboard, Reduced Motion cross-fade.       |
 | `uikit/switch.ts`                       | UISwitch: geometry, clocks, track color curve, press-and-drag rules, haptic (component domains: `uikit/<component>.ts`). |
+| `uikit/list.ts`                         | UITableView / UICollectionView list cells: the cell highlight's release clock and curve.                                 |
 | `uikit/navigation.ts`                   | UINavigationController: push velocity, parallax, dimming, transition clock, interactive pop finish rule.                 |
 | `uikit/gestures.ts`                     | Gesture thresholds (owned by the gesture foundation).                                                                    |
 | `MEASUREMENTS.md`                       | The UIKit reference captures each unconfirmed value still needs.                                                         |
