@@ -38,6 +38,7 @@ import {
   installTimerGate,
   markElement,
   openStory,
+  path,
   readLongTasks,
   releaseAnimations,
   releaseVelocity,
@@ -135,9 +136,14 @@ async function sampleTranslateY(
   }, times);
 }
 
-/** Expected offset for a finger that travelled `travel` px toward the edge. */
+/**
+ * Expected offset (page px, negative = up) for a finger that travelled
+ * `travel` px toward this top toast's edge (negative: back away from it).
+ */
 const follow = (travel: number) =>
-  -TOAST.followRatio * Math.max(0, travel - TOAST.followFrom);
+  -Math.sign(travel) *
+  TOAST.followRatio *
+  Math.max(0, Math.abs(travel) - TOAST.followFrom);
 
 /**
  * A slow drag toward the edge that eases to a stop and rests before the
@@ -298,6 +304,33 @@ test('a quick short flick dismisses on its velocity alone', async ({page}) => {
   expect(releaseVelocity(script).y).toBeCloseTo(-600, -1);
   await driver.play(script);
   await expect(page.locator('.astryx-toast')).toHaveCount(0);
+});
+
+test('a drag that turns back away from the edge stretches the card and springs it back', async ({
+  page,
+}) => {
+  const {driver, card, from} = await openToast(page);
+  // Up 20 px (the swipe begins), then 100 px back down past the start.
+  const script = path(
+    p =>
+      p < 0.2
+        ? {x: from.x, y: from.y - 100 * p}
+        : {x: from.x, y: from.y - 20 + 100 * ((p - 0.2) / 0.8)},
+    {durationMs: 800, hz: 60, restMs: 150},
+  );
+  let lowest = 0;
+  await driver.play(script, {
+    onEvent: async step => {
+      if (step.type === 'touchMove') {
+        lowest = Math.max(lowest, await cardOffset(card));
+      }
+    },
+  });
+  // The finger ended 80 px below where it landed.
+  expect(lowest).toBeCloseTo(follow(-80), 0);
+  await waitForRest(card);
+  expect(await cardOffset(card)).toBeCloseTo(0, 1);
+  await expect(card).toBeVisible();
 });
 
 test('a horizontal drag leaves the card where it is', async ({page}) => {
