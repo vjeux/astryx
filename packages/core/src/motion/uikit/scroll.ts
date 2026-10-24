@@ -26,19 +26,19 @@ export const scroll = {
      * `UIScrollView.DecelerationRate.normal`; its per-millisecond meaning is
      * the one WWDC18 803's projection function assumes ((v ÷ 1000) · r ÷
      * (1 − r)).
-     * @source GUESS — SDK constant value as published in M. Neuburg,
-     *   "Programming iOS", ch. 20 (UIScrollViewDecelerationRateNormal 0.998);
-     *   Apple's page documents the constant, not its number:
-     *   https://developer.apple.com/documentation/uikit/uiscrollview/decelerationrate-swift.struct/normal
-     * @measure M-S1
+     * @source apple-docs https://developer.apple.com/documentation/uikit/uiscrollview/decelerationrate-swift.struct/normal
+     *   (the constant, not its number)
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, rawValue read, Oct 23 2026 (also a new scroll view's
+     *   decelerationRate)
      */
     normal: 0.998,
     /**
      * Fast deceleration (`UIScrollView.DecelerationRate.fast`).
-     * @source GUESS — SDK constant value as published in M. Neuburg,
-     *   "Programming iOS", ch. 20 (UIScrollViewDecelerationRateFast 0.99):
-     *   https://developer.apple.com/documentation/uikit/uiscrollview/decelerationrate-swift.struct/fast
-     * @measure M-S1
+     * @source apple-docs https://developer.apple.com/documentation/uikit/uiscrollview/decelerationrate-swift.struct/fast
+     *   (the constant, not its number)
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, rawValue read, Oct 23 2026
      */
     fast: 0.99,
   },

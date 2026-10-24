@@ -58,47 +58,75 @@ export const timing = {
      *   packages/core/src/utils/pressGesture.ts, 2026-10-06)
      */
     scrollBrakeMs: 150,
+    /**
+     * UIButton (filled configuration) release: the label cross-fade and the
+     * background color both run 0.25 s on `curves.easeInOut`.
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, CAAnimation read (CATransition fade and backgroundColor),
+     *   Oct 23 2026
+     */
+    buttonReleaseMs: 250,
   },
   curves: {
     /**
      * `CAMediaTimingFunctionName.default`: "the timing of … most system
      * animations" that are not springs.
      * @source apple-docs https://developer.apple.com/documentation/quartzcore/camediatimingfunctionname/default
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, CAMediaTimingFunction read from UIView.animate,
+     *   Oct 23 2026
      */
     caDefault: [0.25, 0.1, 0.25, 1],
     /**
      * `easeInEaseOut`; UIKit's default curve (`UIView.AnimationCurve
      * .easeInOut`, "the default curve for most animations").
      * @source apple-docs https://developer.apple.com/documentation/quartzcore/camediatimingfunctionname/easeineaseout
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, CAMediaTimingFunction read from UIView.animate,
+     *   Oct 23 2026
      */
     easeInOut: [0.42, 0, 0.58, 1],
     /**
      * `easeIn`.
      * @source apple-docs https://developer.apple.com/documentation/quartzcore/camediatimingfunctionname/easein
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, CAMediaTimingFunction read from UIView.animate,
+     *   Oct 23 2026
      */
     easeIn: [0.42, 0, 1, 1],
     /**
      * `easeOut`.
      * @source apple-docs https://developer.apple.com/documentation/quartzcore/camediatimingfunctionname/easeout
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, CAMediaTimingFunction read from UIView.animate,
+     *   Oct 23 2026
      */
     easeOut: [0, 0, 0.58, 1],
   },
   /**
    * `UINavigationController.hideShowBarDuration`, in ms.
-   * @source GUESS — Apple documents the constant
-   *   (https://developer.apple.com/documentation/uikit/uinavigationcontroller/hideshowbarduration),
-   *   not its value; 0.2 s is the commonly printed value
-   * @measure M-NB1
+   * @source apple-docs https://developer.apple.com/documentation/uikit/uinavigationcontroller/hideshowbarduration
+   *   (the constant, not its value)
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, read, Oct 23 2026
    */
   navigationBarHideShowMs: 200,
   /**
    * The duration the keyboard notifications report
-   * (UIKeyboardAnimationDurationUserInfoKey), in ms. The frame itself
-   * follows `springs.keyboard`.
-   * @source GUESS — commonly printed value on iPhone
-   * @measure M-K2
+   * (UIKeyboardAnimationDurationUserInfoKey, with curve 7), show and hide
+   * alike, in ms. The frame follows `springs.keyboard`, cut at this time.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, UIKeyboardWillShow / WillHide / WillChangeFrame read,
+   *   Oct 23 2026
    */
-  keyboardNotificationMs: 250,
+  keyboardNotificationMs: 383.3,
+  /**
+   * Core Animation's implicit animation duration
+   * (`CATransaction.animationDuration()`), in ms.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, read, Oct 23 2026
+   */
+  implicitAnimationMs: 250,
   /**
    * Reduced Motion: UIKit replaces travel with a cross-fade
    * (`UIAccessibility.prefersCrossFadeTransitions`,

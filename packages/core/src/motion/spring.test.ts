@@ -416,22 +416,111 @@ describe('settlingDuration (CASpringAnimation semantics)', () => {
   });
 });
 
-describe('springFromUIKitDampingDuration (hypothesis M-K1)', () => {
-  it('derives a spring that settles at the requested duration', () => {
-    for (const duration of [0.25, 0.5, 1]) {
-      for (const dampingRatio of [0.5, 0.8, 1]) {
-        for (const initialSpringVelocity of [0, 2]) {
-          const spring = springFromUIKitDampingDuration({
-            duration,
-            dampingRatio,
-            initialSpringVelocity,
-          });
-          expect(dampingRatioOf(spring)).toBeCloseTo(dampingRatio, 9);
-          expect(
-            settlingDuration(spring, {initialVelocity: initialSpringVelocity}),
-          ).toBeCloseTo(duration, 6);
-        }
+// Read from UIKit on the iOS 26.2 simulator (UIKit lab, injected host app,
+// iPhone 17 Pro, Oct 23 2026): CASpringAnimation.settlingDuration for mass 1,
+// stiffness 100, and the duration UIKit gives UIView.animate(springDuration:
+// bounce:initialSpringVelocity:).
+const CA_SETTLING = [
+  {damping: 5, velocity: 0, settling: 2.854974609888761},
+  {damping: 5, velocity: 5, settling: 2.854974609888761},
+  {damping: 5, velocity: -5, settling: 2.992531378997136},
+  {damping: 10, velocity: 0, settling: 1.4727003346780927},
+  {damping: 10, velocity: 5, settling: 1.3815510557964277},
+  {damping: 10, velocity: -5, settling: 1.5350814063145797},
+  {damping: 15, velocity: 0, settling: 1.0220937981854987},
+  {damping: 15, velocity: 5, settling: 0.9637816892907282},
+  {damping: 15, velocity: -5, settling: 1.0625267085113923},
+];
+const UIKIT_SPRING_DURATION = [
+  {duration: 0.3, bounce: 0, velocity: 0, uikit: 0.4409405178437803},
+  {duration: 0.3, bounce: 0, velocity: 2, uikit: 0.43617534275714415},
+  {duration: 0.3, bounce: 0.15, velocity: 0, uikit: 0.4419904194536484},
+  {duration: 0.3, bounce: 0.15, velocity: 2, uikit: 0.4379526271453696},
+  {duration: 0.3, bounce: 0.3, velocity: 0, uikit: 0.5177731699046524},
+  {duration: 0.5, bounce: 0, velocity: 0, uikit: 0.734900863},
+  {duration: 0.5, bounce: 0.15, velocity: 0, uikit: 0.736650699089414},
+  {duration: 0.5, bounce: 0.3, velocity: 2, uikit: 0.8493819071116907},
+  {duration: 1, bounce: 0, velocity: 0, uikit: 1.469801726},
+  {duration: 1, bounce: 0, velocity: 2, uikit: 1.410252226},
+  {duration: 1, bounce: 0.15, velocity: 2, uikit: 1.4240715395795775},
+  {duration: 1, bounce: 0.3, velocity: 0, uikit: 1.725910566348841},
+];
+
+describe('settlingDuration against values read from UIKit', () => {
+  it.each(CA_SETTLING)(
+    'CASpringAnimation(stiffness 100, damping $damping, v $velocity).settlingDuration',
+    ({damping, velocity, settling}) => {
+      const spring = springFromPhysics({stiffness: 100, damping});
+      expect(settlingDuration(spring, {initialVelocity: velocity})).toBeCloseTo(
+        settling,
+        12,
+      );
+    },
+  );
+
+  it.each(UIKIT_SPRING_DURATION)(
+    'UIView.animate(springDuration: $duration, bounce: $bounce, v $velocity) runs $uikit s',
+    ({duration, bounce, velocity, uikit}) => {
+      const spring = springFromDurationBounce({duration, bounce});
+      const mine = settlingDuration(spring, {initialVelocity: velocity});
+      if (bounce > 0) {
+        expect(mine).toBeCloseTo(uikit, 12);
+      } else {
+        // Critically damped: UIKit stops 0.0016 later in ω₀·t.
+        expect(Math.abs(mine - uikit) / uikit).toBeLessThan(3e-4);
       }
-    }
+    },
+  );
+
+  it('UIKit’s default spring runs 0.505824 s: overdamping clamped to critical', () => {
+    const spring = springFromPhysics({mass: 3, stiffness: 1000, damping: 500});
+    expect(dampingRatioOf(spring)).toBeCloseTo(1, 12);
+    expect(
+      Math.abs(settlingDuration(spring) - 0.505824) / 0.505824,
+    ).toBeLessThan(3e-4);
+  });
+});
+
+describe('springFromUIKitDampingDuration (legacy damping/duration API)', () => {
+  // Read from UIKit (same capture): UIView.animate(withDuration: D,
+  // usingSpringWithDamping: ζ, initialSpringVelocity: 0) → mass 1 and these.
+  it.each([
+    {duration: 0.3, dampingRatio: 0.5, stiffness: 1796.883, damping: 42.3897},
+    {duration: 0.3, dampingRatio: 0.8, stiffness: 898.86, damping: 47.9696},
+    {duration: 0.3, dampingRatio: 1, stiffness: 947.288, damping: 61.5561},
+    {duration: 0.5, dampingRatio: 0.5, stiffness: 646.878, damping: 25.4338},
+    {duration: 0.5, dampingRatio: 0.8, stiffness: 323.589, damping: 28.7817},
+    {duration: 0.5, dampingRatio: 1, stiffness: 341.024, damping: 36.9337},
+    {duration: 1, dampingRatio: 0.5, stiffness: 161.72, damping: 12.7169},
+    {duration: 1, dampingRatio: 0.8, stiffness: 80.897, damping: 14.3909},
+    {duration: 1, dampingRatio: 1, stiffness: 85.256, damping: 18.4668},
+  ])(
+    'D $duration, ζ $dampingRatio → stiffness $stiffness',
+    ({duration, dampingRatio, stiffness, damping}) => {
+      const spring = springFromUIKitDampingDuration({duration, dampingRatio});
+      expect(spring.mass).toBe(1);
+      expect(Math.abs(spring.stiffness - stiffness) / stiffness).toBeLessThan(
+        1e-4,
+      );
+      expect(Math.abs(spring.damping - damping) / damping).toBeLessThan(1e-4);
+    },
+  );
+
+  it('at ζ 1 the derived spring settles exactly at the duration', () => {
+    const spring = springFromUIKitDampingDuration({
+      duration: 0.4,
+      dampingRatio: 1,
+    });
+    expect(settlingDuration(spring)).toBeCloseTo(0.4, 3);
+  });
+
+  it('interpolates between the measured ratios', () => {
+    const a = springFromUIKitDampingDuration({duration: 1, dampingRatio: 0.5});
+    const b = springFromUIKitDampingDuration({duration: 1, dampingRatio: 0.65});
+    const c = springFromUIKitDampingDuration({duration: 1, dampingRatio: 0.8});
+    expect(Math.sqrt(b.stiffness)).toBeCloseTo(
+      (Math.sqrt(a.stiffness) + Math.sqrt(c.stiffness)) / 2,
+      9,
+    );
   });
 });

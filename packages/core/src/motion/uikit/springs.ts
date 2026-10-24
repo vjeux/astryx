@@ -81,14 +81,14 @@ export const springs = {
    * Overdamped on paper; Core Animation treats overdamping as critical
    * unless told otherwise, which `toSpring` mirrors: in effect a critically
    * damped spring with ω₀ = 18.26 rad/s (response 0.344 s) that settles in
-   * 0.506 s. It is also the curve behind the keyboard's undocumented
-   * animation curve 7.
+   * 0.506 s. The keyboard does not use it (see `keyboard`).
    * @source apple-docs https://developer.apple.com/documentation/uikit/uispringtimingparameters/init() (damping ratio 4.56)
-   * @source GUESS — the mass 3 / stiffness 1000 / damping 500 triple is
-   *   community reverse engineering consistent with that ratio; whether
-   *   overdamping is honored is not documented
-   * @measure M-K2
-   * @measure M-CA1
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, CAAnimation read, Oct 23 2026: UISpringTimingParameters()
+   *   is mass 3, stiffness 1000, damping 500; UIKit runs it for 0.505824 s
+   *   (clamped to critical) whatever duration the animator was given, and
+   *   `UIView.animate` with curve 7 outside the keyboard is this spring with
+   *   its duration forced to 0.5 s
    */
   uikitDefault: UIKIT_DEFAULT_SPRING,
 
@@ -248,11 +248,14 @@ export const springs = {
   // ---------------------------------------------------------------------
 
   /**
-   * Keyboard frame animation (UIKeyboardAnimationCurveUserInfoKey = 7).
-   * @source GUESS — UIKit's default spring (community reverse engineering)
-   * @measure M-K2
+   * Keyboard frame animation, show and hide alike: critically damped,
+   * response 0.2667 s. The notification reports curve 7 and 0.3833 s
+   * (`timing.keyboardNotificationMs`); Core Animation cuts the spring there.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, CAAnimation read on the keyboard host and a
+   *   keyboardLayoutGuide-pinned view, Oct 23 2026
    */
-  keyboard: UIKIT_DEFAULT_SPRING,
+  keyboard: {mass: 1, stiffness: 555.0265, damping: 47.118},
   /**
    * Scroll-to-top after a status-bar tap.
    * @source GUESS — UIKit's default spring

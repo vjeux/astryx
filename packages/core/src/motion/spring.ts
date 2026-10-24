@@ -34,15 +34,23 @@
  *   animation distance traversed in one second"
  *   (https://developer.apple.com/documentation/uikit/uiview/animate(withduration:delay:usingspringwithdamping:initialspringvelocity:options:animations:completion:)).
  *
- * Settling duration follows `CASpringAnimation.settlingDuration`: the time
- * after which the displacement from the target, for a unit move, stays below
- * ε = 0.001 (the epsilon SwiftUI documents for `Spring.settlingDuration`),
- * bounded by the decaying envelope |A| + |B| of A·cos + B·sin. That bound
- * reproduces every published reference value: Apple's CASpringAnimation
- * documentation example (stiffness 100, damping 5 → "approximately 2.85
- * seconds"; damping 15 → "just over 1 second") and WebKit's iOS switch
- * durations, which are the settling durations of its UIKit-matched springs
- * (0.4880138408543766 s and 0.5073965509413827 s in
+ * Settling duration follows UIKit's own duration solver: the time after which
+ * the displacement from the target, for a unit move, stays below ε = 0.001
+ * (the epsilon SwiftUI documents for `Spring.settlingDuration`). Underdamped,
+ * it is the closed-form time at which the decaying envelope |A| + |B| of
+ * A·cos + B·sin falls to ε; critically damped and overdamped, the root of the
+ * envelope found numerically. Read from UIKit on the iOS 26.2 simulator, the
+ * underdamped values match to the last digit (`CASpringAnimation`
+ * `settlingDuration` for every stiffness/damping/velocity in the grid, and the
+ * duration UIKit gives `UIView.animate(springDuration:bounce:)`); critically
+ * damped ones land within 0.02 % of the duration UIKit picks (it stops 0.0016
+ * later in ω₀·t). Core Animation's `settlingDuration` PROPERTY additionally
+ * rounds critically damped and overdamped springs up to the next 0.1 s; that
+ * rounding is not modeled. The bound also reproduces Apple's
+ * CASpringAnimation documentation example (stiffness 100, damping 5 →
+ * "approximately 2.85 seconds"; damping 15 → "just over 1 second") and
+ * WebKit's iOS switch durations, the settling durations of its UIKit-matched
+ * springs (0.4880138408543766 s and 0.5073965509413827 s in
  * Source/WebCore/rendering/ios/RenderThemeIOS.h). See spring.test.ts.
  *
  * SYNC: When modified, update:
@@ -420,47 +428,55 @@ export function settlingDuration(
 }
 
 /**
+ * ω₀ · duration that UIKit's legacy spring derivation lands on, by damping
+ * ratio, read from UIKit (`UIView.animate(withDuration:usingSpringWithDamping:
+ * initialSpringVelocity:)` and `UIViewPropertyAnimator(duration:dampingRatio:)`
+ * give identical springs): measured: UIKit lab (injected host app), iOS 26.2
+ * sim iPhone 17 Pro, CAAnimation read, Oct 23 2026.
+ */
+const UIKIT_LEGACY_OMEGA_DURATION: ReadonlyArray<readonly [number, number]> = [
+  [0.5, 12.717],
+  [0.8, 8.994],
+  [1, 9.233],
+];
+
+/**
  * UIKit's legacy `animate(withDuration:delay:usingSpringWithDamping:
  * initialSpringVelocity:…)`: the caller fixes the total duration and the
- * damping ratio, and UIKit derives the spring. Modeled as unit mass with the
- * stiffness whose settling duration (above) equals `duration`.
+ * damping ratio, and UIKit derives the spring: mass 1, the given damping
+ * ratio, and ω₀ = c(ζ) ÷ duration with c read from UIKit (12.717 at ζ 0.5,
+ * 8.994 at ζ 0.8, 9.233 at ζ 1, where the spring settles exactly at the
+ * duration). The animation is cut at the duration.
  *
- * GUESS: UIKit does not document how it derives the stiffness; this is the
- * hypothesis that its spring settles exactly at the given duration.
- * Measurement task M-K1 (see motion/README.md) reads the CASpringAnimation
- * UIKit attaches to a layer to confirm or replace it.
+ * GUESS between and outside the measured ratios: c is interpolated linearly
+ * (held flat past the ends), and the small shift a non-zero initial velocity
+ * causes (about 3 % in stiffness at velocity 2) is not modeled. Measurement
+ * task M-K1 extends the grid.
  */
 export function springFromUIKitDampingDuration({
   duration,
   dampingRatio,
-  initialSpringVelocity = 0,
 }: {
   duration: number;
   dampingRatio: number;
-  initialSpringVelocity?: number;
 }): Spring {
   assertPositiveFinite('duration', duration);
   // UIKit's ratio is clamped to (0, 1]: it has no overdamped springs.
   const zeta = Math.min(1, Math.max(1e-3, dampingRatio));
-  const settleFor = (omega0: number) =>
-    settlingDuration(
-      {mass: 1, stiffness: omega0 * omega0, damping: 2 * zeta * omega0},
-      {initialVelocity: initialSpringVelocity},
-    );
-  // Settling time falls monotonically as ω₀ grows; bisect in log space.
-  let lo = 1e-3;
-  let hi = 1e5;
-  for (let i = 0; i < 200; i++) {
-    const mid = Math.sqrt(lo * hi);
-    if (settleFor(mid) > duration) {
-      lo = mid;
-    } else {
-      hi = mid;
-    }
-    if (hi / lo < 1 + 1e-12) {
-      break;
+  const table = UIKIT_LEGACY_OMEGA_DURATION;
+  let c = table[0][1];
+  if (zeta >= table[table.length - 1][0]) {
+    c = table[table.length - 1][1];
+  } else {
+    for (let i = 0; i + 1 < table.length; i++) {
+      const [z0, c0] = table[i];
+      const [z1, c1] = table[i + 1];
+      if (zeta >= z0 && zeta <= z1) {
+        c = c0 + ((c1 - c0) * (zeta - z0)) / (z1 - z0);
+        break;
+      }
     }
   }
-  const omega0 = Math.sqrt(lo * hi);
+  const omega0 = c / duration;
   return {mass: 1, stiffness: omega0 * omega0, damping: 2 * zeta * omega0};
 }
