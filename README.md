@@ -25,3 +25,14 @@ These are labelled clips of every user-visible path each PR claims. They come fr
 | `paths/8109-dismiss-zone.gif` | #8109 P3: tracking 1:1 into the dismiss zone and back. |
 | `paths/8128-dim.gif` | #8128 P3 to P8: the release dim in lockstep, the catch, the peek's lighter scrim, a dismissal clearing the dim, a 700 ms block, and Reduce Motion. |
 | `paths/8203-entrance.gif` | #8203 P4 and P6: a tap and a grab during the entrance are ignored, a close at 100 ms runs after the landing, and Reduce Motion fades in and out in place. |
+
+## Side by side (review wave)
+
+Before (main) and after in one clip, started together at the same input: the same iOS 26.2 Mobile Safari simulator runs, each cropped to the page. The thin blue line marks a detent's top.
+
+| File | Shows |
+|---|---|
+| `cmp/8109-tracking.gif` | #8109: the same drag down and back up past the tallest detent. Before, the sheet trails the finger near a detent and stretches above the tallest; after, it stays under the finger and holds at the line. |
+| `cmp/8128-dim.gif` | #8128: the same drag 100 pt below the half detent and release. Before, the dim clears 40 % of the way down; after, it thins in a straight line to the bottom, then rides the release back. |
+
+`paths/8105-releases.gif` and `paths/8105-states.gif` were relabelled: P4 names its 3 px overshoot and P8 names canDismiss false.
