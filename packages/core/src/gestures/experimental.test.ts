@@ -34,6 +34,9 @@ const NAMES = [
   'useTouchPresentation',
   'readTouchPresentation',
   'playHaptic',
+  'claimRootScrollStyle',
+  'isScrollLockActive',
+  'subscribeScrollLock',
 ] as const;
 
 describe('@astryxdesign/core/gestures/experimental', () => {
