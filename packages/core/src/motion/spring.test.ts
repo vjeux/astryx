@@ -20,6 +20,7 @@ import {
   responseOf,
   settlingDuration,
   solveSpring,
+  solveSpringTowardRamp,
   springFromDurationBounce,
   springFromPhysics,
   springFromResponse,
@@ -243,6 +244,110 @@ describe('solveSpring', () => {
         1 - Math.cos((2 * Math.PI * t) / 0.5),
         9,
       );
+    }
+  });
+});
+
+describe('solveSpringTowardRamp (a target moving at constant speed)', () => {
+  /** RK4 on m·x″ + c·x′ + k·(x − (target + slope·t)) = 0. */
+  function rk4Ramp(
+    spring: Spring,
+    {
+      from,
+      velocity,
+      target,
+      slope,
+    }: {from: number; velocity: number; target: number; slope: number},
+    until: number,
+    dt = 1e-4,
+  ): {t: number; value: number; velocity: number}[] {
+    const {mass: m, stiffness: k, damping: c} = spring;
+    const accel = (time: number, x: number, v: number) =>
+      (-k * (x - (target + slope * time)) - c * v) / m;
+    let x = from;
+    let v = velocity;
+    const out = [{t: 0, value: x, velocity: v}];
+    const steps = Math.round(until / dt);
+    for (let i = 1; i <= steps; i++) {
+      const time = (i - 1) * dt;
+      const k1x = v;
+      const k1v = accel(time, x, v);
+      const k2x = v + (dt / 2) * k1v;
+      const k2v = accel(time + dt / 2, x + (dt / 2) * k1x, v + (dt / 2) * k1v);
+      const k3x = v + (dt / 2) * k2v;
+      const k3v = accel(time + dt / 2, x + (dt / 2) * k2x, v + (dt / 2) * k2v);
+      const k4x = v + dt * k3v;
+      const k4v = accel(time + dt, x + dt * k3x, v + dt * k3v);
+      x += (dt / 6) * (k1x + 2 * k2x + 2 * k3x + k4x);
+      v += (dt / 6) * (k1v + 2 * k2v + 2 * k3v + k4v);
+      if (i % 100 === 0) {
+        out.push({t: i * dt, value: x, velocity: v});
+      }
+    }
+    return out;
+  }
+
+  it.each([
+    {
+      name: 'underdamped',
+      spring: springFromResponse({response: 0.32, dampingRatio: 0.8}),
+      slope: 0.16,
+    },
+    {
+      name: 'critically damped',
+      spring: springFromResponse({response: 0.3, dampingRatio: 1}),
+      slope: -40,
+    },
+    {
+      name: 'overdamped',
+      spring: springFromPhysics({
+        stiffness: 100,
+        damping: 40,
+        allowOverdamping: true,
+      }),
+      slope: 250,
+    },
+  ])('matches an RK4 integration ($name)', ({spring, slope}) => {
+    const start = {from: 1, velocity: 0.5, target: 1.02, slope};
+    const curve = solveSpringTowardRamp(spring, start);
+    const scale = Math.max(1, Math.abs(slope));
+    for (const sample of rk4Ramp(spring, start, 1.5)) {
+      expect(Math.abs(curve.value(sample.t) - sample.value)).toBeLessThan(
+        1e-7 * scale,
+      );
+      expect(Math.abs(curve.velocity(sample.t) - sample.velocity)).toBeLessThan(
+        1e-6 * scale,
+      );
+    }
+  });
+
+  it('starts where it is told and settles lag behind, at the target\u2019s speed', () => {
+    const spring = springFromResponse({response: 0.3, dampingRatio: 1});
+    const curve = solveSpringTowardRamp(spring, {
+      from: 0,
+      velocity: 2,
+      target: 0,
+      slope: 10,
+    });
+    expect(curve.value(0)).toBeCloseTo(0, 12);
+    expect(curve.velocity(0)).toBeCloseTo(2, 12);
+    expect(curve.lag).toBeCloseTo((spring.damping * 10) / spring.stiffness, 12);
+    expect(curve.value(5) - (10 * 5 - curve.lag)).toBeCloseTo(0, 6);
+    expect(curve.velocity(5)).toBeCloseTo(10, 6);
+  });
+
+  it('with no slope it is the ordinary spring', () => {
+    const spring = springFromResponse({response: 0.35, dampingRatio: 0.85});
+    const ramp = solveSpringTowardRamp(spring, {
+      from: 0,
+      velocity: 3,
+      target: 1,
+      slope: 0,
+    });
+    const plain = solveSpring(spring, {from: 0, to: 1, velocity: 3});
+    for (let t = 0; t <= 1; t += 0.05) {
+      expect(ramp.value(t)).toBeCloseTo(plain.value(t), 12);
+      expect(ramp.velocity(t)).toBeCloseTo(plain.velocity(t), 12);
     }
   });
 });
