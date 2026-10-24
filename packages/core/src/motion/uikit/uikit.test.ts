@@ -20,7 +20,13 @@ import {
   PRESS_ONSET_MS,
   PRESS_SCROLL_BRAKE_MS,
 } from '../../utils/pressGesture';
-import {settlingDuration, toSpring, type SpringDescription} from '../spring';
+import {
+  naturalFrequency,
+  settlingDuration,
+  springFromUIKitDampingDuration,
+  toSpring,
+  type SpringDescription,
+} from '../spring';
 import {scroll, springs, timing} from '.';
 
 // Every domain file of the table: a new one is enforced the moment it lands.
@@ -171,6 +177,25 @@ describe('UIKit constants table: values', () => {
   it('UIKit\u2019s default spring has the documented damping ratio 4.56 before clamping', () => {
     const {mass, stiffness, damping} = springs.uikitDefault;
     expect(damping / (2 * Math.sqrt(stiffness * mass))).toBeCloseTo(4.56, 2);
+  });
+
+  it('the alert spring is UIKit\u2019s legacy derivation at 0.404 s, critically damped', () => {
+    // UIKit asks for damping 600 (clamped to 1) over 0.404 s; the measured
+    // grid predicts the spring Core Animation was handed.
+    const derived = springFromUIKitDampingDuration({
+      duration: 0.404,
+      dampingRatio: 1,
+    });
+    expect(derived.stiffness).toBeCloseTo(springs.alertPresent.stiffness, 1);
+    expect(derived.damping).toBeCloseTo(springs.alertPresent.damping, 2);
+  });
+
+  it('a sheet\u2019s detent spring is its presentation spring as rendered (critical, same pace)', () => {
+    // Core Animation clamps UIKit\u2019s default spring to critical damping.
+    expect(naturalFrequency(toSpring(springs.sheetDetent))).toBeCloseTo(
+      naturalFrequency(toSpring(springs.sheetPresent)),
+      6,
+    );
   });
 
   it('deceleration rates are per-millisecond factors in (0, 1), fast below normal', () => {
