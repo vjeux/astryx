@@ -9,14 +9,18 @@
  * @position Continuous recognizer of packages/core/src/gestures; the base of
  *   ScreenEdgePanGestureRecognizer
  *
- * Begins once the touches' centroid has travelled `hysteresis` px with
- * between `minimumNumberOfTouches` and `maximumNumberOfTouches` fingers down,
- * in the allowed `direction`. `translation()` is measured from where the
- * fingers landed, as UIKit's is; `beganTranslation` is its value at the
- * moment the pan began, for a surface that should not jump by the threshold.
- * Adding or lifting a finger never jumps the translation: the centroid is
- * re-based so the gesture continues where it was. Once moving, fingers past
- * the maximum are ignored, so a second finger never breaks a one-finger pan.
+ * Begins once the touches' centroid has travelled `hysteresis` px along
+ * either axis (UIKit applies it per axis, not as a distance) with between
+ * `minimumNumberOfTouches` and `maximumNumberOfTouches` fingers down, in the
+ * allowed `direction`. As in UIKit, `translation()` is reset when the pan
+ * begins, so the travel spent on the threshold is not part of it and a
+ * dragged surface does not jump; `totalTranslation()` is the movement since
+ * the fingers landed, and `travelAtBegan` what the threshold took.
+ * `velocity()` is UIKit's own filter (see VelocityTracker), fed one sample
+ * per event; the lift's position updates neither, as in UIKit. Adding or
+ * lifting a finger never jumps the translation: the centroid is re-based so
+ * the gesture continues where it was. Once moving, fingers past the maximum
+ * are ignored, so a second finger never breaks a one-finger pan.
  *
  * NATIVE SCROLL COORDINATION, for a pan over content the browser scrolls
  * (a sheet over its own list):
@@ -25,8 +29,9 @@
  *   scroll for that movement — the finger landed at the edge and pulls away
  *   from it. The browser has not committed yet, so beginning claims the
  *   touch and the browser never scrolls.
- * - `scrollHandoff` (with a one-way direction): when the browser took the
- *   touch to scroll, keep watching it. Once the content runs out in the
+ * - `scrollHandoff` (with a one-way direction; NOT UIKit, whose sheet leaves
+ *   a drag that began as a scroll to the scroll view for its whole length):
+ *   when the browser took the touch to scroll, keep watching it. Once the content runs out in the
  *   pan's direction, the travel beyond that point becomes the pan, after
  *   `contentEndHandoffSlop`; if the finger comes back, the translation
  *   clamps at zero while the content scrolls again, and a later pull past the
@@ -74,7 +79,7 @@ export interface PanGestureRecognizerOptions extends GestureRecognizerOptions<Pa
   scrollEdge?: boolean;
   /** Take over a native scroll at its edge (one-way directions only). */
   scrollHandoff?: boolean;
-  /** @default 'lsq2' */
+  /** @default 'uikit' */
   velocityStrategy?: VelocityStrategy;
 }
 
@@ -98,8 +103,8 @@ export class PanGestureRecognizer extends GestureRecognizer {
   scrollHandoff: boolean;
   /** The axis a `lockAxis` pan locked to when it began. */
   lockedAxis: 'x' | 'y' | null = null;
-  /** The translation at the moment the pan began. */
-  beganTranslation: Point = ZERO;
+  /** The movement the begin threshold took (excluded from `translation()`). */
+  travelAtBegan: Point = ZERO;
   /** Whether this pan is driving the rest of a gesture the browser was scrolling. */
   isHandoff = false;
 
@@ -112,7 +117,6 @@ export class PanGestureRecognizer extends GestureRecognizer {
   private raw: Point = ZERO;
   private offset: Point = ZERO;
   private virtual: Point = ZERO;
-  private velocityTime = 0;
   private isObserving = false;
   private anchor: Point | null = null;
   private predictedAnchor: Point | null = null;
@@ -129,11 +133,14 @@ export class PanGestureRecognizer extends GestureRecognizer {
     this.scrollEdge = options.scrollEdge ?? false;
     this.scrollHandoff = options.scrollHandoff ?? false;
     this.tracker = new VelocityTracker({
-      strategy: options.velocityStrategy ?? 'lsq2',
+      strategy: options.velocityStrategy ?? 'uikit',
     });
   }
 
-  /** Movement since the fingers landed (or since `setTranslation`), client px. */
+  /**
+   * Movement since the pan began (or since `setTranslation`), client px; the
+   * movement since touch-down while it is still possible.
+   */
   translation(): Point {
     const base = this.isHandoff ? this.handoffTravel() : this.raw;
     const value = {x: base.x + this.offset.x, y: base.y + this.offset.y};
@@ -146,9 +153,17 @@ export class PanGestureRecognizer extends GestureRecognizer {
     this.offset = {x: value.x - base.x, y: value.y - base.y};
   }
 
-  /** Release velocity in px/s, zero if the fingers rested before the last event. */
+  /** Movement since the fingers landed, threshold included, client px. */
+  totalTranslation(): Point {
+    return this.isHandoff ? this.handoffTravel() : this.raw;
+  }
+
+  /**
+   * Velocity in px/s, UIKit's way: after a rest it is the last moving value,
+   * since a finger at rest sends no events.
+   */
   velocity(): Point {
-    return this.locked(this.tracker.velocity(this.velocityTime));
+    return this.locked(this.tracker.velocity());
   }
 
   /**
@@ -208,7 +223,6 @@ export class PanGestureRecognizer extends GestureRecognizer {
       this.virtual = this.origin;
       this.tracker.reset();
       this.tracker.add(this.origin.x, this.origin.y, event.time);
-      this.velocityTime = event.time;
     } else {
       this.rebase(new Set(touches.map(touch => touch.id)), 'added');
     }
@@ -224,7 +238,7 @@ export class PanGestureRecognizer extends GestureRecognizer {
     touches: ReadonlyArray<GestureTouch>,
     event: GestureEventContext,
   ): void {
-    this.track(touches, event.time, false);
+    this.track(touches, event.time);
     if (this.isObserving) {
       this.observeNativeScroll();
       return;
@@ -236,11 +250,8 @@ export class PanGestureRecognizer extends GestureRecognizer {
     }
   }
 
-  protected override touchesEnded(
-    touches: ReadonlyArray<GestureTouch>,
-    event: GestureEventContext,
-  ): void {
-    this.track(touches, event.time, true);
+  protected override touchesEnded(touches: ReadonlyArray<GestureTouch>): void {
+    // UIKit reads neither the translation nor the velocity from the lift.
     const remaining = this.numberOfTouches - touches.length;
     if (isActive(this.state)) {
       if (remaining < this.minimumNumberOfTouches) {
@@ -276,7 +287,7 @@ export class PanGestureRecognizer extends GestureRecognizer {
 
   protected override reset(): void {
     this.lockedAxis = null;
-    this.beganTranslation = ZERO;
+    this.travelAtBegan = ZERO;
     this.isHandoff = false;
     this.isObserving = false;
     this.anchor = null;
@@ -323,7 +334,7 @@ export class PanGestureRecognizer extends GestureRecognizer {
       return;
     }
     const moved = this.raw;
-    if (Math.hypot(moved.x, moved.y) < this.hysteresis) {
+    if (Math.max(Math.abs(moved.x), Math.abs(moved.y)) < this.hysteresis) {
       return;
     }
     const verdict = this.classify(moved);
@@ -346,8 +357,32 @@ export class PanGestureRecognizer extends GestureRecognizer {
     if (this.lockAxis && this.direction === 'any') {
       this.lockedAxis = Math.abs(moved.x) >= Math.abs(moved.y) ? 'x' : 'y';
     }
-    this.beganTranslation = this.translation();
+    this.startFromHere();
     this.setState('began');
+  }
+
+  /**
+   * Leave the threshold's travel out of the translation, as UIKit does at
+   * .began: up to `hysteresis` px per axis, so a slow drag starts at zero and
+   * a step that overshoots keeps the overshoot (measured: a slow diagonal
+   * that crossed at (10.67, 10.67) reads (0.67, 0.67); a 3:1 drag crossing at
+   * (11, 3.67) reads (1, 0)). Some fast first moves read zero in UIKit; that
+   * case is not modelled.
+   */
+  private startFromHere(): void {
+    if (this.isHandoff) {
+      const base = this.handoffTravel();
+      this.travelAtBegan = base;
+      this.offset = {x: -base.x, y: -base.y};
+      return;
+    }
+    const limit = this.hysteresis;
+    const swallowed = {
+      x: Math.sign(this.raw.x) * Math.min(Math.abs(this.raw.x), limit),
+      y: Math.sign(this.raw.y) * Math.min(Math.abs(this.raw.y), limit),
+    };
+    this.travelAtBegan = swallowed;
+    this.offset = {x: -swallowed.x, y: -swallowed.y};
   }
 
   /** After the browser took the touch: take over once the content runs out. */
@@ -402,7 +437,7 @@ export class PanGestureRecognizer extends GestureRecognizer {
       UIKIT_GESTURES.scroll.contentEndHandoffSlop.value
     ) {
       this.isHandoff = true;
-      this.beganTranslation = this.translation();
+      this.startFromHere();
       this.setState('began');
     }
   }
@@ -442,20 +477,18 @@ export class PanGestureRecognizer extends GestureRecognizer {
     return false;
   }
 
-  private track(
-    touches: ReadonlyArray<GestureTouch>,
-    time: number,
-    isEnd: boolean,
-  ): void {
+  private track(touches: ReadonlyArray<GestureTouch>, time: number): void {
     const current = centroid(this.touches.values());
     const virtual = {
       x: current.x + this.adjust.x,
       y: current.y + this.adjust.y,
     };
-    const last = this.tracker.lastSample;
-    const hasMoved =
-      last == null || last.x !== virtual.x || last.y !== virtual.y;
-    if (this.numberOfTouches === 1 && touches.length === 1 && !isEnd) {
+    if (
+      this.tracker.strategy !== 'uikit' &&
+      this.numberOfTouches === 1 &&
+      touches.length === 1
+    ) {
+      // The fitting estimators take every coalesced sample.
       for (const sample of touches[0].samples) {
         this.tracker.add(
           sample.x + this.adjust.x,
@@ -463,15 +496,12 @@ export class PanGestureRecognizer extends GestureRecognizer {
           sample.time,
         );
       }
-    } else if (hasMoved) {
-      // A lift reports the last known position: adding it again with a
-      // later time would read as the finger slowing down (Android's
-      // VelocityTracker skips the up event for the same reason).
+    } else {
+      // UIKit's filter runs once per event.
       this.tracker.add(virtual.x, virtual.y, time);
     }
     this.virtual = virtual;
     this.raw = {x: virtual.x - this.origin.x, y: virtual.y - this.origin.y};
-    this.velocityTime = time;
   }
 
   /** Keep the translation continuous when fingers join or leave. */

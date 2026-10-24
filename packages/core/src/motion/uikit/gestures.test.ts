@@ -46,9 +46,15 @@ describe('UIKIT_GESTURES', () => {
     },
   );
 
-  it('keeps the documented UIKit defaults', () => {
+  it('keeps the documented and measured UIKit values', () => {
     expect(UIKIT_GESTURES.longPress.minimumPressDuration.value).toBe(500);
     expect(UIKIT_GESTURES.longPress.allowableMovement.value).toBe(10);
+    expect(UIKIT_GESTURES.tap.allowableMovement.value).toBe(45);
+    expect(UIKIT_GESTURES.tap.maximumIntervalBetweenTaps.value).toBe(350);
+    expect(UIKIT_GESTURES.pan.hysteresis.value).toBe(10);
+    expect(UIKIT_GESTURES.pinch.hysteresis.value).toBe(8);
+    expect(UIKIT_GESTURES.control.trackingExpansion.value).toBe(70);
+    expect(UIKIT_GESTURES.velocity.currentWeight.value).toBe(0.2);
   });
 
   it('keeps the pan decision under the distance WebKit claims a scroll at', () => {

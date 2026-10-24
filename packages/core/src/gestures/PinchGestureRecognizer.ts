@@ -8,9 +8,10 @@
  * @position Continuous two-finger recognizer of packages/core/src/gestures
  *
  * Tracks the first two fingers; more are ignored. Begins once the distance
- * between them has changed by `hysteresis` px. `scale` is the current
- * distance over the distance when they landed (settable, as in UIKit, to
- * re-base it); `velocity` is scale per second. Lifting either finger ends an
+ * between them has changed by `hysteresis` px. As in UIKit, `scale` is then
+ * the current distance over the starting distance moved by the hysteresis
+ * toward the pinch, so it does not jump (settable to re-base it); `velocity`
+ * is scale per second. Lifting either finger ends an
  * active pinch and fails a possible one.
  *
  * A host gives every element WITHOUT a pinch recognizer `pinch-zoom` in its
@@ -38,7 +39,7 @@ export class PinchGestureRecognizer extends GestureRecognizer {
   private initialSpan = 0;
   private scaleValue = 1;
   private readonly tracker = new VelocityTracker();
-  private velocityTime = 0;
+  private lastTime = 0;
 
   constructor(options: PinchGestureRecognizerOptions = {}) {
     super(options);
@@ -57,12 +58,15 @@ export class PinchGestureRecognizer extends GestureRecognizer {
     if (span > 0 && value > 0) {
       this.initialSpan = span / value;
       this.scaleValue = value;
+      // The velocity continues from the re-based value, without a jump.
+      this.tracker.reset();
+      this.tracker.add(value, 0, this.lastTime);
     }
   }
 
-  /** Scale per second. */
+  /** Scale per second (UIKit's filter; measured for pans, assumed here). */
   get velocity(): number {
-    return this.tracker.velocity(this.velocityTime).x;
+    return this.tracker.velocity().x;
   }
 
   /** The midpoint between the two fingers. */
@@ -83,12 +87,12 @@ export class PinchGestureRecognizer extends GestureRecognizer {
     _touches: ReadonlyArray<GestureTouch>,
     event: GestureEventContext,
   ): void {
+    this.lastTime = event.time;
     if (this.numberOfTouches === 2) {
       this.initialSpan = this.span();
       this.scaleValue = 1;
       this.tracker.reset();
       this.tracker.add(1, 0, event.time);
-      this.velocityTime = event.time;
     }
   }
 
@@ -99,24 +103,28 @@ export class PinchGestureRecognizer extends GestureRecognizer {
     if (this.numberOfTouches < 2 || this.initialSpan <= 0) {
       return;
     }
+    this.lastTime = event.time;
     const span = this.span();
-    this.scaleValue = span / this.initialSpan;
-    this.tracker.add(this.scaleValue, 0, event.time);
-    this.velocityTime = event.time;
     if (this.state === 'possible') {
       if (Math.abs(span - this.initialSpan) >= this.hysteresis) {
+        // UIKit measures from the start moved by the hysteresis, and its
+        // first velocity spans from the touch-down (scale 1) to here.
+        this.initialSpan +=
+          Math.sign(span - this.initialSpan) * this.hysteresis;
+        this.scaleValue = span / this.initialSpan;
+        this.tracker.add(this.scaleValue, 0, event.time);
         this.setState('began');
       }
-    } else if (isActive(this.state)) {
+      return;
+    }
+    this.scaleValue = span / this.initialSpan;
+    this.tracker.add(this.scaleValue, 0, event.time);
+    if (isActive(this.state)) {
       this.setState('changed');
     }
   }
 
-  protected override touchesEnded(
-    _touches: ReadonlyArray<GestureTouch>,
-    event: GestureEventContext,
-  ): void {
-    this.velocityTime = event.time;
+  protected override touchesEnded(): void {
     this.setState(isActive(this.state) ? 'ended' : 'failed');
   }
 

@@ -183,6 +183,30 @@ describe('LongPressGestureRecognizer', () => {
     expect(h.log).toHaveLength(2);
   });
 
+  it('begins on the touch itself with a zero duration, and claims it', () => {
+    const h = createHarness();
+    const press = new LongPressGestureRecognizer({
+      name: 'press',
+      minimumPressDuration: 0,
+      allowableMovement: Number.POSITIVE_INFINITY,
+    });
+    // Synchronously, in the touch-down delivery: no timer to wait for.
+    h.finger(1).down(10, 10, 40, {recognizers: [press]});
+    expect(press.state).toBe('began');
+    expect(press.beganAt).toBe(40);
+    expect(h.log).toEqual(['press:began@40']);
+    expect(h.claims).toEqual([1]);
+    // The finger slides across the group: changed, then ended at the lift.
+    h.finger(1).move(10, 120, 80);
+    expect(press.location()).toEqual({x: 10, y: 120});
+    h.finger(1).up(120);
+    expect(h.log.slice(1)).toEqual([
+      'press:changed@80',
+      'press:ended@120',
+      'press:possible@120',
+    ]);
+  });
+
   it('supports a tap before the press (numberOfTapsRequired)', () => {
     const h = createHarness();
     const press = new LongPressGestureRecognizer({
@@ -198,7 +222,7 @@ describe('LongPressGestureRecognizer', () => {
 });
 
 describe('PanGestureRecognizer', () => {
-  it('begins past the hysteresis with the translation since touch-down', () => {
+  it('begins past the hysteresis and leaves the threshold out of the translation', () => {
     const h = createHarness();
     const pan = new PanGestureRecognizer({name: 'pan'});
     const hysteresis = UIKIT_GESTURES.pan.hysteresis.value;
@@ -207,11 +231,37 @@ describe('PanGestureRecognizer', () => {
     expect(pan.state).toBe('possible');
     h.finger(1).move(100 + hysteresis + 2, 100, 32);
     expect(pan.state).toBe('began');
-    expect(pan.translation()).toEqual({x: hysteresis + 2, y: 0});
-    expect(pan.beganTranslation).toEqual({x: hysteresis + 2, y: 0});
+    // UIKit: the overshoot past the threshold, not the travel since touch-down.
+    expect(pan.translation()).toEqual({x: 2, y: 0});
+    expect(pan.travelAtBegan).toEqual({x: hysteresis, y: 0});
+    expect(pan.totalTranslation()).toEqual({x: hysteresis + 2, y: 0});
     h.finger(1).move(150, 120, 48);
     expect(pan.state).toBe('changed');
-    expect(pan.translation()).toEqual({x: 50, y: 20});
+    expect(pan.translation()).toEqual({x: 40, y: 20});
+    expect(pan.totalTranslation()).toEqual({x: 50, y: 20});
+  });
+
+  it('applies the hysteresis per axis, as UIKit does', () => {
+    const h = createHarness();
+    const pan = new PanGestureRecognizer({name: 'pan'});
+    // 10.6 px away on the diagonal, but under 10 on each axis: not yet.
+    h.finger(1)
+      .down(0, 0, 0, {recognizers: [pan]})
+      .move(7.5, 7.5, 16);
+    expect(pan.state).toBe('possible');
+    // UIKit's slow diagonal: began at (10.67, 10.67), translation (0.67, 0.67).
+    h.finger(1).move(10.5, 10.5, 32);
+    expect(pan.state).toBe('began');
+    expect(pan.translation()).toEqual({x: 0.5, y: 0.5});
+    // A 3:1 drag crossing at (11, 3.67) reads (1, 0) in UIKit.
+    const slope = createHarness();
+    const other = new PanGestureRecognizer({name: 'other'});
+    slope
+      .finger(1)
+      .down(0, 0, 0, {recognizers: [other]})
+      .move(9, 3, 16)
+      .move(11, 3.5, 32);
+    expect(other.translation()).toEqual({x: 1, y: 0});
   });
 
   it('ends with the release velocity in px/s', () => {
@@ -233,7 +283,7 @@ describe('PanGestureRecognizer', () => {
     expect(releaseVelocity.y).toBeCloseTo(0, 5);
   });
 
-  it('reports no velocity when the finger rested before lifting', () => {
+  it('keeps the last moving velocity through a rest before the lift, as UIKit does', () => {
     const h = createHarness();
     const pan = new PanGestureRecognizer({name: 'pan'});
     let releaseVelocity = {x: -1, y: -1};
@@ -244,8 +294,10 @@ describe('PanGestureRecognizer', () => {
     });
     const finger = h.finger(1).down(0, 0, 0, {recognizers: [pan]});
     finger.drag(200, 0, 100, 10);
-    finger.up(100 + UIKIT_GESTURES.velocity.assumeStopped.value + 1);
-    expect(releaseVelocity).toEqual({x: 0, y: 0});
+    // A still finger sends no events; the lift updates nothing.
+    finger.up(200);
+    expect(releaseVelocity.x).toBeCloseTo(2000, 6);
+    expect(releaseVelocity.y).toBe(0);
   });
 
   it('fails a drag against its direction', () => {
@@ -349,7 +401,7 @@ describe('PanGestureRecognizer', () => {
       .move(12, 4, 16)
       .move(40, 30, 32);
     expect(pan.lockedAxis).toBe('x');
-    expect(pan.translation()).toEqual({x: 40, y: 0});
+    expect(pan.translation()).toEqual({x: 30, y: 0});
   });
 
   it('ignores a second finger once moving, so it never breaks the first', () => {
@@ -366,7 +418,7 @@ describe('PanGestureRecognizer', () => {
     expect(pan.numberOfTouches).toBe(1);
     h.finger(2).move(260, 260, 40);
     h.finger(1).move(30, 0, 48);
-    expect(pan.translation()).toEqual({x: 30, y: 0});
+    expect(pan.translation()).toEqual({x: 20, y: 0});
     h.finger(2).up(60);
     expect(pan.state).toBe('changed');
     h.finger(1).up(70);
@@ -391,17 +443,17 @@ describe('PanGestureRecognizer', () => {
     h.finger(1)
       .down(0, 0, 0, {recognizers: [pan]})
       .move(30, 0, 16);
-    expect(pan.translation()).toEqual({x: 30, y: 0});
+    expect(pan.translation()).toEqual({x: 20, y: 0});
     // A second finger far away moves the centroid by 100 px: no jump.
     h.finger(2).down(230, 0, 20, {recognizers: [pan]});
-    expect(pan.translation()).toEqual({x: 30, y: 0});
+    expect(pan.translation()).toEqual({x: 20, y: 0});
     h.finger(1).move(40, 0, 32);
     h.finger(2).move(240, 0, 32);
-    expect(pan.translation()).toEqual({x: 40, y: 0});
+    expect(pan.translation()).toEqual({x: 30, y: 0});
     h.finger(2).up(40);
-    expect(pan.translation()).toEqual({x: 40, y: 0});
+    expect(pan.translation()).toEqual({x: 30, y: 0});
     h.finger(1).move(50, 0, 48);
-    expect(pan.translation()).toEqual({x: 50, y: 0});
+    expect(pan.translation()).toEqual({x: 40, y: 0});
   });
 
   it('waits for the minimum number of touches', () => {
@@ -510,11 +562,13 @@ describe('PinchGestureRecognizer', () => {
     expect(pinch.state).toBe('possible');
     h.finger(2).move(210, 100, 32);
     expect(pinch.state).toBe('began');
-    expect(pinch.scale).toBeCloseTo(1.1, 5);
+    // UIKit: against the starting span moved by the hysteresis (100 + 8).
+    expect(pinch.scale).toBeCloseTo(110 / 108, 5);
     for (let t = 48; t <= 160; t += 16) {
       h.finger(2).move(210 + (t - 32) * 0.1, 100, t);
     }
-    expect(pinch.velocity).toBeCloseTo(1, 1); // 0.1 px/ms over 100 px
+    // 0.1 px/ms over 108 px.
+    expect(pinch.velocity).toBeCloseTo(100 / 108, 5);
     h.finger(1).up(170);
     expect(h.log).toContain('pinch:ended@170');
   });

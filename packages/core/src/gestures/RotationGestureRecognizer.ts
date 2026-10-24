@@ -34,7 +34,6 @@ export class RotationGestureRecognizer extends GestureRecognizer {
   private lastAngle = 0;
   private rotationValue = 0;
   private readonly tracker = new VelocityTracker();
-  private velocityTime = 0;
 
   constructor(options: RotationGestureRecognizerOptions = {}) {
     super(options);
@@ -54,7 +53,7 @@ export class RotationGestureRecognizer extends GestureRecognizer {
 
   /** Radians per second. */
   get velocity(): number {
-    return this.tracker.velocity(this.velocityTime).x;
+    return this.tracker.velocity().x;
   }
 
   focalPoint(): Point {
@@ -81,7 +80,6 @@ export class RotationGestureRecognizer extends GestureRecognizer {
       this.rotationValue = 0;
       this.tracker.reset();
       this.tracker.add(0, 0, event.time);
-      this.velocityTime = event.time;
     }
   }
 
@@ -96,7 +94,6 @@ export class RotationGestureRecognizer extends GestureRecognizer {
     this.lastAngle = unwrapAngle(angleBetween(a, b), this.lastAngle);
     this.rotationValue = this.lastAngle - this.initialAngle;
     this.tracker.add(this.rotationValue, 0, event.time);
-    this.velocityTime = event.time;
     if (this.state === 'possible') {
       if (Math.abs(this.rotationValue) >= this.hysteresis) {
         this.setState('began');
@@ -106,11 +103,7 @@ export class RotationGestureRecognizer extends GestureRecognizer {
     }
   }
 
-  protected override touchesEnded(
-    _touches: ReadonlyArray<GestureTouch>,
-    event: GestureEventContext,
-  ): void {
-    this.velocityTime = event.time;
+  protected override touchesEnded(): void {
     this.setState(isActive(this.state) ? 'ended' : 'failed');
   }
 

@@ -244,7 +244,8 @@ describe('GestureHost', () => {
       buttons: 1,
       time: 32,
     });
-    expect(states).toEqual(['began:12']);
+    // Translation 2: the 10 px hysteresis is left out, as in UIKit.
+    expect(states).toEqual(['began:2']);
     // The first touchmove (the same input as a pointermove) is cancelled
     // and not read twice.
     pointer('pointermove', box, {
@@ -263,7 +264,7 @@ describe('GestureHost', () => {
       48,
     );
     expect(first.defaultPrevented).toBe(true);
-    expect(states).toEqual(['began:12', 'changed:16']);
+    expect(states).toEqual(['began:2', 'changed:6']);
     // pointercancel names the finger exactly, whatever its coordinates say.
     pointer('pointercancel', box, {
       id: 21,

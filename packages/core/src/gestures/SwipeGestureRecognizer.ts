@@ -10,7 +10,7 @@
  * Recognized WHILE the fingers move, as UIKit's is: as soon as the centroid
  * has travelled `minimumDistance` along an allowed direction, within
  * `maximumDuration` of touch-down, with off-axis travel no more than
- * `maximumOffAxisRatio` of it. Travel that clears the distance in no allowed
+ * `maximumSecondaryMovement` px across it. Travel that clears the distance in no allowed
  * direction fails it, as do too many fingers, the duration running out, and
  * a lift before it was recognized.
  */
@@ -33,7 +33,7 @@ export interface SwipeGestureRecognizerOptions extends GestureRecognizerOptions<
   numberOfTouchesRequired?: number;
   minimumDistance?: number;
   maximumDuration?: number;
-  maximumOffAxisRatio?: number;
+  maximumSecondaryMovement?: number;
 }
 
 const SWIPE = UIKIT_GESTURES.swipe;
@@ -43,7 +43,7 @@ export class SwipeGestureRecognizer extends GestureRecognizer {
   numberOfTouchesRequired: number;
   minimumDistance: number;
   maximumDuration: number;
-  maximumOffAxisRatio: number;
+  maximumSecondaryMovement: number;
   /** The direction of the recognized swipe. */
   recognizedDirection: SwipeDirection | null = null;
 
@@ -58,8 +58,8 @@ export class SwipeGestureRecognizer extends GestureRecognizer {
       options.minimumDistance ?? SWIPE.minimumDistance.value;
     this.maximumDuration =
       options.maximumDuration ?? SWIPE.maximumDuration.value;
-    this.maximumOffAxisRatio =
-      options.maximumOffAxisRatio ?? SWIPE.maximumOffAxisRatio.value;
+    this.maximumSecondaryMovement =
+      options.maximumSecondaryMovement ?? SWIPE.maximumSecondaryMovement.value;
   }
 
   override get isDiscrete(): boolean {
@@ -116,7 +116,7 @@ export class SwipeGestureRecognizer extends GestureRecognizer {
               : [dy, dx];
       if (
         along >= this.minimumDistance &&
-        Math.abs(across) <= along * this.maximumOffAxisRatio
+        Math.abs(across) <= this.maximumSecondaryMovement
       ) {
         this.recognizedDirection = direction;
         this.setState('ended');

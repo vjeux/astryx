@@ -145,6 +145,26 @@ describe('installPressAttribute', () => {
     touch('touchend', row, {id: 3, x: 5, y: 200}, brake + 1050);
   });
 
+  it('never overwrites or clears a value it did not write', () => {
+    const {row, other} = mount(
+      `<div id="row" data-astryx-pressable data-astryx-press="held">Row</div>
+       <div id="other" data-astryx-pressable>Other</div>`,
+    );
+    // A row kept selected through a navigation push stays held.
+    touch('touchstart', row, {id: 1, x: 5, y: 5}, 0);
+    expect(row.getAttribute('data-astryx-press')).toBe('held');
+    touch('touchend', row, {id: 1, x: 5, y: 5}, 80);
+    vi.advanceTimersByTime(PRESS_FADE_MS);
+    expect(row.getAttribute('data-astryx-press')).toBe('held');
+    // Its owner takes over during the release fade: the fade leaves it.
+    touch('touchstart', other, {id: 2, x: 5, y: 5}, 1000);
+    touch('touchend', other, {id: 2, x: 5, y: 5}, 1080);
+    expect(other.getAttribute('data-astryx-press')).toBe('fading');
+    other.setAttribute('data-astryx-press', 'held');
+    vi.advanceTimersByTime(PRESS_FADE_MS);
+    expect(other.getAttribute('data-astryx-press')).toBe('held');
+  });
+
   it('counts installs and adds no listener to the marked elements', () => {
     const second = installPressAttribute(document);
     const {row} = mount('<div id="row" data-astryx-pressable>Row</div>');

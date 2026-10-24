@@ -73,6 +73,14 @@ export function isGuess<T>(
 const APPLE = 'https://developer.apple.com/documentation/uikit';
 
 /**
+ * In-process reads and touch runs of fresh UIKit recognizers (private ivars
+ * read with key-value coding, every value confirmed with HID touches and the
+ * recognizer state log), iPhone 17 Pro simulator, iOS 26.2, Oct 2026.
+ */
+const UIKIT_LAB =
+  'measured: UIKit lab, iOS 26.2 simulator, ivar reads confirmed with HID touches';
+
+/**
  * The repository's own measurement of the touch press model, recorded in
  * packages/core/src/utils/pressGesture.ts: Settings and Contacts on an iPhone
  * simulator running iOS 26.2, driven with real HID touches, filmed at 60 fps.
@@ -90,42 +98,31 @@ const SAFARI_SCROLL_CLAIM =
 export const UIKIT_GESTURES = {
   tap: {
     /**
-     * How far each finger may travel from where it landed before a tap fails.
+     * How far each finger may travel from where it landed before a tap
+     * fails, as a distance.
      */
     allowableMovement: {
-      value: 10,
+      value: 45,
       unit: 'px',
-      guess:
-        'UITapGestureRecognizer does not document it; matches the long-press tolerance and the press slop the repository measured.',
-      measure:
-        'M-G01: Safari (UIKit tap -> click): on a touch-action:none box, HID touch down, move N px over 100 ms, lift; binary-search the largest N that still fires click.',
+      source: `${UIKIT_LAB}: UITapGestureRecognizer _allowableMovement 45; 44 pt taps, 46 pt fails, the same on the diagonal`,
     },
     /** Longest interval between one tap lifting and the next landing. */
     maximumIntervalBetweenTaps: {
       value: 350,
       unit: 'ms',
-      guess:
-        'UITapGestureRecognizer does not document its multi-tap interval; 350 ms is the commonly reported UIKit default.',
-      measure:
-        'M-G02: Safari with user-scalable=no (UIKit double-tap -> dblclick): two HID taps T ms apart; binary-search the largest T that fires dblclick.',
+      source: `${UIKIT_LAB}: _maximumIntervalBetweenSuccessiveTaps 0.35 s; 330 ms double-taps, 370 ms does not`,
     },
     /** How far a later tap may land from the first one of the sequence. */
     allowableSeparation: {
       value: 45,
       unit: 'px',
-      guess:
-        'Undocumented; roughly one fingertip, so a double tap need not land on the same pixel.',
-      measure:
-        'M-G03: Safari with user-scalable=no: two HID taps 150 ms apart, the second D px away; binary-search the largest D that fires dblclick.',
+      source: `${UIKIT_LAB}: _allowableSeparation is unbounded and the 45 pt movement rule applies between taps; 44 pt double-taps, 46 does not`,
     },
     /** Longest a finger may stay down and still tap. */
     maximumTapDuration: {
-      value: Number.POSITIVE_INFINITY,
+      value: 1500,
       unit: 'ms',
-      guess:
-        'Safari fires click after a long hold on a button, which suggests no limit for a single tap.',
-      measure:
-        'M-G04: Safari: HID hold on a <button> for 0.5, 1, 2, 4 s then lift; record which fire click.',
+      source: `${UIKIT_LAB}: maximumTapDuration 1.5 s; a 1.4 s hold taps, 1.6 s does not`,
     },
   },
   longPress: {
@@ -133,27 +130,27 @@ export const UIKIT_GESTURES = {
     minimumPressDuration: {
       value: 500,
       unit: 'ms',
-      source: `apple-docs ${APPLE}/uilongpressgesturerecognizer/minimumpressduration`,
+      source: `apple-docs ${APPLE}/uilongpressgesturerecognizer/minimumpressduration; ${UIKIT_LAB}: _minimumPressDuration 0.5`,
     },
-    /** UILongPressGestureRecognizer.allowableMovement default. */
+    /** UILongPressGestureRecognizer.allowableMovement default, a distance. */
     allowableMovement: {
       value: 10,
       unit: 'px',
-      source: `apple-docs ${APPLE}/uilongpressgesturerecognizer/allowablemovement`,
+      source: `apple-docs ${APPLE}/uilongpressgesturerecognizer/allowablemovement; ${UIKIT_LAB}: a (7, 7) drift begins, (7.2, 7.2) fails`,
     },
   },
   pan: {
     /**
-     * Distance the touches' centroid travels before a pan begins. Kept BELOW
-     * the distance at which WebKit claims a drag for scrolling, so a pan that
-     * must cancel the native scroll still sees cancelable `touchmove`s.
+     * Travel before a pan begins, PER AXIS: |dx| or |dy| reaching it. The
+     * translation is reset when the pan begins, so the hysteresis is not
+     * part of it. Kept below the distance at which WebKit claims a drag for
+     * scrolling, so a pan that must cancel the native scroll still sees
+     * cancelable `touchmove`s.
      */
     hysteresis: {
       value: 10,
       unit: 'px',
-      guess: `UIPanGestureRecognizer does not document it. ${SAFARI_SCROLL_CLAIM}; the pan has to decide before that.`,
-      measure:
-        'M-G05: Settings list (UIScrollView pan): slow HID drag at 20 px/s filmed at 60 fps; touch travel at the first frame the content moves.',
+      source: `${UIKIT_LAB}: UIPanGestureRecognizer _hysteresis 10; x and y began at 10.0, a diagonal at (10.67, 10.67); translation(in:) is 0 at .began`,
     },
   },
   swipe: {
@@ -161,36 +158,40 @@ export const UIKIT_GESTURES = {
     minimumDistance: {
       value: 50,
       unit: 'px',
-      guess:
-        'UISwipeGestureRecognizer does not document it; 50 pt is the commonly reported primary-movement minimum.',
-      measure:
-        'M-G06: Needs a UIKit app that uses UISwipeGestureRecognizer (no built-in candidate known): HID swipes of increasing length at 600 px/s.',
+      source: `${UIKIT_LAB}: UISwipeGestureRecognizer minimum primary movement 50; recognized during the motion; 40 pt does not`,
     },
     /** Longest a swipe may take before it fails. */
     maximumDuration: {
       value: 500,
       unit: 'ms',
-      guess: 'Undocumented; a swipe slower than half a second reads as a drag.',
-      measure:
-        'M-G07: Same rig as minimumDistance: 120 px swipes at decreasing speed; longest duration that still recognizes.',
+      source: `${UIKIT_LAB}: UISwipeGestureRecognizer maximum duration 0.5 s`,
     },
-    /** Off-axis travel allowed, as a fraction of the travel along the axis. */
-    maximumOffAxisRatio: {
-      value: 0.5,
+    /** Travel across the swipe direction that fails it. */
+    maximumSecondaryMovement: {
+      value: 50,
+      unit: 'px',
+      source: `${UIKIT_LAB}: UISwipeGestureRecognizer maximum secondary movement 50`,
+    },
+    /**
+     * How the minimum movement relaxes over time. Read, not modelled: a
+     * 120 pt swipe over 0.8 s was recognized at 303 ms, below 50 pt of travel.
+     */
+    minimumMovementDecay: {
+      value: 0.06,
       unit: 'ratio',
-      guess: 'Undocumented; about 27 degrees off the axis.',
-      measure:
-        'M-G08: Same rig: 120 px swipes at increasing angles; largest angle that still recognizes.',
+      source: `${UIKIT_LAB}: UISwipeGestureRecognizer rateOfMinimumMovementDecay 0.06 (not modelled)`,
     },
   },
   pinch: {
-    /** Change of the distance between two fingers before a pinch begins. */
+    /**
+     * Change of the distance between two fingers before a pinch begins. The
+     * scale is then measured against the starting span moved by this much,
+     * so it does not jump.
+     */
     hysteresis: {
       value: 8,
       unit: 'px',
-      guess: 'UIPinchGestureRecognizer does not document it.',
-      measure:
-        'M-G09: Photos (zoomable image): two HID touches spreading at 20 px/s filmed at 60 fps; span change at the first frame the image scales.',
+      source: `${UIKIT_LAB}: UIPinchGestureRecognizer _hysteresis 8; out from 120 began at 144 with scale 1.125 (= 144 / 128)`,
     },
   },
   rotation: {
@@ -198,20 +199,24 @@ export const UIKIT_GESTURES = {
     hysteresis: {
       value: (5 * Math.PI) / 180,
       unit: 'rad',
-      guess: 'UIRotationGestureRecognizer does not document it; 5 degrees.',
+      guess:
+        'UIRotationGestureRecognizer has no scalar threshold among its ivars; 5 degrees.',
       measure:
-        'M-G10: Maps: two HID touches rotating at 10 deg/s filmed at 60 fps; angle at the first frame the map turns.',
+        'M-G10: The simulator HID cannot rotate two fingers: a device run (or an XCUITest rotate) logging the angle at .began.',
     },
   },
   screenEdgePan: {
     /** Width of the band at the screen edge a touch must land in. */
     edgeRegion: {
-      value: 20,
+      value: 40.2,
       unit: 'px',
-      guess:
-        'UIScreenEdgePanGestureRecognizer does not document it; the interactive pop gesture is reported to start within about 20 pt.',
-      measure:
-        'M-G11: Settings > General (UINavigationController pop): HID drags inward starting at x = 5, 10 ... 40 pt; largest x that still pops.',
+      source: `${UIKIT_LAB}: UIScreenEdgePanGestureRecognizer _edgeRegionSize 40.2 on a 402 pt wide screen (10 % of it); edge pans cannot begin from simulator HID`,
+    },
+    /** Travel before an edge pan begins. */
+    hysteresis: {
+      value: 15,
+      unit: 'px',
+      source: `${UIKIT_LAB}: the screen-edge pan hysteresis ivar 15`,
     },
   },
   control: {
@@ -222,10 +227,7 @@ export const UIKIT_GESTURES = {
     trackingExpansion: {
       value: 70,
       unit: 'px',
-      guess:
-        'Undocumented; UIButton is widely reported to stay highlighted about 70 pt outside its frame.',
-      measure:
-        'M-G12: Calculator (UIButton): HID press, drag away at 20 px/s filmed at 60 fps; distance from the frame at which the highlight turns off, then back on.',
+      source: `${UIKIT_LAB}: UIButton (.system) stays inside up to 70 pt out, touchDragExit at 71, touchDragEnter at 69 coming back; touchUpInside up to 70, touchUpOutside from 71`,
     },
   },
   press: {
@@ -265,7 +267,9 @@ export const UIKIT_GESTURES = {
   scroll: {
     /**
      * Travel past the point where a native scroll ran out of content before
-     * the gesture hands the rest of the pull to a recognizer.
+     * an opt-in `scrollHandoff` pan takes the rest of the gesture. UIKit
+     * itself never hands a drag over mid-gesture (a sheet over a scrolled
+     * list leaves the whole drag to the list), so this is not a parity value.
      */
     contentEndHandoffSlop: {
       value: 4,
@@ -273,33 +277,47 @@ export const UIKIT_GESTURES = {
       guess:
         'The BottomSheet value (useSheetGestures.ts): enough to ignore a fling coming to rest on the last pixel.',
       measure:
-        'M-G13: A UIKit sheet (Maps place card at the medium detent) over a scrolled list: HID drag down from mid-list; finger travel between the list reaching its top and the sheet moving.',
+        'M-G13: None for parity: UIKit decides sheet versus scroll when the drag begins (a sheet over a scrolled list leaves the whole drag to the list).',
     },
   },
   velocity: {
-    /** Samples older than this, relative to the newest, are ignored. */
+    /**
+     * UIPanGestureRecognizer.velocity(in:) is this times the newest event's
+     * instantaneous velocity plus the rest times the previous event's
+     * (instantaneous velocity: position change over timestamp change between
+     * consecutive events, the touch-down counting as the first). The lift
+     * does not update it, and a finger at rest sends no events, so a release
+     * after a pause reports the last moving value.
+     */
+    currentWeight: {
+      value: 0.2,
+      unit: 'ratio',
+      source: `${UIKIT_LAB}: fitted to all 69 velocity(in:) values of six HID streams (constant, accelerating, pauses before the lift) to 0.0 pt/s`,
+    },
+    /** For the least-squares alternative: samples older than this are ignored. */
     horizon: {
       value: 100,
       unit: 'ms',
       guess:
-        "UIKit's estimator is private. Android's VelocityTracker and Flutter's both fit the last 100 ms (least squares, degree 2).",
-      measure:
-        'M-G14: Safari page scroll (UIScrollView): HID flings with known speed profiles; back out the release velocity from the coast distance (0.998/ms decay) and compare with this estimator on the same samples.',
+        "Android's VelocityTracker and Flutter's fit the last 100 ms (least squares, degree 2); UIKit itself uses currentWeight.",
+      measure: 'M-G14: Not a parity value: UIKit uses the two-event filter.',
     },
-    /** At most this many samples are kept. */
+    /** For the least-squares alternative: at most this many samples. */
     maxSamples: {
       value: 20,
       unit: 'count',
       guess: 'Android VelocityTracker and Flutter VelocityTracker keep 20.',
-      measure: 'M-G15: Same comparison as horizon (M-G14).',
+      measure: 'M-G15: Not a parity value: UIKit uses the two-event filter.',
     },
-    /** A finger that has not moved for this long before lifting released nothing in motion. */
+    /**
+     * For the least-squares alternative: a gap this long between samples
+     * separates two motions.
+     */
     assumeStopped: {
       value: 40,
       unit: 'ms',
       guess: 'Android VelocityTracker and Flutter VelocityTracker use 40 ms.',
-      measure:
-        'M-G16: Safari page scroll: HID drag, pause P ms, lift; smallest P after which the page does not coast.',
+      measure: 'M-G16: Not a parity value: UIKit uses the two-event filter.',
     },
   },
   click: {
