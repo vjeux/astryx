@@ -20,8 +20,13 @@
  *   reports coarse and gets touch ones at any width. Not `hover: none` (some
  *   touch browsers report hover) and not `any-pointer` (a laptop's touch
  *   screen is not how it is driven).
- * - LAYOUT behaviours key on the available width: compact at 768 px and
- *   below, whatever the pointer.
+ * - LAYOUT behaviours key on the available size: compact below 744 px of
+ *   width or below 500 px of height, whatever the pointer. UIKit decides by
+ *   size class, which is not a width (an iPad mini in portrait, 744 pt wide,
+ *   is regular; an iPhone in landscape, 852 pt wide, is compact). These two
+ *   lines sort both right, and phones in landscape with them; the one known
+ *   miss is a Max-size iPhone in landscape (932 x 430 pt), which UIKit calls
+ *   regular and this calls compact.
  * - A presentation that needs both (a bottom sheet in place of a popover, a
  *   drilled-in sub-menu in place of a flyout) asks for both.
  *
@@ -46,10 +51,11 @@ import {useMediaQuery} from '../hooks/useMediaQuery';
 export const TOUCH_QUERY = '(pointer: coarse)';
 
 /** The viewport is compact: layout behaviours. */
-export const COMPACT_QUERY = '(max-width: 768px)';
+export const COMPACT_QUERY = '(width < 744px), (height < 500px)';
 
 /** Both: presentations such as a sheet in place of a popover. */
-export const COMPACT_TOUCH_QUERY = `${COMPACT_QUERY} and ${TOUCH_QUERY}`;
+export const COMPACT_TOUCH_QUERY =
+  '(width < 744px) and (pointer: coarse), (height < 500px) and (pointer: coarse)';
 
 export interface TouchPresentation {
   /** The primary pointer is coarse (a finger). */

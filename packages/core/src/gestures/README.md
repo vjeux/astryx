@@ -303,8 +303,10 @@ in `../utils/touchPresentation.ts`:
 
 - touch behaviours (this system, the press model, UIKit springs and
   timings) key on a coarse PRIMARY pointer (`TOUCH_QUERY`);
-- layout behaviours key on a compact viewport, 768 px and below
-  (`COMPACT_QUERY`);
+- layout behaviours key on a compact viewport, narrower than 744 px or
+  shorter than 500 px (`COMPACT_QUERY`), the closest a size can get to
+  UIKit's compact size class (a Max-size iPhone in landscape is its one
+  known miss);
 - a presentation that needs both, a sheet in place of a popover, asks for
   both (`COMPACT_TOUCH_QUERY`).
 

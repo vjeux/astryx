@@ -19,9 +19,10 @@ export type ResolvedAdaptivePresentation = Exclude<
   'adaptive'
 >;
 
-// A sheet needs both a compact viewport and a coarse primary pointer: width
-// keeps desktop-class tablets and large touch displays anchored. The query is
-// the shared touch presentation's (utils/touchPresentation.ts).
+// A sheet needs both a compact viewport and a coarse primary pointer: tablets
+// and large touch displays stay anchored, phones in either orientation get
+// the sheet. The query is the shared touch presentation's
+// (utils/touchPresentation.ts).
 export const COMPACT_TOUCH_PRESENTATION_QUERY = COMPACT_TOUCH_QUERY;
 
 export function useAdaptivePresentation(

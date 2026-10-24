@@ -29,7 +29,8 @@ export const touchMedia = stylex.defineConsts({
   /** The primary pointer is coarse: touch behaviours and UIKit motion. */
   touch: '@media (pointer: coarse)',
   /** The viewport is compact: layout behaviours. */
-  compact: '@media (max-width: 768px)',
+  compact: '@media (width < 744px), (height < 500px)',
   /** Both: presentations such as a sheet in place of a popover. */
-  compactTouch: '@media (max-width: 768px) and (pointer: coarse)',
+  compactTouch:
+    '@media (width < 744px) and (pointer: coarse), (height < 500px) and (pointer: coarse)',
 });

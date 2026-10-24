@@ -59,8 +59,10 @@ describe('touch presentation media keys (compiled)', () => {
   it('compile to the queries themselves', async () => {
     const css = await compile();
     expect(css).toContain('@media (pointer: coarse)');
-    expect(css).toContain('@media (max-width: 768px)');
-    expect(css).toContain('@media (max-width: 768px) and (pointer: coarse)');
+    expect(css).toContain('@media (width < 744px), (height < 500px)');
+    expect(css).toContain(
+      '@media (width < 744px) and (pointer: coarse), (height < 500px) and (pointer: coarse)',
+    );
     // A constant left unresolved compiles to a broken `var(--…){…}` rule.
     expect(css).not.toMatch(/(^|\n)var\(--/);
   });

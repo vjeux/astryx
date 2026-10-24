@@ -29,22 +29,24 @@ import {
 } from './touchPresentation';
 import {touchMedia} from './touchPresentation.stylex';
 
-/** A device: what its primary pointer is and how wide its viewport is. */
-const device = {coarse: false, width: 1280};
+/** A device: what its primary pointer is and how big its viewport is. */
+const device = {coarse: false, width: 1280, height: 800};
 const listeners = new Set<() => void>();
 
+/** Answers a media query list: `,` is or, `and` is and. */
 function answer(query: string): boolean {
-  const parts = query.split(' and ');
-  return parts.every(part => {
-    if (part === '(pointer: coarse)') {
-      return device.coarse;
-    }
-    const width = /^\(max-width: (\d+)px\)$/.exec(part);
-    if (width != null) {
-      return device.width <= Number(width[1]);
-    }
-    throw new Error(`unexpected query ${query}`);
-  });
+  return query.split(', ').some(alternative =>
+    alternative.split(' and ').every(part => {
+      if (part === '(pointer: coarse)') {
+        return device.coarse;
+      }
+      const range = /^\((width|height) < (\d+)px\)$/.exec(part);
+      if (range != null) {
+        return device[range[1] as 'width' | 'height'] < Number(range[2]);
+      }
+      throw new Error(`unexpected query ${query}`);
+    }),
+  );
 }
 
 function setDevice(next: Partial<typeof device>): void {
@@ -55,7 +57,7 @@ function setDevice(next: Partial<typeof device>): void {
 }
 
 beforeEach(() => {
-  setDevice({coarse: false, width: 1280});
+  setDevice({coarse: false, width: 1280, height: 800});
   vi.stubGlobal(
     'matchMedia',
     vi.fn((query: string) => ({
@@ -85,21 +87,21 @@ describe('touch presentation', () => {
       isCompactTouch: false,
     });
     // A tablet: a finger at any width.
-    act(() => setDevice({coarse: true, width: 1024}));
+    act(() => setDevice({coarse: true, width: 1024, height: 1366}));
     expect(result.current).toEqual({
       isTouch: true,
       isCompact: false,
       isCompactTouch: false,
     });
     // A narrowed desktop window: compact, still a mouse.
-    act(() => setDevice({coarse: false, width: 600}));
+    act(() => setDevice({coarse: false, width: 600, height: 900}));
     expect(result.current).toEqual({
       isTouch: false,
       isCompact: true,
       isCompactTouch: false,
     });
     // A phone: both.
-    act(() => setDevice({coarse: true, width: 390}));
+    act(() => setDevice({coarse: true, width: 390, height: 844}));
     expect(result.current).toEqual({
       isTouch: true,
       isCompact: true,
@@ -125,15 +127,31 @@ describe('touch presentation', () => {
         `${presentation.isTouch}/${presentation.isCompactTouch}/${useMotionPresentation(props.hint)}`,
       );
     };
-    setDevice({coarse: true, width: 390});
+    setDevice({coarse: true, width: 390, height: 844});
     expect(renderToString(createElement(Probe))).toContain('false/false/theme');
     expect(renderToString(createElement(Probe, {hint: true}))).toContain(
       'true/true/uikit',
     );
   });
 
+  it('approximates UIKit size classes with a width and a height', () => {
+    const {result} = renderHook(() => useTouchPresentation());
+    // iPad mini in portrait: regular in UIKit, not compact here.
+    act(() => setDevice({coarse: true, width: 744, height: 1133}));
+    expect(result.current.isCompact).toBe(false);
+    // iPhone in landscape: compact in UIKit and here.
+    act(() => setDevice({coarse: true, width: 852, height: 393}));
+    expect(result.current.isCompact).toBe(true);
+    // iPad in Slide Over: compact in UIKit and here.
+    act(() => setDevice({coarse: true, width: 375, height: 1000}));
+    expect(result.current.isCompact).toBe(true);
+    // The known miss: a Max-size iPhone in landscape is regular in UIKit.
+    act(() => setDevice({coarse: true, width: 932, height: 430}));
+    expect(result.current.isCompact).toBe(true);
+  });
+
   it('reads the conditions at one moment, and without a window', () => {
-    setDevice({coarse: true, width: 390});
+    setDevice({coarse: true, width: 390, height: 844});
     expect(readTouchPresentation()).toEqual({
       isTouch: true,
       isCompact: true,
@@ -163,10 +181,13 @@ describe('touch presentation', () => {
     expect(COMPACT_TOUCH_PRESENTATION_QUERY).toBe(COMPACT_TOUCH_QUERY);
     const {result} = renderHook(() => useAdaptivePresentation('adaptive'));
     expect(result.current).toBe('popover');
-    act(() => setDevice({coarse: true, width: 390}));
+    act(() => setDevice({coarse: true, width: 390, height: 844}));
     expect(result.current).toBe('bottom-sheet');
-    // A tablet keeps the anchored popover.
-    act(() => setDevice({coarse: true, width: 1024}));
+    // A phone in landscape too.
+    act(() => setDevice({coarse: true, width: 852, height: 393}));
+    expect(result.current).toBe('bottom-sheet');
+    // A tablet, even an iPad mini in portrait, keeps the anchored popover.
+    act(() => setDevice({coarse: true, width: 744, height: 1133}));
     expect(result.current).toBe('popover');
   });
 });
