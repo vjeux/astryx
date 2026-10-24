@@ -11,7 +11,7 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {UIKIT_GESTURES} from '../../motion/uikit/gestures';
 import {PanGestureRecognizer} from '../PanGestureRecognizer';
-import {PressTracker, type ControlEvent} from '../PressTracker';
+import {PRESS_PROFILES, PressTracker, type ControlEvent} from '../PressTracker';
 import {TapGestureRecognizer} from '../TapGestureRecognizer';
 import {createHarness, scrollProbe} from './harness';
 
@@ -138,6 +138,72 @@ describe('PressTracker', () => {
     h.finger(2).up(20);
     h.finger(1).up(30);
     expect(events).toEqual(['touchDown', 'touchUpInside']);
+  });
+});
+
+describe('PressTracker cell profile', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function cell() {
+    const events: ControlEvent[] = [];
+    const highlights: boolean[] = [];
+    const tracker = new PressTracker({
+      getBounds: () => BOUNDS,
+      ...PRESS_PROFILES.cell,
+      onControlEvent: event => events.push(event),
+      onHighlightChange: value => highlights.push(value),
+    });
+    return {events, highlights, tracker, h: createHarness()};
+  }
+
+  it('waits the content-touch delay even outside a scroller', () => {
+    const {highlights, tracker, h} = cell();
+    h.finger(1).down(150, 120, 0, {recognizers: [], consumer: tracker});
+    expect(highlights).toEqual([]);
+    vi.advanceTimersByTime(DELAY);
+    expect(highlights).toEqual([true]);
+    h.finger(1).up(DELAY + 40);
+    expect(highlights).toEqual([true, false]);
+  });
+
+  it('is cancelled for good once the finger travels past the pan hysteresis', () => {
+    const {events, highlights, tracker, h} = cell();
+    const finger = h.finger(1).down(150, 120, 0, {
+      recognizers: [],
+      consumer: tracker,
+    });
+    vi.advanceTimersByTime(DELAY);
+    const limit = UIKIT_GESTURES.pan.hysteresis.value;
+    finger.move(150, 120 + limit, DELAY + 16);
+    expect(tracker.isTracking).toBe(true);
+    finger.move(150, 120 + limit + 1, DELAY + 32);
+    expect(tracker.isTracking).toBe(false);
+    // Back inside: no re-highlight, and the lift does nothing.
+    finger.move(150, 120, DELAY + 48);
+    finger.up(DELAY + 64);
+    expect(events).toEqual(['touchDown', 'touchDragInside', 'touchCancel']);
+    expect(highlights).toEqual([true, false]);
+  });
+
+  it('shows a quicker tap at the lift straight into the release, with no flash', () => {
+    const {events, highlights, tracker, h} = cell();
+    h.finger(1).down(150, 120, 0, {recognizers: [], consumer: tracker});
+    h.finger(1).up(60);
+    expect(events).toEqual(['touchDown', 'touchUpInside']);
+    expect(highlights).toEqual([true, false]);
+  });
+
+  it('keeps the control profile on today defaults, with the button release clock', () => {
+    expect(PRESS_PROFILES.control.highlightDelay).toBe('inScrollers');
+    expect(PRESS_PROFILES.control.quickTapFlash).toBe(FLASH);
+    expect(PRESS_PROFILES.cell.cancelTravel).toBe(
+      UIKIT_GESTURES.pan.hysteresis.value,
+    );
   });
 });
 

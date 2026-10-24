@@ -3,8 +3,9 @@
 /**
  * @file PressTracker.ts
  * @input Touches the arena delivers to a pressable view (TouchConsumer)
- * @output Exports PressTracker (UIControl's touch tracking), its options and
- *   the control event type
+ * @output Exports PressTracker (UIControl's touch tracking), its options, the
+ *   control event type, and PRESS_PROFILES (a control's and a table cell's
+ *   tracking and release clock)
  * @position View-level consumer of packages/core/src/gestures: what a
  *   UIControl does with the touches no gesture recognizer took
  *
@@ -24,6 +25,15 @@
  *   or the browser took it to scroll: the highlight goes at once, with no
  *   release, one frame before the content moves.
  *
+ * Two profiles (PRESS_PROFILES) cover what UIKit does:
+ *
+ * - `control` (a button, a switch): as above.
+ * - `cell` (a table or collection row, always inside a scroll view in
+ *   UIKit): the highlight always waits the content-touch delay, travel past
+ *   the pan hysteresis cancels the press for good (the scroll view took the
+ *   touch), and a quicker tap highlights at the lift straight into the
+ *   release, with no flash.
+ *
  * And UIControl's iOS 6 rule: a single-finger single tap recognizer on an
  * ANCESTOR does not beat the control's own action for a touch on it (the
  * default veto; `vetoesAncestorRecognizer` replaces it, as a slider vetoes a
@@ -35,6 +45,7 @@
  */
 
 import {UIKIT_GESTURES} from '../motion/uikit/gestures';
+import {timing} from '../motion/uikit/timing';
 import {travel} from './geometry';
 import type {GestureRecognizer} from './GestureRecognizer';
 import {TapGestureRecognizer} from './TapGestureRecognizer';
@@ -65,8 +76,22 @@ export interface PressTrackerOptions {
   onControlEvent?: (event: ControlEvent, touch: GestureTouch) => void;
   onHighlightChange?: (isHighlighted: boolean) => void;
   trackingExpansion?: number;
-  /** Wait `contentTouchDelay` before highlighting inside a scroller. @default true */
-  delaysHighlightInScrollers?: boolean;
+  /**
+   * When the highlight waits `contentTouchDelay`: inside a scroller (a
+   * control), always (a cell), or never. @default 'inScrollers'
+   */
+  highlightDelay?: PressHighlightDelay;
+  /**
+   * Travel (px) past which the press is cancelled for good, with no
+   * re-highlight on the way back (a cell whose scroll view took the touch).
+   * Unset, the finger is tracked in and out of the expanded bounds.
+   */
+  cancelTravel?: number;
+  /**
+   * How long a tap quicker than the delay shows the highlight at the lift,
+   * ms; 0 highlights and releases at once. @default the quick-tap flash
+   */
+  quickTapFlash?: number;
   /** Which ancestor recognizers the control's own action beats. */
   vetoesAncestorRecognizer?: (recognizer: GestureRecognizer) => boolean;
   /** @default () => true */
@@ -80,6 +105,35 @@ export interface PressTrackerOptions {
 }
 
 const PRESS = UIKIT_GESTURES.press;
+
+export type PressHighlightDelay = 'inScrollers' | 'always' | 'never';
+
+/** How a kind of pressable tracks a finger and how long its release takes. */
+export interface PressProfile {
+  readonly highlightDelay: PressHighlightDelay;
+  readonly cancelTravel?: number;
+  readonly quickTapFlash: number;
+  /** The release (`fading`) clock a painter uses, ms. */
+  readonly releaseMs: number;
+}
+
+export const PRESS_PROFILES = {
+  /** UIControl: same-frame highlight outside scrollers, 70 pt tracking. */
+  control: {
+    highlightDelay: 'inScrollers',
+    quickTapFlash: PRESS.quickTapFlash.value,
+    releaseMs: timing.press.buttonReleaseMs,
+  },
+  /** A table or collection cell: delayed highlight, cancelled by the scroll. */
+  cell: {
+    highlightDelay: 'always',
+    cancelTravel: UIKIT_GESTURES.pan.hysteresis.value,
+    quickTapFlash: 0,
+    releaseMs: timing.press.highlightOutMs,
+  },
+} as const satisfies Record<string, PressProfile>;
+
+export type PressProfileName = keyof typeof PRESS_PROFILES;
 
 /** UIButton's rule: an ancestor's single-finger single tap. */
 function vetoesSingleTap(recognizer: GestureRecognizer): boolean {
@@ -126,10 +180,11 @@ export class PressTracker implements TouchConsumer {
     this.isTouchInside = true;
     this.isPendingDead = false;
     this.emit('touchDown', touch);
+    const delay = this.options.highlightDelay ?? 'inScrollers';
     const delays =
-      (this.options.delaysHighlightInScrollers ?? true) &&
       touch.pointerType === 'touch' &&
-      touch.scroll?.isInsideScroller === true;
+      (delay === 'always' ||
+        (delay === 'inScrollers' && touch.scroll?.isInsideScroller === true));
     if (delays) {
       this.highlightTimer = setTimeout(() => {
         this.highlightTimer = null;
@@ -144,6 +199,12 @@ export class PressTracker implements TouchConsumer {
 
   touchMoved(touch: GestureTouch): void {
     if (touch.id !== this.touchId) {
+      return;
+    }
+    const cancelTravel = this.options.cancelTravel;
+    if (cancelTravel != null && travel(touch) > cancelTravel) {
+      // A cell's scroll view took the touch: the press is over.
+      this.touchCancelled(touch);
       return;
     }
     if (this.highlightTimer != null && travel(touch) > PRESS.slop.value) {
@@ -172,13 +233,19 @@ export class PressTracker implements TouchConsumer {
     const wasPending = this.highlightTimer != null;
     this.clearHighlightTimer();
     this.emit(inside ? 'touchUpInside' : 'touchUpOutside', touch);
+    const flash = this.options.quickTapFlash ?? PRESS.quickTapFlash.value;
     if (wasPending && inside) {
-      // Quicker than the scroller's delay: the highlight shows at the lift.
+      // Quicker than the delay: the highlight shows at the lift, for the
+      // flash, or (a cell) straight into the release.
       this.setHighlighted(true);
-      this.flashTimer = setTimeout(() => {
-        this.flashTimer = null;
+      if (flash > 0) {
+        this.flashTimer = setTimeout(() => {
+          this.flashTimer = null;
+          this.setHighlighted(false);
+        }, flash);
+      } else {
         this.setHighlighted(false);
-      }, PRESS.quickTapFlash.value);
+      }
     } else {
       this.setHighlighted(false);
     }

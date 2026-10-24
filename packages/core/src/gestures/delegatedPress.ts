@@ -28,7 +28,11 @@
  * - a disabled control takes the press and paints nothing, so the row around
  *   it does not light;
  * - a value the consumer did not write (a row kept `held` through a
- *   navigation push) is never overwritten or cleared by a press.
+ *   navigation push) is never overwritten or cleared by a press;
+ * - the marker's value picks the press profile (PRESS_PROFILES): empty or
+ *   `control` for a button-like control, `cell` for a row, which waits the
+ *   content-touch delay everywhere, is cancelled by travel past the pan
+ *   hysteresis, and releases on its own clock.
  *
  * Install it once per attribute (installs are counted, and the first one's
  * options hold); do not install it on the same attribute as the older
@@ -39,9 +43,14 @@
 
 import {useEffect, useState} from 'react';
 import {PRESSABLE_ATTRIBUTE, PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
-import {PRESS_FADE_MS} from '../utils/pressGesture';
 import {getGestureHost} from './GestureHost';
-import {PressTracker, type ControlEvent} from './PressTracker';
+import {paintPress} from './pressPaint';
+import {
+  PRESS_PROFILES,
+  PressTracker,
+  type ControlEvent,
+  type PressProfile,
+} from './PressTracker';
 import type {GestureTouch, PointerKind} from './types';
 
 export interface PressAttributeOptions {
@@ -49,12 +58,20 @@ export interface PressAttributeOptions {
   attribute?: string;
   /** Written on the pressed surface. @default 'data-astryx-press' */
   pressedAttribute?: string;
-  /** How long the release's `fading` value stays, ms. @default the press fade */
-  fadeMs?: number;
+  /**
+   * The profiles a marker's value selects; an empty or unknown value is
+   * `control`. @default PRESS_PROFILES
+   */
+  profiles?: Readonly<Record<string, PressProfile>>;
   /** A matching surface takes the press and paints nothing. */
   disabledSelector?: string;
   /** Contacts that press; a mouse keeps CSS `:active`. @default touch and pen */
   pointerTypes?: ReadonlyArray<PointerKind>;
+  /**
+   * Decides per touch whether this element presses (for example a mouse
+   * only while the presentation is touch). @default every listed contact
+   */
+  accepts?: (element: Element, pointerType: PointerKind) => boolean;
   /** UIControl's expanded tracking bounds, px. */
   trackingExpansion?: number;
   /** Every UIControl event, for a caller that acts on them. */
@@ -117,69 +134,59 @@ function addPressType(
 ): () => void {
   const host = getGestureHost(doc);
   const pressed = options.pressedAttribute ?? PRESSED_ATTRIBUTE;
-  const fadeMs = options.fadeMs ?? PRESS_FADE_MS;
+  const profiles: Readonly<Record<string, PressProfile>> =
+    options.profiles ?? PRESS_PROFILES;
   const disabled = options.disabledSelector ?? DISABLED;
   const pointerTypes = options.pointerTypes ?? ['touch', 'pen'];
-  const fades = new WeakMap<Element, ReturnType<typeof setTimeout>>();
 
-  /** Whether the element's value is absent or one this consumer wrote. */
-  const isOurs = (element: Element): boolean => {
-    const value = element.getAttribute(pressed);
-    return value == null || value === 'on' || value === 'fading';
-  };
+  const profileOf = (element: Element): PressProfile =>
+    profiles[element.getAttribute(attribute) ?? ''] ?? profiles.control;
 
   const paint = (
     element: Element,
     isOn: boolean,
     last: ControlEvent | null,
+    profile: PressProfile,
   ): void => {
-    const fade = fades.get(element);
-    if (fade != null) {
-      clearTimeout(fade);
-      fades.delete(element);
-    }
-    if (!isOurs(element)) {
-      // Another owner holds the surface's state (a row kept selected).
-      return;
-    }
     if (isOn) {
-      element.setAttribute(pressed, 'on');
-      return;
+      paintPress(element, 'on', {attribute: pressed});
+    } else if (last === 'touchUpInside' || last === 'touchUpOutside') {
+      // A release fades on the profile's clock; a cancel or a drag off the
+      // control does not.
+      paintPress(element, 'fading', {
+        attribute: pressed,
+        releaseMs: profile.releaseMs,
+      });
+    } else {
+      paintPress(element, 'none', {attribute: pressed});
     }
-    if (last === 'touchUpInside' || last === 'touchUpOutside') {
-      // A release fades; a cancel or a drag off the control does not.
-      element.setAttribute(pressed, 'fading');
-      fades.set(
-        element,
-        setTimeout(() => {
-          fades.delete(element);
-          if (element.getAttribute(pressed) === 'fading') {
-            element.removeAttribute(pressed);
-          }
-        }, fadeMs),
-      );
-      return;
-    }
-    element.removeAttribute(pressed);
   };
 
   return host.addDelegatedConsumer({
     attribute,
     create(element, pointerType) {
-      if (!pointerTypes.includes(pointerType) || element.matches(disabled)) {
+      if (
+        !pointerTypes.includes(pointerType) ||
+        element.matches(disabled) ||
+        options.accepts?.(element, pointerType) === false
+      ) {
         return null;
       }
+      const profile = profileOf(element);
       let last: ControlEvent | null = null;
       return new PressTracker({
         view: element,
         getBounds: () => element.getBoundingClientRect(),
         trackingExpansion: options.trackingExpansion,
+        highlightDelay: profile.highlightDelay,
+        cancelTravel: profile.cancelTravel,
+        quickTapFlash: profile.quickTapFlash,
         isBraking: () => host.isScrollBraking(element),
         onControlEvent: (event, touch) => {
           last = event;
           options.onControlEvent?.(element, event, touch);
         },
-        onHighlightChange: isOn => paint(element, isOn, last),
+        onHighlightChange: isOn => paint(element, isOn, last, profile),
       });
     },
   });

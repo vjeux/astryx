@@ -150,6 +150,25 @@ semantics:
 The browser's click stays the control's activation, so keyboard and
 assistive-technology activation keep working.
 
+### Press profiles
+
+`PRESS_PROFILES` holds the two ways UIKit tracks a press:
+
+- `control` (a button, a switch): the highlight comes on in the same frame
+  outside a scroller, the finger is tracked 70 pt beyond the bounds, and
+  the release takes UIButton's 0.25 s;
+- `cell` (a table or collection row, always in a scroll view in UIKit): the
+  highlight always waits the content-touch delay, travel past the pan
+  hysteresis cancels the press for good, a quicker tap highlights at the
+  lift straight into the release, and the release takes the list's
+  deselect clock.
+
+`paintPress(element, 'on' | 'held' | 'fading' | 'none', {releaseMs})` is
+the one writer of `data-astryx-press`. It owns the release timer and writes
+only over values the caller may replace (by default none, `on` and
+`fading`), so a `held` row survives presses until its owner releases it
+with `onlyFrom: ['held']`.
+
 ### Rows and cards: delegated press tracking
 
 A list of a thousand rows cannot pay for a hook and four listeners per row.
@@ -157,7 +176,8 @@ A list of a thousand rows cannot pay for a hook and four listeners per row.
 the innermost `[data-astryx-pressable]` under each landing touch and creates
 one `PressTracker` for that touch alone. It paints the press on the element:
 `data-astryx-press="on"` while pressed, `"fading"` for the release, removed
-at once on a cancel. A disabled element takes the press and paints nothing.
+at once on a cancel; the marker's value picks the profile (empty or
+`control`, `cell`). A disabled element takes the press and paints nothing.
 A touch that brakes a list the finger set moving paints nothing. A value the
 consumer did not write (a row kept `held` through a navigation push) is
 never overwritten or cleared. Installs are counted per attribute, so every

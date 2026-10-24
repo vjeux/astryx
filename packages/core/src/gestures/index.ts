@@ -52,10 +52,15 @@ export type {
 } from './PanGestureRecognizer';
 export {PinchGestureRecognizer} from './PinchGestureRecognizer';
 export type {PinchGestureRecognizerOptions} from './PinchGestureRecognizer';
-export {PressTracker} from './PressTracker';
+export {paintPress, readPressPaint} from './pressPaint';
+export type {PaintPressOptions, PressPaint} from './pressPaint';
+export {PRESS_PROFILES, PressTracker} from './PressTracker';
 export type {
   ControlEvent,
   PressBounds,
+  PressHighlightDelay,
+  PressProfile,
+  PressProfileName,
   PressTrackerOptions,
 } from './PressTracker';
 export {RotationGestureRecognizer} from './RotationGestureRecognizer';

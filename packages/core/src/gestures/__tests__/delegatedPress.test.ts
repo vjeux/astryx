@@ -12,8 +12,8 @@
 
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {UIKIT_GESTURES} from '../../motion/uikit/gestures';
-import {PRESS_FADE_MS} from '../../utils/pressGesture';
 import {installPressAttribute} from '../delegatedPress';
+import {PRESS_PROFILES} from '../PressTracker';
 import {getGestureHost} from '../GestureHost';
 import {PanGestureRecognizer} from '../PanGestureRecognizer';
 
@@ -74,7 +74,10 @@ describe('installPressAttribute', () => {
     expect(row.getAttribute('data-astryx-press')).toBe('on');
     touch('touchend', row, {id: 1, x: 5, y: 5}, 80);
     expect(row.getAttribute('data-astryx-press')).toBe('fading');
-    vi.advanceTimersByTime(PRESS_FADE_MS);
+    // A control releases on UIButton's clock.
+    vi.advanceTimersByTime(PRESS_PROFILES.control.releaseMs - 1);
+    expect(row.getAttribute('data-astryx-press')).toBe('fading');
+    vi.advanceTimersByTime(1);
     expect(row.hasAttribute('data-astryx-press')).toBe(false);
   });
 
@@ -130,7 +133,7 @@ describe('installPressAttribute', () => {
     // A finger flicks the list, lifts; the list is still gliding.
     touch('touchstart', row, {id: 1, x: 5, y: 300}, 0);
     touch('touchend', row, {id: 1, x: 5, y: 100}, 60);
-    vi.advanceTimersByTime(PRESS_FADE_MS);
+    vi.advanceTimersByTime(PRESS_PROFILES.control.releaseMs);
     const scroll = new Event('scroll');
     Object.defineProperty(scroll, 'timeStamp', {value: 200});
     list.dispatchEvent(scroll);
@@ -154,14 +157,14 @@ describe('installPressAttribute', () => {
     touch('touchstart', row, {id: 1, x: 5, y: 5}, 0);
     expect(row.getAttribute('data-astryx-press')).toBe('held');
     touch('touchend', row, {id: 1, x: 5, y: 5}, 80);
-    vi.advanceTimersByTime(PRESS_FADE_MS);
+    vi.advanceTimersByTime(PRESS_PROFILES.control.releaseMs);
     expect(row.getAttribute('data-astryx-press')).toBe('held');
     // Its owner takes over during the release fade: the fade leaves it.
     touch('touchstart', other, {id: 2, x: 5, y: 5}, 1000);
     touch('touchend', other, {id: 2, x: 5, y: 5}, 1080);
     expect(other.getAttribute('data-astryx-press')).toBe('fading');
     other.setAttribute('data-astryx-press', 'held');
-    vi.advanceTimersByTime(PRESS_FADE_MS);
+    vi.advanceTimersByTime(PRESS_PROFILES.control.releaseMs);
     expect(other.getAttribute('data-astryx-press')).toBe('held');
   });
 
@@ -178,5 +181,40 @@ describe('installPressAttribute', () => {
     // The only listeners a touch adds are the finger's own, removed with it.
     const types = add.mock.calls.map(call => call[0]);
     expect(types.every(type => type.startsWith('touch'))).toBe(true);
+  });
+
+  it('presses a cell with the cell profile: delayed, cancelled by travel, its own release', () => {
+    const {row} = mount('<div id="row" data-astryx-pressable="cell">Row</div>');
+    touch('touchstart', row, {id: 1, x: 5, y: 5}, 0);
+    expect(row.hasAttribute('data-astryx-press')).toBe(false);
+    vi.advanceTimersByTime(UIKIT_GESTURES.press.contentTouchDelay.value);
+    expect(row.getAttribute('data-astryx-press')).toBe('on');
+    touch('touchend', row, {id: 1, x: 5, y: 5}, 200);
+    vi.advanceTimersByTime(PRESS_PROFILES.cell.releaseMs);
+    expect(row.hasAttribute('data-astryx-press')).toBe(false);
+
+    // Travel past the pan hysteresis cancels at once, with no fade.
+    touch('touchstart', row, {id: 2, x: 5, y: 5}, 1000);
+    vi.advanceTimersByTime(UIKIT_GESTURES.press.contentTouchDelay.value);
+    touch('touchmove', row, {id: 2, x: 5, y: 30}, 1200);
+    expect(row.hasAttribute('data-astryx-press')).toBe(false);
+    touch('touchend', row, {id: 2, x: 5, y: 30}, 1250);
+  });
+
+  it('lets an accepts gate decide per touch', () => {
+    release();
+    release = installPressAttribute(document, {
+      accepts: element => element.id !== 'skip',
+    });
+    const {skip, row} = mount(
+      `<div id="skip" data-astryx-pressable>Skip</div>
+       <div id="row" data-astryx-pressable>Row</div>`,
+    );
+    touch('touchstart', skip, {id: 1, x: 5, y: 5}, 0);
+    expect(skip.hasAttribute('data-astryx-press')).toBe(false);
+    touch('touchend', skip, {id: 1, x: 5, y: 5}, 40);
+    touch('touchstart', row, {id: 2, x: 5, y: 5}, 1000);
+    expect(row.getAttribute('data-astryx-press')).toBe('on');
+    touch('touchend', row, {id: 2, x: 5, y: 5}, 1040);
   });
 });

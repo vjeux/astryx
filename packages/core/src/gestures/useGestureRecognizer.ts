@@ -114,7 +114,9 @@ export function usePressTracker(
         onHighlightChange: isHighlighted =>
           optionsRef.current.onHighlightChange?.(isHighlighted),
         trackingExpansion: options.trackingExpansion,
-        delaysHighlightInScrollers: options.delaysHighlightInScrollers,
+        highlightDelay: options.highlightDelay,
+        cancelTravel: options.cancelTravel,
+        quickTapFlash: options.quickTapFlash,
         vetoesAncestorRecognizer: recognizer =>
           optionsRef.current.vetoesAncestorRecognizer?.(recognizer) ??
           defaultVeto(recognizer),
