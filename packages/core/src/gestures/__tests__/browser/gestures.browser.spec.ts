@@ -312,7 +312,8 @@ test('a horizontal drag on a pan-y element is the recognizer’s: cancelled move
   const last = entries
     .filter(entry => entry.name === 'hpan' && entry.state === 'changed')
     .at(-1);
-  expect(last?.x).toBeCloseTo(120, 0);
+  // As in UIKit, the 10 px hysteresis is not part of the translation.
+  expect(last?.x).toBeCloseTo(120 - 10, 0);
   // Every touchmove after the claim was cancelled.
   const moves = await readTouchMoves(page);
   expect(moves.length).toBeGreaterThan(0);
@@ -374,7 +375,7 @@ test('scroll handoff: at the top the pull is the sheet’s at once', async ({
   expect(sheet[0]?.handoff).toBe(false);
   expect(
     sheet.filter(entry => entry.state === 'changed').at(-1)?.y,
-  ).toBeCloseTo(96, 0);
+  ).toBeCloseTo(96 - 10, 0);
   expect(await scrollTop(page, 'sheetBody')).toBe(0);
 });
 
@@ -459,7 +460,9 @@ test('a pinch recognizer takes the two-finger gesture on its element only, along
   const scale = entries
     .filter(entry => entry.name === 'pinch' && entry.state === 'changed')
     .at(-1)?.scale;
-  expect(scale).toBeCloseTo(60 / 20, 1);
+  // The span grew from 40 to 120; as in UIKit, the scale is measured from
+  // the starting span moved by the 8 px hysteresis.
+  expect(scale).toBeCloseTo(120 / (40 + 8), 1);
   expect(states(entries, 'pinchPan')).toContain('began');
   expect(await page.evaluate(() => window.visualViewport?.scale ?? 1)).toBe(1);
 });
@@ -497,7 +500,7 @@ test('a second finger never breaks a claimed one-finger pan', async ({
   expect(hpan.map(entry => entry.state)).not.toContain('cancelled');
   expect(hpan.map(entry => entry.state)).toContain('ended');
   expect(hpan.filter(entry => entry.state === 'changed').at(-1)?.x).toBeCloseTo(
-    70,
+    70 - 10,
     0,
   );
   expect(await page.evaluate(() => window.visualViewport?.scale ?? 1)).toBe(1);
