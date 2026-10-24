@@ -3,13 +3,14 @@
 
 /**
  * @file build-fixture.mjs
- * @input fixture.ts beside this file
+ * @input fixture.ts beside this file, or another fixture named as the second
+ *   argument (scrollLatencyFixture.ts)
  * @output A standalone HTML page (the fixture bundled inline) for running the
  *   gesture proofs in any browser, including Mobile Safari on the iOS
  *   simulator
  * @position Test-only helper of packages/core/src/gestures
  *
- *   node packages/core/src/gestures/__tests__/browser/build-fixture.mjs out.html
+ *   node packages/core/src/gestures/__tests__/browser/build-fixture.mjs out.html [fixture.ts]
  *
  * The page records every recognizer transition and every click on
  * `window.__gestures`; read it with the Web Inspector or by evaluating
@@ -23,12 +24,13 @@ import {build} from 'esbuild';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const out = process.argv[2];
+const entry = process.argv[3] ?? 'fixture.ts';
 if (out == null) {
-  console.error('usage: build-fixture.mjs <out.html>');
+  console.error('usage: build-fixture.mjs <out.html> [fixture.ts]');
   process.exit(1);
 }
 const result = await build({
-  entryPoints: [path.join(here, 'fixture.ts')],
+  entryPoints: [path.join(here, entry)],
   bundle: true,
   write: false,
   format: 'iife',
