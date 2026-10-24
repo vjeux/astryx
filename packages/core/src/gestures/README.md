@@ -208,10 +208,12 @@ component can call the hook.
   off the iOS callout and text selection on its element.
 
 - **Claiming.** When a recognizer recognizes, it owns its touches. Each
-  element with touch recognizers has a non-passive `touchmove` listener that
-  cancels the event only while one of its touches is owned. A touch nobody
-  owns scrolls exactly as it would without the system, and only touches that
-  begin on such an element wait for the main thread before scrolling.
+  element with a recognizer that can claim a moving touch (a pan, a swipe, a
+  long press that then drags, a pinch, a rotation) has a non-passive
+  `touchmove` listener that cancels the event only while one of its touches
+  is owned. A touch nobody owns scrolls exactly as it would without the
+  system. Taps claim only at the lift, so an element with only taps, or only
+  a press consumer, gets no such listener (see the known limit below).
   Measured in Mobile Safari (iOS 26.2): `touchmove` arrives from the first
   pixel; on a scrollable element WebKit commits to scrolling at 10 to 11 px
   (the last cancelable `touchmove` at 10 px), and cancelling every
@@ -341,6 +343,30 @@ is right. Behaviour reads
 `readTouchPresentation()`, and a component with no interaction to infer
 from reads `useMotionPresentation()`: UIKit timings under a finger, theme
 tokens under a mouse.
+
+## Known limits
+
+- **A scroll that begins on a recognizer waits for a busy main thread.** In
+  Mobile Safari (iOS 26.2, measured), a vertical scroll that starts on an
+  element with a non-passive `touchmove` listener waits until the current
+  JavaScript task ends; on a plain row, a pressable row or a tap-only
+  element it starts at once (within 50 ms) even during a 500 ms task.
+  Chromium documents the same rule for non-passive listeners. The listener
+  stays because nothing else keeps UIKit's arbitration: with a passive
+  listener, or one added during `touchstart` (which Safari ignores for that
+  touch), Safari hands every diagonal drag on a swipe row to the list's
+  scroll, 3:1 included. It is never worse than UIKit, where a busy main
+  thread stalls every scroll.
+- **Lists where every row has a horizontal recognizer** (swipe actions on
+  every row of a mail list): every scroll start waits on the current task in
+  Safari. Keep list screens' tasks short. A native horizontal `scroll-snap`
+  reveal inside the row would never wait, but it tracks with scroll physics
+  rather than UIKit's measured tracking spring; it is a possible opt-in, not
+  the default.
+- **Follow-up:** Chromium keeps 3:1 to 1.5:1 drags as swipes even with a
+  passive listener (its `touch-action` filter drops a `pan-y` scroll that
+  starts sideways), so a passive listener there would cost no parity. It
+  waits on a measured run on Android before any engine-specific choice.
 
 ## Where the web differs from UIKit
 

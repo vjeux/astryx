@@ -296,6 +296,23 @@ test('derives touch-action per element from its recognizers', async ({
   });
 });
 
+test('only elements whose recognizers claim a moving touch carry a blocking touchmove listener', async ({
+  page,
+  browserName,
+}) => {
+  await open(page, browserName);
+  const blocking = await page.evaluate(() =>
+    window.__listeners
+      .filter(entry => entry.type === 'touchmove' && entry.passive === false)
+      .map(entry => entry.id),
+  );
+  // A pan, a long press, a pinch and the sheet's pan can take a moving
+  // touch; a tap-only element and a press consumer never wait.
+  expect(new Set(blocking)).toEqual(
+    new Set(['hpan', 'presser', 'pinchable', 'sheetBody']),
+  );
+});
+
 test('a horizontal drag on a pan-y element is the recognizer’s: cancelled moves, no scroll, no click', async ({
   page,
   browserName,

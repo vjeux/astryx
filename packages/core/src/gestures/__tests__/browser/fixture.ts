@@ -30,13 +30,40 @@ interface Entry {
   startedAt?: number;
 }
 
+interface ListenerEntry {
+  id: string;
+  type: string;
+  passive: boolean | null;
+}
+
 declare global {
   interface Window {
     __gestures: Entry[];
+    __listeners: ListenerEntry[];
   }
 }
 
 window.__gestures = [];
+
+// Every touch listener added to an element with an id, as the engine sees
+// it: which elements make a scroll wait for the page.
+window.__listeners = [];
+const addListener = EventTarget.prototype.addEventListener;
+EventTarget.prototype.addEventListener = function (
+  this: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject | null,
+  options?: boolean | AddEventListenerOptions,
+) {
+  if (this instanceof Element && this.id !== '' && type.startsWith('touch')) {
+    window.__listeners.push({
+      id: this.id,
+      type,
+      passive: typeof options === 'object' ? (options.passive ?? null) : null,
+    });
+  }
+  addListener.call(this, type, listener, options);
+};
 
 document.body.style.margin = '0';
 document.body.innerHTML = `
