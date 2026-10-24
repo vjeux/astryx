@@ -32,7 +32,7 @@ From `BottomSheetDetent.interaction.browser.spec.ts`, with real touch input.
 
 - **`storyboards/`**: frame-by-frame boards (with JSON traces) of a drag that settles on the half
   detent, the settle seeked through its curve, a fast throw on the 0.8 damped spring, and (Chromium) the
-  settle through a 700 ms main-thread block.
+  settle through a 700 ms main-thread block (Chromium and WebKit).
 - **`curves/`**: the settle sampled frame by frame against UIKit's spring, for a release at rest and at
   600 px/s and 1500 px/s. The maximum error is ≤ 0.5 px in both engines.
-- **`busy-main-thread/`**: frames presented while the main thread was blocked mid-settle.
+- **`busy-main-thread/`**: frames presented while the main thread was blocked mid-settle, Chromium and WebKit.
