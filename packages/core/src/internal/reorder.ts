@@ -8,7 +8,10 @@
  *   other options. A Lab collection uses it to adapt the owner's moves, such
  *   as a staged selector that aims them at its draft. The owner's `start`
  *   still finds its list. Neither loads the reorder engine: it comes with the
- *   owner's object
+ *   owner's object.
+ *   It also gives List's reorder session for rows that are not ListItems,
+ *   for Lab's ListInput: `useListReorderScope`, `ListReorderScope`, and the
+ *   `ListReorderHandle` each row ends with
  * @position `@astryxdesign/core/internal/reorder`: an internal entry reserved
  *   for Core and Lab. It is undocumented, outside the public API and its
  *   compatibility promise, and versioned in lockstep with Core.
@@ -53,3 +56,10 @@ export function adaptReorderable<TKey extends string | number, TTo>(
   };
   return adapted as unknown as Reorderable<TKey, TTo>;
 }
+
+export {ListReorderScope, useListReorderScope} from '../List/ListReorderScope';
+export {ListReorderHandle} from '../List/ListReorderHandle';
+export type {
+  ListReorderContextValue,
+  ListReorderHandleProps,
+} from '../List/listReorderContext';
