@@ -316,6 +316,28 @@ export class GestureHost {
   }
 
   /**
+   * The Pointer Events `pointerId` of a contact the arena tracks: a mouse's
+   * or a pen's own, and for a finger driven by touch events the pointer its
+   * touch was paired with (null before the pairing, or without Pointer
+   * Events). It hands a held finger to code that follows pointers, as a
+   * menu does when a long press turns into a press-drag selection.
+   */
+  pointerIdOf(touch: GestureTouch | number): number | null {
+    const id = typeof touch === 'number' ? touch : touch.id;
+    for (const [pointerId, arenaId] of this.fingerPointers) {
+      if (arenaId === id) {
+        return pointerId;
+      }
+    }
+    for (const [pointerId, arenaId] of this.pointerIds) {
+      if (arenaId === id) {
+        return pointerId;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Whether a finger set a scroller containing `node` moving within the last
    * `window` ms. A touch there now brakes the scroll rather than pressing
    * whatever is under it: a native list highlights nothing for one.

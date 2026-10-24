@@ -277,6 +277,46 @@ describe('GestureHost', () => {
     expect(host.arena.getTouch(1)?.takenByBrowser).toBe(true);
   });
 
+  it('names the pointer a finger, a pen or a mouse is driven by', () => {
+    const {box} = mount('<div id="box"></div>');
+    const press = new LongPressGestureRecognizer({name: 'press'});
+    detachers.push(host.attach(box, press));
+    // A finger: its pointerdown pairs with its touchstart.
+    pointer('pointerdown', box, {
+      id: 31,
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    const finger = {id: 0, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    const [held] = press.trackedTouches;
+    expect(host.pointerIdOf(held)).toBe(31);
+    expect(host.pointerIdOf(held.id)).toBe(31);
+    touch('touchend', box, [finger], [], 40);
+    // A pen is its own pointer.
+    pointer('pointerdown', box, {
+      id: 7,
+      pointerType: 'pen',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 100,
+    });
+    const [pen] = press.trackedTouches;
+    expect(host.pointerIdOf(pen)).toBe(7);
+    pointer('pointerup', box, {
+      id: 7,
+      pointerType: 'pen',
+      x: 10,
+      y: 10,
+      time: 140,
+    });
+    expect(host.pointerIdOf(pen)).toBeNull();
+  });
+
   it('reads a touchmove that can no longer be cancelled as the browser taking it', () => {
     const {box} = mount('<div id="box"></div>');
     const tap = new TapGestureRecognizer({name: 'tap'});
