@@ -5,7 +5,7 @@
  * @input vitest, the UIKit constants table and its source text
  * @output Enforces law P2 on the table: every leaf has a source of an
  *   allowed kind, every guess and every WebKit value names its measurement
- *   task, every task is listed in motion/README.md; checks that every spring
+ *   task, every task is listed in motion/MEASUREMENTS.md; checks that every spring
  *   in the table is valid and that the press clocks agree with the touch
  *   press model they were measured for
  * @position Testing; validates motion/uikit/*.ts without a browser
@@ -91,7 +91,10 @@ function leavesOf(file: string): Leaf[] {
   return leaves;
 }
 
-const README = fs.readFileSync(path.resolve(__dirname, '../README.md'), 'utf8');
+const MEASUREMENTS = fs.readFileSync(
+  path.resolve(__dirname, '../MEASUREMENTS.md'),
+  'utf8',
+);
 
 describe('UIKit constants table: every value is sourced (law P2)', () => {
   const leaves = TABLE_FILES.flatMap(leavesOf);
@@ -125,7 +128,7 @@ describe('UIKit constants table: every value is sourced (law P2)', () => {
       for (const measure of measures) {
         const id = /^@measure (M-[A-Z0-9]+)$/.exec(measure)?.[1];
         expect(id, `${key}: malformed ${measure}`).toBeDefined();
-        expect(README, `${id} is not in motion/README.md`).toMatch(
+        expect(MEASUREMENTS, `${id} is not in motion/MEASUREMENTS.md`).toMatch(
           new RegExp(`^\\| ${id} +\\|`, 'm'),
         );
       }

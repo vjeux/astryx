@@ -98,16 +98,19 @@ export const springs = {
 
   /**
    * Push: incoming view slides in from the trailing edge, outgoing parallax.
-   * @source GUESS — UIKit's default spring (system-driven transition)
+   * @source GUESS — provisional recording fit of Settings ▸ General on the
+   *   iOS 26.2 simulator (about 400 ms for 402 pt, overdamped: response
+   *   ≈ 0.12–0.14 s, damping ratio ≈ 1.7–1.8, rms 1.6–2 %; the page
+   *   underneath shifts about −106 pt), pending averaged captures
    * @measure M-N1
    */
-  navigationPush: UIKIT_DEFAULT_SPRING,
+  navigationPush: {response: 0.13, dampingRatio: 1.75},
   /**
    * Pop (back button).
-   * @source GUESS — UIKit's default spring (system-driven transition)
+   * @source GUESS — assumed symmetric with the push until measured
    * @measure M-N2
    */
-  navigationPop: UIKIT_DEFAULT_SPRING,
+  navigationPop: {response: 0.13, dampingRatio: 1.75},
   /**
    * Interactive pop (edge swipe) finishing or cancelling after the finger
    * lifts; the release velocity is handed to it.
@@ -126,14 +129,14 @@ export const springs = {
    *   driven by a tap has no momentum, so Music's Now Playing uses 100 %
    *   damping (damping ratio)
    * @source GUESS — pace from UIKit's default spring
-   * @measure M-SH1
+   * @measure M-SH07
    */
   sheetPresent: UIKIT_DEFAULT_SPRING,
   /**
    * Sheet dismissed by a control (Cancel / Done / scrim tap).
    * @source wwdc 2018-803 (no momentum → 100 % damping)
    * @source GUESS — pace from UIKit's default spring
-   * @measure M-SH2
+   * @measure M-SH07
    */
   sheetDismiss: UIKIT_DEFAULT_SPRING,
   /**
@@ -142,14 +145,15 @@ export const springs = {
    * @source wwdc 2018-803 "Designing Fluid Interfaces": swipe-to-dismiss
    *   Now Playing "has momentum … so we use 80 % damping" (damping ratio)
    * @source GUESS — response from UIKit's default spring's ω₀
-   * @measure M-SH2
+   * @measure M-SH09
    */
   sheetDismissSwipe: {response: 0.344, dampingRatio: 0.8},
   /**
    * Snap between detents after a drag releases (release velocity handed
    * over).
    * @source GUESS — critically damped at UIKit's default pace
-   * @measure M-SH3
+   * @measure M-SH08
+   * @measure M-SH09
    */
   sheetDetent: UIKIT_DEFAULT_SPRING,
 
@@ -218,7 +222,7 @@ export const springs = {
    *   chosen for consistency with UIKit" (= response 0.30 s, ratio 0.75);
    *   its settling duration is WebKit's iOS switch duration 0.48801 s
    *   (RenderThemeIOS.h)
-   * @measure M-SW1
+   * @measure M-SW02
    */
   switchThumbMove: {response: 0.3, dampingRatio: 0.75},
   /**
@@ -227,14 +231,15 @@ export const springs = {
    *   `thumbPressSpring = SpringSolver(1.0, 322.272…, 31.2364…)`, "Values
    *   chosen for consistency with UIKit" (= response 0.35 s, ratio 0.87);
    *   settles in WebKit's held duration 0.50740 s (RenderThemeIOS.h)
-   * @measure M-SW1
+   * @measure M-SW03
    */
   switchThumbStretch: {response: 0.35, dampingRatio: 0.87},
   /**
    * UISegmentedControl selection thumb sliding to a new segment.
    * @source GUESS — WebKit's UIKit-matched switch thumb spring, the nearest
    *   sourced control thumb
-   * @measure M-SG1
+   * @measure M-SG02
+   * @measure M-SG03
    */
   segmentedThumb: {response: 0.3, dampingRatio: 0.75},
 

@@ -111,6 +111,52 @@ describe('solveSpring matches an RK4 integration of the ODE', () => {
 });
 
 describe('solveSpring', () => {
+  it('agrees with WebKit\u2019s SpringSolver (an independent port of its code)', () => {
+    // Source/WebCore/platform/graphics/SpringSolver.h, verbatim in
+    // structure: unit move, initial velocity positive toward the target.
+    const webkitSolve = (
+      m: number,
+      k: number,
+      c: number,
+      v0: number,
+      t: number,
+    ) => {
+      const w0 = Math.sqrt(k / m);
+      const zeta = c / (2 * Math.sqrt(k * m));
+      let x: number;
+      if (zeta < 1) {
+        const wd = w0 * Math.sqrt(1 - zeta * zeta);
+        const b = (zeta * w0 + -v0) / wd;
+        x =
+          Math.exp(-t * zeta * w0) * (Math.cos(wd * t) + b * Math.sin(wd * t));
+      } else {
+        x = (1 + (-v0 + w0) * t) * Math.exp(-t * w0);
+      }
+      return 1 - x;
+    };
+    const cases = [
+      [1, 438.64908449286042, 31.415926535897931, 0],
+      [1, 322.27279677026473, 31.2364069556928, 0],
+      [1, 100, 5, 0],
+      [1, 100, 20, 0],
+      [2, 300, 12, 4],
+      [1, 250, 31.6227766016838, -3],
+    ];
+    for (const [m, k, c, v0] of cases) {
+      const curve = solveSpring(
+        springFromPhysics({mass: m, stiffness: k, damping: c}),
+        {
+          from: 0,
+          to: 1,
+          velocity: v0,
+        },
+      );
+      for (let t = 0; t <= 1.5; t += 0.01) {
+        expect(curve.value(t)).toBeCloseTo(webkitSolve(m, k, c, v0, t), 6);
+      }
+    }
+  });
+
   it('starts at the release value and velocity in every regime', () => {
     for (const dampingRatio of RATIOS) {
       const curve = solveSpring(
