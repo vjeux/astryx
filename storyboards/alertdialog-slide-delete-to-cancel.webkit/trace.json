@@ -1,0 +1,88 @@
+{
+  "name": "alertdialog-slide-delete-to-cancel",
+  "browser": "webkit",
+  "viewport": {
+    "width": 402,
+    "height": 714
+  },
+  "clip": {
+    "x": 8,
+    "y": 249,
+    "width": 385.984375,
+    "height": 215.984375
+  },
+  "frames": [
+    {
+      "label": "before",
+      "t": 0,
+      "data": {
+        "del": "none",
+        "cancel": "none"
+      }
+    },
+    {
+      "label": "touchStart t=0 @201,385",
+      "t": 0,
+      "data": {
+        "del": "on",
+        "cancel": "none"
+      }
+    },
+    {
+      "label": "touchMove t=33.3 @201,392",
+      "t": 33.333,
+      "data": {
+        "del": "on",
+        "cancel": "none"
+      }
+    },
+    {
+      "label": "touchMove t=66.7 @201,398",
+      "t": 66.667,
+      "data": {
+        "del": "on",
+        "cancel": "none"
+      }
+    },
+    {
+      "label": "touchMove t=100 @201,405",
+      "t": 100,
+      "data": {
+        "del": "none",
+        "cancel": "none"
+      }
+    },
+    {
+      "label": "touchMove t=133.3 @201,412",
+      "t": 133.333,
+      "data": {
+        "del": "none",
+        "cancel": "on"
+      }
+    },
+    {
+      "label": "touchMove t=166.7 @201,418",
+      "t": 166.667,
+      "data": {
+        "del": "none",
+        "cancel": "on"
+      }
+    },
+    {
+      "label": "touchMove t=200 @201,425",
+      "t": 200,
+      "data": {
+        "del": "none",
+        "cancel": "on"
+      }
+    },
+    {
+      "label": "touchEnd t=300 @201,425",
+      "t": 300,
+      "data": {
+        "del": "none",
+        "cancel": "fading"
+      }
+    }
+  ]
+}

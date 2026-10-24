@@ -1,0 +1,221 @@
+{
+ "label": "base",
+ "results": {
+  "slideDeleteToCancel": {
+   "geometry": {
+    "cancel": [
+     200.9921875,
+     424.5
+    ],
+    "del": [
+     200.9921875,
+     384.5
+    ],
+    "dialog": [
+     16,
+     257.5,
+     369.984375,
+     199
+    ],
+    "coarse": true,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1"
+   },
+   "log": {
+    "clicks": [
+     [
+      5254,
+      "Delete"
+     ]
+    ],
+    "paints": [
+     [
+      4470,
+      "touchstart"
+     ],
+     [
+      4623,
+      "Delete",
+      "on"
+     ],
+     [
+      4629,
+      "Delete",
+      "on"
+     ],
+     [
+      4631,
+      "Delete",
+      "on"
+     ],
+     [
+      4733,
+      "Delete",
+      null
+     ],
+     [
+      5252,
+      "touchend"
+     ]
+    ]
+   },
+   "open": false
+  },
+  "slideCancelToDelete": {
+   "geometry": {
+    "cancel": [
+     200.9921875,
+     424.5
+    ],
+    "del": [
+     200.9921875,
+     384.5
+    ],
+    "dialog": [
+     16,
+     257.5,
+     369.984375,
+     199
+    ],
+    "coarse": true,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1"
+   },
+   "log": {
+    "clicks": [
+     [
+      4067,
+      "Cancel"
+     ]
+    ],
+    "paints": [
+     [
+      3278,
+      "touchstart"
+     ],
+     [
+      3428,
+      "Cancel",
+      "on"
+     ],
+     [
+      3542,
+      "Cancel",
+      null
+     ],
+     [
+      4063,
+      "touchend"
+     ]
+    ]
+   },
+   "open": false
+  },
+  "slideDeleteOut": {
+   "geometry": {
+    "cancel": [
+     200.9921875,
+     424.5
+    ],
+    "del": [
+     200.9921875,
+     384.5
+    ],
+    "dialog": [
+     16,
+     257.5,
+     369.984375,
+     199
+    ],
+    "coarse": true,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1"
+   },
+   "log": {
+    "clicks": [],
+    "paints": [
+     [
+      3341,
+      "touchstart"
+     ],
+     [
+      3492,
+      "Delete",
+      "on"
+     ],
+     [
+      3499,
+      "Delete",
+      "on"
+     ],
+     [
+      3499,
+      "Delete",
+      "on"
+     ],
+     [
+      3552,
+      "Delete",
+      null
+     ],
+     [
+      4253,
+      "touchend"
+     ]
+    ]
+   },
+   "open": true
+  },
+  "tapCancel": {
+   "geometry": {
+    "cancel": [
+     200.9921875,
+     424.5
+    ],
+    "del": [
+     200.9921875,
+     384.5
+    ],
+    "dialog": [
+     16,
+     257.5,
+     369.984375,
+     199
+    ],
+    "coarse": true,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1"
+   },
+   "log": {
+    "clicks": [
+     [
+      3295,
+      "Cancel"
+     ]
+    ],
+    "paints": [
+     [
+      3212,
+      "touchstart"
+     ],
+     [
+      3293,
+      "Cancel",
+      "on"
+     ],
+     [
+      3293,
+      "touchend"
+     ],
+     [
+      3394,
+      "Cancel",
+      "fading"
+     ],
+     [
+      3596,
+      "Cancel",
+      null
+     ]
+    ]
+   },
+   "open": false
+  }
+ }
+}
