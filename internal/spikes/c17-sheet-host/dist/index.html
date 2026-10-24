@@ -1,0 +1,1641 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Sheet host spike</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --sheet: #0a4bff;
+        --dim-max: 0.35;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      html {
+        timeline-scope: --sheet;
+      }
+      body {
+        font:
+          15px -apple-system,
+          system-ui,
+          sans-serif;
+        background: #f2f2f7;
+        color: #1c1c1e;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      #page {
+        padding: 72px 16px 32px;
+      }
+      #page h1 {
+        font-size: 28px;
+        margin: 0 0 12px;
+      }
+      #page .row {
+        height: 52px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #d1d1d6;
+      }
+      #reopen {
+        font: inherit;
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: 0;
+        background: #1c1c1e;
+        color: #fff;
+      }
+      #dim {
+        position: fixed;
+        inset: 0;
+        background: #000;
+        opacity: 0;
+        touch-action: none;
+      }
+      #dim.closed {
+        pointer-events: none;
+      }
+      #dim.sd {
+        animation-name: dimByScroll;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --sheet;
+      }
+      @keyframes dimByScroll {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: var(--dim-max);
+        }
+      }
+      #host {
+        position: fixed;
+        inset: 0;
+      }
+      #host.hybrid {
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scroll-snap-type: y mandatory;
+        scrollbar-width: none;
+        scroll-timeline: --sheet y;
+      }
+      #host.hybrid::-webkit-scrollbar {
+        display: none;
+      }
+      #host.passthrough,
+      #host.js {
+        pointer-events: none;
+      }
+      #host.js {
+        overflow: hidden;
+      }
+      #host.js #spacer {
+        display: none;
+      }
+      #sheet {
+        position: relative;
+        pointer-events: auto;
+        background: var(--sheet);
+        color: #fff;
+        border-radius: 12px 12px 0 0;
+        /* Paints below the sheet when it rubber-bands up; not scroll overflow. */
+        box-shadow: 0 600px 0 0 var(--sheet);
+      }
+      #host.js #sheet {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        touch-action: none;
+        will-change: transform;
+      }
+      #grabber {
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        width: 36px;
+        height: 5px;
+        margin-left: -18px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.85);
+      }
+      #sheet .content {
+        padding: 28px 0 0 20px;
+        width: 62%;
+      }
+      #sheet .item {
+        height: 52px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+      }
+      .snap {
+        position: absolute;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        pointer-events: none;
+        scroll-snap-align: start;
+      }
+      #hud {
+        position: fixed;
+        top: 12px;
+        left: 8px;
+        max-width: 58vw;
+        margin: 0;
+        padding: 4px 6px;
+        font:
+          10px/1.3 ui-monospace,
+          Menlo,
+          monospace;
+        white-space: pre-wrap;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 4px;
+        pointer-events: none;
+        z-index: 10;
+      }
+      #spin-c,
+      #spin-j {
+        position: fixed;
+        top: 12px;
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+        pointer-events: none;
+        z-index: 10;
+      }
+      #spin-c {
+        right: 8px;
+        background: #19c37d;
+        animation: spin 1s linear infinite;
+      }
+      #spin-j {
+        right: 36px;
+        background: #ff3b30;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="page">
+      <h1>Page behind the sheet</h1>
+      <p><button id="reopen" type="button" hidden>Open sheet</button></p>
+      <div class="row">Row 1</div>
+      <div class="row">Row 2</div>
+      <div class="row">Row 3</div>
+      <div class="row">Row 4</div>
+      <div class="row">Row 5</div>
+      <div class="row">Row 6</div>
+      <div class="row">Row 7</div>
+      <div class="row">Row 8</div>
+      <div class="row">Row 9</div>
+      <div class="row">Row 10</div>
+      <div class="row">Row 11</div>
+      <div class="row">Row 12</div>
+    </main>
+    <div id="dim"></div>
+    <div id="host">
+      <div id="spacer"></div>
+      <div id="sheet" role="dialog" aria-label="Spike sheet">
+        <div id="grabber"></div>
+        <div class="content">
+          <div class="item">Item 1</div>
+          <div class="item">Item 2</div>
+          <div class="item">Item 3</div>
+          <div class="item">Item 4</div>
+          <div class="item">Item 5</div>
+          <div class="item">Item 6</div>
+          <div class="item">Item 7</div>
+          <div class="item">Item 8</div>
+          <div class="item">Item 9</div>
+          <div class="item">Item 10</div>
+          <div class="item">Item 11</div>
+          <div class="item">Item 12</div>
+        </div>
+      </div>
+    </div>
+    <pre id="hud"></pre>
+    <div id="spin-c"></div>
+    <div id="spin-j"></div>
+    <script>
+"use strict";
+(() => {
+  // internal/spikes/c17-sheet-host/src/geometry.ts
+  function measureGeometry(host2) {
+    const probe = document.createElement("div");
+    probe.style.cssText = "position:fixed;top:0;left:0;width:1px;visibility:hidden;pointer-events:none;height:calc(env(safe-area-inset-top, 0px) + 10px)";
+    document.body.appendChild(probe);
+    const safeTopPlus10 = probe.getBoundingClientRect().height;
+    probe.remove();
+    const W = host2.clientWidth;
+    const H = host2.clientHeight;
+    const largeTop = Math.max(40, Math.round(safeTopPlus10));
+    const sMedium = Math.round(H / 2);
+    const sLarge = H - largeTop;
+    return {
+      W,
+      H,
+      largeTop,
+      sMedium,
+      sLarge,
+      detents: [0, sMedium, sLarge],
+      dimMax: 0.35
+    };
+  }
+  function dimFor(g2, s) {
+    return g2.dimMax * Math.min(1, Math.max(0, s / g2.sMedium));
+  }
+  function nearestDetent(g2, s) {
+    let best = g2.detents[0];
+    for (const d of g2.detents) {
+      if (Math.abs(d - s) < Math.abs(best - s)) {
+        best = d;
+      }
+    }
+    return best;
+  }
+  function publishGeometry(g2, currentS) {
+    const describe = () => {
+      const top = g2.H - currentS();
+      return {
+        viewport: { w: g2.W, h: g2.H },
+        detents: { closed: 0, medium: g2.sMedium, large: g2.sLarge },
+        sheetTop: { medium: g2.H - g2.sMedium, large: g2.H - g2.sLarge, now: top },
+        /** Handle (grabber) centre, page coordinates. */
+        handle: [Math.round(g2.W / 2), Math.round(top + 8)],
+        /** A point on the sheet body just under the handle. */
+        grab: [Math.round(g2.W / 2), Math.round(top + 40)],
+        /** A point deep in the sheet body: on the sheet at both medium and large. */
+        body: [Math.round(g2.W / 2), Math.round(g2.H - g2.sMedium + 150)],
+        /** Column the sheet's top edge is scanned in (no handle, text or HUD there). */
+        scan: { x: Math.round(g2.W * 0.75) },
+        sheetColor: "#0a4bff"
+      };
+    };
+    Object.defineProperty(window, "__geometry", {
+      configurable: true,
+      enumerable: true,
+      get: describe
+    });
+  }
+
+  // packages/core/src/motion/uikit/scroll.ts
+  var scroll = {
+    decelerationRate: {
+      /**
+       * Normal deceleration: the release velocity is multiplied by this every
+       * millisecond. The value of the public SDK constant
+       * `UIScrollView.DecelerationRate.normal`; its per-millisecond meaning is
+       * the one WWDC18 803's projection function assumes ((v ÷ 1000) · r ÷
+       * (1 − r)).
+       * @source GUESS — SDK constant value as published in M. Neuburg,
+       *   "Programming iOS", ch. 20 (UIScrollViewDecelerationRateNormal 0.998);
+       *   Apple's page documents the constant, not its number:
+       *   https://developer.apple.com/documentation/uikit/uiscrollview/decelerationrate-swift.struct/normal
+       * @measure M-S1
+       */
+      normal: 0.998,
+      /**
+       * Fast deceleration (`UIScrollView.DecelerationRate.fast`).
+       * @source GUESS — SDK constant value as published in M. Neuburg,
+       *   "Programming iOS", ch. 20 (UIScrollViewDecelerationRateFast 0.99):
+       *   https://developer.apple.com/documentation/uikit/uiscrollview/decelerationrate-swift.struct/fast
+       * @measure M-S1
+       */
+      fast: 0.99
+    },
+    rubberBand: {
+      /**
+       * c in b = (1 − 1 ÷ (x·c ÷ d + 1))·d, d = the scroll view's size on the
+       * axis (rubberBand.ts).
+       * @source GUESS — formula and constant from Grant Paul,
+       *   twitter.com/chpwn/status/285540192096497664; reproduced within 0.5 pt
+       *   by I. Lobanov's device measurement of UIScrollView (finger 500 / 1000
+       *   / 1500 pt past the edge → 205 / 328 / 409 pt on an 812 pt view),
+       *   medium.com/@esskeetit/how-uiscrollview-works-e418adc47060
+       * @measure M-S5
+       */
+      coefficient: 0.55
+    },
+    /**
+     * The spring that returns content released past an edge, and that catches
+     * a coast hitting an edge (its velocity handed to the spring).
+     * @source GUESS — critically damped as in I. Lobanov's UIScrollView
+     *   reimplementation (no oscillation at the bound); pace from SwiftUI's
+     *   `.smooth` default duration until measured
+     * @measure M-S3
+     */
+    bounce: { duration: 0.5, bounce: 0 },
+    paging: {
+      /**
+       * Deceleration rate a paging release is projected with to pick the next
+       * page (projection.ts `selectPage`).
+       * @source GUESS — UIScrollView paging behaves like a fast scroll view;
+       *   the rate it uses internally is not documented
+       * @measure M-PG1
+       */
+      projectionRate: 0.99,
+      /**
+       * The spring that carries a paging scroll view onto its page.
+       * @source GUESS — SwiftUI `.smooth` default until measured
+       * @measure M-PG1
+       */
+      snap: { duration: 0.5, bounce: 0 }
+    },
+    /**
+     * `delaysContentTouches`: how long a scroll view holds a touch-down from
+     * its content while it decides whether the touch is a scroll (no highlight
+     * flash on a quick scroll), in ms.
+     * @source wwdc 2014-235 "Advanced Scrollviews and Touch Handling
+     *   Techniques": the touch-delay recognizer UIScrollView uses runs "a
+     *   pretty short timer … Let's say .15 seconds" (presenter's example value)
+     * @source measured: Settings and Contacts, iOS 26.2, simulator driven with
+     *   real HID touches at 60 fps, recorded with the touch press model
+     *   (PRESS_ONSET_MS in packages/core/src/utils/pressGesture.ts, 2026-10-06)
+     */
+    delaysContentTouchesMs: 150
+  };
+
+  // packages/core/src/motion/projection.ts
+  function projectDistance(velocity, rate = scroll.decelerationRate.normal) {
+    if (!(rate > 0 && rate < 1)) {
+      throw new RangeError(`projection: rate must be in (0, 1), got ${rate}`);
+    }
+    return velocity / 1e3 * rate / (1 - rate);
+  }
+  function project(position, velocity, rate = scroll.decelerationRate.normal) {
+    return position + projectDistance(velocity, rate);
+  }
+  function selectSnapPoint(points, {
+    position,
+    velocity,
+    rate = scroll.decelerationRate.normal,
+    fromIndex,
+    maxSteps
+  }) {
+    if (points.length === 0) {
+      throw new RangeError(
+        "projection: selectSnapPoint needs at least one point"
+      );
+    }
+    const projected = project(position, velocity, rate);
+    let lo = 0;
+    let hi = points.length - 1;
+    if (fromIndex != null && maxSteps != null) {
+      lo = Math.max(lo, fromIndex - maxSteps);
+      hi = Math.min(hi, fromIndex + maxSteps);
+    }
+    let best = lo;
+    let bestDistance = Infinity;
+    for (let i = lo; i <= hi; i++) {
+      const distance = Math.abs(points[i] - projected);
+      const isTie = Math.abs(distance - bestDistance) < 1e-9;
+      const isAhead = Math.sign(points[i] - points[best]) === Math.sign(velocity);
+      if (distance < bestDistance - 1e-9 || isTie && isAhead) {
+        best = i;
+        bestDistance = distance;
+      }
+    }
+    return { index: best, value: points[best], projected };
+  }
+
+  // packages/core/src/motion/decay.ts
+  function decayConstant(rate) {
+    if (!(rate > 0 && rate < 1)) {
+      throw new RangeError(`decay: rate must be in (0, 1), got ${rate}`);
+    }
+    return -1e3 * Math.log(rate);
+  }
+  function solveDecay({
+    from,
+    velocity: initialVelocity,
+    rate = scroll.decelerationRate.normal
+  }) {
+    const lambda = decayConstant(rate);
+    const rest = from + initialVelocity / lambda;
+    const speed0 = Math.abs(initialVelocity);
+    return {
+      from,
+      initialVelocity,
+      rate,
+      rest,
+      value: (t) => from + initialVelocity * -Math.expm1(-lambda * t) / lambda,
+      velocity: (t) => initialVelocity * Math.exp(-lambda * t),
+      settleTime: (threshold) => {
+        const remaining = speed0 / lambda;
+        if (!(threshold > 0)) {
+          return Infinity;
+        }
+        return remaining <= threshold ? 0 : Math.log(remaining / threshold) / lambda;
+      },
+      timeToSpeed: (speed) => speed0 <= speed ? 0 : speed > 0 ? Math.log(speed0 / speed) / lambda : Infinity,
+      timeToReach: (target) => {
+        if (initialVelocity === 0) {
+          return target === from ? 0 : null;
+        }
+        const fraction = lambda * (target - from) / initialVelocity;
+        if (fraction < 0 || fraction >= 1) {
+          return null;
+        }
+        return -Math.log1p(-fraction) / lambda;
+      }
+    };
+  }
+
+  // packages/core/src/motion/uikit/springs.ts
+  var UIKIT_DEFAULT_SPRING = { mass: 3, stiffness: 1e3, damping: 500 };
+  var springs = {
+    // ---------------------------------------------------------------------
+    // Sourced presets
+    // ---------------------------------------------------------------------
+    /**
+     * SwiftUI `.smooth`: no bounce. Also SwiftUI's `Spring()` and
+     * `.spring(duration:bounce:)` defaults.
+     * @source apple-docs https://developer.apple.com/documentation/swiftui/spring/smooth(duration:extrabounce:)
+     */
+    smooth: { duration: 0.5, bounce: 0 },
+    /**
+     * SwiftUI `.snappy`: "small amount of bounce", base bounce 0.15.
+     * @source apple-docs https://developer.apple.com/documentation/swiftui/spring/snappy(duration:extrabounce:)
+     */
+    snappy: { duration: 0.5, bounce: 0.15 },
+    /**
+     * SwiftUI `.bouncy`: base bounce 0.3.
+     * @source apple-docs https://developer.apple.com/documentation/swiftui/spring/bouncy(duration:extrabounce:)
+     */
+    bouncy: { duration: 0.5, bounce: 0.3 },
+    /**
+     * SwiftUI `interactiveSpring()` defaults: for a value that tracks a finger.
+     * @source apple-docs https://developer.apple.com/documentation/swiftui/animation/interactivespring(response:dampingfraction:blendduration:)
+     */
+    interactive: { response: 0.15, dampingRatio: 0.86 },
+    /**
+     * SwiftUI `Animation.default` since iOS 17 (what `withAnimation` uses).
+     * @source apple-docs https://developer.apple.com/documentation/swiftui/animation/default
+     */
+    swiftUIDefault: { response: 0.55, dampingRatio: 1 },
+    /**
+     * SwiftUI `.spring(response:dampingFraction:blendDuration:)` defaults.
+     * @source apple-docs https://developer.apple.com/documentation/swiftui/animation/spring(response:dampingfraction:blendduration:)
+     */
+    swiftUISpring: { response: 0.5, dampingRatio: 0.825 },
+    /**
+     * UIKit `UIView.animate(springDuration:bounce:…)` defaults (iOS 17).
+     * @source apple-docs https://developer.apple.com/documentation/uikit/uiview/animate(springduration:bounce:initialspringvelocity:delay:options:animations:completion:)
+     */
+    uikitSpringDuration: { duration: 0.5, bounce: 0 },
+    /**
+     * UIKit's default spring, `UISpringTimingParameters()`: Apple documents
+     * its damping ratio as 4.56, which is exactly 500 ÷ (2·√(3·1000)).
+     * Overdamped on paper; Core Animation treats overdamping as critical
+     * unless told otherwise, which `toSpring` mirrors: in effect a critically
+     * damped spring with ω₀ = 18.26 rad/s (response 0.344 s) that settles in
+     * 0.506 s. It is also the curve behind the keyboard's undocumented
+     * animation curve 7.
+     * @source apple-docs https://developer.apple.com/documentation/uikit/uispringtimingparameters/init() (damping ratio 4.56)
+     * @source GUESS — the mass 3 / stiffness 1000 / damping 500 triple is
+     *   community reverse engineering consistent with that ratio; whether
+     *   overdamping is honored is not documented
+     * @measure M-K2
+     * @measure M-CA1
+     */
+    uikitDefault: UIKIT_DEFAULT_SPRING,
+    // ---------------------------------------------------------------------
+    // Navigation (UINavigationController)
+    // ---------------------------------------------------------------------
+    /**
+     * Push: incoming view slides in from the trailing edge, outgoing parallax.
+     * @source GUESS — UIKit's default spring (system-driven transition)
+     * @measure M-N1
+     */
+    navigationPush: UIKIT_DEFAULT_SPRING,
+    /**
+     * Pop (back button).
+     * @source GUESS — UIKit's default spring (system-driven transition)
+     * @measure M-N2
+     */
+    navigationPop: UIKIT_DEFAULT_SPRING,
+    /**
+     * Interactive pop (edge swipe) finishing or cancelling after the finger
+     * lifts; the release velocity is handed to it.
+     * @source GUESS — UIKit's default spring
+     * @measure M-N3
+     */
+    navigationInteractivePopFinish: UIKIT_DEFAULT_SPRING,
+    // ---------------------------------------------------------------------
+    // Sheets (UISheetPresentationController)
+    // ---------------------------------------------------------------------
+    /**
+     * Sheet presented by a tap: no overshoot.
+     * @source wwdc 2018-803 "Designing Fluid Interfaces": a presentation
+     *   driven by a tap has no momentum, so Music's Now Playing uses 100 %
+     *   damping (damping ratio)
+     * @source GUESS — pace from UIKit's default spring
+     * @measure M-SH1
+     */
+    sheetPresent: UIKIT_DEFAULT_SPRING,
+    /**
+     * Sheet dismissed by a control (Cancel / Done / scrim tap).
+     * @source wwdc 2018-803 (no momentum → 100 % damping)
+     * @source GUESS — pace from UIKit's default spring
+     * @measure M-SH2
+     */
+    sheetDismiss: UIKIT_DEFAULT_SPRING,
+    /**
+     * Sheet dismissed by a swipe: the gesture's momentum earns a little
+     * overshoot.
+     * @source wwdc 2018-803 "Designing Fluid Interfaces": swipe-to-dismiss
+     *   Now Playing "has momentum … so we use 80 % damping" (damping ratio)
+     * @source GUESS — response from UIKit's default spring's ω₀
+     * @measure M-SH2
+     */
+    sheetDismissSwipe: { response: 0.344, dampingRatio: 0.8 },
+    /**
+     * Snap between detents after a drag releases (release velocity handed
+     * over).
+     * @source GUESS — critically damped at UIKit's default pace
+     * @measure M-SH3
+     */
+    sheetDetent: UIKIT_DEFAULT_SPRING,
+    // ---------------------------------------------------------------------
+    // Alerts, action sheets, menus
+    // ---------------------------------------------------------------------
+    /**
+     * Alert (UIAlertController .alert) appearing.
+     * @source GUESS — UIKit's default spring
+     * @measure M-A1
+     */
+    alertPresent: UIKIT_DEFAULT_SPRING,
+    /**
+     * Alert dismissing.
+     * @source GUESS — UIKit's default spring
+     * @measure M-A1
+     */
+    alertDismiss: UIKIT_DEFAULT_SPRING,
+    /**
+     * Action sheet (UIAlertController .actionSheet) appearing.
+     * @source GUESS — UIKit's default spring
+     * @measure M-AS1
+     */
+    actionSheetPresent: UIKIT_DEFAULT_SPRING,
+    /**
+     * Action sheet dismissing.
+     * @source GUESS — UIKit's default spring
+     * @measure M-AS1
+     */
+    actionSheetDismiss: UIKIT_DEFAULT_SPRING,
+    /**
+     * UIMenu (pull-down / button menu) opening.
+     * @source GUESS — UIKit's default spring
+     * @measure M-AS1
+     */
+    menuOpen: UIKIT_DEFAULT_SPRING,
+    /**
+     * UIMenu closing.
+     * @source GUESS — UIKit's default spring
+     * @measure M-AS1
+     */
+    menuClose: UIKIT_DEFAULT_SPRING,
+    /**
+     * Context menu (UIContextMenuInteraction): preview lift after the long
+     * press commits.
+     * @source GUESS — UIKit's default spring
+     * @measure M-CM1
+     */
+    contextMenuLift: UIKIT_DEFAULT_SPRING,
+    /**
+     * Context menu dismissing back into its source.
+     * @source GUESS — UIKit's default spring
+     * @measure M-CM1
+     */
+    contextMenuDismiss: UIKIT_DEFAULT_SPRING,
+    // ---------------------------------------------------------------------
+    // Controls
+    // ---------------------------------------------------------------------
+    /**
+     * UISwitch thumb travelling between off and on.
+     * @source webkit Source/WebCore/rendering/cocoa/RenderThemeCocoa.mm
+     *   `thumbMoveSpring = SpringSolver(1.0, 438.649…, 31.4159…)`, "Values
+     *   chosen for consistency with UIKit" (= response 0.30 s, ratio 0.75);
+     *   its settling duration is WebKit's iOS switch duration 0.48801 s
+     *   (RenderThemeIOS.h)
+     * @measure M-SW1
+     */
+    switchThumbMove: { response: 0.3, dampingRatio: 0.75 },
+    /**
+     * UISwitch thumb stretching while pressed and relaxing on release.
+     * @source webkit Source/WebCore/rendering/cocoa/RenderThemeCocoa.mm
+     *   `thumbPressSpring = SpringSolver(1.0, 322.272…, 31.2364…)`, "Values
+     *   chosen for consistency with UIKit" (= response 0.35 s, ratio 0.87);
+     *   settles in WebKit's held duration 0.50740 s (RenderThemeIOS.h)
+     * @measure M-SW1
+     */
+    switchThumbStretch: { response: 0.35, dampingRatio: 0.87 },
+    /**
+     * UISegmentedControl selection thumb sliding to a new segment.
+     * @source GUESS — WebKit's UIKit-matched switch thumb spring, the nearest
+     *   sourced control thumb
+     * @measure M-SG1
+     */
+    segmentedThumb: { response: 0.3, dampingRatio: 0.75 },
+    // ---------------------------------------------------------------------
+    // System
+    // ---------------------------------------------------------------------
+    /**
+     * Keyboard frame animation (UIKeyboardAnimationCurveUserInfoKey = 7).
+     * @source GUESS — UIKit's default spring (community reverse engineering)
+     * @measure M-K2
+     */
+    keyboard: UIKIT_DEFAULT_SPRING,
+    /**
+     * Scroll-to-top after a status-bar tap.
+     * @source GUESS — UIKit's default spring
+     * @measure M-ST1
+     */
+    scrollToTop: UIKIT_DEFAULT_SPRING,
+    /**
+     * Banner / toast sliding in from the top edge (system notification
+     * banner as the reference).
+     * @source GUESS — UIKit's default spring
+     * @measure M-T1
+     */
+    banner: UIKIT_DEFAULT_SPRING
+  };
+
+  // internal/spikes/c17-sheet-host/src/host.ts
+  var round2 = (n) => Math.round(n * 100) / 100;
+
+  // packages/core/src/motion/spring.ts
+  var TAU = 2 * Math.PI;
+  function assertPositiveFinite(name, value) {
+    if (!(Number.isFinite(value) && value > 0)) {
+      throw new RangeError(
+        `spring: ${name} must be a positive number, got ${value}`
+      );
+    }
+  }
+  function springFromDurationBounce({
+    duration,
+    bounce
+  }) {
+    assertPositiveFinite("duration", duration);
+    if (!Number.isFinite(bounce)) {
+      throw new RangeError(`spring: bounce must be finite, got ${bounce}`);
+    }
+    const b = Math.min(1, Math.max(-0.999999, bounce));
+    const stiffness = (TAU / duration) ** 2;
+    const damping = b >= 0 ? (1 - b) * 2 * TAU / duration : 2 * TAU / (duration * (1 + b));
+    return { mass: 1, stiffness, damping };
+  }
+  function springFromResponse({
+    response,
+    dampingRatio
+  }) {
+    assertPositiveFinite("response", response);
+    if (!(Number.isFinite(dampingRatio) && dampingRatio >= 0)) {
+      throw new RangeError(
+        `spring: dampingRatio must be \u2265 0, got ${dampingRatio}`
+      );
+    }
+    const omega = TAU / response;
+    return { mass: 1, stiffness: omega * omega, damping: 2 * dampingRatio * omega };
+  }
+  function springFromPhysics({
+    mass = 1,
+    stiffness,
+    damping,
+    allowOverdamping = false
+  }) {
+    assertPositiveFinite("mass", mass);
+    assertPositiveFinite("stiffness", stiffness);
+    if (!(Number.isFinite(damping) && damping >= 0)) {
+      throw new RangeError(`spring: damping must be \u2265 0, got ${damping}`);
+    }
+    const critical = 2 * Math.sqrt(stiffness * mass);
+    return {
+      mass,
+      stiffness,
+      damping: allowOverdamping ? damping : Math.min(damping, critical)
+    };
+  }
+  function naturalFrequency(spring) {
+    return Math.sqrt(spring.stiffness / spring.mass);
+  }
+  function dampingRatioOf(spring) {
+    return spring.damping / (2 * Math.sqrt(spring.stiffness * spring.mass));
+  }
+  function toSpring(description) {
+    if ("stiffness" in description) {
+      return springFromPhysics(description);
+    }
+    if ("bounce" in description) {
+      return springFromDurationBounce(description);
+    }
+    return springFromResponse(description);
+  }
+  var CRITICAL_TOLERANCE = 1e-6;
+  function solveSpring(spring, {
+    from,
+    to,
+    velocity: initialVelocity = 0
+  }) {
+    const omega0 = naturalFrequency(spring);
+    const zeta = dampingRatioOf(spring);
+    const x0 = from - to;
+    const v0 = initialVelocity;
+    let displacement;
+    let speed;
+    let envelope;
+    let envelopePeak = 0;
+    if (zeta < 1 - CRITICAL_TOLERANCE) {
+      const decay = zeta * omega0;
+      const omegaD = omega0 * Math.sqrt(1 - zeta * zeta);
+      const a = x0;
+      const b = (v0 + decay * x0) / omegaD;
+      const bv = (decay * v0 + omega0 * omega0 * x0) / omegaD;
+      displacement = (t) => Math.exp(-decay * t) * (a * Math.cos(omegaD * t) + b * Math.sin(omegaD * t));
+      speed = (t) => Math.exp(-decay * t) * (v0 * Math.cos(omegaD * t) - bv * Math.sin(omegaD * t));
+      const amplitude = Math.abs(a) + Math.abs(b);
+      envelope = (t) => amplitude * Math.exp(-decay * t);
+    } else if (zeta <= 1 + CRITICAL_TOLERANCE) {
+      const b = v0 + omega0 * x0;
+      displacement = (t) => (x0 + b * t) * Math.exp(-omega0 * t);
+      speed = (t) => (v0 - omega0 * b * t) * Math.exp(-omega0 * t);
+      const absA = Math.abs(x0);
+      const absB = Math.abs(b);
+      envelope = (t) => (absA + absB * t) * Math.exp(-omega0 * t);
+      envelopePeak = absB > 0 ? Math.max(0, 1 / omega0 - absA / absB) : 0;
+    } else {
+      const root = omega0 * Math.sqrt(zeta * zeta - 1);
+      const r12 = -zeta * omega0 + root;
+      const r2 = -zeta * omega0 - root;
+      const c1 = (v0 - r2 * x0) / (r12 - r2);
+      const c2 = x0 - c1;
+      displacement = (t) => c1 * Math.exp(r12 * t) + c2 * Math.exp(r2 * t);
+      speed = (t) => r12 * c1 * Math.exp(r12 * t) + r2 * c2 * Math.exp(r2 * t);
+      const absC1 = Math.abs(c1);
+      const absC2 = Math.abs(c2);
+      envelope = (t) => absC1 * Math.exp(r12 * t) + absC2 * Math.exp(r2 * t);
+    }
+    const settleTime = (threshold) => {
+      if (!(threshold > 0)) {
+        return Infinity;
+      }
+      if (zeta === 0) {
+        return x0 === 0 && v0 === 0 ? 0 : Infinity;
+      }
+      const start = envelopePeak;
+      if (envelope(start) <= threshold) {
+        return 0;
+      }
+      if (zeta < 1 - CRITICAL_TOLERANCE) {
+        const amplitude = envelope(0);
+        return Math.log(amplitude / threshold) / (zeta * omega0);
+      }
+      let lo = start;
+      let hi = Math.max(start, 1 / omega0);
+      while (envelope(hi) > threshold) {
+        lo = hi;
+        hi *= 2;
+        if (hi > 1e6) {
+          return Infinity;
+        }
+      }
+      for (let i = 0; i < 100 && hi - lo > 1e-12; i++) {
+        const mid = (lo + hi) / 2;
+        if (envelope(mid) > threshold) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+      return hi;
+    };
+    return {
+      spring,
+      from,
+      to,
+      initialVelocity,
+      value: (t) => to + displacement(t),
+      velocity: (t) => speed(t),
+      settleTime
+    };
+  }
+
+  // internal/spikes/c17-sheet-host/src/springAnim.ts
+  var SAMPLE_STEP_S = 1 / 120;
+  var SETTLE_THRESHOLD_PX = 0.5;
+  function animateSpring({
+    el,
+    dimEl,
+    from,
+    to,
+    velocity,
+    spring,
+    toTransform,
+    toDim
+  }) {
+    const curve = solveSpring(toSpring(spring), { from, to, velocity });
+    const settle = Math.min(
+      3,
+      Math.max(1 / 60, curve.settleTime(SETTLE_THRESHOLD_PX))
+    );
+    const steps = Math.ceil(settle / SAMPLE_STEP_S);
+    const frames = [];
+    const dimFrames = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = Math.min(settle, i * SAMPLE_STEP_S);
+      const value = i === steps ? to : curve.value(t);
+      const offset = t / settle;
+      frames.push({ offset, transform: toTransform(value) });
+      dimFrames.push({ offset, opacity: String(toDim(value)) });
+    }
+    const timing = {
+      duration: settle * 1e3,
+      easing: "linear",
+      fill: "forwards"
+    };
+    const anim = el.animate(frames, timing);
+    const dimAnim = dimEl == null ? null : dimEl.animate(dimFrames, timing);
+    return {
+      anim,
+      dimAnim,
+      curve,
+      settle,
+      presentation() {
+        const elapsed = Number(anim.currentTime ?? 0) / 1e3;
+        return elapsed >= settle ? to : curve.value(Math.max(0, elapsed));
+      }
+    };
+  }
+
+  // internal/spikes/c17-sheet-host/src/velocity.ts
+  var WINDOW_MS = 100;
+  var VelocityTracker = class {
+    samples = [];
+    reset() {
+      this.samples = [];
+    }
+    add(t, y) {
+      const last = this.samples[this.samples.length - 1];
+      if (last != null && t < last[0]) {
+        return;
+      }
+      if (last != null && t === last[0]) {
+        last[1] = y;
+        return;
+      }
+      this.samples.push([t, y]);
+      while (this.samples.length > 2 && t - this.samples[0][0] > WINDOW_MS * 2) {
+        this.samples.shift();
+      }
+    }
+    /** px/s at `releaseT`; 0 when the finger rested for the whole window. */
+    velocity(releaseT) {
+      const recent = this.samples.filter(([t]) => releaseT - t <= WINDOW_MS);
+      if (recent.length < 2) {
+        return 0;
+      }
+      const [t0, y0] = recent[0];
+      const [t1, y1] = recent[recent.length - 1];
+      const dt = t1 - t0;
+      return dt > 0 ? (y1 - y0) / dt * 1e3 : 0;
+    }
+    count() {
+      return this.samples.length;
+    }
+  };
+
+  // internal/spikes/c17-sheet-host/src/hybrid.ts
+  var LATE_FRAME_MS = 60;
+  var REST_QUIET_MS = 150;
+  var MAX_REPINS = 4;
+  function mountHybrid(ctx2) {
+    const { host: host2, spacer: spacer2, sheet: sheet2, dim: dim2, g: g2, p: p2, tracer: tracer2, heartbeat: heartbeat2 } = ctx2;
+    host2.classList.add("hybrid");
+    if (p2.passthrough) {
+      host2.classList.add("passthrough");
+    }
+    spacer2.style.height = `${g2.H}px`;
+    sheet2.style.height = `${g2.sLarge}px`;
+    for (const s of g2.detents) {
+      const marker = document.createElement("div");
+      marker.className = "snap";
+      marker.style.top = `${s}px`;
+      host2.appendChild(marker);
+    }
+    const sdSupported = typeof CSS !== "undefined" && CSS.supports("animation-timeline: --sheet") && CSS.supports("timeline-scope: --sheet");
+    const useSD = p2.dim === "scroll" && sdSupported;
+    if (useSD) {
+      dim2.classList.add("sd");
+      dim2.style.setProperty("animation-range", `0px ${g2.sMedium}px`);
+    }
+    host2.scrollTop = ctx2.initialS;
+    if (!useSD) {
+      dim2.style.opacity = String(dimFor(g2, ctx2.initialS));
+    }
+    tracer2.log("hybrid-mount", {
+      sdSupported,
+      useSD,
+      scrollTop: host2.scrollTop,
+      scrollHeight: host2.scrollHeight,
+      clientHeight: host2.clientHeight
+    });
+    const finger = new VelocityTracker();
+    let touching = false;
+    let run = null;
+    let freeze = 0;
+    let repins = 0;
+    let late = false;
+    let restTimer = 0;
+    let restingAt = ctx2.initialS;
+    let lastScroll = { t: performance.now(), s: host2.scrollTop };
+    const pin = (s) => {
+      if (p2.stop === "instant") {
+        host2.scrollTo({ top: s, behavior: "instant" });
+      } else {
+        host2.scrollTop = s;
+      }
+    };
+    const pause = (el, paused) => {
+      if (useSD) {
+        el.style.animationName = paused ? "none" : "";
+      }
+    };
+    const settle = (target, why) => {
+      const done = run;
+      run = null;
+      host2.scrollTop = target;
+      done?.anim.cancel();
+      done?.dimAnim?.cancel();
+      host2.style.overflowY = "";
+      host2.style.scrollSnapType = "";
+      pause(dim2, false);
+      if (!useSD) {
+        dim2.style.opacity = String(dimFor(g2, target));
+      }
+      restingAt = target;
+      late = false;
+      tracer2.log("settled", { target, why, scrollTop: host2.scrollTop });
+      if (target === 0) {
+        ctx2.onClosed();
+      }
+    };
+    const springTo = (target, from, velocity, table, reason) => {
+      run?.anim.cancel();
+      run?.dimAnim?.cancel();
+      const spring = p2.spring ?? table;
+      freeze = Math.min(g2.sLarge, Math.max(0, from));
+      repins = 0;
+      host2.style.scrollSnapType = "none";
+      host2.style.overflowY = "hidden";
+      pin(freeze);
+      pause(dim2, true);
+      const pinned = freeze;
+      const started = animateSpring({
+        el: sheet2,
+        dimEl: dim2,
+        from,
+        to: target,
+        velocity,
+        spring,
+        toTransform: (s) => `translate3d(0, ${round2(pinned - s)}px, 0)`,
+        toDim: (s) => dimFor(g2, s)
+      });
+      run = started;
+      tracer2.log("spring", {
+        reason,
+        from: round2(from),
+        to: target,
+        velocity: round2(velocity),
+        freeze: round2(freeze),
+        settle: round2(started.settle * 1e3),
+        spring
+      });
+      started.anim.finished.then(
+        () => {
+          if (run === started) {
+            settle(target, "finished");
+          }
+        },
+        () => {
+        }
+      );
+    };
+    const regrab = () => {
+      const held = run;
+      if (held == null) {
+        return;
+      }
+      run = null;
+      const presentation = held.presentation();
+      const s = Math.min(g2.sLarge, Math.max(0, presentation));
+      host2.scrollTop = s;
+      held.anim.cancel();
+      held.dimAnim?.cancel();
+      host2.style.overflowY = "";
+      pause(dim2, false);
+      if (!useSD) {
+        dim2.style.opacity = String(dimFor(g2, s));
+      }
+      tracer2.log("regrab", {
+        presentation: round2(presentation),
+        s: round2(s),
+        at: round2(Number(held.anim.currentTime ?? 0))
+      });
+    };
+    const checkRest = (why) => {
+      if (touching || run != null) {
+        return;
+      }
+      const s = host2.scrollTop;
+      const detent = nearestDetent(g2, s);
+      if (Math.abs(s - detent) > 0.75) {
+        tracer2.log("reconcile", { why, s: round2(s), to: detent, late });
+        springTo(detent, s, 0, springs.sheetDetent, "reconcile");
+        return;
+      }
+      if (late || restingAt !== detent) {
+        tracer2.log("rest", { why, s: round2(s), detent, late });
+      }
+      late = false;
+      host2.style.scrollSnapType = "";
+      restingAt = detent;
+      if (detent === 0) {
+        ctx2.onClosed();
+      }
+    };
+    const scheduleRest = () => {
+      clearTimeout(restTimer);
+      restTimer = window.setTimeout(() => checkRest("quiet"), REST_QUIET_MS);
+    };
+    host2.addEventListener(
+      "scroll",
+      (e) => {
+        const s = host2.scrollTop;
+        tracer2.scroll(e.timeStamp, s);
+        lastScroll = { t: e.timeStamp, s };
+        if (!useSD && run == null) {
+          dim2.style.opacity = String(dimFor(g2, s));
+        }
+        if (run != null) {
+          if (Math.abs(s - freeze) > 0.5) {
+            tracer2.log("scroll-during-spring", {
+              s: round2(s),
+              freeze: round2(freeze),
+              repin: repins < MAX_REPINS
+            });
+            if (repins < MAX_REPINS) {
+              repins++;
+              host2.scrollTop = freeze;
+            }
+          }
+        } else if (!touching) {
+          scheduleRest();
+        }
+      },
+      { passive: true }
+    );
+    host2.addEventListener(
+      "scrollend",
+      () => {
+        if (!touching && run == null) {
+          checkRest("scrollend");
+        }
+      },
+      { passive: true }
+    );
+    host2.addEventListener(
+      "touchstart",
+      (e) => {
+        const now = performance.now();
+        tracer2.log("touchstart", {
+          ts: round2(e.timeStamp),
+          lag: round2(now - e.timeStamp),
+          sinceFrame: round2(now - heartbeat2.last),
+          touches: e.touches.length,
+          y: e.changedTouches[0]?.clientY,
+          s: round2(host2.scrollTop),
+          springing: run != null
+        });
+        if (e.touches.length !== 1) {
+          return;
+        }
+        ctx2.onTouchStart();
+        touching = true;
+        clearTimeout(restTimer);
+        if (!p2.snapDuringTouch) {
+          host2.style.scrollSnapType = "none";
+        }
+        finger.reset();
+        finger.add(e.timeStamp, e.changedTouches[0].clientY);
+        if (run != null) {
+          regrab();
+        }
+      },
+      { passive: true }
+    );
+    host2.addEventListener(
+      "touchmove",
+      (e) => {
+        const touch = e.changedTouches[0];
+        if (touch == null) {
+          return;
+        }
+        finger.add(e.timeStamp, touch.clientY);
+        tracer2.move(e.timeStamp, touch.clientY);
+      },
+      { passive: true }
+    );
+    const onEnd = (e) => {
+      const now = performance.now();
+      if (e.touches.length > 0 || !touching) {
+        return;
+      }
+      touching = false;
+      const y = e.changedTouches[0]?.clientY;
+      if (y != null) {
+        finger.add(e.timeStamp, y);
+      }
+      const lateBy = now - e.timeStamp;
+      const sinceFrame = now - heartbeat2.last;
+      const isLate = lateBy > p2.lateMs || sinceFrame > LATE_FRAME_MS;
+      const velocity = -finger.velocity(e.timeStamp);
+      const sRead = host2.scrollTop;
+      tracer2.log("touchend", {
+        type: e.type,
+        ts: round2(e.timeStamp),
+        lag: round2(lateBy),
+        sinceFrame: round2(sinceFrame),
+        velocity: round2(velocity),
+        sRead: round2(sRead),
+        lastScroll: { t: round2(lastScroll.t), s: round2(lastScroll.s) },
+        late: isLate,
+        samples: finger.count()
+      });
+      if (p2.release === "native" || isLate) {
+        late = true;
+        if (p2.snapDuringTouch) {
+          host2.style.scrollSnapType = "";
+        }
+        scheduleRest();
+        return;
+      }
+      let from = sRead;
+      let v0 = velocity;
+      if (p2.handoff === "extrap") {
+        const dt = Math.max(0, now - lastScroll.t) / 1e3 + 1 / 120;
+        const coast = solveDecay({ from: lastScroll.s, velocity });
+        from = coast.value(dt);
+        v0 = coast.velocity(dt);
+      }
+      const pick = selectSnapPoint(g2.detents, { position: from, velocity: v0 });
+      tracer2.log("release", {
+        from: round2(from),
+        velocity: round2(v0),
+        projected: round2(pick.projected),
+        target: pick.value
+      });
+      springTo(
+        pick.value,
+        from,
+        v0,
+        pick.value === 0 ? springs.sheetDismissSwipe : springs.sheetDetent,
+        "release"
+      );
+    };
+    host2.addEventListener("touchend", onEnd, { passive: true });
+    host2.addEventListener("touchcancel", onEnd, { passive: true });
+    return {
+      currentS: () => run != null ? run.presentation() : host2.scrollTop,
+      present(to) {
+        springTo(to, host2.scrollTop, 0, springs.sheetPresent, "present");
+      },
+      dismiss() {
+        const from = run != null ? run.presentation() : host2.scrollTop;
+        springTo(0, from, 0, springs.sheetDismiss, "dismiss");
+      },
+      state: () => ({
+        s: round2(run != null ? run.presentation() : host2.scrollTop),
+        restingAt,
+        touching,
+        late,
+        springing: run != null,
+        overflowY: host2.style.overflowY || "auto",
+        snap: host2.style.scrollSnapType || "y mandatory"
+      })
+    };
+  }
+
+  // packages/core/src/motion/rubberBand.ts
+  function rubberBand(overflow, dimension, coefficient = scroll.rubberBand.coefficient) {
+    if (!(dimension > 0)) {
+      return 0;
+    }
+    const x = Math.abs(overflow);
+    const banded = (1 - 1 / (x * coefficient / dimension + 1)) * dimension;
+    return overflow < 0 ? -banded : banded;
+  }
+  function rubberBandClamp(value, min, max, dimension, coefficient = scroll.rubberBand.coefficient) {
+    if (value < min) {
+      return min + rubberBand(value - min, dimension, coefficient);
+    }
+    if (value > max) {
+      return max + rubberBand(value - max, dimension, coefficient);
+    }
+    return value;
+  }
+
+  // internal/spikes/c17-sheet-host/src/jsHost.ts
+  function mountJs(ctx2) {
+    const { host: host2, sheet: sheet2, dim: dim2, g: g2, p: p2, tracer: tracer2, heartbeat: heartbeat2 } = ctx2;
+    host2.classList.add("js");
+    sheet2.style.height = `${g2.sLarge}px`;
+    const finger = new VelocityTracker();
+    let s = ctx2.initialS;
+    let run = null;
+    let drag = null;
+    const write = (value) => {
+      sheet2.style.transform = `translate3d(0, ${round2(g2.H - value)}px, 0)`;
+      if (p2.jsDim) {
+        dim2.style.opacity = String(dimFor(g2, value));
+      }
+    };
+    write(s);
+    if (!p2.jsDim) {
+      dim2.style.opacity = String(dimFor(g2, s));
+    }
+    tracer2.log("js-mount", { s });
+    const springTo = (target, from, velocity, table, reason) => {
+      run?.anim.cancel();
+      run?.dimAnim?.cancel();
+      const spring = p2.spring ?? table;
+      const started = animateSpring({
+        el: sheet2,
+        dimEl: dim2,
+        from,
+        to: target,
+        velocity,
+        spring,
+        toTransform: (value) => `translate3d(0, ${round2(g2.H - value)}px, 0)`,
+        toDim: (value) => dimFor(g2, value)
+      });
+      run = started;
+      tracer2.log("spring", {
+        reason,
+        from: round2(from),
+        to: target,
+        velocity: round2(velocity),
+        settle: round2(started.settle * 1e3),
+        spring
+      });
+      started.anim.finished.then(
+        () => {
+          if (run !== started) {
+            return;
+          }
+          run = null;
+          s = target;
+          sheet2.style.transform = `translate3d(0, ${round2(g2.H - target)}px, 0)`;
+          dim2.style.opacity = String(dimFor(g2, target));
+          started.anim.cancel();
+          started.dimAnim?.cancel();
+          tracer2.log("settled", { target, why: "finished" });
+          if (target === 0) {
+            ctx2.onClosed();
+          }
+        },
+        () => {
+        }
+      );
+    };
+    sheet2.addEventListener("pointerdown", (e) => {
+      const now = performance.now();
+      tracer2.log("pointerdown", {
+        ts: round2(e.timeStamp),
+        lag: round2(now - e.timeStamp),
+        sinceFrame: round2(now - heartbeat2.last),
+        y: e.clientY,
+        primary: e.isPrimary,
+        springing: run != null
+      });
+      if (!e.isPrimary) {
+        return;
+      }
+      ctx2.onTouchStart();
+      sheet2.setPointerCapture(e.pointerId);
+      if (run != null) {
+        const held = run;
+        run = null;
+        s = held.presentation();
+        held.anim.cancel();
+        held.dimAnim?.cancel();
+        write(s);
+        tracer2.log("regrab", {
+          s: round2(s),
+          at: round2(Number(held.anim.currentTime ?? 0))
+        });
+      }
+      drag = { id: e.pointerId, y0: e.clientY, s0: s };
+      finger.reset();
+      finger.add(e.timeStamp, e.clientY);
+    });
+    sheet2.addEventListener("pointermove", (e) => {
+      if (drag == null || e.pointerId !== drag.id) {
+        return;
+      }
+      const coalesced = typeof e.getCoalescedEvents === "function" ? e.getCoalescedEvents() : [];
+      for (const sample of coalesced.length > 0 ? coalesced : [e]) {
+        finger.add(sample.timeStamp, sample.clientY);
+        tracer2.move(sample.timeStamp, sample.clientY);
+      }
+      const raw = drag.s0 - (e.clientY - drag.y0);
+      s = rubberBandClamp(raw, 0, g2.sLarge, g2.H);
+      write(s);
+    });
+    const end = (e) => {
+      if (drag == null || e.pointerId !== drag.id) {
+        return;
+      }
+      drag = null;
+      const now = performance.now();
+      finger.add(e.timeStamp, e.clientY);
+      const velocity = -finger.velocity(e.timeStamp);
+      const pick = selectSnapPoint(g2.detents, { position: s, velocity });
+      tracer2.log("pointerup", {
+        type: e.type,
+        ts: round2(e.timeStamp),
+        lag: round2(now - e.timeStamp),
+        sinceFrame: round2(now - heartbeat2.last),
+        velocity: round2(velocity),
+        s: round2(s),
+        projected: round2(pick.projected),
+        target: pick.value,
+        samples: finger.count()
+      });
+      springTo(
+        pick.value,
+        s,
+        velocity,
+        pick.value === 0 ? springs.sheetDismissSwipe : springs.sheetDetent,
+        "release"
+      );
+    };
+    sheet2.addEventListener("pointerup", end);
+    sheet2.addEventListener("pointercancel", end);
+    return {
+      currentS: () => run != null ? run.presentation() : s,
+      present(to) {
+        springTo(to, s, 0, springs.sheetPresent, "present");
+      },
+      dismiss() {
+        const from = run != null ? run.presentation() : s;
+        springTo(0, from, 0, springs.sheetDismiss, "dismiss");
+      },
+      state: () => ({
+        s: round2(run != null ? run.presentation() : s),
+        dragging: drag != null,
+        springing: run != null
+      })
+    };
+  }
+
+  // internal/spikes/c17-sheet-host/src/params.ts
+  function parseBusy(raw) {
+    if (raw == null || raw === "" || raw === "none") {
+      return { kind: "none" };
+    }
+    const [kind, ...rest] = raw.split(":");
+    const n = rest.map(Number);
+    if (kind === "always") {
+      return {
+        kind,
+        block: n[0] || 1e3,
+        yieldMs: n[1] || 16,
+        delay: n[2] || 1500,
+        stopAfter: n[3] || 12e3
+      };
+    }
+    if (kind === "window") {
+      return { kind, delay: n[0] || 3e3, block: n[1] || 1500 };
+    }
+    if (kind === "ontouch") {
+      return { kind, delay: n[0] ?? 50, block: n[1] || 3e3 };
+    }
+    throw new Error(`busy: unknown kind ${raw}`);
+  }
+  function parseSpring(raw) {
+    if (raw == null || raw === "") {
+      return null;
+    }
+    const num = (key) => {
+      const match = new RegExp(`${key}(-?[0-9.]+)`).exec(raw);
+      return match ? Number(match[1]) : void 0;
+    };
+    const r = num("r");
+    const z = num("z");
+    if (r != null && z != null) {
+      return { response: r, dampingRatio: z };
+    }
+    const d = num("d");
+    const b = num("b");
+    if (d != null && b != null) {
+      return { duration: d, bounce: b };
+    }
+    const k = num("k");
+    const c = num("c");
+    if (k != null && c != null) {
+      return { mass: num("m") ?? 1, stiffness: k, damping: c };
+    }
+    throw new Error(`spring: cannot parse ${raw}`);
+  }
+  function parseParams(search) {
+    const q = new URLSearchParams(search);
+    const pick = (key, values, fallback) => {
+      const v = q.get(key);
+      return values.includes(v ?? "") ? v : fallback;
+    };
+    return {
+      mode: pick("mode", ["hybrid", "js"], "hybrid"),
+      release: pick("release", ["spring", "native"], "spring"),
+      handoff: pick("handoff", ["read", "extrap"], "extrap"),
+      busy: parseBusy(q.get("busy")),
+      open: pick("open", ["closed", "medium", "large"], "medium"),
+      spring: parseSpring(q.get("spring")),
+      stop: pick("stop", ["assign", "instant"], "assign"),
+      snapDuringTouch: q.get("snaptouch") !== "0",
+      lateMs: Number(q.get("latems") ?? 40) || 40,
+      passthrough: q.get("passthrough") !== "0",
+      dim: pick("dim", ["scroll", "js"], "scroll"),
+      jsDim: q.get("jsdim") !== "0",
+      hud: q.get("hud") !== "0",
+      label: q.get("label") ?? ""
+    };
+  }
+
+  // internal/spikes/c17-sheet-host/src/busy.ts
+  function block(ms, tracer2, reason) {
+    const start = performance.now();
+    tracer2.log("busy-start", { ms, reason });
+    while (performance.now() - start < ms) {
+    }
+    tracer2.log("busy-end", { ms, reason, actual: performance.now() - start });
+  }
+  function startBusy(spec, tracer2) {
+    if (spec.kind === "always") {
+      const startedAt = performance.now() + spec.delay;
+      const loop = () => {
+        if (performance.now() - startedAt > spec.stopAfter) {
+          tracer2.log("busy-stopped");
+          return;
+        }
+        block(spec.block, tracer2, "always");
+        setTimeout(loop, spec.yieldMs);
+      };
+      setTimeout(loop, spec.delay);
+    } else if (spec.kind === "window") {
+      setTimeout(() => block(spec.block, tracer2, "window"), spec.delay);
+    } else if (spec.kind === "ontouch") {
+      let pending = 0;
+      return () => {
+        if (pending !== 0) {
+          return;
+        }
+        pending = window.setTimeout(() => {
+          block(spec.block, tracer2, "ontouch");
+          pending = 0;
+        }, spec.delay);
+      };
+    }
+    return () => {
+    };
+  }
+
+  // internal/spikes/c17-sheet-host/src/trace.ts
+  var r1 = (n) => Math.round(n * 10) / 10;
+  function createTracer(meta) {
+    const trace = {
+      meta,
+      timeOrigin: performance.timeOrigin,
+      events: [],
+      scroll: [],
+      moves: []
+    };
+    window.__trace = trace;
+    return {
+      trace,
+      log(type, data = {}) {
+        trace.events.push({ t: r1(performance.now()), type, ...data });
+      },
+      scroll(timeStamp, s) {
+        trace.scroll.push([r1(timeStamp), r1(s)]);
+      },
+      move(timeStamp, y) {
+        trace.moves.push([r1(timeStamp), r1(y), r1(performance.now())]);
+      }
+    };
+  }
+
+  // internal/spikes/c17-sheet-host/src/main.ts
+  var p = parseParams(location.search);
+  var $ = (id) => document.getElementById(id);
+  var host = $("host");
+  var spacer = $("spacer");
+  var sheet = $("sheet");
+  var dim = $("dim");
+  var hud = $("hud");
+  var reopen = $("reopen");
+  var spinJ = $("spin-j");
+  var tracer = createTracer({
+    params: p,
+    userAgent: navigator.userAgent,
+    loadedAt: performance.now(),
+    devicePixelRatio: window.devicePixelRatio
+  });
+  var g = measureGeometry(host);
+  tracer.trace.meta.geometry = g;
+  var heartbeat = { last: performance.now() };
+  var frame = (now) => {
+    heartbeat.last = now;
+    spinJ.style.transform = `rotate(${now / 1e3 % 1 * 360}deg)`;
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+  var onTouchStart = startBusy(p.busy, tracer);
+  var initialS = p.open === "large" ? g.sLarge : p.open === "medium" ? g.sMedium : 0;
+  var ctx = {
+    host,
+    spacer,
+    sheet,
+    dim,
+    g,
+    p,
+    tracer,
+    heartbeat,
+    onTouchStart,
+    initialS,
+    onClosed: () => {
+      dim.classList.add("closed");
+      reopen.hidden = false;
+    }
+  };
+  var api = p.mode === "js" ? mountJs(ctx) : mountHybrid(ctx);
+  if (initialS === 0) {
+    ctx.onClosed();
+  }
+  publishGeometry(g, () => api.currentS());
+  reopen.addEventListener("click", () => {
+    dim.classList.remove("closed");
+    reopen.hidden = true;
+    api.present(g.sMedium);
+  });
+  dim.addEventListener("click", () => {
+    if (!dim.classList.contains("closed")) {
+      api.dismiss();
+    }
+  });
+  if (p.hud) {
+    const label = [
+      p.label,
+      p.mode,
+      p.mode === "hybrid" ? `${p.release}/${p.handoff}` : ""
+    ].filter(Boolean).join(" ");
+    const busy = p.busy.kind === "none" ? "idle" : `${p.busy.kind}:${"block" in p.busy ? p.busy.block : ""}`;
+    setInterval(() => {
+      const st = api.state();
+      const last = [...tracer.trace.events].reverse().find((e) => e.type === "release" || e.type === "pointerup");
+      hud.textContent = `${label} | ${busy}
+S ${Math.round(Number(st.s))} rest ${String(st.restingAt ?? "")}` + (last ? ` | v ${Math.round(Number(last.velocity))} \u2192 ${String(last.target)}` : "");
+    }, 200);
+  } else {
+    hud.hidden = true;
+  }
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      tracer.log("ready", { state: api.state() });
+      window.__ready = true;
+    });
+  });
+})();
+</script>
+  </body>
+</html>
