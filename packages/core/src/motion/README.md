@@ -7,22 +7,23 @@ package entry point; components import it by path.
 
 ## Files
 
-| File                                    | What it is                                                                                                            |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `uikit/`                                | THE constants table: every spring, duration, deceleration rate, rubber-band constant and curve, with its source.      |
-| `uikit/springs.ts`                      | Interaction springs (navigation, sheets, alerts, menus, controls, keyboard, banners) and the SwiftUI / UIKit presets. |
-| `uikit/scroll.ts`                       | UIScrollView: deceleration rates, rubber band, bounce-back spring, paging, `delaysContentTouches`.                    |
-| `uikit/timing.ts`                       | Non-spring clocks and curves: press highlight, Core Animation's named curves, keyboard, Reduced Motion cross-fade.    |
-| `uikit/gestures.ts`                     | Gesture thresholds (owned by the gesture foundation).                                                                 |
-| `MEASUREMENTS.md`                       | The UIKit reference captures each unconfirmed value still needs.                                                      |
-| `spring.ts`                             | Closed-form damped spring, every Apple parameterization, settling duration.                                           |
-| `decay.ts`                              | UIScrollView's momentum coast.                                                                                        |
-| `rubberBand.ts`                         | UIScrollView's resistance past an edge, and its inverse.                                                              |
-| `projection.ts`                         | Release targets: the rest point nearest the projected coast; paging.                                                  |
-| `bezier.ts`                             | Cubic-bézier timing functions (Core Animation's named curves).                                                        |
-| `animator.ts`                           | Compositor animator: springs and decays compiled to Web Animations, read back analytically.                           |
-| `useAnimator.ts`                        | React wrapper that never re-renders per frame.                                                                        |
-| `__tests__/animator.compositor.spec.ts` | Browser proofs (Chromium and WebKit): busy main thread, no Layout / Paint, seeked curves.                             |
+| File                                    | What it is                                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `uikit/`                                | THE constants table: every spring, duration, deceleration rate, rubber-band constant and curve, with its source.         |
+| `uikit/springs.ts`                      | Interaction springs (navigation, sheets, alerts, menus, controls, keyboard, banners) and the SwiftUI / UIKit presets.    |
+| `uikit/scroll.ts`                       | UIScrollView: deceleration rates, rubber band, bounce-back spring, paging, `delaysContentTouches`.                       |
+| `uikit/timing.ts`                       | Non-spring clocks and curves: press highlight, Core Animation's named curves, keyboard, Reduced Motion cross-fade.       |
+| `uikit/switch.ts`                       | UISwitch: geometry, clocks, track color curve, press-and-drag rules, haptic (component domains: `uikit/<component>.ts`). |
+| `uikit/gestures.ts`                     | Gesture thresholds (owned by the gesture foundation).                                                                    |
+| `MEASUREMENTS.md`                       | The UIKit reference captures each unconfirmed value still needs.                                                         |
+| `spring.ts`                             | Closed-form damped spring, every Apple parameterization, settling duration.                                              |
+| `decay.ts`                              | UIScrollView's momentum coast.                                                                                           |
+| `rubberBand.ts`                         | UIScrollView's resistance past an edge, and its inverse.                                                                 |
+| `projection.ts`                         | Release targets: the rest point nearest the projected coast; paging.                                                     |
+| `bezier.ts`                             | Cubic-bézier timing functions (Core Animation's named curves).                                                           |
+| `animator.ts`                           | Compositor animator: springs and decays compiled to Web Animations, read back analytically.                              |
+| `useAnimator.ts`                        | React wrapper that never re-renders per frame.                                                                           |
+| `__tests__/animator.compositor.spec.ts` | Browser proofs (Chromium and WebKit): busy main thread, no Layout / Paint, seeked curves.                                |
 
 ## Animator
 

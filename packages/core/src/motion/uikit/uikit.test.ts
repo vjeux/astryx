@@ -23,7 +23,14 @@ import {
 import {settlingDuration, toSpring, type SpringDescription} from '../spring';
 import {scroll, springs, timing} from '.';
 
-const TABLE_FILES = ['springs.ts', 'scroll.ts', 'timing.ts'];
+// Every domain file of the table: a new one is enforced the moment it lands.
+const TABLE_FILES = fs
+  .readdirSync(__dirname)
+  .filter(
+    file =>
+      file.endsWith('.ts') && file !== 'index.ts' && !file.endsWith('.test.ts'),
+  )
+  .sort();
 const SOURCE_KINDS =
   /^@source (apple-docs https:\/\/developer\.apple\.com\/|wwdc \d{4}-\d+ |webkit Source\/|measured: .*iOS \d|GUESS — )/;
 
@@ -100,7 +107,15 @@ describe('UIKit constants table: every value is sourced (law P2)', () => {
   const leaves = TABLE_FILES.flatMap(leavesOf);
 
   it('finds the table entries', () => {
-    expect(leaves.length).toBeGreaterThan(40);
+    expect(TABLE_FILES).toEqual(
+      expect.arrayContaining([
+        'scroll.ts',
+        'springs.ts',
+        'switch.ts',
+        'timing.ts',
+      ]),
+    );
+    expect(leaves.length).toBeGreaterThan(50);
   });
 
   for (const {file, key, doc} of leaves) {
