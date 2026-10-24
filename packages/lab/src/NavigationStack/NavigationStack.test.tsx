@@ -16,6 +16,7 @@
 import {describe, expect, it} from 'vitest';
 import {useState} from 'react';
 import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
+import {List, ListItem} from '@astryxdesign/core/List';
 import {
   NavigationScreen,
   NavigationStack,
@@ -175,6 +176,68 @@ describe('NavigationStack', () => {
     // two below the top, keeps its state but is not rendered.
     expect(screenCard('Settings')?.className).toMatch(/cardHidden/);
     expect(screenCard('General')?.className).not.toMatch(/cardHidden/);
+  });
+
+  describe('the row that pushed (CH-01)', () => {
+    function ListRoot() {
+      const nav = useNavigationStack<string>();
+      return (
+        <List>
+          <ListItem label="General" onClick={() => nav.push('General')} />
+          <ListItem label="Privacy" onClick={() => nav.push('Privacy')} />
+        </List>
+      );
+    }
+    function ListHarness() {
+      const [path, setPath] = useState<string[]>([]);
+      return (
+        <NavigationStack
+          label="Settings"
+          root={
+            <NavigationScreen title="Settings">
+              <ListRoot />
+            </NavigationScreen>
+          }
+          path={path}
+          onPathChange={setPath}
+          getKey={entry => entry}
+          renderScreen={entry => (
+            <NavigationScreen title={entry}>
+              <p>{entry} content</p>
+            </NavigationScreen>
+          )}
+        />
+      );
+    }
+    const rowOf = (name: string) =>
+      screen
+        .getByRole('button', {name})
+        .closest<HTMLElement>('[data-astryx-pressable="cell"]');
+
+    it('stays selected under the pushed screen and is released by the pop, with focus back on it', async () => {
+      render(<ListHarness />);
+      const control = screen.getByRole('button', {name: 'General'});
+      control.focus();
+      fireEvent.click(control);
+      expect(rowOf('General')).toHaveAttribute('data-astryx-press', 'held');
+
+      fireEvent.click(backButton('Settings') as HTMLElement);
+      await waitFor(
+        () => expect(screen.queryByText('General content')).toBeNull(),
+        {timeout: 3000},
+      );
+      expect(rowOf('General')).not.toHaveAttribute('data-astryx-press', 'held');
+      await waitFor(() =>
+        expect(screen.getByRole('button', {name: 'General'})).toHaveFocus(),
+      );
+    });
+
+    it('holds only the row that was activated', () => {
+      render(<ListHarness />);
+      fireEvent.click(screen.getByRole('button', {name: 'Privacy'}));
+      expect(rowOf('Privacy')).toHaveAttribute('data-astryx-press', 'held');
+      expect(rowOf('General')).not.toHaveAttribute('data-astryx-press', 'held');
+    });
   });
 
   it('throws when useNavigationStack is used outside a stack', () => {

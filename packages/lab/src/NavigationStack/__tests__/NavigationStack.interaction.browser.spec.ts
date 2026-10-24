@@ -478,6 +478,93 @@ test('a push does no Layout or Paint per frame', async ({
   expect(during.Paint ?? 0, JSON.stringify({during, when})).toBe(0);
 });
 
+/** The press layer's presented opacity on a list row (its ::before). */
+const rowHighlight = async (page: Page, name: string) =>
+  page
+    .getByRole('button', {name})
+    .first()
+    .evaluate(control => {
+      const row = control.closest('[data-astryx-pressable="cell"]');
+      return row == null
+        ? -1
+        : Number(getComputedStyle(row, '::before').opacity);
+    });
+
+test.describe('the row that pushed (CH-01)', () => {
+  test('stays selected under the pushed screen, then deselects linearly over the pop’s first 350 ms', async ({
+    page,
+  }) => {
+    const {driver} = await openStack(page, 'settings');
+    await driver.tap(await rowCenter(page, 'General'));
+    const top = card(page, 'screen-General');
+    await waitForAnimation(top);
+    await waitForRest(top);
+    const held = await rowHighlight(page, 'General');
+    expect(held).toBeGreaterThan(0);
+
+    await page.locator('[data-navigation-back]').last().click();
+    await waitForAnimation(top);
+    await holdAnimations(page);
+    const at = async (ms: number) => {
+      await page.evaluate(t => {
+        const list =
+          (window as unknown as {__harnessHeld?: Animation[]}).__harnessHeld ??
+          [];
+        for (const animation of list) {
+          const end = Number(
+            animation.effect?.getComputedTiming().endTime ?? Infinity,
+          );
+          animation.currentTime = Math.min(t, end - 0.5);
+        }
+      }, ms);
+      return rowHighlight(page, 'General');
+    };
+    // UIKit's in-transition deselect: linear over 0.35 s from the pop's
+    // start, on the same clock as the cards.
+    for (const ms of [0, 87.5, 175, 262.5]) {
+      expect(Math.abs((await at(ms)) - held * (1 - ms / 350))).toBeLessThan(
+        0.03 * held + 0.01,
+      );
+    }
+    await releaseAnimations(page, {finish: true});
+  });
+
+  test('a back swipe scrubs the deselect with its progress', async ({page}) => {
+    const {driver, width, left} = await openStack(page, 'settings', {
+      standalone: true,
+    });
+    await driver.tap(await rowCenter(page, 'General'));
+    const top = card(page, 'screen-General');
+    await waitForAnimation(top);
+    await waitForRest(top);
+    const held = await rowHighlight(page, 'General');
+    const pairs: {p: number; highlight: number}[] = [];
+    await driver.play(
+      drag(
+        {x: left + 4, y: 400},
+        {x: left + width * 0.4, y: 400},
+        {
+          durationMs: 2000,
+        },
+      ),
+      {
+        onEvent: async () => {
+          const p = (await translateX(top)) / width;
+          if (p > 0.05 && p < 0.35) {
+            pairs.push({p, highlight: await rowHighlight(page, 'General')});
+          }
+        },
+      },
+    );
+    expect(pairs.length).toBeGreaterThan(5);
+    for (const pair of pairs) {
+      expect(Math.abs(pair.highlight - held * (1 - pair.p))).toBeLessThan(
+        0.05 * held + 0.01,
+      );
+    }
+  });
+});
+
 test.describe('with Reduce Motion', () => {
   test('a push cross-fades in place instead of sliding', async ({page}) => {
     await page.emulateMedia({reducedMotion: 'reduce'});
