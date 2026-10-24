@@ -42,7 +42,10 @@
  * - Each element with a recognizer that can claim a touch while it moves (a
  *   pan, a swipe, a long press that then drags, a pinch, a rotation) gets a
  *   NON-passive `touchmove` listener that cancels the event only while a
- *   recognizer owns one of its touches. Nothing else is ever cancelled, so a
+ *   recognizer owns one of its touches, or while a one-way overlay pan
+ *   claims early (5 px its way, under WebKit's 10–11 px scroll claim; the
+ *   pan then commits to the touch, since Safari gives the page no scroll
+ *   once one of its moves was cancelled). Nothing else is ever cancelled, so a
  *   touch nobody claims scrolls exactly as it would without the system. The
  *   known cost: a scroll that BEGINS on such an element waits for a busy main
  *   thread (measured in iOS Safari; a passive listener would hand every
@@ -79,6 +82,7 @@ import {
 import type {GestureRecognizer} from './GestureRecognizer';
 import {HAPTIC_SWITCH_ATTRIBUTE} from './haptics';
 import {HoverGestureRecognizer} from './HoverGestureRecognizer';
+import {PanGestureRecognizer} from './PanGestureRecognizer';
 import {TapGestureRecognizer} from './TapGestureRecognizer';
 import {createNativeScrollProbe, parentAcrossShadow} from './nativeScroll';
 import {gestureHostStyle, type GestureHostStyle} from './touchAction';
@@ -705,6 +709,29 @@ export class GestureHost {
       if (this.arena.isClaimed(id)) {
         // A pen whose pointer a recognizer owns: its stylus touches too.
         event.preventDefault();
+        return;
+      }
+    }
+    // A one-way pan over content the browser could scroll (an overlay)
+    // claims before it begins, once the finger has gone its claim distance
+    // its way.
+    const ids = new Set<number>();
+    for (const touch of fingers) {
+      const id = this.touchIds.get(touch.identifier);
+      if (id != null) {
+        ids.add(id);
+      }
+    }
+    for (const recognizer of this.arena.involvedRecognizers) {
+      if (
+        recognizer instanceof PanGestureRecognizer &&
+        recognizer.claimsEarly() &&
+        recognizer.trackedTouches.some(touch => ids.has(touch.id))
+      ) {
+        // Safari gives the page no scroll for a touch once one of its moves
+        // was cancelled, so the pan commits to the touch.
+        event.preventDefault();
+        recognizer.commitClaim();
         return;
       }
     }

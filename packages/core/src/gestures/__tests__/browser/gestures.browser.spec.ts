@@ -306,10 +306,10 @@ test('only elements whose recognizers claim a moving touch carry a blocking touc
       .filter(entry => entry.type === 'touchmove' && entry.passive === false)
       .map(entry => entry.id),
   );
-  // A pan, a long press, a pinch and the sheet's pan can take a moving
-  // touch; a tap-only element and a press consumer never wait.
+  // Pans (the cards' too), a long press, a pinch and the sheet's pan can take
+  // a moving touch; a tap-only element and a press consumer never wait.
   expect(new Set(blocking)).toEqual(
-    new Set(['hpan', 'presser', 'pinchable', 'sheetBody']),
+    new Set(['hpan', 'presser', 'pinchable', 'sheetBody', 'card', 'cardLate']),
   );
 });
 
@@ -378,6 +378,33 @@ test('a horizontal drag on a passive pan-y control keeps its press: uncancelable
   expect(consumed[0]).toBe('began');
   expect(consumed).not.toContain('cancelled');
   expect(consumed.at(-1)).toBe('ended');
+});
+
+test('a one-way overlay pan keeps its direction from the page, and leaves the other way to it', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName === 'webkit',
+    'needs native scrolling from injected touches (Mobile Safari on the simulator)',
+  );
+  const driver = await open(page, browserName);
+  await page.evaluate(() => {
+    document.getElementById('card')?.scrollIntoView({block: 'center'});
+  });
+  const before = await page.evaluate(() => window.scrollY);
+  const start = await center(page, 'card');
+  // Up, slowly: the card's pan begins at 10 px and the page never moves.
+  await driver.play(drag(start, {x: start.x, y: start.y - 40}, 40));
+  expect(await page.evaluate(() => window.scrollY)).toBe(before);
+  const up = (await log(page)).filter(entry => entry.name === 'card');
+  expect(up[0]?.state).toBe('began');
+  expect(up.filter(entry => entry.state === 'changed').at(-1)?.y).toBe(-30);
+  // Down: the page's.
+  await clearLog(page);
+  await driver.play(drag(start, {x: start.x, y: start.y + 60}, 30));
+  expect(await page.evaluate(() => window.scrollY)).toBeLessThan(before - 20);
+  expect(states(await log(page), 'card')).toEqual(['failed', 'possible']);
 });
 
 test('a tap recognizer replaces the click: no ghost click, no compatibility mouse events', async ({

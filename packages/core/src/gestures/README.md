@@ -214,6 +214,17 @@ component can call the hook.
   is owned. A touch nobody owns scrolls exactly as it would without the
   system. Taps claim only at the lift, so an element with only taps, or only
   a press consumer, gets no such listener (see the known limit below).
+- **Early claim.** A one-way pan over content the browser could scroll (an
+  overlay such as a toast or a banner) cancels its touch's moves once the
+  finger has gone 5 px its way (`claimDistance`), before WebKit claims a
+  slow drag at 10–11 px; it still begins at 10 px with UIKit's translation.
+  Safari gives the page no scroll for a touch once one of its moves was
+  cancelled, so from then on the touch is the pan's: a reversal no longer
+  fails it, and it begins whichever way the finger goes. That is UIKit's
+  outcome too, where a drag that starts on an overlay never reaches the
+  content behind it. A `scrollEdge` pan (a sheet over its own content)
+  claims at its begin instead, as UIKit gives a reversed drag to the
+  content.
   Measured in Mobile Safari (iOS 26.2): `touchmove` arrives from the first
   pixel; on a scrollable element WebKit commits to scrolling at 10 to 11 px
   (the last cancelable `touchmove` at 10 px), and cancelling every
@@ -363,6 +374,10 @@ tokens under a mouse.
   reveal inside the row would never wait, but it tracks with scroll physics
   rather than UIKit's measured tracking spring; it is a possible opt-in, not
   the default.
+- **A jitter on an overlay keeps the touch.** A finger that moves 5 px or
+  more in a one-way overlay's direction and then drags the other way moves
+  the overlay, not the page behind it, for that touch (UIKit's outcome, and
+  Safari would not scroll the page after a cancelled move anyway).
 - **Follow-up:** Chromium keeps 3:1 to 1.5:1 drags as swipes even with a
   passive listener (its `touch-action` filter drops a `pan-y` scroll that
   starts sideways), so a passive listener there would cost no parity. It

@@ -374,6 +374,52 @@ describe('GestureHost', () => {
     expect(onBoth.removed()).toBe(1);
   });
 
+  it("cancels a one-way pan's moves from its claim distance, before it begins, and keeps the touch through a reversal", () => {
+    const {card} = mount('<div id="card"></div>');
+    const pan = new PanGestureRecognizer({name: 'pan', direction: 'up'});
+    detachers.push(host.attach(card, pan));
+    const finger = {id: 1, x: 50, y: 100};
+    touch('touchstart', card, [finger], [finger], 0);
+    const at = (y: number, time: number) =>
+      touch('touchmove', card, [{...finger, y}], [{...finger, y}], time);
+    expect(at(97, 16).defaultPrevented).toBe(false);
+    expect(at(95, 32).defaultPrevented).toBe(true);
+    expect(pan.state).toBe('possible');
+    expect(pan.isClaimCommitted).toBe(true);
+    // Safari would give the page nothing now: the reversal is the pan's.
+    expect(at(104, 48).defaultPrevented).toBe(true);
+    expect(pan.state).toBe('possible');
+    expect(at(112, 64).defaultPrevented).toBe(true);
+    expect(pan.state).toBe('began');
+    touch('touchend', card, [{...finger, y: 112}], [], 80);
+    // A drag that starts the other way is the page's.
+    const down = {id: 2, x: 50, y: 100};
+    touch('touchstart', card, [down], [down], 100);
+    const downAt = (y: number, time: number) =>
+      touch('touchmove', card, [{...down, y}], [{...down, y}], time);
+    expect(downAt(106, 116).defaultPrevented).toBe(false);
+    expect(downAt(112, 132).defaultPrevented).toBe(false);
+    touch('touchend', card, [{...down, y: 112}], [], 148);
+  });
+
+  it('leaves a scroll-edge pan to claim at its begin', () => {
+    const {sheet} = mount('<div id="sheet"></div>');
+    const pan = new PanGestureRecognizer({
+      name: 'sheet',
+      direction: 'down',
+      scrollEdge: true,
+    });
+    detachers.push(host.attach(sheet, pan));
+    const finger = {id: 1, x: 50, y: 100};
+    touch('touchstart', sheet, [finger], [finger], 0);
+    const at = (y: number, time: number) =>
+      touch('touchmove', sheet, [{...finger, y}], [{...finger, y}], time);
+    expect(at(107, 16).defaultPrevented).toBe(false);
+    expect(at(112, 32).defaultPrevented).toBe(true);
+    expect(pan.state).toBe('began');
+    touch('touchend', sheet, [{...finger, y: 112}], [], 48);
+  });
+
   it('names the pointer a finger, a pen or a mouse is driven by', () => {
     const {box} = mount('<div id="box"></div>');
     const press = new LongPressGestureRecognizer({name: 'press'});
