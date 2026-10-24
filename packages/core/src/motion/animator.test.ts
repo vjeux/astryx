@@ -641,6 +641,50 @@ describe('decay: UIScrollView coasts', () => {
   });
 });
 
+describe('pseudoElement: a dialog\u2019s ::backdrop', () => {
+  it('targets the pseudo-element, writes no inline style and keeps the end state in effect', async () => {
+    const {animator, element} = setup({pseudoElement: '::backdrop'});
+    animator.set({opacity: 0});
+    const [held] = live('opacity');
+    expect(held.options).toMatchObject({
+      fill: 'both',
+      pseudoElement: '::backdrop',
+    });
+    expect(held.keyframes.map(k => k.opacity)).toEqual(['0', '0']);
+    expect(element.style.opacity).toBe('');
+
+    animator.animate({opacity: 1}, {spring: springs.alertPresent});
+    // The new animation exists before the hold goes: no frame in between.
+    expect(held.cancelled).toBe(true);
+    const [fade] = live('opacity');
+    expect(fade.options).toMatchObject({
+      fill: 'both',
+      pseudoElement: '::backdrop',
+    });
+    expect(fade.keyframes[fade.keyframes.length - 1].opacity).toBe('1');
+    expect(element.style.opacity).toBe('');
+    await advance(Number(fade.options.duration) + 1000);
+    // Nothing else holds the end state: the animation stays.
+    expect(fade.cancelled).toBe(false);
+    expect(animator.get('opacity')).toBe(1);
+  });
+
+  it('an exit holds 0 until the next animation replaces it', async () => {
+    const {animator} = setup({
+      pseudoElement: '::backdrop',
+      initial: {opacity: 1},
+    });
+    animator.animate({opacity: 0}, {spring: springs.alertDismiss});
+    const [fade] = live('opacity');
+    await advance(Number(fade.options.duration) + 1000);
+    expect(fade.cancelled).toBe(false);
+    expect(fade.keyframes[fade.keyframes.length - 1].opacity).toBe('0');
+    animator.animate({opacity: 1}, {spring: springs.alertPresent});
+    expect(fade.cancelled).toBe(true);
+    expect(live('opacity')).toHaveLength(1);
+  });
+});
+
 describe('attach', () => {
   it('keeps state without an element and resumes the curve on attach', () => {
     const animator = createAnimator(null, {

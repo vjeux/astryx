@@ -78,6 +78,9 @@ await handle.finished; // true if it ran to the end, false if interrupted
   any other move dips (fade out, move, fade in), over
   `timing.reducedMotionCrossFadeMs`. `{reducedMotion: 'keep'}` keeps the
   motion (direct manipulation), `'instant'` jumps.
+- `createAnimator(dialog, {pseudoElement: '::backdrop'})` drives a
+  pseudo-element; with no inline style to hold it, each animation stays in
+  effect until the next one replaces it.
 - `useAnimator()` returns a stable `{ref, animator}`; attach `ref` to the
   element.
 

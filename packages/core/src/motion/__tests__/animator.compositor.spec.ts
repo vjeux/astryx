@@ -310,6 +310,52 @@ declare global {
   const Motion: typeof MotionBundle;
 }
 
+test('a dialog\u2019s ::backdrop plays the curve and holds its end state', async ({
+  page,
+}) => {
+  await open(page);
+  const result = await page.evaluate(() => {
+    const dialog = document.createElement('dialog');
+    document.body.append(dialog);
+    dialog.showModal();
+    const backdrop = Motion.createAnimator(dialog, {
+      pseudoElement: '::backdrop',
+    });
+    backdrop.set({opacity: 0});
+    backdrop.animate({opacity: 1}, {spring: Motion.springs.alertPresent});
+    const animations = document
+      .getAnimations()
+      .filter(a => (a.effect as KeyframeEffect).target === dialog);
+    const start = Number(animations[0].startTime);
+    let worst = 0;
+    const read = () =>
+      Number.parseFloat(getComputedStyle(dialog, '::backdrop').opacity);
+    for (const a of animations) {
+      a.pause();
+    }
+    for (let t = 0; t <= 400; t += 5) {
+      for (const a of animations) {
+        a.currentTime = t;
+      }
+      worst = Math.max(
+        worst,
+        Math.abs(read() - backdrop.get('opacity', start + t)),
+      );
+    }
+    for (const a of animations) {
+      a.currentTime = 20_000; // long after the curve and the hold
+    }
+    return {count: animations.length, worst, held: read()};
+  });
+  test.info().annotations.push({
+    type: 'backdrop curve',
+    description: JSON.stringify(result),
+  });
+  expect(result.count).toBe(1);
+  expect(result.worst).toBeLessThan(0.003);
+  expect(result.held).toBeCloseTo(1, 6);
+});
+
 /**
  * WebKit has no screencast protocol: record a video of a spring started just
  * before a 1 s main-thread block, then decode it frame by frame in Chromium.

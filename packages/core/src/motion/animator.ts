@@ -68,6 +68,10 @@
  * direct manipulation that UIKit keeps under Reduce Motion). Decays keep their
  * motion: they follow a finger's throw.
  *
+ * A pseudo-element (`options.pseudoElement`, a dialog's `::backdrop`) has no
+ * inline style: its animations fill both ways and stay in effect until the
+ * next one replaces them, and `set` holds a value with a static animation.
+ *
  * SSR-safe: nothing touches `window` or `document` at module scope, and an
  * animator created without an element only keeps state until one is attached.
  *
@@ -138,6 +142,13 @@ export interface MotionCurve {
 }
 
 export interface AnimatorOptions {
+  /**
+   * Animates a pseudo-element of the element instead (`'::backdrop'` of a
+   * native dialog). A pseudo-element has no inline style, so every animation
+   * fills both ways and stays in effect until the next one replaces it, and
+   * `set` holds its value with a static animation.
+   */
+  pseudoElement?: string;
   /** Starting values; identity by default. Never read from the DOM. */
   initial?: MotionValues;
   /** Clock in ms on the document timeline's time base. */
@@ -387,6 +398,7 @@ export function createAnimator(
   options: AnimatorOptions = {},
 ): Animator {
   const now = options.now ?? defaultNow;
+  const pseudoElement = options.pseudoElement;
   const prefersReducedMotion =
     options.prefersReducedMotion ?? defaultPrefersReducedMotion;
   const resting: Record<MotionProperty, number> = {
@@ -448,7 +460,7 @@ export function createAnimator(
     channel: Channel,
     value: (property: MotionProperty) => number,
   ) => {
-    if (target == null) {
+    if (target == null || pseudoElement != null) {
       return;
     }
     touched.add(channel);
@@ -509,11 +521,32 @@ export function createAnimator(
     return times;
   };
 
+  /** A pseudo-element's resting value, held by a static filling animation. */
+  const hold = (channel: Channel, time: number) => {
+    if (target == null) {
+      return;
+    }
+    const value = format(channel, finalValue);
+    const animation = target.animate([{[channel]: value}, {[channel]: value}], {
+      duration: 1,
+      fill: 'both',
+      pseudoElement,
+    });
+    animation.startTime = time;
+    running.set(channel, animation);
+  };
+
   const rebuild = (channel: Channel, time: number) => {
-    running.get(channel)?.cancel();
+    const previous = running.get(channel);
     running.delete(channel);
     clearTimeout(retireTimers.get(channel));
     retireTimers.delete(channel);
+    // An element's inline style holds the end state, so its old animation can
+    // go first. A pseudo-element has none: its old animation keeps holding the
+    // value until the new one exists (same task, no frame in between).
+    if (pseudoElement == null) {
+      previous?.cancel();
+    }
     const properties = CHANNELS[channel];
     // Settled curves become resting values.
     for (const property of properties) {
@@ -525,11 +558,15 @@ export function createAnimator(
     }
     writeInline(channel, finalValue);
     const moving = properties.filter(p => segments.has(p));
-    if (
-      target == null ||
-      moving.length === 0 ||
-      typeof target.animate !== 'function'
-    ) {
+    if (target == null || typeof target.animate !== 'function') {
+      previous?.cancel();
+      return;
+    }
+    if (moving.length === 0) {
+      if (pseudoElement != null) {
+        hold(channel, time);
+      }
+      previous?.cancel();
       return;
     }
     const end = Math.min(
@@ -543,6 +580,10 @@ export function createAnimator(
       ),
     );
     if (end <= time) {
+      if (pseudoElement != null) {
+        hold(channel, time);
+      }
+      previous?.cancel();
       return;
     }
     const collect = (scale: number) => {
@@ -605,10 +646,15 @@ export function createAnimator(
       // inline style already holds the same values, so that changes no pixel.
       fill: 'both',
       easing: 'linear',
+      ...(pseudoElement != null ? {pseudoElement} : {}),
     });
     // One clock: the keyframes were sampled from `time`.
     animation.startTime = time;
     running.set(channel, animation);
+    previous?.cancel();
+    if (pseudoElement != null) {
+      return; // stays in effect: nothing else holds the end state
+    }
     retireTimers.set(
       channel,
       setTimeout(
