@@ -86,31 +86,11 @@ const {refreshControl, scroll, timing} = uikit;
 
 /** CSS custom property the indicator reads: how much of it is revealed (0–1). */
 export const REFRESH_REVEAL_VAR = '--astryx-refresh-reveal';
-/** CSS custom property the spokes read: the alpha step while spinning. */
-export const REFRESH_SPIN_STEP_VAR = '--astryx-refresh-spin-step';
-/** Attribute on the indicator while it spins. */
-export const REFRESH_SPINNING_ATTRIBUTE = 'data-refresh-spinning';
-
 /**
- * The spin as keyframes: each of the indicator's spokes in turn holds still,
- * then the rotation steps on by one spoke (the replicator's spin). Linear
- * keyframes with a near-zero jump between holds, rather than a `steps()`
- * timing function, so the browser runs it on its compositor.
+ * Attribute on the indicator while it spins: the drawing keys its spin on it
+ * (on the compositor), so the hook only sets and removes it.
  */
-function spinKeyframes(spokes: number): Keyframe[] {
-  const frames: Keyframe[] = [];
-  const jump = 1e-4;
-  for (let index = 0; index < spokes; index++) {
-    const angle = (360 / spokes) * index;
-    frames.push({offset: index / spokes, transform: `rotate(${angle}deg)`});
-    frames.push({
-      offset: (index + 1) / spokes - jump,
-      transform: `rotate(${angle}deg)`,
-    });
-  }
-  frames.push({offset: 1, transform: 'rotate(360deg)'});
-  return frames;
-}
+export const REFRESH_SPINNING_ATTRIBUTE = 'data-refresh-spinning';
 
 /** The indicator's container starts the trigger turn here (π − 0.01 rad). */
 const TRIGGER_TURN_DEGREES = ((Math.PI - 0.01) * 180) / Math.PI;
@@ -136,7 +116,10 @@ export interface UseRefreshControlResult {
   contentRef: RefCallback<HTMLElement>;
   /** Attach to the indicator, placed above the content. */
   indicatorRef: RefCallback<HTMLElement>;
-  /** Attach to the part of the indicator that spins (optional). */
+  /**
+   * Attach to the indicator's glyph wrapper (optional): it turns at the
+   * trigger, while the glyph inside it spins on its own.
+   */
   spinnerRef: RefCallback<HTMLElement>;
   /** Whether a refresh is in progress. */
   isRefreshing: boolean;
@@ -223,8 +206,6 @@ export function useRefreshControl({
   const turn = useAnimator();
   const contentElement = useRef<HTMLElement | null>(null);
   const indicatorElement = useRef<HTMLElement | null>(null);
-  const spinnerElement = useRef<HTMLElement | null>(null);
-  const spin = useRef<Animation | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
 
@@ -307,44 +288,18 @@ export function useRefreshControl({
     selection.current = null;
   }, []);
 
-  const stopSpin = useCallback(() => {
-    spin.current?.cancel();
-    spin.current = null;
-  }, []);
-
   const resetIndicator = useCallback(() => {
-    stopSpin();
     indicatorElement.current?.removeAttribute(REFRESH_SPINNING_ATTRIBUTE);
-    indicatorElement.current?.style.removeProperty(REFRESH_SPIN_STEP_VAR);
     setReveal(0);
     indicator.animator.set({opacity: 1});
     turn.animator.set({rotate: 0});
-  }, [indicator.animator, setReveal, stopSpin, turn.animator]);
+  }, [indicator.animator, setReveal, turn.animator]);
 
   const startSpinning = useCallback(
     (withTurn: boolean) => {
       setReveal(1);
       indicator.animator.set({opacity: 1});
-      indicatorElement.current?.style.setProperty(
-        REFRESH_SPIN_STEP_VAR,
-        String(refreshControl.spinAlphaStep),
-      );
       indicatorElement.current?.setAttribute(REFRESH_SPINNING_ATTRIBUTE, '');
-      const spinner = spinnerElement.current;
-      if (
-        spin.current == null &&
-        spinner != null &&
-        typeof spinner.animate === 'function'
-      ) {
-        spin.current = spinner.animate(
-          spinKeyframes(refreshControl.indicatorSpokes),
-          {
-            duration: refreshControl.spinMs,
-            iterations: Infinity,
-            easing: 'linear',
-          },
-        );
-      }
       if (withTurn) {
         turn.animator.set({rotate: TRIGGER_TURN_DEGREES});
         turn.animator.animate(
@@ -519,9 +474,7 @@ export function useRefreshControl({
       // Under the finger: the release settles back to the top, and the
       // indicator retracts with it.
       pull.current.floor = 0;
-      stopSpin();
       indicatorElement.current?.removeAttribute(REFRESH_SPINNING_ATTRIBUTE);
-      indicatorElement.current?.style.removeProperty(REFRESH_SPIN_STEP_VAR);
       return;
     }
     const current = resolveOwner();
@@ -558,7 +511,7 @@ export function useRefreshControl({
           }
         }
       });
-  }, [content.animator, demote, resetIndicator, resolveOwner, stopSpin]);
+  }, [content.animator, demote, resetIndicator, resolveOwner]);
 
   const run = useCallback(
     (effect: RefreshEffect) => {
@@ -737,8 +690,6 @@ export function useRefreshControl({
   useEffect(
     () => () => {
       refreshToken.current++;
-      spin.current?.cancel();
-      spin.current = null;
     },
     [],
   );
@@ -760,7 +711,6 @@ export function useRefreshControl({
 
   const spinnerRef = useCallback(
     (element: HTMLElement | null) => {
-      spinnerElement.current = element;
       turn.ref(element);
     },
     [turn],
