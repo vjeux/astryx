@@ -2,7 +2,7 @@
 
 /**
  * @file registerTables.ts
- * @input The shared UIKit tables (springs, scroll, timing, navigation)
+ * @input The shared UIKit tables (springs, scroll, timing, navigation, list)
  * @output registerSharedTables: registers their motion roles, once
  * @position Called by resolveMotion before it resolves a role. The tables
  *   themselves are plain data with no side effect on import, so code that only
@@ -14,6 +14,7 @@
  */
 
 import {registerMotionTable} from '../roles';
+import {list} from './list';
 import {navigation} from './navigation';
 import {scroll} from './scroll';
 import {springs} from './springs';
@@ -39,4 +40,11 @@ export function registerSharedTables(): void {
     exclude: ['press.scrollBrakeMs', 'reducedMotionCrossFadeMs'],
   });
   registerMotionTable('navigation', navigation);
+  registerMotionTable('list', list, {
+    // The cell highlight's release: its clock is the touch press model's
+    // (`timing.press.highlightOutMs`, a role of its own), and the press layer
+    // reads both values at build time (utils/interactionOverlay.stylex.ts
+    // `cellPressConsts`), where no theme variable reaches them.
+    exclude: ['highlight'],
+  });
 }
