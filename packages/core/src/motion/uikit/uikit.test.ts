@@ -20,6 +20,8 @@ import {
   PRESS_ONSET_MS,
   PRESS_SCROLL_BRAKE_MS,
 } from '../../utils/pressGesture';
+import {solveDecay} from '../decay';
+import {rubberBand} from '../rubberBand';
 import {
   naturalFrequency,
   settlingDuration,
@@ -251,6 +253,39 @@ describe('UIKit constants table: values', () => {
       naturalFrequency(toSpring(springs.sheetPresent)),
       6,
     );
+  });
+
+  it('scroll-to-top as a decay lands on the top along the measured curve', () => {
+    // 2000 pt from the top: remaining distance every ~50 ms after the start.
+    const measured = [1257, 768, 475, 296, 186, 118];
+    const coast = solveDecay({
+      from: 0,
+      velocity: 9.7 * 2000,
+      rate: scroll.scrollToTopRate,
+    });
+    expect(coast.rest).toBeCloseTo(2000, -1);
+    measured.forEach((remaining, i) => {
+      expect(
+        Math.abs(2000 - coast.value((i + 1) * 0.05) - remaining),
+      ).toBeLessThan(30);
+    });
+  });
+
+  it('the rubber band reproduces UIScrollView\u2019s released overscroll', () => {
+    // Finger 100 / 300 / 600 pt past the edge of an 874 pt view, minus the
+    // pan\u2019s 10 pt hysteresis.
+    const cases: [number, number][] = [
+      [90, 47],
+      [290, 135],
+      [590, 236.67],
+    ];
+    for (const [overflow, shown] of cases) {
+      expect(
+        Math.abs(
+          rubberBand(overflow, 874, scroll.rubberBand.coefficient) - shown,
+        ),
+      ).toBeLessThan(0.5);
+    }
   });
 
   it('deceleration rates are per-millisecond factors in (0, 1), fast below normal', () => {
