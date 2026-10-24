@@ -92,6 +92,7 @@ import {
   useGestureRecognizer,
   useTouchPresentation,
 } from '@astryxdesign/core/gestures/experimental';
+import {isRtlElement} from '@astryxdesign/core/hooks';
 import {useTranslator} from '@astryxdesign/core/i18n';
 import {focusOutlineStyles} from '@astryxdesign/core/utils';
 import {Icon} from '@astryxdesign/core/Icon';
@@ -571,11 +572,9 @@ function startsInEdgeBand(x: number, direction: 'ltr' | 'rtl'): boolean {
     : x <= band;
 }
 
-function writingDirection(element: Element | null): 'ltr' | 'rtl' {
-  if (element == null || typeof window === 'undefined') {
-    return 'ltr';
-  }
-  return getComputedStyle(element).direction === 'rtl' ? 'rtl' : 'ltr';
+/** The stack's writing direction, as core reads it. */
+function writingDirection(element: HTMLElement | null): 'ltr' | 'rtl' {
+  return isRtlElement(element) ? 'rtl' : 'ltr';
 }
 
 /**
