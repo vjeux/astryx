@@ -1,0 +1,34 @@
+{
+ "delete": [
+  [
+   "Cancel",
+   32,
+   389,
+   165,
+   32
+  ],
+  [
+   "Delete",
+   205,
+   389,
+   165,
+   32
+  ]
+ ],
+ "long": [
+  [
+   "Permanently delete workspace",
+   32,
+   182,
+   338,
+   32
+  ],
+  [
+   "Keep this workspace",
+   32,
+   222,
+   338,
+   32
+  ]
+ ]
+}
