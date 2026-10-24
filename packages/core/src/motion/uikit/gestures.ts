@@ -249,6 +249,18 @@ export const UIKIT_GESTURES = {
       unit: 'ms',
       source: PRESS_MEASUREMENT,
     },
+    /**
+     * How long after a finger was down a scroll can still be that finger's
+     * momentum (the brake only counts scrolls a finger drove).
+     */
+    momentumMemory: {
+      value: 3000,
+      unit: 'ms',
+      guess:
+        'The press model bound (utils/pressFeedback.ts): iOS momentum runs for a second or two after the lift.',
+      measure:
+        'M-G19: Safari page, hardest HID flick: time from the lift to the last scroll event.',
+    },
   },
   scroll: {
     /**

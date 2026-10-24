@@ -37,9 +37,9 @@
 import {UIKIT_GESTURES} from '../motion/uikit/gestures';
 import {centroid} from './geometry';
 import {
+  ALL_NATIVE_TOUCH,
   GestureRecognizer,
   isActive,
-  MANIPULATION,
   type GestureRecognizerOptions,
   type NativeTouchBehavior,
 } from './GestureRecognizer';
@@ -57,6 +57,14 @@ export interface PanGestureRecognizerOptions extends GestureRecognizerOptions<Pa
   hysteresis?: number;
   /** Movement that may begin the pan; anything else fails it. @default 'any' */
   direction?: PanDirection;
+  /**
+   * For a pan limited to an axis: how much the movement along the axis must
+   * exceed the movement across it to begin. Above 1, movement between the
+   * two lines keeps the pan waiting (a thumb's arc is not yet a direction);
+   * below 1, the pan claims drags up to atan(1 / axisRatio) off its axis.
+   * @default 1
+   */
+  axisRatio?: number;
   /**
    * With `direction: 'any'`, report movement along the axis that dominated
    * at the start only (UIScrollView's directional lock).
@@ -84,6 +92,7 @@ export class PanGestureRecognizer extends GestureRecognizer {
   maximumNumberOfTouches: number;
   hysteresis: number;
   direction: PanDirection;
+  axisRatio: number;
   lockAxis: boolean;
   scrollEdge: boolean;
   scrollHandoff: boolean;
@@ -115,6 +124,7 @@ export class PanGestureRecognizer extends GestureRecognizer {
       options.maximumNumberOfTouches ?? Number.POSITIVE_INFINITY;
     this.hysteresis = options.hysteresis ?? UIKIT_GESTURES.pan.hysteresis.value;
     this.direction = options.direction ?? 'any';
+    this.axisRatio = options.axisRatio ?? 1;
     this.lockAxis = options.lockAxis ?? false;
     this.scrollEdge = options.scrollEdge ?? false;
     this.scrollHandoff = options.scrollHandoff ?? false;
@@ -142,13 +152,20 @@ export class PanGestureRecognizer extends GestureRecognizer {
   }
 
   /**
-   * The browser keeps the axis this pan does not use; a pan that coordinates
-   * with native scrolling keeps its own axis too, since the browser scrolls
-   * the content until the edge. Pinch-zoom stays the browser's.
+   * The browser keeps the axis a two-way pan does not use. A one-way pan,
+   * and a pan that coordinates with native scrolling, leave the browser
+   * everything: the other direction still scrolls (a toast dragged away from
+   * its edge scrolls the page), and the pan claims its own direction by
+   * cancelling `touchmove` when it begins, below the distance at which the
+   * browser decides to scroll. Pinch-zoom stays the browser's.
    */
   override get nativeTouchBehavior(): NativeTouchBehavior {
-    if (this.scrollEdge || this.scrollHandoff) {
-      return MANIPULATION;
+    if (
+      this.scrollEdge ||
+      this.scrollHandoff ||
+      DIRECTION_VECTORS[this.direction] != null
+    ) {
+      return ALL_NATIVE_TOUCH;
     }
     const horizontal =
       this.direction === 'horizontal' ||
@@ -272,26 +289,28 @@ export class PanGestureRecognizer extends GestureRecognizer {
     this.tracker.reset();
   }
 
-  /** Whether the touch landed where this pan may start. ScreenEdgePan narrows it. */
-  protected matchesDirection(translation: Point): boolean {
-    const ax = Math.abs(translation.x);
-    const ay = Math.abs(translation.y);
-    switch (this.direction) {
-      case 'any':
-        return true;
-      case 'horizontal':
-        return ax > ay;
-      case 'vertical':
-        return ay > ax;
-      case 'left':
-        return ax > ay && translation.x < 0;
-      case 'right':
-        return ax > ay && translation.x > 0;
-      case 'up':
-        return ay > ax && translation.y < 0;
-      case 'down':
-        return ay > ax && translation.y > 0;
+  /**
+   * What this movement means for a pan limited to a direction: begin, fail,
+   * or wait for more movement (see `axisRatio`).
+   */
+  protected classify(translation: Point): 'begin' | 'fail' | 'wait' {
+    if (this.direction === 'any') {
+      return 'begin';
     }
+    const isHorizontal =
+      this.direction === 'horizontal' ||
+      this.direction === 'left' ||
+      this.direction === 'right';
+    const along = isHorizontal ? translation.x : translation.y;
+    const across = Math.abs(isHorizontal ? translation.y : translation.x);
+    const magnitude = Math.abs(along);
+    if (magnitude > this.axisRatio * across) {
+      // The axis is decided; a one-way pan also needs the right sign.
+      const vector = DIRECTION_VECTORS[this.direction];
+      const sign = vector == null ? 0 : vector.x + vector.y;
+      return sign === 0 || Math.sign(along) === sign ? 'begin' : 'fail';
+    }
+    return across * Math.min(1, this.axisRatio) > magnitude ? 'fail' : 'wait';
   }
 
   private tryBegin(): void {
@@ -307,8 +326,12 @@ export class PanGestureRecognizer extends GestureRecognizer {
     if (Math.hypot(moved.x, moved.y) < this.hysteresis) {
       return;
     }
-    if (!this.matchesDirection(moved)) {
+    const verdict = this.classify(moved);
+    if (verdict === 'fail') {
       this.setState('failed');
+      return;
+    }
+    if (verdict === 'wait') {
       return;
     }
     if (this.scrollEdge && this.nativeCanScroll(moved.x, moved.y)) {

@@ -173,7 +173,7 @@ test('derives touch-action per element from its recognizers', async ({
     tapper: 'manipulation',
     presser: 'manipulation',
     pinchable: 'none',
-    sheetBody: 'manipulation',
+    sheetBody: 'auto',
   });
 });
 

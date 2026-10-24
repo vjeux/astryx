@@ -97,6 +97,7 @@ of a page scroll, so many of these can be read off Safari itself.
 | M-G16 | `UIKIT_GESTURES.velocity.assumeStopped`         | Safari page scroll: HID drag, pause P ms, lift; smallest P after which the page does not coast.                                                                                                      | C      |
 | M-G17 | `UIKIT_GESTURES.click.strayClickWindow`         | Not a parity value: confirm in Safari and Chromium that the click follows touchend within one frame.                                                                                                 | C      |
 | M-G18 | `HAPTIC_VIBRATION_PATTERNS` (every kind)        | On an Android device, compare against the platform HapticFeedbackConstants for the same moments.                                                                                                     | C      |
+| M-G19 | `UIKIT_GESTURES.press.momentumMemory`           | Safari page, hardest HID flick: time from the lift to the last scroll event.                                                                                                                         | C      |
 
 ## Switch (UISwitch)
 

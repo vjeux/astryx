@@ -47,7 +47,7 @@ describe('deriveTouchAction', () => {
       deriveTouchAction([new PanGestureRecognizer({direction: 'horizontal'})]),
     ).toBe('pan-y pinch-zoom');
     expect(
-      deriveTouchAction([new PanGestureRecognizer({direction: 'down'})]),
+      deriveTouchAction([new PanGestureRecognizer({direction: 'vertical'})]),
     ).toBe('pan-x pinch-zoom');
     expect(deriveTouchAction([new PanGestureRecognizer()])).toBe('pinch-zoom');
     expect(
@@ -60,10 +60,21 @@ describe('deriveTouchAction', () => {
     ).toBe('pan-y pinch-zoom');
   });
 
-  it('keeps both axes for a pan that coordinates with native scrolling', () => {
+  it('leaves the browser everything for a one-way pan, or one that shares native scrolling', () => {
+    // The other direction keeps scrolling natively; the pan claims its own
+    // by cancelling touchmove when it begins.
+    expect(
+      deriveTouchAction([new PanGestureRecognizer({direction: 'down'})]),
+    ).toBeNull();
     expect(
       deriveTouchAction([
         new PanGestureRecognizer({direction: 'down', scrollEdge: true}),
+      ]),
+    ).toBeNull();
+    expect(
+      deriveTouchAction([
+        new PanGestureRecognizer({direction: 'down', scrollEdge: true}),
+        new TapGestureRecognizer(),
       ]),
     ).toBe('manipulation');
   });
