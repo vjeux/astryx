@@ -1,0 +1,691 @@
+{
+ "page": "internal/spikes/c17-sheet-host/dist/index.html",
+ "notes": [
+  "Every key of `query` goes into the URL as-is (?mode=…&busy=…). Wait for window.__ready before the gesture.",
+  "Coordinates are page CSS px. String coordinates name window.__geometry keys resolved after __ready: grab = sheet body under the handle, body = deep in the sheet (on it at medium and at large), handle = handle centre.",
+  "kind swipe = one straight line at constant speed (from, to, durationS). kind drag = press pressS, move over durationS, hold releaseS, lift.",
+  "`then` = a second touch started gapAfterLiftS after the first lifts (sweep the real gap around it; the probe log gives the real value).",
+  "After each run: JSON.stringify(window.__trace), the probe event log, the mp4 and the per-frame sheet top y (sheet is #0a4bff; scan column window.__geometry.scan.x).",
+  "Hybrid variants: H1 = snap on during touch (browser snaps if the page misses the release), H2 = snap off during touch (page reconciles at rest), H3 = H2 with the spring started from scrollTop as read (no momentum extrapolation), H4 = pure native (momentum + snap, no handoff). J = JS recognizer."
+ ],
+ "runs": [
+  {
+   "id": "S0-H2-sanity-passthrough",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "open": "medium",
+    "label": "S0-H2-pt1"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "pressS": 0.1,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 5,
+   "note": "First run: the sheet must follow the drag. If it does not move, run S0-H2-sanity-no-passthrough and tell me; every hybrid run would then need passthrough=0."
+  },
+  {
+   "id": "S0-H2-sanity-no-passthrough",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "passthrough": "0",
+    "open": "medium",
+    "label": "S0-H2-pt0"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "pressS": 0.1,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S1a-H2-track-up-busy",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "busy": "ontouch:50:3000",
+    "open": "medium",
+    "label": "S1a-H2"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -300
+    },
+    "pressS": 0.15,
+    "durationS": 1,
+    "releaseS": 0.3
+   },
+   "captureS": 8
+  },
+  {
+   "id": "S1a-J-track-up-busy",
+   "query": {
+    "mode": "js",
+    "busy": "ontouch:50:3000",
+    "open": "medium",
+    "label": "S1a-J"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -300
+    },
+    "pressS": 0.15,
+    "durationS": 1,
+    "releaseS": 0.3
+   },
+   "captureS": 8
+  },
+  {
+   "id": "S1a-H1-track-up-busy",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "1",
+    "busy": "ontouch:50:3000",
+    "open": "medium",
+    "label": "S1a-H1"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -300
+    },
+    "pressS": 0.15,
+    "durationS": 1,
+    "releaseS": 0.3
+   },
+   "captureS": 8
+  },
+  {
+   "id": "S1b-H2-track-down-busy",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "busy": "ontouch:50:3000",
+    "open": "large",
+    "label": "S1b-H2"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": 200
+    },
+    "pressS": 0.15,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 8
+  },
+  {
+   "id": "S1b-J-track-down-busy",
+   "query": {
+    "mode": "js",
+    "busy": "ontouch:50:3000",
+    "open": "large",
+    "label": "S1b-J"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": 200
+    },
+    "pressS": 0.15,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 8
+  },
+  {
+   "id": "S2a-H2-slow-place",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "open": "medium",
+    "label": "S2a-H2"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "pressS": 0.1,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2a-H1-slow-place",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "1",
+    "open": "medium",
+    "label": "S2a-H1"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "pressS": 0.1,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2a-H3-slow-place",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "handoff": "read",
+    "open": "medium",
+    "label": "S2a-H3"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "pressS": 0.1,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2a-H4-slow-place",
+   "query": {
+    "mode": "hybrid",
+    "release": "native",
+    "open": "medium",
+    "label": "S2a-H4"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "pressS": 0.1,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2a-J-slow-place",
+   "query": {
+    "mode": "js",
+    "open": "medium",
+    "label": "S2a-J"
+   },
+   "gesture": {
+    "kind": "drag",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "pressS": 0.1,
+    "durationS": 0.6,
+    "releaseS": 0.3
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2b-H2-flick-up-1500",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "open": "medium",
+    "label": "S2b-H2"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2b-H1-flick-up-1500",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "1",
+    "open": "medium",
+    "label": "S2b-H1"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2b-H3-flick-up-1500",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "handoff": "read",
+    "open": "medium",
+    "label": "S2b-H3"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2b-H4-flick-up-1500",
+   "query": {
+    "mode": "hybrid",
+    "release": "native",
+    "open": "medium",
+    "label": "S2b-H4"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2b-J-flick-up-1500",
+   "query": {
+    "mode": "js",
+    "open": "medium",
+    "label": "S2b-J"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2c-H2-flick-up-3000",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "open": "medium",
+    "label": "S2c-H2"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "durationS": 0.05
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2c-H1-flick-up-3000",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "1",
+    "open": "medium",
+    "label": "S2c-H1"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "durationS": 0.05
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2c-H4-flick-up-3000",
+   "query": {
+    "mode": "hybrid",
+    "release": "native",
+    "open": "medium",
+    "label": "S2c-H4"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "durationS": 0.05
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2c-J-flick-up-3000",
+   "query": {
+    "mode": "js",
+    "open": "medium",
+    "label": "S2c-J"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -150
+    },
+    "durationS": 0.05
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2d-H2-flick-down-750",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "open": "large",
+    "label": "S2d-H2"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": 60
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2d-H1-flick-down-750",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "1",
+    "open": "large",
+    "label": "S2d-H1"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": 60
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2d-H4-flick-down-750",
+   "query": {
+    "mode": "hybrid",
+    "release": "native",
+    "open": "large",
+    "label": "S2d-H4"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": 60
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S2d-J-flick-down-750",
+   "query": {
+    "mode": "js",
+    "open": "large",
+    "label": "S2d-J"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": 60
+    },
+    "durationS": 0.08
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S3-H1-release-while-blocked",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "1",
+    "busy": "ontouch:120:1500",
+    "open": "medium",
+    "label": "S3-H1"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.25
+   },
+   "captureS": 6
+  },
+  {
+   "id": "S3-H2-release-while-blocked",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "busy": "ontouch:120:1500",
+    "open": "medium",
+    "label": "S3-H2"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.25
+   },
+   "captureS": 6
+  },
+  {
+   "id": "S3-J-release-while-blocked",
+   "query": {
+    "mode": "js",
+    "busy": "ontouch:120:1500",
+    "open": "medium",
+    "label": "S3-J"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.25
+   },
+   "captureS": 6
+  },
+  {
+   "id": "S4-H2-regrab",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "open": "medium",
+    "label": "S4-H2"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.08
+   },
+   "then": {
+    "gapAfterLiftS": 0.1,
+    "gesture": {
+     "kind": "drag",
+     "from": "body",
+     "to": {
+      "dy": 100
+     },
+     "pressS": 0,
+     "durationS": 0.3,
+     "releaseS": 0.2
+    }
+   },
+   "captureS": 6
+  },
+  {
+   "id": "S4-H1-regrab",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "1",
+    "open": "medium",
+    "label": "S4-H1"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.08
+   },
+   "then": {
+    "gapAfterLiftS": 0.1,
+    "gesture": {
+     "kind": "drag",
+     "from": "body",
+     "to": {
+      "dy": 100
+     },
+     "pressS": 0,
+     "durationS": 0.3,
+     "releaseS": 0.2
+    }
+   },
+   "captureS": 6
+  },
+  {
+   "id": "S4-J-regrab",
+   "query": {
+    "mode": "js",
+    "open": "medium",
+    "label": "S4-J"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": -120
+    },
+    "durationS": 0.08
+   },
+   "then": {
+    "gapAfterLiftS": 0.1,
+    "gesture": {
+     "kind": "drag",
+     "from": "body",
+     "to": {
+      "dy": 100
+     },
+     "pressS": 0,
+     "durationS": 0.3,
+     "releaseS": 0.2
+    }
+   },
+   "captureS": 6
+  },
+  {
+   "id": "S5-H2-dismiss-3000",
+   "query": {
+    "mode": "hybrid",
+    "snaptouch": "0",
+    "open": "medium",
+    "label": "S5-H2"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": 150
+    },
+    "durationS": 0.05
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S5-H4-dismiss-3000",
+   "query": {
+    "mode": "hybrid",
+    "release": "native",
+    "open": "medium",
+    "label": "S5-H4"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": 150
+    },
+    "durationS": 0.05
+   },
+   "captureS": 5
+  },
+  {
+   "id": "S5-J-dismiss-3000",
+   "query": {
+    "mode": "js",
+    "open": "medium",
+    "label": "S5-J"
+   },
+   "gesture": {
+    "kind": "swipe",
+    "from": "grab",
+    "to": {
+     "dy": 150
+    },
+    "durationS": 0.05
+   },
+   "captureS": 5
+  }
+ ]
+}
