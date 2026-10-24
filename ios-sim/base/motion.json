@@ -1,0 +1,27 @@
+{
+ "label": "base",
+ "busy": 0,
+ "trigger": [
+  70.2578125,
+  32
+ ],
+ "cancel": [
+  200.9921875,
+  424.5
+ ],
+ "log": {
+  "clicks": [
+   [
+    10160,
+    "Delete item"
+   ],
+   [
+    14950,
+    "Cancel"
+   ]
+  ],
+  "busy": [],
+  "open": []
+ },
+ "open": false
+}

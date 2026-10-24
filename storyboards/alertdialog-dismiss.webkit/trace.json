@@ -1,0 +1,133 @@
+{
+  "name": "alertdialog-dismiss",
+  "browser": "webkit",
+  "viewport": {
+    "width": 402,
+    "height": 714
+  },
+  "clip": null,
+  "spring": {
+    "mass": 1,
+    "stiffness": 522.35,
+    "damping": 45.71
+  },
+  "frames": [
+    {
+      "label": "t=0 ms",
+      "t": 0,
+      "data": {
+        "scale": "1",
+        "opacity": 1,
+        "dim": 1
+      }
+    },
+    {
+      "label": "t=33.3 ms",
+      "t": 33.333,
+      "data": {
+        "scale": "1",
+        "opacity": 0.822372,
+        "dim": 0.822372
+      }
+    },
+    {
+      "label": "t=66.7 ms",
+      "t": 66.667,
+      "data": {
+        "scale": "1",
+        "opacity": 0.550081,
+        "dim": 0.550081
+      }
+    },
+    {
+      "label": "t=100 ms",
+      "t": 100,
+      "data": {
+        "scale": "1",
+        "opacity": 0.334481,
+        "dim": 0.334481
+      }
+    },
+    {
+      "label": "t=133.3 ms",
+      "t": 133.333,
+      "data": {
+        "scale": "1",
+        "opacity": 0.192422,
+        "dim": 0.192422
+      }
+    },
+    {
+      "label": "t=166.7 ms",
+      "t": 166.667,
+      "data": {
+        "scale": "1",
+        "opacity": 0.106817,
+        "dim": 0.106817
+      }
+    },
+    {
+      "label": "t=200 ms",
+      "t": 200,
+      "data": {
+        "scale": "1",
+        "opacity": 0.057786,
+        "dim": 0.057786
+      }
+    },
+    {
+      "label": "t=233.3 ms",
+      "t": 233.333,
+      "data": {
+        "scale": "1",
+        "opacity": 0.030689,
+        "dim": 0.030689
+      }
+    },
+    {
+      "label": "t=266.7 ms",
+      "t": 266.667,
+      "data": {
+        "scale": "1",
+        "opacity": 0.016042,
+        "dim": 0.016042
+      }
+    },
+    {
+      "label": "t=300 ms",
+      "t": 300,
+      "data": {
+        "scale": "1",
+        "opacity": 0.008298,
+        "dim": 0.008298
+      }
+    },
+    {
+      "label": "t=333.3 ms",
+      "t": 333.333,
+      "data": {
+        "scale": "1",
+        "opacity": 0.004243,
+        "dim": 0.004243
+      }
+    },
+    {
+      "label": "t=366.7 ms",
+      "t": 366.667,
+      "data": {
+        "scale": "1",
+        "opacity": 0.002158,
+        "dim": 0.002158
+      }
+    },
+    {
+      "label": "t=400 ms",
+      "t": 400,
+      "data": {
+        "scale": "1",
+        "opacity": 0.000582,
+        "dim": 0.000582
+      }
+    }
+  ]
+}

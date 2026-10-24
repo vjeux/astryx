@@ -1,0 +1,12 @@
+{
+ "present": {
+  "frames": 12,
+  "expected": 12,
+  "longestGapMs": 32.7822265625
+ },
+ "dismiss": {
+  "frames": 12,
+  "expected": 12,
+  "longestGapMs": 18.264892578125
+ }
+}
