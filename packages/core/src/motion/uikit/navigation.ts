@@ -74,4 +74,26 @@ export const navigation = {
    *   iPhone 17 Pro, the pop decision method over 61 releases, Oct 23 2026
    */
   interactivePopFinishThreshold: 0.5,
+  /**
+   * Travel, in px, before the full-width content swipe (iOS 26's back swipe
+   * from anywhere in the content) begins.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, UINavigationController.contentSwipe began after 27–30 pt
+   *   of travel for drags at or under 600 pt/s, Oct 23 2026
+   * @measure the exact threshold and the faster start: at 1000 pt/s the swipe
+   *   began on the first move event (~8 pt), so above some speed between 600
+   *   and 1000 pt/s it begins sooner; bracket both with finer drags.
+   */
+  contentPopHysteresis: 27,
+  /**
+   * The interactive pop's release velocity is the mean of the pan's last
+   * this-many velocities (each velocity(in:).x / width, one per finger move
+   * and one at the lift). It does not decay while the finger rests: a pause
+   * keeps the last value, and only moving back lowers it.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, UIPercentDrivenInteractiveTransition averageVelocity =
+   *   (prev_n + prev_n−1 + prev_n−2) / 3 at every update to 4 decimals; held
+   *   0–400 ms before the lift it stays 0.73–0.75, Oct 23 2026
+   */
+  interactivePopVelocitySamples: 3,
 } as const;
