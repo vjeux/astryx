@@ -310,6 +310,41 @@ declare global {
   const Motion: typeof MotionBundle;
 }
 
+test('a finished animation leaves the element once the curve ends', async ({
+  page,
+}) => {
+  await open(page);
+  const result = await page.evaluate(
+    async spring =>
+      new Promise<{curveEnd: number; leftAt: number}>(resolve => {
+        const start = performance.now();
+        window.animator.animate({x: 120}, {spring});
+        const box = document.getElementById('box') as HTMLElement;
+        const solved = Motion.solveSpring(Motion.toSpring(spring), {
+          from: 0,
+          to: 120,
+        });
+        const curveEnd = solved.settleTime(0.05) * 1000;
+        const tick = () => {
+          if (box.getAnimations().length === 0) {
+            resolve({curveEnd, leftAt: performance.now() - start});
+          } else {
+            requestAnimationFrame(tick);
+          }
+        };
+        requestAnimationFrame(tick);
+      }),
+    {response: 0.3, dampingRatio: 1},
+  );
+  test.info().annotations.push({
+    type: 'animation lifetime',
+    description: JSON.stringify(result),
+  });
+  // Gone within a couple of frames of the curve's end, not after the hold.
+  expect(result.leftAt).toBeGreaterThanOrEqual(result.curveEnd - 1);
+  expect(result.leftAt).toBeLessThan(result.curveEnd + 100);
+});
+
 test('a dialog\u2019s ::backdrop plays the curve and holds its end state', async ({
   page,
 }) => {

@@ -81,8 +81,8 @@ await handle.finished; // true if it ran to the end, false if interrupted
   an alert fades on its presentation spring). `{reducedMotion: 'keep'}` keeps
   the motion (direct manipulation), `'instant'` jumps.
 - `createAnimator(dialog, {pseudoElement: '::backdrop'})` drives a
-  pseudo-element; with no inline style to hold it, each animation stays in
-  effect until the next one replaces it.
+  pseudo-element; with no inline style to hold it, a static filling animation
+  holds its end value until the next animation replaces it.
 - `useAnimator()` returns a stable `{ref, animator}`; attach `ref` to the
   element.
 

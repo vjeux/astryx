@@ -77,6 +77,12 @@ Subject "switch S": the first switch in Settings ▸ Accessibility ▸ Display &
 Text Size (Bold Text row); a minimal host app holds a UISwitch on a plain view
 where a switch outside any scroll view is needed.
 
+Done (iOS 26.2 simulator, Oct 23 2026; in the switch's own table,
+`uikit/switch.ts`): M-SW02, M-SW03, M-SW04, M-SW05, M-SW06, M-SW09 (UISwitch
+makes no haptic call), M-SW11 (Reduce Motion: the lift stays, the stretch
+goes), M-SW16 (iOS 26.2). Partly: M-SW07 (a single tap only). Still open:
+M-SW17, and M-SW11's On/Off labels, Reduce Transparency and Bold Text.
+
 | ID     | Scene                                                                                                                                              | Gesture                                                                                                                                                                                           | Extract                                                                                                                                    | Method  |
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
 | M-SW01 | † Display & Text Size; light, dark, Increase Contrast on and off                                                                                   | none (static, off and on)                                                                                                                                                                         | track w / h / radius, thumb w / h / inset, shadow profile, off / on colors                                                                 | B, D    |
@@ -204,6 +210,10 @@ match the probe.
 
 Values the context menu reads from its own table (`uikit/contextMenu.ts`);
 its springs are `springs.contextMenuLift` and `springs.contextMenuDismiss`.
+
+Done (iOS 26.2 simulator, Oct 23 2026; in the context menu's table): M-CM4.
+Under Reduce Motion the pressed copy does not grow at all and only its shadow
+fades in, with Prefer Cross-Fade Transitions on or off.
 
 | ID    | What                            | App and gesture                                                                                                             | Extract                                                                                                                                                                                   | Method |
 | ----- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
