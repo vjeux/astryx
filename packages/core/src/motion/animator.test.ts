@@ -13,7 +13,7 @@
  */
 
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {createAnimator, type AnimatorOptions} from './animator';
+import {createAnimator, END_HOLD_MS, type AnimatorOptions} from './animator';
 import {cubicBezier} from './bezier';
 import {solveDecay} from './decay';
 import {solveSpring, solveSpringTowardRamp, toSpring} from './spring';
@@ -128,12 +128,13 @@ describe('animate: keyframes on the compositor', () => {
     const [animation] = live('translate');
     expect(animation).toBeDefined();
     expect(animation.options).toMatchObject({
-      fill: 'backwards',
+      fill: 'both',
       easing: 'linear',
     });
     expect(animation.startTime).toBe(1000);
     const curve = solveSpring(toSpring(springs.smooth), {from: 0, to: 300});
-    const duration = Number(animation.options.duration);
+    // The curve, then the end state held (END_HOLD_MS).
+    const duration = Number(animation.options.duration) - END_HOLD_MS;
     expect(duration).toBeCloseTo(curve.settleTime(0.05) * 1000, 6);
     for (let t = 0; t <= duration; t += 0.5) {
       const [x, y] = sampleAt(animation, 'translate', 1000 + t);
@@ -141,6 +142,10 @@ describe('animate: keyframes on the compositor', () => {
       expect(y).toBe(0);
       expect(animator.get('x', 1000 + t)).toBeCloseTo(curve.value(t / 1000), 9);
     }
+    // Then the end state, held through a main-thread block.
+    expect(
+      sampleAt(animation, 'translate', 1000 + duration + END_HOLD_MS / 2),
+    ).toEqual([300, 0]);
   });
 
   it('keeps the keyframe count modest (adaptive sampling)', () => {
@@ -165,6 +170,23 @@ describe('animate: keyframes on the compositor', () => {
         (element.style as unknown as Record<string, string>)[channel],
       );
     }
+  });
+
+  it('keeps the end state in effect until the main thread drops the finished animation', async () => {
+    const {animator, element} = setup();
+    animator.animate({x: 120}, {spring: springs.snappy});
+    const [animation] = live('translate');
+    expect(animation.options.fill).toBe('both');
+    // The animation outlasts its curve by END_HOLD_MS; the main thread drops
+    // it as soon as it runs after the curve's end.
+    const duration = Number(animation.options.duration) - END_HOLD_MS;
+    await advance(duration - 1);
+    expect(animation.cancelled).toBe(false);
+    await advance(2);
+    expect(animation.cancelled).toBe(true);
+    expect(element.style.translate).toBe(
+      animation.keyframes[animation.keyframes.length - 1].translate,
+    );
   });
 
   it('puts everything one call starts on one clock', () => {
@@ -374,10 +396,19 @@ describe('Reduced Motion (M5): UIKit cross-fades instead of travel', () => {
     const [translate] = live('translate');
     const [opacity] = live('opacity');
     expect(translate.startTime).toBe(opacity.startTime);
-    expect(Number(translate.options.duration)).toBeCloseTo(fade / 2, 6);
-    const last = translate.keyframes.slice(-2);
-    expect(last.map(k => Number(k.offset))).toEqual([1, 1]);
-    expect(last.map(k => k.translate)).toEqual(['0px 0px', '100px 0px']);
+    expect(Number(translate.options.duration)).toBeCloseTo(
+      fade / 2 + END_HOLD_MS,
+      6,
+    );
+    const jump = fade / 2 / (fade / 2 + END_HOLD_MS);
+    const atJump = translate.keyframes.filter(
+      k => Math.abs(Number(k.offset) - jump) < 1e-12,
+    );
+    expect(atJump.map(k => k.translate)).toEqual(['0px 0px', '100px 0px']);
+    expect(translate.keyframes[translate.keyframes.length - 1]).toMatchObject({
+      offset: 1,
+      translate: '100px 0px',
+    });
     expect(sampleAt(translate, 'translate', 1000 + fade / 2 - 2)[0]).toBe(0);
     expect(element.style.translate).toBe('100px 0px');
     expect(element.style.opacity).toBe('1');
@@ -391,7 +422,10 @@ describe('Reduced Motion (M5): UIKit cross-fades instead of travel', () => {
     expect(live('translate')).toHaveLength(0);
     expect(element.style.translate).toBe('0px 0px');
     expect(animator.get('opacity', 1000 + fade / 2)).toBeCloseTo(ease(0.5), 9);
-    expect(Number(live('opacity')[0].options.duration)).toBeCloseTo(fade, 6);
+    expect(Number(live('opacity')[0].options.duration)).toBeCloseTo(
+      fade + END_HOLD_MS,
+      6,
+    );
   });
 
   it('an exit fades out in place, then moves', () => {
@@ -424,6 +458,50 @@ describe('Reduced Motion (M5): UIKit cross-fades instead of travel', () => {
     expect(b.animator.getVelocity('x', 1010)).toBeGreaterThan(0);
   });
 
+  it('a cross-fade can follow the presentation\u2019s own spring', () => {
+    const {animator} = reduced();
+    // An exit: fades out on the spring, then moves once the fade settles.
+    animator.set({y: 0, opacity: 1});
+    animator.animate(
+      {y: 400, opacity: 0},
+      {spring: springs.sheetDismiss},
+      {crossfade: springs.sheetDismiss},
+    );
+    const curve = solveSpring(toSpring(springs.sheetDismiss), {from: 1, to: 0});
+    const settle = curve.settleTime(0.001) * 1000;
+    for (const t of [0, 50, 120, 250]) {
+      expect(animator.get('opacity', 1000 + t)).toBeCloseTo(
+        curve.value(t / 1000),
+        9,
+      );
+      expect(animator.get('y', 1000 + t)).toBe(0);
+    }
+    expect(animator.get('y', 1000 + settle + 1)).toBe(400);
+  });
+
+  it('a dip on a spring fades out, moves at the bottom, fades back in', () => {
+    const {animator} = reduced();
+    animator.animate(
+      {x: 100},
+      {spring: springs.alertPresent},
+      {crossfade: springs.alertPresent},
+    );
+    const spring = toSpring(springs.alertPresent);
+    const out = solveSpring(spring, {from: 1, to: 0});
+    const half = out.settleTime(0.001) * 1000;
+    expect(animator.get('opacity', 1000 + half / 2)).toBeCloseTo(
+      out.value(half / 2000),
+      9,
+    );
+    expect(animator.get('x', 1000 + half - 1)).toBe(0);
+    expect(animator.get('x', 1000 + half)).toBe(100);
+    const back = solveSpring(spring, {from: 0, to: 1});
+    expect(animator.get('opacity', 1000 + half + 60)).toBeCloseTo(
+      back.value(0.06),
+      9,
+    );
+  });
+
   it('an opacity-only change is not travel and keeps its spring', () => {
     const {animator} = reduced();
     animator.animate({opacity: 0}, {spring: springs.smooth});
@@ -451,7 +529,10 @@ describe('play: any closed-form curve', () => {
     animator.play({scale: pressCurve});
     const [animation] = live('scale');
     expect(animation.startTime).toBe(1000);
-    expect(Number(animation.options.duration)).toBeCloseTo(266, 6);
+    expect(Number(animation.options.duration)).toBeCloseTo(
+      266 + END_HOLD_MS,
+      6,
+    );
     // Up to the end: from then on the value rests where the curve ended.
     for (let t = 0; t < 266; t += 0.5) {
       const [sx, sy] = sampleAt(animation, 'scale', 1000 + t);
@@ -601,6 +682,50 @@ describe('decay: UIScrollView coasts', () => {
     const {animator} = setup({prefersReducedMotion: () => true});
     animator.decay({x: 1000});
     expect(animator.getVelocity('x', 1016)).toBeGreaterThan(900);
+  });
+});
+
+describe('pseudoElement: a dialog\u2019s ::backdrop', () => {
+  it('targets the pseudo-element, writes no inline style and keeps the end state in effect', async () => {
+    const {animator, element} = setup({pseudoElement: '::backdrop'});
+    animator.set({opacity: 0});
+    const [held] = live('opacity');
+    expect(held.options).toMatchObject({
+      fill: 'both',
+      pseudoElement: '::backdrop',
+    });
+    expect(held.keyframes.map(k => k.opacity)).toEqual(['0', '0']);
+    expect(element.style.opacity).toBe('');
+
+    animator.animate({opacity: 1}, {spring: springs.alertPresent});
+    // The new animation exists before the hold goes: no frame in between.
+    expect(held.cancelled).toBe(true);
+    const [fade] = live('opacity');
+    expect(fade.options).toMatchObject({
+      fill: 'both',
+      pseudoElement: '::backdrop',
+    });
+    expect(fade.keyframes[fade.keyframes.length - 1].opacity).toBe('1');
+    expect(element.style.opacity).toBe('');
+    await advance(Number(fade.options.duration) + 1000);
+    // Nothing else holds the end state: the animation stays.
+    expect(fade.cancelled).toBe(false);
+    expect(animator.get('opacity')).toBe(1);
+  });
+
+  it('an exit holds 0 until the next animation replaces it', async () => {
+    const {animator} = setup({
+      pseudoElement: '::backdrop',
+      initial: {opacity: 1},
+    });
+    animator.animate({opacity: 0}, {spring: springs.alertDismiss});
+    const [fade] = live('opacity');
+    await advance(Number(fade.options.duration) + 1000);
+    expect(fade.cancelled).toBe(false);
+    expect(fade.keyframes[fade.keyframes.length - 1].opacity).toBe('0');
+    animator.animate({opacity: 1}, {spring: springs.alertPresent});
+    expect(fade.cancelled).toBe(true);
+    expect(live('opacity')).toHaveLength(1);
   });
 });
 

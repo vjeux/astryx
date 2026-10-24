@@ -74,10 +74,15 @@ await handle.finished; // true if it ran to the end, false if interrupted
 - Everything one call starts shares one start time; `{at}` puts several
   animators on one clock.
 - Reduced Motion (`prefers-reduced-motion: reduce`): travel becomes UIKit's
-  cross-fade. An entrance lands and fades in, an exit fades out then moves,
-  any other move dips (fade out, move, fade in), over
-  `timing.reducedMotionCrossFadeMs`. `{reducedMotion: 'keep'}` keeps the
-  motion (direct manipulation), `'instant'` jumps.
+  cross-fade (Reduce Motion with Prefer Cross-Fade Transitions). An entrance
+  lands and fades in, an exit fades out then moves, any other move dips (fade
+  out, move, fade in), over `timing.reducedMotionCrossFadeMs` (a navigation
+  push or pop) or on the spring passed as `{crossfade}` (a sheet, a modal or
+  an alert fades on its presentation spring). `{reducedMotion: 'keep'}` keeps
+  the motion (direct manipulation), `'instant'` jumps.
+- `createAnimator(dialog, {pseudoElement: '::backdrop'})` drives a
+  pseudo-element; with no inline style to hold it, each animation stays in
+  effect until the next one replaces it.
 - `useAnimator()` returns a stable `{ref, animator}`; attach `ref` to the
   element.
 
@@ -85,9 +90,12 @@ await handle.finished; // true if it ran to the end, false if interrupted
 
 Each curve is baked into keyframes, sampled adaptively until linear
 interpolation is within 0.05 px, and played with `easing: linear` and an
-explicit `startTime`. The element's inline style already holds the end values
-and the animations fill backwards only, so the frame an animation ends needs
-no main thread and shows no flicker.
+explicit `startTime`. The element's inline style already holds the end values,
+and the keyframes hold the end state for a few seconds past the curve's end;
+the main thread drops the animation as soon as it runs after that end. So the
+frame an animation ends needs no main thread and shows no flicker, even when
+the main thread is blocked as the curve ends (WebKit's compositor otherwise
+falls back to the last value its main thread committed, mid-flight).
 
 Keyframes rather than one `linear()` easing: measured in Chromium, both are
 composited and, for the same samples, equally precise; but WebKit's Core
@@ -150,7 +158,8 @@ animator, bundled from source, in Chromium (Pixel 7 emulation) and WebKit
 
 - a slow spring keeps advancing on every frame while the main thread is
   blocked for 1 s, on the analytic curve within 2 px (Chromium screencast;
-  WebKit through its video recording, decoded frame by frame);
+  WebKit through its video recording, decoded frame by frame), and a spring
+  that ends inside the block keeps showing its end state (WebKit);
 - no Layout or Paint runs while it animates, and Chromium reports every
   animation composited (trace);
 - seeked to fixed times, the engine plays the analytic curve within 0.05 px,

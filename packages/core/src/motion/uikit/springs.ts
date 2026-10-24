@@ -176,8 +176,8 @@ export const springs = {
   sheetDismiss: UIKIT_DEFAULT_SPRING,
   /**
    * Detent change (`animateChanges`) and the settle after a slow release
-   * (up to about 690 pt/s): critically damped at the same pace as the
-   * presentation.
+   * (below the sheet's fast-release speed, which the sheet's own table
+   * records): critically damped at the same pace as the presentation.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, `_UISpringParameters(dampingRatio: 1, response:
    *   0.3441442326)` hooked, CASpringAnimation mass 1, stiffness 333.333,
@@ -185,9 +185,9 @@ export const springs = {
    */
   sheetDetent: {response: 0.3441442326, dampingRatio: 1},
   /**
-   * The settle after a fast release (from about 870 pt/s), toward a detent
-   * or out of the screen: same pace, 80 % damping; UIKit hands it the
-   * finger's velocity.
+   * The settle after a fast release (from the sheet's fast-release speed
+   * on), toward a detent or out of the screen: same pace, 80 % damping;
+   * UIKit hands it the finger's velocity.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, CASpringAnimation dump over 36 releases (mass 1,
    *   stiffness 333.333, damping 29.212), Oct 23 2026
@@ -263,6 +263,14 @@ export const springs = {
    *   iPhone 17 Pro, the same hook (0.85, 0.35, not tracking), Oct 23 2026
    */
   contextMenuDismiss: MENU_CLOSE_SPRING,
+  /**
+   * Menus opening and closing under Reduce Motion: critically damped,
+   * slower, no overshoot.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, `_animateUsingSpringWithDampingRatio:response:tracking:`
+   *   hooked with Reduce Motion on (1.0, 0.4), Oct 23 2026
+   */
+  menuReducedMotion: {response: 0.4, dampingRatio: 1},
 
   // ---------------------------------------------------------------------
   // Controls
