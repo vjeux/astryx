@@ -15,7 +15,14 @@
 
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {chromium, expect, test, type Page} from '@playwright/test';
+import {
+  chromium,
+  expect,
+  test,
+  type Browser,
+  type Page,
+  type TestInfo,
+} from '@playwright/test';
 import {build} from 'esbuild';
 // @ts-expect-error -- pngjs ships no declarations; runtime support is pinned.
 import {PNG} from 'pngjs';
@@ -303,14 +310,16 @@ declare global {
   const Motion: typeof MotionBundle;
 }
 
-test('WebKit: a spring keeps advancing while the main thread is blocked for 1 s (video)', async ({
-  browser,
-  browserName,
-}, testInfo) => {
-  test.skip(
-    browserName !== 'webkit',
-    'the Chromium screencast test covers Chromium',
-  );
+/**
+ * WebKit has no screencast protocol: record a video of a spring started just
+ * before a 1 s main-thread block, then decode it frame by frame in Chromium.
+ * The beacon (painted by the main thread) marks the frames inside the block.
+ */
+async function recordBlockedRun(
+  browser: Browser,
+  testInfo: TestInfo,
+  spring: {response: number; dampingRatio: number},
+): Promise<{t: number; x: number; beacon: string}[]> {
   const size = {width: 390, height: 160};
   const context = await browser.newContext({
     viewport: size,
@@ -336,7 +345,7 @@ test('WebKit: a spring keeps advancing while the main thread is blocked for 1 s 
           );
         }, 50);
       }),
-    {spring: SLOW, travel: TRAVEL},
+    {spring, travel: TRAVEL},
   );
   await page.waitForTimeout(1000);
   const video = page.video();
@@ -410,23 +419,60 @@ test('WebKit: a spring keeps advancing while the main thread is blocked for 1 s 
         webm: bytes,
       },
     );
-    // Distinct recorded frames while the beacon showed the block.
-    const blocked = frames.filter(f => f.beacon === 'blocked' && f.x >= 0);
-    const positions = blocked
-      .map(f => f.x)
-      .filter((x, i, all) => i === 0 || x !== all[i - 1]);
-    testInfo.annotations.push({
-      type: 'WebKit frames during the block',
-      description: `${blocked.length} samples, positions: ${positions.join(' ')}`,
-    });
-    expect(blocked.length).toBeGreaterThan(0);
-    // The box kept moving: many distinct positions while the main thread
-    // could not run, never going back.
-    expect(positions.length).toBeGreaterThanOrEqual(8);
-    for (let i = 1; i < positions.length; i++) {
-      expect(positions[i]).toBeGreaterThan(positions[i - 1]);
-    }
+    return frames;
   } finally {
     await decoder.close();
+  }
+}
+
+test('WebKit: a spring keeps advancing while the main thread is blocked for 1 s (video)', async ({
+  browser,
+  browserName,
+}, testInfo) => {
+  test.skip(
+    browserName !== 'webkit',
+    'the Chromium screencast test covers Chromium',
+  );
+  const frames = await recordBlockedRun(browser, testInfo, SLOW);
+  // Distinct recorded frames while the beacon showed the block.
+  const blocked = frames.filter(f => f.beacon === 'blocked' && f.x >= 0);
+  const positions = blocked
+    .map(f => f.x)
+    .filter((x, i, all) => i === 0 || x !== all[i - 1]);
+  testInfo.annotations.push({
+    type: 'WebKit frames during the block',
+    description: `${blocked.length} samples, positions: ${positions.join(' ')}`,
+  });
+  expect(blocked.length).toBeGreaterThan(0);
+  // The box kept moving: many distinct positions while the main thread
+  // could not run, never going back.
+  expect(positions.length).toBeGreaterThanOrEqual(8);
+  for (let i = 1; i < positions.length; i++) {
+    expect(positions[i]).toBeGreaterThan(positions[i - 1]);
+  }
+});
+
+test('WebKit: a spring that ends inside the block stays at its end (video)', async ({
+  browser,
+  browserName,
+}, testInfo) => {
+  test.skip(browserName !== 'webkit', 'a WebKit compositor case');
+  // Settles about 450 ms into the block.
+  const frames = await recordBlockedRun(browser, testInfo, {
+    response: 0.25,
+    dampingRatio: 1,
+  });
+  const blocked = frames.filter(f => f.beacon === 'blocked' && f.x >= 0);
+  const landed = blocked.findIndex(f => f.x >= TRAVEL - 1);
+  testInfo.annotations.push({
+    type: 'WebKit frames during the block',
+    description: blocked.map(f => f.x).join(' '),
+  });
+  expect(landed).toBeGreaterThan(0);
+  expect(landed).toBeLessThan(blocked.length - 5);
+  // Every frame after the curve ends shows the end state, until the main
+  // thread runs again.
+  for (const frame of blocked.slice(landed)) {
+    expect(frame.x).toBeGreaterThanOrEqual(TRAVEL - 1);
   }
 });

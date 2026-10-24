@@ -43,10 +43,13 @@
  * can be handed in explicitly instead.
  *
  * End state without a flicker frame: the element's inline style always holds
- * the values the animations END on, and every animation fills backwards
- * only. While an animation runs it overrides the inline style; the frame it
- * ends, the compositor drops it and the inline style already shows the same
- * values, with no main-thread work involved.
+ * the values the animations END on, and the keyframes hold that end state for
+ * a while after the curve ends (END_HOLD_MS). The main thread drops a finished
+ * animation as soon as it runs after the curve's end; the inline style already
+ * shows the same values, so nothing moves. The hold matters when the curve
+ * ends during a main-thread block: WebKit's compositor ends an animation by
+ * falling back to the value its main thread last committed, which is
+ * mid-flight.
  *
  * Shared clock: every animation an `animate` / `decay` call starts gets the
  * same explicit `startTime` (the call time, or `options.at` to line several
@@ -283,6 +286,14 @@ const SAMPLE_TOLERANCE: Record<MotionProperty, number> = {
 const MAX_DURATION_MS = 30_000;
 /** Above this many keyframes the tolerance is relaxed. */
 const MAX_KEYFRAMES = 1200;
+/**
+ * The keyframes hold the end state this long after a curve ends. An engine
+ * whose compositor ends an animation while the main thread is blocked falls
+ * back to the value its main thread last committed, mid-flight (WebKit); the
+ * hold keeps the end state on screen through such a block. The main thread
+ * drops the animation as soon as it runs after the curve's end.
+ */
+export const END_HOLD_MS = 5000;
 
 const TRAVEL: ReadonlyArray<MotionProperty> = [
   'x',
@@ -384,6 +395,8 @@ export function createAnimator(
   };
   const segments = new Map<MotionProperty, Segment>();
   const running = new Map<Channel, Animation>();
+  /** Drops a finished, still-filling animation once the main thread runs. */
+  const retireTimers = new Map<Channel, ReturnType<typeof setTimeout>>();
   const touched = new Set<Channel>();
   let target: HTMLElement | null = null;
 
@@ -499,6 +512,8 @@ export function createAnimator(
   const rebuild = (channel: Channel, time: number) => {
     running.get(channel)?.cancel();
     running.delete(channel);
+    clearTimeout(retireTimers.get(channel));
+    retireTimers.delete(channel);
     const properties = CHANNELS[channel];
     // Settled curves become resting values.
     for (const property of properties) {
@@ -564,7 +579,7 @@ export function createAnimator(
       }
     }
     const times = [...all].sort((a, b) => a - b);
-    const span = end - time;
+    const span = end - time + END_HOLD_MS;
     const keyframes: Keyframe[] = [];
     for (const t of times) {
       const offset = (t - time) / span;
@@ -581,14 +596,32 @@ export function createAnimator(
         ),
       });
     }
+    keyframes.push({offset: 1, [channel]: format(channel, finalValue)});
     const animation = target.animate(keyframes, {
       duration: span,
-      fill: 'backwards',
+      // The last keyframes hold the end state (END_HOLD_MS); filling both
+      // ways also keeps it where an engine honors the fill on its compositor.
+      // The main thread drops the animation once it runs after the end; the
+      // inline style already holds the same values, so that changes no pixel.
+      fill: 'both',
       easing: 'linear',
     });
     // One clock: the keyframes were sampled from `time`.
     animation.startTime = time;
     running.set(channel, animation);
+    retireTimers.set(
+      channel,
+      setTimeout(
+        () => {
+          retireTimers.delete(channel);
+          if (running.get(channel) === animation) {
+            animation.cancel();
+            running.delete(channel);
+          }
+        },
+        Math.max(0, end - now()),
+      ),
+    );
   };
 
   // -- handles --------------------------------------------------------------
@@ -824,6 +857,10 @@ export function createAnimator(
         animation.cancel();
       }
       running.clear();
+      for (const timer of retireTimers.values()) {
+        clearTimeout(timer);
+      }
+      retireTimers.clear();
       target = next;
       if (target == null) {
         return;
@@ -1124,6 +1161,10 @@ export function createAnimator(
         animation.cancel();
       }
       running.clear();
+      for (const timer of retireTimers.values()) {
+        clearTimeout(timer);
+      }
+      retireTimers.clear();
       target = null;
     },
   };

@@ -13,7 +13,7 @@
  */
 
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {createAnimator, type AnimatorOptions} from './animator';
+import {createAnimator, END_HOLD_MS, type AnimatorOptions} from './animator';
 import {cubicBezier} from './bezier';
 import {solveDecay} from './decay';
 import {solveSpring, solveSpringTowardRamp, toSpring} from './spring';
@@ -128,12 +128,13 @@ describe('animate: keyframes on the compositor', () => {
     const [animation] = live('translate');
     expect(animation).toBeDefined();
     expect(animation.options).toMatchObject({
-      fill: 'backwards',
+      fill: 'both',
       easing: 'linear',
     });
     expect(animation.startTime).toBe(1000);
     const curve = solveSpring(toSpring(springs.smooth), {from: 0, to: 300});
-    const duration = Number(animation.options.duration);
+    // The curve, then the end state held (END_HOLD_MS).
+    const duration = Number(animation.options.duration) - END_HOLD_MS;
     expect(duration).toBeCloseTo(curve.settleTime(0.05) * 1000, 6);
     for (let t = 0; t <= duration; t += 0.5) {
       const [x, y] = sampleAt(animation, 'translate', 1000 + t);
@@ -141,6 +142,10 @@ describe('animate: keyframes on the compositor', () => {
       expect(y).toBe(0);
       expect(animator.get('x', 1000 + t)).toBeCloseTo(curve.value(t / 1000), 9);
     }
+    // Then the end state, held through a main-thread block.
+    expect(
+      sampleAt(animation, 'translate', 1000 + duration + END_HOLD_MS / 2),
+    ).toEqual([300, 0]);
   });
 
   it('keeps the keyframe count modest (adaptive sampling)', () => {
@@ -165,6 +170,23 @@ describe('animate: keyframes on the compositor', () => {
         (element.style as unknown as Record<string, string>)[channel],
       );
     }
+  });
+
+  it('keeps the end state in effect until the main thread drops the finished animation', async () => {
+    const {animator, element} = setup();
+    animator.animate({x: 120}, {spring: springs.snappy});
+    const [animation] = live('translate');
+    expect(animation.options.fill).toBe('both');
+    // The animation outlasts its curve by END_HOLD_MS; the main thread drops
+    // it as soon as it runs after the curve's end.
+    const duration = Number(animation.options.duration) - END_HOLD_MS;
+    await advance(duration - 1);
+    expect(animation.cancelled).toBe(false);
+    await advance(2);
+    expect(animation.cancelled).toBe(true);
+    expect(element.style.translate).toBe(
+      animation.keyframes[animation.keyframes.length - 1].translate,
+    );
   });
 
   it('puts everything one call starts on one clock', () => {
@@ -374,10 +396,19 @@ describe('Reduced Motion (M5): UIKit cross-fades instead of travel', () => {
     const [translate] = live('translate');
     const [opacity] = live('opacity');
     expect(translate.startTime).toBe(opacity.startTime);
-    expect(Number(translate.options.duration)).toBeCloseTo(fade / 2, 6);
-    const last = translate.keyframes.slice(-2);
-    expect(last.map(k => Number(k.offset))).toEqual([1, 1]);
-    expect(last.map(k => k.translate)).toEqual(['0px 0px', '100px 0px']);
+    expect(Number(translate.options.duration)).toBeCloseTo(
+      fade / 2 + END_HOLD_MS,
+      6,
+    );
+    const jump = fade / 2 / (fade / 2 + END_HOLD_MS);
+    const atJump = translate.keyframes.filter(
+      k => Math.abs(Number(k.offset) - jump) < 1e-12,
+    );
+    expect(atJump.map(k => k.translate)).toEqual(['0px 0px', '100px 0px']);
+    expect(translate.keyframes[translate.keyframes.length - 1]).toMatchObject({
+      offset: 1,
+      translate: '100px 0px',
+    });
     expect(sampleAt(translate, 'translate', 1000 + fade / 2 - 2)[0]).toBe(0);
     expect(element.style.translate).toBe('100px 0px');
     expect(element.style.opacity).toBe('1');
@@ -391,7 +422,10 @@ describe('Reduced Motion (M5): UIKit cross-fades instead of travel', () => {
     expect(live('translate')).toHaveLength(0);
     expect(element.style.translate).toBe('0px 0px');
     expect(animator.get('opacity', 1000 + fade / 2)).toBeCloseTo(ease(0.5), 9);
-    expect(Number(live('opacity')[0].options.duration)).toBeCloseTo(fade, 6);
+    expect(Number(live('opacity')[0].options.duration)).toBeCloseTo(
+      fade + END_HOLD_MS,
+      6,
+    );
   });
 
   it('an exit fades out in place, then moves', () => {
@@ -451,7 +485,10 @@ describe('play: any closed-form curve', () => {
     animator.play({scale: pressCurve});
     const [animation] = live('scale');
     expect(animation.startTime).toBe(1000);
-    expect(Number(animation.options.duration)).toBeCloseTo(266, 6);
+    expect(Number(animation.options.duration)).toBeCloseTo(
+      266 + END_HOLD_MS,
+      6,
+    );
     // Up to the end: from then on the value rests where the curve ended.
     for (let t = 0; t < 266; t += 0.5) {
       const [sx, sy] = sampleAt(animation, 'scale', 1000 + t);
