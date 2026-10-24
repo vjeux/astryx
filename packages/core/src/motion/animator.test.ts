@@ -16,7 +16,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {createAnimator, type AnimatorOptions} from './animator';
 import {cubicBezier} from './bezier';
 import {solveDecay} from './decay';
-import {solveSpring, toSpring} from './spring';
+import {solveSpring, solveSpringTowardRamp, toSpring} from './spring';
 import {scroll} from './uikit/scroll';
 import {springs} from './uikit/springs';
 import {timing} from './uikit/timing';
@@ -428,6 +428,124 @@ describe('Reduced Motion (M5): UIKit cross-fades instead of travel', () => {
     const {animator} = reduced();
     animator.animate({opacity: 0}, {spring: springs.smooth});
     expect(animator.getVelocity('opacity', 1010)).toBeLessThan(0);
+  });
+});
+
+describe('play: any closed-form curve', () => {
+  // A press that keeps deepening: the scale's target falls at 0.16 per
+  // second and the presentation follows it on a spring.
+  const pressSpring = toSpring(springs.contextMenuLift);
+  const press = solveSpringTowardRamp(pressSpring, {
+    from: 1,
+    target: 1,
+    slope: -0.16,
+  });
+  const pressCurve = {
+    duration: 0.266,
+    at: (t: number) => press.value(t),
+    velocity: (t: number) => press.velocity(t),
+  };
+
+  it('bakes the curve into keyframes and reads it back', () => {
+    const {animator, element} = setup();
+    animator.play({scale: pressCurve});
+    const [animation] = live('scale');
+    expect(animation.startTime).toBe(1000);
+    expect(Number(animation.options.duration)).toBeCloseTo(266, 6);
+    // Up to the end: from then on the value rests where the curve ended.
+    for (let t = 0; t < 266; t += 0.5) {
+      const [sx, sy] = sampleAt(animation, 'scale', 1000 + t);
+      expect(Math.abs(sx - press.value(t / 1000))).toBeLessThan(0.001);
+      expect(sy).toBe(sx);
+      expect(animator.get('scale', 1000 + t)).toBeCloseTo(
+        press.value(t / 1000),
+        12,
+      );
+      expect(animator.getVelocity('scaleY', 1000 + t)).toBeCloseTo(
+        press.velocity(t / 1000),
+        12,
+      );
+    }
+    const end = press.value(0.266);
+    expect(animator.get('scale', 1266)).toBeCloseTo(end, 12);
+    expect(animator.getVelocity('scale', 1266)).toBe(0);
+    for (const axis of parse(element.style.scale)) {
+      expect(axis).toBeCloseTo(end, 4);
+    }
+  });
+
+  it('finishes true at its end, false when interrupted', async () => {
+    const {animator} = setup();
+    const done = animator.play({
+      x: {duration: 0.2, at: t => 100 * t, velocity: () => 100},
+    });
+    await advance(250);
+    await expect(done.finished).resolves.toBe(true);
+    const cut = animator.play({
+      x: {duration: 0.2, at: t => 20 + 100 * t, velocity: () => 100},
+    });
+    await advance(50);
+    animator.set({x: 0});
+    await expect(cut.finished).resolves.toBe(false);
+  });
+
+  it('a later animate starts from the played value and velocity', async () => {
+    const {animator} = setup();
+    animator.play({scale: pressCurve});
+    await advance(120);
+    const value = animator.get('scale');
+    const velocity = animator.getVelocity('scale');
+    expect(value).toBeCloseTo(press.value(0.12), 12);
+    animator.animate({scale: 1.06}, {spring: springs.contextMenuLift});
+    expect(animator.get('scale')).toBeCloseTo(value, 9);
+    expect(animator.getVelocity('scale')).toBeCloseTo(velocity, 9);
+  });
+
+  it('a zero-length curve puts the value in place', () => {
+    const {animator, element} = setup();
+    animator.play({opacity: {duration: 0, at: () => 0.4, velocity: () => 0}});
+    expect(live('opacity')).toHaveLength(0);
+    expect(animator.get('opacity')).toBe(0.4);
+    expect(element.style.opacity).toBe('0.4');
+  });
+
+  it('under Reduced Motion a played travel cross-fades unless kept', () => {
+    const reduced = setup({prefersReducedMotion: () => true});
+    reduced.animator.play({
+      x: {duration: 0.3, at: t => 300 * t, velocity: () => 300},
+    });
+    const [opacity] = live('opacity');
+    expect(opacity).toBeDefined();
+    expect(
+      reduced.animator.get('x', 1000 + timing.reducedMotionCrossFadeMs),
+    ).toBeCloseTo(90, 9);
+    recorded = [];
+    const kept = setup({prefersReducedMotion: () => true});
+    kept.animator.play(
+      {x: {duration: 0.3, at: t => 300 * t, velocity: () => 300}},
+      {reducedMotion: 'keep'},
+    );
+    expect(live('opacity')).toHaveLength(0);
+    expect(kept.animator.get('x', 1150)).toBeCloseTo(45, 9);
+  });
+
+  it('its handle retargets only with a spring', () => {
+    const {animator} = setup();
+    const handle = animator.play({
+      x: {duration: 0.3, at: t => 300 * t, velocity: () => 300},
+    });
+    expect(() => handle.retarget({x: 0})).toThrow(/spring/);
+    handle.retarget({x: 0}, {spring: springs.smooth});
+    expect(animator.getVelocity('x')).toBeCloseTo(300, 9);
+  });
+
+  it('rejects a curve without a finite duration', () => {
+    const {animator} = setup();
+    expect(() =>
+      animator.play({
+        x: {duration: Number.POSITIVE_INFINITY, at: () => 0, velocity: () => 0},
+      }),
+    ).toThrow(RangeError);
   });
 });
 

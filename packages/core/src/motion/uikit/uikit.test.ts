@@ -20,7 +20,15 @@ import {
   PRESS_ONSET_MS,
   PRESS_SCROLL_BRAKE_MS,
 } from '../../utils/pressGesture';
-import {settlingDuration, toSpring, type SpringDescription} from '../spring';
+import {solveDecay} from '../decay';
+import {rubberBand} from '../rubberBand';
+import {
+  naturalFrequency,
+  settlingDuration,
+  springFromUIKitDampingDuration,
+  toSpring,
+  type SpringDescription,
+} from '../spring';
 import {scroll, springs, timing} from '.';
 import {HAPTIC_VIBRATION_PATTERNS, UIKIT_GESTURES} from './gestures';
 
@@ -226,6 +234,58 @@ describe('UIKit constants table: values', () => {
   it('UIKit\u2019s default spring has the documented damping ratio 4.56 before clamping', () => {
     const {mass, stiffness, damping} = springs.uikitDefault;
     expect(damping / (2 * Math.sqrt(stiffness * mass))).toBeCloseTo(4.56, 2);
+  });
+
+  it('the alert spring is UIKit\u2019s legacy derivation at 0.404 s, critically damped', () => {
+    // UIKit asks for damping 600 (clamped to 1) over 0.404 s; the measured
+    // grid predicts the spring Core Animation was handed.
+    const derived = springFromUIKitDampingDuration({
+      duration: 0.404,
+      dampingRatio: 1,
+    });
+    expect(derived.stiffness).toBeCloseTo(springs.alertPresent.stiffness, 1);
+    expect(derived.damping).toBeCloseTo(springs.alertPresent.damping, 2);
+  });
+
+  it('a sheet\u2019s detent spring is its presentation spring as rendered (critical, same pace)', () => {
+    // Core Animation clamps UIKit\u2019s default spring to critical damping.
+    expect(naturalFrequency(toSpring(springs.sheetDetent))).toBeCloseTo(
+      naturalFrequency(toSpring(springs.sheetPresent)),
+      6,
+    );
+  });
+
+  it('scroll-to-top as a decay lands on the top along the measured curve', () => {
+    // 2000 pt from the top: remaining distance every ~50 ms after the start.
+    const measured = [1257, 768, 475, 296, 186, 118];
+    const coast = solveDecay({
+      from: 0,
+      velocity: 9.7 * 2000,
+      rate: scroll.scrollToTopRate,
+    });
+    expect(coast.rest).toBeCloseTo(2000, -1);
+    measured.forEach((remaining, i) => {
+      expect(
+        Math.abs(2000 - coast.value((i + 1) * 0.05) - remaining),
+      ).toBeLessThan(30);
+    });
+  });
+
+  it('the rubber band reproduces UIScrollView\u2019s released overscroll', () => {
+    // Finger 100 / 300 / 600 pt past the edge of an 874 pt view, minus the
+    // pan\u2019s 10 pt hysteresis.
+    const cases: [number, number][] = [
+      [90, 47],
+      [290, 135],
+      [590, 236.67],
+    ];
+    for (const [overflow, shown] of cases) {
+      expect(
+        Math.abs(
+          rubberBand(overflow, 874, scroll.rubberBand.coefficient) - shown,
+        ),
+      ).toBeLessThan(0.5);
+    }
   });
 
   it('deceleration rates are per-millisecond factors in (0, 1), fast below normal', () => {

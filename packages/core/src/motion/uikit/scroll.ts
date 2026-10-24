@@ -22,15 +22,20 @@ export const scroll = {
   decelerationRate: {
     /**
      * Normal deceleration: the release velocity is multiplied by this every
-     * millisecond. The value of the public SDK constant
-     * `UIScrollView.DecelerationRate.normal`; its per-millisecond meaning is
-     * the one WWDC18 803's projection function assumes ((v ÷ 1000) · r ÷
-     * (1 − r)).
+     * millisecond, as a continuous exponential (UIScrollView keeps ln r,
+     * −0.002002, and velocities in pt/ms; decay.ts). The scroll view's own
+     * target for a release (`scrollViewWillEndDragging`) is
+     * v · r ÷ (1 − r), within 1 %: WWDC18 803's projection function.
      * @source apple-docs https://developer.apple.com/documentation/uikit/uiscrollview/decelerationrate-swift.struct/normal
      *   (the constant, not its number)
      * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
      *   iPhone 17 Pro, rawValue read, Oct 23 2026 (also a new scroll view's
      *   decelerationRate)
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, deceleration ivars read mid-coast
+     *   (`_decelerationFactor` 0.998, `_decelerationLnFactorV` −0.002002, the
+     *   velocity decaying 0.4343 over 400 ms) and willEndDragging targets,
+     *   Oct 23 2026
      */
     normal: 0.998,
     /**
@@ -38,20 +43,23 @@ export const scroll = {
      * @source apple-docs https://developer.apple.com/documentation/uikit/uiscrollview/decelerationrate-swift.struct/fast
      *   (the constant, not its number)
      * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, rawValue read, Oct 23 2026
+     *   iPhone 17 Pro, rawValue read and `_decelerationFactor` 0.99 (ln
+     *   −0.01005) mid-coast, Oct 23 2026
      */
     fast: 0.99,
   },
   rubberBand: {
     /**
      * c in b = (1 − 1 ÷ (x·c ÷ d + 1))·d, d = the scroll view's size on the
-     * axis (rubberBand.ts).
-     * @source GUESS — formula and constant from Grant Paul,
-     *   twitter.com/chpwn/status/285540192096497664; reproduced within 0.5 pt
-     *   by I. Lobanov's device measurement of UIScrollView (finger 500 / 1000
-     *   / 1500 pt past the edge → 205 / 328 / 409 pt on an 812 pt view),
-     *   medium.com/@esskeetit/how-uiscrollview-works-e418adc47060
-     * @measure M-S5
+     * axis (rubberBand.ts), x = the finger's travel past the edge after the
+     * pan's 10 pt hysteresis.
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, UIScrollView offsets released 100 / 300 / 600 pt past
+     *   the edge of an 874 pt view: 47 / 135 / 236.67 against the formula's
+     *   46.85 / 134.9 / 236.6, Oct 23 2026
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, sheet drags hooked: UISheetPresentationController
+     *   passes `withRubberBandCoefficient: 0.55` on every drag, Oct 23 2026
      */
     coefficient: 0.55,
   },
@@ -60,7 +68,10 @@ export const scroll = {
    * a coast hitting an edge (its velocity handed to the spring).
    * @source GUESS — critically damped as in I. Lobanov's UIScrollView
    *   reimplementation (no oscillation at the bound); pace from SwiftUI's
-   *   `.smooth` default duration until measured
+   *   `.smooth` default duration. Measured so far (iOS 26.2 simulator, Oct 23
+   *   2026): back to the edge in about 0.5 s with no overshoot, but no single
+   *   spring from rest fits releases 47, 135 and 237 pt past the edge, so
+   *   UIKit's bounce is not a plain spring; the model is still to fit
    * @measure M-S3
    */
   bounce: {duration: 0.5, bounce: 0},
@@ -92,4 +103,15 @@ export const scroll = {
    *   (PRESS_ONSET_MS in packages/core/src/utils/pressGesture.ts, 2026-10-06)
    */
   delaysContentTouchesMs: 150,
+  /**
+   * Scroll-to-top after a status-bar tap: not a spring. The offset
+   * approaches the top as 1 − e^(−9.7 t) whatever the distance (done in about
+   * 1.6 s for 500, 2000 or 8000 pt), which is a decay at this per-millisecond
+   * rate (e^(−0.0097)) whose rest point is the top: `animator.decay` with a
+   * starting velocity of 9.7 × the distance per second.
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, setContentOffset log after status-bar taps (starts 85–95
+   *   ms after the tap), Oct 23 2026
+   */
+  scrollToTopRate: 0.99035,
 } as const;

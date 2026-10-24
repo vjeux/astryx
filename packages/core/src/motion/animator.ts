@@ -2,7 +2,8 @@
 
 /**
  * @file animator.ts
- * @input An element, target values, and a spring or a decay
+ * @input An element, target values, and a spring, a decay or any closed-form
+ *   curve
  * @output Exports `createAnimator`: a compositor animator for translate,
  *   rotate, scale and opacity, with presentation values and velocities read
  *   from the analytic curves, velocity-preserving retargeting, freeze-in-place
@@ -15,7 +16,8 @@
  *
  * Each animated value (x, y, rotate, scaleX, scaleY, opacity) follows a
  * closed-form curve: a spring (spring.ts), a UIScrollView coast with an edge
- * bounce (decay.ts), or a Reduced Motion cross-fade. The curves are baked into
+ * bounce (decay.ts), a curve handed to `play` (a spring chasing a moving
+ * target, a fitted UIKit curve), or a Reduced Motion cross-fade. The curves are baked into
  * Web Animations keyframes on the individual transform properties (`translate`,
  * `rotate`, `scale`) and `opacity`, sampled adaptively until linear
  * interpolation between keyframes is within a fraction of a pixel, and played
@@ -116,6 +118,22 @@ export interface AnimateOptions {
   reducedMotion?: 'crossfade' | 'instant' | 'keep';
 }
 
+/**
+ * Any closed-form curve to play on the compositor (`Animator.play`): a
+ * spring chasing a moving target, a piecewise curve, a fitted UIKit curve.
+ * Times are seconds from the curve's start; the value at `duration` is the
+ * end state. Start it at the property's presentation value (`get`) to
+ * continue without a jump.
+ */
+export interface MotionCurve {
+  /** Length, s. */
+  readonly duration: number;
+  /** Value `t` seconds after the start (0 ≤ t ≤ duration). */
+  at(t: number): number;
+  /** Velocity `t` seconds after the start, units/s. */
+  velocity(t: number): number;
+}
+
 export interface AnimatorOptions {
   /** Starting values; identity by default. Never read from the DOM. */
   initial?: MotionValues;
@@ -170,6 +188,18 @@ export interface Animator {
   animate(
     to: MotionValues,
     transition: SpringTransition,
+    options?: AnimateOptions,
+  ): MotionHandle;
+  /**
+   * Plays given curves (`scale` drives both axes), baked like a spring:
+   * presentation values, velocities, `stop`, `finished` and the shared
+   * clock work the same, and a later `animate` starts from the curve's
+   * value and velocity. Reduced Motion treats a curve that moves x, y, rotate
+   * or scale as travel (`reducedMotion`, `'crossfade'` by default). Its
+   * handle has no spring of its own: `retarget` needs one.
+   */
+  play(
+    curves: Partial<Record<MotionProperty | 'scale', MotionCurve>>,
     options?: AnimateOptions,
   ): MotionHandle;
   /** Coasts with `velocity` like a released scroll view. */
@@ -733,6 +763,54 @@ export function createAnimator(
     }
   };
 
+  /**
+   * Reduced Motion: travel becomes UIKit's cross-fade (see the file header).
+   * Returns each property's new segment, or null to put it in place at once.
+   */
+  const crossfade = (
+    owner: HandleState,
+    time: number,
+    targets: Partial<Record<MotionProperty, number>>,
+    properties: MotionProperty[],
+    mode: 'crossfade' | 'instant',
+  ): Partial<Record<MotionProperty, Segment | null>> => {
+    const next: Partial<Record<MotionProperty, Segment | null>> = {};
+    const fade = timing.reducedMotionCrossFadeMs;
+    const opacityNow = valueAt('opacity', time);
+    const opacityTo = targets.opacity ?? opacityNow;
+    const entering = opacityTo > opacityNow + 1e-6;
+    const leaving = opacityTo < opacityNow - 1e-6;
+    for (const property of properties) {
+      if (!TRAVEL.includes(property)) {
+        continue;
+      }
+      const from = valueAt(property, time);
+      const toValue = targets[property] as number;
+      if (mode === 'instant' || entering) {
+        next[property] = null; // in place at once (and fade in)
+      } else if (leaving) {
+        next[property] = jumpSegment(owner, time, from, toValue, fade); // fade out, then move
+      } else {
+        next[property] = jumpSegment(owner, time, from, toValue, fade / 2); // dip
+      }
+    }
+    if (mode === 'instant') {
+      next.opacity = null;
+    } else if (entering || leaving) {
+      next.opacity = fadeSegment(owner, time, [
+        {at: 0, value: opacityNow},
+        {at: fade, value: opacityTo},
+      ]);
+    } else {
+      next.opacity = fadeSegment(owner, time, [
+        {at: 0, value: opacityNow},
+        {at: fade / 2, value: 0},
+        {at: fade, value: opacityTo},
+      ]);
+    }
+    return next;
+  };
+
   const animator: Animator = {
     get element() {
       return target;
@@ -802,39 +880,16 @@ export function createAnimator(
       const next: Partial<Record<MotionProperty, Segment | null>> = {};
 
       if (reduce) {
-        const fade = timing.reducedMotionCrossFadeMs;
-        const opacityNow = valueAt('opacity', time);
-        const opacityTo = targets.opacity ?? opacityNow;
-        const entering = opacityTo > opacityNow + 1e-6;
-        const leaving = opacityTo < opacityNow - 1e-6;
-        for (const property of properties) {
-          if (!TRAVEL.includes(property)) {
-            continue;
-          }
-          const from = valueAt(property, time);
-          const toValue = targets[property] as number;
-          if (mode === 'instant' || entering) {
-            next[property] = null; // in place at once (and fade in)
-          } else if (leaving) {
-            next[property] = jumpSegment(owner, time, from, toValue, fade); // fade out, then move
-          } else {
-            next[property] = jumpSegment(owner, time, from, toValue, fade / 2); // dip
-          }
-        }
-        if (mode === 'instant') {
-          next.opacity = null;
-        } else if (entering || leaving) {
-          next.opacity = fadeSegment(owner, time, [
-            {at: 0, value: opacityNow},
-            {at: fade, value: opacityTo},
-          ]);
-        } else {
-          next.opacity = fadeSegment(owner, time, [
-            {at: 0, value: opacityNow},
-            {at: fade / 2, value: 0},
-            {at: fade, value: opacityTo},
-          ]);
-        }
+        Object.assign(
+          next,
+          crossfade(
+            owner,
+            time,
+            targets,
+            properties,
+            mode === 'instant' ? 'instant' : 'crossfade',
+          ),
+        );
       } else {
         for (const property of properties) {
           const velocity = velocities[property] ?? velocityAt(property, time);
@@ -849,6 +904,85 @@ export function createAnimator(
         }
       }
 
+      const changed: MotionProperty[] = [];
+      for (const [property, segment] of Object.entries(next) as [
+        MotionProperty,
+        Segment | null,
+      ][]) {
+        interrupt(property, time);
+        changed.push(property);
+        if (segment == null) {
+          segments.delete(property);
+          resting[property] = targets[property] ?? valueAt(property, time);
+        } else {
+          segments.set(property, segment);
+        }
+      }
+      commit(changed, time);
+      return makeHandle(owner, changed, finished, time);
+    },
+
+    play(curves, playOptions = {}) {
+      const time = playOptions.at ?? now();
+      const {owner, finished} = newOwner();
+      const byProperty: Partial<Record<MotionProperty, MotionCurve>> = {};
+      for (const [key, curve] of Object.entries(curves) as [
+        MotionProperty | 'scale',
+        MotionCurve | undefined,
+      ][]) {
+        if (curve == null) {
+          continue;
+        }
+        if (!Number.isFinite(curve.duration) || curve.duration < 0) {
+          throw new RangeError(
+            `animator: a curve needs a finite duration ≥ 0 (got ${curve.duration})`,
+          );
+        }
+        for (const property of expandList([key])) {
+          byProperty[property] = curve;
+        }
+      }
+      const properties = Object.keys(byProperty) as MotionProperty[];
+      const targets: Partial<Record<MotionProperty, number>> = {};
+      for (const property of properties) {
+        const curve = byProperty[property] as MotionCurve;
+        targets[property] = curve.at(curve.duration);
+      }
+      const mode = playOptions.reducedMotion ?? 'crossfade';
+      const travels = properties.some(
+        p =>
+          TRAVEL.includes(p) &&
+          ((byProperty[p] as MotionCurve).duration > 0 ||
+            Math.abs((targets[p] as number) - valueAt(p, time)) > 1e-9),
+      );
+      const next: Partial<Record<MotionProperty, Segment | null>> =
+        mode !== 'keep' && travels && prefersReducedMotion()
+          ? crossfade(
+              owner,
+              time,
+              targets,
+              properties,
+              mode === 'instant' ? 'instant' : 'crossfade',
+            )
+          : {};
+      for (const property of properties) {
+        if (property in next) {
+          continue;
+        }
+        const curve = byProperty[property] as MotionCurve;
+        next[property] =
+          curve.duration === 0
+            ? null
+            : {
+                start: time,
+                duration: Math.min(MAX_DURATION_MS, curve.duration * 1000),
+                target: targets[property] as number,
+                at: t => curve.at(t / 1000),
+                speed: t => curve.velocity(t / 1000),
+                jumps: [],
+                owner,
+              };
+      }
       const changed: MotionProperty[] = [];
       for (const [property, segment] of Object.entries(next) as [
         MotionProperty,
