@@ -27,6 +27,12 @@ export interface BusyWindow {
 /**
  * Holds the page's main thread for `ms` (a synchronous loop: no task, frame,
  * rAF, event or microtask runs meanwhile). Resolves with the window it held.
+ *
+ * Block MID-FLIGHT only: start the gesture or animation first. A touch that
+ * starts while the main thread is busy does not scroll or begin a gesture in
+ * headless Chromium, even with only passive listeners, and an animation that
+ * has not started cannot start (see `waitForAnimation`). Finger tracking
+ * under a busy main thread is a simulator proof, not a Playwright one.
  */
 export async function blockMainThread(
   page: Page,
