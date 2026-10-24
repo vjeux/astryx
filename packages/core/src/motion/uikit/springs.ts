@@ -34,6 +34,30 @@
  */
 const UIKIT_DEFAULT_SPRING = {mass: 3, stiffness: 1000, damping: 500} as const;
 
+/** Push and pop (see `springs.navigationPush`). */
+const NAVIGATION_SPRING = {response: 0.3, dampingRatio: 1} as const;
+
+/**
+ * A sheet's fast release and swipe dismissal (see `springs.sheetReleaseFast`):
+ * the presentation's pace at 80 % damping.
+ */
+const SHEET_RELEASE_FAST_SPRING = {
+  response: 0.3441442326,
+  dampingRatio: 0.8,
+} as const;
+
+/**
+ * Alerts and action sheets, presenting and dismissing (see
+ * `springs.alertPresent`): UIKit's legacy 0.404 s spring, critically damped.
+ */
+const ALERT_SPRING = {mass: 1, stiffness: 522.35, damping: 45.71} as const;
+
+/** Menus and context menus opening (see `springs.menuOpen`). */
+const MENU_OPEN_SPRING = {response: 0.32, dampingRatio: 0.8} as const;
+
+/** Menus and context menus closing (see `springs.menuClose`). */
+const MENU_CLOSE_SPRING = {response: 0.35, dampingRatio: 0.85} as const;
+
 export const springs = {
   // ---------------------------------------------------------------------
   // Sourced presets
@@ -106,13 +130,13 @@ export const springs = {
    *   writes to the cards' CAPresentationModifiers every frame (rms 5e-4 of
    *   the travel), Oct 23 2026
    */
-  navigationPush: {response: 0.3, dampingRatio: 1},
+  navigationPush: NAVIGATION_SPRING,
   /**
    * Pop (back button or programmatic): identical to the push.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, CAPresentationModifier fit as for the push, Oct 23 2026
    */
-  navigationPop: {response: 0.3, dampingRatio: 1},
+  navigationPop: NAVIGATION_SPRING,
   /**
    * Interactive pop finishing or cancelling after the finger lifts, starting
    * from the finger's velocity; which one is `navigation.interactivePop*`.
@@ -168,14 +192,14 @@ export const springs = {
    *   iPhone 17 Pro, CASpringAnimation dump over 36 releases (mass 1,
    *   stiffness 333.333, damping 29.212), Oct 23 2026
    */
-  sheetReleaseFast: {response: 0.3441442326, dampingRatio: 0.8},
+  sheetReleaseFast: SHEET_RELEASE_FAST_SPRING,
   /**
    * Sheet dismissed by a swipe: the fast-release spring.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, CASpringAnimation dump (300 pt swipe in 0.15 s:
    *   stiffness 333.333, damping 29.212), Oct 23 2026
    */
-  sheetDismissSwipe: {response: 0.3441442326, dampingRatio: 0.8},
+  sheetDismissSwipe: SHEET_RELEASE_FAST_SPRING,
 
   // ---------------------------------------------------------------------
   // Alerts, action sheets, menus
@@ -192,26 +216,26 @@ export const springs = {
    *   (mass 1, stiffness 522.350, damping 45.710, duration 0.404),
    *   Oct 23 2026
    */
-  alertPresent: {mass: 1, stiffness: 522.35, damping: 45.71},
+  alertPresent: ALERT_SPRING,
   /**
    * Alert dismissing: the same spring, opacity only.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, CASpringAnimation dump, Oct 23 2026
    */
-  alertDismiss: {mass: 1, stiffness: 522.35, damping: 45.71},
+  alertDismiss: ALERT_SPRING,
   /**
    * Action sheet (UIAlertController .actionSheet) appearing: identical to
    * the alert.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, CASpringAnimation dump, Oct 23 2026
    */
-  actionSheetPresent: {mass: 1, stiffness: 522.35, damping: 45.71},
+  actionSheetPresent: ALERT_SPRING,
   /**
    * Action sheet dismissing: identical to the alert.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, CASpringAnimation dump, Oct 23 2026
    */
-  actionSheetDismiss: {mass: 1, stiffness: 522.35, damping: 45.71},
+  actionSheetDismiss: ALERT_SPRING,
   /**
    * UIMenu (from a button) opening; UIKit drives it per frame and lets it
    * track a finger still on the screen.
@@ -219,26 +243,26 @@ export const springs = {
    *   iPhone 17 Pro, `_animateUsingSpringWithDampingRatio:response:tracking:`
    *   hooked (0.8, 0.32, tracking), Oct 23 2026
    */
-  menuOpen: {response: 0.32, dampingRatio: 0.8},
+  menuOpen: MENU_OPEN_SPRING,
   /**
    * UIMenu closing (a tap outside).
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, the same hook (0.85, 0.35, not tracking), Oct 23 2026
    */
-  menuClose: {response: 0.35, dampingRatio: 0.85},
+  menuClose: MENU_CLOSE_SPRING,
   /**
    * Context menu (UIContextMenuInteraction): the preview lifting once the
    * long press commits.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, the same hook (0.8, 0.32, tracking), Oct 23 2026
    */
-  contextMenuLift: {response: 0.32, dampingRatio: 0.8},
+  contextMenuLift: MENU_OPEN_SPRING,
   /**
    * Context menu dismissing (a tap outside).
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, the same hook (0.85, 0.35, not tracking), Oct 23 2026
    */
-  contextMenuDismiss: {response: 0.35, dampingRatio: 0.85},
+  contextMenuDismiss: MENU_CLOSE_SPRING,
 
   // ---------------------------------------------------------------------
   // Controls
@@ -285,12 +309,6 @@ export const springs = {
    *   keyboardLayoutGuide-pinned view, Oct 23 2026
    */
   keyboard: {mass: 1, stiffness: 555.0265, damping: 47.118},
-  /**
-   * Scroll-to-top after a status-bar tap.
-   * @source GUESS — UIKit's default spring
-   * @measure M-ST1
-   */
-  scrollToTop: UIKIT_DEFAULT_SPRING,
   /**
    * Banner / toast sliding in from the top edge (system notification
    * banner as the reference).
