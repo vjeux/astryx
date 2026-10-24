@@ -147,6 +147,16 @@ export class PanGestureRecognizer extends GestureRecognizer {
     return this.locked(value);
   }
 
+  /**
+   * Change the allowed direction for the next gesture (a pan in progress
+   * keeps the one it began with). The element's touch-action is derived
+   * when the recognizer is attached: switching between directions that
+   * leave the browser the same touches (up and down) needs nothing more.
+   */
+  setDirection(direction: PanDirection): void {
+    this.direction = direction;
+  }
+
   /** UIKit's `setTranslation(_:in:)`: make the current translation read `value`. */
   setTranslation(value: Point): void {
     const base = this.isHandoff ? this.handoffTravel() : this.raw;
