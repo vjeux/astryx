@@ -52,9 +52,13 @@ once for the rest, with no extra request on either.
   whose pointer later turns coarse keeps the desktop behavior.
 - The shared touch core is reached only through touch modules, so the
   desktop condition drops it and the tables' side-effect registrations with
-  it. Two leaks remain today: the theme's role validation pulls `roles.ts`
-  and `spring.ts` (about 1.5 KB gzip) into every theme user, and the gestures
-  barrel registers the gesture table on import.
+  it. The tables register their roles only when a role is first resolved,
+  and a theme writes roles without the registry.
+- What a theme user still ships for motion roles, about 1 KB gzip, is an
+  owner question: the spring conversions that write a role's CSS value
+  (`0.6s 0.1`) and the generated role list that validates ids. Either
+  validation runs only in development builds, or a role's CSS value keeps
+  its own vocabulary so a theme does no spring math.
 - `check-touch-modules.mjs` enforces the rule from source: a touch module is
   imported only through `#touch/`, and a file that imports one reads the
   touch presentation. Its runtime half is a test project that resolves
