@@ -147,6 +147,7 @@ export function usePressTracker(
         highlightDelay: options.highlightDelay,
         cancelTravel: options.cancelTravel,
         quickTapFlash: options.quickTapFlash,
+        preventsTextSelection: options.preventsTextSelection,
         vetoesAncestorRecognizer: recognizer =>
           optionsRef.current.vetoesAncestorRecognizer?.(recognizer) ??
           defaultVeto(recognizer),

@@ -543,11 +543,13 @@ export class GestureHost {
   ): {
     recognizers: GestureRecognizer[];
     consumer: TouchConsumer | null;
+    consumerElement: Element | null;
     hovers: HoverGestureRecognizer[];
   } {
     const recognizers: GestureRecognizer[] = [];
     const hovers: HoverGestureRecognizer[] = [];
     let consumer: TouchConsumer | null = null;
+    let consumerElement: Element | null = null;
     let hasConsumerOwner = pointerType == null;
     for (
       let node: Node | null = target instanceof Node ? target : null;
@@ -567,18 +569,20 @@ export class GestureHost {
       }
       if (registration?.consumer != null) {
         consumer = registration.consumer;
+        consumerElement = node;
         hasConsumerOwner = true;
         continue;
       }
       for (const type of this.delegated) {
         if (node.hasAttribute(type.attribute)) {
           consumer = type.create(node, pointerType);
+          consumerElement = consumer == null ? null : node;
           hasConsumerOwner = true;
           break;
         }
       }
     }
-    return {recognizers, consumer, hovers};
+    return {recognizers, consumer, consumerElement, hovers};
   }
 
   /**
@@ -594,15 +598,25 @@ export class GestureHost {
   private lockSelection(
     id: number,
     recognizers: ReadonlyArray<GestureRecognizer>,
+    consumer: TouchConsumer | null,
+    consumerElement: Element | null,
     target: EventTarget | null,
   ): void {
     const elements = new Set<Element>();
+    // A press consumer whose hold acts (a hold-repeat, a held finger sliding
+    // across a group) asks too; a plain control or row does not.
+    if (consumerElement != null && consumer?.preventsTextSelection === true) {
+      elements.add(consumerElement);
+    }
     for (const recognizer of recognizers) {
       if (
-        // A long press (a menu, a hold-repeat) or a recognizer that asks: a
-        // hold that does something.
+        // A long press whose hold acts (a menu, a hold-repeat) or a
+        // recognizer that asks: a hold that does something. A long press with
+        // no minimum duration is a touch-down (a zoom stage's), whose hold
+        // does nothing; one that tracks a finger opts in explicitly.
         (recognizer.preventsTextSelection ||
-          recognizer instanceof LongPressGestureRecognizer) &&
+          (recognizer instanceof LongPressGestureRecognizer &&
+            recognizer.minimumPressDuration > 0)) &&
         // Only a recognizer that would take this touch locks for it.
         recognizer.isEnabled &&
         recognizer.acceptsTouchInput &&
@@ -651,14 +665,17 @@ export class GestureHost {
         stale.push(previous);
       }
       const target = touch.target instanceof Node ? touch.target : event.target;
-      const {recognizers, consumer} = this.participantsAt(target, 'touch');
+      const {recognizers, consumer, consumerElement} = this.participantsAt(
+        target,
+        'touch',
+      );
       if (recognizers.length === 0 && consumer == null) {
         continue;
       }
       const id = this.nextId++;
       this.touchIds.set(touch.identifier, id);
       if (locksSelectionFor('touch', this.doc.defaultView)) {
-        this.lockSelection(id, recognizers, target);
+        this.lockSelection(id, recognizers, consumer, consumerElement, target);
       }
       this.watchTarget(touch.identifier, target);
       this.lastFed.set(id, {x: touch.clientX, y: touch.clientY, time});
@@ -1013,7 +1030,7 @@ export class GestureHost {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       return;
     }
-    const {recognizers, consumer} = this.participantsAt(
+    const {recognizers, consumer, consumerElement} = this.participantsAt(
       event.target,
       event.pointerType,
     );
@@ -1023,7 +1040,13 @@ export class GestureHost {
     const id = this.nextId++;
     this.pointerIds.set(event.pointerId, id);
     if (locksSelectionFor(event.pointerType, this.doc.defaultView)) {
-      this.lockSelection(id, recognizers, event.target);
+      this.lockSelection(
+        id,
+        recognizers,
+        consumer,
+        consumerElement,
+        event.target,
+      );
     }
     this.arena.began([
       {

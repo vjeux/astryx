@@ -105,6 +105,13 @@ export interface PressTrackerOptions {
    * and the control does not track it at all.
    */
   isBraking?: (touch: GestureTouch) => boolean;
+  /**
+   * The control's hold acts (a hold-repeat, a held finger sliding across a
+   * group), so a held finger never starts text selection or the callout on
+   * it. Without it a long press keeps native selection, as on a control whose
+   * hold does nothing (`spec:AST-094` FR41). @default false
+   */
+  preventsTextSelection?: boolean;
 }
 
 const PRESS = UIKIT_GESTURES.press;
@@ -160,6 +167,9 @@ export class PressTracker implements TouchConsumer {
   isTouchInside = false;
   trackingExpansion: number;
 
+  /** See PressTrackerOptions.preventsTextSelection. */
+  readonly preventsTextSelection: boolean;
+
   private readonly options: PressTrackerOptions;
   private touchId: number | null = null;
   private bounds: PressBounds | null = null;
@@ -170,6 +180,7 @@ export class PressTracker implements TouchConsumer {
 
   constructor(options: PressTrackerOptions) {
     this.options = options;
+    this.preventsTextSelection = options.preventsTextSelection ?? false;
     this.trackingExpansion =
       options.trackingExpansion ??
       UIKIT_GESTURES.control.trackingExpansion.value;

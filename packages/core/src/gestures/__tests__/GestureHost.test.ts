@@ -18,6 +18,7 @@ import {GestureHost} from '../GestureHost';
 import {HoverGestureRecognizer} from '../HoverGestureRecognizer';
 import {LongPressGestureRecognizer} from '../LongPressGestureRecognizer';
 import {PanGestureRecognizer} from '../PanGestureRecognizer';
+import {PressTracker} from '../PressTracker';
 import {TapGestureRecognizer} from '../TapGestureRecognizer';
 import {ManualClock, RecordingConsumer} from './harness';
 
@@ -844,6 +845,73 @@ describe('GestureHost', () => {
     touch('touchstart', trigger, [finger], [finger], 0);
     expect(inline()).toBe('none');
     touch('touchend', trigger, [finger], [], 600);
+  });
+
+  it('keeps native selection under a long press used as a touch-down (no minimum duration), and locks under one whose hold acts or that opts in (spec:AST-094 FR41)', () => {
+    detachers.push(coarsePrimaryPointer());
+    const {menu, photo, group} = mount(
+      '<div id="menu" style="user-select: text"></div>' +
+        '<div id="photo" style="user-select: text"></div>' +
+        '<div id="group" style="user-select: text"></div>',
+    );
+    // The lock alone: no permanent long-press style.
+    const own = {manageStyle: false};
+    detachers.push(
+      host.attach(menu, new LongPressGestureRecognizer({name: 'menu'}), own),
+      // A zoom stage's touch-down: its hold does nothing.
+      host.attach(
+        photo,
+        new LongPressGestureRecognizer({name: 'down', minimumPressDuration: 0}),
+        own,
+      ),
+      // A zero-duration press that tracks a finger across a group opts in.
+      host.attach(
+        group,
+        new LongPressGestureRecognizer({
+          name: 'group',
+          minimumPressDuration: 0,
+          preventsTextSelection: true,
+        }),
+        own,
+      ),
+    );
+    const finger = {id: 1, x: 5, y: 5};
+    const held = (element: HTMLElement, time: number) => {
+      touch('touchstart', element, [finger], [finger], time);
+      const during = element.style.getPropertyValue('user-select');
+      touch('touchend', element, [finger], [], time + 100);
+      return [during, element.style.getPropertyValue('user-select')];
+    };
+    expect(held(menu, 0)).toEqual(['none', 'text']);
+    expect(held(photo, 200)).toEqual(['text', 'text']);
+    expect(held(group, 400)).toEqual(['none', 'text']);
+  });
+
+  it('locks under a press tracker whose hold acts (preventsTextSelection), not under a plain one (spec:AST-094 FR41)', () => {
+    detachers.push(coarsePrimaryPointer());
+    const {stepper, button} = mount(
+      '<div id="stepper" style="user-select: text"></div>' +
+        '<div id="button" style="user-select: text"></div>',
+    );
+    const bounds = {left: 0, top: 0, right: 100, bottom: 100};
+    detachers.push(
+      host.attachConsumer(
+        stepper,
+        new PressTracker({
+          getBounds: () => bounds,
+          preventsTextSelection: true,
+        }),
+      ),
+      host.attachConsumer(button, new PressTracker({getBounds: () => bounds})),
+    );
+    const finger = {id: 1, x: 5, y: 5};
+    touch('touchstart', stepper, [finger], [finger], 0);
+    expect(stepper.style.getPropertyValue('user-select')).toBe('none');
+    touch('touchend', stepper, [finger], [], 600);
+    expect(stepper.style.getPropertyValue('user-select')).toBe('text');
+    touch('touchstart', button, [finger], [finger], 700);
+    expect(button.style.getPropertyValue('user-select')).toBe('text');
+    touch('touchend', button, [finger], [], 1300);
   });
 
   it('keeps native selection on a delegated pressable, whose hold does nothing (spec:AST-094 FR41)', () => {

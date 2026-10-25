@@ -180,4 +180,11 @@ export interface TouchConsumer {
    * (attached above this consumer) from beginning for a touch on it.
    */
   allowsAncestorRecognizer?(recognizer: unknown): boolean;
+  /**
+   * The consumer's hold acts (a hold-repeat, a held finger sliding across a
+   * group), so a held finger never starts text selection or the callout on
+   * its element. A consumer whose hold does nothing leaves native long-press
+   * selection alone (`spec:AST-094` FR41). @default false
+   */
+  readonly preventsTextSelection?: boolean;
 }
