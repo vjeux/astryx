@@ -1,0 +1,127 @@
+{
+ "method": "Android 15 emulator (golden image of Oct 25 2026), Chromium 158, Gboard; screen recorded at 540x1200, 60 fps. The page paints a 60x60 marker red on each keyboard report; lag = first recorded frame showing the red marker minus the first recorded frame where Gboard has moved. Video clock only.",
+ "overlaysContent + geometrychange (overlay set at touchstart, cleared after the keyboard is down)": [
+  {
+   "gboardFirstMovedFrameMs": 4426,
+   "reportMarkerFrameMs": 4426,
+   "lagMs": 0
+  },
+  {
+   "gboardFirstMovedFrameMs": 5894,
+   "reportMarkerFrameMs": 5926,
+   "lagMs": 32
+  },
+  {
+   "gboardFirstMovedFrameMs": 8892,
+   "reportMarkerFrameMs": 8929,
+   "lagMs": 37
+  },
+  {
+   "gboardFirstMovedFrameMs": 11984,
+   "reportMarkerFrameMs": 12026,
+   "lagMs": 42
+  },
+  {
+   "gboardFirstMovedFrameMs": 15043,
+   "reportMarkerFrameMs": 15108,
+   "lagMs": 65
+  },
+  {
+   "gboardFirstMovedFrameMs": 18176,
+   "reportMarkerFrameMs": 18226,
+   "lagMs": 50
+  },
+  {
+   "gboardFirstMovedFrameMs": 21276,
+   "reportMarkerFrameMs": 21311,
+   "lagMs": 35
+  },
+  {
+   "gboardFirstMovedFrameMs": 24411,
+   "reportMarkerFrameMs": 24477,
+   "lagMs": 66
+  },
+  {
+   "gboardFirstMovedFrameMs": 27508,
+   "reportMarkerFrameMs": 27543,
+   "lagMs": 35
+  },
+  {
+   "gboardFirstMovedFrameMs": 30625,
+   "reportMarkerFrameMs": 30660,
+   "lagMs": 35
+  },
+  {
+   "gboardFirstMovedFrameMs": 33784,
+   "reportMarkerFrameMs": 33845,
+   "lagMs": 61
+  },
+  {
+   "gboardFirstMovedFrameMs": 36859,
+   "reportMarkerFrameMs": 36926,
+   "lagMs": 67
+  }
+ ],
+ "default visual-viewport resize": [
+  {
+   "gboardFirstMovedFrameMs": 2473,
+   "reportMarkerFrameMs": 2487,
+   "lagMs": 14
+  },
+  {
+   "gboardFirstMovedFrameMs": 5589,
+   "reportMarkerFrameMs": 5622,
+   "lagMs": 33
+  },
+  {
+   "gboardFirstMovedFrameMs": 8671,
+   "reportMarkerFrameMs": 8706,
+   "lagMs": 35
+  },
+  {
+   "gboardFirstMovedFrameMs": 11772,
+   "reportMarkerFrameMs": 11805,
+   "lagMs": 33
+  },
+  {
+   "gboardFirstMovedFrameMs": 14870,
+   "reportMarkerFrameMs": 14905,
+   "lagMs": 35
+  },
+  {
+   "gboardFirstMovedFrameMs": 17972,
+   "reportMarkerFrameMs": 18006,
+   "lagMs": 34
+  },
+  {
+   "gboardFirstMovedFrameMs": 21071,
+   "reportMarkerFrameMs": 21105,
+   "lagMs": 34
+  },
+  {
+   "gboardFirstMovedFrameMs": 24189,
+   "reportMarkerFrameMs": 24207,
+   "lagMs": 18
+  },
+  {
+   "gboardFirstMovedFrameMs": 27254,
+   "reportMarkerFrameMs": 27289,
+   "lagMs": 35
+  },
+  {
+   "gboardFirstMovedFrameMs": 30354,
+   "reportMarkerFrameMs": 30371,
+   "lagMs": 17
+  },
+  {
+   "gboardFirstMovedFrameMs": 33472,
+   "reportMarkerFrameMs": 33505,
+   "lagMs": 33
+  },
+  {
+   "gboardFirstMovedFrameMs": 36555,
+   "reportMarkerFrameMs": 36588,
+   "lagMs": 33
+  }
+ ]
+}
