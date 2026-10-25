@@ -26,6 +26,10 @@ test.afterAll(async () => {
   await storybook?.close();
 });
 
+// The drag clip's video. Playwright refuses `video` inside a describe group
+// (it forces a new worker), so it is set for the file.
+test.use({video: {mode: 'on', size: {width: 800, height: 300}}});
+
 const TOLERANCE = 1.5;
 
 async function mount(page: Page, storyId: string, direction = 'ltr') {
@@ -308,8 +312,6 @@ test('forced colors and reduced motion keep the tooltip over the thumb', async (
 });
 
 test.describe('drag clip', () => {
-  test.use({video: {mode: 'on', size: {width: 800, height: 300}}});
-
   test('the tooltip rides the thumb through a drag', async ({page}) => {
     await page.setViewportSize({width: 800, height: 300});
     await mount(page, 'core-slider--default');
