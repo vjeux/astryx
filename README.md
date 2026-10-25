@@ -36,3 +36,26 @@ Before (main) and after in one clip, started together at the same input: the sam
 | `cmp/8128-dim.gif` | #8128: the same drag 100 pt below the half detent and release. Before, the dim clears 40 % of the way down; after, it thins in a straight line to the bottom, then rides the release back. |
 
 `paths/8105-releases.gif` and `paths/8105-states.gif` were relabelled: P4 names its 3 px overshoot and P8 names canDismiss false.
+
+## One touch model (Oct 24)
+
+The stack now keys every touch behavior on a coarse primary pointer, iOS and Android alike (AST-094, #8316). These clips were recorded on each PR's head after that change.
+
+iOS 26.2 Mobile Safari on the simulator, labelled, 15 fps, 300 px wide, cropped to the page:
+
+| File | Paths |
+|---|---|
+| `ios/8105-releases.gif` | #8105 P1 to P4: a slow drag settles on the nearest detent; a flick from tall lands on half, and from half the same flick dismisses; the release starts at the finger's speed; a fast throw takes the 0.8-damped spring. |
+| `ios/8105-states.gif` | #8105 P5, P6, P8 to P10: a finger catches the settling sheet; a drag dismissal; a sheet that can't be dismissed lands on its peek; a settle through a 700 ms block; under reduced motion the release fades in place. |
+| `ios/8128-dim.gif` | #8128 P3 to P8: the dim rides the release; a catch holds it; a peek keeps its lighter scrim; a dismissal clears it; a 700 ms block; under reduced motion it fades with the sheet. |
+| `ios/8203-entrance.gif` | #8203 P4 and P6: a tap and a grab during the entrance are ignored, a close at 100 ms runs after the landing; under reduced motion the sheet fades in and out in place. |
+
+Chrome 124 on an Android 15 emulator, 540 × 1200 screen recording, cropped to the page, 30 fps, 270 px wide. Each clip passes the gap gate: no frame gap over 40 ms while the sheet moves.
+
+| File | Path |
+|---|---|
+| `android/8203-present-dismiss.gif` | #8203: a tap opens the sheet on the present spring; a tap on the dim closes it on the dismiss spring. |
+| `android/8105-flick-dismiss.gif` | #8105: from half, a flick dismisses on the release spring. |
+| `android/8109-tracking.gif` | #8109: the sheet follows the finger 1:1 down from tall, then settles on half. |
+
+The Android drag paths for #8105 (the slow settle) and #8128 (the dim drag) are pending a smooth-injection fix: injected drags there render below the gap gate's frame rate.
