@@ -1,0 +1,13 @@
+{
+  "bitrate": "4000000",
+  "browser": "org.chromium.chrome",
+  "browserVersion": "org.chromium.chrome versionName=158.0.8123.0",
+  "density": "280",
+  "file": "/home/vjeux/ios-astryx/analysis/c06-selection-controls-data/evidence/android2/v2-marks-checkbox-before.mp4",
+  "golden": "astryx35g-gate-202610250051",
+  "panel": "720x1600",
+  "serial": "emulator-5602",
+  "size": "540x1200",
+  "startedAt": 1792890034147,
+  "stoppedAt": 1792890039631
+}
