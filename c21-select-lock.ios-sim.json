@@ -1,0 +1,19 @@
+{
+  "what": "The touch wheel's Minute column under a held finger: its inline (from the gesture host's selection lock) and computed -webkit-user-select and -webkit-touch-callout, at each touch and pointer event and every sixth frame",
+  "where": "Mobile Safari, iOS 26.2 simulator (iPhone 17 Pro), TimeInput story bottom-sheet-with-min-max, one-touch-model stack top",
+  "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+  "columns": ["ms", "event", "inline user-select", "inline touch-callout", "computed -webkit-user-select", "computed -webkit-touch-callout"],
+  "trace": [
+    [2511, "frame", "", "", "text", "default"],
+    [2616, "pointerdown:in", "", "", "text", "default"],
+    [2616, "touchstart:in", "", "", "text", "default"],
+    [2621, "frame", "none", "none", "none", "none"],
+    [3627, "frame", "none", "none", "none", "none"],
+    [4628, "frame", "none", "none", "none", "none"],
+    [5227, "frame", "none", "none", "none", "none"],
+    [5278, "pointerup:in", "none", "none", "none", "none"],
+    [5278, "touchend:in", "none", "none", "none", "none"],
+    [5327, "frame", "", "", "text", "default"]
+  ],
+  "summary": "From the finger landing (touchstart) to its lift (touchend, 2.66 s later) the column computes -webkit-user-select: none and -webkit-touch-callout: none, set inline by the gesture host; no contextmenu or selectstart fired; both are back to text/default on the next frame after the lift."
+}
