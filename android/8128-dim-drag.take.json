@@ -1,0 +1,14 @@
+{
+  "bitrate": "4000000",
+  "browser": "org.chromium.chrome",
+  "browserVersion": "org.chromium.chrome versionName=158.0.8123.0",
+  "busyEmulators": 3,
+  "density": "280",
+  "file": "/home/vjeux/ios-astryx/rig-c17-android/out-v2/A2-8128-dim-drag.mp4",
+  "golden": "astryx35g-gate-202610250051",
+  "panel": "720x1600",
+  "serial": "emulator-5604",
+  "size": "540x1200",
+  "startedAt": 1792890720775,
+  "stoppedAt": 1792890727653
+}

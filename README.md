@@ -50,7 +50,7 @@ iOS 26.2 Mobile Safari on the simulator, labelled, 15 fps, 300 px wide, cropped 
 | `ios/8128-dim.gif` | #8128 P3 to P8: the dim rides the release; a catch holds it; a peek keeps its lighter scrim; a dismissal clears it; a 700 ms block; under reduced motion it fades with the sheet. |
 | `ios/8203-entrance.gif` | #8203 P4 and P6: a tap and a grab during the entrance are ignored, a close at 100 ms runs after the landing; under reduced motion the sheet fades in and out in place. |
 
-Chrome 124 on an Android 15 emulator, 540 × 1200 screen recording, cropped to the page, 30 fps, 270 px wide. Each clip passes the gap gate: no frame gap over 40 ms while the sheet moves.
+Chrome 124 on an Android 15 emulator (a 1080 × 2400 panel), 540 × 1200 screen recording, cropped to the page, 30 fps, 270 px wide. Each clip passes the gap gate: no frame gap over 40 ms while the sheet moves.
 
 | File | Path |
 |---|---|
@@ -58,4 +58,9 @@ Chrome 124 on an Android 15 emulator, 540 × 1200 screen recording, cropped to t
 | `android/8105-flick-dismiss.gif` | #8105: from half, a flick dismisses on the release spring. |
 | `android/8109-tracking.gif` | #8109: the sheet follows the finger 1:1 down from tall, then settles on half. |
 
-The Android drag paths for #8105 (the slow settle) and #8128 (the dim drag) are pending a smooth-injection fix: injected drags there render below the gap gate's frame rate.
+Chromium 158 on the same Android 15 emulator (a 720 × 1600 panel), with a finger drag of one move per frame; 540 × 1200 recording, cropped to the page, 30 fps, 270 px wide, each under the gap gate. Each clip's `.take.json` names the emulator image, browser and panel it used.
+
+| File | Path |
+|---|---|
+| `android/8105-slow-settle.gif` | #8105: a slow drag down from tall follows the finger; let go, the sheet settles on the half detent. |
+| `android/8128-dim-drag.gif` | #8128: a drag 130 px below the half detent thins the dim with the sheet; let go, both spring back. |
