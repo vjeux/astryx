@@ -1,0 +1,34 @@
+{
+ "build": "#8287 d985ad12cd",
+ "story": "core-bottomsheet--mobile-keyboard",
+ "device": "Android 15 emulator (golden image), Chromium 158, Gboard",
+ "takes": {
+  "s8287c-1": {
+   "roomBeforeKeyboard": 0,
+   "roomUpAfterReportMs": 37,
+   "roomDownAfterReportMs": 9,
+   "room": 360,
+   "fieldBottomAtRest": 394.5,
+   "keyboardTop": 442.3,
+   "pagePan": 0
+  },
+  "s8287c-2": {
+   "roomBeforeKeyboard": 0,
+   "roomUpAfterReportMs": 24,
+   "roomDownAfterReportMs": 28,
+   "room": 360,
+   "fieldBottomAtRest": 394.5,
+   "keyboardTop": 442.3,
+   "pagePan": 0
+  },
+  "s8287c-3": {
+   "roomBeforeKeyboard": 0,
+   "roomUpAfterReportMs": 21,
+   "roomDownAfterReportMs": 26,
+   "room": 360,
+   "fieldBottomAtRest": 394.5,
+   "keyboardTop": 442.3,
+   "pagePan": 0
+  }
+ }
+}
