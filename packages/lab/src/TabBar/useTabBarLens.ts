@@ -96,6 +96,7 @@ import {
   UIKIT_GESTURES,
 } from '@astryxdesign/core/motion/uikit';
 import {useAnimator} from '@astryxdesign/core/motion/useAnimator';
+import {lockSelection} from '@astryxdesign/core/gestures/selectionLock';
 import {isRtlElement} from '@astryxdesign/core/hooks/isRtlElement';
 import {
   copyTransform,
@@ -458,11 +459,10 @@ export function useTabBarLens({
         name: 'tab-bar-selection',
         minimumPressDuration: 0,
         allowedPointerTypes: ['touch', 'pen'],
-        // Only the capsule's own box: the search tab beside it is a button.
-        shouldReceiveTouch: (_recognizer, touch) => {
-          const box = capsuleRef.current?.getBoundingClientRect();
-          return box != null && touch.x >= box.left && touch.x <= box.right;
-        },
+        // The hold lifts the lens and drags it, so no selection or callout
+        // starts under the finger; a press at 0 ms brings no lock of its
+        // own (`spec:AST-094` FR41).
+        selectionLock: lockSelection,
       }),
     recognizer => {
       switch (recognizer.state) {
@@ -534,7 +534,6 @@ export function useTabBarLens({
       body.animator.getVelocity('x', now) !== 0 ||
       body.animator.getVelocity('scaleX', now) !== 0;
     const options = isMoving ? {at: now} : {};
-    // Under a finger: the bar collapses for the minimize and the search tab.
     body.animator.animate(
       {x: target.x},
       {spring: tabBar.collapseTravel},
@@ -555,7 +554,7 @@ export function useTabBarLens({
       options,
     );
     playCopy(now, !isMoving, isMinimized ? COPY_FADE_S : COPY_HORIZON_S);
-  }, [isMinimized, isTouch, capsuleRef, body, copy]);
+  }, [isMinimized, capsuleRef, body, copy]);
 
   // Minimized, the bar's width can still change (a rotation, a split view):
   // the lens stays in the circle.
