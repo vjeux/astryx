@@ -7,7 +7,7 @@
  * @position Unit tests of packages/core/src/gestures/ScreenEdgePanGestureRecognizer.ts
  */
 
-import {describe, expect, it} from 'vitest';
+import {afterEach, describe, expect, it, vi} from 'vitest';
 import {UIKIT_SCREEN_EDGE_PAN} from '../../motion/uikit/gestures';
 import {ALL_NATIVE_TOUCH} from '../GestureRecognizer';
 import {ScreenEdgePanGestureRecognizer} from '../ScreenEdgePanGestureRecognizer';
@@ -60,11 +60,12 @@ describe('ScreenEdgePanGestureRecognizer', () => {
   });
 
   it('leaves a view wider than the edge zone every touch behavior, so its scrolling is untouched (spec:AST-094 FR18)', () => {
+    const resizes = watchResizes();
     expect(new ScreenEdgePanGestureRecognizer().nativeTouchBehavior).toEqual(
       ALL_NATIVE_TOUCH,
     );
     const page = new ScreenEdgePanGestureRecognizer();
-    page.view = viewOfSize(390, 844);
+    resizes.place(page, 390, 844);
     expect(page.nativeTouchBehavior).toEqual(ALL_NATIVE_TOUCH);
     // A pan from several edges too, off their zones.
     expect(
@@ -74,8 +75,9 @@ describe('ScreenEdgePanGestureRecognizer', () => {
   });
 
   it('takes the axis across its edge in the edge zone, a view no wider than the edge region (spec:AST-094 FR18)', () => {
+    const resizes = watchResizes();
     const leading = new ScreenEdgePanGestureRecognizer();
-    leading.view = viewOfSize(leading.edgeRegion, 844);
+    resizes.place(leading, leading.edgeRegion, 844);
     expect(leading.nativeTouchBehavior).toEqual({
       panX: false,
       panY: true,
@@ -83,7 +85,7 @@ describe('ScreenEdgePanGestureRecognizer', () => {
       doubleTapZoom: false,
     });
     const bottom = new ScreenEdgePanGestureRecognizer({edges: ['bottom']});
-    bottom.view = viewOfSize(390, 12);
+    resizes.place(bottom, 390, 12);
     expect(bottom.nativeTouchBehavior).toEqual({
       panX: true,
       panY: false,
@@ -92,8 +94,45 @@ describe('ScreenEdgePanGestureRecognizer', () => {
     });
     // One pixel wider than the band is not the edge zone.
     const wide = new ScreenEdgePanGestureRecognizer();
-    wide.view = viewOfSize(wide.edgeRegion + 1, 844);
+    resizes.place(wide, wide.edgeRegion + 1, 844);
     expect(wide.nativeTouchBehavior).toEqual(ALL_NATIVE_TOUCH);
+  });
+
+  it('tells its edge band without forcing a layout: attaching it and reading its touch behavior measure nothing (spec:AST-094 FR18, DEC-13)', () => {
+    const measure = vi.spyOn(Element.prototype, 'getBoundingClientRect');
+    const edge = new ScreenEdgePanGestureRecognizer();
+    edge.view = document.createElement('div');
+    expect(edge.nativeTouchBehavior).toEqual(ALL_NATIVE_TOUCH);
+    expect(measure).not.toHaveBeenCalled();
+  });
+
+  it('re-derives as its view resizes into and out of the edge band, says so each time, and stops watching a view it left (spec:AST-094 FR18, DEC-13)', () => {
+    const resizes = watchResizes();
+    const edge = new ScreenEdgePanGestureRecognizer();
+    let changes = 0;
+    edge.onNativeTouchBehaviorChange = () => changes++;
+    const view = document.createElement('div');
+    edge.view = view;
+    // Wide until a layout gives the view a size.
+    expect(edge.nativeTouchBehavior).toEqual(ALL_NATIVE_TOUCH);
+    resizes.to(view, edge.edgeRegion, 844);
+    expect(edge.nativeTouchBehavior).toEqual({
+      panX: false,
+      panY: true,
+      pinchZoom: true,
+      doubleTapZoom: false,
+    });
+    expect(changes).toBe(1);
+    resizes.to(view, 300, 844);
+    expect(edge.nativeTouchBehavior).toEqual(ALL_NATIVE_TOUCH);
+    expect(changes).toBe(2);
+    // Still wider than the band: the touch behavior did not change.
+    resizes.to(view, 320, 844);
+    expect(changes).toBe(2);
+    edge.view = null;
+    resizes.to(view, 10, 844);
+    expect(changes).toBe(2);
+    expect(resizes.watched(view)).toBe(false);
   });
 
   it('in the edge zone, still decides at its hysteresis', () => {
@@ -139,18 +178,20 @@ describe('off the edge zone', () => {
 
 describe('a pan from several edges (spec:AST-094 FR18)', () => {
   it('outside every edge zone leaves the browser every touch behavior', () => {
+    const resizes = watchResizes();
     const edge = new ScreenEdgePanGestureRecognizer({
       edges: ['left', 'bottom'],
     });
-    edge.view = viewOfSize(390, 844);
+    resizes.place(edge, 390, 844);
     expect(edge.nativeTouchBehavior).toEqual(ALL_NATIVE_TOUCH);
   });
 
   it('inside a side edge zone claims pan-x only', () => {
+    const resizes = watchResizes();
     const edge = new ScreenEdgePanGestureRecognizer({
       edges: ['left', 'bottom'],
     });
-    edge.view = viewOfSize(edge.edgeRegion, 844);
+    resizes.place(edge, edge.edgeRegion, 844);
     expect(edge.nativeTouchBehavior).toEqual({
       panX: false,
       panY: true,
@@ -160,10 +201,11 @@ describe('a pan from several edges (spec:AST-094 FR18)', () => {
   });
 
   it('inside a bottom edge zone claims pan-y only', () => {
+    const resizes = watchResizes();
     const edge = new ScreenEdgePanGestureRecognizer({
       edges: ['left', 'bottom'],
     });
-    edge.view = viewOfSize(390, edge.edgeRegion);
+    resizes.place(edge, 390, edge.edgeRegion);
     expect(edge.nativeTouchBehavior).toEqual({
       panX: true,
       panY: false,
@@ -173,10 +215,73 @@ describe('a pan from several edges (spec:AST-094 FR18)', () => {
   });
 });
 
-/** An element whose box has `width` × `height`, as layout would give it. */
-function viewOfSize(width: number, height: number): HTMLElement {
-  const view = document.createElement('div');
-  view.getBoundingClientRect = () =>
-    ({width, height, top: 0, left: 0, right: width, bottom: height}) as DOMRect;
-  return view;
+const realResizeObserver = globalThis.ResizeObserver;
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  globalThis.ResizeObserver = realResizeObserver;
+});
+
+/**
+ * A ResizeObserver jsdom lacks: `to` gives a watched element a box and runs
+ * its observers' callbacks, as a layout would.
+ */
+function watchResizes() {
+  const observers = new Set<{
+    callback: ResizeObserverCallback;
+    targets: Set<Element>;
+  }>();
+  globalThis.ResizeObserver = class {
+    private readonly record: {
+      callback: ResizeObserverCallback;
+      targets: Set<Element>;
+    };
+    constructor(callback: ResizeObserverCallback) {
+      this.record = {callback, targets: new Set()};
+      observers.add(this.record);
+    }
+    observe(target: Element): void {
+      this.record.targets.add(target);
+    }
+    unobserve(target: Element): void {
+      this.record.targets.delete(target);
+    }
+    disconnect(): void {
+      this.record.targets.clear();
+    }
+  };
+  return {
+    to(view: HTMLElement, width: number, height: number): void {
+      view.getBoundingClientRect = () =>
+        ({
+          width,
+          height,
+          top: 0,
+          left: 0,
+          right: width,
+          bottom: height,
+        }) as DOMRect;
+      for (const {callback, targets} of observers) {
+        if (targets.has(view)) {
+          callback(
+            [{target: view} as unknown as ResizeObserverEntry],
+            {} as ResizeObserver,
+          );
+        }
+      }
+    },
+    /** Attach `recognizer` to a new view that lays out at that size. */
+    place(
+      recognizer: ScreenEdgePanGestureRecognizer,
+      width: number,
+      height: number,
+    ): void {
+      const view = document.createElement('div');
+      recognizer.view = view;
+      this.to(view, width, height);
+    },
+    watched(view: Element): boolean {
+      return [...observers].some(({targets}) => targets.has(view));
+    },
+  };
 }
