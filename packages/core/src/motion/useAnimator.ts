@@ -39,8 +39,9 @@ export interface UseAnimatorResult {
  * @example
  * ```
  * const {ref, animator} = useAnimator();
- * // `spring` is the theme's motion role for this move (spec:AST-094 FR4),
- * // never a UIKit table entry played from a component.
+ * // `spring` is the move's motion role where spec:AST-094 FR4 names one
+ * // (internal, DEC-11), or the component's own measured spring, an internal
+ * // constant from the UIKit table.
  * const open = () => animator.animate({y: 0}, {spring});
  * return <div ref={ref} />;
  * ```
