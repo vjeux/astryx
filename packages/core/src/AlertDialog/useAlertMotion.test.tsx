@@ -539,13 +539,13 @@ describe('useAlertMotion', () => {
     expect(motion().isPresented).toBe(false);
   });
 
-  it('takes no theme variable: `--motion-springs-alert-*` on its theme changes neither the spring it plays nor the touch window', async () => {
+  it('takes no theme variable: `--motion-alert-*` on its theme changes neither the spring it plays nor the touch window', async () => {
     render(
       <div
         data-astryx-theme="slow"
         style={{
-          ['--motion-springs-alert-present' as string]: '0.8s 0',
-          ['--motion-springs-alert-dismiss' as string]: '0.8s 0',
+          ['--motion-alert-present' as string]: '0.8s 0',
+          ['--motion-alert-dismiss' as string]: '0.8s 0',
         }}>
         <Alert isOpen isEnabled />
       </div>,
