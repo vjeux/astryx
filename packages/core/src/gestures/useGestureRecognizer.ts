@@ -34,6 +34,15 @@ export interface UseGestureRecognizerOptions {
 }
 
 /**
+ * How many hook detaches are running. The host cancels a gesture in flight
+ * when its element goes (an unmount, a replaced node), and that cancel runs
+ * inside an Effect, which never calls a caller's callback
+ * (`architecture:react-component-runtime` INV2, INV3): while it is above
+ * zero no recognizer's listener reaches its caller.
+ */
+let detachingDepth = 0;
+
+/**
  * Attach a recognizer to the element behind `ref`.
  *
  * @example
@@ -65,7 +74,9 @@ export function useGestureRecognizer<R extends GestureRecognizer>(
   useEffect(
     () =>
       recognizer.addListener(current => {
-        onGestureRef.current?.(current);
+        if (detachingDepth === 0) {
+          onGestureRef.current?.(current);
+        }
       }),
     [recognizer],
   );
@@ -79,15 +90,28 @@ export function useGestureRecognizer<R extends GestureRecognizer>(
   // Syncs the document's gesture host with the element behind `ref`: attached
   // while enabled, re-attached when the node is replaced. A disabled gesture
   // is not attached at all: no listener and no `touch-action` of its own on
-  // the element (spec:AST-094 FR24).
+  // the element (spec:AST-094 FR24). A gesture its detach cancels (an
+  // unmount, a replaced node) reports nothing: that runs in an Effect.
   useNodeAttachment(
     ref,
-    element =>
-      isEnabled
-        ? getGestureHost(element.ownerDocument).attach(element, recognizer, {
-            manageStyle,
-          })
-        : null,
+    element => {
+      if (!isEnabled) {
+        return null;
+      }
+      const detach = getGestureHost(element.ownerDocument).attach(
+        element,
+        recognizer,
+        {manageStyle},
+      );
+      return () => {
+        detachingDepth += 1;
+        try {
+          detach();
+        } finally {
+          detachingDepth -= 1;
+        }
+      };
+    },
     [recognizer, manageStyle, isEnabled],
   );
 
