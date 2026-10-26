@@ -9,7 +9,7 @@
  *   controller's cancel, unchanged by the compositor layer); Reduce
  *   Motion keeps the fade (a fade, not a movement); a mouse press and hover on
  *   a fine pointer leave the press layer out of it
- * @position Interaction evidence for the row press layer (utils/interactionOverlay.stylex.ts `cell`), beside
+ * @position Interaction evidence for the row press layer (utils/rowPressLayer.ts `cell`), beside
  *   ListRowPress.interaction.browser.spec.ts
  */
 

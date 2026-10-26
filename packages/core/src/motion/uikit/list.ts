@@ -6,8 +6,8 @@
  * @output Exports `list`: the clocks and curves of UITableView and
  *   UICollectionView list cells (the cell highlight's release)
  * @position The list domain of the UIKit constants table (motion/uikit);
- *   read by utils/interactionOverlay.stylex.ts (the row press layer)
- *   through its build-time mirror
+ *   read by the row press layer (utils/rowPressLayer.ts) through its
+ *   build-time mirror (utils/rowPressLayer.stylex.ts `cellPressConsts`)
  *
  * Every leaf carries one or more `@source`; GUESS values also carry the
  * `@measure` task that will confirm or replace them (MEASUREMENTS.md, M-LI

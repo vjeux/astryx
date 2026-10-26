@@ -12,7 +12,7 @@
  *   engines); the release keeps fading on every frame while the main thread
  *   is blocked (Chromium screencast, WebKit video); the release does no
  *   Layout or Paint; storyboards of the release and of the blocked window
- * @position Interaction evidence for the row press layer (utils/interactionOverlay.stylex.ts `cell`) as composed
+ * @position Interaction evidence for the row press layer (utils/rowPressLayer.ts `cell`) as composed
  *   by Item (List rows) and TreeList rows
  *
  * The press strength is read from pixels: the row's own background before

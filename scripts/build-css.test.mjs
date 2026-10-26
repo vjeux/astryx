@@ -247,11 +247,7 @@ describe('build-css astryx.css', () => {
       if (capped != null) {
         return Math.min(toMs(capped[1]), toMs(capped[2]));
       }
-      // The release plays a theme motion role: `var(--motion-…, 200ms)`.
-      const role = value.trim().match(/^var\(\s*--[\w-]+\s*,\s*(.+)\)$/);
-      const match = (role == null ? value : role[1])
-        .trim()
-        .match(/^([\d.]+)(ms|s)$/);
+      const match = value.trim().match(/^([\d.]+)(ms|s)$/);
       return match == null
         ? Number.NaN
         : Number(match[1]) * (match[2] === 's' ? 1000 : 1);
@@ -364,11 +360,7 @@ describe('build-css astryx.css', () => {
       if (capped != null) {
         return Math.min(toMs(capped[1]), toMs(capped[2]));
       }
-      // The release plays a theme motion role: `var(--motion-…, 200ms)`.
-      const role = value.trim().match(/^var\(\s*--[\w-]+\s*,\s*(.+)\)$/);
-      const match = (role == null ? value : role[1])
-        .trim()
-        .match(/^([\d.]+)(ms|s)$/);
+      const match = value.trim().match(/^([\d.]+)(ms|s)$/);
       return match == null
         ? Number.NaN
         : Number(match[1]) * (match[2] === 's' ? 1000 : 1);
