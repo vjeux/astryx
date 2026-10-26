@@ -150,6 +150,11 @@ export interface BusyProof extends FrameStats {
    * tracked position is a multiple of (WebKit's casts are 2: see the README).
    */
   readonly stepPx: number;
+  /**
+   * How close to rest judging went, px: `settledWithin`, widened to
+   * `settleSteps` of the cast's position steps; null without `settledWithin`.
+   */
+  readonly settledWithinPx: number | null;
   /** The tracked value's mean motion per screencast interval in the judged part, px. */
   readonly pxPerFrame: number;
   /** Facts worth reading beside the verdict, which never fail it. */
@@ -268,6 +273,7 @@ export function busyWindowProof(
     settledAt,
     maxMedianFrameMs = Infinity,
     maxStallFrames = 3,
+    settleSteps = 2,
     minMovedFraction = 0.9,
     minJudgedFrames = 4,
     presented,
@@ -298,6 +304,14 @@ export function busyWindowProof(
      */
     settledWithin?: number;
     /**
+     * Judge no closer to rest than this many of the cast's position steps
+     * (`stepPx`), whatever `settledWithin` asks: inside them a tail that moves
+     * less than a step a frame shows plateaus the cast cannot resolve (on
+     * WebKit's 2 px steps, 362, 362, 362 before a 366 rest). 0 judges to
+     * `settledWithin` exactly.
+     */
+    settleSteps?: number;
+    /**
      * Where the value ends, for `settledWithin`: read it from the page once the
      * animation has ended (`waitForRest`). Defaults to the last frame's value,
      * which can be stale: once an accelerated animation ends while the main
@@ -314,7 +328,21 @@ export function busyWindowProof(
   } = {},
 ): BusyProof {
   let end = window.to - marginMs;
-  if (settledWithin != null) {
+  // The cast's position step: the largest of 2, 1 and 0.5 px that every
+  // tracked position is a multiple of (WebKit's casts are 2: see the README).
+  const positions = tracked.flatMap(f => (f.box == null ? [] : [f.box[axis]]));
+  const stepPx =
+    [2, 1, 0.5].find(step =>
+      positions.every(p => Math.abs(p / step - Math.round(p / step)) < 0.01),
+    ) ?? 0.5;
+  // Within settleSteps of those steps of rest, a tail that moves less than a
+  // step a frame shows plateaus the cast cannot resolve, so judging never
+  // reaches closer than that, whatever settledWithin asks.
+  const settleBound =
+    settledWithin == null
+      ? null
+      : Math.max(settledWithin, settleSteps * stepPx);
+  if (settleBound != null) {
     const valued = tracked.flatMap(f =>
       f.box == null ? [] : [{t: f.t, value: f.box[axis]}],
     );
@@ -324,7 +352,7 @@ export function busyWindowProof(
       f =>
         f.t >= window.from &&
         final != null &&
-        Math.abs(f.value - final) <= settledWithin,
+        Math.abs(f.value - final) <= settleBound,
     );
     if (arrived != null) {
       end = Math.min(end, arrived.t);
@@ -473,12 +501,7 @@ export function busyWindowProof(
         ? expectedFrames
         : deliveredFrames;
   const movedFraction = (moved + recorderSkipped) / Math.max(1, judgedFrames);
-  // The cast's position step, and the motion per interval it has to resolve.
-  const positions = tracked.flatMap(f => (f.box == null ? [] : [f.box[axis]]));
-  const stepPx =
-    [2, 1, 0.5].find(step =>
-      positions.every(p => Math.abs(p / step - Math.round(p / step)) < 0.01),
-    ) ?? 0.5;
+  // The motion per interval the cast's position step has to resolve.
   const judgedValues = tracked.flatMap(f =>
     f.box != null && f.t >= judged.from && f.t <= judged.to
       ? [{t: f.t, value: f.box[axis]}]
@@ -491,6 +514,15 @@ export function busyWindowProof(
       ? 0
       : Math.abs(last.value - first.value) / ((last.t - first.t) / cadence);
   const notes: string[] = [];
+  if (
+    settleBound != null &&
+    settledWithin != null &&
+    settleBound > settledWithin
+  ) {
+    notes.push(
+      `judged until ${settleBound} px from rest, ${settleSteps} of the cast's ${stepPx} px position steps, rather than settledWithin's ${settledWithin}`,
+    );
+  }
   if (presented != null && compositorFrameMs == null) {
     notes.push(
       'no compositor frames recorded around the window: judged from the screencast alone',
@@ -555,6 +587,7 @@ export function busyWindowProof(
     judged,
     onScreenFromMs,
     stepPx,
+    settledWithinPx: settleBound,
     pxPerFrame,
     notes,
     recorderSkipped,

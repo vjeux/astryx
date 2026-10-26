@@ -114,7 +114,9 @@ new position every frame of the block, and a main-thread animation shows none
 (nothing changed, so no frame is sent at all: `busyWindowProof` counts the
 whole window as one stall). `settledWithin` (2 px) stops judging at the easing
 tail: the screencast rounds to whole pixels, so a tail that still moves shows
-plateaus within a pixel or two of rest. A judged part shorter than four of the
+plateaus within a pixel or two of rest. Judging never comes closer to rest
+than two of the cast's position steps (`settleSteps`), so on WebKit's 2 px
+casts it stops 4 px out (`settledWithinPx` reports where). A judged part shorter than four of the
 screencast's intervals fails: the animation under test was not moving during
 the block. With
 `during`, `blockMainThread` starts the loop from a task queued in the frame

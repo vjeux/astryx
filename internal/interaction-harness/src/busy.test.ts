@@ -217,9 +217,46 @@ describe('busyWindowProof settledWithin', () => {
     expect(loose.verdict.failures).toEqual([]);
     const strict = busyWindowProof(frames, window, {
       settledWithin: 1,
+      settleSteps: 0,
       marginMs: 0,
     });
     expect(strict.longestStallFrames).toBeGreaterThanOrEqual(3);
+  });
+
+  it("judges no closer to rest than two of the cast's position steps", () => {
+    // A spring's tail on WebKit's 2 px cast, settling at 366: inside two steps
+    // of rest it moves less than a step a frame, so two frames repeat 362.
+    const ys = [
+      326, 330, 334, 338, 342, 346, 350, 352, 354, 356, 358, 360, 362, 362, 362,
+      364, 366,
+    ];
+    const frames = ys.map(
+      (y, i) =>
+        ({
+          t: 1000 + i * FRAME,
+          box: {x: 0, y, width: 10, height: 10},
+        }) as TrackedFrame,
+    );
+    const window = {from: 1000 + FRAME / 2, to: 1000 + ys.length * FRAME};
+    const proof = busyWindowProof(frames, window, {
+      settledWithin: 2,
+      settledAt: 366,
+      marginMs: 0,
+    });
+    expect(proof.stepPx).toBe(2);
+    expect(proof.settledWithinPx).toBe(4);
+    expect(proof.judged.to).toBe(frames[12].t);
+    expect(proof.verdict.failures).toEqual([]);
+    // Judged to settledWithin exactly, the plateau reads as frames that did
+    // not move: 13 of 15 moved, under 90%.
+    const exact = busyWindowProof(frames, window, {
+      settledWithin: 2,
+      settledAt: 366,
+      settleSteps: 0,
+      marginMs: 0,
+    });
+    expect(exact.settledWithinPx).toBe(2);
+    expect(exact.verdict.pass).toBe(false);
   });
 
   it('takes the end value from settledAt over a stale last frame', () => {
