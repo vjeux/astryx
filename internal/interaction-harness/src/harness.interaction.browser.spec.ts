@@ -779,6 +779,98 @@ test.describe('frame evidence', () => {
     expect(trace.window.to - started).toBeGreaterThanOrEqual(590);
   });
 
+  test('on a CSS @keyframes animation the traced waits read its timing and keyframes as the recorder first saw them, so the trace counts no Layout from them', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'rendering traces are Chromium-only (README: engine limits)',
+    );
+    await page.route('http://anchored.test/', route =>
+      route.fulfill({contentType: 'text/html', body: ANCHORED}),
+    );
+    await page.goto('http://anchored.test/');
+    await page.addStyleTag({
+      content:
+        '@keyframes harness-slide { from { transform: translateY(0px); opacity: 1 } to { transform: translateY(100px); opacity: 0.5 } }',
+    });
+    const pop = page.locator('#pop');
+    await waitForRest(pop);
+    const watch = await watchAnimations(pop);
+    let started = 0;
+    let waited: {kind: string; durationMs: number}[] = [];
+    let watched: {kind: string; durationMs: number}[] = [];
+    const trace = await traceRendering(page, async () => {
+      started = await pop.evaluate(el => {
+        el.style.animation = 'harness-slide 600ms linear';
+        return performance.timeOrigin + performance.now();
+      });
+      // On a CSS animation getTiming() and getKeyframes() flush style, so
+      // reading them on every poll would lay the anchored element out.
+      waited = await waitForAnimation(pop, {minProgressMs: 450});
+      watched = await watch.started({minProgressMs: 450});
+      await page.waitForTimeout(200);
+    });
+    expect(countBetween(trace, started + 100, started + 500).Layout ?? 0).toBe(
+      0,
+    );
+    expect(waited.map(a => [a.kind, a.durationMs])).toEqual([
+      ['CSSAnimation', 600],
+    ]);
+    expect(watched.map(a => [a.kind, a.durationMs])).toEqual([
+      ['CSSAnimation', 600],
+    ]);
+  });
+
+  test('an unwatched traced waitForAnimation skips a transition the page cancelled rather than read its state, so the trace counts no Layout from it', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'rendering traces are Chromium-only (README: engine limits)',
+    );
+    await page.route('http://anchored.test/', route =>
+      route.fulfill({contentType: 'text/html', body: ANCHORED}),
+    );
+    await page.goto('http://anchored.test/');
+    const pop = page.locator('#pop');
+    await waitForRest(pop);
+    // A transition the recorder logs, then the page cancels by retargeting
+    // its property with transitions off: it never finishes.
+    await pop.evaluate(el => {
+      (el as HTMLElement).style.transition = 'opacity 2s linear';
+      el.getBoundingClientRect();
+      (el as HTMLElement).style.opacity = '0.5';
+    });
+    await waitForAnimation(pop);
+    await pop.evaluate(el => {
+      (el as HTMLElement).style.transition = 'none';
+      (el as HTMLElement).style.opacity = '1';
+    });
+    await expect
+      .poll(() => pop.evaluate(el => el.getAnimations().length))
+      .toBe(0);
+    let started = 0;
+    let waited: {durationMs: number}[] = [];
+    const trace = await traceRendering(page, async () => {
+      started = await pop.evaluate(el => {
+        el.animate(
+          [{transform: 'translateY(0px)'}, {transform: 'translateY(100px)'}],
+          {duration: 600},
+        );
+        return performance.timeOrigin + performance.now();
+      });
+      waited = await waitForAnimation(pop, {minProgressMs: 450});
+      await page.waitForTimeout(200);
+    });
+    expect(countBetween(trace, started + 100, started + 500).Layout ?? 0).toBe(
+      0,
+    );
+    expect(waited.map(a => a.durationMs)).toEqual([600]);
+  });
+
   test('a waitForRest awaited inside a traced body waits for an animation the action starts two frames later', async ({
     page,
     browserName,

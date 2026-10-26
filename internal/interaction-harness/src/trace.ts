@@ -118,11 +118,8 @@ interface TraceEvent {
  * thread did between a start mark (placed just before `body`) and an end mark
  * (just after). The harness's animation recorder, `waitForRest`,
  * `waitForAnimation` and a watch's `started()` stand down meanwhile, so a body
- * may wait with any of them and add no frame of its own, with one gap: on a
- * CSS `@keyframes` animation (and, for an unwatched `waitForAnimation`, a
- * cancelled CSS transition) the wait reads its timing, which flushes that
- * animation's style, so wait on such an animation with `waitForRest`, or
- * after the trace.
+ * may wait with any of them and add no frame of its own, CSS animations and
+ * cancelled transitions included.
  */
 export async function traceRendering(
   page: Page,

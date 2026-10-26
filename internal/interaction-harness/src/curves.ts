@@ -54,8 +54,16 @@ function animationRecorder(): void {
     animation: Animation;
     seenAt: number;
     finishedAt: number | null;
+    cancelledAt: number | null;
     startedAt: number | null;
   }[] = [];
+  // Each effect's timing and keyframes as first seen. On a CSS animation
+  // getTiming() and getKeyframes() flush style, so a read inside a rendering
+  // trace takes them from here (effect() below).
+  const effects = new WeakMap<
+    AnimationEffect,
+    {timing: EffectTiming; keyframes: ComputedKeyframe[]}
+  >();
   // Entries whose start time has not resolved yet (still pending when seen).
   let unstarted: (typeof log)[number][] = [];
   let armedAt = performance.now();
@@ -93,13 +101,26 @@ function animationRecorder(): void {
     ) {
       ancestors.push(node);
     }
+    const effect = animation.effect;
+    if (effect != null) {
+      effects.set(effect, {
+        timing: effect.getTiming(),
+        keyframes: (effect as KeyframeEffect).getKeyframes?.() ?? [],
+      });
+    }
     const entry = {
       animation,
       seenAt: performance.now(),
       finishedAt: null as number | null,
+      cancelledAt: null as number | null,
       startedAt: playStart(animation),
       ancestors,
     };
+    // A cancelled animation never finishes; a traced poll skips it rather
+    // than read its state, which flushes a CSS animation's style.
+    animation.addEventListener('cancel', () => {
+      entry.cancelledAt ??= performance.now();
+    });
     if (entry.startedAt == null) {
       unstarted.push(entry);
     }
@@ -230,6 +251,18 @@ function animationRecorder(): void {
       return armedAt;
     },
     armedAt: () => armedAt,
+    // An effect's timing and keyframes: while a trace runs, as the recorder
+    // first saw them (reading them again flushes a CSS animation's style);
+    // otherwise as they are now.
+    effect: (effect: AnimationEffect) => {
+      const cached = tracing() ? effects.get(effect) : undefined;
+      return (
+        cached ?? {
+          timing: effect.getTiming(),
+          keyframes: (effect as KeyframeEffect).getKeyframes?.() ?? [],
+        }
+      );
+    },
   };
 }
 
@@ -265,6 +298,23 @@ async function installCurveEnd(page: Page): Promise<void> {
     // trace it is worked out from getTiming() instead: getComputedTiming()
     // updates a running animation on demand, which restyles its target in the
     // next frame (and lays out an anchored one), exactly what a trace counts.
+    // An effect's timing and keyframes through the recorder: inside a trace as
+    // it first saw them, since reading them again flushes a CSS animation's
+    // style (and lays out an anchored target).
+    const recorded = (effect: AnimationEffect) =>
+      (
+        window as unknown as {
+          __harnessAnimations?: {
+            effect?: (e: AnimationEffect) => {
+              timing: EffectTiming;
+              keyframes: ComputedKeyframe[];
+            };
+          };
+        }
+      ).__harnessAnimations?.effect?.(effect) ?? {
+        timing: effect.getTiming(),
+        keyframes: (effect as KeyframeEffect).getKeyframes?.() ?? [],
+      };
     w.__harnessTiming ??= effect => {
       if (effect == null) {
         return null;
@@ -275,7 +325,7 @@ async function installCurveEnd(page: Page): Promise<void> {
       ) {
         return effect.getComputedTiming();
       }
-      const timing = effect.getTiming();
+      const timing = recorded(effect).timing;
       const duration =
         typeof timing.duration === 'number' ? timing.duration : 0;
       const iterations = Number(timing.iterations ?? 1);
@@ -332,7 +382,7 @@ async function installCurveEnd(page: Page): Promise<void> {
       ) {
         return delay + active;
       }
-      const frames = effect.getKeyframes();
+      const frames = recorded(effect).keyframes;
       // A run holds only when it reaches offset 1 and every frame in it keys
       // every property the animation keys: a property left out, or a last
       // frame before offset 1, gets an implicit end frame and keeps moving.
@@ -362,7 +412,7 @@ async function installCurveEnd(page: Page): Promise<void> {
       // time the held run starts is solved from the curve; under any other
       // easing (steps, linear() stops, an overshoot) the curve is read to the
       // full end.
-      const easing = String(effect.getTiming().easing ?? 'linear').trim();
+      const easing = String(recorded(effect).timing.easing ?? 'linear').trim();
       const named: Record<string, number[]> = {
         linear: [0, 0, 1, 1],
         ease: [0.25, 0.1, 0.25, 1],
@@ -1009,6 +1059,8 @@ async function withinTimeout<T>(
  * Started inside a `traceRendering` body, it stands down as the recorder
  * does, so it adds no frame the trace counts: it takes the element's
  * animations from the recorder's log, judges a started one by its own times,
+ * reads an effect's timing and keyframes as the recorder first saw them (on a
+ * CSS animation reading them flushes style), skips one the page cancelled,
  * and reaches the element through a handle to what the locator matches at
  * each look.
  */
@@ -1059,11 +1111,16 @@ export async function waitForAnimation(
                   animation: Animation;
                   seenAt: number;
                   finishedAt: number | null;
+                  cancelledAt: number | null;
                   startedAt: number | null;
                   ancestors: Element[];
                 }[];
                 record: () => void;
                 armedAt: () => number;
+                effect: (effect: AnimationEffect) => {
+                  timing: EffectTiming;
+                  keyframes: ComputedKeyframe[];
+                };
               };
             };
             const curveEnd = w.__harnessCurveEnd;
@@ -1120,10 +1177,14 @@ export async function waitForAnimation(
                     ? startedAt + (endTime - delay) / speed
                     : startedAt + curveEnd(a) / speed,
                 durationMs: Number(timing?.duration ?? 0),
-                easing: String(effect?.getTiming().easing ?? 'linear'),
-                keyframes: (effect?.getKeyframes() ?? []).map(
-                  (k): Record<string, unknown> => ({...k}),
+                easing: String(
+                  (effect == null ? null : recorder.effect(effect))?.timing
+                    .easing ?? 'linear',
                 ),
+                keyframes: (
+                  (effect == null ? null : recorder.effect(effect))
+                    ?.keyframes ?? []
+                ).map((k): Record<string, unknown> => ({...k})),
                 finishedAt:
                   finishedAt == null
                     ? null
@@ -1173,7 +1234,11 @@ export async function waitForAnimation(
               watchedFrom == null && !traced
                 ? element.getAnimations({subtree: true})
                 : (watchedFrom == null ? onElement() : recorded)
-                    .filter(e => e.finishedAt == null)
+                    .filter(
+                      e =>
+                        e.finishedAt == null &&
+                        !(traced && e.cancelledAt != null),
+                    )
                     .map(e => e.animation)
             ).filter(runs);
             const running = live.filter(a => a.startTime != null);
