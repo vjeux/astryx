@@ -1,0 +1,56 @@
+[
+ {
+  "label": "blurred, tap on the composer text",
+  "t": 1792982242492,
+  "ime": true,
+  "ok": true,
+  "events": [
+   "touchstart-cap:DIV[ce][combobox]",
+   "touchstart-bub:DIV[ce][combobox]",
+   "touchend-cap:DIV[ce][combobox]",
+   "focusin:DIV[ce][combobox]",
+   "focusout:DIV[log]",
+   "touchend-bub:DIV[ce][combobox](dp)",
+   "touchend:"
+  ],
+  "vvh": 486.2
+ },
+ {
+  "label": "Back, composer still focused",
+  "t": 1792982244131,
+  "ime": false,
+  "ok": true,
+  "events": [],
+  "vvh": 795.6
+ },
+ {
+  "label": "tap on the composer empty space",
+  "t": 1792982245692,
+  "ime": true,
+  "ok": true,
+  "events": [
+   "touchstart-cap:DIV",
+   "touchstart-bub:DIV",
+   "touchend-cap:DIV",
+   "touchend-bub:DIV",
+   "mousedown-cap:DIV",
+   "mousedown-bub:DIV",
+   "focusout:DIV[ce][combobox]",
+   "focusin:DIV[group]",
+   "click-cap:DIV",
+   "focusin:DIV[ce][combobox]",
+   "focusout:DIV[group]",
+   "click-bub:DIV",
+   "touchend:"
+  ],
+  "vvh": 486.2
+ },
+ {
+  "label": "Back",
+  "t": 1792982247282,
+  "ime": false,
+  "ok": true,
+  "events": [],
+  "vvh": 795.6
+ }
+]
