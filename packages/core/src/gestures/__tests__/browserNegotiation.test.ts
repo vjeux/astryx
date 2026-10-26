@@ -126,6 +126,21 @@ describe('deriveTouchAction', () => {
 });
 
 describe('parseTouchAction', () => {
+  it('counts no disabled recognizer, which hears no touch: no touch-action and no selection lock of its own (spec:AST-094 FR24, FR41)', () => {
+    const pan = new PanGestureRecognizer({direction: 'horizontal'});
+    pan.setEnabled(false);
+    expect(deriveTouchAction([pan])).toBeNull();
+    expect(deriveTouchAction([pan, new TapGestureRecognizer()])).toBe(
+      'manipulation',
+    );
+    expect(
+      holdSelectionStyle([new LongPressGestureRecognizer({isEnabled: false})]),
+    ).toBeNull();
+    const turnedOff = new LongPressGestureRecognizer();
+    turnedOff.setEnabled(false);
+    expect(holdSelectionStyle([turnedOff])).toBeNull();
+  });
+
   it('reads the pans each value allows', () => {
     expect(parseTouchAction('auto')).toEqual({x: true, y: true});
     expect(parseTouchAction('manipulation')).toEqual({x: true, y: true});
