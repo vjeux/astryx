@@ -170,7 +170,9 @@ steps a frame: the self-tests move 560 px in 1,600 ms, about 4.8 px a frame.
 On a loaded machine Chromium's screencast can skip frames the compositor
 still presents. `startCompositorTrace(page)`, started with the screencast and
 stopped after the block, records when the compositor presented each frame
-(`Display::FrameDisplayed`); pass it as `presented`. A gap between two moved
+(`Display::FrameDisplayed`); pass it as `presented`. The record is
+browser-wide (its frames carry no page identity), so it throws when another
+page is open as it starts or stops. A gap between two moved
 frames with nothing delivered inside it is then measured between the
 compositor's own frames: the frames it presented there count as presented
 (`recorderSkipped`, in the summary), and a gap it did not present through is
@@ -193,16 +195,23 @@ CSS animation or transition event names, once, when that animation starts, and
 catches up afterwards. A `waitForRest` awaited inside the traced body stands
 down too: it waits on timers for the scheduled ends of the element's curves
 (looking `frames` times a frame apart before settling on none, so an
-animation the action starts a frame or two later is waited for) and reads no
+animation the action starts a frame or two later is waited for) and polls no
 style until the trace ends (in the anchored fixture's steady middle,
-24 Layouts before, 0 now). So do `waitForAnimation` and a watch's
+24 Layouts before, 0 now). Its one read of the element's animations, as it is
+called, restyles the element (2 Layouts and 2 style recalculations in the
+anchored fixture when called 200 ms into its animation), so await it right
+after the action that starts the motion, before the window a proof counts. So do `waitForAnimation` and a watch's
 `started()`: they take the element's animations from the recorder's log,
 judge a started one by its own times, and reach the element through a handle,
 since each `locator.evaluate` makes a main-thread frame (there too, 24
 Layouts before, 0 now). They read an effect's timing and keyframes as the
 recorder first saw them, since on a CSS animation `getTiming()` and
 `getKeyframes()` flush style (23 Layouts before, 0 now), and skip an
-animation the page cancelled rather than read its state (24 before, 0 now). Taking a watch (`watchAnimations`) inside a trace reads the watched element's animations, which restyles it (and lays out an anchored one), so a proof takes its traced watch before the window it counts. The trace's `longTasks` are the page's own: only a
+animation the page cancelled rather than read its state (24 before, 0 now).
+Taking a watch (`watchAnimations`) inside
+a trace reads the watched element's animations, which restyles it (and lays
+out an anchored one), so a proof takes its traced watch before the window it
+counts. The trace's `longTasks` are the page's own: only a
 task the harness marked as its own read (`waitForAnimation` describing
 keyframes, `blockMainThread` without `during`) is in `devtoolsTasks` instead,
 and only when no page script ran inside it. A test's own `page.evaluate` stays a
