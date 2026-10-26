@@ -234,6 +234,124 @@ test('inside a scroller, a flick scrolls the list and paints nothing', async ({
   expect(scrolled).toBeGreaterThan(0);
 });
 
+test('inside a scroller, a finger that stops a fling presses nothing until the scroller’s scrollend, and a tap once the list rests presses', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== 'chromium',
+    'injected touches start no native scroll in this WebKit build; the iOS simulator covers it',
+  );
+  const opened = await openSurface(page, SCROLLER, scrollerButton);
+  // This engine fires scrollend: the brake ends there (ListRowPressPaths
+  // covers an engine with none).
+  expect(await page.evaluate(() => 'onscrollend' in window)).toBe(true);
+  const scroller = page.getByTestId('button-scroller');
+  // Every press paint in the list, and whether each finger landed on a
+  // button.
+  await scroller.evaluate(list => {
+    const log = window as unknown as {
+      __paints: (string | null)[];
+      __landedOnButton: boolean[];
+    };
+    log.__paints = [];
+    log.__landedOnButton = [];
+    new MutationObserver(records => {
+      for (const record of records) {
+        log.__paints.push(
+          (record.target as Element).getAttribute('data-astryx-press'),
+        );
+      }
+    }).observe(list, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-astryx-press'],
+    });
+    document.addEventListener(
+      'pointerdown',
+      event =>
+        log.__landedOnButton.push(
+          event.target instanceof Element &&
+            event.target.closest('button') != null,
+        ),
+      true,
+    );
+  });
+  const read = async () =>
+    page.evaluate(() => {
+      const log = window as unknown as {
+        __paints: (string | null)[];
+        __landedOnButton: boolean[];
+      };
+      return {paints: [...log.__paints], landed: [...log.__landedOnButton]};
+    });
+  const scrollTop = async () => scroller.evaluate(list => list.scrollTop);
+  const rests = async () => {
+    // Still across 300 ms: the fling is over, and so is any idle wait.
+    let previous = await scrollTop();
+    for (;;) {
+      await page.waitForTimeout(300);
+      const now = await scrollTop();
+      if (now === previous) {
+        return;
+      }
+      previous = now;
+    }
+  };
+
+  // The list keeps gliding after a flick; a finger lands in it. The
+  // buttons have gaps between them, so until a finger lands on a button
+  // the list is put back and flicked again.
+  let landedOnButton = false;
+  for (let attempt = 0; attempt < 6 && !landedOnButton; attempt += 1) {
+    await scroller.evaluate(list => {
+      list.scrollTop = 0;
+    });
+    await rests();
+    await opened.driver.play(
+      flick(opened.center, {velocity: {x: 0, y: -1500}, durationMs: 80}),
+    );
+    const before = await scrollTop();
+    await page.waitForTimeout(32);
+    expect(await scrollTop(), 'the fling is still running').toBeGreaterThan(
+      before,
+    );
+    await opened.driver.play(tap(opened.center));
+    const {landed} = await read();
+    landedOnButton = landed.at(-1) === true;
+  }
+  expect(landedOnButton, 'a finger landed on a button mid-fling').toBe(true);
+  await rests();
+  const braked = await read();
+  expect(braked.paints, JSON.stringify(braked)).toEqual([]);
+  expect(
+    (await opened.log()).filter(([kind]) => kind === 'click'),
+  ).toHaveLength(0);
+
+  // At rest, a tap on a button presses it again.
+  const button = await scroller.evaluate(list => {
+    const box = list.getBoundingClientRect();
+    for (const candidate of list.querySelectorAll('button')) {
+      const rect = candidate.getBoundingClientRect();
+      if (rect.top >= box.top && rect.bottom <= box.bottom) {
+        return {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2};
+      }
+    }
+    return null;
+  });
+  expect(button).not.toBeNull();
+  if (button == null) {
+    return;
+  }
+  await opened.driver.play(tap(button));
+  await expect
+    .poll(async () => (await read()).paints)
+    .toEqual(['on', 'fading', null]);
+  expect(
+    (await opened.log()).filter(([kind]) => kind === 'click'),
+  ).toHaveLength(1);
+});
+
 test('inside a scroller, a scroll that takes a held press cancels it: the paint goes at once, with no fade and no click', async ({
   page,
   browserName,
