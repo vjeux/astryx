@@ -22,6 +22,7 @@
 
 import {useEffect, useRef, useState, type RefObject} from 'react';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
+import {UIKIT_CONTROL} from '../motion/uikit/gestures';
 import {getGestureHost} from './GestureHost';
 import type {GestureRecognizer} from './GestureRecognizer';
 import {PressTracker, type PressTrackerOptions} from './PressTracker';
@@ -125,7 +126,9 @@ export type UsePressTrackerOptions = Omit<
 
 /**
  * Track presses on the element behind `ref` with UIControl semantics. The
- * callbacks are read through a ref, like a recognizer's listener.
+ * callbacks are read through a ref, like a recognizer's listener, and so are
+ * the options: one tracker serves the component's life, and a changed option
+ * applies from its next read, a press in progress included.
  */
 export function usePressTracker(
   ref: RefObject<Element | null>,
@@ -147,9 +150,17 @@ export function usePressTracker(
         onHighlightChange: isHighlighted =>
           optionsRef.current.onHighlightChange?.(isHighlighted),
         trackingExpansion: options.trackingExpansion,
-        highlightDelay: options.highlightDelay,
-        cancelTravel: options.cancelTravel,
-        quickTapFlash: options.quickTapFlash,
+        // Read at each use, so a changed option applies from its next read
+        // without dropping a press in progress.
+        get highlightDelay() {
+          return optionsRef.current.highlightDelay;
+        },
+        get cancelTravel() {
+          return optionsRef.current.cancelTravel;
+        },
+        get quickTapFlash() {
+          return optionsRef.current.quickTapFlash;
+        },
         vetoesAncestorRecognizer: recognizer =>
           optionsRef.current.vetoesAncestorRecognizer?.(recognizer) ??
           defaultVeto(recognizer),
@@ -166,6 +177,14 @@ export function usePressTracker(
         },
       }),
   );
+
+  // Syncs the tracker's tracking expansion with the caller's option: the
+  // next move is judged against the new value, mid-press included.
+  const {trackingExpansion} = options;
+  useIsomorphicLayoutEffect(() => {
+    tracker.trackingExpansion =
+      trackingExpansion ?? UIKIT_CONTROL.trackingExpansion.value;
+  }, [tracker, trackingExpansion]);
 
   // Syncs the document's gesture host with the element behind `ref`: the
   // tracker is its press consumer, moved when the node is replaced, and a
