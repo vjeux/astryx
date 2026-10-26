@@ -189,6 +189,30 @@ describe('useGestureRecognizer', () => {
     touch('touchend', second, {id: 9, x: 30, y: 0}, 32, true);
   });
 
+  it('calls nothing back when the element unmounts mid-gesture: the cancel runs in an Effect cleanup (react-component-runtime INV2, INV3)', () => {
+    const states: string[] = [];
+    // A listener of the recognizer's own, outside the hook, hears the cancel.
+    const heard: string[] = [];
+    const {getByTestId, unmount} = render(
+      <Draggable
+        onPan={r => states.push(r.state)}
+        onRecognizer={r => {
+          if (heard.length === 0) {
+            heard.push('attached');
+            r.addListener(current => heard.push(current.state));
+          }
+        }}
+      />,
+    );
+    const surface = getByTestId('surface');
+    touch('touchstart', surface, {id: 9, x: 0, y: 0}, 0);
+    touch('touchmove', surface, {id: 9, x: 30, y: 0}, 16);
+    expect(states).toEqual(['began']);
+    unmount();
+    expect(heard).toContain('cancelled');
+    expect(states).toEqual(['began']);
+  });
+
   it('detaches on unmount', () => {
     const onPan = vi.fn();
     const {getByTestId, unmount} = render(<Draggable onPan={onPan} />);
@@ -268,6 +292,46 @@ describe('usePressTracker', () => {
     touch('touchstart', second, {id: 10, x: 1, y: 1}, 0);
     touch('touchend', second, {id: 10, x: 1, y: 1}, 50, true);
     expect(events).toEqual(['touchDown', 'touchUpInside']);
+  });
+
+  it('applies option changes from its next read, keeping the press in progress', () => {
+    const events: ControlEvent[] = [];
+    function Tracked({
+      cancelTravel,
+      trackingExpansion,
+    }: {
+      cancelTravel?: number;
+      trackingExpansion?: number;
+    }) {
+      const ref = useRef<HTMLButtonElement>(null);
+      usePressTracker(ref, {
+        onControlEvent: event => events.push(event),
+        cancelTravel,
+        trackingExpansion,
+      });
+      return (
+        <button data-testid="tracked" ref={ref} type="button">
+          Go
+        </button>
+      );
+    }
+    // jsdom lays the button out at 0 by 0: the expansion alone is "inside".
+    const {getByTestId, rerender} = render(<Tracked trackingExpansion={70} />);
+    const button = getByTestId('tracked');
+    touch('touchstart', button, {id: 10, x: 1, y: 1}, 0);
+    expect(events).toEqual(['touchDown']);
+    // A smaller expansion mid-press: the next move is judged against it.
+    rerender(<Tracked trackingExpansion={0} />);
+    touch('touchmove', button, {id: 10, x: 30, y: 30}, 16);
+    expect(events).toContain('touchDragExit');
+    touch('touchend', button, {id: 10, x: 30, y: 30}, 32, true);
+    // A travel limit set after mount cancels the next press that passes it.
+    events.length = 0;
+    rerender(<Tracked trackingExpansion={70} cancelTravel={5} />);
+    touch('touchstart', button, {id: 11, x: 1, y: 1}, 100);
+    touch('touchmove', button, {id: 11, x: 1, y: 20}, 116);
+    expect(events).toContain('touchCancel');
+    touch('touchend', button, {id: 11, x: 1, y: 20}, 132, true);
   });
 
   it('presses nothing for a touch that brakes a scroll', () => {
