@@ -431,16 +431,27 @@ test('a held finger never starts text selection on the bar', async ({page}) => {
   // The lock belongs to the hold: the gesture host sets it on the elements
   // a held finger presses and takes it off at the lift, so the bar carries
   // nothing of its own at rest.
-  let held: {prefixed: string; unprefixed: string} | null = null;
+  expect(await read()).toEqual({prefixed: 'auto', unprefixed: 'auto'});
+  let locked: {prefixed: string; unprefixed: string} | null = null;
   const point = await itemCenter(page, 'Home');
-  await driver.play(tapScript(point, {holdMs: 300}), {
+  await driver.play(tapScript(point, {holdMs: 600}), {
     onEvent: async (_step, index) => {
-      if (index === 0) {
-        held = await read();
+      if (index !== 0) {
+        return;
+      }
+      for (let tries = 0; tries < 30 && locked == null; tries += 1) {
+        const styles = await read();
+        if (styles.prefixed === 'none') {
+          locked = styles;
+          return;
+        }
+        await page.waitForTimeout(16);
       }
     },
   });
-  expect(held).toEqual({prefixed: 'none', unprefixed: 'none'});
+  expect(locked).toEqual({prefixed: 'none', unprefixed: 'none'});
+  // And the lift gives it back.
+  await expect.poll(async () => (await read()).prefixed).toBe('auto');
 });
 
 test('badges appear, change and clear without animating', async ({page}) => {
