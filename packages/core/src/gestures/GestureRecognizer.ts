@@ -155,10 +155,12 @@ export abstract class GestureRecognizer {
   allowedPointerTypes: ReadonlySet<PointerKind> | null;
   requiresExclusiveTouchType: boolean;
   /**
-   * The element (or any object) the recognizer is attached to. The DOM host
-   * sets it; the arena treats it as opaque.
+   * @internal Set by the host: called when `nativeTouchBehavior` changes
+   * with no option change (a screen-edge pan's view resizing into or out of
+   * its edge band), so the host derives the view's touch-action again.
    */
-  view: unknown = null;
+  onNativeTouchBehaviorChange: (() => void) | null = null;
+  private viewValue: unknown = null;
 
   /** @internal The arena delivering touches to this recognizer, if any. */
   arena: GestureArena | null = null;
@@ -214,6 +216,24 @@ export abstract class GestureRecognizer {
   get claimsTouches(): boolean {
     return true;
   }
+
+  /**
+   * The element (or any object) the recognizer is attached to. The DOM host
+   * sets it, and null when it detaches; the arena treats it as opaque.
+   */
+  get view(): unknown {
+    return this.viewValue;
+  }
+
+  set view(value: unknown) {
+    if (value !== this.viewValue) {
+      this.viewValue = value;
+      this.viewChanged();
+    }
+  }
+
+  /** Called when the recognizer moves to another view, or to none. */
+  protected viewChanged(): void {}
 
   get state(): GestureState {
     return this.stateValue;

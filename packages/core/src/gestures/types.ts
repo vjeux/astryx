@@ -121,12 +121,23 @@ export interface GestureEnvironment {
   viewportSize(): {readonly width: number; readonly height: number};
   isRtl(view: unknown): boolean;
   /**
-   * The size of a recognizer's view, or null when it has none to measure.
-   * A screen-edge pan reads it to tell an edge zone from a wider view.
+   * The size of a recognizer's view, or null when it has none to measure,
+   * where it can be read without forcing a layout (a test's environment). A
+   * screen-edge pan reads it to tell its edge band from a wider view.
    */
   viewSize?(
     view: unknown,
   ): {readonly width: number; readonly height: number} | null;
+  /**
+   * Call `onSize` with the size of a recognizer's view after each layout
+   * that changes it, never forcing one, until the returned function is
+   * called. Where it is present, a screen-edge pan watches its view with it
+   * instead of reading `viewSize`.
+   */
+  observeViewSize?(
+    view: unknown,
+    onSize: (size: {readonly width: number; readonly height: number}) => void,
+  ): () => void;
 }
 
 export const DEFAULT_ENVIRONMENT: GestureEnvironment = {
@@ -139,12 +150,21 @@ export const DEFAULT_ENVIRONMENT: GestureEnvironment = {
   isRtl() {
     return false;
   },
-  viewSize(view) {
-    if (typeof Element === 'undefined' || !(view instanceof Element)) {
-      return null;
+  observeViewSize(view, onSize) {
+    if (
+      typeof ResizeObserver === 'undefined' ||
+      typeof Element === 'undefined' ||
+      !(view instanceof Element)
+    ) {
+      return () => {};
     }
-    const {width, height} = view.getBoundingClientRect();
-    return {width, height};
+    // Read in the observer's callback, after layout: the box is clean.
+    const observer = new ResizeObserver(() => {
+      const {width, height} = view.getBoundingClientRect();
+      onSize({width, height});
+    });
+    observer.observe(view);
+    return () => observer.disconnect();
   },
 };
 

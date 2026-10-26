@@ -21,8 +21,10 @@
  * the edge from the browser, which has nothing to scroll in so thin a band,
  * so the pan still decides at its 15 px hysteresis; on any wider view it
  * leaves the browser every touch behavior, so the author's scrolling there
- * is untouched (spec:AST-094 FR18), and decides at 10 px, before the browser
- * commits to a scroll (FR19). A pan from several edges claims each axis only
+ * is untouched (spec:AST-094 FR18, DEC-13), and decides at 10 px, before the
+ * browser commits to a scroll (FR19). The view's size comes after each
+ * layout, never read when asked, so attaching and a touch-down force no
+ * layout, and a band that resizes tells the host to derive again. A pan from several edges claims each axis only
  * in the zone of the edges it watches on that axis.
  */
 
@@ -59,6 +61,12 @@ export class ScreenEdgePanGestureRecognizer extends PanGestureRecognizer {
   activeEdge: 'left' | 'right' | 'top' | 'bottom' | null = null;
   /** The hysteresis where the pan takes its axis (UIKit's 15 px). */
   private readonly edgeHysteresis: number;
+  /** The view's size after its last layout; null until the first. */
+  private observedSize: {
+    readonly width: number;
+    readonly height: number;
+  } | null = null;
+  private stopWatchingView: (() => void) | null = null;
 
   constructor(options: ScreenEdgePanGestureRecognizerOptions = {}) {
     super({
@@ -133,12 +141,44 @@ export class ScreenEdgePanGestureRecognizer extends PanGestureRecognizer {
    * axis across its edge. A view that cannot be measured is not.
    */
   private isEdgeZone(across: 'x' | 'y'): boolean {
-    const size = this.environment.viewSize?.(this.view);
+    const size =
+      this.environment.observeViewSize != null
+        ? this.observedSize
+        : (this.environment.viewSize?.(this.view) ?? null);
     if (size == null) {
       return false;
     }
     const extent = across === 'x' ? size.width : size.height;
     return extent > 0 && extent <= this.edgeRegion;
+  }
+
+  /**
+   * Watch the view's size after each layout instead of reading its box when
+   * asked: a read at attach, or at a touch-down, would force a layout of what
+   * just changed, and a read once would keep a resized band's first answer
+   * (spec:AST-094 FR18, DEC-13).
+   */
+  protected override viewChanged(): void {
+    this.stopWatchingView?.();
+    this.stopWatchingView = null;
+    this.observedSize = null;
+    const observe = this.environment.observeViewSize;
+    if (this.view == null || observe == null) {
+      return;
+    }
+    this.stopWatchingView = observe(this.view, size => {
+      const before = this.nativeTouchBehavior;
+      this.observedSize = size;
+      const after = this.nativeTouchBehavior;
+      if (
+        before.panX !== after.panX ||
+        before.panY !== after.panY ||
+        before.pinchZoom !== after.pinchZoom ||
+        before.doubleTapZoom !== after.doubleTapZoom
+      ) {
+        this.onNativeTouchBehaviorChange?.();
+      }
+    });
   }
 
   protected override reset(): void {
