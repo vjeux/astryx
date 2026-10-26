@@ -903,6 +903,19 @@ export function createAnimator(
     };
   };
 
+  /** A Reduced Motion jump on the property still ahead of `time`, if any. */
+  const pendingJump = (
+    property: MotionProperty,
+    time: number,
+  ): Segment | null => {
+    const segment = segments.get(property);
+    return segment != null &&
+      segment.steps === true &&
+      segment.jumps.some(jump => segment.start + jump > time)
+      ? segment
+      : null;
+  };
+
   const jumpSegment = (
     owner: HandleState,
     start: number,
@@ -1014,6 +1027,8 @@ export function createAnimator(
           Math.abs((targets[p] as number) - valueAt(p, time)) > 1e-9,
       );
       const next: Partial<Record<MotionProperty, Segment | null>> = {};
+      /** Where an earlier call's pending travel lands, by property. */
+      const landing: Partial<Record<MotionProperty, number>> = {};
       // A fade the call does not name ends where it was heading.
       const opacityTo = targets.opacity ?? finalValue('opacity');
 
@@ -1045,7 +1060,15 @@ export function createAnimator(
         // it shows.
         const isInvisible = opacityNow <= 1e-6;
         const fadesOut = fadeTo <= 1e-6;
-        const dips = travels && !isInvisible && !fadesOut;
+        // Travel an earlier call has not landed yet lands with this call's.
+        const pending = instant
+          ? []
+          : TRAVEL.filter(
+              property =>
+                !(property in targets) && pendingJump(property, time) != null,
+            );
+        const moves = travels || pending.length > 0;
+        const dips = moves && !isInvisible && !fadesOut;
         for (const property of properties) {
           if (!TRAVEL.includes(property)) {
             continue;
@@ -1060,6 +1083,19 @@ export function createAnimator(
             next[property] = jumpSegment(owner, time, from, toValue, fade / 2); // dip
           }
         }
+        for (const property of pending) {
+          const target = (pendingJump(property, time) as Segment).target;
+          landing[property] = target;
+          next[property] = isInvisible
+            ? null
+            : jumpSegment(
+                owner,
+                time,
+                valueAt(property, time),
+                target,
+                fadesOut ? fade : fade / 2,
+              );
+        }
         if (instant) {
           if (targets.opacity != null) {
             next.opacity = null;
@@ -1069,7 +1105,7 @@ export function createAnimator(
             {at: 0, value: opacityNow},
             {at: fade, value: opacityTo},
           ]);
-        } else if (travels) {
+        } else if (moves) {
           next.opacity = fadeSegment(owner, time, [
             {at: 0, value: opacityNow},
             {at: fade / 2, value: 0},
@@ -1104,7 +1140,9 @@ export function createAnimator(
           resting[property] =
             property === 'opacity'
               ? opacityTo
-              : (targets[property] ?? valueAt(property, time));
+              : (targets[property] ??
+                landing[property] ??
+                valueAt(property, time));
         } else {
           segments.set(property, segment);
         }

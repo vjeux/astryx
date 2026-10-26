@@ -477,6 +477,33 @@ describe('Reduced Motion on a coarse pointer (DR2): a cross-fade of 200 ms or le
   const fade = Math.min(timing.reducedMotionCrossFadeMs, 200);
   const ease = cubicBezier(timing.curves.move);
 
+  /** The first time from `from` on (every ms) at which the property reads `to`. */
+  const landsAt = (
+    animator: ReturnType<typeof setup>['animator'],
+    property: 'x' | 'y',
+    from: number,
+    to: number,
+  ): number => {
+    for (let t = from; t <= from + 4 * fade; t++) {
+      if (Math.abs(animator.get(property, t) - to) < 1e-9) {
+        return t;
+      }
+    }
+    return NaN;
+  };
+
+  it('an earlier call\u2019s pending travel lands only at opacity 0 when a later call restarts the fade', async () => {
+    const {animator} = reduced();
+    animator.animate({y: 100}, {spring: springs.sheetPresent});
+    // Fading out: the y travel has not landed yet.
+    await advance(fade / 4);
+    animator.animate({x: 50}, {spring: springs.navigationPush});
+    const at = landsAt(animator, 'y', clock, 100);
+    expect(at).not.toBeNaN();
+    expect(animator.get('opacity', at)).toBeCloseTo(0, 6);
+    expect(animator.get('x', at)).toBe(50);
+  });
+
   it('a move during a running fade keeps that fade\u2019s target', async () => {
     const {animator} = reduced();
     animator.animate({opacity: 0}, {spring: springs.settle});
