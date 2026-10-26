@@ -57,8 +57,9 @@ describe('conflict matrix', () => {
     inner.requireToFail(edge);
     band.finger(1).down(8, 300, 0, {recognizers: [inner, edge]});
     band.finger(1).drag(60, 2, 60, 6);
-    // The edge pan's own hysteresis is 15 px: the second 10 px step.
-    expect(band.log.slice(0, 2)).toEqual(['edge:began@20', 'inner:failed@20']);
+    // A pan from one edge decides within 10 px (spec:AST-094 FR19): the
+    // first 10 px step.
+    expect(band.log.slice(0, 2)).toEqual(['edge:began@10', 'inner:failed@10']);
 
     const middle = createHarness();
     const edge2 = new ScreenEdgePanGestureRecognizer({name: 'edge'});

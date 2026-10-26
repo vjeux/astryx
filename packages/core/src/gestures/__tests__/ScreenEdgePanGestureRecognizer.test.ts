@@ -58,6 +58,18 @@ describe('ScreenEdgePanGestureRecognizer', () => {
     expect(h.claims).toEqual([]);
   });
 
+  it('decides within 10 pt where the browser keeps every touch behavior: a pan from one edge begins at 10 pt (spec:AST-094 FR19)', () => {
+    const h = createHarness();
+    const edge = new ScreenEdgePanGestureRecognizer({name: 'edge'});
+    const finger = h.finger(1).down(10, 300, 0, {recognizers: [edge]});
+    finger.move(19, 300, 16);
+    expect(edge.state).toBe('possible');
+    finger.move(20, 300, 32);
+    expect(edge.state).toBe('began');
+    expect(h.arena.isClaimed(1)).toBe(true);
+    finger.up(48);
+  });
+
   it('leaves the browser every touch behavior for a pan from one edge (spec:AST-094 FR18)', () => {
     expect(new ScreenEdgePanGestureRecognizer().nativeTouchBehavior).toEqual(
       ALL_NATIVE_TOUCH,
