@@ -15,15 +15,7 @@
 
 import {act, fireEvent, render, screen} from '@testing-library/react';
 import React, {useState} from 'react';
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {Button} from '../Button';
 import {defineTheme} from '../theme/defineTheme';
 import {
@@ -47,12 +39,6 @@ function setCompactTouch(next: boolean) {
     }
   });
 }
-
-beforeAll(async () => {
-  // The sheet loads on demand; load it once so the first open in a test does
-  // not wait on the import.
-  await import('../BottomSheet/BottomSheet');
-});
 
 beforeEach(() => {
   isCompactTouch = false;

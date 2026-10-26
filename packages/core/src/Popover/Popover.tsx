@@ -15,8 +15,9 @@
  * `adaptive` — a BottomSheet on a compact touch screen and the popover
  * elsewhere (the shared adaptive presentation policy), which is what iOS does
  * with a popover unless the app keeps it. The surface is chosen when the
- * popover opens; whichever is open stays until it closes. The BottomSheet
- * loads on demand (lazyPopoverBottomSheet.ts).
+ * popover opens; whichever is open stays until it closes. The BottomSheet is
+ * part of Popover's import, so a phone presents it in the render that opens
+ * it, with no second load.
  *
  * SYNC: When modified, update these files to stay in sync:
  * - /packages/core/src/Popover/Popover.test.tsx
@@ -59,10 +60,8 @@ import {spacingVars} from '../theme/tokens.stylex';
 import {InteractiveRoleContext} from '../InteractiveRoleContext/InteractiveRoleContext';
 import type {SpacingStep} from '../utils/types';
 import {BottomSheetEscapeContext} from '../BottomSheet/bottomSheetEscape';
-import {
-  PopoverBottomSheet,
-  preloadPopoverBottomSheet,
-} from './lazyPopoverBottomSheet';
+import {BottomSheet} from '../BottomSheet/BottomSheet';
+import {useIsHydrating} from '../hooks/useIsHydrating';
 import {Button} from '../Button';
 import {useTranslator} from '../i18n';
 
@@ -589,6 +588,10 @@ export function Popover({
   if (isSheetOpen && !hasSheetBeenOpen) {
     setHasSheetBeenOpen(true);
   }
+  // Nothing of the sheet renders on the server or in the render that
+  // hydrates server HTML (spec:AST-013 FR9); the closed sheet has no visible
+  // markup.
+  const isHydrating = useIsHydrating();
   const isSheetMounted =
     isSheetOpen ||
     hasSheetBeenOpen ||
@@ -673,13 +676,6 @@ export function Popover({
     dialog.addEventListener('close', handleClose);
     return () => dialog.removeEventListener('close', handleClose);
   }, [hasSheetBeenOpen, isSheetOpen]);
-  // An open on a compact touch screen shows the sheet at once: its module
-  // loads as soon as the sheet can be the surface, with nothing rendered.
-  useEffect(() => {
-    if (resolvedPresentation === 'bottom-sheet') {
-      preloadPopoverBottomSheet();
-    }
-  }, [resolvedPresentation]);
   const isAnySurfaceOpen = popover.isOpen || isSheetOpen;
   const sheetId = `${popover.id}-sheet`;
 
@@ -982,6 +978,7 @@ export function Popover({
   // One instance of the content at a time: the sheet holds it while it is
   // mounted, the anchored layer otherwise.
   const isContentInSheet = isSheetMounted;
+  const isSheetShown = isSheetMounted && !isHydrating;
   const anchoredContent = (
     <div data-testid={isContentInSheet ? undefined : testId}>
       {isContentInSheet ? null : content}
@@ -992,9 +989,9 @@ export function Popover({
   // whatever `hasLightDismiss` says, so a finger always has a way out
   // (DEC-8). Escape follows `hasEscapeDismiss`, and the fallback close stays
   // hidden until it is reached, as on the anchored surface.
-  const sheet = isSheetMounted ? (
+  const sheet = isSheetShown ? (
     <BottomSheetEscapeContext value={hasEscapeDismiss}>
-      <PopoverBottomSheet
+      <BottomSheet
         ref={attachSheetPanel}
         id={sheetId}
         isOpen={isSheetOpen}
@@ -1016,7 +1013,7 @@ export function Popover({
             xstyle={styles.sheetFallbackClose}
           />
         ) : null}
-      </PopoverBottomSheet>
+      </BottomSheet>
     </BottomSheetEscapeContext>
   ) : null;
 

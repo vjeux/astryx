@@ -442,8 +442,8 @@ height and inset by Popover's `padding`; `xstyle`, `className` and `style`
 style its panel, and `placement`, `alignment` and `width` do not apply. The
 surface is chosen when the popover opens and stays until it closes, and the
 trigger's expanded state and controlled element follow whichever surface is
-open. The sheet loads on demand, so pages whose popovers stay anchored do not
-load it.
+open. The sheet is part of Popover's import, so a phone presents it in the
+render that opens it, with no second load.
 
 ## Verification gaps
 
