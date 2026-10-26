@@ -54,6 +54,8 @@ export interface BusyWindow {
  */
 /** One display frame, ms: the least progress `blockMainThread` waits for. */
 const ONE_FRAME_MS = 16;
+/** One frame at 60 Hz, the shortest interval frames are counted in. */
+const DISPLAY_FRAME_MS = 1000 / 60;
 
 export async function blockMainThread(
   page: Page,
@@ -167,7 +169,9 @@ export interface BusyProof extends FrameStats {
   readonly compositorFrameMs: number | null;
   /**
    * The screencast's frame interval, from the frames around the window as well
-   * as inside it (a short window has few intervals; a frozen one has none).
+   * as inside it (a short window has few intervals; a frozen one has none),
+   * and never less than one 60 Hz frame: a cast that delivers faster is
+   * counted in display frames.
    */
   readonly cadenceMs: number;
   /**
@@ -382,10 +386,16 @@ export function busyWindowProof(
     tracked.map(f => ({t: f.t, value: f.box == null ? null : f.box[axis]})),
     judged,
   );
-  const cadence =
+  const castMs =
     intervals.length >= 4
       ? intervals[Math.floor(intervals.length / 2)]
-      : stats.medianFrameMs || 1000 / 60;
+      : stats.medianFrameMs || DISPLAY_FRAME_MS;
+  // Frames count in the cast's interval, never in less than one display
+  // frame: WebKit's container screencast alternates about 11 and 17 ms, so its
+  // median lands on one or the other by parity, and counted in 11 ms a 60 Hz
+  // animation would miss frames it never had (more expected frames than it
+  // presented, and every 17 ms interval a dropped frame).
+  const cadence = Math.max(castMs, DISPLAY_FRAME_MS);
   // The compositor's own frames, when recorded: its interval, from the frames
   // around the judged part.
   const draws = [...(presented ?? [])]
@@ -489,7 +499,7 @@ export function busyWindowProof(
   const pxPerFrame =
     first == null || last == null || last.t <= first.t
       ? 0
-      : Math.abs(last.value - first.value) / ((last.t - first.t) / cadence);
+      : Math.abs(last.value - first.value) / ((last.t - first.t) / castMs);
   const notes: string[] = [];
   if (presented != null && compositorFrameMs == null) {
     notes.push(

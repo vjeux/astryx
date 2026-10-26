@@ -178,6 +178,28 @@ describe('busyWindowProof verdict', () => {
     ).toMatch(/frames < 4: the animation under test was not moving/);
   });
 
+  it('counts frames at no more than display rate when the cast alternates short and long intervals', () => {
+    // WebKit's container screencast alternates about 11.3 and 17.1 ms. Its
+    // median interval lands on one or the other by parity; on 11.3 it would
+    // expect more frames than 60 Hz presentation can show, so a spec reading
+    // `expectedFrames` would fail an animation that moved in every frame.
+    for (const intervals of [
+      [11.3, 17.1],
+      [17.1, 11.3],
+    ]) {
+      const proof = busyWindowProof(cadenced(intervals), BLOCK);
+      expect(proof.verdict.failures).toEqual([]);
+      expect(proof.cadenceMs).toBeGreaterThanOrEqual(FRAME);
+      expect(proof.expectedFrames).toBeLessThanOrEqual(proof.frames);
+      expect(proof.moved).toBe(proof.deliveredFrames);
+    }
+    // Still a stall where it delivers nothing for about four frames.
+    const gap = cadenced([11.3, 17.1]).filter(f => f.t < 1300 || f.t > 1360);
+    expect(busyWindowProof(gap, BLOCK).verdict.failures.join('\n')).toMatch(
+      /longest stall/,
+    );
+  });
+
   it('judges the frames a slower screencast delivers by default, and display rate only when asked', () => {
     // One frame in six, as a loaded machine's screencast delivers: every
     // delivered frame moved, so the default verdict passes.
