@@ -111,6 +111,10 @@ export function ContextMenuTouchLayer({
     },
   );
 
+  // Keeps ContextMenu in step with this layer's mount, which it cannot see
+  // from render: until the layer has committed, ContextMenu holds no handle
+  // (a finger keeps the 500 ms long press). On unmount the handle goes, so
+  // ContextMenu never calls a layer that is gone.
   useEffect(() => {
     onHandleChange({
       release: () => feedbackRef.current.release(),
