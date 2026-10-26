@@ -17,7 +17,7 @@
  * one, as the interactive pop gesture's is.
  */
 
-import {UIKIT_SCREEN_EDGE_PAN} from '../motion/uikit/gestures';
+import {UIKIT_PAN, UIKIT_SCREEN_EDGE_PAN} from '../motion/uikit/gestures';
 import {ALL_NATIVE_TOUCH, type NativeTouchBehavior} from './GestureRecognizer';
 import {
   PanGestureRecognizer,
@@ -47,7 +47,14 @@ export class ScreenEdgePanGestureRecognizer extends PanGestureRecognizer {
   constructor(options: ScreenEdgePanGestureRecognizerOptions = {}) {
     super({
       maximumNumberOfTouches: 1,
-      hysteresis: UIKIT_SCREEN_EDGE_PAN.hysteresis.value,
+      // A pan from one edge leaves the browser every touch behavior, so it
+      // competes with native scrolling and decides within 10 pt
+      // (`spec:AST-094` FR19), as a pan starts: UIKit's 15 pt edge
+      // threshold holds where the browser keeps none of the pan's axis.
+      hysteresis:
+        (options.edges ?? ['leading']).length === 1
+          ? UIKIT_PAN.hysteresis.value
+          : UIKIT_SCREEN_EDGE_PAN.hysteresis.value,
       ...options,
     });
     this.edges = options.edges ?? ['leading'];
