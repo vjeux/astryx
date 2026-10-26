@@ -16,8 +16,9 @@
  * - A tap or long press only removes double-tap zoom (`manipulation`): no
  *   300 ms click delay, scrolling and pinch-zoom untouched.
  * - A one-axis pan or swipe gives the browser the other axis.
- * - A pan that coordinates with native scrolling keeps both axes: the
- *   browser scrolls until the edge, and the pan claims from there.
+ * - A `scrollEdge` pan keeps both axes and decides once, when it would
+ *   begin: it begins only if no scroller under the touch could scroll that
+ *   way, and otherwise the drag is the browser's to the lift (FR14).
  * - `pinch-zoom` stays in every value unless a pinch or rotation recognizer
  *   is attached, so the page stays zoomable (WCAG 1.4.4).
  *
@@ -38,7 +39,8 @@ export function combinedNativeBehavior(
   let pinchZoom = true;
   let doubleTapZoom = true;
   for (const recognizer of recognizers) {
-    if (!recognizer.acceptsTouchInput) {
+    // A recognizer turned off hears no touch (spec:AST-094 FR24).
+    if (!recognizer.isEnabled || !recognizer.acceptsTouchInput) {
       continue;
     }
     const behavior = recognizer.nativeTouchBehavior;
@@ -116,6 +118,7 @@ export function holdSelectionStyle(
   const holds = recognizers.some(
     recognizer =>
       recognizer instanceof LongPressGestureRecognizer &&
+      recognizer.isEnabled &&
       recognizer.acceptsTouchInput,
   );
   return holds
