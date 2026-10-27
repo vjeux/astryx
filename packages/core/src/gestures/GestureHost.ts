@@ -278,10 +278,17 @@ export class GestureHost {
    */
   private readonly watched = new Map<
     EventTarget,
-    {count: number; blocking: number}
+    {count: number; blocking: number; claiming: number}
   >();
   /** Fingers whose target listener is the blocking one. */
   private readonly blockingFingers = new Set<number>();
+  /**
+   * Fingers a participant could claim (a recognizer that claims touches, or
+   * a press consumer): only their target's `touchend` may need cancelling,
+   * so a touch only watchers follow gets a passive one (`spec:AST-094`
+   * FR20).
+   */
+  private readonly claimingFingers = new Set<number>();
   /** Touch events already handled (the document's and the target's listeners both see one). */
   private readonly processed = new WeakSet<Event>();
   /** pointerId → arena id, for live mouse and pen contacts. */
@@ -319,6 +326,12 @@ export class GestureHost {
     null;
   private nextId = 1;
   private isInstalled = false;
+  /**
+   * Whether the installed listeners include the cancelable ones (the
+   * document's touchend, contextmenu and the window's click): only while a
+   * participant that can claim is attached (`spec:AST-094` FR20).
+   */
+  private isClaimingInstalled = false;
   private readonly inputMode: 'auto' | 'pointer-events';
   private usesTouchEvents = true;
   private swallowDeadline = Number.NEGATIVE_INFINITY;
@@ -710,9 +723,62 @@ export class GestureHost {
     }
     if (this.shouldListen()) {
       this.install();
+      this.syncClaimingListeners();
     } else if (this.isInstalled) {
       this.uninstall();
     }
+  }
+
+  /**
+   * Whether an enabled participant could claim a touch or cancel a lift: a
+   * consumer, or a recognizer that claims touches. With only watchers
+   * attached, the host's listeners are all passive (`spec:AST-094` FR20).
+   */
+  private hasClaimer(): boolean {
+    for (const registration of this.registry.values()) {
+      if (
+        (registration.consumer != null &&
+          registration.consumer.isEnabled?.() !== false) ||
+        registration.recognizers.some(r => r.isEnabled && r.claimsTouches)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Keeps the document's touchend cancelable, and the contextmenu and click
+   * listeners on, only while a claimer is attached; with only watchers the
+   * touchend is passive and the other two are off.
+   */
+  private syncClaimingListeners(): void {
+    const isClaiming = this.hasClaimer();
+    if (isClaiming === this.isClaimingInstalled) {
+      return;
+    }
+    const doc = this.doc;
+    const view = doc.defaultView;
+    if (this.inputMode === 'auto') {
+      doc.removeEventListener('touchend', this.onTouchEnd, true);
+      doc.addEventListener(
+        'touchend',
+        this.onTouchEnd,
+        isClaiming ? ACTIVE_CAPTURE : PASSIVE_CAPTURE,
+      );
+    }
+    if (isClaiming) {
+      doc.addEventListener('contextmenu', this.onContextMenu, ACTIVE_CAPTURE);
+      view?.addEventListener('click', this.onClick, ACTIVE_CAPTURE);
+    } else {
+      doc.removeEventListener(
+        'contextmenu',
+        this.onContextMenu,
+        ACTIVE_CAPTURE,
+      );
+      view?.removeEventListener('click', this.onClick, ACTIVE_CAPTURE);
+    }
+    this.isClaimingInstalled = isClaiming;
   }
 
   private shouldListen(): boolean {
@@ -749,7 +815,8 @@ export class GestureHost {
     if (this.inputMode === 'auto') {
       doc.addEventListener('touchstart', this.onTouchStart, PASSIVE_CAPTURE);
       doc.addEventListener('touchmove', this.onTouchMove, PASSIVE_CAPTURE);
-      doc.addEventListener('touchend', this.onTouchEnd, ACTIVE_CAPTURE);
+      // Passive until a claimer is attached (syncClaimingListeners).
+      doc.addEventListener('touchend', this.onTouchEnd, PASSIVE_CAPTURE);
       doc.addEventListener('touchcancel', this.onTouchCancel, PASSIVE_CAPTURE);
     }
     doc.addEventListener('pointerdown', this.onPointerDown, PASSIVE_CAPTURE);
@@ -761,10 +828,8 @@ export class GestureHost {
       PASSIVE_CAPTURE,
     );
     doc.addEventListener('pointerout', this.onPointerOut, PASSIVE_CAPTURE);
-    doc.addEventListener('contextmenu', this.onContextMenu, ACTIVE_CAPTURE);
     doc.addEventListener('scroll', this.onScroll, PASSIVE_CAPTURE);
     doc.addEventListener('visibilitychange', this.onVisibilityChange);
-    view?.addEventListener('click', this.onClick, ACTIVE_CAPTURE);
     view?.addEventListener('blur', this.onBlur);
   }
 
@@ -773,11 +838,12 @@ export class GestureHost {
       return;
     }
     this.isInstalled = false;
+    this.isClaimingInstalled = false;
     const doc = this.doc;
     const view = doc.defaultView;
     doc.removeEventListener('touchstart', this.onTouchStart, PASSIVE_CAPTURE);
     doc.removeEventListener('touchmove', this.onTouchMove, PASSIVE_CAPTURE);
-    doc.removeEventListener('touchend', this.onTouchEnd, ACTIVE_CAPTURE);
+    doc.removeEventListener('touchend', this.onTouchEnd, true);
     doc.removeEventListener('touchcancel', this.onTouchCancel, PASSIVE_CAPTURE);
     doc.removeEventListener('pointerdown', this.onPointerDown, PASSIVE_CAPTURE);
     doc.removeEventListener('pointermove', this.onPointerMove, PASSIVE_CAPTURE);
@@ -948,6 +1014,8 @@ export class GestureHost {
         touch.identifier,
         target,
         recognizers.some(claimsWhileMoving),
+        consumer != null ||
+          recognizers.some(recognizer => recognizer.claimsTouches),
       );
       this.lastFed.set(id, {x: touch.clientX, y: touch.clientY, time});
       this.pairTouch(id, {x: touch.clientX, y: touch.clientY, target});
@@ -1182,6 +1250,11 @@ export class GestureHost {
     this.onTouchEnd(event as TouchEvent);
   };
 
+  /** The same, registered passively for a touch only watchers follow. */
+  private readonly onTargetTouchEndPassive = (event: Event): void => {
+    this.onTouchEnd(event as TouchEvent);
+  };
+
   private readonly onTargetTouchCancel = (event: Event): void => {
     this.onTouchCancel(event as TouchEvent);
   };
@@ -1229,6 +1302,7 @@ export class GestureHost {
     identifier: number,
     target: EventTarget | null,
     isBlocking: boolean,
+    isClaiming: boolean,
   ): void {
     if (target == null || typeof target.addEventListener !== 'function') {
       return;
@@ -1236,30 +1310,45 @@ export class GestureHost {
     this.touchTargets.set(identifier, target);
     const state = this.watched.get(target);
     if (state == null) {
-      this.watched.set(target, {count: 1, blocking: isBlocking ? 1 : 0});
+      this.watched.set(target, {
+        count: 1,
+        blocking: isBlocking ? 1 : 0,
+        claiming: isClaiming ? 1 : 0,
+      });
       if (isBlocking) {
         this.blockingFingers.add(identifier);
+      }
+      if (isClaiming) {
+        this.claimingFingers.add(identifier);
       }
       target.addEventListener(
         'touchmove',
         isBlocking ? this.onTargetTouchMove : this.onTargetTouchMovePassive,
         {passive: !isBlocking},
       );
-      target.addEventListener('touchend', this.onTargetTouchEnd, {
-        passive: false,
-      });
+      target.addEventListener(
+        'touchend',
+        isClaiming ? this.onTargetTouchEnd : this.onTargetTouchEndPassive,
+        {passive: !isClaiming},
+      );
       target.addEventListener('touchcancel', this.onTargetTouchCancel, {
         passive: true,
       });
       return;
     }
     const wasBlocking = state.blocking > 0;
+    const wasClaiming = state.claiming > 0;
     state.count += 1;
     if (isBlocking) {
       state.blocking += 1;
       this.blockingFingers.add(identifier);
     }
+    if (isClaiming) {
+      state.claiming += 1;
+      this.claimingFingers.add(identifier);
+    }
     this.swapTargetTouchMove(target, wasBlocking, state.blocking > 0);
+    this.swapTargetTouchEnd(target, wasClaiming, state.claiming > 0);
   }
 
   private unwatchTarget(identifier: number): void {
@@ -1273,12 +1362,17 @@ export class GestureHost {
       return;
     }
     const wasBlocking = state.blocking > 0;
+    const wasClaiming = state.claiming > 0;
     state.count -= 1;
     if (this.blockingFingers.delete(identifier)) {
       state.blocking -= 1;
     }
+    if (this.claimingFingers.delete(identifier)) {
+      state.claiming -= 1;
+    }
     if (state.count > 0) {
       this.swapTargetTouchMove(target, wasBlocking, state.blocking > 0);
+      this.swapTargetTouchEnd(target, wasClaiming, state.claiming > 0);
       return;
     }
     this.watched.delete(target);
@@ -1286,7 +1380,10 @@ export class GestureHost {
       'touchmove',
       wasBlocking ? this.onTargetTouchMove : this.onTargetTouchMovePassive,
     );
-    target.removeEventListener('touchend', this.onTargetTouchEnd);
+    target.removeEventListener(
+      'touchend',
+      wasClaiming ? this.onTargetTouchEnd : this.onTargetTouchEndPassive,
+    );
     target.removeEventListener('touchcancel', this.onTargetTouchCancel);
   }
 
@@ -1312,6 +1409,31 @@ export class GestureHost {
       'touchmove',
       isBlocking ? this.onTargetTouchMove : this.onTargetTouchMovePassive,
       {passive: !isBlocking},
+    );
+  }
+
+  /**
+   * Keeps one `touchend` listener on a watched target: the cancelable one
+   * while a finger on it has a participant that could claim (a lift whose
+   * click must not happen cancels its `touchend`), a passive one while only
+   * watchers follow its fingers (`spec:AST-094` FR20).
+   */
+  private swapTargetTouchEnd(
+    target: EventTarget,
+    wasClaiming: boolean,
+    isClaiming: boolean,
+  ): void {
+    if (wasClaiming === isClaiming) {
+      return;
+    }
+    target.removeEventListener(
+      'touchend',
+      wasClaiming ? this.onTargetTouchEnd : this.onTargetTouchEndPassive,
+    );
+    target.addEventListener(
+      'touchend',
+      isClaiming ? this.onTargetTouchEnd : this.onTargetTouchEndPassive,
+      {passive: !isClaiming},
     );
   }
 
