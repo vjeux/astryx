@@ -1,0 +1,383 @@
+{
+ "r-rm-158-1": {
+  "frames": 470,
+  "reducedMotion": true,
+  "viewportMeta": "width=device-width, initial-scale=1",
+  "layoutViewport": [
+   754
+  ],
+  "show": {
+   "fieldBottoms": [
+    689.3,
+    394.5
+   ],
+   "fieldBottomCount": 2,
+   "translates": [
+    0,
+    294.9
+   ],
+   "minOpacity": 0,
+   "rooms": [
+    0,
+    360
+   ],
+   "keyboardReportedAtMs": 77.1,
+   "rest": {
+    "field": 394.5,
+    "vvh": 442.3,
+    "ih": 754,
+    "gapAboveKeyboard": 47.8,
+    "room": 360,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "hide": {
+   "translates": [
+    0,
+    294.6
+   ],
+   "translateCount": 2,
+   "minOpacity": 0,
+   "roomChanges": [
+    {
+     "ms": 166.6,
+     "from": 360,
+     "to": 0
+    }
+   ],
+   "rest": {
+    "vvh": 754.3,
+    "ih": 754,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "pagePans": [
+   0
+  ],
+  "documentScrolls": [
+   0
+  ],
+  "browser": "org.chromium.chrome versionName=158.0.8123.0"
+ },
+ "r-rm-158-2": {
+  "frames": 473,
+  "reducedMotion": true,
+  "viewportMeta": "width=device-width, initial-scale=1",
+  "layoutViewport": [
+   754
+  ],
+  "show": {
+   "fieldBottoms": [
+    689.3,
+    394.5
+   ],
+   "fieldBottomCount": 2,
+   "translates": [
+    0,
+    294.9
+   ],
+   "minOpacity": 0,
+   "rooms": [
+    0,
+    360
+   ],
+   "keyboardReportedAtMs": 84.6,
+   "rest": {
+    "field": 394.5,
+    "vvh": 442.3,
+    "ih": 754,
+    "gapAboveKeyboard": 47.8,
+    "room": 360,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "hide": {
+   "translates": [
+    0,
+    294.6
+   ],
+   "translateCount": 2,
+   "minOpacity": 0,
+   "roomChanges": [
+    {
+     "ms": 183.3,
+     "from": 360,
+     "to": 0
+    }
+   ],
+   "rest": {
+    "vvh": 754.3,
+    "ih": 754,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "pagePans": [
+   0
+  ],
+  "documentScrolls": [
+   0
+  ],
+  "browser": "org.chromium.chrome versionName=158.0.8123.0"
+ },
+ "r-rm-124-1": {
+  "frames": 464,
+  "reducedMotion": true,
+  "viewportMeta": "width=device-width, initial-scale=1",
+  "layoutViewport": [
+   811
+  ],
+  "show": {
+   "fieldBottoms": [
+    746.5,
+    451.6
+   ],
+   "fieldBottomCount": 2,
+   "translates": [
+    0,
+    294.9
+   ],
+   "minOpacity": 0,
+   "rooms": [
+    0,
+    360
+   ],
+   "keyboardReportedAtMs": 82.8,
+   "rest": {
+    "field": 451.6,
+    "vvh": 499.4,
+    "ih": 811,
+    "gapAboveKeyboard": 47.8,
+    "room": 360,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "hide": {
+   "translates": [
+    0,
+    295
+   ],
+   "translateCount": 2,
+   "minOpacity": 0,
+   "roomChanges": [
+    {
+     "ms": 183.3,
+     "from": 360,
+     "to": 0
+    }
+   ],
+   "rest": {
+    "vvh": 811.4,
+    "ih": 811,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "pagePans": [
+   0
+  ],
+  "documentScrolls": [
+   0
+  ],
+  "browser": "com.android.chrome versionName=124.0.6367.219"
+ },
+ "r-rc-158-1": {
+  "frames": 456,
+  "reducedMotion": false,
+  "viewportMeta": "width=device-width, initial-scale=1, interactive-widget=resizes-content",
+  "layoutViewport": [
+   754,
+   498
+  ],
+  "show": {
+   "fieldBottoms": [
+    689.3,
+    668.9,
+    498
+   ],
+   "fieldBottomCount": 3,
+   "translates": [
+    0
+   ],
+   "minOpacity": 1,
+   "rooms": [
+    0
+   ],
+   "keyboardReportedAtMs": 172.4,
+   "rest": {
+    "field": 498,
+    "vvh": 498.3,
+    "ih": 498,
+    "gapAboveKeyboard": 0,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "hide": {
+   "translates": [
+    0
+   ],
+   "translateCount": 1,
+   "minOpacity": 1,
+   "roomChanges": [],
+   "rest": {
+    "vvh": 754.3,
+    "ih": 754,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "pagePans": [
+   0
+  ],
+  "documentScrolls": [
+   0
+  ],
+  "browser": "org.chromium.chrome versionName=158.0.8123.0"
+ },
+ "r-rc-158-2": {
+  "frames": 456,
+  "reducedMotion": false,
+  "viewportMeta": "width=device-width, initial-scale=1, interactive-widget=resizes-content",
+  "layoutViewport": [
+   754,
+   498
+  ],
+  "show": {
+   "fieldBottoms": [
+    689.3,
+    668.9,
+    498
+   ],
+   "fieldBottomCount": 3,
+   "translates": [
+    0
+   ],
+   "minOpacity": 1,
+   "rooms": [
+    0
+   ],
+   "keyboardReportedAtMs": 113,
+   "rest": {
+    "field": 498,
+    "vvh": 498.3,
+    "ih": 498,
+    "gapAboveKeyboard": 0,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "hide": {
+   "translates": [
+    0
+   ],
+   "translateCount": 1,
+   "minOpacity": 1,
+   "roomChanges": [],
+   "rest": {
+    "vvh": 754.3,
+    "ih": 754,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "pagePans": [
+   0
+  ],
+  "documentScrolls": [
+   0
+  ],
+  "browser": "org.chromium.chrome versionName=158.0.8123.0"
+ },
+ "r-rc-124-1": {
+  "frames": 466,
+  "reducedMotion": false,
+  "viewportMeta": "width=device-width, initial-scale=1, interactive-widget=resizes-content",
+  "layoutViewport": [
+   811,
+   499
+  ],
+  "show": {
+   "fieldBottoms": [
+    746.5,
+    721.5,
+    499.2
+   ],
+   "fieldBottomCount": 3,
+   "translates": [
+    0
+   ],
+   "minOpacity": 1,
+   "rooms": [
+    0
+   ],
+   "keyboardReportedAtMs": 95.6,
+   "rest": {
+    "field": 499.2,
+    "vvh": 499.4,
+    "ih": 499,
+    "gapAboveKeyboard": -0.2,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "hide": {
+   "translates": [
+    0
+   ],
+   "translateCount": 1,
+   "minOpacity": 1,
+   "roomChanges": [],
+   "rest": {
+    "vvh": 811.4,
+    "ih": 811,
+    "room": 0,
+    "translate": "none",
+    "opacity": 1,
+    "scrollY": 0,
+    "vvOffsetTop": 0
+   }
+  },
+  "pagePans": [
+   0
+  ],
+  "documentScrolls": [
+   0
+  ],
+  "browser": "com.android.chrome versionName=124.0.6367.219"
+ }
+}
