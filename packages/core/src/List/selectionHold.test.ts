@@ -33,7 +33,7 @@ import {
   PRESSABLE_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
 } from '../utils/pressFeedback';
-import {DESELECTING_ATTRIBUTE, holdSelection} from './selectionHold';
+import {holdSelection} from './selectionHold';
 
 let clock = 0;
 const now = () => clock;
@@ -344,40 +344,16 @@ describe('interruption, completion and cancel', () => {
     expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
   });
 
-  it('a hold taken while the previous one deselects starts fully held, with no deselecting mark', () => {
+  it('a hold taken while the previous one deselects starts fully held', () => {
     const {row, control} = listRow();
     const first = holdSelection(control, {now});
     void first?.animate(1, {startTime: 1000});
     clock = 1000 + list.deselect.navigationPopMs * 0.4;
-    expect(row.hasAttribute(DESELECTING_ATTRIBUTE)).toBe(true);
     // Tapped again mid-deselect: a new push holds the row.
     const second = holdSelection(control, {now});
     expect(second).not.toBeNull();
     expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('held');
     expect(second?.presentation()).toBe(0);
-    // The dividers beside it stay hidden: nothing marks it deselecting.
-    expect(row.hasAttribute(DESELECTING_ATTRIBUTE)).toBe(false);
-  });
-
-  it("marks the row deselecting from the deselect's first frame until a cancel or the end", async () => {
-    const {row, control} = listRow();
-    const hold = holdSelection(control, {now});
-    // Covered: the dividers stay hidden.
-    expect(row.hasAttribute(DESELECTING_ATTRIBUTE)).toBe(false);
-    hold?.setProgress(0.1);
-    expect(row.hasAttribute(DESELECTING_ATTRIBUTE)).toBe(true);
-    const back = hold?.animate(0, {
-      spring: {response: 0.3, dampingRatio: 0.85},
-      startTime: 1000,
-    });
-    expect(row.hasAttribute(DESELECTING_ATTRIBUTE)).toBe(false);
-    hold?.end(false);
-    await expect(back).resolves.toBe(false);
-    expect(row.hasAttribute(DESELECTING_ATTRIBUTE)).toBe(false);
-    void hold?.animate(1, {startTime: 1000});
-    expect(row.hasAttribute(DESELECTING_ATTRIBUTE)).toBe(true);
-    hold?.end(true);
-    expect(row.hasAttribute(DESELECTING_ATTRIBUTE)).toBe(false);
   });
 
   it('a second hold on the row takes over; the first goes inert', () => {

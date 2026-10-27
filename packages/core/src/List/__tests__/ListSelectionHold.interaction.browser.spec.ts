@@ -90,14 +90,13 @@ async function push(page: Page) {
   };
 }
 
-test('a row tapped again during its slow deselect is held again, with nothing marking it deselecting', async ({
+test('a row tapped again during its slow deselect is held again, fully', async ({
   page,
 }) => {
   const {target} = await push(page);
   await page.getByRole('button', {name: 'Back, slowly'}).click();
-  const deselecting = async () =>
-    target.evaluate(el => el.hasAttribute('data-astryx-deselecting'));
-  await expect.poll(deselecting).toBe(true);
+  // The deselect is under way: the highlight has started to fade.
+  await expect.poll(async () => layerOpacity(target)).toBeLessThan(1);
   // A finger taps the row again mid-deselect: the new push holds it.
   const box = await target.boundingBox();
   if (box == null) {
@@ -106,8 +105,6 @@ test('a row tapped again during its slow deselect is held again, with nothing ma
   const driver = await touchDriver(page);
   await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
   await expect.poll(async () => pressState(target)).toBe('held');
-  // Fully held: its dividers stay hidden, as for the first hold.
-  expect(await deselecting()).toBe(false);
   await expect.poll(async () => layerOpacity(target)).toBe(1);
 });
 
@@ -207,47 +204,6 @@ test('the tapped row stays selected while the pushed screen covers it', async ({
   await page.waitForTimeout(list.highlight.releaseMs + 300);
   expect(await pressState(target)).toBe('held');
   expect(await layerOpacity(target)).toBe(1);
-});
-
-test('the dividers around a held row stay hidden while it is covered, return when the deselect begins, and hide again on a cancel', async ({
-  page,
-}) => {
-  const {target} = await push(page);
-  const dividers = async () =>
-    page
-      .locator('li[data-astryx-pressable]')
-      .evaluateAll(elements =>
-        elements.map(el => getComputedStyle(el).borderBottomColor),
-      );
-  const hidden = 'rgba(0, 0, 0, 0)';
-  // Sent is the second row: its own divider and Inbox's above it.
-  await page.waitForTimeout(list.highlight.releaseMs + 300);
-  const covered = await dividers();
-  expect(covered[0]).toBe(hidden);
-  expect(covered[1]).toBe(hidden);
-  // An interactive pop begins: both come back in its first frame while the
-  // highlight is still mostly on.
-  await page.getByLabel('Pop progress').fill('0.1');
-  await expect.poll(async () => layerOpacity(target)).toBeCloseTo(0.9, 2);
-  const deselecting = await dividers();
-  expect(deselecting[0]).not.toBe(hidden);
-  expect(deselecting[1]).not.toBe(hidden);
-  // A cancel selects the row again, and the dividers hide again.
-  await page.getByRole('button', {name: 'Cancel pop'}).click();
-  await expect.poll(async () => layerOpacity(target)).toBe(1);
-  const reselected = await dividers();
-  expect(reselected[0]).toBe(hidden);
-  expect(reselected[1]).toBe(hidden);
-  // The pop: back in its first frame, and they stay once it ends.
-  await page.getByRole('button', {name: 'Back', exact: true}).click();
-  await holdAnimations(page, target);
-  await seekAnimations(page, 0);
-  const popStart = await dividers();
-  expect(popStart[0]).not.toBe(hidden);
-  expect(popStart[1]).not.toBe(hidden);
-  await releaseAnimations(page, {finish: true});
-  await expect.poll(async () => pressState(target)).toBeNull();
-  expect(await dividers()).toEqual(popStart);
 });
 
 test('a pop deselects the row on the in-transition curve, then its control has focus', async ({

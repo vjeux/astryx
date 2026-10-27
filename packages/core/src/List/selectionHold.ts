@@ -67,14 +67,6 @@ import {TOUCH_QUERY} from '../utils/touchPresentation';
 /** The press state a hold writes; owned by the hold, never by the controller. */
 export const HELD_PRESS_STATE = 'held';
 
-/**
- * Written on a held row once its deselect has begun (a pop's animation or an
- * interactive pop's first frame) and removed by a cancel: a deselecting UIKit
- * cell shows its separators again in the deselect's first frame, while its
- * background is still fading, and hides them again when a cancel selects it.
- */
-export const DESELECTING_ATTRIBUTE = 'data-astryx-deselecting';
-
 interface StartTime {
   /**
    * Start on the document timeline (ms, `performance.now()` clock). Pass the
@@ -263,10 +255,8 @@ export function holdSelection(
     return null;
   }
   // A new hold takes the row from any earlier one, even mid-deselect: it
-  // starts fully held, so nothing marks the row deselecting and the
-  // dividers beside it stay hidden.
+  // starts fully held.
   holds.get(row)?.();
-  row.removeAttribute(DESELECTING_ATTRIBUTE);
 
   const now = options.now ?? defaultNow;
   let ended = false;
@@ -300,7 +290,6 @@ export function holdSelection(
 
     setProgress(progress) {
       if (!ended) {
-        row.setAttribute(DESELECTING_ATTRIBUTE, '');
         layer().set({opacity: 1 - clamp01(progress)});
       }
     },
@@ -314,11 +303,6 @@ export function holdSelection(
       const at = timing.startTime;
       const start = at == null ? {} : {at};
       const target = 1 - to;
-      if (to === 1) {
-        row.setAttribute(DESELECTING_ATTRIBUTE, '');
-      } else {
-        row.removeAttribute(DESELECTING_ATTRIBUTE);
-      }
       const motion = layer();
       if ('spring' in timing) {
         return motion.animate(
@@ -365,7 +349,6 @@ export function holdSelection(
         return;
       }
       drop();
-      row.removeAttribute(DESELECTING_ATTRIBUTE);
       if (completed) {
         ended = true;
         if (holds.get(row) === retire) {

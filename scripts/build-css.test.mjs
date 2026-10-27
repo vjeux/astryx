@@ -450,20 +450,11 @@ describe('build-css astryx.css', () => {
             rule.includes('::before{bottom:')),
       );
 
-    it('hides the dividers beside a pressed row, and reaches its layer over them, only under a finger', () => {
-      const arms = dividerArms('on');
-      // Its own divider, the one above, the layer's reach, the last row's.
-      expect(arms.length).toBeGreaterThanOrEqual(4);
-      for (const rule of arms) {
-        expect(rule).toMatch(TOUCH_GATED);
-      }
-    });
-
-    it('keeps them hidden around a row held through a navigation push the same way', () => {
-      const arms = dividerArms('held');
-      expect(arms.length).toBeGreaterThanOrEqual(4);
-      for (const rule of arms) {
-        expect(rule).toMatch(TOUCH_GATED);
+    it('keeps every divider drawn through a press and a hold: the pressed overlay is the only press treatment', () => {
+      expect(dividerArms('on')).toEqual([]);
+      expect(dividerArms('held')).toEqual([]);
+      for (const rule of rules().filter(line => TOUCH_GATED.test(line))) {
+        expect(rule).not.toContain('border-bottom-color:transparent');
       }
     });
   });
