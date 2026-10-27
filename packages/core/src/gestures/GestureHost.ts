@@ -594,10 +594,15 @@ export class GestureHost {
     this.usesTouchEvents =
       this.inputMode === 'auto' && view != null && 'ontouchstart' in view;
     const doc = this.doc;
-    doc.addEventListener('touchstart', this.onTouchStart, PASSIVE_CAPTURE);
-    doc.addEventListener('touchmove', this.onTouchMove, PASSIVE_CAPTURE);
-    doc.addEventListener('touchend', this.onTouchEnd, ACTIVE_CAPTURE);
-    doc.addEventListener('touchcancel', this.onTouchCancel, PASSIVE_CAPTURE);
+    // Pointer Events only: a finger comes from its pointer events alone. A
+    // browser that has Touch Events still sends them for the same finger, and
+    // reading both would track it twice (a long press needs one touch).
+    if (this.inputMode === 'auto') {
+      doc.addEventListener('touchstart', this.onTouchStart, PASSIVE_CAPTURE);
+      doc.addEventListener('touchmove', this.onTouchMove, PASSIVE_CAPTURE);
+      doc.addEventListener('touchend', this.onTouchEnd, ACTIVE_CAPTURE);
+      doc.addEventListener('touchcancel', this.onTouchCancel, PASSIVE_CAPTURE);
+    }
     doc.addEventListener('pointerdown', this.onPointerDown, PASSIVE_CAPTURE);
     doc.addEventListener('pointermove', this.onPointerMove, PASSIVE_CAPTURE);
     doc.addEventListener('pointerup', this.onPointerUp, PASSIVE_CAPTURE);
@@ -888,6 +893,39 @@ export class GestureHost {
    * no recognizer owns keeps its moves (`spec:AST-094` FR19): nothing is
    * cancelled before a recognizer begins, or for a touch it does not track.
    */
+  /**
+   * Under `inputMode: 'pointer-events'` a finger comes from its pointer
+   * events, so its touches carry no id of ours: the live finger it is, the
+   * nearest pointer-fed finger on the same target. Its touchmoves can then
+   * be cancelled once a recognizer claims it (`spec:AST-094` FR19, FR21).
+   */
+  private pointerFingerAt(touch: Touch): number | undefined {
+    let best: GestureTouch | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (const finger of this.arena.touches) {
+      if (
+        finger.pointerType !== 'touch' ||
+        finger.phase === 'ended' ||
+        finger.phase === 'cancelled' ||
+        !(finger.target instanceof Node) ||
+        !(touch.target instanceof Node) ||
+        !(
+          finger.target === touch.target ||
+          finger.target.contains(touch.target) ||
+          touch.target.contains(finger.target)
+        )
+      ) {
+        continue;
+      }
+      const d = Math.hypot(finger.x - touch.clientX, finger.y - touch.clientY);
+      if (d < bestDistance) {
+        best = finger;
+        bestDistance = d;
+      }
+    }
+    return best?.id;
+  }
+
   private cancelIfClaimed(event: TouchEvent): void {
     if (!event.cancelable || event.defaultPrevented) {
       return;
@@ -896,7 +934,11 @@ export class GestureHost {
     // does not make this one its own.
     const moved = touchesOf(event.changedTouches);
     for (const touch of moved) {
-      const id = this.touchIds.get(touch.identifier);
+      const id =
+        this.touchIds.get(touch.identifier) ??
+        (this.inputMode === 'pointer-events'
+          ? this.pointerFingerAt(touch)
+          : undefined);
       if (id != null && this.arena.isClaimed(id)) {
         event.preventDefault();
         return;
@@ -1308,18 +1350,42 @@ export class GestureHost {
     }
   }
 
+  /**
+   * A group press's own events, finger, pen or mouse alike, through the
+   * pointer path: under a fine pointer the host reads no Touch Events, so
+   * the touch pairing the installed host does for a finger never applies.
+   */
   private readonly onGroupPointer = (event: PointerEvent): void => {
     if (event.pointerId !== this.groupPressPointer) {
       return;
     }
+    const id = this.pointerIds.get(event.pointerId);
     if (event.type === 'pointermove') {
-      this.onPointerMove(event);
+      if (id != null) {
+        this.arena.moved([
+          {
+            id,
+            x: event.clientX,
+            y: event.clientY,
+            time: eventTime(event),
+            history: coalescedHistory(event),
+          },
+        ]);
+      }
       return;
     }
-    if (event.type === 'pointerup') {
-      this.onPointerUp(event);
-    } else {
-      this.onPointerCancel(event);
+    this.pointerIds.delete(event.pointerId);
+    if (id != null) {
+      if (event.type === 'pointerup') {
+        const dispositions = this.arena.ended([
+          {id, x: event.clientX, y: event.clientY, time: eventTime(event)},
+        ]);
+        if (needsSuppression(dispositions)) {
+          this.armSwallower();
+        }
+      } else {
+        this.arena.cancelled([id], eventTime(event));
+      }
     }
     this.endGroupPress();
   };
@@ -1617,7 +1683,18 @@ export class GestureHost {
       ) {
         continue;
       }
-      if (touch.target instanceof Node && scroller.contains(touch.target)) {
+      if (
+        touch.target instanceof Node &&
+        scroller.contains(touch.target) &&
+        // Only a pan this finger drove takes the touch: the browser starts
+        // one only once the finger has travelled the take distance
+        // (spec:AST-094 FR20). A scroll under a finger that has not
+        // (scrollIntoView, a transcript pinned to its end, scroll
+        // anchoring) is the page's own: the touch, and the click it earns,
+        // stay where they are.
+        Math.hypot(touch.x - touch.startX, touch.y - touch.startY) >=
+          UIKIT_GESTURES.press.slop.value
+      ) {
         taken.push(touch.id);
       }
     }
