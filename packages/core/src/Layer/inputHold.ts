@@ -508,19 +508,20 @@ function createPressHold(doc: Document): PressHold | null {
   /**
    * A held press that landed past the shield (it let a mouse through) is
    * captured to it, so its release stays the hold's: a light-dismissing
-   * layer stays open.
+   * layer stays open. A synthetic press has no active pointer to capture
+   * (`setPointerCapture` throws NotFoundError for one); its events are
+   * swallowed all the same.
    */
   const captureToShield = (event: PointerEvent) => {
+    if (!event.isTrusted) {
+      return;
+    }
     const top = liveLayers(doc).at(-1);
     const shield = top == null ? null : held.get(top)?.shield;
     if (shield == null || isInputShield(event.target as Node | null)) {
       return;
     }
-    try {
-      shield.setPointerCapture(event.pointerId);
-    } catch {
-      // Not capturable: its events are swallowed all the same.
-    }
+    shield.setPointerCapture(event.pointerId);
   };
 
   const onPointer = (event: Event) => {
@@ -564,13 +565,13 @@ function createPressHold(doc: Document): PressHold | null {
   };
 
   const onTouch = (event: Event) => {
-    const {changedTouches, touches: down, type} = event as Partial<TouchEvent>;
-    const changed = Array.from(changedTouches ?? []);
+    const {changedTouches, touches: down, type} = event as TouchEvent;
+    const changed = Array.from(changedTouches);
     if (type === 'touchstart') {
       // A held touch the screen no longer has ended unheard: its target left
       // the document (the shield, removed at the release), so its end
       // reached no listener here.
-      const live = new Set(Array.from(down ?? [], touch => touch.identifier));
+      const live = new Set(Array.from(down, touch => touch.identifier));
       for (const identifier of touches) {
         if (!live.has(identifier)) {
           touches.delete(identifier);
@@ -601,7 +602,7 @@ function createPressHold(doc: Document): PressHold | null {
     if (type === 'touchmove') {
       event.stopImmediatePropagation();
       // One finger pans nothing; two still zoom the page.
-      if (down?.length === 1 && event.cancelable) {
+      if (down.length === 1 && event.cancelable) {
         event.preventDefault();
       }
       return;
