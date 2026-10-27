@@ -87,6 +87,16 @@ const STATIC_EXPORTS = {
     types: './dist/theme/dataTokens.stylex.d.ts',
     default: './dist/theme/dataTokens.stylex.js',
   },
+  // Internal entry for Astryx's own packages (Core and Lab), like
+  // internal/motion and internal/touch (architecture:react-component-runtime
+  // INV13). StyleX resolves a constant only from the file that defines it, so
+  // this entry points at the defining .stylex file instead of re-exporting it
+  // through internal/motion.
+  './internal/reducedMotion.stylex': {
+    source: './src/motion/reducedMotion.stylex.ts',
+    types: './dist/motion/reducedMotion.stylex.d.ts',
+    default: './dist/motion/reducedMotion.stylex.js',
+  },
   './theme/syntax': {
     source: './src/theme/syntax/index.ts',
     types: './dist/theme/syntax/index.d.ts',

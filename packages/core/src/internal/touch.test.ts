@@ -50,6 +50,33 @@ describe('internal/touch', () => {
     }
   });
 
+  it('re-exports the gesture host, the other recognizers and the gesture hooks by name, the same values the gestures module exports', async () => {
+    const entry: Record<string, unknown> = await import('./touch');
+    const gestures: Record<string, unknown> = await import('../gestures');
+    for (const name of [
+      'GestureHost',
+      'getGestureHost',
+      'HoverGestureRecognizer',
+      'PinchGestureRecognizer',
+      'RotationGestureRecognizer',
+      'ScreenEdgePanGestureRecognizer',
+      'SwipeGestureRecognizer',
+      'PressTracker',
+      'PRESS_PROFILES',
+      'VelocityTracker',
+      'deriveTouchAction',
+      'gestureHostStyle',
+      'createNativeScrollProbe',
+      'parseTouchAction',
+      'playHaptic',
+      'useGestureRecognizer',
+      'usePressTracker',
+    ]) {
+      expect(entry[name], name).toBeDefined();
+      expect(entry[name], name).toBe(gestures[name]);
+    }
+  });
+
   it('attaches no window or document listeners when it loads', async () => {
     vi.resetModules();
     const onWindow = vi.spyOn(window, 'addEventListener');
