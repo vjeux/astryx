@@ -2,7 +2,7 @@
 
 import {render} from '@testing-library/react';
 import {useRef} from 'react';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, describe, expect, it, onTestFinished, vi} from 'vitest';
 import {GestureHost} from '../gestures/GestureHost';
 import {
   holdInput,
@@ -56,9 +56,20 @@ const flush = async () => {
   await Promise.resolve();
 };
 
+/**
+ * What a listener throws during a case: jsdom reports it as an `error` event
+ * on the window and goes on dispatching, so a hold whose listener throws
+ * would otherwise pass. None is expected.
+ */
+const listenerErrors: unknown[] = [];
+window.addEventListener('error', event => {
+  listenerErrors.push(event.error);
+});
+
 afterEach(() => {
   document.body.replaceChildren();
   vi.restoreAllMocks();
+  expect(listenerErrors.splice(0)).toEqual([]);
 });
 
 describe('holdInput', () => {
@@ -100,9 +111,19 @@ describe('holdInput', () => {
     const press = new Event('pointerdown', {bubbles: true, cancelable: true});
     const click = new MouseEvent('click', {bubbles: true, cancelable: true});
     const touch = new Event('touchstart', {bubbles: true, cancelable: true});
+    // A touch event carries its touch lists.
+    Object.defineProperty(touch, 'changedTouches', {value: [{identifier: 0}]});
+    Object.defineProperty(touch, 'touches', {value: [{identifier: 0}]});
     shield.dispatchEvent(press);
     shield.dispatchEvent(click);
     shield.dispatchEvent(touch);
+    // A touch that starts also ends.
+    const touchEnd = new Event('touchend', {bubbles: true, cancelable: true});
+    Object.defineProperty(touchEnd, 'changedTouches', {
+      value: [{identifier: 0}],
+    });
+    Object.defineProperty(touchEnd, 'touches', {value: []});
+    shield.dispatchEvent(touchEnd);
     expect(seen).toEqual([]);
     expect(press.defaultPrevented).toBe(true);
     expect(click.defaultPrevented).toBe(true);
@@ -240,16 +261,11 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     for (const release of releases.splice(0)) {
       release();
     }
-  });
-
-  beforeEach(() => {
-    // Each case starts with a finger as the page's latest pointer.
-    document.body.dispatchEvent(
-      new PointerEvent('pointerdown', {...INIT, pointerType: 'touch'}),
-    );
-    document.body.dispatchEvent(
-      new PointerEvent('pointerup', {...INIT, pointerType: 'touch'}),
-    );
+    // A new press ends a released hold's click window (the held press's
+    // click can no longer come), so its window listeners go before the next
+    // case rather than lingering into it.
+    pointer(document.body, 'pointerdown', 'mouse');
+    pointer(document.body, 'pointerup', 'mouse');
   });
 
   /** A button that records every event that reaches it. */
@@ -474,6 +490,31 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     expect(isGated(child)).toBe(false);
     // What lands on a shield is held, a mouse's press included.
     expect(isGated(shield)).toBe(true);
+  });
+
+  it('swallows a synthetic press that lands past a lowered shield without capturing it: it has no active pointer to capture', () => {
+    // jsdom implements no pointer capture; a browser's setPointerCapture
+    // throws NotFoundError for a pointer that is not active, as a synthetic
+    // press's is not.
+    const setPointerCapture = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'setPointerCapture', {
+      configurable: true,
+      value: setPointerCapture,
+    });
+    onTestFinished(() => {
+      Reflect.deleteProperty(HTMLElement.prototype, 'setPointerCapture');
+    });
+    const {layer} = mountLayer();
+    const {button, reached} = recorder();
+    hold(layer);
+    // A moving mouse lowers the shield, so the finger lands past it.
+    pointer(document.body, 'pointermove', 'mouse');
+    const down = pointer(button, 'pointerdown', 'touch');
+    pointer(button, 'pointerup', 'touch');
+    click(button, 'touch');
+    expect(setPointerCapture).not.toHaveBeenCalled();
+    expect(down.defaultPrevented).toBe(true);
+    expect(reached).toEqual([]);
   });
 
   it('lets a key or assistive technology click through: it counts no press', () => {
