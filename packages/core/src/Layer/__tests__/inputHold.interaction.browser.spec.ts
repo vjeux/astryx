@@ -49,6 +49,18 @@ interface HoldApi {
 
 let bundle = '';
 
+/** What the page throws during a case, a listener's included: none is expected. */
+let pageErrors: string[] = [];
+test.beforeEach(({page}) => {
+  pageErrors = [];
+  page.on('pageerror', error => {
+    pageErrors.push(error.message);
+  });
+});
+test.afterEach(() => {
+  expect(pageErrors).toEqual([]);
+});
+
 test.beforeAll(async () => {
   const result = await build({
     entryPoints: [
