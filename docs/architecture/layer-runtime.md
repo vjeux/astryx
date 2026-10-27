@@ -566,11 +566,13 @@ Current gaps are observable facts, not current target behavior:
 migration, verification, and completion criteria for these gaps. This record must
 be updated only as that work ships.
 
-INV14 and INV15 are not met yet, and `spec:AST-003` does not cover them: no
-shared presentation hold, exit copy, runtime backdrop tint, or lift module
-exists, and Dialog, Drawer, BottomSheet, Lightbox, MobileNav, ToastViewport,
-and Selector each build their own top-layer mounting, exit, or backdrop, and
-Popover builds its own presentation hold for its sheet presentation.
+INV14 and INV15 are not met yet, and `spec:AST-003` does not cover them. The
+runtime owns the shared exit copy (INV13, `placeLayerExitCopy`), and the one
+lift-from-trigger module exists (INV15, `packages/core/src/liftFromTrigger/`);
+no shared presentation hold or runtime backdrop tint exists, Dialog, Drawer,
+BottomSheet, Lightbox, MobileNav, ToastViewport, and Selector each build their
+own top-layer mounting, exit, or backdrop, and Popover builds its own
+presentation hold for its sheet presentation.
 BottomSheet's own includes its sheet stack's mounting — the re-show that
 keeps a document's sheets in open order, a step dialog's modal present, and
 the non-modal sheet's popover host — alongside its scrim; the ordering rules
