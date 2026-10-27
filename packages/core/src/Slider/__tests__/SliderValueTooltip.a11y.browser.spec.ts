@@ -35,6 +35,12 @@ async function mount(page: Page, storyId: string, direction = 'ltr') {
   await page.locator('.astryx-slider-control').first().waitFor();
   await page.evaluate(dir => {
     document.documentElement.dir = dir;
+    // Room above the control, as a page gives a slider. A layer keeps a
+    // 16 px margin from the viewport edge beyond its 4 px gap, so a 28 px
+    // tooltip needs 48 px above its anchor to open there; the story alone
+    // puts the control 40 px from the top, where the tooltip rightly flips
+    // below (the no-room case scrolls the control to the edge on purpose).
+    document.body.style.paddingTop = '120px';
   }, direction);
 }
 
@@ -181,9 +187,12 @@ for (const direction of ['ltr', 'rtl'] as const) {
     // double translation would put it at twice the thumb's travel.
     for (const value of [50, 25, 75, 10, 90]) {
       await page.keyboard.press('Home');
+      // ArrowUp raises the value in either direction; under RTL ArrowRight
+      // lowers it, so the value would stay at its start.
       for (let i = 0; i < value; i++) {
-        await page.keyboard.press('ArrowRight');
+        await page.keyboard.press('ArrowUp');
       }
+      await expect(thumb).toHaveAttribute('aria-valuenow', String(value));
       await frame(page);
       m = await measure(page);
       expectAbove(m, `${value}`);
@@ -307,11 +316,21 @@ test('forced colors and reduced motion keep the tooltip over the thumb', async (
   await shot(page, `${browserName}-forced-colors-reduced-motion-end`);
 });
 
-test.describe('drag clip', () => {
-  test.use({video: {mode: 'on', size: {width: 800, height: 300}}});
-
-  test('the tooltip rides the thumb through a drag', async ({page}) => {
-    await page.setViewportSize({width: 800, height: 300});
+test('the tooltip rides the thumb through a drag, recorded as a clip', async ({
+  browser,
+}, testInfo) => {
+  // The clip records in a context of its own: a video option on a describe
+  // group forces a new worker, which Playwright refuses, and it would leave
+  // the whole file unlisted.
+  const context = await browser.newContext({
+    viewport: {width: 800, height: 300},
+    recordVideo: {
+      dir: testInfo.outputPath('drag-clip'),
+      size: {width: 800, height: 300},
+    },
+  });
+  const page = await context.newPage();
+  try {
     await mount(page, 'core-slider--default');
     const thumb = page.getByRole('slider');
     const control = page.locator('.astryx-slider-control').first();
@@ -331,5 +350,16 @@ test.describe('drag clip', () => {
     }
     await page.mouse.up();
     await expect(thumb).toHaveAttribute('aria-valuenow', /\d+/);
+  } finally {
+    // Closing the context writes the clip.
+    await context.close();
+  }
+  const video = page.video();
+  if (video == null) {
+    throw new Error('the drag clip did not record');
+  }
+  await testInfo.attach('drag clip', {
+    path: await video.path(),
+    contentType: 'video/webm',
   });
 });
