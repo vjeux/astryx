@@ -23,8 +23,12 @@
  * are, so a live control measures: only where the primary pointer is coarse,
  * only while on screen, and every control pending a measurement in one read
  * pass per frame (all reads, then all writes), up to a 4 ms budget, the rest
- * carried to the next frame. Until the first pass the
- * insets are 0, so first paint and server rendering never overlap anything.
+ * carried to the next frame. A control mid-motion (it or a sibling under a
+ * finite animation, such as a row sliding in its list) is measured once the
+ * motion ends: its rect mid-motion is where one frame puts it, and a write
+ * then would lay out and paint during a compositor-only motion. Until the
+ * first pass the insets are 0, so first paint and server rendering never
+ * overlap anything.
  */
 
 import {observeContent} from './sharedMutationObserver';
@@ -282,6 +286,8 @@ interface Watched {
 
 const watched = new Map<Element, Watched>();
 const pending = new Set<Watch>();
+/** Controls waiting for the motion around them to end before a measurement. */
+const awaitingRest = new Set<Watch>();
 const observedSizes = new WeakMap<Element, string>();
 const scopeTimers = new Map<Element, ReturnType<typeof setTimeout>>();
 let frame: number | null = null;
@@ -400,12 +406,75 @@ function measureOne(
   };
 }
 
+/**
+ * Whether an animation will settle: running or held, and finite. An endless
+ * one (a spinner) moves nothing that comes to rest, so it holds nothing.
+ */
+function isSettling(animation: Animation): boolean {
+  if (animation.playState !== 'running' && animation.playState !== 'paused') {
+    return false;
+  }
+  const end = animation.effect?.getComputedTiming().endTime;
+  return typeof end === 'number' && Number.isFinite(end);
+}
+
+/**
+ * The settling animations in a control's parent, the control included: a row
+ * sliding in its list, or its neighbours sliding past it, moves it by
+ * transform, which its client rect reads as one frame has it. Read once per
+ * parent per pass.
+ */
+function motionsAround(
+  element: Element,
+  seen: Map<Element, Animation[]>,
+): Animation[] {
+  const scope = element.parentElement ?? element;
+  let motions = seen.get(scope);
+  if (motions == null) {
+    motions =
+      typeof scope.getAnimations === 'function'
+        ? scope.getAnimations({subtree: true}).filter(isSettling)
+        : [];
+    seen.set(scope, motions);
+  }
+  return motions;
+}
+
+/** Measures `watch` once every motion around it has ended. */
+function measureAtRest(watch: Watch, motions: ReadonlyArray<Animation>): void {
+  if (awaitingRest.has(watch)) {
+    return;
+  }
+  awaitingRest.add(watch);
+  void Promise.allSettled(motions.map(async motion => motion.finished)).then(
+    () => {
+      awaitingRest.delete(watch);
+      if (watched.get(watch.element)?.watches.has(watch) === true) {
+        schedule(watch);
+      }
+    },
+  );
+}
+
 /** One pass: every pending control's reads, then every write. */
 function measure(): void {
   frame = null;
-  const due = [...pending].filter(watch => watch.isVisible);
+  const visible = [...pending].filter(watch => watch.isVisible);
   pending.clear();
-  if (!isCoarse || due.length === 0) {
+  if (!isCoarse || visible.length === 0) {
+    return;
+  }
+  // A control mid-motion waits for the motion to end: no read, no write.
+  const seen = new Map<Element, Animation[]>();
+  const due = visible.filter(watch => {
+    const motions = motionsAround(watch.element, seen);
+    if (motions.length === 0) {
+      return true;
+    }
+    measureAtRest(watch, motions);
+    return false;
+  });
+  if (due.length === 0) {
     return;
   }
   // Reads: the page's interactive elements once for the whole pass.
@@ -704,7 +773,8 @@ export function resetHitAreaForTests(): void {
  * the pointer query is listened to; where it is, the element is measured
  * while on screen, on resize (its own, its parent's, the window's) and once
  * its parent's text and children settle after a change, all in the shared
- * per-frame pass, and re-measured at once when a touch starts on it.
+ * per-frame pass (mid-motion, once the motion ends), and re-measured at once
+ * when a touch starts on it.
  */
 export function watchHitArea(
   element: Element,

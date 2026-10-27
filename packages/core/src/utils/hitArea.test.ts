@@ -394,6 +394,64 @@ describe('watchHitArea', () => {
     vi.useRealTimers();
   });
 
+  it('measures a control at rest: a pass while it or a sibling slides (a row in its list) reads and writes nothing, then measures once the motion ends', async () => {
+    const control = byId('switch');
+    const parent = control.parentElement as HTMLElement;
+    place(byId('link'), rect(132, 100, 60, 24));
+    // A frame into a slide: the transform puts the control 1.5 px down.
+    place(control, rect(100, 101.5, 24, 24));
+    let finish = (): void => {};
+    const finished = new Promise<void>(resolve => {
+      finish = resolve;
+    });
+    const slide = {
+      playState: 'running',
+      effect: {getComputedTiming: () => ({endTime: 400})},
+      finished,
+    } as unknown as Animation;
+    parent.getAnimations = () => [slide];
+    const heard: HitInsets[] = [];
+    const stop = watchHitArea(control, insets => heard.push(insets));
+    try {
+      show(control);
+      log.length = 0;
+      flush();
+      expect(heard).toEqual([]);
+      expect(log).toEqual([]);
+      // The slide ends where the control's layout puts it.
+      place(control, rect(100, 100, 24, 24));
+      parent.getAnimations = () => [];
+      finish();
+      await vi.waitFor(() => expect(frames.length).toBeGreaterThan(0));
+      flush();
+      expect(heard).toEqual([{top: 10, right: 4, bottom: 10, left: 10}]);
+    } finally {
+      stop();
+    }
+  });
+
+  it('does not wait on an endless animation nearby (a spinner)', () => {
+    const control = byId('switch');
+    const parent = control.parentElement as HTMLElement;
+    place(control, rect(100, 100, 24, 24));
+    place(byId('link'), rect(132, 100, 60, 24));
+    const spinner = {
+      playState: 'running',
+      effect: {getComputedTiming: () => ({endTime: Infinity})},
+      finished: new Promise<void>(() => {}),
+    } as unknown as Animation;
+    parent.getAnimations = () => [spinner];
+    const heard: HitInsets[] = [];
+    const stop = watchHitArea(control, insets => heard.push(insets));
+    try {
+      show(control);
+      flush();
+      expect(heard).toEqual([{top: 10, right: 4, bottom: 10, left: 10}]);
+    } finally {
+      stop();
+    }
+  });
+
   it('swallows the click of a touch that a fresh measurement puts nearer a neighbour, and only that one', () => {
     const control = byId('switch');
     const link = byId('link');
