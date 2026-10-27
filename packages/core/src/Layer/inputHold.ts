@@ -48,6 +48,14 @@
  * popover, so its `toggle` events reach a document listener that logs
  * every popover's: such a log keeps to its own popovers.
  *
+ * A touch that lands during a hold is the hold's to its end (FR35): if it is
+ * still down when the hold ends, the shield stays, taking no new hit
+ * (`pointer-events: none`), until that touch and its pointer end, so their
+ * end lands on the shield, swallowed and held from the host like the rest of
+ * the touch. A shield removed mid-touch would send that touch's end to a
+ * detached node, which reaches no listener, and the browser then drops the
+ * next tap's click.
+ *
  * One hold per layer: holds on a held layer stack, and the layer comes back
  * when the last one ends (when what ends it settles, resolved or rejected;
  * when its release runs; on unmount, for the hook). Nothing is written to
@@ -90,6 +98,15 @@ interface HeldLayer {
 const held = new WeakMap<Element, HeldLayer>();
 const gatedDocuments = new WeakSet<Document>();
 const liveShields = new WeakSet<Node>();
+/** Shields kept after their hold for a touch that landed on them. */
+const lingeringShields = new WeakSet<Node>();
+
+/** The pointers and touches down on a shield, and how it stops watching. */
+interface ShieldPresses {
+  down: Set<string>;
+  stop: () => void;
+}
+const shieldPresses = new WeakMap<Node, ShieldPresses>();
 
 /**
  * Whether `node` is the shield of a live hold. A hit test that must see past
@@ -102,7 +119,8 @@ export function isInputShield(node: Node | null): boolean {
 /**
  * Whether `target` is inside a held layer, walking the flat tree as the
  * gesture host does (parentAcrossShadow: a slotted node to its slot, a
- * shadow root to its host).
+ * shadow root to its host), or is a shield kept for a touch that landed
+ * during its hold.
  */
 export function isInHeldLayer(target: Node | null): boolean {
   for (
@@ -110,7 +128,10 @@ export function isInHeldLayer(target: Node | null): boolean {
     node != null;
     node = parentAcrossShadow(node)
   ) {
-    if (node instanceof Element && held.has(node)) {
+    if (
+      lingeringShields.has(node) ||
+      (node instanceof Element && held.has(node))
+    ) {
       return true;
     }
   }
@@ -176,6 +197,7 @@ function addShield(layer: Element): HTMLElement {
   for (const type of SWALLOWED) {
     shield.addEventListener(type, swallow, {capture: true, passive: false});
   }
+  watchPresses(shield);
   layer.append(shield);
   liveShields.add(shield);
   if (typeof shield.showPopover === 'function') {
@@ -187,6 +209,92 @@ function addShield(layer: Element): HTMLElement {
     }
   }
   return shield;
+}
+
+const PRESS_STARTS = ['pointerdown', 'touchstart'] as const;
+const PRESS_ENDS = [
+  'pointerup',
+  'pointercancel',
+  'touchend',
+  'touchcancel',
+] as const;
+
+/** The pointer and touch keys an event starts or ends. */
+function pressKeys(event: Event): string[] {
+  const keys: string[] = [];
+  const {pointerId, changedTouches} = event as Event & {
+    pointerId?: number;
+    changedTouches?: ArrayLike<{identifier: number}>;
+  };
+  if (typeof pointerId === 'number') {
+    keys.push(`pointer:${pointerId}`);
+  }
+  if (changedTouches != null) {
+    for (let i = 0; i < changedTouches.length; i++) {
+      keys.push(`touch:${changedTouches[i].identifier}`);
+    }
+  }
+  return keys;
+}
+
+/**
+ * Records the pointers and touches that land on `shield`, and their ends
+ * anywhere in its document (a mouse's release lands where the mouse is),
+ * so a shield kept after its hold goes when the last of them ends.
+ */
+function watchPresses(shield: HTMLElement): void {
+  const doc = shield.ownerDocument;
+  const down = new Set<string>();
+  const onStart = (event: Event) => {
+    for (const key of pressKeys(event)) {
+      down.add(key);
+    }
+  };
+  const onEnd = (event: Event) => {
+    if (down.size === 0) {
+      return;
+    }
+    for (const key of pressKeys(event)) {
+      down.delete(key);
+    }
+    if (down.size === 0 && lingeringShields.has(shield)) {
+      removeShield(shield);
+    }
+  };
+  for (const type of PRESS_STARTS) {
+    shield.addEventListener(type, onStart, {capture: true, passive: true});
+  }
+  for (const type of PRESS_ENDS) {
+    doc.addEventListener(type, onEnd, {capture: true, passive: true});
+  }
+  shieldPresses.set(shield, {
+    down,
+    stop: () => {
+      for (const type of PRESS_ENDS) {
+        doc.removeEventListener(type, onEnd, {capture: true});
+      }
+    },
+  });
+}
+
+function removeShield(shield: HTMLElement): void {
+  lingeringShields.delete(shield);
+  shieldPresses.get(shield)?.stop();
+  shield.remove();
+}
+
+/**
+ * Ends a shield's hold: it goes, or, while a touch that landed on it is
+ * still down, it stays for that touch alone, taking no new hit.
+ */
+function retireShield(shield: HTMLElement): void {
+  liveShields.delete(shield);
+  if ((shieldPresses.get(shield)?.down.size ?? 0) === 0) {
+    removeShield(shield);
+    return;
+  }
+  shield.style.pointerEvents = 'none';
+  lingeringShields.add(shield);
 }
 
 /**
@@ -235,8 +343,7 @@ export function holdInput(
     }
     if (current.viewport === 0 && current.layer === 0) {
       if (current.shield != null) {
-        liveShields.delete(current.shield);
-        current.shield.remove();
+        retireShield(current.shield);
       }
       held.delete(layer);
     }

@@ -13,7 +13,9 @@
  *   same; keys still act during a presentation's input hold; a dismissal's
  *   hold makes the content inert and moves focus out of it, so no key acts
  *   on it either (a focused button that turns inert still takes Enter and
- *   Space in both engines); each release gives input back; a hit test
+ *   Space in both engines); each release gives input back, and a touch
+ *   still down at the release stays the hold's to its end (its release and
+ *   its end land on the shield); a hit test
  *   that skips shields (isInputShield) finds what lies beneath, and
  *   a layer above the held one still wins; a one-finger
  *   pan on the shield scrolls nothing while a pinch on it still zooms the
@@ -146,6 +148,57 @@ test("during a presentation's input hold on a modal dialog, a tap on it or besid
   expect(await hitAt(page, beside)).toBe('dialog');
   await driver.tap(message);
   await expect.poll(async () => (await readLog(page)).taps).toBe(1);
+});
+
+test("a touch that lands during a hold and is still down at the release stays the hold's to its end: its release lands on the shield, the document hears it end, and the next tap clicks (spec:AST-094 FR35)", async ({
+  page,
+}) => {
+  const driver = await load(page);
+  await open(page, 'pop');
+  const action = await centre(page, 'popAction');
+  await hold(page, 'pop', 'viewport');
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as {__seen: string[]}).__seen = seen;
+    for (const type of ['pointerup', 'touchend']) {
+      window.addEventListener(
+        type,
+        event => {
+          const target = event.target as Element;
+          seen.push(
+            `${type}:${target.id === '' ? target.tagName.toLowerCase() : target.id}`,
+          );
+        },
+        true,
+      );
+    }
+  });
+  // A drag that lands on the shield and is still moving when the hold
+  // releases.
+  const dragging = driver.play(
+    drag(action, {x: action.x, y: action.y + 120}, {durationMs: 760, hz: 60}),
+  );
+  await page.waitForTimeout(300);
+  await release(page);
+  await dragging;
+  await settle(page);
+  // Its release lands on the shield (no element of the layer or the page
+  // gets a release it never saw pressed), and its end reaches the document,
+  // so every touch listener hears that touch end.
+  expect(
+    await page.evaluate(() => (window as unknown as {__seen: string[]}).__seen),
+  ).toEqual(['pointerup:div', 'touchend:div']);
+  expect(await readLog(page)).toEqual({
+    clicks: [],
+    taps: 0,
+    toggles: ['pop:open'],
+  });
+  expect(await hitAt(page, action)).toBe('popAction');
+  // The next tap is the layer's: its click lands.
+  await driver.tap(action);
+  await expect
+    .poll(async () => (await readLog(page)).clicks)
+    .toEqual(['popAction']);
 });
 
 test('while a dismissal holds it, its content is inert, focus and keys leave it, and the shield still takes every tap; the release restores both', async ({

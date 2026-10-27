@@ -89,6 +89,69 @@ describe('holdInput', () => {
     expect(touch.defaultPrevented).toBe(false);
   });
 
+  it('keeps the shield for a touch that landed during the hold and is still down when it ends, taking no new hit, until that touch ends (spec:AST-094 FR35)', async () => {
+    const {layer, child} = mountLayer();
+    const end = deferred();
+    holdInput(layer, {until: end.promise, scope: 'viewport'});
+    const shield = layer.lastElementChild as HTMLElement;
+    const event = (
+      type: string,
+      init: {pointerId?: number; touch?: number},
+    ) => {
+      const created = new Event(type, {bubbles: true, cancelable: true});
+      if (init.pointerId != null) {
+        Object.defineProperty(created, 'pointerId', {value: init.pointerId});
+      }
+      if (init.touch != null) {
+        Object.defineProperty(created, 'changedTouches', {
+          value: [{identifier: init.touch}],
+        });
+      }
+      return created;
+    };
+    // A finger lands on the shield: its pointer and its touch.
+    shield.dispatchEvent(event('pointerdown', {pointerId: 2}));
+    shield.dispatchEvent(event('touchstart', {touch: 0}));
+    end.resolve();
+    await flush();
+    // The hold is over, the layer is live, and the shield takes no new hit,
+    // but it stays for that touch, whose events keep landing on it, held.
+    expect(isInHeldLayer(child)).toBe(false);
+    expect(isInputShield(shield)).toBe(false);
+    expect(shield.isConnected).toBe(true);
+    expect(shield.style.pointerEvents).toBe('none');
+    expect(isInHeldLayer(shield)).toBe(true);
+    // Another touch ending changes nothing.
+    document.dispatchEvent(event('touchend', {touch: 1}));
+    expect(shield.isConnected).toBe(true);
+    shield.dispatchEvent(event('pointerup', {pointerId: 2}));
+    expect(shield.isConnected).toBe(true);
+    // Its touch ends on the shield, swallowed, and the shield goes.
+    const touchEnd = event('touchend', {touch: 0});
+    shield.dispatchEvent(touchEnd);
+    expect(touchEnd.defaultPrevented).toBe(true);
+    expect(shield.isConnected).toBe(false);
+    expect(isInHeldLayer(shield)).toBe(false);
+  });
+
+  it('removes the shield at the end of the hold when nothing that landed on it is still down', async () => {
+    const {layer} = mountLayer();
+    const end = deferred();
+    holdInput(layer, {until: end.promise, scope: 'viewport'});
+    const shield = layer.lastElementChild as HTMLElement;
+    const press = (type: string) => {
+      const created = new Event(type, {bubbles: true, cancelable: true});
+      Object.defineProperty(created, 'pointerId', {value: 1});
+      return created;
+    };
+    // A mouse pressed on the shield and released, during the hold.
+    shield.dispatchEvent(press('pointerdown'));
+    shield.dispatchEvent(press('pointerup'));
+    end.resolve();
+    await flush();
+    expect(shield.isConnected).toBe(false);
+  });
+
   it("holds a dismissing layer: its content inert, the layer itself live under the shield, each element's inert given back", async () => {
     const {layer, child} = mountLayer();
     const already = document.createElement('div');
