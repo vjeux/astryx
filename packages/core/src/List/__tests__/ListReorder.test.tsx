@@ -282,12 +282,12 @@ describe('List reorderable', () => {
     expect(
       await screen.findByRole('button', {name: 'Reorder item 2'}),
     ).toBeInTheDocument();
-    // Only the nameless row warns, once.
-    const nameless = warn.mock.calls.filter(([message]) =>
-      String(message).includes('A reorderable row has no accessible name'),
-    );
-    expect(nameless).toHaveLength(1);
+    // Only the nameless row warns, once, and nothing else does.
+    const warned = warn.mock.calls.map(([message]) => String(message));
     warn.mockRestore();
+    expect(warned).toEqual([
+      expect.stringContaining('A reorderable row has no accessible name'),
+    ]);
   });
 
   it('does not warn about a nameless reorderable row in production', async () => {
@@ -307,12 +307,10 @@ describe('List reorderable', () => {
       expect(
         await screen.findByRole('button', {name: 'Reorder item 1'}),
       ).toBeInTheDocument();
-      expect(
-        warn.mock.calls.some(([message]) =>
-          String(message).includes('A reorderable row has no accessible name'),
-        ),
-      ).toBe(false);
+      // Production warns nothing at all.
+      const warned = warn.mock.calls.map(([message]) => String(message));
       warn.mockRestore();
+      expect(warned).toEqual([]);
     } finally {
       vi.unstubAllEnvs();
     }
@@ -428,10 +426,7 @@ describe('List reorderable', () => {
 
   it('keeps a row without an item key in place, and warns in development when no row has one', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const warnings = () =>
-      warn.mock.calls.filter(([message]) =>
-        String(message).includes('`itemKey`'),
-      );
+    const warnings = () => warn.mock.calls.map(([message]) => String(message));
     const {unmount} = render(
       <List reorderable={createReorderable({onReorder: () => {}})}>
         <ListItem itemKey="inbox" label="Inbox" />
@@ -440,7 +435,7 @@ describe('List reorderable', () => {
     );
     expect(screen.queryByRole('button', {name: 'Reorder Sent'})).toBeNull();
     expect(handleOf('Inbox')).toBeInTheDocument();
-    expect(warnings()).toHaveLength(0);
+    expect(warnings()).toEqual([]);
     unmount();
     render(
       <List reorderable={createReorderable({onReorder: () => {}})}>
@@ -448,8 +443,9 @@ describe('List reorderable', () => {
         <ListItem label="Drafts" />
       </List>,
     );
-    expect(warnings()).toHaveLength(1);
+    const warned = warnings();
     warn.mockRestore();
+    expect(warned).toEqual([expect.stringContaining('`itemKey`')]);
   });
 
   it.each([
@@ -961,12 +957,9 @@ describe('List reorderable', () => {
       }
       await user.keyboard('{ArrowDown}');
       expect(onReorder).not.toHaveBeenCalled();
-      expect(
-        warn.mock.calls.some(([message]) =>
-          String(message).includes(`start(${key})`),
-        ),
-      ).toBe(true);
+      const warned = warn.mock.calls.map(([message]) => String(message));
       warn.mockRestore();
+      expect(warned).toEqual([expect.stringContaining(`start(${key})`)]);
     },
   );
 
@@ -986,12 +979,11 @@ describe('List reorderable', () => {
     act(() => reorderable.start('same'));
     expect(handleOf("Later's")).toHaveAttribute('aria-pressed', 'true');
     expect(handleOf("Today's")).toHaveAttribute('aria-pressed', 'false');
-    expect(
-      warn.mock.calls.some(([message]) =>
-        String(message).includes('more than one collection'),
-      ),
-    ).toBe(true);
+    const warned = warn.mock.calls.map(([message]) => String(message));
     warn.mockRestore();
+    expect(warned).toEqual([
+      expect.stringContaining('more than one collection'),
+    ]);
   });
 
   it("keeps the mouse drag slop equal to the date wheel's", () => {
