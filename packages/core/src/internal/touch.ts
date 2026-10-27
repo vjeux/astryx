@@ -70,65 +70,7 @@ export {
   useTouchPresentation,
 } from '../utils/touchPresentation';
 export type {TouchPresentation} from '../utils/touchPresentation';
-export type {
-  ArenaBeganInput,
-  ClickDisposition,
-  GestureArenaOptions,
-  GestureClock,
-} from '../gestures/GestureArena';
-export {GestureHost, getGestureHost} from '../gestures/GestureHost';
-export type {AttachOptions, GestureHostOptions} from '../gestures/GestureHost';
-export type {
-  GestureListener,
-  GestureRecognizerOptions,
-  GestureTransitionListener,
-  NativeTouchBehavior,
-} from '../gestures/GestureRecognizer';
-export {
-  attachTapHaptic,
-  canVibrate,
-  playHaptic,
-  supportsSwitchControl,
-} from '../gestures/haptics';
-export {HoverGestureRecognizer} from '../gestures/HoverGestureRecognizer';
-export type {LongPressGestureRecognizerOptions} from '../gestures/LongPressGestureRecognizer';
-export {
-  createNativeScrollProbe,
-  parseTouchAction,
-} from '../gestures/nativeScroll';
-export {PinchGestureRecognizer} from '../gestures/PinchGestureRecognizer';
-export type {PinchGestureRecognizerOptions} from '../gestures/PinchGestureRecognizer';
-export {PRESS_PROFILES, PressTracker} from '../gestures/PressTracker';
-export type {
-  ControlEvent,
-  PressBounds,
-  PressHighlightDelay,
-  PressProfile,
-  PressProfileName,
-  PressTrackerOptions,
-} from '../gestures/PressTracker';
-export {RotationGestureRecognizer} from '../gestures/RotationGestureRecognizer';
-export type {RotationGestureRecognizerOptions} from '../gestures/RotationGestureRecognizer';
-export {ScreenEdgePanGestureRecognizer} from '../gestures/ScreenEdgePanGestureRecognizer';
-export type {
-  ScreenEdge,
-  ScreenEdgePanGestureRecognizerOptions,
-} from '../gestures/ScreenEdgePanGestureRecognizer';
-export {SwipeGestureRecognizer} from '../gestures/SwipeGestureRecognizer';
-export type {
-  SwipeDirection,
-  SwipeGestureRecognizerOptions,
-} from '../gestures/SwipeGestureRecognizer';
-export type {TapGestureRecognizerOptions} from '../gestures/TapGestureRecognizer';
-export {deriveTouchAction, gestureHostStyle} from '../gestures/touchAction';
-export type {GestureHostStyle} from '../gestures/touchAction';
-export {
-  useGestureRecognizer,
-  usePressTracker,
-} from '../gestures/useGestureRecognizer';
-export type {
-  UseGestureRecognizerOptions,
-  UsePressTrackerOptions,
-} from '../gestures/useGestureRecognizer';
-export {VelocityTracker} from '../gestures/VelocityTracker';
-export type {VelocityTrackerOptions} from '../gestures/VelocityTracker';
+// The gesture modules' barrel whole: a module a touch presentation adds to
+// the barrel reaches this entry with it, so presentations that each add one
+// never edit this file. The named re-exports above stay as they are.
+export * from '../gestures';
