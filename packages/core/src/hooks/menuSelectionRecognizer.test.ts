@@ -108,12 +108,14 @@ describe('MenuSelectionGestureRecognizer', () => {
     const h = createHarness();
     h.finger(1).down(100, 120, 1000, {recognizers: [fits]});
     expect(landed).toEqual([120]);
-    // The press, and its claim, wait for the onset, so a pinch that starts
-    // meanwhile stays the page's.
+    // The press waits for the onset, and once begun it still leaves the
+    // finger unclaimed: a press in a list that no scroll can claim stays
+    // unclaimed (spec:AST-094 FR11, DEC-14).
     expect(fits.state).toBe('possible');
     expect(h.claims).toEqual([]);
     h.advance(1000 + ONSET);
     expect(fits.state).toBe('began');
+    expect(h.claims).toEqual([]);
 
     const scrollingLanded: number[] = [];
     const scrolls = new MenuSelectionGestureRecognizer({
@@ -126,8 +128,8 @@ describe('MenuSelectionGestureRecognizer', () => {
     expect(scrollingLanded).toEqual([]);
   });
 
-  it('claims the finger only in a menu that fits', () => {
-    expect(select(false).claimsTouches).toBe(true);
+  it('never claims the finger, in a menu that fits or one that scrolls (spec:AST-094 FR11, DEC-14)', () => {
+    expect(select(false).claimsTouches).toBe(false);
     expect(select(true).claimsTouches).toBe(false);
   });
 

@@ -16,9 +16,8 @@
  * - held still in a menu that scrolls, the row under it highlights after
  *   the content-touch delay (about 160 ms); in a menu that fits, where
  *   there is no scroll to wait for, it highlights at once (spec:AST-094
- *   FR11), through `onLand`, while the press itself still begins (and
- *   claims the finger) after the delay, so a pinch that starts meanwhile
- *   stays the page's;
+ *   FR11), through `onLand`, while the press itself still begins after the
+ *   delay;
  * - lifted before that (a tap), the row under it highlights and acts at the
  *   lift;
  * - travelling past the press slop before that: in a menu that scrolls, the
@@ -30,9 +29,13 @@
  *
  * The recognizer begins, changes and ends like any continuous recognizer; a
  * tap is recognized at the lift (possible to ended), so the owner begins and
- * ends the tracking in that one event. In a menu that scrolls it does not
- * claim the finger: a drag after the highlight came on still scrolls the
- * list, and the browser's taking the finger cancels the press, as in UIKit.
+ * ends the tracking in that one event. It never claims the finger
+ * (`spec:AST-094` FR11, DEC-14: a press in a list that no scroll can claim
+ * stays unclaimed, which FR19 allows). In a menu that scrolls, a drag after
+ * the highlight came on still scrolls the list, and the browser's taking the
+ * finger cancels the press, as in UIKit; in a menu that fits, the menu's
+ * `touch-action: pinch-zoom` keeps a one-finger move from panning while a
+ * pinch stays the page's.
  *
  * SYNC: When modified, update menuSelectionRecognizer.test.ts and
  * useMenuPress.ts
@@ -99,11 +102,13 @@ export class MenuSelectionGestureRecognizer extends GestureRecognizer {
   }
 
   /**
-   * A menu that scrolls leaves the finger to the browser even once the press
-   * has begun, so a drag still scrolls it (and cancels the press).
+   * The press never claims the finger (`spec:AST-094` FR11, DEC-14): a
+   * menu that scrolls leaves it to the browser so a drag still scrolls it
+   * (and cancels the press), and a menu that fits leaves it unclaimed too,
+   * its `touch-action` alone keeping a one-finger move from panning.
    */
   override get claimsTouches(): boolean {
-    return !this.scrolls();
+    return false;
   }
 
   protected override acceptsTouch(touch: GestureTouch): boolean {

@@ -1143,6 +1143,8 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
     onActivate: row =>
       activateRef.current(row, syntheticRelease(row, releaseRef.current)),
   }));
+  // The action-group tracker's release fades run on timers it owns: finish
+  // them when the menu unmounts.
   useEffect(() => () => trackerRef.current?.dispose(), []);
   const highlightRef = useRef(highlight);
   highlightRef.current = highlight;
