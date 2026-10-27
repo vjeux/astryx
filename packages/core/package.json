@@ -858,6 +858,7 @@
   },
   "devDependencies": {
     "@astryxdesign/a11y-spec": "workspace:*",
+    "@astryxdesign/interaction-harness": "workspace:*",
     "@astryxdesign/cli": "workspace:*",
     "@astryxdesign/interaction-harness": "workspace:*",
     "@babel/cli": "catalog:",
