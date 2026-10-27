@@ -40,6 +40,7 @@ ruleTester.run('no-core-internal-import', rule, {
     {code: `import {x} from '@astryxdesign/core/motionless';`},
     {code: `import {x} from '@astryxdesign/core/gesturesKit';`},
     {code: `import {x} from '../core/src/gesturesKit/x';`},
+    {code: `import {x} from '../core/src/internalTools/x';`},
     // A code sample in a string is not an import.
     {
       code: "const sample = `import {duration} from '@astryxdesign/core/motion';`;",
@@ -115,6 +116,11 @@ ruleTester.run('no-core-internal-import', rule, {
     {
       code: `type M = typeof import('../../core/src/motion/spring');`,
       errors: [{message: deep('../../core/src/motion/spring')}],
+    },
+    // An internal subpath's source is reported as the subpath is.
+    {
+      code: `import {GestureArena} from '../../../packages/core/src/internal/touch';`,
+      errors: [{message: message('../../../packages/core/src/internal/touch')}],
     },
   ],
 });

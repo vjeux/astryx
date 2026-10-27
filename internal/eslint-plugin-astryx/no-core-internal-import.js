@@ -11,8 +11,9 @@
  * Reported, by `import`, `export … from`, `import()`, `require()` and
  * `typeof import()`:
  *   - `@astryxdesign/core/internal` and any `@astryxdesign/core/internal/*`
- *     subpath, which are reserved for Astryx's own packages and sit outside
- *     the compatibility promise (spec:AST-017 FR21);
+ *     subpath, or a path into their source in `core/src/internal`, which are
+ *     reserved for Astryx's own packages and sit outside the compatibility
+ *     promise (spec:AST-017 FR21);
  *   - `@astryxdesign/core/gestures`, `@astryxdesign/core/motion` and their
  *     subpaths, and any path into `core/src/gestures`, `core/src/motion` or
  *     `core/src/touch-support`, which have no entry of their own
@@ -23,7 +24,11 @@
  * the layer blocks that already use `no-restricted-imports`.
  */
 
-const INTERNAL = /^@astryxdesign\/core\/internal(?:\/|$)/;
+// Core's internal subpaths: by package path, or by a path into their source.
+const INTERNAL = [
+  /^@astryxdesign\/core\/internal(?:\/|$)/,
+  /(?:^|\/)core\/src\/internal(?:\/|$)/,
+];
 // Core's gesture core, motion and touch support, which have no entry of
 // their own: by package path, or by a path into Core's source.
 const DEEP = [
@@ -50,7 +55,7 @@ const rule = {
       if (typeof source !== 'string') {
         return;
       }
-      if (INTERNAL.test(source)) {
+      if (INTERNAL.some(pattern => pattern.test(source))) {
         context.report({node, messageId: 'internal', data: {source}});
       } else if (DEEP.some(pattern => pattern.test(source))) {
         context.report({node, messageId: 'deep', data: {source}});
