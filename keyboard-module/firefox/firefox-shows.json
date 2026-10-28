@@ -2,24 +2,220 @@
  "browser": "Firefox 158.0.2, Android 15 emulator, Gboard; a top-level document (Storybook iframe.html opened directly); BottomSheet Mobile keyboard story, the lowest field on screen tapped, keyboard top at 486.2 CSS px",
  "runs": {
   "main 84faa0d94b": {
-   "shows": 0,
+   "shows": 8,
    "fieldUnderKeyboard": 0,
-   "shows_detail": []
+   "shows_detail": [
+    {
+     "pan": "pan 205 px at +69 ms, stays",
+     "fieldBottomOnScreen": 233.3,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 204.9
+    },
+    {
+     "pan": "pan 87 px at +55 ms, stays",
+     "fieldBottomOnScreen": 351.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 87.0
+    },
+    {
+     "pan": "pan 8 px at +56 ms, stays",
+     "fieldBottomOnScreen": 429.9,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 8.3
+    },
+    {
+     "pan": "pan 156 px at +56 ms, stays",
+     "fieldBottomOnScreen": 329.5,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 156.4
+    },
+    {
+     "pan": "pan 204 px at +67 ms, stays",
+     "fieldBottomOnScreen": 234.0,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 204.2
+    },
+    {
+     "pan": "pan 86 px at +54 ms, stays",
+     "fieldBottomOnScreen": 352.6,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 85.6
+    },
+    {
+     "pan": "pan 8 px at +58 ms, stays",
+     "fieldBottomOnScreen": 430.1,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 8.1
+    },
+    {
+     "pan": "pan 152 px at +55 ms, stays",
+     "fieldBottomOnScreen": 334.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 151.7
+    }
+   ]
   },
   "module move alone (room on the body, next-frame reveal, no put-back)": {
-   "shows": 0,
-   "fieldUnderKeyboard": 0,
-   "shows_detail": []
+   "shows": 8,
+   "fieldUnderKeyboard": 3,
+   "shows_detail": [
+    {
+     "pan": "pan 208 px at +69 ms, stays",
+     "fieldBottomOnScreen": 230.0,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 208.2
+    },
+    {
+     "pan": "pan 90 px at +54 ms, stays",
+     "fieldBottomOnScreen": 544.8,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 90.1
+    },
+    {
+     "pan": "pan 56 px at +55 ms, stays",
+     "fieldBottomOnScreen": 382.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 56.0
+    },
+    {
+     "pan": "pan 11 px at +54 ms, stays",
+     "fieldBottomOnScreen": 427.6,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 10.6
+    },
+    {
+     "pan": "pan 218 px at +63 ms, stays",
+     "fieldBottomOnScreen": 446.8,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 218.1
+    },
+    {
+     "pan": "pan 231 px at +56 ms, stays",
+     "fieldBottomOnScreen": 207.5,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 230.7
+    },
+    {
+     "pan": "pan 15 px at +57 ms, stays",
+     "fieldBottomOnScreen": 552.0,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 15.0
+    },
+    {
+     "pan": "pan 129 px at +58 ms, stays",
+     "fieldBottomOnScreen": 585.4,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 128.9
+    }
+   ]
   },
   "module move + content-box room (no report-frame reveal, no put-back)": {
-   "shows": 0,
-   "fieldUnderKeyboard": 0,
-   "shows_detail": []
+   "shows": 8,
+   "fieldUnderKeyboard": 1,
+   "shows_detail": [
+    {
+     "pan": "pan 208 px at +66 ms, stays",
+     "fieldBottomOnScreen": 466.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 208.2
+    },
+    {
+     "pan": "pan 257 px at +74 ms, stays",
+     "fieldBottomOnScreen": 181.1,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 257.1
+    },
+    {
+     "pan": "pan 14 px at +56 ms, stays",
+     "fieldBottomOnScreen": 424.7,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 13.5
+    },
+    {
+     "pan": "pan 20 px at +58 ms, stays",
+     "fieldBottomOnScreen": 417.8,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 20.4
+    },
+    {
+     "pan": "pan 203 px at +63 ms, stays",
+     "fieldBottomOnScreen": 467.3,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 203.4
+    },
+    {
+     "pan": "pan 254 px at +55 ms, stays",
+     "fieldBottomOnScreen": 184.3,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 253.9
+    },
+    {
+     "pan": "pan 22 px at +71 ms, stays",
+     "fieldBottomOnScreen": 539.0,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 21.5
+    },
+    {
+     "pan": "pan 77 px at +143 ms, stays",
+     "fieldBottomOnScreen": 361.3,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 76.9
+    }
+   ]
   },
   "this pull request 2997a96b29": {
-   "shows": 0,
+   "shows": 8,
    "fieldUnderKeyboard": 0,
-   "shows_detail": []
+   "shows_detail": [
+    {
+     "pan": "pan 209 px at +112 ms, put back at +121 ms",
+     "fieldBottomOnScreen": 438.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 0.0
+    },
+    {
+     "pan": "pan none",
+     "fieldBottomOnScreen": 438.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 0.0
+    },
+    {
+     "pan": "pan none",
+     "fieldBottomOnScreen": 438.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 0.0
+    },
+    {
+     "pan": "pan none",
+     "fieldBottomOnScreen": 438.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 0.0
+    },
+    {
+     "pan": "pan 183 px at +69 ms, put back at +104 ms",
+     "fieldBottomOnScreen": 438.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 0.0
+    },
+    {
+     "pan": "pan none",
+     "fieldBottomOnScreen": 438.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 0.0
+    },
+    {
+     "pan": "pan none",
+     "fieldBottomOnScreen": 438.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 0.0
+    },
+    {
+     "pan": "pan none",
+     "fieldBottomOnScreen": 438.2,
+     "keyboardTop": 486.2,
+     "visualViewportTop": 0.0
+    }
+   ]
   }
  }
 }
