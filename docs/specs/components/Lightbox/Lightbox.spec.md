@@ -49,8 +49,8 @@ same actions.
 
 - Released default preserved: `no`. Under a coarse primary pointer the touch
   presentation (FR5–FR10) and the touch exit (FR16) are the default
-  (`spec:AST-094` FR13). Under a fine pointer a mouse or pen drag pages and
-  closes the viewer, a ctrl-wheel or trackpad pinch over the photo zooms the
+  (`spec:AST-094` FR13). Under a fine pointer a mouse or pen drag closes the
+  viewer, a ctrl-wheel or trackpad pinch over the photo zooms the
   photo instead of the page, a trackpad's scroll pans a zoomed photo, and a
   double-click
   zooms 2× about the clicked point instead of the centre (FR11). Preserved: a
@@ -79,9 +79,14 @@ Consumer migration instructions belong in consumer docs and release notes.
 The shipped Lightbox does not yet meet every requirement below. Each gap names
 the requirement it misses and the person it affects.
 
-- **Touch presentation (FR7–FR10, FR12).** On a touch screen there is no swipe
-  paging, drag or pinch to close, tap to hide the controls, or thumbnail
-  transition.
+- **Touch presentation (FR8–FR10, FR12).** On a touch screen there is no drag
+  or pinch to close, tap to hide the controls, or thumbnail transition.
+- **Paging motion roles (FR5).** The page settle and the buttons' slide play
+  the pager's own UIKit values, which the motion role table does not list as
+  roles.
+- **Video controls (FR7).** A video's native controls are taken as a 48 px
+  band at its bottom edge, since browsers expose no control geometry; a
+  browser that places controls elsewhere pages from them.
 - **Tab containment (FR4).** Tab from the viewer's last control can move focus
   to the browser's own interface.
 - **Zoom reset key (AR3).** `0` does not return a zoomed photo to its fitted
@@ -92,12 +97,14 @@ the requirement it misses and the person it affects.
   are sent from above the modal Lightbox renders, so they reach the page body
   and a screen-reader user does not hear them while the viewer is open
   (`spec:AST-086` FR14).
-- **Fine-pointer gestures (FR11).** FR11's drag paging (FR7) and drag to
-  close (FR8) are not built for a mouse, a pen or a trackpad: a drag on a
-  fitted photo does nothing.
+- **Fine-pointer gestures (FR11).** FR11's drag to close (FR8) is not built
+  for a mouse, a pen or a trackpad: a drag on a fitted photo does nothing.
 - **Double-click listener (FR14).** A mouse's or a pen's double-click reaches
   the zoom through the stage's own `dblclick` listener, since only the browser
   knows the system's double-click speed.
+- **Press tracker (FR14).** The stage's own `pointerdown` listener records
+  each press's pointer type, which the browser's `dblclick` does not carry,
+  and clears the flag a drag leaves for its click.
 - **Touch exit (FR16).** On a touch screen the viewer disappears at once when
   it closes.
 
@@ -142,7 +149,7 @@ FR21). Consumer props and usage remain documented in `Lightbox.doc.mjs`.
 | FR8  | On a fitted image, a downward drag moves the photo with the finger, shrinks it, and fades the backdrop. The release decides once: a projected travel past the commit point closes the viewer and reports `onOpenChange(false)` at the lift; a release moving back springs back. Video is unchanged.                                                                                                                                                                                                                                                                                 | `spec:AST-094` FR36–FR40                     | settled; implementation gap |
 | FR9  | With `hasZoom`, a pinch in from the fitted size is a release decision: below the measured fraction of the fitted size the release closes the viewer; opening the fingers again by the measured amount before the lift is moving back and cancels. A pinch that starts zoomed in never closes the viewer.                                                                                                                                                                                                                                                                            | `spec:AST-094` FR36, FR37                    | settled; implementation gap |
 | FR10 | With `hasZoom`, under a coarse pointer only, a tap on the photo fades the controls and caption and darkens the backdrop. While they are hidden, the next tap on the photo, a tap beside the photo, or a cancelled drag brings them back, and that tap beside the photo does not close the viewer (ORD3). AR5 governs keyboard and assistive-technology access while they are hidden.                                                                                                                                                                                                | `architecture:public-component-api` INV16    | settled; implementation gap |
-| FR11 | A mouse, a pen, and a trackpad also use FR7's drag paging, FR8's drag to close, a ctrl-wheel or trackpad pinch over the photo for FR6's zoom and FR9's close, and a trackpad's scroll to pan a zoomed photo; a mouse wheel's notches leave it in place (`spec:AST-094` FR43); over the photo these replace the browser's page zoom and scroll. A double-click zooms 2× about the clicked point. A click on the photo keeps the controls, and the viewer opens and closes at once.                                                                                                   | `spec:AST-094` FR43; `spec:AST-017` FR59     | settled; implementation gap |
+| FR11 | A mouse, a pen, and a trackpad also use FR8's drag to close, a ctrl-wheel or trackpad pinch over the photo for FR6's zoom and FR9's close, and a trackpad's scroll to pan a zoomed photo; a mouse wheel's notches leave it in place (`spec:AST-094` FR43); over the photo these replace the browser's page zoom and scroll. A double-click zooms 2× about the clicked point. A click on the photo keeps the controls, and the viewer opens and closes at once.                                                                                                                      | `spec:AST-094` FR43; `spec:AST-017` FR59     | settled; implementation gap |
 | FR12 | Inside `experimental` only, under a coarse pointer, the photo grows out of its source when the viewer opens and returns into it when it closes: the element `experimental.sourceFor(index)` returns, else the opener when it shows a picture. A close reports `onOpenChange(false)` at the request; the viewer stays only until the photo lands. Pointer input during the entrance is held; keys and assistive technology stay live. Without `experimental`, opening is unchanged and closing plays FR16.                                                                           | `spec:AST-017` FR21; `spec:AST-094` FR35     | settled; implementation gap |
 | FR13 | `hasZoom={false}` turns off FR6, FR9, and FR10. FR7 and FR8 add to the buttons, keys, and Escape and remove none of them, so Lightbox takes no `presentation` prop.                                                                                                                                                                                                                                                                                                                                                                                                                 | `architecture:public-component-api` INV16    | settled                     |
 | FR14 | Gestures, paging, motion, and reduced motion run through Core's one shared set of internal touch modules; Lightbox bundles no copy of a module's primitive and adds no gesture listener outside them.                                                                                                                                                                                                                                                                                                                                                                               | `architecture:react-component-runtime` INV13 | settled; implementation gap |
