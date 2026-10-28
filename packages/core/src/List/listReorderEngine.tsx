@@ -2019,28 +2019,24 @@ function ListReorderModeHint({
     () => null,
   );
   const layer = useLayer({mode: 'context'});
-  const layerRef = useRef(layer);
+  const {ref: anchorLayer, show: showLayer, hide: hideLayer} = layer;
   const hintRef = useRef<HTMLElement | null>(null);
-  // No external system: keeps the latest layer handle for the effect below,
-  // which re-runs only when the mode's row changes. Idempotent.
-  useIsomorphicLayoutEffect(() => {
-    layerRef.current = layer;
-  });
   // External system: the hint's popover in the top layer (useLayer),
   // anchored to the handle of the row in reorder mode. Shown while that row
   // is in the mode; hidden and unanchored when the mode ends or moves on.
+  // The layer's anchor, show and hide keep their identity while it opens and
+  // closes, so this runs again only when the mode's row changes.
   useIsomorphicLayoutEffect(() => {
     if (target == null) {
       return undefined;
     }
-    const shown = layerRef.current;
-    shown.ref(target);
-    shown.show();
+    anchorLayer(target);
+    showLayer();
     return () => {
-      shown.hide();
-      shown.ref(null);
+      hideLayer();
+      anchorLayer(null);
     };
-  }, [target]);
+  }, [target, anchorLayer, showLayer, hideLayer]);
   // The shared dismissal stack (family:overlay-dismissal): while the hint is
   // up, an Escape that reaches the stack, with the focus in the hint, ends
   // reorder mode instead of closing a layer below it such as a Dialog. The
