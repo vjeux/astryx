@@ -147,8 +147,11 @@ export interface ListItemProps extends BaseProps<HTMLLIElement> {
   /**
    * The row's item key, a string or a number from the data (the shape
    * Table's `idKey` returns): the row's identity for the list's animated
-   * layout (`animatedLayout`, `component:List` FR12). A row without one
-   * changes at once. Separate from React's `key`, which stays React's own.
+   * layout (`animatedLayout`, `component:List` FR12), and, in a reorderable
+   * List (`List reorderable`), the key the reorderable object's `onReorder`
+   * reports as given and `isReorderable` is asked about. A row without one
+   * changes at once and has no reorder handle. Separate from React's `key`,
+   * which stays React's own.
    */
   itemKey?: string | number;
 
