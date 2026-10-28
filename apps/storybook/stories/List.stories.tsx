@@ -7,7 +7,7 @@
  * @position Storybook demonstrations for List consumers
  */
 
-import {useMemo, useState} from 'react';
+import {useMemo, useRef, useState} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import type {Meta, StoryObj} from '@storybook/react';
 import {List, ListItem} from '@astryxdesign/core/List';
@@ -21,6 +21,7 @@ import {Heading, Text} from '@astryxdesign/core/Text';
 import {VStack} from '@astryxdesign/core/Layout';
 import {Button} from '@astryxdesign/core/Button';
 import {ContextMenu} from '@astryxdesign/core/ContextMenu';
+import {useAnimatedLayout} from '@astryxdesign/core/hooks';
 import {
   Cog6ToothIcon,
   BellIcon,
@@ -421,40 +422,50 @@ function AnimatedChangesDemo() {
     'Spam',
   ]);
   const [next, setNext] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animatedLayout = useAnimatedLayout({containerRef});
   return (
-    <VStack gap={4}>
-      <List hasAnimatedChanges hasDividers>
-        {rows.map(label => (
-          <ListItem key={label} label={label} onClick={() => {}} />
-        ))}
-      </List>
-      <Button
-        label="Insert a row second"
-        onClick={() => {
-          setRows(current => [
-            current[0],
-            `Folder ${next}`,
-            ...current.slice(1),
-          ]);
-          setNext(n => n + 1);
-        }}
-      />
-      <Button
-        label="Remove the second row"
-        onClick={() =>
-          setRows(current => current.filter((_, index) => index !== 1))
-        }
-      />
-      <Button
-        label="Move the last row first"
-        onClick={() =>
-          setRows(current => [
-            current[current.length - 1],
-            ...current.slice(0, -1),
-          ])
-        }
-      />
-    </VStack>
+    <div ref={containerRef}>
+      <VStack gap={4}>
+        <List animatedLayout={animatedLayout} hasDividers>
+          {rows.map(label => (
+            <ListItem
+              key={label}
+              itemKey={label}
+              label={label}
+              onClick={() => {}}
+            />
+          ))}
+        </List>
+        <Text data-testid="after-list">{`${rows.length} folders`}</Text>
+        <Button
+          label="Insert a row second"
+          onClick={() => {
+            setRows(current => [
+              current[0],
+              `Folder ${next}`,
+              ...current.slice(1),
+            ]);
+            setNext(n => n + 1);
+          }}
+        />
+        <Button
+          label="Remove the second row"
+          onClick={() =>
+            setRows(current => current.filter((_, index) => index !== 1))
+          }
+        />
+        <Button
+          label="Move the last row first"
+          onClick={() =>
+            setRows(current => [
+              current[current.length - 1],
+              ...current.slice(0, -1),
+            ])
+          }
+        />
+      </VStack>
+    </div>
   );
 }
 
@@ -464,11 +475,12 @@ export const AnimatedChanges: Story = {
     docs: {
       description: {
         story:
-          'With `hasAnimatedChanges`, under a finger, ' +
-          'rows that stay slide to their new places and new rows fade in ' +
-          'once the rows sliding past have cleared them, on UIKit’s table ' +
-          'update spring; a row crossing rows that move the other way ' +
-          'rides above them with the surface color behind it.',
+          'With `animatedLayout` (the handle from `useAnimatedLayout`) and ' +
+          'an `itemKey` on each row, an inserted row enters, a removed row ' +
+          'collapses in place, a row crossing rows that move the other way ' +
+          'rides above them with the surface color behind it, and the rows ' +
+          'after a change and the buttons below the list glide to their new ' +
+          'places, all on one shared motion, under every pointer.',
       },
     },
   },
@@ -476,27 +488,32 @@ export const AnimatedChanges: Story = {
 
 function AnimatedChangesSwipeDemo() {
   const [rows, setRows] = useState(['Inbox', 'Sent', 'Drafts', 'Archive']);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animatedLayout = useAnimatedLayout({containerRef});
   return (
-    <List hasAnimatedChanges hasDividers>
-      {rows.map(label => (
-        <ListItem
-          key={label}
-          label={label}
-          onClick={() => {}}
-          swipeActions={{
-            trailing: [
-              {
-                label: 'Delete',
-                variant: 'destructive',
-                hasRemoval: true,
-                onActivate: () =>
-                  setRows(current => current.filter(row => row !== label)),
-              },
-            ],
-          }}
-        />
-      ))}
-    </List>
+    <div ref={containerRef}>
+      <List animatedLayout={animatedLayout} hasDividers>
+        {rows.map(label => (
+          <ListItem
+            key={label}
+            itemKey={label}
+            label={label}
+            onClick={() => {}}
+            swipeActions={{
+              trailing: [
+                {
+                  label: 'Delete',
+                  variant: 'destructive',
+                  hasRemoval: true,
+                  onActivate: () =>
+                    setRows(current => current.filter(row => row !== label)),
+                },
+              ],
+            }}
+          />
+        ))}
+      </List>
+    </div>
   );
 }
 
@@ -506,9 +523,9 @@ export const AnimatedChangesSwipe: Story = {
     docs: {
       description: {
         story:
-          'With `hasAnimatedChanges`, a row swiped away with a removal ' +
-          'action collapses in place, its action showing, while the rows ' +
-          'below slide up into its gap on UIKit’s table update spring.',
+          'With `animatedLayout`, a row swiped away with a removal action ' +
+          'collapses in place, its action showing, while the rows below ' +
+          'glide up into its gap on the shared motion.',
       },
     },
   },
@@ -534,19 +551,24 @@ function ReorderDemo({
   edge?: 'padded' | 'flush';
 }) {
   const [rows, setRows] = useState(initial);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animatedLayout = useAnimatedLayout({containerRef});
   return (
-    <List
-      hasDividers
-      hasAnimatedChanges
-      edge={edge}
-      reorderable={createReorderable({
-        onReorder: ({key, to}) => setRows(current => moveKey(current, key, to)),
-        isReorderable: key => !pinned.includes(key as string),
-      })}>
-      {rows.map(label => (
-        <ListItem key={label} itemKey={label} label={label} />
-      ))}
-    </List>
+    <div ref={containerRef}>
+      <List
+        hasDividers
+        animatedLayout={animatedLayout}
+        edge={edge}
+        reorderable={createReorderable({
+          onReorder: ({key, to}) =>
+            setRows(current => moveKey(current, key, to)),
+          isReorderable: key => !pinned.includes(key as string),
+        })}>
+        {rows.map(label => (
+          <ListItem key={label} itemKey={label} label={label} />
+        ))}
+      </List>
+    </div>
   );
 }
 
@@ -627,8 +649,10 @@ function ReorderFromYourUIDemo() {
       }),
     [],
   );
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animatedLayout = useAnimatedLayout({containerRef});
   return (
-    <VStack gap={2}>
+    <VStack gap={2} ref={containerRef}>
       <Button
         label={`Move ${selected}`}
         onClick={() => reorderable.start(selected)}
@@ -641,7 +665,10 @@ function ReorderFromYourUIDemo() {
             onClick: () => reorderable.start(selected),
           },
         ]}>
-        <List hasDividers hasAnimatedChanges reorderable={reorderable}>
+        <List
+          hasDividers
+          animatedLayout={animatedLayout}
+          reorderable={reorderable}>
           {rows.map(label => (
             <ListItem
               key={label}

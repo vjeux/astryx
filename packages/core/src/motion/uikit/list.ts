@@ -16,10 +16,6 @@
  * rows). uikit.test.ts enforces both. Durations are in ms; curves are
  * cubic-bézier control points [x1, y1, x2, y2].
  *
- * Every value here is a list's own measured motion, an internal constant:
- * it is no motion role, and no theme variable reaches it. The row heights
- * are lengths, not motion.
- *
  * SYNC: When modified, update:
  * - /packages/core/src/motion/MEASUREMENTS.md
  * - /packages/core/src/utils/rowPressLayer.stylex.ts (`cellPressConsts`
