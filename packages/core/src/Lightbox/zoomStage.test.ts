@@ -4,33 +4,40 @@
  * @file zoomStage.test.ts
  * @input vitest, the zoom stage geometry and the UIKit zoom constants
  * @output Checks the zoom stage against UIKit's measured zooming and
- *   Lightbox's double tap. It covers the overshoot, the settle, the maximum
- *   zoom, the point kept in place, resting places, a drag's rubber band and a
- *   resize
+ *   Lightbox's own zoom. It covers the overshoot, the settle, the maximum
+ *   zoom, both double taps, resting places, a drag's rubber band, a resize
+ *   and the keyboard's zoom
  * @position Testing; zoomStage.ts without a browser
  */
 
 import {describe, expect, it} from 'vitest';
+import {cubicBezier} from '../motion/bezier';
 import {progressCurve} from '../motion/progress';
 import {rubberBand} from '../motion/rubberBand';
 import {motionRoleOf} from '../motion/roles';
 import {registerSpringsTable, springs} from '../motion/uikit/springs';
 import {
   IDENTITY,
+  RELEASED_ZOOM,
   ZOOM_STEP,
+  doubleClickTarget,
   doubleTapScaleFor,
   doubleTapTarget,
   draggedTransform,
   isZoomed,
   maxScaleFor,
   overshootScale,
+  overshootSlope,
   pannedBy,
   pinchScaleFor,
   rawForDragged,
   releaseTarget,
+  releasedCurves,
+  releasedZoomTarget,
   restRange,
   restingTransform,
   settleCurves,
+  settleProgressVelocity,
   transformForResize,
   transformKeepingPoint,
   type ZoomGeometry,
@@ -395,5 +402,121 @@ describe('a resize while zoomed (rotation)', () => {
     const before = landscape();
     const after = landscape({width: 500});
     expect(transformForResize(before, after, IDENTITY)).toEqual(IDENTITY);
+  });
+});
+
+describe('the double-click: 2× about the clicked point', () => {
+  const g = landscape();
+  it('zooms 2× and keeps the clicked photo point under the pointer', () => {
+    // Aspect fill would zoom this photo about 3.3×.
+    expect(g.doubleTapScale).toBeGreaterThan(3);
+    const fitted = {...IDENTITY, scale: g.minScale};
+    const target = doubleClickTarget(g, fitted, {x: 134, y: 437});
+    expect(target.scale).toBe(ZOOM_STEP);
+    expect(shown(g, target, 134, 134).x).toBeCloseTo(134, 9);
+  });
+  it('returns to the fitted size when zoomed', () => {
+    const fitted = {...IDENTITY, scale: g.minScale};
+    const zoomed = doubleClickTarget(g, fitted, {x: 134, y: 437});
+    expect(doubleClickTarget(g, zoomed, {x: 50, y: 50})).toEqual(
+      restingTransform(g, fitted),
+    );
+  });
+});
+
+describe('the released zoom the keyboard keeps', () => {
+  const g = landscape();
+  const centre = {x: g.width / 2, y: g.height / 2};
+  it('zooms 2x about the centre, whatever aspect fill would give', () => {
+    // Aspect fill would zoom this photo about 3.3x.
+    expect(g.doubleTapScale).toBeGreaterThan(3);
+    const target = releasedZoomTarget(g, {...IDENTITY, scale: g.minScale});
+    expect(target.scale).toBe(2);
+    // The stage's centre shows the photo's centre, as before.
+    const middle = shown(g, target, g.fit.width / 2, g.fit.height / 2);
+    expect(middle.x).toBeCloseTo(centre.x, 9);
+    expect(middle.y).toBeCloseTo(centre.y, 9);
+  });
+  it('returns to the fitted size when zoomed', () => {
+    const zoomed = releasedZoomTarget(g, {...IDENTITY, scale: g.minScale});
+    expect(releasedZoomTarget(g, zoomed)).toEqual(
+      restingTransform(g, {...IDENTITY, scale: g.minScale}),
+    );
+  });
+  it('stays inside the limits', () => {
+    const small = landscape({maxScale: 1.5});
+    expect(
+      releasedZoomTarget(small, {...IDENTITY, scale: small.minScale}).scale,
+    ).toBe(1.5);
+  });
+  it("plays CSS's 200 ms ease-out, not the settle's spring", () => {
+    const from = {...IDENTITY, scale: 1};
+    const to = releasedZoomTarget(g, from);
+    const curves = releasedCurves(from, to);
+    expect(curves.duration).toBe(RELEASED_ZOOM.seconds);
+    expect(curves.duration).toBe(0.2);
+    expect(settleCurves(from, to, springs.settle).duration).not.toBe(0.2);
+    const ease = cubicBezier([0, 0, 0.58, 1]);
+    for (const t of [0.05, 0.1, 0.15]) {
+      expect(curves.scale.at(t)).toBeCloseTo(1 + ease(t / 0.2), 9);
+    }
+    expect(curves.scale.at(0.2)).toBe(2);
+  });
+});
+
+describe("a pinch's release starts the settle at its velocity", () => {
+  const g = landscape();
+  it('turns the scale velocity into progress per second toward the target', () => {
+    const from = {...IDENTITY, scale: 5};
+    const to = {...IDENTITY, scale: 4};
+    const spring = springs.settle;
+    // Shrinking at 2 a second toward a target 1 below: 2 progress a second.
+    expect(settleProgressVelocity(from, to, -2, spring)).toBe(2);
+    // Still growing away from it: the progress starts backward.
+    expect(settleProgressVelocity(from, to, 2, spring)).toBe(-2);
+    // Nothing to go, or no velocity to read: at rest.
+    expect(settleProgressVelocity(from, from, 3, spring)).toBe(0);
+    expect(settleProgressVelocity(from, to, Number.NaN, spring)).toBe(0);
+  });
+
+  it('eases back to a limit without passing it, however fast the release', () => {
+    // Released at 4.1 past a maximum of 4, still closing at 5.7 a second:
+    // 57 progress a second, more than four times the spring's frequency.
+    const from = {...IDENTITY, scale: 4.1};
+    const to = {...IDENTITY, scale: 4};
+    const omega = (2 * Math.PI) / 0.5;
+    const velocity = settleProgressVelocity(from, to, -5.7, springs.settle);
+    expect(velocity).toBeCloseTo(omega, 9);
+    const curves = settleCurves(from, to, springs.settle, velocity);
+    let lowest = from.scale;
+    for (let i = 0; i <= 200; i++) {
+      lowest = Math.min(lowest, curves.scale.at((curves.duration * i) / 200));
+    }
+    expect(lowest).toBeGreaterThanOrEqual(to.scale - 1e-9);
+    // Unclamped, the same release would dip below the maximum.
+    const unclamped = settleCurves(from, to, springs.settle, 57);
+    let dip = from.scale;
+    for (let i = 0; i <= 200; i++) {
+      dip = Math.min(dip, unclamped.scale.at((unclamped.duration * i) / 200));
+    }
+    expect(dip).toBeLessThan(to.scale - 0.05);
+    // A slower release keeps its own velocity.
+    expect(settleProgressVelocity(from, to, -0.5, springs.settle)).toBeCloseTo(
+      5,
+      9,
+    );
+  });
+  it('slows the shown zoom past a limit as the overshoot gives way', () => {
+    // Inside the limits the zoom follows the pinch 1:1.
+    expect(overshootSlope(g, 2)).toBe(1);
+    // Past them, the slope matches the overshoot's own rate of change.
+    for (const scale of [g.maxScale * 1.1, g.maxScale * 1.5, 0.8, 0.5]) {
+      const step = 1e-6;
+      const numeric =
+        (overshootScale(g, scale + step) - overshootScale(g, scale - step)) /
+        (2 * step);
+      expect(overshootSlope(g, scale)).toBeCloseTo(numeric, 6);
+      expect(overshootSlope(g, scale)).toBeLessThan(1);
+    }
   });
 });
