@@ -153,6 +153,8 @@ const GESTURE_USERS = new Set([
   'SegmentedControl',
   // DateTimeInput: through the SegmentedControl its touch field renders.
   'DateTimeInput',
+  // Lightbox: its zoom's pinch, pan and double tap, for every pointer.
+  'Lightbox',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
