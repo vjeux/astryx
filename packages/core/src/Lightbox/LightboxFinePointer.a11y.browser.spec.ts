@@ -5,9 +5,10 @@
  * @input The built Lightbox "with zoom" story, a desktop browser (a fine
  *   primary pointer) and real mouse input; in Chromium, pen input
  * @output Evidence that the gestures take every pointer where the primary
- *   pointer is fine too. It covers the zoom's touches as on a phone, the
- *   double-click's 2× zoom and the keyboard's 200 ms ease-out. It also covers
- *   pen and mouse drags, and a gallery's Next, arrow keys and dark-area click
+ *   pointer is fine too. It covers the zoom's touches as on a phone, a photo
+ *   without zoom that leaves touches to the page, the double-click's 2× zoom
+ *   and the keyboard's 200 ms ease-out. It also covers pen and mouse drags,
+ *   and a gallery's Next, arrow keys and dark-area click
  * @position Cross-browser proof for Lightbox under a fine primary pointer
  */
 
@@ -236,6 +237,33 @@ test('the zoom target takes its touches as on a phone where the primary pointer 
   expect(await touchActionsAbove(img)).toEqual([
     'auto',
     'none',
+    'auto',
+    'auto',
+  ]);
+});
+
+test('a photo without zoom leaves its touches to the page where the primary pointer is fine, as on main', async ({
+  page,
+}) => {
+  // The drag to close belongs to the touch presentation, which a coarse
+  // primary pointer brings. A touchscreen laptop's finger scrolls and zooms
+  // the page around a photo without zoom, as on main.
+  await page.route('https://picsum.photos/**', async route =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: photoSvg(PHOTO.width, PHOTO.height),
+    }),
+  );
+  await page.goto(
+    `${storybook.origin}/iframe.html?id=core-lightbox--default&viewMode=story`,
+  );
+  await page.getByRole('button', {name: 'Open lightbox'}).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  const photo = dialog.getByRole('img').first();
+  expect(await touchActionsAbove(photo)).toEqual([
+    'auto',
+    'auto',
     'auto',
     'auto',
   ]);
