@@ -76,7 +76,7 @@ afterEach(() => {
 });
 
 describe('useTouchLayer', () => {
-  it('sets nothing up under a fine primary pointer, and attaches no input listener', () => {
+  it('sets nothing up under a fine primary pointer, and attaches no input listener (spec:AST-094 FR13, spec:AST-017 FR59)', () => {
     primaryPointer(false);
     const onWindow = vi.spyOn(window, 'addEventListener');
     const onDocument = vi.spyOn(document, 'addEventListener');

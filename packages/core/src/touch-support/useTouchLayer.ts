@@ -19,7 +19,11 @@
  * the layer detaches (the pointer turns fine, the element goes). It runs
  * again only when that answer or the element changes, and never on the
  * server or under a fine primary pointer, where the component keeps its plain
- * behavior and attaches no input listener (`spec:AST-094` FR19). `setup`
+ * behavior and attaches no input listener. A touch layer serves a touch
+ * presentation, which applies under a coarse primary pointer and only after
+ * hydration (`spec:AST-094` FR13), and touch work leaves fine-pointer behavior
+ * alone (`spec:AST-017` FR59). Gestures are not touch layers: their
+ * recognizers attach for every pointer (`spec:AST-094` FR19, FR43). `setup`
  * reads changing values through refs: a new `setup` function alone does not
  * run it again. The setup imports the touch modules it uses itself
  * (statically): the layer gives it only the element.
