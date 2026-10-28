@@ -4,7 +4,7 @@
  * @file useCombobox.test.tsx
  * @input Uses vitest, @testing-library/react, @testing-library/user-event,
  *   useCombobox and the layer dismissal stack
- * @output Unit tests for useCombobox over a single-line field the caller renders
+ * @output Unit tests for useCombobox over a text field the caller renders
  * @position Tests; validates the field props, keys and pointer model of
  *   hooks.ts against spec:AST-075 FR1–FR6
  *
@@ -26,6 +26,7 @@ import {useLayerDismissal} from '../Layer/useLayerDismissal';
 import {useCombobox} from './hooks';
 
 type Person = {value: string; label: string; disabled?: boolean};
+type Field = 'input' | 'textarea' | 'contenteditable';
 
 const PEOPLE: Person[] = [
   {value: 'ada', label: 'Ada'},
@@ -38,6 +39,7 @@ afterEach(() => {
 });
 
 interface PickerProps {
+  field: Field;
   options?: Person[];
   isInitiallyOpen?: boolean;
   onSelect?: (value: string) => void;
@@ -48,6 +50,7 @@ interface PickerProps {
 
 /** A field the test renders itself, with its list in the page's flow. */
 function Picker({
+  field,
   options = PEOPLE,
   isInitiallyOpen = true,
   onSelect,
@@ -69,11 +72,23 @@ function Picker({
     },
     onSelect,
     listboxId: 'people',
+    field,
   });
   const fieldProps = combobox.getFieldProps({onKeyDown: onFieldKeyDown});
   return (
     <>
-      <input aria-label="To" {...fieldProps} />
+      {field === 'input' ? (
+        <input aria-label="To" {...fieldProps} />
+      ) : field === 'textarea' ? (
+        <textarea aria-label="Message" {...fieldProps} />
+      ) : (
+        <div
+          contentEditable
+          suppressContentEditableWarning
+          aria-label="Message"
+          {...fieldProps}
+        />
+      )}
       {isOpen && options.length > 0 ? (
         <div aria-label="People" {...combobox.getListboxProps()}>
           {options.map((person, index) => (
@@ -108,8 +123,12 @@ function Layer({
   );
 }
 
-function toField(): HTMLElement {
-  return screen.getByRole('combobox', {name: 'To'});
+function fieldFor(field: Field): HTMLElement {
+  return field === 'textarea'
+    ? screen.getByRole('textbox', {name: 'Message'})
+    : screen.getByRole('combobox', {
+        name: field === 'input' ? 'To' : 'Message',
+      });
 }
 
 function option(name: string): HTMLElement {
@@ -117,30 +136,56 @@ function option(name: string): HTMLElement {
 }
 
 describe('useCombobox field props — roles and state (FR1–FR3)', () => {
-  it('a hidden list leaves the field collapsed with nothing to reference', () => {
-    render(<Picker isInitiallyOpen={false} />);
-    const box = toField();
-    expect(box).toHaveAttribute('role', 'combobox');
-    expect(box).toHaveAttribute('aria-autocomplete', 'list');
-    expect(box).toHaveAttribute('aria-expanded', 'false');
-    expect(box).not.toHaveAttribute('aria-controls');
-    expect(box).not.toHaveAttribute('aria-activedescendant');
-  });
+  it.each(['input', 'contenteditable'] as const)(
+    'a hidden list leaves the %s collapsed with nothing to reference',
+    field => {
+      render(<Picker field={field} isInitiallyOpen={false} />);
+      const box = fieldFor(field);
+      expect(box).toHaveAttribute('role', 'combobox');
+      expect(box).toHaveAttribute('aria-autocomplete', 'list');
+      expect(box).toHaveAttribute('aria-expanded', 'false');
+      expect(box).not.toHaveAttribute('aria-controls');
+      expect(box).not.toHaveAttribute('aria-activedescendant');
+    },
+  );
 
-  it('a shown list expands the field and names the listbox', () => {
-    render(<Picker />);
-    const box = toField();
-    const listbox = screen.getByRole('listbox', {name: 'People'});
-    expect(box).toHaveAttribute('aria-expanded', 'true');
-    expect(box).toHaveAttribute('aria-controls', listbox.id);
-    expect(screen.getAllByRole('option')).toHaveLength(3);
-    // No option is active until the person moves to one.
-    expect(box).not.toHaveAttribute('aria-activedescendant');
+  it.each(['input', 'contenteditable'] as const)(
+    'a shown list expands the %s and names the listbox',
+    field => {
+      render(<Picker field={field} />);
+      const box = fieldFor(field);
+      const listbox = screen.getByRole('listbox', {name: 'People'});
+      expect(box).toHaveAttribute('aria-expanded', 'true');
+      expect(box).toHaveAttribute('aria-controls', listbox.id);
+      expect(screen.getAllByRole('option')).toHaveLength(3);
+      // No option is active until the person moves to one.
+      expect(box).not.toHaveAttribute('aria-activedescendant');
+    },
+  );
+
+  it('a textarea keeps its textbox role and carries no aria-expanded', () => {
+    const {unmount} = render(
+      <Picker field="textarea" isInitiallyOpen={false} />,
+    );
+    let box = fieldFor('textarea');
+    expect(box).not.toHaveAttribute('role');
+    expect(box).not.toHaveAttribute('aria-expanded');
+    expect(box).toHaveAttribute('aria-autocomplete', 'list');
+    expect(box).not.toHaveAttribute('aria-controls');
+    unmount();
+
+    render(<Picker field="textarea" />);
+    box = fieldFor('textarea');
+    expect(box).not.toHaveAttribute('aria-expanded');
+    expect(box).toHaveAttribute(
+      'aria-controls',
+      screen.getByRole('listbox').id,
+    );
   });
 
   it('an open list with no options renders no listbox, so the field stays collapsed', () => {
-    render(<Picker options={[]} />);
-    const box = toField();
+    render(<Picker field="input" options={[]} />);
+    const box = fieldFor('input');
     expect(screen.queryByRole('listbox')).toBeNull();
     expect(box).toHaveAttribute('aria-expanded', 'false');
     expect(box).not.toHaveAttribute('aria-controls');
@@ -148,8 +193,8 @@ describe('useCombobox field props — roles and state (FR1–FR3)', () => {
 
   it('moving the active option keeps focus in the field and names it (FR1)', async () => {
     const user = userEvent.setup();
-    render(<Picker />);
-    const box = toField();
+    render(<Picker field="input" />);
+    const box = fieldFor('input');
     await user.click(box);
 
     await user.keyboard('{ArrowDown}');
@@ -171,8 +216,8 @@ describe('useCombobox field props — roles and state (FR1–FR3)', () => {
 
   it('ArrowUp with nothing active starts at the last option', async () => {
     const user = userEvent.setup();
-    render(<Picker />);
-    const box = toField();
+    render(<Picker field="textarea" />);
+    const box = fieldFor('textarea');
     await user.click(box);
     await user.keyboard('{ArrowUp}');
     expect(box).toHaveAttribute('aria-activedescendant', option('Cy').id);
@@ -192,8 +237,9 @@ describe('useCombobox field props — the reusable Combobox contract', () => {
   };
 
   it.each([
-    {open: false, facts: closed},
+    {field: 'input', open: false, facts: closed},
     {
+      field: 'input',
       open: true,
       facts: {
         ...closed,
@@ -202,20 +248,31 @@ describe('useCombobox field props — the reusable Combobox contract', () => {
         activeDescendant: true,
       },
     },
-  ] as const)('input, list shown: $open', async ({open, facts}) => {
+    {
+      field: 'contenteditable',
+      open: true,
+      facts: {
+        ...closed,
+        name: 'Message',
+        expanded: true,
+        popupVisible: true,
+        activeDescendant: true,
+      },
+    },
+  ] as const)('$field, list shown: $open', async ({field, open, facts}) => {
     await expectAccessibilitySpec({
       spec: COMBOBOX_PATTERN,
       binding: 'useCombobox.field',
-      state: `input-${open ? 'shown' : 'hidden'}`,
+      state: `${field}-${open ? 'shown' : 'hidden'}`,
       facts,
       render: async () => {
-        render(<Picker isInitiallyOpen={open} />);
+        render(<Picker field={field} isInitiallyOpen={open} />);
         if (open) {
-          toField().focus();
-          fireEvent.keyDown(toField(), {key: 'ArrowDown'});
+          fieldFor(field).focus();
+          fireEvent.keyDown(fieldFor(field), {key: 'ArrowDown'});
         }
       },
-      subject: () => toField(),
+      subject: () => fieldFor(field),
       related: (): Record<string, Element> =>
         open
           ? {
@@ -233,20 +290,27 @@ describe('useCombobox field props — keys (FR4)', () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const onFieldKeyDown = vi.fn();
-    render(<Picker onSelect={onSelect} onFieldKeyDown={onFieldKeyDown} />);
-    const box = toField();
+    render(
+      <Picker
+        field="textarea"
+        onSelect={onSelect}
+        onFieldKeyDown={onFieldKeyDown}
+      />,
+    );
+    const box = fieldFor('textarea');
     await user.click(box);
 
-    // Nothing active: Enter is the field's own, such as a submit.
-    expect(fireEvent.keyDown(box, {key: 'Enter'})).toBe(true);
+    // Nothing active: Enter is the field's, so it types its newline.
+    await user.keyboard('{Enter}');
     expect(onSelect).not.toHaveBeenCalled();
     expect(onFieldKeyDown).toHaveBeenCalledTimes(1);
+    expect(box).toHaveValue('\n');
 
-    await user.keyboard('{ArrowDown}');
-    expect(fireEvent.keyDown(box, {key: 'Enter'})).toBe(false);
+    await user.keyboard('{ArrowDown}{Enter}');
     expect(onSelect).toHaveBeenCalledWith('ada');
-    // The arrow and the pick never reached the field's handler.
+    // The arrow and the pick never reached the field's handler or its text.
     expect(onFieldKeyDown).toHaveBeenCalledTimes(1);
+    expect(box).toHaveValue('\n');
     // Picking hides the list; focus never left the field.
     expect(screen.queryByRole('listbox')).toBeNull();
     expect(box).toHaveFocus();
@@ -257,10 +321,10 @@ describe('useCombobox field props — keys (FR4)', () => {
     const onDismiss = vi.fn();
     render(
       <Layer onDismiss={onDismiss}>
-        <Picker />
+        <Picker field="input" />
       </Layer>,
     );
-    await user.click(toField());
+    await user.click(fieldFor('input'));
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('listbox')).toBeNull();
@@ -273,8 +337,8 @@ describe('useCombobox field props — keys (FR4)', () => {
 
   it('Escape also hides an open list that has no options', () => {
     const onClose = vi.fn();
-    render(<Picker options={[]} onClose={onClose} />);
-    expect(fireEvent.keyDown(toField(), {key: 'Escape'})).toBe(false);
+    render(<Picker field="input" options={[]} onClose={onClose} />);
+    expect(fireEvent.keyDown(fieldFor('input'), {key: 'Escape'})).toBe(false);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -284,10 +348,10 @@ describe('useCombobox field props — keys (FR4)', () => {
       const onDismiss = vi.fn();
       render(
         <Layer onDismiss={onDismiss}>
-          <Picker />
+          <Picker field="input" />
         </Layer>,
       );
-      const box = toField();
+      const box = fieldFor('input');
       box.focus();
       expect(fireEvent.keyDown(box, {key: 'Escape', [modifier]: true})).toBe(
         false,
@@ -303,8 +367,8 @@ describe('useCombobox field props — keys (FR4)', () => {
 
   it('ArrowDown shows a hidden list in a single-line field', async () => {
     const user = userEvent.setup();
-    render(<Picker isInitiallyOpen={false} />);
-    const box = toField();
+    render(<Picker field="input" isInitiallyOpen={false} />);
+    const box = fieldFor('input');
     await user.click(box);
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('listbox')).toBeInTheDocument();
@@ -314,16 +378,69 @@ describe('useCombobox field props — keys (FR4)', () => {
 
   it('ArrowDown leaves a hidden list alone when there is nothing to show', () => {
     const onOpen = vi.fn();
-    render(<Picker options={[]} isInitiallyOpen={false} onOpen={onOpen} />);
-    expect(fireEvent.keyDown(toField(), {key: 'ArrowDown'})).toBe(true);
+    render(
+      <Picker
+        field="input"
+        options={[]}
+        isInitiallyOpen={false}
+        onOpen={onOpen}
+      />,
+    );
+    expect(fireEvent.keyDown(fieldFor('input'), {key: 'ArrowDown'})).toBe(true);
     expect(onOpen).not.toHaveBeenCalled();
   });
+
+  it.each(['textarea', 'contenteditable'] as const)(
+    'every key reaches a multi-line %s while the list is hidden',
+    field => {
+      const onOpen = vi.fn();
+      const onFieldKeyDown = vi.fn();
+      render(
+        <Picker
+          field={field}
+          isInitiallyOpen={false}
+          onOpen={onOpen}
+          onFieldKeyDown={onFieldKeyDown}
+        />,
+      );
+      const box = fieldFor(field);
+      for (const key of ['ArrowDown', 'ArrowUp', 'Enter', 'Escape']) {
+        expect(fireEvent.keyDown(box, {key})).toBe(true);
+      }
+      expect(onOpen).not.toHaveBeenCalled();
+      expect(onFieldKeyDown).toHaveBeenCalledTimes(4);
+      expect(screen.queryByRole('listbox')).toBeNull();
+    },
+  );
+
+  it.each(['textarea', 'contenteditable'] as const)(
+    'an open list with no options leaves every key to a multi-line %s, as its collapsed state says',
+    field => {
+      const onClose = vi.fn();
+      const onFieldKeyDown = vi.fn();
+      render(
+        <Picker
+          field={field}
+          options={[]}
+          onClose={onClose}
+          onFieldKeyDown={onFieldKeyDown}
+        />,
+      );
+      const box = fieldFor(field);
+      expect(box).not.toHaveAttribute('aria-controls');
+      for (const key of ['ArrowDown', 'ArrowUp', 'Enter', 'Escape']) {
+        expect(fireEvent.keyDown(box, {key})).toBe(true);
+      }
+      expect(onClose).not.toHaveBeenCalled();
+      expect(onFieldKeyDown).toHaveBeenCalledTimes(4);
+    },
+  );
 
   it('keys other than the arrows, Enter and Escape reach the field while the list is shown', async () => {
     const user = userEvent.setup();
     const onFieldKeyDown = vi.fn();
-    render(<Picker onFieldKeyDown={onFieldKeyDown} />);
-    const box = toField();
+    render(<Picker field="input" onFieldKeyDown={onFieldKeyDown} />);
+    const box = fieldFor('input');
     await user.click(box);
     await user.keyboard('{ArrowDown}');
     const active = box.getAttribute('aria-activedescendant');
@@ -340,8 +457,8 @@ describe('useCombobox field props — keys (FR4)', () => {
   it('a chord such as Shift+Enter is the field’s own command', async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
-    render(<Picker onSelect={onSelect} />);
-    const box = toField();
+    render(<Picker field="textarea" onSelect={onSelect} />);
+    const box = fieldFor('textarea');
     await user.click(box);
     await user.keyboard('{ArrowDown}');
     expect(fireEvent.keyDown(box, {key: 'Enter', shiftKey: true})).toBe(true);
@@ -358,6 +475,7 @@ describe('useCombobox field props — keys (FR4)', () => {
         onOpen: () => setIsOpen(true),
         onClose: () => setIsOpen(false),
         listboxId: 'trigger',
+        field: 'input',
       });
       return (
         <button
@@ -385,8 +503,8 @@ describe('useCombobox field props — input-method composition (FR5)', () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const onClose = vi.fn();
-    render(<Picker onSelect={onSelect} onClose={onClose} />);
-    const box = toField();
+    render(<Picker field="input" onSelect={onSelect} onClose={onClose} />);
+    const box = fieldFor('input');
     await user.click(box);
     await user.keyboard('{ArrowDown}');
     const active = option('Ada').id;
@@ -413,8 +531,8 @@ describe('useCombobox field props — pointer (FR6)', () => {
   it('hovering makes an option active and pressing picks it, with focus kept in the field', async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
-    render(<Picker onSelect={onSelect} />);
-    const box = toField();
+    render(<Picker field="input" onSelect={onSelect} />);
+    const box = fieldFor('input');
     await user.click(box);
 
     await user.hover(option('Cy'));
@@ -435,8 +553,8 @@ describe('useCombobox field props — pointer (FR6)', () => {
   });
 
   it('a press on the listbox itself keeps focus in the field', () => {
-    render(<Picker />);
-    const box = toField();
+    render(<Picker field="input" />);
+    const box = fieldFor('input');
     box.focus();
     expect(fireEvent.mouseDown(screen.getByRole('listbox'))).toBe(false);
     expect(fireEvent.mouseDown(option('Ada'))).toBe(false);

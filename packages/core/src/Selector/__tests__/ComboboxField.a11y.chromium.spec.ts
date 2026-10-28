@@ -40,8 +40,10 @@ test.afterAll(async () => {
 });
 
 const STORY = {
+  message: 'core-hooks-usecombobox--message-field',
   search: 'core-hooks-usecombobox--search-field',
   layer: 'core-hooks-usecombobox--assignee-field',
+  editable: 'core-hooks-usecombobox--editable-field',
   dialog: 'core-hooks-usecombobox--in-dialog',
 } as const;
 
@@ -135,6 +137,15 @@ const SCENARIOS: ReadonlyArray<Scenario> = [
     },
   },
   {
+    id: 'contenteditable-shown-in-flow',
+    story: STORY.editable,
+    name: 'Add people',
+    open: true,
+    arrange: async page => {
+      await page.keyboard.type('ar');
+    },
+  },
+  {
     id: 'input-shown-in-dialog',
     story: STORY.dialog,
     name: 'Add people',
@@ -194,6 +205,36 @@ for (const scenario of SCENARIOS) {
   });
 }
 
+test('a textarea stays a textbox that names its list in a layer and its active option', async ({
+  page,
+}) => {
+  await openStory(page, STORY.message);
+  const field = page.getByRole('textbox', {name: 'Message'});
+  await expect(field).not.toHaveAttribute('aria-expanded');
+  await expect(field).not.toHaveAttribute('aria-controls');
+  await field.click();
+  await page.keyboard.type('@a');
+
+  const listbox = page.getByRole('listbox', {name: 'People'});
+  await expect(listbox).toBeVisible();
+  // The list renders in a layer: an open popover in the top layer.
+  expect(
+    await listbox.evaluate(
+      el => el.closest('[popover]')?.matches(':popover-open') === true,
+    ),
+  ).toBe(true);
+  await expect(field).toHaveAttribute('aria-autocomplete', 'list');
+  await expect(field).not.toHaveAttribute('role');
+  await expect(field).not.toHaveAttribute('aria-expanded');
+  await expect(field).toHaveAttribute(
+    'aria-controls',
+    (await listbox.getAttribute('id')) ?? '',
+  );
+  expect(await activeOptionName(page, field)).toBe('Ada Lovelace');
+  expect(await axeViolations(page)).toEqual([]);
+  expect(await hasFocus(field)).toBe(true);
+});
+
 test('arrows move the active option and Enter picks it, with focus kept in the field', async ({
   page,
 }) => {
@@ -240,6 +281,97 @@ test('ArrowDown brings back a hidden list in a single-line field', async ({
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('listbox')).toBeVisible();
   expect(await activeOptionName(page, field)).toBe('Password');
+});
+
+test('in a textarea, a pick stops Enter, a hidden list leaves the arrows to the caret, and Enter sends', async ({
+  page,
+}) => {
+  await openStory(page, STORY.message);
+  const field = page.getByRole('textbox', {name: 'Message'});
+  await field.click();
+  await page.keyboard.type('Hi @ad');
+  expect(await activeOptionName(page, field)).toBe('Ada Lovelace');
+  await page.keyboard.press('Enter');
+  await expect(field).toHaveValue('Hi @Ada ');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+
+  // A new mention, dismissed: the arrows are the caret's again.
+  await page.keyboard.type('@k');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  await page.keyboard.press('ArrowUp');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  expect(
+    await field.evaluate(el => (el as HTMLTextAreaElement).selectionStart),
+  ).toBe(0);
+  // ArrowDown on the hidden list is the caret's too: only a single-line field
+  // brings the list back (DEC-3), so the list stays hidden and the caret moves
+  // to the end of the text.
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  const caret = await field.evaluate(el => {
+    const area = el as HTMLTextAreaElement;
+    return {at: area.selectionStart, end: area.value.length};
+  });
+  expect(caret.end).toBeGreaterThan(0);
+  expect(caret.at).toBe(caret.end);
+
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Sent: Hi @Ada @k')).toBeVisible();
+  expect(await hasFocus(field)).toBe(true);
+});
+
+test('in the message field, the Enter that commits a composition never sends, in Safari’s event order', async ({
+  page,
+}) => {
+  await openStory(page, STORY.message);
+  const field = page.getByRole('textbox', {name: 'Message'});
+  await field.click();
+  await page.keyboard.type('Hi');
+
+  // Safari fires the committing Enter after compositionend, with keyCode 229
+  // and `isComposing` false. Playwright drives no input method, so the
+  // sequence is dispatched on the field.
+  const committing = await field.evaluate(el => {
+    el.dispatchEvent(new CompositionEvent('compositionstart', {data: ''}));
+    el.dispatchEvent(new CompositionEvent('compositionend', {data: 'の'}));
+    const enter = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+      cancelable: true,
+      isComposing: false,
+    });
+    Object.defineProperty(enter, 'keyCode', {value: 229});
+    el.dispatchEvent(enter);
+    return {
+      isComposing: enter.isComposing,
+      keyCode: enter.keyCode,
+      prevented: enter.defaultPrevented,
+    };
+  });
+  expect(committing).toEqual({
+    isComposing: false,
+    keyCode: 229,
+    prevented: false,
+  });
+  await page.waitForTimeout(300);
+  await expect(page.getByText(/^Sent:/)).toHaveCount(0);
+  await expect(field).toHaveValue('Hi');
+
+  // The same dispatch without the composition's keyCode sends, so the event
+  // above did reach the field's handler.
+  const plainPrevented = await field.evaluate(el => {
+    const enter = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+      cancelable: true,
+    });
+    el.dispatchEvent(enter);
+    return enter.defaultPrevented;
+  });
+  expect(plainPrevented).toBe(true);
+  await expect(page.getByText('Sent: Hi')).toBeVisible();
 });
 
 test('Escape hides the list before it closes the dialog around the field', async ({
@@ -455,4 +587,78 @@ test('the dialog story announces in the dialog’s own live region, never the pa
     await expect.poll(writes).toEqual({body: [], dialog: expected});
     await nextFrames(page);
   }
+});
+
+test('a contenteditable field keeps its arrows while the list is hidden', async ({
+  page,
+}) => {
+  await openStory(page, STORY.editable);
+  const field = page.getByRole('combobox', {name: 'Add people'});
+  await field.click();
+  await page.keyboard.type('ed');
+  expect(await activeOptionName(page, field)).toBe('Edsger Dijkstra');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('list', {name: 'Added'})).toHaveText(
+    'Edsger Dijkstra',
+  );
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+
+  await page.keyboard.type('b');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  await expect(field).toHaveAttribute('aria-expanded', 'false');
+  expect(await hasFocus(field)).toBe(true);
+});
+
+test('the message field announces each new mention query’s count, never on mount', async ({
+  page,
+}) => {
+  const writes = await recordPoliteWrites(page);
+  await openStory(page, STORY.message);
+  await page.getByRole('textbox', {name: 'Message'}).click();
+  await nextFrames(page);
+  await page.waitForTimeout(300);
+  expect(await writes()).toEqual({body: [], dialog: []});
+  // "@" alone is an empty query, so it is not announced.
+  await page.keyboard.type('@');
+  await nextFrames(page);
+  const expected: string[] = [];
+  for (const [key, words] of [
+    ['a', '7 results'],
+    ['r', '2 results'],
+    ['q', 'No one matches'],
+  ] as const) {
+    await page.keyboard.press(key);
+    expected.push(words);
+    await expect.poll(writes).toEqual({body: expected, dialog: []});
+    await nextFrames(page);
+  }
+  await expect(
+    page.locator('p').filter({hasText: /^No one matches$/}),
+  ).toBeVisible();
+});
+
+test('the editable field announces each new query’s count, and the words it shows for none', async ({
+  page,
+}) => {
+  const writes = await recordPoliteWrites(page);
+  await openStory(page, STORY.editable);
+  await page.getByRole('combobox', {name: 'Add people'}).click();
+  const expected: string[] = [];
+  for (const [key, words] of [
+    ['e', '5 results'],
+    ['d', '1 result'],
+    ['z', 'No one matches'],
+  ] as const) {
+    await page.keyboard.press(key);
+    expected.push(words);
+    await expect.poll(writes).toEqual({body: expected, dialog: []});
+    await nextFrames(page);
+  }
+  await expect(
+    page.locator('p').filter({hasText: /^No one matches$/}),
+  ).toBeVisible();
 });
