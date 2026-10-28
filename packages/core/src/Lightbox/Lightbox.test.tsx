@@ -57,8 +57,12 @@ function stubStageLayout(): () => void {
     });
   };
   const isPhoto = (element: Element) => element instanceof HTMLImageElement;
+  // The zoom stage: a single item's photo box, or a gallery page's.
   const isStage = (element: Element) =>
-    element.querySelector(':scope > img') != null;
+    element.hasAttribute('data-lightbox-page-media') ||
+    (element.getAttribute('role') === 'button' &&
+      element.getAttribute('aria-label') === 'Zoom' &&
+      element.querySelector('[data-lightbox-page]') == null);
   define(HTMLElement.prototype, 'offsetWidth', element =>
     isPhoto(element) ? 400 : 0,
   );
@@ -107,6 +111,41 @@ const POSITION_MESSAGES = {
       'Photo {index, number} sur {total, number}',
   },
 };
+
+/** A mouse press on `target` from `from` to `to`, as a browser sends it. */
+function mousePress(
+  target: Element,
+  from: {x: number; y: number},
+  to: {x: number; y: number} = from,
+): void {
+  const send = (
+    type: string,
+    {x, y}: {x: number; y: number},
+    buttons: number,
+  ) => {
+    const event = new Event(type, {bubbles: true, cancelable: true});
+    for (const [key, value] of Object.entries({
+      pointerType: 'mouse',
+      pointerId: 1,
+      isPrimary: true,
+      button: 0,
+      buttons,
+      clientX: x,
+      clientY: y,
+      timeStamp: performance.now(),
+    })) {
+      Object.defineProperty(event, key, {value});
+    }
+    act(() => {
+      target.dispatchEvent(event);
+    });
+  };
+  send('pointerdown', from, 1);
+  if (to.x !== from.x || to.y !== from.y) {
+    send('pointermove', to, 1);
+  }
+  send('pointerup', to, 0);
+}
 
 describe('Lightbox', () => {
   it('renders as a dialog element', () => {
@@ -275,6 +314,195 @@ describe('Lightbox', () => {
         />,
       );
       expect(screen.getByAltText('Image B')).toBeInTheDocument();
+    });
+
+    it('renders the current item and its neighbours as pages, each with its own caption', () => {
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          media={media}
+          index={1}
+        />,
+      );
+      const pages = [
+        ...document.querySelectorAll<HTMLElement>('[data-lightbox-page]'),
+      ];
+      expect(pages).toHaveLength(3);
+      const current = pages.filter(page => page.hasAttribute('data-current'));
+      expect(current).toHaveLength(1);
+      expect(current[0]).toContainElement(screen.getByAltText('Image B'));
+      expect(current[0]).toHaveTextContent('Second');
+      // The neighbours are off screen: hidden from assistive technology.
+      for (const page of pages.filter(p => p !== current[0])) {
+        const img = page.querySelector('img');
+        expect(img).toHaveAttribute('aria-hidden', 'true');
+        expect(img).toHaveAttribute('alt', '');
+      }
+      expect(pages[0]).toHaveTextContent('First');
+    });
+
+    it('closes on a tap beside the photo on a page', () => {
+      const onOpenChange = vi.fn();
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={onOpenChange}
+          media={media}
+          index={0}
+        />,
+      );
+      const current = document.querySelector('[data-current]')!;
+      mousePress(current.querySelector('[data-lightbox-page-media]')!, {
+        x: 20,
+        y: 20,
+      });
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it('keeps the viewer open on a press that moved past the tap limit', () => {
+      const onOpenChange = vi.fn();
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={onOpenChange}
+          media={media}
+          index={0}
+        />,
+      );
+      const pageMedia = document.querySelector(
+        '[data-current] [data-lightbox-page-media]',
+      )!;
+      // 60 px straight down: past UIKit's 45 px tap limit, and a drag the
+      // pager never takes.
+      mousePress(pageMedia, {x: 100, y: 100}, {x: 100, y: 160});
+      expect(onOpenChange).not.toHaveBeenCalled();
+      // Still, unmoved, the same press closes it.
+      mousePress(pageMedia, {x: 100, y: 100});
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it('plays a video again when paging back to it, with hasAutoPlay', () => {
+      const play = vi
+        .spyOn(HTMLMediaElement.prototype, 'play')
+        .mockImplementation(async () => {});
+      try {
+        const withVideo = [
+          {src: '/a.jpg', alt: 'Image A'},
+          {src: '/clip.webm', alt: 'Clip', type: 'video' as const},
+        ];
+        const {rerender} = render(
+          <Lightbox
+            isOpen={true}
+            onOpenChange={() => {}}
+            media={withVideo}
+            index={0}
+            hasAutoPlay
+          />,
+        );
+        expect(play).not.toHaveBeenCalled();
+        rerender(
+          <Lightbox
+            isOpen={true}
+            onOpenChange={() => {}}
+            media={withVideo}
+            index={1}
+            hasAutoPlay
+          />,
+        );
+        expect(play).toHaveBeenCalledTimes(1);
+        expect(play.mock.contexts[0]).toBe(
+          document.querySelector('[data-current] video'),
+        );
+      } finally {
+        play.mockRestore();
+      }
+    });
+
+    it('shows the last item as the current one for an index past the end', () => {
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          media={media}
+          index={media.length + 2}
+        />,
+      );
+      const photo = screen.getByAltText('Image C');
+      expect(photo).not.toHaveAttribute('aria-hidden');
+      const page = photo.closest('[data-lightbox-page]')!;
+      expect(page).toHaveAttribute('data-current');
+      expect(page).not.toHaveAttribute('inert');
+      expect(
+        screen.getByText(`${media.length} / ${media.length}`),
+      ).toBeTruthy();
+    });
+
+    it('pauses a playing video once the viewer moves to another item', () => {
+      const items = [
+        {src: '/clip.mp4', alt: 'A clip', type: 'video' as const},
+        {src: '/b.jpg', alt: 'Image B'},
+      ];
+      const {rerender} = render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          media={items}
+          index={0}
+        />,
+      );
+      const video = document.querySelector('video')!;
+      // Started by someone: playing, with its sound.
+      const pause = vi.fn();
+      video.pause = pause;
+      Object.defineProperty(video, 'paused', {
+        configurable: true,
+        get: () => pause.mock.calls.length > 0,
+      });
+      rerender(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          media={items}
+          index={1}
+        />,
+      );
+      // Still mounted as the pager's neighbour, and stopped.
+      expect(document.querySelector('video')).toBe(video);
+      expect(pause).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays open on a tap on the photo, with zoom off', () => {
+      const onOpenChange = vi.fn();
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={onOpenChange}
+          media={media}
+          index={0}
+        />,
+      );
+      const current = document.querySelector('[data-current]')!;
+      const box = current.querySelector<HTMLElement>(
+        '[data-lightbox-page-media]',
+      )!;
+      // The photo takes no pointer events: a tap on it lands on its box.
+      current.querySelector('img')!.getBoundingClientRect = () => ({
+        x: 100,
+        y: 100,
+        left: 100,
+        top: 100,
+        right: 500,
+        bottom: 300,
+        width: 400,
+        height: 200,
+        toJSON: () => ({}),
+      });
+      mousePress(box, {x: 300, y: 200});
+      expect(onOpenChange).not.toHaveBeenCalled();
+      // Beside the photo, on the same box, the tap is the backdrop's.
+      mousePress(box, {x: 20, y: 200});
+      expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
     it('shows gallery counter', () => {
