@@ -79,8 +79,11 @@ Consumer migration instructions belong in consumer docs and release notes.
 The shipped Lightbox does not yet meet every requirement below. Each gap names
 the requirement it misses and the person it affects.
 
-- **Touch presentation (FR8–FR10, FR12).** On a touch screen there is no drag
-  or pinch to close, tap to hide the controls, or thumbnail transition.
+- **Touch presentation (FR9, FR10, FR12).** On a touch screen there is no
+  pinch to close, tap to hide the controls, or thumbnail transition.
+- **Drag to close (FR8).** Implementation gap: the close is reported when the
+  photo has left the screen, about 0.3–0.5 s after the lift, until the shared
+  exit hold lets the viewer stay up after a reported close.
 - **Paging motion roles (FR5).** The page settle and the buttons' slide play
   the pager's own UIKit values, which the motion role table does not list as
   roles.
