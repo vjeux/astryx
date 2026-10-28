@@ -294,11 +294,14 @@ and Photos, iOS 26.2 simulator, Oct 23 2026; tagged `measured:`): the
 overshoot past the limits, the settle curve and its duration law, the absence
 of scale momentum and of a two-finger-tap action, the content point under the
 centroid staying put, Photos' aspect-fill double tap and its maximum zoom on
-3000 × 2000 and 2000 × 3000 photos, and the 40 pt gap between Photos' pages.
-M-ZM2 confirms that maximum on two other sizes. A zoomed pan flicked into an
-edge coasts and bounces like any scroll
-view (`scroll.*`).
+3000 × 2000 and 2000 × 3000 photos, the 40 pt gap between Photos' pages, and
+its drag-to-dismiss: the shrink and fades by travel, the release rule and the
+springs. M-ZM2 confirms that maximum on two other sizes. M-ZM3 measures the
+cancel distance and M-ZM5 the release's projection. A zoomed pan flicked into
+an edge coasts and bounces like any scroll view (`scroll.*`).
 
-| ID    | What         | App and gesture                                                      | Extract                                                                   | Method |
-| ----- | ------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------ |
-| M-ZM2 | Maximum zoom | Photos: pinch a 4032 × 3024 and a 1200 × 800 photo as far as it goes | the zoom it settles on against the photo's pixel size and the fitted size | B, C   |
+| ID    | What                     | App and gesture                                                                  | Extract                                                                       | Method |
+| ----- | ------------------------ | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------ |
+| M-ZM2 | Maximum zoom             | Photos: pinch a 4032 × 3024 and a 1200 × 800 photo as far as it goes             | the zoom it settles on against the photo's pixel size and the fitted size     | B, C   |
+| M-ZM3 | Dismiss cancel distance  | Photos: pull a photo down 6–19 pt, bring it back to N pt and lift without moving | the largest N that still cancels                                              | B, C   |
+| M-ZM5 | Dismiss flick projection | Photos: flick a photo down from rest, lifting after 6–19 pt at a range of speeds | the shortest travel that still dismisses at each speed: the projection's rate | B, C   |

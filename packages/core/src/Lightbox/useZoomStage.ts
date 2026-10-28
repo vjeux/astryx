@@ -19,7 +19,7 @@
  * __tests__/LightboxPaging.interaction.browser.spec.ts.
  */
 
-import {useRef, useState, type RefObject} from 'react';
+import {useMemo, useRef, useState, type RefObject} from 'react';
 import type {GestureRecognizer} from '../gestures/GestureRecognizer';
 import {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
 import {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
@@ -30,7 +30,12 @@ import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {coast as coastCurves} from '../motion/coast';
 import {decayRestDistance} from '../motion/decay';
+import {zoomMedia} from '../motion/uikit/zoomMedia';
 import {
+  IDENTITY,
+  dismissCommits,
+  dismissExitY,
+  dismissTransform,
   doubleTapTarget,
   draggedTransform,
   isZoomed,
@@ -52,6 +57,12 @@ import {
 
 export {ZOOM_DRAGGING_ATTRIBUTE, type ZoomStage};
 
+/**
+ * Set on the stage while a drag to dismiss moves the photo, until it settles.
+ * A stage that only hugs the photo then lets the moved photo draw outside it.
+ */
+export const ZOOM_DISMISSING_ATTRIBUTE = 'data-zoom-dismissing';
+
 export interface UseZoomStageOptions {
   /** The stage: the box the photo is fitted and centred in, clipping it. */
   stageRef: RefObject<HTMLElement | null>;
@@ -59,6 +70,8 @@ export interface UseZoomStageOptions {
   surfaceRef?: RefObject<HTMLElement | null>;
   /** The gestures are on (zoom is on), for every pointer. */
   isEnabled: boolean;
+  /** Changes when another item shows: a drag to dismiss in progress ends. */
+  itemKey: unknown;
   /** A single tap landed outside the photo. */
   onTapOutside?: () => void;
   /** A pan began (a release over the backdrop must not close). */
@@ -68,6 +81,37 @@ export interface UseZoomStageOptions {
    * tracked touches. False leaves the fingers to the page's zoom.
    */
   shouldBeginPinch?: (recognizer: GestureRecognizer) => boolean;
+  /** Drag to dismiss, as Photos has it; none without. */
+  dismiss?: ZoomStageDismiss;
+}
+
+/**
+ * Photos' drag to dismiss. A one-finger drag that starts downward on a photo
+ * at its fitted size carries it. Its centre follows the finger, and it
+ * shrinks with the travel. The release dismisses or springs back. The owner
+ * fades its backdrop and controls by the travel and closes once the photo
+ * has left.
+ */
+export interface ZoomStageDismiss {
+  /** Whether a drag can dismiss now (an image, under every pointer). */
+  isEnabled: boolean;
+  /** Each move of the drag: its downward travel, pt. */
+  onDrag: (travel: number) => void;
+  /**
+   * The release: whether it dismisses, so the photo leaves, or springs back,
+   * and whether a finger released it. Under reduced motion a finger's
+   * release cross-fades. A mouse's, a trackpad's or a pen's cross-fades on a
+   * coarse primary pointer and completes at once otherwise.
+   */
+  onRelease: (dismisses: boolean, touch: boolean) => void;
+  /** The dismissed photo has left the stage. */
+  onDismissed: () => void;
+}
+
+/** The touch layer's additions to the core's API. */
+export interface ZoomStageWithTouch extends ZoomStage {
+  /** A dismissed photo back at its fitted size at once (the viewer opens again). */
+  reset(): void;
 }
 
 interface PinchSession {
@@ -123,6 +167,13 @@ const DOUBLE_TAP_POINTERS = ['touch'] as const;
  *   on a moving photo stops it where it shows, and a lift with no drag lets
  *   it settle. It claims only a press on a moving photo, so a still one
  *   leaves the press to an outer pager's own catch.
+ * - with `dismiss`, a pan that begins only downward on a photo at its fitted
+ *   size: Photos' drag to dismiss. One finger, a mouse's or a pen's drag, or
+ *   a trackpad's scroll drives it. The photo's centre follows the pointer, and
+ *   it shrinks by the travel. A release moving up, or back at the start,
+ *   springs back on the cancel springs. Any other sends it on down on the
+ *   dismissal's spring and reports it once it has left. A dismissed photo is
+ *   not caught.
  *
  * The stage's `touch-action` is the caller's (none while zoom is on), since a
  * disabled recognizer would still claim it.
@@ -137,16 +188,18 @@ const DOUBLE_TAP_POINTERS = ['touch'] as const;
 export function useZoomStage(
   core: ZoomCore,
   options: UseZoomStageOptions,
-): ZoomStage {
+): ZoomStageWithTouch {
   const {
     animator,
     geometryRef,
+    targetRef,
     measure,
     toStage,
     current,
     write,
     setTarget,
     setZoomed,
+    setAtFit,
     settleTo,
     isMoving,
     isAtEdgeOf,
@@ -157,6 +210,10 @@ export function useZoomStage(
   });
   const pinchRef = useRef<PinchSession | null>(null);
   const panRef = useRef<PanSession | null>(null);
+  /** A drag to dismiss in progress: the geometry it started from. */
+  const dismissRef = useRef<ZoomGeometry | null>(null);
+  /** A dismissed photo is leaving: nothing catches it. */
+  const leavingRef = useRef(false);
   /** A touch stopped a moving photo; a pan or pinch has since taken over. */
   const caughtRef = useRef(false);
   const draggedSinceCatchRef = useRef(false);
@@ -197,6 +254,10 @@ export function useZoomStage(
     (recognizer: GestureRecognizer) => boolean
   >(() => true);
   const {shouldBeginPinch} = options;
+  // A drag to dismiss starts downward on a photo at its fitted size.
+  const dismissShouldBeginRef = useRef<(pan: PanGestureRecognizer) => boolean>(
+    () => false,
+  );
   useIsomorphicLayoutEffect(() => {
     pinchShouldBeginRef.current = shouldBeginPinch ?? (() => true);
     panShouldBeginRef.current = pan => {
@@ -213,14 +274,29 @@ export function useZoomStage(
         isAtEdgeOf(geometry, x < 0 ? 'left' : 'right')
       );
     };
-    isMovingRef.current = isMoving;
+    isMovingRef.current = () => !leavingRef.current && isMoving();
+    dismissShouldBeginRef.current = pan => {
+      if (
+        optionsRef.current.dismiss?.isEnabled !== true ||
+        leavingRef.current
+      ) {
+        return false;
+      }
+      // Where the photo is going: one zooming in is not dismissed.
+      const geometry = measure();
+      if (geometry == null || isZoomed(geometry, targetRef.current)) {
+        return false;
+      }
+      const {x, y} = pan.totalTranslation();
+      return y > 0 && y >= Math.abs(x);
+    };
   });
 
   // Whether a finger began each gesture, read from its first touch as it
   // begins. Under reduced motion a finger's release cross-fades. A mouse's, a
   // trackpad's or a pen's release completes at once where the primary pointer
   // is fine.
-  const fingerRef = useRef({pinch: false, catch: false});
+  const fingerRef = useRef({pinch: false, catch: false, dismiss: false});
   const [recognizers] = useState(() => {
     const pinch = new PinchGestureRecognizer({
       name: 'Lightbox.zoomPinch',
@@ -258,12 +334,19 @@ export function useZoomStage(
       // everyone else (an outer pager's own catch).
       shouldBegin: () => isMovingRef.current(),
     });
+    const dismissPan = new PanGestureRecognizer({
+      name: 'Lightbox.dismissPan',
+      maximumNumberOfTouches: 1,
+      allowedPointerTypes: EVERY_POINTER,
+      allowedScrollTypes: ['continuous'],
+      shouldBegin: recognizer => dismissShouldBeginRef.current(recognizer),
+    });
     pinch.recognizeSimultaneouslyWith(pan);
     tap.requireToFail(doubleTap);
-    for (const other of [pinch, pan, doubleTap, tap]) {
+    for (const other of [pinch, pan, doubleTap, tap, dismissPan]) {
       touchDown.recognizeSimultaneouslyWith(other);
     }
-    return {pinch, pan, doubleTap, tap, touchDown};
+    return {pinch, pan, doubleTap, tap, touchDown, dismissPan};
   });
 
   const recognizerOptions = {isEnabled: options.isEnabled, manageStyle: false};
@@ -501,5 +584,136 @@ export function useZoomStage(
     recognizerOptions,
   );
 
-  return core.api;
+  useGestureRecognizer(
+    surfaceRef,
+    () => recognizers.dismissPan,
+    pan => {
+      const dismiss = optionsRef.current.dismiss;
+      if (pan.state === 'began') {
+        fingerRef.current.dismiss =
+          pan.trackedTouches[0]?.pointerType === 'touch';
+        const geometry = measure();
+        if (geometry == null || dismiss == null) {
+          return;
+        }
+        animator.stop();
+        optionsRef.current.onDragStart?.();
+        dismissRef.current = geometry;
+        optionsRef.current.stageRef.current?.setAttribute(
+          ZOOM_DISMISSING_ATTRIBUTE,
+          '',
+        );
+      }
+      const geometry = dismissRef.current;
+      if (geometry == null) {
+        return;
+      }
+      const translation = pan.translation();
+      if (pan.state === 'began' || pan.state === 'changed') {
+        write(dismissTransform(geometry, translation.x, translation.y));
+        dismiss?.onDrag(Math.max(0, translation.y));
+        return;
+      }
+      // Ended or cancelled.
+      dismissRef.current = null;
+      // The release rule and the motion read the shared filter's velocity at
+      // the lift, at rest after a silent hold.
+      const velocity = pan.velocity();
+      const dismisses =
+        pan.state === 'ended' && dismissCommits(translation.y, velocity.y);
+      dismiss?.onRelease(dismisses, fingerRef.current.dismiss);
+      const shown = current();
+      if (dismisses) {
+        // No thumbnail to return to, so straight on down on the dismissal's
+        // position spring, from the release velocity, until it leaves the
+        // screen. A stage that only hugs the photo sits above its bottom.
+        const stageElement = optionsRef.current.stageRef.current;
+        const view = stageElement?.ownerDocument.defaultView;
+        const y = dismissExitY(
+          geometry,
+          shown,
+          stageElement != null && view != null
+            ? view.innerHeight - stageElement.getBoundingClientRect().top
+            : geometry.height,
+        );
+        leavingRef.current = true;
+        setTarget({...shown, y});
+        const handle = animator.animate(
+          {x: shown.x, y},
+          {
+            spring: zoomMedia.dismiss.dismissPositionSpring,
+            velocity: {x: velocity.x, y: velocity.y},
+          },
+          {crossfadeAs: 'exit', touchRelease: fingerRef.current.dismiss},
+        );
+        void handle.finished.then(() => {
+          if (leavingRef.current) {
+            optionsRef.current.dismiss?.onDismissed();
+          }
+        });
+        return;
+      }
+      setTarget(IDENTITY);
+      const position = animator.animate(
+        {x: 0, y: 0},
+        {
+          spring: zoomMedia.dismiss.cancelPositionSpring,
+          velocity: {x: velocity.x, y: velocity.y},
+        },
+        {touchRelease: fingerRef.current.dismiss},
+      );
+      const size = animator.animate(
+        {scale: 1},
+        {spring: zoomMedia.dismiss.cancelSizeSpring},
+        {touchRelease: fingerRef.current.dismiss},
+      );
+      // Back in its box: the stage clips again, unless another drag began,
+      // and the photo is at its fitted size again once both springs land.
+      void Promise.all([position.finished, size.finished]).then(
+        ([moved, sized]) => {
+          if (dismissRef.current == null && !leavingRef.current) {
+            optionsRef.current.stageRef.current?.removeAttribute(
+              ZOOM_DISMISSING_ATTRIBUTE,
+            );
+            if (moved && sized) {
+              setAtFit(true);
+            }
+          }
+        },
+      );
+    },
+    {isEnabled: options.dismiss?.isEnabled === true, manageStyle: false},
+  );
+
+  // Another item: a drag to dismiss in progress ends, and the stage clips its
+  // photo again. The core puts the photo back at the fitted size.
+  useIsomorphicLayoutEffect(() => {
+    dismissRef.current = null;
+    leavingRef.current = false;
+    optionsRef.current.stageRef.current?.removeAttribute(
+      ZOOM_DISMISSING_ATTRIBUTE,
+    );
+  }, [options.itemKey]);
+
+  const api = core.api;
+  return useMemo(
+    () => ({
+      ...api,
+      reset: () => {
+        if (!leavingRef.current) {
+          return;
+        }
+        leavingRef.current = false;
+        dismissRef.current = null;
+        animator.stop();
+        animator.set({x: 0, y: 0, scale: 1, opacity: 1});
+        setTarget(IDENTITY);
+        setAtFit(true);
+        optionsRef.current.stageRef.current?.removeAttribute(
+          ZOOM_DISMISSING_ATTRIBUTE,
+        );
+      },
+    }),
+    [animator, api, setAtFit, setTarget],
+  );
 }
