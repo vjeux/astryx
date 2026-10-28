@@ -498,6 +498,22 @@ test("a pinch on a zoomable gallery's caption still zooms the page", async ({
   expect((await g.photo()).scale).toBe(1);
 });
 
+test('a tap on the counter keeps the viewer open', async ({page}) => {
+  const g = await openGallery(page);
+  const counter = g.dialog.getByText(/^\d+ \/ \d+$/);
+  // Presence first: the counter shows, with a box to tap.
+  await expect(counter).toHaveText(/^1 \/ \d+$/);
+  const box = await counter.boundingBox();
+  if (box == null) {
+    throw new Error('no counter box');
+  }
+  // A tap that passes through closes once the double-tap wait ends, well
+  // within these frames.
+  await g.driver.tap({x: box.x + 4, y: box.y + box.height / 2});
+  await frames(page, 40);
+  await expect(g.dialog).toBeVisible();
+});
+
 test('a swipe that starts on a caption pages', async ({page}) => {
   const g = await openGallery(page, {
     story: 'core-lightbox--gallery-with-captions',
