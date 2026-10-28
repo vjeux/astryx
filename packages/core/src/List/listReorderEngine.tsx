@@ -43,8 +43,8 @@
  * per-element animator's `set`), and a position change writes one on the
  * insertion line. The list root carries
  * `data-astryx-reordering` from the begin until the commit that applies the
- * drop, so the List's update motion (useListUpdateMotion) leaves that commit
- * to the reorder: after it, each row's old layout place (the dragged row's,
+ * drop, so the List's layout updates (List/listLayoutUpdates.ts) leave that
+ * commit to the reorder: after it, each row's old layout place (the dragged row's,
  * where its preview was dropped) is put back with an inverse offset that
  * glides to 0. If `onReorder` does not commit a new order by the end of the
  * task, nothing has moved and nothing does. Reorder mode (spec:AST-103 FR4)
@@ -83,7 +83,7 @@ import {
 import {edgeAutoscroll, type EdgeAutoscroll} from '../utils/edgeAutoscroll';
 import {useTouchPresentation} from '../utils/touchPresentation';
 import {devWarn} from '../utils/devWarning';
-import {GHOST_ATTRIBUTE} from './useListUpdateMotion';
+import {LEAVING_ATTRIBUTE} from './listLayoutUpdates';
 import {
   INSERTION_LINE_THICKNESS,
   ListReorderHandle,
@@ -166,13 +166,13 @@ function shownY(element: HTMLElement, at: number): number {
 
 /**
  * The list's rows: its element children, without the ghost of a removed row
- * still collapsing (the update motion's, `GHOST_ATTRIBUTE`), which holds no
+ * still collapsing (the layout updates', `LEAVING_ATTRIBUTE`), which holds no
  * place in the order.
  */
 function rowsOf(list: HTMLElement): HTMLElement[] {
   return Array.from(list.children).filter(
     (child): child is HTMLElement =>
-      child instanceof HTMLElement && !child.hasAttribute(GHOST_ATTRIBUTE),
+      child instanceof HTMLElement && !child.hasAttribute(LEAVING_ATTRIBUTE),
   );
 }
 
@@ -213,11 +213,11 @@ const MOVING_OPACITY = '0.6';
 
 /**
  * An element the drag draws over the list: a ghost to the list's order and
- * its update motion, inert and hidden from assistive technology.
+ * its layout updates, inert and hidden from assistive technology.
  */
 function overlay(element: HTMLElement, marker: string): HTMLElement {
   element.setAttribute(marker, '');
-  element.setAttribute(GHOST_ATTRIBUTE, '');
+  element.setAttribute(LEAVING_ATTRIBUTE, '');
   element.setAttribute('aria-hidden', 'true');
   element.inert = true;
   Object.assign(element.style, {
@@ -1386,10 +1386,10 @@ export class ListReorderController implements ListReorderSession {
       if (this.session?.rows[this.session.dragged] === element) {
         return;
       }
-      const running = motionOf(element, 'y');
+      const running = motionOf(element);
       if (running != null) {
         // The drop's spring, or the rebase that continues it.
-        void running.handle.finished.then(settle);
+        void running.finished.then(settle);
         return;
       }
       element.style.zIndex = restore.zIndex;
@@ -1696,7 +1696,7 @@ export class ListReorderController implements ListReorderSession {
         rows,
         tops: rows.map(element => layoutTop(element, list)),
       };
-      // The List's update motion leaves this commit to the reorder.
+      // The List's layout updates leave this commit to the reorder.
       list.setAttribute(REORDERING_ATTRIBUTE, '');
       if (this.moveFallback != null) {
         clearTimeout(this.moveFallback);
