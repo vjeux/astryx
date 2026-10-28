@@ -112,7 +112,7 @@ export const docs = {
       name: 'itemKey',
       type: 'string | number',
       description:
-        "The row's item key in a reorderable List (List reorderable), a string or a number from the data (the shape Table's idKey returns): the key the reorderable object's onReorder reports as given and isReorderable is asked about. A row without one has no reorder handle and keeps its place. Separate from React's key. No effect elsewhere.",
+        "The row's item key, a string or a number from the data (the shape Table's idKey returns). It is the row's identity for the list's animated layout (List animatedLayout): with a handle, the list matches rows by it to animate inserts, removals and moves, and a row without one changes at once. In a reorderable List (List reorderable), it is the key the reorderable object's onReorder reports as given and isReorderable is asked about; a row without one has no reorder handle and keeps its place. Separate from React's key.",
     },
     {
       name: 'swipeActions',
@@ -208,6 +208,12 @@ export const docsZh = {
       default: 'false',
     },
     {
+      name: 'itemKey',
+      type: 'string | number',
+      description:
+        '行的项目键，取自数据的字符串或数字（与 Table 的 idKey 返回的形状相同）。它是列表动画布局（List animatedLayout）中该行的身份：传入句柄时，列表按它匹配各行，为插入、删除和移动添加动画；没有项目键的行会立即变化。在可重新排序的列表（List reorderable）中，它是重新排序对象的 onReorder 原样报告、isReorderable 被询问的键；没有项目键的行没有重新排序手柄，保持原位。与 React 的 key 相互独立。',
+    },
+    {
       name: 'swipeActions',
       type: '{leading?: ItemSwipeAction[]; trailing?: ItemSwipeAction[]}',
       description:
@@ -232,7 +238,7 @@ export const docsDense = {
     align:
       "Start/end content alignment, passed to Item: 'center' (default), 'start', or 'first-line' (centered on the label's first line).",
     itemKey:
-      'In a reorderable List: the key onReorder reports; without one the row keeps its place.',
+      "The row's identity for List animatedLayout (a row without one changes at once) and, in a reorderable List, the key onReorder reports (a row without one keeps its place).",
     label:
       'Primary content. String auto-truncates; ReactNode renders as given.',
     description: 'Secondary text below label.',

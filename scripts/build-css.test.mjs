@@ -427,7 +427,7 @@ describe('build-css astryx.css', () => {
     });
   });
 
-  describe("the list rows' touch hit layer (List, TreeList)", () => {
+  describe("the list rows' touch arms (List, TreeList)", () => {
     /**
      * A rule the build puts inside the touch gate (TOUCH_QUERY,
      * utils/touchPresentation.ts): a coarse primary pointer, iOS and Android
@@ -435,6 +435,19 @@ describe('build-css astryx.css', () => {
      */
     const TOUCH_GATED = /^@media \(pointer: coarse\)\{(?!@supports)/;
     const rules = () => astryxCss.split('\n').map(line => line.trim());
+
+    it('keeps the dividers drawn beside a pressed row', () => {
+      // No press state hides a divider or reaches the press layer over one.
+      expect(
+        rules().filter(
+          rule =>
+            rule.includes('[data-astryx-press=') &&
+            (rule.includes('{border-bottom-color:transparent}') ||
+              rule.includes('::before{bottom:')),
+        ),
+      ).toEqual([]);
+    });
+
     it('gives an interactive row its hit layer only under a finger, and no row a new height', () => {
       // Its top and bottom edges, grown by the insets utils/hitArea.ts measures
       // (utils/touchHitArea.stylex.ts, spec:AST-094 FR42).
