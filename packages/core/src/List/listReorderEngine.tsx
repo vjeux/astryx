@@ -702,6 +702,11 @@ export class ListReorderController implements ListReorderSession {
     this.modeHandle = handle;
     this.lastStep = null;
     this.clearModeLine();
+    // The line marks the row's place from the mode's start (FR4).
+    const list = handle == null ? null : this.getList();
+    if (list != null) {
+      this.placeModeLine(list);
+    }
     for (const listener of [...this.modeListeners]) {
       listener();
     }
@@ -1547,29 +1552,32 @@ export class ListReorderController implements ListReorderSession {
    * Reorder mode's insertion line, at the edge the mode's row came in
    * through on its last key move (the gap above it after a move up, below
    * it after a move down), shared with the pointer drag's
-   * (design:ordered-collection-reordering). None before a move.
+   * (design:ordered-collection-reordering DR7). As the mode starts, before
+   * any move, it marks the gap before the row (spec:AST-103 FR4: the line
+   * marks the item's place while it is in reorder mode).
    */
   private placeModeLine(list: HTMLElement): void {
     const row = this.rowOf(this.modeHandle);
-    if (row == null || this.lastStep == null) {
+    if (row == null) {
       this.clearModeLine();
       return;
     }
+    const step = this.lastStep ?? -1;
     const rows = rowsOf(list);
     const index = rows.indexOf(row);
     const top = layoutTop(row, list);
     const bottom = top + row.offsetHeight;
-    const neighbour = rows[index + this.lastStep];
+    const neighbour = rows[index + step];
     const gap =
       neighbour == null
         ? 0
-        : this.lastStep < 0
+        : step < 0
           ? Math.max(
               0,
               top - (layoutTop(neighbour, list) + neighbour.offsetHeight),
             )
           : Math.max(0, layoutTop(neighbour, list) - bottom);
-    const center = this.lastStep < 0 ? top - gap / 2 : bottom + gap / 2;
+    const center = step < 0 ? top - gap / 2 : bottom + gap / 2;
     if (this.modeLine?.list !== list) {
       this.clearModeLine();
       const listPosition = list.style.position;

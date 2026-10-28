@@ -548,16 +548,26 @@ describe('List reorderable', () => {
     expect(onReorder).toHaveBeenCalledTimes(2);
   });
 
-  it("marks a key move's new place with the insertion line until the mode ends (design:ordered-collection-reordering)", async () => {
+  it("marks the item's place with the insertion line from the mode's start, moving with each move, until the mode ends (spec:AST-103 FR4, design:ordered-collection-reordering DR7)", async () => {
     const user = userEvent.setup();
     render(<ReorderableRows initial={['Inbox', 'Sent', 'Drafts']} />);
     const list = screen.getByRole('list');
     layOut(list);
+    const sent = handleOf('Sent');
+    sent.focus();
+    await user.keyboard(' ');
+    // As the mode starts, the line marks the gap before the item: Sent's top
+    // edge, 44 px down (the line's own 2 px centred on it).
+    expect(list).toHaveAttribute('data-astryx-reorder-line');
+    expect(list.style.getPropertyValue('--astryx-reorder-line-y')).toBe('43px');
+    await user.keyboard('{Escape}');
+    expect(list).not.toHaveAttribute('data-astryx-reorder-line');
     const handle = handleOf('Inbox');
     handle.focus();
     await user.keyboard(' ');
-    // No line before a move.
-    expect(list).not.toHaveAttribute('data-astryx-reorder-line');
+    // The first row: the gap before it is the list's top edge.
+    expect(list).toHaveAttribute('data-astryx-reorder-line');
+    expect(list.style.getPropertyValue('--astryx-reorder-line-y')).toBe('-1px');
     await user.keyboard('{ArrowDown}');
     layOut(list);
     await user.keyboard('{ArrowDown}');
