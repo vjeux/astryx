@@ -1280,7 +1280,7 @@ describe('List reorderable', () => {
     expect(attached(false).elements).toEqual([]);
   });
 
-  it('listens for touches on the document only while the list is mounted', () => {
+  it('listens for presses on the document only while the list is mounted', () => {
     // A touch screen: the hold attaches where the primary pointer is coarse.
     stubPrimaryPointer(true);
     // A document of its own, so no earlier test has touched it, in a window
@@ -1292,7 +1292,10 @@ describe('List reorderable', () => {
       configurable: true,
       value: (query: string) => window.matchMedia(query),
     });
-    const touches = new Set(['touchstart', 'touchend', 'touchcancel']);
+    // The host takes a finger from pointer events where it can and from
+    // touch events where it must: either kind counts.
+    const isPress = (type: string) =>
+      type.startsWith('touch') || type.startsWith('pointer');
     const added = vi.spyOn(doc, 'addEventListener');
     const removed = vi.spyOn(doc, 'removeEventListener');
     const mount = () => {
@@ -1305,11 +1308,11 @@ describe('List reorderable', () => {
     };
     const first = mount();
     const second = mount();
-    const listeners = added.mock.calls.filter(([type]) => touches.has(type));
+    const listeners = added.mock.calls.filter(([type]) => isPress(type));
     expect(listeners.length).toBeGreaterThan(0);
     first.unmount();
     second.unmount();
-    // Every touch listener the lists put on the document went with them.
+    // Every press listener the lists put on the document went with them.
     for (const [type, listener, options] of listeners) {
       expect(
         removed.mock.calls.some(
