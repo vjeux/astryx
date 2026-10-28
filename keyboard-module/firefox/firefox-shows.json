@@ -1,0 +1,25 @@
+{
+ "browser": "Firefox 158.0.2, Android 15 emulator, Gboard; a top-level document (Storybook iframe.html opened directly); BottomSheet Mobile keyboard story, the lowest field on screen tapped, keyboard top at 486.2 CSS px",
+ "runs": {
+  "main 84faa0d94b": {
+   "shows": 0,
+   "fieldUnderKeyboard": 0,
+   "shows_detail": []
+  },
+  "module move alone (room on the body, next-frame reveal, no put-back)": {
+   "shows": 0,
+   "fieldUnderKeyboard": 0,
+   "shows_detail": []
+  },
+  "module move + content-box room (no report-frame reveal, no put-back)": {
+   "shows": 0,
+   "fieldUnderKeyboard": 0,
+   "shows_detail": []
+  },
+  "this pull request 2997a96b29": {
+   "shows": 0,
+   "fieldUnderKeyboard": 0,
+   "shows_detail": []
+  }
+ }
+}
