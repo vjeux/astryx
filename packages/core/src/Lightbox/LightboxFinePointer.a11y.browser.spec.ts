@@ -4,17 +4,14 @@
  * @file LightboxFinePointer.a11y.browser.spec.ts
  * @input The built Lightbox "with zoom" story, a desktop browser (a fine
  *   primary pointer) and real mouse input; in Chromium, pen input
- * @output Browser evidence that the zoom's gestures attach for every
- *   pointer where the primary pointer is fine too. The zoom target takes its
- *   touches as on a phone. A mouse's double-click zooms 2× about the clicked
- *   point, and the next zooms back; a pen's double-click zooms 2× too. The
- *   keyboard's zoom plays the released 200 ms ease-out, a pen drag pans a
- *   zoomed photo, and a mouse drag stops at the photo's edges
- * @position Cross-browser proof for Lightbox's mouse, pen and keyboard zoom
- *   where the primary pointer is fine
+ * @output Evidence that the gestures take every pointer where the primary
+ *   pointer is fine too. It covers touches as on a phone, the double-click's
+ *   2× zoom and the keyboard's 200 ms ease-out. It also covers pen and mouse
+ *   drags, and a gallery's Next, arrow keys and dark-area click
+ * @position Cross-browser proof for Lightbox under a fine primary pointer
  */
 
-import {expect, test, type Page} from '@playwright/test';
+import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
   DEFAULT_STORYBOOK_DIR,
   serveStorybook,
@@ -167,16 +164,182 @@ test('a caption sits under the fitted photo, as it does without zoom', async ({
     .toBeGreaterThanOrEqual(-0.5);
 });
 
+/** Opens the gallery story (zoom on) at its first photo with the mouse. */
+async function openGallery(page: Page) {
+  await page.route('https://picsum.photos/**', async route =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: photoSvg(PHOTO.width, PHOTO.height),
+    }),
+  );
+  await page.goto(
+    `${storybook.origin}/iframe.html?id=core-lightbox--gallery-with-zoom&viewMode=story`,
+  );
+  await page.getByRole('button', {name: 'Open gallery with zoom'}).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText('1 / 4');
+  const current = dialog.locator('[data-current] img');
+  await expect
+    .poll(async () =>
+      current.evaluate(el => (el as HTMLImageElement).naturalWidth),
+    )
+    .toBe(PHOTO.width);
+  await settled(page);
+  return {dialog, current};
+}
+
+/** Clicks `point`, which must be the dark area, and expects the viewer gone. */
+async function expectBackdropClickCloses(
+  page: Page,
+  dialog: Locator,
+  point: {x: number; y: number},
+): Promise<void> {
+  const hit = await page.evaluate(({x, y}) => {
+    const el = document.elementFromPoint(x, y);
+    return {
+      isControl: el?.closest('button, a, input') != null,
+      isPhoto: el instanceof HTMLImageElement,
+      inDialog: el?.closest('dialog') != null,
+    };
+  }, point);
+  expect(hit).toEqual({isControl: false, isPhoto: false, inDialog: true});
+  await page.mouse.click(point.x, point.y);
+  await expect(dialog).toBeHidden();
+}
+
+/** The computed touch-action of the photo and each ancestor below the dialog. */
+async function touchActionsAbove(photo: Locator): Promise<string[]> {
+  return photo.evaluate(el => {
+    const actions: string[] = [];
+    for (
+      let node: Element | null = el;
+      node != null && node.tagName !== 'DIALOG';
+      node = node.parentElement
+    ) {
+      actions.push(getComputedStyle(node).touchAction);
+    }
+    return actions;
+  });
+}
+
 test('the zoom target takes its touches as on a phone where the primary pointer is fine too', async ({
   page,
 }) => {
-  const {stage} = await openViewer(page);
+  const {stage, img} = await openViewer(page);
   // Gestures attach for every pointer. A touchscreen laptop's finger pinches
   // and pans the photo as on a phone, so the zoom target claims its touches,
   // as under a coarse pointer.
   expect(await stage.evaluate(el => getComputedStyle(el).touchAction)).toBe(
     'none',
   );
+  expect(await touchActionsAbove(img)).toEqual([
+    'auto',
+    'none',
+    'auto',
+    'auto',
+  ]);
+});
+
+test('a gallery takes its touches as on a phone where the primary pointer is fine too', async ({
+  page,
+}) => {
+  // The current photo's row claims its touches, and the track, the zoom
+  // stage's surface, leaves only the page's pinch-zoom, as under a coarse
+  // pointer. The pager's viewport claims its horizontal pan.
+  const {current} = await openGallery(page);
+  expect(await touchActionsAbove(current)).toEqual([
+    'auto',
+    'none',
+    'auto',
+    'pinch-zoom',
+    'pan-y pinch-zoom',
+    'auto',
+    'auto',
+  ]);
+});
+
+for (const via of ['the Next button', 'the arrow key'] as const) {
+  test(`${via} shows the next photo at once where the primary pointer is fine`, async ({
+    page,
+  }) => {
+    const {dialog} = await openGallery(page);
+    // The track's place every frame from the press on. Under a finger the
+    // pager slides; with a mouse or the keyboard the new photo shows at once,
+    // as it always has. The sampler is installed and awaited before the press,
+    // since a press the page gets first would leave it waiting.
+    await page.evaluate(() => {
+      (window as unknown as {__places: Promise<number[]>}).__places =
+        new Promise<number[]>(resolve => {
+          const track = document.querySelector(
+            'dialog [data-lightbox-page]',
+          )?.parentElement;
+          const places: number[] = [];
+          let start: number | null = null;
+          const begin = () => {
+            start = performance.now();
+          };
+          window.addEventListener('click', begin, {capture: true, once: true});
+          window.addEventListener('keydown', begin, {
+            capture: true,
+            once: true,
+          });
+          const tick = (now: number) => {
+            if (start != null && track != null) {
+              places.push(Math.round(track.getBoundingClientRect().x));
+            }
+            if (start == null || now - start < 600) {
+              requestAnimationFrame(tick);
+            } else {
+              resolve(places);
+            }
+          };
+          requestAnimationFrame(tick);
+        });
+    });
+    if (via === 'the Next button') {
+      await dialog.getByRole('button', {name: 'Next'}).click();
+    } else {
+      await page.keyboard.press('ArrowRight');
+    }
+    const places = await page.evaluate(
+      async () => (window as unknown as {__places: Promise<number[]>}).__places,
+    );
+    await expect(dialog).toContainText('2 / 4');
+    expect(places.length).toBeGreaterThan(10);
+    // One place from the first frame after the press: no frame in between.
+    expect(new Set(places).size).toBe(1);
+  });
+}
+
+test('a mouse click above the photo closes the viewer with zoom on, as before', async ({
+  page,
+}) => {
+  // A window taller than the photo's fitted height leaves the dark area
+  // above it; the stage stretches only under the touch layer.
+  await page.setViewportSize({width: 1280, height: 1000});
+  const {dialog, img} = await openViewer(page);
+  const shown = await boxOf(img);
+  expect(shown.y).toBeGreaterThan(40);
+  await expectBackdropClickCloses(page, dialog, {
+    x: shown.x + shown.width / 2,
+    y: shown.y / 2,
+  });
+});
+
+test('in a gallery, a mouse click beside the photo closes the viewer', async ({
+  page,
+}) => {
+  // A gallery's stage fills the viewer: beside the photo is the stage's own
+  // dark area. Halfway between the window's left edge and the photo's, in
+  // the photo's upper part (the buttons sit at its middle height).
+  const {dialog, current} = await openGallery(page);
+  const shown = await boxOf(current);
+  expect(shown.x).toBeGreaterThan(40);
+  await expectBackdropClickCloses(page, dialog, {
+    x: shown.x / 2,
+    y: shown.y + shown.height * 0.15,
+  });
 });
 
 test('a mouse double-click zooms 2× about the clicked point, and the next zooms back', async ({
