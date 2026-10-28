@@ -32,6 +32,7 @@
 
 import {getGestureHost} from '../gestures/GestureHost';
 import {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
+import type {MotionHandle} from '../motion/animator';
 import {resolveMotion} from '../motion/resolveMotion';
 import {
   durationBounceOf,
@@ -83,6 +84,24 @@ export function attachTouchHold(
 }
 
 /** Releases a row's offset once its motion arrives. */
+/**
+ * The spring each reorder motion runs on, by its handle: a layout shift
+ * (`follow`) continues a running glide on the same spring, so its curve on
+ * screen goes on.
+ */
+const runningSprings = new WeakMap<MotionHandle, SpringDescription>();
+
+/** Starts a reorder motion on a row (rowMotion's `animateRow`), keeping its spring. */
+function startRow(
+  element: HTMLElement,
+  spring: SpringDescription,
+  options: {at?: number; velocity?: {y: number}},
+): MotionHandle {
+  const handle = animateRow(element, {y: 0}, spring, options);
+  runningSprings.set(handle, spring);
+  return handle;
+}
+
 function releaseOnArrival(element: HTMLElement, arrived: Promise<boolean>) {
   void arrived.then(done => {
     if (done) {
@@ -120,8 +139,7 @@ export const touchMotion = {
     animatorFor(element).rebase({y: shift}, {at});
     releaseOnArrival(
       element,
-      animateRow(element, {y: 0}, spring, {at, velocity: {y: velocity}})
-        .finished,
+      startRow(element, spring, {at, velocity: {y: velocity}}).finished,
     );
   },
   /**
@@ -136,7 +154,7 @@ export const touchMotion = {
   ): void {
     releaseOnArrival(
       element,
-      animateRow(element, {y: 0}, spring, {
+      startRow(element, spring, {
         at,
         velocity: fromRest ? {y: 0} : undefined,
       }).finished,
@@ -154,11 +172,10 @@ export const touchMotion = {
     spring: SpringDescription,
     at: number,
   ): void {
-    const running = motionOf(element, 'y')?.spring ?? spring;
+    const handle = motionOf(element);
+    const running =
+      (handle != null ? runningSprings.get(handle) : null) ?? spring;
     animatorFor(element).rebase({y: shift}, {at});
-    releaseOnArrival(
-      element,
-      animateRow(element, {y: 0}, running, {at}).finished,
-    );
+    releaseOnArrival(element, startRow(element, running, {at}).finished);
   },
 };
