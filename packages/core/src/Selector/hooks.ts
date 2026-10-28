@@ -170,6 +170,12 @@ interface ComboboxOption {
   disabled?: boolean;
 }
 
+/**
+ * The text field a caller renders and keeps focused (spec:AST-075): a
+ * single-line `input`, or a multi-line `textarea` or contenteditable element.
+ */
+type ComboboxField = 'input' | 'textarea' | 'contenteditable';
+
 interface UseComboboxOptions<T extends ComboboxOption> {
   selectableItems: ReadonlyArray<T>;
   value?: string;
@@ -194,13 +200,20 @@ interface UseComboboxOptions<T extends ComboboxOption> {
    */
   onSearchSeed?: (char: string) => void;
   listboxId: string;
+  /**
+   * The text field `getFieldProps` wires: one the caller renders and keeps
+   * focused while a person picks from the list (spec:AST-075). It decides the
+   * field's role and whether ArrowDown shows a hidden list. `onKeyDown` keeps
+   * its own key model and ignores it.
+   */
+  field?: ComboboxField;
 }
 
 /** Spread onto the caller's field. */
 interface ComboboxFieldProps {
-  role: 'combobox';
+  role?: 'combobox';
   'aria-autocomplete': 'list';
-  'aria-expanded': boolean;
+  'aria-expanded'?: boolean;
   'aria-controls'?: string;
   'aria-activedescendant'?: string;
   onKeyDown: (event: React.KeyboardEvent) => void;
@@ -226,7 +239,7 @@ interface ComboboxOptionProps {
 /** The caller's own handlers for its field, run after the hook's. */
 interface ComboboxFieldHandlers {
   // Method syntax keeps the parameter bivariant, so a handler typed for its
-  // own element, such as an input, is accepted.
+  // own element (an input, a textarea, a contenteditable element) is accepted.
   onKeyDown?(event: React.KeyboardEvent): void;
 }
 
@@ -258,7 +271,7 @@ function hasModifier(e: React.KeyboardEvent): boolean {
  * keeps matching consistent with the other collections and leaves consumers
  * whose own input already filters the items (CommandPalette) untouched.
  *
- * For a single-line text field the caller renders (spec:AST-075), `getFieldProps`,
+ * For a text field the caller renders (spec:AST-075), `getFieldProps`,
  * `getListboxProps` and `getOptionProps` carry the combobox semantics, the
  * field's keys and the pointer model, while the caller keeps the field, the
  * rows and where the list renders. The caller announces each new result count
@@ -276,6 +289,7 @@ export function useCombobox<T extends ComboboxOption = SelectorOptionData>({
   onClear,
   onSearchSeed,
   listboxId,
+  field = 'input',
 }: UseComboboxOptions<T>): UseComboboxResult<T> {
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
@@ -527,11 +541,14 @@ export function useCombobox<T extends ComboboxOption = SelectorOptionData>({
         return;
       }
       const enabledIndices = getEnabledIndices();
-      if (!isOpen) {
+      // A multi-line field whose open list has no options renders no listbox
+      // and reports itself collapsed, so it keeps every key, as when hidden.
+      if (!isOpen || (field !== 'input' && !isListboxShown)) {
         // A single-line field has no caret work for ArrowDown, so it shows the
-        // hidden list.
+        // hidden list; a multi-line field keeps its arrows for the caret.
         if (
           e.key === 'ArrowDown' &&
+          field === 'input' &&
           selectableItems.length > 0 &&
           onOpen() !== false
         ) {
@@ -588,6 +605,8 @@ export function useCombobox<T extends ComboboxOption = SelectorOptionData>({
       isDisabled,
       getEnabledIndices,
       isOpen,
+      field,
+      isListboxShown,
       selectableItems,
       onOpen,
       highlightedIndex,
@@ -599,8 +618,11 @@ export function useCombobox<T extends ComboboxOption = SelectorOptionData>({
   const getFieldProps = useCallback(
     (props: ComboboxFieldHandlers = {}): ComboboxFieldProps => {
       return {
-        role: 'combobox',
-        'aria-expanded': isListboxShown,
+        // A textarea admits no explicit role and no aria-expanded; it stays a
+        // textbox that names its list and active option.
+        ...(field === 'textarea'
+          ? {}
+          : {role: 'combobox' as const, 'aria-expanded': isListboxShown}),
         'aria-autocomplete': 'list',
         'aria-controls': isListboxShown ? listboxId : undefined,
         'aria-activedescendant': activeDescendant,
@@ -612,7 +634,7 @@ export function useCombobox<T extends ComboboxOption = SelectorOptionData>({
         },
       };
     },
-    [isListboxShown, listboxId, activeDescendant, onFieldKeyDown],
+    [field, isListboxShown, listboxId, activeDescendant, onFieldKeyDown],
   );
 
   const getListboxProps = useCallback(
