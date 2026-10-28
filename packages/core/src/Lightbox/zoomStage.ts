@@ -17,6 +17,7 @@
 import {rubberBandClamp, rubberBandUnclamp} from '../motion/rubberBand';
 import {solveAnimatedPageScroll} from '../motion/paging';
 import {resolveMotion} from '../motion/resolveMotion';
+import {resolveSnapPoint} from '../motion/resolveSnapPoint';
 import {registerZoomMediaTable, zoomMedia} from '../motion/uikit/zoomMedia';
 import type {MotionCurve} from '../motion/animator';
 
@@ -449,4 +450,86 @@ export function transformForResize(
     y: after.height / 2 - after.fit.y - v * after.fit.height * scale,
     scale,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Drag to dismiss (Photos)
+
+/**
+ * The photo under a drag to dismiss, from its fitted size. Its centre follows
+ * the pointer (dx, dy). It shrinks about that centre by
+ * `zoomMedia.dismiss.scalePerTravelSquared` × the downward travel².
+ */
+export function dismissTransform(
+  geometry: ZoomGeometry,
+  dx: number,
+  dy: number,
+): ZoomTransform {
+  const travel = Math.max(0, dy);
+  const scale = Math.max(
+    0,
+    1 - zoomMedia.dismiss.scalePerTravelSquared * travel * travel,
+  );
+  return {
+    x: dx + ((1 - scale) * geometry.fit.width) / 2,
+    y: dy + ((1 - scale) * geometry.fit.height) / 2,
+    scale,
+  };
+}
+
+/** The backdrop's opacity at a drag's downward travel (pt). */
+export function dismissBackdropAlpha(travel: number): number {
+  const t = Math.max(0, travel);
+  return Math.min(
+    1,
+    Math.max(0, 1 - zoomMedia.dismiss.backdropAlphaPerTravelSquared * t * t),
+  );
+}
+
+/** The controls' and neighbouring photos' opacity at a drag's travel (pt). */
+export function dismissChromeAlpha(travel: number): number {
+  const {chromeAlphaPerPoint, chromeFadeStart} = zoomMedia.dismiss;
+  return Math.min(
+    1,
+    Math.max(0, 1 - chromeAlphaPerPoint * (travel - chromeFadeStart)),
+  );
+}
+
+/**
+ * Whether a released drag to dismiss dismisses, decided once at the lift. A
+ * pointer moving up cancels. Otherwise the drag dismisses when its projected
+ * travel passes `zoomMedia.dismiss.cancelTravel`. That is the travel plus
+ * where its velocity would coast (`zoomMedia.dismiss.projectionRate`). A
+ * short flick down closes; a short pull lifted still springs back.
+ */
+export function dismissCommits(travel: number, velocityY: number): boolean {
+  const {cancelTravel, projectionRate} = zoomMedia.dismiss;
+  // The shared release rule picks rest or a point twice the commit travel
+  // away, so the commit point is halfway. Below its start, a release moving
+  // up cancels to rest.
+  const release = resolveSnapPoint({
+    points: [0, 2 * cancelTravel],
+    position: travel,
+    velocity: velocityY,
+    flickThreshold: Number.POSITIVE_INFINITY,
+    projection: {seconds: projectionRate / (1 - projectionRate) / 1000},
+    start: travel > 0 ? 0 : undefined,
+  });
+  return release.index === 1;
+}
+
+/**
+ * Where a dismissed photo goes with no thumbnail to return to: straight on
+ * down until its top passes `bottom`, in stage px. That is the screen's
+ * bottom edge, which a stage that only hugs the photo sits well above. By
+ * default it is the stage's own bottom.
+ */
+export function dismissExitY(
+  geometry: ZoomGeometry,
+  shown: ZoomTransform,
+  bottom: number = geometry.height,
+): number {
+  return (
+    Math.max(shown.y, Math.max(bottom, geometry.height) - geometry.fit.y) + 1
+  );
 }
