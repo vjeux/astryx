@@ -64,6 +64,14 @@ const progress = (t: number) =>
 /** Where it settles: every sampled curve is judged up to here. */
 const SETTLE_MS =
   solveSpring(SPRING, {from: 0, to: 1}).settleTime(0.001) * 1000;
+/** The spring's fastest progress, as a share of its travel per ms. */
+const PEAK_RATE = (() => {
+  let peak = 0;
+  for (let t = 0; t < SETTLE_MS; t += 1) {
+    peak = Math.max(peak, Math.abs(progress(t + 1) - progress(t)));
+  }
+  return peak;
+})();
 
 /** A tree row by its item id (an ancestor row contains its label too). */
 const treeItem = (page: Page, id: string) =>
@@ -231,6 +239,232 @@ test('a busy first frame delays the expand instead of skipping into it', async (
     });
   }
   await expect.poll(async () => translateY(parts(page).child)).toBe(0);
+});
+
+test('a collapse from rest starts on its chevron’s clock: a busy first frame delays both together (spec:AST-108 FR4a)', async ({
+  page,
+}) => {
+  await open(page);
+  const {toggle, parent, child} = parts(page);
+  await tapToggle(page);
+  await expect.poll(async () => translateY(child)).toBe(0);
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter(animation => animation.playState === 'running').length,
+      ),
+    )
+    .toBe(0);
+  // The collapse's commit starts the block and the chevron; 150 ms of script
+  // then hold the main thread before the first frame. Both start when the
+  // browser commits them, on one clock.
+  const starts = await parent.evaluate(
+    async (folder, toggleButton) =>
+      new Promise<{chevron: number[]; rows: number[]}>(resolve => {
+        const observer = new MutationObserver(() => {
+          observer.disconnect();
+          const chevron = folder.querySelector<HTMLElement>(
+            ':scope > :not([role="group"]) [data-tree-chevron]',
+          );
+          const rows = [
+            ...folder.querySelectorAll<HTMLElement>(
+              ':scope > [role="group"] > [role="treeitem"]',
+            ),
+          ];
+          const motions = {
+            chevron: chevron?.getAnimations() ?? [],
+            rows: rows.flatMap(row => row.getAnimations()),
+          };
+          const until = performance.now() + 150;
+          while (performance.now() < until) {
+            // Busy: the main thread is held.
+          }
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              resolve({
+                chevron: motions.chevron.map(a => Number(a.startTime)),
+                rows: motions.rows.map(a => Number(a.startTime)),
+              }),
+            ),
+          );
+        });
+        observer.observe(folder, {attributes: true, subtree: true});
+        (toggleButton as HTMLElement).click();
+      }),
+    await toggle.elementHandle(),
+  );
+  expect(starts.chevron.length, JSON.stringify(starts)).toBeGreaterThan(0);
+  expect(starts.rows.length, JSON.stringify(starts)).toBeGreaterThan(0);
+  const all = [...starts.chevron, ...starts.rows];
+  expect(
+    Math.max(...all) - Math.min(...all),
+    JSON.stringify(starts),
+  ).toBeLessThan(1);
+});
+
+test('a toggle mid-motion turns the block and the chevron around from the frame on screen', async ({
+  page,
+}) => {
+  await open(page);
+  const {group} = parts(page);
+  // Every frame's child offset and chevron turn, from the first tap on, with
+  // the frame's time: the values on screen at that time. On the first frame
+  // the expand moves the block, the page toggles the row again, so the turn
+  // around lands early in the curve, far from either end, under any load.
+  await page.evaluate(() => {
+    const samples: {t: number; y: number; turn: number}[] = [];
+    (window as unknown as {samples: typeof samples}).samples = samples;
+    let turned = false;
+    const read = (t: number) => {
+      const row = document.querySelector<HTMLElement>(
+        '[data-tree-id="button"]',
+      );
+      const chevron = document.querySelector<HTMLElement>(
+        '[data-tree-id="components"] > :not([role="group"]) [data-tree-chevron]',
+      );
+      if (row != null && chevron != null) {
+        const translate = getComputedStyle(row).translate;
+        const [, y = '0px'] =
+          translate === 'none' || translate === ''
+            ? ['0px']
+            : translate.split(' ');
+        // The chevron's angle on screen: the quarter turn its class gives its
+        // transform, plus the additive turn the motion springs home.
+        const style = getComputedStyle(chevron);
+        const additive =
+          style.rotate === 'none' || style.rotate === ''
+            ? 0
+            : Number.parseFloat(style.rotate);
+        const matrix = /matrix\(([^)]+)\)/.exec(style.transform);
+        const [a = 1, b = 0] =
+          matrix == null ? [] : matrix[1].split(',').map(Number);
+        samples.push({
+          t,
+          y: Number.parseFloat(y),
+          turn: (Math.atan2(b, a) * 180) / Math.PI + additive,
+        });
+        const height =
+          row.closest('[role="group"]')?.getBoundingClientRect().height ?? 0;
+        if (!turned && Number.parseFloat(y) > 1 - height) {
+          turned = true;
+          document
+            .querySelector<HTMLElement>(
+              '[data-tree-id="components"] > :not([role="group"]) [data-tree-toggle]',
+            )
+            ?.click();
+        }
+      }
+      requestAnimationFrame(read);
+    };
+    requestAnimationFrame(read);
+  });
+  await tapToggle(page);
+  const height = await group.evaluate(el => el.getBoundingClientRect().height);
+  // The page turned it around mid-expand; the collapse then removes the group.
+  await expect(group).toHaveCount(0, {timeout: 3000});
+  const samples = await page.evaluate(
+    () =>
+      (window as unknown as {samples: {t: number; y: number; turn: number}[]})
+        .samples,
+  );
+  // No jumps: a turn around continues from the value on screen, with no
+  // restart from either end. Judged against the time between frames, so a
+  // frame the browser delays may carry more travel: between two frames the
+  // block and the chevron move at most twice the spring's peak speed (the
+  // old curve's and the new one's at a turn around), plus a pixel or a
+  // degree.
+  for (let i = 1; i < samples.length; i++) {
+    const elapsed = samples[i].t - samples[i - 1].t;
+    const context = `frame ${i}: ${JSON.stringify(samples.slice(Math.max(0, i - 2), i + 2))}`;
+    expect(Math.abs(samples[i].y - samples[i - 1].y), context).toBeLessThan(
+      2 * PEAK_RATE * height * elapsed + 1,
+    );
+    expect(
+      Math.abs(samples[i].turn - samples[i - 1].turn),
+      context,
+    ).toBeLessThan(2 * PEAK_RATE * 90 * elapsed + 1);
+  }
+  // It did turn around: the block went down, then back up.
+  const lowest = Math.max(...samples.map(sample => sample.y));
+  expect(lowest).toBeLessThan(0);
+  expect(samples.at(-1)?.y ?? 0).toBeLessThan(lowest);
+});
+
+/**
+ * Expands the Animated layout story's "Photos" folder (its TreeList takes the
+ * story's handle) and reports, one frame later, what each running animation
+ * moves: rows of the expanded group, other rows of the tree, or content after
+ * the tree.
+ */
+async function expandWithHandle(page: Page) {
+  await openStory(page, storybook(), 'core-animated-layout--animated-layout');
+  const folder = page.locator('[role="treeitem"][data-tree-id="photos"]');
+  const toggle = folder.locator(
+    ':scope > :not([role="group"]) [data-tree-toggle]',
+  );
+  return folder.evaluate(
+    async (row, button) => {
+      (button as HTMLElement).click();
+      await new Promise(requestAnimationFrame);
+      const tree = row.closest('[role="tree"]');
+      const group = row.querySelector(':scope > [role="group"]');
+      return document.getAnimations().map(animation => {
+        const effect = animation.effect as KeyframeEffect | null;
+        const target = effect?.target ?? null;
+        const moves = [
+          ...new Set(
+            (effect?.getKeyframes() ?? []).flatMap(frame =>
+              Object.keys(frame).filter(
+                key =>
+                  !['offset', 'computedOffset', 'easing', 'composite'].includes(
+                    key,
+                  ),
+              ),
+            ),
+          ),
+        ];
+        const where =
+          target == null
+            ? 'none'
+            : group?.contains(target)
+              ? 'group'
+              : tree?.contains(target)
+                ? 'tree'
+                : 'after';
+        return {where, moves};
+      });
+    },
+    await toggle.elementHandle(),
+  );
+}
+
+test('with an animatedLayout handle, expanding a folder glides what follows it under a finger and with a mouse, and its rows play no slide of their own (component:TreeList FR8, FR9)', async ({
+  page,
+  browser,
+}) => {
+  const isSlide = (animation: {where: string; moves: string[]}) =>
+    animation.where === 'group' && animation.moves.includes('translate');
+  const isGlide = (animation: {where: string; moves: string[]}) =>
+    animation.where !== 'group' &&
+    animation.moves.some(move => move === 'translate' || move === 'transform');
+  const touch = await expandWithHandle(page);
+  expect(touch.some(isGlide), JSON.stringify(touch)).toBe(true);
+  expect(touch.filter(isSlide), JSON.stringify(touch)).toEqual([]);
+  const context = await browser.newContext({
+    hasTouch: false,
+    isMobile: false,
+    viewport: {width: 900, height: 900},
+  });
+  try {
+    const mouse = await expandWithHandle(await context.newPage());
+    expect(mouse.some(isGlide), JSON.stringify(mouse)).toBe(true);
+    expect(mouse.filter(isSlide), JSON.stringify(mouse)).toEqual([]);
+  } finally {
+    await context.close();
+  }
 });
 
 test('Android: a tap expands with the same motion (one touch model)', async ({
@@ -790,6 +1024,31 @@ test('the expand does no Layout or Paint per frame', async ({
     await page.waitForTimeout(SETTLE_MS + 100);
   });
   const during = countBetween(trace, window.from + 30, window.to - 30);
+  expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
+  expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
+});
+
+test('the collapse does no Layout or Paint per frame while its block slides', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
+  await open(page);
+  const {parent, child} = parts(page);
+  await parent.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(async () => translateY(child)).toBe(0);
+  await page.waitForTimeout(SETTLE_MS);
+  let window = {from: 0, to: 0};
+  const trace = await traceRendering(page, async () => {
+    await page.keyboard.press('ArrowLeft');
+    const [started] = await waitForAnimation(child);
+    // Up to well before the frame the block is clipped, when the commit that
+    // removes the group lays out once.
+    window = {from: started.from, to: started.from + 0.5 * SETTLE_MS};
+    await page.waitForTimeout(SETTLE_MS + 100);
+  });
+  const during = countBetween(trace, window.from + 30, window.to);
   expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
   expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
 });
