@@ -1294,11 +1294,13 @@ for (const stop of [
   });
 }
 
+// Upward, so the list (at its top) can scroll along the drag: each case can
+// fail.
 for (const travel of [
-  {dx: 0, dy: 9, label: '9 px straight', keeps: true},
-  {dx: 0, dy: 10, label: '10 px straight', keeps: false},
-  {dx: 7, dy: 7, label: '(7, 7), 9.9 px diagonally', keeps: true},
-  {dx: 8, dy: 8, label: '(8, 8), 11.3 px diagonally', keeps: false},
+  {dx: 0, dy: -9, label: '9 px straight', keeps: true},
+  {dx: 0, dy: -10, label: '10 px straight', keeps: false},
+  {dx: 7, dy: -7, label: '(7, 7), 9.9 px diagonally', keeps: true},
+  {dx: 8, dy: -8, label: '(8, 8), 11.3 px diagonally', keeps: false},
 ]) {
   test(`a finger moved ${travel.label} over a scroll view ${travel.keeps ? 'keeps its tap and scrolls nothing' : 'is a tap or a scroll, never both'} (spec:AST-094 FR18–FR22)`, async ({
     page,
