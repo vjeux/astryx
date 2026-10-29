@@ -4405,8 +4405,10 @@ describe('gestures attach for every pointer (spec:AST-094 FR43, FR19, FR24)', ()
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it("cancels a claimed finger's touchend, and leaves an unclaimed one's alone (spec:AST-094 FR21)", () => {
-    const {box, other} = mount('<div id="box"></div><div id="other"></div>');
+  it("cancels a claimed finger's touchend, a recognized tap's too, and leaves an unclaimed one's alone (spec:AST-094 FR21)", () => {
+    const {box, other, tapper} = mount(
+      '<div id="box"></div><div id="other"></div><div id="tapper"></div>',
+    );
     const pointerHost = new GestureHost(document, {
       clock,
       inputMode: 'pointer-events',
@@ -4415,7 +4417,9 @@ describe('gestures attach for every pointer (spec:AST-094 FR43, FR19, FR24)', ()
     const pan = new PanGestureRecognizer({direction: 'horizontal'});
     detachers.push(
       pointerHost.attach(box, pan),
-      pointerHost.attach(other, new TapGestureRecognizer()),
+      // A hold a short tap never reaches: the touch is tracked, unclaimed.
+      pointerHost.attach(other, new LongPressGestureRecognizer()),
+      pointerHost.attach(tapper, new TapGestureRecognizer()),
     );
     // A pan that claims, then lifts: its touchend is cancelled (FR21).
     pointer('pointerdown', box, {
@@ -4440,7 +4444,7 @@ describe('gestures attach for every pointer (spec:AST-094 FR43, FR19, FR24)', ()
     expect(touch('touchend', box, [lifted], [], 48).defaultPrevented).toBe(
       true,
     );
-    // A tap nobody claimed before its lift keeps its touchend.
+    // A tap nobody claims keeps its touchend.
     pointer('pointerdown', other, {
       id: 2,
       pointerType: 'touch',
@@ -4460,6 +4464,28 @@ describe('gestures attach for every pointer (spec:AST-094 FR43, FR19, FR24)', ()
     });
     expect(touch('touchend', other, [second], [], 460).defaultPrevented).toBe(
       false,
+    );
+    // A tap recognizer replaces the click, as under Touch Events: its lift's
+    // touchend is cancelled, so no compatibility mouse event follows.
+    pointer('pointerdown', tapper, {
+      id: 3,
+      pointerType: 'touch',
+      x: 10,
+      y: 160,
+      buttons: 1,
+      time: 800,
+    });
+    const third = {id: 9, x: 10, y: 160};
+    touch('touchstart', tapper, [third], [third], 800);
+    pointer('pointerup', tapper, {
+      id: 3,
+      pointerType: 'touch',
+      x: 10,
+      y: 160,
+      time: 860,
+    });
+    expect(touch('touchend', tapper, [third], [], 860).defaultPrevented).toBe(
+      true,
     );
   });
 
