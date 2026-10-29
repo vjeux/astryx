@@ -178,14 +178,14 @@ interface Registration {
   readonly recognizers: GestureRecognizer[];
   readonly hovers: HoverGestureRecognizer[];
   consumer: TouchConsumer | null;
-  /** Whether the element carries the host's shared blocking touchmove handler. */
-  hasTouchMoveListener: boolean;
   /**
    * Under `inputMode: 'pointer-events'`, whether the element carries the
    * host's blocking `touchend` handler, which cancels a claimed finger's lift
    * (`spec:AST-094` FR21).
    */
   hasTouchEndListener: boolean;
+  /** Whether the element carries the host's shared blocking touchmove handler. */
+  hasTouchMoveListener: boolean;
   /** Inline values the host replaced, to restore on detach. */
   readonly savedStyle: Map<string, string>;
   /**
@@ -902,8 +902,8 @@ export class GestureHost {
         recognizers: [],
         hovers: [],
         consumer: null,
-        hasTouchMoveListener: false,
         hasTouchEndListener: false,
+        hasTouchMoveListener: false,
         savedStyle: new Map(),
         authorTouchAction: null,
         manageStyle: true,
@@ -941,6 +941,24 @@ export class GestureHost {
     element: Element,
     registration: Registration,
   ): void {
+    // Pointer Events only: a claimed finger's touchend is not the host's own
+    // document listener's to cancel, so the element cancels it (FR21).
+    const needsEndListener =
+      this.inputMode === 'pointer-events' &&
+      this.isCoarse &&
+      registration.recognizers.some(
+        recognizer =>
+          recognizer.isEnabled && internals(recognizer).acceptsTouchInput,
+      );
+    if (needsEndListener && !registration.hasTouchEndListener) {
+      element.addEventListener('touchend', this.onClaimedTouchEnd, {
+        passive: false,
+      });
+      registration.hasTouchEndListener = true;
+    } else if (!needsEndListener && registration.hasTouchEndListener) {
+      element.removeEventListener('touchend', this.onClaimedTouchEnd);
+      registration.hasTouchEndListener = false;
+    }
     const needsListener =
       registration.recognizers.some(
         recognizer => recognizer.isEnabled && claimsWhileMoving(recognizer),
@@ -959,24 +977,6 @@ export class GestureHost {
     } else if (!needsListener && registration.hasTouchMoveListener) {
       element.removeEventListener('touchmove', this.onBlockingTouchMove);
       registration.hasTouchMoveListener = false;
-    }
-    // Pointer Events only: a claimed finger's touchend is not the host's own
-    // document listener's to cancel, so the element cancels it (FR21).
-    const needsEndListener =
-      this.inputMode === 'pointer-events' &&
-      this.isCoarse &&
-      registration.recognizers.some(
-        recognizer =>
-          recognizer.isEnabled && internals(recognizer).acceptsTouchInput,
-      );
-    if (needsEndListener && !registration.hasTouchEndListener) {
-      element.addEventListener('touchend', this.onClaimedTouchEnd, {
-        passive: false,
-      });
-      registration.hasTouchEndListener = true;
-    } else if (!needsEndListener && registration.hasTouchEndListener) {
-      element.removeEventListener('touchend', this.onClaimedTouchEnd);
-      registration.hasTouchEndListener = false;
     }
   }
 
@@ -1127,12 +1127,12 @@ export class GestureHost {
       this.syncListeners();
       return;
     }
-    if (registration.hasTouchMoveListener) {
-      element.removeEventListener('touchmove', this.onBlockingTouchMove);
-    }
     if (registration.hasTouchEndListener) {
       element.removeEventListener('touchend', this.onClaimedTouchEnd);
       registration.hasTouchEndListener = false;
+    }
+    if (registration.hasTouchMoveListener) {
+      element.removeEventListener('touchmove', this.onBlockingTouchMove);
     }
     this.registry.delete(element);
     this.uninstallIfIdle();
@@ -2574,8 +2574,6 @@ export class GestureHost {
     if (id == null) {
       return;
     }
-    this.pointerIds.delete(event.pointerId);
-    this.unlockSelection(id);
     if (
       this.inputMode === 'pointer-events' &&
       event.pointerType === 'touch' &&
@@ -2588,6 +2586,8 @@ export class GestureHost {
         time: eventTime(event),
       });
     }
+    this.pointerIds.delete(event.pointerId);
+    this.unlockSelection(id);
     const dispositions = this.arena.ended([
       {id, x: event.clientX, y: event.clientY, time: eventTime(event)},
     ]);
