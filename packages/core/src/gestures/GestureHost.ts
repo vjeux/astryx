@@ -180,6 +180,12 @@ interface Registration {
   consumer: TouchConsumer | null;
   /** Whether the element carries the host's shared blocking touchmove handler. */
   hasTouchMoveListener: boolean;
+  /**
+   * Under `inputMode: 'pointer-events'`, whether the element carries the
+   * host's blocking `touchend` handler, which cancels a claimed finger's lift
+   * (`spec:AST-094` FR21).
+   */
+  hasTouchEndListener: boolean;
   /** Inline values the host replaced, to restore on detach. */
   readonly savedStyle: Map<string, string>;
   /**
@@ -315,6 +321,13 @@ interface PlacedContact {
 }
 
 /** A touchstart and a pointerdown describe one finger: same target, same spot. */
+/**
+ * How long a claimed finger's lift waits for its `touchend`, ms. The touchend
+ * follows its pointerup in the same frame; a browser that sends pointer events
+ * alone for a finger never sends it, and the record goes.
+ */
+const CLAIMED_LIFT_MS = 500;
+
 function isSamePlace(a: PlacedContact, b: PlacedContact): boolean {
   return (
     a.target === b.target &&
@@ -445,6 +458,12 @@ export class GestureHost {
   private readonly fingerPointers = new Map<number, number>();
   /** Finger pointerdowns still waiting for their touchstart. */
   private readonly pendingPointers = new Map<number, PlacedContact>();
+  /**
+   * Under `inputMode: 'pointer-events'`, where claimed fingers lifted and
+   * when: the `touchend` that follows each `pointerup` is cancelled (FR21). A
+   * record no `touchend` consumed expires (CLAIMED_LIFT_MS).
+   */
+  private readonly claimedLifts: (PlacedContact & {time: number})[] = [];
   /** Fingers still waiting for their pointerdown, by arena id. */
   private readonly unpairedTouches = new Map<number, PlacedContact>();
   /** The last sample fed per contact: a contact's time never runs back. */
@@ -892,6 +911,7 @@ export class GestureHost {
         hovers: [],
         consumer: null,
         hasTouchMoveListener: false,
+        hasTouchEndListener: false,
         savedStyle: new Map(),
         authorTouchAction: null,
         manageStyle: true,
@@ -958,6 +978,24 @@ export class GestureHost {
     } else if (!needsListener && registration.hasTouchMoveListener) {
       element.removeEventListener('touchmove', this.onBlockingTouchMove);
       registration.hasTouchMoveListener = false;
+    }
+    // Pointer Events only: a claimed finger's touchend is not the host's own
+    // document listener's to cancel, so the element cancels it (FR21).
+    const needsEndListener =
+      this.inputMode === 'pointer-events' &&
+      this.isCoarse &&
+      registration.recognizers.some(
+        recognizer =>
+          recognizer.isEnabled && internals(recognizer).acceptsTouchInput,
+      );
+    if (needsEndListener && !registration.hasTouchEndListener) {
+      element.addEventListener('touchend', this.onClaimedTouchEnd, {
+        passive: false,
+      });
+      registration.hasTouchEndListener = true;
+    } else if (!needsEndListener && registration.hasTouchEndListener) {
+      element.removeEventListener('touchend', this.onClaimedTouchEnd);
+      registration.hasTouchEndListener = false;
     }
     // An action group under a fine pointer: its one idle listener.
     const needsGroupListener =
@@ -1132,6 +1170,10 @@ export class GestureHost {
     }
     if (registration.hasTouchMoveListener) {
       element.removeEventListener('touchmove', this.onBlockingTouchMove);
+    }
+    if (registration.hasTouchEndListener) {
+      element.removeEventListener('touchend', this.onClaimedTouchEnd);
+      registration.hasTouchEndListener = false;
     }
     if (registration.groupDownListener != null) {
       element.removeEventListener(
@@ -1766,13 +1808,20 @@ export class GestureHost {
         toLock.push({id, target, consumerElement});
       }
       // The finger's events keep going to what the engine hit.
+      // Only an enabled participant brings a blocking listener (FR19).
       this.watchTarget(
         touch.identifier,
         native,
-        recognizers.some(claimsWhileMoving) ||
-          (this.isCoarse && consumer?.keepsTouch != null),
-        consumer != null ||
-          recognizers.some(recognizer => recognizer.claimsTouches),
+        recognizers.some(
+          recognizer => recognizer.isEnabled && claimsWhileMoving(recognizer),
+        ) ||
+          (this.isCoarse &&
+            consumer?.keepsTouch != null &&
+            consumer.isEnabled?.() !== false),
+        (consumer != null && consumer.isEnabled?.() !== false) ||
+          recognizers.some(
+            recognizer => recognizer.isEnabled && recognizer.claimsTouches,
+          ),
       );
       this.lastFed.set(id, {x: touch.clientX, y: touch.clientY, time});
       this.pairTouch(id, {x: touch.clientX, y: touch.clientY, target: native});
@@ -1925,6 +1974,39 @@ export class GestureHost {
     }
     return best?.id;
   }
+
+  /**
+   * Cancel the `touchend` of a finger a recognizer owned when it lifted
+   * (`inputMode: 'pointer-events'`): its `pointerup` came first, at the same
+   * place on the same target (`spec:AST-094` FR21). Records older than
+   * CLAIMED_LIFT_MS are dropped first: their touchend never came.
+   */
+  private readonly onClaimedTouchEnd = (event: Event): void => {
+    const end = event as TouchEvent;
+    const time = eventTime(end);
+    for (let i = this.claimedLifts.length - 1; i >= 0; i--) {
+      if (time - this.claimedLifts[i].time > CLAIMED_LIFT_MS) {
+        this.claimedLifts.splice(i, 1);
+      }
+    }
+    if (!end.cancelable || end.defaultPrevented) {
+      return;
+    }
+    for (const touch of touchesOf(end.changedTouches)) {
+      const index = this.claimedLifts.findIndex(lift =>
+        isSamePlace(lift, {
+          x: touch.clientX,
+          y: touch.clientY,
+          target: touch.target,
+        }),
+      );
+      if (index >= 0) {
+        this.claimedLifts.splice(index, 1);
+        end.preventDefault();
+        return;
+      }
+    }
+  };
 
   private cancelIfClaimed(event: TouchEvent): void {
     if (!event.cancelable || event.defaultPrevented) {
@@ -2599,6 +2681,18 @@ export class GestureHost {
     }
     this.pointerIds.delete(event.pointerId);
     this.unlockSelection(id);
+    if (
+      this.inputMode === 'pointer-events' &&
+      event.pointerType === 'touch' &&
+      this.arena.isClaimed(id)
+    ) {
+      this.claimedLifts.push({
+        x: event.clientX,
+        y: event.clientY,
+        target: landedOn(event),
+        time: eventTime(event),
+      });
+    }
     const dispositions = this.arena.ended([
       {id, x: event.clientX, y: event.clientY, time: eventTime(event)},
     ]);
