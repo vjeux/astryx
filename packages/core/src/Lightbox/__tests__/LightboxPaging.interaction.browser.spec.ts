@@ -415,22 +415,28 @@ test('the page settle keeps advancing every frame while the main thread is block
   const cast = await startScreencast(page);
   const from = {x: g.box.x + g.box.width * 0.8, y: g.box.y + g.box.height / 2};
   await g.driver.play(slowDrag(from, -g.box.width * 0.6));
-  const [settle] = await waitForAnimation(g.track, {minProgressMs: 16});
-  const block = await blockMainThread(page, 400);
+  // Blocked inside the page once the settle runs on the compositor, 16 ms
+  // in: a block started from the test lands later in the settle, by a
+  // varying amount, and on a loaded machine left WebKit too few frames to
+  // judge.
+  const block = await blockMainThread(page, 400, {
+    during: g.track,
+    minProgressMs: 16,
+  });
   await page.waitForTimeout(100);
   const castFrames = await cast.stop();
   const tracked = await trackMarker(page, castFrames);
   const control = await trackMarker(page, castFrames, {rgb: CONTROL_RGB});
   const proof = busyWindowProof(
     tracked,
-    {from: block.from, to: Math.min(block.to, settle.to)},
+    {from: block.from, to: block.to},
     {axis: 'x', settledWithin: 1, control},
   );
   await writeEvidence(
     'busy-main-thread/lightbox-page-settle',
     {
       [`${testInfo.project.name}.json`]: JSON.stringify(
-        {block, settle, proof, control},
+        {block, proof, control},
         null,
         1,
       ),
@@ -441,12 +447,12 @@ test('the page settle keeps advancing every frame while the main thread is block
     name: 'lightbox-page-settle-busy-main-thread',
     zero: block.from,
     from: block.from - 40,
-    to: Math.min(block.to, settle.to) + 40,
+    to: block.to + 40,
     columns: 8,
     cellScale: 0.35,
     data: t => ({x: tracked.find(f => f.t === t)?.box?.x ?? -1}),
   });
-  await film.write(testInfo, {block, settle});
+  await film.write(testInfo, {block});
   // Judged against the control: a two-core runner's software compositor and
   // the screencast share the core the block spins on, so every compositor
   // animation presents fewer frames there, the control's too. The photo keeps
