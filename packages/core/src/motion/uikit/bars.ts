@@ -25,6 +25,12 @@
  * step and every frame, and `-[CALayer addAnimation:forKey:]` hooked on it.
  * Lengths are in pt (CSS px).
  *
+ * The bar's height and the capsules' sizes are UIKit's geometry, which the
+ * default Astryx look does not apply: it grows no box for touch
+ * (`spec:AST-094` FR42, DEC-20), so they are a theme's adaptation. TopNav's
+ * phone bar takes only the cell inset, as how far its capsule's paint
+ * reaches past its controls.
+ *
  * Every leaf carries one or more `@source`; uikit.test.ts enforces it.
  *
  * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md

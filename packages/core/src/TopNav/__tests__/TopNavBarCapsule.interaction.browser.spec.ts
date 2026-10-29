@@ -6,16 +6,17 @@
  *   phone profile (its TopNav in the phone bar: a Profile icon button and the
  *   drawer toggle), the interaction harness, and the iOS 26 bar geometry in
  *   motion/uikit/bars
- * @output Browser proof of the iOS 26 bar buttons under a finger: the
- *   phone bar is 54px tall with its end items on one capsule at its
- *   top, 44px tall and fully rounded, 16px from the shell's side, painted with
- *   the theme's surface and no shadow; two icon buttons are centred where UIKit
- *   centres its 36px cells (4px in from the ends, 16px apart: a 96px
- *   capsule); right to left, the capsule sits at the inline end, 16px from
- *   the shell's left side; Reduce Transparency changes nothing (the
- *   capsule is opaque); a finger
- *   on the toggle still opens the drawer; the buttons keep their names and
- *   order; a mouse keeps today's bar; a still of the bar
+ * @output Browser proof of the iOS 26 bar buttons under a finger, in the
+ *   default look that grows no box for touch (`spec:AST-094` FR42, DEC-20):
+ *   the phone bar keeps its 48px height and 8px padding, and its end items,
+ *   still 32px controls 4px apart, sit on one capsule that is paint only
+ *   (the theme's surface, fully rounded, reaching 4px past them, no drop
+ *   shadow), the same boxes a mouse gets; right to left, the capsule sits at
+ *   the inline end; an end group emptied of its content paints no capsule
+ *   and the bar keeps its heading centred; Reduce Transparency changes
+ *   nothing (the capsule is opaque); a finger on the toggle still opens the
+ *   drawer; the buttons keep their names and order; a mouse keeps today's
+ *   bar; a still of the bar
  * @position Interaction proof for TopNav.tsx's phone bar, run by
  *   `pnpm test:interaction` (Chromium and WebKit). Touch is one model on
  *   every touch device, so the phone profile's coarse pointer is the touch
@@ -50,15 +51,17 @@ async function openBar(
 const STORY = 'core-appshell--touch-bar-over-content';
 
 /**
- * `bars.heightPt` and `bars.buttonCapsules`, iOS 26.2: what the phone bar
- * measures with the default tokens it is built from.
+ * The default look's phone bar, under every pointer: `--spacing-2` padding
+ * around `--size-element-md` controls `--spacing-1` apart.
  */
-const BAR = 54;
-const CAPSULE = 44;
-const EDGE = 16;
-/** Two 36px cells, 4px in from the ends and 16px apart. */
-const CELL = 36;
-const TWO_IMAGES = 4 + CELL + 16 + CELL + 4;
+const PAD = 8;
+const CONTROL = 32;
+const GAP = 4;
+const BAR = PAD + CONTROL + PAD;
+/** Two icon buttons and the gap between them. */
+const TWO_CONTROLS = CONTROL + GAP + CONTROL;
+/** How far the capsule's paint reaches past the controls: UIKit's 4pt cell inset. */
+const REACH = 4;
 
 /** The theme's `--color-background-surface`, computed beside the capsule. */
 async function surfaceColor(page: Page): Promise<string> {
@@ -77,6 +80,8 @@ interface Geometry {
   shellLeft: number;
   shellRight: number;
   bar: {top: number; height: number};
+  /** The heading's vertical centre, from the bar's. */
+  headingOffset: number;
   capsule: {
     left: number;
     right: number;
@@ -109,6 +114,13 @@ async function geometry(page: Page): Promise<Geometry> {
         top: bar.getBoundingClientRect().top,
         height: bar.getBoundingClientRect().height,
       },
+      headingOffset: (() => {
+        const heading = bar.firstElementChild?.getBoundingClientRect();
+        const b = bar.getBoundingClientRect();
+        return heading == null
+          ? Infinity
+          : heading.top + heading.height / 2 - (b.top + b.height / 2);
+      })(),
       capsule: {
         left: c.left,
         right: c.right,
@@ -130,7 +142,7 @@ async function geometry(page: Page): Promise<Geometry> {
   });
 }
 
-test('the phone bar is 54px tall with its end items on one capsule', async ({
+test('under a finger the bar keeps its boxes, its end items on one capsule of paint', async ({
   page,
 }) => {
   await openBar(page);
@@ -138,29 +150,45 @@ test('the phone bar is 54px tall with its end items on one capsule', async ({
   test
     .info()
     .annotations.push({type: 'geometry', description: JSON.stringify(g)});
+  // No box grows for touch: the bar and its end group measure as with a
+  // mouse (below).
   expect(g.bar.height).toBeCloseTo(BAR, 1);
-  // The capsule rides the bar's top edge, 44px tall, a full pill.
-  expect(g.capsule.top).toBeCloseTo(g.bar.top, 1);
-  expect(g.capsule.height).toBeCloseTo(CAPSULE, 1);
-  expect(g.capsule.radius).toBe('22px');
-  // 16px from the shell's side.
-  expect(g.shellRight - g.capsule.right).toBeCloseTo(EDGE, 1);
-  // The theme's surface, opaque; UIKit's capsule has no shadow.
-  expect(g.capsule.background).toBe(await surfaceColor(page));
+  expect(g.capsule.height).toBeCloseTo(CONTROL, 1);
+  expect(g.capsule.width).toBeCloseTo(TWO_CONTROLS, 1);
+  expect(g.shellRight - g.capsule.right).toBeCloseTo(PAD, 1);
+  // The capsule is paint: the theme's surface, opaque, fully rounded, and
+  // reaching 4px past the controls through a spread of the same colour.
+  const surface = await surfaceColor(page);
+  expect(g.capsule.background).toBe(surface);
   expect(g.capsule.background).not.toBe('rgba(0, 0, 0, 0)');
-  expect(g.capsule.shadow).toBe('none');
+  expect(g.capsule.radius).toBe('9999px');
+  expect(g.capsule.shadow).toBe(`${surface} 0px 0px 0px ${REACH}px`);
 });
 
-test('two icon buttons are centred where UIKit centres its 36px cells', async ({
+test('two icon buttons keep their size and spacing in the capsule', async ({
   page,
 }) => {
   await openBar(page);
   const g = await geometry(page);
   expect(g.names).toEqual(['Profile', 'Open navigation']);
-  expect(g.capsule.width).toBeCloseTo(TWO_IMAGES, 0);
-  // Centres 22px and 74px from the capsule's start.
-  expect(g.centres[0]).toBeCloseTo(4 + CELL / 2, 0);
-  expect(g.centres[1]).toBeCloseTo(4 + CELL + 16 + CELL / 2, 0);
+  // Centres 16px and 52px from the group's start, as with a mouse.
+  expect(g.centres[0]).toBeCloseTo(CONTROL / 2, 0);
+  expect(g.centres[1]).toBeCloseTo(CONTROL + GAP + CONTROL / 2, 0);
+});
+
+test('an end group emptied of its content paints no capsule; the heading stays centred', async ({
+  page,
+}) => {
+  await openBar(page);
+  const paint = await page.evaluate(() => {
+    const group = document.querySelector('[data-bar-capsule]') as HTMLElement;
+    group.replaceChildren();
+    const style = getComputedStyle(group);
+    return {background: style.backgroundColor, shadow: style.boxShadow};
+  });
+  expect(paint).toEqual({background: 'rgba(0, 0, 0, 0)', shadow: 'none'});
+  const g = await geometry(page);
+  expect(Math.abs(g.headingOffset)).toBeLessThan(0.5);
 });
 
 test('a finger on the toggle in the capsule opens the drawer', async ({
@@ -187,14 +215,12 @@ test('still: the bar at rest', {tag: '@storyboard'}, async ({page}) => {
   await expect(bar).toBeVisible();
 });
 
-test('right to left, the capsule sits at the inline end, 16px from the side', async ({
-  page,
-}) => {
+test('right to left, the capsule sits at the inline end', async ({page}) => {
   await openBar(page, {dir: 'rtl'});
   const g = await geometry(page);
   test.info().annotations.push({type: 'rtl', description: JSON.stringify(g)});
-  expect(g.capsule.left - g.shellLeft).toBeCloseTo(EDGE, 1);
-  expect(g.capsule.height).toBeCloseTo(CAPSULE, 1);
+  expect(g.capsule.left - g.shellLeft).toBeCloseTo(PAD, 1);
+  expect(g.capsule.height).toBeCloseTo(CONTROL, 1);
   // The order follows the inline direction: Profile first, at the right.
   expect(g.names).toEqual(['Profile', 'Open navigation']);
   expect(g.centres[0]).toBeGreaterThan(g.centres[1]);
@@ -225,7 +251,7 @@ test('Reduce Transparency changes nothing: the capsule is opaque', async ({
 test.describe('with a mouse', () => {
   test.use({hasTouch: false, isMobile: false});
 
-  test('the bar keeps today’s layout: no capsule surface, today’s height', async ({
+  test('the bar keeps today’s layout: no capsule, the same boxes', async ({
     page,
   }) => {
     await openBar(page);
@@ -238,6 +264,9 @@ test.describe('with a mouse', () => {
       .annotations.push({type: 'mouse', description: JSON.stringify(g)});
     expect(g.capsule.background).toBe('rgba(0, 0, 0, 0)');
     expect(g.capsule.radius).toBe('0px');
-    expect(g.bar.height).not.toBeCloseTo(BAR, 0);
+    expect(g.capsule.shadow).toBe('none');
+    expect(g.bar.height).toBeCloseTo(BAR, 1);
+    expect(g.capsule.height).toBeCloseTo(CONTROL, 1);
+    expect(g.capsule.width).toBeCloseTo(TWO_CONTROLS, 1);
   });
 });
