@@ -256,6 +256,14 @@ keyframes, `blockMainThread` without `during`) is in `devtoolsTasks` instead,
 and only when no page script ran inside it. A test's own `page.evaluate` stays a
 long task, whether it calls page code directly or sets it off.
 
+With `{invalidations: true}`, `traceRendering` also records why each style
+recalculation ran and on which element, every animation that ran and whether
+it ran on the compositor, and when script ran. `countBetween(trace, from, to,
+{skipCompositorAnimationUpdates: true})` then leaves out a pass Chrome makes on
+its own for compositor animations: every recalculation since the previous pass
+has the reason Animation, on an element with an animation on the compositor at
+the time, with no script in between.
+
 **Storyboards.** Deterministic: frames come from seeking held animations or
 from stepping scripted input, never from wall-clock capture. The JSON trace
 carries each frame's measurements and the spec asserts on it; the sheet is
