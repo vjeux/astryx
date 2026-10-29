@@ -232,6 +232,14 @@ const styles = stylex.create({
       'max(var(--container-padding-inline-end, 0px), var(--_item-inset-inline))',
     borderRadius: 0,
   },
+  // Under a finger, the row's touch band (touchHitAreaStyles.layer) rises
+  // above the rows after it: a later row is positioned with no z-index, and
+  // would paint and hit-test over the band. Only inside a List (isInList).
+  bandRaised: {
+    '::after': {
+      zIndex: {default: null, '@media (pointer: coarse)': 1},
+    },
+  },
   // A swipeable row is a stacking context at rest (Item isolates and
   // translates its swipe root), so its touch band's own z-index orders only
   // inside it: under a finger the row itself rises above the rows after it,
@@ -423,6 +431,11 @@ export function ListItem({
       }
     };
   }, []);
+  // A List isolates its rows (List.tsx), so what a row raises (its touch band
+  // above the rows after it, a swipeable row) stays below a page-level sticky
+  // header (`spec:AST-027` FR1–FR2). Outside a List nothing bounds a raise,
+  // so a row raises nothing there.
+  const isInList = ctx != null;
   // In a reorderable List: a trailing handle, or a row that stays put.
   const reorder = ctx?.reorder;
   const hasHandle =
@@ -472,6 +485,7 @@ export function ListItem({
   // band's own z-index orders only inside it: under a finger, the row raises
   // itself (styles.swipeRaised). Its root is its `<li>`, never a link.
   const isRaisedSwipeRow =
+    isInList &&
     isTouchTarget &&
     servesSwipeActions({
       swipeActions: restProps.swipeActions,
@@ -563,6 +577,7 @@ export function ListItem({
           hasDividers && styles.withDivider,
           hasDividers && embeddedStyles.noRadius,
           isTouchTarget && touchHitAreaStyles.layer,
+          isTouchTarget && isInList && styles.bandRaised,
           isRaisedSwipeRow && styles.swipeRaised,
           edge === 'flush' && styles.edgeFlush,
           edge === 'outset' && styles.edgeOutset,
