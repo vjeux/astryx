@@ -2588,15 +2588,6 @@ export class GestureHost {
       }
       return;
     }
-    // A finger read from its pointer events: its touchend follows (FR21).
-    if (event.pointerType === 'touch' && this.arena.isClaimed(id)) {
-      this.claimedLifts.push({
-        x: event.clientX,
-        y: event.clientY,
-        target: landedOn(event),
-        time: eventTime(event),
-      });
-    }
     this.pointerIds.delete(event.pointerId);
     this.unlockSelection(id);
     const dispositions = this.arena.ended([
@@ -2612,6 +2603,21 @@ export class GestureHost {
     );
     if (!clicked && needsSuppression(dispositions)) {
       armClickGuard(this.doc);
+    }
+    // A finger read from its pointer events: the touchend that follows the
+    // lift is cancelled when a gesture took it, which the lift itself may
+    // decide (a hold whose time came with it), or when its tap was retargeted
+    // (FR21).
+    if (
+      event.pointerType === 'touch' &&
+      (clicked || needsSuppression(dispositions))
+    ) {
+      this.claimedLifts.push({
+        x: event.clientX,
+        y: event.clientY,
+        target: landedOn(event),
+        time: eventTime(event),
+      });
     }
     if (event.pointerType === 'pen' && this.usesTouchEvents) {
       this.isPenLiftClaimed = clicked || needsSuppression(dispositions);
