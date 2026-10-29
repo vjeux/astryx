@@ -4,13 +4,12 @@
 
 /**
  * @file TopNav.tsx
- * @input Uses React, ReactNode, the theme's spacing, size and surface
- *   tokens, and the iOS 26 bar geometry of motion/uikit/bars (built from the
- *   tokens; TopNavBarCapsule.test.tsx checks that the default tokens give
- *   the measured geometry)
+ * @input Uses React, ReactNode, the theme's spacing, radius and surface
+ *   tokens, and UIKit's capsule cell inset in motion/uikit/bars
  * @output Exports TopNav component and TopNavProps. Under a finger (one
- *   touch model on every touch device) the phone bar takes the iOS 26 bar's
- *   geometry and its end items sit on one capsule
+ *   touch model on every touch device) the phone bar's end items sit on one
+ *   capsule, as iOS 26 bar buttons do; the capsule is paint only, so no box
+ *   grows (`spec:AST-094` FR42, DEC-20)
  * @position Core implementation; consumed by index.ts
  *
  * SYNC: When modified, update these files to stay in sync:
@@ -24,7 +23,7 @@
 import type {ReactNode} from 'react';
 import type {BaseProps} from '../BaseProps';
 import * as stylex from '@stylexjs/stylex';
-import {colorVars, sizeVars, spacingVars} from '../theme/tokens.stylex';
+import {colorVars, radiusVars, spacingVars} from '../theme/tokens.stylex';
 import {mergeProps} from '../utils';
 import {useTranslator} from '../i18n';
 import {TopNavSlotContext} from './TopNavContext';
@@ -92,29 +91,14 @@ const styles = stylex.create({
     marginInlineStart: 'auto',
   },
   // Mobile bar mode — simplified top bar with heading + toggle + endContent.
-  // Under a finger (the resolver's touch query, spelled literally as
-  // TOUCH_QUERY: an imported at-rule key changes StyleX priority) it takes
-  // the iOS 26 bar's geometry (bars.heightPt, bars.buttonCapsules), from the
-  // theme's tokens: the items on its top row, as tall as the capsule (the
-  // heading centred on them), `--spacing-4` from the screen's sides, and the
-  // measured 10px under them. With the default tokens that is UIKit's 54px
-  // bar, 16px from the sides. A mouse keeps today's bar.
+  // The same geometry under every pointer: the default look grows no box for
+  // touch (`spec:AST-094` FR42, DEC-20). UIKit's 54px bar and 16px insets
+  // (bars.heightPt, bars.buttonCapsules) are a theme's adaptation.
   mobileBar: {
     display: 'flex',
     alignItems: 'center',
     width: '100%',
-    paddingInline: {
-      default: spacingVars['--spacing-2'],
-      '@media (pointer: coarse)': spacingVars['--spacing-4'],
-    },
-    paddingBlockStart: {
-      default: spacingVars['--spacing-2'],
-      '@media (pointer: coarse)': 0,
-    },
-    paddingBlockEnd: {
-      default: spacingVars['--spacing-2'],
-      '@media (pointer: coarse)': '10px',
-    },
+    padding: spacingVars['--spacing-2'],
     boxSizing: 'border-box',
   },
   // The heading gives up space first so the end content and toggle stay in view
@@ -131,33 +115,33 @@ const styles = stylex.create({
     flexShrink: 0,
     marginInlineStart: 'auto',
   },
-  // The end items on one capsule, as iOS 26 puts a run of bar buttons
+  // Under a finger (the resolver's touch query, spelled literally as
+  // TOUCH_QUERY: an imported at-rule key changes StyleX priority) the end
+  // items sit on one capsule, as iOS 26 puts a run of bar buttons
   // (bars.buttonCapsules): fully rounded, painted with the theme's surface,
-  // no shadow and nothing blurred. UIKit puts each item in a 36pt cell
-  // (`--size-element-lg`), 4pt (`--spacing-1`) in from the capsule's ends
-  // and above and below, and 16pt (`--spacing-4`) from the next; the padding
-  // and gap below give a control of the theme's size the same centres, so a
-  // lone icon button makes a circle: 44px with the default tokens.
+  // nothing blurred. It is paint only, so no box grows (FR42, DEC-20): the
+  // fill reaches `--spacing-1` past the end group, UIKit's cell inset,
+  // through a spread of the same colour, which keeps a control's press paint
+  // inside the pill's rounded ends. No drop shadow: UIKit's capsule has
+  // none. An end group whose content renders nothing paints no capsule.
   mobileBarEndCapsule: {
-    height: {
-      default: null,
-      '@media (pointer: coarse)': `calc(${sizeVars['--size-element-lg']} + 2 * ${spacingVars['--spacing-1']})`,
-    },
-    paddingInline: {
-      default: null,
-      '@media (pointer: coarse)': `calc(${spacingVars['--spacing-1']} + (${sizeVars['--size-element-lg']} - ${sizeVars['--size-element-md']}) / 2)`,
-    },
-    gap: {
-      default: spacingVars['--spacing-1'],
-      '@media (pointer: coarse)': `calc(${spacingVars['--spacing-4']} + ${sizeVars['--size-element-lg']} - ${sizeVars['--size-element-md']})`,
-    },
     borderRadius: {
       default: null,
-      '@media (pointer: coarse)': `calc((${sizeVars['--size-element-lg']} + 2 * ${spacingVars['--spacing-1']}) / 2)`,
+      '@media (pointer: coarse)': radiusVars['--radius-full'],
     },
     backgroundColor: {
       default: null,
-      '@media (pointer: coarse)': colorVars['--color-background-surface'],
+      '@media (pointer: coarse)': {
+        default: colorVars['--color-background-surface'],
+        ':empty': 'transparent',
+      },
+    },
+    boxShadow: {
+      default: null,
+      '@media (pointer: coarse)': {
+        default: `0 0 0 ${spacingVars['--spacing-1']} ${colorVars['--color-background-surface']}`,
+        ':empty': 'none',
+      },
     },
   },
   // Drawer mode — vertical list of nav items

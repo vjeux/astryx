@@ -5,30 +5,28 @@
  * @input vitest (jsdom), React Testing Library, TopNav in its phone-bar mode,
  *   the iOS 26 bar geometry in motion/uikit/bars, and the raw CSS the StyleX
  *   runtime injects (recorded before jsdom parses it)
- * @output Checks the iOS 26 bar under a finger (the coarse pointer: one
- *   touch model on every touch device), built from the theme's tokens: the
- *   phone bar's items sit `--spacing-4` from the sides with the measured
- *   10px under them, and its end items sit on one capsule (as tall as a
- *   `--size-element-lg` cell plus `--spacing-1` above and below, fully
- *   rounded, the theme's surface, no shadow, each control centred where
- *   UIKit centres its cells); with a mouse the bar and its end items keep
- *   today's layout; an empty end group draws no capsule; and the default
- *   tokens give the geometry measured in bars.ts
+ * @output Checks the phone bar under a finger (the coarse pointer: one
+ *   touch model on every touch device): the default look grows no box
+ *   (`spec:AST-094` FR42, DEC-20), so no touch rule sizes the bar or its end
+ *   group, also with no end items; the end items sit on one capsule that is
+ *   paint only (the theme's surface, fully rounded, carried `--spacing-1`
+ *   past the end group by a spread shadow of the same colour, UIKit's 4 pt
+ *   cell inset in bars.ts); an end group that is empty, or whose content
+ *   renders nothing, paints no capsule; with a mouse the bar and its end
+ *   items keep today's layout
  * @position Testing; validates TopNav.tsx's phone-bar styles. jsdom's CSS
  *   parser drops media blocks, so the declarations are read from the rules
  *   StyleX hands to `insertRule`; the geometry in a real browser is proven by
  *   __tests__/TopNavBarCapsule.interaction.browser.spec.ts
  */
 
-import {readFileSync} from 'node:fs';
-import {join} from 'node:path';
 import {render, screen} from '@testing-library/react';
 import {beforeAll, describe, expect, it} from 'vitest';
 import type {TopNav as TopNavComponent} from './TopNav';
 import type {TopNavRenderContext as TopNavRenderContextValue} from './TopNavRenderContext';
 import type {Button as ButtonComponent} from '../Button/Button';
 import {bars} from '../motion/uikit/bars';
-import {sizeDefaults, spacingDefaults} from '../theme/tokens.stylex';
+import {spacingDefaults} from '../theme/tokens.stylex';
 
 const COARSE_KEY = '@media (pointer: coarse)';
 
@@ -57,18 +55,21 @@ beforeAll(async () => {
 
 /**
  * The declarations `el`'s own classes make, by property: outside any at-rule
- * (`where` omitted), or under the coarse pointer alone (`'touch'`). StyleX
+ * (`where` omitted), or under the coarse pointer alone (`'touch'`), on the
+ * class itself or, with `pseudo`, on that pseudo-class of it. StyleX
  * minifies values: they are compared without whitespace.
  */
 function declared(
   el: Element,
   where: 'default' | 'touch' = 'default',
+  pseudo = '',
 ): Map<string, string> {
   const out = new Map<string, string>();
+  const escapedPseudo = pseudo.replace(/[()]/g, '\\$&');
   for (const className of Array.from(el.classList)) {
     // Inside at-rules StyleX repeats the class for specificity.
     const selector = new RegExp(
-      `^(?:\\.${className})+(?::not\\(#\\\\#\\))*\\{([^}]*)\\}$`,
+      `^(?:\\.${className})+${escapedPseudo}(?::not\\(#\\\\#\\))*\\{([^}]*)\\}$`,
     );
     for (const raw of rawRules) {
       let body = raw;
@@ -117,47 +118,78 @@ const profile = () => (
 );
 
 describe('TopNav phone bar under a finger', () => {
-  it('sits its items `--spacing-4` from the sides, with the measured 10px under them', () => {
-    renderPhoneBar(profile());
+  /** The geometry a touch rule must not set (`spec:AST-094` FR42, DEC-20). */
+  const BAR_GEOMETRY = [
+    'padding',
+    'padding-inline',
+    'padding-top',
+    'padding-bottom',
+    'padding-block',
+    'height',
+    'min-height',
+  ];
+  const END_GEOMETRY = [
+    'padding',
+    'padding-inline',
+    'padding-block',
+    'height',
+    'min-height',
+    'width',
+    'gap',
+  ];
+
+  it('grows no box: no touch rule sizes the bar or its end group (spec:AST-094 FR42, DEC-20)', () => {
+    const {container} = renderPhoneBar(profile());
     const bar = screen.getByRole('navigation');
-    const touch = declared(bar, 'touch');
-    expect(touch.get('padding-inline')).toBe('var(--spacing-4)');
-    expect(touch.get('padding-top')).toBe('0');
-    expect(touch.get('padding-bottom')).toBe('10px');
-    // A mouse keeps the 8px padding all round.
-    const mouse = declared(bar);
-    expect(mouse.get('padding-inline')).toBe('var(--spacing-2)');
-    expect(mouse.get('padding-top')).toBe('var(--spacing-2)');
-    expect(mouse.get('padding-bottom')).toBe('var(--spacing-2)');
+    for (const property of BAR_GEOMETRY) {
+      expect(declared(bar, 'touch').has(property), property).toBe(false);
+    }
+    // The 8px padding all round, as with a mouse.
+    expect(declared(bar).get('padding')).toBe('var(--spacing-2)');
+    const capsule = container.querySelector('[data-bar-capsule]')!;
+    for (const property of END_GEOMETRY) {
+      expect(declared(capsule, 'touch').has(property), property).toBe(false);
+    }
   });
 
-  it('puts the end items on one capsule painted with the theme’s surface', () => {
+  it('with no end items keeps the same bar, its heading centred', () => {
+    const {container} = renderPhoneBar();
+    const bar = screen.getByRole('navigation');
+    expect(container.querySelector('[data-bar-capsule]')).toBeNull();
+    for (const property of BAR_GEOMETRY) {
+      expect(declared(bar, 'touch').has(property), property).toBe(false);
+    }
+    expect(declared(bar).get('align-items')).toBe('center');
+  });
+
+  it('puts the end items on one capsule that is paint only', () => {
     const {container} = renderPhoneBar(profile());
     const capsule = container.querySelector('[data-bar-capsule]')!;
     expect(capsule).not.toBeNull();
-    expect(capsule.contains(screen.getByRole('button', {name: 'Profile'})));
+    expect(
+      capsule.contains(screen.getByRole('button', {name: 'Profile'})),
+    ).toBe(true);
     const touch = declared(capsule, 'touch');
-    expect(touch.get('height')).toBe(
-      'calc(var(--size-element-lg)+2*var(--spacing-1))',
-    );
-    expect(touch.get('border-radius')).toBe(
-      'calc((var(--size-element-lg)+2*var(--spacing-1))/2)',
-    );
     expect(touch.get('background-color')).toBe(
       'var(--color-background-surface)',
     );
-    // UIKit's capsule has no shadow layer.
-    expect(touch.has('box-shadow')).toBe(false);
-    // UIKit's cells (`--size-element-lg`), `--spacing-1` in from the ends and
-    // `--spacing-4` apart: with the default tokens, around 32px controls that
-    // is 6px ends and a 20px gap, so a lone icon button makes a 44px circle
-    // and two make a 96px capsule.
-    expect(touch.get('padding-inline')).toBe(
-      'calc(var(--spacing-1)+(var(--size-element-lg)-var(--size-element-md))/2)',
+    expect(touch.get('border-radius')).toBe('var(--radius-full)');
+    // The fill reaches `--spacing-1` past the end group, UIKit's cell inset,
+    // through a spread of the same colour: a pill around the controls that
+    // changes no box. No drop shadow: UIKit's capsule has none.
+    expect(touch.get('box-shadow')).toBe(
+      '000var(--spacing-1)var(--color-background-surface)',
     );
-    expect(touch.get('gap')).toBe(
-      'calc(var(--spacing-4)+var(--size-element-lg)-var(--size-element-md))',
-    );
+  });
+
+  it('paints no capsule when the end content renders nothing', () => {
+    const Nothing = () => null;
+    const {container} = renderPhoneBar(<Nothing />);
+    const group = container.querySelector('[data-bar-capsule]')!;
+    expect(group.matches(':empty')).toBe(true);
+    const empty = declared(group, 'touch', ':empty');
+    expect(empty.get('background-color')).toBe('transparent');
+    expect(empty.get('box-shadow')).toBe('none');
   });
 
   it('keeps today’s layout with a mouse: no surface, no size, the 4px gap', () => {
@@ -180,6 +212,7 @@ describe('TopNav phone bar under a finger', () => {
       'height',
       'border-radius',
       'background-color',
+      'box-shadow',
       'padding-inline',
     ]) {
       expect(mouse.has(property), property).toBe(false);
@@ -192,28 +225,14 @@ describe('TopNav phone bar under a finger', () => {
   });
 });
 
-describe('the default tokens give the geometry measured in bars.ts', () => {
-  const source = readFileSync(join(__dirname, 'TopNav.tsx'), 'utf8');
-  const {heightPt, buttonCapsules} = bars;
+describe('the capsule’s reach is the cell inset measured in bars.ts', () => {
   /** A default token in px (rem at the default 16px root). */
   const px = (value: string): number =>
     value.endsWith('rem') ? parseFloat(value) * 16 : parseFloat(value);
-  const spacing1 = px(spacingDefaults['--spacing-1']);
-  const spacing4 = px(spacingDefaults['--spacing-4']);
-  const cell = px(sizeDefaults['--size-element-lg']);
 
-  it('the side inset and the cell gap are `--spacing-4`', () => {
-    expect(spacing4).toBe(buttonCapsules.edgeInsetPt);
-    expect(spacing4).toBe(buttonCapsules.cellGapPt);
-  });
-
-  it('a cell is `--size-element-lg`, `--spacing-1` in from the capsule', () => {
-    expect(cell).toBe(buttonCapsules.cellHeightPt);
-    expect(spacing1).toBe(buttonCapsules.cellInsetPt);
-    expect(cell + 2 * spacing1).toBe(buttonCapsules.heightPt);
-  });
-
-  it('the space under the items is the measured constant', () => {
-    expect(source).toContain(`'${heightPt - buttonCapsules.heightPt}px'`);
+  it('`--spacing-1` is UIKit’s cell inset', () => {
+    expect(px(spacingDefaults['--spacing-1'])).toBe(
+      bars.buttonCapsules.cellInsetPt,
+    );
   });
 });
