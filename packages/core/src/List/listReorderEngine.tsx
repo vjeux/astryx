@@ -75,7 +75,6 @@ import {VelocityTracker} from '../gestures/VelocityTracker';
 import {reorder} from '../motion/uikit/reorder';
 import {
   animatorFor,
-  isMoving,
   motionNow,
   motionOf,
   releaseMotion,
@@ -1348,7 +1347,7 @@ export class ListReorderController implements ListReorderSession {
     const at = motionNow();
     for (const element of rows) {
       const value = shownY(element, at);
-      if (Math.abs(value) < MIN_MOVE_PX && !isMoving(element)) {
+      if (Math.abs(value) < MIN_MOVE_PX && motionOf(element) == null) {
         continue;
       }
       if (!this.animates) {
@@ -1515,7 +1514,7 @@ export class ListReorderController implements ListReorderSession {
         index === pending.dragged ? pending.droppedTop : pending.tops[index];
       const shift = from - layoutTop(element, list);
       const value = shownY(element, at);
-      if (Math.abs(value + shift) < MIN_MOVE_PX && !isMoving(element)) {
+      if (Math.abs(value + shift) < MIN_MOVE_PX && motionOf(element) == null) {
         animatorFor(element).set({y: 0});
         releaseMotion(element, 'translate');
         continue;
