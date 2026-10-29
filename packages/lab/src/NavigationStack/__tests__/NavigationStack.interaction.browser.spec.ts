@@ -348,27 +348,121 @@ const cutLayers = (page: Page, covered: string, incoming: string) =>
     [covered, incoming] as const,
   );
 
+/** A layer's running `translate` animation: its start, length and keyframes. */
+interface LayerMotion {
+  startTime: number;
+  duration: number;
+  frames: {offset: number; x: number}[];
+}
+
 /**
- * How far the covered bar's cut is from the incoming card's leading edge at
- * `mid`, from the layers' animated `translate`, with each edge's static part
- * read at `rest`, when box and translate agree. Mid-animation WebKit can hand
- * back one layer's box a frame behind its animation and not the other's (in
- * a burst of animation frames), so the boxes alone can disagree by a pixel
- * or two while the layers move as one on the compositor.
+ * The running `translate` animations of the incoming card, the covered bar
+ * and its cut box (null for a layer with none), read from the animations
+ * themselves: mid-animation WebKit's first computed read in a frame can be a
+ * frame stale (one layer's `translate` a pixel off another's on the same
+ * animation progress), so computed values cannot prove two layers move as
+ * one.
  */
-const cutGap = (
-  mid: CutLayers | null,
+const cutMotions = (page: Page, covered: string, incoming: string) =>
+  page.evaluate(
+    ([coveredKey, incomingKey]) => {
+      const motionOf = (
+        element: Element | null | undefined,
+      ): LayerMotion | null => {
+        for (const animation of element?.getAnimations() ?? []) {
+          const effect = animation.effect;
+          if (
+            !(effect instanceof KeyframeEffect) ||
+            animation.startTime == null
+          ) {
+            continue;
+          }
+          const keyframes = effect.getKeyframes();
+          if (!keyframes.some(frame => frame.translate != null)) {
+            continue;
+          }
+          return {
+            startTime: Number(animation.startTime),
+            duration: Number(effect.getComputedTiming().duration),
+            frames: keyframes.map(frame => ({
+              offset: frame.computedOffset,
+              x: parseFloat(String(frame.translate ?? '0')) || 0,
+            })),
+          };
+        }
+        return null;
+      };
+      const cardElement = document.querySelector(
+        `[data-navigation-screen="${incomingKey}"]`,
+      );
+      const barElement = document.querySelector(
+        `[data-navigation-bar="${coveredKey}"]`,
+      );
+      return {
+        card: motionOf(cardElement),
+        bar: motionOf(barElement),
+        cut: motionOf(barElement?.firstElementChild),
+      };
+    },
+    [covered, incoming] as const,
+  );
+
+/** A motion's x at `time` (the page's timeline, ms): linear between keyframes, held at the ends. */
+const motionX = (motion: LayerMotion, time: number): number => {
+  const progress = Math.min(
+    1,
+    Math.max(0, (time - motion.startTime) / motion.duration),
+  );
+  const {frames} = motion;
+  for (let i = 1; i < frames.length; i++) {
+    const a = frames[i - 1];
+    const b = frames[i];
+    if (progress <= b.offset) {
+      const span = b.offset - a.offset;
+      return span <= 0
+        ? b.x
+        : a.x + ((b.x - a.x) * (progress - a.offset)) / span;
+    }
+  }
+  return frames.at(-1)?.x ?? 0;
+};
+
+/**
+ * The widest gap, in px, between the covered bar's cut and the incoming
+ * card's leading edge over the whole push: the three layers' running
+ * animations sampled every 4 ms from the first start to the last end, each
+ * edge's static part read at `rest`, when box and translate agree.
+ */
+const cutTrackGap = (
+  motions: {
+    card: LayerMotion | null;
+    bar: LayerMotion | null;
+    cut: LayerMotion | null;
+  },
   rest: CutLayers | null,
   direction: 'ltr' | 'rtl',
 ): number => {
-  if (mid == null || rest == null) {
+  const {card: cardMotion, bar: barMotion, cut: cutMotion} = motions;
+  if (cardMotion == null || cutMotion == null || rest == null) {
     return Infinity;
   }
   const cardEdge = direction === 'rtl' ? 'right' : 'left';
   const cutEdge = direction === 'rtl' ? 'left' : 'right';
   const cardStatic = rest.cardBox[cardEdge] - rest.card;
   const cutStatic = rest.cutBox[cutEdge] - rest.bar - rest.cut;
-  return Math.abs(cutStatic + mid.bar + mid.cut - (cardStatic + mid.card));
+  const layers = [cardMotion, cutMotion, ...(barMotion ? [barMotion] : [])];
+  const first = Math.min(...layers.map(motion => motion.startTime));
+  const last = Math.max(
+    ...layers.map(motion => motion.startTime + motion.duration),
+  );
+  let widest = 0;
+  for (let time = first; time <= last; time += 4) {
+    const bar = barMotion ? motionX(barMotion, time) : rest.bar;
+    const cutEdgeX = cutStatic + bar + motionX(cutMotion, time);
+    const cardEdgeX = cardStatic + motionX(cardMotion, time);
+    widest = Math.max(widest, Math.abs(cutEdgeX - cardEdgeX));
+  }
+  return widest;
 };
 
 const rowCenter = async (page: Page, name: string) => {
@@ -964,14 +1058,15 @@ test('under a finger the cut rides the incoming card’s leading edge', async ({
   const {driver} = await openStack(page, 'settings');
   await driver.tap(await rowCenter(page, 'General'));
   await waitForAnimation(card(page, 'screen-General'), {minProgressMs: 16});
-  // Mid-push the root's bar shows only left of the incoming card: the cut
-  // and the card's edge move on one spring.
-  const mid = await cutLayers(page, 'root', 'screen-General');
+  // Through the push the root's bar shows only left of the incoming card:
+  // the cut and the card's edge move on one spring.
+  const motions = await cutMotions(page, 'root', 'screen-General');
   await waitForRest(card(page, 'screen-General'));
   const rest = await cutLayers(page, 'root', 'screen-General');
-  expect(mid).not.toBeNull();
+  expect(motions.card, 'the card animates').not.toBeNull();
+  expect(motions.cut, 'the cut animates').not.toBeNull();
   expect(rest).not.toBeNull();
-  expect(cutGap(mid, rest, 'ltr')).toBeLessThan(2);
+  expect(cutTrackGap(motions, rest, 'ltr')).toBeLessThan(1);
   expect(await readCut(page, 'root')).toEqual({shown: 0});
   expect(await readCut(page, 'screen-General')).toEqual({shown: 1});
 });
@@ -985,14 +1080,15 @@ test('under a finger in a right-to-left stack, the cut mirrors', async ({
     .evaluate(element => element.setAttribute('dir', 'rtl'));
   await driver.tap(await rowCenter(page, 'General'));
   await waitForAnimation(card(page, 'screen-General'), {minProgressMs: 16});
-  // The incoming card enters from the left: the root's bar shows only right
-  // of its trailing edge.
-  const mid = await cutLayers(page, 'root', 'screen-General');
+  // The incoming card enters from the left: through the push the root's bar
+  // shows only right of its trailing edge.
+  const motions = await cutMotions(page, 'root', 'screen-General');
   await waitForRest(card(page, 'screen-General'));
   const rest = await cutLayers(page, 'root', 'screen-General');
-  expect(mid).not.toBeNull();
+  expect(motions.card, 'the card animates').not.toBeNull();
+  expect(motions.cut, 'the cut animates').not.toBeNull();
   expect(rest).not.toBeNull();
-  expect(cutGap(mid, rest, 'rtl')).toBeLessThan(2);
+  expect(cutTrackGap(motions, rest, 'rtl')).toBeLessThan(1);
   expect(await readCut(page, 'root')).toEqual({shown: 0});
   expect(await readCut(page, 'screen-General')).toEqual({shown: 1});
 });
