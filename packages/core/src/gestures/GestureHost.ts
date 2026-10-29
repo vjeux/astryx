@@ -179,9 +179,9 @@ interface Registration {
   readonly hovers: HoverGestureRecognizer[];
   consumer: TouchConsumer | null;
   /**
-   * Under `inputMode: 'pointer-events'`, whether the element carries the
-   * host's blocking `touchend` handler, which cancels a claimed finger's lift
-   * (`spec:AST-094` FR21).
+   * Where fingers come from their pointer events, whether the element
+   * carries the host's blocking `touchend` handler, which cancels a claimed
+   * finger's lift (`spec:AST-094` FR21).
    */
   hasTouchEndListener: boolean;
   /** Whether the element carries the host's shared blocking touchmove handler. */
@@ -421,6 +421,12 @@ export class GestureHost {
    * lift click (`spec:AST-094` FR28: nothing acts).
    */
   private readonly cancelledFingers = new Set<number>();
+  /**
+   * Pointer ids of the pens, and of fingers read from their pointer events,
+   * that the app's lost focus cancelled, kept until their lift, which must
+   * not click either (FR28).
+   */
+  private readonly cancelledPointers = new Set<number>();
   /** Touch.identifier → the element the finger landed on. */
   private readonly touchTargets = new Map<number, EventTarget>();
   /** Finger targets with listeners of their own, and how many fingers each. */
@@ -464,9 +470,10 @@ export class GestureHost {
   /** Finger pointerdowns still waiting for their touchstart. */
   private readonly pendingPointers = new Map<number, PlacedContact>();
   /**
-   * Under `inputMode: 'pointer-events'`, where claimed fingers lifted and
-   * when: the `touchend` that follows each `pointerup` is cancelled (FR21). A
-   * record no `touchend` consumed expires (CLAIMED_LIFT_MS).
+   * Where fingers come from their pointer events, where claimed fingers
+   * lifted and when: the `touchend` that follows each `pointerup` is
+   * cancelled (FR21). A record no `touchend` consumed expires
+   * (CLAIMED_LIFT_MS).
    */
   private readonly claimedLifts: (PlacedContact & {time: number})[] = [];
   /** Fingers still waiting for their pointerdown, by arena id. */
@@ -941,10 +948,12 @@ export class GestureHost {
     element: Element,
     registration: Registration,
   ): void {
-    // Pointer Events only: a claimed finger's touchend is not the host's own
-    // document listener's to cancel, so the element cancels it (FR21).
+    // Where fingers come from their pointer events (Pointer Events input, or
+    // a window with no ontouchstart), a claimed finger's touchend is not the
+    // host's own document listener's to cancel, so the element cancels it
+    // (FR21).
     const needsEndListener =
-      this.inputMode === 'pointer-events' &&
+      this.readsFingersFromPointerEvents() &&
       this.isCoarse &&
       registration.recognizers.some(
         recognizer =>
@@ -2498,6 +2507,7 @@ export class GestureHost {
       return;
     }
     const id = this.nextId++;
+    this.cancelledPointers.delete(event.pointerId);
     this.pointerIds.set(event.pointerId, id);
     if (target !== landed && target != null) {
       this.retargeted.set(id, {x: event.clientX, y: event.clientY, target});
@@ -2572,13 +2582,14 @@ export class GestureHost {
     }
     const id = this.pointerIds.get(event.pointerId);
     if (id == null) {
+      // A contact the lost focus cancelled: its lift clicks nothing (FR28).
+      if (this.cancelledPointers.delete(event.pointerId)) {
+        this.refuseCancelledLift(event);
+      }
       return;
     }
-    if (
-      this.inputMode === 'pointer-events' &&
-      event.pointerType === 'touch' &&
-      this.arena.isClaimed(id)
-    ) {
+    // A finger read from its pointer events: its touchend follows (FR21).
+    if (event.pointerType === 'touch' && this.arena.isClaimed(id)) {
       this.claimedLifts.push({
         x: event.clientX,
         y: event.clientY,
@@ -2886,8 +2897,42 @@ export class GestureHost {
     this.releaseArmedPress();
   };
 
+  /**
+   * Whether the host reads fingers from their pointer events: Pointer Events
+   * input, or a window with no `ontouchstart` (touch emulation turned on
+   * after load), as the move path does.
+   */
+  private readsFingersFromPointerEvents(): boolean {
+    const view = this.doc.defaultView;
+    return (
+      this.inputMode === 'pointer-events' ||
+      (view != null && !('ontouchstart' in view))
+    );
+  }
+
+  /**
+   * The lift of a contact the lost focus cancelled: its click is refused,
+   * and a finger's touchend after it is cancelled (FR28, FR21).
+   */
+  private refuseCancelledLift(event: PointerEvent): void {
+    armClickGuard(this.doc);
+    if (event.pointerType === 'touch') {
+      this.claimedLifts.push({
+        x: event.clientX,
+        y: event.clientY,
+        target: landedOn(event),
+        time: eventTime(event),
+      });
+    }
+  }
+
   /** The app lost focus: UIKit cancels every touch in flight. */
   private cancelEverything(time: number): void {
+    // The browser may keep a pen or a pointer-read finger down: its lift must
+    // not click (FR28).
+    for (const pointerId of this.pointerIds.keys()) {
+      this.cancelledPointers.add(pointerId);
+    }
     const ids = [...this.pointerIds.values()];
     for (const id of ids) {
       this.unlockSelection(id, true);
