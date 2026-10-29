@@ -24,7 +24,6 @@
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
   blockMainThread,
-  busyWindowProof,
   compareCurve,
   CONTROL_RGB,
   curveOf,
@@ -32,6 +31,7 @@ import {
   frames,
   holdAnimations,
   openStory,
+  pooledBusyProof,
   releaseAnimations,
   sampleCurve,
   startBusyControl,
@@ -391,57 +391,84 @@ test('the dismissal keeps changing the screen every frame while the main thread 
   page,
 }, testInfo) => {
   const v = await openViewer(page);
-  // Where the photo starts: as it leaves and the backdrop fades behind it,
-  // those pixels change every frame the dismissal runs (the photo itself
-  // leaves the screen within a few frames).
   const box = await v.photo.boundingBox();
   if (box == null) {
     throw new Error('no photo');
   }
-  // A compositor-only control animation in the same window: what the
+  const trigger = page.getByRole('button', {name: STORIES.plain.trigger});
+  // A compositor-only control animation in the same recording: what the
   // compositor presented while the main thread spun, on this machine.
-  await startBusyControl(page);
+  const control = await startBusyControl(page);
   const cast = await startScreencast(page);
-  await v.driver.play(pullDown(v.centre, 60));
-  // Blocked inside the page once the dismissal runs on the compositor.
-  const block = await blockMainThread(page, 400, {
-    during: v.photo,
-    minProgressMs: 16,
-  });
+  // Photos' dismissal is short, so on a loaded machine one blocked dismissal
+  // holds only a few frames of the control in WebKit: the viewer is
+  // dismissed, blocked inside the dismissal, six times (reopened between,
+  // with the control raised above it), and the runs are judged pooled.
+  const runs: {block: Awaited<ReturnType<typeof blockMainThread>>}[] = [];
+  for (let i = 0; i < 6; i++) {
+    if (i > 0) {
+      const at = await trigger.boundingBox();
+      if (at == null) {
+        throw new Error('no trigger');
+      }
+      await v.driver.tap({x: at.x + at.width / 2, y: at.y + at.height / 2});
+      await expect(v.dialog).toBeVisible();
+      await waitForRest(v.photo);
+      await control.raise();
+      await frames(page, 2);
+    }
+    await v.driver.play(pullDown(v.centre, 60));
+    const block = await blockMainThread(page, 400, {
+      during: v.photo,
+      minProgressMs: 16,
+    });
+    await expect(v.dialog).toBeHidden();
+    runs.push({block});
+  }
   await page.waitForTimeout(100);
   const castFrames = await cast.stop();
   const signal = await regionSignal(page, castFrames, box);
-  const final = signal.at(-1)?.value ?? 0;
-  const settled =
-    signal.find(c => c.t >= block.from && Math.abs(c.value - final) <= 1)?.t ??
-    block.to;
-  const window = {from: block.from + 20, to: Math.min(block.to, settled) - 1};
-  const control = await trackMarker(page, castFrames, {rgb: CONTROL_RGB});
+  const controlFrames = await trackMarker(page, castFrames, {
+    rgb: CONTROL_RGB,
+  });
+  // Each run is judged until the spot is within 1 of where the dismissal
+  // rests: its value as the block ends. After the block the main thread
+  // removes the closed dialog, a step that is no part of the animation.
+  const windows = runs.map(({block}) => {
+    const run = signal.filter(c => c.t >= block.from && c.t <= block.to);
+    const final = run.at(-1)?.value ?? 0;
+    const settled =
+      run.find(c => Math.abs(c.value - final) <= 1)?.t ?? block.to;
+    return {from: block.from + 20, to: Math.min(block.to, settled) - 1};
+  });
   // A change of the region's mean brightness by more than 0.05 counts, as
   // the signal's own judgment did; settled within 1 of its final value.
-  const proof = busyWindowProof(signalFrames(signal, 5), window, {
-    axis: 'y',
-    settledWithin: 5,
-    control,
-  });
+  const signalTracked = signalFrames(signal, 5);
+  const proof = pooledBusyProof(
+    windows.map(window => ({
+      tracked: signalTracked,
+      control: controlFrames,
+      window,
+    })),
+    {axis: 'y', settledWithin: 5},
+  );
   await writeEvidence(
     'busy-main-thread/lightbox-dismiss',
     {
       [`${testInfo.project.name}.json`]: JSON.stringify(
-        {block, window, proof, signal, control},
+        {runs, windows, proof, signal, control: controlFrames},
         null,
         1,
       ),
     },
     testInfo,
   );
-  expect(window.to - window.from).toBeGreaterThan(100);
-  // Judged against the control: a two-core runner's software compositor and
-  // the screencast share the core the block spins on, so every compositor
-  // animation presents fewer frames there, the control's too. The screen
-  // keeps changing with the control, and a main-thread fade would not.
+  // Judged against the control over the six runs pooled: a two-core runner's
+  // software compositor and the screencast share the core the block spins
+  // on, so every compositor animation presents fewer frames there, the
+  // control's too. The screen keeps changing with the control, and a
+  // main-thread dismissal would not.
   expect(proof.verdict.failures).toEqual([]);
-  await expect(v.dialog).toBeHidden();
 });
 
 test('under Reduce Motion the dismissal fades the photo out in place', async ({
