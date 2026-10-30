@@ -13,7 +13,7 @@
  *   specs
  */
 
-import {act, fireEvent, render, screen} from '@testing-library/react';
+import {act, fireEvent, render, screen, within} from '@testing-library/react';
 import {Profiler} from 'react';
 import {
   afterAll,
@@ -26,7 +26,7 @@ import {
   vi,
 } from 'vitest';
 import {timing} from '../motion/uikit';
-import {fontWeightVars} from '../theme/tokens.stylex';
+import {colorVars, fontWeightVars} from '../theme/tokens.stylex';
 import {PickerWheel} from './PickerWheel';
 import type {WheelOption, WheelProps} from './wheelOptions';
 import {WHEEL_ROW_PITCH, todayLook} from './wheelLook';
@@ -568,6 +568,43 @@ describe('PickerWheel — keyboard and clicks', () => {
     expect(onChange).toHaveBeenLastCalledWith(17);
   });
 
+  it('keeps the band’s mark on the last row when a key has nowhere further to go', () => {
+    const {column, option, onChange} = renderWheel({
+      options: MINUTES,
+      value: 59,
+      label: 'Minute',
+    });
+    fireEvent.keyDown(column, {key: 'ArrowDown'});
+    advance(1000);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(option('59').style.transform).toBe(AT_BAND);
+    expect(isMarked(option('59'))).toBe(true);
+  });
+
+  it('never steps the long way round a loop onto the far side of a disabled stretch', () => {
+    // A year of months, looping, with only January and February enabled:
+    // up from January is December, and the nearest enabled row to it is
+    // January again, so the key stays where it is rather than turning
+    // eleven rows round to February.
+    const MONTHS: WheelOption[] = Array.from({length: 12}, (_, month) => ({
+      value: month,
+      label: `M${String(month + 1).padStart(2, '0')}`,
+      isDisabled: month > 1,
+    }));
+    const {column, option, onChange} = renderWheel({
+      options: MONTHS,
+      value: 0,
+      label: 'Month',
+      isLooping: true,
+    });
+    fireEvent.keyDown(column, {key: 'ArrowUp'});
+    advance(1000);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(distanceOf(option('M01'))).toBeCloseTo(0, 1);
+    fireEvent.keyDown(column, {key: 'ArrowDown'});
+    expect(onChange).toHaveBeenLastCalledWith(1);
+  });
+
   it('takes Home and End to the first and last enabled rows, even mid-coast', () => {
     const {column, onChange} = renderWheel({
       options: MINUTES,
@@ -839,6 +876,19 @@ describe('PickerWheel — mechanics for its owners', () => {
     expect(onPointerDown).not.toHaveBeenCalled();
   });
 
+  it('loops: the first row follows the last', () => {
+    const {column, option, onChange} = renderWheel({
+      options: MINUTES,
+      value: 59,
+      label: 'Minute',
+      isLooping: true,
+    });
+    // Minute 00 is drawn just below 59.
+    expect(distanceOf(option('00'))).toBeCloseTo(ROW, 2);
+    fireEvent.keyDown(column, {key: 'ArrowDown'});
+    expect(onChange).toHaveBeenLastCalledWith(0);
+  });
+
   it('keeps coasting when its owner hands it a copy of the same rows', () => {
     const {column, rerender, onChange} = renderWheel({
       options: MINUTES,
@@ -859,6 +909,291 @@ describe('PickerWheel — mechanics for its owners', () => {
     // It came to rest on a row and committed it, as without the re-render.
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange.mock.calls[0][0]).toBeGreaterThan(15);
+  });
+});
+
+describe('PickerWheel — a short looping list', () => {
+  /** A minute column every 15 minutes, and one every 30. */
+  const QUARTERS: WheelOption[] = [0, 15, 30, 45].map(minute => ({
+    value: minute,
+    label: String(minute).padStart(2, '0'),
+  }));
+  const HALVES = QUARTERS.filter(option => option.value % 30 === 0);
+
+  /** Every row the strip draws, its options' copies included. */
+  function stripRowsOf(column: HTMLElement): HTMLElement[] {
+    return [
+      ...column.querySelectorAll<HTMLElement>(
+        '[data-wheel-strip] > [data-label]',
+      ),
+    ];
+  }
+
+  /** The labels in sight, top to bottom. */
+  function shownLabels(column: HTMLElement): string[] {
+    return stripRowsOf(column)
+      .filter(row => Number(row.style.opacity) > 0)
+      .map(row => ({label: row.dataset.label!, distance: distanceOf(row)}))
+      .sort((a, b) => a.distance - b.distance)
+      .map(({label}) => label);
+  }
+
+  /** The row drawn on the band, by its place among the strip's rows. */
+  function bandRow(column: HTMLElement): number {
+    return stripRowsOf(column).findIndex(
+      row => Math.abs(distanceOf(row)) < 1e-6,
+    );
+  }
+
+  it('fills the column with copies, as UIPickerView’s looping table does', () => {
+    const {column} = renderWheel({
+      options: QUARTERS,
+      value: 45,
+      label: 'Minute',
+      isLooping: true,
+    });
+    // At :45 the list runs on both ways down today's column, eleven rows in
+    // sight (UIKit's cylinder shows the same run, nine rows).
+    expect(shownLabels(column)).toEqual([
+      '30',
+      '45',
+      '00',
+      '15',
+      '30',
+      '45',
+      '00',
+      '15',
+      '30',
+      '45',
+      '00',
+    ]);
+    // One option per value for assistive technology; the copies are hidden.
+    expect(within(column).getAllByRole('option')).toHaveLength(4);
+    for (const copy of column.querySelectorAll('[data-wheel-copy]')) {
+      expect(copy).toHaveAttribute('aria-hidden', 'true');
+    }
+  });
+
+  it('turns onto a tapped copy, and commits nothing when it holds the same value', () => {
+    const {column, onChange} = renderWheel({
+      options: HALVES,
+      value: 30,
+      label: 'Minute',
+      isLooping: true,
+    });
+    expect(shownLabels(column)).toEqual([
+      '00',
+      '30',
+      '00',
+      '30',
+      '00',
+      '30',
+      '00',
+      '30',
+      '00',
+      '30',
+      '00',
+    ]);
+    const rows = stripRowsOf(column).length;
+    const start = bandRow(column);
+    // Two rows below the band: the next copy of 30.
+    const twoBelow = CENTRE + 2 * ROW;
+    touch('touchstart', column, twoBelow);
+    advance(60);
+    touch('touchend', column, twoBelow);
+    advance(500);
+    expect((bandRow(column) - start + rows) % rows).toBe(2);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('steps by key in the key’s direction across the seam', () => {
+    const {column, onChange} = renderWheel({
+      options: QUARTERS,
+      value: 45,
+      label: 'Minute',
+      isLooping: true,
+    });
+    const rows = stripRowsOf(column).length;
+    const start = bandRow(column);
+    fireEvent.keyDown(column, {key: 'ArrowDown'});
+    expect(onChange).toHaveBeenLastCalledWith(0);
+    advance(500);
+    expect((bandRow(column) - start + rows) % rows).toBe(1);
+  });
+
+  it('stays put when a key would turn onto a copy of its own row', () => {
+    // PageDown moves ten rows: on a two-row loop that is a copy of the row
+    // under the band, so nothing turns and nothing commits.
+    const {column, onChange} = renderWheel({
+      options: HALVES,
+      value: 30,
+      label: 'Minute',
+      isLooping: true,
+    });
+    const start = bandRow(column);
+    fireEvent.keyDown(column, {key: 'PageDown'});
+    advance(1000);
+    expect(bandRow(column)).toBe(start);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('turns the shorter way round from a rest beside the seam onto the nearest enabled row', () => {
+    // :00 and :15 disabled. One row on from :45 rests on :00, across the
+    // seam: :45 is one row back, :30 two rows on, so it turns back to :45
+    // and commits nothing.
+    const {column, onChange} = renderWheel({
+      options: QUARTERS.map(option => ({
+        ...option,
+        isDisabled: option.value === 0 || option.value === 15,
+      })),
+      value: 45,
+      label: 'Minute',
+      isLooping: true,
+    });
+    const rows = stripRowsOf(column).length;
+    const start = bandRow(column);
+    // 10 px of hysteresis + a row, held still, lifted.
+    drag(column, 150, 150 - (10 + ROW), {steps: 25, interval: 40, hold: 300});
+    advance(2000);
+    expect((bandRow(column) - start + rows) % rows).toBe(0);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('repaints the band’s row in its new colour when the bounds change under it', () => {
+    const {column, rerender, onChange} = renderWheel({
+      options: QUARTERS,
+      value: 15,
+      label: 'Minute',
+      isLooping: true,
+    });
+    const band = () => stripRowsOf(column)[bandRow(column)];
+    expect(band().style.color).toBe(colorVars['--color-text-accent']);
+    rerender(
+      <PickerWheel
+        label="Minute"
+        options={QUARTERS.map(option => ({
+          ...option,
+          isDisabled: option.value === 15,
+        }))}
+        value={15}
+        onChange={onChange}
+        isLooping
+      />,
+    );
+    expect(band().style.color).toBe(colorVars['--color-text-disabled']);
+  });
+
+  it('never turns a whole revolution when no other row is enabled', () => {
+    // Only :15 is enabled, so an arrow key has nowhere to go.
+    const {column, onChange} = renderWheel({
+      options: QUARTERS.map(option => ({
+        ...option,
+        isDisabled: option.value !== 15,
+      })),
+      value: 15,
+      label: 'Minute',
+      isLooping: true,
+    });
+    const start = bandRow(column);
+    fireEvent.keyDown(column, {key: 'ArrowDown'});
+    advance(1000);
+    expect(bandRow(column)).toBe(start);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('flings on through the seam, its copies drawn all the way', () => {
+    const {column, onChange} = renderWheel({
+      options: QUARTERS,
+      value: 0,
+      label: 'Minute',
+      isLooping: true,
+    });
+    // 120 px in 90 ms, UIKit's measured fling: several turns of the list.
+    drag(column, 180, 60, {steps: 6, interval: 15});
+    advance(4000);
+    // A full column at rest, and the value on the band committed.
+    expect(shownLabels(column)).toHaveLength(11);
+    const rested = Number(stripRowsOf(column)[bandRow(column)].dataset.label);
+    if (rested === 0) {
+      expect(onChange).not.toHaveBeenCalled();
+    } else {
+      expect(onChange).toHaveBeenLastCalledWith(rested);
+    }
+  });
+
+  it('marks the copy on the band, wherever it is', () => {
+    const {column} = renderWheel({
+      options: QUARTERS,
+      value: 45,
+      label: 'Minute',
+      isLooping: true,
+    });
+    const onBand = stripRowsOf(column)[bandRow(column)];
+    expect(onBand.dataset.label).toBe('45');
+    expect(onBand.style.fontWeight).not.toBe('');
+    // The other copies of 45 in sight, the option itself among them, carry
+    // no mark.
+    const others = stripRowsOf(column).filter(
+      row => row !== onBand && row.dataset.label === '45',
+    );
+    expect(others.length).toBeGreaterThan(1);
+    for (const row of others) {
+      expect(row.style.fontWeight).not.toBe(onBand.style.fontWeight);
+    }
+  });
+
+  it('marks the band’s row when a short loop opens on its first row', () => {
+    // Offset 0: parking moves nothing, so no new row is reported.
+    const {column} = renderWheel({
+      options: QUARTERS,
+      value: 0,
+      label: 'Minute',
+      isLooping: true,
+    });
+    const onBand = stripRowsOf(column)[bandRow(column)];
+    expect(onBand.dataset.label).toBe('00');
+    expect(onBand.style.fontWeight).toBe(
+      fontWeightVars['--font-weight-semibold'],
+    );
+  });
+
+  it('keeps a disabled minute’s colour on a copy under the band', () => {
+    const options = QUARTERS.map(option =>
+      option.value === 30 ? {...option, isDisabled: true} : option,
+    );
+    const {column} = renderWheel({
+      options,
+      value: 45,
+      label: 'Minute',
+      isLooping: true,
+    });
+    // A finger holds the wheel a row back: the copy of 30 before the band's
+    // 45 (itself a copy) reaches the band.
+    touch('touchstart', column, CENTRE);
+    advance(16);
+    touch('touchmove', column, CENTRE + 20);
+    advance(16);
+    touch('touchmove', column, CENTRE + 20 + ROW);
+    const near = [...stripRowsOf(column)].sort(
+      (a, b) => Math.abs(distanceOf(a)) - Math.abs(distanceOf(b)),
+    )[0];
+    expect(near.dataset.label).toBe('30');
+    expect(near.hasAttribute('data-wheel-copy')).toBe(true);
+    expect(near.style.color).toBe(colorVars['--color-text-disabled']);
+    touch('touchend', column, CENTRE + 20 + ROW);
+  });
+
+  it('keeps a two-row list that does not loop to its two rows (AM/PM)', () => {
+    const {column} = renderWheel({
+      options: [
+        {value: 0, label: 'AM'},
+        {value: 1, label: 'PM'},
+      ],
+      value: 0,
+      label: 'AM/PM',
+    });
+    expect(shownLabels(column)).toEqual(['AM', 'PM']);
+    expect(column.querySelectorAll('[data-wheel-copy]')).toHaveLength(0);
   });
 });
 
