@@ -41,7 +41,6 @@ export {
   createKeyboardModel,
   type KeyboardCurve,
   type KeyboardModel,
-  type KeyboardModelOptions,
   type KeyboardProfile,
   type KeyboardTransition,
   type KeyboardTransitionKind,

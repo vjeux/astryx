@@ -701,12 +701,11 @@ export function useSheetKeyboard({
     // FR8: where the keyboard layout guide publishes the keyboard's own slide
     // (Gboard's, in Chrome on Android), the sheet's content rides it. Only
     // under a coarse primary pointer and on Chrome's schedule: under a fine
-    // pointer nothing of the ride attaches, and on Safari's (iOS Safari,
-    // Firefox for Android) the keyboard moves on UIKit's spring, which the
-    // sheet does not ride, so the guide and its frame watch never start; the
-    // room follows the reports. The guide is subscribed before the keyboard
-    // module below, so a report's transition is published before the reveal
-    // reads it.
+    // pointer nothing of the ride attaches, and in a browser without the
+    // VirtualKeyboard API (iOS Safari, Firefox for Android) the guide never
+    // starts; the room follows the reports. The guide is subscribed before
+    // the keyboard module below, so a report's transition is published before
+    // the reveal reads it.
     const guide =
       isTouch && keyboardProfileOf(window) === 'chromium'
         ? getKeyboardLayoutGuide(window)
@@ -1025,7 +1024,7 @@ export function useSheetKeyboard({
       }
     };
     const unsubscribeGuide = guide?.subscribe(transition => {
-      // Safari's keyboard keeps the reveal below: only a slide rides.
+      // A jump lands with the reports: only a slide rides.
       if (transition.curve == null) {
         return;
       }
