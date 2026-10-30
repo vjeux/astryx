@@ -33,21 +33,17 @@ import {
   type Page,
 } from '@playwright/test';
 import {
-  curveOf,
   drag,
   flick,
   frames,
-  holdAnimations,
   openStory,
   pinch,
-  releaseAnimations,
-  sampleCurve,
-  timeline,
   touchDriver,
+  type TouchScript,
   waitForAnimation,
   waitForRest,
+  watchAnimations,
   withStorybook,
-  type TouchScript,
 } from '@astryxdesign/interaction-harness';
 
 const storybook = withStorybook(test);
@@ -152,6 +148,31 @@ function doubleTap(at: {x: number; y: number}): TouchScript {
   ];
 }
 
+/**
+ * Whether a set of keyframes moves or scales between its ends (travel),
+ * rather than holding one end and then the other: any property but opacity
+ * taking a value other than its first or its last.
+ */
+function travels(keyframes: ReadonlyArray<Record<string, unknown>>): boolean {
+  const meta = new Set(['offset', 'computedOffset', 'easing', 'composite']);
+  const props = new Set(
+    keyframes
+      .flatMap(k => Object.keys(k))
+      .filter(p => !meta.has(p) && p !== 'opacity'),
+  );
+  for (const p of props) {
+    const values = keyframes
+      .filter(k => k[p] != null)
+      .map(k => JSON.stringify(k[p]));
+    const first = values[0];
+    const last = values.at(-1);
+    if (values.some(v => v !== first && v !== last)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 test('with a fine pointer (a desktop) the stage fills the viewer, as under a coarse pointer: its gestures take the whole viewer', async ({
   browser,
 }) => {
@@ -223,20 +244,26 @@ test('under Reduce Motion a double tap cross-fades to its zoom instead of travel
   if (rect == null) {
     throw new Error('no photo');
   }
+  // Watched before the double tap and read from the fades' own keyframes:
+  // on a loaded machine a fade of 200 ms or less can end before a hold taken
+  // after the gesture, or the hold can land between the two fades.
+  const watch = await watchAnimations(img);
   await driver.play(
     doubleTap({x: rect.x + rect.width / 2, y: rect.y + rect.height / 2}),
   );
-  await waitForAnimation(img);
-  const held = await holdAnimations(page, img);
-  const duration = Math.max(...held.map(a => a.curveEndMs));
-  const samples = await sampleCurve(img, timeline(duration));
-  await releaseAnimations(page);
+  const started = await watch.started();
+  expect(started.length).toBeGreaterThan(0);
   // The photo fades out and back in; the new scale lands while it is
   // transparent (design:reduced-motion DR1: no travel). DR2: on a touch
   // screen, a fade of 200 ms or less.
-  const opacity = curveOf(samples, 'opacity').map(s => s.value);
+  for (const fade of started) {
+    expect(travels(fade.keyframes)).toBe(false);
+    expect(fade.to - fade.from).toBeLessThanOrEqual(205);
+  }
+  const opacity = started.flatMap(f =>
+    f.keyframes.map(k => Number(k.opacity ?? 1)),
+  );
   expect(Math.min(...opacity)).toBeLessThan(0.1);
-  expect(duration).toBeLessThanOrEqual(205);
   // The landing is a timed write between the fade out and the fade back in
   // (no animation runs then): wait for the photo to be opaque again.
   await expect
@@ -401,6 +428,7 @@ test('under Reduce Motion a pinch released past the maximum settles in place, wi
     y: s.stage.y + s.stage.height / 2,
   };
   let released = 1;
+  const watch = await watchAnimations(img);
   await driver.play(
     pinch({
       center: centre,
@@ -417,17 +445,20 @@ test('under Reduce Motion a pinch released past the maximum settles in place, wi
       },
     },
   );
-  await waitForAnimation(img);
-  const held = await holdAnimations(page, img);
-  const duration = Math.max(...held.map(a => a.curveEndMs));
-  const opacity = curveOf(
-    await sampleCurve(img, timeline(duration)),
-    'opacity',
-  ).map(x => x.value);
-  await releaseAnimations(page);
+  // Read from the fades' own keyframes (watched before the pinch): on a
+  // loaded machine a fade of 200 ms or less can end before a hold taken after
+  // the release.
+  const started = await watch.started();
+  expect(started.length).toBeGreaterThan(0);
   // It fades out and back in while the scale lands at the maximum,
   // transparent: no travel back.
-  expect(duration).toBeLessThanOrEqual(205);
+  for (const fade of started) {
+    expect(travels(fade.keyframes)).toBe(false);
+    expect(fade.to - fade.from).toBeLessThanOrEqual(205);
+  }
+  const opacity = started.flatMap(f =>
+    f.keyframes.map(k => Number(k.opacity ?? 1)),
+  );
   expect(Math.min(...opacity)).toBeLessThan(0.1);
   // The scale lands in a timed write while the photo is transparent: wait
   // for it, then for the photo to be opaque again.

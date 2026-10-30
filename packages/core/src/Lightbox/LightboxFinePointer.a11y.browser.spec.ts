@@ -18,6 +18,7 @@
  */
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
+import {watchAnimations} from '@astryxdesign/interaction-harness';
 import {
   DEFAULT_STORYBOOK_DIR,
   serveStorybook,
@@ -345,65 +346,49 @@ test('the keyboard’s zoom plays the released 200 ms ease-out', async ({
   page,
 }) => {
   const {stage, fitted} = await openViewer(page);
-  // Samples the photo's width every frame from the key press on. The sampler
-  // is in place before the press (an awaited install): one the page gets
-  // first would leave it waiting for a press that already came.
-  await page.evaluate(() => {
-    (window as unknown as {__samples: Promise<[number, number][]>}).__samples =
-      new Promise<[number, number][]>(resolve => {
-        const img = document.querySelector('dialog img');
-        const samples: [number, number][] = [];
-        let start: number | null = null;
-        window.addEventListener(
-          'keydown',
-          () => {
-            start = performance.now();
-          },
-          {capture: true, once: true},
-        );
-        const tick = (now: number) => {
-          if (start != null && img != null) {
-            samples.push([now - start, img.getBoundingClientRect().width]);
-          }
-          if (start == null || now - start < 800) {
-            requestAnimationFrame(tick);
-          } else {
-            resolve(samples);
-          }
-        };
-        requestAnimationFrame(tick);
-      });
-  });
+  const photo = page.locator('dialog img').first();
+  // Read from the zoom's own timeline, not from frames timed on the main
+  // thread: on a loaded machine a frame can come 100 ms late, and the press,
+  // the zoom's start and the samples drift apart. The watch is taken before
+  // the press, so a zoom that ends before the test looks is still caught.
+  const watch = await watchAnimations(photo);
   // The keyboard keeps Lightbox's released zoom: Enter zooms 2x about the
   // centre (a double-click is the stage's double tap now, FR43).
   await stage.focus();
   await page.keyboard.press('Enter');
-  const samples = await page.evaluate(
-    async () =>
-      (window as unknown as {__samples: Promise<[number, number][]>}).__samples,
-  );
-  const to = fitted.width * 2;
-  const progress = (width: number) =>
-    (width - fitted.width) / (to - fitted.width);
-  // Timed from the last frame before the photo moved: an engine can start
-  // the animation a frame or more after the double-click, more on a busy
-  // runner, and the start-up is not the curve.
-  const first = samples.findIndex(([, width]) => progress(width) > 0.001);
-  expect(first).toBeGreaterThanOrEqual(0);
-  const origin = first > 0 ? samples[first - 1][0] : 0;
-  // Progress 100 ms in, interpolated between the frames around it: CSS
-  // `ease-out` over 200 ms is past 0.6 there (0.69 at its middle), where
-  // UIScrollView's eased settle over its ~0.31 s is near 0.25.
-  const after = samples.findIndex(([t]) => t - origin >= 100);
-  expect(after).toBeGreaterThan(0);
-  const [t0, w0] = samples[after - 1];
-  const [t1, w1] = samples[after];
-  const at100 = progress(w0 + ((w1 - w0) * (origin + 100 - t0)) / (t1 - t0));
-  expect(at100).toBeGreaterThan(0.5);
-  // It ends within the 200 ms and a frame or two.
-  const doneAt = samples.find(([, width]) => progress(width) > 0.995)?.[0];
-  expect(doneAt).toBeDefined();
-  expect((doneAt ?? Number.POSITIVE_INFINITY) - origin).toBeLessThan(250);
+  const [zoom] = await watch.started();
+  expect(zoom).toBeDefined();
+  // The animator plays a curve as keyframes on its own clock, the curve first
+  // and its end held after it: the scale t ms in is the keyframes' value at
+  // offset t / duration.
+  const frames = zoom.keyframes as ReadonlyArray<{
+    computedOffset: number;
+    scale?: string;
+  }>;
+  const scaleAt = (ms: number) => {
+    const at = ms / zoom.durationMs;
+    const i = frames.findIndex(f => f.computedOffset >= at);
+    if (i <= 0) {
+      return Number(frames[Math.max(i, 0)]?.scale ?? 1);
+    }
+    const a = frames[i - 1];
+    const b = frames[i];
+    const u = (at - a.computedOffset) / (b.computedOffset - a.computedOffset);
+    return Number(a.scale) + (Number(b.scale) - Number(a.scale)) * u;
+  };
+  // From the fitted size (scale 1) to twice it.
+  const progress = (scale: number) => scale - 1;
+  // CSS `ease-out` over 200 ms is past 0.6 at 100 ms (0.69 at its middle),
+  // where UIScrollView's eased settle over its ~0.31 s is near 0.25.
+  expect(progress(scaleAt(100))).toBeGreaterThan(0.5);
+  // It ends within the 200 ms and a frame.
+  expect(progress(scaleAt(217))).toBeGreaterThan(0.995);
+  // And the photo shows it: twice its fitted width at rest.
+  await expect
+    .poll(async () =>
+      Math.abs(((await photo.boundingBox())?.width ?? 0) - fitted.width * 2),
+    )
+    .toBeLessThan(2);
 });
 
 test('a pen double-click zooms, as a finger’s double tap', async ({
