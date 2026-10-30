@@ -316,6 +316,9 @@ const styles = stylex.create({
   platter: (half: string) => ({
     position: 'absolute',
     inset: 0,
+    // Below the resting lens (z-index -1), which sits on the glass under the
+    // tabs: the tab list is no stacking context once the glass is here.
+    zIndex: -2,
     pointerEvents: 'none',
     transformOrigin: {
       default: `${half} ${half}`,
