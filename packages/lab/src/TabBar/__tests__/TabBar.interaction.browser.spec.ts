@@ -1968,7 +1968,7 @@ test.describe('minimize on scroll', () => {
   }) => {
     // A blocking (non-passive) touchstart, touchmove or wheel listener on the
     // root path makes the browser wait for the main thread before every page
-    // scroll (the gesture README's measured limit); the watcher's are passive.
+    // scroll (the gesture README's measured limit); the scroll watch's are passive.
     // (A finger scrolling through a busy main thread is a simulator proof: the
     // harness cannot drive one.)
     test.skip(
@@ -1976,7 +1976,7 @@ test.describe('minimize on scroll', () => {
       'reads listeners through Chromium’s debugger',
     );
     const {driver} = await openBar(page, 'minimize-on-scroll');
-    // A scroll first, so every listener the watcher adds while it tracks a
+    // A scroll first, so every listener the scroll watch adds while it tracks a
     // touch is in place.
     await scrollByFinger(page, driver, 120);
     const cdp = await page.context().newCDPSession(page);
