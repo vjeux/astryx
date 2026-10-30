@@ -71,7 +71,9 @@
  * one button for assistive technology, as on iOS: the circle, named after
  * the selected tab and collapsed (`aria-expanded`), the tabs inert until it
  * expands; activated from the keys, focus lands on the selected tab. The
- * circle and the glass's three pieces mount only when minimizing is on.
+ * circle, the glass's three pieces, the bar's box and the tab layer mount
+ * only when minimizing is on; otherwise the tab list draws its own glass and
+ * holds the tabs itself (INV7).
  *
  * SYNC: When modified, update TabBar.doc.mjs, TabBar.test.tsx,
  * useTabBarLens.ts, tabBarModel.ts and
@@ -86,6 +88,7 @@ import {
   useRef,
   type ReactElement,
   type ReactNode,
+  type ComponentPropsWithRef,
 } from 'react';
 import {flushSync} from 'react-dom';
 import * as stylex from '@stylexjs/stylex';
@@ -298,6 +301,19 @@ const styles = stylex.create({
     WebkitTapHighlightColor: 'transparent',
   },
   // Minimized, only the circle takes touches; the page gets the rest.
+  // The tab list standing alone (no bar box): it takes the box's flex.
+  capsuleAlone: {
+    flexGrow: 1,
+    minWidth: 0,
+    width: 'auto',
+  },
+  // The tab list drawing its own glass (no platter).
+  capsuleGlass: (half: string) => ({
+    borderRadius: half,
+    backgroundColor: `color-mix(in srgb, ${colorVars['--color-background-popover']} 78%, transparent)`,
+    backdropFilter: 'blur(16px) saturate(180%)',
+    boxShadow: shadowVars['--shadow-med'],
+  }),
   capsuleMinimized: {
     pointerEvents: 'none',
   },
@@ -326,10 +342,6 @@ const styles = stylex.create({
     boxShadow: shadowVars['--shadow-med'],
   },
   // Minimizing off, the glass is one piece.
-  platterWhole: (half: string) => ({
-    insetInline: 0,
-    borderRadius: half,
-  }),
   // Each piece keeps its shadow off the pieces it meets.
   platterStart: (half: string) => ({
     insetInlineStart: 0,
@@ -696,6 +708,18 @@ function ItemFace({
  * </TabBar>
  * ```
  */
+/**
+ * A wrapper the bar mounts only `when` something needs it; otherwise its
+ * children render in its place (architecture:component-style-authoring INV7).
+ */
+function Layer({
+  when,
+  children,
+  ...props
+}: ComponentPropsWithRef<'div'> & {when: boolean}) {
+  return when ? <div {...props}>{children}</div> : children;
+}
+
 export function TabBar({
   value,
   onChange,
@@ -800,6 +824,13 @@ export function TabBar({
   const capsuleInset = px(tabBar.itemInset);
   const itemSize = `calc(${size(count)})`;
 
+  // The bar's box, the platter and the tab layer mount only while something
+  // needs them (architecture:component-style-authoring INV7): otherwise the
+  // tab list takes the box's flex and size, draws its own glass and holds the
+  // tabs itself.
+  const isBoxed = canMinimize;
+  const hasPlatter = canMinimize;
+
   return (
     <div
       ref={ref}
@@ -814,7 +845,8 @@ export function TabBar({
         style,
       )}
       {...props}>
-      <div
+      <Layer
+        when={isBoxed}
         {...stylex.props(
           styles.bar,
           styles.barSize(px(tabBar.barHeight), px(naturalWidth(count))),
@@ -891,9 +923,15 @@ export function TabBar({
           }}
           {...stylex.props(
             styles.capsule,
+            !isBoxed && [
+              styles.capsuleAlone,
+              styles.barSize(px(tabBar.barHeight), px(naturalWidth(count))),
+            ],
+            !hasPlatter && styles.capsuleGlass(HALF_BAR),
             isMinimized && styles.capsuleMinimized,
           )}>
-          <div
+          <Layer
+            when={hasPlatter}
             ref={minimize.platter}
             aria-hidden
             data-tab-bar-platter=""
@@ -916,13 +954,10 @@ export function TabBar({
                   {...stylex.props(styles.glass, styles.platterEnd(HALF_BAR))}
                 />
               </>
-            ) : (
-              <div
-                {...stylex.props(styles.glass, styles.platterWhole(HALF_BAR))}
-              />
-            )}
-          </div>
-          <div
+            ) : null}
+          </Layer>
+          <Layer
+            when={hasPlatter}
             ref={minimize.items}
             role="presentation"
             data-tab-bar-items=""
@@ -982,7 +1017,7 @@ export function TabBar({
                 </button>
               );
             })}
-          </div>
+          </Layer>
           {selectedIndex >= 0 ? (
             <div
               aria-hidden
@@ -1106,7 +1141,7 @@ export function TabBar({
             ) : null}
           </button>
         ) : null}
-      </div>
+      </Layer>
     </div>
   );
 }
