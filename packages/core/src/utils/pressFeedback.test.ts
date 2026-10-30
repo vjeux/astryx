@@ -31,6 +31,7 @@ import {
   PRESSABLE_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
   installPressFeedback,
+  paintPress,
 } from './pressFeedback';
 import {
   PRESS_FADE_MS,
@@ -720,6 +721,25 @@ describe('the release ends with its animation, not its clock', () => {
     await settled();
     expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
   });
+
+  it("another painter's fade never cuts the controller's own release short", () => {
+    // Two writers kept two clocks: a fade another painter left running on
+    // the surface removed the attribute in the middle of the controller's
+    // release. With one writer, any write ends a pending fade.
+    const control = pressable('button');
+    document.body.appendChild(control);
+    paintPress(control, 'fading', {releaseMs: 150});
+    press(control, 'pointerdown', 10, 10);
+    expect(control.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    vi.advanceTimersByTime(50);
+    press(control, 'pointerup', 10, 10);
+    expect(control.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    // The other painter's clock ran out here: the release is still running.
+    vi.advanceTimersByTime(100);
+    expect(control.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    vi.advanceTimersByTime(PRESS_FADE_MS - 100);
+    expect(control.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+  });
 });
 
 describe('two touches in a row', () => {
@@ -874,6 +894,17 @@ describe('a phone or tablet paints a mouse or Space press itself', () => {
     rows[3].appendChild(disabled);
     press(disabled, 'pointerdown', 10, 300, 'mouse');
     expect(document.querySelectorAll(`[${PRESSED_ATTRIBUTE}]`)).toHaveLength(0);
+  });
+
+  it('leaves a row another painter holds to its owner: a mouse press there neither repaints nor clears it, even when the next press ends it early', () => {
+    expect(paintPress(rows[1], 'held')).toBe(true);
+    press(rows[1], 'pointerdown', 10, 100, 'mouse');
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('held');
+    press(rows[1], 'pointerup', 10, 100, 'mouse');
+    // The next press ends the first one's release at once.
+    press(rows[2], 'pointerdown', 10, 200, 'mouse');
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('held');
+    expect(rows[2].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
   });
 
   it('drops the paint at once when the pointer is cancelled or a drag starts', () => {
