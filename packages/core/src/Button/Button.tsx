@@ -178,7 +178,15 @@ const styles = stylex.create({
   pressableTracked: {
     transform: {
       default: 'scale(1)',
-      '[data-astryx-press="on"]': 'scale(0.98)',
+      '[data-astryx-press="on"]': {
+        default: 'scale(0.98)',
+        // Reduced motion: a press never scales the button
+        // (design:reduced-motion DR1), as on any button (`pressable`).
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          'scale(1)',
+        '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+          'scale(1)',
+      },
       // A keyboard press is the button's own (the group tracks pointers
       // only): holding Space on the focused button scales it as on any
       // button, as the tracked overlay's `:active:focus-visible` arm paints.
@@ -188,6 +196,10 @@ const styles = stylex.create({
         {
           default: 'scale(0.98)',
           '@media (pointer: coarse)': 'scale(1)',
+          '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+            'scale(1)',
+          '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+            'scale(1)',
         },
     },
   },
