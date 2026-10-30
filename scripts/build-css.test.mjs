@@ -326,15 +326,9 @@ describe('build-css astryx.css', () => {
       // control's clock, the one the controller waits for (a list row drops
       // this animation for its own layer's, rowPressLayer.ts).
       const clocks = await readReleaseClocks();
-      // A mouse or Space press the controller paints on a touch-first device
-      // keeps the deselect clock (`[data-astryx-press-input]`).
-      const input = line => line.includes('[data-astryx-press-input]');
-      expect(
-        durationsOf(fading.filter(line => coarse(line) && !input(line))),
-      ).toEqual([clocks.control]);
-      expect(
-        durationsOf(fading.filter(line => coarse(line) && input(line))),
-      ).toEqual([clocks.deselect]);
+      expect(durationsOf(fading.filter(line => coarse(line)))).toEqual([
+        clocks.control,
+      ]);
       // With any other pointer, the one clock it always had: the deselect's
       // (the desktop rule, `spec:AST-017` FR59/DEC-25).
       expect(durationsOf(fading.filter(line => !coarse(line)))).toEqual([
@@ -414,10 +408,18 @@ describe('build-css astryx.css', () => {
     const durationMs = value => toMs(value);
     const durationOf = line =>
       line.match(/animation-duration:\s*([^;}]+)/)?.[1] ?? null;
-    /** A control's release clock: UIButton's, 250 ms (`button.highlight`). */
+    /**
+     * A control's release clock on a press arm: the shared release, 200 ms
+     * (`controlPressConsts.controlReleaseMs`, which pressFeedback.test.ts
+     * holds to `pressConsts.releaseMs`).
+     */
     const isControlClock = line => {
       const duration = durationOf(line);
-      return duration != null && toMs(duration) === 250;
+      return (
+        duration != null &&
+        line.includes('data-astryx-press') &&
+        toMs(duration) === 200
+      );
     };
     const kindOf = line =>
       line.includes('::before')
@@ -445,17 +447,6 @@ describe('build-css astryx.css', () => {
     };
 
     it('cross-fades every control release in 200 ms or less where the primary pointer is coarse (DR2)', () => {
-      const long = fadingLines().filter(line => {
-        const duration = durationOf(line);
-        return (
-          duration != null &&
-          !line.includes('prefers-reduced-motion') &&
-          durationMs(duration) > 200
-        );
-      });
-      expect(new Set(long.map(kindOf))).toEqual(
-        new Set(['host', '::before', '::after']),
-      );
       for (const kind of ['host', '::before', '::after']) {
         const reduced = fadingLines().filter(
           line =>
@@ -496,7 +487,7 @@ describe('build-css astryx.css', () => {
         ),
       ).toBe(true);
       // A control's layer release (a button's `::before`, a card's
-      // `::after`, on UIButton's clock) runs only under a coarse primary
+      // `::after`, on the control's clock) runs only under a coarse primary
       // pointer, so it never runs with any other.
       const layerReleases = fadingLines().filter(
         line =>
@@ -512,8 +503,10 @@ describe('build-css astryx.css', () => {
 
     it('adds nothing for any other pointer than a coarse primary one (the desktop rule)', async () => {
       // `spec:AST-017` FR59/DEC-25: touch work leaves a fine pointer's behavior as
-      // it is. UIButton's release clock and curve, and the button's
-      // `isolation`, apply only behind the coarse gate.
+      // it is. The control layer's release, on the control's clock and curve,
+      // and the button's `isolation`, apply only behind the coarse gate; the
+      // element's own release keeps the same clock and curve elsewhere, so
+      // only a pseudo-element's press arm counts here.
       const source = await fs.readFile(
         path.join(ROOT, 'packages/core/src/utils/controlPressLayer.stylex.ts'),
         'utf8',
@@ -536,7 +529,12 @@ describe('build-css astryx.css', () => {
           .replace(/\s+/g, '')
           .replace(/([(,])0\./g, '$1.')
           .includes(curve);
-      const control = lines.filter(line => isClock(line) || hasCurve(line));
+      const control = lines.filter(
+        line =>
+          kindOf(line) !== 'host' &&
+          line.includes('data-astryx-press') &&
+          (isClock(line) || hasCurve(line)),
+      );
       expect(control.some(isClock)).toBe(true);
       expect(control.some(hasCurve)).toBe(true);
       expect(control.filter(line => !gated(line))).toEqual([]);

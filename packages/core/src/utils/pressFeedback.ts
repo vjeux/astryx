@@ -25,11 +25,6 @@
  * travel past the slop or the scroll that takes the touch cancels the press,
  * and the lift fades it.
  *
- * A mouse button's or the Space key's press on a touch-first device carries
- * {@link PRESS_INPUT_ATTRIBUTE}, so the stylesheet keeps the fine pointer's
- * 200 ms release for it, while a finger's press on a control releases over
- * UIButton's 250 ms (`component:Button` FR15, controlPressLayer.stylex.ts).
- *
  * Why a delegated document-level controller and not a hook on the element: a
  * virtualized list can carry more than a thousand rows, and four listeners
  * plus a state hook per row is not a cost a list like that can pay. This is
@@ -100,15 +95,6 @@ export const PRESSABLE_ATTRIBUTE = 'data-astryx-pressable';
  * release's exit.
  */
 export const PRESSED_ATTRIBUTE = 'data-astryx-press';
-
-/**
- * Marks a press the controller paints for a mouse button (`mouse`) or the
- * Space key (`key`) on a touch-first device, beside {@link PRESSED_ATTRIBUTE}:
- * its release keeps the 200 ms fade a fine pointer has, while a finger's
- * press on a control releases over UIButton's 250 ms (`component:Button`
- * FR15, `spec:AST-094`).
- */
-export const PRESS_INPUT_ATTRIBUTE = 'data-astryx-press-input';
 
 /** Spread onto the element that paints the press. */
 export const pressableProps: {readonly [PRESSABLE_ATTRIBUTE]: ''} = {
@@ -493,10 +479,7 @@ export function paintPress(
  * release's end overwrites or clears it.
  */
 function paintElement(element: HTMLElement, paint: GesturePaint): void {
-  // The press is over where its paint goes: its input marker goes with it.
-  if (writePress(element, paint) && paint === 'none') {
-    element.removeAttribute(PRESS_INPUT_ATTRIBUTE);
-  }
+  writePress(element, paint);
 }
 
 function clearTimer(slot: Slot): void {
@@ -641,7 +624,6 @@ function finish(slot: Slot): void {
   }
   clearTimer(slot);
   writePress(live.element, 'none');
-  live.element.removeAttribute(PRESS_INPUT_ATTRIBUTE);
   slot.live = null;
   if (slot === button) {
     holdKey(false);
@@ -702,12 +684,6 @@ function pressButton(
   }
   takeOver(finger, element);
   button.live = {element, gesture: idlePressGesture(), pointerId, timer: null};
-  // A mouse or a key keeps the fine pointer's 200 ms release on any surface;
-  // the marker tells the stylesheet's release arms the same.
-  element.setAttribute(
-    PRESS_INPUT_ATTRIBUTE,
-    pointerId == null ? 'key' : 'mouse',
-  );
   holdKey(pointerId == null);
   apply(button, pressGestureStep(button.live.gesture, {kind: 'buttonDown'}));
 }

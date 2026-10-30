@@ -123,7 +123,7 @@ export const pressConsts = stylex.defineConsts({
 
 /** The release's clock as CSS: the table's value. */
 const PRESS_RELEASE_DURATION = `${pressConsts.releaseMs}ms`;
-/** The control release's clock as CSS: the table's value. */
+/** The control release's clock as CSS: the shared release's (controlPressLayer.stylex.ts). */
 const CONTROL_RELEASE_DURATION = `${controlPressConsts.controlReleaseMs}ms`;
 /**
  * Under reduced motion each clock is capped by the Reduce Motion cross-fade's
@@ -194,10 +194,7 @@ const pressRelease = stylex.keyframes({
  */
 const RELEASE_EASE = 'cubic-bezier(0, 0, 0.2, 1)';
 
-/**
- * A control's release curve: UIButton's, UIKit's easeInEaseOut
- * (`button.highlight.releaseCurve`).
- */
+/** A control's release curve: the shared release's (controlPressLayer.stylex.ts). */
 const CONTROL_RELEASE_EASE = controlPressConsts.controlReleaseEase;
 
 /**
@@ -256,13 +253,6 @@ const pressReleaseAnimation = {
       default: PRESS_RELEASE_DURATION,
       '@media (pointer: coarse)': {
         default: CONTROL_RELEASE_DURATION,
-        // A mouse or Space press the controller paints on a touch-first
-        // device keeps the fine pointer's clock (PRESS_INPUT_ATTRIBUTE).
-        '[data-astryx-press-input]': {
-          default: PRESS_RELEASE_DURATION,
-          '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
-            PRESS_RELEASE_DURATION_REDUCED,
-        },
         '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
           CONTROL_RELEASE_DURATION_REDUCED,
       },
@@ -274,11 +264,6 @@ const pressReleaseAnimation = {
       default: RELEASE_EASE,
       '@media (pointer: coarse)': {
         default: CONTROL_RELEASE_EASE,
-        '[data-astryx-press-input]': {
-          default: RELEASE_EASE,
-          '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
-            reducedMotionFadeConsts.easing,
-        },
         '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
           reducedMotionFadeConsts.easing,
       },

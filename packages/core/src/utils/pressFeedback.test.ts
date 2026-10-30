@@ -14,7 +14,7 @@
 
 import * as stylex from '@stylexjs/stylex';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {button} from '../motion/uikit/button';
+import {list} from '../motion/uikit/list';
 import {
   hasReleaseFade,
   readsPressStrength,
@@ -32,7 +32,6 @@ import {
   PRESSED_ATTRIBUTE,
   installPressFeedback,
   paintPress,
-  PRESS_INPUT_ATTRIBUTE,
 } from './pressFeedback';
 import {
   PRESS_FADE_MS,
@@ -542,8 +541,8 @@ describe('a finger waits only inside a scroller (spec:AST-094 FR11)', () => {
 });
 
 describe('the release clocks the browser specs read', () => {
-  it("a finger's release on a control runs 250 ms (ButtonPress.interaction.browser.spec.ts RELEASE_MS)", () => {
-    expect(controlPressConsts.controlReleaseMs).toBe(250);
+  it("a finger's release on a control runs the shared 200 ms (ButtonPress.interaction.browser.spec.ts RELEASE_MS)", () => {
+    expect(controlPressConsts.controlReleaseMs).toBe(200);
   });
 
   it('a fine primary pointer keeps 200 ms (ButtonPressRelease.interaction.browser.spec.ts DESELECT_MS)', () => {
@@ -861,12 +860,10 @@ describe('a phone or tablet paints a mouse or Space press itself', () => {
     control.setAttribute(PRESSABLE_ATTRIBUTE, '');
     rows[1].appendChild(control);
     press(control, 'pointerdown', 10, 100, 'mouse');
-    expect(control.getAttribute(PRESS_INPUT_ATTRIBUTE)).toBe('mouse');
     press(control, 'pointerup', 10, 100, 'mouse');
     expect(control.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
     vi.advanceTimersByTime(PRESS_FADE_MS);
     expect(control.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
-    expect(control.hasAttribute(PRESS_INPUT_ATTRIBUTE)).toBe(false);
     control.remove();
   });
 
@@ -1344,11 +1341,11 @@ describe('the release fades: the arms the controller writes to', () => {
 
   it("the machine's clock and a control's are the stylesheet's constants: one number each", () => {
     expect(PRESS_FADE_MS).toBe(pressConsts.releaseMs);
-    expect(controlPressConsts.controlReleaseMs).toBe(
-      button.highlight.releaseMs,
-    );
+    // A control releases as every press does until `component:Button` FR15
+    // gives it a release of its own.
+    expect(controlPressConsts.controlReleaseMs).toBe(pressConsts.releaseMs);
     expect(controlPressConsts.controlReleaseEase).toBe(
-      `cubic-bezier(${button.highlight.releaseCurve.join(', ')})`,
+      `cubic-bezier(${list.highlight.releaseCurve.join(', ')})`,
     );
     expect(hasReleaseFade(surface(interactionOverlayStyles.pressedAlpha))).toBe(
       true,

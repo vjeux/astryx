@@ -22,7 +22,6 @@ import {reducedMotionFadeConsts} from '../motion/reducedMotion.stylex';
 import {colorVars} from '../theme/tokens.stylex';
 import {controlPressConsts} from './controlPressLayer.stylex';
 import {pressVars} from './interactionOverlay.stylex';
-import {cellPressConsts} from './rowPressLayer.stylex';
 
 // The overlay's arm selectors (interactionOverlay.stylex.ts), restated here:
 // StyleX resolves a style's keys within its own file.
@@ -57,18 +56,10 @@ const controlRelease = stylex.keyframes({
   to: {opacity: 0},
 });
 
-/** The control release's clock as CSS: the table's value. */
+/** The control release's clock as CSS: the shared release's. */
 const CONTROL_RELEASE_DURATION = `${controlPressConsts.controlReleaseMs}ms`;
-/** A control's release curve: UIButton's, UIKit's easeInEaseOut. */
+/** A control's release curve: the shared release's. */
 const CONTROL_RELEASE_EASE = controlPressConsts.controlReleaseEase;
-/**
- * A mouse or Space press the controller paints on a touch-first device
- * (pressFeedback.ts `PRESS_INPUT_ATTRIBUTE`): it keeps the fine pointer's
- * 200 ms deselect clock and curve.
- */
-const PRESS_INPUT = '[data-astryx-press-input]';
-const INPUT_RELEASE_DURATION = `${cellPressConsts.cellReleaseMs}ms`;
-const INPUT_RELEASE_EASE = cellPressConsts.cellReleaseEase;
 /** Reduce Motion on a coarse primary pointer: the policy's cross-fade. */
 const REDUCED_MOTION_RELEASE_DURATION = reducedMotionFadeConsts.duration;
 
@@ -113,7 +104,7 @@ export const controlPressLayerStyles = stylex.create({
    * IconButton and ToggleButton built on it), composed after the
    * `backgroundImage` variant. Under a coarse primary pointer the press is a
    * `::before` layer under the label, present only while a press is on or
-   * fading, and its release is UIButton's (`button.highlight`): an opacity
+   * fading, and its release is the shared release: an opacity
    * animation, which engines run on the compositor. At rest, and with any
    * other pointer, nothing here applies: no layer, no
    * `isolation`, and the variant's own paint and release, as before (the
@@ -218,12 +209,6 @@ export const controlPressLayerStyles = stylex.create({
           default: null,
           [PRESSED_FADING]: {
             default: CONTROL_RELEASE_DURATION,
-            // A mouse or Space press keeps the fine pointer's clock.
-            [PRESS_INPUT]: {
-              default: INPUT_RELEASE_DURATION,
-              '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
-                REDUCED_MOTION_RELEASE_DURATION,
-            },
             '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
               REDUCED_MOTION_RELEASE_DURATION,
           },
@@ -235,11 +220,6 @@ export const controlPressLayerStyles = stylex.create({
           default: null,
           [PRESSED_FADING]: {
             default: CONTROL_RELEASE_EASE,
-            [PRESS_INPUT]: {
-              default: INPUT_RELEASE_EASE,
-              '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
-                reducedMotionFadeConsts.easing,
-            },
             '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
               reducedMotionFadeConsts.easing,
           },
@@ -276,12 +256,6 @@ export const controlPressLayerStyles = stylex.create({
           default: null,
           [PRESSED_FADING]: {
             default: CONTROL_RELEASE_DURATION,
-            // A mouse or Space press keeps the fine pointer's clock.
-            [PRESS_INPUT]: {
-              default: INPUT_RELEASE_DURATION,
-              '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
-                REDUCED_MOTION_RELEASE_DURATION,
-            },
             '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
               REDUCED_MOTION_RELEASE_DURATION,
           },
@@ -293,11 +267,6 @@ export const controlPressLayerStyles = stylex.create({
           default: null,
           [PRESSED_FADING]: {
             default: CONTROL_RELEASE_EASE,
-            [PRESS_INPUT]: {
-              default: INPUT_RELEASE_EASE,
-              '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
-                reducedMotionFadeConsts.easing,
-            },
             '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
               reducedMotionFadeConsts.easing,
           },
