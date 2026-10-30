@@ -722,6 +722,20 @@ describe('the release ends with its animation, not its clock', () => {
     expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
   });
 
+  it('another painter’s release also lasts until its animation ends', async () => {
+    const control = pressable('button');
+    document.body.appendChild(control);
+    paintPress(control, 'fading', {releaseMs: 150});
+    const release = cssAnimation(control);
+    animate(control, [release.animation]);
+    vi.advanceTimersByTime(150);
+    await settled();
+    expect(control.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    release.end();
+    await settled();
+    expect(control.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+  });
+
   it("another painter's fade never cuts the controller's own release short", () => {
     // Two writers kept two clocks: a fade another painter left running on
     // the surface removed the attribute in the middle of the controller's
