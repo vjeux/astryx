@@ -255,20 +255,30 @@ describe('RefreshControl indicator: UIRefreshControl\u2019s replicator', () => {
     }
     return '';
   };
-  /** The eight capsules side by side, rebuilt from the table. */
-  const capsuleSprite = (): string => {
-    const fmt = (n: number) => String(Math.round(n * 10000) / 10000);
-    const box = 2 * table.spokeOuterRadiusPt;
-    const center = box / 2;
-    const rects = Array.from({length: table.indicatorSpokes}, (_, k) => {
-      const ox = k * box;
-      return `<rect x='${fmt(ox + center - table.spokeWidthPt / 2)}' y='${fmt(center - table.spokeOuterRadiusPt)}' width='${fmt(table.spokeWidthPt)}' height='${fmt(table.spokeOuterRadiusPt - table.spokeInnerRadiusPt)}' rx='${fmt(table.spokeCornerRadiusPt)}' transform='rotate(${fmt((k * 360) / table.indicatorSpokes)} ${fmt(ox + center)} ${fmt(center)})'/>`;
-    }).join('');
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${fmt(box * table.indicatorSpokes)} ${fmt(box)}'>${rects}</svg>`;
-    return `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E')}")`;
+  /**
+   * Spoke k's capsule as a clip path, rebuilt from the table: the capsule at
+   * 12 o'clock, straight edges and quarter arcs, turned k × 360° / n about the
+   * glyph's center.
+   */
+  const capsulePath = (k: number): string => {
+    const center = table.spokeOuterRadiusPt;
+    const width = table.spokeWidthPt;
+    const radius = table.spokeCornerRadiusPt;
+    const length = table.spokeOuterRadiusPt - table.spokeInnerRadiusPt;
+    const left = center - width / 2;
+    const top = center - table.spokeOuterRadiusPt;
+    const angle = (k * 2 * Math.PI) / table.indicatorSpokes;
+    const fmt = (n: number) => String(Math.round(n * 1000) / 1000 + 0);
+    const point = (x: number, y: number) => {
+      const dx = x - center;
+      const dy = y - center;
+      return `${fmt(center + dx * Math.cos(angle) - dy * Math.sin(angle))} ${fmt(center + dx * Math.sin(angle) + dy * Math.cos(angle))}`;
+    };
+    const arc = `A ${fmt(radius)} ${fmt(radius)} 0 0 1`;
+    return `path('M ${point(left + radius, top)} L ${point(left + width - radius, top)} ${arc} ${point(left + width, top + radius)} L ${point(left + width, top + length - radius)} ${arc} ${point(left + width - radius, top + length)} L ${point(left + radius, top + length)} ${arc} ${point(left, top + length - radius)} L ${point(left, top + radius)} ${arc} ${point(left + radius, top)} Z')`;
   };
 
-  it('draws its eight capsules once, each a masked layer at its own angle', () => {
+  it('draws its eight capsules once, each a layer clipped to its capsule at its own angle', () => {
     render(
       <RefreshControl onRefresh={() => {}}>
         <div>Row</div>
@@ -280,14 +290,15 @@ describe('RefreshControl indicator: UIRefreshControl\u2019s replicator', () => {
     // (two sets of svg capsules before: 50 elements under the glyph).
     expect(spokes).toHaveLength(table.indicatorSpokes);
     expect(glyph.querySelectorAll('*')).toHaveLength(table.indicatorSpokes);
-    // The table's capsules, at their angles in an eight-frame sprite.
-    expect(declarationOf(spokes[0], 'mask-image')).toBe(capsuleSprite());
-    expect(declarationOf(spokes[0], 'mask-size')).toBe('800% 100%');
     spokes.forEach((spoke, index) => {
       expect(spoke.tagName).toBe('SPAN');
       expect(spoke.childNodes).toHaveLength(0);
-      const x = Math.round((index / (table.indicatorSpokes - 1)) * 1e6) / 1e4;
-      expect(declarationOf(spoke, 'mask-position')).toBe(`${x}% 0%`);
+      // The table's capsule at its angle; a clip, never a mask (WebKit
+      // repaints a masked layer on every opacity change).
+      expect(declarationOf(spoke, 'clip-path').replace(/"/g, "'")).toBe(
+        capsulePath(index),
+      );
+      expect(declarationOf(spoke, 'mask-image')).toBe('');
     });
     // The pull reveals the spokes one after another: UIKit's alpha offset
     // runs from −1 to 0 with the reveal, times the reveal itself.
