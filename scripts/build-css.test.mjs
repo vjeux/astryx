@@ -396,16 +396,18 @@ describe('build-css astryx.css', () => {
     it('paints the checkbox and radio press on their own layer and releases it by opacity', () => {
       // The element that owns a press (a CheckboxInput's control, a
       // CheckboxList or RadioList row) declares the press's image and release
-      // on itself, inside its own press arms under a coarse pointer
-      // (indicatorPressOwnerStyles); the layer over a checkbox box or a radio
-      // circle (its wrapper's `::after`) reads them, so it answers its
-      // nearest owner only. The release runs on a control's clock (250 ms)
-      // for a standalone checkbox and a cell's (200 ms) in a row, and the
-      // layer reads no strength.
+      // on itself, inside its own press arms, for every pointer
+      // (indicatorPressOwnerStyles; `spec:AST-094` FR11's fine-pointer
+      // profile, FR43); the layer over a checkbox box or a radio circle (its
+      // wrapper's `::after`) reads them, so it answers its nearest owner
+      // only. The release runs on a control's clock (250 ms) for a standalone
+      // checkbox and a cell's (200 ms) in a row, and the layer reads no
+      // strength.
+      const behindPointer = line => /@media[^{]*pointer:/.test(line);
       const own = arm =>
         lines().filter(
           line =>
-            line.includes('@media (pointer: coarse)') &&
+            !behindPointer(line) &&
             line.includes(`:is([data-astryx-press="${arm}"])`),
         );
       const setsImage = arm =>
@@ -422,9 +424,7 @@ describe('build-css astryx.css', () => {
         ),
       ).toBe(true);
       const layer = lines().filter(
-        line =>
-          line.includes('@media (pointer: coarse)') &&
-          line.includes('::after{'),
+        line => !behindPointer(line) && line.includes('::after{'),
       );
       expect(
         layer.some(line =>
@@ -440,9 +440,21 @@ describe('build-css astryx.css', () => {
           ),
         ),
       ).toBe(true);
+      // One press model for every pointer: no part of a selection mark's
+      // press sits behind a pointer query.
+      expect(
+        lines().filter(
+          line =>
+            behindPointer(line) &&
+            /--_indicator-press-(image|release)/.test(line),
+        ),
+      ).toEqual([]);
       const durations = lines().flatMap(line => {
+        if (/^\s*@/.test(line)) {
+          return [];
+        }
         const match = line.match(
-          /^\s*@media [^{]*pointer: coarse[^{]*\{[^{]*::after\{animation-duration:([\d.]+)(ms|s)\}/,
+          /::after\{animation-duration:([\d.]+)(ms|s)\}/,
         );
         return match == null
           ? []
@@ -594,11 +606,27 @@ describe('build-css astryx.css', () => {
           .replace(/\s+/g, '')
           .replace(/([(,])0\./g, '$1.')
           .includes(curve);
+      // A selection mark's press layer (a CheckboxInput box's `::after`) is
+      // the mark's only press for every pointer (`spec:AST-094` FR11's
+      // fine-pointer profile, FR43), so its release on the control clock runs
+      // ungated.
+      const indicatorClasses = new Set(
+        (
+          await fs.readFile(
+            path.join(CORE_DIST, 'CheckboxInput/CheckboxInput.js'),
+            'utf8',
+          )
+        ).match(/\bx[a-z0-9]+\b/g) ?? [],
+      );
+      const isIndicatorLayer = line =>
+        line.includes('::after') &&
+        indicatorClasses.has(line.trim().match(/^\.([\w-]+)/)?.[1] ?? '');
       const control = lines.filter(
         line =>
           kindOf(line) !== 'host' &&
           line.includes('data-astryx-press') &&
-          (isClock(line) || hasCurve(line)),
+          (isClock(line) || hasCurve(line)) &&
+          !isIndicatorLayer(line),
       );
       expect(control.some(isClock)).toBe(true);
       expect(control.some(hasCurve)).toBe(true);
