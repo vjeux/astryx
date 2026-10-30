@@ -297,3 +297,77 @@ test('WebKit lays out and paints a menu anchored to a button once when the butto
     `the menu painted in ${painted.length} frames while its trigger was pressed, where a menu laid out again with an animating anchor paints every frame: ${JSON.stringify(onMenu)}`,
   ).toBeLessThanOrEqual(1);
 });
+
+/** The toggles a tap selects: on their own and in a group. */
+const TOGGLES: ReadonlyArray<readonly [string, string]> = [
+  ['a toggle', 'core-togglebutton--standalone'],
+  ['a toggle in a group', 'core-togglebutton--group-single'],
+];
+
+for (const [name, story] of TOGGLES) {
+  test(`WebKit paints the selected look of ${name} a tap toggles at its press's edges only, not on every frame of a colour transition (spec:AST-094 FR5)`, async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'webkit',
+      "WebKit's own Timeline: it runs no colour animation on the compositor",
+    );
+    await openStory(page, storybook(), story);
+    // The first toggle not yet selected, held by its place: once the tap
+    // selects it, a locator by its state would move on to the next one.
+    const toggles = page.locator('#storybook-root button[aria-pressed]');
+    const index = await toggles.evaluateAll(buttons =>
+      buttons.findIndex(
+        button => button.getAttribute('aria-pressed') === 'false',
+      ),
+    );
+    if (index < 0) {
+      throw new Error(`${story}: no toggle is unselected`);
+    }
+    const toggle = toggles.nth(index);
+    await expect(toggle).toBeVisible();
+    const box = await toggle.boundingBox();
+    if (box == null) {
+      throw new Error(`${story}: the toggle has no box`);
+    }
+    const driver = await touchDriver(page);
+    // The engine's own tap, whose click selects the toggle, recorded whole:
+    // the press shows and releases while the selected look changes.
+    const timeline = await recordWebKitTimeline(
+      page,
+      async () => {
+        await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
+        await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+        await expect
+          .poll(async () => toggle.getAttribute('data-astryx-press'), {
+            timeout: 3000,
+          })
+          .toBeNull();
+        await settled(page);
+        await frames(page);
+      },
+      {sentinel: true},
+    );
+    // Over the toggle, the press's edges only (EDGE_FRAMES): its layer and
+    // its selected look appearing at once, the scaled layer's one re-raster
+    // as its ease-back starts, the release's last frame and the layer's
+    // removal. A selected look fading in by a colour transition is
+    // repainted on every frame of it instead.
+    const painted = paintedFrames(
+      timeline.paints
+        .filter(
+          ({rect}) =>
+            rect.x < box.x + box.width + 4 &&
+            rect.x + rect.width > box.x - 4 &&
+            rect.y < box.y + box.height + 4 &&
+            rect.y + rect.height > box.y - 4,
+        )
+        .map(paint => paint.t),
+    );
+    expect(
+      painted.length,
+      `${name} painted in ${painted.length} frames as a tap selected it, where a selected look fading in by a colour transition paints every frame: ${JSON.stringify(timeline.paints)}`,
+    ).toBeLessThanOrEqual(EDGE_FRAMES);
+  });
+}
