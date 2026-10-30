@@ -85,6 +85,7 @@ import {
   waitForRest,
   watchAnimations,
   withFinger,
+  recordWebKitTimeline,
 } from './index';
 
 // An element positioned against an anchor: a composited animation of it lays
@@ -295,6 +296,87 @@ test.describe('touch input', () => {
         ...log.filter(r => r.type === 'touchmove').map(r => r.touches ?? 0),
       ),
     ).toBe(2);
+  });
+});
+
+test.describe('WebKit timeline', () => {
+  test('recordWebKitTimeline records no paint for a compositor transform, and one where a property WebKit paints changes', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'webkit',
+      "WebKit's own Timeline; Chromium's counterpart is a rendering trace",
+    );
+    await page.setContent(
+      '<meta name="viewport" content="width=device-width"><body style="margin:0"><div id="a" style="position:absolute;left:20px;top:20px;width:80px;height:80px;background:#3a6;will-change:transform"></div><div id="b" style="position:absolute;left:20px;top:200px;width:80px;height:80px;background:#36a"></div></body>',
+    );
+    await frames(page, 2);
+    const run = (id: string, keyframes: Keyframe[]) =>
+      recordWebKitTimeline(page, async () => {
+        await page.evaluate(
+          ([target, motion]) => {
+            const element = document.getElementById(target);
+            if (element == null) {
+              throw new Error(`no #${target}`);
+            }
+            return element
+              .animate(motion, {duration: 400})
+              .finished.then(() => undefined);
+          },
+          [id, keyframes] as const,
+        );
+      });
+    // On the compositor: the layer moves, nothing is painted again.
+    const composited = await run('a', [
+      {transform: 'translateX(0px)'},
+      {transform: 'translateX(200px)'},
+    ]);
+    expect(composited.paints).toEqual([]);
+    // `left` is painted again each frame, where the box was and is.
+    const painted = await run('b', [{left: '20px'}, {left: '220px'}]);
+    expect(painted.paints.length).toBeGreaterThan(0);
+    expect(painted.counts.Paint).toBe(painted.paints.length);
+    for (const {rect} of painted.paints) {
+      expect(rect.y).toBeGreaterThanOrEqual(200);
+      expect(rect.y + rect.height).toBeLessThanOrEqual(280);
+      expect(rect.x).toBeGreaterThanOrEqual(20);
+      expect(rect.x + rect.width).toBeLessThanOrEqual(300);
+    }
+  });
+
+  test('with a sentinel, the recording composites one before it starts, and removes it after', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'webkit',
+      "WebKit's own Timeline; Chromium's counterpart is a rendering trace",
+    );
+    await page.setContent(
+      '<meta name="viewport" content="width=device-width"><body style="margin:0"><div id="a" style="position:absolute;left:20px;top:20px;width:80px;height:80px;background:#3a6;will-change:transform"></div></body>',
+    );
+    let during = 0;
+    const timeline = await recordWebKitTimeline(
+      page,
+      async () => {
+        during = await page.evaluate(
+          () =>
+            document.querySelectorAll('[data-harness-composite-sentinel]')
+              .length,
+        );
+      },
+      {sentinel: true},
+    );
+    expect(during).toBe(1);
+    // Composited two frames before the recording: it paints outside it.
+    expect(timeline.paints).toEqual([]);
+    expect(
+      await page.evaluate(
+        () =>
+          document.querySelectorAll('[data-harness-composite-sentinel]').length,
+      ),
+    ).toBe(0);
   });
 });
 
