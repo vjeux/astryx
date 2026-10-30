@@ -308,103 +308,115 @@ export interface TrackedFrame {
 export async function trackMarker(
   page: Page,
   frames: readonly CastFrame[],
+  options: {rgb?: readonly [number, number, number]; tolerance?: number} = {},
+): Promise<TrackedFrame[]> {
+  const scratch = await page.context().newPage();
+  try {
+    return await trackMarkerIn(scratch, frames, options);
+  } finally {
+    await scratch.close();
+  }
+}
+
+/**
+ * `trackMarker` in a scratch page the caller opened and closes, for a caller
+ * that tracks the frames of a running cast more than once.
+ */
+export async function trackMarkerIn(
+  scratch: Page,
+  frames: readonly CastFrame[],
   {
     rgb = MARKER_RGB,
     tolerance = 40,
   }: {rgb?: readonly [number, number, number]; tolerance?: number} = {},
 ): Promise<TrackedFrame[]> {
-  const scratch = await page.context().newPage();
-  try {
-    const out: TrackedFrame[] = [];
-    // Batches keep each evaluate payload moderate.
-    for (let i = 0; i < frames.length; i += 12) {
-      const batch = frames.slice(i, i + 12);
-      const boxes = await scratch.evaluate(
-        async ({batch: items, color, tol}) => {
-          const results: {
-            box: {x: number; y: number; width: number; height: number} | null;
-            pixels: number;
-          }[] = [];
-          for (const item of items) {
-            const blob = await (
-              await fetch(`data:image/${item.format};base64,${item.data}`)
-            ).blob();
-            const bitmap = await createImageBitmap(blob);
-            const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-            const context = canvas.getContext('2d');
-            if (context == null) {
-              throw new Error('no 2d context');
-            }
-            context.drawImage(bitmap, 0, 0);
-            const {data, width, height} = context.getImageData(
-              0,
-              0,
-              bitmap.width,
-              bitmap.height,
-            );
-            let minX = Infinity;
-            let minY = Infinity;
-            let maxX = -Infinity;
-            let maxY = -Infinity;
-            let pixels = 0;
-            for (let y = 0; y < height; y += 1) {
-              for (let x = 0; x < width; x += 1) {
-                const o = (y * width + x) * 4;
-                if (
-                  Math.abs(data[o] - color[0]) <= tol &&
-                  Math.abs(data[o + 1] - color[1]) <= tol &&
-                  Math.abs(data[o + 2] - color[2]) <= tol
-                ) {
-                  pixels += 1;
-                  if (x < minX) {
-                    minX = x;
-                  }
-                  if (x > maxX) {
-                    maxX = x;
-                  }
-                  if (y < minY) {
-                    minY = y;
-                  }
-                  if (y > maxY) {
-                    maxY = y;
-                  }
+  const out: TrackedFrame[] = [];
+  // Batches keep each evaluate payload moderate.
+  for (let i = 0; i < frames.length; i += 12) {
+    const batch = frames.slice(i, i + 12);
+    const boxes = await scratch.evaluate(
+      async ({batch: items, color, tol}) => {
+        const results: {
+          box: {x: number; y: number; width: number; height: number} | null;
+          pixels: number;
+        }[] = [];
+        for (const item of items) {
+          const blob = await (
+            await fetch(`data:image/${item.format};base64,${item.data}`)
+          ).blob();
+          const bitmap = await createImageBitmap(blob);
+          const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+          const context = canvas.getContext('2d');
+          if (context == null) {
+            throw new Error('no 2d context');
+          }
+          context.drawImage(bitmap, 0, 0);
+          const {data, width, height} = context.getImageData(
+            0,
+            0,
+            bitmap.width,
+            bitmap.height,
+          );
+          let minX = Infinity;
+          let minY = Infinity;
+          let maxX = -Infinity;
+          let maxY = -Infinity;
+          let pixels = 0;
+          for (let y = 0; y < height; y += 1) {
+            for (let x = 0; x < width; x += 1) {
+              const o = (y * width + x) * 4;
+              if (
+                Math.abs(data[o] - color[0]) <= tol &&
+                Math.abs(data[o + 1] - color[1]) <= tol &&
+                Math.abs(data[o + 2] - color[2]) <= tol
+              ) {
+                pixels += 1;
+                if (x < minX) {
+                  minX = x;
+                }
+                if (x > maxX) {
+                  maxX = x;
+                }
+                if (y < minY) {
+                  minY = y;
+                }
+                if (y > maxY) {
+                  maxY = y;
                 }
               }
             }
-            const scale = width / item.viewportWidth;
-            results.push({
-              box:
-                pixels === 0
-                  ? null
-                  : {
-                      x: minX / scale,
-                      y: minY / scale,
-                      width: (maxX - minX + 1) / scale,
-                      height: (maxY - minY + 1) / scale,
-                    },
-              pixels,
-            });
           }
-          return results;
-        },
-        {
-          batch: batch.map(f => ({
-            data: f.data,
-            format: f.format,
-            viewportWidth: f.viewportWidth,
-          })),
-          color: [...rgb],
-          tol: tolerance,
-        },
-      );
-      boxes.forEach((result, k) =>
-        out.push({t: batch[k].t, box: result.box, pixels: result.pixels}),
-      );
-    }
-    return out;
-  } finally {
-    await scratch.close();
+          const scale = width / item.viewportWidth;
+          results.push({
+            box:
+              pixels === 0
+                ? null
+                : {
+                    x: minX / scale,
+                    y: minY / scale,
+                    width: (maxX - minX + 1) / scale,
+                    height: (maxY - minY + 1) / scale,
+                  },
+            pixels,
+          });
+        }
+        return results;
+      },
+      {
+        batch: batch.map(f => ({
+          data: f.data,
+          format: f.format,
+          viewportWidth: f.viewportWidth,
+        })),
+        color: [...rgb],
+        tol: tolerance,
+      },
+    );
+    boxes.forEach((result, k) =>
+      out.push({t: batch[k].t, box: result.box, pixels: result.pixels}),
+    );
   }
+  return out;
 }
 
 export interface FrameStats {

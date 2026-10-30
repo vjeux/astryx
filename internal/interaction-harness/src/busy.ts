@@ -23,7 +23,7 @@ import {
   frameStats,
   inPresentationOrder,
   MARKER_RGB,
-  trackMarker,
+  trackMarkerIn,
   type FrameStats,
   type Screencast,
   type TrackedFrame,
@@ -48,13 +48,14 @@ const CONTROL_TRAVEL = 240;
  * The box is a manual popover, so it shows in the top layer, above a modal
  * dialog the page opened before it; `raise()` shows it again on top of one
  * opened after. With `within`, it is mounted inside that element instead (an
- * open modal dialog), as a plain fixed box with no top-layer entry: in WebKit
- * a popover shown above an open modal dialog takes the dialog's `::backdrop`
- * animation off the compositor, so a proof of a dialog's backdrop mounts its
- * control inside the dialog. Start it before the block: it resolves once the
- * animation is running and past its first frame (on the compositor; see
- * `blockMainThread`). Keep the component's marker out of the strip it crosses
- * (the top `CONTROL_SIDE` px, `CONTROL_SIDE + CONTROL_TRAVEL` px wide).
+ * open modal dialog), as a plain fixed box with no top-layer entry, for a
+ * proof of the dialog's `::backdrop`: in WebKit, with the popover above
+ * BottomSheet's open modal dialog, the sheet's dim held for 155 to 225 ms
+ * into a block while the control moved. Start it before the block: it
+ * resolves once the animation is running and past its first frame (on the
+ * compositor; see `blockMainThread`). Keep the component's marker out of the
+ * strip it crosses (the top `CONTROL_SIDE` px, `CONTROL_SIDE +
+ * CONTROL_TRAVEL` px wide).
  */
 export async function startBusyControl(
   page: Page,
@@ -162,37 +163,45 @@ export async function waitForPresentedMotion(
   } = {},
 ): Promise<void> {
   const deadline = Date.now() + timeout;
-  const seen: TrackedFrame[] = [];
-  let read = 0;
-  for (;;) {
-    const captured = cast.framesSoFar();
-    if (captured.length > read) {
-      seen.push(...(await trackMarker(page, captured.slice(read), {rgb})));
-      read = captured.length;
-      const ordered = inPresentationOrder(seen);
-      let moved = 0;
-      for (let i = ordered.length - 1; i > 0; i -= 1) {
-        const now = ordered[i].box;
-        const before = ordered[i - 1].box;
-        if (
-          now == null ||
-          before == null ||
-          (now.x === before.x && now.y === before.y)
-        ) {
-          break;
+  // One scratch page for the whole wait: each poll would otherwise open one.
+  const scratch = await page.context().newPage();
+  try {
+    const seen: TrackedFrame[] = [];
+    let read = 0;
+    for (;;) {
+      const captured = cast.framesSoFar();
+      if (captured.length > read) {
+        seen.push(
+          ...(await trackMarkerIn(scratch, captured.slice(read), {rgb})),
+        );
+        read = captured.length;
+        const ordered = inPresentationOrder(seen);
+        let moved = 0;
+        for (let i = ordered.length - 1; i > 0; i -= 1) {
+          const now = ordered[i].box;
+          const before = ordered[i - 1].box;
+          if (
+            now == null ||
+            before == null ||
+            (now.x === before.x && now.y === before.y)
+          ) {
+            break;
+          }
+          moved += 1;
         }
-        moved += 1;
+        if (moved >= frames) {
+          return;
+        }
       }
-      if (moved >= frames) {
-        return;
+      if (Date.now() > deadline) {
+        throw new Error(
+          `waitForPresentedMotion: the screencast did not present the element moving on ${frames} consecutive frames within ${timeout} ms`,
+        );
       }
+      await new Promise(resolve => setTimeout(resolve, 16));
     }
-    if (Date.now() > deadline) {
-      throw new Error(
-        `waitForPresentedMotion: the screencast did not present the element moving on ${frames} consecutive frames within ${timeout} ms`,
-      );
-    }
-    await new Promise(resolve => setTimeout(resolve, 16));
+  } finally {
+    await scratch.close();
   }
 }
 

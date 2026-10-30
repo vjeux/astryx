@@ -355,7 +355,11 @@ test.describe('frame evidence', () => {
 
     // The README's order: the cast, then the animation, then the block once
     // it runs (on the compositor, for the compositor's run).
-    const run = async (driver: 'compositor' | 'raf', everyNthFrame = 1) => {
+    const run = async (
+      driver: 'compositor' | 'raf',
+      everyNthFrame = 1,
+      blockMs = 700,
+    ) => {
       const cast = await startScreencast(page, {everyNthFrame});
       await box.evaluate((el, how) => {
         el.getAnimations().forEach(a => a.cancel());
@@ -379,7 +383,7 @@ test.describe('frame evidence', () => {
       }, driver);
       const window = await blockMainThread(
         page,
-        700,
+        blockMs,
         driver === 'compositor' ? {during: box} : {},
       );
       await page.waitForTimeout(200);
@@ -427,11 +431,12 @@ test.describe('frame evidence', () => {
 
     // The verdict judges the frames the screencast delivered, not its rate:
     // at one frame in six (a loaded machine's ~100 ms), the compositor
-    // animation still passes and the rAF one still fails.
-    const {proof: slow} = await run('compositor', 6);
+    // animation still passes and the rAF one still fails. A 1.4 s block keeps
+    // the control's four frames on a runner that presents half the rate.
+    const {proof: slow} = await run('compositor', 6, 1400);
     expect(slow.cadenceMs, slow.summary).toBeGreaterThan(60);
     expect(slow.verdict.failures, slow.summary).toEqual([]);
-    const {proof: slowRaf} = await run('raf', 6);
+    const {proof: slowRaf} = await run('raf', 6, 1400);
     expect(slowRaf.verdict.pass, slowRaf.summary).toBe(false);
     expect(slowRaf.verdict.failures.join('\n')).toMatch(/longest stall/);
     await control.remove();
@@ -480,7 +485,11 @@ test.describe('frame evidence', () => {
     await markElement(box, {mode: 'outline'});
     const control = await startBusyControl(page);
 
-    const run = async (driver: 'compositor' | 'raf', everyNthFrame = 1) => {
+    const run = async (
+      driver: 'compositor' | 'raf',
+      everyNthFrame = 1,
+      blockMs = 700,
+    ) => {
       // Endless, so the animation still runs when the block starts however
       // long a loaded runner takes to start the cast, and wrapping from 560 px
       // back to 0 rather than turning, so every frame changes: two frames
@@ -508,7 +517,7 @@ test.describe('frame evidence', () => {
       // The compositor's run is blocked only once it is on the compositor.
       const window = await blockMainThread(
         page,
-        700,
+        blockMs,
         driver === 'compositor' ? {during: box} : {},
       );
       await page.waitForTimeout(200);
@@ -545,10 +554,11 @@ test.describe('frame evidence', () => {
     );
     expect(rafFailures).toMatch(/longest stall .* longer than the control's/);
 
-    // A slower screencast samples the control and the component alike.
-    const slow = await run('compositor', 6);
+    // A slower screencast samples the control and the component alike; a
+    // 1.4 s block keeps the control's four frames on a loaded runner.
+    const slow = await run('compositor', 6, 1400);
     expect(slow.verdict.failures, slow.summary).toEqual([]);
-    const slowRaf = await run('raf', 6);
+    const slowRaf = await run('raf', 6, 1400);
     expect(slowRaf.verdict.pass, slowRaf.summary).toBe(false);
     await control.remove();
   });
@@ -566,19 +576,20 @@ test.describe('frame evidence', () => {
     );
     await page.goto('http://backdrop.test/');
     const dialog = page.locator('#sheet');
-    await dialog.evaluate(el => (el as HTMLDialogElement).showModal());
-    const control = await startBusyControl(page, {within: dialog});
-    const cast = await startScreencast(page);
-    // The dim starts, as a dismissal's does, and the block holds the main
-    // thread once its transition runs.
+    // The dim runs from the dialog's open, endlessly and wrapping rather than
+    // turning, so it is on screen and changing on every frame by the block.
     await dialog.evaluate(el => {
+      (el as HTMLDialogElement).showModal();
       el.animate([{opacity: 0.2}, {opacity: 1}], {
         duration: 900,
         easing: 'linear',
-        fill: 'forwards',
+        iterations: Infinity,
         pseudoElement: '::backdrop',
       });
     });
+    const control = await startBusyControl(page, {within: dialog});
+    const cast = await startScreencast(page);
+    await page.waitForTimeout(200);
     const window = await blockMainThread(page, 600, {during: dialog});
     await page.waitForTimeout(200);
     const castFrames = await cast.stop();
@@ -620,10 +631,11 @@ test.describe('frame evidence', () => {
     });
     await waitForPresentedMotion(page, cast);
     expect(Date.now()).toBeGreaterThan(startsAt);
-    const frames = await trackMarker(page, await cast.stop());
-    expect(frames.some(f => f.t > startsAt && (f.box?.y ?? 0) > 100)).toBe(
-      true,
-    );
+    // Two consecutive moves after the start: three positions at least.
+    const positions = (await trackMarker(page, await cast.stop()))
+      .filter(f => f.t > startsAt && f.box != null)
+      .map(f => f.box?.y);
+    expect(new Set(positions).size).toBeGreaterThanOrEqual(3);
   });
 
   test('a block too short to judge alone is judged over pooled runs: a compositor animation passes, and a rAF one fails, timed or frame-counted', async ({
