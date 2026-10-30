@@ -62,6 +62,7 @@ import {
   openStory,
   path,
   readLongTasks,
+  recordWebKitTimeline,
   releaseAnimations,
   rubberBand,
   springStep,
@@ -2217,6 +2218,42 @@ test('the cross-fade keeps moving while the main thread is blocked right after t
     minChanged,
   );
   expect(longestStill).toBeLessThanOrEqual(3 * cadenceMs);
+});
+
+test('a pull reveals the spokes without WebKit repainting them each frame', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== 'webkit',
+    "WebKit's own Timeline; Chromium's counterpart is the rendering trace above",
+  );
+  const {driver, content, start} = await openRefresh(page, undefined, {
+    refreshMs: '8000',
+  });
+  // One element composited before recording: the page's switch into
+  // compositing mode repaints the whole viewport once, which is not the pull's.
+  await page.evaluate(() => {
+    const sentinel = document.createElement('div');
+    sentinel.style.cssText =
+      'position:fixed;left:0;top:0;width:4px;height:4px;will-change:transform;pointer-events:none';
+    document.body.append(sentinel);
+  });
+  await frames(page, 2);
+  const glyph = await content
+    .locator(':scope > div:last-child > div > span')
+    .first()
+    .evaluate(element => element.getBoundingClientRect().width);
+  const timeline = await recordWebKitTimeline(page, async () => {
+    await driver.play(slowPull(start, 300, 200));
+  });
+  // The reveal changes every spoke's opacity on every move; a spoke that
+  // WebKit repaints for it (a masked layer: about 570 paints in this pull)
+  // shows as glyph-sized paints frame after frame.
+  const spokePaints = timeline.paints.filter(
+    ({rect}) => rect.width <= glyph + 4 && rect.height <= glyph + 4,
+  );
+  expect(spokePaints, JSON.stringify(spokePaints.slice(0, 4))).toEqual([]);
 });
 
 test('under Reduce Motion the gradient applies at once at the trigger on a touch screen, with no copy of the spokes', async ({
