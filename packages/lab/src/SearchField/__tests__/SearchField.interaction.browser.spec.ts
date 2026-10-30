@@ -527,7 +527,7 @@ test('the activation keeps advancing every frame while the main thread is blocke
 }, testInfo) => {
   test.skip(
     browserName !== 'chromium',
-    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
+    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator)',
   );
   // The lifted field's rise: a 53 px travel on one element that nothing
   // passes over (the close button slides over the field's trailing end,
