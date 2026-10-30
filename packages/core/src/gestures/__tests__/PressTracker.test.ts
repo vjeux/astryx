@@ -11,7 +11,11 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {UIKIT_GESTURES} from '../../motion/uikit/gestures';
 import {PanGestureRecognizer} from '../PanGestureRecognizer';
-import {PRESS_PROFILES, PressTracker, type ControlEvent} from '../PressTracker';
+import {
+  PRESS_PROFILES,
+  createPressTracker,
+  type ControlEvent,
+} from '../PressTracker';
 import {TapGestureRecognizer} from '../TapGestureRecognizer';
 import {createHarness, scrollProbe} from './harness';
 
@@ -23,7 +27,7 @@ const FLASH = UIKIT_GESTURES.press.quickTapFlash.value;
 function setup() {
   const events: ControlEvent[] = [];
   const highlights: boolean[] = [];
-  const tracker = new PressTracker({
+  const tracker = createPressTracker({
     getBounds: () => BOUNDS,
     onControlEvent: event => events.push(event),
     onHighlightChange: value => highlights.push(value),
@@ -40,7 +44,7 @@ describe('PressTracker', () => {
   });
 
   it('a keepsTouch tracker keeps only the touch whose press it delivered: a quick tap leaves the next touch free until its own press (spec:AST-094 FR19)', () => {
-    const tracker = new PressTracker({
+    const tracker = createPressTracker({
       getBounds: () => BOUNDS,
       keepsTouch: true,
       highlightDelay: 'always',
@@ -174,7 +178,7 @@ describe('PressTracker cell profile', () => {
   function cell() {
     const events: ControlEvent[] = [];
     const highlights: boolean[] = [];
-    const tracker = new PressTracker({
+    const tracker = createPressTracker({
       getBounds: () => BOUNDS,
       ...PRESS_PROFILES.cell,
       onControlEvent: event => events.push(event),
@@ -246,7 +250,7 @@ describe('PressTracker cell profile', () => {
 describe('PressTracker in the arena', () => {
   it("lets a control veto an ancestor's single tap (UIControl's rule)", () => {
     const h = createHarness();
-    const button = new PressTracker({getBounds: () => null, view: 'button'});
+    const button = createPressTracker({getBounds: () => null, view: 'button'});
     const tap = new TapGestureRecognizer({name: 'tap'});
     tap.view = 'row';
     const double = new TapGestureRecognizer({
@@ -287,7 +291,7 @@ describe('PressTracker under a fine pointer (spec:AST-094 FR11, DEC-21)', () => 
   it('brakes only a finger: a mouse press on a scroller a flick set moving still presses', () => {
     const events: ControlEvent[] = [];
     const highlights: boolean[] = [];
-    const tracker = new PressTracker({
+    const tracker = createPressTracker({
       getBounds: () => BOUNDS,
       onControlEvent: event => events.push(event),
       onHighlightChange: value => highlights.push(value),

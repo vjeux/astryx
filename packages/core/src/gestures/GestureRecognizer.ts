@@ -178,9 +178,20 @@ export const MANIPULATION: NativeTouchBehavior = {
   doubleTapZoom: false,
 };
 
+/**
+ * What a recognizer is. The gesture code tells the family apart by it, never
+ * by `instanceof` (`architecture:react-component-runtime` INV13); a
+ * screen-edge pan is its own kind, though it is built on the pan.
+ */
+export type RecognizerKind =
+  'tap' | 'longPress' | 'pan' | 'screenEdgePan' | 'swipe' | 'pinch';
+
 let nextRecognizerId = 1;
 
 export abstract class GestureRecognizer {
+  /** What this recognizer is (see RecognizerKind). */
+  abstract get kind(): RecognizerKind;
+
   /** Stable id, for ordering and debugging. */
   readonly id = nextRecognizerId++;
   name: string;

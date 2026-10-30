@@ -66,6 +66,10 @@ function isAcrossHorizontal(edge: ScreenEdge): boolean {
 }
 
 export class ScreenEdgePanGestureRecognizer extends PanGestureRecognizer {
+  override get kind(): PanGestureRecognizer['kind'] {
+    return 'screenEdgePan';
+  }
+
   edges: ReadonlyArray<ScreenEdge>;
   edgeRegion: number;
   /** The physical edge the current gesture started from. */

@@ -48,9 +48,10 @@ export type {
 } from './PanGestureRecognizer';
 export {PinchGestureRecognizer} from './PinchGestureRecognizer';
 export type {PinchGestureRecognizerOptions} from './PinchGestureRecognizer';
-export {PRESS_PROFILES, PressTracker} from './PressTracker';
+export {createPressTracker, PRESS_PROFILES} from './PressTracker';
 export type {
   ControlEvent,
+  PressTracker,
   PressBounds,
   PressHighlightDelay,
   PressProfile,
