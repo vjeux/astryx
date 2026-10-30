@@ -9,8 +9,8 @@
  *   measured once per document and zoom); __resetLayoutViewportForTest
  * @position Internal shared measurement (not re-exported from the utils
  *   entry): the keyboard module's height (spec:AST-099 FR2), BottomSheet's
- *   keyboard obstruction, and any layout that sizes against the layout
- *   viewport in the units of element rects
+ *   keyboard obstruction, ChatLayout's lift, and any layout that sizes
+ *   against the layout viewport in the units of element rects
  *
  * `innerHeight` is the layout viewport's height in most engines. WebKit
  * reports `innerHeight` and `innerWidth` in the pinch-zoomed visual viewport's
