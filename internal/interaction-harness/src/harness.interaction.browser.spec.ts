@@ -322,6 +322,40 @@ test.describe('WebKit timeline', () => {
       expect(rect.x + rect.width).toBeLessThanOrEqual(300);
     }
   });
+
+  test('with a sentinel, the recording composites one before it starts, and removes it after', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'webkit',
+      "WebKit's own Timeline; Chromium's counterpart is a rendering trace",
+    );
+    await page.setContent(
+      '<meta name="viewport" content="width=device-width"><body style="margin:0"><div id="a" style="position:absolute;left:20px;top:20px;width:80px;height:80px;background:#3a6;will-change:transform"></div></body>',
+    );
+    let during = 0;
+    const timeline = await recordWebKitTimeline(
+      page,
+      async () => {
+        during = await page.evaluate(
+          () =>
+            document.querySelectorAll('[data-harness-composite-sentinel]')
+              .length,
+        );
+      },
+      {sentinel: true},
+    );
+    expect(during).toBe(1);
+    // Composited two frames before the recording: it paints outside it.
+    expect(timeline.paints).toEqual([]);
+    expect(
+      await page.evaluate(
+        () =>
+          document.querySelectorAll('[data-harness-composite-sentinel]').length,
+      ),
+    ).toBe(0);
+  });
 });
 
 test.describe('frame evidence', () => {
