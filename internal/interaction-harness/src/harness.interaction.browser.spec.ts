@@ -401,6 +401,54 @@ test.describe('touch input', () => {
       test.info().annotations.filter(a => a.type === 'touch-retake').length + 1,
     );
   });
+
+  test('a pacing error shows the page keeping its main thread after a touch, for work its handler queued', async ({
+    page,
+  }) => {
+    await fixture(page);
+    const driver = await touchDriver(page);
+    test.skip(
+      driver.scriptedTimestamps,
+      "Chromium: the page sees the script's stamps whatever it does",
+    );
+    const script = flick(
+      {x: 160, y: 200},
+      {velocity: {x: 0, y: -1500}, durationMs: 96, hz: 120},
+    );
+    const count = toTouchEvents(script).length;
+    // The page's listener returns at once on the event before the last move,
+    // having queued 30 ms of work (a render) for after it.
+    await page.evaluate(stallAt => {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => {
+        const end = performance.now() + 30;
+        while (performance.now() < end) {
+          // the page's own work
+        }
+      };
+      window.addEventListener(
+        'touchmove',
+        () => {
+          const w = window as unknown as {__moves: number};
+          w.__moves = (w.__moves ?? 0) + 1;
+          if (w.__moves === stallAt) {
+            channel.port2.postMessage(null);
+          }
+        },
+        {passive: true},
+      );
+    }, count - 3);
+    const error = await driver.play(script, {checkPacing: true}).then(
+      () => null,
+      (thrown: unknown) => thrown,
+    );
+    expect(error).toBeInstanceOf(TouchPacingError);
+    const {page: times} = error as TouchPacingError;
+    // Its listeners ran at once; its main thread stayed busy for the work.
+    expect(times.held[count - 3]).toBeLessThan(TOUCH_PACING_TOLERANCE_MS);
+    expect(times.busy[count - 3]).toBeGreaterThanOrEqual(28);
+    expect((error as Error).message).toContain('was busy');
+  });
 });
 
 test.describe('frame evidence', () => {
