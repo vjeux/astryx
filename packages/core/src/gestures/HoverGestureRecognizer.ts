@@ -27,6 +27,10 @@ import {
 import type {Point, PointerKind} from './types';
 
 export class HoverGestureRecognizer extends GestureRecognizer {
+  override get kind(): GestureRecognizer['kind'] {
+    return 'hover';
+  }
+
   private point: Point = {x: 0, y: 0};
   /** The kind of pointer hovering: a mouse, or a pen in range. */
   pointerType: PointerKind | null = null;

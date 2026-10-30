@@ -87,6 +87,10 @@ const DIRECTION_VECTORS: Partial<Record<PanDirection, Point>> = {
 };
 
 export class PanGestureRecognizer extends GestureRecognizer {
+  override get kind(): GestureRecognizer['kind'] {
+    return 'pan';
+  }
+
   /** @internal The host's brand: a pan follows the one-finger rule (recognizerInternals). */
   protected get family(): 'pan' {
     return 'pan';

@@ -42,6 +42,10 @@ export interface LongPressGestureRecognizerOptions extends GestureRecognizerOpti
 }
 
 export class LongPressGestureRecognizer extends GestureRecognizer {
+  override get kind(): GestureRecognizer['kind'] {
+    return 'longPress';
+  }
+
   /** @internal The host's brand: a long press keeps the callout and selection off (recognizerInternals). */
   protected get family(): 'longPress' {
     return 'longPress';
