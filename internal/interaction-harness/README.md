@@ -104,7 +104,10 @@ action may be the page's first contact with the harness, take
 
 **Busy main thread.** Mark the element, start the screencast, start the
 animation, wait until it runs (`waitForAnimation`: an animation cannot start
-while the thread is held), block the main thread for 1 s (`spec:AST-094`
+while the thread is held) and until the cast shows it moving
+(`waitForPresentedMotion(page, cast)`: in WebKit a just-started layer can run
+on the timeline 130 to 300 ms before its first presented frame, as a sheet's
+release does), block the main thread for 1 s (`spec:AST-094`
 FR5's verification row), stop. Always
 start the gesture or animation first and block mid-flight, never before:
 in headless Chromium a touch that starts while the main thread is busy does

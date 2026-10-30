@@ -19,7 +19,15 @@
  */
 
 import type {Locator, Page} from '@playwright/test';
-import {frameStats, type FrameStats, type TrackedFrame} from './frames';
+import {
+  frameStats,
+  inPresentationOrder,
+  MARKER_RGB,
+  trackMarker,
+  type FrameStats,
+  type Screencast,
+  type TrackedFrame,
+} from './frames';
 
 /** The control's colour, apart from the component's marker (`MARKER_RGB`). */
 export const CONTROL_RGB: readonly [number, number, number] = [0, 255, 255];
@@ -128,6 +136,64 @@ export async function startBusyControl(
         }
       }),
   };
+}
+
+/**
+ * Waits until the screencast has presented the marked element moving: a new
+ * position on `frames` consecutive cast frames (default 2), read from the
+ * live cast as its frames arrive. Block the main thread after it, not after
+ * the document timeline alone: in WebKit a just-started animation runs on the
+ * timeline before its first frame is presented, 20 to 300 ms later for a
+ * layer that must first be drawn (a blur, a shadow, a sheet's first
+ * release), and a block started in that gap judges a hold that is not the
+ * component's. Throws past `timeout` ms.
+ */
+export async function waitForPresentedMotion(
+  page: Page,
+  cast: Screencast,
+  {
+    rgb = MARKER_RGB,
+    frames = 2,
+    timeout = 5_000,
+  }: {
+    rgb?: readonly [number, number, number];
+    frames?: number;
+    timeout?: number;
+  } = {},
+): Promise<void> {
+  const deadline = Date.now() + timeout;
+  const seen: TrackedFrame[] = [];
+  let read = 0;
+  for (;;) {
+    const captured = cast.framesSoFar();
+    if (captured.length > read) {
+      seen.push(...(await trackMarker(page, captured.slice(read), {rgb})));
+      read = captured.length;
+      const ordered = inPresentationOrder(seen);
+      let moved = 0;
+      for (let i = ordered.length - 1; i > 0; i -= 1) {
+        const now = ordered[i].box;
+        const before = ordered[i - 1].box;
+        if (
+          now == null ||
+          before == null ||
+          (now.x === before.x && now.y === before.y)
+        ) {
+          break;
+        }
+        moved += 1;
+      }
+      if (moved >= frames) {
+        return;
+      }
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `waitForPresentedMotion: the screencast did not present the element moving on ${frames} consecutive frames within ${timeout} ms`,
+      );
+    }
+    await new Promise(resolve => setTimeout(resolve, 16));
+  }
 }
 
 /** What the control presented in the judged part (see `busyWindowProof`). */

@@ -67,6 +67,7 @@ import {
   touchStoryboard,
   trackMarker,
   waitForAnimation,
+  waitForPresentedMotion,
   waitForRest,
   watchAnimations,
   withFinger,
@@ -591,6 +592,38 @@ test.describe('frame evidence', () => {
       control: controlFrames,
     });
     expect(proof.verdict.failures, proof.summary).toEqual([]);
+  });
+
+  test('waitForPresentedMotion resolves once the cast shows the element moving, and names a cast that never does', async ({
+    page,
+  }) => {
+    await busyFixture(page);
+    const box = page.locator('#box');
+    await markElement(box, {mode: 'outline'});
+    const cast = await startScreencast(page);
+    // Nothing moves: it fails within its timeout, naming why.
+    await expect(
+      waitForPresentedMotion(page, cast, {timeout: 600}),
+    ).rejects.toThrow(
+      /did not present the element moving on 2 consecutive frames within 600 ms/,
+    );
+    // The animation starts 300 ms into the wait, which resolves only once the
+    // cast has shown it moving, past that start.
+    const startsAt = await box.evaluate(el => {
+      setTimeout(() => {
+        el.animate(
+          [{transform: 'translateY(0px)'}, {transform: 'translateY(560px)'}],
+          {duration: 1600, easing: 'linear'},
+        );
+      }, 300);
+      return performance.timeOrigin + performance.now() + 300;
+    });
+    await waitForPresentedMotion(page, cast);
+    expect(Date.now()).toBeGreaterThan(startsAt);
+    const frames = await trackMarker(page, await cast.stop());
+    expect(frames.some(f => f.t > startsAt && (f.box?.y ?? 0) > 100)).toBe(
+      true,
+    );
   });
 
   test('a block too short to judge alone is judged over pooled runs: a compositor animation passes, and a rAF one fails, timed or frame-counted', async ({

@@ -41,6 +41,12 @@ export interface Screencast {
    * position).
    */
   frameCount(): number;
+  /**
+   * The frames captured so far, in arrival order, for reading the cast while
+   * it runs (`waitForPresentedMotion`); their times are the cast's own until
+   * `stop`, which puts them on the wall clock.
+   */
+  framesSoFar(): readonly CastFrame[];
   /** Stops and returns every frame captured, in order. */
   stop(): Promise<CastFrame[]>;
 }
@@ -117,6 +123,7 @@ async function chromiumScreencast(
   });
   return {
     frameCount: () => frames.length,
+    framesSoFar: () => frames.slice(),
     async stop() {
       await cdp.send('Page.stopScreencast');
       cdp.off('Page.screencastFrame', onFrame);
@@ -170,6 +177,7 @@ async function webkitScreencast(
   const wallMinusMonotonic = Date.now() - Number(process.hrtime.bigint()) / 1e6;
   return {
     frameCount: () => frames.length,
+    framesSoFar: () => frames.slice(),
     async stop() {
       await session.send('Screencast.stopScreencast');
       session.off?.('Screencast.screencastFrame', onFrame);
