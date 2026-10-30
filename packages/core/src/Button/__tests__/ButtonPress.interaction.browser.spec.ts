@@ -36,11 +36,12 @@ import {scroll} from '../../motion/uikit/scroll';
 const storybook = withStorybook(test);
 
 /**
- * The release clock: `PRESS_FADE_MS` in utils/pressGesture.ts, which this
- * runner cannot import (it compiles StyleX). pressFeedback.test.ts holds the
- * two equal.
+ * A finger's release on a control: UIButton's 250 ms,
+ * `controlPressConsts.controlReleaseMs` in utils/controlPressLayer.stylex.ts,
+ * which this runner cannot import (it compiles StyleX). pressFeedback.test.ts
+ * holds the two equal.
  */
-const RELEASE_MS = 200;
+const RELEASE_MS = 250;
 const CONTENT_TOUCH_DELAY_MS = scroll.delaysContentTouchesMs;
 /** Long enough that a press in a scroller is believed. */
 const HOLD_MS = 400;
