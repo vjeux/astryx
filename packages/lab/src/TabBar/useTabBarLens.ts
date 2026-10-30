@@ -546,9 +546,12 @@ export function useTabBarLens({
         // landed on, the chosen tab takes the focus.
         const capsule = capsuleRef.current;
         const active = document.activeElement;
-        const chosen = capsule?.querySelector('[data-tab-bar-items]')?.children[
-          nearest
-        ];
+        // The tabs sit in the tab layer while one is mounted, else in the
+        // tab list itself.
+        const layer = capsule?.querySelector('[data-tab-bar-items]') ?? capsule;
+        const chosen = [...(layer?.children ?? [])].filter(
+          child => child.getAttribute('role') === 'tab',
+        )[nearest];
         if (
           chosen instanceof HTMLElement &&
           active !== chosen &&
