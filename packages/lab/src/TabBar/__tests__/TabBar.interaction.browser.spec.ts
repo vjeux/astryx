@@ -1541,14 +1541,12 @@ const MINIMIZED_SIZE = 48;
 const COLLAPSE_TRAVEL = {response: 0.4, dampingFraction: 0.85};
 const COLLAPSE_SIZE = {response: 0.6, dampingFraction: 0.85};
 
+// The bar's tab list carries the flag (the platter mounts only while needed).
 const isMinimized = (page: Page) =>
   page
-    .locator('[data-tab-bar-platter]')
+    .locator('[role="tablist"]')
     .first()
-    .evaluate(
-      element =>
-        element.parentElement?.hasAttribute('data-tab-bar-minimized') === true,
-    );
+    .evaluate(element => element.hasAttribute('data-tab-bar-minimized'));
 const pageScroll = (page: Page) => page.evaluate(() => window.scrollY);
 const circle = (page: Page) => page.locator('[data-tab-bar-circle]');
 
