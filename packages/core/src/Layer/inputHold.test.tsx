@@ -6,31 +6,11 @@ import {afterEach, describe, expect, it, onTestFinished, vi} from 'vitest';
 import {GestureHost} from '../gestures/GestureHost';
 import {
   holdInput,
+  holdsTouch,
   isInHeldLayer,
   isInputShield,
   useInputHold,
 } from './inputHold';
-
-/**
- * Every touch gate registered on a gesture host in this file, kept in order:
- * a hold registers its gate once per document, at the first hold.
- */
-const touchGates: ((target: Node) => boolean)[] = [];
-/** The gates registered and not yet released. */
-const liveTouchGates = new Set<(target: Node) => boolean>();
-const addTouchGate = GestureHost.prototype.addTouchGate;
-GestureHost.prototype.addTouchGate = function (
-  this: GestureHost,
-  gate: (target: Node) => boolean,
-) {
-  touchGates.push(gate);
-  liveTouchGates.add(gate);
-  const release = addTouchGate.call(this, gate);
-  return () => {
-    liveTouchGates.delete(gate);
-    release();
-  };
-};
 
 function deferred() {
   let resolve: () => void = () => {};
@@ -228,21 +208,25 @@ describe('holdInput', () => {
     expect(layer.querySelectorAll('[popover]')).toHaveLength(0);
   });
 
-  it("registers one touch gate per document, which answers whether a touch's target is held", () => {
+  it('registers nothing with the gesture host: the host asks holdsTouch for each touch', () => {
     const addTouchGate = vi.spyOn(GestureHost.prototype, 'addTouchGate');
     const {layer, child} = mountLayer();
-    holdInput(layer, {until: new Promise(() => {}), scope: 'layer'});
+    const releaseLayer = holdInput(layer, {
+      until: new Promise(() => {}),
+      scope: 'layer',
+    });
     const release = holdInput(layer, {
       until: new Promise(() => {}),
       scope: 'viewport',
     });
-    expect(addTouchGate.mock.calls.length).toBeLessThanOrEqual(1);
-    const registered =
-      addTouchGate.mock.calls[0]?.[0] ??
-      ((target: Node) => isInHeldLayer(target));
-    expect(registered(child)).toBe(true);
-    expect(registered(document.body)).toBe(false);
+    expect(addTouchGate).not.toHaveBeenCalled();
+    expect(isInHeldLayer(child)).toBe(true);
+    expect(holdsTouch(child)).toBe(true);
+    expect(holdsTouch(document.body)).toBe(false);
     release();
+    releaseLayer();
+    expect(isInHeldLayer(child)).toBe(false);
+    expect(holdsTouch(child)).toBe(false);
   });
 });
 
@@ -415,7 +399,7 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     hold(layer);
     const shield = layer.lastElementChild as HTMLElement;
     expect(shield.style.pointerEvents).toBe('auto');
-    const isGated = (target: Node) => touchGates.some(gate => gate(target));
+    const isGated = holdsTouch;
     expect(isGated(child)).toBe(true);
     // Once it moves during the hold, it passes.
     pointer(document.body, 'pointermove', 'mouse');
@@ -440,21 +424,23 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     expect(listening()).toBe(0);
   });
 
-  it("registers the gesture host's gate only while a layer is held, and releases it after the last hold ends (spec:AST-094 FR24)", () => {
-    const {layer} = mountLayer();
+  it("answers the gesture host's question only while a layer is held, and false after the last hold ends, registering nothing (spec:AST-094 FR24)", () => {
+    const addTouchGate = vi.spyOn(GestureHost.prototype, 'addTouchGate');
+    const {layer, child} = mountLayer();
     const release = hold(layer);
-    expect(liveTouchGates.size).toBe(1);
+    expect(holdsTouch(child)).toBe(true);
     hold(mountLayer().layer)();
-    expect(liveTouchGates.size).toBe(1);
+    expect(holdsTouch(child)).toBe(true);
     release();
-    expect(liveTouchGates.size).toBe(0);
+    expect(holdsTouch(child)).toBe(false);
+    expect(addTouchGate).not.toHaveBeenCalled();
   });
 
   it("lets the gesture host's gate pass a mouse during a presentation and hold it during a dismissal", () => {
     const {layer, child} = mountLayer();
     hold(layer);
-    // The gate the hold registered for this document, as the host asks it.
-    const isGated = (target: Node) => touchGates.some(gate => gate(target));
+    // What the gesture host asks the hold for every touch.
+    const isGated = holdsTouch;
     // Before any pointer: held.
     expect(isGated(child)).toBe(true);
     pointer(child, 'pointermove', 'mouse');
@@ -475,7 +461,7 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     const {layer, child} = mountLayer();
     hold(layer);
     const shield = layer.lastElementChild as HTMLElement;
-    const isGated = (target: Node) => touchGates.some(gate => gate(target));
+    const isGated = holdsTouch;
     // A mouse that has not moved during the hold presses: the press meets
     // the shield, which stays up through the press, a drag included.
     pointer(shield, 'pointerdown', 'mouse', 1, 1);
