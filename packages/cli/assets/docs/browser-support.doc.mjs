@@ -148,11 +148,11 @@ export const docs = {
       content: [
         {
           type: 'prose',
-          text: "On a phone, a fully expanded `height='tall'` BottomSheet responds to the on-screen keyboard: it measures the keyboard as the layout viewport's height minus the visual viewport's height times its scale. Where the visual viewport shrinks for the keyboard, as in Safari on iOS in the browser and as a home-screen app, in Firefox for Android and in Chrome on Android, it keeps the focused field above the keyboard and leaves the page where it was: if the browser pans to the field, the sheet puts the page back within a couple of frames.",
+          text: "On a phone, the components that respond to the on-screen keyboard, a fully expanded `height='tall'` BottomSheet and ChatLayout's composer, measure it the same way: the layout viewport's height minus the visual viewport's height times its scale. Where the visual viewport shrinks for the keyboard, as in Safari on iOS in the browser and as a home-screen app, in Firefox for Android and in Chrome on Android, they keep the focused field and the surface around it above the keyboard and leave the page where it was: if the browser pans to the field, they put the page back within a couple of frames.",
         },
         {
           type: 'prose',
-          text: 'In Chrome on Android, a Tall BottomSheet\u2019s focused field rides the keyboard as Gboard slides it up and down, its scroll room staying until the keyboard is down. Chrome follows your viewport setting, which Astryx documents and never sets: your app owns its viewport `<meta>` element. By default (`interactive-widget=resizes-visual`) Chrome lays the keyboard over the page and pans to a focused field elsewhere on the page. With `interactive-widget=resizes-content` it shrinks the layout viewport instead, so content anchored to the bottom sits above the keyboard, and the sheet measures no keyboard and changes nothing: the browser has already made the room.',
+          text: 'In Chrome on Android, ChatLayout\u2019s composer rides the keyboard as Gboard slides it up and down, and so does a Tall BottomSheet\u2019s focused field, its scroll room staying until the keyboard is down. Chrome follows your viewport setting, which Astryx documents and never sets: your app owns its viewport `<meta>` element. By default (`interactive-widget=resizes-visual`) Chrome lays the keyboard over the page and pans to a focused field elsewhere on the page. With `interactive-widget=resizes-content` it shrinks the layout viewport instead, so content anchored to the bottom sits above the keyboard, and those components measure no keyboard and change nothing: the browser has already made the room.',
         },
         {
           type: 'code',

@@ -18,7 +18,7 @@
  * - /packages/core/src/BottomSheet/BottomSheet.tsx
  * - /packages/core/src/BottomSheet/BottomSheetPanel.test.tsx
  * - /packages/core/src/BottomSheet/snapOffsets.ts
- * - /packages/core/src/keyboard/keyboardHeight.ts
+ * - /packages/core/src/keyboard/sheetKeyboard.ts
  * - /packages/core/src/BottomSheet/useSheetGestures.ts
  * - /packages/core/src/Layout/container.stylex.ts (bottom-sheet padding chain)
  */
@@ -69,7 +69,7 @@ import {
   resolveSnapPoints,
   type BottomSheetSnapPoint,
 } from './snapOffsets';
-import {useSheetKeyboard} from '../keyboard/keyboardHeight';
+import {useSheetKeyboard} from '../keyboard/sheetKeyboard';
 import {useSheetGestures} from './useSheetGestures';
 
 const HEIGHT_BUDGETS = {
