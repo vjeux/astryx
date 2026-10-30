@@ -954,7 +954,7 @@ describe('pressed state', () => {
     }
     // The controller writes the control, which declares the press's image
     // and release; the layer over the box paints the pressed token at full
-    // strength and fades by its own opacity on UIButton's release, on the
+    // strength and fades by its own opacity on a control's release, on the
     // compositor.
     expect(declaresIndicatorPressOwner(control)).toBe(true);
     const layer = readIndicatorPressLayer(wrapper, control);
@@ -962,7 +962,7 @@ describe('pressed state', () => {
       paintsOn: true,
       paintsFading: true,
       releases: true,
-      // UIButton's release, and under Reduce Motion the policy's 200 ms fade
+      // A control's release, and under Reduce Motion the policy's 200 ms fade
       // (design:reduced-motion DR2, reducedMotionFadeConsts).
       releaseMs: [controlPressConsts.controlReleaseMs, 200],
       fillsBoth: true,

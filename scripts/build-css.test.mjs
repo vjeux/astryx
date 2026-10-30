@@ -393,16 +393,16 @@ describe('build-css astryx.css', () => {
       );
     });
 
-    it('paints the checkbox and radio press on their own layer and releases it by opacity', () => {
+    it('paints the checkbox and radio press on their own layer and releases it by opacity', async () => {
       // The element that owns a press (a CheckboxInput's control, a
       // CheckboxList or RadioList row) declares the press's image and release
       // on itself, inside its own press arms, for every pointer
       // (indicatorPressOwnerStyles; `spec:AST-094` FR11's fine-pointer
       // profile, FR43); the layer over a checkbox box or a radio circle (its
       // wrapper's `::after`) reads them, so it answers its nearest owner
-      // only. The release runs on a control's clock (250 ms) for a standalone
-      // checkbox and a cell's (200 ms) in a row, and the layer reads no
-      // strength.
+      // only. The release runs on a control's clock for a standalone checkbox
+      // and a cell's in a row, each read from its constants, and the layer
+      // reads no strength.
       const behindPointer = line => /@media[^{]*pointer:/.test(line);
       const own = arm =>
         lines().filter(
@@ -460,7 +460,21 @@ describe('build-css astryx.css', () => {
           ? []
           : [Number(match[1]) * (match[2] === 's' ? 1000 : 1)];
       });
-      expect(durations).toEqual(expect.arrayContaining([200, 250]));
+      const msOf = async (file, key) =>
+        Number(
+          (await fs.readFile(path.join(ROOT, file), 'utf8')).match(
+            new RegExp(`${key}:\\s*(\\d+)`),
+          )[1],
+        );
+      const control = await msOf(
+        'packages/core/src/utils/controlPressLayer.stylex.ts',
+        'controlReleaseMs',
+      );
+      const cell = await msOf(
+        'packages/core/src/utils/rowPressLayer.stylex.ts',
+        'cellReleaseMs',
+      );
+      expect(durations).toEqual(expect.arrayContaining([control, cell]));
       expect(
         lines().some(
           line =>
