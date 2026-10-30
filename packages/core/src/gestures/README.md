@@ -213,13 +213,9 @@ assistive-technology activation keep working.
   good, a quicker tap highlights at the lift straight into the release, and
   the release takes the list's deselect clock.
 
-`paintPress(element, 'on' | 'held' | 'fading' | 'none', {releaseMs})`, in
-`utils/pressFeedback.ts`, writes `data-astryx-press` for every press it tracks;
-the action-group tracker (`hooks/actionGroupTracker.ts`) writes its groups'
-presses itself. `paintPress` owns the release timer and writes
-only over values the caller may replace (by default none, `on` and
-`fading`), so a `held` row survives presses until its owner releases it
-with `onlyFrom: ['held']`.
+The document press controller (`utils/pressFeedback.ts`) writes
+`data-astryx-press` for the presses it tracks, and the action-group tracker
+(`hooks/actionGroupTracker.ts`) writes its groups' presses itself.
 
 ### Rows and cards
 
