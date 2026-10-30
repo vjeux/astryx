@@ -7,9 +7,9 @@
  *   a mouse and the Space key
  * @output Real-engine proof of how long each press's release runs on a
  *   touch-first device (`component:Button` FR15): a finger's release on a
- *   control is UIButton's 250 ms, and a mouse's or the Space key's press keeps
- *   the 200 ms release a fine pointer has; a list row's release keeps the
- *   deselect clock's 200 ms. Each release animation's own duration is read
+ *   control runs the shared 200 ms on the control's own layer, as a mouse's
+ *   or the Space key's press does, and a list row's release runs the
+ *   deselect clock's 200 ms on the row's layer. Each release animation's own duration is read
  *   when `fading` is written; `fading` outlasts the animation (its progress
  *   has reached its end when `fading` goes) and goes within a few frames of
  *   that end. The animation's own progress and frames, not ms, bound it, so
@@ -31,9 +31,7 @@ const storybook = withStorybook(test);
 
 const BUTTONS = 'core-press-feedback-touch--buttons';
 const ROWS = 'core-press-feedback-touch--rows';
-/** UIButton's measured release, a finger's on a control (FR15). */
-const FINGER_RELEASE_MS = 250;
-/** The release a mouse or the Space key keeps on any device (FR15). */
+/** A control's release for every press (FR15): the shared release. */
 const BUTTON_RELEASE_MS = 200;
 /** A list row's release: the deselect clock. */
 const ROW_RELEASE_MS = 200;
@@ -234,17 +232,17 @@ function expectRelease(release: Release, ms: number): void {
   );
 }
 
-test("a finger's release on a button runs UIButton's 250 ms", async ({
+test("a finger's release on a button runs the shared 200 ms on its layer", async ({
   page,
 }) => {
   const {center} = await openButton(page);
   const driver = await touchDriver(page);
   await driver.play(tap(center, {holdMs: HOLD_MS}));
   const release = await releaseOf(page);
-  expectRelease(release, FINGER_RELEASE_MS);
+  expectRelease(release, BUTTON_RELEASE_MS);
 });
 
-test("a mouse press's release on the same device keeps 200 ms", async ({
+test("a mouse press's release on the same device runs 200 ms", async ({
   page,
 }) => {
   const {center} = await openButton(page);
@@ -256,7 +254,7 @@ test("a mouse press's release on the same device keeps 200 ms", async ({
   expectRelease(release, BUTTON_RELEASE_MS);
 });
 
-test("a Space press's release on the same device keeps 200 ms", async ({
+test("a Space press's release on the same device runs 200 ms", async ({
   page,
 }) => {
   const {button} = await openButton(page);
@@ -268,7 +266,7 @@ test("a Space press's release on the same device keeps 200 ms", async ({
   expectRelease(release, BUTTON_RELEASE_MS);
 });
 
-test("a finger's release on a list row keeps the deselect clock's 200 ms", async ({
+test("a finger's release on a list row runs the deselect clock's 200 ms", async ({
   page,
 }) => {
   const {center} = await openSurface(page, ROWS, firstRow);

@@ -18,19 +18,20 @@ import * as stylex from '@stylexjs/stylex';
 /**
  * A control's release, mirrored for the stylesheet: StyleX evaluates a style
  * at build time and cannot read the constants table, so these are the
- * table's `button.highlight` values (motion/uikit/button.ts), and
- * pressFeedback.test.ts fails if they drift.
+ * shared release's values (the overlay's `pressConsts.releaseMs` and release
+ * curve, the deselect's `timing.press.highlightOutMs`), and
+ * pressFeedback.test.ts fails if they drift. A control's own release, if
+ * `component:Button` FR15 takes one, changes these two values only.
  */
 export const controlPressConsts = stylex.defineConsts({
   /**
-   * How long a control's release takes, in ms: UIButton's highlight release
-   * (`button.highlight.releaseMs`), for every surface not marked as a cell.
+   * How long a control's release takes, in ms: the shared release, for every
+   * surface not marked as a cell.
    */
-  controlReleaseMs: 250,
+  controlReleaseMs: 200,
   /**
-   * A control's release curve, as CSS: UIButton's, UIKit's easeInEaseOut
-   * (`button.highlight.releaseCurve`), for a surface that runs a control's
-   * release on a layer of its own.
+   * A control's release curve, as CSS: the shared release's, for a surface
+   * that runs a control's release on a layer of its own.
    */
-  controlReleaseEase: 'cubic-bezier(0.42, 0, 0.58, 1)',
+  controlReleaseEase: 'cubic-bezier(0, 0, 0.2, 1)',
 });

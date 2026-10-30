@@ -27,7 +27,6 @@
  * SYNC: When modified, update this header.
  */
 
-import {button} from '../motion/uikit/button';
 import {list} from '../motion/uikit/list';
 
 const PRESSED_TOKEN = '--color-overlay-pressed';
@@ -36,9 +35,6 @@ const PRESS_STRENGTH = '--astryx-press-alpha';
 const PRESS_PAINT = '--_press-paint';
 const FADING_ARM = '[data-astryx-press="fading"]';
 const ON_ARM = '[data-astryx-press="on"]';
-/** A mouse or Space press on a touch-first device: the fine pointer's clock. */
-const INPUT_ARM = '[data-astryx-press-input]';
-const isInputArm = (rule: string) => selectorOf(rule).includes(INPUT_ARM);
 
 const selectorOf = (rule: string) => rule.slice(0, rule.indexOf('{'));
 const onPseudoElement = (rule: string) => selectorOf(rule).includes('::');
@@ -256,15 +252,12 @@ export function releasesOnLayer(
     outsideMedia: REDUCED_MEDIA,
   });
   const layer = fading.filter(rule => selectorOf(rule).includes(pseudo));
-  const durations = durationsOf(layer.filter(rule => !isInputArm(rule)));
-  // A mouse or Space press on the same layer keeps the deselect clock.
-  const inputDurations = durationsOf(layer.filter(isInputArm));
+  const durations = durationsOf(layer);
   const layerReleases =
     layer.some(runsAnimation) &&
     layer.some(rule => /animation-fill-mode:\s*both/.test(rule)) &&
     durations.length === 1 &&
-    durations[0] === releaseMs &&
-    inputDurations.every(ms => ms === list.highlight.releaseMs);
+    durations[0] === releaseMs;
   if (!layerReleases) {
     return false;
   }
@@ -376,15 +369,14 @@ export function durationToMs(value: string): number {
 
 /**
  * Does the element run the release animation on the fading arm, on a
- * control's clock under a coarse primary pointer (UIButton's highlight
- * release; a list row's layer runs the deselect clock and is checked with
- * the row), and on the deselect clock it always had under any other pointer
- * (the desktop rule), with no animation on the on arm (the onset is
- * instant)? Asserted on the element the controller writes to — the one that
- * composes `pressedAlpha` or an overlay variant — not on a descendant that
- * merely reads the strength. A surface on a compositor press layer releases
- * there instead: its layer's release must run on the clock its marker names
- * (see {@link releasesOnLayer}).
+ * control's clock under a coarse primary pointer (the shared release; a list
+ * row's layer is checked with the row), and on the deselect clock it always
+ * had under any other pointer (the desktop rule), with no animation on the
+ * on arm (the onset is instant)? Asserted on the element the controller
+ * writes to — the one that composes `pressedAlpha` or an overlay variant —
+ * not on a descendant that merely reads the strength. A surface on a
+ * compositor press layer releases there instead: its layer's release must
+ * run on the control's clock (see {@link releasesOnLayer}).
  */
 export function hasReleaseFade(el: Element): boolean {
   // The release without Reduce Motion; its Reduce Motion arms are checked in
@@ -396,9 +388,9 @@ export function hasReleaseFade(el: Element): boolean {
   if (onArmAnimates) {
     return false;
   }
-  // A control's release, on UIButton's clock: a list row's layer runs the
-  // deselect clock and is checked with the row (utils/rowPressLayer.ts).
-  const controlMs = button.highlight.releaseMs;
+  // A control's release, on the shared clock (the deselect's): a list row's
+  // layer is checked with the row (utils/rowPressLayer.ts).
+  const controlMs = list.highlight.releaseMs;
   const fine = own(rulesWithSelector(el, FADING_ARM, UNDER.fine));
   if (!fine.some(runsAnimation)) {
     // A surface whose layer runs every release (a list row).
@@ -421,13 +413,6 @@ export function hasReleaseFade(el: Element): boolean {
       releasesOnLayer(el, '::after', controlMs)
     );
   }
-  const control = durationsOf(coarse.filter(rule => !isInputArm(rule)));
-  // A mouse or Space press keeps the deselect clock on any surface.
-  const input = durationsOf(coarse.filter(isInputArm));
-  return (
-    control.length === 1 &&
-    control[0] === button.highlight.releaseMs &&
-    input.length === 1 &&
-    input[0] === list.highlight.releaseMs
-  );
+  const control = durationsOf(coarse);
+  return control.length === 1 && control[0] === controlMs;
 }
