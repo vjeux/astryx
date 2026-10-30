@@ -2,7 +2,8 @@
 
 /**
  * @file keyboardHeight.test.ts
- * @input keyboardHeight.ts, a stand-in visual viewport
+ * @input keyboardHeight.ts, the keyboard layout guide, a stand-in visual
+ *   viewport
  * @output Tests for the on-screen keyboard module (spec:AST-099): the height
  *   (FR2), where it measures (FR6, FR7), its one set of listeners (FR1,
  *   architecture:react-component-runtime INV11) and the focus refusal (FR4)
@@ -13,6 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {act} from '@testing-library/react';
+import {getKeyboardLayoutGuide} from './keyboardLayoutGuide';
 import {
   __resetLayoutViewportForTest,
   layoutViewportHeight,
@@ -356,6 +358,27 @@ describe('one set of listeners per window (FR1, INV11)', () => {
     ]);
   });
 
+  it('feeds the keyboard layout guide, which adds no listener of its own', () => {
+    const add = vi.spyOn(viewport, 'addEventListener');
+    const windowAdd = vi.spyOn(window, 'addEventListener');
+    const stopHook = subscribeKeyboardHeight(window, () => {});
+    const guide = getKeyboardLayoutGuide(window);
+    const transitions: number[] = [];
+    const stopGuide = guide.subscribe(transition => {
+      transitions.push(transition.to);
+    });
+    expect(add).toHaveBeenCalledTimes(2);
+    expect(
+      windowAdd.mock.calls.filter(([type]) => type === 'resize'),
+    ).toHaveLength(1);
+
+    report({height: window.innerHeight - 300});
+    expect(transitions.at(-1)).toBe(300);
+    expect(guide.inset).toBe(300);
+    stopGuide();
+    stopHook();
+  });
+
   it('reads the layout once per keyboard change, however many read the height (INV11)', () => {
     // Count every read of the visual viewport's height: one per measurement.
     let height = viewport.height;
@@ -377,31 +400,67 @@ describe('one set of listeners per window (FR1, INV11)', () => {
         seen.push(getKeyboardHeight(window), event.height);
       }
     };
+    // And the keyboard layout guide, whose rider reads the height again as
+    // it commits its layout.
+    const stopGuide = getKeyboardLayoutGuide(window).subscribe(transition => {
+      seen.push(getKeyboardHeight(window), transition.to);
+    });
     const stops = [reader(), reader(), reader()].map(listener =>
       subscribeKeyboardHeight(window, listener),
     );
     try {
       reads = 0;
       report({height: window.innerHeight - 300});
-      expect(seen).toHaveLength(6);
+      expect(seen).toHaveLength(8);
       expect(seen.every(value => value === 300)).toBe(true);
       expect(reads).toBe(1);
     } finally {
       for (const stop of stops) {
         stop();
       }
+      stopGuide();
     }
   });
-  it('listens to the visual viewport and the window only, with no document focus listener (spec:AST-094 FR24)', () => {
+  it('listens to focus moves only while a subscriber asks for them, through one pair of document listeners (spec:AST-094 FR24)', () => {
     const documentAdd = vi.spyOn(document, 'addEventListener');
-    const stop = subscribeKeyboardHeight(window, () => {});
+    const documentRemove = vi.spyOn(document, 'removeEventListener');
+    const focusCalls = (spy: typeof documentAdd) =>
+      spy.mock.calls
+        .filter(([type]) => String(type).startsWith('focus'))
+        .map(([type]) => type);
+    const viewportTypes: string[] = [];
+    const guideTypes: string[] = [];
+    const input = document.createElement('input');
+    document.body.append(input);
+    // A viewport reader (a Tall BottomSheet's hook) adds no focus listener.
+    const stopViewport = subscribeKeyboardHeight(window, event => {
+      viewportTypes.push(event.type);
+    });
     try {
-      expect(
-        documentAdd.mock.calls.filter(([type]) => type.startsWith('focus')),
-      ).toEqual([]);
+      expect(focusCalls(documentAdd)).toEqual([]);
+      // Readers of focus moves (the keyboard layout guide) share one pair.
+      const stopA = subscribeKeyboardHeight(
+        window,
+        event => {
+          guideTypes.push(event.type);
+        },
+        {focus: true},
+      );
+      const stopB = subscribeKeyboardHeight(window, () => {}, {focus: true});
+      expect(focusCalls(documentAdd)).toEqual(['focusin', 'focusout']);
+      input.focus();
+      input.blur();
+      expect(guideTypes).toEqual(['focusin', 'focusout']);
+      expect(viewportTypes).toEqual([]);
+      stopA();
+      expect(focusCalls(documentRemove)).toEqual([]);
+      stopB();
+      expect(focusCalls(documentRemove)).toEqual(['focusin', 'focusout']);
     } finally {
-      stop();
+      input.remove();
+      stopViewport();
       documentAdd.mockRestore();
+      documentRemove.mockRestore();
     }
   });
 
@@ -417,8 +476,13 @@ describe('one set of listeners per window (FR1, INV11)', () => {
       }
     });
     expect(getKeyboardHeight(window)).toBe(300);
+    // The guide reads it too.
+    const guide = getKeyboardLayoutGuide(window);
+    const stopGuide = guide.subscribe(() => {});
+    expect(guide.inset).toBe(300);
     report({height: window.innerHeight});
     expect(heights).toEqual([0]);
+    stopGuide();
     stop();
   });
   it('is the only visual viewport listener for the keyboard in core', () => {

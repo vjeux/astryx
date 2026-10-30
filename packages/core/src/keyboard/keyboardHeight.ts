@@ -6,7 +6,9 @@
  * @file keyboardHeight.ts
  * @input The window's visual viewport, focus events, React effects and refs,
  *   the Reduce Motion media query, the touch query, the layout viewport's
- *   height (utils/layoutViewport.ts)
+ *   height (utils/layoutViewport.ts), and for BottomSheet's ride the
+ *   compositor animator, the keyboard layout guide's transitions and
+ *   rideKeyboard
  * @output Exports the on-screen keyboard module: measureKeyboardHeight,
  *   isKeyboardMeasurable, subscribeKeyboardHeight, getKeyboardHeight,
  *   isTextEntryControl, findTextEntryControl, refuseFocusReveal,
@@ -25,8 +27,9 @@
  * Android) is measured the same way (FR6, DEC-4). It is 0 without a visual
  * viewport, and inside an iframe, whose visual viewport never shrinks for the
  * keyboard (FR7). One set of
- * listeners per window reads it (the visual viewport's resize and scroll, and
- * the window's resize), however many components subscribe.
+ * listeners per window reads it (the visual viewport's resize and scroll and
+ * the window's resize, plus focus moves while a subscriber asks for them),
+ * however many components subscribe.
  *
  * Every route into a field has to reach it without the browser revealing it
  * (FR4). On iOS that reveal scrolls the DOCUMENT, and fixed content travels
@@ -45,13 +48,22 @@
  * only under a coarse primary pointer: a desktop browser keeps its own focus
  * (spec:AST-017 FR59). Shorter detents and other heights opt out entirely.
  * Starting Tall-sheet travel or closing the sheet blurs the field and
- * dismisses the keyboard (FR5).
+ * dismisses the keyboard (FR5). Where the keyboard layout guide publishes the
+ * keyboard's own slide (Gboard's, in Chrome on Android), the sheet rides it
+ * (FR8): a reveal scrolls the body at once and its content rides up from
+ * where it was on the show's curve, and through a hide the room stays while
+ * the content rides down by the scroll the room's drop takes back; at rest
+ * the room drops and the translate clears in one commit.
  *
  * SYNC: When modified, update /packages/core/src/keyboard/README.md
  */
 
 import {useMediaQuery} from '../hooks/useMediaQuery';
 import {TOUCH_QUERY} from '../utils/touchPresentation';
+import {animatorFor, type Animator} from '../motion/animator';
+import {getKeyboardLayoutGuide, keyboardProfileOf} from './keyboardLayoutGuide';
+import {rideKeyboard} from './rideKeyboard';
+import type {KeyboardTransition} from './keyboardModel';
 import {useEffect, useRef, useState, type RefObject} from 'react';
 import {flushSync} from 'react-dom';
 import {layoutViewportHeight} from '../utils/layoutViewport';
@@ -103,19 +115,31 @@ export function measureKeyboardHeight(win: Window): number {
 }
 
 /** A report from the keyboard module, in the order the window raised them. */
-export interface KeyboardHeightEvent {
-  /** The visual viewport or the window changed size or position. */
-  type: 'viewport';
-  /** The keyboard height after this report. */
-  height: number;
-  /** The report's event time (the document timeline). */
-  timeStamp: number;
-}
+export type KeyboardHeightEvent =
+  | {
+      /** The visual viewport or the window changed size or position. */
+      type: 'viewport';
+      /** The keyboard height after this report. */
+      height: number;
+      /** The report's event time (the document timeline). */
+      timeStamp: number;
+    }
+  | {
+      /** Focus moved into (`focusin`) or out of (`focusout`) `target`. */
+      type: 'focusin' | 'focusout';
+      height: number;
+      timeStamp: number;
+      target: EventTarget | null;
+      relatedTarget: EventTarget | null;
+    };
 
 interface KeyboardStore {
   height: number;
   listeners: Set<(event: KeyboardHeightEvent) => void>;
+  /** The subscribers that asked for focus moves too (the layout guide). */
+  focusListeners: Set<(event: KeyboardHeightEvent) => void>;
   detach: (() => void) | null;
+  detachFocus: (() => void) | null;
 }
 
 const stores = new WeakMap<Window, KeyboardStore>();
@@ -123,7 +147,13 @@ const stores = new WeakMap<Window, KeyboardStore>();
 function storeOf(win: Window): KeyboardStore {
   let store = stores.get(win);
   if (store == null) {
-    store = {height: 0, listeners: new Set(), detach: null};
+    store = {
+      height: 0,
+      listeners: new Set(),
+      focusListeners: new Set(),
+      detach: null,
+      detachFocus: null,
+    };
     stores.set(win, store);
   }
   return store;
@@ -132,14 +162,16 @@ function storeOf(win: Window): KeyboardStore {
 function attach(win: Window, store: KeyboardStore): () => void {
   const viewport = win.visualViewport;
   store.height = measureKeyboardHeight(win);
-  const emit = (event: KeyboardHeightEvent) => {
-    for (const listener of [...store.listeners]) {
-      listener(event);
-    }
-  };
   const onViewport = (event: Event) => {
     store.height = measureKeyboardHeight(win);
-    emit({type: 'viewport', height: store.height, timeStamp: event.timeStamp});
+    const report: KeyboardHeightEvent = {
+      type: 'viewport',
+      height: store.height,
+      timeStamp: event.timeStamp,
+    };
+    for (const listener of [...store.listeners]) {
+      listener(report);
+    }
   };
   viewport?.addEventListener('resize', onViewport);
   viewport?.addEventListener('scroll', onViewport);
@@ -151,9 +183,37 @@ function attach(win: Window, store: KeyboardStore): () => void {
   };
 }
 
+// Focus moves, heard only while a subscriber asks for them: a viewport
+// reader (a Tall BottomSheet's hook, under any pointer) adds no document
+// listener (spec:AST-094 FR24).
+function attachFocus(win: Window, store: KeyboardStore): () => void {
+  const doc = win.document;
+  const onFocus = (event: FocusEvent) => {
+    const report: KeyboardHeightEvent = {
+      type: event.type === 'focusin' ? 'focusin' : 'focusout',
+      height: store.height,
+      timeStamp: event.timeStamp,
+      target: event.target,
+      relatedTarget: event.relatedTarget,
+    };
+    for (const listener of [...store.focusListeners]) {
+      listener(report);
+    }
+  };
+  doc.addEventListener('focusin', onFocus, true);
+  doc.addEventListener('focusout', onFocus, true);
+  return () => {
+    doc.removeEventListener('focusin', onFocus, true);
+    doc.removeEventListener('focusout', onFocus, true);
+  };
+}
+
 /**
  * Calls `listener` with every report of `win`'s keyboard until the returned
- * function is called. All subscribers of a window share one set of listeners.
+ * function is called: the viewport's reports, and focus moves too when
+ * `focus` is set. All subscribers of a window share one set of listeners,
+ * and the document's focus listeners exist only while a subscriber asks for
+ * focus moves.
  *
  * @example
  * ```
@@ -165,14 +225,28 @@ function attach(win: Window, store: KeyboardStore): () => void {
 export function subscribeKeyboardHeight(
   win: Window,
   listener: (event: KeyboardHeightEvent) => void,
+  {focus = false}: {focus?: boolean} = {},
 ): () => void {
   const store = storeOf(win);
   store.listeners.add(listener);
   if (store.detach == null) {
     store.detach = attach(win, store);
   }
+  if (focus) {
+    store.focusListeners.add(listener);
+    if (store.detachFocus == null) {
+      store.detachFocus = attachFocus(win, store);
+    }
+  }
   return () => {
     store.listeners.delete(listener);
+    if (focus) {
+      store.focusListeners.delete(listener);
+      if (store.focusListeners.size === 0 && store.detachFocus != null) {
+        store.detachFocus();
+        store.detachFocus = null;
+      }
+    }
     if (store.listeners.size === 0 && store.detach != null) {
       store.detach();
       store.detach = null;
@@ -566,9 +640,9 @@ export function useSheetKeyboard({
   const isOpenRef = useRef(isOpen);
   isFullyExpandedRef.current = isFullyExpanded;
   isOpenRef.current = isOpen;
-  // Touch-only work attaches only under a coarse primary pointer (the touch
-  // query): under a fine one no touch listener is registered (architecture
-  // INV13, spec:AST-094 FR24).
+  // Touch-only work (the ride, the reveal-pan watch) attaches only under a
+  // coarse primary pointer (the touch query): under a fine one no touch
+  // listener is registered (architecture INV13, spec:AST-094 FR24).
   const isTouch = useMediaQuery(TOUCH_QUERY, false);
 
   useEffect(() => {
@@ -619,6 +693,53 @@ export function useSheetKeyboard({
     let keyboardGeometry: KeyboardGeometry | null = null;
     // Where a smooth reveal under way is taking the body's scrollTop.
     let smoothTarget: number | null = null;
+    // The room laid out at the end of the body, and the scroll range it
+    // adds to the body (what its drop takes back), CSS px. The two can
+    // differ: Chrome 124 added 344 px of range for a 360 px room.
+    let room = 0;
+    let roomRange = 0;
+    // FR8: where the keyboard layout guide publishes the keyboard's own slide
+    // (Gboard's, in Chrome on Android), the sheet's content rides it. Only
+    // under a coarse primary pointer and on Chrome's schedule: under a fine
+    // pointer nothing of the ride attaches, and on Safari's (iOS Safari,
+    // Firefox for Android) the keyboard moves on UIKit's spring, which the
+    // sheet does not ride, so the guide and its frame watch never start; the
+    // room follows the reports. The guide is subscribed before the keyboard
+    // module below, so a report's transition is published before the reveal
+    // reads it.
+    const guide =
+      isTouch && keyboardProfileOf(window) === 'chromium'
+        ? getKeyboardLayoutGuide(window)
+        : null;
+    const contentAnimator = (): Animator | null => {
+      const content = body.firstElementChild;
+      return guide != null && content instanceof HTMLElement
+        ? animatorFor(content)
+        : null;
+    };
+    // How far a ride has the content from where its layout puts it, as the
+    // page draws it now: the same frame a control's rect is read in.
+    const rideOffset = () => {
+      const content = body.firstElementChild;
+      if (!(content instanceof HTMLElement)) {
+        return 0;
+      }
+      const translate = getComputedStyle(content).translate;
+      return parseFloat(translate.split(' ')[1] ?? '') || 0;
+    };
+    // The keyboard's show the guide plays on its slide right now, if any.
+    const showOnSlide = (): KeyboardTransition | null => {
+      const transition = guide?.transition;
+      return transition != null &&
+        transition.kind === 'show' &&
+        transition.animated &&
+        transition.curve != null &&
+        performance.now() < transition.start + transition.curve.durationMs
+        ? transition
+        : null;
+    };
+    // A hide the room is held through (see holdRoomThrough).
+    let heldHide: {readonly release: () => void} | null = null;
     let documentScrollAtKeyboard: {x: number; y: number} | null = null;
     // FR6: where this window measures the keyboard, never by user agent, and
     // only under a coarse primary pointer: under a fine one no touch-only
@@ -635,8 +756,17 @@ export function useSheetKeyboard({
     // Lays the inset out before anything measures or scrolls the body: the
     // reveal scrolls into the room it adds in the same frame.
     const writeInset = (inset: number) => {
+      const changes = inset !== room;
+      const rangeBefore = changes ? body.scrollHeight : 0;
+      room = inset;
       // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the reveal scrolls into this room in the same frame, so it must be laid out before the reveal measures
       flushSync(() => setKeyboardInset(inset));
+      if (changes) {
+        roomRange =
+          inset === 0
+            ? 0
+            : Math.max(0, roomRange + body.scrollHeight - rangeBefore);
+      }
     };
 
     const clearKeyboardLayout = () => {
@@ -647,8 +777,30 @@ export function useSheetKeyboard({
       retainKeyboardLayoutRef.current = false;
     };
 
-    const scrollBodyBy = (distance: number, smoothly: boolean) => {
+    const scrollBodyBy = (
+      distance: number,
+      smoothly: boolean,
+      ride: KeyboardTransition | null = null,
+    ) => {
       smoothTarget = null;
+      const animator = ride == null ? null : contentAnimator();
+      if (ride != null && animator != null) {
+        // FR8: the body lands at once, and its content rides the keyboard's
+        // slide up from where it was, from the slide's start: content that
+        // joins the slide late is where the keyboard is (rideKeyboard). A
+        // further scroll during the slide adds to the same ride.
+        const before = body.scrollTop;
+        body.scrollTop = before + distance;
+        const moved = body.scrollTop - before;
+        // Only what the body actually scrolled rides: a remainder under the
+        // scroll position's precision moves nothing, so the ride under way
+        // is left on its curve.
+        if (moved !== 0) {
+          animator.set({y: animator.get('y', ride.start) + moved});
+          rideKeyboard(animator, {y: 0}, ride);
+        }
+        return;
+      }
       if (typeof body.scrollBy !== 'function') {
         body.scrollTop += distance;
         return;
@@ -690,6 +842,7 @@ export function useSheetKeyboard({
     const scrollControlIntoSafeArea = (
       control: HTMLElement,
       smoothly: boolean,
+      ride: KeyboardTransition | null = null,
     ) => {
       const measuredBodyRect = body.getBoundingClientRect();
       const measuredControlRect = control.getBoundingClientRect();
@@ -710,13 +863,14 @@ export function useSheetKeyboard({
       // Where the control will be once a smooth reveal under way lands: if
       // it lands the control, scrolling again would overshoot in Firefox,
       // which keeps adding a smooth scrollBy's distance after another scroll.
-      const pending = smoothDistanceLeft();
+      // A ride's translate is not where the layout puts the control either.
+      const pending = smoothDistanceLeft() + rideOffset();
       const controlBottom = measuredControlRect.bottom - pending;
       const controlTop = measuredControlRect.top - pending;
       if (controlBottom > safeBottom) {
-        scrollBodyBy(controlBottom - safeBottom, smoothly);
+        scrollBodyBy(controlBottom - safeBottom, smoothly, ride);
       } else if (controlTop < safeTop) {
-        scrollBodyBy(controlTop - safeTop, smoothly);
+        scrollBodyBy(controlTop - safeTop, smoothly, ride);
       }
     };
 
@@ -768,6 +922,10 @@ export function useSheetKeyboard({
       });
 
     const revealFocusedControl = () => {
+      // Through a hide the sheet rides, its layout holds until the end.
+      if (heldHide != null) {
+        return;
+      }
       const activeElement = document.activeElement;
       if (
         !isFullyExpandedRef.current ||
@@ -817,8 +975,76 @@ export function useSheetKeyboard({
       scrollControlIntoSafeArea(
         activeElement,
         overlap > 0 && !revealsAtReport.has(window),
+        overlap > 0 ? showOnSlide() : null,
       );
     };
+
+    // FR8: through a hide on the keyboard's slide the room stays, so nothing
+    // drops while the keyboard still covers the sheet's bottom: the content
+    // rides down on the hide's curve by the scroll the room's drop takes back
+    // (how far the body is scrolled into the room), and at rest the room
+    // drops and the translate clears in one commit.
+    const holdRoomThrough = (transition: KeyboardTransition) => {
+      heldHide?.release();
+      const animator = contentAnimator();
+      const scrolledIntoRoom = Math.max(
+        0,
+        body.scrollTop - (body.scrollHeight - roomRange - body.clientHeight),
+      );
+      const handle =
+        animator != null && scrolledIntoRoom > 0
+          ? rideKeyboard(animator, {y: scrolledIntoRoom}, transition)
+          : null;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const hold = {
+        release: () => {
+          clearTimeout(timer);
+          if (heldHide === hold) {
+            heldHide = null;
+          }
+        },
+      };
+      heldHide = hold;
+      const commit = () => {
+        if (heldHide !== hold) {
+          return;
+        }
+        heldHide = null;
+        if (isVisualViewportRecovered()) {
+          clearKeyboardLayout();
+        } else {
+          revealFocusedControl();
+        }
+        animator?.set({y: 0});
+      };
+      if (handle == null) {
+        const end = transition.start + (transition.curve?.durationMs ?? 0);
+        timer = setTimeout(commit, Math.max(0, end - performance.now()));
+      } else {
+        void handle.finished.then(commit);
+      }
+    };
+    const unsubscribeGuide = guide?.subscribe(transition => {
+      // Safari's keyboard keeps the reveal below: only a slide rides.
+      if (transition.curve == null) {
+        return;
+      }
+      if (transition.kind === 'hide') {
+        if (hasKeyboardLayoutRef.current && transition.animated) {
+          holdRoomThrough(transition);
+        }
+        return;
+      }
+      if (heldHide != null) {
+        // The keyboard comes back before it is down (focus returns): the
+        // room never left, so the content rides back to its place with it.
+        heldHide.release();
+        const animator = contentAnimator();
+        if (animator != null) {
+          rideKeyboard(animator, {y: 0}, transition);
+        }
+      }
+    });
 
     let animationFrame = 0;
     const scheduleReveal = () => {
@@ -952,6 +1178,9 @@ export function useSheetKeyboard({
     // Every keyboard report reaches the reveal through the keyboard module's
     // one set of listeners.
     const unsubscribe = subscribeKeyboardHeight(window, event => {
+      if (event.type !== 'viewport') {
+        return;
+      }
       if (event.height !== lastHeight) {
         lastHeight = event.height;
         revealPan?.report();
@@ -1009,6 +1238,9 @@ export function useSheetKeyboard({
       cancelAnimationFrame(animationFrame);
       stopClaiming?.();
       unsubscribe();
+      unsubscribeGuide?.();
+      heldHide?.release();
+      contentAnimator()?.set({y: 0});
       revealPan?.stop();
       body.removeEventListener('focusin', handleFocusIn);
       body.removeEventListener('focusout', handleFocusOut);
