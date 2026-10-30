@@ -1806,6 +1806,37 @@ test.describe('minimize on scroll', () => {
     await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
   });
 
+  test('at rest the lens draws over the glass, under the tabs', async ({
+    page,
+  }) => {
+    await openBar(page, 'minimize-on-scroll');
+    const lens = page.locator('[data-tab-bar-lens]');
+    await expect(lens).toBeVisible();
+    // Paint order at the lens, topmost first. The bar takes no pointer, so
+    // hit testing is turned on for this read only.
+    const order = await lens.evaluate(element => {
+      const style = document.createElement('style');
+      style.textContent =
+        '.astryx-tab-bar * { pointer-events: auto !important; }';
+      document.head.append(style);
+      const box = element.getBoundingClientRect();
+      const stack = document.elementsFromPoint(
+        box.x + 6,
+        box.y + box.height / 2,
+      );
+      style.remove();
+      const first = (selector: string) =>
+        stack.findIndex(node => node.closest(selector) != null);
+      return {
+        lens: first('[data-tab-bar-lens]'),
+        glass: first('[data-tab-bar-platter]'),
+      };
+    });
+    expect(order.lens).toBeGreaterThanOrEqual(0);
+    expect(order.glass).toBeGreaterThanOrEqual(0);
+    expect(order.lens, JSON.stringify(order)).toBeLessThan(order.glass);
+  });
+
   test('minimized, the accessibility tree holds no empty tab list beside the circle', async ({
     page,
     browserName,
