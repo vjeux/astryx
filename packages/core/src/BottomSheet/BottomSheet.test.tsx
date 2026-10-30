@@ -19,7 +19,7 @@ import {
   onTestFinished,
 } from 'vitest';
 import {act, render, screen, fireEvent} from '@testing-library/react';
-import {createRef, useState} from 'react';
+import {createRef, useState, type ReactNode} from 'react';
 import {BottomSheet} from './BottomSheet';
 import {BottomSheetEscapeContext} from './bottomSheetEscape';
 import {resetBottomSheetStackForTests} from './bottomSheetStack';
@@ -29,6 +29,7 @@ import {
   __focusTakeoverCallersForTest,
   __resetRevealsAtReportForTest,
 } from '../keyboard/keyboardHeight';
+import {getKeyboardLayoutGuide} from '../keyboard/keyboardLayoutGuide';
 
 // A sheet has no stops unless its host asks for them, so the tests that
 // exercise detents pass their own. These three — a 14% peek, a half-height
@@ -2171,6 +2172,243 @@ describe('BottomSheet', () => {
       input.focus();
 
       expect(keyboardInsetOf(body)).toBe(348);
+    });
+
+    describe('on Gboard\u2019s slides in Chrome on Android (spec:AST-099 FR8)', () => {
+      // A Tall sheet in Chrome on Android: its body (top 100, bottom 800)
+      // holds 800 px of content and the room after it, so the last field's
+      // reveal scrolls into the room. The body's scroll stays within its
+      // range, as a browser keeps it. `scrollBy` records a smooth scroll and
+      // moves nothing, unless `instantScrollBy` lands it at once.
+      function renderChromeSheet({
+        instantScrollBy = false,
+        roomRangeShort = 0,
+        pointer = 'coarse',
+        picker,
+      }: {
+        instantScrollBy?: boolean;
+        roomRangeShort?: number;
+        pointer?: 'coarse' | 'fine';
+        picker?: ReactNode;
+      } = {}) {
+        mockKeyboardGeometryApi();
+        mockPrimaryPointer(pointer);
+        mockWindowHeight(800);
+        const viewport = Object.assign(mockVisualViewport(800), {scale: 1});
+        render(
+          <BottomSheet
+            isOpen
+            onOpenChange={() => {}}
+            label="Add a comment"
+            height="tall">
+            <input aria-label="Comment" />
+            {picker}
+          </BottomSheet>,
+        );
+        const body = getBody();
+        const content = body.firstElementChild as HTMLElement;
+        const input = screen.getByRole('textbox', {name: 'Comment'});
+        let scrollTop = 0;
+        // The scroll range the room adds: its height, less `roomRangeShort`.
+        const scrollHeight = () =>
+          800 + Math.max(0, keyboardInsetOf(body) - roomRangeShort);
+        const maxScroll = () => scrollHeight() - 700;
+        Object.defineProperties(body, {
+          clientHeight: {configurable: true, get: () => 700},
+          scrollHeight: {configurable: true, get: scrollHeight},
+          scrollTop: {
+            configurable: true,
+            get: () => Math.min(scrollTop, maxScroll()),
+            set: (value: number) => {
+              scrollTop = Math.max(0, Math.min(value, maxScroll()));
+            },
+          },
+        });
+        const scrollBy = vi.fn((options: ScrollToOptions) => {
+          if (instantScrollBy) {
+            body.scrollTop += options.top ?? 0;
+          }
+        });
+        Object.defineProperty(body, 'scrollBy', {
+          configurable: true,
+          value: scrollBy,
+        });
+        vi.spyOn(body, 'getBoundingClientRect').mockReturnValue(
+          rect({top: 100, bottom: 800}),
+        );
+        vi.spyOn(input, 'getBoundingClientRect').mockImplementation(() =>
+          rect({top: 660 - body.scrollTop, bottom: 700 - body.scrollTop}),
+        );
+        const report = (height: number) => {
+          viewport.height = height;
+          act(() => {
+            viewport.dispatchEvent(new Event('resize'));
+          });
+        };
+        return {body, content, input, report, scrollBy};
+      }
+
+      const afterTheSlide = async () =>
+        act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 400));
+        });
+
+      it('lands the body at once at the keyboard\u2019s report, and the content rides up from where it was', async () => {
+        const {body, content, input, report, scrollBy} = renderChromeSheet();
+        act(() => input.focus());
+        report(500);
+        // In the report's own event: the room (300 px of keyboard over the
+        // body, plus the 48 px clearance), and the body scrolled at once so
+        // the field rests 48 px above the keyboard. No smooth scroll trails
+        // Gboard's slide.
+        expect(keyboardInsetOf(body)).toBe(348);
+        expect(body.scrollTop).toBe(248);
+        expect(scrollBy).not.toHaveBeenCalled();
+        await afterTheSlide();
+        // The ride ends at the layout: no translate is left.
+        expect(content.style.translate).toBe('');
+        expect(body.scrollTop).toBe(248);
+      });
+
+      it('keeps the room through the keyboard\u2019s hide while the content rides down by the scroll the room\u2019s drop takes back, then drops both at rest', async () => {
+        const {body, content, input, report} = renderChromeSheet({
+          instantScrollBy: true,
+        });
+        act(() => input.focus());
+        report(500);
+        await afterTheSlide();
+        expect(body.scrollTop).toBe(248);
+
+        // Back: Chrome reports the keyboard gone, about 33 ms into Gboard's
+        // 167 ms slide down, and the field keeps focus.
+        report(800);
+        // The room stays, so the body keeps its scroll, while the content
+        // rides down by how far the body is scrolled into the room (248 past
+        // the 100 px the content alone scrolls).
+        expect(keyboardInsetOf(body)).toBe(348);
+        expect(body.scrollTop).toBe(248);
+        expect(content.style.translate).toBe('0px 148px');
+
+        await afterTheSlide();
+        // At rest, in one commit: the room drops, the body's scroll gives
+        // back the 148 px, and the translate clears.
+        expect(keyboardInsetOf(body)).toBe(0);
+        expect(body.scrollTop).toBe(100);
+        expect(content.style.translate).toBe('');
+      });
+
+      it.each([
+        [
+          'a select',
+          <select key="s" aria-label="Picker">
+            <option>One</option>
+          </select>,
+        ],
+        ['a date input', <input key="d" type="date" aria-label="Picker" />],
+      ] as const)(
+        'rides the content down and keeps the room through the hide when focus moves to %s, whose picker Chrome opens over the page',
+        async (_, picker) => {
+          const {body, content, input, report} = renderChromeSheet({
+            instantScrollBy: true,
+            picker,
+          });
+          // The picker sits above the field, in view while the keyboard is up.
+          const pickerControl = screen.getByLabelText('Picker');
+          vi.spyOn(pickerControl, 'getBoundingClientRect').mockImplementation(
+            () =>
+              rect({top: 600 - body.scrollTop, bottom: 640 - body.scrollTop}),
+          );
+          act(() => input.focus());
+          report(500);
+          await afterTheSlide();
+          expect(body.scrollTop).toBe(248);
+          // Gboard slides down for the picker: Chrome reports the keyboard
+          // gone, and no keyboard comes back.
+          act(() => pickerControl.focus());
+          report(800);
+          expect(keyboardInsetOf(body)).toBe(348);
+          expect(content.style.translate).toBe('0px 148px');
+          await afterTheSlide();
+          expect(keyboardInsetOf(body)).toBe(0);
+          expect(body.scrollTop).toBe(100);
+          expect(content.style.translate).toBe('');
+        },
+      );
+
+      it('rides by the scroll the room\u2019s drop takes back where the room adds less range than its height, as in Chrome 124', async () => {
+        // Chrome 124 added 344 px of scroll range for a 360 px room: here 16
+        // px less than the room's 348.
+        const {body, content, input, report} = renderChromeSheet({
+          instantScrollBy: true,
+          roomRangeShort: 16,
+        });
+        act(() => input.focus());
+        report(500);
+        await afterTheSlide();
+        expect(body.scrollTop).toBe(248);
+        report(800);
+        // The drop takes back 148 px (to the 100 px the content alone
+        // scrolls), not the 164 the room's height would say.
+        expect(content.style.translate).toBe('0px 148px');
+        await afterTheSlide();
+        expect(body.scrollTop).toBe(100);
+        expect(content.style.translate).toBe('');
+      });
+
+      it('attaches nothing of the ride under a fine pointer: the room drops at Chrome\u2019s hide report', () => {
+        const guide = getKeyboardLayoutGuide(window);
+        const subscribe = vi.spyOn(guide, 'subscribe');
+        const {body, content, input, report} = renderChromeSheet({
+          instantScrollBy: true,
+          pointer: 'fine',
+        });
+        act(() => input.focus());
+        report(500);
+        expect(keyboardInsetOf(body)).toBe(348);
+        report(800);
+        expect(keyboardInsetOf(body)).toBe(0);
+        expect(content.style.translate).toBe('');
+        // Nothing subscribed the keyboard layout guide.
+        expect(subscribe).not.toHaveBeenCalled();
+        subscribe.mockRestore();
+      });
+    });
+
+    it('subscribes no keyboard layout guide where the keyboard moves on Safari\u2019s schedule, whose transitions the sheet never rides (spec:AST-099 FR8)', () => {
+      // iOS Safari and Firefox for Android have no VirtualKeyboard API, so the
+      // guide reads Safari's profile there: it would watch frames after each
+      // focus for transitions on UIKit's keyboard spring, which the sheet
+      // drops. Only a slide rides (Chrome's profile).
+      mockWindowHeight(800);
+      const viewport = mockVisualViewport(800);
+      mockIOSWebKit();
+      const guide = getKeyboardLayoutGuide(window);
+      const subscribe = vi.spyOn(guide, 'subscribe');
+      render(
+        <BottomSheet
+          isOpen
+          onOpenChange={() => {}}
+          label="Add a comment"
+          height="tall">
+          <input aria-label="Comment" />
+        </BottomSheet>,
+      );
+      const body = getBody();
+      const input = screen.getByRole('textbox', {name: 'Comment'});
+      vi.spyOn(body, 'getBoundingClientRect').mockReturnValue(
+        rect({top: 100, bottom: 800}),
+      );
+      vi.spyOn(input, 'getBoundingClientRect').mockReturnValue(
+        rect({top: 660, bottom: 700}),
+      );
+      act(() => input.focus());
+      viewport.height = 500;
+      void act(() => viewport.dispatchEvent(new Event('resize')));
+      // The room follows the keyboard's report (FR3)...
+      expect(keyboardInsetOf(body)).toBe(348);
+      // ...and nothing subscribed the guide, so no frame watch runs.
+      expect(subscribe).not.toHaveBeenCalled();
+      subscribe.mockRestore();
     });
 
     it('keeps the keyboard room when the page is pinch-zoomed past 2x with the keyboard up', () => {
