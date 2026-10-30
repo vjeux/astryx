@@ -8,7 +8,8 @@
  * @output Real-engine proof that a touch press's release runs on the
  *   compositor in WebKit too (`spec:AST-094` FR5): while the release fades,
  *   WebKit paints nothing, frame after frame, on a button, an icon button,
- *   the cards, a list row, a tree row, a radio row and a checkbox; and a
+ *   the cards, a list row, a tree row, a radio row, a checkbox, a button
+ *   its group tracks and an alert dialog's action; and a
  *   menu anchored to a tapped button is not laid out and repainted every
  *   frame while the button's press releases, since the anchor's box stays
  *   still. Paint at a motion's first or last frame is a layer appearing and
@@ -80,6 +81,16 @@ const SURFACES: ReadonlyArray<
   ['a tree row', 'core-treelist--basic', firstPressable],
   ['a radio row', 'core-radiolist--default', firstPressable],
   ['a checkbox', 'core-checkboxinput--default', firstPressable],
+  [
+    'a button its group tracks',
+    'core-buttongroup--slide-across',
+    page => page.getByRole('button', {name: 'Copy', exact: true}),
+  ],
+  [
+    "an alert dialog's action",
+    'core-alertdialog--inline',
+    page => page.getByRole('button', {name: 'Cancel', exact: true}).first(),
+  ],
 ];
 
 /** The frames that painted: paint within {@link SAME_FRAME_MS} of the last is one frame. */
