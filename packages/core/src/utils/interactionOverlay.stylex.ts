@@ -9,7 +9,8 @@
  * @input Uses StyleX and the semantic interaction-overlay color tokens
  * @output Exports reusable background-color and background-image state styles,
  *   the touch press's registered strength variable (`pressVars`) and its
- *   clocks (`pressConsts`)
+ *   clock (`pressConsts`). The list row's compositor press layer and its
+ *   clocks are internal (rowPressLayer.ts, rowPressLayer.stylex.ts)
  * @position Internal styling utility for interactive core surfaces
  *
  * Every surface that paints a press composes one of these (or carries its own
@@ -118,7 +119,7 @@ export const pressConsts = stylex.defineConsts({
   releaseMs: 200,
 });
 
-/** The release's clock as CSS. */
+/** The release's clock as CSS: the table's value. */
 const PRESS_RELEASE_DURATION = `${pressConsts.releaseMs}ms`;
 /**
  * Under reduced motion the clock is capped by the Reduce Motion cross-fade's
@@ -180,7 +181,11 @@ const pressRelease = stylex.keyframes({
  * (strength ≈ 0.2 at the midpoint), which is what a deselect crossfade reads
  * as. Not the system's `--ease-standard`: that curve is for things that move,
  * and is so front-loaded (strength 0.05 at the midpoint) that the release
- * would read as half its clock.
+ * would read as half its clock. It is the constants table's
+ * `timing.press.highlightOutCurve`, which the list row's layer mirrors too
+ * (rowPressLayer.stylex.ts); interactionOverlay.cell.test.ts fails if either
+ * drifts. A copy, not an import: this module reaches nearly every component,
+ * and the row layer's constants stay with the rows.
  */
 const RELEASE_EASE = 'cubic-bezier(0, 0, 0.2, 1)';
 
