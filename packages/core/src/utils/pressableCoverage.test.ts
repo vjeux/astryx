@@ -35,6 +35,7 @@ const SRC = path.resolve(__dirname, '..');
 /** The utility and the controller define the model; they are not surfaces. */
 const MODEL_FILES = new Set([
   'utils/interactionOverlay.stylex.ts',
+  'Switch/switchPressLayer.ts',
   'utils/pressFeedback.ts',
   'utils/pressGesture.ts',
 ]);
