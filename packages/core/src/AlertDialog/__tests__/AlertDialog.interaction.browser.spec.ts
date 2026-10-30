@@ -15,8 +15,8 @@
  *   held finger starts no text selection (refused by style or by a cancelled
  *   selectstart); the tracking is the same under a finger in Chrome's engine;
  *   a storyboard of the slide from Delete to Cancel.
- * @position Touch lane of AlertDialog, beside the accessibility bindings in
- *   this folder. Run with `pnpm test:interaction AlertDialog`.
+ * @position AlertDialog's touch interaction proofs, beside the accessibility
+ *   bindings in this folder. Run with `pnpm test:interaction AlertDialog`.
  */
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
