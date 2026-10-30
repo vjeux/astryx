@@ -1,14 +1,15 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
-// @pr-a11y scope core/Button core/ClickableCard core/SelectableCard core/Thumbnail ^packages/core/src/(motion/reducedMotion|utils/interactionOverlay)
+// @pr-a11y scope core/Button core/ToggleButton core/ClickableCard core/SelectableCard core/Thumbnail ^packages/core/src/(motion/reducedMotion|utils/interactionOverlay)
 
 /**
  * @file ReducedMotionPress.a11y.chromium.spec.ts
- * @input The Button Secondary story and the ClickableCard, SelectableCard
- *   and Thumbnail stories in a built Storybook, emulated
+ * @input The Button Secondary story, a ToggleButtonGroup story and the
+ *   ClickableCard, SelectableCard and Thumbnail stories in a built Storybook, emulated
  *   `prefers-reduced-motion: reduce`, a real mouse and real touch input
  *   through CDP
  * @output Real-engine proof that Button and the cards follow
- *   `design:reduced-motion`: a press never scales a button (DR1); with a
+ *   `design:reduced-motion`: a press never scales a button, a group's
+ *   tracked toggle included (DR1); with a
  *   fine primary pointer their state changes are immediate (DR3); on a touch
  *   screen they stay cross-fades of 200 ms or less (DR2)
  * @position Run with `pnpm test:a11y-contract`. Browser layer of the
@@ -52,6 +53,9 @@ const DESKTOP = {
 } as const;
 
 const BUTTON = 'core-button--secondary';
+/** A group whose toggles it tracks: the group paints the press. */
+const TOGGLE_GROUP = 'core-togglebutton--group-multiple';
+const TOGGLE = '#storybook-root [aria-pressed]';
 const CARDS = [
   ['ClickableCard', 'core-clickablecard--with-on-click', 0],
   // The second card: the first starts selected.
@@ -203,6 +207,54 @@ test('a pressed button never scales under reduced motion, with a mouse or a fing
     expect(isIdentity(pressed), pressed).toBe(true);
   } finally {
     await phone.close();
+  }
+});
+
+test('a toggle its group tracks never scales under reduced motion, with a mouse or a finger (DR1)', async ({
+  browser,
+}) => {
+  for (const device of [DESKTOP, PHONE]) {
+    const opened = await open(browser, device, TOGGLE_GROUP);
+    try {
+      const toggle = opened.page.locator(TOGGLE).first();
+      const box = await toggle.boundingBox();
+      if (box == null) {
+        throw new Error('the ToggleButtonGroup story rendered no toggle');
+      }
+      const point = {x: box.x + box.width / 2, y: box.y + box.height / 2};
+      let lift: () => Promise<void>;
+      if (device.hasTouch) {
+        const cdp = await opened.page.context().newCDPSession(opened.page);
+        await cdp.send('Input.dispatchTouchEvent', {
+          type: 'touchStart',
+          touchPoints: [{...point, id: 1}],
+        });
+        lift = async () => {
+          await cdp.send('Input.dispatchTouchEvent', {
+            type: 'touchEnd',
+            touchPoints: [],
+          });
+        };
+      } else {
+        await opened.page.mouse.move(point.x, point.y);
+        await opened.page.mouse.down();
+        lift = async () => opened.page.mouse.up();
+      }
+      // The group paints its press on the toggle under the pointer.
+      await expect
+        .poll(async () => toggle.getAttribute('data-astryx-press'))
+        .toBe('on');
+      const pressed = await toggle.evaluate(
+        element => getComputedStyle(element).transform,
+      );
+      await lift();
+      expect(
+        isIdentity(pressed),
+        `${device.hasTouch ? 'a finger' : 'a mouse'}: ${pressed}`,
+      ).toBe(true);
+    } finally {
+      await opened.close();
+    }
   }
 });
 
