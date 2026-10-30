@@ -13,18 +13,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {act} from '@testing-library/react';
+import {act, renderHook} from '@testing-library/react';
 import {getKeyboardLayoutGuide} from './keyboardLayoutGuide';
 import {
   __resetLayoutViewportForTest,
   layoutViewportHeight,
 } from '../utils/layoutViewport';
 import {
+  blurAsDismissal,
+  claimTapFocus,
   getKeyboardHeight,
   isKeyboardMeasurable,
   measureKeyboardHeight,
   refuseFocusReveal,
   subscribeKeyboardHeight,
+  useKeyboardHeight,
   watchRevealPan,
   type KeyboardHeightEvent,
 } from './keyboardHeight';
@@ -379,6 +382,75 @@ describe('one set of listeners per window (FR1, INV11)', () => {
     stopHook();
   });
 
+  it('reads the layout once per keyboard change for a lone component, which keeps its one subscription across renders (INV11)', () => {
+    // Count every read of the visual viewport's height: one per measurement.
+    let height = viewport.height;
+    let reads = 0;
+    Object.defineProperty(viewport, 'height', {
+      configurable: true,
+      get: () => {
+        reads += 1;
+        return height;
+      },
+      set: (value: number) => {
+        height = value;
+      },
+    });
+    const add = vi.spyOn(viewport, 'addEventListener');
+    const {result, unmount} = renderHook(() => useKeyboardHeight());
+    add.mockClear();
+    reads = 0;
+    report({height: window.innerHeight - 300});
+    expect(result.current).toBe(300);
+    // The re-render keeps the subscription: no listener is added again, and
+    // the change is measured once.
+    expect(add).not.toHaveBeenCalled();
+    expect(reads).toBe(1);
+    unmount();
+  });
+
+  it('re-renders a component when the height changes, and only then', () => {
+    let renders = 0;
+    const {result, unmount} = renderHook(() => {
+      renders += 1;
+      return useKeyboardHeight();
+    });
+    expect(result.current).toBe(0);
+    const before = renders;
+    report({offsetTop: 10});
+    expect(renders).toBe(before);
+    report({height: window.innerHeight - 300});
+    expect(result.current).toBe(300);
+    expect(getKeyboardHeight(window)).toBe(300);
+    unmount();
+  });
+
+  it('leaves no listener once every component has unmounted, StrictMode replay included', () => {
+    const remove = vi.spyOn(viewport, 'removeEventListener');
+    const {unmount} = renderHook(() => useKeyboardHeight(), {
+      reactStrictMode: true,
+    });
+    unmount();
+    const removed = remove.mock.calls.map(([type]) => type);
+    expect(removed.filter(type => type === 'resize').length).toBeGreaterThan(0);
+    // Every add was matched by a remove.
+    const add = vi.spyOn(viewport, 'addEventListener');
+    const stop = subscribeKeyboardHeight(window, () => {});
+    expect(add).toHaveBeenCalledTimes(2);
+    stop();
+  });
+
+  it('reads a keyboard that is already up when the first component mounts, through useKeyboardHeight', () => {
+    // Nothing listens yet: the keyboard came up before any keyboard-aware
+    // component mounted (a sheet opened from a focused field).
+    viewport.height = window.innerHeight - 300;
+    const {result, unmount} = renderHook(() => useKeyboardHeight());
+    expect(result.current).toBe(300);
+    report({height: window.innerHeight});
+    expect(result.current).toBe(0);
+    unmount();
+  });
+
   it('reads the layout once per keyboard change, however many read the height (INV11)', () => {
     // Count every read of the visual viewport's height: one per measurement.
     let height = viewport.height;
@@ -547,6 +619,23 @@ describe('the focus refusal (FR4)', () => {
     second.remove();
   });
 
+  it('parks nothing for the keyboard module\u2019s own dismissal, which is not the keyboard\u2019s Done', () => {
+    const field = document.createElement('input');
+    const park = vi.fn();
+    document.body.append(field);
+    const stop = refuseFocusReveal(document, {claim: () => null, park});
+    field.focus();
+    blurAsDismissal(field);
+    expect(park).not.toHaveBeenCalled();
+    expect(document.activeElement).not.toBe(field);
+    // A blur after the dismissal is the Done again.
+    field.focus();
+    field.blur();
+    expect(park).toHaveBeenCalledWith(field);
+    stop();
+    field.remove();
+  });
+
   it('shares one document blur listener among its callers, each still hearing every blur (spec:AST-094 FR24)', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
@@ -703,5 +792,185 @@ describe('the browser\u2019s own reveal pan (FR4)', () => {
     expect(touched).toEqual(['first', 'second', 'second']);
     second.stop();
     expect(remove.mock.calls.map(([type]) => type)).toEqual(['touchstart']);
+  });
+});
+
+describe('the tap route (FR4)', () => {
+  // A touch event as the browser raises it: its fingers, and cancelable.
+  const touchEvent = (
+    type: string,
+    points: {x: number; y: number}[],
+    changed = points,
+  ) => {
+    const event = new Event(type, {bubbles: true, cancelable: true});
+    const list = (ps: {x: number; y: number}[]) =>
+      ps.map((p, identifier) => ({identifier, clientX: p.x, clientY: p.y}));
+    Object.assign(event, {
+      touches: list(points),
+      changedTouches: list(changed),
+    });
+    return event;
+  };
+
+  function setup() {
+    const region = document.createElement('div');
+    const field = document.createElement('div');
+    region.append(field);
+    document.body.append(region);
+    const deliver = vi.fn();
+    const stop = claimTapFocus(region, {
+      claim: target => (target === field ? field : null),
+      deliver,
+    });
+    return {region, field, deliver, stop};
+  }
+
+  it('delivers a tap on a claimed field itself, and cancels the browser\u2019s', () => {
+    const {region, field, deliver, stop} = setup();
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    const end = touchEvent('touchend', [], [{x: 12, y: 11}]);
+    field.dispatchEvent(end);
+    expect(end.defaultPrevented).toBe(true);
+    expect(deliver).toHaveBeenCalledWith(field, 12, 11);
+    stop();
+    region.remove();
+  });
+
+  it('leaves a touch that moves past the scroll slop, or a second finger, to the browser', () => {
+    const {region, field, deliver, stop} = setup();
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    field.dispatchEvent(touchEvent('touchmove', [{x: 10, y: 30}]));
+    const moved = touchEvent('touchend', [], [{x: 10, y: 30}]);
+    field.dispatchEvent(moved);
+    expect(moved.defaultPrevented).toBe(false);
+
+    field.dispatchEvent(
+      touchEvent('touchstart', [
+        {x: 10, y: 10},
+        {x: 40, y: 10},
+      ]),
+    );
+    const pinch = touchEvent('touchend', [], [{x: 10, y: 10}]);
+    field.dispatchEvent(pinch);
+    expect(pinch.defaultPrevented).toBe(false);
+    expect(deliver).not.toHaveBeenCalled();
+    stop();
+    region.remove();
+  });
+
+  it('listens on the region only, and follows a touch only while it is down', () => {
+    const {region, field, stop} = setup();
+    const add = vi.spyOn(region, 'addEventListener');
+    const remove = vi.spyOn(region, 'removeEventListener');
+    const documentAdd = vi.spyOn(document, 'addEventListener');
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    expect(add.mock.calls.map(([type]) => type)).toEqual([
+      'touchmove',
+      'touchend',
+      'touchcancel',
+    ]);
+    field.dispatchEvent(touchEvent('touchend', [], [{x: 10, y: 10}]));
+    expect(remove.mock.calls.map(([type]) => type)).toEqual([
+      'touchmove',
+      'touchend',
+      'touchcancel',
+    ]);
+    // The only document listeners: after the tap, until its click or a new
+    // press, the swallower of the mouse events Safari may still send.
+    expect(documentAdd.mock.calls.map(([type]) => type)).toEqual([
+      'mousedown',
+      'mouseup',
+      'click',
+      'touchstart',
+      'pointerdown',
+      'keydown',
+    ]);
+    stop();
+    region.remove();
+  });
+
+  it('swallows the mouse events Safari still sends for a delivered tap, wherever they land, until its click', () => {
+    const {region, field, deliver, stop} = setup();
+    const elsewhere = document.createElement('button');
+    document.body.append(elsewhere);
+    const pressed = vi.fn();
+    elsewhere.addEventListener('mousedown', pressed);
+    elsewhere.addEventListener('click', pressed);
+    // Safari's events for a tap carry its click count.
+    const mouse = (type: string) => {
+      const event = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        detail: 1,
+      });
+      elsewhere.dispatchEvent(event);
+      return event;
+    };
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    field.dispatchEvent(touchEvent('touchend', [], [{x: 12, y: 11}]));
+    expect(deliver).toHaveBeenCalledTimes(1);
+    // Aimed at what is under the finger now.
+    expect(mouse('mousedown').defaultPrevented).toBe(true);
+    expect(mouse('click').defaultPrevented).toBe(true);
+    expect(pressed).not.toHaveBeenCalled();
+    // The tap's click ends it.
+    expect(mouse('click').defaultPrevented).toBe(false);
+    expect(pressed).toHaveBeenCalledTimes(1);
+    stop();
+    elsewhere.remove();
+    region.remove();
+  });
+
+  it('lets go when no click comes and a new touch or pointer press starts', () => {
+    const {region, field, stop} = setup();
+    const mousedown = () => {
+      const event = new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+        detail: 1,
+      });
+      document.body.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    field.dispatchEvent(touchEvent('touchend', [], [{x: 10, y: 10}]));
+    // A new touch anywhere.
+    document.body.dispatchEvent(touchEvent('touchstart', [{x: 300, y: 300}]));
+    expect(mousedown()).toBe(false);
+
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    field.dispatchEvent(touchEvent('touchend', [], [{x: 10, y: 10}]));
+    // A mouse's own press.
+    document.body.dispatchEvent(new Event('pointerdown', {bubbles: true}));
+    expect(mousedown()).toBe(false);
+
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    field.dispatchEvent(touchEvent('touchend', [], [{x: 10, y: 10}]));
+    // A key, whose own click (detail 0) goes through.
+    document.body.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true}));
+    expect(mousedown()).toBe(false);
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    field.dispatchEvent(touchEvent('touchend', [], [{x: 10, y: 10}]));
+    const keyClick = new MouseEvent('click', {bubbles: true, cancelable: true});
+    document.body.dispatchEvent(keyClick);
+    expect(keyClick.defaultPrevented).toBe(false);
+
+    field.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    field.dispatchEvent(touchEvent('touchend', [], [{x: 10, y: 10}]));
+    // And when the route goes.
+    stop();
+    expect(mousedown()).toBe(false);
+    region.remove();
+  });
+
+  it('leaves a touch outside what the caller claims to the browser', () => {
+    const {region, deliver, stop} = setup();
+    region.dispatchEvent(touchEvent('touchstart', [{x: 10, y: 10}]));
+    const end = touchEvent('touchend', [], [{x: 10, y: 10}]);
+    region.dispatchEvent(end);
+    expect(end.defaultPrevented).toBe(false);
+    expect(deliver).not.toHaveBeenCalled();
+    stop();
+    region.remove();
   });
 });
