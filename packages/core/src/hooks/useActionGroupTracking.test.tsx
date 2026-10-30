@@ -243,6 +243,25 @@ describe('useActionGroupTracking', () => {
     expect(onDelete).not.toHaveBeenCalled();
   });
 
+  it('marks the action a pointer press began on while the press runs, and clears the mark at the lift and at a cancel (family:action-groups FR2)', () => {
+    const POINTER_PRESS = 'data-astryx-pointer-press';
+    const {cancel, del} = mount();
+    const f = finger();
+    f.down(del, centerOf(DELETE));
+    expect(del.hasAttribute(POINTER_PRESS)).toBe(true);
+    f.move(del, centerOf(CANCEL));
+    // The press's own :active stays on Delete: the mark stays with it.
+    expect(del.hasAttribute(POINTER_PRESS)).toBe(true);
+    expect(cancel.hasAttribute(POINTER_PRESS)).toBe(false);
+    f.up(del, centerOf(CANCEL));
+    expect(del.hasAttribute(POINTER_PRESS)).toBe(false);
+    const g = finger();
+    g.down(cancel, centerOf(CANCEL));
+    expect(cancel.hasAttribute(POINTER_PRESS)).toBe(true);
+    g.cancel(cancel, centerOf(CANCEL));
+    expect(cancel.hasAttribute(POINTER_PRESS)).toBe(false);
+  });
+
   it('keeps no margin around an action: 1 px outside clears it and a lift there runs nothing', () => {
     const {del, onCancel, onDelete} = mount();
     const f = finger();
@@ -343,6 +362,78 @@ describe('useActionGroupTracking', () => {
     expect(onCancel).not.toHaveBeenCalled();
   });
 
+  it("picks the action through the caller's resolveTarget: a touch outside both actions runs the one it returns", () => {
+    const resolveTarget = vi.fn(
+      (
+        _x: number,
+        _y: number,
+        targets: ReadonlyArray<ActionGroupTrackerModule.ActionGroupTarget>,
+      ) => targets[1]?.element ?? null,
+    );
+    const {cancel, del, message, onCancel, onDelete} = mount({
+      options: {resolveTarget},
+    });
+    const f = finger();
+    // On the message, outside both actions' rects, where the flat margin
+    // would highlight nothing.
+    f.down(message, centerOf(MESSAGE));
+    expect(paintOf(del)).toBe('on');
+    expect(paintOf(cancel)).toBeNull();
+    f.up(message, centerOf(MESSAGE));
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onCancel).not.toHaveBeenCalled();
+    // The tracker asks the caller's choice for a finger, handing it the
+    // group's disabled actions read when the press began (none here).
+    const getOptions = vi
+      .mocked(createActionGroupTracker)
+      .mock.calls.at(-1)?.[0];
+    expect(getOptions?.().resolveTarget).toBeTypeOf('function');
+    expect(resolveTarget).toHaveBeenCalledWith(
+      centerOf(MESSAGE).x,
+      centerOf(MESSAGE).y,
+      expect.any(Array),
+      [],
+    );
+  });
+
+  it("lets a mouse hit-test the exact rects even with a resolveTarget, which is a finger's (family:action-groups FR5)", () => {
+    const resolveTarget = vi.fn(
+      (
+        _x: number,
+        _y: number,
+        targets: ReadonlyArray<ActionGroupTrackerModule.ActionGroupTarget>,
+      ) => targets[1]?.element ?? null,
+    );
+    const {cancel, del, message, onCancel, onDelete} = mount({
+      options: {resolveTarget},
+    });
+    const mouse = (type: string, point: {x: number; y: number}) => {
+      time += 16;
+      const event = new PointerEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        button: 0,
+        buttons: type === 'pointerup' ? 0 : 1,
+        clientX: point.x,
+        clientY: point.y,
+      });
+      Object.defineProperty(event, 'timeStamp', {value: time});
+      message.dispatchEvent(event);
+    };
+    // A coarse primary pointer with a mouse beside it: on the message, outside
+    // both actions, the mouse highlights nothing and runs nothing.
+    mouse('pointerdown', centerOf(MESSAGE));
+    expect(paintOf(del)).toBeNull();
+    expect(paintOf(cancel)).toBeNull();
+    mouse('pointerup', centerOf(MESSAGE));
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(resolveTarget).not.toHaveBeenCalled();
+  });
+
   it('tracks through the shared action-group tracker', () => {
     vi.mocked(createActionGroupTracker).mockClear();
     const {cancel, onCancel} = mount();
@@ -394,6 +485,134 @@ describe('useActionGroupTracking', () => {
     );
     expect(onCancel).toHaveBeenCalledTimes(1);
     expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  describe('focus after a slide (family:action-groups FR1)', () => {
+    /** A mouse under a fine pointer, as on a desktop. */
+    function mouseOn(
+      target: Element,
+      type: string,
+      point: {x: number; y: number},
+    ): void {
+      time += 16;
+      const event = new PointerEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        button: 0,
+        buttons: type === 'pointerup' ? 0 : 1,
+        clientX: point.x,
+        clientY: point.y,
+      });
+      Object.defineProperty(event, 'timeStamp', {value: time});
+      target.dispatchEvent(event);
+    }
+
+    function mountFine(props: Partial<Parameters<typeof Group>[0]> = {}) {
+      restorePointer();
+      restorePointer = pointerQuery(false).restore;
+      const mounted = mount(props);
+      runAttachFrame();
+      return mounted;
+    }
+
+    it('moves focus to the lifted action when the press focused the one it began on, as a click on the lifted action does', () => {
+      const {cancel, del} = mountFine();
+      mouseOn(del, 'pointerdown', centerOf(DELETE));
+      // The browser focuses a pressed button on the press (not Safari).
+      del.focus();
+      mouseOn(del, 'pointermove', centerOf(CANCEL));
+      mouseOn(cancel, 'pointerup', centerOf(CANCEL));
+      expect(document.activeElement).toBe(cancel);
+    });
+
+    it("leaves focus where it was when the press did not focus the action it began on (Safari's buttons)", () => {
+      const outside = document.createElement('button');
+      document.body.appendChild(outside);
+      outside.focus();
+      const {cancel, del} = mountFine();
+      mouseOn(del, 'pointerdown', centerOf(DELETE));
+      mouseOn(del, 'pointermove', centerOf(CANCEL));
+      mouseOn(cancel, 'pointerup', centerOf(CANCEL));
+      expect(document.activeElement).toBe(outside);
+      outside.remove();
+    });
+
+    it("keeps the focus the lifted action's own click moved", () => {
+      const elsewhere = document.createElement('button');
+      document.body.appendChild(elsewhere);
+      const {cancel, del} = mountFine({onCancel: () => elsewhere.focus()});
+      mouseOn(del, 'pointerdown', centerOf(DELETE));
+      del.focus();
+      mouseOn(del, 'pointermove', centerOf(CANCEL));
+      mouseOn(cancel, 'pointerup', centerOf(CANCEL));
+      expect(document.activeElement).toBe(elsewhere);
+      elsewhere.remove();
+    });
+
+    /** A button outside the group that holds focus before the press. */
+    function focusOutside(): HTMLButtonElement {
+      const outside = document.createElement('button');
+      document.body.appendChild(outside);
+      outside.focus();
+      return outside;
+    }
+
+    it('under a finger, a slide leaves focus on the lifted action, as a tap on it does', () => {
+      // The tap's own focusing runs on the mousedown that follows a touch,
+      // which the claimed touch cancels with its click; a tap focuses a
+      // button outside iOS WebKit.
+      const outside = focusOutside();
+      const {cancel, del} = mount();
+      const f = finger();
+      f.down(del, centerOf(DELETE));
+      f.move(del, centerOf(CANCEL));
+      f.up(del, centerOf(CANCEL));
+      expect(document.activeElement).toBe(cancel);
+      outside.remove();
+    });
+
+    it('under a finger, a tap that never leaves its action focuses it', () => {
+      const outside = focusOutside();
+      const {cancel} = mount();
+      const f = finger();
+      f.down(cancel, centerOf(CANCEL));
+      f.up(cancel, centerOf(CANCEL), 80);
+      expect(document.activeElement).toBe(cancel);
+      outside.remove();
+    });
+
+    it('where a tap focuses no button (iOS WebKit), a finger leaves focus where it was', () => {
+      vi.stubGlobal('CSS', {
+        ...globalThis.CSS,
+        supports: (query: string) => query === '(-webkit-touch-callout: none)',
+      });
+      try {
+        const outside = focusOutside();
+        const {del} = mount();
+        const f = finger();
+        f.down(del, centerOf(DELETE));
+        f.move(del, centerOf(CANCEL));
+        f.up(del, centerOf(CANCEL));
+        expect(document.activeElement).toBe(outside);
+        outside.remove();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it('under a finger, a lift outside the group moves no focus', () => {
+      const outside = focusOutside();
+      const {del} = mount();
+      const f = finger();
+      f.down(del, centerOf(DELETE));
+      f.move(del, {x: 150, y: 400});
+      f.up(del, {x: 150, y: 400});
+      expect(document.activeElement).toBe(outside);
+      outside.remove();
+    });
   });
 
   it('expands the hit area for a finger only: a mouse hit-tests the exact rects (family:action-groups FR5)', () => {
@@ -636,6 +855,44 @@ describe('useActionGroupTracking', () => {
       f.up(message, centerOf(CANCEL));
       expect(onCancel).not.toHaveBeenCalled();
     });
+
+    /** One pointer event from a mouse or a pen, on the test clock. */
+    function pointerEvent(
+      kind: 'mouse' | 'pen',
+      target: Element,
+      type: string,
+      point: {x: number; y: number},
+    ): void {
+      time += 16;
+      const event = new PointerEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        pointerId: kind === 'pen' ? 41 : 1,
+        pointerType: kind,
+        isPrimary: true,
+        button: 0,
+        buttons: type === 'pointerup' ? 0 : 1,
+        clientX: point.x,
+        clientY: point.y,
+      });
+      Object.defineProperty(event, 'timeStamp', {value: time});
+      target.dispatchEvent(event);
+    }
+
+    for (const kind of ['mouse', 'pen'] as const) {
+      it(`lights a ${kind}'s press at once: only a finger waits the content-touch delay (spec:AST-094 FR11)`, () => {
+        restorePointer();
+        restorePointer = pointerQuery(false).restore;
+        const {del, cancel, onCancel} = mountInScroller();
+        runAttachFrame();
+        pointerEvent(kind, del, 'pointerdown', centerOf(DELETE));
+        expect(paintOf(del)).toBe('on');
+        pointerEvent(kind, del, 'pointermove', centerOf(CANCEL));
+        expect(paintOf(cancel)).toBe('on');
+        pointerEvent(kind, cancel, 'pointerup', centerOf(CANCEL));
+        expect(onCancel).toHaveBeenCalledTimes(1);
+      });
+    }
 
     it('tracks once the finger has rested for the content-touch delay', () => {
       const {message, cancel, onCancel} = mountInScroller();
