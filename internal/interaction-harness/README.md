@@ -47,7 +47,7 @@ committed: a pull request links or attaches it.
 | `touch.ts`      | `touchDriver(page).play(script)`: the script as real engine input. `installInputLog` / `readInputLog`: what the page received.                                                                                                |
 | `frames.ts`     | `startScreencast` (timestamped composited frames), `markElement` (a marker chip or outline), `trackMarker` (marker box per frame), `frameStats`.                                                                              |
 | `busy.ts`       | `blockMainThread(page, ms)` and `busyWindowProof(tracked, window)`: frames presented, frames that moved, longest stall, a verdict; `presented` adds the compositor's own frames.                                              |
-| `curves.ts`     | `holdAnimations`, `seekAnimations`, `sampleCurve` (presented transform / opacity at any t), `waitForAnimation`, `watchAnimations`, `waitForRest`, `releaseAnimations`.                                                        |
+| `curves.ts`     | `holdAnimations`, `armHold` (hold a motion in the task that makes it), `seekAnimations`, `sampleCurve` (presented transform / opacity at any t), `waitForAnimation`, `watchAnimations`, `waitForRest`, `releaseAnimations`.   |
 | `math.ts`       | Oracles independent of the code under test: `cubicBezier`, `timingFunction`, `springStep` (SwiftUI response / dampingFraction, initial velocity), `projectDecay`, `rubberBand`, `parseTransform`, `compareCurve`, `timeline`. |
 | `storyboard.ts` | `animationStoryboard` (seek to t = 0, 16.7, 33.3 … ms), `touchStoryboard` (a frame per scripted event): PNG contact sheet + JSON trace.                                                                                       |
 | `output.ts`     | `evidenceDir`, `writeEvidence`: where evidence goes and how it is attached to the report.                                                                                                                                     |
@@ -101,6 +101,26 @@ and `Element.animate` as it is called, pending animations included. So
 set): a short entrance no longer races the first look on a cold page. When the
 action may be the page's first contact with the harness, take
 `watchAnimations(locator)` before it and read `watch.started()` after.
+`watch.recorded()` returns everything recorded on the element since the
+watch, running or finished, with no wait: read it once the action has run in
+the page, and a cross-fade that ended before the read is in it, beside a part
+still running.
+
+**Holding a motion as it is made.** A hold the test takes after an action
+reaches the page as late as the runner lets it: on a loaded machine a 1 s
+settle can end before the test's next call arrives. `armHold(scope, {property,
+to})`, taken before the action, holds it in the page instead. When an
+animation of `scope`'s own element whose last keyframe sets `property` to `to`
+is recorded, everything running in the scope is held, into the same held set
+as `holdAnimations` (so `seekAnimations`, `sampleCurve` and
+`releaseAnimations` take it), in a microtask of the task that created it;
+until the page's next frame, an animation the same task starts in the scope
+later is held too. A script animation is held before its first frame (a call
+from rest at 0 ms, one on an explicit start time where it stands); a CSS
+animation or transition at its first frame, when the recorder sees it.
+`armed.held()` after the action returns the held animations and the one that
+fired the hold, or rejects after three of the page's frames, naming what the
+scope's element started instead.
 
 **Busy main thread.** Mark the element, start the screencast, start the
 animation, wait until it runs (`waitForAnimation`: an animation cannot start
