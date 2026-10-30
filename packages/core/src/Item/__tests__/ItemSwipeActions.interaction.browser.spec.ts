@@ -45,6 +45,7 @@ import {
   markElement,
   openStory,
   readLongTasks,
+  recordWebKitTimeline,
   releaseAnimations,
   retakeOnTouchPacing,
   sampleRects,
@@ -1518,6 +1519,54 @@ test('the drag and the settle do no Layout or Paint per frame', async ({
   const dragging = countBetween(trace, dragWindow.from, dragWindow.to);
   expect(dragging.Layout ?? 0, JSON.stringify(dragging)).toBe(0);
   expect(trace.longTasks).toEqual([]);
+});
+
+test('in WebKit the drag and the settle repaint nothing frame after frame: no other row paints, and the row paints each part at most when it is uncovered', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== 'webkit',
+    "WebKit's own Timeline; Chromium's counterpart is the rendering trace above",
+  );
+  const {driver, row, rest, start} = await openRow(page);
+  // A composited box keeps the page in compositing mode, as any app's page
+  // with one layer is: on a bare story page the first compositor animation
+  // switches the page into it and back, repainting the whole viewport at
+  // its start and its end, which is the page's doing, not the row's.
+  await page.evaluate(() => {
+    const layer = document.createElement('div');
+    layer.style.cssText =
+      'position:fixed;left:0;top:0;width:4px;height:4px;will-change:transform';
+    document.body.append(layer);
+  });
+  await waitForRest(row);
+  const timeline = await recordWebKitTimeline(page, async () => {
+    await driver.play(heldDrag(start, -130));
+    await waitForRest(row);
+  });
+  // Nothing outside the swiped row paints: not the other rows, not the list
+  // below them.
+  const outside = timeline.paints.filter(
+    ({rect}) =>
+      rect.y + rect.height <= rest.y + 0.5 ||
+      rect.y >= rest.y + rest.height - 0.5,
+  );
+  expect(outside, JSON.stringify(outside.slice(0, 4))).toEqual([]);
+  // A repaint per frame shows as one area painted frame after frame; a part
+  // painted as it is uncovered, or as the row lands, shows a few times at
+  // most.
+  const timesPainted = new Map<string, number>();
+  for (const {rect} of timeline.paints) {
+    const area = [rect.x, rect.y, rect.width, rect.height]
+      .map(Math.round)
+      .join(',');
+    timesPainted.set(area, (timesPainted.get(area) ?? 0) + 1);
+  }
+  expect(
+    Math.max(0, ...timesPainted.values()),
+    JSON.stringify([...timesPainted]),
+  ).toBeLessThanOrEqual(3);
 });
 
 test(
