@@ -69,11 +69,10 @@ exported from the package entry.
   scrolls the body at once and the content box rides up from where it was on
   the show's curve; through the hide the room stays and the content box
   rides down by the scroll the room's drop takes back, and at rest the room
-  drops and the translate clears in one commit. Under a fine pointer, and
-  where the keyboard moves on Safari's schedule (iOS Safari, Firefox for
-  Android, which have no VirtualKeyboard API), nothing of the ride attaches:
-  no guide subscription and no frame watch, and the room follows the
-  reports. Safari's and Firefox's reveals are unchanged.
+  drops and the translate clears in one commit. Under a fine pointer, and in
+  a browser without the VirtualKeyboard API (iOS Safari, Firefox for
+  Android), nothing of the ride attaches: no guide subscription, and the room
+  follows the reports. Safari's and Firefox's reveals are unchanged.
 
 ## Riding the keyboard
 
@@ -91,40 +90,21 @@ const unsubscribe = guide.subscribe(t => {
 ```
 
 Each transition is
-`{kind, from, to, start, velocity, animated, predicted, curve, spring}`:
-heights in CSS px, `start` on the document timeline (in the past for a show
-reported after the keyboard started, slightly ahead for a hide that starts
-after a blur), and the curve the keyboard moves on: `curve`, Gboard's slide in
-Chrome on Android, or else `spring`, UIKit's keyboard spring
-(`keyboard.spring`), values and no motion role
-(architecture:react-component-runtime INV11). `rideKeyboard` moves your
-element on the compositor from `start` on that curve, or at once when the
-transition is not animated. Hand the translate back to the layout once the
+`{kind, from, to, start, velocity, animated, predicted, curve}`: heights in
+CSS px, `start` on the document timeline (dated back to Gboard's start for a
+slide Chrome reported, slightly ahead for a hide that starts after a blur),
+and the curve the keyboard moves on: `curve`, Gboard's slide in Chrome on
+Android, values and no motion role (architecture:react-component-runtime
+INV11). `rideKeyboard` moves your element on the compositor from `start` on
+that curve, or at once when the transition is not animated. Hand the translate back to the layout once the
 ride ends (BottomSheet's hook does, in one commit at rest). Under Reduce Motion
 nothing travels with the keyboard
 (design:reduced-motion): the animator's default cross-fades on a touch screen
 and moves at once otherwise. `presentation(time)` gives the height presented
 at any time, for something that appears while the keyboard moves.
 
-## What the page sees (Mobile Safari, iOS 26.2)
+## What the page sees
 
-- Show: one `resize` of the visual viewport, with the final height, about
-  `keyboard.showReportLagMs` after the keyboard started to rise. A busy main
-  thread holds the report back, but UIKit raises the keyboard on its own
-  schedule, `keyboard.focusToShowMs` after the focus: the guide watches frames
-  from the focus and dates a report that follows a gap from the focus (no
-  earlier than the last frame before the report), however late, so the dock
-  joins the spring where the keyboard is by then. Without a focus it goes
-  back to the last frame before the report, at most
-  `keyboard.showReportLagMaxMs`.
-- Hide: the `resize` comes only once the keyboard is down. The keyboard starts
-  to fall `keyboard.hideAfterBlurMs` after the focused control blurs to
-  something that brings up no keyboard, whether the page blurred it or the
-  accessory bar's Done did, so the guide starts the hide at the blur and takes
-  the late `resize` as its confirmation. A prediction the viewport has not
-  confirmed once it should have ended gives way to what the viewport says.
-- Another keyboard while one is up (a field that brings up the number pad)
-  is UIKit's zero-duration change: the height jumps.
 - Safari reveals a focused field by scrolling the whole page, so a layout that
   keeps its own content above the keyboard focuses its field with
   `preventScroll` (`refuseFocusReveal`).
@@ -192,11 +172,9 @@ keyboard module measures them from the visual viewport, as in every browser
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | `keyboardHeight.ts`      | The keyboard module: the height, its listeners, the focus routes, BottomSheet's hook.                                 |
 | `keyboardModel.ts`       | The clock-free core of the guide: transitions from keyboard reports and focus changes.                                |
-| `keyboardLayoutGuide.ts` | One guide per window, fed by the keyboard module: the frame watch, the verification timer, the focus handoff.         |
+| `keyboardLayoutGuide.ts` | One guide per window, fed by the keyboard module: the verification timer, the focus handoff.                          |
 | `rideKeyboard.ts`        | Moves an element with the keyboard on the curve its transition publishes, or at once (tests: `rideKeyboard.test.ts`). |
 | `index.ts`               | Entry point.                                                                                                          |
 
-The timing constants live in `../motion/uikit/keyboard.ts` (iOS) and
-`../motion/android/keyboard.ts` (Chrome with Gboard), the spring in
-`keyboard.spring`, the duration in `keyboardNotification` (composed into
-`timing` as `keyboardNotificationMs`).
+The timing constants live in `../motion/android/keyboard.ts` (Chrome with
+Gboard).

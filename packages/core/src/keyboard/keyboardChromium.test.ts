@@ -156,6 +156,24 @@ describe('the keyboard layout guide on Chrome', () => {
     expect(seen.at(-1)).toBe(hide);
   });
 
+  it('checks a prediction Chrome never confirms 150 ms after its slide ends', () => {
+    // One clock for event times and the guide's own reads, as in a browser.
+    vi.spyOn(window.performance, 'now').mockImplementation(() => Date.now());
+    a.focus();
+    report(312);
+    vi.advanceTimersByTime(1000);
+    a.blur();
+    const hide = seen.at(-1);
+    expect(hide).toMatchObject({kind: 'hide', to: 0, predicted: true});
+    // The keyboard stays up: Chrome never reports the hide. Once the slide
+    // should have ended, and 150 ms more, the guide believes the viewport.
+    const due = (hide?.start ?? 0) + androidKeyboard.hideMs + 150;
+    vi.advanceTimersByTime(due - Date.now() - 1);
+    expect(seen.at(-1)).toBe(hide);
+    vi.advanceTimersByTime(2);
+    expect(seen.at(-1)).toMatchObject({kind: 'show', to: 312});
+  });
+
   it('rides a hide nothing predicted (Back) down from its report, dated back to Gboard’s start', () => {
     a.focus();
     report(312);

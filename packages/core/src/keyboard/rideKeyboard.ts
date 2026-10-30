@@ -9,10 +9,10 @@
  * @position Keyboard module (internal to core); what a guide subscriber
  *   calls for each transition (BottomSheet's hook, keyboardHeight.ts)
  *
- * iOS's keyboard moves on UIKit's keyboard spring and Android's on Gboard's
- * slides up and down (motion/android/keyboard.ts); the transition publishes
- * which (`curve`, else `spring`), and the ride plays that
- * (architecture:react-component-runtime INV11). Every ride starts at the transition's start, so content that
+ * Android's keyboard moves on Gboard's slides up and down
+ * (motion/android/keyboard.ts); the transition publishes the slide (`curve`),
+ * and the ride plays it (architecture:react-component-runtime INV11). Every
+ * ride starts at the transition's start, so content that
  * joins a slide late lands where the keyboard is; a transition that is not
  * animated (a keyboard changing while up) lands at once. Under Reduce Motion
  * nothing travels (design:reduced-motion): the animator's default
@@ -36,8 +36,8 @@ import {cubicBezier} from '../motion/bezier';
 import type {KeyboardTransition} from './keyboardModel';
 
 /**
- * Moves `animator`'s element to `to` with the keyboard: on its spring or its
- * curve from `transition.start`, or at once when the keyboard jumps.
+ * Moves `animator`'s element to `to` with the keyboard: on its curve from
+ * `transition.start`, or at once when the keyboard jumps.
  *
  * @example
  * ```
@@ -49,15 +49,12 @@ export function rideKeyboard(
   to: MotionValues,
   transition: KeyboardTransition,
 ): MotionHandle | null {
-  if (!transition.animated) {
+  if (!transition.animated || transition.curve == null) {
     animator.set(to);
     return null;
   }
   // Under Reduce Motion the animator's default applies: no travel (DR1).
   const options = {at: transition.start};
-  if (transition.curve == null) {
-    return animator.animate(to, {spring: transition.spring}, options);
-  }
   const show = transition.kind === 'show';
   const span = (show ? androidKeyboard.showMs : androidKeyboard.hideMs) / 1000;
   const ease = cubicBezier(
