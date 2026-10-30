@@ -19,6 +19,13 @@
  * taps 0.1 s and 0.25 s into a sheet or full-screen dismissal reach no
  * window). MobileNav's close keeps its own timing (FR5, ORD3), so its leaving
  * drawer takes no input only until the dialog closes.
+ *
+ * A case that must act inside the slide-in or the close stops the page's
+ * clock first, so the close's own delay, the slide-in's cap and AppShell's
+ * Activity hold wait for it however long the runner takes between steps, and
+ * it runs the clock on by exact amounts. Where the drawer's place or its
+ * slide-in matters, the slide is slowed to a minute; the close keeps its own
+ * timing either way.
  */
 
 import {expect, test, type Page} from '@playwright/test';
@@ -44,6 +51,25 @@ test.use({
   viewport: {width: 402, height: 714},
   deviceScaleFactor: 1,
 });
+
+test.beforeEach(async ({page}) => {
+  // The page's clock runs with real time until a case stops it (stopClock).
+  await page.clock.install();
+  // Counts the key presses that reach the window (settleInput).
+  await page.addInitScript(() => {
+    const counter = window as unknown as {__keydowns: number};
+    counter.__keydowns = 0;
+    window.addEventListener(
+      'keydown',
+      () => {
+        counter.__keydowns += 1;
+      },
+      true,
+    );
+  });
+});
+
+const MOBILE_NAV_STORY = 'core-mobilenav--default';
 
 interface LoggedEvent {
   type: 'click' | 'focus' | 'open';
@@ -81,7 +107,7 @@ async function openNav(
   } = {},
 ) {
   await page.goto(
-    `${storybook.origin}/iframe.html?id=core-mobilenav--default&viewMode=story`,
+    `${storybook.origin}/iframe.html?id=${MOBILE_NAV_STORY}&viewMode=story`,
   );
   if (tokenDefault) {
     await page.addStyleTag({
@@ -190,69 +216,75 @@ const state = async (page: Page) =>
     };
   });
 
+const middleOf = (box: {x: number; y: number; width: number; height: number}) =>
+  [box.x + box.width / 2, box.y + box.height / 2] as const;
+
 /**
- * Attempts at a case that must act inside the close, before the dialog closes
- * (at most 250 ms after the close tap). A runner that gets there only after
- * the close missed its window rather than finding nothing held, so the case
- * runs again on a fresh page, and fails only if it never lands inside the
- * close.
+ * Stops the page's clock: no timer fires (the close's own delay, the
+ * slide-in's cap, AppShell's Activity hold) until `advance` runs the clock on.
+ * Until here it runs with real time; the pause is a minute ahead, so always in
+ * its future.
  */
-const CLOSE_WINDOW_ATTEMPTS = 3;
+async function stopClock(page: Page) {
+  const pageNow = await page.evaluate(() => Date.now());
+  await page.clock.pauseAt(pageNow + 60_000);
+  return {
+    /** Runs the page's clock `ms` on, firing every timer due by then. */
+    advance: async (ms: number) => page.clock.runFor(ms),
+  };
+}
+
+/** Slows the drawer's slide to a minute, so it is still moving at each step. */
+const slowSlide = async (page: Page) =>
+  page.addStyleTag({content: '* { --duration-medium: 60s !important; }'});
+
+/**
+ * Waits until every tap sent before has reached the page, clicks and all: a
+ * Shift press goes through the same input queue after them, and no hold takes
+ * keys (FR35).
+ */
+async function settleInput(page: Page) {
+  const keydowns = async () =>
+    page.evaluate(() => (window as unknown as {__keydowns: number}).__keydowns);
+  const before = await keydowns();
+  await page.keyboard.press('Shift');
+  await expect.poll(keydowns).toBe(before + 1);
+}
 
 test('the leaving drawer takes no input until the dialog closes, at most 250 ms in (FR5), then focus returns', async ({
   page,
 }) => {
-  let closeTapped = 0;
-  let early: Awaited<ReturnType<typeof state>> | null = null;
-  for (
-    let attempt = 1;
-    attempt <= CLOSE_WINDOW_ATTEMPTS && early == null;
-    attempt++
-  ) {
-    const opened = await openNav(page, {tokenDefault: true});
-    expect(opened.durationMs).toBeGreaterThan(400);
+  const {durationMs, backdrop} = await openNav(page, {tokenDefault: true});
+  expect(durationMs).toBeGreaterThan(400);
 
-    await page.touchscreen.tap(opened.backdrop.x, opened.backdrop.y);
-    closeTapped = await now(page);
-    await page.waitForTimeout(60);
-    const probe = await state(page);
-    // Already closed: the probe came after the close, not inside it.
-    if (!probe.modal) {
-      console.log(
-        `↻ the dialog had closed before the early probe (attempt ${attempt}); probing again`,
-      );
-      continue;
-    }
-    early = probe;
-  }
-  if (early == null) {
-    throw new Error(
-      `in ${CLOSE_WINDOW_ATTEMPTS} attempts the early probe never landed before the close`,
-    );
-  }
-  await page.waitForTimeout(500);
-
-  // Before the close: still the modal dialog holding the page, the leaving
-  // drawer inert, and focus on neither the drawer nor the opener (Chromium
-  // parks it on the dialog element once the drawer goes inert).
+  const clock = await stopClock(page);
+  await page.touchscreen.tap(backdrop.x, backdrop.y);
+  const closeTapped = await now(page);
+  await settleInput(page);
+  // Inside the close, which cannot end while the page's clock is stopped:
+  // still the modal dialog holding the page, the leaving drawer inert, and
+  // focus on neither the drawer nor the opener (Chromium parks it on the
+  // dialog element once the drawer goes inert).
+  await expect.poll(async () => (await state(page)).drawerInert).toBe(true);
+  const early = await state(page);
   expect(early.modal).toBe(true);
-  expect(early.drawerInert).toBe(true);
   expect(early.focusInDrawer).toBe(false);
   expect(early.focusOnOpener).toBe(false);
 
+  await clock.advance(1000);
   // The dialog closed on its own timing, at most 250 ms in, well before the
   // 410 ms slide-out ended...
   const events = await loggedEvents(page);
   const closed = events.find(e => e.type === 'open' && e.open === false);
   expect(closed).toBeDefined();
-  expect((closed?.t ?? Infinity) - closeTapped).toBeLessThan(290);
-  // ...and focus went back to the opener once it had.
+  const closedIn = (closed?.t ?? Infinity) - closeTapped;
+  expect(closedIn).toBeGreaterThan(0);
+  expect(closedIn).toBeLessThanOrEqual(250);
+  // ...and focus went back to the opener as it did, in the same task.
   const returned = events.find(
     e => e.type === 'focus' && e.name === 'Open Navigation',
   );
-  expect(returned).toBeDefined();
-  // Same task as the close; the observer logs the close a microtask later.
-  expect(returned?.t ?? 0).toBeGreaterThanOrEqual((closed?.t ?? Infinity) - 2);
+  expect(returned?.t).toBe(closed?.t);
   const after = await state(page);
   expect(after.modal).toBe(false);
   expect(after.drawerInert).toBe(false);
@@ -261,97 +293,112 @@ test('the leaving drawer takes no input until the dialog closes, at most 250 ms 
 test('a tap on the leaving drawer before the dialog closes does nothing', async ({
   page,
 }) => {
-  for (let attempt = 1; attempt <= CLOSE_WINDOW_ATTEMPTS; attempt++) {
-    const {nav} = await openNav(page, {tokenDefault: true});
-    const link = nav.getByRole('link', {name: 'Projects'});
-
-    await nav.getByRole('button', {name: /close navigation/i}).tap();
-    // Tap where the link is right now, early in the close.
-    const box = await link.boundingBox();
-    if (box == null) {
-      throw new Error('no link box');
-    }
-    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
-    const tapped = await now(page);
-    await page.waitForTimeout(500);
-
-    const events = await loggedEvents(page);
-    const closed = events.find(e => e.type === 'open' && e.open === false);
-    expect(closed).toBeDefined();
-    // The tap came after the close, not inside it.
-    if (tapped > (closed?.t ?? Infinity)) {
-      console.log(
-        `↻ the tap landed after the close (attempt ${attempt}); tapping again`,
-      );
-      continue;
-    }
-    // The close button's own click is the only click on the drawer.
-    expect(events.filter(e => e.type === 'click' && e.inDrawer)).toHaveLength(
-      1,
-    );
-    return;
+  const {nav, drawer} = await openNav(page, {tokenDefault: true});
+  const link = nav.getByRole('link', {name: 'Projects'});
+  const closeButton = await nav
+    .getByRole('button', {name: /close navigation/i})
+    .boundingBox();
+  if (closeButton == null) {
+    throw new Error('no close button box');
   }
-  throw new Error(
-    `in ${CLOSE_WINDOW_ATTEMPTS} attempts the tap never landed before the close`,
-  );
+  await slowSlide(page);
+
+  const clock = await stopClock(page);
+  await page.touchscreen.tap(...middleOf(closeButton));
+  await settleInput(page);
+  await expect.poll(async () => (await state(page)).drawerInert).toBe(true);
+  // The leaving drawer, held where it is early in its slide-out: tap the link
+  // right where it is drawn.
+  await drawer.evaluate(element => {
+    for (const animation of element.getAnimations()) {
+      animation.pause();
+    }
+  });
+  const box = await link.boundingBox();
+  const viewport = page.viewportSize();
+  if (box == null || viewport == null) {
+    throw new Error('no link box');
+  }
+  const [x, y] = middleOf(box);
+  expect(x).toBeGreaterThan(0);
+  expect(x).toBeLessThan(viewport.width);
+  await page.touchscreen.tap(x, y);
+  await settleInput(page);
+  await clock.advance(1000);
+
+  const events = await loggedEvents(page);
+  expect(events.find(e => e.type === 'open' && e.open === false)).toBeDefined();
+  // The tap reached nothing: the close button's own click is the only click.
+  const clicks = events.filter(e => e.type === 'click');
+  expect(clicks).toHaveLength(1);
+  expect(clicks[0].inDrawer).toBe(true);
 });
 
 test('the page takes taps again once the dialog has closed', async ({page}) => {
-  for (let attempt = 1; attempt <= CLOSE_WINDOW_ATTEMPTS; attempt++) {
-    const {backdrop} = await openNav(page, {tokenDefault: true});
+  const {backdrop} = await openNav(page, {tokenDefault: true});
+  await slowSlide(page);
 
-    await page.touchscreen.tap(backdrop.x, backdrop.y);
-    // Inside the close: it reaches only the dialog's backdrop, which can only
-    // ask to close again.
-    await page.touchscreen.tap(backdrop.x, backdrop.y);
-    const lateTapped = await now(page);
-    // Once the dialog has closed, while the drawer still slides out, the page
-    // takes the next tap.
-    await page.waitForFunction(() => !document.querySelector('dialog')?.open);
-    await page.touchscreen.tap(backdrop.x, backdrop.y);
+  const clock = await stopClock(page);
+  await page.touchscreen.tap(backdrop.x, backdrop.y);
+  await settleInput(page);
+  await expect.poll(async () => (await state(page)).drawerInert).toBe(true);
+  // Inside the close the next tap reaches nothing, not even the backdrop.
+  await page.touchscreen.tap(backdrop.x, backdrop.y);
+  await settleInput(page);
+  await clock.advance(1000);
+  expect((await state(page)).modal).toBe(false);
+  // The dialog has closed while the drawer still slides out (a minute long
+  // here): the page takes the next tap.
+  await page.touchscreen.tap(backdrop.x, backdrop.y);
+  await settleInput(page);
 
-    const events = await loggedEvents(page);
-    const closed = events.find(e => e.type === 'open' && e.open === false);
-    expect(closed).toBeDefined();
-    // The second tap came after the close, not inside it.
-    if (lateTapped > (closed?.t ?? Infinity)) {
-      console.log(
-        `↻ the second tap landed after the close (attempt ${attempt}); tapping again`,
-      );
-      continue;
-    }
-    const clicks = events.filter(e => e.type === 'click');
-    const pageClicks = clicks.filter(e => !e.inDialog);
-    // The page got exactly one click: the one after the close. The tap inside
-    // the close reached only the dialog's backdrop, never the page and never
-    // the drawer.
-    expect(pageClicks).toHaveLength(1);
-    expect(pageClicks[0].t).toBeGreaterThan(closed?.t ?? Infinity);
-    expect(clicks.some(e => e.inDrawer)).toBe(false);
-    expect(clicks.filter(e => e.inDialog).every(e => e.onBackdrop)).toBe(true);
-    return;
-  }
-  throw new Error(
-    `in ${CLOSE_WINDOW_ATTEMPTS} attempts the second tap never landed before the close`,
-  );
+  const events = await loggedEvents(page);
+  const closed = events.find(e => e.type === 'open' && e.open === false);
+  expect(closed).toBeDefined();
+  const clicks = events.filter(e => e.type === 'click');
+  const pageClicks = clicks.filter(e => !e.inDialog);
+  // Two clicks: the close tap's on the backdrop, and the page's after the
+  // close. The tap inside the close reached nothing.
+  expect(clicks).toHaveLength(2);
+  expect(clicks[0].onBackdrop).toBe(true);
+  expect(clicks[0].t).toBeLessThan(closed?.t ?? -Infinity);
+  expect(pageClicks).toHaveLength(1);
+  expect(pageClicks[0]).toBe(clicks[1]);
+  expect(pageClicks[0].t).toBeGreaterThan(closed?.t ?? Infinity);
 });
 
-test('a tap during the slide-in reaches nothing', async ({page}) => {
+/** Opens the drawer with a tap while the page's clock is stopped. */
+async function openInsideSlideIn(page: Page) {
   await page.goto(
-    `${storybook.origin}/iframe.html?id=core-mobilenav--default&viewMode=story`,
+    `${storybook.origin}/iframe.html?id=${MOBILE_NAV_STORY}&viewMode=story`,
   );
+  await slowSlide(page);
+  const opener = await page
+    .getByRole('button', {name: 'Open Navigation'})
+    .boundingBox();
+  if (opener == null) {
+    throw new Error('no opener box');
+  }
+  const clock = await stopClock(page);
+  await page.touchscreen.tap(...middleOf(opener));
+  await settleInput(page);
+  await expect.poll(async () => (await state(page)).modal).toBe(true);
+  return clock;
+}
+
+test('a tap during the slide-in reaches nothing', async ({page}) => {
+  const clock = await openInsideSlideIn(page);
   const viewport = page.viewportSize();
   if (viewport == null) {
     throw new Error('no viewport');
   }
-  await page.getByRole('button', {name: 'Open Navigation'}).tap();
-  await page.waitForTimeout(100);
   // Early in the slide-in, on the strip the drawer leaves free: under iOS's
   // rule the tap is dropped, so it does not close the drawer.
   await page.touchscreen.tap(8, viewport.height / 2);
-  await page.waitForTimeout(800);
-
-  await expect(page.getByRole('dialog')).toBeVisible();
+  await settleInput(page);
+  // A close asked for would have closed the dialog by now: the page's clock
+  // ran past the close's delay and the slide-in's cap.
+  await clock.advance(1000);
   expect(
     await page.evaluate(() => document.querySelector('dialog')?.open),
   ).toBe(true);
@@ -360,15 +407,11 @@ test('a tap during the slide-in reaches nothing', async ({page}) => {
 test('keys and assistive technology stay live during the slide-in (spec:AST-094 FR35)', async ({
   page,
 }) => {
-  await page.goto(
-    `${storybook.origin}/iframe.html?id=core-mobilenav--default&viewMode=story`,
-  );
-  await page.getByRole('button', {name: 'Open Navigation'}).tap();
+  await openInsideSlideIn(page);
   // Early in the slide-in, while a tap is still held: a key moves focus into
   // the drawer, and its links stay in the accessibility tree.
-  await page.waitForTimeout(50);
   await page.keyboard.press('Tab');
-  const state = await page.evaluate(() => {
+  const live = await page.evaluate(() => {
     const dialog = document.querySelector('dialog');
     const drawer = dialog?.querySelector('[tabindex="-1"]');
     const focused = document.activeElement;
@@ -379,9 +422,9 @@ test('keys and assistive technology stay live during the slide-in (spec:AST-094 
       focusInert: focused?.closest('[inert]') != null,
     };
   });
-  expect(state.sliding).toBe(true);
-  expect(state.focusInDialog).toBe(true);
-  expect(state.focusInert).toBe(false);
+  expect(live.sliding).toBe(true);
+  expect(live.focusInDialog).toBe(true);
+  expect(live.focusInert).toBe(false);
   await expect(page.getByRole('link', {name: 'Dashboard'})).toHaveCount(1);
 });
 
@@ -398,21 +441,25 @@ test.describe('under a mouse', () => {
       await page.evaluate(() => matchMedia('(pointer: fine)').matches),
     ).toBe(true);
 
+    const clock = await stopClock(page);
     await page.mouse.click(backdrop.x, backdrop.y);
     const closeClicked = await now(page);
-    await page.waitForTimeout(60);
+    await settleInput(page);
     // No hold: the leaving drawer is not inert.
     expect(
       await drawer.evaluate(element => (element as HTMLElement).inert),
     ).toBe(false);
-    await page.waitForTimeout(durationMs + 200);
+    await clock.advance(1000);
 
     const events = await loggedEvents(page);
     const closed = events.find(e => e.type === 'open' && e.open === false);
     expect(closed).toBeDefined();
     // The close's own timing: at most 250 ms in, well before the slide-out
     // ends.
-    expect((closed?.t ?? Infinity) - closeClicked).toBeLessThan(290);
+    const closedIn = (closed?.t ?? Infinity) - closeClicked;
+    expect(closedIn).toBeGreaterThan(0);
+    expect(closedIn).toBeLessThan(durationMs);
+    expect(closedIn).toBeLessThanOrEqual(250);
     expect(
       events.some(e => e.type === 'focus' && e.name === 'Open Navigation'),
     ).toBe(true);
@@ -420,8 +467,9 @@ test.describe('under a mouse', () => {
 });
 
 /**
- * Opens AppShell's drawer, closes it, and reads it 390 ms after the close:
- * past the 300 ms at which AppShell used to hide it, inside the slide-out,
+ * Opens AppShell's drawer, closes it, and reads it 390 ms after the close by
+ * the page's clock: past the 300 ms at which AppShell used to hide it, inside
+ * the slide-out,
  * which runs at the token default, `--duration-medium: 410ms` (the story's
  * theme runs it in 300 ms, which would hide the cut). Activity hides its
  * subtree with an inline `display: none`; Chromium still holds the dialog
@@ -450,13 +498,20 @@ async function appShellDrawerAfterClose(
   await drawer.evaluate(async element => {
     await Promise.all(element.getAnimations().map(async a => a.finished));
   });
-  const close = nav.getByRole('button', {name: /close navigation/i});
-  if (input === 'mouse') {
-    await close.click();
-  } else {
-    await close.tap();
+  const close = await nav
+    .getByRole('button', {name: /close navigation/i})
+    .boundingBox();
+  if (close == null) {
+    throw new Error('no close button box');
   }
-  await page.waitForTimeout(390);
+  const clock = await stopClock(page);
+  if (input === 'mouse') {
+    await page.mouse.click(...middleOf(close));
+  } else {
+    await page.touchscreen.tap(...middleOf(close));
+  }
+  await settleInput(page);
+  await clock.advance(390);
   return page.evaluate(() => {
     const dialog = document.querySelector('dialog');
     return {

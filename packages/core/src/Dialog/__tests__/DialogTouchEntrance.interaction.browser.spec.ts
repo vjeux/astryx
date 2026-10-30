@@ -104,19 +104,63 @@ async function openMidEntrance(
 }
 
 /**
- * Plays a drag twice. Chromium can drop the first scroll gesture after a
- * top-layer element opens, so a single drag would prove nothing about the
- * hold.
+ * Records every touch the page receives, and whether the browser took one to
+ * pan something (a `pointercancel`): a window capture listener added before
+ * the page's own scripts, so it sees a touch even when the input hold stops
+ * it there. Install it before opening the story.
  */
-async function dragTwice(
+async function installTouchProbe(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const seen: string[] = [];
+    (window as unknown as {__touchProbe: string[]}).__touchProbe = seen;
+    for (const type of [
+      'touchstart',
+      'touchmove',
+      'touchend',
+      'touchcancel',
+      'pointercancel',
+    ]) {
+      window.addEventListener(type, () => seen.push(type), {
+        capture: true,
+        passive: true,
+      });
+    }
+  });
+}
+
+/** What the probe saw since the last read, emptying it. */
+const takeTouchProbe = async (page: Page) =>
+  page.evaluate(() => {
+    const seen = (window as unknown as {__touchProbe: string[]}).__touchProbe;
+    return seen.splice(0);
+  });
+
+/**
+ * Plays one drag and returns what the page received: its touch events, and
+ * whether the browser took the touch to pan something (a `pointercancel`).
+ * A drag the page never received shows here, so it cannot pass as one that
+ * scrolled nothing.
+ */
+async function playDrag(
   page: Page,
   driver: TouchDriver,
   script: Parameters<TouchDriver['play']>[0],
-): Promise<void> {
-  for (let i = 0; i < 2; i++) {
-    await driver.play(script);
-    await frames(page, 4);
-  }
+): Promise<{received: string[]; panned: boolean}> {
+  await takeTouchProbe(page);
+  await driver.play(script);
+  await frames(page, 4);
+  const seen = await takeTouchProbe(page);
+  return {
+    received: seen.filter(type => type.startsWith('touch')),
+    panned: seen.includes('pointercancel'),
+  };
+}
+
+/** The whole drag reached the page: a touchstart, its moves and its touchend. */
+function expectDelivered(played: {received: string[]}): void {
+  expect(played.received[0], 'the drag reached the page').toBe('touchstart');
+  expect(played.received).toContain('touchmove');
+  expect(played.received.at(-1)).toBe('touchend');
 }
 
 /** What has focus: its tag and accessible name. */
@@ -181,6 +225,7 @@ test.describe('under a finger (spec:AST-094 FR35)', () => {
       browserName === 'webkit',
       'needs native scrolling from injected touches (the WebKit driver has none)',
     );
+    await installTouchProbe(page);
     const driver = await openMidEntrance(
       page,
       SCROLLING,
@@ -213,12 +258,16 @@ test.describe('under a finger (spec:AST-094 FR35)', () => {
     const scrollTop = async () =>
       content.evaluate(element => element.scrollTop);
 
-    await dragTwice(page, driver, up);
+    const held = await playDrag(page, driver, up);
+    expectDelivered(held);
+    expect(held.panned, 'the browser panned nothing').toBe(false);
     expect(await scrollTop()).toBe(0);
     await expect(openDialogs(page)).toHaveCount(1);
 
     await finishEntrance(page);
-    await dragTwice(page, driver, up);
+    const free = await playDrag(page, driver, up);
+    expectDelivered(free);
+    expect(free.panned, 'the browser took the drag to scroll').toBe(true);
     expect(await scrollTop()).toBeGreaterThan(0);
   });
 

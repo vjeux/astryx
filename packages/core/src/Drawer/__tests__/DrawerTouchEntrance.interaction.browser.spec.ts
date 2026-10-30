@@ -125,20 +125,63 @@ async function openMidEntrance(
 }
 
 /**
- * Plays a drag twice. Chromium drops the first scroll gesture after a page
- * loads or a top-layer element opens (measured here: unheld, the first drag
- * after the drawer opens scrolls nothing, the second scrolls 303 px), so a
- * single drag would prove nothing about the hold.
+ * Records every touch the page receives, and whether the browser took one to
+ * pan something (a `pointercancel`): a window capture listener added before
+ * the page's own scripts, so it sees a touch even when the input hold stops
+ * it there. Install it before opening the story.
  */
-async function dragTwice(
+async function installTouchProbe(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const seen: string[] = [];
+    (window as unknown as {__touchProbe: string[]}).__touchProbe = seen;
+    for (const type of [
+      'touchstart',
+      'touchmove',
+      'touchend',
+      'touchcancel',
+      'pointercancel',
+    ]) {
+      window.addEventListener(type, () => seen.push(type), {
+        capture: true,
+        passive: true,
+      });
+    }
+  });
+}
+
+/** What the probe saw since the last read, emptying it. */
+const takeTouchProbe = async (page: Page) =>
+  page.evaluate(() => {
+    const seen = (window as unknown as {__touchProbe: string[]}).__touchProbe;
+    return seen.splice(0);
+  });
+
+/**
+ * Plays one drag and returns what the page received: its touch events, and
+ * whether the browser took the touch to pan something (a `pointercancel`).
+ * A drag the page never received shows here, so it cannot pass as one that
+ * scrolled nothing.
+ */
+async function playDrag(
   page: Page,
   driver: TouchDriver,
   script: Parameters<TouchDriver['play']>[0],
-): Promise<void> {
-  for (let i = 0; i < 2; i++) {
-    await driver.play(script);
-    await frames(page, 4);
-  }
+): Promise<{received: string[]; panned: boolean}> {
+  await takeTouchProbe(page);
+  await driver.play(script);
+  await frames(page, 4);
+  const seen = await takeTouchProbe(page);
+  return {
+    received: seen.filter(type => type.startsWith('touch')),
+    panned: seen.includes('pointercancel'),
+  };
+}
+
+/** The whole drag reached the page: a touchstart, its moves and its touchend. */
+function expectDelivered(played: {received: string[]}): void {
+  expect(played.received[0], 'the drag reached the page').toBe('touchstart');
+  expect(played.received).toContain('touchmove');
+  expect(played.received.at(-1)).toBe('touchend');
 }
 
 /** What has focus: its tag and accessible name. */
@@ -210,6 +253,7 @@ test.describe('under a finger (spec:AST-094 FR35)', () => {
       browserName === 'webkit',
       'needs native scrolling from injected touches (the WebKit driver has none)',
     );
+    await installTouchProbe(page);
     await openStory(page, storybook(), NON_MODAL);
     // A page that scrolls behind the drawer, which leaves it interactive.
     await page.evaluate(() => {
@@ -224,16 +268,27 @@ test.describe('under a finger (spec:AST-094 FR35)', () => {
       // A rest before the lift: no fling outlives the pan.
       {durationMs: 200, restMs: 150},
     );
-    const scrollY = async () => page.evaluate(() => window.scrollY);
-    // Unheld, the same drag scrolls the page (see dragTwice).
-    await dragTwice(page, driver, up);
-    expect(await scrollY()).toBeGreaterThan(0);
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await frames(page, 2);
+    // Where the visual viewport is in the document. This story's page is
+    // wider than the phone, so a pan first moves the visual viewport inside
+    // the layout viewport, which `window.scrollY` does not report.
+    const pageTop = async () =>
+      page.evaluate(() => {
+        if (window.visualViewport == null) {
+          throw new Error('the page has no visual viewport');
+        }
+        return window.visualViewport.pageTop;
+      });
+    // Unheld, the same drag scrolls the page.
+    const start = await pageTop();
+    const free = await playDrag(page, driver, up);
+    expectDelivered(free);
+    expect(free.panned, 'the browser took the drag to scroll').toBe(true);
+    expect(await pageTop()).toBeGreaterThan(start);
 
-    await driver.tap(
-      await centerOf(page.getByRole('button', {name: 'Open drawer'})),
-    );
+    const opener = page.getByRole('button', {name: 'Open drawer'});
+    await opener.evaluate(element => element.scrollIntoView({block: 'center'}));
+    await frames(page, 2);
+    await driver.tap(await centerOf(opener));
     await holdEntrance(page);
     // The page's own clicks: those that reach it and bubble.
     await page.evaluate(() => {
@@ -251,8 +306,11 @@ test.describe('under a finger (spec:AST-094 FR35)', () => {
         () => (window as unknown as {__pageClicks: string[]}).__pageClicks,
       );
 
-    await dragTwice(page, driver, up);
-    expect(await scrollY()).toBe(0);
+    const before = await pageTop();
+    const held = await playDrag(page, driver, up);
+    expectDelivered(held);
+    expect(held.panned, 'the browser panned nothing').toBe(false);
+    expect(await pageTop()).toBe(before);
     await driver.tap(STRIP);
     await frames(page);
     expect(await pageClicks()).toEqual([]);
