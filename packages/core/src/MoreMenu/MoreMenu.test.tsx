@@ -316,11 +316,13 @@ describe('MoreMenu', () => {
   });
 
   describe('placement and alignment', () => {
-    const positionAreaOf = (menu: HTMLElement) =>
+    // The layer's anchor insets and self-alignment, as the runtime emits them.
+    const placementOf = (menu: HTMLElement) =>
       menu
         .closest('[popover]')
         ?.getAttribute('style')
-        ?.match(/position-area:[^;]*/)?.[0];
+        ?.match(/(inset-[a-z-]+|[a-z]+-self): [^;]*/g)
+        ?.join('; ');
 
     it('resolves the same default position as DropdownMenu', () => {
       render(
@@ -333,23 +335,26 @@ describe('MoreMenu', () => {
         hidden: true,
       });
 
-      expect(positionAreaOf(moreMenu)).toBe(positionAreaOf(dropdownMenu));
-      expect(positionAreaOf(moreMenu)).toBe(
-        'position-area: self-block-end span-self-inline-end',
+      expect(placementOf(moreMenu)).toBe(placementOf(dropdownMenu));
+      expect(placementOf(moreMenu)).toContain(
+        'inset-block-start: anchor(self-end)',
+      );
+      expect(placementOf(moreMenu)).toContain(
+        'inset-inline-start: anchor(self-start)',
       );
     });
 
     it('forwards alignment to the menu layer', () => {
       render(<MoreMenu items={defaultItems} alignment="end" />);
-      expect(positionAreaOf(screen.getByRole('menu', {hidden: true}))).toBe(
-        'position-area: self-block-end span-self-inline-start',
+      expect(placementOf(screen.getByRole('menu', {hidden: true}))).toContain(
+        'inset-inline-end: anchor(self-end)',
       );
     });
 
     it('forwards placement to the menu layer', () => {
       render(<MoreMenu items={defaultItems} placement="above" />);
-      expect(positionAreaOf(screen.getByRole('menu', {hidden: true}))).toBe(
-        'position-area: self-block-start span-self-inline-end',
+      expect(placementOf(screen.getByRole('menu', {hidden: true}))).toContain(
+        'inset-block-end: anchor(self-start)',
       );
     });
   });

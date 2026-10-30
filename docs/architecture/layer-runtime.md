@@ -120,8 +120,8 @@ owns Theme provider behavior; this record owns where a layer's DOM is hosted.
 `useLayer` has three positioning modes:
 
 - **context / anchor:** the trigger receives a unique CSS `anchor-name`; the
-  surface receives `position-anchor`, logical `position-area`, and ordered
-  fallback positions;
+  surface receives `position-anchor`, logical `anchor()` insets with their
+  self-alignment, and ordered fallback positions;
 - **context / custom:** the trigger and `position-anchor` relationship remain,
   while the caller owns geometry, fallback, offset, and direction handling; and
 - **fixed:** the caller supplies viewport `x` and `y` coordinates and receives no
@@ -129,7 +129,12 @@ owns Theme provider behavior; this record owns where a layer's DOM is hosted.
 
 Anchor names form a list so several layers may share one trigger without
 clobbering one another. Standard placement uses the `self-*` logical keyword
-family so inherited direction controls RTL behavior. Every anchored placement
+family so inherited direction controls RTL behavior. Placement uses
+`anchor()` insets, not `position-area`: while any element on a page is placed
+by `position-area`, WebKit lays out the whole document on every style change.
+The anchor-clear list's `fit` options are the exception, sized to the room on
+their side as a percentage of an area, and in effect only while a layer taller
+than that room on both sides is shown. Every anchored placement
 can flip across either axis. Centered placements also gain span fallbacks so the
 surface can move along the alignment axis near viewport edges. Clearance is
 applied to both edges of the placement axis so a flip retains the gap.
@@ -579,8 +584,8 @@ above are the stack's, the mounting under them is this gap's.
   `Layer/layerStructureReset.stylex.ts` owns the named structural custom-property
   reset applied on layer content roots.
 - `Layer/layerViewportInset.stylex.ts` owns the gutter and the viewport caps;
-  `Layer/layerSlideRules.ts` owns the slide options' `@position-try` rules
-  and the anchor-clear list's beside and fit rules;
+  `Layer/layerSlideRules.ts` owns the span and slide options' `@position-try`
+  rules and the anchor-clear list's beside and fit rules;
   `LayerProvider` publishes the declared inset through `LayerContext`, and
   `Layer/layerInset.ts` owns the `--astryx-layer-inset-*` properties a layer or
   the toast viewport writes on itself to carry it; `Layer/clampInlineSize.ts`

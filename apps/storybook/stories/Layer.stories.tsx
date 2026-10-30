@@ -7,6 +7,9 @@ import {useLayer} from '@astryxdesign/core/Layer';
 import {LayerProvider} from '@astryxdesign/core/Layer';
 import {Button} from '@astryxdesign/core/Button';
 import {Text} from '@astryxdesign/core/Text';
+import {Carousel} from '@astryxdesign/core/Carousel';
+import {Popover} from '@astryxdesign/core/Popover';
+import {Tooltip} from '@astryxdesign/core/Tooltip';
 
 const styles = stylex.create({
   popoverContent: {
@@ -1519,4 +1522,77 @@ export const Playground: Story = {
     },
   },
   render: () => <PlaygroundDemo />,
+};
+
+const scrollStyles = stylex.create({
+  page: {
+    display: 'grid',
+    gap: 16,
+    padding: 16,
+  },
+  swatch: (color: string) => ({
+    inlineSize: 96,
+    blockSize: 64,
+    borderRadius: 8,
+    backgroundColor: color,
+  }),
+  row: {
+    display: 'flex',
+    gap: 16,
+    alignItems: 'center',
+  },
+});
+
+const SWATCHES = [
+  '#e57373',
+  '#f06292',
+  '#ba68c8',
+  '#7986cb',
+  '#4fc3f7',
+  '#4db6ac',
+  '#aed581',
+  '#ffd54f',
+];
+
+/**
+ * A carousel scrolled while a Popover is open and a Tooltip is shown: every
+ * anchored layer on the page, including the carousel's own edge-button cover.
+ */
+function OpenLayersOverCarouselDemo() {
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  return (
+    <div {...stylex.props(scrollStyles.page)}>
+      <Carousel gap={1} aria-label="Swatches">
+        {SWATCHES.map(color => (
+          <div key={color} {...stylex.props(scrollStyles.swatch(color))} />
+        ))}
+      </Carousel>
+      <div {...stylex.props(scrollStyles.row)}>
+        <Popover
+          isOpen
+          placement="below"
+          alignment="start"
+          label="Open popover"
+          width={240}
+          content={<Text>It stays open while the carousel scrolls.</Text>}>
+          <Button label="Popover" size="sm" />
+        </Popover>
+        <Tooltip
+          content="Shown while the carousel scrolls"
+          isOpen={isTooltipOpen}>
+          <Button
+            label="Tooltip"
+            size="sm"
+            onClick={() => setIsTooltipOpen(true)}
+          />
+        </Tooltip>
+      </div>
+    </div>
+  );
+}
+
+export const OpenLayersOverACarouselScroll: Story = {
+  name: 'Open layers over a carousel scroll',
+  parameters: {layout: 'fullscreen'},
+  render: () => <OpenLayersOverCarouselDemo />,
 };

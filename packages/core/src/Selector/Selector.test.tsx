@@ -552,15 +552,16 @@ describe('Selector', () => {
     const popover = screen
       .getByRole('listbox', {hidden: true})
       .closest('[popover]');
-    expect(popover?.getAttribute('style')).toContain(
-      'position-area: self-block-start span-self-inline-end',
-    );
+    const style = popover?.getAttribute('style') ?? '';
+    expect(style).toContain('inset-block-end: anchor(self-start)');
+    expect(style).toContain('inset-inline-start: anchor(self-start)');
   });
 
   it('emits the direction-independent logical mapping under an RTL ancestor (#3389)', async () => {
-    // The self-* position-area keywords resolve against the popover's own
-    // inherited direction in the browser, so RTL emits the same string as
-    // LTR and the mirroring is pure CSS — jsdom can only assert the string.
+    // The logical insets and the self-* anchor sides resolve against the
+    // popover's own inherited direction in the browser, so RTL emits the same
+    // string as LTR and the mirroring is pure CSS — jsdom can only assert the
+    // string.
     const user = userEvent.setup();
     render(
       <div style={{direction: 'rtl'}}>
@@ -578,9 +579,9 @@ describe('Selector', () => {
     const popover = screen
       .getByRole('listbox', {hidden: true})
       .closest('[popover]');
-    expect(popover?.getAttribute('style')).toContain(
-      'position-area: self-block-end span-self-inline-end',
-    );
+    const style = popover?.getAttribute('style') ?? '';
+    expect(style).toContain('inset-block-start: anchor(self-end)');
+    expect(style).toContain('inset-inline-start: anchor(self-start)');
   });
 
   it('clamps the default selected-item overlay to the viewport', async () => {

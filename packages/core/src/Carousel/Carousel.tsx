@@ -567,10 +567,14 @@ export function Carousel({
           : null
     : null;
 
-  // Self-authored position styles (positioning: 'custom' below): a cover
-  // centered on the anchor, sized to it — direction-neutral by construction.
+  // Self-authored position styles (positioning: 'custom' below): a cover on
+  // the anchor, sized to it — direction-neutral by construction. Insets, not
+  // `position-area: center`: while any element on a page is placed by
+  // `position-area`, WebKit lays out the whole document on every style change
+  // and repaints this cover under a drag, frame after frame.
   const coverStyle: React.CSSProperties = {
-    positionArea: 'center',
+    top: 'anchor(top)',
+    left: 'anchor(left)',
     width: 'anchor-size(width)',
     height: 'anchor-size(height)',
   };

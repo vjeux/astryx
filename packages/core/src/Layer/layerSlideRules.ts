@@ -3,20 +3,29 @@
 /**
  * @file layerSlideRules.ts
  * @input A layer's placement and alignment
- * @output The `@position-try` rules for its slide options and their names, and
- *   the beside and fit options of a layer that must never settle over its
- *   anchor
- * @position Layer runtime geometry; the slide of spec:AST-059 FR4
+ * @output The `@position-try` rules for its span and slide options and their
+ *   names, and the beside and fit options of a layer that must never settle
+ *   over its anchor
+ * @position Layer runtime geometry; the spans and the slide of
+ *   spec:AST-059 FR4
  *
- * The slide is a position option whose area spans the whole alignment axis,
- * so a layer wider than the room beside its trigger on both sides still
- * reaches the side of the trigger that has room on the placement axis. A
- * plain `<position-area>` fallback would keep the base margins and insets,
- * which belong to an edge-aligned layer: the alignment-axis gutter on one
+ * Every option but `fit` places the layer with `anchor()` insets, as its base
+ * position does (useLayer's `getAnchorInsets`): on each axis the room from
+ * the anchor's edge to the viewport's far edge, aligned toward the anchor, or
+ * the whole axis centered on the anchor. Each option sets all four insets and
+ * both alignments, so nothing of the base position carries over.
+ *
+ * A span option (a centered layer's fallback) lands on one physical side,
+ * aligned to the anchor's edge on the other axis, and keeps the base margins.
+ *
+ * The slide is a position option that spans the whole alignment axis, so a
+ * layer wider than the room beside its trigger on both sides still reaches
+ * the side of the trigger that has room on the placement axis. The base
+ * margins belong to an edge-aligned layer: the alignment-axis gutter on one
  * edge only, and the clearance/gutter pair of the base side on the placement
- * axis. Each slide option therefore carries its own declarations — the
- * gutter on both alignment-axis edges, and the clearance facing the anchor
- * with the gutter on the far edge of the side it lands on.
+ * axis. Each slide option therefore carries its own margins — the gutter on
+ * both alignment-axis edges, and the clearance facing the anchor with the
+ * gutter on the far edge of the side it lands on.
  *
  * A layer that must never settle over its anchor (spec:AST-059 FR4, Tooltip)
  * has a second fallback list, for when its settled box covers its anchor:
@@ -49,6 +58,23 @@ import {layerViewportInset} from './layerViewportInset.stylex';
 
 /** The custom property a layer writes its anchor clearance to. */
 export const LAYER_CLEARANCE_PROPERTY = '--_astryx-layer-clearance';
+
+/**
+ * The overflow keyword the span and fit options align with: `unsafe` while
+ * the anchor is out of the viewport (spec:AST-059 FR5), so no option shifts
+ * the layer toward the viewport; unset otherwise.
+ */
+export const LAYER_PIN_PROPERTY = '--_astryx-layer-pin';
+
+/**
+ * The alignment-axis alignment of a slide option: `anchor-center` unless the
+ * anchor is out of the viewport, when it is the layer's own pinned alignment
+ * (spec:AST-059 FR5).
+ */
+export const LAYER_SLIDE_ALIGN_PROPERTY = '--_astryx-layer-slide-align';
+
+const PIN = `var(${LAYER_PIN_PROPERTY},)`;
+const SLIDE_ALIGN = `var(${LAYER_SLIDE_ALIGN_PROPERTY},anchor-center)`;
 
 type Side = 'same' | 'opposite';
 
@@ -90,18 +116,79 @@ const OPPOSITE: Record<LayerPlacement, LayerPlacement> = {
   end: 'start',
 };
 
-function areaFor(placement: LayerPlacement): string {
+/**
+ * The placement-axis insets and alignment of a layer resting on `placement`'s
+ * side, across the whole alignment axis with `across` as its alignment there.
+ */
+function landing(placement: LayerPlacement, across: string): string {
   switch (placement) {
     case 'above':
-      return 'self-block-start span-all';
+      return `inset-block-start:0;inset-block-end:anchor(self-start);align-self:${PIN} self-end;justify-self:${across};`;
     case 'below':
-      return 'self-block-end span-all';
+      return `inset-block-start:anchor(self-end);inset-block-end:0;align-self:${PIN} self-start;justify-self:${across};`;
     case 'start':
-      return 'self-inline-start span-all';
+      return `inset-inline-start:0;inset-inline-end:anchor(self-start);justify-self:${PIN} self-end;align-self:${across};`;
     case 'end':
-      return 'self-inline-end span-all';
+      return `inset-inline-start:anchor(self-end);inset-inline-end:0;justify-self:${PIN} self-start;align-self:${across};`;
   }
 }
+
+/** A physical side of the anchor, as the span options name them. */
+export type PhysicalSide = 'top' | 'bottom' | 'left' | 'right';
+
+/**
+ * The name of the span option that lands on `side` of the anchor, from the
+ * anchor's opposite edge across `span`'s side of the other axis.
+ */
+export function spanRuleName(side: PhysicalSide, span: PhysicalSide): string {
+  return `--astryx-layer-span-${side}-${span}`;
+}
+
+/** The insets and alignment that put a layer on `side` of its anchor. */
+function sideInsets(side: PhysicalSide): string {
+  switch (side) {
+    case 'top':
+      return `top:0;bottom:anchor(top);align-self:${PIN} end;`;
+    case 'bottom':
+      return `top:anchor(bottom);bottom:0;align-self:${PIN} start;`;
+    case 'left':
+      return `left:0;right:anchor(left);justify-self:${PIN} right;`;
+    case 'right':
+      return `left:anchor(right);right:0;justify-self:${PIN} left;`;
+  }
+}
+
+/**
+ * The insets and alignment that align a layer to its anchor's edge and run it
+ * toward `span` (`span-left`: the anchor's right edge, toward the left).
+ */
+function spanInsets(span: PhysicalSide): string {
+  switch (span) {
+    case 'left':
+      return `left:0;right:anchor(right);justify-self:${PIN} right;`;
+    case 'right':
+      return `left:anchor(left);right:0;justify-self:${PIN} left;`;
+    case 'top':
+      return `top:0;bottom:anchor(bottom);align-self:${PIN} end;`;
+    case 'bottom':
+      return `top:anchor(top);bottom:0;align-self:${PIN} start;`;
+  }
+}
+
+function spanRule(side: PhysicalSide, span: PhysicalSide): string {
+  return `@position-try ${spanRuleName(side, span)}{${sideInsets(side)}${spanInsets(span)}}`;
+}
+
+const SPANS: ReadonlyArray<[PhysicalSide, PhysicalSide]> = [
+  ['top', 'left'],
+  ['top', 'right'],
+  ['bottom', 'left'],
+  ['bottom', 'right'],
+  ['left', 'top'],
+  ['left', 'bottom'],
+  ['right', 'top'],
+  ['right', 'bottom'],
+];
 
 /** The placement-axis margins for a layer resting on `placement`'s side. */
 function placementMargins(placement: LayerPlacement): string {
@@ -129,8 +216,8 @@ function rule(
   alignment: LayerAlignment,
   side: Side,
 ): string {
-  const landing = side === 'same' ? placement : OPPOSITE[placement];
-  return `@position-try ${slideRuleName(placement, alignment, side)}{position-area:${areaFor(landing)};${placementMargins(landing)}${alignmentMargins(landing)}}`;
+  const lands = side === 'same' ? placement : OPPOSITE[placement];
+  return `@position-try ${slideRuleName(placement, alignment, side)}{${placementMargins(lands)}${alignmentMargins(lands)}${landing(lands, SLIDE_ALIGN)}}`;
 }
 
 const PLACEMENTS: ReadonlyArray<LayerPlacement> = [
@@ -161,12 +248,7 @@ export function fitRuleName(side: 'above' | 'below'): string {
  * of room the trigger leaves and always fit.
  */
 function besideRule(side: 'start' | 'end'): string {
-  return `@position-try ${besideRuleName(side)}{position-area:${areaFor(side)};${placementMargins(side)}${alignmentMargins(side)}inline-size:max-content;}`;
-}
-
-/** The block size of the room on one block side: the area minus its margins. */
-function roomCap(gutter: string): string {
-  return `calc(100% - ${CLEARANCE} - ${gutter})`;
+  return `@position-try ${besideRuleName(side)}{${placementMargins(side)}${alignmentMargins(side)}${landing(side, `${PIN} anchor-center`)}inline-size:max-content;}`;
 }
 
 /**
@@ -179,11 +261,30 @@ function halfRoom(viewport: string, gutter: string): string {
   return `calc((${viewport} - anchor-size(block)) / 2 - ${CLEARANCE} - ${gutter} - 1px)`;
 }
 
+/** The area a `fit` option takes: its block side, across the inline axis. */
+function fitArea(side: 'above' | 'below'): string {
+  return side === 'above'
+    ? 'self-block-start span-all'
+    : 'self-block-end span-all';
+}
+
+/** The block size of the room on one block side: the area minus its margins. */
+function roomCap(gutter: string): string {
+  return `calc(100% - ${CLEARANCE} - ${gutter})`;
+}
+
 /**
  * `fit`: the slide's geometry on a block side, sized to the room on that
  * side; the layer scrolls what does not fit (FR3). It is at least half of the
  * room the trigger leaves, so it overflows, and does not fit, on the side
  * with less room.
+ *
+ * The one option placed by a `position-area`: its size is a percentage of the
+ * room on its side, which only an area gives a percentage base, and an option
+ * fits only inside its own containing block, so an inset reaching past the
+ * viewport could not make it overflow. It is in effect only while a layer
+ * taller than the room on both sides is shown. It resets the insets and the
+ * alignment the layer's own position sets.
  */
 function fitRule(side: 'above' | 'below'): string {
   const size = (viewport: string, gutter: string) =>
@@ -193,7 +294,7 @@ function fitRule(side: 'above' | 'below'): string {
     size('100vh', layerViewportInset.gutterBlockFallback),
     size('100dvb', layerViewportInset.gutterBlock),
   );
-  return `@position-try ${fitRuleName(side)}{position-area:${areaFor(side)};${placementMargins(side)}${alignmentMargins(side)}${blockSize}}`;
+  return `@position-try ${fitRuleName(side)}{position-area:${fitArea(side)};inset-block-start:0;inset-block-end:0;align-self:normal;justify-self:var(${LAYER_SLIDE_ALIGN_PROPERTY},normal);${placementMargins(side)}${alignmentMargins(side)}${blockSize}}`;
 }
 
 /**
@@ -246,8 +347,8 @@ function clearSwitchCss(): string {
 }
 
 /**
- * Every slide rule, for every placement and alignment, and the beside and fit
- * rules.
+ * Every slide rule, for every placement and alignment, the span rules, and
+ * the beside and fit rules.
  */
 export function slideRulesCss(): string {
   return [
@@ -257,6 +358,7 @@ export function slideRulesCss(): string {
         rule(placement, alignment, 'opposite'),
       ]),
     ),
+    ...SPANS.map(([side, span]) => spanRule(side, span)),
     besideRule('end'),
     besideRule('start'),
     fitRule('above'),

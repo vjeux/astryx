@@ -520,9 +520,9 @@ describe('DropdownMenu', () => {
     const popover = screen
       .getByRole('menu', {hidden: true})
       .closest('[popover]');
-    expect(popover?.getAttribute('style')).toContain(
-      'position-area: self-block-end span-self-inline-end',
-    );
+    const style = popover?.getAttribute('style') ?? '';
+    expect(style).toContain('inset-block-start: anchor(self-end)');
+    expect(style).toContain('inset-inline-start: anchor(self-start)');
   });
 
   it('supports explicit menu placement', () => {
@@ -536,9 +536,9 @@ describe('DropdownMenu', () => {
     const popover = screen
       .getByRole('menu', {hidden: true})
       .closest('[popover]');
-    expect(popover?.getAttribute('style')).toContain(
-      'position-area: self-block-start span-self-inline-end',
-    );
+    const style = popover?.getAttribute('style') ?? '';
+    expect(style).toContain('inset-block-end: anchor(self-start)');
+    expect(style).toContain('inset-inline-start: anchor(self-start)');
   });
 
   it('supports explicit menu alignment', () => {
@@ -552,9 +552,9 @@ describe('DropdownMenu', () => {
     const popover = screen
       .getByRole('menu', {hidden: true})
       .closest('[popover]');
-    expect(popover?.getAttribute('style')).toContain(
-      'position-area: self-block-end span-self-inline-start',
-    );
+    const style = popover?.getAttribute('style') ?? '';
+    expect(style).toContain('inset-block-start: anchor(self-end)');
+    expect(style).toContain('inset-inline-end: anchor(self-end)');
   });
 
   it('uses block-axis viewport gutters for side placement', () => {
@@ -577,10 +577,11 @@ describe('DropdownMenu', () => {
   });
 
   it('emits the direction-independent logical mapping under an RTL ancestor (#3389)', async () => {
-    // The self-* position-area keywords resolve against the popover's own
-    // inherited direction in the browser, so RTL emits the same string as
-    // LTR and the mirroring is pure CSS. jsdom can't verify the geometry —
-    // the DropdownMenu RTL Storybook story is the visual proof surface.
+    // The logical insets and the self-* anchor sides resolve against the
+    // popover's own inherited direction in the browser, so RTL emits the same
+    // string as LTR and the mirroring is pure CSS. jsdom can't verify the
+    // geometry — the DropdownMenu RTL Storybook story is the visual proof
+    // surface.
     const user = userEvent.setup();
     const {container} = render(
       <div style={{direction: 'rtl'}}>
@@ -591,9 +592,9 @@ describe('DropdownMenu', () => {
     await user.click(screen.getByRole('button', {name: /Actions/}));
 
     const popover = container.querySelector('[popover]');
-    expect(popover?.getAttribute('style')).toContain(
-      'position-area: self-block-end span-self-inline-end',
-    );
+    const style = popover?.getAttribute('style') ?? '';
+    expect(style).toContain('inset-block-start: anchor(self-end)');
+    expect(style).toContain('inset-inline-start: anchor(self-start)');
   });
 
   it('caps default and custom widths to the available viewport', () => {

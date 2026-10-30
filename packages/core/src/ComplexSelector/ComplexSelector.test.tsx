@@ -433,9 +433,9 @@ describe('ComplexSelector', () => {
     const popover = screen
       .getByRole('dialog', {hidden: true})
       .closest('[popover]');
-    expect(popover?.getAttribute('style')).toContain(
-      'position-area: self-block-end span-self-inline-start',
-    );
+    const style = popover?.getAttribute('style') ?? '';
+    expect(style).toContain('inset-block-start: anchor(self-end)');
+    expect(style).toContain('inset-inline-end: anchor(self-end)');
   });
 
   it('exposes imperative open, close, toggle, and isOpen via handleRef', async () => {
