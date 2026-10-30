@@ -4,8 +4,12 @@
 
 /**
  * @file TopNav.tsx
- * @input Uses React, ReactNode
- * @output Exports TopNav component and TopNavProps
+ * @input Uses React, ReactNode, the theme's spacing, radius and surface
+ *   tokens, and UIKit's capsule cell inset in motion/uikit/bars
+ * @output Exports TopNav component and TopNavProps. Under a finger (one
+ *   touch model on every touch device) the phone bar's end items sit on one
+ *   capsule, as iOS 26 bar buttons do; the capsule is paint only, so no box
+ *   grows (`spec:AST-094` FR42, DEC-20)
  * @position Core implementation; consumed by index.ts
  *
  * SYNC: When modified, update these files to stay in sync:
@@ -19,7 +23,7 @@
 import type {ReactNode} from 'react';
 import type {BaseProps} from '../BaseProps';
 import * as stylex from '@stylexjs/stylex';
-import {spacingVars} from '../theme/tokens.stylex';
+import {colorVars, radiusVars, spacingVars} from '../theme/tokens.stylex';
 import {mergeProps} from '../utils';
 import {useTranslator} from '../i18n';
 import {TopNavSlotContext} from './TopNavContext';
@@ -86,7 +90,10 @@ const styles = stylex.create({
     flexShrink: 0,
     marginInlineStart: 'auto',
   },
-  // Mobile bar mode — simplified top bar with heading + toggle + endContent
+  // Mobile bar mode — simplified top bar with heading + toggle + endContent.
+  // The same geometry under every pointer: the default look grows no box for
+  // touch (`spec:AST-094` FR42, DEC-20). UIKit's 54px bar and 16px insets
+  // would be a theme's adaptation.
   mobileBar: {
     display: 'flex',
     alignItems: 'center',
@@ -107,6 +114,35 @@ const styles = stylex.create({
     gap: spacingVars['--spacing-1'],
     flexShrink: 0,
     marginInlineStart: 'auto',
+  },
+  // Under a finger (the resolver's touch query, spelled literally as
+  // TOUCH_QUERY: an imported at-rule key changes StyleX priority) the end
+  // items sit on one capsule, as iOS 26 puts a run of bar buttons
+  // (bars.buttonCapsules): fully rounded, painted with the theme's surface,
+  // nothing blurred. It is paint only, so no box grows (FR42, DEC-20): the
+  // fill reaches `--spacing-1` past the end group, UIKit's cell inset,
+  // through a spread of the same colour, which keeps a control's press paint
+  // inside the pill's rounded ends. No drop shadow: UIKit's capsule has
+  // none. An end group whose content renders nothing paints no capsule.
+  mobileBarEndCapsule: {
+    borderRadius: {
+      default: null,
+      '@media (pointer: coarse)': radiusVars['--radius-full'],
+    },
+    backgroundColor: {
+      default: null,
+      '@media (pointer: coarse)': {
+        default: colorVars['--color-background-surface'],
+        ':empty': 'transparent',
+      },
+    },
+    boxShadow: {
+      default: null,
+      '@media (pointer: coarse)': {
+        default: `0 0 0 ${spacingVars['--spacing-1']} ${colorVars['--color-background-surface']}`,
+        ':empty': 'none',
+      },
+    },
   },
   // Drawer mode — vertical list of nav items
   drawerItems: {
@@ -211,6 +247,10 @@ export function TopNav({
   // to strip down the TopNav if there's nothing to put in the drawer.
   // =========================================================================
   if (renderMode === 'mobile-bar') {
+    const showToggle = hasMobileDrawerContent && hasAutoToggle;
+    // An empty end group draws no capsule.
+    const hasEndItems =
+      (endContent != null && endContent !== false) || showToggle;
     return (
       <nav
         ref={ref}
@@ -226,9 +266,14 @@ export function TopNav({
         {heading && (
           <div {...stylex.props(styles.mobileBarHeading)}>{heading}</div>
         )}
-        <div {...stylex.props(styles.mobileBarEnd)}>
+        <div
+          data-bar-capsule={hasEndItems ? '' : undefined}
+          {...stylex.props(
+            styles.mobileBarEnd,
+            hasEndItems && styles.mobileBarEndCapsule,
+          )}>
           {endContent}
-          {hasMobileDrawerContent && hasAutoToggle && <MobileNavToggle />}
+          {showToggle && <MobileNavToggle />}
         </div>
       </nav>
     );
