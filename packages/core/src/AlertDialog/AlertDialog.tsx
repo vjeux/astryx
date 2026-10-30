@@ -253,16 +253,15 @@ export function AlertDialog({
   // a pointer's press there to the tracker, the one painter, and still
   // records the touch for the scroll brake. The inline preview is not
   // tracked, and its actions keep the controller's press.
-  // Tracked while presented, leaving included: a press during either
-  // transition is taken and dropped (`isInert`) rather than reaching the
-  // button under it.
+  // Tracked while presented, leaving included: during either transition the
+  // touch layer's input hold (useAlertMotion) keeps every press from the
+  // group and from the buttons under it.
   const actionsRef = useRef<HTMLElement>(null);
   const isTracking = motion.isPresented && isInline !== true;
   useActionGroupTracking(actionsRef, {
     itemSelector: `[${PRESS_GROUP_ITEM_ATTRIBUTE}]`,
     highlightOnsetMs: alertController.actions.highlightOnsetMs,
     highlightExpansion: alertController.actions.highlightExpansion,
-    isInert: () => !motion.acceptsTouches(),
     isEnabled: isTracking,
     // The row's touch-action is its own style (trackingRow); a held finger
     // or pen selects nothing while it holds (`spec:AST-094` FR41), and the
@@ -270,21 +269,20 @@ export function AlertDialog({
     manageStyle: false,
   });
   // While the alert leaves (closed by the caller, still presented while it
-  // fades out under a finger), UIKit delivers no input to it: a click, Enter
-  // or an assistive-technology activation on an action, and Escape, do
-  // nothing until it is hidden. Focus stays where it is, so Dialog returns it
-  // to the opener when the fade ends.
+  // fades out under a finger), UIKit delivers no input to it: the touch
+  // layer's input hold makes its content inert under a shield, so a
+  // tap, a click, Enter or an assistive-technology activation on an action
+  // does nothing, and the dialog's own Escape (its cancel event, which inert
+  // content does not stop) is ignored here until it is hidden. Focus leaves
+  // the inert content, and Dialog returns it to the opener when the fade
+  // ends.
   const isLeaving = motion.isDriving && motion.isPresented && !isOpen;
   const handleCancel = useCallback(() => {
-    if (!isLeaving) {
-      onOpenChange(false);
-    }
-  }, [isLeaving, onOpenChange]);
+    onOpenChange(false);
+  }, [onOpenChange]);
   const handleAction = useCallback(() => {
-    if (!isLeaving) {
-      void onAction();
-    }
-  }, [isLeaving, onAction]);
+    void onAction();
+  }, [onAction]);
   const handleOpenChange = useCallback(
     (next: boolean) => {
       if (!isLeaving) {
