@@ -4,9 +4,8 @@
  * @file pressFeedback.ts
  * @input The press state machine (pressGesture.ts) and the document's pointer,
  *   keyboard, scroll and visibility events
- * @output Exports paintPress and readPressPaint (the press attribute's
- *   writer for every press they track), PRESSABLE_ATTRIBUTE,
- *   PRESSED_ATTRIBUTE, pressableProps and installPressFeedback
+ * @output Exports PRESSABLE_ATTRIBUTE, PRESSED_ATTRIBUTE, pressableProps and
+ *   installPressFeedback
  * @position The DOM half of the touch press model: one delegated controller
  *   per document that writes `data-astryx-press` on the nearest pressable surface.
  *   Installed by usePressFeedback (hooks/usePressFeedback.ts) on first mount;
@@ -52,11 +51,7 @@
  * pressFeedback.test.ts.
  */
 
-import type {
-  PressGesture,
-  PressPaint as GesturePaint,
-  PressStep,
-} from './pressGesture';
+import type {PressGesture, PressPaint, PressStep} from './pressGesture';
 import {
   idlePressGesture,
   PRESS_FADE_MS,
@@ -176,98 +171,12 @@ const TIMER_EVENT = {
   onset: 'onset',
 } as const;
 
-/** The press attribute's states: on, held, fading on its release, none. */
-export type PressPaint = 'on' | 'held' | 'fading' | 'none';
-
-export interface PaintPressOptions {
-  /** How long `fading` stays before the attribute goes, ms. @default the press fade */
-  releaseMs?: number;
-  /** The current values this write may replace. @default none, on, fading */
-  onlyFrom?: ReadonlyArray<PressPaint>;
-}
-
-/** What a press may replace: a `held` row is its owner's until released. */
-const PRESS_REPLACES: ReadonlyArray<PressPaint> = ['none', 'on', 'fading'];
-const PAINTS: ReadonlySet<string> = new Set(['on', 'held', 'fading']);
-/** A `fading` paint's own release clock, per element (paintPress). */
-const fadeTimers = new WeakMap<Element, ReturnType<typeof setTimeout>>();
-
-/** The press state painted on `element` now; `null` for a value no painter wrote. */
-export function readPressPaint(element: Element): PressPaint | null {
-  const value = element.getAttribute(PRESSED_ATTRIBUTE);
-  if (value == null) {
-    return 'none';
-  }
-  return PAINTS.has(value) ? (value as PressPaint) : null;
-}
-
-/**
- * Write `next` on `element` if its state is one of `onlyFrom`: the press
- * attribute's writer for the controller and every painter that uses
- * paintPress, so a fade's clock and the attribute never drift apart (the
- * action-group tracker, hooks/actionGroupTracker.ts, still writes its groups'
- * presses itself). Any write ends a fade paintPress left running there.
- * Returns whether it wrote.
- */
-function writePress(
-  element: Element,
-  next: PressPaint,
-  onlyFrom: ReadonlyArray<PressPaint> = PRESS_REPLACES,
-): boolean {
-  const current = readPressPaint(element);
-  if (current == null || !onlyFrom.includes(current)) {
-    return false;
-  }
-  const pending = fadeTimers.get(element);
-  if (pending != null) {
-    clearTimeout(pending);
-    fadeTimers.delete(element);
-  }
-  if (next === 'none') {
+function paintElement(element: HTMLElement, paint: PressPaint): void {
+  if (paint === 'none') {
     element.removeAttribute(PRESSED_ATTRIBUTE);
-  } else if (current !== next) {
-    element.setAttribute(PRESSED_ATTRIBUTE, next);
+    return;
   }
-  return true;
-}
-
-/**
- * Paint `next` on `element` if its current press state is in `onlyFrom`
- * (by default none, on or fading: a hold survives a press, and its owner
- * releases it with `onlyFrom: ['held']`). A `fading` paint ends on its own
- * clock. Returns whether it painted. For a painter other than the touch
- * press controller: a group that tracks its selection, a row that keeps its
- * selection through a navigation.
- */
-export function paintPress(
-  element: Element,
-  next: PressPaint,
-  options: PaintPressOptions = {},
-): boolean {
-  if (!writePress(element, next, options.onlyFrom)) {
-    return false;
-  }
-  if (next === 'fading') {
-    fadeTimers.set(
-      element,
-      setTimeout(() => {
-        fadeTimers.delete(element);
-        if (element.getAttribute(PRESSED_ATTRIBUTE) === 'fading') {
-          element.removeAttribute(PRESSED_ATTRIBUTE);
-        }
-      }, options.releaseMs ?? PRESS_FADE_MS),
-    );
-  }
-  return true;
-}
-
-/**
- * The controller's paint, through writePress: a state the controller did
- * not write is its owner's (a `held` row), so neither a new press nor a
- * release's end overwrites or clears it.
- */
-function paintElement(element: HTMLElement, paint: GesturePaint): void {
-  writePress(element, paint);
+  element.setAttribute(PRESSED_ATTRIBUTE, paint);
 }
 
 function clearTimer(slot: Slot): void {
@@ -399,7 +308,7 @@ function finish(slot: Slot): void {
     return;
   }
   clearTimer(slot);
-  writePress(live.element, 'none');
+  live.element.removeAttribute(PRESSED_ATTRIBUTE);
   slot.live = null;
   if (slot === button) {
     holdKey(false);
