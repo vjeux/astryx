@@ -70,7 +70,10 @@ import {
 import {claimRootScrollStyle} from '@astryxdesign/core/internal/touch';
 import type {PointerKind} from '@astryxdesign/core/internal/touch';
 import {useGestureRecognizer} from '@astryxdesign/core/internal/touch';
-import type {MotionCurve} from '@astryxdesign/core/internal/motion';
+import {
+  SETTLE_THRESHOLD,
+  type MotionCurve,
+} from '@astryxdesign/core/internal/motion';
 import {cubicBezier} from '@astryxdesign/core/internal/motion';
 import {resolveMotion} from '@astryxdesign/core/internal/motion';
 import {solveSpring, toSpring} from '@astryxdesign/core/internal/motion';
@@ -81,7 +84,6 @@ import {useAnimator} from '@astryxdesign/core/internal/motion';
 import {RefreshPullRecognizer} from './RefreshPullRecognizer';
 import {
   REFRESH_REVEAL_VAR,
-  REFRESH_SPIN_STEP_VAR,
   REFRESH_SPINNING_ATTRIBUTE,
 } from './refreshIndicator';
 import type {RefreshEvent, RefreshState} from './refreshModel';
@@ -96,27 +98,6 @@ import {
   triggerDistance,
   type PullMode,
 } from './refreshPull';
-
-/**
- * The spin as keyframes: each of the indicator's spokes in turn holds still,
- * then the rotation steps on by one spoke (the replicator's spin). Linear
- * keyframes with a near-zero jump between holds, rather than a `steps()`
- * timing function, so the browser runs it on its compositor.
- */
-function spinKeyframes(spokes: number): Keyframe[] {
-  const frames: Keyframe[] = [];
-  const jump = 1e-4;
-  for (let index = 0; index < spokes; index++) {
-    const angle = (360 / spokes) * index;
-    frames.push({offset: index / spokes, transform: `rotate(${angle}deg)`});
-    frames.push({
-      offset: (index + 1) / spokes - jump,
-      transform: `rotate(${angle}deg)`,
-    });
-  }
-  frames.push({offset: 1, transform: 'rotate(360deg)'});
-  return frames;
-}
 
 /**
  * The indicator's turn, degrees: the trigger turn starts this far round and
@@ -219,6 +200,63 @@ function derivative(
 }
 
 /**
+ * One spoke's turn of the spin as Web Animation keyframes on its opacity.
+ * While refreshing, UIKit's replicator turns its instances by one spoke every
+ * eighth of `spinMs`, each instance `spinInstanceAlphaOffset` more opaque
+ * than the one before it (the first at `spinFirstInstanceAlpha`). With eight
+ * spokes at eight angles that is each spoke stepping its own opacity through
+ * the instances that pass it, so every step is drawn at its own angle and
+ * nothing is resampled: spoke p holds instance (p − s) mod 8 at step s. Holds
+ * joined by 0.1 ms ramps under linear timing, never steps(), so every engine
+ * runs them on the compositor. One iteration is one turn.
+ */
+function spinKeyframes(spoke: number, turnMs: number): Keyframe[] {
+  const count = refreshControl.indicatorSpokes;
+  const ramp = 0.1 / turnMs;
+  const frames: Keyframe[] = [];
+  for (let step = 0; step < count; step += 1) {
+    const instance = (((spoke - step) % count) + count) % count;
+    const opacity =
+      refreshControl.spinFirstInstanceAlpha +
+      instance * refreshControl.spinInstanceAlphaOffset;
+    // The last hold runs to the turn's end, where the next turn begins.
+    const end = step + 1 < count ? (step + 1) / count - ramp : 1;
+    frames.push({offset: step / count, opacity}, {offset: end, opacity});
+  }
+  return frames;
+}
+
+/**
+ * The trigger's cross-fade as Web Animation keyframes on the copy's opacity:
+ * 1 − w, w the table's gradient spring, until it settles where the animator's
+ * opacity springs do. Under Reduce Motion there is no cross-fade (see
+ * startSpinning).
+ */
+function crossFadeKeyframes(): {
+  frames: Keyframe[];
+  durationMs: number;
+  easing: string;
+} {
+  const curve = solveSpring(toSpring(refreshControl.triggerGradientSpring), {
+    from: 0,
+    to: 1,
+  });
+  const durationMs = curve.settleTime(SETTLE_THRESHOLD.opacity) * 1000;
+  const count = Math.max(2, Math.ceil(durationMs / (1000 / 60)));
+  const frames: Keyframe[] = Array.from({length: count + 1}, (_, i) => ({
+    offset: i / count,
+    opacity:
+      i === count
+        ? 0
+        : Math.min(
+            1,
+            Math.max(0, 1 - curve.value(((i / count) * durationMs) / 1000)),
+          ),
+  }));
+  return {frames, durationMs, easing: 'linear'};
+}
+
+/**
  * The refresh control's touch layer. The wiring owns the state and the
  * announcements; this owns everything a finger drives.
  */
@@ -240,10 +278,15 @@ export function useRefreshTouchController({
   const title = useAnimator();
   // The spinner turns on its own: the title beside it must not.
   const turn = useAnimator();
+  // The spinner's glyph, whose children are the drawing's eight spokes, and
+  // the transient copy of them that fades out over them at the trigger.
+  const spinnerElement = useRef<HTMLElement | null>(null);
+  const crossFadeCopy = useRef<HTMLElement | null>(null);
+  const crossFadeAnimation = useRef<Animation | null>(null);
+  // The spokes' turns while the refresh spins, one animation each.
+  const spin = useRef<Animation[]>([]);
   const contentElement = useRef<HTMLElement | null>(null);
   const indicatorElement = useRef<HTMLElement | null>(null);
-  const spinnerElement = useRef<HTMLElement | null>(null);
-  const spin = useRef<Animation | null>(null);
   // Whether the content holds the refreshing inset (only under a finger).
   const hasInset = useRef(false);
   // An end waiting for the frame after its render, and that frame.
@@ -323,11 +366,6 @@ export function useRefreshTouchController({
     selection.current = null;
   }, []);
 
-  const stopSpin = useCallback(() => {
-    spin.current?.cancel();
-    spin.current = null;
-  }, []);
-
   /**
    * The content at `y`, and the indicator pinned at the top of the scroll
    * view: it rides on the content's edge, so it moves by the inset minus `y`.
@@ -364,13 +402,133 @@ export function useRefreshTouchController({
     }
   }, [indicator.animator, title.animator, turn.animator]);
 
-  const resetIndicator = useCallback(() => {
-    stopSpin();
+  /**
+   * Removes the trigger's transient copy of the spokes, if it is there, and
+   * cancels its fade.
+   */
+  const removeCrossFadeCopy = useCallback(() => {
+    crossFadeAnimation.current?.cancel();
+    crossFadeAnimation.current = null;
+    crossFadeCopy.current?.remove();
+    crossFadeCopy.current = null;
+  }, []);
+
+  /**
+   * Starts the spin, marked by the spinning attribute: each spoke's turn of
+   * the gradient, every one started in this task so they share one clock, a
+   * turn every `refreshControl.spinMs`. A spin already running is left as it
+   * is.
+   */
+  const startStepping = useCallback(() => {
+    const indicatorNode = indicatorElement.current;
+    if (
+      indicatorNode == null ||
+      indicatorNode.hasAttribute(REFRESH_SPINNING_ATTRIBUTE)
+    ) {
+      return;
+    }
+    indicatorNode.setAttribute(REFRESH_SPINNING_ATTRIBUTE, '');
+    const glyph = spinnerElement.current;
+    if (glyph == null) {
+      return;
+    }
+    const turnMs = refreshControl.spinMs;
+    spin.current = Array.from(glyph.children)
+      .filter(spoke => spoke !== crossFadeCopy.current)
+      .flatMap((spoke, index) =>
+        typeof spoke.animate === 'function'
+          ? [
+              spoke.animate(spinKeyframes(index, turnMs), {
+                duration: turnMs,
+                iterations: Infinity,
+              }),
+            ]
+          : [],
+      );
+  }, []);
+
+  /** Stops the spin: the spokes show the reveal again. */
+  const stopStepping = useCallback(() => {
     indicatorElement.current?.removeAttribute(REFRESH_SPINNING_ATTRIBUTE);
-    indicatorElement.current?.style.removeProperty(REFRESH_SPIN_STEP_VAR);
+    for (const animation of spin.current) {
+      animation.cancel();
+    }
+    spin.current = [];
+  }, []);
+
+  /**
+   * UIKit's cross-fade at the trigger. UIKit fades the revealed spokes out as
+   * the stepping gradient fades in, on one spring, and sums the two: each
+   * spoke at 1 − w + w × g, w the spring's progress and g the spoke's step of
+   * the gradient. Here the spokes step from the trigger, at full, and a
+   * transient copy of them as the pull left them (every one at full alpha)
+   * sits over them and fades out on that spring: with normal blending a copy
+   * at 1 − w over a spoke at g shows exactly 1 − w + w × g. Each element runs
+   * one animation (the spokes their steps, the copy its
+   * fade), so the cross-fade runs on the compositor and keeps going while a
+   * script holds the main thread; under Reduce Motion the fade is the shared
+   * 200 ms opacity fade. It is a plain Web Animation, not the animator's: on a
+   * fresh element the animator's start-up cost a busy main thread's first
+   * frame one more interval in the settle proof. The copy is removed once its
+   * fade has ended (it holds 0 until then), so at rest the indicator draws its
+   * spokes once. It is `architecture:component-style-authoring` INV7's
+   * recorded conformance gap until Core's shared transient copy exists. It
+   * cannot be the glyph's `::after`: while the glyph turns, Chromium then ticks
+   * every animation in the glyph on the main thread, restyling and repainting
+   * every frame.
+   */
+  const playCrossFade = useCallback(() => {
+    removeCrossFadeCopy();
+    const glyph = spinnerElement.current;
+    if (glyph == null) {
+      return;
+    }
+    const copy = glyph.ownerDocument.createElement('span');
+    copy.style.position = 'absolute';
+    copy.style.inset = '0';
+    for (const spoke of Array.from(glyph.children)) {
+      const spokeCopy = spoke.cloneNode(false) as HTMLElement;
+      // As the pull left it: full alpha (a clone runs no animation).
+      spokeCopy.style.opacity = '1';
+      copy.append(spokeCopy);
+    }
+    glyph.append(copy);
+    crossFadeCopy.current = copy;
+    if (typeof copy.animate !== 'function') {
+      removeCrossFadeCopy();
+      return;
+    }
+    const keyframes = crossFadeKeyframes();
+    const animation = copy.animate(keyframes.frames, {
+      duration: keyframes.durationMs,
+      easing: keyframes.easing,
+      // Held at 0 until it is removed, however late the main thread is.
+      fill: 'forwards',
+    });
+    crossFadeAnimation.current = animation;
+    animation.onfinish = () => {
+      if (crossFadeCopy.current === copy) {
+        removeCrossFadeCopy();
+      }
+    };
+  }, [removeCrossFadeCopy]);
+
+  const resetIndicator = useCallback(() => {
+    stopStepping();
     setReveal(0);
     restoreIndicator();
-  }, [restoreIndicator, setReveal, stopSpin]);
+    removeCrossFadeCopy();
+  }, [removeCrossFadeCopy, restoreIndicator, setReveal, stopStepping]);
+
+  // Unmounted mid-refresh or mid-fade: nothing keeps running on detached
+  // spokes (`architecture:react-component-runtime` INV5).
+  useEffect(
+    () => () => {
+      stopStepping();
+      removeCrossFadeCopy();
+    },
+    [removeCrossFadeCopy, stopStepping],
+  );
 
   const startSpinning = useCallback(
     (withTurn: boolean) => {
@@ -378,38 +536,41 @@ export function useRefreshTouchController({
       if (indicator.animator.get('opacity') !== 1) {
         indicator.animator.set({opacity: 1});
       }
-      indicatorElement.current?.style.setProperty(
-        REFRESH_SPIN_STEP_VAR,
-        String(refreshControl.spinAlphaStep),
-      );
-      indicatorElement.current?.setAttribute(REFRESH_SPINNING_ATTRIBUTE, '');
-      const spinner = spinnerElement.current;
-      if (
-        spin.current == null &&
-        spinner != null &&
-        typeof spinner.animate === 'function'
-      ) {
-        spin.current = spinner.animate(
-          spinKeyframes(refreshControl.indicatorSpokes),
-          {
-            duration: refreshControl.spinMs,
-            iterations: Infinity,
-            easing: 'linear',
-          },
-        );
+      // A trigger while the gradient already steps (a pull during a refresh)
+      // turns the spinner again but leaves the gradient as it is.
+      const isStepping =
+        indicatorElement.current?.hasAttribute(REFRESH_SPINNING_ATTRIBUTE) ===
+        true;
+      if (withTurn) {
+        // Under Reduce Motion there is no turn: the spinner starts at rest, so
+        // nothing moves and nothing changes (design:reduced-motion DR1), where
+        // the animator's cross-fade would blink the spinner out and back.
+        if (turn.animator.reducedMotion() === 'off') {
+          turn.animator.set({rotate: TURN_DEGREES});
+          turn.animator.animate(
+            {rotate: 0},
+            {spring: refreshControl.triggerTurnSpring, velocity: {rotate: 0}},
+          );
+        }
+        // UIKit springs the refreshing gradient in at the trigger, started
+        // with the turn so they share a frame. Under Reduce Motion the
+        // gradient is an in-place value change, so it applies at once on any
+        // pointer, with no copy of the spokes (design:reduced-motion DR2,
+        // DEC-3).
+        if (!isStepping && turn.animator.reducedMotion() === 'off') {
+          playCrossFade();
+        }
       }
-      // Under Reduce Motion there is no turn: the spinner starts at rest, so
-      // nothing moves and nothing changes (design:reduced-motion DR1), where
-      // the animator's cross-fade would blink the spinner out and back.
-      if (withTurn && turn.animator.reducedMotion() === 'off') {
-        turn.animator.set({rotate: TURN_DEGREES});
-        turn.animator.animate(
-          {rotate: 0},
-          {spring: refreshControl.triggerTurnSpring, velocity: {rotate: 0}},
-        );
-      }
+      // A refresh begun without a pull shows the gradient at once.
+      startStepping();
     },
-    [indicator.animator, setReveal, turn.animator],
+    [
+      indicator.animator,
+      playCrossFade,
+      setReveal,
+      startStepping,
+      turn.animator,
+    ],
   );
 
   // -- Scroll owner and its top-edge policy ----------------------------------
@@ -604,9 +765,8 @@ export function useRefreshTouchController({
       // Under the finger: the release settles back to the top, and the
       // indicator retracts with it.
       pull.current.floor = 0;
-      stopSpin();
-      indicatorElement.current?.removeAttribute(REFRESH_SPINNING_ATTRIBUTE);
-      indicatorElement.current?.style.removeProperty(REFRESH_SPIN_STEP_VAR);
+      stopStepping();
+      removeCrossFadeCopy();
       return;
     }
     if (!hadInset) {
@@ -644,7 +804,8 @@ export function useRefreshTouchController({
       // spinner out where it is and shortens the title's fade
       // (design:reduced-motion DR2, DR3).
       const exit = refreshControl.exitMs;
-      stopSpin();
+      // UIKit's end replaces only the spin's transform: the gradient stays
+      // through the exit (the drawing resets it when the content lands).
       turn.animator.play(
         {
           rotate: bezierCurve(0, TURN_DEGREES, exit, curve),
@@ -680,8 +841,9 @@ export function useRefreshTouchController({
     place,
     resetIndicator,
     resolveOwner,
+    removeCrossFadeCopy,
     stopPlacing,
-    stopSpin,
+    stopStepping,
     title.animator,
     turn.animator,
   ]);
@@ -854,14 +1016,6 @@ export function useRefreshTouchController({
     resumeSettle,
     stopPlacing,
   ]);
-
-  useEffect(
-    () => () => {
-      spin.current?.cancel();
-      spin.current = null;
-    },
-    [],
-  );
 
   const contentRef = useCallback(
     (element: HTMLElement | null) => {

@@ -23,6 +23,10 @@
 import {useState, type ReactNode} from 'react';
 import {act, render, screen, waitFor} from '@testing-library/react';
 import {useScrollLock} from '@astryxdesign/core/hooks';
+import {SETTLE_THRESHOLD} from '@astryxdesign/core/internal/motion';
+import {solveSpring, toSpring} from '@astryxdesign/core/internal/motion';
+import {refreshControl} from '@astryxdesign/core/internal/motion';
+import {timing} from '@astryxdesign/core/internal/motion';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {
   useRefreshControl,
@@ -158,6 +162,89 @@ function translateY(element: HTMLElement): number {
   return parseFloat(parts[1] ?? '0');
 }
 
+/** A host whose glyph holds the drawing's eight spokes, as RefreshControl's. */
+function SpokedRefreshable({
+  children,
+  ...options
+}: UseRefreshControlOptions & {children: ReactNode}) {
+  const control = useRefreshControl(options);
+  return (
+    <div
+      data-testid="refresh"
+      ref={control.contentRef}
+      aria-busy={control.isRefreshing || undefined}>
+      <div ref={control.indicatorRef} aria-hidden>
+        <span ref={control.spinnerRef}>
+          {Array.from({length: refreshControl.indicatorSpokes}, (_, index) => (
+            <span key={index} data-testid="spoke" />
+          ))}
+        </span>
+      </div>
+      <button type="button" onClick={control.refresh}>
+        Refresh
+      </button>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Every element added to or removed from the glyph from now on: the trigger's
+ * transient copy of the spokes.
+ */
+function watchGlyph(): {added: HTMLElement[]; removed: HTMLElement[]} {
+  const glyph = screen.getAllByTestId('spoke')[0].parentElement as HTMLElement;
+  const seen = {added: [] as HTMLElement[], removed: [] as HTMLElement[]};
+  new MutationObserver(records => {
+    for (const record of records) {
+      seen.added.push(...(Array.from(record.addedNodes) as HTMLElement[]));
+      seen.removed.push(...(Array.from(record.removedNodes) as HTMLElement[]));
+    }
+  }).observe(glyph, {childList: true});
+  return seen;
+}
+
+interface Played {
+  element: Element;
+  keyframes: Keyframe[];
+  options: KeyframeAnimationOptions;
+  animation: {onfinish: (() => void) | null; cancel: () => void};
+}
+
+/**
+ * Records the Web Animations elements start from now on (jsdom implements
+ * none), for the test that calls it.
+ */
+function recordAnimations(): Played[] {
+  const played: Played[] = [];
+  Object.defineProperty(HTMLElement.prototype, 'animate', {
+    configurable: true,
+    value(
+      this: Element,
+      keyframes: Keyframe[],
+      options: KeyframeAnimationOptions,
+    ) {
+      const animation = {onfinish: null, cancel: vi.fn()};
+      played.push({element: this, keyframes, options, animation});
+      return animation as unknown as Animation;
+    },
+  });
+  return played;
+}
+
+/** Lets the mutation observer and the animator's promises run. */
+async function flush(): Promise<void> {
+  await act(async () => {
+    await Promise.resolve();
+  });
+}
+
+/** The indicator, marked with the spinning attribute while the spokes step. */
+function indicator(): HTMLElement {
+  return screen.getAllByTestId('spoke')[0].parentElement
+    ?.parentElement as HTMLElement;
+}
+
 function content(): HTMLElement {
   return screen.getByTestId('refresh');
 }
@@ -177,6 +264,8 @@ describe('useRefreshControl', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
+    Reflect.deleteProperty(HTMLElement.prototype, 'animate');
     window.matchMedia = originalMatchMedia;
     if (originalCss) {
       Object.defineProperty(window, 'CSS', originalCss);
@@ -938,5 +1027,207 @@ describe('useRefreshControl', () => {
     expect(scroller.style.overscrollBehaviorY).toBe('none');
     rerender(<Host hasControl={false} />);
     expect(scroller.style.overscrollBehaviorY).toBe('');
+  });
+  it('at the trigger steps the spokes at once and fades a transient copy of them out over them', async () => {
+    const played = recordAnimations();
+    let resolve: () => void = () => {};
+    render(
+      <SpokedRefreshable
+        onRefresh={() =>
+          new Promise<void>(done => {
+            resolve = done;
+          })
+        }>
+        <p>Inbox</p>
+      </SpokedRefreshable>,
+    );
+    const seen = watchGlyph();
+    pull(content(), [30, 30, 30, 30]);
+    // The spokes step from the trigger: no hand-over later.
+    expect(indicator()).toHaveAttribute('data-refresh-spinning');
+    await flush();
+    // One transient copy, holding a copy of each spoke as the pull left it:
+    // full alpha, and none of the spinning steps.
+    expect(seen.added).toHaveLength(1);
+    const [copy] = seen.added;
+    expect(copy.children).toHaveLength(refreshControl.indicatorSpokes);
+    for (const spoke of Array.from(copy.children) as HTMLElement[]) {
+      expect(spoke.style.opacity).toBe('1');
+      expect(spoke.childNodes).toHaveLength(0);
+      expect(played.filter(p => p.element === spoke)).toEqual([]);
+    }
+    // Each spoke steps on its own animation, a turn per iteration.
+    const steps = played.filter(p => p.options.iterations === Infinity);
+    expect(steps.map(p => p.element)).toEqual(
+      screen.getAllByTestId('spoke').filter(spoke => !copy.contains(spoke)),
+    );
+    // Its one animation: 1 − w on the gradient spring until it settles, held
+    // at 0 until the copy is removed.
+    const fades = played.filter(p => p.element === copy);
+    expect(fades).toHaveLength(1);
+    const [{keyframes, options, animation}] = fades;
+    const settleMs =
+      solveSpring(toSpring(refreshControl.triggerGradientSpring), {
+        from: 0,
+        to: 1,
+      }).settleTime(SETTLE_THRESHOLD.opacity) * 1000;
+    expect(options).toEqual({
+      duration: settleMs,
+      easing: 'linear',
+      fill: 'forwards',
+    });
+    const opacities = keyframes.map(frame => Number(frame.opacity));
+    expect(opacities[0]).toBe(1);
+    expect(opacities.at(-1)).toBe(0);
+    opacities.slice(1).forEach((opacity, i) => {
+      expect(opacity).toBeLessThanOrEqual(opacities[i]);
+    });
+    // Its end removes it: at rest the glyph holds its eight spokes alone.
+    expect(seen.removed).toEqual([]);
+    act(() => {
+      animation.onfinish?.();
+    });
+    await flush();
+    expect(seen.removed).toEqual([copy]);
+    expect(screen.getAllByTestId('spoke')).toHaveLength(
+      refreshControl.indicatorSpokes,
+    );
+    await act(async () => {
+      resolve();
+    });
+    expect(content()).not.toHaveAttribute('aria-busy');
+    // Once the end's slide has finished, the spokes show the reveal again.
+    await waitFor(() =>
+      expect(indicator()).not.toHaveAttribute('data-refresh-spinning'),
+    );
+    for (const step of steps) {
+      expect(step.animation.cancel).toHaveBeenCalled();
+    }
+  });
+
+  it('under Reduce Motion applies the gradient at once at the trigger, with no copy of the spokes', async () => {
+    // design:reduced-motion DR2, DEC-3: the spokes' gradient is an in-place
+    // value change, so under reduced motion it applies at once on any
+    // pointer, with no added element and no cross-fade.
+    window.matchMedia = (query: string) =>
+      ({
+        matches: COARSE.test(query) || /prefers-reduced-motion/.test(query),
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }) as MediaQueryList;
+    const played = recordAnimations();
+    render(
+      <SpokedRefreshable onRefresh={() => new Promise<void>(() => {})}>
+        <p>Inbox</p>
+      </SpokedRefreshable>,
+    );
+    const seen = watchGlyph();
+    pull(content(), [30, 30, 30, 30]);
+    expect(indicator()).toHaveAttribute('data-refresh-spinning');
+    await flush();
+    expect(seen.added).toHaveLength(0);
+    expect(
+      played.filter(
+        p => p.options.duration === timing.reducedMotionCrossFadeMs,
+      ),
+    ).toEqual([]);
+  });
+
+  it('cancels the spin and the cross-fade when the control unmounts mid-refresh', async () => {
+    const played = recordAnimations();
+    const {unmount} = render(
+      <SpokedRefreshable onRefresh={() => new Promise<void>(() => {})}>
+        <p>Inbox</p>
+      </SpokedRefreshable>,
+    );
+    pull(content(), [30, 30, 30, 30]);
+    await flush();
+    // The spokes' eight turns, and the trigger's cross-fade: 1 to 0, held.
+    const steps = played.filter(p => p.options.iterations === Infinity);
+    const fades = played.filter(
+      p =>
+        p.options.fill === 'forwards' &&
+        Number(p.keyframes[0]?.opacity) === 1 &&
+        Number(p.keyframes.at(-1)?.opacity) === 0,
+    );
+    expect(steps).toHaveLength(refreshControl.indicatorSpokes);
+    expect(fades).toHaveLength(1);
+    // Still running: nothing has ended them yet.
+    for (const run of [...steps, ...fades]) {
+      expect(run.animation.cancel).not.toHaveBeenCalled();
+    }
+    // Unmounted mid-refresh, mid-fade: nothing keeps running on detached
+    // nodes.
+    unmount();
+    for (const run of [...steps, ...fades]) {
+      expect(run.animation.cancel).toHaveBeenCalled();
+    }
+  });
+
+  it('without Web Animations marks the spin and leaves no copy', async () => {
+    render(
+      <SpokedRefreshable onRefresh={() => new Promise<void>(() => {})}>
+        <p>Inbox</p>
+      </SpokedRefreshable>,
+    );
+    pull(content(), [30, 30, 30, 30]);
+    expect(indicator()).toHaveAttribute('data-refresh-spinning');
+    await flush();
+    expect(
+      (indicator().firstElementChild as HTMLElement).children,
+    ).toHaveLength(refreshControl.indicatorSpokes);
+  });
+
+  it('shows the gradient at once for a refresh begun without a pull', async () => {
+    const played = recordAnimations();
+    render(
+      <SpokedRefreshable onRefresh={() => new Promise<void>(() => {})}>
+        <p>Inbox</p>
+      </SpokedRefreshable>,
+    );
+    const seen = watchGlyph();
+    act(() => {
+      screen.getByRole('button', {name: 'Refresh'}).click();
+    });
+    expect(content()).toHaveAttribute('aria-busy', 'true');
+    // Every spoke steps at once, with no cross-fade.
+    expect(indicator()).toHaveAttribute('data-refresh-spinning');
+    expect(played.map(p => p.element)).toEqual(screen.getAllByTestId('spoke'));
+    await flush();
+    expect(seen.added).toEqual([]);
+  });
+
+  it('brings the revealed spokes back when a refresh ends under the finger', async () => {
+    function Controlled({isRefreshing}: {isRefreshing: boolean}) {
+      return (
+        <SpokedRefreshable isRefreshing={isRefreshing} onRefresh={() => {}}>
+          <p>Inbox</p>
+        </SpokedRefreshable>
+      );
+    }
+    const played = recordAnimations();
+    const {rerender} = render(<Controlled isRefreshing={false} />);
+    // A pull past the trigger, the finger still down.
+    pull(content(), [30, 30, 30, 30], false);
+    rerender(<Controlled isRefreshing />);
+    expect(indicator()).toHaveAttribute('data-refresh-spinning');
+    const steps = played.filter(p => p.options.iterations === Infinity);
+    const running = () =>
+      steps.filter(p => vi.mocked(p.animation.cancel).mock.calls.length === 0);
+    expect(running()).toHaveLength(refreshControl.indicatorSpokes);
+    rerender(<Controlled isRefreshing={false} />);
+    expect(indicator()).not.toHaveAttribute('data-refresh-spinning');
+    expect(running()).toEqual([]);
+    await flush();
+    expect(screen.getAllByTestId('spoke')).toHaveLength(
+      refreshControl.indicatorSpokes,
+    );
+    const glyph = indicator().firstElementChild as HTMLElement;
+    expect(glyph.children).toHaveLength(refreshControl.indicatorSpokes);
   });
 });
