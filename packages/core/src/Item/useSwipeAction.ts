@@ -729,8 +729,17 @@ export function useSwipeAction({
         {x: withSlide(curves.entries, side.outer, parts.outer, spring)},
         options,
       );
-      side.entries.animate({opacity: parts.fade}, {spring}, options);
-      side.fill.animate({opacity: 1 - parts.fade}, {spring}, options);
+      // The fade moves only when the full swipe confirms or backs out: a fade
+      // to the opacity the entries and the fill already have is a motion per
+      // entry for nothing, and at identity it hands the value back to the
+      // stylesheet with a style read inside the touch.
+      if (
+        side.entries.get('opacity') !== parts.fade ||
+        side.fill.get('opacity') !== 1 - parts.fade
+      ) {
+        side.entries.animate({opacity: parts.fade}, {spring}, options);
+        side.fill.animate({opacity: 1 - parts.fade}, {spring}, options);
+      }
       return handle.finished;
     },
     [animators],
