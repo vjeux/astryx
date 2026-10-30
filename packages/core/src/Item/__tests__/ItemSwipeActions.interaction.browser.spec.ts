@@ -50,7 +50,6 @@ import {
   sampleCurve,
   retakeOnTouchPacing,
   sampleRects,
-  seekAnimations,
   springStep,
   startScreencast,
   tap,
@@ -131,21 +130,6 @@ const openWidthOf = async (track: Locator) =>
 /** The x of an element's `translate` (0 when it has none). */
 const xOf = async (locator: Locator) =>
   locator.evaluate(node => parseFloat(getComputedStyle(node).translate) || 0);
-
-/** The four moving parts' x at once (one evaluate: also while timers are frozen). */
-const partsOf = async (row: Locator) =>
-  row.evaluate(node => {
-    const x = (el: Element | null) =>
-      el == null ? NaN : parseFloat(getComputedStyle(el).translate) || 0;
-    const panel = node.querySelector('[data-swipe-panel="trailing"]');
-    const track = panel?.firstElementChild ?? null;
-    return {
-      root: x(node),
-      panel: x(panel),
-      track: x(track),
-      entries: x(track?.firstElementChild ?? null),
-    };
-  });
 
 /**
  * The settle the row is running: when it started (page clock, epoch ms) and
@@ -280,6 +264,118 @@ async function motionOf(
     );
   }
   return {from: found.from, ms: found.ms};
+}
+
+/**
+ * The row's four moving parts: the row, the trailing panel (which cancels
+ * the row's translation), the panel's track (which moves with the row) and
+ * its first entry (pinned against the track).
+ */
+type Part = 'root' | 'panel' | 'track' | 'entries';
+
+function partLocators(row: Locator): Record<Part, Locator> {
+  const panel = row.locator('[data-swipe-panel="trailing"]');
+  const track = panel.locator(':scope > *').first();
+  return {
+    root: row,
+    panel,
+    track,
+    entries: track.locator(':scope > *').first(),
+  };
+}
+
+/**
+ * Holds the row's settle toward `target` right after `motionOf` found it, and
+ * the page's timers for the sampling (or the animator retires the held
+ * animation at its curve's end mid-sampling). A hold that comes after the
+ * settle has ended would sample its end value at every time: it fails by
+ * name instead, with how late it came. Returns the held animations and the
+ * settle's keyframes, the points the animator computed on its curve.
+ */
+async function holdSettle(
+  page: Page,
+  row: Locator,
+  target: number,
+  motion: {from: number; ms: number},
+): Promise<{
+  held: Awaited<ReturnType<typeof holdAnimations>>;
+  keyed: {t: number; value: number}[];
+}> {
+  const held = await holdAnimations(page, row);
+  const found = await row.evaluate(
+    (node, {to, from}) => {
+      const heldNow =
+        (window as unknown as {__harnessHeld?: Animation[]}).__harnessHeld ??
+        [];
+      const endOf = (animation: Animation) => {
+        const keyframes =
+          (animation.effect as KeyframeEffect | null)?.getKeyframes() ?? [];
+        const last = keyframes[keyframes.length - 1];
+        return last == null || !('translate' in last)
+          ? null
+          : parseFloat(String(last.translate));
+      };
+      const animation = node.getAnimations().find(candidate => {
+        const end = endOf(candidate);
+        return (
+          end != null && Math.abs(end - to) < 0.5 && heldNow.includes(candidate)
+        );
+      });
+      if (animation == null) {
+        return {
+          points: null,
+          heldAfter: performance.now() - (from - performance.timeOrigin),
+        };
+      }
+      const effect = animation.effect as KeyframeEffect;
+      const duration = Number(effect.getComputedTiming().duration);
+      return {
+        points: effect.getKeyframes().map(frame => ({
+          t: (frame.computedOffset ?? 0) * duration,
+          value: parseFloat(String(frame.translate)),
+        })),
+        heldAfter: 0,
+      };
+    },
+    {to: target, from: motion.from},
+  );
+  if (found.points == null) {
+    throw new Error(
+      `the settle toward ${target} px, ${motion.ms.toFixed(0)} ms long, had ended or been replaced by the time it was held, ${found.heldAfter.toFixed(0)} ms after it started`,
+    );
+  }
+  await freezeTimers(page);
+  return {held, keyed: found.points};
+}
+
+/**
+ * The parts' x at each time (ms into the held motion), one page call per
+ * part: a call per sample is a round trip per sample, which a loaded runner
+ * stretches past the motion's own length. Hold first (`holdSettle`).
+ */
+async function sampleParts(
+  row: Locator,
+  times: ReadonlyArray<number>,
+  parts: ReadonlyArray<Part> = ['root', 'panel', 'track', 'entries'],
+): Promise<({t: number} & Record<Part, number>)[]> {
+  const locators = partLocators(row);
+  const columns: Partial<Record<Part, number[]>> = {};
+  for (const part of parts) {
+    // At once: a part that is not there fails here, not after a wait.
+    if ((await locators[part].count()) !== 1) {
+      throw new Error(`the row has no ${part} to sample`);
+    }
+    columns[part] = (await sampleCurve(locators[part], times)).map(
+      sample => parseFloat(sample.raw.translate) || 0,
+    );
+  }
+  return times.map((t, i) => ({
+    t,
+    root: columns.root?.[i] ?? Number.NaN,
+    panel: columns.panel?.[i] ?? Number.NaN,
+    track: columns.track?.[i] ?? Number.NaN,
+    entries: columns.entries?.[i] ?? Number.NaN,
+  }));
 }
 
 /**
@@ -455,21 +551,8 @@ test('the settle after a held release is UIKit’s spring, frame by frame, with 
   // 105 px of swipe, held: past half the panel, so the row settles open.
   await driver.play(heldDrag(start, -130));
   const motion = await motionOf(row, -openWidth);
-  // Sampling takes real time: hold the page's timers too, or the animator
-  // retires the held animation at the curve's end mid-sampling.
-  await freezeTimers(page);
-  const held = await holdAnimations(page, row);
-  const samples: {
-    t: number;
-    root: number;
-    panel: number;
-    track: number;
-    entries: number;
-  }[] = [];
-  for (const t of timeline(motion.ms + 50)) {
-    await seekAnimations(page, t);
-    samples.push({t, ...(await partsOf(row))});
-  }
+  const {held} = await holdSettle(page, row, -openWidth, motion);
+  const samples = await sampleParts(row, timeline(motion.ms + 50));
   await releaseAnimations(page);
   await thawTimers(page);
   const from = samples[0].root;
@@ -584,53 +667,14 @@ test('a flick hands the row’s velocity to the settle', async ({
   const {row} = opened;
   const target = -openWidth;
   const motion = await motionOf(row, target);
-  // Held at once: the settle runs on the page's clock meanwhile, and a
-  // loaded runner's next call can come after it has ended.
-  await holdAnimations(page, row);
   // The settle's keyframes: the points the animator computed on its curve.
   // The browser draws straight lines between them, up to a quarter pixel
   // inside the curve, so the initial velocity is read from these points
   // (fitted to frames between them it reads about 5 px/s low).
-  const keyed = await row.evaluate(
-    (node, {to, from}) => {
-      const animation = node.getAnimations().find(candidate => {
-        const keyframes =
-          (candidate.effect as KeyframeEffect | null)?.getKeyframes() ?? [];
-        const last = keyframes[keyframes.length - 1];
-        return (
-          last != null &&
-          Math.abs(parseFloat(String(last.translate)) - to) < 0.5
-        );
-      });
-      if (animation == null) {
-        // How long after its start the hold came.
-        return {heldAfter: performance.now() - (from - performance.timeOrigin)};
-      }
-      const effect = animation.effect as KeyframeEffect;
-      const duration = Number(effect.getComputedTiming().duration);
-      return {
-        points: effect.getKeyframes().map(frame => ({
-          t: (frame.computedOffset ?? 0) * duration,
-          value: parseFloat(String(frame.translate)),
-        })),
-      };
-    },
-    {to: target, from: motion.from},
-  );
-  if (keyed.points == null) {
-    throw new Error(
-      `the settle toward ${target} px, ${motion.ms.toFixed(0)} ms long, had ended or been replaced by the time it was held, ${(keyed.heldAfter ?? 0).toFixed(0)} ms after it started`,
-    );
-  }
-  await freezeTimers(page);
-  // Every sample in one page call: a call per sample is a round trip per
-  // sample, which a loaded runner stretches.
+  const {keyed} = await holdSettle(page, row, target, motion);
   const samples = (
-    await sampleCurve(row, timeline(motion.ms + 50, 1000 / 120))
-  ).map(sample => ({
-    t: sample.t,
-    value: parseFloat(sample.raw.translate) || 0,
-  }));
+    await sampleParts(row, timeline(motion.ms + 50, 1000 / 120), ['root'])
+  ).map(sample => ({t: sample.t, value: sample.root}));
   await releaseAnimations(page);
   await thawTimers(page);
   // The critically damped family: x(t) = target + (A + B·t)·e^(−ωt), with
@@ -641,7 +685,7 @@ test('a flick hands the row’s velocity to the settle', async ({
   let sbb = 0;
   let sya = 0;
   let syb = 0;
-  for (const {t, value} of keyed.points) {
+  for (const {t, value} of keyed) {
     const s = t / 1000;
     const a = Math.exp(-OMEGA * s);
     const b = s * a;
@@ -672,7 +716,7 @@ test('a flick hands the row’s velocity to the settle', async ({
           d0,
           target,
           comparison: result,
-          keyed: keyed.points,
+          keyed,
           samples,
         },
         null,
@@ -1402,13 +1446,12 @@ test('backing out of a confirmed full swipe closes the row and fires nothing; th
   await driver.play([...out, ...back.slice(1)]);
   // A swipe that confirmed and backed out closes, whatever its position.
   const motion = await motionOf(row, 0);
-  await freezeTimers(page);
-  await holdAnimations(page, row);
-  const samples: {root: number; track: number; entries: number}[] = [];
-  for (const t of timeline(motion.ms, 1000 / 60)) {
-    await seekAnimations(page, t);
-    samples.push(await partsOf(row));
-  }
+  await holdSettle(page, row, 0, motion);
+  const samples = await sampleParts(row, timeline(motion.ms, 1000 / 60), [
+    'root',
+    'track',
+    'entries',
+  ]);
   await releaseAnimations(page);
   await thawTimers(page);
   // The settle crosses the open width: above it the entries ride the row,
