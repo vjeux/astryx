@@ -26,6 +26,11 @@ import {
 } from './animator';
 import {cubicBezier} from './bezier';
 import {coast} from './coast';
+import {
+  presentedElements,
+  presentedOffsetOf,
+  resolvePresented,
+} from './presentation';
 import {solveDecay} from './decay';
 import {solveSpring, solveSpringTowardRamp, toSpring} from './spring';
 import {scroll} from './uikit/scroll';
@@ -2486,6 +2491,92 @@ describe('Reduced Motion (design:reduced-motion)', () => {
     }
   });
 
+  it('a landing later than the whole fade back in shows the element at once and settles then', async () => {
+    // A hold released long after the dip was due: the landing\u2019s timer runs
+    // more than the whole fade back in late, so the element appears at once
+    // where it landed. No fade is left for the browser to start a frame
+    // later, so the call\u2019s finished never reports an element still at 0.
+    for (const sheet of ['own', 'stylesheet'] as const) {
+      const {animator, element} = reduced();
+      stylesheet = sheet === 'stylesheet' ? {opacity: '0.6'} : {};
+      const handle = animator.animate(
+        {x: 100},
+        {spring: springs.navigationPush},
+      );
+      for (const animation of recorded) {
+        animation.paused = true;
+      }
+      await commitFrame(clock);
+      clock += fade * 2;
+      for (const animation of recorded) {
+        animation.finish();
+      }
+      const before = recorded.length;
+      let settled: boolean | undefined;
+      void handle.finished.then(value => {
+        settled = value;
+      });
+      // The next frame finds the hold finished: the landing is long due.
+      await commitFrame(clock);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(animator.get('x')).toBe(100);
+      expect(
+        recorded
+          .slice(before)
+          .filter(
+            animation =>
+              !animation.cancelled &&
+              'opacity' in (animation.keyframes[0] ?? {}),
+          ),
+      ).toHaveLength(0);
+      expect(settled).toBe(true);
+      if (sheet === 'stylesheet') {
+        // Handed back to the stylesheet at once.
+        expect(element.style.opacity).toBe('');
+      } else {
+        expect(animator.get('opacity')).toBe(1);
+      }
+      animator.dispose();
+      recorded = [];
+    }
+  });
+
+  it('a move held before its first frame and finished from outside still lands when its retire runs before the next frame', async () => {
+    // A sampler pauses the call's animations in its own task and finishes
+    // them later. A loaded page can run the retire timer, which cancels the
+    // finished fade, before the frame that would read the call's start: the
+    // call must not be left waiting for a start that no animation can give.
+    const {animator} = reduced();
+    const handle = animator.animate({x: 100}, {spring: springs.navigationPush});
+    for (const animation of recorded) {
+      animation.paused = true;
+    }
+    await commitFrame(clock);
+    clock += 30;
+    await commitFrame(clock);
+    for (const animation of recorded) {
+      animation.finish();
+    }
+    let settled: boolean | undefined;
+    void handle.finished.then(value => {
+      settled = value;
+    });
+    // The retire timer first, with no frame in between: it cancels the
+    // finished fade out.
+    clock += fade * 2;
+    await vi.advanceTimersByTimeAsync(fade * 2);
+    expect(
+      recorded.filter(animation => animation.finished && !animation.cancelled),
+    ).toEqual([]);
+    // Frames keep coming: step the clock through the landing.
+    for (let step = 0; step < 16; step++) {
+      await advance(fade / 4);
+    }
+    expect(animator.get('x')).toBe(100);
+    expect(animator.get('opacity')).toBe(1);
+    expect(settled).toBe(true);
+  });
+
   it('a waiting call whose own opacity a later call retargets settles interrupted', async () => {
     const {animator} = reduced();
     const dismiss = animator.animate(
@@ -3615,5 +3706,93 @@ describe('attach', () => {
     const element = document.createElement('div');
     createAnimator(element);
     expect(element.getAttribute('style')).toBeNull();
+  });
+});
+
+describe('the presented offset iOS hit testing reads', () => {
+  it('reports translate while it moves: drawn minus where its animation started, zero before the browser starts it', async () => {
+    const {element, animator} = setup();
+    animator.animate({y: 300}, {spring: springs.sheetPresent});
+    // A call from rest starts at the browser's commit: nothing has moved yet.
+    expect(presentedOffsetOf(element)).toEqual({x: 0, y: 0});
+    await commitFrame(clock);
+    expect(presentedElements()).toContain(element);
+    expect(presentedOffsetOf(element)).toEqual({x: 0, y: 0});
+    clock += 120;
+    await vi.advanceTimersByTimeAsync(120);
+    const offset = presentedOffsetOf(element);
+    expect(offset.x).toBe(0);
+    expect(offset.y).toBeCloseTo(animator.get('y'), 9);
+    expect(offset.y).toBeGreaterThan(0);
+    expect(offset.y).toBeLessThan(300);
+    // The curve ends and its animation retires: nothing left to report.
+    clock += 5000;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(presentedElements()).not.toContain(element);
+  });
+
+  it('stops reporting on stop, set, dispose and detach, and never for a pseudo-element or opacity alone', async () => {
+    const {element, animator} = setup();
+    const play = async () => {
+      animator.animate({x: 200}, {spring: springs.sheetPresent});
+      await advance(16);
+      expect(presentedElements()).toContain(element);
+    };
+    await play();
+    animator.stop();
+    expect(presentedElements()).not.toContain(element);
+    await play();
+    animator.set({x: 10});
+    expect(presentedElements()).not.toContain(element);
+    await play();
+    const other = document.createElement('div');
+    animator.attach(other);
+    expect(presentedElements()).not.toContain(element);
+    expect(presentedElements()).toContain(other);
+    animator.dispose();
+    expect(presentedElements()).not.toContain(other);
+
+    const fade = setup();
+    fade.animator.animate({opacity: 0}, {spring: springs.sheetPresent});
+    await advance(16);
+    expect(presentedElements()).not.toContain(fade.element);
+
+    const backdrop = setup({pseudoElement: '::backdrop'});
+    backdrop.animator.animate({y: 100}, {spring: springs.sheetPresent});
+    await advance(16);
+    expect(presentedElements()).not.toContain(backdrop.element);
+    backdrop.animator.dispose();
+    fade.animator.dispose();
+  });
+
+  it('resolves where it is drawn on request: one custom-property write, the offset restarting there', async () => {
+    const {element, animator} = setup();
+    animator.play({y: {duration: 1, at: t => 300 * t, velocity: () => 300}});
+    await advance(400);
+    expect(presentedOffsetOf(element).y).toBeCloseTo(120, 6);
+    resolvePresented([element]);
+    expect(element.style.getPropertyValue('--astryx-presented')).toBe('1');
+    expect(presentedOffsetOf(element).y).toBeCloseTo(0, 6);
+    await advance(100);
+    expect(presentedOffsetOf(element).y).toBeCloseTo(30, 6);
+    // Unreported once at rest, the property goes too.
+    animator.stop();
+    expect(element.style.getPropertyValue('--astryx-presented')).toBe('');
+    animator.dispose();
+  });
+
+  it('starts over from the current value when a rebase or a retarget builds a new animation', async () => {
+    const {element, animator} = setup();
+    animator.play({y: {duration: 1, at: t => 300 * t, velocity: () => 300}});
+    await advance(500);
+    expect(presentedOffsetOf(element).y).toBeCloseTo(150, 6);
+    animator.rebase({y: 40});
+    // The new animation starts where the element is drawn now.
+    expect(presentedOffsetOf(element).y).toBeCloseTo(0, 6);
+    await advance(100);
+    expect(presentedOffsetOf(element).y).toBeCloseTo(30, 6);
+    animator.animate({y: 0}, {spring: springs.sheetPresent});
+    expect(presentedOffsetOf(element).y).toBeCloseTo(0, 6);
+    animator.dispose();
   });
 });

@@ -177,6 +177,7 @@
 
 import {cubicBezier} from './bezier';
 import {solveSpring, toSpring, type SpringDescription} from './spring';
+import {registerPresentedOffset, type PresentedSource} from './presentation';
 import {resolveMotion} from './resolveMotion';
 import {
   reducedMotionCrossFade,
@@ -711,6 +712,9 @@ export const PROMOTION_LINGER_MS = 500;
 
 type Channel = 'translate' | 'rotate' | 'scale' | 'opacity';
 
+/** The custom property whose writes make WebKit resolve a moving element. */
+const RESOLVE_PROPERTY = '--astryx-presented';
+
 const CHANNELS: Record<Channel, ReadonlyArray<MotionProperty>> = {
   translate: ['x', 'y'],
   rotate: ['rotate'],
@@ -952,6 +956,16 @@ export function createAnimator(
   };
   /** The call being committed, when it starts from rest. */
   let callGroup: StartGroup | null = null;
+  /** The element reported to presentation.ts while translate moves. */
+  let presented: Element | null = null;
+  /**
+   * The translate the engine hit-tests the element at while the compositor
+   * moves it: where the animation started, or where a `resolve` left it.
+   */
+  let hitTested = {x: 0, y: 0};
+  /** Counts the style writes that make WebKit resolve the element again. */
+  let resolutions = 0;
+  let unpresent: (() => void) | null = null;
   /** Channels promoted to the element's compositing layer (will-change). */
   const promoted = new Set<Channel>();
   /** The element's own inline will-change, restored when promotion ends. */
@@ -1049,6 +1063,63 @@ export function createAnimator(
 
   const finalValue = (property: MotionProperty): number =>
     segments.get(property)?.target ?? resting[property];
+
+  /**
+   * Where translate is drawn relative to where the translate animation
+   * started, read live when a touch lands. iOS WebKit keeps the transform it
+   * resolved when the animation went to the compositor (iOS 26.2: the
+   * element's rect and its hit tests stay at the start for the whole curve,
+   * while the computed style is live), until the animation is retired. A
+   * segment whose start still waits for the browser's commit has painted
+   * nothing of its curve yet.
+   */
+  const drawnTranslate = (property: MotionProperty, time: number) => {
+    const segment = segments.get(property);
+    return segment?.group != null && !segment.group.resolved
+      ? segment.at(0)
+      : valueAt(property, time);
+  };
+
+  const presentedSource: PresentedSource = {
+    offset: () => {
+      syncPending();
+      const time = now();
+      return {
+        x: drawnTranslate('x', time) - hitTested.x,
+        y: drawnTranslate('y', time) - hitTested.y,
+      };
+    },
+    resolve: () => {
+      if (target == null) {
+        return;
+      }
+      syncPending();
+      const time = now();
+      // Any style write makes WebKit resolve the element's transform again,
+      // to the value drawn now, where it then stays (iOS 26.2: in the same
+      // task); a custom property changes nothing else.
+      resolutions += 1;
+      target.style.setProperty(RESOLVE_PROPERTY, String(resolutions));
+      hitTested = {x: drawnTranslate('x', time), y: drawnTranslate('y', time)};
+    },
+  };
+
+  /** Reports the element while its translate moves (not a pseudo-element's). */
+  const present = (isMoving: boolean) => {
+    const element = isMoving && pseudoElement == null ? target : null;
+    if (element === presented) {
+      return;
+    }
+    unpresent?.();
+    unpresent = null;
+    if (presented instanceof HTMLElement) {
+      presented.style.removeProperty(RESOLVE_PROPERTY);
+    }
+    presented = element;
+    if (element != null) {
+      unpresent = registerPresentedOffset(element, presentedSource);
+    }
+  };
 
   const writeInline = (
     channel: Channel,
@@ -1160,6 +1231,16 @@ export function createAnimator(
       }
     }
     const moving = properties.filter(p => segments.has(p));
+    if (channel === 'translate') {
+      // The animation built below starts from the value at `time` (its first
+      // keyframe); a rebase or a retarget builds a new one, so a new start.
+      hitTested = {x: valueAt('x', time), y: valueAt('y', time)};
+      present(
+        moving.length > 0 &&
+          target != null &&
+          typeof target.animate === 'function',
+      );
+    }
     if (
       moving.length === 0 ||
       target == null ||
@@ -1352,6 +1433,9 @@ export function createAnimator(
         return;
       }
       running.delete(channel);
+      if (channel === 'translate') {
+        present(false);
+      }
       // A pseudo-element holds its resting value, unless the stylesheet
       // takes it back now (a borrowed dip that has ended).
       const handsBack =
@@ -1367,7 +1451,20 @@ export function createAnimator(
         // style would hide a stylesheet value (an opacity 0) under it.
         writeInline(channel, finalValue, false);
       }
+      // A call from rest the browser never started (finished from outside
+      // before its first frame, a sampler's finish()): read its start from the
+      // animation before the cancel takes it, and with nothing left to wait
+      // on the call keeps its own clock, so its landing is still armed.
+      const waiting = [...pendingGroups].filter(group =>
+        group.animations.includes(animation),
+      );
+      for (const group of waiting) {
+        syncGroup(group);
+      }
       animation.cancel();
+      for (const group of waiting) {
+        resolveGroup(group, group.provisional);
+      }
       releaseIdentity(channel);
       flushReleases();
     };
@@ -2628,8 +2725,9 @@ export function createAnimator(
    * never an animation (DR2: opacity only), so it is never shown in the wrong
    * place. In a dip the fade back in starts from here and takes what is left
    * of the cross-fade, so the dip ends when it was due even when a busy main
-   * thread runs this timer late; past the whole fade back in (over 100 ms
-   * late) the element appears at once where it landed.
+   * thread runs this timer late; past the whole fade back in (100 ms late or
+   * more) the element appears at once where it landed, with no animation,
+   * and the call settles then.
    */
   const land = (landing: Landing) => {
     landings.delete(landing);
@@ -2642,13 +2740,16 @@ export function createAnimator(
       changed.push(property);
     }
     let end = time;
-    if (landing.fadeIn != null) {
-      // The fade back in takes what is left of the cross-fade: a timer that
-      // a busy main thread runs late shortens it, so the dip still ends
-      // when it was due (design:reduced-motion DR2, 200 ms or less), and the
-      // element is never shown before it lands.
-      const late = landing.due == null ? 0 : Math.max(0, time - landing.due);
-      const ms = Math.max(1, landing.fadeIn.ms - late);
+    // The fade back in takes what is left of the cross-fade: a timer that a
+    // busy main thread runs late shortens it, so the dip still ends when it
+    // was due (design:reduced-motion DR2, 200 ms or less), and the element is
+    // never shown before it lands. Past the whole fade back in nothing is
+    // left: the element appears at once, a plain write with no fade for the
+    // browser to start a frame later, so the call settles showing it.
+    const late = landing.due == null ? 0 : Math.max(0, time - landing.due);
+    const appears = landing.fadeIn != null && late >= landing.fadeIn.ms;
+    if (landing.fadeIn != null && !appears) {
+      const ms = landing.fadeIn.ms - late;
       segments.set(
         'opacity',
         fadeSegment(landing.owner, time, [
@@ -2658,6 +2759,13 @@ export function createAnimator(
       );
       changed.push('opacity');
       end = time + ms;
+    } else if (landing.fadeIn != null) {
+      segments.delete('opacity');
+      resting.opacity =
+        landing.fadeIn.isBorrowed === true
+          ? IDENTITY.opacity
+          : landing.fadeIn.to;
+      changed.push('opacity');
     } else if (landing.restore != null) {
       segments.delete('opacity');
       resting.opacity =
@@ -2665,11 +2773,13 @@ export function createAnimator(
       changed.push('opacity');
     }
     commit(changed, time);
-    if (landing.restoreIsBorrowed === true) {
+    if (
+      landing.restoreIsBorrowed === true ||
+      (appears && landing.fadeIn?.isBorrowed === true)
+    ) {
       // The stylesheet owns its opacity again.
       releaseOwnOpacity();
-    }
-    if (landing.fadeIn?.isBorrowed === true) {
+    } else if (landing.fadeIn?.isBorrowed === true) {
       // The fade back in returns to the stylesheet's opacity: it owns it
       // again once the fade ends (releaseIdentity).
       borrowedOpacity = landing.fadeIn.to;
@@ -2844,6 +2954,7 @@ export function createAnimator(
         return;
       }
       flushDeferred();
+      present(false);
       if (next == null) {
         // Unmount, unless a node replaces this one in the same task (React's
         // replacement order: attach(null), then the new node): nothing is
@@ -3531,6 +3642,7 @@ export function createAnimator(
         clearTimeout(timer);
       }
       retireTimers.clear();
+      present(false);
       handBackBorrow();
       demote();
       cancelSheetWillChangeRead();
