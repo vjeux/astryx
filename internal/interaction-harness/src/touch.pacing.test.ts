@@ -148,6 +148,15 @@ describe('checkTouchPacing', () => {
     expect(() => checkTouchPacing(steps, received)).toThrow(TouchPacingError);
   });
 
+  it("does not name a hold within the tolerance as the page's: WebKit stamps to the millisecond", () => {
+    // The last move interval is 5 ms off, and the page held the event before
+    // it 1 ms: measurement noise, so the dispatch is the cause.
+    const received = at([9, 5, 8, 16, 11, 5, 9, 10, 5, 13, 2]);
+    expect(() =>
+      checkTouchPacing(steps, received, {handledAt: handledAt(received, 9, 1)}),
+    ).toThrow(TouchPacingError);
+  });
+
   it("names the page's own stall when its handling explains a late lift", () => {
     const received = at([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 45]);
     expect(() =>

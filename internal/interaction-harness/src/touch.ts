@@ -234,10 +234,15 @@ export function checkTouchPacing(
     return Number.isFinite(h) && h > 0 ? h : 0;
   };
   // The gap ending at event i runs from event i - 1 to event i. A widened gap
-  // is the page's when, without the time it held event i - 1, it is on pace.
+  // is the page's when the page held event i - 1 longer than the tolerance
+  // itself, and the gap is on pace without that time. A hold within the
+  // tolerance is measurement noise (WebKit stamps to the millisecond), and
+  // the rest of the gap is the dispatch's.
+  const pageHeld = (i: number) => held(i) > TOUCH_PACING_TOLERANCE_MS;
   const widenedByPage = (i: number) =>
+    pageHeld(i - 1) &&
     receivedGaps[i - 1] - held(i - 1) - scriptedGaps[i - 1] <=
-    TOUCH_PACING_TOLERANCE_MS;
+      TOUCH_PACING_TOLERANCE_MS;
   const offPace: {reason: string; page: boolean}[] = [];
   const moves = steps.flatMap((step, i) =>
     step.type === 'touchMove' ? [i] : [],
@@ -274,7 +279,9 @@ export function checkTouchPacing(
   if (liftAfter >= TOUCH_LIFT_STILLNESS_MS) {
     offPace.push({
       reason: `the lift came ${liftAfter.toFixed(1)} ms after the last move, where a release reads as still from ${TOUCH_LIFT_STILLNESS_MS} ms`,
-      page: liftAfter - held(lastMove) < TOUCH_LIFT_STILLNESS_MS,
+      page:
+        pageHeld(lastMove) &&
+        liftAfter - held(lastMove) < TOUCH_LIFT_STILLNESS_MS,
     });
   }
   const byPage = offPace.find(o => o.page);
