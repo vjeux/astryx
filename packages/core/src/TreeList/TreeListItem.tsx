@@ -371,7 +371,8 @@ export interface TreeListItemInternalProps {
   isExiting?: boolean;
   /**
    * The tree holds an animated-layout handle, which plays the group's
-   * motion; without one, the row plays its own touch slide.
+   * motion; without one, the row plays its own touch expand (a collapse
+   * removes the group at once).
    */
   hasAnimatedLayout?: boolean;
   /**
@@ -389,7 +390,7 @@ export interface TreeListItemInternalProps {
   variant: TreeListVariant;
   /**
    * Renders the children subtree (the parent recursion), called while the
-   * row shows its children: expanded, or sliding them away after a collapse.
+   * row shows its children: expanded, or while a handle's exit plays.
    */
   renderChildren?: () => ReactNode;
   /** 1-based position of this item among its siblings (aria-posinset). */

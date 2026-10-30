@@ -10,11 +10,11 @@
  *   as one block inside the group's clip and the chevron turns, both on the
  *   outline spring, sampled frame by frame, while the rows below take their
  *   new places at once (no animated layout handle, `spec:AST-105` FR2); a
- *   collapse slides them back and removes them, no child showing outside
- *   the group up to the frame it leaves; the children keep moving while the
- *   main thread is blocked, with no Layout or Paint;
- *   under reduced motion an expand and a collapse cross-fade, opacity only,
- *   within 200 ms (`design:reduced-motion`); right to left mirrors the
+ *   collapse removes the group at the tap, the rows below taking their
+ *   places on that frame, while the chevron turns back; the children keep
+ *   moving while the main thread is blocked, with no Layout or Paint;
+ *   under reduced motion the expand and the chevron cross-fade, opacity
+ *   only, within 200 ms (`design:reduced-motion`); right to left mirrors the
  *   chevron's turn; a theme's outline spring times it; content after the
  *   tree takes its new place by layout at once, with no translate on it and
  *   a fixed element inside it staying fixed; a storyboard of the expand
@@ -241,7 +241,7 @@ test('a busy first frame delays the expand instead of skipping into it', async (
   await expect.poll(async () => translateY(parts(page).child)).toBe(0);
 });
 
-test('a collapse from rest starts on its chevron’s clock: a busy first frame delays both together (spec:AST-108 FR4a)', async ({
+test('a collapse from rest removes the group at its commit and starts the chevron’s turn back when the browser commits it (spec:AST-108 FR4a)', async ({
   page,
 }) => {
   await open(page);
@@ -258,82 +258,76 @@ test('a collapse from rest starts on its chevron’s clock: a busy first frame d
       ),
     )
     .toBe(0);
-  // The collapse's commit starts the block and the chevron; 150 ms of script
-  // then hold the main thread before the first frame. Both start when the
-  // browser commits them, on one clock.
-  const starts = await parent.evaluate(
+  // The collapse's commit removes the group and starts the chevron's turn
+  // back; 150 ms of script then hold the main thread before the first frame.
+  // The turn carries no start of its own: the browser sets it when it
+  // commits it.
+  const result = await parent.evaluate(
     async (folder, toggleButton) =>
-      new Promise<{chevron: number[]; rows: number[]}>(resolve => {
-        const observer = new MutationObserver(() => {
-          observer.disconnect();
-          const chevron = folder.querySelector<HTMLElement>(
-            ':scope > :not([role="group"]) [data-tree-chevron]',
-          );
-          const rows = [
-            ...folder.querySelectorAll<HTMLElement>(
+      new Promise<{rows: number; chevron: number; pending: boolean}>(
+        resolve => {
+          const observer = new MutationObserver(() => {
+            observer.disconnect();
+            const chevron = folder.querySelector<HTMLElement>(
+              ':scope > :not([role="group"]) [data-tree-chevron]',
+            );
+            const motions = chevron?.getAnimations() ?? [];
+            const rows = folder.querySelectorAll(
               ':scope > [role="group"] > [role="treeitem"]',
-            ),
-          ];
-          const motions = {
-            chevron: chevron?.getAnimations() ?? [],
-            rows: rows.flatMap(row => row.getAnimations()),
-          };
-          const until = performance.now() + 150;
-          while (performance.now() < until) {
-            // Busy: the main thread is held.
-          }
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() =>
-              resolve({
-                chevron: motions.chevron.map(a => Number(a.startTime)),
-                rows: motions.rows.map(a => Number(a.startTime)),
-              }),
-            ),
-          );
-        });
-        observer.observe(folder, {attributes: true, subtree: true});
-        (toggleButton as HTMLElement).click();
-      }),
+            ).length;
+            const pending = motions.every(
+              animation => animation.startTime == null,
+            );
+            const until = performance.now() + 150;
+            while (performance.now() < until) {
+              // Busy: the main thread is held.
+            }
+            resolve({rows, chevron: motions.length, pending});
+          });
+          observer.observe(folder, {attributes: true, subtree: true});
+          (toggleButton as HTMLElement).click();
+        },
+      ),
     await toggle.elementHandle(),
   );
-  expect(starts.chevron.length, JSON.stringify(starts)).toBeGreaterThan(0);
-  expect(starts.rows.length, JSON.stringify(starts)).toBeGreaterThan(0);
-  const all = [...starts.chevron, ...starts.rows];
-  expect(
-    Math.max(...all) - Math.min(...all),
-    JSON.stringify(starts),
-  ).toBeLessThan(1);
+  expect(result.rows, JSON.stringify(result)).toBe(0);
+  expect(result.chevron, JSON.stringify(result)).toBeGreaterThan(0);
+  expect(result.pending, JSON.stringify(result)).toBe(true);
 });
 
-test('a toggle mid-motion turns the block and the chevron around from the frame on screen', async ({
+test('a toggle mid-expand removes the group at once and turns the chevron around from its angle on screen', async ({
   page,
 }) => {
   await open(page);
-  const {group} = parts(page);
-  // Every frame's child offset and chevron turn, from the first tap on, with
-  // the frame's time: the values on screen at that time. On the first frame
-  // the expand moves the block, the page toggles the row again, so the turn
-  // around lands early in the curve, far from either end, under any load.
+  const {chevron} = parts(page);
+  // Every frame's chevron turn, and the child's offset while it exists,
+  // from the first tap on, with the frame's time. On the first frame the
+  // expand moves the block, the page toggles the row again.
   await page.evaluate(() => {
-    const samples: {t: number; y: number; turn: number}[] = [];
-    (window as unknown as {samples: typeof samples}).samples = samples;
-    let turned = false;
+    const samples: {t: number; y: number | null; turn: number}[] = [];
+    const w = window as unknown as {samples: typeof samples; turnedAt: number};
+    w.samples = samples;
+    w.turnedAt = -1;
     const read = (t: number) => {
       const row = document.querySelector<HTMLElement>(
         '[data-tree-id="button"]',
       );
-      const chevron = document.querySelector<HTMLElement>(
+      const glyph = document.querySelector<HTMLElement>(
         '[data-tree-id="components"] > :not([role="group"]) [data-tree-chevron]',
       );
-      if (row != null && chevron != null) {
-        const translate = getComputedStyle(row).translate;
-        const [, y = '0px'] =
-          translate === 'none' || translate === ''
-            ? ['0px']
-            : translate.split(' ');
+      if (glyph != null) {
+        let y: number | null = null;
+        if (row != null) {
+          const translate = getComputedStyle(row).translate;
+          const [, value = '0px'] =
+            translate === 'none' || translate === ''
+              ? ['0px']
+              : translate.split(' ');
+          y = Number.parseFloat(value);
+        }
         // The chevron's angle on screen: the quarter turn its class gives its
         // transform, plus the additive turn the motion springs home.
-        const style = getComputedStyle(chevron);
+        const style = getComputedStyle(glyph);
         const additive =
           style.rotate === 'none' || style.rotate === ''
             ? 0
@@ -343,13 +337,13 @@ test('a toggle mid-motion turns the block and the chevron around from the frame 
           matrix == null ? [] : matrix[1].split(',').map(Number);
         samples.push({
           t,
-          y: Number.parseFloat(y),
+          y,
           turn: (Math.atan2(b, a) * 180) / Math.PI + additive,
         });
         const height =
-          row.closest('[role="group"]')?.getBoundingClientRect().height ?? 0;
-        if (!turned && Number.parseFloat(y) > 1 - height) {
-          turned = true;
+          row?.closest('[role="group"]')?.getBoundingClientRect().height ?? 0;
+        if (w.turnedAt < 0 && y != null && y > 1 - height) {
+          w.turnedAt = samples.length - 1;
           document
             .querySelector<HTMLElement>(
               '[data-tree-id="components"] > :not([role="group"]) [data-tree-toggle]',
@@ -362,35 +356,43 @@ test('a toggle mid-motion turns the block and the chevron around from the frame 
     requestAnimationFrame(read);
   });
   await tapToggle(page);
-  const height = await group.evaluate(el => el.getBoundingClientRect().height);
-  // The page turned it around mid-expand; the collapse then removes the group.
-  await expect(group).toHaveCount(0, {timeout: 3000});
-  const samples = await page.evaluate(
-    () =>
-      (window as unknown as {samples: {t: number; y: number; turn: number}[]})
-        .samples,
-  );
-  // No jumps: a turn around continues from the value on screen, with no
-  // restart from either end. Judged against the time between frames, so a
-  // frame the browser delays may carry more travel: between two frames the
-  // block and the chevron move at most twice the spring's peak speed (the
-  // old curve's and the new one's at a turn around), plus a pixel or a
-  // degree.
+  // The page turned it around mid-expand: the group is gone, and the chevron
+  // comes back to rest.
+  await expect(parts(page).group).toHaveCount(0, {timeout: 3000});
+  await expect.poll(async () => rotation(chevron), {timeout: 3000}).toBe(0);
+  const {samples, turnedAt} = await page.evaluate(() => {
+    const w = window as unknown as {
+      samples: {t: number; y: number | null; turn: number}[];
+      turnedAt: number;
+    };
+    return {samples: [...w.samples], turnedAt: w.turnedAt};
+  });
+  expect(turnedAt, JSON.stringify(samples.slice(0, 6))).toBeGreaterThan(0);
+  // The group left at the toggle: no frame after it shows a child.
+  expect(
+    samples.slice(turnedAt + 1).every(sample => sample.y == null),
+    JSON.stringify(samples.slice(turnedAt, turnedAt + 4)),
+  ).toBe(true);
+  // No jump: the chevron's turn around continues from the angle on screen,
+  // with no restart from either end. Judged against the time between frames,
+  // so a frame the browser delays may carry more travel: between two frames
+  // it turns at most twice the spring's peak speed (the old curve's and the
+  // new one's at a turn around), plus a degree.
   for (let i = 1; i < samples.length; i++) {
     const elapsed = samples[i].t - samples[i - 1].t;
     const context = `frame ${i}: ${JSON.stringify(samples.slice(Math.max(0, i - 2), i + 2))}`;
-    expect(Math.abs(samples[i].y - samples[i - 1].y), context).toBeLessThan(
-      2 * PEAK_RATE * height * elapsed + 1,
-    );
     expect(
       Math.abs(samples[i].turn - samples[i - 1].turn),
       context,
     ).toBeLessThan(2 * PEAK_RATE * 90 * elapsed + 1);
   }
-  // It did turn around: the block went down, then back up.
-  const lowest = Math.max(...samples.map(sample => sample.y));
-  expect(lowest).toBeLessThan(0);
-  expect(samples.at(-1)?.y ?? 0).toBeLessThan(lowest);
+  // It did turn around: toward the expanded angle, then back to rest.
+  const start = samples[0].turn;
+  const farthest = Math.max(
+    ...samples.map(sample => Math.abs(sample.turn - start)),
+  );
+  expect(farthest, JSON.stringify(samples.slice(0, 8))).toBeGreaterThan(0.5);
+  expect(Math.abs((samples.at(-1)?.turn ?? start) - start)).toBeLessThan(0.5);
 });
 
 /**
@@ -545,11 +547,12 @@ test('the expansion keeps its own outline spring, whatever a theme writes', asyn
   await expect.poll(async () => translateY(child)).toBe(0);
 });
 
-test('under reduced motion an expand and a collapse cross-fade: opacity only, within 200 ms', async ({
+test('under reduced motion an expand and the chevron cross-fade, opacity only, within 200 ms, and a collapse removes the group at once', async ({
   page,
 }) => {
   // design:reduced-motion DR1 and DR2, under a finger: nothing travels or
-  // turns; the children fade in where they land and out where they are.
+  // turns; the children fade in where they land, and the chevron
+  // cross-fades.
   await page.emulateMedia({reducedMotion: 'reduce'});
   await open(page);
   const {child} = parts(page);
@@ -564,9 +567,13 @@ test('under reduced motion an expand and a collapse cross-fade: opacity only, wi
   await expect.poll(async () => translateY(child)).toBe(0);
   await expect.poll(async () => hiddenParts(page)).toBe(0);
   await tapToggle(page);
-  expectReducedMotionCrossFade(await holdAnimations(page));
-  await releaseAnimations(page, {finish: true});
+  // The collapse removes the group at the tap; only the chevron changes, by
+  // a cross-fade.
+  const held = await holdAnimations(page);
   await expect(child).toHaveCount(0);
+  expectReducedMotionCrossFade(held);
+  await releaseAnimations(page, {finish: true});
+  await expect.poll(async () => hiddenParts(page)).toBe(0);
 });
 
 test("right to left: the chevron's quarter turn mirrors, and the children slide the same way", async ({
@@ -684,11 +691,11 @@ test('expand: the children slide out from under the parent and the chevron turns
   );
 });
 
-test('collapse: the children slide back under the parent, then leave, and the rows below take their places when they do', async ({
+test('collapse: the group leaves at the tap and the rows below take their places on that frame, while the chevron turns back', async ({
   page,
 }) => {
   await open(page);
-  const {group, child, below} = parts(page);
+  const {group, child, below, chevron, parent} = parts(page);
   const belowCollapsed = (await below.boundingBox())?.y ?? 0;
   await tapToggle(page);
   await expect(child).toBeVisible();
@@ -696,133 +703,58 @@ test('collapse: the children slide back under the parent, then leave, and the ro
   await expect
     .poll(async () => group.evaluate(el => getComputedStyle(el).overflow))
     .not.toBe('clip');
-  const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
-
-  await tapToggle(page);
-  // Still rendered while it slides away, but out of reach.
-  await expect(group).toHaveAttribute('inert', '');
-  await holdAnimations(page);
-  await seekAnimations(page, SETTLE_MS / 3);
-  const midway = await translateY(child);
-  expect(midway).toBeLessThan(-1);
-  expect(midway).toBeGreaterThan(-height + 1);
-  // The row below waits in place, untranslated, while the block slides.
-  expect(await translateY(below)).toBe(0);
-  expect(await below.evaluate(el => el.getAnimations().length)).toBe(0);
-  await releaseAnimations(page, {finish: true});
-  // Gone, and the row below sits where it sat before the expand, taken there
-  // by the commit that removed the children.
-  await expect(group).toHaveCount(0);
-  expect(await translateY(below)).toBe(0);
-  expect((await below.boundingBox())?.y ?? 0).toBeCloseTo(belowCollapsed, 0);
-});
-
-test('collapse: the group leaves the frame its block is fully clipped, not when the spring settles', async ({
-  page,
-}) => {
-  await open(page);
-  const {group, child} = parts(page);
-  await tapToggle(page);
-  await expect(child).toBeVisible();
-  await expect.poll(async () => translateY(child)).toBe(0);
-  await expect
-    .poll(async () => group.evaluate(el => getComputedStyle(el).overflow))
-    .not.toBe('clip');
-  const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
-  // When the outline spring brings the block within half a pixel of the
-  // group's height above it: from then on nothing of it shows.
-  let clipMs = 0;
-  while (height * (1 - progress(clipMs)) > 0.5) {
-    clipMs += 4;
-  }
-  expect(clipMs).toBeLessThan(SETTLE_MS - 100);
-  // From the collapse's commit (the group turns inert) to its removal.
-  const watch = page.evaluate(
-    async () =>
-      new Promise<number>(resolve => {
-        const parent = document.querySelector('[data-tree-id="components"]');
-        if (parent == null) {
-          throw new Error('no parent');
-        }
-        let start = 0;
+  // The collapse's commit, read in the same task: the group is gone, the row
+  // below already sits where it sat before the expand, by layout, with
+  // nothing animating it (`spec:AST-105` FR2), and the chevron's turn back
+  // has started.
+  const atCommit = parent.evaluate(
+    async folder =>
+      new Promise<{
+        group: boolean;
+        belowTop: number;
+        belowMotions: number;
+        chevronMotions: number;
+      }>(resolve => {
         const observer = new MutationObserver(() => {
-          const current = parent.querySelector(':scope > [role="group"]');
-          if (start === 0 && current?.hasAttribute('inert') === true) {
-            start = performance.now();
+          // The tap's press feedback writes first; the collapse's commit is
+          // the mutation that marks the row collapsed.
+          if (folder.getAttribute('aria-expanded') !== 'false') {
+            return;
           }
-          if (start !== 0 && current == null) {
-            observer.disconnect();
-            resolve(performance.now() - start);
-          }
+          observer.disconnect();
+          const row = document.querySelector<HTMLElement>(
+            '[data-tree-id="app"]',
+          );
+          const glyph = folder.querySelector<HTMLElement>(
+            ':scope > :not([role="group"]) [data-tree-chevron]',
+          );
+          resolve({
+            group: folder.querySelector(':scope > [role="group"]') != null,
+            belowTop: row?.getBoundingClientRect().top ?? Number.NaN,
+            belowMotions: row?.getAnimations().length ?? -1,
+            chevronMotions: glyph?.getAnimations().length ?? -1,
+          });
         });
-        observer.observe(parent, {
-          subtree: true,
-          childList: true,
+        observer.observe(folder, {
           attributes: true,
-          attributeFilter: ['inert'],
+          childList: true,
+          subtree: true,
         });
       }),
   );
   await tapToggle(page);
-  const elapsed = await watch;
-  // Closer to the clip than to the settle: no empty band before the rows
-  // below take their places.
-  expect(elapsed, `clip ${clipMs} ms, settle ${SETTLE_MS} ms`).toBeLessThan(
-    (clipMs + SETTLE_MS) / 2,
+  const commit = await atCommit;
+  expect(commit.group, JSON.stringify(commit)).toBe(false);
+  expect(commit.belowTop, JSON.stringify(commit)).toBeCloseTo(
+    belowCollapsed,
+    0,
   );
-  expect(elapsed).toBeGreaterThan(clipMs - 50);
-});
-
-test('the end of a collapse shows no child outside the group, up to the frame the group leaves', async ({
-  page,
-}) => {
-  await open(page);
-  const {child} = parts(page);
-  await tapToggle(page);
-  await expect(child).toBeVisible();
-  await expect
-    .poll(async () =>
-      parts(page).group.evaluate(el => getComputedStyle(el).overflow),
-    )
-    .not.toBe('clip');
-  // Every frame from the collapse's tap until the group is gone: a child
-  // painted above the group's top edge with no clip shows over the parent
-  // row.
-  await page.evaluate(() => {
-    const w = window as unknown as {__frames: string[]; __stop: boolean};
-    w.__frames = [];
-    w.__stop = false;
-    const parent = document.querySelector('[data-tree-id="components"]');
-    const frame = () => {
-      const group = parent?.querySelector<HTMLElement>(
-        ':scope > [role="group"]',
-      );
-      if (group != null && getComputedStyle(group).overflow !== 'clip') {
-        const top = group.getBoundingClientRect().top;
-        for (const item of group.children) {
-          const box = item.getBoundingClientRect();
-          if (box.height > 0 && box.top < top - 0.5) {
-            w.__frames.push(
-              `${(item.textContent ?? '').slice(0, 12)} at ${box.top} above ${top}`,
-            );
-          }
-        }
-      }
-      if (!w.__stop) {
-        requestAnimationFrame(frame);
-      }
-    };
-    requestAnimationFrame(frame);
-  });
-  await tapToggle(page);
-  await expect(parts(page).group).toHaveCount(0, {timeout: 3000});
-  await page.waitForTimeout(50);
-  const outside = await page.evaluate(() => {
-    const w = window as unknown as {__frames: string[]; __stop: boolean};
-    w.__stop = true;
-    return w.__frames;
-  });
-  expect(outside).toEqual([]);
+  expect(commit.belowMotions, JSON.stringify(commit)).toBe(0);
+  expect(commit.chevronMotions, JSON.stringify(commit)).toBeGreaterThan(0);
+  // The chevron comes to rest; the row below never moved again.
+  await expect.poll(async () => rotation(chevron)).toBe(0);
+  expect(await translateY(below)).toBe(0);
+  expect((await below.boundingBox())?.y ?? 0).toBeCloseTo(belowCollapsed, 0);
 });
 
 test('content after the tree takes its place by layout at once, with no translate, and a fixed element inside it stays fixed', async ({
@@ -870,21 +802,15 @@ test('content after the tree takes its place by layout at once, with no translat
   expect(await translateY(below)).toBe(0);
   await releaseAnimations(page, {finish: true});
 
-  // A collapse: it stays where it is while the children slide back, then
-  // takes its place when the group leaves, never translated.
+  // A collapse: the group leaves at the tap, and the content after the tree
+  // takes its place at once, never translated.
   await tapToggle(page);
-  await holdAnimations(page);
-  await seekAnimations(page, SETTLE_MS / 3);
-  expect(await button.evaluate(el => getComputedStyle(el).translate)).toBe(
-    'none',
-  );
-  expect(await fixedTop()).toBeCloseTo(10, 0);
-  await releaseAnimations(page, {finish: true});
   await expect(group).toHaveCount(0);
   expect(await button.evaluate(el => getComputedStyle(el).translate)).toBe(
     'none',
   );
   expect((await button.boundingBox())?.y ?? 0).toBeCloseTo(rest, 0);
+  expect(await fixedTop()).toBeCloseTo(10, 0);
 });
 
 test('the children keep moving on every frame while the main thread is blocked', async ({
@@ -1028,13 +954,13 @@ test('the expand does no Layout or Paint per frame', async ({
   expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
 });
 
-test('the collapse does no Layout or Paint per frame while its block slides', async ({
+test('a collapse lays out once, at its commit, and the chevron’s turn back does no Layout or Paint per frame', async ({
   page,
   browserName,
 }) => {
   test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
   await open(page);
-  const {parent, child} = parts(page);
+  const {parent, child, chevron} = parts(page);
   await parent.focus();
   await page.keyboard.press('ArrowRight');
   await expect.poll(async () => translateY(child)).toBe(0);
@@ -1042,13 +968,11 @@ test('the collapse does no Layout or Paint per frame while its block slides', as
   let window = {from: 0, to: 0};
   const trace = await traceRendering(page, async () => {
     await page.keyboard.press('ArrowLeft');
-    const [started] = await waitForAnimation(child);
-    // Up to well before the frame the block is clipped, when the commit that
-    // removes the group lays out once.
-    window = {from: started.from, to: started.from + 0.5 * SETTLE_MS};
+    const [started] = await waitForAnimation(chevron);
+    window = {from: started.from, to: started.from + SETTLE_MS};
     await page.waitForTimeout(SETTLE_MS + 100);
   });
-  const during = countBetween(trace, window.from + 30, window.to);
+  const during = countBetween(trace, window.from + 30, window.to - 30);
   expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
   expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
 });

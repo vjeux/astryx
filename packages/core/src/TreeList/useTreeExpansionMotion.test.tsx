@@ -4,14 +4,15 @@
  * @file useTreeExpansionMotion.test.tsx
  * @input vitest, TreeList, a stubbed pointer (a coarse primary pointer, or
  *   a mouse)
- * @output Unit tests for the expansion's presence rules: with a mouse a
- *   collapse removes the children at once; under a coarse primary pointer they stay, inert and out of the arrow keys' reach, until they have
- *   slid away, and an expand that interrupts the collapse keeps them; with no
- *   animated layout handle nothing outside the group moves, neither the rows
- *   after it in the tree nor the page content after the tree (both take their
- *   places by layout, `spec:AST-105` FR2); the group's rows release their
+ * @output Unit tests for the expansion's presence rules: a collapse removes
+ *   the children at the tap under every pointer, so the rows after the group
+ *   take their places at once (`spec:AST-105` FR2), and under a coarse
+ *   primary pointer the chevron still turns back on its spring, mid-expand
+ *   too; with no animated layout handle nothing outside the group moves,
+ *   neither the rows after it in the tree nor the page content after the tree
+ *   (both take their places by layout); the group's rows release their
  *   translate at their own arrival and are left at rest when the tree
- *   unmounts mid-collapse
+ *   unmounts mid-expand
  * @position Beside TreeList/useTreeExpansionMotion.ts; the motion itself is
  *   proven in a real engine by
  *   TreeList/__tests__/TreeListExpand.interaction.browser.spec.ts
@@ -154,39 +155,44 @@ describe('TreeList expansion presence', () => {
     expect(group()).toBeNull();
   });
 
-  it('under a finger, the children stay, inert and skipped by the arrow keys, until they have slid away', async () => {
+  it('under a finger, a collapse removes the children at the tap, so the rows after take their places at once (spec:AST-105 FR2), and the chevron turns back', async () => {
     stubPointer('touch');
     render(<TreeList items={items} />);
     // Let the touch presentation settle after mount.
     await act(async () => undefined);
+    const chevron = row('components')?.querySelector<HTMLElement>(
+      '[data-tree-chevron]',
+    ) as HTMLElement;
     fireEvent.click(toggle() as HTMLElement);
     expect(row('components')).toHaveAttribute('aria-expanded', 'false');
-    // Still rendered while it slides away, but inert.
-    expect(group()).not.toBeNull();
-    expect(group()).toHaveAttribute('inert');
-    // The arrow keys roam as if the children were already gone.
+    // Gone at the tap: nothing holds the rows after the group in place.
+    expect(group()).toBeNull();
     const components = row('components') as HTMLElement;
     components.focus();
     fireEvent.keyDown(components, {key: 'ArrowDown'});
     expect(document.activeElement).toBe(row('app'));
-    // Gone once the motion settles.
-    await waitFor(() => expect(group()).toBeNull(), {timeout: 2000});
+    // The chevron turns back on its own spring.
+    expect(motionOf(chevron)).toBeDefined();
   });
 
-  it('under a finger, an expand that interrupts the collapse keeps the children', async () => {
+  it('under a finger, a collapse mid-expand removes the children at once and turns the chevron back from its angle', async () => {
     stubPointer('touch');
     render(<TreeList items={items} />);
     await act(async () => undefined);
-    const before = group();
+    const chevron = row('components')?.querySelector<HTMLElement>(
+      '[data-tree-chevron]',
+    ) as HTMLElement;
     fireEvent.click(toggle() as HTMLElement);
     fireEvent.click(toggle() as HTMLElement);
+    // Expanding: the group is back, its block sliding out.
     expect(row('components')).toHaveAttribute('aria-expanded', 'true');
-    // The same group, never removed, and in reach again.
-    expect(group()).toBe(before);
-    expect(group()).not.toHaveAttribute('inert');
-    await new Promise(resolve => setTimeout(resolve, 800));
-    expect(group()).toBe(before);
-    expect(screen.getByText('Card.tsx')).toBeInTheDocument();
+    expect(group()).not.toBeNull();
+    expect(motionOf(row('button') as HTMLElement)).toBeDefined();
+    fireEvent.click(toggle() as HTMLElement);
+    expect(row('components')).toHaveAttribute('aria-expanded', 'false');
+    expect(group()).toBeNull();
+    expect(motionOf(chevron)).toBeDefined();
+    expect(screen.queryByText('Card.tsx')).toBeNull();
   });
 });
 
@@ -261,8 +267,10 @@ describe('content after the tree', () => {
     );
     fireEvent.click(toggle() as HTMLElement);
     const below = screen.getByTestId('below');
-    expect(motionOf(row('button') as HTMLElement)).toBeDefined();
+    // The group leaves at the tap, and nothing after it moves.
+    expect(row('button')).toBeNull();
     expect(motionOf(row('app') as HTMLElement)).toBeUndefined();
+    expect((row('app') as HTMLElement).style.translate).toBe('');
     expect(motionOf(below)).toBeUndefined();
     expect(below.style.translate).toBe('');
   });
@@ -281,17 +289,12 @@ describe('content after the tree', () => {
     });
   });
 
-  it('leaves nothing moved when the tree unmounts mid-collapse', async () => {
+  it('leaves nothing moved when the tree unmounts mid-expand', async () => {
     stubPointer('touch');
     stubLayout();
     const {rerender} = render(<Page />);
     await act(async () => undefined);
-    fireEvent.click(toggle() as HTMLElement);
-    await waitFor(
-      () => expect(motionOf(row('button') as HTMLElement)).toBeUndefined(),
-      {timeout: 3000},
-    );
-    // Collapse, and take the tree away while it runs: the row after the
+    // Expand, and take the tree away while it runs: the row after the
     // group was never moved, and nothing is left moving.
     fireEvent.click(toggle() as HTMLElement);
     const app = row('app') as HTMLElement;
