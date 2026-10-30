@@ -50,7 +50,7 @@
  * - /packages/core/src/DateInput/DateInputTouch.test.tsx
  */
 
-import {useCallback, useEffect, useId, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {
   colorVars,
@@ -68,6 +68,7 @@ import {dateInputTouchSizes, dateInputTouchGeometry} from './tokens.stylex';
 import {useOwnScrollGesture} from './useOwnScrollGesture';
 import {usePointerDragScroll} from './usePointerDragScroll';
 import {useScrollSettle} from './useScrollSettle';
+import {useWheelListbox} from './useWheelListbox';
 import {nearestEnabledIndex, type WheelProps} from './wheelOptions';
 
 export {
@@ -274,7 +275,6 @@ export function ScrollWheel({
   onChange,
   isActive = true,
 }: WheelProps) {
-  const id = useId();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const selectedIndex = Math.max(
     0,
@@ -529,50 +529,46 @@ export function ScrollWheel({
     [activeIndex, options, scrollToIndex, value, onChange],
   );
 
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      switch (event.key) {
-        case 'ArrowDown':
-          event.preventDefault();
-          moveBy(1);
-          break;
-        case 'ArrowUp':
-          event.preventDefault();
-          moveBy(-1);
-          break;
-        case 'PageDown':
-          event.preventDefault();
-          moveBy(10);
-          break;
-        case 'PageUp':
-          event.preventDefault();
-          moveBy(-10);
-          break;
-        case 'Home':
-          event.preventDefault();
-          moveBy(-activeIndex);
-          break;
-        case 'End':
-          event.preventDefault();
-          moveBy(options.length - 1 - activeIndex);
-          break;
-        default:
-          break;
-      }
+  // Home and End step to the first and the last row, as any key does: a
+  // disabled one stops them.
+  const toEnd = useCallback(
+    (end: 'first' | 'last') => {
+      moveBy(end === 'first' ? -activeIndex : options.length - 1 - activeIndex);
     },
     [moveBy, activeIndex, options.length],
   );
+
+  const activate = useCallback(
+    (index: number) => {
+      const option = options[index];
+      if (option == null || option.isDisabled) {
+        return;
+      }
+      setActiveIndex(index);
+      scrollToIndex(index, 'smooth');
+      if (option.value !== value) {
+        onChange(option.value);
+      }
+    },
+    [options, scrollToIndex, value, onChange],
+  );
+
+  const {listboxProps, optionProps} = useWheelListbox({
+    label,
+    options,
+    value,
+    activeIndex,
+    stepBy: moveBy,
+    toEnd,
+    activate,
+  });
 
   return (
     <div {...stylex.props(styles.column)}>
       <div aria-hidden="true" {...stylex.props(styles.band)} />
       <div
         ref={scrollerRef}
-        role="listbox"
-        aria-label={label}
-        aria-activedescendant={`${id}-${options[activeIndex]?.value}`}
-        tabIndex={0}
-        onKeyDown={handleKeyDown}
+        {...listboxProps}
         // Read on the way down: usePointerDragScroll stops a primary mouse
         // press from bubbling (it must not reach BottomSheet's drag), so a
         // bubbling handler would never see a mouse and would keep the last
@@ -587,20 +583,7 @@ export function ScrollWheel({
         {options.map((option, index) => (
           <div
             key={option.value}
-            id={`${id}-${option.value}`}
-            role="option"
-            aria-selected={option.value === value}
-            aria-disabled={option.isDisabled || undefined}
-            onClick={() => {
-              if (option.isDisabled) {
-                return;
-              }
-              setActiveIndex(index);
-              scrollToIndex(index, 'smooth');
-              if (option.value !== value) {
-                onChange(option.value);
-              }
-            }}
+            {...optionProps(option, index)}
             {...stylex.props(
               styles.item,
               index === activeIndex && styles.itemActive,

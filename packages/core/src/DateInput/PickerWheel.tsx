@@ -74,7 +74,7 @@
  * - /packages/core/src/TimeInput/TimeInput.doc.mjs
  */
 
-import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
 import {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
@@ -98,6 +98,7 @@ import {focusOutlineStyles} from '../utils';
 import {lockSelection} from '../gestures/selectionLock';
 import {dateInputTouchGeometry, dateInputTouchSizes} from './tokens.stylex';
 import {useOwnScrollGesture} from './useOwnScrollGesture';
+import {useWheelListbox} from './useWheelListbox';
 import {drumGeometry} from './wheelDrum';
 import {WHEEL_ROW_PITCH, todayLook} from './wheelLook';
 import {WheelMotion, type PlayOptions} from './wheelMotion';
@@ -260,7 +261,6 @@ export function PickerWheel({
   onChange,
   isActive = true,
 }: WheelProps) {
-  const id = useId();
   const columnRef = useRef<HTMLDivElement | null>(null);
   const rowsRef = useRef<HTMLDivElement | null>(null);
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
@@ -278,6 +278,8 @@ export function PickerWheel({
   /** A finger landed on a moving wheel and stopped it. */
   const caughtRef = useRef(false);
 
+  // The latest props, for the motion's and the gesture listeners' callbacks,
+  // which are attached once and outlive a render.
   const latestRef = useRef({options, value, onChange, layout});
   useIsomorphicLayoutEffect(() => {
     latestRef.current = {options, value, onChange, layout};
@@ -432,6 +434,7 @@ export function PickerWheel({
     });
   }, [motion, reducedMotion]);
 
+  // The band's mark follows the row the motion reports nearest the band.
   useIsomorphicLayoutEffect(() => {
     motion.onNearestChange(paintRow);
     return () => motion.onNearestChange(null);
@@ -452,6 +455,7 @@ export function PickerWheel({
     paintedRef.current.clear();
   });
 
+  // The motion's animations and timers end with the wheel.
   useEffect(() => () => motion.dispose(), [motion]);
 
   // Park the committed row under the band when the wheel is shown, at once. A
@@ -502,6 +506,7 @@ export function PickerWheel({
     [motion],
   );
 
+  // The latest touch-down handler, for the gesture listener attached once.
   const onTouchDownRef = useRef(onTouchDown);
   useIsomorphicLayoutEffect(() => {
     onTouchDownRef.current = onTouchDown;
@@ -790,49 +795,21 @@ export function PickerWheel({
     [motion, move],
   );
 
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      switch (event.key) {
-        case 'ArrowDown':
-          event.preventDefault();
-          moveBy(1);
-          break;
-        case 'ArrowUp':
-          event.preventDefault();
-          moveBy(-1);
-          break;
-        case 'PageDown':
-          event.preventDefault();
-          moveBy(10);
-          break;
-        case 'PageUp':
-          event.preventDefault();
-          moveBy(-10);
-          break;
-        case 'Home':
-          event.preventDefault();
-          moveToEnd('first');
-          break;
-        case 'End':
-          event.preventDefault();
-          moveToEnd('last');
-          break;
-        default:
-          break;
-      }
-    },
-    [moveBy, moveToEnd],
-  );
+  const {listboxProps, optionProps} = useWheelListbox({
+    label,
+    options,
+    value,
+    // The committed row: a value set from outside shows in the same render.
+    activeIndex: selectedIndex,
+    stepBy: moveBy,
+    toEnd: moveToEnd,
+    activate: activateRow,
+  });
 
   return (
     <div
       ref={columnRef}
-      role="listbox"
-      aria-label={label}
-      // The committed row: a value set from outside shows in the same render.
-      aria-activedescendant={`${id}-${options[selectedIndex]?.value}`}
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
+      {...listboxProps}
       data-wheel=""
       {...stylex.props(styles.column, focusOutlineStyles.focusVisible)}>
       <div aria-hidden="true" {...stylex.props(styles.band)} />
@@ -840,13 +817,9 @@ export function PickerWheel({
         {options.map((option, index) => (
           <div
             key={option.value}
-            id={`${id}-${option.value}`}
-            role="option"
-            aria-selected={option.value === value}
-            aria-disabled={option.isDisabled || undefined}
+            {...optionProps(option, index)}
             data-wheel-row=""
             data-label={option.label}
-            onClick={() => activateRow(index)}
             {...stylex.props(
               styles.row,
               styles.rowAt(`${index * ROW_HEIGHT}px`),
