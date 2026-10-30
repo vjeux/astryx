@@ -111,6 +111,31 @@ describe('checkTouchPacing', () => {
     ).not.toThrow();
   });
 
+  it('names what the page did with each event when it says the runner widened a gap: held until its listeners ran, busy until its main thread was free', () => {
+    // The gap ending at event 10 widened 6 ms while the page's listeners took
+    // half a ms each: the runner's, as before, but the error now shows that
+    // the page's render after event 9 kept its main thread for 14 ms.
+    const received = at([8, 8, 8, 8, 8, 8, 8, 8, 14, 6, 2]);
+    const handledAt = received.map(t => t + 0.5);
+    const settledAt = received.map((t, i) => t + (i === 8 ? 14 : 0.5));
+    try {
+      checkTouchPacing(steps, received, {handledAt, settledAt});
+      expect.unreachable();
+    } catch (error) {
+      const pacing = error as TouchPacingError;
+      expect(pacing).toBeInstanceOf(TouchPacingError);
+      expect(pacing.page.held).toEqual(Array(12).fill(0.5));
+      expect(pacing.page.busy[8]).toBe(14);
+      expect(pacing.message).toContain(
+        'the page held each event 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 ms and was busy 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 14, 0.5, 0.5, 0.5 ms after its stamp',
+      );
+    }
+    // Without the page's own record, the message is the gaps alone.
+    expect(() => checkTouchPacing(steps, received)).toThrow(
+      /received 8, 8, 8, 8, 8, 8, 8, 8, 14, 6, 2 ms\)$/,
+    );
+  });
+
   it(`fails a lift that reaches the page ${TOUCH_LIFT_STILLNESS_MS} ms or more after the last move, where a release reads as still`, () => {
     expect(() =>
       checkTouchPacing(steps, at([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 45])),
