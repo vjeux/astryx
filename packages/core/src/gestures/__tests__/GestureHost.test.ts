@@ -874,6 +874,39 @@ describe('GestureHost', () => {
     expect(end.defaultPrevented).toBe(false);
   });
 
+  it("fails a one-finger pan that a pinch's second finger lands on, as well as the first finger's: neither row claims mid-pinch (spec:AST-094 FR10)", () => {
+    const {rowA, rowB} = mount('<div id="rowA"></div><div id="rowB"></div>');
+    const states: Record<string, string[]> = {a: [], b: []};
+    for (const [key, row] of [
+      ['a', rowA],
+      ['b', rowB],
+    ] as const) {
+      const pan = new PanGestureRecognizer({
+        name: key,
+        direction: 'horizontal',
+        maximumNumberOfTouches: 1,
+      });
+      pan.addTransitionListener((_recognizer, _from, to) =>
+        states[key].push(to),
+      );
+      detachers.push(host.attach(row, pan));
+    }
+    const first = {id: 1, x: 10, y: 10};
+    touch('touchstart', rowA, [first], [first], 0);
+    const second = {id: 2, x: 10, y: 60};
+    touch('touchstart', rowB, [second], [first, second], 16);
+    for (const [dx, time] of [
+      [20, 32],
+      [40, 48],
+    ] as const) {
+      const a = {...first, x: 10 + dx};
+      const b = {...second, x: 10 - dx};
+      touch('touchmove', rowA, [a, b], [a, b], time);
+    }
+    expect(states.a).not.toContain('began');
+    expect(states.b).not.toContain('began');
+  });
+
   it('keeps a claimed one-finger drag when a second finger lands on it (AST-094 FR10)', () => {
     const {box} = mount('<div id="box"></div>');
     const pan = new PanGestureRecognizer({maximumNumberOfTouches: 1});
@@ -930,6 +963,36 @@ describe('GestureHost', () => {
       48,
     );
     expect(own.defaultPrevented).toBe(true);
+  });
+
+  it("gives a finger's target no blocking listener for a disabled recognizer that would claim it (spec:AST-094 FR19)", () => {
+    const {box} = mount('<div id="box"></div>');
+    const pan = new PanGestureRecognizer({direction: 'horizontal'});
+    pan.isEnabled = false;
+    detachers.push(
+      host.attach(box, pan),
+      host.attach(box, new TapGestureRecognizer({claimsTouches: false})),
+    );
+    const blocking: string[] = [];
+    const add = box.addEventListener.bind(box);
+    box.addEventListener = ((
+      type: string,
+      listener: never,
+      options?: AddEventListenerOptions | boolean,
+    ) => {
+      if (
+        typeof options === 'object' &&
+        options.passive === false &&
+        (type === 'touchmove' || type === 'touchend')
+      ) {
+        blocking.push(type);
+      }
+      add(type, listener, options);
+    }) as typeof box.addEventListener;
+    const finger = {id: 1, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    expect(blocking).toEqual([]);
+    touch('touchend', box, [finger], [], 40);
   });
 
   it('reads pointercancel on a finger as the browser taking it', () => {
@@ -2393,6 +2456,31 @@ describe('GestureHost', () => {
     expect(actions).toEqual(['ended']);
   });
 
+  it("hands a press's selection lock what it landed on inside an open shadow root, not the shadow host the document sees", () => {
+    const {outer} = mount('<div id="outer"></div>');
+    const shadow = outer.attachShadow({mode: 'open'});
+    shadow.innerHTML = '<div id="row"><input id="field" type="checkbox"></div>';
+    const row = shadow.getElementById('row') as HTMLElement;
+    const field = shadow.getElementById('field') as HTMLElement;
+    const seen: (EventTarget | null)[] = [];
+    const hold = new LongPressGestureRecognizer({
+      name: 'hold',
+      selectionLock: (_elements, target) => {
+        seen.push(target);
+        return () => {};
+      },
+    });
+    detachers.push(host.attach(row, hold));
+    pointer('pointerdown', field, {
+      pointerType: 'pen',
+      x: 5,
+      y: 5,
+      buttons: 1,
+      time: 0,
+    });
+    expect(seen).toEqual([field]);
+  });
+
   it.each([
     ['stopPropagation on the window', window, 'stopPropagation'],
     [
@@ -2472,6 +2560,33 @@ describe('GestureHost', () => {
     expect(touch('touchend', page, [finger], [], 460).defaultPrevented).toBe(
       false,
     );
+  });
+
+  it('refuses its click to a pen the window blur cancelled, at its later lift, as a finger (spec:AST-094 FR28)', () => {
+    const {box} = mount('<div id="box"></div>');
+    const tap = new TapGestureRecognizer({name: 'tap'});
+    const states: string[] = [];
+    tap.addTransitionListener((_r, _from, to) => states.push(to));
+    detachers.push(host.attach(box, tap));
+    pointer('pointerdown', box, {
+      pointerType: 'pen',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    window.dispatchEvent(new Event('blur'));
+    // The browser kept the pen down: its lift's click would act.
+    pointer('pointerup', box, {pointerType: 'pen', x: 10, y: 10, time: 80});
+    // The pen's own click (a pointer's, detail 1).
+    const click = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      detail: 1,
+    });
+    box.dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(true);
+    expect(states).not.toContain('ended');
   });
 
   it('finishes a gesture whose target left the document mid-gesture', () => {
@@ -4488,6 +4603,140 @@ describe('gestures attach for every pointer (spec:AST-094 FR43, FR19, FR24)', ()
     expect(gestureListeners(boxAdded)).toEqual(gestureListeners(rowAdded));
     expect(warn).not.toHaveBeenCalled();
   });
+
+  it("cancels a claimed finger's touchend, a recognized tap's too, and leaves an unclaimed one's alone (spec:AST-094 FR21)", () => {
+    const {box, other, tapper} = mount(
+      '<div id="box"></div><div id="other"></div><div id="tapper"></div>',
+    );
+    const pointerHost = new GestureHost(document, {
+      clock,
+      inputMode: 'pointer-events',
+      isPrimaryPointerCoarse: () => true,
+    });
+    const pan = new PanGestureRecognizer({direction: 'horizontal'});
+    detachers.push(
+      pointerHost.attach(box, pan),
+      // A hold a short tap never reaches: the touch is tracked, unclaimed.
+      pointerHost.attach(other, new LongPressGestureRecognizer()),
+      pointerHost.attach(tapper, new TapGestureRecognizer()),
+    );
+    // A pan that claims, then lifts: its touchend is cancelled (FR21).
+    pointer('pointerdown', box, {
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    const finger = {id: 7, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    pointer('pointermove', box, {
+      pointerType: 'touch',
+      x: 40,
+      y: 10,
+      buttons: 1,
+      time: 32,
+    });
+    expect(pan.state).toBe('began');
+    pointer('pointerup', box, {pointerType: 'touch', x: 40, y: 10, time: 48});
+    const lifted = {...finger, x: 40};
+    expect(touch('touchend', box, [lifted], [], 48).defaultPrevented).toBe(
+      true,
+    );
+    // A tap nobody claims keeps its touchend.
+    pointer('pointerdown', other, {
+      id: 2,
+      pointerType: 'touch',
+      x: 10,
+      y: 80,
+      buttons: 1,
+      time: 400,
+    });
+    const second = {id: 8, x: 10, y: 80};
+    touch('touchstart', other, [second], [second], 400);
+    pointer('pointerup', other, {
+      id: 2,
+      pointerType: 'touch',
+      x: 10,
+      y: 80,
+      time: 460,
+    });
+    expect(touch('touchend', other, [second], [], 460).defaultPrevented).toBe(
+      false,
+    );
+    // A tap recognizer replaces the click, as under Touch Events: its lift's
+    // touchend is cancelled, so no compatibility mouse event follows.
+    pointer('pointerdown', tapper, {
+      id: 3,
+      pointerType: 'touch',
+      x: 10,
+      y: 160,
+      buttons: 1,
+      time: 800,
+    });
+    const third = {id: 9, x: 10, y: 160};
+    touch('touchstart', tapper, [third], [third], 800);
+    pointer('pointerup', tapper, {
+      id: 3,
+      pointerType: 'touch',
+      x: 10,
+      y: 160,
+      time: 860,
+    });
+    expect(touch('touchend', tapper, [third], [], 860).defaultPrevented).toBe(
+      true,
+    );
+  });
+
+  it('forgets a claimed lift whose touchend never came: a later tap at that place keeps its touchend (spec:AST-094 FR21)', () => {
+    const {box} = mount('<div id="box"></div>');
+    const pointerHost = new GestureHost(document, {
+      clock,
+      inputMode: 'pointer-events',
+      isPrimaryPointerCoarse: () => true,
+    });
+    const pan = new PanGestureRecognizer({direction: 'horizontal'});
+    detachers.push(pointerHost.attach(box, pan));
+    pointer('pointerdown', box, {
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    pointer('pointermove', box, {
+      pointerType: 'touch',
+      x: 40,
+      y: 10,
+      buttons: 1,
+      time: 32,
+    });
+    expect(pan.state).toBe('began');
+    // The claimed finger lifts, and no touchend follows (a browser that
+    // sends pointer events alone for it).
+    pointer('pointerup', box, {pointerType: 'touch', x: 40, y: 10, time: 48});
+    // Two seconds later, an unclaimed tap at the same place.
+    pointer('pointerdown', box, {
+      id: 2,
+      pointerType: 'touch',
+      x: 40,
+      y: 10,
+      buttons: 1,
+      time: 2048,
+    });
+    const tap = {id: 9, x: 40, y: 10};
+    touch('touchstart', box, [tap], [tap], 2048);
+    pointer('pointerup', box, {
+      id: 2,
+      pointerType: 'touch',
+      x: 40,
+      y: 10,
+      time: 2100,
+    });
+    expect(touch('touchend', box, [tap], [], 2100).defaultPrevented).toBe(
+      false,
+    );
+  });
 });
 
 describe('Touch Events from a browser that exposes no ontouchstart', () => {
@@ -4525,6 +4774,64 @@ describe('Touch Events from a browser that exposes no ontouchstart', () => {
     touch('touchstart', box, [finger], [finger], 0);
     host.arena.advanceTime(600);
     expect(press.state).toBe('began');
+  });
+
+  it('fails an unclaimed one-finger pan when a second finger lands there too, so the two fingers stay the page’s pinch (spec:AST-094 FR10)', () => {
+    let owner: object | null = window;
+    let descriptor: PropertyDescriptor | undefined;
+    while (owner != null) {
+      descriptor = Object.getOwnPropertyDescriptor(owner, 'ontouchstart');
+      if (descriptor != null) {
+        break;
+      }
+      owner = Object.getPrototypeOf(owner) as object | null;
+    }
+    if (owner != null && descriptor != null) {
+      const from = owner;
+      const saved = descriptor;
+      delete (from as {ontouchstart?: unknown}).ontouchstart;
+      detachers.push(() => Object.defineProperty(from, 'ontouchstart', saved));
+    }
+    expect('ontouchstart' in window).toBe(false);
+    const {box, page} = mount('<div id="box"></div><div id="page"></div>');
+    const pan = new PanGestureRecognizer({
+      direction: 'horizontal',
+      maximumNumberOfTouches: 1,
+    });
+    const states: string[] = [];
+    pan.addTransitionListener((_recognizer, _from, to) => states.push(to));
+    detachers.push(host.attach(box, pan));
+    pointer('pointerdown', box, {
+      id: 7,
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    // A second finger lands elsewhere before the first has moved: a pinch.
+    pointer('pointerdown', page, {
+      id: 8,
+      pointerType: 'touch',
+      x: 200,
+      y: 10,
+      buttons: 1,
+      time: 16,
+    });
+    for (const [x, time] of [
+      [30, 32],
+      [60, 48],
+    ] as const) {
+      pointer('pointermove', box, {
+        id: 7,
+        pointerType: 'touch',
+        x,
+        y: 10,
+        buttons: 1,
+        time,
+      });
+    }
+    expect(states).not.toContain('began');
   });
 
   it("cancels a claimed pan's touchmove there too: the finger read from its pointer events is the one the move reports", () => {
@@ -4574,6 +4881,62 @@ describe('Touch Events from a browser that exposes no ontouchstart', () => {
     const moved = {...finger, x: 50};
     const move = touch('touchmove', box, [moved], [moved], 32);
     expect(move.defaultPrevented).toBe(true);
+  });
+
+  it("cancels a claimed finger's touchend there too: the lift of a pan that claimed from the finger's pointer events (spec:AST-094 FR21)", () => {
+    let owner: object | null = window;
+    let descriptor: PropertyDescriptor | undefined;
+    while (owner != null) {
+      descriptor = Object.getOwnPropertyDescriptor(owner, 'ontouchstart');
+      if (descriptor != null) {
+        break;
+      }
+      owner = Object.getPrototypeOf(owner) as object | null;
+    }
+    if (owner != null && descriptor != null) {
+      const from = owner;
+      const saved = descriptor;
+      delete (from as {ontouchstart?: unknown}).ontouchstart;
+      detachers.push(() => Object.defineProperty(from, 'ontouchstart', saved));
+    }
+    expect('ontouchstart' in window).toBe(false);
+    const {box} = mount('<div id="box"></div>');
+    const auto = new GestureHost(document, {
+      clock,
+      isPrimaryPointerCoarse: () => true,
+    });
+    const pan = new PanGestureRecognizer({direction: 'horizontal'});
+    detachers.push(auto.attach(box, pan));
+    const finger = {id: 1, x: 10, y: 10};
+    pointer('pointerdown', box, {
+      id: 7,
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    touch('touchstart', box, [finger], [finger], 0);
+    pointer('pointermove', box, {
+      id: 7,
+      pointerType: 'touch',
+      x: 40,
+      y: 10,
+      buttons: 1,
+      time: 32,
+    });
+    expect(pan.state).toBe('began');
+    pointer('pointerup', box, {
+      id: 7,
+      pointerType: 'touch',
+      x: 40,
+      y: 10,
+      time: 48,
+    });
+    const lifted = {...finger, x: 40};
+    expect(touch('touchend', box, [lifted], [], 48).defaultPrevented).toBe(
+      true,
+    );
   });
 });
 describe('every pointer where the primary pointer is fine (spec:AST-094 FR19, FR24, FR43)', () => {
