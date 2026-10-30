@@ -42,6 +42,7 @@ import {
   trackMarker,
   waitForAnimation,
   waitForRest,
+  watchAnimations,
   withStorybook,
   writeEvidence,
 } from '@astryxdesign/interaction-harness';
@@ -198,6 +199,31 @@ async function expectRestored(v: Viewer) {
   expect(await v.photoState()).toEqual({x: 0, y: 0, scale: 1});
   await expect.poll(v.backdropAlpha).toBeCloseTo(1, 2);
   await expect.poll(v.closeAlpha).toBeCloseTo(1, 2);
+}
+
+/**
+ * Whether a set of keyframes moves or scales between its ends (travel),
+ * rather than holding one end and then the other: any property but opacity
+ * taking a value other than its first or its last.
+ */
+function travels(keyframes: ReadonlyArray<Record<string, unknown>>): boolean {
+  const meta = new Set(['offset', 'computedOffset', 'easing', 'composite']);
+  const props = new Set(
+    keyframes
+      .flatMap(k => Object.keys(k))
+      .filter(p => !meta.has(p) && p !== 'opacity'),
+  );
+  for (const p of props) {
+    const values = keyframes
+      .filter(k => k[p] != null)
+      .map(k => JSON.stringify(k[p]));
+    const first = values[0];
+    const last = values.at(-1);
+    if (values.some(v => v !== first && v !== last)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 test('released moving up, the photo springs back on the cancel springs and the viewer stays open', async ({
@@ -404,18 +430,17 @@ test('under Reduce Motion a cancelled drag returns by a fade of 200 ms or less, 
   // place; it never moves or scales on its way back.
   await page.emulateMedia({reducedMotion: 'reduce'});
   const v = await openViewer(page);
+  // Watched before the drag and read from the return's own keyframes: on a
+  // loaded machine a fade of 200 ms or less can end before a hold taken after
+  // the release.
+  const watch = await watchAnimations(v.photo);
   await v.driver.play(pullThenFlickUp(v.centre, 150, 60));
-  await waitForAnimation(v.photo);
-  const held = await holdAnimations(page, v.photo);
-  const duration = Math.max(...held.map(a => a.curveEndMs));
-  const samples = await sampleCurve(v.photo, timeline(duration));
-  await releaseAnimations(page);
-  expect(duration).toBeLessThanOrEqual(205);
-  const ys = samples.map(s => s.transform.translateY);
-  const from = ys[0];
-  const to = ys.at(-1) ?? from;
-  for (const y of ys) {
-    expect(Math.min(Math.abs(y - from), Math.abs(y - to))).toBeLessThan(0.5);
+  const started = await watch.started();
+  expect(started.length).toBeGreaterThan(0);
+  for (const fade of started) {
+    expect(fade.to - fade.from).toBeLessThanOrEqual(205);
+    // No travel: the photo holds where it was, then where it lands.
+    expect(travels(fade.keyframes)).toBe(false);
   }
   await waitForRest(v.photo);
   await expect(v.dialog).toBeVisible();
