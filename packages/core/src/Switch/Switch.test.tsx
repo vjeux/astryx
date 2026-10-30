@@ -41,6 +41,7 @@ import {
 import {button as uikitButton} from '../motion/uikit/button';
 import {__resetLiveRegionsForTest} from '../hooks/useAnnounce';
 import {InternationalizationProvider} from '../i18n';
+import {installPressFeedback} from '../utils/pressFeedback';
 import {docs as switchDocs} from './Switch.doc.mjs';
 
 afterEach(() => {
@@ -1312,6 +1313,10 @@ describe('touch listeners (spec:AST-094 FR24)', () => {
       }) as unknown as MediaQueryList;
     const listenersWhileRendering = (isDisabled: boolean) => {
       vi.spyOn(window, 'matchMedia').mockImplementation(fineMedia);
+      // The one shared press controller is FR24's allowed idle page listener:
+      // it is installed before the render is measured, so a count is the
+      // switch's own.
+      const releasePressController = installPressFeedback();
       const onElements: {
         target: unknown;
         type: string;
@@ -1350,6 +1355,7 @@ describe('touch listeners (spec:AST-094 FR24)', () => {
       documentSpy.mockRestore();
       windowSpy.mockRestore();
       unmount();
+      releasePressController();
       vi.restoreAllMocks();
       const armed = onElements.filter(({target, type, options}) => {
         const o = options as AddEventListenerOptions | undefined;
