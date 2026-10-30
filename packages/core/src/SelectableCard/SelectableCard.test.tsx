@@ -19,7 +19,7 @@ import {
   readsPressStrength,
   releasesOnLayer,
 } from '../__tests__/pressState';
-import {button as uikitButton} from '../motion/uikit/button';
+import {pressConsts} from '../utils/interactionOverlay.stylex';
 
 describe('SelectableCard', () => {
   it('renders children', () => {
@@ -211,9 +211,7 @@ describe('SelectableCard pressed state (touch)', () => {
     // Under a coarse primary pointer the `::after`'s opacity releases the
     // press on a control's clock (the compositor); under any other the
     // card keeps the strength's release it always had (the desktop rule).
-    expect(
-      releasesOnLayer(card, '::after', uikitButton.highlight.releaseMs),
-    ).toBe(true);
+    expect(releasesOnLayer(card, '::after', pressConsts.releaseMs)).toBe(true);
     expect(keepsPressOutsideCoarse(card, '::after')).toBe(true);
     expect(readsPressStrength(card, '[data-astryx-press="on"]')).toBe(true);
     expect(readsPressStrength(card)).toBe(true);

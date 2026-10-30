@@ -29,9 +29,8 @@ import {VStack} from '@astryxdesign/core/Layout';
  * follows UIKit. A surface highlights in the frame the finger lands, or
  * 150 ms later inside a scroller, where a flick paints nothing; travelling
  * 10 px, or the browser taking the touch to scroll, cancels it with no fade;
- * a tap shorter than the delay paints at the lift; the lift fades it out,
- * over UIButton's 250 ms on a control under a coarse primary pointer (a
- * list row keeps the deselect clock). A mouse keeps `:active` on a desktop.
+ * a tap shorter than the delay paints at the lift; the lift fades it out. A
+ * mouse keeps `:active` on a desktop.
  */
 const meta: Meta = {
   title: 'Core/Press feedback (touch)',
@@ -40,7 +39,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          'The touch press model on every pressable surface. View with a coarse pointer (DevTools device toolbar, or a phone). Under a finger the bare `:active` arm is dropped and one document-level controller writes `data-astryx-press="on"` while a press is held and `data-astryx-press="fading"` for the release. A surface highlights in the frame the finger lands (150 ms later inside a scroller) and fades at the lift (over 250 ms on a control, as UIButton does; a list row keeps the deselect clock); 10 px of travel or a scroll claiming the touch cancels it with no fade. A mouse keeps `:active` on a desktop. Scroll the list stories with a finger: nothing paints while the list moves.',
+          'The touch press model on every pressable surface. View with a coarse pointer (DevTools device toolbar, or a phone). Under a finger the bare `:active` arm is dropped and one document-level controller writes `data-astryx-press="on"` while a press is held and `data-astryx-press="fading"` for the release. A surface highlights in the frame the finger lands (150 ms later inside a scroller) and fades at the lift; 10 px of travel or a scroll claiming the touch cancels it with no fade. A mouse keeps `:active` on a desktop. Scroll the list stories with a finger: nothing paints while the list moves.',
       },
     },
   },
@@ -50,7 +49,7 @@ export default meta;
 type Story = StoryObj;
 
 const controlNote = (what: string) =>
-  `${what} Touch: paints in the frame the finger lands. Lift: fades over 250 ms. A scroll that takes the touch: the paint goes at once, with no fade and no click.`;
+  `${what} Touch: paints in the frame the finger lands. Lift: fades out. A scroll that takes the touch: the paint goes at once, with no fade and no click.`;
 
 export const Buttons: Story = {
   parameters: {

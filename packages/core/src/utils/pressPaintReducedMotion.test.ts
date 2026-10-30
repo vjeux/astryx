@@ -119,10 +119,10 @@ describe('press paint under Reduce Motion', () => {
     const curve = rule(rules, [fade, FADING, 'animation-timing-function:']);
     expect(duration).toBeDefined();
     expect(curve).toBeDefined();
-    // A control's release runs on UIButton's clock (a list row drops this
+    // A control's release runs on the control's clock (a list row drops this
     // animation for its own layer's, utils/rowPressLayer.ts). The fade
-    // outranks it: UIButton's clock is the coarse-pointer clock that is not
-    // the fade's.
+    // outranks it: the control's clock is the coarse-pointer clock that is
+    // not the fade's.
     const controlDuration = rules.find(
       ([, {ltr}]) =>
         !ltr.includes(fade) &&

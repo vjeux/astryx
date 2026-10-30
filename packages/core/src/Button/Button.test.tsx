@@ -29,7 +29,7 @@ import {
   releasesOnLayer,
   showsLayerPress,
 } from '../__tests__/pressState';
-import {button as uikitButton} from '../motion/uikit/button';
+import {pressConsts} from '../utils/interactionOverlay.stylex';
 import {Badge} from '../Badge/Badge';
 import {ButtonGroup} from '../ButtonGroup';
 import {InputGroup} from '../InputGroup';
@@ -852,19 +852,19 @@ describe('Button', () => {
 });
 
 describe('Button pressed state (touch)', () => {
-  it('paints the touch press on a compositor layer and releases it on UIButton’s clock', () => {
+  it('paints the touch press on a compositor layer and releases it on the shared clock', () => {
     render(<Button label="Save" />);
     const button = screen.getByRole('button', {name: 'Save'});
     // The touch arms the controller writes, under a coarse primary pointer:
     // `on` shows the pressed token on the button's `::before` layer on the
-    // first frame; `fading` runs the layer's opacity release on UIButton's
-    // highlight release. A mouse keeps `:active`.
+    // first frame; `fading` runs the layer's opacity release on the shared
+    // release clock. A mouse keeps `:active`.
     expect(button).toHaveAttribute('data-astryx-pressable');
     expect(hasPressedArm(button)).toBe(true);
     expect(showsLayerPress(button)).toBe(true);
-    expect(
-      releasesOnLayer(button, '::before', uikitButton.highlight.releaseMs),
-    ).toBe(true);
+    expect(releasesOnLayer(button, '::before', pressConsts.releaseMs)).toBe(
+      true,
+    );
   });
 
   it('has no press layer and no isolation at rest under a coarse pointer, only while a press is on or fading', () => {
