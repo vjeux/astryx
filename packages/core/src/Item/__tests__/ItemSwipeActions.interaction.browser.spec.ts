@@ -33,13 +33,13 @@ import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
   animationStoryboard,
   busyWindowProof,
+  armHold,
   castStoryboard,
   compareCurve,
   countBetween,
   drag,
   flick,
   freezeTimers,
-  holdAnimations,
   installLongTaskLog,
   installTimerGate,
   markElement,
@@ -47,7 +47,7 @@ import {
   readLongTasks,
   recordWebKitTimeline,
   releaseAnimations,
-  sampleCurve,
+  sampleCurves,
   retakeOnTouchPacing,
   sampleRects,
   springStep,
@@ -63,7 +63,9 @@ import {
   withStorybook,
   waitForAnimation,
   waitForRest,
+  watchAnimations,
   writeEvidence,
+  type AnimationWatch,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
 import {swipeActions} from '../../motion/uikit/swipeActions';
@@ -285,90 +287,77 @@ function partLocators(row: Locator): Record<Part, Locator> {
 }
 
 /**
- * Holds the row's settle toward `target` right after `motionOf` found it, and
- * the page's timers for the sampling (or the animator retires the held
- * animation at its curve's end mid-sampling). A hold that comes after the
- * settle has ended would sample its end value at every time: it fails by
- * name instead, with how late it came. Returns the held animations and the
- * settle's keyframes, the points the animator computed on its curve.
+ * Arms a hold on the row's settle toward `target` before the gesture that
+ * makes it (`armHold`): the settle and every part's motion are held in the
+ * task that creates them, so no delay of the test's own can let them run on,
+ * or end, unobserved. `held()`, once the gesture is played, returns the held
+ * animations, the settle's keyframes (the points the animator computed on
+ * its curve), its length and its offset from the held origin, and holds the
+ * page's timers for the sampling (or the animator retires the held animation
+ * at its curve's end mid-sampling). Install the timer gate first.
  */
-async function holdSettle(
+async function armSettle(
   page: Page,
   row: Locator,
   target: number,
-  motion: {from: number; ms: number},
 ): Promise<{
-  held: Awaited<ReturnType<typeof holdAnimations>>;
-  keyed: {t: number; value: number}[];
+  held(): Promise<{
+    held: Awaited<
+      ReturnType<Awaited<ReturnType<typeof armHold>>['held']>
+    >['held'];
+    keyed: {t: number; value: number}[];
+    ms: number;
+    offsetMs: number;
+  }>;
 }> {
-  const held = await holdAnimations(page, row);
-  const found = await row.evaluate(
-    (node, {to, from}) => {
-      const heldNow =
-        (window as unknown as {__harnessHeld?: Animation[]}).__harnessHeld ??
-        [];
-      const endOf = (animation: Animation) => {
-        const keyframes =
-          (animation.effect as KeyframeEffect | null)?.getKeyframes() ?? [];
-        const last = keyframes[keyframes.length - 1];
-        return last == null || !('translate' in last)
-          ? null
-          : parseFloat(String(last.translate));
-      };
-      const animation = node.getAnimations().find(candidate => {
-        const end = endOf(candidate);
-        return (
-          end != null && Math.abs(end - to) < 0.5 && heldNow.includes(candidate)
-        );
-      });
-      if (animation == null) {
-        return {
-          points: null,
-          heldAfter: performance.now() - (from - performance.timeOrigin),
-        };
-      }
-      const effect = animation.effect as KeyframeEffect;
-      const duration = Number(effect.getComputedTiming().duration);
+  const armed = await armHold(row, {property: 'translate', to: target});
+  return {
+    async held() {
+      const {held, trigger} = await armed.held();
+      await freezeTimers(page);
       return {
-        points: effect.getKeyframes().map(frame => ({
-          t: (frame.computedOffset ?? 0) * duration,
+        held,
+        keyed: trigger.keyframes.map(frame => ({
+          t: Number(frame.computedOffset ?? 0) * trigger.durationMs,
           value: parseFloat(String(frame.translate)),
         })),
-        heldAfter: 0,
+        ms: trigger.curveEndMs,
+        offsetMs: trigger.offsetMs,
       };
     },
-    {to: target, from: motion.from},
-  );
-  if (found.points == null) {
-    throw new Error(
-      `the settle toward ${target} px, ${motion.ms.toFixed(0)} ms long, had ended or been replaced by the time it was held, ${found.heldAfter.toFixed(0)} ms after it started`,
-    );
-  }
-  await freezeTimers(page);
-  return {held, keyed: found.points};
+  };
 }
 
 /**
- * The parts' x at each time (ms into the held motion), one page call per
- * part: a call per sample is a round trip per sample, which a loaded runner
- * stretches past the motion's own length. Hold first (`holdSettle`).
+ * The parts' x at each time (ms into the held motion, which starts
+ * `offsetMs` after the held origin), every part in one page call: a call per
+ * sample is a round trip per sample, which a loaded runner stretches past
+ * the motion's own length, and a call per part leaves room between parts
+ * for the page to run. Hold first (`armSettle`).
  */
 async function sampleParts(
   row: Locator,
   times: ReadonlyArray<number>,
   parts: ReadonlyArray<Part> = ['root', 'panel', 'track', 'entries'],
+  offsetMs = 0,
 ): Promise<({t: number} & Record<Part, number>)[]> {
   const locators = partLocators(row);
-  const columns: Partial<Record<Part, number[]>> = {};
   for (const part of parts) {
     // At once: a part that is not there fails here, not after a wait.
     if ((await locators[part].count()) !== 1) {
       throw new Error(`the row has no ${part} to sample`);
     }
-    columns[part] = (await sampleCurve(locators[part], times)).map(
+  }
+  const sampled = await sampleCurves(
+    parts.map(part => locators[part]),
+    times.map(t => t + offsetMs),
+  );
+  const columns: Partial<Record<Part, number[]>> = {};
+  parts.forEach((part, k) => {
+    columns[part] = sampled[k].map(
       sample => parseFloat(sample.raw.translate) || 0,
     );
-  }
+  });
   return times.map((t, i) => ({
     t,
     root: columns.root?.[i] ?? Number.NaN,
@@ -392,35 +381,110 @@ async function sampleParts(
  * and an opacity-only cross-fade that dips and is over within 200 ms. Then,
  * once it is over, the row is at `to`, fully opaque.
  */
-async function expectCrossFade(
+/** The last trusted touch the page took, and how many lifts it has taken. */
+interface TouchTaken {
+  type: string;
+  x: number;
+  y: number;
+  lifts: number;
+}
+
+/** Records, in the page, the last trusted touch it takes (`pageTook`). */
+async function recordTouches(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as {__itemTouch?: TouchTaken};
+    if (w.__itemTouch != null) {
+      return;
+    }
+    w.__itemTouch = {type: '', x: Number.NaN, y: Number.NaN, lifts: 0};
+    for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
+      window.addEventListener(
+        type,
+        event => {
+          const touch = (event as TouchEvent).changedTouches[0];
+          const last = w.__itemTouch;
+          if (!event.isTrusted || touch == null || last == null) {
+            return;
+          }
+          w.__itemTouch = {
+            type,
+            x: touch.clientX,
+            y: touch.clientY,
+            lifts: last.lifts + (type === 'touchend' ? 1 : 0),
+          };
+        },
+        {capture: true, passive: true},
+      );
+    }
+  });
+}
+
+/**
+ * Waits, in the page's frames, until the page has taken a touch: a move to
+ * `move` (its last touch, within the half pixel WebKit rounds to), or its
+ * `lifts`-th lift. A touch's dispatch can return before the page takes it.
+ * Fails by name past `frames` of the page's frames.
+ */
+async function pageTook(
   page: Page,
+  touch: {move: {x: number; y: number}} | {lifts: number},
+  frames = 120,
+): Promise<void> {
+  const result = await page.evaluate(
+    async ({wanted, count}) => {
+      const w = window as unknown as {
+        __itemTouch?: TouchTaken;
+        __harnessTimerGate?: {frame?: typeof requestAnimationFrame};
+      };
+      const frame = (
+        w.__harnessTimerGate?.frame ?? window.requestAnimationFrame
+      ).bind(window);
+      const took = () => {
+        const last = w.__itemTouch;
+        if (last == null) {
+          return false;
+        }
+        return 'lifts' in wanted
+          ? last.lifts >= wanted.lifts
+          : last.type === 'touchmove' &&
+              Math.abs(last.x - wanted.move.x) <= 0.6 &&
+              Math.abs(last.y - wanted.move.y) <= 0.6;
+      };
+      for (let i = 0; i < count && !took(); i += 1) {
+        await new Promise(resolve => frame(resolve));
+      }
+      return {took: took(), last: w.__itemTouch ?? null};
+    },
+    {wanted: touch, count: frames},
+  );
+  if (!result.took) {
+    const last = result.last;
+    throw new Error(
+      `the page had not taken ${'lifts' in touch ? `lift ${touch.lifts}` : `the move to (${touch.move.x.toFixed(1)}, ${touch.move.y.toFixed(1)})`} after ${frames} of its frames; the last touch it took was ${last == null || last.type === '' ? 'none' : `a ${last.type} at (${last.x}, ${last.y})`}`,
+    );
+  }
+}
+
+async function expectCrossFade(
+  watch: AnimationWatch,
   row: Locator,
   to: number,
 ): Promise<void> {
-  const animations = await row.evaluate(node =>
-    document
-      .getAnimations()
-      .filter(animation => {
-        const target = (animation.effect as KeyframeEffect | null)?.target;
-        return target != null && node.contains(target);
-      })
-      .map(animation => {
-        const effect = animation.effect as KeyframeEffect;
-        return {
-          duration: Number(effect.getComputedTiming().duration),
-          frames: effect.getKeyframes().map(frame => ({
-            offset: frame.computedOffset,
-            travel:
-              frame.translate != null
-                ? String(frame.translate)
-                : frame.transform != null
-                  ? String(frame.transform)
-                  : null,
-            opacity: frame.opacity == null ? null : Number(frame.opacity),
-          })),
-        };
-      }),
-  );
+  // Everything the row and its parts started since the watch, running or
+  // ended: a fade of 200 ms or less can end before a later read.
+  const animations = (await watch.recorded()).map(animation => ({
+    duration: animation.durationMs,
+    frames: animation.keyframes.map(frame => ({
+      offset: Number(frame.computedOffset),
+      travel:
+        typeof frame.translate === 'string'
+          ? frame.translate
+          : typeof frame.transform === 'string'
+            ? frame.transform
+            : null,
+      opacity: frame.opacity == null ? null : Number(frame.opacity),
+    })),
+  }));
   for (const {frames} of animations) {
     const moving = frames.filter(frame => frame.travel != null);
     for (let k = 1; k < moving.length; k += 1) {
@@ -445,7 +509,7 @@ async function expectCrossFade(
     expect(back, JSON.stringify(frames)).toBeGreaterThan(dip);
     expect(frames[back].offset * duration).toBeLessThanOrEqual(200);
   }
-  await page.waitForTimeout(260);
+  await waitForRest(row);
   expect(await xOf(row)).toBeCloseTo(to, 0);
   expect(
     await row.evaluate(node => Number(getComputedStyle(node).opacity)),
@@ -453,20 +517,6 @@ async function expectCrossFade(
 }
 
 /** How many of the row's own animations (not its entries') dip its opacity. */
-async function rowDipsOf(row: Locator): Promise<number> {
-  return row.evaluate(
-    node =>
-      node
-        .getAnimations()
-        .filter(animation =>
-          (animation.effect as KeyframeEffect)
-            .getKeyframes()
-            .some(
-              frame => frame.opacity != null && Number(frame.opacity) < 0.05,
-            ),
-        ).length,
-  );
-}
 
 function heldDrag(from: {x: number; y: number}, dx: number) {
   const moving = drag(
@@ -548,11 +598,16 @@ test('the settle after a held release is UIKit’s spring, frame by frame, with 
   const {driver, row, entries, start} = await openRow(page);
   const openWidth = await openWidthOf(entries);
   await installTimerGate(page);
+  const settle = await armSettle(page, row, -openWidth);
   // 105 px of swipe, held: past half the panel, so the row settles open.
   await driver.play(heldDrag(start, -130));
-  const motion = await motionOf(row, -openWidth);
-  const {held} = await holdSettle(page, row, -openWidth, motion);
-  const samples = await sampleParts(row, timeline(motion.ms + 50));
+  const {held, ms, offsetMs} = await settle.held();
+  const samples = await sampleParts(
+    row,
+    timeline(ms + 50),
+    undefined,
+    offsetMs,
+  );
   await releaseAnimations(page);
   await thawTimers(page);
   const from = samples[0].root;
@@ -604,76 +659,79 @@ test('a flick hands the row’s velocity to the settle', async ({
   // velocity is 0), and the throw no longer flicks. The harness checks the
   // pacing the page received where a release reads it, and re-takes the
   // throw once, on a fresh row, only when it was off.
-  const {opened, openWidth} = await retakeOnTouchPacing(testInfo, async () => {
-    const opened = await openRow(page);
-    const openWidth = await openWidthOf(opened.entries);
-    await installTimerGate(page);
-    // The row's tracking curve as the finger lifts, before the release
-    // replaces it: its keyframes, points on the curve. The lift is the finger's first
-    // lift event: its pointerup comes before its touchend, and a gesture host
-    // may release on either; a move is either of its moves.
-    await opened.row.evaluate(node => {
-      let firstMoveHandled = Number.NaN;
-      let lifted = false;
-      const onMove = () => {
-        // When the row's tracking spring could first have started: the host
-        // handles the move right after this listener.
-        if (Number.isNaN(firstMoveHandled)) {
-          firstMoveHandled = performance.now();
-        }
-      };
-      addEventListener('pointermove', onMove, {capture: true});
-      addEventListener('touchmove', onMove, {capture: true});
-      const onLift = () => {
-        // The longest the tracking spring can have run in the animator's
-        // model when the host releases, on this lift event (right after this
-        // listener) or the one before it.
-        Object.assign(window, {
-          __liftElapsed: (performance.now() - firstMoveHandled) / 1000,
-        });
-        if (lifted) {
-          return;
-        }
-        lifted = true;
-        const animation = node
-          .getAnimations()
-          .find(candidate =>
-            (candidate.effect as KeyframeEffect)
-              .getKeyframes()
-              .some(frame => 'translate' in frame),
-          );
-        const effect = animation?.effect as KeyframeEffect | undefined;
-        const duration = Number(effect?.getComputedTiming().duration ?? 0);
-        Object.assign(window, {
-          __trackingAtLift: (effect?.getKeyframes() ?? []).map(frame => ({
-            t: (frame.computedOffset ?? 0) * duration,
-            value: parseFloat(String(frame.translate)),
-          })),
-        });
-      };
-      addEventListener('pointerup', onLift, {capture: true});
-      addEventListener('touchend', onLift, {capture: true});
-    });
-    await opened.driver.play(
-      flick(opened.start, {
-        velocity: {x: -1000, y: 0},
-        durationMs: 80,
-        hz: 120,
-      }),
-      {checkPacing: true},
-    );
-    return {opened, openWidth};
-  });
+  const {opened, openWidth, settle} = await retakeOnTouchPacing(
+    testInfo,
+    async () => {
+      const opened = await openRow(page);
+      const openWidth = await openWidthOf(opened.entries);
+      await installTimerGate(page);
+      const settle = await armSettle(page, opened.row, -openWidth);
+      // The row's tracking curve as the finger lifts, before the release
+      // replaces it: its keyframes, points on the curve. The lift is the finger's first
+      // lift event: its pointerup comes before its touchend, and a gesture host
+      // may release on either; a move is either of its moves.
+      await opened.row.evaluate(node => {
+        let firstMoveHandled = Number.NaN;
+        let lifted = false;
+        const onMove = () => {
+          // When the row's tracking spring could first have started: the host
+          // handles the move right after this listener.
+          if (Number.isNaN(firstMoveHandled)) {
+            firstMoveHandled = performance.now();
+          }
+        };
+        addEventListener('pointermove', onMove, {capture: true});
+        addEventListener('touchmove', onMove, {capture: true});
+        const onLift = () => {
+          // The longest the tracking spring can have run in the animator's
+          // model when the host releases, on this lift event (right after this
+          // listener) or the one before it.
+          Object.assign(window, {
+            __liftElapsed: (performance.now() - firstMoveHandled) / 1000,
+          });
+          if (lifted) {
+            return;
+          }
+          lifted = true;
+          const animation = node
+            .getAnimations()
+            .find(candidate =>
+              (candidate.effect as KeyframeEffect)
+                .getKeyframes()
+                .some(frame => 'translate' in frame),
+            );
+          const effect = animation?.effect as KeyframeEffect | undefined;
+          const duration = Number(effect?.getComputedTiming().duration ?? 0);
+          Object.assign(window, {
+            __trackingAtLift: (effect?.getKeyframes() ?? []).map(frame => ({
+              t: (frame.computedOffset ?? 0) * duration,
+              value: parseFloat(String(frame.translate)),
+            })),
+          });
+        };
+        addEventListener('pointerup', onLift, {capture: true});
+        addEventListener('touchend', onLift, {capture: true});
+      });
+      await opened.driver.play(
+        flick(opened.start, {
+          velocity: {x: -1000, y: 0},
+          durationMs: 80,
+          hz: 120,
+        }),
+        {checkPacing: true},
+      );
+      return {opened, openWidth, settle};
+    },
+  );
   const {row} = opened;
   const target = -openWidth;
-  const motion = await motionOf(row, target);
   // The settle's keyframes: the points the animator computed on its curve.
   // The browser draws straight lines between them, up to a quarter pixel
   // inside the curve, so the initial velocity is read from these points
   // (fitted to frames between them it reads about 5 px/s low).
-  const {keyed} = await holdSettle(page, row, target, motion);
+  const {keyed, ms, offsetMs} = await settle.held();
   const samples = (
-    await sampleParts(row, timeline(motion.ms + 50, 1000 / 120), ['root'])
+    await sampleParts(row, timeline(ms + 50, 1000 / 120), ['root'], offsetMs)
   ).map(sample => ({t: sample.t, value: sample.root}));
   await releaseAnimations(page);
   await thawTimers(page);
@@ -829,8 +887,13 @@ test('under Reduce Motion a held release lands open with no travel: the row step
   await page.emulateMedia({reducedMotion: 'reduce'});
   const {driver, row, entries, start} = await openRow(page);
   const openWidth = await openWidthOf(entries);
+  await recordTouches(page);
+  // Under Reduce Motion the drag itself starts no animation: everything the
+  // watch records is the release's.
+  const watch = await watchAnimations(row);
   await driver.play(heldDrag(start, -130));
-  await expectCrossFade(page, row, -openWidth);
+  await pageTook(page, {lifts: 1});
+  await expectCrossFade(watch, row, -openWidth);
 });
 
 test('a close the main thread holds back plays from its start after the block, skipping no travel', async ({
@@ -1160,8 +1223,14 @@ test('under Reduce Motion a tap on the resting row’s content closes it with no
   await restOpen(open);
   await waitForRest(row);
   const content = {x: rest.x + 60, y: rest.y + rest.height / 2};
+  await recordTouches(page);
+  const lifts = await page.evaluate(
+    () => (window as unknown as {__itemTouch: TouchTaken}).__itemTouch.lifts,
+  );
+  const watch = await watchAnimations(row);
   await engineTap(page, browserName, driver, content);
-  await expectCrossFade(page, row, 0);
+  await pageTook(page, {lifts: lifts + 1});
+  await expectCrossFade(watch, row, 0);
 });
 
 test('a scroll that starts on the resting row closes it', async ({
@@ -1443,15 +1512,16 @@ test('backing out of a confirmed full swipe closes the row and fires nothing; th
     {x: start.x - (200 + h), y: start.y},
     {durationMs: 500, hz: 60, restMs: 600},
   ).map(frame => ({...frame, t: frame.t + last.t + 16}));
-  await driver.play([...out, ...back.slice(1)]);
   // A swipe that confirmed and backed out closes, whatever its position.
-  const motion = await motionOf(row, 0);
-  await holdSettle(page, row, 0, motion);
-  const samples = await sampleParts(row, timeline(motion.ms, 1000 / 60), [
-    'root',
-    'track',
-    'entries',
-  ]);
+  const settle = await armSettle(page, row, 0);
+  await driver.play([...out, ...back.slice(1)]);
+  const {ms, offsetMs} = await settle.held();
+  const samples = await sampleParts(
+    row,
+    timeline(ms, 1000 / 60),
+    ['root', 'track', 'entries'],
+    offsetMs,
+  );
   await releaseAnimations(page);
   await thawTimers(page);
   // The settle crosses the open width: above it the entries ride the row,
@@ -1488,16 +1558,31 @@ test('under Reduce Motion a full swipe confirms with no travel: the row steps to
     {x: start.x - (confirmAt + h + 4), y: start.y},
     {durationMs: 900, hz: 60, restMs: 300},
   );
+  // The move that confirms, and the one before it, where the watch starts.
+  const confirming = toTouchEvents(script).findIndex(
+    step =>
+      step.type === 'touchMove' &&
+      start.x - (step.fingers[0]?.x ?? start.x) - h >= confirmAt,
+  );
+  expect(confirming).toBeGreaterThan(1);
+  await recordTouches(page);
+  let watch: AnimationWatch | null = null;
   let checked = false;
   await driver.play(script, {
-    onEvent: async step => {
-      const swipe = start.x - (step.fingers[0]?.x ?? start.x) - h;
-      if (!checked && step.type === 'touchMove' && swipe >= confirmAt) {
-        // The move that confirms: the row is now fading out, to land at the
-        // confirmation offset while transparent and fade back in.
+    onEvent: async (step, index) => {
+      const finger = step.fingers[0];
+      if (finger == null) {
+        return;
+      }
+      if (index === confirming - 1) {
+        await pageTook(page, {move: finger});
+        watch = await watchAnimations(row);
+      } else if (index === confirming && watch != null) {
+        // The move that confirms: the row fades out, lands at the
+        // confirmation offset while transparent and fades back in.
+        await pageTook(page, {move: finger});
         checked = true;
-        expect(await rowDipsOf(row)).toBeGreaterThan(0);
-        await expectCrossFade(page, row, -confirmedOffset);
+        await expectCrossFade(watch, row, -confirmedOffset);
       }
     },
   });
@@ -1529,22 +1614,40 @@ test('under Reduce Motion backing out of a confirmed full swipe returns to the f
     {x: start.x - (confirmAt + h - 19), y: start.y},
     {durationMs: 300, hz: 60, restMs: 300},
   ).map(frame => ({...frame, t: frame.t + last.t + 16}));
+  const script = [...out, ...back.slice(1)];
+  // The move that backs out (the first short of the confirm point after one
+  // past it), and the one before it, where the watch starts.
+  const swipeOf = (x: number | undefined) => start.x - (x ?? start.x) - h;
   let confirmed = false;
+  const backingOut = toTouchEvents(script).findIndex(step => {
+    if (step.type !== 'touchMove') {
+      return false;
+    }
+    if (swipeOf(step.fingers[0]?.x) >= confirmAt) {
+      confirmed = true;
+      return false;
+    }
+    return confirmed;
+  });
+  expect(backingOut).toBeGreaterThan(1);
+  await recordTouches(page);
+  let watch: AnimationWatch | null = null;
   let checked = false;
-  await driver.play([...out, ...back.slice(1)], {
-    onEvent: async step => {
-      if (step.type !== 'touchMove' || checked) {
+  await driver.play(script, {
+    onEvent: async (step, index) => {
+      const finger = step.fingers[0];
+      if (finger == null) {
         return;
       }
-      const swipe = start.x - (step.fingers[0]?.x ?? start.x) - h;
-      if (swipe >= confirmAt) {
-        confirmed = true;
-      } else if (confirmed) {
+      if (index === backingOut - 1) {
+        await pageTook(page, {move: finger});
+        watch = await watchAnimations(row);
+      } else if (index === backingOut && watch != null) {
         // The move that backs out: the row fades out, lands under the
         // finger while transparent and fades back in.
+        await pageTook(page, {move: finger});
         checked = true;
-        expect(await rowDipsOf(row)).toBeGreaterThan(0);
-        await expectCrossFade(page, row, -swipe);
+        await expectCrossFade(watch, row, -swipeOf(finger.x));
       }
     },
   });
