@@ -22,10 +22,11 @@ import {
 } from '../__tests__/pressState';
 import {
   declaresIndicatorPressOwner,
-  layerPressRulesOutsideCoarse,
-  ownerPressRulesOutsideCoarse,
+  layerPressRulesBehindPointer,
+  ownerPressRulesBehindPointer,
   readIndicatorPressLayer,
   readsAncestorPress,
+  readsIndicatorPress,
 } from '../__tests__/indicatorPressLayer';
 import {cellPressConsts} from '../utils/rowPressLayer.stylex';
 import {RadioList} from './RadioList';
@@ -913,7 +914,7 @@ function declaresRowPress(el: Element): boolean {
 }
 
 describe('pressed state', () => {
-  it('paints the pressed overlay over the radio indicator while the row is pressed', () => {
+  it('paints its press through the press model for every pointer: no `:active` arm over the circle (FR43)', () => {
     const {container} = render(
       <RadioList label="Plan" value="a" onChange={() => {}}>
         <RadioListItem label="Option A" value="a" />
@@ -926,10 +927,13 @@ describe('pressed state', () => {
     if (wrapper == null || row == null) {
       throw new Error('the radio has no pressable row or indicator wrapper');
     }
-    // The row declares the mouse press's paint while it is pressed, and the
-    // layer over the circle reads it.
-    expect(declaresRowPress(row)).toBe(true);
-    expect(readsRowPress(wrapper)).toBe(true);
+    // A mouse and a pen press through the same controller as a finger
+    // (spec:AST-094 FR11's fine-pointer profile, FR43): the row declares no
+    // `:active` paint, and the layer over the circle reads only the press
+    // the controller marks.
+    expect(declaresRowPress(row)).toBe(false);
+    expect(readsRowPress(wrapper)).toBe(false);
+    expect(readsIndicatorPress(wrapper)).toBe(true);
   });
 
   it('does not expose a pressed arm on a disabled radio', () => {
@@ -948,7 +952,7 @@ describe('pressed state', () => {
     expect(readsRowPress(wrapper)).toBe(false);
   });
 
-  it('paints the touch press on the circle’s own layer and releases it on the row’s clock', () => {
+  it('paints the press on the circle’s own layer and releases it on the row’s clock', () => {
     const {container} = render(
       <RadioList label="Plan" value="a" onChange={() => {}}>
         <RadioListItem label="Option A" value="a" />
@@ -974,10 +978,10 @@ describe('pressed state', () => {
       fillsBoth: true,
     });
     expect(readsPressStrength(wrapper)).toBe(false);
-    // A fine pointer keeps its behavior (spec:AST-017 FR59): the layer's
-    // press, release included, is in the coarse media key.
-    expect(layerPressRulesOutsideCoarse(wrapper)).toEqual([]);
-    expect(ownerPressRulesOutsideCoarse(row)).toEqual([]);
+    // One press model for every pointer (spec:AST-094 FR43): no press rule,
+    // release included, sits behind a pointer query.
+    expect(layerPressRulesBehindPointer(wrapper)).toEqual([]);
+    expect(ownerPressRulesBehindPointer(row)).toEqual([]);
     // The circle answers its own row only, never an outer element's press
     // (architecture:component-style-authoring INV4).
     expect(readsAncestorPress(wrapper)).toBe(false);
