@@ -39,7 +39,8 @@
  * once, by layout, at the commit that inserts or removes the group
  * (`spec:AST-105` FR2; `spec:AST-094` FR5 forbids animating layout): at the
  * expand, and on a collapse the frame its block is clipped, so they hold
- * while it slides under the parent, as in UIKit (`component:TreeList` FR8).
+ * while it slides under the parent, as UIKit's outline list does: the
+ * group's box is what clips the block (`component:TreeList` FR8).
  * An unmount mid-motion leaves nothing moved.
  *
  * Under reduced motion nothing travels (`design:reduced-motion`): every part
