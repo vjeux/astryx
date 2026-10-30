@@ -487,8 +487,11 @@ function resolvedMotion(
   };
 }
 
-/** Plays `keyframes` on `element`'s `::backdrop`, holding the end. */
-function animateBackdrop(
+/**
+ * @internal Plays `keyframes` on `element`'s `::backdrop`, holding the end
+ * (exported for its tests).
+ */
+export function animateBackdrop(
   element: HTMLElement,
   keyframes: Keyframe[],
   options: KeyframeAnimationOptions,

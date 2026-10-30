@@ -20,9 +20,10 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import * as inputHold from '../Layer/inputHold';
 import {
+  animateBackdrop,
   createLiftFromTrigger,
-  type LiftFromTriggerOptions,
   liftCopy,
+  type LiftFromTriggerOptions,
 } from './liftFromTrigger';
 
 vi.mock('../Layer/inputHold', async importOriginal => ({
@@ -410,6 +411,37 @@ describe('lift', () => {
     pointer('pointerup', 2);
     expect(onBackdropTap).toHaveBeenCalledTimes(1);
     lift.dispose();
+  });
+});
+
+describe("the layer's backdrop motion", () => {
+  /** An element whose `animate` throws `error`. */
+  function throwingOn(error: unknown): HTMLElement {
+    const element = document.createElement('div');
+    element.animate = () => {
+      throw error;
+    };
+    return element;
+  }
+
+  it('an engine that cannot animate `::backdrop` rejects it with a SyntaxError: the lift shows without that motion', () => {
+    expect(
+      animateBackdrop(
+        throwingOn(new DOMException('::backdrop', 'SyntaxError')),
+        [{opacity: 0}, {opacity: 1}],
+        {duration: 100},
+      ),
+    ).toBeNull();
+  });
+
+  it('any other error from `animate` surfaces', () => {
+    expect(() =>
+      animateBackdrop(
+        throwingOn(new TypeError('a broken keyframe')),
+        [{opacity: 0}, {opacity: 1}],
+        {duration: 100},
+      ),
+    ).toThrow('a broken keyframe');
   });
 });
 
