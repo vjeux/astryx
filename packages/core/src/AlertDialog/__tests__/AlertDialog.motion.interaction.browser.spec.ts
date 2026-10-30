@@ -16,9 +16,9 @@
  *   where it is: from the presented value at the close, with its velocity,
  *   never above that fade; both run on the
  *   compositor (frames keep coming through a blocked main thread, judged
- *   with the backdrop blur off because this rig composites in software; no
- *   Layout or Paint per frame); a tap during either transition reaches
- *   nothing (an input that must land while it presents lands with the
+ *   with the backdrop blur off because the test browser composites in
+ *   software; no Layout or Paint per frame); a tap during either transition
+ *   reaches nothing (an input that must land while it presents lands with the
  *   presentation held where it starts, its animations paused as they are
  *   created, so under its input hold however busy the page is); under
  *   reduced motion the alert and the dimming cross-fade in and out, opacity
@@ -1028,16 +1028,17 @@ test.describe('under a finger', () => {
   }, testInfo) => {
     test.skip(
       browserName !== 'chromium',
-      'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
+      'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator)',
     );
     const {driver, trigger, dialog} = await openPage(page);
-    // This rig composites in software (no GPU), where Dialog's backdrop blur
-    // alone takes most of every frame: Chromium's DrawFrame costs 9.0 ms with
-    // it and 1.3 ms without, on an idle core. On a busy runner that drops
-    // frames inside the block and around it alike (3 CPU hogs on the test's 4
-    // cores: 18 of 20 runs at about 30 fps with the blur, 0 of 20 without),
-    // while what this proves, which thread runs the motion, does not depend
-    // on it. The blur stays in every other proof and in the storyboard.
+    // The test browser composites in software (no GPU), where Dialog's
+    // backdrop blur alone takes most of every frame: Chromium's DrawFrame
+    // costs 9.0 ms with it and 1.3 ms without, on an idle core. On a busy
+    // runner that drops frames inside the block and around it alike (3 CPU
+    // hogs on the test's 4 cores: 18 of 20 runs at about 30 fps with the blur,
+    // 0 of 20 without), while what this proves, which thread runs the motion,
+    // does not depend on it. The blur stays in every other proof and in the
+    // storyboard.
     await page.addStyleTag({
       content: 'dialog::backdrop { backdrop-filter: none !important; }',
     });
