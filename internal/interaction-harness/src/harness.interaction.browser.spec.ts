@@ -32,6 +32,7 @@
 import {expect, test, type Page} from '@playwright/test';
 import {
   animationStoryboard,
+  armHold,
   blockMainThread,
   busyWindowProof,
   compareCurve,
@@ -52,6 +53,7 @@ import {
   readInputLog,
   releaseAnimations,
   sampleCurve,
+  sampleCurves,
   seekAnimations,
   springStep,
   startScreencast,
@@ -672,6 +674,118 @@ test.describe('curve sampling', () => {
 });
 
 test.describe('holding', () => {
+  test('an armed hold holds a motion in the task that makes it, however late the test looks', async ({
+    page,
+  }) => {
+    await fixture(page);
+    const box = page.locator('#box');
+    const armed = await armHold(box, {property: 'translate', to: 300});
+    // The page makes the motion on its own, 50 ms from now: a 200 ms slide
+    // from rest, with a fade on a child started in the same task, and an
+    // unrelated slide that ends elsewhere first.
+    await box.evaluate(el => {
+      const child = document.createElement('div');
+      child.id = 'child';
+      el.append(child);
+      setTimeout(() => {
+        el.animate([{translate: '0px'}, {translate: '40px'}], {duration: 200});
+        el.animate([{translate: '0px'}, {translate: '300px'}], {
+          duration: 200,
+          easing: 'linear',
+          fill: 'both',
+        });
+        child.animate([{opacity: 1}, {opacity: 0}], {duration: 200});
+      }, 50);
+    });
+    // The test looks long after the slide would have ended.
+    await page.waitForTimeout(600);
+    const {held, trigger} = await armed.held();
+    // Held before its first frame: at its start, with every animation the
+    // scope was running then, the other slide and the child's fade included.
+    expect(trigger.heldAtMs).toBe(0);
+    expect(held).toHaveLength(3);
+    expect(held.map(h => h.offsetMs)).toEqual([0, 0, 0]);
+    const samples = await sampleCurve(box, [0, 100]);
+    expect(parseFloat(samples[0].raw.translate)).toBeCloseTo(0, 1);
+    expect(parseFloat(samples[1].raw.translate)).toBeCloseTo(150, 1);
+    await releaseAnimations(page);
+    await waitForRest(box);
+    expect(
+      await box.evaluate(el => parseFloat(getComputedStyle(el).translate)),
+    ).toBeCloseTo(300, 0);
+  });
+
+  test('an armed hold takes a motion on an explicit start where it stands, and names what started when nothing fires it', async ({
+    page,
+  }) => {
+    await fixture(page);
+    const box = page.locator('#box');
+    const armed = await armHold(box, {property: 'translate', to: 300});
+    // Started 80 ms in the past, as a motion that continues another does.
+    await box.evaluate(el => {
+      const animation = el.animate([{translate: '0px'}, {translate: '300px'}], {
+        duration: 400,
+        easing: 'linear',
+        fill: 'both',
+      });
+      animation.startTime = Number(document.timeline.currentTime) - 80;
+    });
+    const {trigger} = await armed.held();
+    expect(trigger.heldAtMs).toBeCloseTo(80, 0);
+    await releaseAnimations(page);
+    const unfired = await armHold(box, {property: 'translate', to: 999});
+    await box.evaluate(el => {
+      el.animate([{translate: '0px'}, {translate: '120px'}], {duration: 100});
+    });
+    await expect(unfired.held()).rejects.toThrow(
+      /no animation of the scope's element ended at translate 999 within 3 of the page's frames; it started one to 120px/,
+    );
+    // Rejected, it stands down: a later motion to its value runs on.
+    const playState = await box.evaluate(el => {
+      const animation = el.animate([{translate: '0px'}, {translate: '999px'}], {
+        duration: 1000,
+      });
+      return new Promise<string>(resolve =>
+        requestAnimationFrame(() => resolve(animation.playState)),
+      );
+    });
+    expect(playState).toBe('running');
+  });
+
+  test('several elements sample in one call, each as it samples alone', async ({
+    page,
+  }) => {
+    await fixture(page);
+    const box = page.locator('#box');
+    await box.evaluate(el => {
+      const other = document.createElement('div');
+      other.id = 'other';
+      document.body.append(other);
+      el.animate([{translate: '0px'}, {translate: '200px'}], {
+        duration: 400,
+        easing: 'linear',
+      });
+      other.animate([{opacity: 1}, {opacity: 0}], {
+        duration: 400,
+        easing: 'linear',
+      });
+    });
+    const other = page.locator('#other');
+    await holdAnimations(page);
+    const times = [0, 100, 200, 300];
+    const [boxSamples, otherSamples] = await sampleCurves([box, other], times);
+    expect(boxSamples.map(s => s.raw.translate)).toEqual(
+      (await sampleCurve(box, times)).map(s => s.raw.translate),
+    );
+    expect(otherSamples.map(s => s.opacity)).toEqual(
+      (await sampleCurve(other, times)).map(s => s.opacity),
+    );
+    expect(boxSamples.map(s => parseFloat(s.raw.translate))).toEqual([
+      0, 50, 100, 150,
+    ]);
+    await releaseAnimations(page);
+  });
+
   test('a sample at an end reports the time it was read at', async ({page}) => {
     await fixture(page);
     const box = page.locator('#box');
@@ -1223,6 +1337,36 @@ test.describe('holding', () => {
 });
 
 test.describe('animation state', () => {
+  test("a watch's record holds a short animation that ended beside one still running", async ({
+    page,
+  }) => {
+    await fixture(page);
+    const box = page.locator('#box');
+    const watch = await watchAnimations(box);
+    await box.evaluate(el => {
+      el.animate([{opacity: 1}, {opacity: 0}, {opacity: 1}], {duration: 60});
+      el.animate([{translate: '0px'}, {translate: '200px'}], {duration: 3000});
+    });
+    await expect
+      .poll(async () =>
+        box.evaluate(
+          el =>
+            el.getAnimations().filter(a => a.playState === 'running').length,
+        ),
+      )
+      .toBe(1);
+    // `started` answers with the running one alone; the record has both.
+    const started = await watch.started();
+    expect(started).toHaveLength(1);
+    const recorded = await watch.recorded();
+    expect(recorded.map(a => a.durationMs)).toEqual([60, 3000]);
+    expect(recorded[0].finishedAt).not.toBeNull();
+    expect(recorded[1].finishedAt).toBeNull();
+    expect(recorded[0].keyframes.map(k => Number(k.opacity))).toEqual([
+      1, 0, 1,
+    ]);
+  });
+
   test('waitForAnimation reports a running transition and waitForRest resolves after it', async ({
     page,
   }) => {

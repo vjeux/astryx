@@ -50,6 +50,9 @@ function animationRecorder(): void {
     ).__harnessTimerGate?.frame ?? window.requestAnimationFrame
   ).bind(window);
   const seen = new WeakSet<Animation>();
+  // Called with each animation as it is recorded (armHold): a script
+  // animation in the task that creates it.
+  const watchers = new Set<(animation: Animation) => void>();
   const log: {
     animation: Animation;
     seenAt: number;
@@ -121,6 +124,9 @@ function animationRecorder(): void {
     log.push(entry);
     if (log.length > 5000) {
       log.splice(0, log.length - 5000);
+    }
+    for (const watcher of watchers) {
+      watcher(animation);
     }
   };
   const record = () => {
@@ -203,6 +209,7 @@ function animationRecorder(): void {
   };
   w.__harnessAnimations = {
     log,
+    watchers,
     // A read from outside the recorder (a wait's poll) stands down while a
     // trace runs, as the frame loop does: document.getAnimations() flushes
     // style. CSS start events and the animate() wrapper still log what
@@ -268,6 +275,155 @@ async function installCurveEnd(page: Page): Promise<void> {
       __harnessTiming?: (
         effect: AnimationEffect | null | undefined,
       ) => ComputedEffectTiming | null;
+      __harnessHoldNow?: (all: Animation[]) => unknown[];
+      __harnessDescribe?: (
+        a: Animation,
+        finishedAt: number | null,
+        recordedStart: number | null,
+      ) => unknown;
+      __harnessHeld?: Animation[];
+      __harnessHeldStarts?: number[];
+      __harnessHeldOrigin?: number;
+    };
+    // The page side of holdAnimations, shared with armHold: each animation is
+    // paused where it stands and added to the held set, with its start on the
+    // document timeline (a pending play has none yet: it starts now).
+    w.__harnessHoldNow ??= all => {
+      const curveEnd = (
+        window as unknown as {__harnessCurveEnd: (a: Animation) => number}
+      ).__harnessCurveEnd;
+      const describe = (node: Element | null) =>
+        node == null
+          ? null
+          : node.tagName.toLowerCase() +
+            (node.id ? `#${node.id}` : '') +
+            (node.classList.length
+              ? `.${[...node.classList].slice(0, 2).join('.')}`
+              : '');
+      // Seeking and sampling run a curve forward: an animation running
+      // backward (`reverse()`, a negative playback rate) cannot be held and
+      // read, so it is refused rather than misread.
+      const backward = all.find(animation => animation.playbackRate < 0);
+      if (backward != null) {
+        throw new Error(
+          `holdAnimations: ${describe((backward.effect as KeyframeEffect | null)?.target ?? null) ?? 'an animation'} runs backward (reverse() or a negative playback rate); hold and sample a forward run instead`,
+        );
+      }
+      const now = Number(document.timeline.currentTime ?? performance.now());
+      // Each animation's start, read before the pause clears it.
+      const starts = all.map(animation =>
+        animation.startTime != null
+          ? Number(animation.startTime)
+          : now - Number(animation.currentTime ?? 0),
+      );
+      const held = all.map(animation => {
+        animation.pause();
+        // `pause()` only schedules the pause: the engine takes the hold time
+        // at its next frame, a frame past where this read it. Setting the
+        // current time completes a pending pause at once, here.
+        // eslint-disable-next-line no-self-assign
+        animation.currentTime = animation.currentTime;
+        return animation;
+      });
+      // A later hold adds to the held set: what an earlier one held stays
+      // held (it is paused, so it is not taken again) until released.
+      w.__harnessHeld = [...(w.__harnessHeld ?? []), ...held];
+      w.__harnessHeldStarts = [...(w.__harnessHeldStarts ?? []), ...starts];
+      // Times count from the origin the first hold set (its earliest start)
+      // until the release: a later hold, even of an animation that started
+      // earlier (its offset is then negative), and dropping one never move
+      // it, so every offsetMs already returned stays true.
+      const origin = Number.isFinite(w.__harnessHeldOrigin ?? Number.NaN)
+        ? (w.__harnessHeldOrigin as number)
+        : Math.min(...starts);
+      w.__harnessHeldOrigin = origin;
+      return held.map((animation, index) => {
+        const effect = animation.effect as KeyframeEffect | null;
+        const timing = effect?.getComputedTiming();
+        const cssName =
+          'transitionProperty' in animation
+            ? (animation as unknown as {transitionProperty: string})
+                .transitionProperty
+            : 'animationName' in animation
+              ? (animation as unknown as {animationName: string}).animationName
+              : null;
+        return {
+          index,
+          kind: animation.constructor.name,
+          name: cssName,
+          target: describe((effect?.target as Element | null) ?? null),
+          durationMs: Number(timing?.duration ?? 0),
+          delayMs: Number(timing?.delay ?? 0),
+          curveEndMs: curveEnd(animation),
+          easing: String(effect?.getTiming().easing ?? 'linear'),
+          keyframes: (effect?.getKeyframes() ?? []).map(
+            (k): Record<string, unknown> => ({...k}),
+          ),
+          heldAtMs:
+            animation.currentTime == null
+              ? null
+              : Number(animation.currentTime),
+          offsetMs: starts[index] - origin,
+        };
+      });
+    };
+    // An animation as waitForAnimation and a watch report it: its curve's
+    // start and end on the page clock (epoch ms), its keyframes, and when it
+    // finished. `recordedStart` stands in once the page has cancelled it.
+    w.__harnessDescribe ??= (a, finishedAt, recordedStart) => {
+      const timingOf = (
+        window as unknown as {
+          __harnessTiming: (
+            effect: AnimationEffect | null | undefined,
+          ) => ComputedEffectTiming | null;
+        }
+      ).__harnessTiming;
+      const curveEnd = (
+        window as unknown as {__harnessCurveEnd: (a: Animation) => number}
+      ).__harnessCurveEnd;
+      const effect = a.effect as KeyframeEffect | null;
+      const timing = timingOf(effect);
+      // A run going backward began at its end: its startTime is where its
+      // current time would reach 0, a whole run later.
+      const rate = a.playbackRate;
+      const speed = Math.abs(rate || 1);
+      const endTime = Number(timing?.endTime ?? 0);
+      const delay = Number(timing?.delay ?? 0);
+      const start =
+        a.startTime == null
+          ? recordedStart
+          : rate < 0
+            ? Number(a.startTime) - endTime / speed
+            : Number(a.startTime);
+      const startedAt = performance.timeOrigin + Number(start ?? Number.NaN);
+      const name =
+        'transitionProperty' in a
+          ? (a as unknown as {transitionProperty: string}).transitionProperty
+          : 'animationName' in a
+            ? (a as unknown as {animationName: string}).animationName
+            : null;
+      return {
+        kind: a.constructor.name,
+        name,
+        // Through the playback rate's speed: at rate 2 a curve runs in half
+        // its duration. Backward, the end delay plays first and the start
+        // delay last.
+        from:
+          rate < 0
+            ? startedAt + Number(timing?.endDelay ?? 0) / speed
+            : startedAt + delay / speed,
+        to:
+          rate < 0
+            ? startedAt + (endTime - delay) / speed
+            : startedAt + curveEnd(a) / speed,
+        durationMs: Number(timing?.duration ?? 0),
+        easing: String(effect?.getTiming().easing ?? 'linear'),
+        keyframes: (effect?.getKeyframes() ?? []).map(
+          (k): Record<string, unknown> => ({...k}),
+        ),
+        finishedAt:
+          finishedAt == null ? null : performance.timeOrigin + finishedAt,
+      };
     };
     // An effect's timing as getComputedTiming() reports it. Inside a rendering
     // trace it is worked out from getTiming() instead: getComputedTiming()
@@ -458,18 +614,6 @@ export async function holdAnimations(
   const scopeHandle = scope ? await scope.elementHandle() : null;
   await installCurveEnd(page);
   return page.evaluate(root => {
-    const curveEnd = (
-      window as unknown as {__harnessCurveEnd: (a: Animation) => number}
-    ).__harnessCurveEnd;
-    const describe = (node: Element | null) =>
-      node == null
-        ? null
-        : node.tagName.toLowerCase() +
-          (node.id ? `#${node.id}` : '') +
-          (node.classList.length
-            ? `.${[...node.classList].slice(0, 2).join('.')}`
-            : '');
-    const now = Number(document.timeline.currentTime ?? performance.now());
     const all = document.getAnimations().filter(animation => {
       const target =
         (animation.effect as KeyframeEffect | null)?.target ?? null;
@@ -480,76 +624,11 @@ export async function holdAnimations(
           (target != null && (root === target || root.contains(target))))
       );
     });
-    // Seeking and sampling run a curve forward: an animation running
-    // backward (`reverse()`, a negative playback rate) cannot be held and
-    // read, so it is refused rather than misread.
-    const backward = all.find(animation => animation.playbackRate < 0);
-    if (backward != null) {
-      throw new Error(
-        `holdAnimations: ${describe((backward.effect as KeyframeEffect | null)?.target ?? null) ?? 'an animation'} runs backward (reverse() or a negative playback rate); hold and sample a forward run instead`,
-      );
-    }
-    // Each animation's start on the document timeline, read before the pause
-    // clears it (a pending play has no start time yet: it starts now).
-    const starts = all.map(animation =>
-      animation.startTime != null
-        ? Number(animation.startTime)
-        : now - Number(animation.currentTime ?? 0),
-    );
-    const held = all.map(animation => {
-      animation.pause();
-      // `pause()` only schedules the pause: the engine takes the hold time at
-      // its next frame, a frame past where this read it. Setting the current
-      // time completes a pending pause at once, here.
-      // eslint-disable-next-line no-self-assign
-      animation.currentTime = animation.currentTime;
-      return animation;
-    });
-    // A later hold adds to the held set: what an earlier one held stays held
-    // (it is paused, so it is not taken again above) until released.
-    const w = window as unknown as {
-      __harnessHeld?: Animation[];
-      __harnessHeldStarts?: number[];
-      __harnessHeldOrigin?: number;
-    };
-    w.__harnessHeld = [...(w.__harnessHeld ?? []), ...held];
-    w.__harnessHeldStarts = [...(w.__harnessHeldStarts ?? []), ...starts];
-    // Times count from the origin the first hold set (its earliest start)
-    // until the release: a later hold, even of an animation that started
-    // earlier (its offset is then negative), and dropping one never move it,
-    // so every offsetMs already returned stays true.
-    const origin = Number.isFinite(w.__harnessHeldOrigin ?? Number.NaN)
-      ? (w.__harnessHeldOrigin as number)
-      : Math.min(...starts);
-    w.__harnessHeldOrigin = origin;
-    const offsets = starts.map(start => start - origin);
-    return held.map((animation, index) => {
-      const effect = animation.effect as KeyframeEffect | null;
-      const timing = effect?.getComputedTiming();
-      const cssName =
-        'transitionProperty' in animation
-          ? (animation as unknown as {transitionProperty: string})
-              .transitionProperty
-          : 'animationName' in animation
-            ? (animation as unknown as {animationName: string}).animationName
-            : null;
-      return {
-        index,
-        kind: animation.constructor.name,
-        name: cssName,
-        target: describe((effect?.target as Element | null) ?? null),
-        durationMs: Number(timing?.duration ?? 0),
-        delayMs: Number(timing?.delay ?? 0),
-        curveEndMs: curveEnd(animation),
-        easing: String(effect?.getTiming().easing ?? 'linear'),
-        keyframes: (effect?.getKeyframes() ?? []).map(
-          (k): Record<string, unknown> => ({...k}),
-        ),
-        heldAtMs:
-          animation.currentTime == null ? null : Number(animation.currentTime),
-        offsetMs: offsets[index],
-      };
-    });
+    return (
+      window as unknown as {
+        __harnessHoldNow: (all: Animation[]) => HeldAnimation[];
+      }
+    ).__harnessHoldNow(all);
   }, scopeHandle);
 }
 
@@ -694,204 +773,240 @@ export async function sampleCurve(
   locator: Locator,
   times: readonly number[],
 ): Promise<CurveSample[]> {
-  const raw = await locator.evaluate(
-    (element, {ts, inset}) => {
-      const w = window as unknown as {
-        __harnessHeld?: Animation[];
-        __harnessHeldStarts?: number[];
-        __harnessHeldOrigin?: number;
-      };
-      // An animation the page cancelled since the hold (a CSS transition is
-      // cancelled whenever the page retargets its property) leaves the held set:
-      // applying or playing it again would revive what the page dropped.
-      const kept = (w.__harnessHeld ?? []).flatMap((animation, index) =>
-        animation.playState === 'idle'
-          ? []
-          : [{animation, start: (w.__harnessHeldStarts ?? [])[index] ?? 0}],
-      );
-      w.__harnessHeld = kept.map(k => k.animation);
-      w.__harnessHeldStarts = kept.map(k => k.start);
-      const held = kept.map(k => k.animation);
-      const origin = w.__harnessHeldOrigin ?? 0;
-      if (held.length === 0) {
-        throw new Error(
-          'sampleCurve: no held animations (call holdAnimations first)',
-        );
-      }
-      // The properties each held animation of this element animates. A
-      // `::before` or `::after` animation is not the element's own: its
-      // clock would label the element's samples with another box's time.
-      const own = held.map(animation => {
-        const effect = animation.effect as KeyframeEffect | null;
-        if (effect?.target !== element || effect.pseudoElement != null) {
-          return null;
-        }
-        const properties = new Set<string>();
-        for (const keyframe of effect.getKeyframes()) {
-          for (const key of Object.keys(keyframe)) {
-            properties.add(key);
-          }
-        }
-        return properties;
-      });
-      const TRANSFORM = ['transform', 'translate', 'rotate', 'scale'];
-      return ts.map(t => {
-        let presented = -Infinity;
-        let presentedOwn = -Infinity;
-        let presentedTransform = -Infinity;
-        let presentedOpacity = -Infinity;
-        held.forEach((animation, index) => {
-          // Each at its own offset, just inside its end: see seekAnimations.
-          const offset = kept[index].start - origin;
-          const end = Number(
-            animation.effect?.getComputedTiming().endTime ?? Infinity,
-          );
-          // A faster rate runs more curve per timeline ms.
-          const rate = animation.playbackRate || 1;
-          const local = Math.min((t - offset) * rate, end - inset);
-          animation.currentTime = local;
-          presented = Math.max(presented, local / rate + offset);
-          const properties = own[index];
-          if (properties == null) {
-            return;
-          }
-          presentedOwn = Math.max(presentedOwn, local / rate + offset);
-          if (TRANSFORM.some(p => properties.has(p))) {
-            presentedTransform = Math.max(
-              presentedTransform,
-              local / rate + offset,
-            );
-          }
-          if (properties.has('opacity')) {
-            presentedOpacity = Math.max(
-              presentedOpacity,
-              local / rate + offset,
-            );
-          }
-        });
-        const or = (value: number, fallback: number) =>
-          Number.isFinite(value) ? value : fallback;
-        const presentedAt = or(presentedOwn, or(presented, t));
-        const style = getComputedStyle(element);
-        // translate · rotate · scale · transform, as CSS applies them (all
-        // about the same transform origin, which `transform` excludes too).
-        // A percentage resolves against the border box, unrounded
-        // (`offsetWidth` rounds it); anything else it cannot resolve (a
-        // `calc()`) is an error, not a guess.
-        const px = (value: string) => parseFloat(value) || 0;
-        const borderBox =
-          style.boxSizing === 'border-box'
-            ? {width: px(style.width), height: px(style.height)}
-            : {
-                width:
-                  px(style.width) +
-                  px(style.paddingLeft) +
-                  px(style.paddingRight) +
-                  px(style.borderLeftWidth) +
-                  px(style.borderRightWidth),
-                height:
-                  px(style.height) +
-                  px(style.paddingTop) +
-                  px(style.paddingBottom) +
-                  px(style.borderTopWidth) +
-                  px(style.borderBottomWidth),
-              };
-        const length = (value: string, size: number) => {
-          const match = /^(-?[\d.]+(?:e-?\d+)?)(px|%)$/.exec(value);
-          if (match == null) {
-            throw new Error(
-              `sampleCurve: cannot resolve translate ${JSON.stringify(style.translate)}`,
-            );
-          }
-          const amount = Number(match[1]);
-          return match[2] === '%' ? (amount / 100) * size : amount;
-        };
-        const matrix = new DOMMatrix();
-        if (style.translate !== 'none') {
-          // "x", "x y" or "x y z"; a calc() holds spaces, so split at the
-          // top level only.
-          const parts = style.translate.match(/(?:calc\([^)]*\)|\S)+/g) ?? [];
-          const [x = '0px', y = '0px'] = parts;
-          matrix.translateSelf(
-            length(x, borderBox.width),
-            length(y, borderBox.height),
-          );
-        }
-        if (style.rotate !== 'none') {
-          // "45deg", "x 45deg" (or y, z) or "1 0 0 45deg": the angle is the
-          // last token, the axis what comes before it (z when none).
-          const tokens = style.rotate.split(' ');
-          const angle = tokens.at(-1) ?? '0deg';
-          const turns: Record<string, number> = {
-            deg: 1,
-            rad: 180 / Math.PI,
-            grad: 0.9,
-            turn: 360,
-          };
-          const unit = /[a-z]+$/.exec(angle)?.[0] ?? 'deg';
-          const named: Record<string, [number, number, number]> = {
-            x: [1, 0, 0],
-            y: [0, 1, 0],
-            z: [0, 0, 1],
-          };
-          const axis: [number, number, number] =
-            tokens.length === 1
-              ? [0, 0, 1]
-              : tokens.length === 2 && named[tokens[0]] != null
-                ? named[tokens[0]]
-                : tokens.length === 4
-                  ? [Number(tokens[0]), Number(tokens[1]), Number(tokens[2])]
-                  : [Number.NaN, Number.NaN, Number.NaN];
-          if (!axis.every(Number.isFinite)) {
-            throw new Error(
-              `sampleCurve: cannot resolve rotate ${JSON.stringify(style.rotate)}`,
-            );
-          }
-          matrix.rotateAxisAngleSelf(
-            ...axis,
-            parseFloat(angle) * (turns[unit] ?? 1),
-          );
-        }
-        if (style.scale !== 'none') {
-          const [sx = 1, sy = sx] = style.scale.split(' ').map(Number);
-          matrix.scaleSelf(sx, sy);
-        }
-        if (style.transform !== 'none') {
-          matrix.multiplySelf(new DOMMatrix(style.transform));
-        }
-        const {a, b, c, d, e, f} = matrix;
-        return {
-          t,
-          presentedAt,
-          presentedAtFor: {
-            transform: or(presentedTransform, presentedAt),
-            opacity: or(presentedOpacity, presentedAt),
-          },
-          matrix: `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`,
-          transform: style.transform,
-          translate: style.translate,
-          rotate: style.rotate,
-          scale: style.scale,
-          opacity: style.opacity,
-        };
-      });
-    },
-    {ts: [...times], inset: END_INSET_MS},
+  const [samples] = await sampleCurves([locator], times);
+  return samples;
+}
+
+/**
+ * `sampleCurve` for several elements at once, in one page call: whatever the
+ * page runs between two calls (a render that replaces an animation) cannot
+ * land between one element's samples and another's.
+ */
+export async function sampleCurves(
+  locators: readonly Locator[],
+  times: readonly number[],
+): Promise<CurveSample[][]> {
+  if (locators.length === 0) {
+    return [];
+  }
+  const found = await Promise.all(
+    locators.map(locator => locator.elementHandle()),
   );
-  return raw.map(r => ({
-    t: r.t,
-    presentedAt: r.presentedAt,
-    presentedAtFor: r.presentedAtFor,
-    transform: parseTransform(r.matrix),
-    opacity: Number(r.opacity),
-    raw: {
-      transform: r.transform,
-      translate: r.translate,
-      rotate: r.rotate,
-      scale: r.scale,
-      opacity: r.opacity,
-    },
-  }));
+  const handles = found.flatMap(handle => (handle == null ? [] : [handle]));
+  try {
+    if (handles.length !== locators.length) {
+      throw notInDocument('sampleCurve');
+    }
+    const raw = await locators[0].page().evaluate(
+      ({elements, ts, inset}) => {
+        const w = window as unknown as {
+          __harnessHeld?: Animation[];
+          __harnessHeldStarts?: number[];
+          __harnessHeldOrigin?: number;
+        };
+        // An animation the page cancelled since the hold (a CSS transition is
+        // cancelled whenever the page retargets its property) leaves the held set:
+        // applying or playing it again would revive what the page dropped.
+        const kept = (w.__harnessHeld ?? []).flatMap((animation, index) =>
+          animation.playState === 'idle'
+            ? []
+            : [{animation, start: (w.__harnessHeldStarts ?? [])[index] ?? 0}],
+        );
+        w.__harnessHeld = kept.map(k => k.animation);
+        w.__harnessHeldStarts = kept.map(k => k.start);
+        const held = kept.map(k => k.animation);
+        const origin = w.__harnessHeldOrigin ?? 0;
+        if (held.length === 0) {
+          throw new Error(
+            'sampleCurve: no held animations (call holdAnimations first)',
+          );
+        }
+        return (elements as Element[]).map(element => {
+          // The properties each held animation of this element animates. A
+          // `::before` or `::after` animation is not the element's own: its
+          // clock would label the element's samples with another box's time.
+          const own = held.map(animation => {
+            const effect = animation.effect as KeyframeEffect | null;
+            if (effect?.target !== element || effect.pseudoElement != null) {
+              return null;
+            }
+            const properties = new Set<string>();
+            for (const keyframe of effect.getKeyframes()) {
+              for (const key of Object.keys(keyframe)) {
+                properties.add(key);
+              }
+            }
+            return properties;
+          });
+          const TRANSFORM = ['transform', 'translate', 'rotate', 'scale'];
+          return ts.map(t => {
+            let presented = -Infinity;
+            let presentedOwn = -Infinity;
+            let presentedTransform = -Infinity;
+            let presentedOpacity = -Infinity;
+            held.forEach((animation, index) => {
+              // Each at its own offset, just inside its end: see seekAnimations.
+              const offset = kept[index].start - origin;
+              const end = Number(
+                animation.effect?.getComputedTiming().endTime ?? Infinity,
+              );
+              // A faster rate runs more curve per timeline ms.
+              const rate = animation.playbackRate || 1;
+              const local = Math.min((t - offset) * rate, end - inset);
+              animation.currentTime = local;
+              presented = Math.max(presented, local / rate + offset);
+              const properties = own[index];
+              if (properties == null) {
+                return;
+              }
+              presentedOwn = Math.max(presentedOwn, local / rate + offset);
+              if (TRANSFORM.some(p => properties.has(p))) {
+                presentedTransform = Math.max(
+                  presentedTransform,
+                  local / rate + offset,
+                );
+              }
+              if (properties.has('opacity')) {
+                presentedOpacity = Math.max(
+                  presentedOpacity,
+                  local / rate + offset,
+                );
+              }
+            });
+            const or = (value: number, fallback: number) =>
+              Number.isFinite(value) ? value : fallback;
+            const presentedAt = or(presentedOwn, or(presented, t));
+            const style = getComputedStyle(element);
+            // translate · rotate · scale · transform, as CSS applies them (all
+            // about the same transform origin, which `transform` excludes too).
+            // A percentage resolves against the border box, unrounded
+            // (`offsetWidth` rounds it); anything else it cannot resolve (a
+            // `calc()`) is an error, not a guess.
+            const px = (value: string) => parseFloat(value) || 0;
+            const borderBox =
+              style.boxSizing === 'border-box'
+                ? {width: px(style.width), height: px(style.height)}
+                : {
+                    width:
+                      px(style.width) +
+                      px(style.paddingLeft) +
+                      px(style.paddingRight) +
+                      px(style.borderLeftWidth) +
+                      px(style.borderRightWidth),
+                    height:
+                      px(style.height) +
+                      px(style.paddingTop) +
+                      px(style.paddingBottom) +
+                      px(style.borderTopWidth) +
+                      px(style.borderBottomWidth),
+                  };
+            const length = (value: string, size: number) => {
+              const match = /^(-?[\d.]+(?:e-?\d+)?)(px|%)$/.exec(value);
+              if (match == null) {
+                throw new Error(
+                  `sampleCurve: cannot resolve translate ${JSON.stringify(style.translate)}`,
+                );
+              }
+              const amount = Number(match[1]);
+              return match[2] === '%' ? (amount / 100) * size : amount;
+            };
+            const matrix = new DOMMatrix();
+            if (style.translate !== 'none') {
+              // "x", "x y" or "x y z"; a calc() holds spaces, so split at the
+              // top level only.
+              const parts =
+                style.translate.match(/(?:calc\([^)]*\)|\S)+/g) ?? [];
+              const [x = '0px', y = '0px'] = parts;
+              matrix.translateSelf(
+                length(x, borderBox.width),
+                length(y, borderBox.height),
+              );
+            }
+            if (style.rotate !== 'none') {
+              // "45deg", "x 45deg" (or y, z) or "1 0 0 45deg": the angle is the
+              // last token, the axis what comes before it (z when none).
+              const tokens = style.rotate.split(' ');
+              const angle = tokens.at(-1) ?? '0deg';
+              const turns: Record<string, number> = {
+                deg: 1,
+                rad: 180 / Math.PI,
+                grad: 0.9,
+                turn: 360,
+              };
+              const unit = /[a-z]+$/.exec(angle)?.[0] ?? 'deg';
+              const named: Record<string, [number, number, number]> = {
+                x: [1, 0, 0],
+                y: [0, 1, 0],
+                z: [0, 0, 1],
+              };
+              const axis: [number, number, number] =
+                tokens.length === 1
+                  ? [0, 0, 1]
+                  : tokens.length === 2 && named[tokens[0]] != null
+                    ? named[tokens[0]]
+                    : tokens.length === 4
+                      ? [
+                          Number(tokens[0]),
+                          Number(tokens[1]),
+                          Number(tokens[2]),
+                        ]
+                      : [Number.NaN, Number.NaN, Number.NaN];
+              if (!axis.every(Number.isFinite)) {
+                throw new Error(
+                  `sampleCurve: cannot resolve rotate ${JSON.stringify(style.rotate)}`,
+                );
+              }
+              matrix.rotateAxisAngleSelf(
+                ...axis,
+                parseFloat(angle) * (turns[unit] ?? 1),
+              );
+            }
+            if (style.scale !== 'none') {
+              const [sx = 1, sy = sx] = style.scale.split(' ').map(Number);
+              matrix.scaleSelf(sx, sy);
+            }
+            if (style.transform !== 'none') {
+              matrix.multiplySelf(new DOMMatrix(style.transform));
+            }
+            const {a, b, c, d, e, f} = matrix;
+            return {
+              t,
+              presentedAt,
+              presentedAtFor: {
+                transform: or(presentedTransform, presentedAt),
+                opacity: or(presentedOpacity, presentedAt),
+              },
+              matrix: `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`,
+              transform: style.transform,
+              translate: style.translate,
+              rotate: style.rotate,
+              scale: style.scale,
+              opacity: style.opacity,
+            };
+          });
+        });
+      },
+      {elements: handles, ts: [...times], inset: END_INSET_MS},
+    );
+    return raw.map(list =>
+      list.map(r => ({
+        t: r.t,
+        presentedAt: r.presentedAt,
+        presentedAtFor: r.presentedAtFor,
+        transform: parseTransform(r.matrix),
+        opacity: Number(r.opacity),
+        raw: {
+          transform: r.transform,
+          translate: r.translate,
+          rotate: r.rotate,
+          scale: r.scale,
+          opacity: r.opacity,
+        },
+      })),
+    );
+  } finally {
+    await Promise.all(handles.map(handle => handle.dispose()));
+  }
 }
 
 export type Channel =
@@ -1082,7 +1197,6 @@ export async function waitForAnimation(
                 armedAt: () => number;
               };
             };
-            const curveEnd = w.__harnessCurveEnd;
             const recorder = w.__harnessAnimations;
             // Inside a rendering trace the wait stands down as the recorder does:
             // record() reads nothing, the animations come from the recorder's log
@@ -1093,59 +1207,14 @@ export async function waitForAnimation(
                 .__harnessRenderingTrace === true;
             recorder.record();
             const describe = (
-              a: Animation,
-              finishedAt: number | null,
-              recordedStart: number | null,
-            ) => {
-              const effect = a.effect as KeyframeEffect | null;
-              const timing = w.__harnessTiming(effect);
-              // The recorded start stands in once the page has cancelled it. A
-              // run going backward began at its end: its startTime is where its
-              // current time would reach 0, a whole run later.
-              const rate = a.playbackRate;
-              const speed = Math.abs(rate || 1);
-              const endTime = Number(timing?.endTime ?? 0);
-              const delay = Number(timing?.delay ?? 0);
-              const start =
-                a.startTime == null
-                  ? recordedStart
-                  : rate < 0
-                    ? Number(a.startTime) - endTime / speed
-                    : Number(a.startTime);
-              const startedAt =
-                performance.timeOrigin + Number(start ?? Number.NaN);
-              const name =
-                'transitionProperty' in a
-                  ? (a as unknown as {transitionProperty: string})
-                      .transitionProperty
-                  : 'animationName' in a
-                    ? (a as unknown as {animationName: string}).animationName
-                    : null;
-              return {
-                kind: a.constructor.name,
-                name,
-                // Through the playback rate's speed: at rate 2 a curve runs in half
-                // its duration. Backward, the end delay plays first and the start
-                // delay last.
-                from:
-                  rate < 0
-                    ? startedAt + Number(timing?.endDelay ?? 0) / speed
-                    : startedAt + delay / speed,
-                to:
-                  rate < 0
-                    ? startedAt + (endTime - delay) / speed
-                    : startedAt + curveEnd(a) / speed,
-                durationMs: Number(timing?.duration ?? 0),
-                easing: String(effect?.getTiming().easing ?? 'linear'),
-                keyframes: (effect?.getKeyframes() ?? []).map(
-                  (k): Record<string, unknown> => ({...k}),
-                ),
-                finishedAt:
-                  finishedAt == null
-                    ? null
-                    : performance.timeOrigin + finishedAt,
-              };
-            };
+              window as unknown as {
+                __harnessDescribe: (
+                  a: Animation,
+                  finishedAt: number | null,
+                  recordedStart: number | null,
+                ) => ActiveAnimation;
+              }
+            ).__harnessDescribe;
             const inside = (a: Animation) => {
               const target =
                 (a.effect as KeyframeEffect | null)?.target ?? null;
@@ -1309,6 +1378,16 @@ export interface AnimationWatch {
     timeout?: number;
     minProgressMs?: number;
   }): Promise<ActiveAnimation[]>;
+  /**
+   * Every animation on (or inside) the element recorded since the watch was
+   * taken, running or finished, in the order the page recorded them, as it
+   * stands now: no wait. Read it once the action has run in the page; a
+   * short animation that ended before the read is in it, as is one still
+   * running beside it. It reads through the locator, which makes a
+   * main-thread frame: inside a rendering trace, read it after the window a
+   * proof counts.
+   */
+  recorded(): Promise<ActiveAnimation[]>;
 }
 
 /**
@@ -1329,6 +1408,320 @@ export async function watchAnimations(
   const since = await armRecorder(locator.page(), locator);
   return {
     started: options => waitForAnimation(locator, {...options, since}),
+    recorded: async () =>
+      locator.evaluate((element, after) => {
+        const w = window as unknown as {
+          __harnessDescribe: (
+            a: Animation,
+            finishedAt: number | null,
+            recordedStart: number | null,
+          ) => ActiveAnimation;
+          __harnessAnimations: {
+            log: {
+              animation: Animation;
+              seenAt: number;
+              finishedAt: number | null;
+              startedAt: number | null;
+              ancestors: Element[];
+            }[];
+            record: () => void;
+          };
+        };
+        w.__harnessAnimations.record();
+        const inside = (a: Animation) => {
+          const target = (a.effect as KeyframeEffect | null)?.target ?? null;
+          return (
+            target != null && (target === element || element.contains(target))
+          );
+        };
+        return w.__harnessAnimations.log
+          .filter(
+            e =>
+              e.seenAt >= after &&
+              (inside(e.animation) || e.ancestors.includes(element)) &&
+              e.animation.timeline instanceof DocumentTimeline,
+          )
+          .map(e =>
+            w.__harnessDescribe(e.animation, e.finishedAt, e.startedAt),
+          );
+      }, since),
+  };
+}
+
+/** What `armHold` fires on: the end value of one of the scope's own animations. */
+export interface HoldTrigger {
+  /** A property the animation keyframes, read with `parseFloat` (`translate`). */
+  readonly property: string;
+  /** Its value in the last keyframe. */
+  readonly to: number;
+  /** How far from `to` the end may be (default 0.5). */
+  readonly tolerance?: number;
+}
+
+export interface ArmedHold {
+  /**
+   * Resolves with what the hold took: every animation that was running in
+   * the scope when it fired, and any the same task started after, with the
+   * one that fired it. Waits at most `frames` of the page's frames (default
+   * 3) for it to fire, then rejects, naming what the scope started instead.
+   */
+  held(options?: {
+    frames?: number;
+  }): Promise<{held: HeldAnimation[]; trigger: HeldAnimation}>;
+}
+
+/**
+ * Holds a motion in the page the moment it is made, before the action that
+ * makes it. When an animation of `scope`'s own element whose last keyframe
+ * sets `trigger.property` to `trigger.to` is recorded, everything running in
+ * the scope is held, as `holdAnimations` holds it (into the same held set,
+ * so `seekAnimations`, `sampleCurve` and `releaseAnimations` take it), in a
+ * microtask of the task that created it: no delay of the test's own can let
+ * the motion run on, or end, unobserved. Until the page's next frame, an
+ * animation the same task starts in the scope after that is held too.
+ *
+ * A script animation (`Element.animate`) is held before its first frame, so
+ * a call from rest holds at its start (0 ms) and one on an explicit start
+ * time where it stands. A CSS animation or transition is recorded at its
+ * first frame, and held there. One that runs backward is refused, as
+ * `holdAnimations` refuses it.
+ *
+ *   const armed = await armHold(row, {property: 'translate', to: -144});
+ *   await driver.play(flick(start, {velocity: {x: -1000, y: 0}}));
+ *   const {trigger} = await armed.held();
+ */
+export async function armHold(
+  scope: Locator,
+  trigger: HoldTrigger,
+): Promise<ArmedHold> {
+  const page = scope.page();
+  await installCurveEnd(page);
+  const handle = await scope.elementHandle();
+  if (handle == null) {
+    throw notInDocument('armHold');
+  }
+  let id: number;
+  try {
+    id = await handle.evaluate(
+      (root, {property, to, tolerance}) => {
+        type Held = {offsetMs: number};
+        const w = window as unknown as {
+          __harnessAnimations: {
+            log: {animation: Animation; finishedAt: number | null}[];
+            watchers: Set<(animation: Animation) => void>;
+          };
+          __harnessHoldNow: (all: Animation[]) => Held[];
+          __harnessTimerGate?: {frame?: typeof requestAnimationFrame};
+          __harnessArmedHolds?: {
+            root: Element;
+            property: string;
+            to: number;
+            armedAt: number;
+            status: 'armed' | 'held' | 'error';
+            held: Held[];
+            triggerIndex: number;
+            error: string | null;
+            disarm: () => void;
+          }[];
+        };
+        const recorder = w.__harnessAnimations;
+        const frame = (
+          w.__harnessTimerGate?.frame ?? window.requestAnimationFrame
+        ).bind(window);
+        const holds = (w.__harnessArmedHolds ??= []);
+        const state = {
+          root,
+          property,
+          to,
+          armedAt: performance.now(),
+          status: 'armed' as 'armed' | 'held' | 'error',
+          held: [] as Held[],
+          triggerIndex: -1,
+          error: null as string | null,
+          disarm: () => {},
+        };
+        holds.push(state);
+        const inScope = (animation: Animation) => {
+          const target =
+            (animation.effect as KeyframeEffect | null)?.target ?? null;
+          return target != null && (target === root || root.contains(target));
+        };
+        const endOf = (animation: Animation) => {
+          const keyframes =
+            (animation.effect as KeyframeEffect | null)?.getKeyframes() ?? [];
+          const last = keyframes[keyframes.length - 1] as
+            Record<string, unknown> | undefined;
+          const value = last?.[property];
+          return value == null ? null : parseFloat(String(value));
+        };
+        let fired: Animation | null = null;
+        let open = false;
+        // What runs in the scope and is not held yet, from the recorder's
+        // log: document.getAnimations() would restyle the page in the task
+        // that made the motion.
+        const holdRunning = () => {
+          if (state.status === 'error') {
+            return;
+          }
+          const running = recorder.log
+            .filter(
+              e =>
+                e.finishedAt == null &&
+                inScope(e.animation) &&
+                e.animation.playState === 'running' &&
+                e.animation.timeline instanceof DocumentTimeline,
+            )
+            .map(e => e.animation);
+          if (running.length === 0) {
+            return;
+          }
+          try {
+            const before = state.held.length;
+            state.held.push(...w.__harnessHoldNow(running));
+            const at = fired == null ? -1 : running.indexOf(fired);
+            if (state.triggerIndex < 0 && at >= 0) {
+              state.triggerIndex = before + at;
+            }
+            if (state.triggerIndex < 0) {
+              state.status = 'error';
+              state.error =
+                'the animation that fired it was cancelled before it could be held';
+              return;
+            }
+            state.status = 'held';
+          } catch (error) {
+            state.status = 'error';
+            state.error = String((error as Error).message ?? error);
+          }
+        };
+        const watcher = (animation: Animation) => {
+          if (!inScope(animation)) {
+            return;
+          }
+          if (fired == null) {
+            const end = endOf(animation);
+            if (
+              animation.effect == null ||
+              (animation.effect as KeyframeEffect).target !== root ||
+              end == null ||
+              !(Math.abs(end - to) <= tolerance)
+            ) {
+              return;
+            }
+            fired = animation;
+            open = true;
+            frame(() => {
+              open = false;
+              recorder.watchers.delete(watcher);
+            });
+            queueMicrotask(holdRunning);
+            return;
+          }
+          if (open) {
+            queueMicrotask(holdRunning);
+          }
+        };
+        recorder.watchers.add(watcher);
+        state.disarm = () => {
+          recorder.watchers.delete(watcher);
+        };
+        return holds.length - 1;
+      },
+      {
+        property: trigger.property,
+        to: trigger.to,
+        tolerance: trigger.tolerance ?? 0.5,
+      },
+    );
+  } finally {
+    await handle.dispose();
+  }
+  return {
+    async held({frames = 3} = {}) {
+      const result = await page.evaluate(
+        async ({at, count}) => {
+          const w = window as unknown as {
+            __harnessAnimations: {
+              log: {
+                animation: Animation;
+                seenAt: number;
+                finishedAt: number | null;
+              }[];
+            };
+            __harnessTimerGate?: {frame?: typeof requestAnimationFrame};
+            __harnessArmedHolds?: {
+              root: Element;
+              property: string;
+              to: number;
+              armedAt: number;
+              status: 'armed' | 'held' | 'error';
+              held: unknown[];
+              triggerIndex: number;
+              error: string | null;
+              disarm: () => void;
+            }[];
+          };
+          const state = w.__harnessArmedHolds?.[at];
+          if (state == null) {
+            return {status: 'gone' as const};
+          }
+          const frame = (
+            w.__harnessTimerGate?.frame ?? window.requestAnimationFrame
+          ).bind(window);
+          for (let i = 0; i < count && state.status === 'armed'; i += 1) {
+            await new Promise(resolve => frame(resolve));
+          }
+          if (state.status === 'held') {
+            return {
+              status: 'held' as const,
+              held: state.held,
+              triggerIndex: state.triggerIndex,
+            };
+          }
+          if (state.status === 'error') {
+            return {status: 'error' as const, error: state.error ?? ''};
+          }
+          // Not fired: it stands down, so no later motion is held unasked.
+          state.disarm();
+          // What the scope's own element started instead, since the arm.
+          const instead = w.__harnessAnimations.log
+            .filter(
+              e =>
+                e.seenAt >= state.armedAt &&
+                (e.animation.effect as KeyframeEffect | null)?.target ===
+                  state.root,
+            )
+            .map(e => {
+              const keyframes =
+                (e.animation.effect as KeyframeEffect | null)?.getKeyframes() ??
+                [];
+              const last = keyframes[keyframes.length - 1] as
+                Record<string, unknown> | undefined;
+              const value = last?.[state.property];
+              return value == null
+                ? `an animation not keyframing ${state.property}`
+                : `one to ${String(value)}`;
+            });
+          return {status: 'armed' as const, instead};
+        },
+        {at: id, count: frames},
+      );
+      if (result.status === 'gone') {
+        throw new Error(
+          'armHold: the page left the document the hold was armed in',
+        );
+      }
+      if (result.status === 'error') {
+        throw new Error(`armHold: ${result.error}`);
+      }
+      if (result.status === 'armed') {
+        throw new Error(
+          `armHold: no animation of the scope's element ended at ${trigger.property} ${trigger.to} within ${frames} of the page's frames; it started ${result.instead.length === 0 ? 'none since the hold was armed' : result.instead.join(', ')}`,
+        );
+      }
+      const held = result.held as HeldAnimation[];
+      return {held, trigger: held[result.triggerIndex]};
+    },
   };
 }
 
