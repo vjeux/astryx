@@ -4,7 +4,8 @@
 
 /**
  * @file Wheel.tsx
- * @input Option list, selected value and change callback
+ * @input Option list, selected value, change callback; under a finger,
+ *   optionally looping
  * @output Exports Wheel — one picker column — ScrollWheel (today's column),
  *   and the shared types of wheelOptions.ts
  * @position Internal component; consumed by MonthYearWheels.tsx,
