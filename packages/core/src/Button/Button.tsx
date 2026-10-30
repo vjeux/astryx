@@ -119,6 +119,19 @@ const styles = stylex.create({
       // allows a touch screen only an opacity cross-fade (DR2), and nothing
       // of a button fades on opacity.
       '@media (prefers-reduced-motion: reduce)': 'none',
+      // A trigger whose popover is open is that popover's anchor, and WebKit
+      // lays out and repaints a popover positioned against an anchor every
+      // frame the anchor animates a transform. Under a coarse primary
+      // pointer the press scale changes at once there, so the anchor's box
+      // stays still: the transition that eases it back from the press is
+      // cancelled when the popover opens, and a press to close it scales at
+      // once. The release itself is the press layer's opacity
+      // (controlPressLayer.ts), which moves nothing.
+      '[aria-expanded="true"]': {
+        default: null,
+        '@media (pointer: coarse) and (not (prefers-reduced-motion: reduce))':
+          'background-image, background-color, color, opacity',
+      },
     },
     transitionDuration: {
       default: durationVars['--duration-fast'],
