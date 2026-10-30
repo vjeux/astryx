@@ -496,9 +496,14 @@ const styles = stylex.create({
   // row owns horizontal movement, and `pinch-zoom` leaves a two-finger pinch
   // that starts on the row to the browser, so the page stays zoomable
   // (WCAG 1.4.4). The gesture writes the same value inline once it loads.
+  // Each swipe row is its own compositing layer from the start: where the
+  // rows beside a moving one have none, WebKit repaints them on every frame
+  // of its drag and settle, while promoting only the moving row changes
+  // nothing.
   swipeRoot: {
     isolation: 'isolate',
     touchAction: 'pan-y pinch-zoom',
+    willChange: 'translate',
   },
 });
 
