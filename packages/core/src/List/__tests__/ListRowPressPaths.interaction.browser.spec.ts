@@ -238,7 +238,7 @@ test('under a finger, a row held and released between two divided rows keeps bot
   await expectDividersAsAtRest('after the release');
 });
 
-test('a mouse press and hover on a fine pointer leave the press layer out of it', async ({
+test("a mouse press and hover on a fine pointer leave the press layer out of it, though the press is the controller's", async ({
   browser,
 }) => {
   const context = await browser.newContext({
@@ -270,11 +270,13 @@ test('a mouse press and hover on a fine pointer leave the press layer out of it'
       row.evaluate(el => getComputedStyle(el, '::before').content);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     expect(await layer()).toBe('none');
+    // A fine pointer's press is the controller's (`spec:AST-094` FR11,
+    // DEC-21), and the layer stays a coarse pointer's.
     await page.mouse.down();
-    expect(await pressState(row)).toBeNull();
+    expect(await pressState(row)).toBe('on');
     expect(await layer()).toBe('none');
     await page.mouse.up();
-    expect(await pressState(row)).toBeNull();
+    expect(await pressState(row)).toBe('fading');
     expect(await layer()).toBe('none');
   } finally {
     await context.close();

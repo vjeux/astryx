@@ -34,20 +34,27 @@
  * component that paints a press carries {@link PRESSABLE_ATTRIBUTE}, so all of
  * them change together.
  *
- * Where the primary pointer is fine (a desktop), the controller ignores the
- * mouse and the keyboard: CSS `:active` keeps their press, as it always has,
- * and the mouse path costs nothing. Under a finger the `:active` arm is
- * dropped by the CSS (`@media (pointer: coarse)`) and this writes
- * `data-astryx-press="on"` when the press is believed and
- * `data-astryx-press="fading"` for the release's exit.
+ A FINE POINTER'S PRESS, a mouse's or a pen's, goes through this controller
+ * on every device (`spec:AST-094` FR11, FR43, DEC-21): it paints at once on
+ * `pointerdown` (no scroller can claim it, so nothing waits and no brake
+ * applies), holds while the button is down (a mouse's press, like
+ * `:active`, through a drag off the surface), and fades at the release on a
+ * finger's clock on that device, in place of the browser's `:active`. A
+ * right click and a ctrl-click on macOS paint nothing (primaryClick.ts). A
+ * finger's press writes `data-astryx-press="on"` when the press is believed
+ * and `data-astryx-press="fading"` for the release's exit.
  *
- * That query reads the PRIMARY pointer, so on a phone or a tablet the
- * stylesheet drops `:active` for every press, including a mouse or trackpad
- * click and a Space press on a focused button. There, the controller paints
- * those too: at once (no scroller can claim a mouse button or a key, so
- * nothing waits), held while the button or key is down, and faded at the
- * release, the way a finger's press leaves. The query is the stylesheet's
- * own, so the two cannot disagree about which presses are the controller's.
+ * A Space press keeps its path: where the primary pointer is fine, the
+ * browser's `:active` paints it; on a phone or a tablet, where the
+ * stylesheet drops `:active` (`@media (pointer: coarse)` reads the PRIMARY
+ * pointer), the controller paints it, at once, held while the key is down,
+ * and faded on the deselect clock. The query is the stylesheet's own, so the
+ * two cannot disagree about which key presses are the controller's.
+ *
+ * A native control inside a surface (a link or a button in a row's
+ * description) takes its own press, for every pointer, and the surface stays
+ * at rest; the surface's activator (its first control: a row's radio, the
+ * invisible button an Item row's content sits in) is the surface's own.
  *
  * A surface's hold does nothing, so it keeps the browser's long-press text
  * selection (`spec:AST-094` FR41); only an element whose hold does something
@@ -76,9 +83,11 @@ import {
 } from './pressGesture';
 import {isCoarsePointer, watchCoarsePointer} from './coarsePointer';
 import {subscribeInput} from './inputStream';
-import {parentAcrossShadow} from './flatTree';
-import {TOUCH_QUERY} from './touchPresentation';
+import {resolveMotion} from '../motion/resolveMotion';
 import {reducedMotionCrossFade} from '../motion/uikit/timing';
+import {parentAcrossShadow} from './flatTree';
+import {isPrimaryClick} from './primaryClick';
+import {TOUCH_QUERY} from './touchPresentation';
 
 /**
  * The marker the controller finds with `closest()`. Every Astryx component
@@ -278,29 +287,45 @@ const TIMER_MS: Record<NonNullable<PressStep['timer']>, number> = {
 };
 
 /**
- * How long a timer runs on `element`. The release's clock is the table's
- * (PRESS_FADE_MS, the value the stylesheet's release plays), capped under
- * reduced motion by the Reduce Motion cross-fade's duration, as the
- * stylesheet caps its fade (`design:reduced-motion` DR2: a touch transition
- * finishes within it; `spec:AST-094` FR4: the cap is a role, never a
- * literal). The fade's own export, so the controller ships that one value,
- * not the rest of the timing table (`architecture:component-style-authoring`
- * INV6).
+ * The press roles the controller times, under their `timing.press` keys and
+ * with the values that table holds (PRESS_FLASH_MS, PRESS_FADE_MS): each is
+ * resolved through resolveMotion as a role, while only these two values ship,
+ * not the table (`architecture:component-style-authoring` INV6).
+ */
+const PRESS_ROLES = {flashMs: PRESS_FLASH_MS, highlightOutMs: PRESS_FADE_MS};
+
+/**
+ * How long a timer runs on `element`. A quick tap's flash and the release's
+ * clock read their motion roles under the element (`timing.press.flashMs`,
+ * and the deselect's `timing.press.highlightOutMs`: PRESS_FADE_MS, the value
+ * the stylesheet's release plays, unless a theme's knobs transform it,
+ * `spec:AST-094` DEC-15); a longer release animation is waited for
+ * (endAfterRelease). The release's clock is capped under reduced motion by
+ * the Reduce Motion cross-fade's duration, as the stylesheet caps its fade
+ * (`design:reduced-motion` DR2: a touch transition finishes within it;
+ * `spec:AST-094` FR4: the cap is a role, never a literal), read from the
+ * fade's own export, so the controller ships that one value, not the rest
+ * of the timing table (`architecture:component-style-authoring` INV6).
  */
 function timerMs(
   kind: NonNullable<PressStep['timer']>,
   element: Element,
 ): number {
+  if (kind === 'flash') {
+    // The quick tap's flash, on its motion role under the pressed element.
+    return resolveMotion(element, PRESS_ROLES, 'flashMs');
+  }
   if (kind !== 'fade') {
     return TIMER_MS[kind];
   }
+  const releaseMs = resolveMotion(element, PRESS_ROLES, 'highlightOutMs');
   const reduced =
     element.ownerDocument.defaultView?.matchMedia?.(
       '(prefers-reduced-motion: reduce)',
     ).matches ?? false;
   return reduced
-    ? Math.min(TIMER_MS.fade, reducedMotionCrossFade.durationMs)
-    : TIMER_MS.fade;
+    ? Math.min(releaseMs, reducedMotionCrossFade.durationMs)
+    : releaseMs;
 }
 
 const TIMER_EVENT = {
@@ -563,12 +588,37 @@ function apply(slot: Slot, step: PressStep): void {
  * disabled surface takes it and paints nothing, so a press on a disabled
  * control does not light the row around it.
  */
+/**
+ * A native control nested in a pressable surface: a press on it is the
+ * control's own, not the surface's, unless it is the surface's activator.
+ */
+const NESTED_CONTROL = 'a[href], button, [role="button"], [role="link"]';
+/**
+ * A surface's activator is its first control in tree order: the radio a
+ * RadioList row delegates to, the invisible button or link an Item row's
+ * content sits in. A press on the activator is the surface's.
+ */
+const ACTIVATOR = `input, select, textarea, ${NESTED_CONTROL}`;
+
 function surfaceAt(target: EventTarget | null): HTMLElement | null {
   if (!(target instanceof Element)) {
     return null;
   }
   const found = target.closest(`[${PRESSABLE_ATTRIBUTE}]`);
   if (!(found instanceof HTMLElement) || found.matches(DISABLED)) {
+    return null;
+  }
+  // A native control inside the surface other than its activator (a link or
+  // a button in a row's description) takes its own press, for every
+  // pointer: the rule RadioListItem's `:active:not(:has(...))` arm kept for
+  // a mouse.
+  const control = target.closest(NESTED_CONTROL);
+  if (
+    control != null &&
+    control !== found &&
+    found.contains(control) &&
+    control !== found.querySelector(ACTIVATOR)
+  ) {
     return null;
   }
   return found;
@@ -638,9 +688,10 @@ function takeOver(other: Slot, element: HTMLElement): void {
 }
 
 /**
- * Whether presses with a mouse or a key are the controller's to paint here.
- * Asked at each such press: rendering a pressable never queries the pointer,
- * so a layout that must not depend on it stays independent.
+ * Whether the stylesheet drops `:active` here (a coarse primary pointer): a
+ * Space press is then the controller's to paint. Asked at each such press:
+ * rendering a pressable never queries the pointer, so a layout that must
+ * not depend on it stays independent.
  */
 function stylesheetDroppedActive(): boolean {
   // The shared touch resolver's key (`spec:AST-012` FR2): the condition the
@@ -709,13 +760,18 @@ function cancelButton(): void {
 
 function onPointerDown(event: PointerEvent): void {
   if (event.pointerType === 'mouse') {
-    // A mouse already has hover and keeps `:active` where the primary pointer
-    // is fine; the touch treatment's CSS is inside `@media (pointer: coarse)`.
-    // Not tracking it there keeps desktop identical and costs the mouse path
-    // nothing. Only the primary button: that is the press `:active` paints.
-    if (event.button === 0 && stylesheetDroppedActive()) {
+    // A mouse is a fine pointer: its press paints at once, through this
+    // controller and the release fade a finger's has, in place of the
+    // browser's `:active` (`spec:AST-094` FR11, FR43, DEC-21). Only a
+    // primary click: a right click and a ctrl-click on macOS ask for the
+    // context menu.
+    if (isPrimaryClick(event)) {
       pressButton(event.target, event.pointerId);
     }
+    return;
+  }
+  if (event.pointerType === 'pen' && !isPrimaryClick(event)) {
+    // A pen's barrel or eraser button: not a press.
     return;
   }
   armTouchCancel();
@@ -740,7 +796,12 @@ function onPointerDown(event: PointerEvent): void {
   // question the brake asks is whether a PREVIOUS finger could still be
   // driving this scroll, and stamping first would make every first touch on a
   // freshly restored page answer yes.
-  const braking = element != null && scrollerIsBraking(element);
+  // The brake is a finger's: a pen, a fine pointer, presses at once, even on
+  // a list a finger left moving (FR11).
+  const braking =
+    event.pointerType === 'touch' &&
+    element != null &&
+    scrollerIsBraking(element);
   lastTouchAt = Date.now();
   lastTouchTarget = event.target instanceof Node ? event.target : null;
   if (element == null || braking) {
@@ -759,7 +820,9 @@ function onPointerDown(event: PointerEvent): void {
       kind: 'down',
       x: event.clientX,
       y: event.clientY,
-      delayed: isInsideScroller(element),
+      // A pen presses at once, in a scroll view too: the content-touch delay
+      // waits out a finger's scroll (FR11).
+      delayed: event.pointerType === 'touch' && isInsideScroller(element),
     }),
   );
 }
