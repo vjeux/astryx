@@ -339,7 +339,11 @@ const TIMER_EVENT = {
 export type PressPaint = 'on' | 'held' | 'fading' | 'none';
 
 export interface PaintPressOptions {
-  /** How long `fading` stays before the attribute goes, ms. @default the press fade */
+  /**
+   * The release's clock, ms: when it runs out, the controller checks for the
+   * release animation, and `fading` stays until that animation ends (or goes
+   * then, where none runs). @default the press fade
+   */
   releaseMs?: number;
   /** The current values this write may replace. @default none, on, fading */
   onlyFrom?: ReadonlyArray<PressPaint>;
@@ -348,8 +352,8 @@ export interface PaintPressOptions {
 /** What a press may replace: a `held` row is its owner's until released. */
 const PRESS_REPLACES: ReadonlyArray<PressPaint> = ['none', 'on', 'fading'];
 const PAINTS: ReadonlySet<string> = new Set(['on', 'held', 'fading']);
-/** A `fading` paint's own release clock, per element (paintPress). */
-const fadeTimers = new WeakMap<Element, ReturnType<typeof setTimeout>>();
+/** Cancels a `fading` paint's own release, per element (paintPress). */
+const fadeTimers = new WeakMap<Element, () => void>();
 
 /**
  * The release animations running for `element`'s press: CSS animations on it
@@ -452,7 +456,7 @@ function writePress(
   }
   const pending = fadeTimers.get(element);
   if (pending != null) {
-    clearTimeout(pending);
+    pending();
     fadeTimers.delete(element);
   }
   if (next === 'none') {
@@ -466,8 +470,9 @@ function writePress(
 /**
  * Paint `next` on `element` if its current press state is in `onlyFrom`
  * (by default none, on or fading: a hold survives a press, and its owner
- * releases it with `onlyFrom: ['held']`). A `fading` paint ends on its own
- * clock. Returns whether it painted. For a painter other than the touch
+ * releases it with `onlyFrom: ['held']`). A `fading` paint ends when its
+ * release animation does, or on its own clock where none runs
+ * (endAfterRelease). Returns whether it painted. For a painter other than the touch
  * press controller: a group that tracks its selection, a row that keeps its
  * selection through a navigation.
  */
@@ -482,12 +487,12 @@ export function paintPress(
   if (next === 'fading') {
     fadeTimers.set(
       element,
-      setTimeout(() => {
+      endAfterRelease(element, options.releaseMs ?? PRESS_FADE_MS, () => {
         fadeTimers.delete(element);
         if (element.getAttribute(PRESSED_ATTRIBUTE) === 'fading') {
           element.removeAttribute(PRESSED_ATTRIBUTE);
         }
-      }, options.releaseMs ?? PRESS_FADE_MS),
+      }),
     );
   }
   return true;
