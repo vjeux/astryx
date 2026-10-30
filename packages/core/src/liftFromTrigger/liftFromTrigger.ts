@@ -505,22 +505,24 @@ export function animateBackdrop(
       ...options,
       pseudoElement: '::backdrop',
     });
-  } catch {
-    // No `::backdrop` animations: the lift shows without its decoration.
-    return null;
+  } catch (error) {
+    // An engine that cannot animate `::backdrop` rejects the pseudo-element
+    // with a SyntaxError (Web Animations, KeyframeEffect's pseudoElement):
+    // the lift then shows without that motion. Any other error is real.
+    if (error instanceof DOMException && error.name === 'SyntaxError') {
+      return null;
+    }
+    throw error;
   }
 }
 
 /** The `::backdrop` opacity `element` shows now, or `fallback`. */
 function backdropOpacity(element: HTMLElement, fallback: number): number {
-  try {
-    const shown = Number.parseFloat(
-      getComputedStyle(element, '::backdrop').opacity,
-    );
-    return Number.isFinite(shown) ? shown : fallback;
-  } catch {
-    return fallback;
-  }
+  // An engine without `::backdrop` styles reports an empty opacity.
+  const shown = Number.parseFloat(
+    getComputedStyle(element, '::backdrop').opacity,
+  );
+  return Number.isFinite(shown) ? shown : fallback;
 }
 
 /**
