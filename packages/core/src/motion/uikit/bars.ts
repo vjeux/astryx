@@ -5,7 +5,8 @@
  * @input Nothing; data only
  * @output Exports `bars`: when the iOS 26 scroll edge effect under a
  *   navigation bar appears and leaves, the springs it fades on, how far it
- *   reaches below the bar, and the shape of its veil
+ *   reaches below the bar, and the shape of its veil; how far a bar button's
+ *   capsule reaches past its cells
  * @position The bars domain of the UIKit constants table (motion/uikit)
  *
  * On iOS 26.2 a navigation bar paints no background of its own: its
@@ -24,6 +25,11 @@
  * step and every frame, and `-[CALayer addAnimation:forKey:]` hooked on it.
  * Lengths are in pt (CSS px).
  *
+ * The bar's height and the capsules' sizes are not here: the default
+ * Astryx look grows no box for touch (`spec:AST-094` FR42, DEC-20), so they
+ * would be a theme's adaptation. TopNav's phone bar takes only the cell
+ * inset, as how far its capsule's paint reaches past its controls.
+ *
  * Every leaf carries one or more `@source`; uikit.test.ts enforces it.
  *
  * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md
@@ -32,6 +38,27 @@
 import {registerMotionTable} from '../roles';
 
 export const bars = {
+  /**
+   * iOS 26 bar buttons sit on glass capsules
+   * (`_UINavigationBarPlatterGlassView`): image items side by side share
+   * one capsule, every other item gets its own, and a fixed space splits a
+   * run. The glass has no shadow layer, and its colour follows the content
+   * behind it rather than the appearance (white over a white list, #191919
+   * over a black one, in light and dark mode alike); on the web the
+   * capsule paints the theme's general surface, opaque, with nothing
+   * blurred.
+   */
+  buttonCapsules: {
+    /**
+     * Inside a capsule, the items' cells start this many pt in from each
+     * end, and above and below.
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, one `_UIButtonBarButton` per item, the first starting
+     *   4 pt in from the capsule's end, and a 36 pt cell at y 66 inside the
+     *   44 pt glass view at y 62 (batch 18c), Oct 24 2026
+     */
+    cellInsetPt: 4,
+  },
   scrollEdgeEffect: {
     /**
      * The soft top edge effect is off while the content sits at most this
