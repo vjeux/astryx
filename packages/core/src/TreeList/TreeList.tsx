@@ -545,10 +545,8 @@ export function TreeList({
         : ancestorsIsLast;
 
       const isExiting = exitingIds.has(item.id);
-      // Rendered by the row when it shows them: while expanded, while a
-      // handle's exit plays (isExiting), and, with no handle, while the
-      // touch slide carries them away after a collapse
-      // (useTreeExpansionMotion).
+      // Rendered by the row when it shows them: while expanded, and while a
+      // handle's exit plays (isExiting).
       const renderChildren = hasChildren
         ? (): ReactNode =>
             renderItems(
