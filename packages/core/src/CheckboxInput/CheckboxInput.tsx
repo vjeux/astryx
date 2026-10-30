@@ -5,7 +5,9 @@
 /**
  * @file CheckboxInput.tsx
  * @input Uses React, useId, ChangeEvent, FieldLabel, FieldStatus, IconType, InputStatus, useTooltip,
- *   CheckboxRowPressContext (a row around the checkbox that owns its press)
+ *   CheckboxRowPressContext (a row around the checkbox that owns its press),
+ *   the press release clocks (controlPressConsts, cellPressConsts) and the Reduce
+ *   Motion fade (reducedMotionFadeConsts)
  * @output Exports CheckboxInput component, CheckboxInputProps
  * @position Core implementation; consumed by index.ts, tested by CheckboxInput.test.tsx
  *
@@ -47,7 +49,10 @@ import {Spinner} from '../Spinner';
 import {useTooltip} from '../Tooltip';
 import {mergeProps, rtlStyles} from '../utils';
 import {indicatorScope} from '../Indicator/indicator.markers.stylex';
-import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {indicatorPressOwnerStyles} from '../Indicator/indicatorPress.stylex';
+import {cellPressConsts} from '../utils/rowPressLayer.stylex';
+import {controlPressConsts} from '../utils/controlPressLayer.stylex';
+import {reducedMotionFadeConsts} from '../motion/reducedMotion.stylex';
 import {useTranslator} from '../i18n';
 import {useIndicatorFocusRing} from '../hooks/useIndicatorFocusRing';
 import {useBusyAnnouncement} from '../hooks/useBusyAnnouncement';
@@ -59,11 +64,11 @@ import {themeProps} from '../utils/themeProps';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 import {CheckboxRowPressContext} from './CheckboxRowPressContext';
 
-// The touch press's paint, declared by the shared overlay styles on the
-// element the controller writes to (`pressedAlpha`) at the press's strength,
-// 1 while on and 1 → 0 over the release, and inherited resolved by the layer
-// that paints it. See interactionOverlay.stylex.ts.
-const pressedOverlayImage = 'var(--_press-paint-image)';
+const COARSE = '@media (pointer: coarse)';
+/** A control's release (UIButton's), when the checkbox owns the press. */
+const CONTROL_RELEASE = `${controlPressConsts.controlReleaseMs}ms`;
+/** A cell's release (the row's deselect), when a row owns the press. */
+const CELL_RELEASE = `${cellPressConsts.cellReleaseMs}ms`;
 
 const styles = stylex.create({
   container: {
@@ -85,11 +90,27 @@ const styles = stylex.create({
   // The owner paints this layer over the resolved indicator, so a theme
   // replacement cannot accidentally drop the component's pressed contract.
   // Two pointers, two press models (see interactionOverlay.stylex.ts): a
-  // mouse keeps `:active`; under a coarse pointer that arm is dropped and the
-  // touch press controller writes `data-astryx-press` on the row, which this layer
-  // reads off the same scope marker as the hover tint — or, for the row's own
-  // checkbox under a row that owns the press (CheckboxRowPressContext), paints
-  // that row's own press paint (indicatorRowPressOverlay).
+  // mouse keeps `:active` (read off `indicatorScope`, as the hover tint is);
+  // under a coarse pointer that arm is dropped and the touch press controller
+  // writes `data-astryx-press` on the element that owns the press: the
+  // checkbox's own control or, for the row's own checkbox, a row that owns it
+  // (CheckboxRowPressContext).
+  //
+  // The touch press is this layer's own: the pressed token at full strength
+  // while the press is on, and a release of the layer's opacity, 1 → 0, on
+  // the press's clock (a control's, UIButton's highlight release, when the
+  // checkbox owns the press; a cell's, the row's deselect, when a row does).
+  // Opacity runs on the compositor, so the release keeps moving while script
+  // runs, in step with a row's own press layer (rowPressLayerStyles.cell).
+  // The owner declares the press's image and release on itself
+  // (indicatorPressOwnerStyles) and the layer reads its nearest owner's, so a
+  // checkbox inside another owner's content (a radio row, a list row) answers
+  // only its own press (`architecture:component-style-authoring` INV4).
+  // Every rule for a press the controller writes, the release's clock, curve
+  // and fill included, is in the coarse media key: touch work leaves a fine
+  // pointer's behavior as it is (spec:AST-017 FR59). Under Reduce Motion the
+  // release is the policy's fade (reducedMotionFadeConsts;
+  // `design:reduced-motion` DR2), like the row's.
   indicatorPressOverlay: {
     '::after': {
       content: '""',
@@ -101,41 +122,62 @@ const styles = stylex.create({
         default: 'transparent',
         [stylex.when.ancestor(':active', indicatorScope)]: {
           default: colorVars['--color-overlay-pressed'],
-          '@media (pointer: coarse)': 'transparent',
+          [COARSE]: 'transparent',
         },
       },
-      // The touch press, as an image layer over the colour: an image change is
-      // discrete, so no transition can delay the onset, and the strength the
-      // row's `pressedAlpha` arms own (1 while on, 1 → 0 over the release) is
-      // what moves. Coarse pointers only, like the drop above.
+      // An image layer over the colour: an image change is discrete, so no
+      // transition can delay the onset. The owner declares the image and the
+      // release (indicatorPressOwnerStyles); the layer reads them, under a
+      // coarse pointer only.
       backgroundImage: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="on"]', indicatorScope)]: {
-          default: null,
-          '@media (pointer: coarse)': pressedOverlayImage,
-        },
-        [stylex.when.ancestor('[data-astryx-press="fading"]', indicatorScope)]:
-          {
-            default: null,
-            '@media (pointer: coarse)': pressedOverlayImage,
-          },
+        '@media (pointer: coarse)': 'var(--_indicator-press-image, none)',
       },
+      animationName: {
+        default: null,
+        '@media (pointer: coarse)': 'var(--_indicator-press-release, none)',
+      },
+      animationDuration: {
+        default: null,
+        '@media (pointer: coarse)': {
+          default: CONTROL_RELEASE,
+          '@media (prefers-reduced-motion: reduce)':
+            reducedMotionFadeConsts.duration,
+        },
+      },
+      animationTimingFunction: {
+        default: null,
+        '@media (pointer: coarse)': {
+          default: controlPressConsts.controlReleaseEase,
+          '@media (prefers-reduced-motion: reduce)':
+            reducedMotionFadeConsts.easing,
+        },
+      },
+      animationFillMode: {default: null, '@media (pointer: coarse)': 'both'},
     },
   },
   // The row's own checkbox, under a row that owns the press
-  // (CheckboxRowPressContext): the layer paints the row's own press paint,
-  // which that row declares (`--_checkbox-row-press-paint`): none at rest,
-  // and the press paint the row's shared overlay style declares at the
-  // press's strength only inside that row's own press arms, under a coarse
-  // pointer (CheckboxListItem). The box reads its nearest row's value, so the
-  // row and the box are one press and nothing else reaches the box: not an
-  // outer row around a list placed in this row's content, not a pressed
-  // ClickableCard, not a pen on a fine-pointer page. A checkbox placed in the
-  // row's content declares its own paint and keeps its own press. It replaces
-  // the scope arms: this checkbox's own container is never pressed.
+  // (CheckboxRowPressContext): the same layer, reading that row's press, on a
+  // cell's clock. Only that checkbox takes it, so a CheckboxInput placed in
+  // the row's content keeps its own press.
   indicatorRowPressOverlay: {
     '::after': {
-      backgroundImage: 'var(--_checkbox-row-press-paint, none)',
+      animationDuration: {
+        default: null,
+        '@media (pointer: coarse)': {
+          default: CELL_RELEASE,
+          '@media (prefers-reduced-motion: reduce)':
+            reducedMotionFadeConsts.duration,
+        },
+      },
+      animationTimingFunction: {
+        default: null,
+        '@media (pointer: coarse)': {
+          default: cellPressConsts.cellReleaseEase,
+          '@media (prefers-reduced-motion: reduce)':
+            reducedMotionFadeConsts.easing,
+        },
+      },
     },
   },
   // Holds only the indicator, so the focus ring has one unambiguous target.
@@ -359,8 +401,8 @@ export function CheckboxInput({
   'aria-describedby': ariaDescribedByProp,
   ...rest
 }: CheckboxInputProps) {
-  // The row is the pressable: the overlay's pressed arm reads the row's
-  // scope marker, the way the indicator's hover tint does.
+  // The control is the pressable (a control's profile): the layer over the
+  // box reads its press off the control's scope marker.
   const pressable = usePressFeedback();
   // A row around the checkbox that answers a press anywhere on it (a
   // CheckboxListItem) owns the touch press instead: the checkbox carries no
@@ -472,13 +514,13 @@ export function CheckboxInput({
           styles.container,
           isLabelHidden && styles.containerLabelHidden,
           // Hover and focus reach the checkbox visual through this ancestor
-          // marker rather than props, so the whole row drives it.
+          // marker rather than props, so the whole row drives it. The touch
+          // press is painted and released by the layer over the box itself,
+          // so nothing here carries a press strength.
           !isDisabled && indicatorScope,
-          // The touch press's strength and release live on the row the
-          // controller writes to; the layer over the checkbox box inherits
-          // and paints it. Under a row that owns the press, the box inherits
-          // that row's strength instead.
-          ownsPress && interactionOverlayStyles.pressedAlpha,
+          // When the checkbox owns its touch press, the control declares the
+          // press's image and release for the layer over its box.
+          ownsPress && indicatorPressOwnerStyles.owner,
         )}>
         <div
           {...stylex.props(

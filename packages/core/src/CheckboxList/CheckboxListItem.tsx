@@ -5,9 +5,9 @@
 /**
  * @file CheckboxListItem.tsx
  * @input Uses React, CheckboxInput, ListItem, CheckboxListContext,
- *   CheckboxRowPressContext, the shared touch-pointer store and the row's
- *   own press paint (under a coarse primary pointer the row owns its
- *   checkbox's press)
+ *   CheckboxRowPressContext, the shared touch-pointer store and
+ *   indicatorPressOwnerStyles (under a coarse primary pointer the row owns
+ *   its checkbox's press)
  * @output Exports CheckboxListItem component, CheckboxListItemProps
  * @position Core implementation; consumed by index.ts, tested by CheckboxList.test.tsx
  *
@@ -28,6 +28,7 @@ import type {BaseProps} from '../BaseProps';
 import {CheckboxInput} from '../CheckboxInput/CheckboxInput';
 import type {CheckboxInputProps} from '../CheckboxInput/CheckboxInput';
 import {CheckboxRowPressContext} from '../CheckboxInput/CheckboxRowPressContext';
+import {indicatorPressOwnerStyles} from '../Indicator/indicatorPress.stylex';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {useIsTouchPointer} from '../utils/touchPointerStore';
 import {ListItem} from '../List/ListItem';
@@ -44,25 +45,6 @@ import type {ItemAlign} from '../Item';
 const styles = stylex.create({
   selected: {
     backgroundColor: colorVars['--color-accent-muted'],
-  },
-  // The row's own press paint, for the layer over its checkbox's box: none
-  // at rest, and the press paint (the row's shared overlay style declares it
-  // at the press's strength) only inside this row's own press arms, under a
-  // coarse pointer. Every row that owns its press declares it, so a box reads
-  // its nearest row's value: a list placed in a row's content keeps its own
-  // rows' paint (`architecture:component-style-authoring` INV4).
-  rowPressPaint: {
-    '--_checkbox-row-press-paint': {
-      default: 'none',
-      ':is([data-astryx-press="on"])': {
-        default: 'none',
-        '@media (pointer: coarse)': 'var(--_press-paint-image)',
-      },
-      ':is([data-astryx-press="fading"])': {
-        default: 'none',
-        '@media (pointer: coarse)': 'var(--_press-paint-image)',
-      },
-    },
   },
 });
 
@@ -301,10 +283,10 @@ export function CheckboxListItem({
   // answer (spec:AST-094 FR13).
   const isTouch = useIsTouchPointer();
   const rowOwnsPress = isTouch && hasRowInteraction && !effectiveDisabled;
-  // The row's own press arms (the row's press paint) key on the attribute
-  // the touch press controller writes on this row, so the row names itself
-  // pressable here too: every file with a press arm stays verifiably
-  // reachable by the controller (pressableCoverage.test.ts).
+  // The row's own press arms (the press's image and release it declares)
+  // key on the attribute the touch press controller writes on this row, so
+  // the row names itself pressable here too: every file with a press arm
+  // stays verifiably reachable by the controller (pressableCoverage.test.ts).
   const pressable = usePressFeedback();
 
   // A read-only checkbox carries aria-readonly, which the row's clickable
@@ -362,8 +344,9 @@ export function CheckboxListItem({
       aria-busy={isBusy || undefined}
       xstyle={
         [
-          // The row's own press paint, which the layer over its box reads.
-          rowOwnsPress && styles.rowPressPaint,
+          // The row owns its checkbox's touch press: it declares the press's
+          // image and release for the layer over its box.
+          rowOwnsPress && indicatorPressOwnerStyles.owner,
           resolvedChecked === true &&
             !effectiveDisabled &&
             !effectiveReadOnly &&
