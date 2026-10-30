@@ -23,7 +23,11 @@ import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {UIKIT_CONTROL} from '../motion/uikit/gestures';
 import {getGestureHost} from './GestureHost';
 import type {GestureRecognizer} from './GestureRecognizer';
-import {PressTracker, type PressTrackerOptions} from './PressTracker';
+import {
+  createPressTracker,
+  type PressTracker,
+  type PressTrackerOptions,
+} from './PressTracker';
 import {
   isSyncingGestures,
   useAttachment,
@@ -92,54 +96,53 @@ export function usePressTracker(
   // survives it (the change applies from the tracker's next read).
   // `keepsTouch` is the exception, fixed when the tracker is created: it
   // decides whether the host gives the element a blocking touchmove.
-  const [tracker] = useState(
-    () =>
-      new PressTracker({
-        getBounds: () => {
-          const element = refRef.current.current;
-          return element == null
-            ? null
-            : getGestureHost(element.ownerDocument).presentedRect(element);
-        },
-        get view() {
-          return refRef.current.current;
-        },
-        onControlEvent: (event, touch) =>
-          deliver(() => optionsRef.current.onControlEvent?.(event, touch)),
-        onHighlightChange: isHighlighted =>
-          deliver(() => optionsRef.current.onHighlightChange?.(isHighlighted)),
-        trackingExpansion: options.trackingExpansion,
-        get highlightDelay() {
-          return optionsRef.current.highlightDelay;
-        },
-        get cancelTravel() {
-          return optionsRef.current.cancelTravel;
-        },
-        get quickTapFlash() {
-          return optionsRef.current.quickTapFlash;
-        },
-        keepsTouch: options.keepsTouch,
-        get selectionLock() {
-          return optionsRef.current.selectionLock;
-        },
-        vetoesAncestorRecognizer: recognizer =>
-          optionsRef.current.vetoesAncestorRecognizer?.(recognizer) ??
-          defaultVeto(recognizer),
-        isEnabled: () => optionsRef.current.isEnabled?.() ?? true,
-        // The caller's brake, or the host's: a touch that stops a flick
-        // presses nothing, as a UIKit control in a decelerating scroll view.
-        isBraking: touch => {
-          const own = optionsRef.current.isBraking;
-          if (own != null) {
-            return own(touch);
-          }
-          const element = refRef.current.current;
-          return (
-            element != null &&
-            getGestureHost(element.ownerDocument).isScrollBraking(element)
-          );
-        },
-      }),
+  const [tracker] = useState(() =>
+    createPressTracker({
+      getBounds: () => {
+        const element = refRef.current.current;
+        return element == null
+          ? null
+          : getGestureHost(element.ownerDocument).presentedRect(element);
+      },
+      get view() {
+        return refRef.current.current;
+      },
+      onControlEvent: (event, touch) =>
+        deliver(() => optionsRef.current.onControlEvent?.(event, touch)),
+      onHighlightChange: isHighlighted =>
+        deliver(() => optionsRef.current.onHighlightChange?.(isHighlighted)),
+      trackingExpansion: options.trackingExpansion,
+      get highlightDelay() {
+        return optionsRef.current.highlightDelay;
+      },
+      get cancelTravel() {
+        return optionsRef.current.cancelTravel;
+      },
+      get quickTapFlash() {
+        return optionsRef.current.quickTapFlash;
+      },
+      keepsTouch: options.keepsTouch,
+      get selectionLock() {
+        return optionsRef.current.selectionLock;
+      },
+      vetoesAncestorRecognizer: recognizer =>
+        optionsRef.current.vetoesAncestorRecognizer?.(recognizer) ??
+        defaultVeto(recognizer),
+      isEnabled: () => optionsRef.current.isEnabled?.() ?? true,
+      // The caller's brake, or the host's: a touch that stops a flick
+      // presses nothing, as a UIKit control in a decelerating scroll view.
+      isBraking: touch => {
+        const own = optionsRef.current.isBraking;
+        if (own != null) {
+          return own(touch);
+        }
+        const element = refRef.current.current;
+        return (
+          element != null &&
+          getGestureHost(element.ownerDocument).isScrollBraking(element)
+        );
+      },
+    }),
   );
   const {trackingExpansion} = options;
   // Syncs the tracker's tracking expansion with the option.

@@ -20,7 +20,7 @@ import {GestureHost} from '../GestureHost';
 import {HoverGestureRecognizer} from '../HoverGestureRecognizer';
 import {LongPressGestureRecognizer} from '../LongPressGestureRecognizer';
 import {PanGestureRecognizer} from '../PanGestureRecognizer';
-import {PressTracker} from '../PressTracker';
+import {createPressTracker} from '../PressTracker';
 import type {SelectionLock} from '../GestureRecognizer';
 import {VelocityTracker} from '../VelocityTracker';
 import {ScreenEdgePanGestureRecognizer} from '../ScreenEdgePanGestureRecognizer';
@@ -75,6 +75,9 @@ function pointer(
     button?: number;
     buttons?: number;
     ctrlKey?: boolean;
+    metaKey?: boolean;
+    shiftKey?: boolean;
+    altKey?: boolean;
     time: number;
   },
 ): Event {
@@ -89,6 +92,9 @@ function pointer(
     button: init.button ?? 0,
     buttons: init.buttons ?? 0,
     ctrlKey: init.ctrlKey ?? false,
+    metaKey: init.metaKey ?? false,
+    shiftKey: init.shiftKey ?? false,
+    altKey: init.altKey ?? false,
   });
   Object.defineProperty(event, 'timeStamp', {value: init.time});
   target.dispatchEvent(event);
@@ -2546,7 +2552,7 @@ describe('GestureHost', () => {
     detachers.push(
       host.attachConsumer(
         stepper,
-        new PressTracker({getBounds: () => null, keepsTouch: true}),
+        createPressTracker({getBounds: () => null, keepsTouch: true}),
       ),
     );
     const held = {id: 1, x: 5, y: 5};
@@ -2577,11 +2583,11 @@ describe('GestureHost', () => {
     detachers.push(
       host.attachConsumer(
         stepper,
-        new PressTracker({getBounds: () => null, keepsTouch: true}),
+        createPressTracker({getBounds: () => null, keepsTouch: true}),
       ),
     );
     detachers.push(
-      host.attachConsumer(row, new PressTracker({getBounds: () => null})),
+      host.attachConsumer(row, createPressTracker({getBounds: () => null})),
     );
     expect(stepper.getAttribute('data-astryx-touch-action')).toBe(
       'manipulation',
@@ -3342,7 +3348,7 @@ describe('where the primary pointer is fine (spec:AST-094 FR43, FR24)', () => {
     detachers.push(
       host.attachConsumer(
         stepper,
-        new PressTracker({
+        createPressTracker({
           getBounds: () => ({left: 0, top: 0, right: 100, bottom: 100}),
           onHighlightChange: value => highlights.push(value),
         }),
@@ -4134,6 +4140,41 @@ describe('gestures attach for every pointer (spec:AST-094 FR43, FR19, FR24)', ()
     }
     expect(['began', 'changed']).toContain(swipe.state);
     expect(last?.defaultPrevented).toBe(true);
+  });
+
+  it('hands a recognizer the modifier keys a press began with, so a group can leave a Ctrl-, Cmd- or Shift-click on a link to the browser', () => {
+    const {box} = mount('<div id="box"></div>');
+    const fine = fineHost();
+    const seen: GestureTouch[] = [];
+    detachers.push(
+      fine.attach(
+        box,
+        new TapGestureRecognizer({
+          shouldReceiveTouch: (_recognizer, touch) => {
+            seen.push(touch);
+            return true;
+          },
+        }),
+      ),
+    );
+    pointer('pointerdown', box, {
+      pointerType: 'mouse',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      metaKey: true,
+      shiftKey: true,
+      time: 0,
+    });
+    pointer('pointerup', box, {pointerType: 'mouse', x: 10, y: 10, time: 50});
+    expect(
+      seen.map(({ctrlKey, metaKey, shiftKey, altKey}) => ({
+        ctrlKey,
+        metaKey,
+        shiftKey,
+        altKey,
+      })),
+    ).toEqual([{ctrlKey: false, metaKey: true, shiftKey: true, altKey: false}]);
   });
 
   it("starts no press for a right click or a ctrl-click on macOS, that platform's context click, and starts one for a ctrl-click elsewhere (FR43)", () => {

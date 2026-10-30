@@ -3,7 +3,9 @@
 /**
  * @file PressTracker.ts
  * @input Touches the arena delivers to a pressable view (TouchConsumer)
- * @output Exports PressTracker (UIControl's touch tracking), its options, the
+ * @output Exports createPressTracker and its PressTracker interface
+ *   (UIControl's touch tracking, built by a factory per
+ *   architecture:react-component-runtime INV13), its options, the
  *   control event type, and PRESS_PROFILES (a control's and a table cell's
  *   tracking and release clock)
  * @position View-level consumer of packages/core/src/gestures: what a
@@ -45,7 +47,9 @@
  */
 
 import {UIKIT_CONTROL, UIKIT_PAN, UIKIT_PRESS} from '../motion/uikit/gestures';
-import {timing} from '../motion/uikit/timing';
+// The press clocks alone: the whole timing table would ship its curves with
+// every control (architecture:component-style-authoring INV6).
+import {press as pressClocks} from '../motion/uikit/timing';
 import {travel} from './geometry';
 import type {GestureRecognizer, SelectionLock} from './GestureRecognizer';
 import {internals} from './recognizerInternals';
@@ -146,7 +150,7 @@ export const PRESS_PROFILES = {
     // The shared press styles release every surface on the deselect clock
     // until a control runs its own release (UIButton's 250 ms), so a
     // painter's `fading` never outlasts the fade it shows.
-    releaseMs: timing.press.highlightOutMs,
+    releaseMs: pressClocks.highlightOutMs,
   },
   /**
    * A table or collection cell: inside a scroll view it highlights after the
@@ -157,7 +161,7 @@ export const PRESS_PROFILES = {
     highlightDelay: 'inScrollers',
     cancelTravel: UIKIT_PAN.hysteresis.value,
     quickTapFlash: 0,
-    releaseMs: timing.press.highlightOutMs,
+    releaseMs: pressClocks.highlightOutMs,
   },
 } as const satisfies Record<string, PressProfile>;
 
@@ -176,188 +180,32 @@ function vetoesSingleTap(recognizer: GestureRecognizer): boolean {
   return tap.numberOfTapsRequired === 1 && tap.numberOfTouchesRequired === 1;
 }
 
-export class PressTracker implements TouchConsumer {
-  isHighlighted = false;
-  private isKept = false;
-  isTracking = false;
-  isTouchInside = false;
+/**
+ * A control's touch tracking, the gesture host's consumer for one element
+ * (UIControl's `beginTracking` / `continueTracking` / `endTracking`): it
+ * reports control events and the highlight, and keeps a continuous-tracking
+ * control's touch. Built by {@link createPressTracker}.
+ */
+export interface PressTracker extends TouchConsumer {
+  /** Whether the control paints its pressed highlight now. */
+  readonly isHighlighted: boolean;
+  /** Whether a touch is being tracked. */
+  readonly isTracking: boolean;
+  /** Whether the tracked touch is inside the bounds plus the expansion. */
+  readonly isTouchInside: boolean;
+  /**
+   * How far past its bounds a tracked touch still counts as inside, px; its
+   * hook keeps it in step with the option.
+   */
   trackingExpansion: number;
-
-  private readonly options: PressTrackerOptions;
-  private touchId: number | null = null;
-  private bounds: PressBounds | null = null;
-  private highlightTimer: ReturnType<typeof setTimeout> | null = null;
-  private flashTimer: ReturnType<typeof setTimeout> | null = null;
-  /** A pending highlight whose finger travelled: it will never paint. */
-  private isPendingDead = false;
-
-  constructor(options: PressTrackerOptions) {
-    if (options.keepsTouch === true) {
-      // Only the tracked touch whose press was delivered is kept.
-      this.keepsTouch = touchId => this.isKept && this.touchId === touchId;
-    }
-    this.options = options;
-    this.trackingExpansion =
-      options.trackingExpansion ?? UIKIT_CONTROL.trackingExpansion.value;
-  }
-
   /**
    * Whether the control takes touches now: a disabled one gives the host no
    * reason to listen (`spec:AST-094` FR24).
    */
-  isEnabled(): boolean {
-    return this.options.isEnabled?.() !== false;
-  }
-
-  touchBegan(touch: GestureTouch): void {
-    if (
-      this.touchId != null ||
-      this.options.isEnabled?.() === false ||
-      // The scroll brake is a finger's (`spec:AST-094` FR11, DEC-21).
-      (touch.pointerType === 'touch' &&
-        this.options.isBraking?.(touch) === true)
-    ) {
-      return;
-    }
-    this.clearFlash();
-    this.touchId = touch.id;
-    this.bounds = this.options.getBounds();
-    this.isTracking = true;
-    this.isTouchInside = true;
-    this.isPendingDead = false;
-    this.emit('touchDown', touch);
-    const delay = this.options.highlightDelay ?? 'inScrollers';
-    const delays =
-      touch.pointerType === 'touch' &&
-      (delay === 'always' ||
-        (delay === 'inScrollers' && touch.scroll?.isInsideScroller === true));
-    if (delays) {
-      this.highlightTimer = setTimeout(() => {
-        this.highlightTimer = null;
-        if (this.isTouchInside) {
-          this.setHighlighted(true);
-        }
-      }, PRESS.contentTouchDelay.value);
-    } else {
-      this.setHighlighted(true);
-    }
-  }
-
-  touchMoved(touch: GestureTouch): void {
-    if (touch.id !== this.touchId) {
-      return;
-    }
-    const cancelTravel = this.options.cancelTravel;
-    if (cancelTravel != null && travel(touch) > cancelTravel) {
-      // A cell's scroll view took the touch: the press is over.
-      this.touchCancelled(touch);
-      return;
-    }
-    if (this.highlightTimer != null && travel(touch) > PRESS.slop.value) {
-      // A finger travelling before the delay ran out is scrolling: the
-      // press it began never paints, as a flick on a list paints nothing.
-      clearTimeout(this.highlightTimer);
-      this.highlightTimer = null;
-      this.isPendingDead = true;
-    }
-    const inside = this.contains(touch);
-    if (inside !== this.isTouchInside) {
-      this.isTouchInside = inside;
-      this.emit(inside ? 'touchDragEnter' : 'touchDragExit', touch);
-      if (this.highlightTimer == null && !this.isPendingDead) {
-        this.setHighlighted(inside);
-      }
-    }
-    this.emit(inside ? 'touchDragInside' : 'touchDragOutside', touch);
-  }
-
-  touchEnded(touch: GestureTouch): void {
-    if (touch.id !== this.touchId) {
-      return;
-    }
-    this.isKept = false;
-    const inside = this.contains(touch);
-    const wasPending = this.highlightTimer != null;
-    this.clearHighlightTimer();
-    this.emit(inside ? 'touchUpInside' : 'touchUpOutside', touch);
-    const flash = this.options.quickTapFlash ?? PRESS.quickTapFlash.value;
-    if (wasPending && inside) {
-      // Quicker than the delay: the highlight shows at the lift, for the
-      // flash, or (a cell) straight into the release.
-      this.setHighlighted(true);
-      if (flash > 0) {
-        this.flashTimer = setTimeout(() => {
-          this.flashTimer = null;
-          this.setHighlighted(false);
-        }, flash);
-      } else {
-        this.setHighlighted(false);
-      }
-    } else {
-      this.setHighlighted(false);
-    }
-    this.finish();
-  }
-
-  touchCancelled(touch: GestureTouch): void {
-    if (touch.id !== this.touchId) {
-      return;
-    }
-    this.isKept = false;
-    this.clearHighlightTimer();
-    this.emit('touchCancel', touch);
-    this.setHighlighted(false);
-    this.finish();
-  }
-
-  allowsAncestorRecognizer(recognizer: unknown): boolean {
-    const candidate = recognizer as GestureRecognizer;
-    if (candidate.view != null && candidate.view === this.options.view) {
-      return true;
-    }
-    const vetoes = this.options.vetoesAncestorRecognizer ?? vetoesSingleTap;
-    return !vetoes(candidate);
-  }
-
+  isEnabled(): boolean;
+  allowsAncestorRecognizer(recognizer: unknown): boolean;
   /** Drop any highlight and timers (the control unmounted or was disabled). */
-  dispose(): void {
-    this.clearHighlightTimer();
-    this.clearFlash();
-    this.setHighlighted(false);
-    this.finish();
-  }
-
-  private contains(touch: GestureTouch): boolean {
-    const bounds = this.bounds;
-    if (bounds == null) {
-      return true;
-    }
-    const margin = this.trackingExpansion;
-    return (
-      touch.x >= bounds.left - margin &&
-      touch.x <= bounds.right + margin &&
-      touch.y >= bounds.top - margin &&
-      touch.y <= bounds.bottom + margin
-    );
-  }
-
-  private emit(event: ControlEvent, touch: GestureTouch): void {
-    this.options.onControlEvent?.(event, touch);
-  }
-
-  private setHighlighted(value: boolean): void {
-    if (value && this.touchId != null) {
-      // Delivered: the control keeps this touch until it ends (also when a
-      // quick tap's flash is still showing as the press arrives).
-      this.isKept = true;
-    }
-    if (this.isHighlighted === value) {
-      return;
-    }
-    this.isHighlighted = value;
-    this.options.onHighlightChange?.(value);
-  }
-
+  dispose(): void;
   /**
    * Present only for a continuous-tracking control created with
    * `keepsTouch: true` (a held stepper): once its press is delivered, the
@@ -366,32 +214,222 @@ export class PressTracker implements TouchConsumer {
    * waits on the main thread.
    */
   readonly keepsTouch?: (touchId: number) => boolean;
-
   /** The selection lock of a control whose hold acts (FR41); see the option. */
-  get selectionLock(): SelectionLock | undefined {
-    return this.options.selectionLock;
-  }
+  readonly selectionLock: SelectionLock | undefined;
+}
 
-  private clearHighlightTimer(): void {
-    if (this.highlightTimer != null) {
-      clearTimeout(this.highlightTimer);
-      this.highlightTimer = null;
+/** Track a control's touches (see {@link PressTracker}). */
+export function createPressTracker(options: PressTrackerOptions): PressTracker {
+  let isKept = false;
+  let touchId: number | null = null;
+  let bounds: PressBounds | null = null;
+  let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+  let flashTimer: ReturnType<typeof setTimeout> | null = null;
+  /** A pending highlight whose finger travelled: it will never paint. */
+  let isPendingDead = false;
+
+  const state = {
+    isHighlighted: false,
+    isTracking: false,
+    isTouchInside: false,
+  };
+  const contains = (touch: GestureTouch): boolean => {
+    if (bounds == null) {
+      return true;
     }
-  }
+    const margin = tracker.trackingExpansion;
+    return (
+      touch.x >= bounds.left - margin &&
+      touch.x <= bounds.right + margin &&
+      touch.y >= bounds.top - margin &&
+      touch.y <= bounds.bottom + margin
+    );
+  };
 
-  private clearFlash(): void {
-    if (this.flashTimer != null) {
-      clearTimeout(this.flashTimer);
-      this.flashTimer = null;
+  const emit = (event: ControlEvent, touch: GestureTouch): void => {
+    options.onControlEvent?.(event, touch);
+  };
+
+  const setHighlighted = (value: boolean): void => {
+    if (value && touchId != null) {
+      // Delivered: the control keeps this touch until it ends (also when a
+      // quick tap's flash is still showing as the press arrives).
+      isKept = true;
     }
-  }
+    if (state.isHighlighted === value) {
+      return;
+    }
+    state.isHighlighted = value;
+    options.onHighlightChange?.(value);
+  };
 
-  private finish(): void {
+  const clearHighlightTimer = (): void => {
+    if (highlightTimer != null) {
+      clearTimeout(highlightTimer);
+      highlightTimer = null;
+    }
+  };
+
+  const clearFlash = (): void => {
+    if (flashTimer != null) {
+      clearTimeout(flashTimer);
+      flashTimer = null;
+    }
+  };
+
+  const finish = (): void => {
     // A highlight shown at the lift (a quick tap's flash) keeps nothing.
-    this.isKept = false;
-    this.touchId = null;
-    this.isTracking = false;
-    this.isTouchInside = false;
-    this.bounds = null;
+    isKept = false;
+    touchId = null;
+    state.isTracking = false;
+    state.isTouchInside = false;
+    bounds = null;
+  };
+
+  const touchCancelled = (touch: GestureTouch): void => {
+    if (touch.id !== touchId) {
+      return;
+    }
+    isKept = false;
+    clearHighlightTimer();
+    emit('touchCancel', touch);
+    setHighlighted(false);
+    finish();
+  };
+
+  const tracker: PressTracker = {
+    get isHighlighted() {
+      return state.isHighlighted;
+    },
+    get isTracking() {
+      return state.isTracking;
+    },
+    get isTouchInside() {
+      return state.isTouchInside;
+    },
+    trackingExpansion:
+      options.trackingExpansion ?? UIKIT_CONTROL.trackingExpansion.value,
+
+    isEnabled(): boolean {
+      return options.isEnabled?.() !== false;
+    },
+
+    touchBegan(touch: GestureTouch): void {
+      if (
+        touchId != null ||
+        options.isEnabled?.() === false ||
+        // The scroll brake is a finger's (`spec:AST-094` FR11, DEC-21).
+        (touch.pointerType === 'touch' && options.isBraking?.(touch) === true)
+      ) {
+        return;
+      }
+      clearFlash();
+      touchId = touch.id;
+      bounds = options.getBounds();
+      state.isTracking = true;
+      state.isTouchInside = true;
+      isPendingDead = false;
+      emit('touchDown', touch);
+      const delay = options.highlightDelay ?? 'inScrollers';
+      const delays =
+        touch.pointerType === 'touch' &&
+        (delay === 'always' ||
+          (delay === 'inScrollers' && touch.scroll?.isInsideScroller === true));
+      if (delays) {
+        highlightTimer = setTimeout(() => {
+          highlightTimer = null;
+          if (state.isTouchInside) {
+            setHighlighted(true);
+          }
+        }, PRESS.contentTouchDelay.value);
+      } else {
+        setHighlighted(true);
+      }
+    },
+
+    touchMoved(touch: GestureTouch): void {
+      if (touch.id !== touchId) {
+        return;
+      }
+      const cancelTravel = options.cancelTravel;
+      if (cancelTravel != null && travel(touch) > cancelTravel) {
+        // A cell's scroll view took the touch: the press is over.
+        touchCancelled(touch);
+        return;
+      }
+      if (highlightTimer != null && travel(touch) > PRESS.slop.value) {
+        // A finger travelling before the delay ran out is scrolling: the
+        // press it began never paints, as a flick on a list paints nothing.
+        clearTimeout(highlightTimer);
+        highlightTimer = null;
+        isPendingDead = true;
+      }
+      const inside = contains(touch);
+      if (inside !== state.isTouchInside) {
+        state.isTouchInside = inside;
+        emit(inside ? 'touchDragEnter' : 'touchDragExit', touch);
+        if (highlightTimer == null && !isPendingDead) {
+          setHighlighted(inside);
+        }
+      }
+      emit(inside ? 'touchDragInside' : 'touchDragOutside', touch);
+    },
+
+    touchEnded(touch: GestureTouch): void {
+      if (touch.id !== touchId) {
+        return;
+      }
+      isKept = false;
+      const inside = contains(touch);
+      const wasPending = highlightTimer != null;
+      clearHighlightTimer();
+      emit(inside ? 'touchUpInside' : 'touchUpOutside', touch);
+      const flash = options.quickTapFlash ?? PRESS.quickTapFlash.value;
+      if (wasPending && inside) {
+        // Quicker than the delay: the highlight shows at the lift, for the
+        // flash, or (a cell) straight into the release.
+        setHighlighted(true);
+        if (flash > 0) {
+          flashTimer = setTimeout(() => {
+            flashTimer = null;
+            setHighlighted(false);
+          }, flash);
+        } else {
+          setHighlighted(false);
+        }
+      } else {
+        setHighlighted(false);
+      }
+      finish();
+    },
+
+    touchCancelled,
+
+    allowsAncestorRecognizer(recognizer: unknown): boolean {
+      const candidate = recognizer as GestureRecognizer;
+      if (candidate.view != null && candidate.view === options.view) {
+        return true;
+      }
+      const vetoes = options.vetoesAncestorRecognizer ?? vetoesSingleTap;
+      return !vetoes(candidate);
+    },
+
+    dispose(): void {
+      clearHighlightTimer();
+      clearFlash();
+      setHighlighted(false);
+      finish();
+    },
+
+    get selectionLock() {
+      return options.selectionLock;
+    },
+  };
+  if (options.keepsTouch === true) {
+    // Only the tracked touch whose press was delivered is kept.
+    return Object.assign(tracker, {
+      keepsTouch: (id: number) => isKept && touchId === id,
+    });
   }
+  return tracker;
 }

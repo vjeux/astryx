@@ -29,6 +29,10 @@ export interface RotationGestureRecognizerOptions extends GestureRecognizerOptio
 }
 
 export class RotationGestureRecognizer extends GestureRecognizer {
+  override get kind(): GestureRecognizer['kind'] {
+    return 'rotation';
+  }
+
   hysteresis: number;
   private initialAngle = 0;
   private lastAngle = 0;

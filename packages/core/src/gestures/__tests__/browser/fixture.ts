@@ -17,7 +17,7 @@ import {LongPressGestureRecognizer} from '../../LongPressGestureRecognizer';
 import {PanGestureRecognizer} from '../../PanGestureRecognizer';
 import {lockSelection} from '../../../utils/selectionLock';
 import {PinchGestureRecognizer} from '../../PinchGestureRecognizer';
-import {PressTracker} from '../../PressTracker';
+import {createPressTracker} from '../../PressTracker';
 import {holdPageScroll} from '../../pageHold';
 import {TapGestureRecognizer} from '../../TapGestureRecognizer';
 import {internals} from '../../recognizerInternals';
@@ -229,7 +229,7 @@ const keptEvent = (state: string) =>
   window.__gestures.push({name: 'kept', state, time: performance.now()});
 host.attachConsumer(
   element('kept'),
-  new PressTracker({
+  createPressTracker({
     getBounds: () => element('kept').getBoundingClientRect(),
     keepsTouch: true,
     onControlEvent: event => keptEvent(event),

@@ -17,7 +17,7 @@ import {GestureHost} from '../GestureHost';
 import {HoverGestureRecognizer} from '../HoverGestureRecognizer';
 import {LongPressGestureRecognizer} from '../LongPressGestureRecognizer';
 import {PanGestureRecognizer} from '../PanGestureRecognizer';
-import {PressTracker} from '../PressTracker';
+import {createPressTracker} from '../PressTracker';
 import {TapGestureRecognizer} from '../TapGestureRecognizer';
 import type * as InputStreamModule from '../../utils/inputStream';
 import {ManualClock} from './harness';
@@ -171,7 +171,7 @@ describe('a fine primary pointer', () => {
     detachers.push(
       host.attachConsumer(
         stepper,
-        new PressTracker({getBounds: () => null, keepsTouch: true}),
+        createPressTracker({getBounds: () => null, keepsTouch: true}),
       ),
     );
     expect(touchMoves()).toBe(0);
@@ -269,7 +269,7 @@ describe('a fine primary pointer', () => {
     detachers.push(
       host.attachConsumer(
         stepper,
-        new PressTracker({getBounds: () => null, keepsTouch: true}),
+        createPressTracker({getBounds: () => null, keepsTouch: true}),
       ),
     );
     pointer('pointerdown', stepper, {

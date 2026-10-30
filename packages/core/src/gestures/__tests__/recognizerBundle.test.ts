@@ -94,9 +94,9 @@ describe('a gesture bundle', () => {
   it('ships press tracking without the tap recognizer, which it only reads', () => {
     const modules = bundledModules(`
       import {getGestureHost} from './GestureHost';
-      import {PressTracker} from './PressTracker';
+      import {createPressTracker} from './PressTracker';
       export function mount(element: Element): () => void {
-        const tracker = new PressTracker({
+        const tracker = createPressTracker({
           getBounds: () => element.getBoundingClientRect(),
           view: element,
         });
