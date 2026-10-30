@@ -9,6 +9,7 @@
  * SYNC: When NumberInput.tsx changes, update tests to match new behavior
  */
 
+import {readFileSync} from 'node:fs';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {act, useState} from 'react';
 import {render, screen, fireEvent, waitFor} from '@testing-library/react';
@@ -2439,7 +2440,9 @@ describe('NumberInput stepping', () => {
     });
 
     // UIStepper never becomes first responder, and focusing the field on a
-    // phone brings up the on-screen keyboard.
+    // phone brings up the on-screen keyboard. A tracked finger or pen steps
+    // through the gesture system (NumberInput.stepperTouch.test.tsx); a touch
+    // click the steppers did not track still steps, without focus.
     it('steps the value without focusing the input on a touch tap', () => {
       const onChange = vi.fn();
       render(
@@ -2495,6 +2498,37 @@ describe('NumberInput stepping', () => {
         expect(screen.getByRole('spinbutton')).toHaveFocus();
       },
     );
+
+    // Only a primary click presses a stepper (`spec:AST-094` FR43): a right
+    // click's press names no pointer, so the activation after it is judged
+    // on its own.
+    it('a right click on a stepper leaves the next activation with no pointer to focus the input where the primary pointer is fine', () => {
+      expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
+      const onChange = vi.fn();
+      render(
+        <NumberInput
+          label="Quantity"
+          value={5}
+          onChange={onChange}
+          hasNumberSteppers
+        />,
+      );
+      const increment = screen.getByRole('button', {
+        name: 'Increment Quantity',
+      });
+      fireEvent.pointerDown(increment, {
+        pointerType: 'mouse',
+        button: 2,
+        buttons: 2,
+      });
+      fireEvent.pointerUp(increment, {pointerType: 'mouse', button: 2});
+      fireEvent.contextMenu(increment);
+      expect(onChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('spinbutton')).not.toHaveFocus();
+      pressStepper(increment, null);
+      expect(onChange).toHaveBeenLastCalledWith(6);
+      expect(screen.getByRole('spinbutton')).toHaveFocus();
+    });
 
     // Where it is coarse (a phone, a tablet), focusing the field would bring
     // up the on-screen keyboard: a pen and an activation with no pointer step
@@ -2552,7 +2586,10 @@ describe('NumberInput stepping', () => {
       });
       fireEvent.click(increment, {detail: 1});
 
-      // The press is default-prevented, so focus never leaves the field.
+      // The press is default-prevented, so focus never leaves the field:
+      // canceling the mousedown alone would not do, since Chrome on Android
+      // focuses a held stepper at its long press unless the touch's
+      // pointerdown is canceled (measured).
       expect(pointerDown).toBe(false);
       expect(onChange).toHaveBeenLastCalledWith(8);
       expect(input).toHaveFocus();
@@ -2839,5 +2876,30 @@ describe('NumberInput stepper padding coupling', () => {
     const css = generateThemeTestCSS(theme);
     expect(css).toContain('--_field-radius: 2px');
     expect(css).toContain('border-radius: 2px');
+  });
+});
+
+describe('NumberInput stepper column under a held finger', () => {
+  it('declares no touch-action or selection style of its own: the gesture host writes them for its kept press', () => {
+    // The host gives the column's kept press `touch-action: manipulation`
+    // (`spec:AST-094` FR18) and, for a held finger, the selection lock (FR41).
+    const source = readFileSync(
+      'packages/core/src/NumberInput/NumberInput.tsx',
+      'utf8',
+    );
+    const start = source.indexOf('  numberSteppers: {');
+    const column = source.slice(start, source.indexOf('\n  },', start));
+    expect(column).not.toContain('touchAction');
+    expect(column).not.toContain('userSelect');
+    expect(column).not.toContain('WebkitTouchCallout');
+    const touchSource = readFileSync(
+      'packages/core/src/NumberInput/NumberInputTouch.tsx',
+      'utf8',
+    );
+    expect(touchSource).toContain('keepsTouch: true,');
+    expect(touchSource).toContain('selectionLock: lockSelection,');
+    // The column's press tracker attaches for every pointer (`spec:AST-094`
+    // FR43, FR19).
+    expect(touchSource).toMatch(/usePressTracker\(columnRef, options\)/);
   });
 });
