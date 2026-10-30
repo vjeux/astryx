@@ -1,0 +1,320 @@
+{
+ "device": "iPhone 17 Pro simulator, iOS 26.2, Mobile Safari, 60 fps",
+ "page": "DateInput Default story, presentation bottom-sheet, calendar opened on October 2026",
+ "builds": {
+  "main": "d73908f675",
+  "thisPR": "881b5c3eae"
+ },
+ "swipeTimeToRest": {
+  "main": {
+   "medianMs": 574.5,
+   "rangeMs": [
+    554,
+    594
+   ]
+  },
+  "thisPR": {
+   "medianMs": 572.0,
+   "rangeMs": [
+    556,
+    585
+   ]
+  }
+ },
+ "notes": [
+  "Times run from the touch end (or the tap) to the first frame at rest on the month.",
+  "With a finger driving the scroll, this PR never turns scroll snapping off: every swipe take logs 0 changes of the scroller's scroll-snap-type.",
+  "An earlier version that paused snapping for every re-center, a finger's included, left 5 of 8 of these swipes coasting about 2.2 s before they reached the month; this PR leaves snapping on for a finger's scroll.",
+  "Neither build ran away after a stall on iOS: every take rests one month on."
+ ],
+ "takes": [
+  {
+   "scenario": "atrest-56",
+   "what": "a 0.3 s swipe of 56 % of a month (about 5 % is touch slop), crossing the middle on its last moves",
+   "main": [
+    {
+     "msToRest": 570,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 579,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ],
+   "thisPR": [
+    {
+     "msToRest": 579,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 583,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ]
+  },
+  {
+   "scenario": "atrest-57",
+   "what": "the same, 57 %",
+   "main": [
+    {
+     "msToRest": 594,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 594,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ],
+   "thisPR": [
+    {
+     "msToRest": 565,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 558,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ]
+  },
+  {
+   "scenario": "atrest-58",
+   "what": "the same, 58 %",
+   "main": [
+    {
+     "msToRest": 554,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 586,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ],
+   "thisPR": [
+    {
+     "msToRest": 584,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 585,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ]
+  },
+  {
+   "scenario": "atrest-59",
+   "what": "the same, 59 %",
+   "main": [
+    {
+     "msToRest": 567,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 564,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ],
+   "thisPR": [
+    {
+     "msToRest": 556,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 562,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ]
+  },
+  {
+   "scenario": "flick-85",
+   "what": "a 0.15 s flick of 85 % of a month",
+   "main": [
+    {
+     "msToRest": 438,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 825,
+     "monthsMoved": 2,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ],
+   "thisPR": [
+    {
+     "msToRest": 802,
+     "monthsMoved": 2,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    },
+    {
+     "msToRest": 810,
+     "monthsMoved": 2,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": null
+    }
+   ]
+  },
+  {
+   "scenario": "stall-lift-300",
+   "what": "the 56 % swipe, the main thread blocked 300 ms at the lift",
+   "main": [
+    {
+     "msToRest": 601,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": 301
+    },
+    {
+     "msToRest": 576,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": 301
+    }
+   ],
+   "thisPR": [
+    {
+     "msToRest": 596,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": 300
+    },
+    {
+     "msToRest": 580,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": 300
+    }
+   ]
+  },
+  {
+   "scenario": "arrow-stall-300",
+   "what": "Next month tapped, the main thread blocked 300 ms right after the tap is handled",
+   "main": [
+    {
+     "msToRest": 699,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": 301
+    },
+    {
+     "msToRest": 386,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": 300
+    }
+   ],
+   "thisPR": [
+    {
+     "msToRest": 417,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 1,
+     "stallMs": 300
+    },
+    {
+     "msToRest": 654,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 1,
+     "stallMs": 301
+    }
+   ]
+  },
+  {
+   "scenario": "arrow-stall-600",
+   "what": "the same, blocked 600 ms",
+   "main": [
+    {
+     "msToRest": 955,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": 600
+    },
+    {
+     "msToRest": 631,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 0,
+     "stallMs": 600
+    }
+   ],
+   "thisPR": [
+    {
+     "msToRest": 955,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 1,
+     "stallMs": 600
+    },
+    {
+     "msToRest": 980,
+     "monthsMoved": 1,
+     "snapTurnedOffWithFingerDown": 0,
+     "snapPauses": 1,
+     "stallMs": 600
+    }
+   ]
+  }
+ ]
+}
