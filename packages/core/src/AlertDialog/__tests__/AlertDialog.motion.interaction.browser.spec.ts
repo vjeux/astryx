@@ -18,14 +18,16 @@
  *   compositor (frames keep coming through a blocked main thread, judged
  *   with the backdrop blur off because this rig composites in software; no
  *   Layout or Paint per frame); a tap during either transition reaches
- *   nothing; under
+ *   nothing (an input that must land while it presents lands with the
+ *   presentation held where it starts, its animations paused as they are
+ *   created, so under its input hold however busy the page is); under
  *   reduced motion the alert and the dimming cross-fade in and out, opacity
  *   only, settled within 200 ms (design:reduced-motion DR1, DR2); a finger in
  *   Chrome's engine gets the same presentation; a mouse keeps the theme's
  *   entrance and closes at once; storyboards of the present and the
  *   dismiss.
- * @position Motion lane of AlertDialog, beside the touch-tracking spec. Run
- *   with `pnpm test:interaction AlertDialog`.
+ * @position AlertDialog's motion interaction proofs, beside the touch-tracking
+ *   spec. Run with `pnpm test:interaction AlertDialog`.
  */
 
 import {
@@ -348,6 +350,66 @@ async function holdDialogAnimationsAtCreation(page: Page): Promise<void> {
   });
 }
 
+/**
+ * Holds the alert's presentation where it starts: the animations a dialog
+ * creates in the task that presents it are paused as they are created (and
+ * left for releaseAnimations to play), and every later animation, such as
+ * the dismissal's, runs as it would.
+ */
+async function holdPresentationAtCreation(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function hold(
+      this: Element,
+      ...args: Parameters<Element['animate']>
+    ) {
+      const animation = animate.apply(this, args);
+      if (this instanceof HTMLDialogElement) {
+        animation.pause();
+        const w = window as unknown as {__harnessHeld?: Animation[]};
+        w.__harnessHeld = [...(w.__harnessHeld ?? []), animation];
+        // The presentation's animations start together, in one task.
+        queueMicrotask(() => {
+          Element.prototype.animate = animate;
+        });
+      }
+      return animation;
+    };
+  });
+}
+
+/**
+ * Taps the alert open with its presentation held where it starts, so
+ * whatever lands next lands inside the presentation, under its input hold,
+ * however busy the page is. releaseAnimations lets the presentation play on.
+ */
+async function presentHeld(
+  page: Page,
+  {driver, trigger}: Opened,
+): Promise<void> {
+  await holdPresentationAtCreation(page);
+  await driver.tap(await centerOf(trigger));
+  // The alert's scale and opacity, and the dimming's opacity, held where
+  // they start (an animation the page cancelled as it started is gone from
+  // the document's animations).
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter(
+              animation =>
+                (animation.effect as KeyframeEffect | null)?.target instanceof
+                  HTMLDialogElement && animation.playState === 'paused',
+            ).length,
+      ),
+    )
+    .toBe(3);
+  // The presentation's input hold is up: its shield is in the alert.
+  await expect(page.locator('dialog[open] > [popover]')).toHaveCount(1);
+}
+
 async function sampleAlert(
   page: Page,
   times: ReadonlyArray<number>,
@@ -650,51 +712,50 @@ test.describe('under a finger', () => {
   });
 
   test('a tap while the alert presents reaches nothing', async ({page}) => {
-    const {driver, trigger, dialog} = await openPage(page);
-    const triggerPoint = await centerOf(trigger);
+    const opened = await openPage(page);
+    const {driver, dialog} = opened;
+    await presentHeld(page, opened);
     // On the window, ahead of the hold's own listeners there (the hold
-    // swallows a held touch at the window, so the document never hears it).
+    // swallows a held touch at the window, so the document never hears it):
+    // whether the hold's shield was up when the tap landed, and any click an
+    // action took.
     await page.evaluate(() => {
-      const log = {start: Number.NaN, touches: [] as number[]};
-      (window as unknown as {__presentLog: typeof log}).__presentLog = log;
+      const log = {heldAtTap: [] as boolean[], clicks: [] as string[]};
+      (window as unknown as {__tapLog: typeof log}).__tapLog = log;
       window.addEventListener(
         'touchstart',
-        event => log.touches.push(event.timeStamp),
+        () =>
+          log.heldAtTap.push(
+            document.querySelector('dialog[open] > [popover]') != null,
+          ),
+        true,
+      );
+      document.addEventListener(
+        'click',
+        event => {
+          const button = (event.target as Element).closest('dialog button');
+          if (button != null) {
+            log.clicks.push(button.textContent ?? '');
+          }
+        },
         true,
       );
     });
-    await driver.tap(triggerPoint);
-    await waitForAnimation(dialog);
-    const cancelPoint = await centerOf(
-      dialog.getByRole('button', {name: 'Cancel'}),
+    await driver.tap(
+      await centerOf(dialog.getByRole('button', {name: 'Cancel'})),
     );
-    await page.evaluate(() => {
-      const dialogElement = document.querySelector('dialog[open]');
-      const start = document
-        .getAnimations()
-        .find(
-          a => (a.effect as KeyframeEffect | null)?.target === dialogElement,
-        )?.startTime;
-      const log = (window as unknown as {__presentLog: {start: number; touches: number[]}}).__presentLog;
-      log.start = Number(start);
-      log.touches.length = 0;
-    });
-    await driver.tap(cancelPoint);
+    await releaseAnimations(page);
+    await waitForRest(dialog);
     const log = await page.evaluate(
       () =>
         (
           window as unknown as {
-            __presentLog: {start: number; touches: number[]};
+            __tapLog: {heldAtTap: boolean[]; clicks: string[]};
           }
-        ).__presentLog,
+        ).__tapLog,
     );
-    // The tap must have landed inside the presentation for this to prove
-    // anything.
-    expect(log.touches[0] - log.start).toBeLessThan(
-      alertController.present.ignoresTouchesForMs,
-    );
-    await waitForRest(dialog);
-    await page.waitForTimeout(100);
+    expect(log.heldAtTap).toEqual([true]);
+    expect(log.clicks).toEqual([]);
     await expect(dialog).toBeVisible();
   });
 
@@ -702,44 +763,39 @@ test.describe('under a finger', () => {
     page,
   }) => {
     // Keys and assistive technology stay live while it presents (the hold
-    // covers touches, presses and clicks alone). The key must land inside
-    // the presentation, under its hold, for this to prove anything: a busy
-    // page can push it past, and then it is taken again.
-    let heldAtKey = false;
-    for (let attempt = 0; attempt < 3 && !heldAtKey; attempt += 1) {
-      const {driver, trigger, dialog} = await openPage(page);
-      await page.evaluate(() => {
-        const log = {heldAtKey: [] as boolean[]};
-        (window as unknown as {__keyLog: typeof log}).__keyLog = log;
-        document.addEventListener(
-          'keydown',
-          () =>
-            log.heldAtKey.push(
-              document.querySelector('dialog > [popover]') != null,
-            ),
-          true,
-        );
-      });
-      await driver.tap(await centerOf(trigger));
-      await expect(dialog).toBeVisible();
-      await page.keyboard.press('Escape');
-      heldAtKey = await page.evaluate(
+    // covers touches, presses and clicks alone). The presentation is held
+    // where it starts, so the key lands inside it, under its hold.
+    const opened = await openPage(page);
+    const {dialog} = opened;
+    await presentHeld(page, opened);
+    await page.evaluate(() => {
+      const log = {heldAtKey: [] as boolean[]};
+      (window as unknown as {__keyLog: typeof log}).__keyLog = log;
+      document.addEventListener(
+        'keydown',
+        () =>
+          log.heldAtKey.push(
+            document.querySelector('dialog[open] > [popover]') != null,
+          ),
+        true,
+      );
+    });
+    await page.keyboard.press('Escape');
+    expect(
+      await page.evaluate(
         () =>
           (window as unknown as {__keyLog: {heldAtKey: boolean[]}}).__keyLog
-            .heldAtKey[0] === true,
-      );
-      if (heldAtKey) {
-        await expect(dialog).toBeHidden();
-      }
-    }
-    expect(heldAtKey).toBe(true);
+            .heldAtKey,
+      ),
+    ).toEqual([true]);
+    await expect(dialog).toBeHidden();
   });
 
   // spec:AST-094 FR35 (DEC-16): a drag that lands during the entrance
   // reaches nothing and scrolls nothing; an assistive-technology activation
-  // acts; a pinch still zooms the page. Each must land inside the
-  // presentation's hold to prove anything (the hold's shield is in the alert
-  // when it lands): a busy page can push it past, so each retries.
+  // acts; a pinch still zooms the page. Each lands with the presentation
+  // held where it starts, so inside its hold (the hold's shield is in the
+  // alert when it lands) however busy the page is.
   test('a drag that lands while the alert presents reaches nothing and scrolls nothing (spec:AST-094 FR35)', async ({
     page,
     browserName,
@@ -748,91 +804,83 @@ test.describe('under a finger', () => {
       browserName === 'webkit',
       'needs native scrolling from injected touches (Mobile Safari on the simulator)',
     );
-    let heldAtDrag = false;
-    for (let attempt = 0; attempt < 3 && !heldAtDrag; attempt += 1) {
-      const {driver, trigger, dialog} = await openPage(page);
-      const viewport = page.viewportSize();
-      if (viewport == null) {
-        throw new Error('no viewport');
-      }
-      await page.evaluate(() => {
-        // A page that scrolls under the alert.
-        const spacer = document.createElement('div');
-        spacer.style.height = '300vh';
-        document.body.append(spacer);
-        const log = {heldAtDrag: [] as boolean[], clicks: [] as string[]};
-        (window as unknown as {__dragLog: typeof log}).__dragLog = log;
-        window.addEventListener(
-          'touchstart',
-          () =>
-            log.heldAtDrag.push(
-              document.querySelector('dialog > [popover]') != null,
-            ),
-          true,
-        );
-        document.addEventListener(
-          'click',
-          event => {
-            const button = (event.target as Element).closest('dialog button');
-            if (button != null) {
-              log.clicks.push(button.textContent ?? '');
-            }
-          },
-          true,
-        );
-      });
-      await driver.tap(await centerOf(trigger));
-      await waitForAnimation(dialog);
-      const x = viewport.width / 2;
-      await driver.play(
-        drag(
-          {x, y: viewport.height - 40},
-          {x, y: viewport.height - 340},
-          {durationMs: 150, restMs: 50},
-        ),
-      );
-      const log = await page.evaluate(
-        () =>
-          (
-            window as unknown as {
-              __dragLog: {heldAtDrag: boolean[]; clicks: string[]};
-            }
-          ).__dragLog,
-      );
-      heldAtDrag = log.heldAtDrag.at(-1) === true;
-      if (heldAtDrag) {
-        await waitForRest(dialog);
-        await expect(dialog).toBeVisible();
-        expect(await page.evaluate(() => window.scrollY)).toBe(0);
-        expect(log.clicks).toEqual([]);
-      }
+    const opened = await openPage(page);
+    const {driver, dialog} = opened;
+    const viewport = page.viewportSize();
+    if (viewport == null) {
+      throw new Error('no viewport');
     }
-    expect(heldAtDrag).toBe(true);
+    // A page that scrolls under the alert.
+    await page.evaluate(() => {
+      const spacer = document.createElement('div');
+      spacer.style.height = '300vh';
+      document.body.append(spacer);
+    });
+    await presentHeld(page, opened);
+    await page.evaluate(() => {
+      const log = {heldAtDrag: [] as boolean[], clicks: [] as string[]};
+      (window as unknown as {__dragLog: typeof log}).__dragLog = log;
+      window.addEventListener(
+        'touchstart',
+        () =>
+          log.heldAtDrag.push(
+            document.querySelector('dialog[open] > [popover]') != null,
+          ),
+        true,
+      );
+      document.addEventListener(
+        'click',
+        event => {
+          const button = (event.target as Element).closest('dialog button');
+          if (button != null) {
+            log.clicks.push(button.textContent ?? '');
+          }
+        },
+        true,
+      );
+    });
+    const x = viewport.width / 2;
+    await driver.play(
+      drag(
+        {x, y: viewport.height - 40},
+        {x, y: viewport.height - 340},
+        {durationMs: 150, restMs: 50},
+      ),
+    );
+    await releaseAnimations(page);
+    await waitForRest(dialog);
+    const log = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __dragLog: {heldAtDrag: boolean[]; clicks: string[]};
+          }
+        ).__dragLog,
+    );
+    expect(log.heldAtDrag).toEqual([true]);
+    await expect(dialog).toBeVisible();
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    expect(log.clicks).toEqual([]);
   });
 
   test('an assistive-technology activation reaches its action while the alert presents (spec:AST-094 FR35)', async ({
     page,
   }) => {
-    let heldAtActivation = false;
-    for (let attempt = 0; attempt < 3 && !heldAtActivation; attempt += 1) {
-      const {driver, trigger, dialog} = await openPage(page);
-      await driver.tap(await centerOf(trigger));
-      await waitForAnimation(dialog);
-      // An activation with no pointer, as assistive technology sends it:
-      // the button's own click, with no click count.
-      heldAtActivation = await page.evaluate(() => {
-        const held = document.querySelector('dialog > [popover]') != null;
-        const cancel = [...document.querySelectorAll('dialog button')].find(
-          button => button.textContent === 'Cancel',
-        ) as HTMLButtonElement | undefined;
-        cancel?.click();
-        return held;
-      });
-      if (heldAtActivation) {
-        await expect(dialog).toBeHidden();
-      }
-    }
+    const opened = await openPage(page);
+    const {dialog} = opened;
+    await presentHeld(page, opened);
+    // An activation with no pointer, as assistive technology sends it: the
+    // button's own click, with no click count, under the hold's shield.
+    const heldAtActivation = await page.evaluate(() => {
+      const held = document.querySelector('dialog[open] > [popover]') != null;
+      const cancel = [...document.querySelectorAll('dialog button')].find(
+        button => button.textContent === 'Cancel',
+      ) as HTMLButtonElement | undefined;
+      cancel?.click();
+      return held;
+    });
     expect(heldAtActivation).toBe(true);
+    await expect(dialog).toBeHidden();
   });
 
   test('a pinch that lands while the alert presents still zooms the page (spec:AST-094 FR35, FR10)', async ({
@@ -843,51 +891,46 @@ test.describe('under a finger', () => {
       browserName === 'webkit',
       'needs pinch-zoom from injected touches (Mobile Safari on the simulator)',
     );
-    let heldAtPinch = false;
-    for (let attempt = 0; attempt < 3 && !heldAtPinch; attempt += 1) {
-      const {driver, trigger, dialog} = await openPage(page);
-      const viewport = page.viewportSize();
-      if (viewport == null) {
-        throw new Error('no viewport');
-      }
-      await page.evaluate(() => {
-        const log = {heldAtPinch: [] as boolean[]};
-        (window as unknown as {__pinchLog: typeof log}).__pinchLog = log;
-        window.addEventListener(
-          'touchstart',
-          () =>
-            log.heldAtPinch.push(
-              document.querySelector('dialog > [popover]') != null,
-            ),
-          true,
-        );
-      });
-      await driver.tap(await centerOf(trigger));
-      await waitForAnimation(dialog);
-      await driver.play(
-        pinch({
-          center: {x: viewport.width / 2, y: viewport.height / 2},
-          fromDistance: 60,
-          toDistance: 220,
-          durationMs: 200,
-        }),
-      );
-      // The pinch's first finger (the trigger's tap came before it).
-      heldAtPinch = await page.evaluate(
-        () =>
-          (window as unknown as {__pinchLog: {heldAtPinch: boolean[]}})
-            .__pinchLog.heldAtPinch[1] === true,
-      );
-      if (heldAtPinch) {
-        await expect
-          .poll(async () =>
-            page.evaluate(() => window.visualViewport?.scale ?? 1),
-          )
-          .toBeGreaterThan(1.2);
-        await expect(dialog).toBeVisible();
-      }
+    const opened = await openPage(page);
+    const {driver, dialog} = opened;
+    const viewport = page.viewportSize();
+    if (viewport == null) {
+      throw new Error('no viewport');
     }
-    expect(heldAtPinch).toBe(true);
+    await presentHeld(page, opened);
+    await page.evaluate(() => {
+      const log = {heldAtPinch: [] as boolean[]};
+      (window as unknown as {__pinchLog: typeof log}).__pinchLog = log;
+      window.addEventListener(
+        'touchstart',
+        () =>
+          log.heldAtPinch.push(
+            document.querySelector('dialog[open] > [popover]') != null,
+          ),
+        true,
+      );
+    });
+    await driver.play(
+      pinch({
+        center: {x: viewport.width / 2, y: viewport.height / 2},
+        fromDistance: 60,
+        toDistance: 220,
+        durationMs: 200,
+      }),
+    );
+    const heldAtPinch = await page.evaluate(
+      () =>
+        (window as unknown as {__pinchLog: {heldAtPinch: boolean[]}}).__pinchLog
+          .heldAtPinch,
+    );
+    // Each of the pinch's fingers landed under the hold's shield.
+    expect(heldAtPinch.length).toBeGreaterThan(0);
+    expect(heldAtPinch.every(Boolean)).toBe(true);
+    await expect
+      .poll(async () => page.evaluate(() => window.visualViewport?.scale ?? 1))
+      .toBeGreaterThan(1.2);
+    await expect(dialog).toBeVisible();
+    await releaseAnimations(page);
   });
 
   test('a tap or a key while the alert leaves reaches nothing, on the alert or under it', async ({
