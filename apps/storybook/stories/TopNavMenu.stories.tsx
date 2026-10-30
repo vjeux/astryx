@@ -11,6 +11,7 @@ import {
   TopNavMegaMenuItem,
   TopNavMegaMenuFeaturedCard,
 } from '@astryxdesign/core/TopNav';
+import {AppShell} from '@astryxdesign/core/AppShell';
 import {NavIcon} from '@astryxdesign/core/NavIcon';
 import {Button} from '@astryxdesign/core/Button';
 import {
@@ -310,5 +311,74 @@ export const MegaMenuSimple: Story = {
         endContent={<Button label="Sign in" variant="primary" />}
       />
     </div>
+  ),
+};
+
+/**
+ * The same menus inside an AppShell. Below the shell's breakpoint (a phone),
+ * the shell's menu button opens a drawer: a menu there is a section that
+ * expands in place, a mega menu too, and their entries are drawer rows.
+ */
+export const InAppShell: Story = {
+  name: 'In App Shell',
+  render: () => (
+    <AppShell
+      topNav={
+        <TopNav
+          label="Main navigation"
+          heading={
+            <TopNavHeading
+              heading="Acme"
+              logo={
+                <NavIcon icon={<CubeIcon style={{width: 16, height: 16}} />} />
+              }
+              headingHref="#"
+            />
+          }
+          startContent={
+            <>
+              <TopNavItem label="Home" href="#" isSelected />
+              <TopNavMenu
+                label="Products"
+                items={[
+                  {
+                    title: 'Analytics',
+                    description: 'Track and analyze user behavior',
+                    icon: <ChartBarIcon style={{width: 20, height: 20}} />,
+                    href: '#analytics',
+                  },
+                  {
+                    title: 'Security',
+                    description: 'Enterprise-grade protection',
+                    icon: <ShieldCheckIcon style={{width: 20, height: 20}} />,
+                    href: '#security',
+                  },
+                ]}
+              />
+              <TopNavMegaMenu
+                label="Solutions"
+                items={
+                  <>
+                    <TopNavMegaMenuItem
+                      title="Automation"
+                      description="Streamline workflows with intelligent tools"
+                      icon={<BoltIcon style={{width: 20, height: 20}} />}
+                      href="#automation"
+                    />
+                    <TopNavMegaMenuItem
+                      title="Developer Tools"
+                      description="APIs, SDKs, and CLI for integration"
+                      icon={<CodeBracketIcon style={{width: 20, height: 20}} />}
+                      href="#dev-tools"
+                    />
+                  </>
+                }
+              />
+            </>
+          }
+        />
+      }>
+      <p>On a phone, the menu button opens the navigation drawer.</p>
+    </AppShell>
   ),
 };
