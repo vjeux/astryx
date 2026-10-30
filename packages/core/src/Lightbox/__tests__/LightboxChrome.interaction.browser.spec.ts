@@ -34,6 +34,7 @@ import {
   type Page,
 } from '@playwright/test';
 import {
+  type ActiveAnimation,
   animationStoryboard,
   blockMainThread,
   CONTROL_RGB,
@@ -55,6 +56,7 @@ import {
   trackMarker,
   waitForAnimation,
   waitForRest,
+  watchAnimations,
   withStorybook,
   writeEvidence,
 } from '@astryxdesign/interaction-harness';
@@ -156,6 +158,27 @@ async function openGallery(page: Page): Promise<Viewer> {
   };
 }
 
+/**
+ * An animation's opacity `ms` into its curve, from its own keyframes: the
+ * animator plays a curve as keyframes on its own clock, the curve first and
+ * its end held after it.
+ */
+function opacityAt(animation: ActiveAnimation, ms: number): number {
+  const frames = animation.keyframes as ReadonlyArray<{
+    computedOffset: number;
+    opacity?: string;
+  }>;
+  const at = ms / animation.durationMs;
+  const i = frames.findIndex(f => f.computedOffset >= at);
+  if (i <= 0) {
+    return Number(frames[Math.max(i, 0)]?.opacity ?? 1);
+  }
+  const a = frames[i - 1];
+  const b = frames[i];
+  const u = (at - a.computedOffset) / (b.computedOffset - a.computedOffset);
+  return Number(a.opacity) + (Number(b.opacity) - Number(a.opacity)) * u;
+}
+
 test("the black is the viewer container's own ::before, with no element of its own (INV7)", async ({
   page,
 }) => {
@@ -253,25 +276,31 @@ test('the next tap on the photo shows them, the black clearing at once', async (
 }) => {
   const v = await openGallery(page);
   await hideByTap(v, page);
+  // Watched before the tap and read from the fades' own keyframes: on a
+  // loaded machine the black's 100 ms fade could end before a hold taken
+  // after the controls' fade started, and every sample read its end.
+  const watch = await watchAnimations(v.container);
   await v.driver.tap(v.centre);
-  await waitForAnimation(v.chrome);
-  await holdAnimations(page, v.dialog);
-  const [chrome, black] = await Promise.all([
-    sampleCurve(v.chrome, [0, 100, 200]),
-    sampleCurve(v.container, [0, 50, 100], {pseudoElement: '::before'}),
-  ]);
-  await releaseAnimations(page);
-  expect(chrome.map(s => s.opacity)).toEqual([
-    expect.closeTo(0, 2),
-    expect.closeTo(0.5, 2),
+  const started = await watch.started();
+  // The controls fade in from 0; the black, the one fade from 1, clears.
+  const controls = started.filter(a => opacityAt(a, 0) < 0.01);
+  const black = started.filter(a => opacityAt(a, 0) > 0.99);
+  expect(controls.length).toBeGreaterThan(0);
+  expect(black).toHaveLength(1);
+  for (const fade of controls) {
+    expect([0, 100, 200].map(ms => opacityAt(fade, ms))).toEqual([
+      expect.closeTo(0, 2),
+      expect.closeTo(0.5, 2),
+      expect.closeTo(1, 2),
+    ]);
+  }
+  expect([0, 50, 100].map(ms => opacityAt(black[0], ms))).toEqual([
     expect.closeTo(1, 2),
+    expect.closeTo(0.5, 2),
+    expect.closeTo(0, 2),
   ]);
   // No wait: the black starts clearing with the controls' fade.
-  expect(black.map(s => s.opacity)).toEqual([
-    expect.closeTo(1, 2),
-    expect.closeTo(0.5, 2),
-    expect.closeTo(0, 2),
-  ]);
+  expect(Math.abs(black[0].from - controls[0].from)).toBeLessThan(17);
 });
 
 test('a double tap that zooms in hides them, and one back to the fitted size shows them', async ({
