@@ -393,6 +393,22 @@ describe('build-css astryx.css', () => {
       );
     });
 
+    it("changes a toggle's selected look at once under a coarse pointer, while its press still scales", () => {
+      // A colour transition there is repainted on every frame (WebKit runs no
+      // colour animation on the compositor): under a coarse primary pointer
+      // a toggle (`aria-pressed`) transitions its press scale and layer, never
+      // its colours. Read from the shipped sheet: the unit tests' jsdom sheet
+      // loses some nested arms the compiler emits.
+      const rules = [
+        ...astryxCss.matchAll(
+          /@media \(pointer: coarse\) and \(not \(prefers-reduced-motion: reduce\)\)\{[^{}]*\[aria-pressed\][^{}]*\{transition-property:([^}]*)\}/g,
+        ),
+      ].map(([, value]) => value);
+      expect(rules).toHaveLength(1);
+      expect(rules[0]).toContain('transform');
+      expect(rules[0]).not.toMatch(/background-color|(^|,)color(,|$)/);
+    });
+
     it('paints the checkbox and radio press on their own layer and releases it by opacity', async () => {
       // The element that owns a press (a CheckboxInput's control, a
       // CheckboxList or RadioList row) declares the press's image and release
