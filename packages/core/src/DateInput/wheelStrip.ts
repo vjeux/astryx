@@ -325,15 +325,13 @@ export function createWheelStrip(initialLayout: WheelLayout): WheelStrip {
       };
       schedule(motion, now(), plan);
       // A busy main thread can hold a motion's first frame: its timers then
-      // follow the start the browser gives it.
-      void handle.started.then(
-        start => {
-          if (running === motion) {
-            schedule(motion, start, plan);
-          }
-        },
-        () => {},
-      );
+      // follow the start the browser gives it. The animator's start promise
+      // only resolves, so nothing here waits on a rejection.
+      void handle.started.then(start => {
+        if (running === motion) {
+          schedule(motion, start, plan);
+        }
+      });
     },
     forgetNearest() {
       lastNearest = null;
