@@ -46,6 +46,7 @@ import {useTooltip} from '../Tooltip';
 import {mergeProps, mergeRefs, rtlStyles} from '../utils';
 import {switchFocusInput, switchScope} from './switch.markers.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import type {BaseProps} from '../BaseProps';
 import type {SizeValue} from '../utils/types';
 import {themeProps} from '../utils/themeProps';
@@ -135,11 +136,6 @@ const thumbOnSizeStyles = stylex.create({
 // hover tint already is: pressing the input, the track or the label all
 // activate the row.
 const pressedImage = `linear-gradient(${colorVars['--color-overlay-pressed']}, ${colorVars['--color-overlay-pressed']})`;
-// The touch press's paint, declared by the shared overlay styles on the
-// element the controller writes to (`pressedAlpha`) at the press's strength,
-// 1 while on and 1 → 0 over the release, and inherited resolved by the layer
-// that paints it. See interactionOverlay.stylex.ts.
-const pressedOverlayImage = 'var(--_press-paint-image)';
 
 const labelWrapperSizeStyles = stylex.create({
   sm: {
@@ -201,6 +197,9 @@ const styles = stylex.create({
     pointerEvents: 'none',
   },
   track: {
+    // The containing block of the press layer over the track and its thumb
+    // (pressLayerStyles.ownedAfter).
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     borderRadius: radiusVars['--radius-full'],
@@ -237,22 +236,6 @@ const styles = stylex.create({
           // Under a coarse pointer the touch press model writes `data-astryx-press`
           // on the row instead; see interactionOverlay.stylex.ts.
           '@media (pointer: coarse)': 'none',
-        },
-      },
-      // Nested in the same media as the arm above so it outranks the drop: an
-      // ancestor-scoped attribute selector gets no priority of its own.
-      [stylex.when.ancestor('[data-astryx-press="on"]', switchScope)]: {
-        default: null,
-        '@media (forced-colors: none)': {
-          default: null,
-          '@media (pointer: coarse)': pressedOverlayImage,
-        },
-      },
-      [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
-        default: null,
-        '@media (forced-colors: none)': {
-          default: null,
-          '@media (pointer: coarse)': pressedOverlayImage,
         },
       },
     },
@@ -339,22 +322,6 @@ const styles = stylex.create({
         '@media (forced-colors: none)': {
           default: pressedImage,
           '@media (pointer: coarse)': 'none',
-        },
-      },
-      // Nested in the same media as the arm above so it outranks the drop: an
-      // ancestor-scoped attribute selector gets no priority of its own.
-      [stylex.when.ancestor('[data-astryx-press="on"]', switchScope)]: {
-        default: null,
-        '@media (forced-colors: none)': {
-          default: null,
-          '@media (pointer: coarse)': pressedOverlayImage,
-        },
-      },
-      [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
-        default: null,
-        '@media (forced-colors: none)': {
-          default: null,
-          '@media (pointer: coarse)': pressedOverlayImage,
         },
       },
     },
@@ -706,6 +673,9 @@ export function Switch({
             styles.trackFocus,
             isDisabled && styles.trackDisabled,
             isDisabled && !isOn && styles.trackDisabledOff,
+            // The touch press, over the track and its thumb, on a layer that
+            // releases by opacity: the row declares it (pressLayerStyles.owner).
+            !isDisabled && pressLayerStyles.ownedAfter,
           ),
         )}>
         <div
@@ -777,8 +747,12 @@ export function Switch({
           labelSpacing === 'spread' && styles.containerSpread,
           !isDisabled && switchScope,
           // The touch press's strength and release live on the row the
-          // controller writes to; the track and thumb inherit and paint it.
+          // controller writes to; the track and thumb inherit and paint it,
+          // and under a coarse primary pointer the layer over the track does,
+          // its release on the compositor (pressLayerStyles.owner).
           !isDisabled && interactionOverlayStyles.pressedAlpha,
+          !isDisabled && pressLayerStyles.holdStrength,
+          !isDisabled && pressLayerStyles.owner,
         )}>
         {' '}
         {labelPosition === 'start' ? (

@@ -16,8 +16,12 @@ import userEvent from '@testing-library/user-event';
 import {
   hasPressedArm,
   hasReleaseFade,
+  keepsPressOutsideCoarse,
   readsPressStrength,
+  releasesOnLayer,
+  showsLayerPress,
 } from '../__tests__/pressState';
+import {list} from '../motion/uikit/list';
 import {TabList} from './TabList';
 import type {TabListProps} from './TabList';
 import {Tab} from './Tab';
@@ -1679,7 +1683,7 @@ describe('pressed state', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('fades the touch press out from the tab, with the surface reading its strength', () => {
+  it('releases the touch press on the tab’s own layer, by opacity on the compositor', () => {
     render(
       <TabList value="home" onChange={() => {}}>
         <Tab value="home" label="Home" />
@@ -1691,11 +1695,18 @@ describe('pressed state', () => {
     if (surface == null) {
       throw new Error('the tab has no hover surface to press');
     }
-    // The controller writes the tab; the tab owns the strength and its
-    // release, and the surface paints the pressed token at that strength on
-    // both touch arms.
+    // The controller writes the tab. Under a coarse primary pointer the tab's
+    // `::before` layer paints the pressed token at full strength and releases
+    // it by opacity on the shared release's clock while the strength holds;
+    // with any other pointer the strength's own release runs, as before. The
+    // hover surface paints no touch press of its own.
     expect(hasReleaseFade(tab)).toBe(true);
-    expect(readsPressStrength(surface, '[data-astryx-press="on"]')).toBe(true);
-    expect(readsPressStrength(surface)).toBe(true);
+    expect(showsLayerPress(tab)).toBe(true);
+    expect(releasesOnLayer(tab, '::before', list.highlight.releaseMs)).toBe(
+      true,
+    );
+    expect(keepsPressOutsideCoarse(tab, '::before')).toBe(true);
+    expect(readsPressStrength(surface, '[data-astryx-press="on"]')).toBe(false);
+    expect(readsPressStrength(surface)).toBe(false);
   });
 });
