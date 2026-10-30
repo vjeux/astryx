@@ -7,12 +7,14 @@
  *   controller, one attribute, and the two properties a per-element hook
  *   would give away — that the paint belongs to the element the finger landed
  *   on and that a list pays nothing per row for it — plus the CSS arms the
- *   attribute drives: the release runs on the machine's own clock
+ *   attribute drives: the release runs on the machine's own clock and ends
+ *   when its animation does, however late a busy main thread started it
  * @position Testing; validates pressFeedback.ts in jsdom
  */
 
 import * as stylex from '@stylexjs/stylex';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {button} from '../motion/uikit/button';
 import {
   hasReleaseFade,
   readsPressStrength,
@@ -20,6 +22,7 @@ import {
   rulesDeclaredFor,
   rulesWithSelector,
 } from '../__tests__/pressState';
+import {controlPressConsts} from './controlPressLayer.stylex';
 import {
   interactionOverlayStyles,
   pressConsts,
@@ -28,6 +31,7 @@ import {
   PRESSABLE_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
   installPressFeedback,
+  PRESS_INPUT_ATTRIBUTE,
 } from './pressFeedback';
 import {
   PRESS_FADE_MS,
@@ -57,6 +61,13 @@ function press(
     pointerId: 1,
     pointerType,
   });
+  element.dispatchEvent(event);
+}
+
+/** The finger leaving the screen: a `touchend` with no touches left. */
+function lift(element: Element): void {
+  const event = new Event('touchend', {bubbles: true});
+  Object.assign(event, {touches: []});
   element.dispatchEvent(event);
 }
 
@@ -529,8 +540,12 @@ describe('a finger waits only inside a scroller (spec:AST-094 FR11)', () => {
   });
 });
 
-describe('the release clock the browser specs read', () => {
-  it('is 200 ms (ButtonPress.interaction.browser.spec.ts RELEASE_MS)', () => {
+describe('the release clocks the browser specs read', () => {
+  it("a finger's release on a control runs 250 ms (ButtonPress.interaction.browser.spec.ts RELEASE_MS)", () => {
+    expect(controlPressConsts.controlReleaseMs).toBe(250);
+  });
+
+  it('a fine primary pointer keeps 200 ms (ButtonPressRelease.interaction.browser.spec.ts DESELECT_MS)', () => {
     expect(PRESS_FADE_MS).toBe(200);
   });
 });
@@ -716,6 +731,21 @@ describe('the release ends with its animation, not its clock', () => {
 });
 
 describe('two touches in a row', () => {
+  it('a second tap 70 ms after the first ends with no press: its lift is still heard', () => {
+    // The second touch lands while the first tap's release is still fading:
+    // it owns the surface from there, and its own lift still ends its press.
+    const control = pressable('button');
+    document.body.appendChild(control);
+    for (let tapIndex = 0; tapIndex < 2; tapIndex += 1) {
+      press(control, 'pointerdown', 10, 10);
+      press(control, 'pointerup', 10, 10);
+      lift(control);
+      vi.advanceTimersByTime(70);
+    }
+    vi.advanceTimersByTime(PRESS_FLASH_MS + PRESS_FADE_MS * 4);
+    expect(control.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+  });
+
   it('answers the second tap while the first is still fading', () => {
     press(rows[0], 'pointerdown', 10, 10);
     vi.advanceTimersByTime(PRESS_ONSET_MS);
@@ -790,6 +820,20 @@ describe('a phone or tablet paints a mouse or Space press itself', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("keeps a mouse or Space press on the fine pointer's 200 ms release, even on a control", () => {
+    const control = document.createElement('button');
+    control.setAttribute(PRESSABLE_ATTRIBUTE, '');
+    rows[1].appendChild(control);
+    press(control, 'pointerdown', 10, 100, 'mouse');
+    expect(control.getAttribute(PRESS_INPUT_ATTRIBUTE)).toBe('mouse');
+    press(control, 'pointerup', 10, 100, 'mouse');
+    expect(control.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    vi.advanceTimersByTime(PRESS_FADE_MS);
+    expect(control.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    expect(control.hasAttribute(PRESS_INPUT_ATTRIBUTE)).toBe(false);
+    control.remove();
   });
 
   it('paints a mouse press at once, holds it, and fades it at the release', () => {
@@ -1253,8 +1297,14 @@ describe('the release fades: the arms the controller writes to', () => {
     );
   });
 
-  it("the machine's clock is the stylesheet's constant: one number", () => {
+  it("the machine's clock and a control's are the stylesheet's constants: one number each", () => {
     expect(PRESS_FADE_MS).toBe(pressConsts.releaseMs);
+    expect(controlPressConsts.controlReleaseMs).toBe(
+      button.highlight.releaseMs,
+    );
+    expect(controlPressConsts.controlReleaseEase).toBe(
+      `cubic-bezier(${button.highlight.releaseCurve.join(', ')})`,
+    );
     expect(hasReleaseFade(surface(interactionOverlayStyles.pressedAlpha))).toBe(
       true,
     );
