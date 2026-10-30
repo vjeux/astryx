@@ -1745,7 +1745,7 @@ test('the spin steps clockwise every eighth of a second while the main thread is
 }, testInfo) => {
   test.skip(
     browserName !== 'chromium',
-    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
+    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator)',
   );
   const {driver, content, start} = await openRefresh(page, undefined, {
     refreshMs: '8000',
@@ -2068,7 +2068,7 @@ test('the cross-fade keeps moving while the main thread is blocked right after t
 }, testInfo) => {
   test.skip(
     browserName !== 'chromium',
-    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
+    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator)',
   );
   const {driver, content, start} = await openRefresh(page, undefined, {
     refreshMs: '8000',

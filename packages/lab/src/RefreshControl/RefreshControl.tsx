@@ -21,8 +21,10 @@
  * custom property the pull writes) and, once the refresh starts, a gradient
  * that springs in and steps round clockwise every eighth of a second. The
  * eight capsules are drawn once, one element each: a layer in the text color
- * masked to its capsule already drawn at its angle (one frame of an
- * eight-frame sprite), so nothing is resampled at rest. The spin is the
+ * clipped to its capsule already drawn at its angle (a clip path with exact
+ * arcs), so nothing is resampled at rest, and each its own compositor layer,
+ * so the pull's reveal and the spin change only opacity and WebKit repaints
+ * nothing (it repaints a masked layer on every opacity change). The spin is the
  * hook's: each spoke steps its opacity on a Web Animation, a compositor
  * animation that keeps turning while a script runs. At the trigger the
  * spokes start stepping and the hook fades a transient copy of them, as the
@@ -107,11 +109,13 @@ const styles = stylex.create({
     width: 30,
     height: 30,
   },
-  // One element per spoke, the glyph's whole box: the text color masked to
-  // the spoke's capsule, drawn at its angle in its frame of the sprite
-  // (`spokeFrames` picks the frame). The capsules are the table's: 3.67 pt
-  // wide with 1.83 pt corners, from 5 to 15 pt out; RefreshControl.test.tsx
-  // rebuilds the sprite from refresh.ts.
+  // One element per spoke, the glyph's whole box: the text color clipped to
+  // the spoke's capsule at its angle (`spokeShapes` gives each its clip
+  // path). The capsules are the table's: 3.67 pt wide with 1.83 pt corners,
+  // from 5 to 15 pt out; RefreshControl.test.tsx rebuilds the paths from
+  // refresh.ts. A clip, not a mask: WebKit repaints a masked layer whenever
+  // its opacity changes, and the pull changes every spoke's opacity on every
+  // move.
   spoke: {
     position: 'absolute',
     inset: 0,
@@ -125,9 +129,6 @@ const styles = stylex.create({
       default: null,
       '@media (forced-colors: active)': 'none',
     },
-    maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 30'%3E%3Crect x='13.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(0 15 15)'/%3E%3Crect x='43.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(45 45 15)'/%3E%3Crect x='73.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(90 75 15)'/%3E%3Crect x='103.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(135 105 15)'/%3E%3Crect x='133.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(180 135 15)'/%3E%3Crect x='163.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(225 165 15)'/%3E%3Crect x='193.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(270 195 15)'/%3E%3Crect x='223.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(315 225 15)'/%3E%3C/svg%3E")`,
-    maskRepeat: 'no-repeat',
-    maskSize: '800% 100%',
   },
   spokeOpacity: (opacity: string) => ({
     opacity,
@@ -162,29 +163,53 @@ export interface RefreshControlProps
   title?: ReactNode;
 }
 
-// Each spoke's frame of the sprite: spoke k drawn k × 45° clockwise from 12
-// o'clock.
-const spokeFrames = stylex.create({
-  s0: {maskPosition: '0% 0%'},
-  s1: {maskPosition: '14.2857% 0%'},
-  s2: {maskPosition: '28.5714% 0%'},
-  s3: {maskPosition: '42.8571% 0%'},
-  s4: {maskPosition: '57.1429% 0%'},
-  s5: {maskPosition: '71.4286% 0%'},
-  s6: {maskPosition: '85.7143% 0%'},
-  s7: {maskPosition: '100% 0%'},
+// Each spoke's capsule: spoke k turned k × 45° clockwise from 12 o'clock
+// about the glyph's center, as straight edges and quarter arcs.
+const spokeShapes = stylex.create({
+  s0: {
+    clipPath:
+      "path('M 14.995 0 L 15.005 0 A 1.83 1.83 0 0 1 16.835 1.83 L 16.835 8.17 A 1.83 1.83 0 0 1 15.005 10 L 14.995 10 A 1.83 1.83 0 0 1 13.165 8.17 L 13.165 1.83 A 1.83 1.83 0 0 1 14.995 0 Z')",
+  },
+  s1: {
+    clipPath:
+      "path('M 25.603 4.39 L 25.61 4.397 A 1.83 1.83 0 0 1 25.61 6.985 L 21.127 11.468 A 1.83 1.83 0 0 1 18.539 11.468 L 18.532 11.461 A 1.83 1.83 0 0 1 18.532 8.873 L 23.015 4.39 A 1.83 1.83 0 0 1 25.603 4.39 Z')",
+  },
+  s2: {
+    clipPath:
+      "path('M 30 14.995 L 30 15.005 A 1.83 1.83 0 0 1 28.17 16.835 L 21.83 16.835 A 1.83 1.83 0 0 1 20 15.005 L 20 14.995 A 1.83 1.83 0 0 1 21.83 13.165 L 28.17 13.165 A 1.83 1.83 0 0 1 30 14.995 Z')",
+  },
+  s3: {
+    clipPath:
+      "path('M 25.61 25.603 L 25.603 25.61 A 1.83 1.83 0 0 1 23.015 25.61 L 18.532 21.127 A 1.83 1.83 0 0 1 18.532 18.539 L 18.539 18.532 A 1.83 1.83 0 0 1 21.127 18.532 L 25.61 23.015 A 1.83 1.83 0 0 1 25.61 25.603 Z')",
+  },
+  s4: {
+    clipPath:
+      "path('M 15.005 30 L 14.995 30 A 1.83 1.83 0 0 1 13.165 28.17 L 13.165 21.83 A 1.83 1.83 0 0 1 14.995 20 L 15.005 20 A 1.83 1.83 0 0 1 16.835 21.83 L 16.835 28.17 A 1.83 1.83 0 0 1 15.005 30 Z')",
+  },
+  s5: {
+    clipPath:
+      "path('M 4.397 25.61 L 4.39 25.603 A 1.83 1.83 0 0 1 4.39 23.015 L 8.873 18.532 A 1.83 1.83 0 0 1 11.461 18.532 L 11.468 18.539 A 1.83 1.83 0 0 1 11.468 21.127 L 6.985 25.61 A 1.83 1.83 0 0 1 4.397 25.61 Z')",
+  },
+  s6: {
+    clipPath:
+      "path('M 0 15.005 L 0 14.995 A 1.83 1.83 0 0 1 1.83 13.165 L 8.17 13.165 A 1.83 1.83 0 0 1 10 14.995 L 10 15.005 A 1.83 1.83 0 0 1 8.17 16.835 L 1.83 16.835 A 1.83 1.83 0 0 1 0 15.005 Z')",
+  },
+  s7: {
+    clipPath:
+      "path('M 4.39 4.397 L 4.397 4.39 A 1.83 1.83 0 0 1 6.985 4.39 L 11.468 8.873 A 1.83 1.83 0 0 1 11.468 11.461 L 11.461 11.468 A 1.83 1.83 0 0 1 8.873 11.468 L 4.39 6.985 A 1.83 1.83 0 0 1 4.39 4.397 Z')",
+  },
 });
 
-/** Each spoke's frame, in spoke order. */
-const SPOKE_FRAMES = [
-  spokeFrames.s0,
-  spokeFrames.s1,
-  spokeFrames.s2,
-  spokeFrames.s3,
-  spokeFrames.s4,
-  spokeFrames.s5,
-  spokeFrames.s6,
-  spokeFrames.s7,
+/** Each spoke's capsule, in spoke order. */
+const SPOKE_SHAPES = [
+  spokeShapes.s0,
+  spokeShapes.s1,
+  spokeShapes.s2,
+  spokeShapes.s3,
+  spokeShapes.s4,
+  spokeShapes.s5,
+  spokeShapes.s6,
+  spokeShapes.s7,
 ];
 
 /**
@@ -231,7 +256,7 @@ export function RefreshControl({
       key={index}
       {...stylex.props(
         styles.spoke,
-        SPOKE_FRAMES[index],
+        SPOKE_SHAPES[index],
         styles.spokeOpacity(revealOpacity(index)),
       )}
     />
