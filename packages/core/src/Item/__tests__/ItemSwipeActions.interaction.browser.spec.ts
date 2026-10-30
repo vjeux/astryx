@@ -1521,6 +1521,47 @@ test('the drag and the settle do no Layout or Paint per frame', async ({
   expect(trace.longTasks).toEqual([]);
 });
 
+test('the release starts its motion without forcing a style recalculation inside the touch', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
+  // The release's own handling, on the page's clock: from the first window
+  // listener of its touchend (added before the page's own) to the last, the
+  // gesture host's listener and the work it queues for the same task (a
+  // render, the animator's reads) in between.
+  await page.addInitScript(() => {
+    const at = () => performance.timeOrigin + performance.now();
+    addEventListener(
+      'touchend',
+      () => Object.assign(window, {__releaseFrom: at()}),
+      {capture: true, once: true},
+    );
+    addEventListener(
+      'touchend',
+      () => Object.assign(window, {__releaseTo: at()}),
+      {once: true},
+    );
+  });
+  const {driver, row, start} = await openRow(page);
+  const trace = await traceRendering(page, async () => {
+    // A throw that opens the row: no full swipe, so nothing fades.
+    await driver.play(
+      flick(start, {velocity: {x: -1000, y: 0}, durationMs: 80, hz: 120}),
+    );
+    await waitForRest(row);
+  });
+  const release = await page.evaluate(() => {
+    const w = window as unknown as {__releaseFrom: number; __releaseTo: number};
+    return {from: w.__releaseFrom, to: w.__releaseTo};
+  });
+  // The motion's styles are the next frame's to resolve, once: a read inside
+  // the touch resolves them early and holds up the event.
+  const inside = countBetween(trace, release.from, release.to);
+  expect(inside.UpdateLayoutTree ?? 0, JSON.stringify(inside)).toBe(0);
+  expect(inside.Layout ?? 0, JSON.stringify(inside)).toBe(0);
+});
+
 test('in WebKit the drag and the settle repaint nothing frame after frame: no other row paints, and the row paints each part at most when it is uncovered', async ({
   page,
   browserName,
