@@ -52,8 +52,9 @@ async function watchCard(page: Page, name: string): Promise<void> {
     if (card == null) {
       throw new Error(`no card for ${key}`);
     }
-    const reads = ((window as unknown as Record<string, unknown>).__c06cards ??=
-      {}) as Record<string, unknown>;
+    const reads = ((
+      window as unknown as Record<string, unknown>
+    ).__cardMarkReads ??= {}) as Record<string, unknown>;
     const observer = new MutationObserver(() => {
       if (reads[key] != null) {
         return;
@@ -80,13 +81,13 @@ async function readCard(page: Page, name: string): Promise<CardRead> {
   await page.waitForFunction(
     key =>
       ((window as unknown as Record<string, Record<string, unknown>>)
-        .__c06cards ?? {})[key] != null,
+        .__cardMarkReads ?? {})[key] != null,
     name,
   );
   return page.evaluate(
     key =>
       (window as unknown as Record<string, Record<string, CardRead>>)
-        .__c06cards[key],
+        .__cardMarkReads[key],
     name,
   );
 }
