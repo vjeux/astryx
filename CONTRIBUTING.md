@@ -296,7 +296,9 @@ Components read user-facing strings with `useComponentTranslator(<slice>)`
 rather than hardcoding them. The slice is the component's own namespace of the
 English catalog, generated under `src/i18n/generated-locales/en/`, so an app
 that neither mounts `InternationalizationProvider`, calls `useTranslator()` nor
-imports `InternationalizationContext` (each carries the whole catalog) bundles
+imports `InternationalizationContext` (each carries the whole catalog), and does
+not render `PowerSearch` (its caller-supplied operator keys keep the whole
+catalog as their fallback, through the internal `useCatalogTranslator`), bundles
 only the strings of the components it renders:
 
 ```tsx
@@ -313,17 +315,16 @@ A file that reads several namespaces merges their slices once at module level
 (`const messages = {...aMessages, ...bMessages}`) and passes that. Astryx's own
 strings live in `packages/core/locales/en.json`, keyed
 `@astryx.<namespace>.<name>`; `pnpm generate:i18n-runtime` emits the slices, and
-`pnpm check:i18n-catalog` gains a slice-coverage rule with the component
-sweep, failing a key read outside the file's slice. The
+`pnpm check:i18n-catalog` fails a key read outside the file's slice, and any
+import of `useTranslator` or `InternationalizationContext` inside core. The
 `@astryx/no-hardcoded-i18n-string` ESLint rule rejects a hardcoded string. For
 a prop whose default is a translated string, alias the prop and resolve it in
 the body: destructure `label: labelFromProps`, then
 `const label = labelFromProps ?? t('@astryx.<component>.<key>')`.
 
 `useTranslator()` from `@astryxdesign/core/i18n` is the consumer-facing hook:
-it carries the whole English catalog, so a component inside `packages/core`
-renders with its slice instead; packages that depend on core (`lab`,
-`richtext`) use `useTranslator()`.
+it carries the whole English catalog, so code inside `packages/core` does not
+use it; packages that depend on core (`lab`, `richtext`) do.
 
 A component that responds to text direction resolves it from the DOM, not from
 a render-time JavaScript read. Reach for the lightest tool that works, in this

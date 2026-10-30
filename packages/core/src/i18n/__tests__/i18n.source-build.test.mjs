@@ -68,4 +68,29 @@ describe('the shipped i18n runtime and the English catalog', () => {
       './InternationalizationContext.js',
     );
   });
+
+  it('the caller-key translator reads the public context, and only PowerSearch carries it', async () => {
+    // `operator.i18nKey` is caller-supplied, so PowerSearch keeps the whole
+    // catalog as that key's fallback; a component with fixed keys does not.
+    expect(
+      await compiledStaticImportsOf('i18n/useCatalogTranslator.ts'),
+    ).toContain('./InternationalizationContext.js');
+    expect(
+      await compiledStaticImportsOf('PowerSearch/PowerSearchToken.tsx'),
+    ).toContain('../i18n/useCatalogTranslator.js');
+    expect(await compiledStaticImportsOf('Button/Button.tsx')).not.toContain(
+      '../i18n/useCatalogTranslator.js',
+    );
+  });
+
+  it('a component carries its own slice and not the whole catalog', async () => {
+    const imports = await compiledStaticImportsOf('Button/Button.tsx');
+    expect(imports).toContain(
+      '../i18n/generated-locales/en/button.generated.js',
+    );
+    expect(imports).toContain('../i18n/useComponentTranslator.js');
+    expect(imports).not.toContainEqual(expect.stringMatching(WHOLE_CATALOG));
+    expect(imports).not.toContain('../i18n/useTranslator.js');
+    expect(imports).not.toContain('../i18n/InternationalizationContext.js');
+  });
 });
