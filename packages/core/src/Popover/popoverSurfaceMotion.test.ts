@@ -15,7 +15,7 @@
 
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {cubicBezier} from '../motion/bezier';
-import {solveSpring, toSpring, type SpringDescription} from '../motion/spring';
+import {solveSpring, toSpring} from '../motion/spring';
 import {popover, springs, timing} from '../motion/uikit';
 import {isInputShield} from '../Layer/inputHold';
 import {
@@ -234,10 +234,21 @@ interface Recorded {
 describe('createPopoverSurfaceMotion', () => {
   let clock = 1000;
   let recorded: Recorded[] = [];
+  // The animation frames the motion asked for, run by `frame()`.
+  const frames = new Map<number, () => void>();
+  let lastFrame = 0;
+  const frame = () => {
+    const due = [...frames.values()];
+    frames.clear();
+    for (const callback of due) {
+      callback();
+    }
+  };
 
   beforeEach(() => {
     clock = 1000;
     recorded = [];
+    frames.clear();
     vi.useFakeTimers();
     HTMLElement.prototype.animate = function (keyframes, options) {
       const animation = {
@@ -312,7 +323,15 @@ describe('createPopoverSurfaceMotion', () => {
     // The touch presentation runs under a coarse pointer, where Reduce
     // Motion cross-fades.
     stubMedia(reducedMotion, true);
-    const motion = createPopoverSurfaceMotion(element, {now: () => clock});
+    const motion = createPopoverSurfaceMotion(element, {
+      now: () => clock,
+      requestFrame: callback => {
+        lastFrame += 1;
+        frames.set(lastFrame, callback);
+        return lastFrame;
+      },
+      cancelFrame: handle => frames.delete(handle),
+    });
     return {element, motion};
   };
 
@@ -337,6 +356,7 @@ describe('createPopoverSurfaceMotion', () => {
       return GEOMETRY;
     });
     motion.enter(measure);
+    frame();
     expect(measure).toHaveBeenCalledTimes(1);
     const state = popoverCollapsedState(GEOMETRY);
     expect(element.style.getPropertyValue('animation-name')).toBe('none');
@@ -376,6 +396,7 @@ describe('createPopoverSurfaceMotion', () => {
   it('plays the dismissal on a static copy of the popover, back into its source, removed when the spring settles', async () => {
     const {element, motion} = create();
     motion.enter(() => GEOMETRY);
+    frame();
     clock += 1000;
     await vi.advanceTimersByTimeAsync(1000);
     motion.exit();
@@ -432,6 +453,7 @@ describe('createPopoverSurfaceMotion', () => {
   it('lets the hidden layer go of its compositing layer as the dismissal starts, so no style write reaches it during the dismissal', async () => {
     const {element, motion} = create();
     motion.enter(() => GEOMETRY);
+    frame();
     // Dismissed about 100 ms after the presentation's curve ended, while the
     // animator still keeps the element promoted (its PROMOTION_LINGER_MS).
     clock += 600;
@@ -462,9 +484,47 @@ describe('createPopoverSurfaceMotion', () => {
     expect(element.style.getPropertyValue('will-change')).toBe('');
   });
 
+  it('writes and reads nothing in the task that opens the popover: the next frame, before it paints, turns the CSS entrance off and reads the boxes', () => {
+    const {element, motion} = create();
+    const measure = vi.fn(() => GEOMETRY);
+    motion.enter(measure);
+    expect(measure).not.toHaveBeenCalled();
+    expect(live('scale')).toEqual([]);
+    // Nothing is written in the opening task either: the frame turns the
+    // CSS entrance off before it paints.
+    expect(element.style.getPropertyValue('animation-name')).toBe('');
+    expect(element.style.getPropertyValue('opacity')).toBe('');
+    frame();
+    expect(element.style.getPropertyValue('animation-name')).toBe('none');
+    expect(measure).toHaveBeenCalledTimes(1);
+    expect(live('scale')).toHaveLength(1);
+  });
+
+  it('a close before that frame presents nothing and leaves the element as the component styles it, with no compositing layer or timer left on it', () => {
+    const {element, motion} = create();
+    const measure = vi.fn(() => GEOMETRY);
+    motion.enter(measure);
+    const timers = vi.getTimerCount();
+    motion.exit();
+    frame();
+    expect(measure).not.toHaveBeenCalled();
+    expect(copyOf(element)).toBeNull();
+    expect(live('scale')).toEqual([]);
+    expect(element.style.getPropertyValue('animation-name')).toBe('');
+    expect(element.style.getPropertyValue('opacity')).toMatch(/^(1)?$/);
+    // The element is hidden: a promotion would leave `will-change` on it and
+    // a timer to end it, a style write on an element that no longer paints.
+    expect(element.style.getPropertyValue('will-change')).toBe('');
+    expect(vi.getTimerCount()).toBe(timers);
+    const style = element.getAttribute('style');
+    vi.advanceTimersByTime(1000);
+    expect(element.getAttribute('style')).toBe(style);
+  });
+
   it('presented again during the dismissal, grows back from the frame on screen about the same point', () => {
     const {element, motion} = create();
     motion.enter(() => GEOMETRY);
+    frame();
     clock += 1000;
     vi.advanceTimersByTime(1000);
     motion.exit();
@@ -496,6 +556,7 @@ describe('createPopoverSurfaceMotion', () => {
   it('reset leaves the element as the component styles it', () => {
     const {element, motion} = create();
     motion.enter(() => GEOMETRY);
+    frame();
     motion.reset();
     for (const property of [
       'scale',
@@ -512,6 +573,7 @@ describe('createPopoverSurfaceMotion', () => {
   it('Reduce Motion: the popover cross-fades in at its size and out where it stands, in 200 ms or less, with no spring', () => {
     const {element, motion} = create(true);
     motion.enter(() => GEOMETRY);
+    frame();
     // No growth: every scale keyframe is the full size.
     for (const animation of live('scale', element)) {
       for (const frame of animation.keyframes) {
@@ -635,6 +697,8 @@ describe('createPopoverSurfaceMotion', () => {
     it('takes every touch until the present spring settles, as UIKit ignores touches during the presentation', async () => {
       const {element, motion} = create();
       motion.enter(() => GEOMETRY);
+      // The presentation, and its hold, start in the next frame.
+      frame();
       const hold = holdOf(element);
       expect(hold).not.toBeNull();
       // A manual popover inside the layer: above everything in the top layer,
@@ -667,6 +731,7 @@ describe('createPopoverSurfaceMotion', () => {
     it('ignores a tap without a trace: it moves no focus and fires no click', () => {
       const {element, motion} = create();
       motion.enter(() => GEOMETRY);
+      frame();
       const hold = holdOf(element)!;
       // The compatibility mousedown moves focus and the touch's end makes
       // the click: both are cancelled, so the focused control keeps focus.
@@ -684,12 +749,14 @@ describe('createPopoverSurfaceMotion', () => {
     it('lets go at once when the popover is dismissed or reset during the presentation', () => {
       const dismissed = create();
       dismissed.motion.enter(() => GEOMETRY);
+      frame();
       expect(holdOf(dismissed.element)).not.toBeNull();
       dismissed.motion.exit();
       expect(holdOf(dismissed.element)).toBeNull();
 
       const reset = create();
       reset.motion.enter(() => GEOMETRY);
+      frame();
       reset.motion.reset();
       expect(holdOf(reset.element)).toBeNull();
       // No hold is left in the top layer (the dismissal's copy is, by design).
@@ -699,6 +766,7 @@ describe('createPopoverSurfaceMotion', () => {
     it('holds under Reduce Motion too, for the length of the cross-fade', async () => {
       const {element, motion} = create(true);
       motion.enter(() => GEOMETRY);
+      frame();
       const hold = holdOf(element);
       expect(hold).not.toBeNull();
       clock += timing.reducedMotionCrossFadeMs / 2;
@@ -716,6 +784,7 @@ describe('createPopoverSurfaceMotion', () => {
       Reflect.deleteProperty(HTMLElement.prototype, 'showPopover');
       const {element, motion} = create();
       motion.enter(() => GEOMETRY);
+      frame();
       const hold = holdOf(element);
       // Not in the top layer, so it covers only what a fixed element can:
       // the tap it does take is still a tap inside the popover.

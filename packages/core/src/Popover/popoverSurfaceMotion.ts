@@ -35,6 +35,12 @@
  * same motion turned toward its source (M-PO1 confirms it). The point it
  * grows out of is the source's centre on that edge, kept on the popover.
  *
+ * A presentation writes and reads nothing until the next animation frame,
+ * which runs before that frame paints: as the popover opens, the element's
+ * style and the boxes would lay the page out inside the task that opened it.
+ * The layer's own CSS entrance, started meanwhile, is turned off in that
+ * frame, before anything paints.
+ *
  * The dismissal outlives the popover: the browser hides a popover as it
  * closes, so it plays on the layer runtime's exit copy (`placeLayerExitCopy`),
  * removed when its motion ends.
@@ -114,9 +120,10 @@ function pathOf(
 export interface PopoverSurfaceMotion {
   /**
    * The popover has just been shown in its touch presentation: grow it out
-   * of its source. `measure` reads the geometry; it runs with the element at
-   * its full size. During a dismissal, the popover grows back from where the
-   * dismissal has it, about the same point.
+   * of its source, from the next animation frame, before it paints:
+   * `measure` reads the geometry there, with the element at its full size.
+   * During a dismissal, the popover grows back from where the dismissal has
+   * it, about the same point, at once (it reads nothing).
    */
   enter(measure: () => PopoverSurfaceGeometry): void;
   /**
@@ -136,12 +143,43 @@ export interface PopoverSurfaceMotion {
 
 export function createPopoverSurfaceMotion(
   element: HTMLElement,
-  options: Pick<AnimatorOptions, 'now'> = {},
+  {
+    requestFrame,
+    cancelFrame,
+    ...options
+  }: Pick<AnimatorOptions, 'now'> & {
+    /** Schedules the presentation's read (default: the element's window's animation frame). */
+    requestFrame?: (callback: () => void) => number;
+    /** Cancels a read `requestFrame` scheduled. */
+    cancelFrame?: (handle: number) => void;
+  } = {},
 ): PopoverSurfaceMotion {
   // The popover's two springs are this component's measured values, not
   // motion roles (touch motion stays internal, spec:AST-094 DEC-11): they
   // play as given, so no table is registered and no other row is bundled.
   const morph = createRectMorph(element, options);
+  const view = element.ownerDocument.defaultView;
+  const scheduleFrame =
+    requestFrame ??
+    ((callback: () => void) =>
+      typeof view?.requestAnimationFrame === 'function'
+        ? view.requestAnimationFrame(() => callback())
+        : (callback(), 0));
+  const unscheduleFrame =
+    cancelFrame ??
+    ((handle: number) => {
+      if (typeof view?.cancelAnimationFrame === 'function') {
+        view.cancelAnimationFrame(handle);
+      }
+    });
+  // The frame a fresh presentation waits for to read its geometry.
+  let pendingFrame: number | null = null;
+  const cancelPending = () => {
+    if (pendingFrame != null) {
+      unscheduleFrame(pendingFrame);
+      pendingFrame = null;
+    }
+  };
   // The presentation in progress or last played, and the geometry it
   // measured; null while the popover is in a presentation this motion does
   // not drive.
@@ -158,6 +196,7 @@ export function createPopoverSurfaceMotion(
   };
 
   const reset = () => {
+    cancelPending();
     collapsed = null;
     measured = null;
     presentHandle = null;
@@ -167,28 +206,18 @@ export function createPopoverSurfaceMotion(
     element.style.removeProperty('animation-name');
   };
 
-  const enter = (measure: () => PopoverSurfaceGeometry) => {
-    // Presented again during the dismissal: the morph continues from the
-    // copy's frame on screen, about the same point.
-    const resumed = dismissHandle != null && collapsed != null;
-    if (!resumed || measured == null) {
-      // At full size for the read: no transform left from the last
-      // dismissal, nor the first keyframe of the layer's CSS entrance (which
-      // belongs to the pointer presentation). Nothing paints before the
-      // present below replaces it.
-      element.style.setProperty('animation-name', 'none');
-      if (!resumed) {
-        morph.reset();
-      }
-      measured = measure();
-      collapsed = popoverCollapsedState(measured);
-    }
+  const present = (
+    geometry: PopoverSurfaceGeometry,
+    state: PopoverCollapsedState,
+  ) => {
+    measured = geometry;
+    collapsed = state;
     // The layer's own CSS entrance belongs to the pointer presentation.
     element.style.setProperty('animation-name', 'none');
     // Under Reduce Motion the animator lands the growth at once and fades
     // the opacity in (design:reduced-motion).
     const handle = morph.present(
-      pathOf(measured.surface, collapsed!),
+      pathOf(geometry.surface, state),
       POPOVER_PRESENT_SPRING,
     );
     dismissHandle = null;
@@ -204,8 +233,52 @@ export function createPopoverSurfaceMotion(
     });
   };
 
+  const enter = (measure: () => PopoverSurfaceGeometry) => {
+    cancelPending();
+    // Presented again during the dismissal: the morph continues from the
+    // copy's frame on screen, about the same point.
+    if (dismissHandle != null && collapsed != null && measured != null) {
+      present(measured, collapsed);
+      return;
+    }
+    // A fresh presentation writes and reads nothing until the next frame,
+    // which runs before that frame paints: here, the element's style and
+    // the boxes would lay the page out inside the task that opened the
+    // popover. The layer's own CSS entrance, started meanwhile, is turned
+    // off before anything paints.
+    // The input hold starts with the presentation too, in that frame: a touch
+    // that starts in the one frame between the open and it (about 16 ms after
+    // the opening tap lifts) reaches the page, though its tap does not
+    // dismiss, since its lift lands on the hold. Holding from the open would
+    // cost two forced layouts in every touch opening (a top-layer cover's
+    // `showPopover()` lays the page out), the work this frame keeps out of
+    // the opening task.
+    pendingFrame = scheduleFrame(() => {
+      pendingFrame = null;
+      // At full size for the read: no transform left from the last
+      // dismissal, nor the first keyframe of the layer's CSS entrance (which
+      // belongs to the pointer presentation). Nothing paints before the
+      // present below replaces it.
+      element.style.setProperty('animation-name', 'none');
+      morph.reset();
+      const geometry = measure();
+      present(geometry, popoverCollapsedState(geometry));
+    });
+  };
+
   const exit = () => {
     releaseHold();
+    if (pendingFrame != null) {
+      // Closed before the frame that would have presented it: nothing is on
+      // screen to dismiss, and nothing was written to the element, which is
+      // hidden now and stays as the component styles it, with no compositing
+      // layer and no timer to end one.
+      cancelPending();
+      collapsed = null;
+      measured = null;
+      presentHandle = null;
+      return;
+    }
     const state = collapsed;
     if (state == null || measured == null || dismissHandle != null) {
       return;
