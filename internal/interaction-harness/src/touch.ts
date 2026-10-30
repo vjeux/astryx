@@ -140,6 +140,24 @@ const formatGaps = (gaps: readonly number[]) =>
   gaps.map(gap => Number(gap.toFixed(1))).join(', ');
 
 /**
+ * What the page did with each event of a gesture, ms after the event's own
+ * stamp: `held` until its listeners had run, `busy` until its main thread was
+ * next free (work the listeners queued, such as a render, included). An
+ * error names them, so a red says whose time widened a gap without a rerun.
+ */
+export interface TouchPageTimes {
+  readonly held: readonly number[];
+  readonly busy: readonly number[];
+}
+
+const NO_PAGE_TIMES: TouchPageTimes = {held: [], busy: []};
+
+const formatPageTimes = ({held, busy}: TouchPageTimes) =>
+  held.length === 0
+    ? ''
+    : `; the page held each event ${formatGaps(held)} ms and was busy ${formatGaps(busy)} ms after its stamp`;
+
+/**
  * A gesture the page received off its scripted pacing. WebKit's touch command
  * takes no timestamp, so the page times each event by when it arrives: under
  * load a dispatch can stall and the events behind it arrive at once, and the
@@ -148,17 +166,20 @@ const formatGaps = (gaps: readonly number[]) =>
 export class TouchPacingError extends Error {
   readonly scriptedGaps: readonly number[];
   readonly receivedGaps: readonly number[];
+  readonly page: TouchPageTimes;
   constructor(
     reason: string,
     scriptedGaps: readonly number[],
     receivedGaps: readonly number[],
+    page: TouchPageTimes = NO_PAGE_TIMES,
   ) {
     super(
-      `the page received this gesture off its scripted pacing: ${reason} (scripted gaps ${formatGaps(scriptedGaps)} ms; received ${formatGaps(receivedGaps)} ms)`,
+      `the page received this gesture off its scripted pacing: ${reason} (scripted gaps ${formatGaps(scriptedGaps)} ms; received ${formatGaps(receivedGaps)} ms${formatPageTimes(page)})`,
     );
     this.name = 'TouchPacingError';
     this.scriptedGaps = scriptedGaps;
     this.receivedGaps = receivedGaps;
+    this.page = page;
   }
 }
 
@@ -171,17 +192,20 @@ export class TouchPacingError extends Error {
 export class TouchPageStallError extends Error {
   readonly scriptedGaps: readonly number[];
   readonly receivedGaps: readonly number[];
+  readonly page: TouchPageTimes;
   constructor(
     reason: string,
     scriptedGaps: readonly number[],
     receivedGaps: readonly number[],
+    page: TouchPageTimes = NO_PAGE_TIMES,
   ) {
     super(
-      `the page's own handling put this gesture off its scripted pacing: ${reason} (scripted gaps ${formatGaps(scriptedGaps)} ms; received ${formatGaps(receivedGaps)} ms)`,
+      `the page's own handling put this gesture off its scripted pacing: ${reason} (scripted gaps ${formatGaps(scriptedGaps)} ms; received ${formatGaps(receivedGaps)} ms${formatPageTimes(page)})`,
     );
     this.name = 'TouchPageStallError';
     this.scriptedGaps = scriptedGaps;
     this.receivedGaps = receivedGaps;
+    this.page = page;
   }
 }
 
@@ -207,7 +231,12 @@ export function checkTouchPacing(
   {
     partial = false,
     handledAt = [],
-  }: {partial?: boolean; handledAt?: readonly number[]} = {},
+    settledAt = [],
+  }: {
+    partial?: boolean;
+    handledAt?: readonly number[];
+    settledAt?: readonly number[];
+  } = {},
 ): void {
   const gapsOf = (times: readonly number[]) =>
     times.slice(1).map((t, i) => t - times[i]);
@@ -233,6 +262,19 @@ export function checkTouchPacing(
     const h = (handledAt[i] ?? Number.NaN) - received[i];
     return Number.isFinite(h) && h > 0 ? h : 0;
   };
+  // Until the page's main thread was next free after the event: reported
+  // with an error, not judged.
+  const busy = (i: number) => {
+    const b = (settledAt[i] ?? Number.NaN) - received[i];
+    return Number.isFinite(b) && b > 0 ? Math.max(b, held(i)) : held(i);
+  };
+  const pageTimes: TouchPageTimes =
+    handledAt.length === 0
+      ? NO_PAGE_TIMES
+      : {
+          held: received.map((_, i) => held(i)),
+          busy: received.map((_, i) => busy(i)),
+        };
   // The gap ending at event i runs from event i - 1 to event i. A widened gap
   // is the page's when the page held event i - 1 longer than the tolerance
   // itself, and the gap is on pace without that time. A hold within the
@@ -286,10 +328,20 @@ export function checkTouchPacing(
   }
   const byPage = offPace.find(o => o.page);
   if (byPage != null) {
-    throw new TouchPageStallError(byPage.reason, scriptedGaps, receivedGaps);
+    throw new TouchPageStallError(
+      byPage.reason,
+      scriptedGaps,
+      receivedGaps,
+      pageTimes,
+    );
   }
   if (offPace.length > 0) {
-    throw new TouchPacingError(offPace[0].reason, scriptedGaps, receivedGaps);
+    throw new TouchPacingError(
+      offPace[0].reason,
+      scriptedGaps,
+      receivedGaps,
+      pageTimes,
+    );
   }
 }
 
@@ -496,6 +548,7 @@ async function webkitDriver(page: Page): Promise<TouchDriver> {
         checkTouchPacing(played, pace.times, {
           partial: !pace.connected,
           handledAt: pace.handledAt,
+          settledAt: pace.settledAt,
         });
       }
       return played.map(p => ({...p, timestamp: null}));
@@ -512,24 +565,39 @@ async function webkitDriver(page: Page): Promise<TouchDriver> {
  */
 const TOUCH_PACE_SCRIPT = `(() => {
   if (window.__harnessTouchPace) return;
-  const pace = (window.__harnessTouchPace = {times: [], handledAt: [], start: null});
+  const pace = (window.__harnessTouchPace = {times: [], handledAt: [], settledAt: [], start: null});
+  // A message posted once an event's listeners have run is delivered after
+  // the tasks they queued (a render): the main thread is free again then.
+  const settle = new MessageChannel();
+  settle.port1.onmessage = message => {
+    if (Number.isNaN(pace.settledAt[message.data])) pace.settledAt[message.data] = performance.now();
+  };
   for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
     window.addEventListener(type, event => {
       if (!event.isTrusted) return;
       const index = pace.times.length;
       pace.times.push(event.timeStamp);
       pace.handledAt.push(NaN);
+      pace.settledAt.push(NaN);
       if (type === 'touchstart') pace.start = event.target;
       // When the page stopped the event's propagation, the next task marks it.
       const later = (window.__harnessTimerGate && window.__harnessTimerGate.timeout) || setTimeout;
-      later(() => { if (Number.isNaN(pace.handledAt[index])) pace.handledAt[index] = performance.now(); }, 0);
+      later(() => {
+        if (Number.isNaN(pace.handledAt[index])) {
+          pace.handledAt[index] = performance.now();
+          settle.port2.postMessage(index);
+        }
+      }, 0);
     }, {capture: true, passive: true});
   }
   // Last on window's bubble phase: rearm() adds it again after the page's own.
   const end = event => {
     if (!event.isTrusted) return;
     const index = pace.handledAt.length - 1;
-    if (index >= 0 && Number.isNaN(pace.handledAt[index])) pace.handledAt[index] = performance.now();
+    if (index >= 0 && Number.isNaN(pace.handledAt[index])) {
+      pace.handledAt[index] = performance.now();
+      settle.port2.postMessage(index);
+    }
   };
   pace.rearm = () => {
     for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
@@ -548,6 +616,7 @@ async function readTouchPace(
   count: number;
   times: number[];
   handledAt: number[];
+  settledAt: number[];
   connected: boolean;
 }> {
   return page.evaluate(at => {
@@ -556,6 +625,7 @@ async function readTouchPace(
         __harnessTouchPace?: {
           times: number[];
           handledAt: number[];
+          settledAt?: number[];
           start: Node | null;
         };
       }
@@ -565,6 +635,7 @@ async function readTouchPace(
       count: times.length,
       times: times.slice(at),
       handledAt: (pace?.handledAt ?? []).slice(at),
+      settledAt: (pace?.settledAt ?? []).slice(at),
       connected: pace?.start?.isConnected ?? true,
     };
   }, from);
