@@ -123,12 +123,69 @@ function webkitTargetSession(page: Page): WebKitTargetSession {
  * records of each type (Paint, Composite, Layout, RecalculateStyles, …), their
  * total time, and every painted rect. WebKit only; Chromium's counterpart is a
  * rendering trace.
+ *
+ * What to read: paint during a motion, frame after frame, is the defect.
+ * Where an element starts or stops animating on the compositor, WebKit paints
+ * it and the area of the layer it leaves or rejoins (its block; on a story
+ * page with nothing composited, the whole viewport, as the page enters and
+ * leaves compositing mode). `{sentinel: true}` composites a sentinel first,
+ * which takes the viewport-wide ones away on a story page.
  */
 export async function recordWebKitTimeline(
   page: Page,
   body: () => Promise<void>,
+  {
+    sentinel = false,
+  }: {
+    /**
+     * Composites a 4 px transparent sentinel for the recording, so the page is
+     * in compositing mode before the body runs. Without one, a story page
+     * with nothing composited repaints its whole viewport where its first
+     * compositor animation starts and again where it ends, as it enters and
+     * leaves compositing mode (4 such paints in 4 of 4 runs; none with it).
+     */
+    sentinel?: boolean;
+  } = {},
 ): Promise<WebKitTimeline> {
   const session = webkitTargetSession(page);
+  if (sentinel) {
+    // Added two frames before the recording, so entering compositing mode
+    // lands outside it; removed after it.
+    await page.evaluate(
+      () =>
+        new Promise<void>(resolve => {
+          const element = document.createElement('div');
+          element.setAttribute('data-harness-composite-sentinel', '');
+          element.setAttribute('aria-hidden', 'true');
+          element.style.cssText =
+            'position:fixed;left:0;top:0;width:4px;height:4px;will-change:transform;pointer-events:none';
+          document.body.append(element);
+          const frame =
+            (
+              window as unknown as {
+                __harnessTimerGate?: {frame?: typeof requestAnimationFrame};
+              }
+            ).__harnessTimerGate?.frame ??
+            window.requestAnimationFrame.bind(window);
+          frame(() => frame(() => resolve()));
+        }),
+    );
+  }
+  try {
+    return await recordTimeline(session, body);
+  } finally {
+    if (sentinel) {
+      await page.evaluate(() =>
+        document.querySelector('[data-harness-composite-sentinel]')?.remove(),
+      );
+    }
+  }
+}
+
+async function recordTimeline(
+  session: WebKitTargetSession,
+  body: () => Promise<void>,
+): Promise<WebKitTimeline> {
   const records: WebKitTimelineRecord[] = [];
   const onRecord = (payload: unknown) => {
     const record = (payload as {record?: WebKitTimelineRecord}).record;

@@ -61,7 +61,12 @@ motion paints nothing per frame there either. WebKit repaints what it does not
 composite, and on a machine without a GPU the raster of a large area at three
 device pixels per CSS px can hold up the next frame, and the touch events that
 wait for it. Rects are in CSS px times the page's scale (1 with
-`width=device-width`).
+`width=device-width`). Paint during a motion, frame after frame, is the defect.
+Where an element starts or stops animating on the compositor, WebKit paints it
+and the area of the layer it leaves or rejoins (its block; on a story page with
+nothing composited, the whole viewport, as the page enters and leaves
+compositing mode): `{sentinel: true}` composites a 4 px sentinel two frames
+before the recording, which takes the viewport-wide ones away on a story page.
 
 ## The proofs
 
