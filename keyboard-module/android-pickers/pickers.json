@@ -1,0 +1,43 @@
+{
+ "setup": "Android 15 emulator, Gboard; a page with a text field, a date field, a select and a time field; the text field tapped (keyboard up), then each picker control tapped",
+ "chromium-158": {
+  "date": {
+   "imeShownAfter": false,
+   "visualViewportBefore": 442,
+   "after": 754,
+   "hideReportMsAfterFocus": 447
+  },
+  "select": {
+   "imeShownAfter": false,
+   "visualViewportBefore": 442,
+   "after": 754,
+   "hideReportMsAfterFocus": 181
+  },
+  "time": {
+   "imeShownAfter": false,
+   "visualViewportBefore": 442,
+   "after": 754,
+   "hideReportMsAfterFocus": 361
+  }
+ },
+ "chrome-124": {
+  "date": {
+   "imeShownAfter": false,
+   "visualViewportBefore": 451,
+   "after": 811,
+   "hideReportMsAfterFocus": 339
+  },
+  "select": {
+   "imeShownAfter": false,
+   "visualViewportBefore": 451,
+   "after": 811,
+   "hideReportMsAfterFocus": 76
+  },
+  "time": {
+   "imeShownAfter": false,
+   "visualViewportBefore": 451,
+   "after": 811,
+   "hideReportMsAfterFocus": 111
+  }
+ }
+}
