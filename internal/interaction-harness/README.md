@@ -193,7 +193,7 @@ in all, and lists each retake under `recaptures` in the trace.
 |                                                        | Chromium 149 | WebKit 26.5 (Linux build)                                                                             |
 | ------------------------------------------------------ | ------------ | ----------------------------------------------------------------------------------------------------- |
 | Trusted touch + pointer events, multi-touch            | yes          | yes (a `touchstart` lists only the fingers that landed in it; pointer events exact)                   |
-| Page sees the scripted timestamps                      | yes, exactly | no: real dispatch time; real-time pacing keeps velocities within ~1 ms                                |
+| Page sees the scripted timestamps                      | yes, exactly | yes, in a real-time play: the driver stamps each touch (below)                                        |
 | Sub-pixel touch positions                              | yes          | no: integer CSS px                                                                                    |
 | Native scroll, fling, pinch-zoom from injected touches | yes          | no                                                                                                    |
 | Lifting one finger while others stay down              | yes          | pointer events right, but that `touchend` lists no remaining `touches`: skip with `PARTIAL_LIFT_SKIP` |
@@ -211,31 +211,45 @@ The WebKit input command is reached through Playwright's in-process server
 object, so it needs a locally launched browser (the default), not `connect()`.
 Firefox has no touch input path and no project.
 
-WebKit's touches carry their real dispatch time, so a velocity reaches the
-page only as well as the dispatch keeps pace. `play` sends each event at its
-scripted time, and never sooner after the one before it than the script spaces
-them: a stall stretches one gap instead of sending the events behind it
-together. With `{checkPacing: true}`, `play` then reads the `timeStamp`s the
-page received and throws `TouchPacingError` where they decide a release: an
-event missing, either of the last two move intervals (what a release velocity
-reads) more than `TOUCH_PACING_TOLERANCE_MS` (4 ms) off the script, or the
-lift `TOUCH_LIFT_STILLNESS_MS` (40 ms) or more after the last move. A
-gesture's first moves and its lift reach the page with its own handling time
-(a burst after `touchstart`, a lift a frame late), and no release reads them.
-The page's own handling can also hold an event the release reads: WebKit
-dispatches an event only once the main thread is free, so a listener that
-blocks widens the gap after it as a stalled runner does. `play` times how
-long the page held each event, from its stamp until a listener on the window
-that runs after the page's own; an off-pace interval or lift that time
-explains throws `TouchPageStallError`, the page's stall, and the rest
-`TouchPacingError`.
+WebKit's input command takes no timestamp, and the engine stamps a touch when
+the page takes it: work the page queued, a render included, moves the stamps a
+device would take in hardware time, when the finger moved. So in a real-time
+play the driver gives each trusted touch event, and the touch pointer events
+derived from it, the script's time for that event on the page's clock (from
+just before the first dispatch, so no stamp is later than its event's
+arrival). A page that takes an event late reads an old stamp, as on a device;
+`performance.now()` in its handlers stays real. Nothing else is stamped:
+synthetic events, mouse and pen pointer events, and every event outside a
+play keep the engine's. Not covered: a pointer event's `getCoalescedEvents()`
+keeps the engine's stamps, `driver.tap` goes through WebKit's tap path with
+the engine's stamps, and a page clock a proof freezes is bypassed (the
+stamps are on the real clock).
+
+`play` sends each event at its scripted time, and never sooner after the one
+before it than the script spaces them: a stall stretches one gap instead of
+sending the events behind it together. With `{checkPacing: true}`, `play`
+then reads the `timeStamp`s the page received and throws `TouchPacingError`
+where they decide a release: an event missing, either of the last two move
+intervals (what a release velocity reads) more than
+`TOUCH_PACING_TOLERANCE_MS` (4 ms) off the script, or the lift
+`TOUCH_LIFT_STILLNESS_MS` (40 ms) or more after the last move. With the
+script's stamps only a missing event can fail it. With
+`{engineTimestamps: true}`, for a check of the pacing itself, WebKit's own
+stamps reach the page and can be off pace: a gesture's first moves and its
+lift arrive with the page's own handling time (a burst after `touchstart`, a
+lift a frame late), and no release reads them; a stalled dispatch widens a
+gap, and so does the page's own handling: WebKit dispatches an event only
+once the main thread is free. `play` times how long the page held each event,
+from its stamp until a listener on the window that runs after the page's own,
+and how long its main thread stayed busy after it; an off-pace interval or
+lift that the holding explains throws `TouchPageStallError`, the page's
+stall, and the rest `TouchPacingError`, each listing both times per event.
 On one worker of a loaded machine, 440 gaps over 40 flicks moved at most 4 ms;
-under eight workers, 4% of flicks had a gap further off, up to 21 ms. Wrap a
-proof whose outcome follows a velocity in
-`retakeOnTouchPacing(testInfo, attempt)`:
-`attempt` builds the state, plays with `checkPacing` and asserts, and runs once
-more only on a `TouchPacingError` (never on a `TouchPageStallError`), listed as
-a `touch-retake` annotation; a second one fails the test with that cause.
+under eight workers, 4% of flicks had a gap further off, up to 21 ms.
+`retakeOnTouchPacing(testInfo, attempt)` runs `attempt` (it builds the state,
+plays with `checkPacing` and asserts) once more only on a `TouchPacingError`
+(never on a `TouchPageStallError`), listed as a `touch-retake` annotation; a
+second one fails the test with that cause.
 
 A tap that must click uses `driver.tap` in both engines. WebKit synthesises no
 click from a scripted touch sequence, so a proof that needs that click skips

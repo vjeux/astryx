@@ -22,9 +22,13 @@
  * WebKit (Playwright's Linux build): the engine's own inspector command
  *   `Input.dispatchTouchEvent` on the page proxy. Touches and the pointer
  *   events derived from them are trusted and cancelable, multi-touch works.
- *   Limits, measured with WebKit 26.5: no timestamp parameter (the page sees
- *   the real dispatch time, so velocity comes from real-time pacing, about
- *   ±1 ms on an idle worker; `checkPacing` reads what the page received);
+ *   Limits, measured with WebKit 26.5: no timestamp parameter, and the engine
+ *   stamps a touch when the page takes it, so queued page work moves the
+ *   stamps a device would take in hardware time. The driver gives each
+ *   trusted touch event and the touch pointer events derived from it the
+ *   script's time on the page's clock instead, in a real-time play
+ *   (`engineTimestamps` keeps the engine's; not covered: a pointer event's
+ *   `getCoalescedEvents()`, `tap`, and a page clock a proof freezes);
  *   integer coordinates only; no native scrolling, fling or pinch-zoom from
  *   these touches; a `touchstart` lists only the fingers that landed in it
  *   (pointer events are exact); no click synthesised from a raw touch sequence (use
@@ -59,11 +63,20 @@ export interface PlayOptions {
   /**
    * Check, once the gesture is played in real time, that the page received it
    * at the script's pacing, and throw `TouchPacingError` if not (default
-   * false). Only WebKit can fail it: its touches carry their real dispatch
-   * time. For a proof whose outcome follows a velocity, with
-   * `retakeOnTouchPacing` around it.
+   * false): one event per dispatched one, the move intervals a release reads
+   * and the lift on pace. With the script's stamps (both engines, the
+   * default) only a missing event can fail it; WebKit's own stamps
+   * (`engineTimestamps`) can be off pace too. For a proof whose outcome
+   * follows a velocity, with `retakeOnTouchPacing` around it.
    */
   readonly checkPacing?: boolean;
+  /**
+   * WebKit: leave each touch with the stamp the engine gives it, the time the
+   * page took it, instead of the script's (default false). For a check of
+   * the pacing itself; a real-time play otherwise stamps every touch as a
+   * device does, with when its finger moved.
+   */
+  readonly engineTimestamps?: boolean;
   /** Called after each event is dispatched, before the next one (storyboards). */
   readonly onEvent?: (
     step: TouchEventStep,
@@ -80,7 +93,11 @@ export interface PlayedEvent extends TouchEventStep {
 
 export interface TouchDriver {
   readonly engine: Engine;
-  /** True when the page's `event.timeStamp` follows the script exactly. */
+  /**
+   * True when the page's `event.timeStamp` follows the script exactly: in
+   * both engines for a real-time play (WebKit's driver stamps its touches;
+   * not with `engineTimestamps` or `realtime: false`).
+   */
   readonly scriptedTimestamps: boolean;
   /** True when these touches can scroll, fling and pinch-zoom natively. */
   readonly drivesNativeGestures: boolean;
@@ -515,7 +532,7 @@ async function webkitDriver(page: Page): Promise<TouchDriver> {
   await page.evaluate(TOUCH_PACE_SCRIPT);
   return {
     engine: 'webkit',
-    scriptedTimestamps: false,
+    scriptedTimestamps: true,
     drivesNativeGestures: false,
     partialLifts: false,
     synthesizesClicks: false,
@@ -528,6 +545,29 @@ async function webkitDriver(page: Page): Promise<TouchDriver> {
           (
             window as unknown as {__harnessTouchPace?: {rearm(): void}}
           ).__harnessTouchPace?.rearm(),
+        );
+      }
+      // The script's time for each event, on the page's clock from now:
+      // before the first dispatch, so no stamp is later than its event's
+      // arrival. Only in real time, where no event leaves before its time.
+      const stamped =
+        (options.realtime ?? true) && !(options.engineTimestamps ?? false);
+      if (stamped) {
+        await page.evaluate(
+          entries => {
+            const pace = (
+              window as unknown as {__harnessTouchPace?: TouchPaceStamps}
+            ).__harnessTouchPace;
+            if (pace != null) {
+              const base = performance.now();
+              pace.stamps = entries.map(e => ({type: e.type, at: base + e.t}));
+              pace.next = 0;
+            }
+          },
+          toTouchEvents(script).map(step => ({
+            type: step.type.toLowerCase(),
+            t: step.t,
+          })),
         );
       }
       const played = await playSteps(
@@ -543,6 +583,31 @@ async function webkitDriver(page: Page): Promise<TouchDriver> {
         },
         () => Date.now(),
       );
+      if (stamped) {
+        // The page takes the events it was sent in its own time: once it has
+        // taken every one (or the touched element left the document with the
+        // rest), touches after this play keep their own stamps.
+        await page.evaluate(async () => {
+          const pace = (
+            window as unknown as {
+              __harnessTouchPace?: TouchPaceStamps & {start: Node | null};
+            }
+          ).__harnessTouchPace;
+          if (pace == null) {
+            return;
+          }
+          const end = performance.now() + 2000;
+          while (
+            pace.next < pace.stamps.length &&
+            (pace.start?.isConnected ?? true) &&
+            performance.now() < end
+          ) {
+            await new Promise(resolve => setTimeout(resolve, 4));
+          }
+          pace.stamps = [];
+          pace.next = 0;
+        });
+      }
       if (from != null) {
         const pace = await readTouchPace(page, from.count);
         checkTouchPacing(played, pace.times, {
@@ -565,7 +630,40 @@ async function webkitDriver(page: Page): Promise<TouchDriver> {
  */
 const TOUCH_PACE_SCRIPT = `(() => {
   if (window.__harnessTouchPace) return;
-  const pace = (window.__harnessTouchPace = {times: [], handledAt: [], settledAt: [], start: null});
+  const pace = (window.__harnessTouchPace = {times: [], handledAt: [], settledAt: [], start: null, stamps: [], next: 0});
+  // The script's stamps: while the driver plays a gesture, each trusted touch
+  // event and the touch pointer events derived from it read the script's time
+  // for that event, as a device stamps a touch in hardware time however late
+  // the page takes it. The getter assigns an event its stamp the first time
+  // it is read or seen, so a page listener that runs before the driver's
+  // reads it too. Each dispatch brings its pointer events, then its touch
+  // event, which moves on to the next stamp.
+  const POINTER_PHASE = {pointerdown: 'touchstart', pointermove: 'touchmove', pointerup: 'touchend', pointercancel: 'touchcancel'};
+  const assigned = new WeakMap();
+  const assign = event => {
+    if (assigned.has(event)) return assigned.get(event);
+    if (!event.isTrusted || pace.next >= pace.stamps.length) return undefined;
+    const isTouch = event.type.startsWith('touch') && 'changedTouches' in event;
+    const phase = isTouch ? event.type : event.pointerType === 'touch' ? POINTER_PHASE[event.type] : undefined;
+    if (phase == null) return undefined;
+    const entry = pace.stamps[pace.next];
+    const at = entry.type === phase ? entry.at : undefined;
+    assigned.set(event, at);
+    if (isTouch && at != null) pace.next += 1;
+    return at;
+  };
+  const nativeTimeStamp = Object.getOwnPropertyDescriptor(Event.prototype, 'timeStamp');
+  Object.defineProperty(Event.prototype, 'timeStamp', {
+    configurable: true,
+    enumerable: nativeTimeStamp.enumerable,
+    get() {
+      const at = pace.next < pace.stamps.length || assigned.has(this) ? assign(this) : undefined;
+      return at ?? nativeTimeStamp.get.call(this);
+    },
+  });
+  for (const type of Object.keys(POINTER_PHASE)) {
+    window.addEventListener(type, event => { assign(event); }, {capture: true, passive: true});
+  }
   // A message posted once an event's listeners have run is delivered after
   // the tasks they queued (a render): the main thread is free again then.
   const settle = new MessageChannel();
@@ -575,6 +673,7 @@ const TOUCH_PACE_SCRIPT = `(() => {
   for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
     window.addEventListener(type, event => {
       if (!event.isTrusted) return;
+      assign(event);
       const index = pace.times.length;
       pace.times.push(event.timeStamp);
       pace.handledAt.push(NaN);
@@ -607,6 +706,12 @@ const TOUCH_PACE_SCRIPT = `(() => {
   };
   pace.rearm();
 })()`;
+
+/** The page's record of the stamps the driver gives a gesture's touches. */
+interface TouchPaceStamps {
+  stamps: {type: string; at: number}[];
+  next: number;
+}
 
 /** The touch times recorded since `from`, and whether the touched element is still in the document. */
 async function readTouchPace(

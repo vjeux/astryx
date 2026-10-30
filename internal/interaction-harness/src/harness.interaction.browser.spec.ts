@@ -313,7 +313,7 @@ test.describe('touch input', () => {
     expect(SCRIPTED_CLICK_SKIP).toContain('driver.tap');
   });
 
-  test('a gesture the page receives off its pacing throws TouchPacingError where the page times touches by their arrival', async ({
+  test("a gesture the page receives off its pacing throws TouchPacingError with WebKit's own stamps, which time touches by their arrival", async ({
     page,
   }) => {
     await fixture(page);
@@ -327,13 +327,14 @@ test.describe('touch input', () => {
     const count = toTouchEvents(script).length;
     const played = driver.play(script, {
       checkPacing: true,
+      engineTimestamps: true,
       onEvent: async (_, index) => {
         if (index === count - 3) {
           await new Promise(r => setTimeout(r, 40));
         }
       },
     });
-    if (driver.scriptedTimestamps) {
+    if (driver.engine === 'chromium') {
       // Chromium: the page sees the script's stamps whatever the dispatch.
       expect((await played).length).toBeGreaterThan(4);
       return;
@@ -351,7 +352,7 @@ test.describe('touch input', () => {
     );
   });
 
-  test("a gesture the page's own touch handler stalls throws TouchPageStallError, which is never re-taken as the runner's", async ({
+  test("with WebKit's own stamps, a gesture the page's own touch handler stalls throws TouchPageStallError, which is never re-taken as the runner's", async ({
     page,
   }) => {
     await fixture(page);
@@ -385,12 +386,12 @@ test.describe('touch input', () => {
       await page.evaluate(() => {
         (window as unknown as {__moves: number}).__moves = 0;
       });
-      return driver.play(script, {checkPacing: true});
+      return driver.play(script, {checkPacing: true, engineTimestamps: true});
     }).then(
       () => 'played',
       (thrown: unknown) => thrown,
     );
-    if (driver.scriptedTimestamps) {
+    if (driver.engine === 'chromium') {
       // Chromium: the page sees the script's stamps whatever it does.
       expect(outcome).toBe('played');
       return;
@@ -402,13 +403,13 @@ test.describe('touch input', () => {
     );
   });
 
-  test('a pacing error shows the page keeping its main thread after a touch, for work its handler queued', async ({
+  test("with WebKit's own stamps, a pacing error shows the page keeping its main thread after a touch, for work its handler queued", async ({
     page,
   }) => {
     await fixture(page);
     const driver = await touchDriver(page);
     test.skip(
-      driver.scriptedTimestamps,
+      driver.engine === 'chromium',
       "Chromium: the page sees the script's stamps whatever it does",
     );
     const script = flick(
@@ -438,16 +439,201 @@ test.describe('touch input', () => {
         {passive: true},
       );
     }, count - 3);
-    const error = await driver.play(script, {checkPacing: true}).then(
-      () => null,
-      (thrown: unknown) => thrown,
-    );
+    const error = await driver
+      .play(script, {checkPacing: true, engineTimestamps: true})
+      .then(
+        () => null,
+        (thrown: unknown) => thrown,
+      );
     expect(error).toBeInstanceOf(TouchPacingError);
     const {page: times} = error as TouchPacingError;
     // Its listeners ran at once; its main thread stayed busy for the work.
     expect(times.held[count - 3]).toBeLessThan(TOUCH_PACING_TOLERANCE_MS);
     expect(times.busy[count - 3]).toBeGreaterThanOrEqual(28);
     expect((error as Error).message).toContain('was busy');
+  });
+
+  test("a touch carries the script's time however late the page takes it, as a device stamps it, while the page's own clock stays real", async ({
+    page,
+  }) => {
+    await fixture(page);
+    const driver = await touchDriver(page);
+    expect(driver.scriptedTimestamps).toBe(true);
+    const script = flick(
+      {x: 160, y: 200},
+      {velocity: {x: 0, y: -1500}, durationMs: 96, hz: 120},
+    );
+    const steps = toTouchEvents(script);
+    const count = steps.length;
+    type Seen = {type: string; at: number; now: number; queued: boolean};
+    // A listener on the pad notes each touch's stamp and the page's clock in
+    // its handler, and queues 30 ms of work (a render) after the move before
+    // the last one.
+    await page.evaluate(stallAt => {
+      const w = window as unknown as {__seen: Seen[]; __moves: number};
+      w.__seen = [];
+      w.__moves = 0;
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => {
+        const end = performance.now() + 30;
+        while (performance.now() < end) {
+          // the page's own work
+        }
+      };
+      const pad = document.getElementById('pad') ?? document.body;
+      for (const type of [
+        'touchstart',
+        'touchmove',
+        'touchend',
+        'pointerdown',
+        'pointermove',
+        'pointerup',
+      ]) {
+        pad.addEventListener(
+          type,
+          event => {
+            let queued = false;
+            if (type === 'touchmove') {
+              w.__moves += 1;
+              if (w.__moves === stallAt) {
+                channel.port2.postMessage(null);
+                queued = true;
+              }
+            }
+            w.__seen.push({
+              type,
+              at: event.timeStamp,
+              now: performance.now(),
+              queued,
+            });
+          },
+          {passive: true},
+        );
+      }
+    }, count - 3);
+    const playAndRead = async (options: {engineTimestamps?: boolean}) => {
+      await page.evaluate(() => {
+        const w = window as unknown as {__seen: Seen[]; __moves: number};
+        w.__seen = [];
+        w.__moves = 0;
+      });
+      await driver.play(script, options);
+      const seen = await page.evaluate(
+        () => (window as unknown as {__seen: Seen[]}).__seen,
+      );
+      const touches = seen.filter(e => e.type.startsWith('touch'));
+      return {seen, touches, queuedAt: touches.findIndex(e => e.queued)};
+    };
+    const {seen, touches, queuedAt} = await playAndRead({});
+    const gaps = (times: readonly number[]) =>
+      times.slice(1).map((t, i) => t - times[i]);
+    // The gaps a release reads and the lift, aligned from the end (Chromium
+    // holds back a gesture's first moves inside its touch slop).
+    const scripted = gaps(steps.map(step => step.t)).slice(-6);
+    const stamped = gaps(touches.map(e => e.at)).slice(-6);
+    for (const [i, gap] of stamped.entries()) {
+      expect(Math.abs(gap - scripted[i]), `gap ${i}`).toBeLessThan(0.2);
+    }
+    // The page's own clock is real: no stamp is later than the handler that
+    // reads it, and the queued work shows there, not in the stamps.
+    for (const e of seen) {
+      expect(e.at).toBeLessThanOrEqual(e.now + 0.5);
+    }
+    expect(queuedAt).toBeGreaterThan(0);
+    expect(
+      touches[queuedAt + 1].now - touches[queuedAt].now,
+    ).toBeGreaterThanOrEqual(25);
+    if (driver.engine === 'chromium') {
+      return;
+    }
+    // Every event of the gesture, and each touch's pointer event reads the
+    // same stamp.
+    expect(touches).toHaveLength(count);
+    expect(
+      seen.filter(e => e.type.startsWith('pointer')).map(e => e.at),
+    ).toEqual(touches.map(e => e.at));
+    // WebKit's own stamps, for the same gesture: the gap after the queued
+    // work widens to it, the distortion the script's stamps remove.
+    const native = await playAndRead({engineTimestamps: true});
+    expect(
+      native.touches[native.queuedAt + 1].at -
+        native.touches[native.queuedAt].at,
+    ).toBeGreaterThanOrEqual(20);
+  });
+
+  test("only the gesture's own trusted touch and touch pointer events carry the script's time", async ({
+    page,
+  }) => {
+    await fixture(page);
+    const driver = await touchDriver(page);
+    test.skip(
+      driver.engine === 'chromium',
+      "the driver stamps WebKit's touches; Chromium's carry CDP's stamps",
+    );
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __others: {kind: string; at: number; now: number}[];
+      };
+      w.__others = [];
+      const pad = document.getElementById('pad') ?? document.body;
+      pad.addEventListener('pointermove', event => {
+        const pointer = event as PointerEvent;
+        if (!pointer.isTrusted || pointer.pointerType !== 'touch') {
+          w.__others.push({
+            kind: pointer.isTrusted ? pointer.pointerType : 'synthetic',
+            at: pointer.timeStamp,
+            now: performance.now(),
+          });
+        }
+      });
+    });
+    const script = flick(
+      {x: 160, y: 200},
+      {velocity: {x: 0, y: -1500}, durationMs: 96, hz: 120},
+    );
+    await driver.play(script, {
+      onEvent: async (_, index) => {
+        if (index === 3) {
+          // A synthetic touch pointer event, mid-gesture.
+          await page.evaluate(() => {
+            const pad = document.getElementById('pad') ?? document.body;
+            pad.dispatchEvent(
+              new PointerEvent('pointermove', {
+                pointerType: 'touch',
+                bubbles: true,
+              }),
+            );
+          });
+        }
+      },
+    });
+    const others = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __others: {kind: string; at: number; now: number}[];
+          }
+        ).__others,
+    );
+    expect(others.map(e => e.kind)).toEqual(['synthetic']);
+    // Its own creation time, not a scripted one.
+    expect(Math.abs(others[0].at - others[0].now)).toBeLessThan(2);
+    // After the play, a tap's touches keep the engine's stamps.
+    const tapped = page.evaluate(
+      async () =>
+        new Promise<{at: number; now: number}>(resolve => {
+          window.addEventListener(
+            'touchstart',
+            event => {
+              resolve({at: event.timeStamp, now: performance.now()});
+            },
+            {once: true, passive: true},
+          );
+        }),
+    );
+    await driver.tap({x: 160, y: 200});
+    const tap = await tapped;
+    expect(Math.abs(tap.at - tap.now)).toBeLessThan(2);
   });
 });
 
