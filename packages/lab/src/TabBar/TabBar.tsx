@@ -209,7 +209,8 @@ export interface TabBarProps extends Omit<
    * Whether scrolling the page down collapses the bar into a circle holding
    * the selected tab's icon (UIKit's `tabBarMinimizeBehavior`): reaching the
    * top of the page or activating the circle (a tap, or the keys) expands
-   * it. Under a finger only;
+   * it; with a search tab, so does focusing it, since it stays in reach
+   * beside the circle. Under a finger only;
    * under a mouse the bar stays expanded.
    * @default 'never'
    */
@@ -1372,7 +1373,13 @@ export function TabBar({
           }}
           {...stylex.props(
             styles.capsule,
-            !isBoxed && [styles.capsuleAlone, styles.barSize(px(tabBar.barHeight), hasSearch ? 'none' : px(naturalWidth(count)),)],
+            !isBoxed && [
+              styles.capsuleAlone,
+              styles.barSize(
+                px(tabBar.barHeight),
+                hasSearch ? 'none' : px(naturalWidth(count)),
+              ),
+            ],
             !hasPlatter && styles.capsuleGlass(HALF_BAR),
             hasSearch && styles.capsuleBesideSearch(SEARCH_ROOM),
             isMinimized && styles.capsuleMinimized,
