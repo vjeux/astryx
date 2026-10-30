@@ -64,7 +64,7 @@ import {themeProps} from '../utils/themeProps';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 import {CheckboxRowPressContext} from './CheckboxRowPressContext';
 
-/** A control's release (UIButton's), when the checkbox owns the press. */
+/** A control's release (the shared release), when the checkbox owns the press. */
 const CONTROL_RELEASE = `${controlPressConsts.controlReleaseMs}ms`;
 /** A cell's release (the row's deselect), when a row owns the press. */
 const CELL_RELEASE = `${cellPressConsts.cellReleaseMs}ms`;
@@ -96,8 +96,8 @@ const styles = stylex.create({
   //
   // The press is this layer's own: the pressed token at full strength
   // while the press is on, and a release of the layer's opacity, 1 → 0, on
-  // the press's clock (a control's, UIButton's highlight release, when the
-  // checkbox owns the press; a cell's, the row's deselect, when a row does).
+  // the press's clock (a control's, the shared release, when the checkbox
+  // owns the press; a cell's, the row's deselect, when a row does).
   // Opacity runs on the compositor, so the release keeps moving while script
   // runs, in step with a row's own press layer (rowPressLayerStyles.cell).
   // The owner declares the press's image and release on itself
