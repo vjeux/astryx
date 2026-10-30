@@ -289,7 +289,16 @@ test('a touch that lands during a hold and lifts after its release reaches nothi
   await page.evaluate(() => {
     const seen: string[] = [];
     (window as unknown as {__seen: string[]}).__seen = seen;
-    for (const type of ['pointerup', 'touchend', 'click']) {
+    // Everything of the touch that reaches the document: a held touch never
+    // does, from its start (which proves it landed under the hold) to its
+    // end.
+    for (const type of [
+      'touchstart',
+      'touchmove',
+      'pointerup',
+      'touchend',
+      'click',
+    ]) {
       document.addEventListener(
         type,
         event => {
@@ -302,13 +311,22 @@ test('a touch that lands during a hold and lifts after its release reaches nothi
       );
     }
   });
-  // A drag that lands during the hold and is still moving when it releases.
-  const dragging = driver.play(
+  // A drag that lands during the hold and is still moving when it releases:
+  // the release runs between two of its moves, a third of the way in (the
+  // driver dispatches each step, then runs onEvent, before the next).
+  let released = false;
+  await driver.play(
     drag(action, {x: action.x, y: action.y + 120}, {durationMs: 760, hz: 60}),
+    {
+      onEvent: async step => {
+        if (!released && step.type === 'touchMove' && step.t >= 250) {
+          released = true;
+          await release(page);
+        }
+      },
+    },
   );
-  await page.waitForTimeout(300);
-  await release(page);
-  await dragging;
+  expect(released).toBe(true);
   await settle(page);
   expect(
     await page.evaluate(() => (window as unknown as {__seen: string[]}).__seen),
