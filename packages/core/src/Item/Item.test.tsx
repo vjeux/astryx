@@ -11,7 +11,7 @@
 
 import {use, useRef} from 'react';
 import {afterEach, beforeEach, describe, it, expect, vi} from 'vitest';
-import {act, fireEvent, render, screen} from '@testing-library/react';
+import {act, cleanup, fireEvent, render, screen} from '@testing-library/react';
 import {rulesDeclaredFor} from '../__tests__/pressState';
 import userEvent from '@testing-library/user-event';
 import {Item} from './Item';
