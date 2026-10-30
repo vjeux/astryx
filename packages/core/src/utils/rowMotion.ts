@@ -7,7 +7,7 @@
  * @input The motion foundation's animator and the springs of list updates
  *   (motion/uikit/list.ts)
  * @output The moves list rows share: one animator per element for every
- *   lane that moves it (`animatorFor`, `motionOf` for its latest motion),
+ *   feature that moves it (`animatorFor`, `motionOf` for its latest motion),
  *   `springHome` (spring a property to its resting value after the layout
  *   moved the element, keeping the velocity on screen), `springTo`,
  *   `releaseMotion` (clear the identity inline values once it rests) and
