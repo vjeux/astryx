@@ -247,16 +247,6 @@ describe('the press reaches the surface the finger landed on', () => {
     expect(rows[2].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
   });
 
-  it('leaves a mouse press to `:active` where the primary pointer is fine', () => {
-    // The test environment is a desktop: `(pointer: coarse)` does not match,
-    // so the stylesheet keeps `:active` for the mouse and the controller
-    // stays out of its way.
-    expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
-    press(rows[0], 'pointerdown', 10, 10, 'mouse');
-    vi.advanceTimersByTime(PRESS_ONSET_MS * 2);
-    expect(pressedRow()).toBe(-1);
-  });
-
   it('leaves a Space press to `:active` where the primary pointer is fine', () => {
     expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
     const button = pressable('button');
@@ -1115,6 +1105,218 @@ describe('a phone or tablet paints a mouse or Space press itself', () => {
     expect(document.querySelectorAll(`[${PRESSED_ATTRIBUTE}]`)).toHaveLength(0);
     // Re-install for afterEach's release.
     release = installPressFeedback();
+  });
+});
+
+describe("a fine pointer's press: at once, the finger's release, no brake (spec:AST-094 FR11, FR43, DEC-21)", () => {
+  // jsdom's matchMedia models a desktop: the primary pointer is fine. A
+  // mouse's or a pen's press goes through the controller, as a finger's
+  // does, in place of the browser's `:active`.
+
+  function control(row: HTMLElement): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.setAttribute(PRESSABLE_ATTRIBUTE, '');
+    row.appendChild(button);
+    return button;
+  }
+
+  function mouseDown(
+    target: Element,
+    init: {button?: number; ctrlKey?: boolean},
+  ): void {
+    const event = new Event('pointerdown', {bubbles: true, cancelable: true});
+    Object.assign(event, {
+      button: 0,
+      ctrlKey: false,
+      clientX: 10,
+      clientY: 100,
+      pointerId: 1,
+      pointerType: 'mouse',
+      ...init,
+    });
+    target.dispatchEvent(event);
+  }
+
+  it("paints a mouse's press at once, holds it, and fades it on a finger's clock here: the deselect clock, on any surface", () => {
+    // With a fine primary pointer a finger's release keeps the deselect
+    // clock on every surface (spec:AST-017 FR59/DEC-25), so a mouse's does.
+    expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
+    const button = control(rows[1]);
+    press(button, 'pointerdown', 10, 100, 'mouse');
+    expect(button.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    vi.advanceTimersByTime(1000);
+    expect(button.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(button, 'pointerup', 10, 100, 'mouse');
+    expect(button.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    vi.advanceTimersByTime(PRESS_FADE_MS - 1);
+    expect(button.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    vi.advanceTimersByTime(1);
+    expect(button.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+  });
+
+  it("paints a mouse's press on a row in a scroll view at once: no content-touch delay", () => {
+    press(rows[1], 'pointerdown', 10, 100, 'mouse');
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(rows[1], 'pointerup', 10, 100, 'mouse');
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    vi.advanceTimersByTime(PRESS_FADE_MS);
+    expect(rows[1].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+  });
+
+  it("on a phone or tablet, a mouse's press paints at once and releases on the shared clock, as a finger's does", () => {
+    coarsePrimaryPointer();
+    const button = control(rows[1]);
+    press(button, 'pointerdown', 10, 100, 'mouse');
+    expect(button.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(button, 'pointerup', 10, 100, 'mouse');
+    expect(button.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    vi.advanceTimersByTime(PRESS_FADE_MS);
+    expect(button.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+  });
+
+  it("paints a pen's press at once, in a scroll view too", () => {
+    press(rows[1], 'pointerdown', 10, 100, 'pen');
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(rows[1], 'pointerup', 10, 100, 'pen');
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+  });
+
+  it('brakes only a finger: a mouse or a pen landing on a list a finger left moving paints at once', () => {
+    coarsePrimaryPointer();
+    // A finger flings the list and lifts: it is still moving.
+    press(rows[0], 'pointerdown', 10, 10);
+    scroller.dispatchEvent(new Event('scroll'));
+    press(rows[0], 'pointercancel', 10, 10);
+    lift(rows[0]);
+    press(rows[1], 'pointerdown', 10, 100, 'pen');
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(rows[1], 'pointerup', 10, 100, 'pen');
+    press(rows[2], 'pointerdown', 10, 200, 'mouse');
+    expect(rows[2].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+  });
+
+  it('paints nothing for a right click, or for a ctrl-click on macOS, which opens the context menu', () => {
+    const button = control(rows[1]);
+    mouseDown(button, {button: 2});
+    expect(button.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    const platform = vi
+      .spyOn(navigator, 'platform', 'get')
+      .mockReturnValue('MacIntel');
+    try {
+      mouseDown(button, {ctrlKey: true});
+      expect(button.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    } finally {
+      platform.mockRestore();
+    }
+  });
+
+  it('paints a ctrl-click elsewhere, where it is a click', () => {
+    const button = control(rows[1]);
+    const platform = vi
+      .spyOn(navigator, 'platform', 'get')
+      .mockReturnValue('Win32');
+    try {
+      mouseDown(button, {ctrlKey: true});
+      expect(button.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    } finally {
+      platform.mockRestore();
+    }
+  });
+});
+
+describe('a link or button inside a pressable is its own press, for every pointer', () => {
+  // The rule RadioListItem's `:active:not(:has(a:active, button:active,
+  // [role="button"]:active, [role="link"]:active))` kept for a mouse (#8424):
+  // a press on a nested native control is that control's, not the row's.
+
+  function rowWith(kind: 'link' | 'button' | 'roleButton' | 'roleLink'): {
+    row: HTMLElement;
+    nested: HTMLElement;
+    text: HTMLElement;
+  } {
+    const row = rows[1];
+    // The row's activator comes first, as a RadioList row's radio does.
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    row.appendChild(radio);
+    const text = document.createElement('span');
+    text.textContent = 'Free forever.';
+    let nested: HTMLElement;
+    if (kind === 'link') {
+      nested = document.createElement('a');
+      nested.setAttribute('href', '#pricing');
+    } else if (kind === 'button') {
+      nested = document.createElement('button');
+    } else {
+      nested = document.createElement('span');
+      nested.setAttribute('role', kind === 'roleButton' ? 'button' : 'link');
+    }
+    const label = document.createElement('span');
+    label.textContent = 'Compare plans';
+    nested.appendChild(label);
+    row.append(text, nested);
+    return {row, nested: label, text};
+  }
+
+  it("a finger on a link in a row paints nothing, and on the row's own text paints the row", () => {
+    const {row, nested, text} = rowWith('link');
+    press(nested, 'pointerdown', 10, 100);
+    vi.advanceTimersByTime(PRESS_ONSET_MS);
+    expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    press(nested, 'pointerup', 10, 100);
+    vi.runAllTimers();
+    press(text, 'pointerdown', 10, 100);
+    vi.advanceTimersByTime(PRESS_ONSET_MS);
+    expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+  });
+
+  it("a mouse on a button in a row paints nothing, and on the row's own text paints the row", () => {
+    const {row, nested, text} = rowWith('button');
+    press(nested, 'pointerdown', 10, 100, 'mouse');
+    expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    press(nested, 'pointerup', 10, 100, 'mouse');
+    vi.runAllTimers();
+    press(text, 'pointerdown', 10, 100, 'mouse');
+    expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+  });
+
+  it('treats role="button" and role="link" as their own presses too', () => {
+    for (const kind of ['roleButton', 'roleLink'] as const) {
+      const {row, nested} = rowWith(kind);
+      press(nested, 'pointerdown', 10, 100);
+      vi.advanceTimersByTime(PRESS_ONSET_MS);
+      expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+      press(nested, 'pointerup', 10, 100);
+      vi.runAllTimers();
+      row.replaceChildren();
+    }
+  });
+
+  it("paints the row for a press inside its activator: an Item row's content sits in an invisible button", () => {
+    const activator = document.createElement('button');
+    const label = document.createElement('span');
+    label.textContent = 'Inbox';
+    activator.appendChild(label);
+    rows[1].appendChild(activator);
+    press(label, 'pointerdown', 10, 100, 'mouse');
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(label, 'pointerup', 10, 100, 'mouse');
+    vi.runAllTimers();
+    press(label, 'pointerdown', 10, 100);
+    vi.advanceTimersByTime(PRESS_ONSET_MS);
+    expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+  });
+
+  it('still paints a pressable that is itself a button, pressed on its label', () => {
+    const button = document.createElement('button');
+    button.setAttribute(PRESSABLE_ATTRIBUTE, '');
+    const label = document.createElement('span');
+    label.textContent = 'Save';
+    button.appendChild(label);
+    document.body.appendChild(button);
+    press(label, 'pointerdown', 10, 10);
+    expect(button.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    button.remove();
   });
 });
 
