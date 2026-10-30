@@ -254,9 +254,6 @@ const same = (a: RGB, b: RGB) => near(a, b, 2);
 /** Further than this from both ends is a blend between the two states. */
 const PRESS_TOLERANCE = 20;
 
-/** Attempts a busy-window probe gets to land its block after the change. */
-const BUSY_ATTEMPTS = 3;
-
 interface BusyProbe {
   /** The colour at the rest state's sample point before the tap. */
   readonly restColour: RGB;
@@ -268,20 +265,21 @@ interface BusyProbe {
 }
 
 /**
- * One busy-window probe: a tap checks "Push notification", then the main
- * thread blocks for 500 ms. It returns what the screen showed during the
- * block from the change's presentation on: the last frame presented before
- * the block began if it already shows the change, plus every frame presented
- * inside the block from the change on. Chromium's screencast sends nothing for
- * an unchanged screen, so the block window can hold no frame at all, and an
- * earlier captured frame was never on screen during it. The capture starts
- * before the tap, so the frame that presents the change is in it. Both
- * engines' compositors can present a change the page committed before the
- * block a few milliseconds into it, which is presentation latency, not the
- * blocked thread holding the mark back. When the change shows only after the
- * block (a lagging runner), the probe missed its window and returns null.
+ * One busy-window probe: a tap checks "Push notification", and once the page
+ * has committed the change the main thread blocks for 500 ms. It returns what
+ * the screen showed during the block from the change's presentation on: the
+ * last frame presented before the block began if it already shows the change,
+ * plus every frame presented inside the block from the change on. Chromium's
+ * screencast sends nothing for an unchanged screen, so the block window can
+ * hold no frame at all, and an earlier captured frame was never on screen
+ * during it. The capture starts before the tap, so the frame that presents
+ * the change is in it. Both engines' compositors can present a change the
+ * page committed before the block a few milliseconds into it, which is
+ * presentation latency, not the blocked thread holding the mark back. A
+ * change committed before the block and first presented after it is a
+ * failure, with its frames.
  */
-async function probeBusyAfterChange(page: Page): Promise<BusyProbe | null> {
+async function probeBusyAfterChange(page: Page): Promise<BusyProbe> {
   await openStory(page, storybook(), 'core-checkboxlist--default');
   const driver = await touchDriver(page);
   const at = await centreOf(page, 'Push notification', 'checkbox');
@@ -292,8 +290,10 @@ async function probeBusyAfterChange(page: Page): Promise<BusyProbe | null> {
   await expect(
     page.getByRole('checkbox', {name: 'Push notification'}),
   ).toBeChecked();
-  // The change has been presented; now the app does 500 ms of work.
-  await frames(page, 1);
+  // The change committed: the second frame's callbacks run only after the
+  // first frame, which renders the change, has been committed. Now the app
+  // does 500 ms of work.
+  await frames(page, 2);
   const busy = await blockMainThread(page, 500);
   await frames(page, 2);
   const shot = await cast.stop();
@@ -308,7 +308,10 @@ async function probeBusyAfterChange(page: Page): Promise<BusyProbe | null> {
     frame => !near(frame.colour, restColour, PRESS_TOLERANCE),
   );
   if (change == null || change.t > busy.to) {
-    return null;
+    throw new Error(
+      'the change, committed before the block, showed only after it: ' +
+        JSON.stringify({busy, frames: read}),
+    );
   }
   const before = read
     .filter(frame => frame.t >= change.t && frame.t < busy.from)
@@ -507,29 +510,7 @@ test.describe('selection marks under a finger', () => {
   test('a main thread blocked right after the change shows the whole mark', async ({
     page,
   }, testInfo) => {
-    // A probe lands when the change is on screen before the block begins. On
-    // a lagging runner it can miss that window; it then runs again on a fresh
-    // page, so a late frame never reads as a missing mark.
-    let probe: BusyProbe | null = null;
-    for (
-      let attempt = 1;
-      attempt <= BUSY_ATTEMPTS && probe == null;
-      attempt++
-    ) {
-      const target = attempt === 1 ? page : await page.context().newPage();
-      try {
-        probe = await probeBusyAfterChange(target);
-      } finally {
-        if (target !== page) {
-          await target.close();
-        }
-      }
-    }
-    if (probe == null) {
-      throw new Error(
-        `in ${BUSY_ATTEMPTS} attempts the change was never presented during the block`,
-      );
-    }
+    const probe = await probeBusyAfterChange(page);
     const {colours, restColour, settledColour} = probe;
     expect(near(settledColour, restColour, PRESS_TOLERANCE)).toBe(false);
     // Whatever the screen showed during the block, once the change showed,
