@@ -9,8 +9,8 @@
  * @output Proof that the animator's motion runs on the compositor
  *   (`spec:AST-094` FR5): a spring keeps advancing every frame through a 1 s
  *   main-thread block, on its analytic curve; a spring that ends inside the
- *   block keeps its end state; the engine plays the analytic curve when
- *   seeked; a finished animation leaves within a frame or two of the curve's
+ *   block keeps its end state; no Layout or Paint runs while it animates
+ *   (Chromium trace); the engine plays the analytic curve when seeked; a finished animation leaves within a frame or two of the curve's
  *   end; a fade-in on an element its stylesheet hides stays visible once it
  *   retires; a dialog's ::backdrop follows the curve and holds its end state;
  *   a frame painted before the compositor has a curve shows the element where
@@ -24,8 +24,10 @@ import {fileURLToPath} from 'node:url';
 import {
   blockMainThread,
   busyWindowProof,
+  countBetween,
   markElement,
   startScreencast,
+  traceRendering,
   trackMarker,
 } from '@astryxdesign/interaction-harness';
 import {expect, test, type Page} from '@playwright/test';
@@ -518,6 +520,33 @@ test('a spring started right before a block plays in full after it', async ({
   expect(first?.x ?? Infinity).toBeLessThanOrEqual(atMost + 1);
   expect(later.length).toBeGreaterThan(0);
   expect(Math.max(...later.map(f => f.x))).toBeGreaterThan((first?.x ?? 0) + 1);
+});
+
+test('no Layout or Paint runs while it animates', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'tracing is a Chromium protocol');
+  await open(page);
+  let start = 0;
+  const trace = await traceRendering(page, async () => {
+    start = await page.evaluate(
+      ({spring, travel}) => {
+        window.animator.animate({x: travel, opacity: 0.5}, {spring});
+        return performance.timeOrigin + performance.now();
+      },
+      {spring: SLOW, travel: TRAVEL},
+    );
+    await page.waitForTimeout(1900);
+  });
+  // After the frame that starts the animation.
+  const counts = countBetween(trace, start + 50, trace.window.to);
+  test.info().annotations.push({
+    type: 'rendering work while animating',
+    description: JSON.stringify(counts),
+  });
+  expect(counts.Layout ?? 0).toBe(0);
+  expect(counts.Paint ?? 0).toBe(0);
 });
 
 test('the engine plays the analytic curve, all channels on one clock', async ({
