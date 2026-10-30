@@ -372,17 +372,17 @@ describe('build-css astryx.css', () => {
         /color-mix\(in srgb,\s*var\(--color-overlay-pressed\)\s*calc\(/g,
       );
       expect(formulas).toHaveLength(1);
-      // Every overlay variant, the cards' `--_press-overlay`, and the
-      // ancestor-scoped paints (switch, tab) read it back: eight lines today,
-      // fewer than the arms because StyleX deduplicates identical rules. The
-      // checkbox and radio overlays paint on their own layer instead (below).
-      // A regex that stopped matching would fall well below this floor.
+      // Every overlay variant and the cards' `--_press-overlay` read it
+      // back: six lines today, fewer than the arms because StyleX
+      // deduplicates identical rules. The switch, the tab, the checkbox and
+      // the radio paint on their own layer instead (below). A regex that
+      // stopped matching would fall well below this floor.
       const paints = lines().filter(
         line =>
           /\[data-astryx-press="(?:on|fading)"\]/.test(line) &&
           line.includes('var(--_press-paint'),
       );
-      expect(paints.length).toBeGreaterThanOrEqual(7);
+      expect(paints.length).toBeGreaterThanOrEqual(5);
       // Not the hover strength: under a finger there is no hover to land on,
       // and a paint that stepped there would still have to step off.
       const arms = lines().filter(line =>
@@ -391,6 +391,31 @@ describe('build-css astryx.css', () => {
       expect(arms.some(line => line.includes('--color-overlay-hover'))).toBe(
         false,
       );
+    });
+
+    it('declares, on a switch row under a coarse pointer, the press its track layer paints and releases', () => {
+      // The row that owns a switch's press declares the pressed token at full
+      // strength on its own press arms, and the release keyframes on the
+      // fading arm, for the layer over the track to read
+      // (pressLayerStyles.owner). Read from the shipped sheet: the unit
+      // tests' jsdom sheet loses some nested arms the compiler emits.
+      const coarseRules = property =>
+        [
+          ...astryxCss.matchAll(
+            new RegExp(
+              `@media \\(pointer: coarse\\)\\{[^{}]*:is\\(\\[data-astryx-press="(on|fading)"\\]\\)\\{${property}:([^}]*)\\}`,
+              'g',
+            ),
+          ),
+        ].map(([, arm, value]) => ({arm, value}));
+      const image = coarseRules('--_press-layer-image');
+      expect(image.map(({arm}) => arm).sort()).toEqual(['fading', 'on']);
+      for (const {value} of image) {
+        expect(value).toContain('var(--color-overlay-pressed)');
+      }
+      const release = coarseRules('--_press-layer-release');
+      expect(release.map(({arm}) => arm)).toEqual(['fading']);
+      expect(release[0].value).not.toBe('none');
     });
 
     it('paints the checkbox and radio press on their own layer and releases it by opacity', async () => {

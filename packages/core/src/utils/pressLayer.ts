@@ -11,10 +11,12 @@
  * @output `pressLayerStyles`: the compositor press layer of every surface on
  *   an overlay variant other than Button and the cards (`before`, `after`,
  *   with each variant's host arms, `colorHost`, `imageHost` and
- *   `neutralHost`, and `positioned` for a host that is no containing block)
+ *   `neutralHost`, and `positioned` for a host that is no containing block),
+ *   and of a press a descendant paints (`owner`, `ownedAfter`,
+ *   `holdStrength`)
  * @position Internal to core: core's `exports` do not list this module
  *   (`architecture:public-component-api` INV12). Composed by SegmentedControl,
- *   Link, SideNav, Stepper, Outline, Calendar, Collapsible,
+ *   Switch, Tab, Link, SideNav, Stepper, Outline, Calendar, Collapsible,
  *   NumberInput, Token, TopNav, CommandPalette, AvatarGroup and DateInput's
  *   touch field after their overlay variant (interactionOverlay.stylex.ts);
  *   Button's and the cards' layers are controlPressLayer.ts's, which this
@@ -349,6 +351,70 @@ export const pressLayerStyles = stylex.create({
             'relative',
         },
       },
+    },
+  },
+  /**
+   * The strength alone held under a coarse primary pointer, for an owner
+   * whose press a descendant paints on a layer of its own (a switch's
+   * track, a tab).
+   */
+  holdStrength: {
+    ...strengthReleaseOutsideCoarse,
+  },
+  /**
+   * An owner whose press a descendant's layer paints (a switch row and its
+   * track): under a coarse primary pointer it declares the press's image, the
+   * pressed token at full strength, and its release for that layer, so the
+   * layer answers its nearest owner only (`architecture:component-style-
+   * authoring` INV4). Keyed on `:is(…)`: on a custom property, StyleX's
+   * layered build places a bare attribute condition below the default.
+   */
+  owner: {
+    '--_press-layer-image': {
+      default: 'none',
+      '@media (pointer: coarse)': {
+        default: 'none',
+        ':is([data-astryx-press="on"])': pressedImage,
+        ':is([data-astryx-press="fading"])': pressedImage,
+      },
+    },
+    '--_press-layer-release': {
+      default: 'none',
+      '@media (pointer: coarse)': {
+        default: 'none',
+        ':is([data-astryx-press="fading"])': controlRelease,
+      },
+    },
+  },
+  /**
+   * The layer on a descendant's `::after`, over its content, painting its
+   * nearest owner's press (`owner`) and releasing it by opacity on the
+   * compositor. Its host is the layer's containing block.
+   */
+  ownedAfter: {
+    '::after': {
+      content: '""',
+      position: 'absolute',
+      inset: 0,
+      borderRadius: 'inherit',
+      pointerEvents: 'none',
+      // Forced colours keep the host's own system colours: no press paint.
+      backgroundImage: {
+        default: 'var(--_press-layer-image, none)',
+        '@media (forced-colors: active)': 'none',
+      },
+      animationName: 'var(--_press-layer-release, none)',
+      animationDuration: {
+        default: CONTROL_RELEASE_DURATION,
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          REDUCED_MOTION_RELEASE_DURATION,
+      },
+      animationTimingFunction: {
+        default: CONTROL_RELEASE_EASE,
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          reducedMotionFadeConsts.easing,
+      },
+      animationFillMode: 'both',
     },
   },
 });

@@ -33,9 +33,12 @@ import {
 } from '../__tests__/forcedColors';
 import {
   hasPressedArm,
-  hasReleaseFade,
+  keepsPressOutsideCoarse,
   readsPressStrength,
+  rulesDeclaredFor,
+  rulesWithSelector,
 } from '../__tests__/pressState';
+import {list} from '../motion/uikit/list';
 import {__resetLiveRegionsForTest} from '../hooks/useAnnounce';
 import {InternationalizationProvider} from '../i18n';
 
@@ -429,7 +432,9 @@ describe('Switch', () => {
           continue;
         }
         for (const node of record.addedNodes) {
-          if (node.textContent) {written.push(node.textContent);}
+          if (node.textContent) {
+            written.push(node.textContent);
+          }
         }
       }
     });
@@ -976,7 +981,7 @@ describe('Switch', () => {
       expect(hasPressedArm(thumb)).toBe(true);
     });
 
-    it('fades the touch press out from the row, with the track and thumb reading its strength', () => {
+    it('fades the touch press out from the row on the layer over the track, by opacity on the compositor', () => {
       const {container} = render(
         <Switch label="Notifications" value={false} onChange={() => {}} />,
       );
@@ -986,13 +991,54 @@ describe('Switch', () => {
       if (track == null || thumb == null || row == null) {
         throw new Error('the switch has no pressable row, track or thumb');
       }
-      // The controller writes the row; the row owns the strength and its
-      // release, and the two parts paint the pressed token at that strength
-      // on both touch arms, so they fade together.
-      expect(hasReleaseFade(row)).toBe(true);
+      // The controller writes the row. Under a coarse primary pointer the row
+      // holds the strength and declares the press for the layer over the
+      // track (its `::after`, over the track and its thumb): the pressed token
+      // at full strength while the press is on or fading, released by opacity
+      // on the shared release's clock. With any other pointer the row's
+      // strength release runs, as before; the two parts paint no touch press
+      // of their own.
+      const coarseRow = rulesDeclaredFor(row, {
+        insideMedia: /\(pointer: coarse\)/,
+      });
+      expect(
+        coarseRow.some(
+          rule =>
+            rule.includes('--_press-layer-image:') &&
+            rule.includes('[data-astryx-press="on"]') &&
+            rule.includes('--color-overlay-pressed'),
+        ),
+      ).toBe(true);
+      expect(
+        coarseRow.some(
+          rule =>
+            rule.includes('--_press-layer-release:') &&
+            rule.includes('[data-astryx-press="fading"]'),
+        ),
+      ).toBe(true);
+      const layer = rulesWithSelector(track, '::after');
+      expect(
+        layer.some(rule => rule.includes('var(--_press-layer-image')),
+      ).toBe(true);
+      expect(
+        layer.some(rule => rule.includes('var(--_press-layer-release')),
+      ).toBe(true);
+      expect(layer.some(rule => /animation-fill-mode:\s*both/.test(rule))).toBe(
+        true,
+      );
+      expect(
+        layer.some(rule =>
+          new RegExp(
+            `animation-duration:\\s*${list.highlight.releaseMs}ms`,
+          ).test(rule),
+        ),
+      ).toBe(true);
+      expect(keepsPressOutsideCoarse(row, '::after')).toBe(true);
       for (const part of [track, thumb]) {
-        expect(readsPressStrength(part, '[data-astryx-press="on"]')).toBe(true);
-        expect(readsPressStrength(part)).toBe(true);
+        expect(readsPressStrength(part, '[data-astryx-press="on"]')).toBe(
+          false,
+        );
+        expect(readsPressStrength(part)).toBe(false);
       }
     });
   });
