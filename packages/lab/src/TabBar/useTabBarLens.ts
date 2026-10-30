@@ -844,12 +844,20 @@ export function useTabBarLens({
       dropCopyAtRest();
       return;
     }
-    // From rest (a key, the app): both curves start when the browser commits
-    // the frame, with the lens's jump to its new place.
+    // From rest (a key, the app): the body starts when the browser commits
+    // the frame, with the lens's jump to its new place, and the copy plays the
+    // body's own curve on the body's clock. Two calls on two animators would
+    // each take their own start, which WebKit's late-start correction can
+    // part under a busy main thread.
     copy.animator.set({x: -offset});
-    body.animator.animate({x: 0}, {spring: tabBar.lensTravel});
-    copy.animator.animate({x: 0}, {spring: tabBar.lensTravel});
+    const call = body.animator.animate({x: 0}, {spring: tabBar.lensTravel});
     dropCopyAtRest();
+    const motion = motionRef.current;
+    void call.started.then(start => {
+      if (motionRef.current === motion) {
+        playCopy(start);
+      }
+    });
   }, [selectedIndex, count, isTouch, capsuleRef, body, copy]);
 
   return {
