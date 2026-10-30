@@ -71,7 +71,7 @@ async function watchMark(
       }
       const reads = ((
         window as unknown as Record<string, unknown>
-      ).__c06marks ??= {}) as Record<string, unknown>;
+      ).__selectionMarkReads ??= {}) as Record<string, unknown>;
       const observer = new MutationObserver(() => {
         if (reads[key] != null) {
           return;
@@ -103,13 +103,13 @@ async function readMark(
   await page.waitForFunction(
     k =>
       ((window as unknown as Record<string, Record<string, unknown>>)
-        .__c06marks ?? {})[k] != null,
+        .__selectionMarkReads ?? {})[k] != null,
     key,
   );
   return page.evaluate(
     k =>
       (window as unknown as Record<string, Record<string, MarkRead>>)
-        .__c06marks[k],
+        .__selectionMarkReads[k],
     key,
   );
 }
