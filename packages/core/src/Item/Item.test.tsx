@@ -18,7 +18,6 @@ import {Item} from './Item';
 import {ItemDescriptionContext} from './ItemDescriptionContext';
 import {emulateTouch} from './__tests__/emulateTouch';
 import {TapGestureRecognizer, useGestureRecognizer} from '../gestures';
-import {pointerQuery} from '../gestures/__tests__/pointerQuery';
 
 /**
  * Item in delegation mode: `interactiveRef` points at a nested control that
@@ -762,10 +761,34 @@ describe('swipeActions', () => {
       });
       return event as Event;
     };
+    /**
+     * The finger's pointer event, which a browser sends before the touch
+     * event of the same input (`spec:AST-094` FR43: where the primary
+     * pointer is fine, the press is what installs the host's listeners).
+     */
+    const sendPointer = (type: string) => {
+      const event = new PointerEvent(type, {
+        bubbles: true,
+        button: 0,
+        buttons: type === 'pointerdown' || type === 'pointermove' ? 1 : 0,
+        cancelable: true,
+        clientX: contact.x,
+        clientY: contact.y,
+        composed: true,
+        isPrimary: down.size === 0 || (down.size === 1 && down.has(id)),
+        pointerId: 100 + id,
+        pointerType: 'touch',
+      });
+      Object.defineProperty(event, 'timeStamp', {value: performance.now()});
+      act(() => {
+        contact.target.dispatchEvent(event);
+      });
+    };
     return {
       down(x: number, y = 10) {
         void act(() => vi.advanceTimersByTime(16));
         contact = {id, x, y, target};
+        sendPointer('pointerdown');
         down.set(id, contact);
         return send('touchstart');
       },
@@ -774,20 +797,24 @@ describe('swipeActions', () => {
         void act(() => vi.advanceTimersByTime(16));
         contact = {...contact, x, y};
         down.set(id, contact);
+        sendPointer('pointermove');
         return send('touchmove', cancelable);
       },
       rest(ms = 320) {
         for (let t = 0; t < ms; t += 16) {
           void act(() => vi.advanceTimersByTime(16));
+          sendPointer('pointermove');
           send('touchmove');
         }
       },
       up({afterMs = 16} = {}) {
         void act(() => vi.advanceTimersByTime(afterMs));
+        sendPointer('pointerup');
         down.delete(id);
         return send('touchend');
       },
       cancel() {
+        sendPointer('pointercancel');
         down.delete(id);
         return send('touchcancel');
       },
@@ -1108,7 +1135,7 @@ describe('swipeActions', () => {
       expect(panelOf(row, 'leading')).not.toHaveAttribute('inert');
     });
 
-    it('keeps every other recognizer on the gesture host inactive while a finger swipes the row (spec:AST-094 FR19; the row swipe reads each event, spec:AST-057)', async () => {
+    it('swipes under a finger beside another recognizer, which a finger works too: gestures attach for every pointer (spec:AST-094 FR43)', async () => {
       expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
       const taps: string[] = [];
       function Other() {
@@ -1122,39 +1149,16 @@ describe('swipeActions', () => {
         );
         return <div ref={ref} data-testid="other" />;
       }
-      // Attached where the primary pointer is fine without reading each
-      // event's pointer, the other recognizer warns once in development (its
-      // misuse is this case's point); the row warns nothing.
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const {row} = renderRow();
       render(<Other />);
       const t = finger(screen.getByTestId('other'), 3);
       t.down(20);
       t.up();
-      // Not opted out of the gate: inactive where the primary pointer is fine.
-      expect(taps).not.toContain('ended');
+      expect(taps).toContain('ended');
       // The row swipes under a finger beside it.
       dragLeading(row, 45);
       await settled();
       expect(xOf(row)).toBe(72);
-      expect(warn).toHaveBeenCalledTimes(1);
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('attached where the primary pointer is fine'),
-      );
-      warn.mockRestore();
-      // The control: on a phone's pointer the same tap is recognized.
-      const coarse = pointerQuery(true);
-      try {
-        cleanup();
-        taps.length = 0;
-        render(<Other />);
-        const u = finger(screen.getByTestId('other'), 4);
-        u.down(20);
-        u.up();
-        expect(taps).toContain('ended');
-      } finally {
-        coarse.restore();
-      }
     });
 
     it('closes a row a finger opened on a tap on its content, as on a phone', async () => {
