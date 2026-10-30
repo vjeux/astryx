@@ -47,6 +47,7 @@ import {
   readLongTasks,
   recordWebKitTimeline,
   releaseAnimations,
+  sampleCurve,
   retakeOnTouchPacing,
   sampleRects,
   seekAnimations,
@@ -152,40 +153,133 @@ const partsOf = async (row: Locator) =>
  * longer (so a blocked main thread cannot drop it), so the motion ends at the
  * first keyframe that reaches the final value, not at the animation's end.
  */
+/**
+ * Frames `motionOf` waits for the row's settle toward a target. The release
+ * starts its settle in the task that handles the lift (a call that continues
+ * motion on screen starts at its own call time), or at the browser's next
+ * commit when it starts from rest (useSwipeAction's `play`), and its start
+ * time resolves at that commit. Each caller reads after its gesture's events
+ * have been handled (both drivers return only then), so the settle is on the
+ * row, started, by the second frame of the wait; the third covers a wait that
+ * begins mid-frame.
+ */
+const SETTLE_START_FRAMES = 3;
+
 async function motionOf(
   row: Locator,
   target?: number,
 ): Promise<{from: number; ms: number}> {
-  // The settle toward `target`, not a tracking spring still running when the
-  // lift has been sent but not yet handled (WebKit dispatches in real time).
-  if (target != null) {
-    await expect
-      .poll(async () =>
-        row.evaluate(node => {
-          const animation = node.getAnimations()[0];
-          const frames = (
-            animation?.effect as KeyframeEffect | undefined
-          )?.getKeyframes();
-          return frames == null
-            ? null
-            : parseFloat(String(frames[frames.length - 1].translate));
-        }),
-      )
-      .toBeCloseTo(target, 0);
+  if (target == null) {
+    await waitForAnimation(row);
+    return row.evaluate(node => {
+      const animation = node.getAnimations()[0];
+      const effect = animation.effect as KeyframeEffect;
+      const duration = Number(effect.getComputedTiming().duration);
+      const frames = effect.getKeyframes();
+      const last = String(frames[frames.length - 1].translate);
+      const end = frames.find(frame => String(frame.translate) === last);
+      return {
+        from: performance.timeOrigin + Number(animation.startTime),
+        ms: (end?.computedOffset ?? 1) * duration,
+      };
+    });
   }
-  await waitForAnimation(row);
-  return row.evaluate(node => {
-    const animation = node.getAnimations()[0];
-    const effect = animation.effect as KeyframeEffect;
-    const duration = Number(effect.getComputedTiming().duration);
-    const frames = effect.getKeyframes();
-    const last = String(frames[frames.length - 1].translate);
-    const end = frames.find(frame => String(frame.translate) === last);
-    return {
-      from: performance.timeOrigin + Number(animation.startTime),
-      ms: (end?.computedOffset ?? 1) * duration,
-    };
-  });
+  // The settle toward `target`: an animation of the row whose keyframes end
+  // there, started, counted in the page's frames rather than waited for on
+  // the runner's clock, which a loaded runner stretches.
+  const found = await row.evaluate(
+    async (node, {to, frames}) => {
+      const w = window as unknown as {
+        __harnessTimerGate?: {frame?: typeof requestAnimationFrame};
+        __harnessAnimations?: {
+          log: {animation: Animation; finishedAt: number | null}[];
+        };
+      };
+      // The page's real frames, even while a timer gate holds its callbacks.
+      const frame = (
+        w.__harnessTimerGate?.frame ?? window.requestAnimationFrame
+      ).bind(window);
+      const endOf = (animation: Animation) => {
+        const keyframes =
+          (animation.effect as KeyframeEffect | null)?.getKeyframes() ?? [];
+        const last = keyframes[keyframes.length - 1];
+        return last == null || !('translate' in last)
+          ? null
+          : parseFloat(String(last.translate));
+      };
+      for (let i = 0; ; i += 1) {
+        const animation = node.getAnimations().find(candidate => {
+          const end = endOf(candidate);
+          return (
+            end != null &&
+            Math.abs(end - to) < 0.5 &&
+            candidate.startTime != null
+          );
+        });
+        if (animation != null) {
+          const effect = animation.effect as KeyframeEffect;
+          const duration = Number(effect.getComputedTiming().duration);
+          const keyframes = effect.getKeyframes();
+          const last = String(keyframes[keyframes.length - 1].translate);
+          const end = keyframes.find(k => String(k.translate) === last);
+          return {
+            from: performance.timeOrigin + Number(animation.startTime),
+            ms: (end?.computedOffset ?? 1) * duration,
+          };
+        }
+        if (i >= frames) {
+          break;
+        }
+        await new Promise(resolve => frame(resolve));
+      }
+      // What the row has instead: its animations now, and those the
+      // harness's recorder (when a wait has installed it) saw end on it.
+      const describe = (animation: Animation, state: string) => {
+        const end = endOf(animation);
+        return `${end == null ? 'an animation' : `a curve to ${end.toFixed(1)} px`} (${state})`;
+      };
+      const now = node
+        .getAnimations()
+        .map(animation =>
+          describe(
+            animation,
+            animation.startTime == null ? 'not started' : 'running',
+          ),
+        );
+      const ended = (w.__harnessAnimations?.log ?? []).flatMap(entry =>
+        (entry.animation.effect as KeyframeEffect | null)?.target === node &&
+        entry.finishedAt != null
+          ? [
+              describe(
+                entry.animation,
+                `ended ${(performance.now() - entry.finishedAt).toFixed(0)} ms ago`,
+              ),
+            ]
+          : [],
+      );
+      // How late the read came: past the settle's length, the runner's.
+      const touches = (
+        window as unknown as {__harnessTouchPace?: {times: number[]}}
+      ).__harnessTouchPace?.times;
+      const lastTouch = touches?.[touches.length - 1];
+      return {
+        instead: [...now, ...ended],
+        sinceLift: lastTouch == null ? null : performance.now() - lastTouch,
+      };
+    },
+    {to: target, frames: SETTLE_START_FRAMES},
+  );
+  if (found.instead != null) {
+    throw new Error(
+      `no settle toward ${target} px on the row ${SETTLE_START_FRAMES} frames after its gesture was handled; the row has ${found.instead.length === 0 ? 'no animation' : found.instead.join(', ')}${found.sinceLift == null ? '' : `, ${found.sinceLift.toFixed(0)} ms after the gesture's last touch`}`,
+    );
+  }
+  if (!Number.isFinite(found.ms)) {
+    throw new Error(
+      `the settle toward ${target} px has no finite end (${found.ms} ms)`,
+    );
+  }
+  return {from: found.from, ms: found.ms};
 }
 
 /**
@@ -488,30 +582,57 @@ test('a flick hands the row’s velocity to the settle', async ({
     return {opened, openWidth};
   });
   const {row} = opened;
-  const motion = await motionOf(row, -openWidth);
+  const target = -openWidth;
+  const motion = await motionOf(row, target);
+  // Held at once: the settle runs on the page's clock meanwhile, and a
+  // loaded runner's next call can come after it has ended.
+  await holdAnimations(page, row);
   // The settle's keyframes: the points the animator computed on its curve.
   // The browser draws straight lines between them, up to a quarter pixel
   // inside the curve, so the initial velocity is read from these points
   // (fitted to frames between them it reads about 5 px/s low).
-  const keyed = await row.evaluate(node => {
-    const animation = node.getAnimations()[0];
-    const effect = animation.effect as KeyframeEffect;
-    const duration = Number(effect.getComputedTiming().duration);
-    return effect.getKeyframes().map(frame => ({
-      t: (frame.computedOffset ?? 0) * duration,
-      value: parseFloat(String(frame.translate)),
-    }));
-  });
-  await freezeTimers(page);
-  await holdAnimations(page, row);
-  const samples: {t: number; value: number}[] = [];
-  for (const t of timeline(motion.ms + 50, 1000 / 120)) {
-    await seekAnimations(page, t);
-    samples.push({t, value: await xOf(row)});
+  const keyed = await row.evaluate(
+    (node, {to, from}) => {
+      const animation = node.getAnimations().find(candidate => {
+        const keyframes =
+          (candidate.effect as KeyframeEffect | null)?.getKeyframes() ?? [];
+        const last = keyframes[keyframes.length - 1];
+        return (
+          last != null &&
+          Math.abs(parseFloat(String(last.translate)) - to) < 0.5
+        );
+      });
+      if (animation == null) {
+        // How long after its start the hold came.
+        return {heldAfter: performance.now() - (from - performance.timeOrigin)};
+      }
+      const effect = animation.effect as KeyframeEffect;
+      const duration = Number(effect.getComputedTiming().duration);
+      return {
+        points: effect.getKeyframes().map(frame => ({
+          t: (frame.computedOffset ?? 0) * duration,
+          value: parseFloat(String(frame.translate)),
+        })),
+      };
+    },
+    {to: target, from: motion.from},
+  );
+  if (keyed.points == null) {
+    throw new Error(
+      `the settle toward ${target} px, ${motion.ms.toFixed(0)} ms long, had ended or been replaced by the time it was held, ${(keyed.heldAfter ?? 0).toFixed(0)} ms after it started`,
+    );
   }
+  await freezeTimers(page);
+  // Every sample in one page call: a call per sample is a round trip per
+  // sample, which a loaded runner stretches.
+  const samples = (
+    await sampleCurve(row, timeline(motion.ms + 50, 1000 / 120))
+  ).map(sample => ({
+    t: sample.t,
+    value: parseFloat(sample.raw.translate) || 0,
+  }));
   await releaseAnimations(page);
   await thawTimers(page);
-  const target = -openWidth;
   // The critically damped family: x(t) = target + (A + B·t)·e^(−ωt), with
   // A the distance left at t = 0 and B = v0 + ω·A. Fit A and B to the
   // keyframes by least squares.
@@ -520,7 +641,7 @@ test('a flick hands the row’s velocity to the settle', async ({
   let sbb = 0;
   let sya = 0;
   let syb = 0;
-  for (const {t, value} of keyed) {
+  for (const {t, value} of keyed.points) {
     const s = t / 1000;
     const a = Math.exp(-OMEGA * s);
     const b = s * a;
@@ -545,7 +666,15 @@ test('a flick hands the row’s velocity to the settle', async ({
     'curves/item-swipe-flick-settle',
     {
       [`${testInfo.project.name}.json`]: JSON.stringify(
-        {omega: OMEGA, v0, d0, target, comparison: result, keyed, samples},
+        {
+          omega: OMEGA,
+          v0,
+          d0,
+          target,
+          comparison: result,
+          keyed: keyed.points,
+          samples,
+        },
         null,
         1,
       ),
