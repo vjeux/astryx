@@ -58,6 +58,13 @@ function installFadeRecorder(): void {
   const recorder: {entries: FadeEntry[]} = {entries: []};
   w.__searchFieldFades = recorder;
   const seen = new WeakSet<Animation>();
+  // A cancelled animation's `ready` rejects with an AbortError: it was never
+  // shown, which the record expects. Any other rejection is a real error.
+  const unlessAborted = (error: unknown) => {
+    if (!(error instanceof DOMException && error.name === 'AbortError')) {
+      throw error;
+    }
+  };
   const remember = (animation: Animation) => {
     const effect = animation.effect;
     if (seen.has(animation) || !(effect instanceof KeyframeEffect)) {
@@ -80,14 +87,11 @@ function installFadeRecorder(): void {
     recorder.entries.push(entry);
     // The browser sets the start when it commits the animation. One that is
     // cancelled before then was never shown, and keeps no start.
-    animation.ready.then(
-      () => {
-        if (entry.start == null && animation.startTime != null) {
-          entry.start = Number(animation.startTime);
-        }
-      },
-      () => {},
-    );
+    animation.ready.then(() => {
+      if (entry.start == null && animation.startTime != null) {
+        entry.start = Number(animation.startTime);
+      }
+    }, unlessAborted);
     animation.addEventListener('cancel', event => {
       if (entry.start != null && entry.stoppedAt == null) {
         const at = (event as AnimationPlaybackEvent).timelineTime;

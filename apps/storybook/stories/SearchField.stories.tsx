@@ -87,6 +87,17 @@ function titleOpacity(a: number, activating: boolean): number {
 }
 
 /**
+ * A cancelled animation's `ready` or `finished` rejects with an AbortError: a
+ * change of mind or an unmount stopped it, and the host expects that. Any
+ * other rejection is a real error.
+ */
+function unlessAborted(error: unknown): void {
+  if (!(error instanceof DOMException && error.name === 'AbortError')) {
+    throw error;
+  }
+}
+
+/**
  * The host's half of a lift, as a navigation bar does it (NavigationStack
  * runs the real one): the content rises with the field by `lift` on the
  * field's clock, and the large title fades as UIKit's does. Placed at once
@@ -200,22 +211,19 @@ function useLiftedHost(
       if (field.startTime != null) {
         align();
       } else {
-        void field.ready.then(align, () => {});
+        void field.ready.then(align, unlessAborted);
       }
     };
     requestAnimationFrame(startWithField);
     let cancelled = false;
-    void Promise.all(added.map(animation => animation.finished)).then(
-      () => {
-        if (
-          !cancelled &&
-          running.current.every(a => a.playState === 'finished')
-        ) {
-          place();
-        }
-      },
-      () => {},
-    );
+    void Promise.all(added.map(animation => animation.finished)).then(() => {
+      if (
+        !cancelled &&
+        running.current.every(a => a.playState === 'finished')
+      ) {
+        place();
+      }
+    }, unlessAborted);
     return () => {
       cancelled = true;
     };
