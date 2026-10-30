@@ -23,40 +23,46 @@ import {
   TOUCH_LIFT_STILLNESS_MS,
   TOUCH_PACING_TOLERANCE_MS,
   TouchPacingError,
+  TouchPageStallError,
 } from './touch';
 
 describe('playSteps', () => {
   it('keeps the scripted gaps after a stalled dispatch instead of sending the events behind it together', async () => {
-    // A drag of six moves 12 ms apart; the third dispatch stalls 40 ms.
+    // A drag of six moves 12 ms apart; the third dispatch stalls 40 ms. The
+    // clock is the test's own, so the box's load cannot move it.
     const script = drag(
       {x: 0, y: 0},
       {x: 0, y: 60},
       {durationMs: 72, hz: 1000 / 12},
     );
+    let now = 0;
+    const clock = {
+      now: () => now,
+      until: async (deadline: number) => {
+        now = Math.max(now, deadline);
+      },
+    };
     const sentAt: number[] = [];
     let index = 0;
     const played = await playSteps(
       script,
       {},
       async () => {
-        sentAt.push(performance.now());
+        sentAt.push(now);
         if (index === 2) {
-          await new Promise(resolve => setTimeout(resolve, 40));
+          now += 40;
         }
         index += 1;
       },
       t => t,
+      clock,
     );
     const scriptedGaps = played.slice(1).map((p, i) => p.t - played[i].t);
     const sentGaps = sentAt.slice(1).map((t, i) => t - sentAt[i]);
-    // The stalled event's own gap stretches; every later one is at least
-    // its scripted gap (less a millisecond of timer slack), never a burst.
-    for (let i = 3; i < sentGaps.length; i += 1) {
-      expect(sentGaps[i], `gap ${i + 1}`).toBeGreaterThanOrEqual(
-        scriptedGaps[i] - 1,
-      );
-    }
-    expect(sentGaps[2]).toBeGreaterThanOrEqual(40);
+    // The stalled event's own gap stretches to the stall; every later one is
+    // its scripted gap, never a burst.
+    expect(sentGaps[2]).toBe(40);
+    expect(sentGaps.slice(3)).toEqual(scriptedGaps.slice(3));
   });
 });
 
@@ -121,6 +127,45 @@ describe('checkTouchPacing', () => {
     ).not.toThrow();
   });
 
+  /** The page holding each event half a ms, and event `index` for `long`. */
+  const handledAt = (times: readonly number[], index: number, long: number) =>
+    times.map((t, i) => t + (i === index ? long : 0.5));
+
+  it("names the page's own stall when its handling explains a widened interval and the burst after it, and the runner's when it does not", () => {
+    // The page spends 30 ms on the eighth event: the ninth waits, the tenth
+    // follows close behind, both inside the intervals a release reads.
+    const received = at([8, 8, 8, 8, 8, 8, 8, 29, 2, 8, 2]);
+    const byPage = () =>
+      checkTouchPacing(steps, received, {
+        handledAt: handledAt(received, 7, 30),
+      });
+    expect(byPage).toThrow(TouchPageStallError);
+    expect(byPage).toThrow(/the page's own handling put this gesture off/);
+    // The same gaps with the page idle: the runner stalled.
+    expect(() =>
+      checkTouchPacing(steps, received, {handledAt: handledAt(received, 7, 0)}),
+    ).toThrow(TouchPacingError);
+    expect(() => checkTouchPacing(steps, received)).toThrow(TouchPacingError);
+  });
+
+  it("does not name a hold within the tolerance as the page's: WebKit stamps to the millisecond", () => {
+    // The last move interval is 5 ms off, and the page held the event before
+    // it 1 ms: measurement noise, so the dispatch is the cause.
+    const received = at([9, 5, 8, 16, 11, 5, 9, 10, 5, 13, 2]);
+    expect(() =>
+      checkTouchPacing(steps, received, {handledAt: handledAt(received, 9, 1)}),
+    ).toThrow(TouchPacingError);
+  });
+
+  it("names the page's own stall when its handling explains a late lift", () => {
+    const received = at([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 45]);
+    expect(() =>
+      checkTouchPacing(steps, received, {
+        handledAt: handledAt(received, 10, 40),
+      }),
+    ).toThrow(TouchPageStallError);
+  });
+
   it('holds the tolerance it states', () => {
     expect(TOUCH_PACING_TOLERANCE_MS).toBe(4);
   });
@@ -140,6 +185,21 @@ describe('retakeOnTouchPacing', () => {
     ).rejects.toThrow(TouchPacingError);
     expect(attempts).toEqual([1, 2]);
     expect(info.annotations.map(a => a.type)).toEqual(['touch-retake']);
+  });
+
+  it("never re-takes the page's own stall", async () => {
+    const testInfo = {
+      annotations: [] as {type: string; description?: string}[],
+    };
+    let attempts = 0;
+    await expect(
+      retakeOnTouchPacing(testInfo, async () => {
+        attempts += 1;
+        throw new TouchPageStallError('a handler ran 30 ms', [8], [29]);
+      }),
+    ).rejects.toBeInstanceOf(TouchPageStallError);
+    expect(attempts).toBe(1);
+    expect(testInfo.annotations).toEqual([]);
   });
 
   it('never re-takes a product failure after input that arrived on pace', async () => {
