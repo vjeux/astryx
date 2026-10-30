@@ -76,6 +76,15 @@ const menuItemStyles = stylex.create({
     },
     borderWidth: 0,
     borderStyle: 'none',
+    // Under a finger the highlight follows the finger: focus moves to the row
+    // under it, and the highlight changes at once, as UIKit's menu
+    // highlight does. A colour transition there would be repainted on every
+    // frame of each move (WebKit runs no colour animation on the compositor).
+    // With any other pointer the row's transition stays Item's.
+    transitionProperty: {
+      default: 'background-color',
+      '@media (pointer: coarse)': 'none',
+    },
     cursor: {
       default: 'pointer',
       ':is(:disabled,[aria-disabled="true"])': 'default',
