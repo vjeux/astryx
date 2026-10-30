@@ -1,5 +1,5 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
-// @pr-a11y scope core/Button ^packages/core/src/(utils/(pressFeedback|pressGesture|interactionOverlay|touchPresentation)|hooks/usePressFeedback)
+// @pr-a11y scope core/Button ^packages/core/src/(utils/(pressFeedback|pressGesture|interactionOverlay|touchPresentation|controlPressLayer)|hooks/usePressFeedback)
 
 /**
  * @file PressModality.a11y.chromium.spec.ts
