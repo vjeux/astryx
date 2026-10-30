@@ -4,8 +4,11 @@
 
 /**
  * @file TopNav.tsx
- * @input Uses React, ReactNode
- * @output Exports TopNav component and TopNavProps
+ * @input Uses React, ReactNode, the theme's spacing, radius and surface
+ *   tokens, and UIKit's capsule cell inset in motion/uikit/bars
+ * @output Exports TopNav component and TopNavProps. Under a finger, the phone
+ *   bar's end items sit on one capsule, as iOS 26 bar buttons do. The capsule
+ *   is paint only, so no box grows.
  * @position Core implementation; consumed by index.ts
  *
  * SYNC: When modified, update these files to stay in sync:
@@ -19,7 +22,7 @@
 import type {ReactNode} from 'react';
 import type {BaseProps} from '../BaseProps';
 import * as stylex from '@stylexjs/stylex';
-import {spacingVars} from '../theme/tokens.stylex';
+import {colorVars, radiusVars, spacingVars} from '../theme/tokens.stylex';
 import {mergeProps} from '../utils';
 import {TopNavSlotContext} from './TopNavContext';
 import {useTopNavRenderMode} from './TopNavRenderContext';
@@ -93,7 +96,9 @@ const styles = stylex.create({
     flexShrink: 0,
     marginInlineStart: 'auto',
   },
-  // Mobile bar mode — simplified top bar with heading + toggle + endContent
+  // Mobile bar mode — simplified top bar with heading + toggle + endContent.
+  // The same geometry under every pointer: the default look grows no box for
+  // touch. UIKit's 54px bar and 16px insets are a theme's adaptation.
   mobileBar: {
     display: 'flex',
     alignItems: 'center',
@@ -114,6 +119,34 @@ const styles = stylex.create({
     gap: spacingVars['--spacing-1'],
     flexShrink: 0,
     marginInlineStart: 'auto',
+  },
+  // Under a finger the end items sit on one capsule, as iOS 26 groups bar
+  // buttons. It is fully rounded, painted with the theme's surface, and blurs
+  // nothing. It is paint only, so no box grows: a spread of the same colour
+  // carries the fill `--spacing-1` past the end group. That keeps a control's
+  // press paint inside the pill's rounded ends. UIKit's capsule has no drop
+  // shadow. An end group whose content renders nothing paints no capsule. The
+  // key spells the resolver's touch query literally: StyleX layers an imported
+  // at-rule key differently.
+  mobileBarEndCapsule: {
+    borderRadius: {
+      default: null,
+      '@media (pointer: coarse)': radiusVars['--radius-full'],
+    },
+    backgroundColor: {
+      default: null,
+      '@media (pointer: coarse)': {
+        default: colorVars['--color-background-surface'],
+        ':empty': 'transparent',
+      },
+    },
+    boxShadow: {
+      default: null,
+      '@media (pointer: coarse)': {
+        default: `0 0 0 ${spacingVars['--spacing-1']} ${colorVars['--color-background-surface']}`,
+        ':empty': 'none',
+      },
+    },
   },
   // Drawer mode — vertical list of nav items
   drawerItems: {
@@ -220,6 +253,10 @@ export function TopNav({
   // to strip down the TopNav if there's nothing to put in the drawer.
   // =========================================================================
   if (renderMode === 'mobile-bar') {
+    const showToggle = hasMobileDrawerContent && hasAutoToggle;
+    // An empty end group draws no capsule.
+    const hasEndItems =
+      (endContent != null && endContent !== false) || showToggle;
     return (
       <nav
         ref={ref}
@@ -235,9 +272,14 @@ export function TopNav({
         {isRenderable(heading) && (
           <div {...stylex.props(styles.mobileBarHeading)}>{heading}</div>
         )}
-        <div {...stylex.props(styles.mobileBarEnd)}>
+        <div
+          data-bar-capsule={hasEndItems ? '' : undefined}
+          {...stylex.props(
+            styles.mobileBarEnd,
+            hasEndItems && styles.mobileBarEndCapsule,
+          )}>
           {endContent}
-          {hasMobileDrawerContent && hasAutoToggle && <MobileNavToggle />}
+          {showToggle && <MobileNavToggle />}
         </div>
       </nav>
     );

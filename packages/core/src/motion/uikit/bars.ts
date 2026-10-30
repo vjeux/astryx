@@ -3,8 +3,8 @@
 /**
  * @file bars.ts
  * @input Nothing; data only
- * @output Exports `bars`, the switch, springs, reach and veil of the iOS 26
- *   scroll edge effect under a navigation bar, and `registerBarsTable`
+ * @output Exports `bars` and `registerBarsTable`: the iOS 26 scroll edge effect
+ *   under a navigation bar, and the inset of a bar button's capsule
  * @position The bars domain of the UIKit constants table (motion/uikit)
  *
  * The values are a navigation bar's on iOS 26.2, read in a UIKit host app on
@@ -16,6 +16,27 @@
 import {registerMotionTable} from '../roles';
 
 export const bars = {
+  /**
+   * iOS 26 bar buttons sit on glass capsules
+   * (`_UINavigationBarPlatterGlassView`). Image items side by side share one
+   * capsule, every other item gets its own, and a fixed space splits a run.
+   * The glass has no shadow, and its colour follows the content behind it, not
+   * the appearance. On the web the capsule paints the theme's general surface,
+   * opaque, with nothing blurred. The bar's height and the capsules' sizes are
+   * not here: the default look grows no box for touch. TopNav's phone bar takes
+   * only the cell inset.
+   */
+  buttonCapsules: {
+    /**
+     * Inside a capsule, the items' cells start this many pt in from each
+     * end, and above and below.
+     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+     *   iPhone 17 Pro, one `_UIButtonBarButton` per item, the first starting
+     *   4 pt in from the capsule's end, and a 36 pt cell at y 66 inside the
+     *   44 pt glass view at y 62, Oct 24 2026
+     */
+    cellInsetPt: 4,
+  },
   /**
    * An iOS 26.2 navigation bar paints no background. The scroll view's edge
    * effect, a veil of one colour, separates the bar from the content under it.
