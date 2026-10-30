@@ -55,7 +55,7 @@ import {
   rowsIn,
   DEFAULT_MONTH_REACH,
 } from './monthGeometry';
-import {WHEEL_ROW_PITCH} from './wheelLook';
+import {WHEEL_ROW_HEIGHT} from './wheelOptions';
 import {SWIPE_DISTANCE} from './useOwnScrollGesture';
 import {DRAG_SLOP} from './usePointerDragScroll';
 import {SCROLL_QUIET_MS} from './useScrollSettle';
@@ -2642,14 +2642,13 @@ describe('DateInput — scroll CSS (definition-level)', () => {
   });
 
   it('sizes the touch wheels as today’s column, with the large text of the theme', () => {
-    // The player's row pitch and column height are today's tokens, in
-    // numbers: a row is `wheelItemSize`, the column six day rows.
+    // The wheel's row pitch is today's token, in numbers (`wheelItemSize`),
+    // and its column is today's pane of six day rows.
     const tokens = read('tokens.stylex.ts');
-    expect(tokens).toContain(`wheelItemSize: '${WHEEL_ROW_PITCH}px'`);
+    expect(tokens).toContain(`wheelItemSize: '${WHEEL_ROW_HEIGHT}px'`);
     expect(tokens).toContain("daySize: '44px'");
     expect(tokens).toContain('export const WEEKS_PER_PANE = 6;');
     const source = read('PickerWheel.tsx');
-    expect(source).toContain('const COLUMN_HEIGHT = 6 * 44;');
     expect(source).toContain('blockSize: dateInputTouchGeometry.paneBlockSize');
     expect(source).toContain("fontSize: typeScaleVars['--text-large-size']");
   });

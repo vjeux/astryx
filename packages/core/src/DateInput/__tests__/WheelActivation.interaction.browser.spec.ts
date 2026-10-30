@@ -6,9 +6,9 @@
  *   "BottomSheetNarrowRange" (2 years), real touch input
  * @output Proof that showing a touch wheel (a finger gets it on every engine)
  *   costs no more per year than today's column: opening the month and year
- *   wheels writes no element per year, each year is drawn once, and only
- *   the rows in sight tip. Under a mouse the year wheel is today's column,
- *   every year listed natively.
+ *   wheels writes no element per year, and each year is drawn once, as its
+ *   own flat row. Under a mouse the year wheel is today's column, every year
+ *   listed natively.
  * @position Browser proof for DateInput/PickerWheel.tsx's rows, run by
  *   playwright.interaction.config.ts. It counts the elements an opening
  *   writes rather than timing it: the load on the machine running it moves
@@ -25,11 +25,8 @@ import {
 
 const storybook = withStorybook(test);
 
-/** The most rows a column shows on its cylinder at once, around the band. */
-const ROWS_IN_SIGHT = 15;
-
 interface Activation {
-  /** Year options listed, and year rows drawn on the drum. */
+  /** Year options listed, and the year rows drawn (each option is one). */
   yearOptions: number;
   yearRowsDrawn: number;
   /**
@@ -100,15 +97,10 @@ async function openMonthYearWheels(
   await waitForRest(years.locator('[data-wheel-strip]'));
   return {
     yearOptions: await years.getByRole('option').count(),
-    // Rows in sight: every row the wheel draws, copies included, with
-    // some opacity (a row out of sight is transparent and upright).
+    // Every row the wheel draws: each option is its own row, and nothing
+    // else draws a year.
     yearRowsDrawn: await years.evaluate(
-      list =>
-        [
-          ...list.querySelectorAll<HTMLElement>(
-            '[data-wheel-row], [data-wheel-copy]',
-          ),
-        ].filter(row => Number(row.style.opacity) > 0).length,
+      list => list.querySelectorAll('[data-wheel-row]').length,
     ),
     yearElementsWritten: await page.evaluate(
       () =>
@@ -117,7 +109,7 @@ async function openMonthYearWheels(
   };
 }
 
-test('the month and year wheels tip the same rows for 200 years as for 2, and opening them writes no element per year', async ({
+test('the month and year wheels draw each year once, and opening them writes no element per year', async ({
   page,
 }, testInfo) => {
   const narrow = await openMonthYearWheels(
@@ -136,16 +128,15 @@ test('the month and year wheels tip the same rows for 200 years as for 2, and op
   expect(wide.yearOptions).toBe(200);
   // The touch column.
   await expect(page.locator('[data-wheel]')).toHaveCount(2);
+  // Each year is drawn once, as its own row.
   expect(narrow.yearRowsDrawn).toBe(2);
-  // The rows in sight: the same for any range; every other year is drawn
-  // once, flat and transparent.
-  expect(wide.yearRowsDrawn).toBeLessThanOrEqual(ROWS_IN_SIGHT);
-  // What opening costs, counted: the year wheel parks on its year, writing
-  // the rows that leave sight and the rows that come into it, and its strip,
-  // beside what the two-year wheel writes. A cost per year (every row
-  // written as the wheel opens) shows here as 200 or more.
+  expect(wide.yearRowsDrawn).toBe(200);
+  // What opening costs, counted: the year wheel parks its strip on its year
+  // and marks the band's row, beside what the two-year wheel writes. A cost
+  // per year (every row written as the wheel opens) shows here as 200 or
+  // more.
   expect(wide.yearElementsWritten).toBeLessThanOrEqual(
-    narrow.yearElementsWritten + 2 * ROWS_IN_SIGHT + 1,
+    narrow.yearElementsWritten + 2,
   );
 });
 

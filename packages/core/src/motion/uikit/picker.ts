@@ -3,12 +3,13 @@
 /**
  * @file picker.ts
  * @input Nothing; data only
- * @output Exports `picker`, the UIPickerView constants: the cylinder the rows
- *   sit on, the selection band, the release rule (velocity, target, coast),
- *   the snap at rest, the tap spin and the selection tick
+ * @output Exports `picker`, the UIPickerView constants: the row pitch and the
+ *   picker's height, the rubber band past an end, the release rule
+ *   (velocity, target, coast), the snap at rest, the tap spin and the
+ *   selection tick
  * @position The picker domain of the UIKit constants table (motion/uikit);
- *   read by DateInput/wheelPhysics.ts, DateInput/wheelDrum.ts and
- *   DateInput/PickerWheel.tsx (the tap spin)
+ *   read by DateInput/wheelPhysics.ts, DateInput/wheelStrip.ts and
+ *   DateInput/PickerWheel.tsx
  *
  * Every leaf carries one `@source` (apple-docs | wwdc | webkit | measured |
  * GUESS); webkit and GUESS values also carry the `@measure` task that will
@@ -47,55 +48,6 @@ export const picker = {
      *   iPhone 17 Pro, UIPickerView frame, Oct 23 2026
      */
     height: 216,
-    /**
-     * Radius of the cylinder the rows are drawn on. Each cell is a rotation
-     * about x by its distance from the band over this radius (18.85°,
-     * 37.8°, 56.7°, 75.7° for rows ±1 to ±4), moved onto the cylinder
-     * (R sin θ, R (cos θ − 1)).
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, cell CATransform3D of the outer table copies at rest
-     *   (m22 = m33 = cos θ, m23 = −m32 = sin θ; m42, m43), Oct 23 2026
-     */
-    cylinderRadius: 97.2,
-    /**
-     * Perspective distance of the dimmed copies above and below the band:
-     * their tables' sublayerTransform has m34 = −1/900, centred on the
-     * picker (every column's table is centred on it, so all columns share
-     * one vanishing point). The band's own copy has none.
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, UIPickerTableView layer sublayerTransform, Oct 23 2026
-     */
-    perspective: 900,
-    /**
-     * Height of the selection band, centred on the picker.
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, the band UIView (384 × 34 pt at 9, 291), Oct 23 2026
-     */
-    bandHeight: 34,
-    /**
-     * The band's inset from the picker's sides: one band spans every column.
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, the band UIView (384 × 34 pt at 9, 291 in a 402 pt
-     *   picker), Oct 23 2026
-     */
-    bandInset: 9,
-    /**
-     * The band's copy of the rows is magnified about the picker's centre:
-     * its labels are 23.5 pt against 21 pt in the dimmed copies, and its
-     * columns sit that much further from the centre (band digits ≈ 11 pt
-     * outward of the rows above and below, on screen).
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, label fonts of the three table copies and the
-     *   rendered digits' extents in a screenshot, Oct 23 2026
-     */
-    bandMagnification: 23.5 / 21,
-    /**
-     * Opacity of the rows in the copies above and below the band (the band's
-     * copy is opaque); the same at every angle.
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, label alpha in the outer table copies, Oct 23 2026
-     */
-    outerOpacity: 0.447,
     /**
      * d of the rubber band past the first or last row: the column's table
      * view is 291 pt tall in a 216 pt picker (scroll.rubberBand's formula
