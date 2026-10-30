@@ -46,6 +46,7 @@ import {
   openStory,
   readLongTasks,
   releaseAnimations,
+  retakeOnTouchPacing,
   sampleRects,
   seekAnimations,
   springStep,
@@ -64,7 +65,6 @@ import {
   writeEvidence,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
-import {UIKIT_VELOCITY} from '../../motion/uikit/gestures';
 import {swipeActions} from '../../motion/uikit/swipeActions';
 
 const storybook = withStorybook(test);
@@ -420,36 +420,24 @@ test('a flick hands the row’s velocity to the settle', async ({
   // half the panel, still moving at 1000 px/s when it lifts. The release
   // projects past half the panel, so the row opens; the settle starts with
   // the row's own velocity, which the tracking spring had built up.
-  // WebKit stamps a touch event when it dispatches it, so a stall on a busy
-  // machine between the last move and the lift reads as a finger that rested
-  // (`spec:AST-100` FR2: the release velocity is 0), and the throw no longer
-  // flicks. Only a delivered flick is judged: the throw is replayed on a
-  // fresh page until the lift arrives within the stillness interval.
-  let opened: OpenRow | undefined;
-  let openWidth = 0;
-  let liftGap = Number.POSITIVE_INFINITY;
-  for (
-    let attempt = 0;
-    attempt < 3 && liftGap > UIKIT_VELOCITY.stillness.value;
-    attempt += 1
-  ) {
-    opened = await openRow(page);
-    openWidth = await openWidthOf(opened.entries);
+  // WebKit stamps a touch event when it dispatches it, so on a busy machine
+  // the page can receive the throw off its scripted pacing: a stall before
+  // the lift reads as a finger that rested (`spec:AST-100` FR2: the release
+  // velocity is 0), and the throw no longer flicks. The harness checks the
+  // pacing the page received where a release reads it, and re-takes the
+  // throw once, on a fresh row, only when it was off.
+  const {opened, openWidth} = await retakeOnTouchPacing(testInfo, async () => {
+    const opened = await openRow(page);
+    const openWidth = await openWidthOf(opened.entries);
     await installTimerGate(page);
     // The row's tracking curve as the finger lifts, before the release
-    // replaces it: its keyframes, points on the curve. And how long after
-    // the last move the lift was stamped. The lift is the finger's first
+    // replaces it: its keyframes, points on the curve. The lift is the finger's first
     // lift event: its pointerup comes before its touchend, and a gesture host
     // may release on either; a move is either of its moves.
     await opened.row.evaluate(node => {
-      let lastMove = Number.NaN;
       let firstMoveHandled = Number.NaN;
       let lifted = false;
-      const onMove = (event: Event) => {
-        lastMove = Math.max(
-          Number.isNaN(lastMove) ? event.timeStamp : lastMove,
-          event.timeStamp,
-        );
+      const onMove = () => {
         // When the row's tracking spring could first have started: the host
         // handles the move right after this listener.
         if (Number.isNaN(firstMoveHandled)) {
@@ -458,7 +446,7 @@ test('a flick hands the row’s velocity to the settle', async ({
       };
       addEventListener('pointermove', onMove, {capture: true});
       addEventListener('touchmove', onMove, {capture: true});
-      const onLift = (event: Event) => {
+      const onLift = () => {
         // The longest the tracking spring can have run in the animator's
         // model when the host releases, on this lift event (right after this
         // listener) or the one before it.
@@ -469,7 +457,6 @@ test('a flick hands the row’s velocity to the settle', async ({
           return;
         }
         lifted = true;
-        Object.assign(window, {__liftGap: event.timeStamp - lastMove});
         const animation = node
           .getAnimations()
           .find(candidate =>
@@ -495,16 +482,11 @@ test('a flick hands the row’s velocity to the settle', async ({
         durationMs: 80,
         hz: 120,
       }),
+      {checkPacing: true},
     );
-    liftGap = await page.evaluate(
-      () => (window as unknown as {__liftGap: number}).__liftGap,
-    );
-  }
-  expect(
-    liftGap,
-    'the browser delivers the lift within the stillness interval',
-  ).toBeLessThanOrEqual(UIKIT_VELOCITY.stillness.value);
-  const {row} = opened as OpenRow;
+    return {opened, openWidth};
+  });
+  const {row} = opened;
   const motion = await motionOf(row, -openWidth);
   // The settle's keyframes: the points the animator computed on its curve.
   // The browser draws straight lines between them, up to a quarter pixel
