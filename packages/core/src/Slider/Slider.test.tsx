@@ -1638,10 +1638,16 @@ describe('pressed state', () => {
       toJSON: () => {},
     });
 
+    // A mouse press on a thumb is the thumb's pan (spec:AST-094 FR43), so it
+    // is a real mouse press: the gesture host takes only a known pointer.
     fireEvent.pointerDown(end, {
       clientX: 100,
       clientY: 10,
       pointerId: 1,
+      pointerType: 'mouse',
+      isPrimary: true,
+      button: 0,
+      buttons: 1,
     });
     expect(declaresPressedOverlay(end)).toBe(true);
     expect(declaresPressedOverlay(start)).toBe(false);
@@ -1656,5 +1662,56 @@ describe('pressed state', () => {
       pointerId: 1,
     });
     expect(declaresPressedOverlay(thumb)).toBe(false);
+  });
+
+  it('takes only a primary click: a right click or a macOS ctrl-click on the track neither moves the value nor presses (spec:AST-094 FR43)', () => {
+    const handleChange = vi.fn();
+    render(<Slider label="Volume" value={50} onChange={handleChange} />);
+    const thumb = screen.getByRole('slider');
+    const track = controlOf(thumb);
+    track.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 20,
+      width: 200,
+      height: 20,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+    const press = (
+      pointerId: number,
+      init: {button: number; ctrlKey?: boolean},
+    ) => {
+      fireEvent.pointerDown(track, {
+        clientX: 20,
+        clientY: 10,
+        pointerId,
+        pointerType: 'mouse',
+        isPrimary: true,
+        ...init,
+      });
+      fireEvent.pointerUp(track, {clientX: 20, clientY: 10, pointerId});
+    };
+    // A right click is the context request, not a press.
+    press(1, {button: 2});
+    expect(handleChange).not.toHaveBeenCalled();
+    expect(declaresPressedOverlay(thumb)).toBe(false);
+    // So is a ctrl-click on macOS.
+    const platform = vi
+      .spyOn(navigator, 'platform', 'get')
+      .mockReturnValue('MacIntel');
+    try {
+      press(2, {button: 0, ctrlKey: true});
+      expect(handleChange).not.toHaveBeenCalled();
+      expect(declaresPressedOverlay(thumb)).toBe(false);
+    } finally {
+      platform.mockRestore();
+    }
+    // A primary click there still sets the value, toward the click.
+    press(3, {button: 0});
+    expect(handleChange).toHaveBeenCalledTimes(1);
+    expect(handleChange.mock.calls[0][0]).toBeLessThan(50);
   });
 });
