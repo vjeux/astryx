@@ -19,7 +19,7 @@
 import {describe, expect, it} from 'vitest';
 import {listMotionRoles, motionRoleOf} from '../motion/roles';
 import {solveSpring, toSpring} from '../motion/spring';
-import {switchControl} from '../motion/uikit/switch';
+import {registerSwitchTable, switchControl} from '../motion/uikit/switch';
 import {
   commitOnRelease,
   dragTarget,
@@ -54,10 +54,11 @@ describe('switchTouchGeometry', () => {
     expect(UIKIT.inset).toBeCloseTo(2, 9);
     expect(UIKIT.travel).toBeCloseTo(22, 9);
     expect(UIKIT.flipDistance).toBeCloseTo(26, 9);
-    expect(UIKIT.rubberBandDimension).toBeCloseTo(12, 9);
-    // The lifted lens: 58 × 38.33 from 37 × 24.
-    expect(UIKIT.thumbWidth * UIKIT.liftScaleX).toBeCloseTo(58, 9);
-    expect(UIKIT.thumbHeight * UIKIT.liftScaleY).toBeCloseTo(38.333, 9);
+    // The lift fills half the 2 pt gap on each side (UIKit's own lens grows
+    // to 58 × 38.3, past the track), and the band the other half.
+    expect(UIKIT.liftScaleX).toBeCloseTo(1 + 2 / 37, 9);
+    expect(UIKIT.liftScaleY).toBeCloseTo(UIKIT.liftScaleX, 9);
+    expect(UIKIT.rubberBandDimension).toBeCloseTo(1, 9);
   });
 
   it('keeps UIKit proportions in a smaller track (md 40 × 24, sm 32 × 20)', () => {
@@ -85,14 +86,44 @@ describe('dragTarget', () => {
     expect(dragTarget(22, -7, UIKIT)).toBeCloseTo(15, 9);
   });
 
-  it("rubber-bands past either end with UIScrollView's curve (c 0.55, d 12)", () => {
-    // UIKit: 46 pt past the on end shows 8.15 pt (measured 8.5 with lag).
+  it("rubber-bands past either end with UIScrollView's curve (c 0.55), reaching no further than the lift leaves", () => {
     const past = 46;
-    const expected = (1 - 1 / ((past * 0.55) / 12 + 1)) * 12;
+    const d = UIKIT.rubberBandDimension;
+    const expected = (1 - 1 / ((past * 0.55) / d + 1)) * d;
     expect(dragTarget(0, 22 + past, UIKIT)).toBeCloseTo(22 + expected, 9);
     expect(dragTarget(22, -22 - past, UIKIT)).toBeCloseTo(-expected, 9);
-    // Never further than d past the end.
-    expect(dragTarget(0, 1e6, UIKIT)).toBeLessThan(22 + 12);
+  });
+
+  it('keeps a lifted thumb inside the track at any overdrag, at every size and thumb shape', () => {
+    for (const [width, height, thumb] of [
+      [63, 28, undefined],
+      [40, 24, undefined],
+      [32, 20, undefined],
+      // A theme's circle (aspect ratio 1) in the md and sm tracks.
+      [40, 24, {width: (24 * 24) / 28, height: (24 * 24) / 28}],
+      [32, 20, {width: (20 * 24) / 28, height: (20 * 24) / 28}],
+    ] as const) {
+      const geometry = switchTouchGeometry(width, height, thumb);
+      const grownX = (geometry.thumbWidth * (geometry.liftScaleX - 1)) / 2;
+      const grownY = (geometry.thumbHeight * (geometry.liftScaleY - 1)) / 2;
+      expect(geometry.inset - grownY).toBeGreaterThanOrEqual(0);
+      for (const finger of [1e3, 1e6]) {
+        const end = dragTarget(0, finger, geometry);
+        const start = dragTarget(geometry.travel, -finger, geometry);
+        // Lifted edges from the track's start: inset + offset ∓ growth.
+        expect(
+          geometry.inset + end + geometry.thumbWidth + grownX,
+        ).toBeLessThanOrEqual(width + 1e-9);
+        expect(geometry.inset + start - grownX).toBeGreaterThanOrEqual(-1e-9);
+      }
+    }
+  });
+
+  it('measures the thumb a theme shapes: a circle travels further and flips at the track minus its width', () => {
+    const circle = switchTouchGeometry(40, 24, {width: 20, height: 20});
+    expect(circle.inset).toBeCloseTo(2, 9);
+    expect(circle.travel).toBeCloseTo(16, 9);
+    expect(circle.flipDistance).toBeCloseTo(20, 9);
   });
 
   it('starts from a banded thumb without a jump (grab mid-flight)', () => {
@@ -167,10 +198,20 @@ describe('stepFlip (UIKit, 1 pt steps)', () => {
 });
 
 describe('commitOnRelease (UIKit)', () => {
-  it('toggles when nothing flipped: a tap, a hold, a slide off, a 15 pt drag', () => {
+  it('toggles when nothing flipped, wherever the finger lifts: a tap, a hold, a 15 pt drag, a slide off (UISwitch)', () => {
     expect(commitOnRelease(null, false)).toBe(true);
     expect(commitOnRelease(null, true)).toBe(false);
     expect(commitOnRelease(drag(false, [15]).at(-1)!, false)).toBe(true);
+    // Slid 160 pt toward the off end, which never flips an off switch.
+    expect(commitOnRelease(drag(false, [-40, -160]).at(-1)!, false)).toBe(true);
+  });
+
+  it('commits the side a flipped drag shows, wherever the finger lifts (UISwitch)', () => {
+    // Flipped on, then slid back past where it landed and off the far end:
+    // it shows the side it started on, so it commits that side.
+    expect(
+      commitOnRelease(drag(false, [26, 27, 30, 0, -160]).at(-1)!, false),
+    ).toBe(false);
   });
 
   it('commits the side a drag shows once it flipped: a 30 pt drag stays on', () => {
@@ -281,14 +322,27 @@ describe('the switch springs against UIKit frames (iOS 26.2)', () => {
 });
 
 describe('switch values', () => {
-  it('are internal constants, not motion roles', () => {
-    // Until Switch's record names its motion roles (spec:AST-094 FR4,
-    // DEC-5), the springs and the minimum lift time are plain constants.
+  it("are the motion roles Switch's record names, registered internally", () => {
+    // spec:AST-094 FR4, DEC-5: the springs and the minimum lift time are
+    // roles; DEC-11: internal, so nothing public writes them.
+    registerSwitchTable();
     expect(
-      listMotionRoles().filter(role => role.id.startsWith('switchControl.')),
-    ).toEqual([]);
-    expect(motionRoleOf(switchControl.lift)).toBeUndefined();
-    expect(motionRoleOf(switchControl.travel)).toBeUndefined();
+      listMotionRoles()
+        .filter(role => role.id.startsWith('switchControl.'))
+        .map(role => [role.id, role.kind]),
+    ).toEqual([
+      ['switchControl.lift', 'spring'],
+      ['switchControl.minimumLiftMs', 'duration'],
+      ['switchControl.settle', 'spring'],
+      ['switchControl.tracking', 'spring'],
+      ['switchControl.travel', 'spring'],
+      ['switchControl.wellOff', 'spring'],
+      ['switchControl.wellOn', 'spring'],
+    ]);
+    expect(motionRoleOf(switchControl.lift)?.id).toBe('switchControl.lift');
+    expect(motionRoleOf(switchControl.travel)?.id).toBe('switchControl.travel');
+    // The geometry and the rubber band are not motion.
+    expect(motionRoleOf(switchControl.rubberBand)).toBeUndefined();
     expect(settleTime(0, 0)).toBe(switchControl.minimumLiftMs);
   });
 });
