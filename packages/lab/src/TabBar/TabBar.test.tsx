@@ -695,14 +695,23 @@ describe('TabBar search tab, selected', () => {
   it('leaving search from the circle reports the field inactive', () => {
     restorePointer.push(coarsePrimaryPointer());
     const onActiveChange = vi.fn();
-    render(<Searching onActiveChange={onActiveChange} />);
+    // The field waits inline, so the circle is in reach (an active field
+    // covers it, and Cancel leaves search then).
+    render(
+      <Searching
+        automaticallyActivates={false}
+        onActiveChange={onActiveChange}
+      />,
+    );
     fireEvent.click(screen.getByRole('tab', {name: 'Search'}));
-    expect(onActiveChange).toHaveBeenLastCalledWith(true);
-    fireEvent.click(document.querySelector('[data-tab-bar-circle]') as Element);
-    // Without this the app keeps `isActive`, and the next visit to the
-    // search tab opens with a stale active field.
+    expect(onActiveChange).not.toHaveBeenCalled();
+    const circle = document.querySelector('[data-tab-bar-circle]') as Element;
+    expect(circle.closest('[inert]')).toBeNull();
+    fireEvent.click(circle);
+    // The field goes with the tab: the app's `isActive` stays in step, so
+    // the next visit to the search tab opens with no stale active field.
     expect(onActiveChange).toHaveBeenLastCalledWith(false);
-    expect(onActiveChange).toHaveBeenCalledTimes(2);
+    expect(onActiveChange).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('tab', {name: 'Browse'})).toHaveAttribute(
       'aria-selected',
       'true',
@@ -727,11 +736,13 @@ describe('TabBar search tab, selected', () => {
 
   it('leaving search from the circle with the keys moves focus on to the tab it returns to', () => {
     restorePointer.push(coarsePrimaryPointer());
-    render(<Searching />);
+    // The field waits inline, so the circle is in reach.
+    render(<Searching automaticallyActivates={false} />);
     fireEvent.click(screen.getByRole('tab', {name: 'Search'}));
     const circle = document.querySelector(
       '[data-tab-bar-circle]',
     ) as HTMLElement;
+    expect(circle.closest('[inert]')).toBeNull();
     act(() => {
       circle.focus();
     });
