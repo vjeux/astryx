@@ -582,6 +582,9 @@ function cssAnimation(
     end = resolve;
     cancel = () => reject(new DOMException('cancelled', 'AbortError'));
   });
+  // As the Web Animations spec does when an animation is cancelled: its
+  // rejected `finished` promise is marked handled, so `cancel()` raises no
+  // unhandled rejection.
   finished.catch(() => undefined);
   return {
     animation: {
