@@ -828,7 +828,7 @@ export function TabBar({
   // needs them (architecture:component-style-authoring INV7): otherwise the
   // tab list takes the box's flex and size, draws its own glass and holds the
   // tabs itself.
-  const isBoxed = canMinimize;
+  const isBoxed = canMinimize || hasAccessory;
   const hasPlatter = canMinimize;
 
   return (
