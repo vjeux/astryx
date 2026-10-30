@@ -5,11 +5,11 @@
 /**
  * @file inputHold.ts
  * @input A layer's root element, what ends the hold (a promise, or an
- *   animator handle's `finished`), and its scope; the gesture host's touch
- *   gates
- * @output holdInput, useInputHold, isInHeldLayer and
- *   isInputShield: input held away from a layer while its
- *   presentation runs
+ *   animator handle's `finished`), and its scope; the flat-tree walk
+ *   (utils/flatTree)
+ * @output holdInput, useInputHold, isInHeldLayer (which the gesture host
+ *   asks for each touch) and isInputShield: input held away from a layer
+ *   while its presentation runs
  * @position The Layer module's one input hold, for every component
  *   whose layer presents or dismisses under a finger
  *
@@ -50,8 +50,8 @@
  * a pinch too), and a move is canceled, so that it pans nothing, only while
  * one finger is down. A click a key or assistive technology sends (`detail`
  * 0) passes. During a presentation a mouse passes too: once a mouse moves
- * with no button down, the shield stops taking hits and the gesture host's
- * gate lets it through. A finger's press makes the shield take hits again,
+ * with no button down, the shield stops taking hits and the gesture host
+ * (asking `holdsTouch`) lets it through. A finger's press makes the shield take hits again,
  * and a finger that lands while it does not is captured to it, so its
  * release stays the hold's and a light-dismissing layer stays open. A mouse
  * press that begins on the shield stays the shield's to its end: its release
@@ -75,14 +75,16 @@
  * One hold per layer: holds on a held layer stack, and the layer comes back
  * when the last one ends (when what ends it settles, resolved or rejected;
  * when its release runs; on unmount, for the hook). Nothing is written to
- * the DOM but the shield and the content's `inert` attribute; the host
- * learns through a touch gate that asks whether the target is in a held
- * layer, walking the flat tree as it does (a slotted node to its slot, a
- * shadow root to its host), for that event's pointer. While any of its
- * layers is held, a document has one gate and one set of window listeners,
- * however many layers are held; the gate goes when its last hold ends, and
- * the listeners once the presses they hold have ended (spec:AST-094 FR24). A
- * layer that leaves the document holds nothing more.
+ * the DOM but the shield and the content's `inert` attribute. The gesture
+ * host asks `holdsTouch` itself for each touch: whether the target is in a
+ * held layer, walking the flat tree as it does (a slotted node to its slot,
+ * a shadow root to its host), for that event's pointer. This module imports
+ * nothing from gestures/, so a component in the root entry can hold its
+ * layer statically and bring no gesture code
+ * (`architecture:react-component-runtime` INV13). While any of its layers
+ * is held, a document has one set of window listeners, however many layers
+ * are held; they go once the presses they hold have ended (spec:AST-094
+ * FR24). A layer that leaves the document holds nothing more.
  *
  * SYNC: When modified, update inputHold.test.tsx,
  * __tests__/inputHold.interaction.browser.spec.ts and the components
@@ -90,8 +92,7 @@
  */
 
 import {useEffect, type RefObject} from 'react';
-import {getGestureHost} from '../gestures/GestureHost';
-import {parentAcrossShadow} from '../gestures/nativeScroll';
+import {parentAcrossShadow} from '../utils/flatTree';
 
 /** What a hold covers: the whole viewport, or the layer alone. */
 export type InputHoldScope = 'viewport' | 'layer';
@@ -119,8 +120,6 @@ interface HeldLayer {
 interface HeldDocument {
   /** Its held layers, oldest first. */
   readonly layers: Set<Element>;
-  /** Removes the gesture host's gate. */
-  readonly releaseGate: () => void;
 }
 
 /** A document's press hold, while its window listeners are on. */
@@ -167,9 +166,11 @@ export function isInHeldLayer(target: Node | null): boolean {
 /**
  * Whether the gesture host holds `target` away for the pointer at hand: in a
  * dismissing layer always, in a presenting one unless that pointer is a
- * mouse (spec:AST-094 FR35: a mouse keeps today's behavior).
+ * mouse (spec:AST-094 FR35: a mouse keeps today's behavior). The host asks
+ * it for every touch; with nothing held it answers false, and nothing
+ * listens (spec:AST-094 FR24).
  */
-function holdsTarget(target: Node): boolean {
+export function holdsTouch(target: Node): boolean {
   // What lands on a shield is held, a mouse's press included.
   if (isInputShield(target)) {
     return true;
@@ -193,20 +194,16 @@ function holdsTarget(target: Node): boolean {
 }
 
 /**
- * Starts holding `layer`. A document's first held layer registers the
- * gesture host's gate and turns its press hold's window listeners on: once
- * per document however many layers are held (spec:AST-094 FR24). Nothing is
- * remembered from before: a pointer used while nothing was held went
- * unheard.
+ * Starts holding `layer`. A document's first held layer turns its press
+ * hold's window listeners on: once per document however many layers are
+ * held (spec:AST-094 FR24). Nothing is remembered from before: a pointer
+ * used while nothing was held went unheard.
  */
 function startHolding(layer: Element): void {
   const doc = layer.ownerDocument;
   let state = heldDocuments.get(doc);
   if (state == null) {
-    state = {
-      layers: new Set(),
-      releaseGate: getGestureHost(doc).addTouchGate(holdsTarget),
-    };
+    state = {layers: new Set()};
     heldDocuments.set(doc, state);
   }
   state.layers.add(layer);
@@ -221,9 +218,9 @@ function stopHolding(layer: Element): void {
 
 /**
  * The document's held layers still in it, oldest first: a layer that has left
- * the document holds nothing more. When none is left, the gesture host's gate
- * goes and the press hold stops holding new presses, its listeners going once
- * the presses it holds have ended (spec:AST-094 FR24).
+ * the document holds nothing more. When none is left, `holdsTouch` answers
+ * false and the press hold stops holding new presses, its listeners going
+ * once the presses it holds have ended (spec:AST-094 FR24).
  */
 function liveLayers(doc: Document): Element[] {
   const state = heldDocuments.get(doc);
@@ -240,7 +237,6 @@ function liveLayers(doc: Document): Element[] {
   }
   heldDocuments.delete(doc);
   latestPointer.delete(doc);
-  state.releaseGate();
   pressHolds.get(doc)?.release();
   return [];
 }
