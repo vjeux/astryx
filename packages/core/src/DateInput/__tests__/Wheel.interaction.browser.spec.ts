@@ -61,12 +61,12 @@ import {
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
 import {UIKIT_GESTURES} from '../../motion/uikit';
-import {WHEEL_ROW_PITCH} from '../wheelLook';
+import {WHEEL_ROW_HEIGHT} from '../wheelOptions';
 import {planRelease, type WheelLayout} from '../wheelPhysics';
 
 const storybook = withStorybook(test);
 
-const ROW = WHEEL_ROW_PITCH;
+const ROW = WHEEL_ROW_HEIGHT;
 const MINUTES: WheelLayout = {rowHeight: ROW, rowCount: 60};
 const HYSTERESIS = UIKIT_GESTURES.pan.hysteresis.value;
 /** A flick up the minute wheel: the rows run on towards higher minutes. */
@@ -108,6 +108,13 @@ async function openWheel(page: Page): Promise<OpenWheel> {
   await page.waitForTimeout(600);
   // The touch column: a finger gets it on every engine.
   await expect(page.locator('[data-wheel]')).toHaveCount(1);
+  // The column fades its rows toward its edges with a mask, which washes out
+  // the colour a proof tracks; the proofs read it unmasked (the mask is
+  // static, and the motion the same either way).
+  await minutes.evaluate(element => {
+    element.style.setProperty('mask-image', 'none');
+    element.style.setProperty('-webkit-mask-image', 'none');
+  });
   const column = await minutes.boundingBox();
   if (column == null) {
     throw new Error('no minute column');
@@ -151,30 +158,31 @@ function flickUp(start: {x: number; y: number}) {
 const SCRIPTED_RELEASE_SKIP =
   'the coast needs the scripted release velocity, which only an engine replaying the script timestamps gives (README: engine limits); Mobile Safari has an iOS simulator capture through a 530 ms block instead';
 
-/** The y of a `translateY(…px)` keyframe. */
-function translateYOf(transform: string): number {
-  const match = /translateY\((-?[\d.]+)px\)/.exec(transform);
-  if (match == null) {
-    throw new Error(`not a translateY keyframe: ${transform}`);
+/** The y of a strip keyframe: the animator plays the strip's `translate`. */
+function stripYOf(frame: Record<string, unknown> | undefined): number {
+  const translate = frame?.translate;
+  if (translate === 'none') {
+    return 0;
   }
-  return Number(match[1]);
+  if (typeof translate !== 'string') {
+    throw new Error(`not a translate keyframe: ${JSON.stringify(frame)}`);
+  }
+  const [, y = '0px'] = translate.trim().split(/\s+/);
+  return Number.parseFloat(y);
 }
 
 type WheelAnimation = Awaited<ReturnType<typeof waitForAnimation>>[number];
 
 /**
- * The strip's own animation among those under it (each row also animates its
- * tip and fade): the one whose keyframes are all translations.
+ * The strip's own animation among those under it: the one whose keyframes
+ * are all translations (the rows are flat and never animate).
  */
 function stripAnimationOf(animations: WheelAnimation[]): WheelAnimation {
   const strip = animations.find(
     animation =>
       (animation.keyframes ?? []).length > 0 &&
       (animation.keyframes ?? []).every(
-        frame =>
-          frame.opacity == null &&
-          typeof frame.transform === 'string' &&
-          frame.transform.startsWith('translateY('),
+        frame => frame.opacity == null && typeof frame.translate === 'string',
       ),
   );
   if (strip == null) {
@@ -215,7 +223,7 @@ async function stripCoastTiming(
     let first = frames.length - 1;
     while (
       first > 0 &&
-      String(frames[first - 1].transform) === String(frames[first].transform)
+      String(frames[first - 1].translate) === String(frames[first].translate)
     ) {
       first -= 1;
     }
@@ -227,8 +235,10 @@ async function stripCoastTiming(
 
 const stripOffset = async (strip: Locator) =>
   strip.evaluate(element => {
-    const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform);
-    return -matrix.m42;
+    const translate = getComputedStyle(element).translate;
+    const [, y = '0px'] =
+      translate === 'none' ? [] : translate.trim().split(/\s+/);
+    return -Number.parseFloat(y);
   });
 
 test('a flick coasts on UIKit’s curve onto the row it projects, and commits it on arrival', async ({
@@ -375,7 +385,7 @@ test('the coast keeps advancing every frame while the main thread is blocked', a
   // keyframes.
   const points = (coast.keyframes ?? []).map(frame => ({
     t: Number(frame.computedOffset ?? frame.offset) * coast.durationMs,
-    offset: -translateYOf(String(frame.transform)),
+    offset: -stripYOf(frame),
   }));
   const rest = points[points.length - 1].offset;
   const when = (distance: number) =>
@@ -507,7 +517,7 @@ test('a finger landing on the coasting wheel stops it where it is, then it eases
   const coast = stripAnimationOf(
     await waitForAnimation(strip, {minProgressMs: 16}),
   );
-  const coastEnd = -translateYOf(String(coast.keyframes?.at(-1)?.transform));
+  const coastEnd = -stripYOf(coast.keyframes?.at(-1));
   await page.waitForTimeout(300);
   // Land and hold still: the wheel stops at once, between rows.
   const hold = tap(start, {holdMs: 300});
@@ -591,7 +601,7 @@ test(
   },
 );
 
-/** Records every animation under `column`, every frame: its animated properties, length, transforms and keyframe offsets. */
+/** Records every animation under `column`, every frame: its animated properties, length, translations, opacities and keyframe offsets, and whether it animates a row. */
 async function recordAnimations(column: Locator) {
   await column.evaluate(element => {
     const seen = new Map<
@@ -599,8 +609,10 @@ async function recordAnimations(column: Locator) {
       {
         props: string[];
         duration: number;
-        transforms: string[];
+        translates: string[];
+        opacities: number[];
         offsets: number[];
+        isRow: boolean;
       }
     >();
     (window as unknown as {wheelAnimations: typeof seen}).wheelAnimations =
@@ -620,7 +632,8 @@ async function recordAnimations(column: Locator) {
           continue;
         }
         const props = new Set<string>();
-        const transforms: string[] = [];
+        const translates: string[] = [];
+        const opacities: number[] = [];
         const offsets: number[] = [];
         for (const frame of effect.getKeyframes()) {
           offsets.push(frame.computedOffset);
@@ -631,15 +644,21 @@ async function recordAnimations(column: Locator) {
               props.add(key);
             }
           }
-          if (frame.transform != null) {
-            transforms.push(String(frame.transform));
+          if (frame.translate != null) {
+            translates.push(String(frame.translate));
+          }
+          if (frame.opacity != null) {
+            opacities.push(Number(frame.opacity));
           }
         }
         seen.set(animation, {
           props: [...props],
           duration: Number(effect.getTiming().duration),
-          transforms,
+          translates,
+          opacities,
           offsets,
+          isRow:
+            target instanceof Element && target.matches('[data-wheel-row]'),
         });
       }
       requestAnimationFrame(sample);
@@ -655,8 +674,10 @@ async function recordAnimations(column: Locator) {
             {
               props: string[];
               duration: number;
-              transforms: string[];
+              translates: string[];
+              opacities: number[];
               offsets: number[];
+              isRow: boolean;
             }
           >;
         }
@@ -668,8 +689,7 @@ test('under reduced motion, a flick still coasts as momentum, its rows flat', as
   page,
 }) => {
   // design:reduced-motion DR2: the momentum that continues a throw is direct
-  // movement, not a transition, so it coasts as scrolling does; only the
-  // rows' tip gives way to their fade.
+  // movement, not a transition, so it coasts as scrolling does.
   await page.emulateMedia({reducedMotion: 'reduce'});
   const {driver, field, minutes, start} = await openWheel(page);
   const read = await recordAnimations(minutes);
@@ -677,22 +697,17 @@ test('under reduced motion, a flick still coasts as momentum, its rows flat', as
   await expect(field).not.toHaveValue('00', {timeout: 4000});
   const seen = await read();
   // The strip coasts: a translation longer than any cross-fade.
-  const coasts = seen.filter(
-    animation =>
-      animation.props.includes('transform') &&
-      animation.transforms.some(transform =>
-        transform.startsWith('translateY'),
-      ),
+  const coasts = seen.filter(animation =>
+    animation.props.includes('translate'),
   );
   expect(coasts.length).toBeGreaterThan(0);
   expect(
     Math.max(...coasts.map(animation => animation.duration)),
   ).toBeGreaterThan(200);
-  // No row tips: every row stays upright and full size.
+  // Nothing fades, and the rows stay flat: no animation reaches a row.
   for (const animation of seen) {
-    for (const transform of animation.transforms) {
-      expect(transform).not.toMatch(/rotateX\((?!0deg)|scale\((?!1\))/);
-    }
+    expect(animation.props).not.toContain('opacity');
+    expect(animation.isRow).toBe(false);
   }
 });
 
@@ -700,8 +715,9 @@ test('under reduced motion, a tap cross-fades onto its row: nothing travels, in 
   page,
 }) => {
   // design:reduced-motion DR2: a transition the wheel starts, here a tap's
-  // turn, fades in 200 ms or less and moves nothing on screen: the rows land
-  // at the fade's midpoint, a step while the drawing is faded out.
+  // turn, is the animator's cross-fade: the strip's opacity dips out and
+  // back in, 200 ms in all, and its rows land on their row while it is faded
+  // out, a style write with no animation, so nothing is seen to travel.
   await page.emulateMedia({reducedMotion: 'reduce'});
   const {driver, field, minutes} = await openWheel(page);
   const read = await recordAnimations(minutes);
@@ -716,36 +732,35 @@ test('under reduced motion, a tap cross-fades onto its row: nothing travels, in 
   });
   await expect(field).toHaveValue('02', {timeout: 3000});
   const seen = await read();
-  const fades = seen.filter(
-    animation => !animation.props.includes('transform'),
-  );
-  expect(fades.length).toBeGreaterThan(0);
-  for (const fade of fades) {
-    expect(fade.props).toEqual(['opacity']);
-    expect(fade.duration).toBeLessThanOrEqual(200);
+  expect(seen.length).toBeGreaterThan(0);
+  // No travel: every animation is an opacity fade.
+  for (const animation of seen) {
+    expect(animation.props).toEqual(['opacity']);
   }
-  const fadeMs = Math.max(...fades.map(fade => fade.duration));
-  for (const landing of seen.filter(animation =>
-    animation.props.includes('transform'),
-  )) {
-    // The origin held, then the destination: two values, no travel...
-    const [origin, held, landed, end] = landing.transforms;
-    expect(landing.transforms).toHaveLength(4);
-    expect(held).toBe(origin);
-    expect(end).toBe(landed);
-    // ...stepping at the fade's midpoint.
-    expect(landing.offsets[1]).toBe(landing.offsets[2]);
-    expect(landing.offsets[1] * landing.duration).toBeCloseTo(fadeMs / 2, 0);
+  // Each half of the dip changes over 100 ms or less; the rest of each
+  // animation holds its last value.
+  for (const {opacities, offsets, duration} of seen) {
+    let held = opacities.length - 1;
+    while (held > 0 && opacities[held - 1] === opacities[held]) {
+      held -= 1;
+    }
+    expect(offsets[held] * duration).toBeLessThanOrEqual(100 + 1);
   }
+  expect(
+    seen.some(({opacities}) => opacities.includes(0)),
+    'the strip faded out',
+  ).toBe(true);
 });
 
-test('under reduced motion, a tap lands its row on the compositor while the main thread is blocked', async ({
+test('under reduced motion, a tap’s cross-fade never shows the old row again while the main thread is blocked', async ({
   page,
   browserName,
 }) => {
-  // design:reduced-motion DR2 with spec:AST-094 FR5: the rows land at the
-  // fade's midpoint on the compositor, so a main thread blocked across it
-  // never brings the fade back in on the old row.
+  // design:reduced-motion DR2 with spec:AST-094 FR5: the strip fades out on
+  // the compositor and holds faded out through a main-thread block across
+  // the fade's midpoint, so no frame brings the old row back; the animator
+  // lands the row as the main thread runs again, and the strip fades back in
+  // on it.
   test.skip(
     browserName !== 'chromium',
     'the screencast proof runs on Chromium; WebKit runs the landing case above',
@@ -769,7 +784,8 @@ test('under reduced motion, a tap lands its row on the compositor while the main
     y: Math.round(box.y + box.height / 2 + ROW),
   });
   const fade = (await waitForAnimation(strip, {minProgressMs: 16})).find(
-    animation => animation.durationMs <= 200,
+    animation =>
+      (animation.keyframes ?? []).some(frame => frame.opacity != null),
   );
   if (fade == null) {
     throw new Error('no cross-fade');
@@ -785,16 +801,13 @@ test('under reduced motion, a tap lands its row on the compositor while the main
   expect(Math.abs(to.y - from.y), 'the row moved to the band').toBeGreaterThan(
     ROW / 2,
   );
-  // The screencast sends a frame for each change on screen: the fade coming
-  // back in from its midpoint, while the main thread is still blocked. Each
-  // frame of it with the row in sight has the row at the band.
+  // Every frame with the row in sight after the fade's midpoint has the row
+  // at the band, through the block and after it: the old row never comes
+  // back.
   const fadeMs = 200;
   const tracked = await trackMarker(page, frames);
-  const fadingIn = tracked.filter(
-    frame =>
-      frame.box != null &&
-      frame.t >= fade.from + fadeMs / 2 + 10 &&
-      frame.t < block.to,
+  const afterMidpoint = tracked.filter(
+    frame => frame.box != null && frame.t >= fade.from + fadeMs / 2 + 10,
   );
   const timeline = tracked
     .map(
@@ -803,10 +816,10 @@ test('under reduced motion, a tap lands its row on the compositor while the main
     )
     .join(' ');
   expect(
-    fadingIn.length,
+    afterMidpoint.length,
     `frames with the row in sight (${timeline})`,
   ).toBeGreaterThan(0);
-  for (const frame of fadingIn) {
+  for (const frame of afterMidpoint) {
     expect(
       Math.abs((frame.box?.y ?? Infinity) - to.y),
       `the row at +${Math.round(frame.t - block.from)} ms, at rest y ${Math.round(to.y)} (${timeline})`,

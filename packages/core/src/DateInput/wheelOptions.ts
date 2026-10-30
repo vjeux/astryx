@@ -2,9 +2,9 @@
 
 /**
  * @file wheelOptions.ts
- * @input Nothing; types and one pure function
- * @output WheelOption, WheelProps, WheelHandle and
- *   nearestEnabledIndex: what both wheels share
+ * @input Nothing; types, the row height and pure functions
+ * @output WheelOption, WheelProps, WheelHandle, WHEEL_ROW_HEIGHT, canSpinTo
+ *   and nearestEnabledIndex: what both wheels share
  * @position Internal; read by Wheel.tsx (which re-exports all of it) and
  *   PickerWheel.tsx
  *
@@ -14,6 +14,12 @@
  */
 
 import type {Ref} from 'react';
+
+/**
+ * Today's row, px (`dateInputTouchSizes.wheelItemSize`): the pitch of both
+ * columns' rows, and the unit of the touch wheel's offset.
+ */
+export const WHEEL_ROW_HEIGHT = 28;
 
 export interface WheelOption {
   /** Stable numeric identity of the row (a month 1-12, or a year). */
@@ -58,16 +64,9 @@ export interface WheelProps {
    */
   isActive?: boolean;
   /**
-   * The rows repeat without end, as UIDatePicker's minutes and hours do: the
-   * last row is followed by the first. A list shorter than the column (a
-   * minute column every 15 minutes) repeats down all of it, as UIKit's does.
-   * Under a finger only; a single row never loops.
-   */
-  isLooping?: boolean;
-  /**
    * The row the wheel rests on after stopping on `index`. When it differs,
    * the wheel turns on to it and commits that one. Under a finger only.
-   * @default the nearest enabled row, around the seam on a loop (`restingStep`)
+   * @default the nearest enabled row (`nearestEnabledIndex`)
    */
   resolveRest?: (index: number) => number;
   /** Programmatic turns: `spinTo(index)`. */
@@ -90,62 +89,6 @@ export function canSpinTo(
     !option.isDisabled &&
     (resolveRest == null || resolveRest(index) === index)
   );
-}
-
-/**
- * The shorter signed number of rows from `from` to `to` around a loop of
- * `count` rows; a tie (exactly half a turn) goes forward.
- */
-export function loopStep(from: number, to: number, count: number): number {
-  const ahead = (((to - from) % count) + count) % count;
-  return ahead <= count / 2 ? ahead : ahead - count;
-}
-
-/**
- * How many rows, signed, a wheel resting on row `index` travels to the
- * nearest enabled row: 0 when `index` is enabled. A tie goes toward
- * `towardIndex` (the committed row). On a looping wheel distance runs around
- * the seam, so a rest beside it turns the shorter way round and never the
- * long way across the list. A wheel with no enabled row travels to
- * `towardIndex`.
- *
- * @example
- * ```
- * // Months, looping, with only January and February enabled: a rest on
- * // December turns one row on to January, not ten back to February.
- * restingStep(monthOptions, 11, 0, true); // 1
- * ```
- */
-export function restingStep(
-  options: ReadonlyArray<WheelOption>,
-  index: number,
-  towardIndex: number,
-  isLooping: boolean = false,
-): number {
-  const count = options.length;
-  if (!isLooping || count === 0) {
-    return nearestEnabledIndex(options, index, towardIndex) - index;
-  }
-  const isEnabled = (i: number) =>
-    !options[((i % count) + count) % count].isDisabled;
-  if (isEnabled(index)) {
-    return 0;
-  }
-  const toward = loopStep(index, towardIndex, count);
-  for (let distance = 1; distance <= count / 2; distance++) {
-    const isBelowEnabled = isEnabled(index - distance);
-    const isAboveEnabled = isEnabled(index + distance);
-    if (isBelowEnabled && isAboveEnabled) {
-      return toward < 0 ? -distance : distance;
-    }
-    if (isBelowEnabled) {
-      return -distance;
-    }
-    if (isAboveEnabled) {
-      return distance;
-    }
-  }
-  return toward;
 }
 
 /**

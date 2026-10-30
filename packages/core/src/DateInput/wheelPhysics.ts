@@ -8,8 +8,8 @@
  *   coast onto a row, a snap, a coast into an end and its bounce, a return
  *   from past an end), the tap spin, the rubber band while dragging, and the
  *   row crossings that tick
- * @position Pure math of the touch picker wheel (PickerWheel.tsx); the drum
- *   (wheelDrum.ts) renders whatever curve this returns
+ * @position Pure math of the touch picker wheel (PickerWheel.tsx); the
+ *   shared animator plays whatever curve this returns (wheelStrip.ts)
  *
  * Units follow the motion foundation: positions in px, time in seconds,
  * velocities in px/s. The offset is the distance the rows have travelled up:
@@ -70,10 +70,7 @@ export type WheelPlanKind = 'coast' | 'snap' | 'edge' | 'return';
 /** What a release does: the curve, and the row it ends on. */
 export interface WheelPlan {
   readonly kind: WheelPlanKind;
-  /**
-   * The row the wheel comes to rest on. With `looping` it can be any
-   * integer: the row it shows is `index` modulo the row count.
-   */
+  /** The row the wheel comes to rest on. */
   readonly index: number;
   readonly curve: WheelCurve;
 }
@@ -83,8 +80,6 @@ export interface WheelLayout {
   /** Row height, px. */
   readonly rowHeight: number;
   readonly rowCount: number;
-  /** Whether the rows repeat without end (minutes, hours). */
-  readonly looping?: boolean;
 }
 
 /** UIKit's row height in pt: the unit the picker constants are measured in. */
@@ -115,14 +110,11 @@ export function restCurve(offset: number): WheelCurve {
   };
 }
 
-/** The offsets of the first and last rows; unbounded when looping. */
-export function offsetBounds({rowHeight, rowCount, looping}: WheelLayout): {
+/** The offsets of the first and last rows. */
+export function offsetBounds({rowHeight, rowCount}: WheelLayout): {
   min: number;
   max: number;
 } {
-  if (looping) {
-    return {min: -Infinity, max: Infinity};
-  }
   return {min: 0, max: Math.max(0, rowCount - 1) * rowHeight};
 }
 
@@ -143,21 +135,10 @@ export function dragOffset(offset: number, layout: WheelLayout): number {
   return offset;
 }
 
-/** The nearest row to `offset` (clamped to the rows unless looping). */
+/** The nearest row to `offset`, clamped to the rows. */
 export function nearestIndex(offset: number, layout: WheelLayout): number {
   const index = Math.round(offset / layout.rowHeight);
-  if (layout.looping) {
-    return index;
-  }
   return Math.min(Math.max(index, 0), Math.max(0, layout.rowCount - 1));
-}
-
-/** `index` folded onto the rows: the row a looping wheel shows there. */
-export function wrapIndex(index: number, rowCount: number): number {
-  if (rowCount <= 0) {
-    return 0;
-  }
-  return ((index % rowCount) + rowCount) % rowCount;
 }
 
 /**

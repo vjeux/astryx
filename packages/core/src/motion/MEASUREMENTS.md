@@ -276,10 +276,9 @@ fades in, with Prefer Cross-Fade Transitions on or off.
 Values the Wheel reads from its own table (`uikit/picker.ts`).
 
 Done (UIKit lab, iOS 26.2 simulator, Oct 23 2026; in the picker's table): the
-geometry (row pitch, cylinder, perspective, band, the band copy's
-magnification, the dimmed copies' opacity), the rubber band's dimension, the
-coast's stop speed, the velocity floor, the snap at rest, the tap spin and
-the selection tick. Measured and kept by the gesture system instead: the
+row pitch, the picker's height, the rubber band's dimension, the coast's stop
+speed, the velocity floor, the snap at rest, the tap spin and the selection
+tick. Measured and kept by the gesture system instead: the
 scroll view coasts with 0.25 × the pan's velocity plus 0.75 × its value one
 event earlier (four HID releases; `velocity.scrollReleaseWeight`, which a
 pan's `scrollVelocity()` reads). On UIKit, Reduce Motion with Prefer Cross-Fade changes

@@ -16,7 +16,6 @@
  */
 
 import {describe, expect, it} from 'vitest';
-import {sampleCurve} from './wheelDrum';
 import {
   MAX_PLAN_SECONDS,
   coastCurve,
@@ -28,7 +27,6 @@ import {
   snapCurve,
   spinCurve,
   tickTimes,
-  wrapIndex,
   type WheelLayout,
 } from './wheelPhysics';
 
@@ -325,15 +323,6 @@ describe('past an end', () => {
     expect(plan.curve.velocity(0)).toBeCloseTo(-147.8, 6);
     expect(plan.curve.value(plan.curve.duration)).toBe(0);
   });
-
-  it('never has an end when looping', () => {
-    const looping = {...MINUTES, looping: true};
-    expect(dragOffset(-50, looping)).toBe(-50);
-    expect(planRelease(-37.33, 0, looping).index).toBe(-1);
-    expect(nearestIndex(70 * 32, looping)).toBe(70);
-    expect(wrapIndex(70, 60)).toBe(10);
-    expect(wrapIndex(-1, 60)).toBe(59);
-  });
 });
 
 describe('the tap spin', () => {
@@ -408,10 +397,6 @@ describe('the bounce spring it is handed', () => {
         );
         expect(curve.value(curve.duration)).toBe(curve.to);
         expect(curve.velocity(curve.duration)).toBe(0);
-        expect(sampleCurve(curve).at(-1)).toEqual({
-          t: curve.duration,
-          value: curve.to,
-        });
       }
     }
   });

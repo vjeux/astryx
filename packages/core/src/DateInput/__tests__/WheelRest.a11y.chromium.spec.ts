@@ -23,7 +23,7 @@ import {
   type StaticServer,
 } from '@astryxdesign/a11y-spec/storybook';
 import {UIKIT_GESTURES} from '../../motion/uikit';
-import {WHEEL_ROW_PITCH} from '../wheelLook';
+import {WHEEL_ROW_HEIGHT} from '../wheelOptions';
 
 let storybook: StaticServer;
 test.beforeAll(async () => {
@@ -98,7 +98,7 @@ const selectedHour = (hours: Locator) =>
   hours.locator('[role="option"][aria-selected="true"]');
 
 /** The touch column's row pitch: today's row. */
-const ROW = WHEEL_ROW_PITCH;
+const ROW = WHEEL_ROW_HEIGHT;
 /**
  * A drag begins only once the finger has travelled the pan's hysteresis,
  * which the rows never show, so each drag adds that and a little more and
