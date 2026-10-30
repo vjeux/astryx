@@ -215,9 +215,9 @@ assistive-technology activation keep working.
 
 `paintPress(element, 'on' | 'held' | 'fading' | 'none', {releaseMs})`, in
 `utils/pressFeedback.ts`, writes `data-astryx-press` for a painter other than
-the document press controller, through the controller's own writer; the
-action-group tracker (`hooks/actionGroupTracker.ts`) writes its groups'
-presses itself. `paintPress` owns the release timer and writes
+the document press controller, through the controller's own writer: the
+action-group tracker (`hooks/actionGroupTracker.ts`) paints its groups'
+presses with it. `paintPress` owns the release timer and writes
 only over values the caller may replace (by default none, `on` and
 `fading`), so a `held` row survives presses until its owner releases it
 with `onlyFrom: ['held']`.

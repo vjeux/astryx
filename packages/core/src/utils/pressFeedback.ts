@@ -367,6 +367,11 @@ export interface PaintPressOptions {
   releaseMs?: number;
   /** The current values this write may replace. @default none, on, fading */
   onlyFrom?: ReadonlyArray<PressPaint>;
+  /**
+   * For a `fading` paint: called once when that fade stops being the
+   * element's paint, on its own clock or because a later write replaced it.
+   */
+  onFadeEnd?: () => void;
 }
 
 /** What a press may replace: a `held` row is its owner's until released. */
@@ -374,6 +379,17 @@ const PRESS_REPLACES: ReadonlyArray<PressPaint> = ['none', 'on', 'fading'];
 const PAINTS: ReadonlySet<string> = new Set(['on', 'held', 'fading']);
 /** Cancels a `fading` paint's own release, per element (paintPress). */
 const fadeTimers = new WeakMap<Element, () => void>();
+/** A `fading` paint's end callback, per element (paintPress's onFadeEnd). */
+const fadeEnds = new WeakMap<Element, () => void>();
+
+/** The end of the fade paintPress left running on `element`: its painter hears it once. */
+function endFade(element: Element): void {
+  const onEnd = fadeEnds.get(element);
+  if (onEnd != null) {
+    fadeEnds.delete(element);
+    onEnd();
+  }
+}
 
 /**
  * The release animations running for `element`'s press: CSS animations on it
@@ -459,11 +475,11 @@ export function readPressPaint(element: Element): PressPaint | null {
 }
 
 /**
- * Write `next` on `element` if its state is one of `onlyFrom`: the writer of
- * the press attribute for the controller and for paintPress, so a fade's
- * clock and the attribute never drift apart (the action-group tracker writes
- * its groups' presses itself). Any write ends a fade paintPress left running
- * there. Returns whether it wrote.
+ * Write `next` on `element` if its state is one of `onlyFrom`: the press
+ * attribute's writer for the controller and every painter that uses
+ * paintPress, the action-group tracker among them, so a fade's clock and the
+ * attribute never drift apart. Any write ends a fade paintPress left running
+ * there, and tells its painter (onFadeEnd). Returns whether it wrote.
  */
 function writePress(
   element: Element,
@@ -479,6 +495,7 @@ function writePress(
     pending();
     fadeTimers.delete(element);
   }
+  endFade(element);
   if (next === 'none') {
     element.removeAttribute(PRESSED_ATTRIBUTE);
   } else if (current !== next) {
@@ -492,9 +509,11 @@ function writePress(
  * (by default none, on or fading: a hold survives a press, and its owner
  * releases it with `onlyFrom: ['held']`). A `fading` paint ends when its
  * release animation does, or on its own clock where none runs
- * (endAfterRelease). Returns whether it painted. For a painter other than the touch
- * press controller: a group that tracks its selection, a row that keeps its
- * selection through a navigation.
+ * (endAfterRelease), and `onFadeEnd` tells its painter when it stops being
+ * the element's paint. Returns whether it painted. For a painter other than
+ * the touch press controller: a group that tracks its selection (the
+ * action-group tracker), a row that keeps its selection through a
+ * navigation.
  */
 export function paintPress(
   element: Element,
@@ -505,6 +524,9 @@ export function paintPress(
     return false;
   }
   if (next === 'fading') {
+    if (options.onFadeEnd != null) {
+      fadeEnds.set(element, options.onFadeEnd);
+    }
     fadeTimers.set(
       element,
       endAfterRelease(element, options.releaseMs ?? PRESS_FADE_MS, () => {
@@ -512,6 +534,7 @@ export function paintPress(
         if (element.getAttribute(PRESSED_ATTRIBUTE) === 'fading') {
           element.removeAttribute(PRESSED_ATTRIBUTE);
         }
+        endFade(element);
       }),
     );
   }
