@@ -1666,3 +1666,682 @@ test(
     expect(ends.at(-1)).toBeCloseTo(0, 0);
   },
 );
+
+// -----------------------------------------------------------------------------
+// The indicator's spin (opacity steps on the compositor)
+// -----------------------------------------------------------------------------
+
+/**
+ * For each frame, which of the eight spokes is the darkest (the gradient's
+ * head), sampled at the middle of each spoke (10 pt from the center), and
+ * each spoke's darkness there.
+ */
+async function spinHeads(
+  page: Page,
+  castFrames: readonly {t: number; data: string}[],
+  glyph: {x: number; y: number; width: number; height: number},
+): Promise<{t: number; head: number; contrast: number; dark: number[]}[]> {
+  const scratch = await page.context().newPage();
+  try {
+    const viewport = page.viewportSize() ?? {width: 402, height: 874};
+    return await scratch.evaluate(
+      async ({items, box, width}) => {
+        const out: {
+          t: number;
+          head: number;
+          contrast: number;
+          dark: number[];
+        }[] = [];
+        for (const item of items) {
+          const bitmap = await createImageBitmap(
+            await (await fetch(`data:image/png;base64,${item.data}`)).blob(),
+          );
+          const scale = bitmap.width / width;
+          const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+          const context = canvas.getContext('2d');
+          if (context == null) {
+            throw new Error('no 2d context');
+          }
+          context.drawImage(bitmap, 0, 0);
+          const cx = (box.x + box.width / 2) * scale;
+          const cy = (box.y + box.height / 2) * scale;
+          const dark: number[] = [];
+          for (let k = 0; k < 8; k += 1) {
+            const angle = (k * Math.PI) / 4;
+            const x = Math.round(cx + 10 * scale * Math.sin(angle));
+            const y = Math.round(cy - 10 * scale * Math.cos(angle));
+            const {data} = context.getImageData(x - 1, y - 1, 3, 3);
+            let sum = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              sum += data[i] + data[i + 1] + data[i + 2];
+            }
+            dark.push(765 - sum / (data.length / 4));
+          }
+          const max = Math.max(...dark);
+          const sorted = [...dark].sort((a, b) => b - a);
+          out.push({
+            t: item.t,
+            head: dark.indexOf(max),
+            contrast: max - sorted[1],
+            dark,
+          });
+        }
+        return out;
+      },
+      {
+        items: castFrames.map(f => ({t: f.t, data: f.data})),
+        box: glyph,
+        width: viewport.width,
+      },
+    );
+  } finally {
+    await scratch.close();
+  }
+}
+
+test('the spin steps clockwise every eighth of a second while the main thread is blocked', async ({
+  page,
+  browserName,
+}, testInfo) => {
+  test.skip(
+    browserName !== 'chromium',
+    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
+  );
+  const {driver, content, start} = await openRefresh(page, undefined, {
+    refreshMs: '8000',
+  });
+  await driver.play(slowPull(start, 300, 200));
+  await expect.poll(() => isBusy(content)).toBe(true);
+  // Past the trigger turn and the gradient's spring (both about 3 s).
+  await page.waitForTimeout(3600);
+  const spinner = content
+    .locator(':scope > div:last-child > div > span')
+    .first();
+  const glyph = await spinner.boundingBox();
+  if (glyph == null) {
+    throw new Error('no indicator');
+  }
+  // The step, from the running spin itself: one turn over the stepping
+  // spokes.
+  const {stepMs, spokes} = await spinner.evaluate(element => {
+    const turns = Array.from(element.children).flatMap(child =>
+      child
+        .getAnimations()
+        .filter(
+          animation => animation.effect?.getTiming().iterations === Infinity,
+        ),
+    );
+    return {
+      stepMs: Number(turns[0]?.effect?.getTiming().duration) / turns.length,
+      spokes: turns.length,
+    };
+  });
+  const cast = await startScreencast(page);
+  await page.waitForTimeout(150);
+  const block = await blockMainThread(page, 700);
+  await page.waitForTimeout(150);
+  const castFrames = await cast.stop();
+  const heads = await spinHeads(page, castFrames, glyph);
+  // A frame may catch the 0.1 ms ramp between two steps (the head then
+  // barely stands out): judge the frames where it clearly does.
+  const inside = heads.filter(
+    f => f.t >= block.from + 20 && f.t <= block.to - 20 && f.contrast > 15,
+  );
+  const steps: {t: number; from: number; to: number}[] = [];
+  for (let i = 1; i < inside.length; i += 1) {
+    if (inside[i].head !== inside[i - 1].head) {
+      steps.push({
+        t: inside[i].t,
+        from: inside[i - 1].head,
+        to: inside[i].head,
+      });
+    }
+  }
+  await writeEvidence(
+    'busy-main-thread/refresh-spin',
+    {
+      [`${testInfo.project.name}.json`]: JSON.stringify(
+        {block, glyph, steps, heads: inside},
+        null,
+        1,
+      ),
+    },
+    testInfo,
+  );
+  // The head is clearly the darkest spoke in nearly every frame.
+  const judged = heads.filter(
+    f => f.t >= block.from + 20 && f.t <= block.to - 20,
+  );
+  expect(inside.length).toBeGreaterThanOrEqual(judged.length - 2);
+  const first = inside[0];
+  const last = inside[inside.length - 1];
+  if (first == null || last == null) {
+    throw new Error('no frame to judge');
+  }
+  // Judged against the clock, not the frame rate: between any two judged
+  // frames the head has moved clockwise by as many spokes as step boundaries
+  // fit between them. A frame's time is known to within the screencast's own
+  // interval, so the count may fall either side of that window by it; a
+  // freeze, a catch-up jump or a backward step fails at any cadence.
+  const intervals = inside
+    .slice(1)
+    .map((f, i) => f.t - inside[i].t)
+    .sort((a, b) => a - b);
+  const slackMs = intervals[Math.floor(intervals.length / 2)] ?? 0;
+  const moved = [0];
+  for (let i = 1; i < inside.length; i += 1) {
+    moved.push(
+      moved[i - 1] + ((inside[i].head - inside[i - 1].head + spokes) % spokes),
+    );
+  }
+  const offClock: {from: number; to: number; moved: number}[] = [];
+  for (let i = 0; i < inside.length; i += 1) {
+    for (let j = i + 1; j < inside.length; j += 1) {
+      const elapsedMs = inside[j].t - inside[i].t;
+      const count = moved[j] - moved[i];
+      if (
+        count < Math.floor((elapsedMs - slackMs) / stepMs) ||
+        count > Math.ceil((elapsedMs + slackMs) / stepMs)
+      ) {
+        offClock.push({from: inside[i].t, to: inside[j].t, moved: count});
+      }
+    }
+  }
+  expect(offClock.slice(0, 5), JSON.stringify({stepMs, slackMs})).toEqual([]);
+  // The judged frames reach across the block, within the screencast's own
+  // interval at each end.
+  expect(first.t - (block.from + 20)).toBeLessThanOrEqual(2 * slackMs);
+  expect(block.to - 20 - last.t).toBeLessThanOrEqual(2 * slackMs);
+});
+
+test('the trigger\u2019s copy of the spokes leaves when its fade ends, mid-refresh', async ({
+  page,
+}) => {
+  const {driver, content, start} = await openRefresh(page, undefined, {
+    refreshMs: '8000',
+  });
+  const glyph = content.locator(':scope > div:last-child > div > span').first();
+  // When the copy's fade finishes: whether the copy is still mounted, and
+  // whether the refresh is still busy. The hook sets the fade's finish
+  // handler as it starts it, before this listener exists, so a copy its own
+  // fade removes is already gone when this one runs.
+  await glyph.evaluate(element => {
+    const log: {
+      fadeMs: number | null;
+      mountedAtFinish: boolean | null;
+      busyAtFinish: boolean | null;
+    } = {fadeMs: null, mountedAtFinish: null, busyAtFinish: null};
+    (window as unknown as {__copy: typeof log}).__copy = log;
+    const root = element.closest('.astryx-refresh-control');
+    new MutationObserver(records => {
+      for (const record of records) {
+        for (const node of Array.from(record.addedNodes)) {
+          const copy = node as Element;
+          const [fade] = copy.getAnimations();
+          log.fadeMs = Number(fade?.effect?.getComputedTiming().duration);
+          fade?.addEventListener('finish', () => {
+            log.mountedAtFinish = copy.isConnected;
+            log.busyAtFinish = root?.getAttribute('aria-busy') === 'true';
+          });
+        }
+      }
+    }).observe(element, {childList: true});
+  });
+  await driver.play(slowPull(start, 300, 200));
+  await expect.poll(() => isBusy(content)).toBe(true);
+  const readLog = () =>
+    page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __copy: {
+              fadeMs: number | null;
+              mountedAtFinish: boolean | null;
+              busyAtFinish: boolean | null;
+            };
+          }
+        ).__copy,
+    );
+  await expect
+    .poll(async () => (await readLog()).mountedAtFinish, {timeout: 9000})
+    .not.toBeNull();
+  const log = await readLog();
+  expect(log.fadeMs, JSON.stringify(log)).toBeGreaterThan(0);
+  // Removed by its own fade's end, mid-refresh: not by the refresh's end.
+  expect(log.mountedAtFinish, JSON.stringify(log)).toBe(false);
+  expect(log.busyAtFinish, JSON.stringify(log)).toBe(true);
+  expect(await glyph.evaluate(element => element.children.length)).toBe(8);
+});
+
+test('the cross-fade and the spin do no Layout or Paint per frame', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
+  const {driver, content, start} = await openRefresh(page, undefined, {
+    refreshMs: '8000',
+  });
+  await driver.play(slowPull(start, 300, 200));
+  await expect.poll(() => isBusy(content)).toBe(true);
+  const glyph = content.locator(':scope > div:last-child > div > span').first();
+  // While the transient copy fades out over the stepping spokes, once the
+  // content holds still (the pull itself repaints: the content's translate).
+  await waitForSettle(content);
+  const copyCount = () => glyph.evaluate(element => element.children.length);
+  expect(await copyCount()).toBe(9);
+  const during = await traceRendering(page, async () => {
+    await page.waitForTimeout(600);
+  });
+  // The copy was still fading the whole time.
+  expect(await copyCount()).toBe(9);
+  expect(during.layout, JSON.stringify(during.counts)).toBe(0);
+  expect(during.paint, JSON.stringify(during.counts)).toBe(0);
+  // Then the spin alone, once the copy is gone: eight steps.
+  await expect
+    .poll(() => glyph.evaluate(element => element.children.length), {
+      timeout: 8000,
+    })
+    .toBe(8);
+  await page.waitForTimeout(200);
+  const after = await traceRendering(page, async () => {
+    await page.waitForTimeout(1000);
+  });
+  expect(after.layout, JSON.stringify(after.counts)).toBe(0);
+  expect(after.paint, JSON.stringify(after.counts)).toBe(0);
+});
+
+test('at the trigger each spoke cross-fades into the gradient: UIKit\u2019s two images summed', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Chromium screenshot proof');
+  const {driver, content, start} = await openRefresh(page, undefined, {
+    refreshMs: '8000',
+  });
+  await driver.play(slowPull(start, 300, 200));
+  await expect.poll(() => isBusy(content)).toBe(true);
+  await page.waitForTimeout(1200);
+  const glyph = content.locator(':scope > div:last-child > div > span').first();
+  // Hold everything 0.755 s after the trigger: the copy's fade at the
+  // gradient spring's midpoint (w = 0.5), the spokes' steps at step 6, the
+  // trigger turn finished.
+  const held = await glyph.evaluate(element => {
+    const kinds: string[] = [];
+    const spinStarts = new Set<number | null>();
+    for (const animation of element.getAnimations({subtree: true})) {
+      const startTime = animation.startTime;
+      animation.pause();
+      const timing = animation.effect?.getTiming();
+      if ((animation.effect as KeyframeEffect).target === element) {
+        animation.finish();
+        kinds.push('turn');
+      } else if (timing?.iterations === Infinity) {
+        spinStarts.add(Number(startTime));
+        animation.currentTime = 755;
+        kinds.push('spin');
+      } else {
+        animation.currentTime = 755;
+        kinds.push('cross-fade');
+      }
+    }
+    return {
+      kinds,
+      spinStarts: [...spinStarts],
+      children: element.children.length,
+      copySpokes: element.lastElementChild?.children.length ?? 0,
+      color: getComputedStyle(element.firstElementChild as Element)
+        .backgroundColor,
+    };
+  });
+  // The eight spokes and the transient copy of them, each element with its
+  // one animation: eight steps and one fade.
+  expect(held.children).toBe(9);
+  expect(held.copySpokes).toBe(8);
+  expect(held.kinds.filter(k => k === 'spin')).toHaveLength(8);
+  expect(held.kinds.filter(k => k === 'cross-fade')).toHaveLength(1);
+  // The eight spokes step on one clock.
+  expect(held.spinStarts).toHaveLength(1);
+  const shot = await glyph.screenshot();
+  const ink = (held.color.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+  const alphas = await page.evaluate(
+    async ({png, color}) => {
+      const bitmap = await createImageBitmap(
+        await (await fetch(`data:image/png;base64,${png}`)).blob(),
+      );
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+      const context = canvas.getContext('2d');
+      if (context == null) {
+        throw new Error('no 2d context');
+      }
+      context.drawImage(bitmap, 0, 0);
+      const {data, width} = context.getImageData(
+        0,
+        0,
+        bitmap.width,
+        bitmap.height,
+      );
+      const scale = bitmap.width / 30;
+      const c = bitmap.width / 2;
+      const out: number[] = [];
+      for (let p = 0; p < 8; p += 1) {
+        const a = (p * Math.PI) / 4;
+        const x = Math.round(c + 10 * scale * Math.sin(a));
+        const y = Math.round(c - 10 * scale * Math.cos(a));
+        let sum = 0;
+        let n = 0;
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dx = -1; dx <= 1; dx += 1) {
+            const i = ((y + dy) * width + (x + dx)) * 4;
+            sum += data[i] + data[i + 1] + data[i + 2];
+            n += 3;
+          }
+        }
+        const level = sum / n;
+        const gray = (color[0] + color[1] + color[2]) / 3;
+        // The page is white: level = 255 - alpha * (255 - ink).
+        out.push((255 - level) / (255 - gray));
+      }
+      return out;
+    },
+    {png: shot.toString('base64'), color: ink},
+  );
+  // Each spoke at 1 - w + w × its instance's alpha (spoke p holds instance
+  // (p - 6) mod 8 at step 6): the copy at 1 - w over the stepping spoke,
+  // UIKit's sum of its two images.
+  const w = 0.5;
+  alphas.forEach((alpha, p) => {
+    const instance = 0.08 * ((p + 2) % 8);
+    const sum = 1 - w + w * instance;
+    expect(
+      Math.abs(alpha - sum),
+      `spoke ${p}: ${alpha.toFixed(3)}`,
+    ).toBeLessThan(0.03);
+  });
+  // The brightest spoke (instance 7, at spoke 5) shows the sum, not normal
+  // blending's 0.64.
+  expect(alphas[5]).toBeGreaterThan(0.74);
+});
+
+test('the cross-fade keeps moving while the main thread is blocked right after the trigger', async ({
+  page,
+  browserName,
+}, testInfo) => {
+  test.skip(
+    browserName !== 'chromium',
+    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
+  );
+  const {driver, content, start} = await openRefresh(page, undefined, {
+    refreshMs: '8000',
+  });
+  // The compositor's own frames, for gaps the screencast skips under load.
+  const compositor = await startCompositorTrace(page);
+  const cast = await startScreencast(page);
+  await driver.play(slowPull(start, 300, 200));
+  // Blocked from the page itself as soon as the trigger has mounted the
+  // copy, so the block covers the start of its fade.
+  const {block, glyph} = await content.evaluate(async element => {
+    const spinner = element.querySelector(
+      ':scope > div:last-child > div > span',
+    ) as Element;
+    while (spinner.children.length < 9) {
+      await new Promise(requestAnimationFrame);
+    }
+    // A few frames after the lift, so the settle it starts has committed,
+    // then from a task of its own: a block that holds a pending commit makes
+    // the compositor wait for it before drawing on, a startup gap that is
+    // not the cross-fade's.
+    for (let i = 0; i < 3; i += 1) {
+      await new Promise(requestAnimationFrame);
+    }
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const rect = spinner.getBoundingClientRect();
+    const from = performance.timeOrigin + performance.now();
+    const end = performance.now() + 700;
+    while (performance.now() < end) {
+      // Hold the main thread.
+    }
+    return {
+      block: {from, to: performance.timeOrigin + performance.now()},
+      glyph: {x: rect.x, y: rect.y, width: rect.width, height: rect.height},
+    };
+  });
+  await page.waitForTimeout(150);
+  const castFrames = await cast.stop();
+  const presented = await compositor.stop();
+  // The glyph's whole ink, frame by frame: the turn moves the spokes but not
+  // how much they cover, so only the fade changes it.
+  const scratch = await page.context().newPage();
+  const viewport = page.viewportSize() ?? {width: 402, height: 874};
+  const inks = await scratch
+    .evaluate(
+      async ({items, box, width}) => {
+        const out: {t: number; ink: number}[] = [];
+        for (const item of items) {
+          const bitmap = await createImageBitmap(
+            await (await fetch(`data:image/png;base64,${item.data}`)).blob(),
+          );
+          const scale = bitmap.width / width;
+          const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+          const context = canvas.getContext('2d');
+          if (context == null) {
+            throw new Error('no 2d context');
+          }
+          context.drawImage(bitmap, 0, 0);
+          const pad = 2;
+          const x = Math.floor((box.x - pad) * scale);
+          const y = Math.floor((box.y - pad) * scale);
+          const side = Math.ceil((box.width + 2 * pad) * scale);
+          const {data} = context.getImageData(x, y, side, side);
+          let ink = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            ink += 765 - (data[i] + data[i + 1] + data[i + 2]);
+          }
+          out.push({t: item.t, ink: ink / (scale * scale * 765)});
+        }
+        return out;
+      },
+      {
+        items: castFrames.map(f => ({t: f.t, data: f.data})),
+        box: glyph,
+        width: viewport.width,
+      },
+    )
+    .finally(() => scratch.close());
+  const judged = {from: block.from + 20, to: block.to - 20};
+  const inside = inks.filter(f => f.t >= judged.from && f.t <= judged.to);
+  // The screencast's own cadence, from the frames around the block.
+  const around = inks.filter(
+    f => f.t >= block.from - 300 && f.t <= block.to + 150,
+  );
+  const intervals = around
+    .slice(1)
+    .map((f, i) => f.t - around[i].t)
+    .sort((a, b) => a - b);
+  const cadenceMs = intervals[Math.floor(intervals.length / 2)] ?? 16.7;
+  // A loaded machine's screencast skips frames the compositor still
+  // presents, so the frames it delivered are judged, never counted against
+  // its cadence (`busyWindowProof`'s rule). The copy fades every frame, so
+  // each delivered frame shows less ink than the one before it.
+  const moved: number[] = [];
+  const unchanged: number[] = [];
+  for (let i = 1; i < inside.length; i += 1) {
+    (inside[i].ink < inside[i - 1].ink - 0.05 ? moved : unchanged).push(
+      inside[i].t,
+    );
+  }
+  // The longest time with no presented change. A gap between two changed
+  // frames that holds no delivered frame is measured between the
+  // compositor's own frames there; a gap that opens or closes the judged
+  // part, or holds an unchanged frame, is the screencast's.
+  const between = (times: readonly number[], a: number, b: number) =>
+    times.filter(t => t > a && t < b);
+  const edges = [judged.from, ...moved, judged.to];
+  let longestStill = 0;
+  for (let i = 1; i < edges.length; i += 1) {
+    const a = edges[i - 1];
+    const b = edges[i];
+    const interior =
+      i > 1 && i < edges.length - 1 && between(unchanged, a, b).length === 0;
+    const marks = interior ? [a, ...between(presented, a, b), b] : [a, b];
+    for (let k = 1; k < marks.length; k += 1) {
+      longestStill = Math.max(longestStill, marks[k] - marks[k - 1]);
+    }
+  }
+  // At least 90% of the delivered frames change, one miss always allowed.
+  const minChanged = Math.max(
+    inside.length - 3,
+    Math.ceil(0.9 * (inside.length - 1)) - 1,
+  );
+  await writeEvidence(
+    'busy-main-thread/refresh-trigger',
+    {
+      [`${testInfo.project.name}.json`]: JSON.stringify(
+        {
+          block,
+          glyph,
+          cadenceMs,
+          presentedInside: between(presented, judged.from, judged.to).length,
+          changed: moved.length,
+          longestStill,
+          frames: inside,
+        },
+        null,
+        1,
+      ),
+    },
+    testInfo,
+  );
+  // Enough delivered frames to judge (`busyWindowProof`'s `minJudgedFrames`).
+  expect(inside.length).toBeGreaterThanOrEqual(4);
+  expect(moved.length, JSON.stringify(inside)).toBeGreaterThanOrEqual(
+    minChanged,
+  );
+  expect(longestStill).toBeLessThanOrEqual(3 * cadenceMs);
+});
+
+test('under Reduce Motion the gradient applies at once at the trigger on a touch screen, with no copy of the spokes', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Chromium proof');
+  // design:reduced-motion DR2, DEC-3: the spokes' gradient is an in-place
+  // value change, so under reduced motion it applies at once on any pointer:
+  // no copy of the spokes joins the spinner and nothing cross-fades.
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  await primaryPointer(page, 'coarse');
+  const {driver, content, start} = await openRefresh(page, undefined, {
+    refreshMs: '8000',
+  });
+  const glyph = content.locator(':scope > div:last-child > div > span').first();
+  await glyph.evaluate(element => {
+    const state = {added: 0};
+    (window as unknown as {__added: typeof state}).__added = state;
+    new MutationObserver(records => {
+      for (const record of records) {
+        state.added += record.addedNodes.length;
+      }
+    }).observe(element, {childList: true});
+  });
+  await recordAnimations(page);
+  await driver.play(slowPull(start, 300, 200));
+  await expect.poll(() => isBusy(content)).toBe(true);
+  await page.waitForTimeout(400);
+  const log = await recordedAnimations(page);
+  const added = await page.evaluate(
+    () => (window as unknown as {__added: {added: number}}).__added.added,
+  );
+  expect(added).toBe(0);
+  expect(await glyph.evaluate(element => element.children.length)).toBe(8);
+  expect(
+    log.filter(a => a.part === 'other' && !a.endless),
+    JSON.stringify(log),
+  ).toEqual([]);
+  expect(reducedMotionFailures(log), JSON.stringify(log)).toEqual([]);
+});
+
+test(
+  'storyboard: the spin, one turn of the gradient',
+  {tag: '@storyboard'},
+  async ({page, browserName}, testInfo) => {
+    test.skip(browserName !== 'chromium', 'Chromium storyboard');
+    const {driver, content, start} = await openRefresh(page, undefined, {
+      refreshMs: '8000',
+    });
+    await driver.play(slowPull(start, 300, 200));
+    await expect.poll(() => isBusy(content)).toBe(true);
+    const glyph = content
+      .locator(':scope > div:last-child > div > span')
+      .first();
+    // Once the trigger's cross-fade is over and its copy gone.
+    await expect
+      .poll(() => glyph.evaluate(element => element.children.length), {
+        timeout: 8000,
+      })
+      .toBe(8);
+    // Hold the glyph's animations, then show each eighth of a turn mid-hold.
+    await glyph.evaluate(element => {
+      for (const animation of element.getAnimations({subtree: true})) {
+        animation.pause();
+      }
+    });
+    const shots: Buffer[] = [];
+    for (let step = 0; step < 8; step += 1) {
+      await glyph.evaluate(
+        (element, t) => {
+          for (const animation of element.getAnimations({subtree: true})) {
+            const iterations = animation.effect?.getTiming().iterations;
+            // The turn repeats; the gradient's spring has settled.
+            if (iterations === Infinity) {
+              animation.currentTime = t;
+            }
+          }
+        },
+        step * 125 + 62,
+      );
+      shots.push(await glyph.screenshot());
+    }
+    const sheet = await page.context().newPage();
+    try {
+      const png = await sheet.evaluate(
+        async items => {
+          const decoded = await Promise.all(
+            items.map(async item =>
+              createImageBitmap(
+                await (await fetch(`data:image/png;base64,${item}`)).blob(),
+              ),
+            ),
+          );
+          const w = decoded[0].width + 8;
+          const canvas = new OffscreenCanvas(
+            w * decoded.length,
+            decoded[0].height + 8,
+          );
+          const context = canvas.getContext('2d');
+          if (context == null) {
+            throw new Error('no 2d context');
+          }
+          context.fillStyle = '#fff';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          decoded.forEach((bitmap, i) =>
+            context.drawImage(bitmap, i * w + 4, 4),
+          );
+          const blob = await canvas.convertToBlob({type: 'image/png'});
+          const bytes = new Uint8Array(await blob.arrayBuffer());
+          let binary = '';
+          for (const byte of bytes) {
+            binary += String.fromCharCode(byte);
+          }
+          return btoa(binary);
+        },
+        shots.map(shot => shot.toString('base64')),
+      );
+      await writeEvidence(
+        'storyboards/refresh-spin',
+        {[`${testInfo.project.name}.png`]: Buffer.from(png, 'base64')},
+        testInfo,
+      );
+    } finally {
+      await sheet.close();
+    }
+  },
+);

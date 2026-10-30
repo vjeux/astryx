@@ -16,10 +16,19 @@
  * The title (optional) sits under the indicator, a status line for assistive
  * technology; the spinner is decoration, hidden from it.
  *
- * The indicator is a stand-in spoke spinner until the activity indicator's
- * own drawing lands: UIKit's eight spokes revealed by the pull on its reveal
- * curve (a CSS custom property the pull writes), stepping round once the
- * refresh starts (a Web Animation the hook runs, on the compositor).
+ * The indicator is UIRefreshControl's replicator, drawn from the refresh
+ * table: eight capsule spokes revealed one after another by the pull (a CSS
+ * custom property the pull writes) and, once the refresh starts, a gradient
+ * that springs in and steps round clockwise every eighth of a second. The
+ * eight capsules are drawn once, one element each: a layer in the text color
+ * masked to its capsule already drawn at its angle (one frame of an
+ * eight-frame sprite), so nothing is resampled at rest. The spin is the
+ * hook's: each spoke steps its opacity on a Web Animation, a compositor
+ * animation that keeps turning while a script runs. At the trigger the
+ * spokes start stepping and the hook fades a transient copy of them, as the
+ * pull left them, out over them on the gradient spring: UIKit's
+ * cross-fade, and under Reduce Motion the shared 200 ms opacity fade
+ * (nothing travels). The copy is removed when its fade ends.
  *
  * SYNC: When modified, update these files to stay in sync:
  * - /packages/lab/src/RefreshControl/RefreshControl.doc.mjs
@@ -42,23 +51,21 @@ import {mergeProps, themeProps} from '@astryxdesign/core/utils';
 import {REFRESH_HEIGHT} from './refreshPull';
 import {
   REFRESH_REVEAL_VAR,
-  REFRESH_SPIN_STEP_VAR,
   useRefreshControl,
   type UseRefreshControlOptions,
 } from './useRefreshControl';
 
 const SPOKES = refreshControl.indicatorSpokes;
 const REVEAL = `var(${REFRESH_REVEAL_VAR}, 0)`;
-const SPIN_STEP = `var(${REFRESH_SPIN_STEP_VAR}, 0)`;
 
 /**
- * A spoke's opacity, as UIKit's replicator draws it: the layer's opacity is
- * the reveal, and each spoke is fainter than the one before by the alpha
- * offset (reveal − 1 while pulling, so the spokes fill in one after another;
- * the spin's step while spinning).
+ * A spoke's opacity while the pull reveals it, as UIKit's replicator draws
+ * it: the layer's opacity is the reveal, and each spoke is fainter than the
+ * one before by the alpha offset (reveal − 1), so the spokes fill in one
+ * after another. At the trigger every spoke is at full alpha.
  */
-function spokeOpacity(index: number): string {
-  return `calc(${REVEAL} * clamp(0, 1 + ${index} * (${REVEAL} - 1 + ${SPIN_STEP}), 1))`;
+function revealOpacity(index: number): string {
+  return `calc(${REVEAL} * clamp(0, 1 + ${index} * (${REVEAL} - 1), 1))`;
 }
 
 const styles = stylex.create({
@@ -92,24 +99,37 @@ const styles = stylex.create({
     bottom: 0,
     height,
   }),
-  // Stand-in glyph geometry (20 pt, like UIActivityIndicatorView's medium
-  // style) until the activity indicator's own drawing lands.
-  spokes: {
+  // The indicator: the spokes reach 15 pt from its center (30 pt across,
+  // `spokeOuterRadiusPt` twice; StyleX needs the literal).
+  glyph: {
     position: 'relative',
     flexShrink: 0,
-    width: 20,
-    height: 20,
+    width: 30,
+    height: 30,
   },
-  spoke: (transform: string, opacity: string) => ({
+  // One element per spoke, the glyph's whole box: the text color masked to
+  // the spoke's capsule, drawn at its angle in its frame of the sprite
+  // (`spokeFrames` picks the frame). The capsules are the table's: 3.67 pt
+  // wide with 1.83 pt corners, from 5 to 15 pt out; RefreshControl.test.tsx
+  // rebuilds the sprite from refresh.ts.
+  spoke: {
     position: 'absolute',
-    top: 0,
-    insetInlineStart: 9,
-    width: 2,
-    height: 6,
-    borderRadius: 1,
-    backgroundColor: colorVars['--color-text-secondary'],
-    transformOrigin: '1px 10px',
-    transform,
+    inset: 0,
+    // Under forced colors a background becomes the page's Canvas, which would
+    // hide every spoke; the spokes keep the system text color instead.
+    backgroundColor: {
+      default: colorVars['--color-text-secondary'],
+      '@media (forced-colors: active)': 'CanvasText',
+    },
+    forcedColorAdjust: {
+      default: null,
+      '@media (forced-colors: active)': 'none',
+    },
+    maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 30'%3E%3Crect x='13.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(0 15 15)'/%3E%3Crect x='43.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(45 45 15)'/%3E%3Crect x='73.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(90 75 15)'/%3E%3Crect x='103.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(135 105 15)'/%3E%3Crect x='133.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(180 135 15)'/%3E%3Crect x='163.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(225 165 15)'/%3E%3Crect x='193.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(270 195 15)'/%3E%3Crect x='223.165' y='0' width='3.67' height='10' rx='1.83' transform='rotate(315 225 15)'/%3E%3C/svg%3E")`,
+    maskRepeat: 'no-repeat',
+    maskSize: '800% 100%',
+  },
+  spokeOpacity: (opacity: string) => ({
     opacity,
     // Each spoke is its own compositor layer: the pull changes its opacity
     // every move (through the reveal), and a composited opacity changes
@@ -141,6 +161,31 @@ export interface RefreshControlProps
    */
   title?: ReactNode;
 }
+
+// Each spoke's frame of the sprite: spoke k drawn k × 45° clockwise from 12
+// o'clock.
+const spokeFrames = stylex.create({
+  s0: {maskPosition: '0% 0%'},
+  s1: {maskPosition: '14.2857% 0%'},
+  s2: {maskPosition: '28.5714% 0%'},
+  s3: {maskPosition: '42.8571% 0%'},
+  s4: {maskPosition: '57.1429% 0%'},
+  s5: {maskPosition: '71.4286% 0%'},
+  s6: {maskPosition: '85.7143% 0%'},
+  s7: {maskPosition: '100% 0%'},
+});
+
+/** Each spoke's frame, in spoke order. */
+const SPOKE_FRAMES = [
+  spokeFrames.s0,
+  spokeFrames.s1,
+  spokeFrames.s2,
+  spokeFrames.s3,
+  spokeFrames.s4,
+  spokeFrames.s5,
+  spokeFrames.s6,
+  spokeFrames.s7,
+];
 
 /**
  * Pull to refresh, as UIRefreshControl: pulling the content down past the
@@ -178,20 +223,19 @@ export function RefreshControl({
 }: RefreshControlProps) {
   const control = useRefreshControl({onRefresh, isRefreshing, isDisabled});
   const rootRef = useMergedRefs(ref, control.contentRef);
-  const spokes = [];
-  for (let index = 0; index < SPOKES; index++) {
-    spokes.push(
-      <span
-        key={index}
-        {...stylex.props(
-          styles.spoke(
-            `rotate(${(index * 360) / SPOKES}deg)`,
-            spokeOpacity(index),
-          ),
-        )}
-      />,
-    );
-  }
+  // The eight capsules, drawn once: each spoke shows the reveal's opacity
+  // while the pull reveals it and its phase of the gradient while spinning
+  // (at the trigger the hook fades a transient copy of them out over them).
+  const spokes = Array.from({length: SPOKES}, (_, index) => (
+    <span
+      key={index}
+      {...stylex.props(
+        styles.spoke,
+        SPOKE_FRAMES[index],
+        styles.spokeOpacity(revealOpacity(index)),
+      )}
+    />
+  ));
   return (
     <div
       ref={rootRef}
@@ -217,7 +261,7 @@ export function RefreshControl({
           <span
             ref={control.spinnerRef}
             aria-hidden
-            {...stylex.props(styles.spokes)}>
+            {...stylex.props(styles.glyph)}>
             {spokes}
           </span>
           {title != null ? (

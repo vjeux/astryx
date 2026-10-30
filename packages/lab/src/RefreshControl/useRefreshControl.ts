@@ -94,7 +94,11 @@ export interface UseRefreshControlResult {
    * UIRefreshControl's label does.
    */
   titleRef: RefCallback<HTMLElement>;
-  /** Attach to the part of the indicator that spins (optional). */
+  /**
+   * Attach to the indicator's glyph (optional): it turns at the trigger, and
+   * its children, the drawing's spokes, cross-fade there from the reveal into
+   * the stepping gradient.
+   */
   spinnerRef: RefCallback<HTMLElement>;
   /** Whether a refresh is in progress. */
   isRefreshing: boolean;
