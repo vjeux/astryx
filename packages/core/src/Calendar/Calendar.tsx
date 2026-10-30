@@ -65,6 +65,7 @@ import {
 import {mergeProps, composeEventHandlers, rtlStyles} from '../utils';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {getInitialFocusDate} from './getInitialFocusDate';
 import {
@@ -1402,6 +1403,8 @@ function DayCell({
             dayCellStyles.day,
             dayCellTheme.day,
             interactionOverlayStyles.backgroundImage,
+            pressLayerStyles.imageHost,
+            pressLayerStyles.before,
             isOutside && dayCellStyles.dayOutside,
             isOutside && dayCellTheme.dayOutside,
             showsTodayRing && dayCellStyles.dayToday,

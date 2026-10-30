@@ -38,6 +38,7 @@ import type {BaseProps} from '../BaseProps';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {useTranslator} from '../i18n';
 import type {TokenColorMap} from './index';
@@ -358,11 +359,14 @@ export function Token({
           {...mergeProps(
             themeProps('token', {color, size}),
             focusOutlineProps.focusVisible(
+              pressLayerStyles.positioned,
               styles.base,
               sizeStyles[size],
               colorStyles[color],
               styles.interactive,
               interactionOverlayStyles.backgroundImage,
+              pressLayerStyles.imageHost,
+              pressLayerStyles.before,
               isDisabled && styles.disabled,
               xstyle,
             ),
@@ -407,11 +411,14 @@ export function Token({
         {...mergeProps(
           themeProps('token', {color, size}),
           focusOutlineProps.focusWithin(
+            pressLayerStyles.positioned,
             styles.base,
             sizeStyles[size],
             colorStyles[color],
             styles.interactive,
             interactionOverlayStyles.backgroundImage,
+            pressLayerStyles.imageHost,
+            pressLayerStyles.before,
             isDisabled && styles.disabled,
             xstyle,
           ),
@@ -441,11 +448,14 @@ export function Token({
         {...mergeProps(
           themeProps('token', {color, size}),
           focusOutlineProps.focusWithin(
+            pressLayerStyles.positioned,
             styles.base,
             sizeStyles[size],
             colorStyles[color],
             styles.interactive,
             interactionOverlayStyles.backgroundImage,
+            pressLayerStyles.imageHost,
+            pressLayerStyles.before,
             isDisabled && styles.disabled,
             xstyle,
           ),

@@ -33,13 +33,14 @@ import {describe, expect, it} from 'vitest';
 const SRC = path.resolve(__dirname, '..');
 
 /**
- * The utility, the list row's press layer and the controller define the
- * model; they are not surfaces.
+ * The utility, the press layers (a list row's, a control's, and every other
+ * surface's) and the controller define the model; they are not surfaces.
  */
 const MODEL_FILES = new Set([
   'utils/interactionOverlay.stylex.ts',
   'utils/rowPressLayer.ts',
   'utils/controlPressLayer.ts',
+  'utils/pressLayer.ts',
   'utils/pressFeedback.ts',
   'utils/pressGesture.ts',
 ]);

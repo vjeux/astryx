@@ -27,6 +27,7 @@ import {useCommandPaletteContext} from './CommandPaletteContext';
 import {useDialogContext} from '../Dialog/DialogContext';
 import {themeProps} from '../utils/themeProps';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 
 import {useMergedRefs} from '../hooks/useMergedRefs';
@@ -209,8 +210,11 @@ export function CommandPaletteItem({
           disabled: isDisabled ? 'disabled' : null,
         }),
         stylex.props(
+          pressLayerStyles.positioned,
           styles.item,
           !isDisabled && interactionOverlayStyles.backgroundColor,
+          !isDisabled && pressLayerStyles.colorHost,
+          !isDisabled && pressLayerStyles.before,
           isHighlighted && styles.itemHighlighted,
           isSelected && styles.itemSelected,
           isDisabled && styles.itemDisabled,

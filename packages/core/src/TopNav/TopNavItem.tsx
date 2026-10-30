@@ -37,6 +37,7 @@ import {useAppShellMobile} from '../AppShell/AppShellMobileContext';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 
 /**
@@ -240,8 +241,11 @@ export function TopNavItem({
             selected: isSelected ? 'selected' : null,
           }),
           focusOutlineProps.focusVisible(
+            pressLayerStyles.positioned,
             navItemStyles.item,
             interactionOverlayStyles.backgroundColor,
+            pressLayerStyles.colorHost,
+            pressLayerStyles.before,
             navItemStyles[size],
             isSelected && navItemStyles.selected,
             isDisabled && navItemStyles.disabled,
@@ -278,8 +282,11 @@ export function TopNavItem({
           selected: isSelected ? 'selected' : null,
         }),
         focusOutlineProps.focusVisible(
+          pressLayerStyles.positioned,
           styles.base,
           interactionOverlayStyles.backgroundColor,
+          pressLayerStyles.colorHost,
+          pressLayerStyles.before,
           isSelected && styles.selected,
           isDisabled && navItemStyles.disabled,
           isIconOnly && styles.iconOnly,

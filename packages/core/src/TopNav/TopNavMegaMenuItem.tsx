@@ -36,6 +36,7 @@ import {useAppShellMobile} from '../AppShell/AppShellMobileContext';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 
 // =============================================================================
@@ -223,8 +224,11 @@ export function TopNavMegaMenuItem({
         {...mergeProps(
           themeProps('top-nav-mega-menu-item', {mode: 'drawer'}),
           focusOutlineProps.focusVisible(
+            pressLayerStyles.positioned,
             navItemStyles.item,
             interactionOverlayStyles.backgroundColor,
+            pressLayerStyles.colorHost,
+            pressLayerStyles.before,
             styles.drawerItem,
             xstyle,
           ),
@@ -259,8 +263,11 @@ export function TopNavMegaMenuItem({
       {...mergeProps(
         themeProps('top-nav-mega-menu-item'),
         focusOutlineProps.focusVisible(
+          pressLayerStyles.positioned,
           styles.desktop,
           interactionOverlayStyles.backgroundColor,
+          pressLayerStyles.colorHost,
+          pressLayerStyles.before,
           xstyle,
         ),
         className,
