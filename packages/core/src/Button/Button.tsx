@@ -132,6 +132,16 @@ const styles = stylex.create({
         '@media (pointer: coarse) and (not (prefers-reduced-motion: reduce))':
           'background-image, background-color, color, opacity',
       },
+      // A toggle's selected look (ToggleButton's `aria-pressed`) changes at
+      // once under a coarse primary pointer, as UIKit's does: a colour
+      // transition there is repainted on every frame (WebKit runs no colour
+      // animation on the compositor). Its press still scales and releases as
+      // any button's.
+      '[aria-pressed]': {
+        default: null,
+        '@media (pointer: coarse) and (not (prefers-reduced-motion: reduce))':
+          'background-image, opacity, transform',
+      },
     },
     transitionDuration: {
       default: durationVars['--duration-fast'],
