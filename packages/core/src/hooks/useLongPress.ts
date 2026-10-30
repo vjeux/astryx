@@ -18,8 +18,10 @@
  * touch is cancelled. The pending timer is also cleared on unmount. The
  * default duration and tolerance are the long-press recognizer's
  * (motion/uikit/longPress.ts); the recognizer measures its tolerance as a
- * distance, as UIKit does, and this hook on each axis, as ContextMenu's
- * measured hold and the menu trigger's released behavior do.
+ * distance, as UIKit does, and this hook on each axis: the released rule
+ * that ContextMenu's hold and the menu trigger keep. GUESS (`spec:AST-094`
+ * FR2): the context menu's own movement allowance and press thresholds are
+ * not measured yet (motion/MEASUREMENTS.md M-CM3, M-CM6).
  *
  * Two ways in, one detector. Spread the touch handlers onto an element, or —
  * when the caller already runs its own pointer-event machine, as
@@ -55,7 +57,10 @@ export interface UseLongPressOptions {
   moveCancelPx?: number;
 }
 
-/** A press's own movement tolerance, for a caller that decides it as the press starts. */
+/**
+ * @internal A press's own movement tolerance, for a core caller that decides
+ * it as the press starts (useMenuPress's trigger). Not in the hooks entry.
+ */
 export interface LongPressTolerance {
   moveCancelPx?: number;
 }
@@ -67,13 +72,9 @@ export interface UseLongPressHandlers {
   onTouchCancel: () => void;
   /**
    * Begin detection at a point, for a caller driving this from its own
-   * pointer events rather than the touch handlers above. `tolerance`
-   * overrides the options' for this press.
+   * pointer events rather than the touch handlers above.
    */
-  start: (
-    point: {x: number; y: number},
-    tolerance?: LongPressTolerance,
-  ) => void;
+  start: (point: {x: number; y: number}) => void;
   /**
    * Report the pointer's new position. Past `moveCancelPx` the press is off.
    * Returns whether a press is still pending, so a caller running its own
@@ -84,9 +85,32 @@ export interface UseLongPressHandlers {
   cancel: () => void;
 }
 
+/**
+ * @internal The handlers with a per-press tolerance on `start`, for a core
+ * caller that decides it as the press starts (useMenuPress's trigger). Not in
+ * the hooks entry: the public `useLongPress` takes its tolerance from
+ * `moveCancelPx`.
+ */
+export interface LongPressDetectorHandlers extends Omit<
+  UseLongPressHandlers,
+  'start'
+> {
+  start: (
+    point: {x: number; y: number},
+    tolerance?: LongPressTolerance,
+  ) => void;
+}
+
 export function useLongPress(
   options: UseLongPressOptions,
 ): UseLongPressHandlers {
+  return useLongPressDetector(options);
+}
+
+/** @internal useLongPress with a per-press tolerance (LongPressDetectorHandlers). */
+export function useLongPressDetector(
+  options: UseLongPressOptions,
+): LongPressDetectorHandlers {
   const {
     onLongPress,
     disabled = false,

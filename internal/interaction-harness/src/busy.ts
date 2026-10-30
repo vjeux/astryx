@@ -119,6 +119,16 @@ export interface BusyControlRead {
   readonly movedWith: number;
   /** The control's longest time without a new position, the edges included. */
   readonly longestStallMs: number;
+  /**
+   * Of `movedWith`, the frames counted as moved because the component's motion
+   * there was under one cast step per frame (see `busyWindowProof`).
+   */
+  readonly belowStep: number;
+  /**
+   * The component's longest time without a new position, read the same way:
+   * a run of unchanged frames under one cast step per frame is motion.
+   */
+  readonly componentStallMs: number;
 }
 
 export interface BusyWindow {
@@ -376,12 +386,21 @@ export interface BusyProof extends FrameStats {
  * component passes when:
  * - the control moved on at least `minJudgedFrames` frames of the judged part
  *   (fewer: the machine presented too little to judge, which fails);
- * - the component moved on at least `minMovedFraction` of the frames the
- *   control moved (one miss always allowed);
- * - its longest stall is at most one interval longer than the control's.
+ * - the component moved on every frame the control moved: both are read from
+ *   the same screencast frames, so a compositor animation misses none;
+ * - its longest stall is no longer than the control's.
+ * A run of frames with no new component position counts as moved when the
+ * change that ends it is a single cast step (`stepPx`): the component moves
+ * under one step per frame there, as on an easing tail, which the cast cannot
+ * show on every frame. The run also has to read as a slowing curve, at most
+ * one frame longer than the component's run before it. A freeze ends in a
+ * catch-up of more than one step, a stall in a frame-counted animation is
+ * longer than its runs before it, and a run that no change ends stays a miss.
+ * The component still has to show a new position on at least
+ * `minJudgedFrames` of the control's frames.
  * A main-thread animation still fails: the control moves and it does not.
- * `maxMedianFrameMs`, when given, still applies; the absolute stall, frame and
- * motion limits do not.
+ * `maxMedianFrameMs`, when given, still applies; `minMovedFraction` and the
+ * absolute stall, frame and motion limits do not.
  */
 export function busyWindowProof(
   tracked: readonly TrackedFrame[],
@@ -605,12 +624,29 @@ export function busyWindowProof(
         ? expectedFrames
         : deliveredFrames;
   const movedFraction = (moved + recorderSkipped) / Math.max(1, judgedFrames);
-  // The cast's position step, and the motion per interval it has to resolve.
-  const positions = tracked.flatMap(f => (f.box == null ? [] : [f.box[axis]]));
+  // The cast's position step for the tracked value: the largest of 2, 1 and
+  // 0.5 CSS px that every change between its consecutive positions in the
+  // judged part is a multiple of. Changes rather than positions: a position
+  // the page commits once the block ends can sit off that grid.
+  const partValues = tracked.flatMap(f =>
+    f.box != null && f.t >= judged.from && f.t <= judged.to
+      ? [f.box[axis]]
+      : [],
+  );
+  const stepChanges = partValues
+    .slice(1)
+    .map((p, i) => Math.abs(p - partValues[i]))
+    .filter(d => d > 0.25);
+  // With no change to read, the finest step: a coarser one would let a larger
+  // jump pass for a single step.
   const stepPx =
-    [2, 1, 0.5].find(step =>
-      positions.every(p => Math.abs(p / step - Math.round(p / step)) < 0.01),
-    ) ?? 0.5;
+    stepChanges.length === 0
+      ? 0.5
+      : ([2, 1, 0.5].find(step =>
+          stepChanges.every(
+            d => Math.abs(d / step - Math.round(d / step)) < 0.01,
+          ),
+        ) ?? 0.5);
   const judgedValues = tracked.flatMap(f =>
     f.box != null && f.t >= judged.from && f.t <= judged.to
       ? [{t: f.t, value: f.box[axis]}]
@@ -660,11 +696,62 @@ export function busyWindowProof(
       last = f.box.x;
     }
     const controlEdges = [judged.from, ...controlChanges, judged.to];
+    // A frame with no new component position, in a run of such frames whose
+    // next change is a single cast step: the component moves under one step
+    // per frame there, which the cast cannot show on every frame, so the
+    // frame counts as moved. A freeze ends in a catch-up of more than one
+    // step, and a run that no change ends stays a miss.
+    const series = tracked.flatMap(f =>
+      f.box == null ? [] : [{t: f.t, value: f.box[axis]}],
+    );
+    const seriesIndex = new Map(series.map((f, i) => [f.t, i]));
+    const same = (a: number, b: number) =>
+      Math.abs(series[a].value - series[b].value) <= 0.25;
+    // The first frame of the run of equal positions that holds frame i.
+    const runStart = (i: number): number => {
+      let s = i;
+      while (s > 0 && same(s - 1, i)) {
+        s -= 1;
+      }
+      return s;
+    };
+    const underStep = (t: number): boolean => {
+      const i = seriesIndex.get(t);
+      if (i == null || changed.has(t)) {
+        return false;
+      }
+      const start = runStart(i);
+      let k = i + 1;
+      while (k < series.length && same(k, i)) {
+        k += 1;
+      }
+      if (
+        k >= series.length ||
+        Math.abs(series[k].value - series[i].value) >= 1.5 * stepPx
+      ) {
+        return false;
+      }
+      // A slowing curve lengthens its runs a frame at a time: a run more than
+      // one frame longer than the one before it is a stall.
+      const unchanged = k - 1 - start;
+      const before = start > 0 ? start - 1 - runStart(start - 1) : 0;
+      return unchanged <= before + 1;
+    };
+    const componentEdges = [
+      judged.from,
+      ...delivered.filter(t => changed.has(t) || underStep(t)),
+      judged.to,
+    ];
     controlRead = {
       moved: controlChanges.length,
-      movedWith: controlChanges.filter(t => changed.has(t)).length,
+      movedWith: controlChanges.filter(t => changed.has(t) || underStep(t))
+        .length,
+      belowStep: controlChanges.filter(underStep).length,
       longestStallMs: Math.max(
         ...controlEdges.slice(1).map((t, i) => t - controlEdges[i]),
+      ),
+      componentStallMs: Math.max(
+        ...componentEdges.slice(1).map((t, i) => t - componentEdges[i]),
       ),
     };
   }
@@ -682,18 +769,20 @@ export function busyWindowProof(
         `the control moved on ${controlRead.moved} frames in the judged part, under ${minJudgedFrames}: the compositor presented too little in this window to judge`,
       );
     }
-    const allowed = Math.max(
-      1,
-      Math.floor((1 - minMovedFraction) * controlRead.moved + 1e-9),
-    );
-    if (controlRead.moved - controlRead.movedWith > allowed) {
+    const visible = controlRead.movedWith - controlRead.belowStep;
+    if (visible < minJudgedFrames) {
+      failures.push(
+        `the component showed a new position on ${visible} of the control's frames, under ${minJudgedFrames}: too little motion in this window to judge`,
+      );
+    }
+    if (controlRead.movedWith < controlRead.moved) {
       failures.push(
         `moved on ${controlRead.movedWith} of the ${controlRead.moved} frames the control moved (${((controlRead.movedWith / Math.max(1, controlRead.moved)) * 100).toFixed(0)}%)`,
       );
     }
-    if (longestStallMs > controlRead.longestStallMs + cadence) {
+    if (controlRead.componentStallMs > controlRead.longestStallMs) {
       failures.push(
-        `longest stall ${longestStallMs.toFixed(1)} ms, more than one interval (${cadence.toFixed(1)} ms) past the control's ${controlRead.longestStallMs.toFixed(1)} ms`,
+        `longest stall ${controlRead.componentStallMs.toFixed(1)} ms, longer than the control's ${controlRead.longestStallMs.toFixed(1)} ms`,
       );
     }
   } else if (longestStallFrames > maxStallFrames) {
@@ -735,7 +824,7 @@ export function busyWindowProof(
       : `, on screen from +${onScreenFromMs.toFixed(0)} ms (nothing moved before the block)`) +
     (controlRead == null
       ? ''
-      : `; against the control: moved on ${controlRead.movedWith} of its ${controlRead.moved} frames, its longest stall ${controlRead.longestStallMs.toFixed(1)} ms`) +
+      : `; against the control: moved on ${controlRead.movedWith} of its ${controlRead.moved} frames${controlRead.belowStep > 0 ? ` (${controlRead.belowStep} under one cast step a frame)` : ''}, its longest stall ${controlRead.longestStallMs.toFixed(1)} ms`) +
     notes.map(note => `; note: ${note}`).join('');
   return {
     ...stats,
@@ -795,10 +884,9 @@ export interface PooledBusyProof {
  * present fewer than `minJudgedFrames` in one run, and one run cannot decide.
  * Pooled, the runs are judged as one long window is:
  * - the control moved on at least `minJudgedFrames` frames over all the runs;
- * - the component moved on at least `minMovedFraction` of those frames (one
- *   miss always allowed);
- * - in each run, its longest stall is at most one interval longer than that
- *   run's control's: a stall belongs to its run and is never pooled.
+ * - the component moved on every one of those frames;
+ * - in each run, its longest stall is no longer than that run's control's: a
+ *   stall belongs to its run and is never pooled.
  * `maxMedianFrameMs`, when given, applies to each run. A main-thread
  * animation still fails: in every run the control moves and it does not.
  */
@@ -806,17 +894,13 @@ export function pooledBusyProof(
   runs: readonly BusyRun[],
   options: Omit<
     NonNullable<Parameters<typeof busyWindowProof>[2]>,
-    'control'
+    'control' | 'minMovedFraction'
   > = {},
 ): PooledBusyProof {
   if (runs.length === 0) {
     throw new Error('pooledBusyProof: no runs to judge');
   }
-  const {
-    minJudgedFrames = 4,
-    minMovedFraction = 0.9,
-    maxMedianFrameMs = Infinity,
-  } = options;
+  const {minJudgedFrames = 4, maxMedianFrameMs = Infinity} = options;
   const proofs = runs.map(run =>
     busyWindowProof(run.tracked, run.window, {
       ...options,
@@ -832,13 +916,16 @@ export function pooledBusyProof(
       `the control moved on ${moved} frames over ${runs.length} runs, under ${minJudgedFrames}: the compositor presented too little in these windows to judge`,
     );
   }
-  const allowed = Math.max(
-    1,
-    Math.floor((1 - minMovedFraction) * moved + 1e-9),
-  );
-  if (moved - movedWith > allowed) {
+  const visible =
+    movedWith - reads.reduce((sum, read) => sum + read.belowStep, 0);
+  if (visible < minJudgedFrames) {
     failures.push(
-      `moved on ${movedWith} of the ${moved} frames the control moved over ${runs.length} runs (${((movedWith / Math.max(1, moved)) * 100).toFixed(0)}%, at least ${(minMovedFraction * 100).toFixed(0)}% with one miss allowed)`,
+      `the component showed a new position on ${visible} of the control's frames over ${runs.length} runs, under ${minJudgedFrames}: too little motion in these windows to judge`,
+    );
+  }
+  if (movedWith < moved) {
+    failures.push(
+      `moved on ${movedWith} of the ${moved} frames the control moved over ${runs.length} runs (${((movedWith / Math.max(1, moved)) * 100).toFixed(0)}%)`,
     );
   }
   proofs.forEach((proof, i) => {
@@ -848,9 +935,9 @@ export function pooledBusyProof(
       );
     }
     const read = reads[i];
-    if (proof.longestStallMs > read.longestStallMs + proof.cadenceMs) {
+    if (read.componentStallMs > read.longestStallMs) {
       failures.push(
-        `run ${i + 1}: longest stall ${proof.longestStallMs.toFixed(1)} ms, more than one interval (${proof.cadenceMs.toFixed(1)} ms) past the control's ${read.longestStallMs.toFixed(1)} ms`,
+        `run ${i + 1}: longest stall ${read.componentStallMs.toFixed(1)} ms, longer than the control's ${read.longestStallMs.toFixed(1)} ms`,
       );
     }
   });

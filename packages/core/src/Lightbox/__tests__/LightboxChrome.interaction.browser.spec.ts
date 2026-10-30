@@ -818,3 +818,54 @@ test(
     await storyboard.write(testInfo);
   },
 );
+
+test('with a mouse, after a keyboard zoom, Enter on Next keeps the controls and the focus on Next: a keyboard activation is no click on the photo', async ({
+  browser,
+}) => {
+  const v = await openDesktopViewer(
+    browser,
+    'core-lightbox--gallery-with-zoom',
+  );
+  try {
+    // Enter zooms the photo 2x about the centre: it covers (0, 0), where a
+    // keyboard activation's click lands.
+    const stage = v.dialog.getByRole('button', {name: 'Zoom', exact: true});
+    await stage.focus();
+    await v.page.keyboard.press('Enter');
+    await expect(stage).toHaveAttribute('aria-pressed', 'true');
+    // Zoomed in: the photo covers (0, 0).
+    const photo = v.dialog.locator('[data-current] img');
+    await expect
+      .poll(async () => {
+        const box = await photo.boundingBox();
+        return box != null && box.x <= 0 && box.y <= 0;
+      })
+      .toBe(true);
+    const next = v.dialog.getByRole('button', {name: 'Next'});
+    await next.focus();
+    await v.page.keyboard.press('Enter');
+    await expect(v.dialog.getByText(/^\d+ \/ \d+$/)).toHaveText('2 / 4');
+    // Past the double-click interval: the controls stay, and the focus with
+    // them.
+    await v.page.waitForTimeout(700);
+    expect(await v.alpha()).toBe(1);
+    await expect(next).toBeFocused();
+  } finally {
+    await v.context.close();
+  }
+});
+
+test('with a mouse, a click on a single zoomable photo hides the controls, and the next shows them', async ({
+  browser,
+}) => {
+  const v = await openDesktopViewer(browser, 'core-lightbox--with-zoom');
+  try {
+    await v.page.mouse.click(v.centre.x, v.centre.y);
+    await expect.poll(v.alpha, {timeout: 3000}).toBe(0);
+    await expect(v.dialog).toBeVisible();
+    await v.page.mouse.click(v.centre.x, v.centre.y);
+    await expect.poll(v.alpha, {timeout: 3000}).toBe(1);
+  } finally {
+    await v.context.close();
+  }
+});

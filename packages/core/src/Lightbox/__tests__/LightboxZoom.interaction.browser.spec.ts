@@ -15,8 +15,7 @@
  *   moving through a blocked main thread with no Layout or Paint per frame;
  *   the zoomed photo is redrawn sharp; storyboards of the pinch and the
  *   double tap. Every case runs under a finger (a coarse pointer), in Chromium and WebKit alike
- * @position Interaction tests for Lightbox (browser); the shape follows
- *   BottomSheet/__tests__/BottomSheetDetent.interaction.browser.spec.ts
+ * @position Interaction tests for Lightbox (browser)
  */
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
