@@ -130,7 +130,7 @@ describe.each<[string, (state: MarkState) => ReturnType<typeof createElement>]>(
   it('keeps the theme’s duration token with a mouse, and changes at once with a mouse under Reduce Motion', () => {
     const durations = durationsOf(mark('unchecked'));
     expect(durations.get(null)).toMatch(/^var\(--duration-fast/);
-    // design:reduced-motion DR3, in the instant key F1's policy spells.
+    // design:reduced-motion DR3, in the reduced-motion policy's instant key.
     expect(durations.get(REDUCED_MOTION_INSTANT)).toBe('0s');
   });
 });
