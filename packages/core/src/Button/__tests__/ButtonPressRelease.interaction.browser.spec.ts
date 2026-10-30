@@ -4,10 +4,9 @@
  * @file ButtonPressRelease.interaction.browser.spec.ts
  * @input The built press feedback Buttons story and the ClickableCard story,
  *   real touch input (Chromium CDP / WebKit's input command), the interaction
- *   harness, and UIButton's release clock and curve from the UIKit constants
- *   table (motion/uikit/button.ts)
+ *   harness, and the shared release's clock and curve (pinned below)
  * @output Animation proofs for a control's press release on the
- *   compositor: it follows UIButton's curve on the button's layer and on a
+ *   compositor: it follows the shared release curve on the button's layer and on a
  *   card's `::after` (sampled frame by frame, both engines), keeps fading on
  *   every frame while the main thread is blocked, starts at the first frame
  *   after a busy one and keeps its layer until the strength reaches 0 (both
@@ -47,18 +46,24 @@ import {
   type CastFrame,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
-import {button} from '../../motion/uikit/button';
 
 const storybook = withStorybook(test);
 
-const RELEASE_MS = button.highlight.releaseMs;
+/**
+ * A control's release under a coarse primary pointer: the shared release
+ * (`controlPressConsts`, 200 ms on the deselect's curve), pinned by
+ * pressFeedback.test.ts, since this runner cannot load the motion registry.
+ */
+const RELEASE_MS = 200;
 /**
  * The release a fine primary pointer keeps: the deselect clock
  * (`pressConsts.releaseMs`), pinned by pressFeedback.test.ts, since this
  * runner cannot load the motion registry.
  */
 const DESELECT_MS = 200;
-const releaseEase = cubicBezier(...button.highlight.releaseCurve);
+/** The shared release's curve, its control points (pinned like RELEASE_MS). */
+const RELEASE_CURVE = [0, 0, 0.2, 1] as const;
+const releaseEase = cubicBezier(...RELEASE_CURVE);
 /** The layer's opacity t ms into the release: the strength, 1 → 0. */
 const expectedStrength = (t: number) =>
   1 - releaseEase(Math.min(1, Math.max(0, t / RELEASE_MS)));
@@ -302,7 +307,7 @@ for (const [name, story, locate, pseudo] of [
     }
   });
 
-  test(`the release of ${name} follows UIButton’s curve, sampled frame by frame`, async ({
+  test(`the release of ${name} follows the shared release curve, sampled frame by frame`, async ({
     page,
   }, testInfo) => {
     const opened = await openSurface(page, story, locate);
@@ -342,7 +347,7 @@ for (const [name, story, locate, pseudo] of [
         [`${testInfo.project.name}.json`]: JSON.stringify(
           {
             releaseMs: RELEASE_MS,
-            curve: button.highlight.releaseCurve,
+            curve: RELEASE_CURVE,
             held,
             samples,
             comparison,
@@ -532,7 +537,7 @@ test('the release of a button keeps fading on every frame while the main thread 
   const opened = await openSurface(page, BUTTONS, secondaryButton);
   const cast = await startScreencast(page);
   await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
-  // The release is the longest animation running: the 250 ms `::before`
+  // The release is the longest animation running: the 200 ms `::before`
   // opacity fade, not the 125 ms press-scale transition that starts with it.
   const running = await waitForAnimation(opened.surface, {minProgressMs: 16});
   const release = running.reduce((longest, animation) =>
@@ -688,7 +693,7 @@ test('the release of a button does no Layout or Paint per frame', async ({
   let release = {from: 0, to: 0};
   const trace = await traceRendering(page, async () => {
     await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
-    // The release is the longest animation running: the 250 ms `::before`
+    // The release is the longest animation running: the 200 ms `::before`
     // opacity fade, not the 125 ms press-scale transition that starts with it.
     const running = await waitForAnimation(opened.surface);
     release = running.reduce((longest, animation) =>

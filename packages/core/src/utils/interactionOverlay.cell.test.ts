@@ -135,12 +135,18 @@ describe('press layer clock', () => {
       const selector = selectorOf(rule);
       return selector.includes(FADING) && !selector.includes('::');
     });
-    // StyleX writes the curve minified: compare the control points.
+    // StyleX writes the curve minified: compare the control points. Every
+    // curve the overlay's own fading arm plays, a control's arm under a
+    // coarse primary pointer included (the shared release), is the table's.
     const points = (css: string) =>
       (css.match(/-?\d*\.?\d+/g) ?? []).map(Number);
-    expect(values(fading, 'animation-timing-function').map(points)).toEqual([
-      [...timing.press.highlightOutCurve],
-    ]);
+    expect([
+      ...new Set(
+        values(fading, 'animation-timing-function').map(css =>
+          points(css).join(','),
+        ),
+      ),
+    ]).toEqual([[...timing.press.highlightOutCurve].join(',')]);
     element.remove();
   });
 });
