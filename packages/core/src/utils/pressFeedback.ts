@@ -63,6 +63,7 @@ import {
 import {isCoarsePointer, watchCoarsePointer} from './coarsePointer';
 import {subscribeInput} from './inputStream';
 import {TOUCH_QUERY} from './touchPresentation';
+import {reducedMotionCrossFade} from '../motion/uikit/timing';
 
 /**
  * The marker the controller finds with `closest()`. Every Astryx component
@@ -126,7 +127,8 @@ interface LiveGesture {
    * for a press of the Space key.
    */
   pointerId: number | null;
-  timer: ReturnType<typeof setTimeout> | null;
+  /** Cancels the clock the current phase owes, or the release it waits for. */
+  timer: (() => void) | null;
 }
 
 /**
@@ -165,11 +167,111 @@ const TIMER_MS: Record<NonNullable<PressStep['timer']>, number> = {
   onset: PRESS_ONSET_MS,
 };
 
+/**
+ * How long a timer runs on `element`. The release's clock is the table's
+ * (PRESS_FADE_MS, the value the stylesheet's release plays), capped under
+ * reduced motion by the Reduce Motion cross-fade's duration, as the
+ * stylesheet caps its fade (`design:reduced-motion` DR2: a touch transition
+ * finishes within it; `spec:AST-094` FR4: the cap is a role, never a
+ * literal). The fade's own export, so the controller ships that one value,
+ * not the rest of the timing table (`architecture:component-style-authoring`
+ * INV6).
+ */
+function timerMs(
+  kind: NonNullable<PressStep['timer']>,
+  element: Element,
+): number {
+  if (kind !== 'fade') {
+    return TIMER_MS[kind];
+  }
+  const reduced =
+    element.ownerDocument.defaultView?.matchMedia?.(
+      '(prefers-reduced-motion: reduce)',
+    ).matches ?? false;
+  return reduced
+    ? Math.min(TIMER_MS.fade, reducedMotionCrossFade.durationMs)
+    : TIMER_MS.fade;
+}
+
 const TIMER_EVENT = {
   fade: 'fadeEnd',
   flash: 'flashEnd',
   onset: 'onset',
 } as const;
+
+/**
+ * The release animations running for `element`'s press: CSS animations on it
+ * (or its `::before` or `::after`), or on a descendant whose nearest press
+ * owner it is, finite, and not yet finished. A component may draw its release
+ * on a part inside the surface, keyed on this press as the layers are: each
+ * reads its nearest owner, so a press owner nested inside
+ * plays its own press's release and never extends this one. Nothing at the
+ * write reads the document timeline: WebKit starts an animation created after
+ * such a read at the time read, so a busy first frame would skip into the
+ * release. Empty where the engine has no Web Animations.
+ */
+function releaseAnimationsOf(element: Element): Animation[] {
+  if (typeof element.getAnimations !== 'function') {
+    return [];
+  }
+  return element.getAnimations({subtree: true}).filter(animation => {
+    // A CSS animation's effect is a KeyframeEffect: its target is the
+    // element it runs on, or the element whose pseudo-element it runs on.
+    const effect = animation.effect as KeyframeEffect | null;
+    const target = effect?.target ?? null;
+    if (
+      effect == null ||
+      target == null ||
+      !('animationName' in animation) ||
+      (target !== element &&
+        target.closest(`[${PRESSABLE_ATTRIBUTE}]`) !== element)
+    ) {
+      return false;
+    }
+    if (!Number.isFinite(Number(effect.getComputedTiming().endTime))) {
+      return false;
+    }
+    return animation.playState !== 'finished';
+  });
+}
+
+/**
+ * Call `end` when the release a `fading` write just started on `element` is
+ * over: when the stylesheet's release animation ends, not when a clock runs
+ * out. A busy main thread delays the animation's first frame, and with it
+ * its end, so a clock started at the write would remove `fading` mid-fade
+ * and cut the release short. The clock only looks: `clockMs` after the
+ * write, a release animation still running, or still waiting for its first
+ * frame, is waited for until it finishes or is cancelled (the surface was
+ * unmounted or restyled); with none (an instant release, a surface without
+ * a release animation, an engine without Web Animations) the release ends
+ * there. Returns a cancel.
+ */
+function endAfterRelease(
+  element: Element,
+  clockMs: number,
+  end: () => void,
+): () => void {
+  let waiting = true;
+  const timer = setTimeout(() => {
+    const running = releaseAnimationsOf(element);
+    if (running.length === 0) {
+      end();
+      return;
+    }
+    void Promise.allSettled(
+      running.map(async animation => animation.finished),
+    ).then(() => {
+      if (waiting) {
+        end();
+      }
+    });
+  }, clockMs);
+  return () => {
+    waiting = false;
+    clearTimeout(timer);
+  };
+}
 
 function paintElement(element: HTMLElement, paint: PressPaint): void {
   if (paint === 'none') {
@@ -181,7 +283,7 @@ function paintElement(element: HTMLElement, paint: PressPaint): void {
 
 function clearTimer(slot: Slot): void {
   if (slot.live?.timer != null) {
-    clearTimeout(slot.live.timer);
+    slot.live.timer();
     slot.live.timer = null;
   }
 }
@@ -223,10 +325,7 @@ function apply(slot: Slot, step: PressStep): void {
   }
   if (step.timer != null) {
     const kind = step.timer;
-    // A TIMER, never `requestAnimationFrame`: iOS throttles frame callbacks
-    // while a scroll runs, so a frame-based delay would fire late, after the
-    // scroll, and paint a control nobody is pressing any more.
-    live.timer = setTimeout(() => {
+    const fire = () => {
       if (slot.live != null) {
         slot.live.timer = null;
       }
@@ -236,7 +335,22 @@ function apply(slot: Slot, step: PressStep): void {
           kind: TIMER_EVENT[kind],
         }),
       );
-    }, TIMER_MS[kind]);
+    };
+    if (kind === 'fade') {
+      // The release is over when its animation is, however late a busy
+      // main thread let that animation start.
+      live.timer = endAfterRelease(
+        live.element,
+        timerMs(kind, live.element),
+        fire,
+      );
+    } else {
+      // A TIMER, never `requestAnimationFrame`: iOS throttles frame callbacks
+      // while a scroll runs, so a frame-based delay would fire late, after the
+      // scroll, and paint a control nobody is pressing any more.
+      const timer = setTimeout(fire, timerMs(kind, live.element));
+      live.timer = () => clearTimeout(timer);
+    }
   }
 }
 
