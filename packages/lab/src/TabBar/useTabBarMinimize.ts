@@ -98,7 +98,7 @@ export interface TabBarMinimize {
   readonly isMinimized: boolean;
   /** Drawn collapsed: minimized, or the search tab selected. */
   readonly isCollapsed: boolean;
-  /** Expands a minimized bar (the circle activated, a tap or the keys). */
+  /** Expands a minimized bar (the circle activated, a tap or the keys; or focus on the search tab, which stays in reach). */
   readonly expand: () => void;
   /** The platter: shrinks to the circle about the leading cap's centre. */
   readonly platter: (element: HTMLElement | null) => void;
