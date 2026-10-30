@@ -236,7 +236,9 @@ describe('TabBar', () => {
     expect(document.querySelector('[data-tab-bar-copy]')).toBeNull();
     expect(lens?.querySelectorAll('[data-testid^="icon-"]')).toHaveLength(0);
     expect(
-      document.querySelectorAll('[data-tab-bar-items] [data-testid^="icon-"]'),
+      screen
+        .getByRole('tablist')
+        .querySelectorAll('[role="tab"] [data-testid^="icon-"]'),
     ).toHaveLength(4);
   });
 
@@ -305,13 +307,24 @@ describe('TabBar', () => {
     ).not.toBeNull();
   });
 
+  it('with minimizing off the tab list stands alone: no bar box, platter or tab layer (INV7)', () => {
+    const {container} = render(<Bar />);
+    const root = container.querySelector('.astryx-tab-bar');
+    const list = screen.getByRole('tablist');
+    expect(list.parentElement).toBe(root);
+    expect(container.querySelector('[data-tab-bar-platter]')).toBeNull();
+    expect(container.querySelector('[data-tab-bar-items]')).toBeNull();
+    expect(
+      [...list.children].filter(child => child.getAttribute('role') === 'tab'),
+    ).toHaveLength(4);
+  });
+
   it('mounts the circle and the split glass only when minimizing is on', () => {
     restorePointer.push(coarsePrimaryPointer());
     const {unmount} = render(<Bar />);
     expect(document.querySelector('[data-tab-bar-circle]')).toBeNull();
-    expect(
-      document.querySelector('[data-tab-bar-platter]')?.children,
-    ).toHaveLength(1);
+    // The tab list draws its own glass: no platter.
+    expect(document.querySelector('[data-tab-bar-platter]')).toBeNull();
     unmount();
     render(<Bar minimizeBehavior="onScrollDown" />);
     expect(document.querySelector('[data-tab-bar-circle]')).not.toBeNull();
