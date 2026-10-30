@@ -85,6 +85,7 @@ import {
   waitForRest,
   watchAnimations,
   withFinger,
+  recordWebKitTimeline,
 } from './index';
 import {toTouchEvents} from './scripts';
 import {
@@ -376,6 +377,53 @@ test.describe('touch input', () => {
     expect(receivedGaps[count - 3] - scriptedGaps[count - 3]).toBeGreaterThan(
       TOUCH_PACING_TOLERANCE_MS,
     );
+  });
+});
+
+test.describe('WebKit timeline', () => {
+  test('recordWebKitTimeline records no paint for a compositor transform, and one where a property WebKit paints changes', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'webkit',
+      "WebKit's own Timeline; Chromium's counterpart is a rendering trace",
+    );
+    await page.setContent(
+      '<meta name="viewport" content="width=device-width"><body style="margin:0"><div id="a" style="position:absolute;left:20px;top:20px;width:80px;height:80px;background:#3a6;will-change:transform"></div><div id="b" style="position:absolute;left:20px;top:200px;width:80px;height:80px;background:#36a"></div></body>',
+    );
+    await frames(page, 2);
+    const run = (id: string, keyframes: Keyframe[]) =>
+      recordWebKitTimeline(page, async () => {
+        await page.evaluate(
+          ([target, motion]) => {
+            const element = document.getElementById(target);
+            if (element == null) {
+              throw new Error(`no #${target}`);
+            }
+            return element
+              .animate(motion, {duration: 400})
+              .finished.then(() => undefined);
+          },
+          [id, keyframes] as const,
+        );
+      });
+    // On the compositor: the layer moves, nothing is painted again.
+    const composited = await run('a', [
+      {transform: 'translateX(0px)'},
+      {transform: 'translateX(200px)'},
+    ]);
+    expect(composited.paints).toEqual([]);
+    // `left` is painted again each frame, where the box was and is.
+    const painted = await run('b', [{left: '20px'}, {left: '220px'}]);
+    expect(painted.paints.length).toBeGreaterThan(0);
+    expect(painted.counts.Paint).toBe(painted.paints.length);
+    for (const {rect} of painted.paints) {
+      expect(rect.y).toBeGreaterThanOrEqual(200);
+      expect(rect.y + rect.height).toBeLessThanOrEqual(280);
+      expect(rect.x).toBeGreaterThanOrEqual(20);
+      expect(rect.x + rect.width).toBeLessThanOrEqual(300);
+    }
   });
 });
 
