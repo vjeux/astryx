@@ -25,7 +25,7 @@
   "Times run from the touch end (or the tap) to the first frame at rest on the month.",
   "With a finger driving the scroll, this PR never turns scroll snapping off: every swipe take logs 0 changes of the scroller's scroll-snap-type.",
   "An earlier version that paused snapping for every re-center, a finger's included, left 5 of 8 of these swipes coasting about 2.2 s before they reached the month; this PR leaves snapping on for a finger's scroll.",
-  "Neither build ran away after a stall on iOS: every take rests one month on."
+  "No stall ran away on the iOS simulator on either build: after an arrow plus a 300 or 600 ms stall, and after a swipe plus a 300 ms stall, every take rests one month on. The stall runaway this PR also fixes reproduces in Playwright's WebKit."
  ],
  "takes": [
   {
@@ -316,5 +316,139 @@
     }
    ]
   }
- ]
+ ],
+ "twoNextPresses": {
+  "what": "Next month pressed twice from October 2026, the second press while the first press's scroll is still moving (pressed from script through the arrow's own click handler, at an exact gap)",
+  "takes": [
+   {
+    "scenario": "two-arrows-150",
+    "main": [
+     {
+      "gapMs": 151,
+      "gridRestsOnMonthsFromStart": 0,
+      "title": "December 2026",
+      "gridMatchesTitle": false
+     },
+     {
+      "gapMs": 152,
+      "gridRestsOnMonthsFromStart": 0,
+      "title": "December 2026",
+      "gridMatchesTitle": false
+     }
+    ],
+    "thisPR": [
+     {
+      "gapMs": 152,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     },
+     {
+      "gapMs": 151,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     }
+    ]
+   },
+   {
+    "scenario": "two-arrows-250",
+    "main": [
+     {
+      "gapMs": 251,
+      "gridRestsOnMonthsFromStart": 1,
+      "title": "December 2026",
+      "gridMatchesTitle": false
+     },
+     {
+      "gapMs": 253,
+      "gridRestsOnMonthsFromStart": 1,
+      "title": "December 2026",
+      "gridMatchesTitle": false
+     }
+    ],
+    "thisPR": [
+     {
+      "gapMs": 252,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     },
+     {
+      "gapMs": 251,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     }
+    ]
+   },
+   {
+    "scenario": "two-arrows-350",
+    "main": [
+     {
+      "gapMs": 351,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     },
+     {
+      "gapMs": 351,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     }
+    ],
+    "thisPR": [
+     {
+      "gapMs": 351,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     },
+     {
+      "gapMs": 352,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     }
+    ]
+   },
+   {
+    "scenario": "two-arrows-450",
+    "main": [
+     {
+      "gapMs": 452,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     },
+     {
+      "gapMs": 451,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     }
+    ],
+    "thisPR": [
+     {
+      "gapMs": 452,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     },
+     {
+      "gapMs": 451,
+      "gridRestsOnMonthsFromStart": 2,
+      "title": "December 2026",
+      "gridMatchesTitle": true
+     }
+    ]
+   }
+  ],
+  "summary": {
+   "main": "at 150 and 250 ms the grid rested behind the title in 4 of 4 takes (October or November under \"December 2026\"); at 350 and 450 ms it rested on December",
+   "thisPR": "rested on December, the month the title names, in 8 of 8 takes"
+  },
+  "gif": "two-presses-150ms-main-vs-this-pr.gif is one more recorded take of each build at 150 ms (main: October under \"December 2026\"; this PR: December)"
+ }
 }
