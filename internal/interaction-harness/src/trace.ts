@@ -391,14 +391,21 @@ export async function traceRendering(
   await standDown(true);
   let fromEpoch: number;
   let toEpoch: number;
+  let bodyFailed = true;
   try {
     fromEpoch = await mark(`${tag}:start`);
     await body();
     toEpoch = await mark(`${tag}:end`);
+    bodyFailed = false;
   } finally {
     // Its catch-up read lands after the end mark, outside the counted window.
-    // A failure here would hide the body's own error, which is the one to see.
-    await standDown(false).catch(() => {});
+    // After the body threw, its error is the one to see, so a failure to
+    // resume is dropped then; otherwise it throws.
+    if (bodyFailed) {
+      await standDown(false).catch(() => undefined);
+    } else {
+      await standDown(false);
+    }
   }
   await cdp.send('Tracing.end');
   await complete;
