@@ -600,9 +600,9 @@ describe('TransferListSelector', () => {
     const popover = screen
       .getByRole('dialog', {name: 'Table columns', ...hidden})
       .closest('[popover]');
-    expect(popover?.getAttribute('style')).toContain(
-      'position-area: self-block-end span-self-inline-end',
-    );
+    const style = popover?.getAttribute('style') ?? '';
+    expect(style).toContain('inset-block-start: anchor(self-end)');
+    expect(style).toContain('inset-inline-start: anchor(self-start)');
   });
 });
 

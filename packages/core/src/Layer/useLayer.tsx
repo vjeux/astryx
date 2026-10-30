@@ -41,10 +41,14 @@ import {
   LAYER_CLEARS_ANCHOR_ATTRIBUTE,
   LAYER_SCROLLS_ATTRIBUTE,
   LAYER_CLEAR_FALLBACKS_PROPERTY,
+  LAYER_PIN_PROPERTY,
+  LAYER_SLIDE_ALIGN_PROPERTY,
   LAYER_TRY_FALLBACKS_PROPERTY,
   ensureSlideRules,
   getAnchorClearFallbacks,
   slideRuleName,
+  spanRuleName,
+  type PhysicalSide,
 } from './layerSlideRules';
 import {preserveAnimations} from './preserveAnimations';
 import {useLayerContext} from './LayerContext';
@@ -185,7 +189,7 @@ export interface ContextRenderProps {
    * Who authors the layer's position styles.
    *
    * `'anchor'` (default): the hook derives CSS anchor-positioning styles —
-   * `position-area` and `position-try-fallbacks` — from the logical
+   * `anchor()` insets and `position-try-fallbacks` — from the logical
    * `placement`/`alignment`.
    *
    * `'custom'`: the consumer authors its own position styles via `style`
@@ -961,56 +965,103 @@ function readPortalWritingContext(
 }
 
 /**
- * Map logical placement/alignment to a CSS position-area value.
+ * The `anchor()` insets and self-alignment that place a layer on its
+ * placement's side of the anchor, aligned on the other axis
+ * (spec:AST-059 FR4; layer-runtime INV5).
  *
- * Uses the self-* logical keyword family: the inline axis resolves against
- * the popover's own direction (inherited inline or preserved when portaled),
- * so it mirrors in RTL without placement-specific JS. The block axis is
- * direction-neutral but must come from the same keyword family — mixing
- * physical `top` with `self-inline-*` produces an invalid position-area
- * (computes to `none`, which pins the popover to the viewport corner because
- * styles.base zeroes the UA margins).
+ * On each axis the layer gets the room from its anchor's edge to the
+ * viewport's far edge, aligned toward the anchor, and a centered layer the
+ * whole axis centered on its anchor (`anchor-center`). With both insets set
+ * and an explicit alignment, a box that overflows that room shifts to stay
+ * inside the viewport, as an aligned layer fitting on neither side relies on
+ * (FR4). They are insets rather than a `position-area`: while any element on
+ * a page is placed by `position-area`, WebKit lays out the whole document on
+ * every style change, and repaints the anchored box wherever that change sits
+ * under it.
  *
- * Note the plain logical family (`inline-start`, no `self-`) is NOT a
- * substitute: it resolves against the containing block — the page root for
- * a top-layer popover — so it ignores `direction` set on a subtree, which
- * is exactly #3389's repro.
+ * The `self-*` anchor sides and alignment keywords resolve against the
+ * layer's own writing mode and direction, inherited inline or preserved when
+ * portaled, so the layer mirrors in RTL without placement-specific JS. The
+ * plain logical family (`start`, no `self-`) is NOT a substitute: it resolves
+ * against the containing block, the page root for a top-layer layer, so it
+ * ignores `direction` set on a subtree, which is exactly #3389's repro.
  */
-function getPositionArea(
+export function getAnchorInsets(
   placement: LayerPlacement = 'above',
   alignment: LayerAlignment = 'center',
-): string {
+): React.CSSProperties {
   if (placement === 'above' || placement === 'below') {
-    const block = placement === 'above' ? 'self-block-start' : 'self-block-end';
-    if (alignment === 'start') {
-      return `${block} span-self-inline-end`;
-    }
-    if (alignment === 'end') {
-      return `${block} span-self-inline-start`;
-    }
-    return block; // center
+    const block: React.CSSProperties =
+      placement === 'above'
+        ? {
+            insetBlockStart: 0,
+            insetBlockEnd: 'anchor(self-start)',
+            alignSelf: 'self-end',
+          }
+        : {
+            insetBlockStart: 'anchor(self-end)',
+            insetBlockEnd: 0,
+            alignSelf: 'self-start',
+          };
+    const inline: React.CSSProperties =
+      alignment === 'start'
+        ? {
+            insetInlineStart: 'anchor(self-start)',
+            insetInlineEnd: 0,
+            justifySelf: 'self-start',
+          }
+        : alignment === 'end'
+          ? {
+              insetInlineStart: 0,
+              insetInlineEnd: 'anchor(self-end)',
+              justifySelf: 'self-end',
+            }
+          : {
+              insetInlineStart: 0,
+              insetInlineEnd: 0,
+              justifySelf: 'anchor-center',
+            };
+    return {...block, ...inline};
   }
-
-  const inline =
-    placement === 'start' ? 'self-inline-start' : 'self-inline-end';
-  if (alignment === 'start') {
-    return `${inline} span-self-block-end`;
-  }
-  if (alignment === 'end') {
-    return `${inline} span-self-block-start`;
-  }
-  return inline; // center
+  const inline: React.CSSProperties =
+    placement === 'start'
+      ? {
+          insetInlineStart: 0,
+          insetInlineEnd: 'anchor(self-start)',
+          justifySelf: 'self-end',
+        }
+      : {
+          insetInlineStart: 'anchor(self-end)',
+          insetInlineEnd: 0,
+          justifySelf: 'self-start',
+        };
+  const block: React.CSSProperties =
+    alignment === 'start'
+      ? {
+          insetBlockStart: 'anchor(self-start)',
+          insetBlockEnd: 0,
+          alignSelf: 'self-start',
+        }
+      : alignment === 'end'
+        ? {
+            insetBlockStart: 0,
+            insetBlockEnd: 'anchor(self-end)',
+            alignSelf: 'self-end',
+          }
+        : {insetBlockStart: 0, insetBlockEnd: 0, alignSelf: 'anchor-center'};
+  return {...inline, ...block};
 }
 
 /**
  * Compute the `position-try-fallbacks` list for a placement/alignment pair
  * (spec:AST-059 FR4).
  *
- * Flips first; they mirror the placement-axis margins (clearance and gutter)
- * and the alignment-axis gutter with the area. Then the slide: named
- * `@position-try` options whose area spans the whole alignment axis
- * (`layerSlideRules.ts`), same side of the trigger first, opposite side
- * second. Flips alone cannot rescue a layer wider than the room on either
+ * Flips first; they mirror the insets, the alignment, the placement-axis
+ * margins (clearance and gutter) and the alignment-axis gutter. Centered
+ * layers then try the one-sided spans, named `@position-try` options that
+ * keep the base margins (`layerSlideRules.ts`). Then the slide: named
+ * `@position-try` options that span the whole alignment axis, same side of
+ * the trigger first, opposite side second. Flips alone cannot rescue a layer wider than the room on either
  * side of its trigger — every flipped option overflows the alignment axis
  * too, and the browser keeps the base option, so the layer never moves to the
  * side of the trigger that has room on the placement axis (#3671 for centered
@@ -1032,42 +1083,78 @@ export function getPositionTryFallbacks(
   }
 
   if (placement === 'above' || placement === 'below') {
-    const [same, opposite] =
+    const [same, opposite]: [PhysicalSide, PhysicalSide] =
       placement === 'above' ? ['top', 'bottom'] : ['bottom', 'top'];
-    return `${flips}, ${same} span-left, ${same} span-right, ${opposite} span-left, ${opposite} span-right, ${slides}`;
+    return `${flips}, ${spanRuleName(same, 'left')}, ${spanRuleName(same, 'right')}, ${spanRuleName(opposite, 'left')}, ${spanRuleName(opposite, 'right')}, ${slides}`;
   }
 
-  const [same, opposite] =
+  const [same, opposite]: [PhysicalSide, PhysicalSide] =
     placement === 'start' ? ['left', 'right'] : ['right', 'left'];
-  return `${flips}, ${same} span-top, ${same} span-bottom, ${opposite} span-top, ${opposite} span-bottom, ${slides}`;
+  return `${flips}, ${spanRuleName(same, 'top')}, ${spanRuleName(same, 'bottom')}, ${spanRuleName(opposite, 'top')}, ${spanRuleName(opposite, 'bottom')}, ${slides}`;
+}
+
+/**
+ * Whether an anchor is in view, and if not, along which physical axes it has
+ * left: `off-x` (beside the viewport, in view vertically), `off-y` (above or
+ * below it, in view horizontally), or `off` (both, or clipped by a scrolled
+ * ancestor while inside the viewport's rectangle).
+ */
+type AnchorView = 'visible' | 'off-x' | 'off-y' | 'off';
+
+function anchorViewOf(
+  rect: {left: number; top: number; right: number; bottom: number},
+  root: {left: number; top: number; right: number; bottom: number},
+  isIntersecting = true,
+): AnchorView {
+  const isInX = rect.right >= root.left && rect.left <= root.right;
+  const isInY = rect.bottom >= root.top && rect.top <= root.bottom;
+  if (isInX && isInY) {
+    return isIntersecting ? 'visible' : 'off';
+  }
+  return isInX ? 'off-y' : isInY ? 'off-x' : 'off';
 }
 
 /**
  * The self-alignment an aligned layer uses while its anchor is out of view
- * (spec:AST-059 FR5). A position-area box that overflows the room beside its
- * anchor is shifted by default to stay inside the viewport — the slide an
- * aligned layer relies on when it fits on neither side (FR4). Once the anchor
- * has left the viewport that shift would pin the layer into the narrowest
- * strip at the edge, so the alignment is pinned `unsafe` toward the anchor
- * instead and the layer holds the position its flips give it. `self-*`
- * keywords resolve against the layer's own direction, matching the `self-*`
- * position-area family; the flip tactics swap start/end with the area.
+ * (spec:AST-059 FR5). A box that overflows the room beside its anchor is
+ * shifted by default to stay inside the viewport — the slide an aligned
+ * layer relies on when it fits on neither side (FR4). Once the anchor has
+ * left the viewport that shift would pin the layer into the narrowest strip
+ * at the edge, so the alignment is pinned `unsafe` toward the anchor instead
+ * and the layer holds the position its flips give it. `self-*` keywords
+ * resolve against the layer's own direction, matching the `self-*` anchor
+ * sides; the flip tactics swap start/end with the insets.
  *
- * Centered layers already slide through their span fallbacks and are
- * unchanged; a visible anchor keeps the browser's default alignment.
+ * A centered layer is pinned the same way, centered on its anchor without
+ * the shift, but only while its anchor is out of view along the alignment
+ * axis (`isAnchorInViewAcross`): an anchor that left across the placement
+ * axis keeps the centered layer's shift, as it is in view along the axis the
+ * shift runs on. A visible anchor keeps each position's own alignment.
  */
 export function getSelfAlignment(
   placement: LayerPlacement,
   alignment: LayerAlignment,
   isAnchorInView: boolean,
+  isAnchorInViewAcross: boolean = isAnchorInView,
 ): React.CSSProperties {
-  if (isAnchorInView || alignment === 'center') {
+  if (alignment === 'center' ? isAnchorInViewAcross : isAnchorInView) {
     return {};
   }
-  const edge = alignment === 'start' ? 'unsafe self-start' : 'unsafe self-end';
+  const edge =
+    alignment === 'start'
+      ? 'unsafe self-start'
+      : alignment === 'end'
+        ? 'unsafe self-end'
+        : 'unsafe anchor-center';
+  // The position options carry the pin too: a span or a slide aligns as the
+  // layer itself, and no option shifts it toward the viewport.
+  const pin: Record<string, string> = {
+    [LAYER_PIN_PROPERTY]: 'unsafe',
+    [LAYER_SLIDE_ALIGN_PROPERTY]: edge,
+  };
   return placement === 'above' || placement === 'below'
-    ? {justifySelf: edge}
-    : {alignSelf: edge};
+    ? {justifySelf: edge, ...pin}
+    : {alignSelf: edge, ...pin};
 }
 
 /**
@@ -1169,13 +1256,16 @@ function useLayerImplementation(
   // Whether the anchor is inside the viewport (spec:AST-059 FR5). The slide
   // fallback is withdrawn while it is not, so an aligned layer holds its
   // position and size instead of chasing an anchor nobody can see.
-  const [isAnchorInView, setIsAnchorInView] = useState(true);
+  // Along which physical axes the anchor is out of view: a centered layer
+  // pins only along its alignment axis (`getSelfAlignment`).
+  const [anchorView, setAnchorView] = useState<AnchorView>('visible');
+  const isAnchorInView = anchorView === 'visible';
   // Mirror so the pre-paint read commits nothing when the answer is unchanged.
-  const isAnchorInViewRef = useRef(true);
-  const updateAnchorInView = useCallback((inView: boolean) => {
-    if (isAnchorInViewRef.current !== inView) {
-      isAnchorInViewRef.current = inView;
-      setIsAnchorInView(inView);
+  const anchorViewRef = useRef<AnchorView>('visible');
+  const updateAnchorInView = useCallback((view: AnchorView) => {
+    if (anchorViewRef.current !== view) {
+      anchorViewRef.current = view;
+      setAnchorView(view);
     }
   }, []);
   // The inset the app declared on LayerProvider (FR6). Read through context
@@ -1664,13 +1754,14 @@ function useLayerImplementation(
     if (view) {
       // Edge-adjacent counts as in view, as IntersectionObserver reports it;
       // an engine with no layout (a zero rect) therefore reads as in view too.
-      const rect = anchor.getBoundingClientRect();
-      const inView =
-        rect.bottom >= 0 &&
-        rect.right >= 0 &&
-        rect.top <= view.innerHeight &&
-        rect.left <= view.innerWidth;
-      updateAnchorInView(inView);
+      updateAnchorInView(
+        anchorViewOf(anchor.getBoundingClientRect(), {
+          left: 0,
+          top: 0,
+          right: view.innerWidth,
+          bottom: view.innerHeight,
+        }),
+      );
     }
     if (typeof IntersectionObserver === 'undefined') {
       return;
@@ -1678,7 +1769,23 @@ function useLayerImplementation(
     const observer = new IntersectionObserver(entries => {
       const latest = entries[entries.length - 1];
       if (latest) {
-        updateAnchorInView(latest.isIntersecting);
+        const root = latest.rootBounds ?? {
+          left: 0,
+          top: 0,
+          right: view?.innerWidth ?? 0,
+          bottom: view?.innerHeight ?? 0,
+        };
+        updateAnchorInView(
+          latest.boundingClientRect == null
+            ? latest.isIntersecting
+              ? 'visible'
+              : 'off'
+            : anchorViewOf(
+                latest.boundingClientRect,
+                root,
+                latest.isIntersecting,
+              ),
+        );
       }
     });
     observer.observe(anchor);
@@ -1751,11 +1858,18 @@ function useLayerImplementation(
             {positionAnchor: anchorId}
           : {
               positionAnchor: anchorId,
-              positionArea: getPositionArea(placement, alignment),
+              ...getAnchorInsets(placement, alignment),
               positionTryFallbacks: clearFallbacks
                 ? `var(${LAYER_TRY_FALLBACKS_PROPERTY}, ${standardFallbacks})`
                 : standardFallbacks,
-              ...getSelfAlignment(placement, alignment, isAnchorInView),
+              ...getSelfAlignment(
+                placement,
+                alignment,
+                isAnchorInView,
+                placement === 'above' || placement === 'below'
+                  ? anchorView !== 'off-x' && anchorView !== 'off'
+                  : anchorView !== 'off-y' && anchorView !== 'off',
+              ),
             };
 
       const clearance = offset ? toCssLength(offset) : null;
@@ -1838,6 +1952,7 @@ function useLayerImplementation(
     [
       anchorId,
       declaredInset,
+      anchorView,
       id,
       isAnchorInView,
       keepsAnchorClear,
