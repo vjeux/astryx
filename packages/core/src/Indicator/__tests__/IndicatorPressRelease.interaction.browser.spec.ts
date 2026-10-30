@@ -4,11 +4,12 @@
  * @file IndicatorPressRelease.interaction.browser.spec.ts
  * @input The built CheckboxInput, CheckboxList and RadioList Default stories,
  *   real touch input (Chromium CDP / WebKit's input command), the interaction
- *   harness, and the release clocks and curves of the UIKit constants table
- *   (motion/uikit/button.ts for a control, motion/uikit/list.ts for a cell)
+ *   harness, a control's release clock and curve (the shared release,
+ *   pinned below) and a cell's from the UIKit constants table
+ *   (motion/uikit/list.ts)
  * @output Animation proofs for the press release of the layer over a
  *   checkbox box or a radio circle: it follows its host's curve (a
- *   standalone checkbox is a control and releases like UIButton; a checkbox
+ *   standalone checkbox is a control and takes the shared release; a checkbox
  *   or radio row is a cell and releases on the deselect), sampled frame by
  *   frame in both engines; it keeps fading on every frame while the main
  *   thread is blocked and does no Layout or Paint (Chromium); a RadioList row
@@ -50,7 +51,6 @@ import {
   type CastFrame,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
-import {button} from '../../motion/uikit/button';
 import {list} from '../../motion/uikit/list';
 
 const storybook = withStorybook(test);
@@ -63,9 +63,14 @@ interface Clock {
   readonly curve: readonly [number, number, number, number];
 }
 
+/**
+ * A control's release under a coarse primary pointer: the shared release
+ * (`controlPressConsts`, 200 ms on the deselect's curve), pinned by
+ * pressFeedback.test.ts, since this runner cannot load the motion registry.
+ */
 const CONTROL: Clock = {
-  releaseMs: button.highlight.releaseMs,
-  curve: button.highlight.releaseCurve,
+  releaseMs: 200,
+  curve: [0, 0, 0.2, 1],
 };
 const CELL: Clock = {
   releaseMs: list.highlight.releaseMs,
@@ -553,8 +558,8 @@ test('under Reduce Motion a checkbox’s press release is an opacity cross-fade 
   page,
 }) => {
   // design:reduced-motion DR2: on a coarse pointer a change cross-fades,
-  // opacity only, in 200 ms or less. The control clock (UIButton's 250 ms)
-  // is capped there.
+  // opacity only, in 200 ms or less, which the control clock (the shared
+  // 200 ms) already meets.
   await page.emulateMedia({reducedMotion: 'reduce'});
   const opened = await open(page, SURFACES[0]);
   await opened.driver.tap({
