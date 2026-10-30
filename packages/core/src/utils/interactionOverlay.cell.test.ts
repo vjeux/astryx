@@ -12,7 +12,8 @@
  *   all under a finger; a fine pointer's row as it was (no layer, no
  *   stacking context, the overlay's own paint); and that the layer and the
  *   overlay cap their release under reduced motion with the Reduce Motion
- *   constant, never a literal
+ *   constant, never a literal; its stylesheet reader skips only a sheet from
+ *   another origin and lets any other error reading a sheet throw
  * @position Unit test of the row press layer (utils/rowPressLayer.ts
  *   `rowPressLayerStyles.cell`, its clocks in utils/rowPressLayer.stylex.ts
  *   `cellPressConsts`); the real-engine proofs (compositor, busy main
@@ -26,7 +27,7 @@ import {resolve} from 'node:path';
 import * as stylex from '@stylexjs/stylex';
 import {createElement} from 'react';
 import {render, screen} from '@testing-library/react';
-import {describe, expect, it} from 'vitest';
+import {afterEach, describe, expect, it, vi} from 'vitest';
 import {list} from '../motion/uikit/list';
 import {timing} from '../motion/uikit/timing';
 import {Item} from '../Item';
@@ -49,6 +50,15 @@ const layerRules = (el: Element, arm: string) =>
 const COARSE = '(pointer: coarse)';
 
 const isHost = (rule: string) => !selectorOf(rule).includes('::before');
+
+/**
+ * A sheet the document may not read: one loaded from another origin, whose
+ * `cssRules` throws. Its rules are never ours. Every other sheet is read, so
+ * an error reading one fails the test instead of hiding its rules.
+ */
+const isCrossOrigin = (sheet: CSSStyleSheet) =>
+  sheet.href != null &&
+  new URL(sheet.href, document.baseURI).origin !== window.location.origin;
 
 /**
  * The element's style rules inside an `@media` naming `media`, or outside
@@ -79,10 +89,8 @@ function rulesIn(el: Element, media: string | null): string[] {
     }
   };
   for (const sheet of Array.from(document.styleSheets)) {
-    try {
+    if (!isCrossOrigin(sheet)) {
       walk(sheet.cssRules, null);
-    } catch {
-      // A sheet the document cannot read holds no rule of ours.
     }
   }
   return out;
@@ -96,6 +104,39 @@ const values = (rules: string[], property: string) =>
     );
     return match == null ? [] : [match[1].trim()];
   });
+
+describe('the stylesheet reader', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /** The document holds one sheet: its `href`, and what reading its rules does. */
+  const onlySheet = (href: string | null, read: () => CSSRuleList) => {
+    const sheet = {
+      href,
+      get cssRules() {
+        return read();
+      },
+    } as unknown as CSSStyleSheet;
+    vi.spyOn(Document.prototype, 'styleSheets', 'get').mockReturnValue([
+      sheet,
+    ] as unknown as StyleSheetList);
+  };
+
+  it('lets a real error reading a same-origin sheet throw, instead of reading no rules from it', () => {
+    onlySheet(null, () => {
+      throw new TypeError('a real error');
+    });
+    expect(() => rulesIn(document.body, null)).toThrow('a real error');
+  });
+
+  it('skips only a sheet from another origin, whose rules the document may not read', () => {
+    onlySheet('https://cdn.example.com/theme.css', () => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+    expect(rulesIn(document.body, null)).toEqual([]);
+  });
+});
 
 describe('press layer clock', () => {
   it('caps its release under reduced motion with the Reduce Motion constant, as the overlay does, never a literal (spec:AST-094 FR4)', () => {
