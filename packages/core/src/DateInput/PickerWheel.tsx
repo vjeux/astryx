@@ -5,7 +5,8 @@
 /**
  * @file PickerWheel.tsx
  * @input Wheel's props (wheelOptions.ts): option list, selected value,
- *   change callback; optionally looping
+ *   change callback; optionally looping, a rest rule, and a ref for
+ *   programmatic turns
  * @output Exports PickerWheel — one picker column that moves like UIPickerView
  * @position Internal component; the Wheel under a finger (Wheel.tsx picks it)
  *
@@ -38,10 +39,10 @@
  *   (`spec:AST-094` FR43), and with no pinch of its own the wheel leaves it
  *   to the page's zoom (FR10).
  * - The value commits when the wheel comes to rest, as UIPickerView's
- *   didSelectRow does. A rest on a disabled row (outside the bounds) is
- *   followed by a turn onto the nearest enabled row, which then commits; a
- *   rest on the committed row commits nothing, even outside the bounds
- *   (component:DateInput FR13).
+ *   didSelectRow does. A row `resolveRest` moves away from (by default, a
+ *   disabled one: outside the bounds) is followed by a turn onto the row it
+ *   names, which then commits; a rest on the committed row commits nothing,
+ *   even outside the bounds (component:DateInput FR13).
  * - Each row reaching the band ticks a selection haptic where the browser
  *   can vibrate (not iOS Safari, which cannot play haptics from script).
  * - Under reduced motion (design:reduced-motion DR2) the drag follows the
@@ -49,7 +50,7 @@
  *   its bounce at an end) plays as is, as scrolling keeps decelerating under
  *   iOS Reduce Motion. Every transition the wheel starts (a slow release's
  *   snap, a return from past an end, the turn on from a disabled row, a tap,
- *   a key, a click, a scroll wheel's snap) lands without
+ *   a key, a click, `spinTo`, a scroll wheel's snap) lands without
  *   travel: the rows cross-fade onto their row, opacity only, on the
  *   animator's Reduce Motion fade (`reducedMotionFade`).
  *
@@ -75,7 +76,14 @@
  * - /packages/core/src/TimeInput/TimeInput.doc.mjs
  */
 
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
 import {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
@@ -115,7 +123,12 @@ import {
   type WheelCurve,
   type WheelLayout,
 } from './wheelPhysics';
-import {restingStep, type WheelProps} from './wheelOptions';
+import {
+  canSpinTo,
+  loopStep,
+  restingStep,
+  type WheelProps,
+} from './wheelOptions';
 
 /** Today's row pitch, px: the touch column draws today's look (wheelLook.ts). */
 const ROW_HEIGHT = WHEEL_ROW_PITCH;
@@ -293,6 +306,8 @@ export function PickerWheel({
   onChange,
   isActive = true,
   isLooping = false,
+  resolveRest,
+  ref,
 }: WheelProps) {
   const columnRef = useRef<HTMLDivElement | null>(null);
   const rowsRef = useRef<HTMLDivElement | null>(null);
@@ -322,9 +337,9 @@ export function PickerWheel({
 
   // The latest props, for the motion's and the gesture listeners' callbacks,
   // which are attached once and outlive a render.
-  const latestRef = useRef({options, value, onChange, layout});
+  const latestRef = useRef({options, value, onChange, resolveRest, layout});
   useIsomorphicLayoutEffect(() => {
-    latestRef.current = {options, value, onChange, layout};
+    latestRef.current = {options, value, onChange, resolveRest, layout};
   });
 
   // The row under the band is marked as today's column marks it. At rest
@@ -423,15 +438,26 @@ export function PickerWheel({
       // until a person moves the wheel off it, as in the scrolling column. On
       // a loop the nearest enabled row is measured around the seam, and the
       // wheel turns the shorter way to it.
-      const step =
-        row === committed
-          ? 0
-          : restingStep(
-              current.options,
-              row,
-              Math.max(0, committed),
-              Boolean(current.layout.looping),
-            );
+      const count = current.options.length;
+      const isLooping = Boolean(current.layout.looping);
+      let step = 0;
+      if (row !== committed) {
+        if (current.resolveRest) {
+          // The owner's rest: the row it names, reached the shorter way
+          // round on a loop.
+          const resolved = current.resolveRest(row);
+          if (current.options[resolved] != null) {
+            step = isLooping ? loopStep(row, resolved, count) : resolved - row;
+          }
+        } else {
+          step = restingStep(
+            current.options,
+            row,
+            Math.max(0, committed),
+            isLooping,
+          );
+        }
+      }
       if (step !== 0) {
         const target = position + step;
         move(turnCurve(columnRef.current, offset, target * ROW_HEIGHT), {
@@ -801,6 +827,42 @@ export function PickerWheel({
       window.clearTimeout(idle);
     };
   }, [isActive, motion, move, onEnd]);
+
+  // A spin turns only onto a row a rest would keep (canSpinTo), so its
+  // arrival commits that row and nothing turns on past it: it reports the
+  // row it was asked for, as the scrolling column does.
+  const spinTo = useCallback(
+    async (index: number): Promise<boolean> =>
+      new Promise(resolve => {
+        const {
+          layout: currentLayout,
+          options: currentOptions,
+          resolveRest: currentResolveRest,
+        } = latestRef.current;
+        if (!canSpinTo(currentOptions, index, currentResolveRest)) {
+          resolve(false);
+          return;
+        }
+        const offset = motion.offset();
+        const target = nearestPosition(
+          index,
+          offset,
+          currentLayout,
+          currentOptions.length,
+        );
+        move(turnCurve(columnRef.current, offset, target * ROW_HEIGHT), {
+          onEnd: (outcome, end) => {
+            if (outcome === 'arrived') {
+              arrive(end);
+            }
+            resolve(outcome === 'arrived');
+          },
+        });
+      }),
+    [motion, move, arrive],
+  );
+
+  useImperativeHandle(ref, () => ({spinTo}), [spinTo]);
 
   // A key commits the row at `position` at once and turns the wheel there
   // from `offset`.
