@@ -49,7 +49,7 @@ async function watchCircle(page: Page, name: string): Promise<void> {
       }
       const reads = ((
         window as unknown as Record<string, unknown>
-      ).__c06circles ??= {}) as Record<string, unknown>;
+      ).__circleMarkReads ??= {}) as Record<string, unknown>;
       const observer = new MutationObserver(() => {
         if (reads[key] != null) {
           return;
@@ -76,13 +76,13 @@ async function readCircle(page: Page, name: string): Promise<CircleRead> {
   await page.waitForFunction(
     key =>
       ((window as unknown as Record<string, Record<string, unknown>>)
-        .__c06circles ?? {})[key] != null,
+        .__circleMarkReads ?? {})[key] != null,
     name,
   );
   return page.evaluate(
     key =>
       (window as unknown as Record<string, Record<string, CircleRead>>)
-        .__c06circles[key],
+        .__circleMarkReads[key],
     name,
   );
 }
