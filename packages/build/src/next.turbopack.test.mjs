@@ -10,7 +10,8 @@
  *   prebuilt class names and source-built rules (spec:AST-080 FR7), keep the
  *   app's rules to its files in their order, let a theme override win, and
  *   declare Core's data-colour defaults in an app with Core alone
- * @position Opt-in end-to-end check for the Turbopack half of @astryxdesign/build:
+ * @position End-to-end check for the Turbopack half of @astryxdesign/build, run by
+ *   `pnpm test:build` (the Build package's own CI job) or directly:
  *   ASTRYX_TURBOPACK_E2E=1 pnpm exec vitest run --project node packages/build/src/next.turbopack.test.mjs
  */
 
@@ -144,7 +145,8 @@ function expectStyled(page, stylesheet) {
 }
 
 // Real Next.js builds, a dev server and Chromium take minutes of every core, so
-// the default suite skips them; ASTRYX_TURBOPACK_E2E=1 runs them (with Chromium).
+// the default suite skips them; ASTRYX_TURBOPACK_E2E=1 runs them (with Chromium),
+// as `pnpm test:build` does on the Build package's own CI runner.
 describe.runIf(process.env.ASTRYX_TURBOPACK_E2E === '1')(
   'Turbopack end to end (ASTRYX_TURBOPACK_E2E=1)',
   () => {
