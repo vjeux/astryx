@@ -39,6 +39,7 @@ import {Tooltip} from '../Tooltip';
 import {navItemStyles} from '../NavItem/navItemStyles.stylex';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {useSideNavCollapse} from './SideNavCollapseContext';
 import {useLinkComponent} from '../Link/useLinkComponent';
@@ -488,8 +489,11 @@ export function SideNavHeading({
           {...mergeProps(
             themeProps('side-nav-heading'),
             focusOutlineProps.focusVisible(
+              pressLayerStyles.positioned,
               navItemStyles.item,
               interactionOverlayStyles.backgroundColor,
+              pressLayerStyles.colorHost,
+              pressLayerStyles.before,
               styles.rootCollapsed,
               xstyle,
             ),
@@ -513,8 +517,11 @@ export function SideNavHeading({
             {...mergeProps(
               themeProps('side-nav-heading'),
               focusOutlineProps.focusVisible(
+                pressLayerStyles.positioned,
                 navItemStyles.item,
                 interactionOverlayStyles.backgroundColor,
+                pressLayerStyles.colorHost,
+                pressLayerStyles.before,
                 styles.rootCollapsed,
                 styles.menuTrigger,
                 xstyle,

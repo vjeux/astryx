@@ -66,6 +66,7 @@ import {navItemStyles, type NavItemSize} from '../NavItem/navItemStyles.stylex';
 import {SizeProvider} from '../SizeContext/SizeContext';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {
   useSideNavCollapse,
@@ -646,8 +647,11 @@ export function SideNavItem({
           disabled: isDisabled ? 'disabled' : null,
         }),
         focusOutlineProps.focusVisible(
+          pressLayerStyles.positioned,
           navItemStyles.item,
           interactionOverlayStyles.backgroundColor,
+          pressLayerStyles.colorHost,
+          pressLayerStyles.before,
           navItemStyles[size],
           styles.itemCollapsed,
           size === 'sm' && styles.itemCollapsedSm,
@@ -773,8 +777,11 @@ export function SideNavItem({
   });
 
   const itemStyleArgs = [
+    pressLayerStyles.positioned,
     navItemStyles.item,
     interactionOverlayStyles.backgroundColor,
+    pressLayerStyles.colorHost,
+    pressLayerStyles.before,
     navItemStyles[size],
     isSelected && navItemStyles.selected,
     isDisabled && navItemStyles.disabled,
@@ -879,8 +886,11 @@ export function SideNavItem({
             aria-controls={`${id}-children`}
             {...pressable}
             {...focusOutlineProps.focusVisible(
+              pressLayerStyles.positioned,
               styles.expandToggle,
               interactionOverlayStyles.backgroundColor,
+              pressLayerStyles.colorHost,
+              pressLayerStyles.before,
             )}>
             <Icon
               icon="chevronDown"

@@ -46,6 +46,7 @@ import {useInteractiveRole} from '../hooks/useInteractiveRole';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {useTranslator} from '../i18n';
 import {disabledInteractionProps} from '../utils/disabledInteraction';
@@ -361,12 +362,15 @@ export function Link({
         {...mergeProps(
           themeProps('link', {color}),
           focusOutlineProps.focusVisible(
+            pressLayerStyles.positioned,
             styles.base,
             styles.buttonReset,
             linkColorStyles[color],
             // The system's pressed overlay behind the text; the hover stays the
             // colour change above, so a press is the one background it paints.
             !isDisabled && interactionOverlayStyles.pressedBackgroundColor,
+            !isDisabled && pressLayerStyles.colorHost,
+            !isDisabled && pressLayerStyles.before,
             hasUnderline && styles.hasUnderline,
             isStandalone && styles.standalone,
             isDisabled && styles.disabled,
@@ -428,9 +432,12 @@ export function Link({
         {...mergeProps(
           themeProps('link', {color}),
           focusOutlineProps.focusVisible(
+            pressLayerStyles.positioned,
             styles.base,
             linkColorStyles[color],
             !isDisabled && interactionOverlayStyles.pressedBackgroundColor,
+            !isDisabled && pressLayerStyles.colorHost,
+            !isDisabled && pressLayerStyles.before,
             hasUnderline && styles.hasUnderline,
             isStandalone && styles.standalone,
             isDisabled && styles.disabled,

@@ -34,6 +34,7 @@ import type {BaseProps} from '../BaseProps';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 
 export interface SegmentedControlItemProps extends BaseProps<HTMLButtonElement> {
@@ -257,6 +258,8 @@ export function SegmentedControlItem({
           !isSelected &&
             !isItemDisabled &&
             interactionOverlayStyles.backgroundColor,
+          !isSelected && !isItemDisabled && pressLayerStyles.colorHost,
+          !isSelected && !isItemDisabled && pressLayerStyles.before,
           isItemDisabled && styles.disabled,
           xstyle,
         ),

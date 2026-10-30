@@ -114,6 +114,7 @@ import {
 } from '../utils';
 import {chainEventHandlers} from '../utils/chainEventHandlers';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {normalizeDayOfWeek} from '../utils/dateTypes';
 import {MonthScroller, type MonthScrollerHandle} from './MonthScroller';
@@ -1003,6 +1004,8 @@ export function TouchDateField({
           {...stylex.props(
             styles.title,
             interactionOverlayStyles.backgroundColor,
+            pressLayerStyles.colorHost,
+            pressLayerStyles.before,
             focusOutlineStyles.focusVisible,
           )}>
           <span {...stylex.props(styles.titleText)}>{monthYearLabel}</span>

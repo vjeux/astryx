@@ -31,6 +31,7 @@ import type {BaseProps} from '../BaseProps';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {useTranslator} from '../i18n';
 
@@ -190,6 +191,8 @@ export function AvatarGroupOverflow({
             styles.base,
             styles.button,
             interactionOverlayStyles.backgroundImageOnNeutral,
+            pressLayerStyles.neutralHost,
+            pressLayerStyles.before,
             styles.overlap,
             dynamicStyles.size(numericSize),
             dynamicStyles.fontSize(numericSize),

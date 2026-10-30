@@ -54,6 +54,7 @@ import {useTooltip} from '../Tooltip';
 import {getInputARIA} from '../utils';
 import {joinAriaIDs} from '../utils/inputAria';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {inputDisabledFocusStyles} from '../Field/inputDisabledFocus';
 import {useSize} from '../SizeContext/SizeContext';
@@ -1054,8 +1055,11 @@ export function NumberInput({
               stepValue(1);
             }}
             {...stylex.props(
+              pressLayerStyles.positioned,
               styles.numberStepperButton,
               interactionOverlayStyles.backgroundImage,
+              pressLayerStyles.imageHost,
+              pressLayerStyles.before,
               (isDisabled || isReadOnly || !canIncrement) &&
                 styles.numberStepperButtonDisabled,
             )}>
@@ -1085,8 +1089,11 @@ export function NumberInput({
               stepValue(-1);
             }}
             {...stylex.props(
+              pressLayerStyles.positioned,
               styles.numberStepperButton,
               interactionOverlayStyles.backgroundImage,
+              pressLayerStyles.imageHost,
+              pressLayerStyles.before,
               styles.decrementButton,
               (isDisabled || isReadOnly || !canDecrement) &&
                 styles.numberStepperButtonDisabled,

@@ -61,6 +61,7 @@ import {useTopNavRenderMode} from './TopNavRenderContext';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 
 import {useMergedRefs} from '../hooks/useMergedRefs';
@@ -593,8 +594,11 @@ function DrawerMegaMenu({
         {...mergeProps(
           themeProps('top-nav-mega-menu', {mode: 'drawer'}),
           focusOutlineProps.focusVisible(
+            pressLayerStyles.positioned,
             navItemStyles.item,
             interactionOverlayStyles.backgroundColor,
+            pressLayerStyles.colorHost,
+            pressLayerStyles.before,
             styles.drawerHeader,
             xstyle,
           ),

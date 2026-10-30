@@ -67,6 +67,7 @@ import type {BaseProps} from '../BaseProps';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 
 const styles = stylex.create({
@@ -534,12 +535,15 @@ export function Collapsible({
             disabled: isDisabled ? 'disabled' : null,
           }),
           focusOutlineProps.focusVisible(
+            pressLayerStyles.positioned,
             styles.trigger,
             density != null && triggerDensity[density],
             // The system's pressed overlay on the disclosure row. The trigger
             // has no hover surface of its own, so this is the one background
             // it paints, and only while it is pressed.
             !isDisabled && interactionOverlayStyles.pressedBackgroundColor,
+            !isDisabled && pressLayerStyles.colorHost,
+            !isDisabled && pressLayerStyles.before,
             isDisabled && styles.triggerDisabled,
           ),
         )}>

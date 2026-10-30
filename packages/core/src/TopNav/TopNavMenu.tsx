@@ -45,6 +45,7 @@ import {isSafeUrl} from '../utils/safeUrl';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {
   colorVars,
@@ -489,8 +490,11 @@ export function TopNavMenu({
           {...pressable}
           {...mergeProps(
             focusOutlineProps.focusVisible(
+              pressLayerStyles.positioned,
               navItemStyles.item,
               interactionOverlayStyles.backgroundColor,
+              pressLayerStyles.colorHost,
+              pressLayerStyles.before,
               drawerStyles.header,
               xstyle,
             ),
@@ -527,8 +531,11 @@ export function TopNavMenu({
                   closeMobileNav();
                 }}
                 {...focusOutlineProps.focusVisible(
+                  pressLayerStyles.positioned,
                   navItemStyles.item,
                   interactionOverlayStyles.backgroundColor,
+                  pressLayerStyles.colorHost,
+                  pressLayerStyles.before,
                   drawerStyles.item,
                 )}>
                 {item.icon && (

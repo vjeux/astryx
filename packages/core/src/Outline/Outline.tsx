@@ -44,6 +44,7 @@ import type {OutlineItem} from './types';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {useTranslator} from '../i18n';
 
@@ -476,6 +477,8 @@ export function Outline({
                   focusOutlineProps.focusVisible(
                     styles.link,
                     interactionOverlayStyles.backgroundColor,
+                    pressLayerStyles.colorHost,
+                    pressLayerStyles.before,
                     densityStyles[density],
                     getIndentStyle(item.level),
                     isActive && styles.activeLink,

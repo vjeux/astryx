@@ -59,6 +59,7 @@ import {
   themeProps,
 } from '../utils';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {pressLayerStyles} from '../utils/pressLayer';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import type {BaseProps} from '../BaseProps';
 import {Icon} from '../Icon';
@@ -1617,8 +1618,11 @@ export function Step({
               aria-label={stepAriaLabel}
               {...pressable}
               {...stylex.props(
+                pressLayerStyles.positioned,
                 styles.otInteractive,
                 interactionOverlayStyles.backgroundColor,
+                pressLayerStyles.colorHost,
+                pressLayerStyles.after,
                 styles.otRowWrap,
                 styles.otRowPadV(densitySpace),
                 focusOutlineStyles.focusVisible,
@@ -1709,8 +1713,11 @@ export function Step({
             aria-label={stepAriaLabel}
             {...pressable}
             {...stylex.props(
+              pressLayerStyles.positioned,
               styles.otInteractive,
               interactionOverlayStyles.backgroundColor,
+              pressLayerStyles.colorHost,
+              pressLayerStyles.after,
               styles.otColWrap,
               styles.otPadBlock(densitySpace),
               focusOutlineStyles.focusVisible,
@@ -1769,8 +1776,11 @@ export function Step({
               aria-label={stepAriaLabel}
               {...pressable}
               {...stylex.props(
+                pressLayerStyles.positioned,
                 styles.buttonReset,
                 interactionOverlayStyles.backgroundColor,
+                pressLayerStyles.colorHost,
+                pressLayerStyles.after,
                 focusOutlineStyles.focusVisible,
                 density === 'compact' && styles.densityCompact,
                 density === 'balanced' && styles.densityBalanced,
@@ -1836,8 +1846,11 @@ export function Step({
           onClick={handleClick}
           aria-label={stepAriaLabel}
           {...stylex.props(
+            pressLayerStyles.positioned,
             styles.buttonReset,
             interactionOverlayStyles.backgroundColor,
+            pressLayerStyles.colorHost,
+            pressLayerStyles.after,
             focusOutlineStyles.focusVisible,
             density === 'compact' && styles.densityCompact,
             density === 'balanced' && styles.densityBalanced,
