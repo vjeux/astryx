@@ -142,26 +142,82 @@ export interface CircularProgressProps extends BaseProps<HTMLDivElement> {
 // Indeterminate animation
 // =============================================================================
 
-const indeterminateRotation = stylex.keyframes({
+/**
+ * The indeterminate arc's cycle, as the stroked circle drew it with a dash
+ * pattern: a dash 2 units long grows to 175 and back while its start moves
+ * on by 68 units over the first half and by the rest of the 302-unit
+ * pattern over the second, each half eased in and out. Here a unit is a
+ * 302nd of a turn, so every cycle ends exactly where it started.
+ */
+// Exported for its unit test (the barrel exports the component alone).
+export const INDETERMINATE = {
+  pattern: 302,
+  shortest: 2,
+  longest: 175,
+  midway: 68,
+};
+
+// The cycle as static keyframes, so the ring turns before hydration and
+// without script. Each half of the cycle eases in and out, and the arc's
+// start and length are affine in that eased progress, so every layer's turn
+// is exact with a few keyframes: the halves' segments are pieces of the same
+// curve, split where the arc crosses half a turn (37.0564% rising, 62.9436%
+// falling), and the left half shows only past that crossing (two keyframes a
+// hundredth of a percent apart, since WebKit runs no `steps()` animation on
+// the compositor). Unit tests rebuild them from INDETERMINATE.
+const indeterminateSpinFrames = stylex.keyframes({
   '0%': {transform: 'rotate(0deg)'},
   '100%': {transform: 'rotate(360deg)'},
 });
-
-// SVG dash percentages scale with the square viewport. A 300% gap exceeds every
-// ring circumference; shifting the 2% + 300% pattern by 302% closes the loop.
-const indeterminateDash = stylex.keyframes({
+const indeterminateTailFrames = stylex.keyframes({
   '0%': {
-    strokeDasharray: '2%, 300%',
-    strokeDashoffset: '0%',
+    transform: 'rotate(0deg)',
+    animationTimingFunction: 'cubic-bezier(0.42, 0, 0.58, 1)',
   },
   '50%': {
-    strokeDasharray: '175%, 300%',
-    strokeDashoffset: '-68%',
+    transform: 'rotate(81.0596deg)',
+    animationTimingFunction: 'cubic-bezier(0.42, 0, 0.58, 1)',
   },
-  '100%': {
-    strokeDasharray: '2%, 300%',
-    strokeDashoffset: '-302%',
+  '100%': {transform: 'rotate(360deg)'},
+});
+const indeterminateCapFrames = stylex.keyframes({
+  '0%': {
+    transform: 'rotate(2.3841deg)',
+    animationTimingFunction: 'cubic-bezier(0.42, 0, 0.58, 1)',
   },
+  '50%': {
+    transform: 'rotate(208.6093deg)',
+    animationTimingFunction: 'cubic-bezier(0.42, 0, 0.58, 1)',
+  },
+  '100%': {transform: 'rotate(2.3841deg)'},
+});
+const indeterminateRightFrames = stylex.keyframes({
+  '0%': {
+    transform: 'rotate(2.3841deg)',
+    animationTimingFunction: 'cubic-bezier(0.434, 0, 0.6623, 0.6811)',
+  },
+  '37.0564%': {transform: 'rotate(180deg)'},
+  '62.9436%': {
+    transform: 'rotate(180deg)',
+    animationTimingFunction: 'cubic-bezier(0.3377, 0.3189, 0.566, 1)',
+  },
+  '100%': {transform: 'rotate(2.3841deg)'},
+});
+const indeterminateLeftFrames = stylex.keyframes({
+  '0%': {transform: 'rotate(180deg)', opacity: 0},
+  '37.0564%': {
+    transform: 'rotate(180deg)',
+    opacity: 0,
+    animationTimingFunction: 'cubic-bezier(0.2955, 0.605, 0.6202, 1)',
+  },
+  '37.0664%': {opacity: 1},
+  '50%': {
+    transform: 'rotate(208.6093deg)',
+    animationTimingFunction: 'cubic-bezier(0.3798, 0, 0.7045, 0.395)',
+  },
+  '62.9436%': {transform: 'rotate(180deg)', opacity: 1},
+  '62.9536%': {opacity: 0},
+  '100%': {transform: 'rotate(180deg)', opacity: 0},
 });
 
 // =============================================================================
@@ -183,16 +239,6 @@ const styles = stylex.create({
   svg: {
     display: 'block',
     transform: 'rotate(-90deg)',
-  },
-  svgIndeterminate: {
-    display: 'block',
-    animationName: indeterminateRotation,
-    animationDuration: {
-      default: '2s',
-      '@media (prefers-reduced-motion: reduce)': '4s',
-    },
-    animationTimingFunction: 'linear',
-    animationIterationCount: 'infinite',
   },
   track: {
     fill: 'none',
@@ -258,6 +304,20 @@ const styles = stylex.create({
   fillTurnLeft: {
     left: 0,
   },
+  // In the indeterminate arc the halves turn with the arc's start, so the
+  // line between them (the turned arc's 6 o'clock) falls across pixels: both
+  // clips antialiased it, and together they left a light hairline across the
+  // arc whenever it was longer than half. Here the left half reaches half a
+  // pixel past that line, over the right half's drawing, which covers it;
+  // its turning layer keeps the ring's size, so it still turns about the
+  // ring's center. (While the arc is shorter than half the left half is
+  // hidden, so the extra half pixel never shows.)
+  fillHalfLeftJoint: {
+    width: 'calc(50% + 0.5px)',
+  },
+  fillTurnLeftJoint: {
+    width: 'calc((100% - 0.5px) * 2)',
+  },
   fillCap: {
     position: 'absolute',
     inset: 0,
@@ -276,17 +336,40 @@ const styles = stylex.create({
     fill: 'none',
     strokeLinecap: 'round',
   },
-  fillIndeterminate: {
-    fill: 'none',
-    strokeLinecap: 'round',
-    animationName: indeterminateDash,
+  // The indeterminate arc turns with CSS animations on the compositor: the
+  // whole arc spins once per `animationDuration` here...
+  // Under reduced motion both clocks run at half speed on every pointer: a
+  // continuous indicator sits outside design:reduced-motion's scope, so this
+  // keeps the ring's slower reduced-motion clocks, keyed on the two shared
+  // reduced-motion queries, a fine pointer's and a coarse pointer's.
+  indeterminateSpin: {
+    animationName: indeterminateSpinFrames,
+    animationIterationCount: 'infinite',
+    animationTimingFunction: 'linear',
+    animationDuration: {
+      default: '2s',
+      '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+        '4s',
+      '@media (prefers-reduced-motion: reduce) and (pointer: coarse)': '4s',
+    },
+  },
+  // ...while its start (this layer) and the halves and leading cap inside it
+  // run one breathing cycle per `animationDuration` here. Each keyframe sets
+  // its own segment's easing; between them the clock is linear.
+  indeterminateCycle: {
+    animationIterationCount: 'infinite',
+    animationTimingFunction: 'linear',
     animationDuration: {
       default: '1.5s',
-      '@media (prefers-reduced-motion: reduce)': '3s',
+      '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+        '3s',
+      '@media (prefers-reduced-motion: reduce) and (pointer: coarse)': '3s',
     },
-    animationTimingFunction: 'ease-in-out',
-    animationIterationCount: 'infinite',
   },
+  indeterminateTail: {animationName: indeterminateTailFrames},
+  indeterminateRight: {animationName: indeterminateRightFrames},
+  indeterminateLeft: {animationName: indeterminateLeftFrames},
+  indeterminateCap: {animationName: indeterminateCapFrames},
   children: {
     position: 'absolute',
     inset: 0,
@@ -642,7 +725,12 @@ export function CircularProgress({
       }
     };
   }, [percentage, isIndeterminate]);
-  const turns = fillTurns(percentage);
+  // Indeterminate: the same layers, turned by endless CSS animations on the
+  // compositor (`styles.indeterminateSpin`, `indeterminateCycle`), so the ring
+  // turns before hydration; a stroke-dash animation would repaint on the main
+  // thread and stop while a script runs. The reduced-motion clocks come from
+  // CSS too. Without its animations it rests as a quarter turn.
+  const turns = fillTurns(isIndeterminate ? 0.25 : percentage);
   // One half of the ring's stroke, from 6 o'clock clockwise to 12 (the left
   // half) before its layer turns; butt ends, the caps are drawn apart.
   const bleedBox = `${-FILL_BLEED} ${-FILL_BLEED} ${diameter + 2 * FILL_BLEED} ${diameter + 2 * FILL_BLEED}`;
@@ -664,6 +752,79 @@ export function CircularProgress({
   );
   // A round cap at 12 o'clock on the ring's centerline (a zero-length stroke).
   const capPath = `M ${center} ${strokeWidth / 2} h 0`;
+  const arc = (
+    <>
+      <span {...stylex.props(styles.fillHalf, styles.fillHalfRight)}>
+        <span
+          ref={rightRef}
+          {...stylex.props(
+            styles.fillTurn,
+            styles.fillTurnRight,
+            isIndeterminate && styles.indeterminateCycle,
+            isIndeterminate && styles.indeterminateRight,
+          )}
+          style={{
+            transform: `rotate(${turns.right}deg)`,
+            opacity: turns.rightShown,
+          }}>
+          {halfRing}
+        </span>
+      </span>
+      <span
+        {...stylex.props(
+          styles.fillHalf,
+          styles.fillHalfLeft,
+          isIndeterminate && styles.fillHalfLeftJoint,
+        )}>
+        <span
+          ref={leftRef}
+          {...stylex.props(
+            styles.fillTurn,
+            styles.fillTurnLeft,
+            isIndeterminate && styles.fillTurnLeftJoint,
+            isIndeterminate && styles.indeterminateCycle,
+            isIndeterminate && styles.indeterminateLeft,
+          )}
+          style={{
+            transform: `rotate(${turns.left}deg)`,
+            opacity: turns.leftShown,
+          }}>
+          {halfRing}
+        </span>
+      </span>
+      <svg
+        width={diameter}
+        height={diameter}
+        viewBox={`0 0 ${diameter} ${diameter}`}
+        {...stylex.props(styles.fillCap, styles.fillCapShape)}>
+        <path
+          ref={startRef}
+          d={capPath}
+          strokeWidth={strokeWidth}
+          style={{opacity: turns.caps}}
+        />
+      </svg>
+      <span
+        ref={capRef}
+        {...stylex.props(
+          styles.fillCap,
+          isIndeterminate && styles.indeterminateCycle,
+          isIndeterminate && styles.indeterminateCap,
+        )}
+        style={{
+          transform: `rotate(${turns.cap}deg)`,
+          opacity: turns.caps,
+        }}>
+        <svg
+          width={diameter + 2 * FILL_BLEED}
+          height={diameter + 2 * FILL_BLEED}
+          viewBox={bleedBox}
+          {...stylex.props(styles.fillCapShape, styles.fillShape)}>
+          <path d={capPath} strokeWidth={strokeWidth} />
+        </svg>
+      </span>
+    </>
+  );
 
   return (
     <div
@@ -696,9 +857,7 @@ export function CircularProgress({
           width={diameter}
           height={diameter}
           viewBox={`0 0 ${diameter} ${diameter}`}
-          {...stylex.props(
-            isIndeterminate ? styles.svgIndeterminate : styles.svg,
-          )}>
+          {...stylex.props(styles.svg)}>
           <circle
             {...mergeProps(
               themeProps('circular-progress-track'),
@@ -709,84 +868,35 @@ export function CircularProgress({
             r={radius}
             strokeWidth={strokeWidth}
           />
-          {isIndeterminate ? (
-            <circle
-              {...mergeProps(
-                themeProps('circular-progress-fill', {variant: fillVariant}),
-                stylex.props(
-                  styles.fillIndeterminate,
-                  variantStyles[fillVariant],
-                ),
-              )}
-              cx={center}
-              cy={center}
-              r={radius}
-              strokeWidth={strokeWidth}
-            />
-          ) : null}
         </svg>
 
-        {isIndeterminate ? null : (
-          // The determinate fill (see `styles.fill`). Its stroke color is
-          // set on the theming target and inherited by every part.
-          <span
-            ref={fillRef}
-            aria-hidden="true"
-            {...mergeProps(
-              themeProps('circular-progress-fill', {variant: fillVariant}),
-              stylex.props(styles.fill, variantStyles[fillVariant]),
-            )}>
-            <span {...stylex.props(styles.fillHalf, styles.fillHalfRight)}>
+        {/*
+          The fill (see `styles.fill`); indeterminate, the same layers inside
+          a spinning layer and one for the arc's start. Its stroke color is
+          set on the theming target and inherited by every part.
+        */}
+        <span
+          ref={fillRef}
+          aria-hidden="true"
+          {...mergeProps(
+            themeProps('circular-progress-fill', {variant: fillVariant}),
+            stylex.props(styles.fill, variantStyles[fillVariant]),
+          )}>
+          {isIndeterminate ? (
+            <span {...stylex.props(styles.fillCap, styles.indeterminateSpin)}>
               <span
-                ref={rightRef}
-                {...stylex.props(styles.fillTurn, styles.fillTurnRight)}
-                style={{
-                  transform: `rotate(${turns.right}deg)`,
-                  opacity: turns.rightShown,
-                }}>
-                {halfRing}
+                {...stylex.props(
+                  styles.fillCap,
+                  styles.indeterminateCycle,
+                  styles.indeterminateTail,
+                )}>
+                {arc}
               </span>
             </span>
-            <span {...stylex.props(styles.fillHalf, styles.fillHalfLeft)}>
-              <span
-                ref={leftRef}
-                {...stylex.props(styles.fillTurn, styles.fillTurnLeft)}
-                style={{
-                  transform: `rotate(${turns.left}deg)`,
-                  opacity: turns.leftShown,
-                }}>
-                {halfRing}
-              </span>
-            </span>
-            <svg
-              width={diameter}
-              height={diameter}
-              viewBox={`0 0 ${diameter} ${diameter}`}
-              {...stylex.props(styles.fillCap, styles.fillCapShape)}>
-              <path
-                ref={startRef}
-                d={capPath}
-                strokeWidth={strokeWidth}
-                style={{opacity: turns.caps}}
-              />
-            </svg>
-            <span
-              ref={capRef}
-              {...stylex.props(styles.fillCap)}
-              style={{
-                transform: `rotate(${turns.cap}deg)`,
-                opacity: turns.caps,
-              }}>
-              <svg
-                width={diameter + 2 * FILL_BLEED}
-                height={diameter + 2 * FILL_BLEED}
-                viewBox={bleedBox}
-                {...stylex.props(styles.fillCapShape, styles.fillShape)}>
-                <path d={capPath} strokeWidth={strokeWidth} />
-              </svg>
-            </span>
-          </span>
-        )}
+          ) : (
+            arc
+          )}
+        </span>
 
         {centerContent != null && (
           <div {...stylex.props(styles.children)}>
