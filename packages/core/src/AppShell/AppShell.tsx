@@ -7,7 +7,8 @@ import React from 'react';
 /**
  * @file AppShell.tsx
  * @input Uses React, Theme-resolved breakpoints, Layout, navigation slots, and StyleX
- * @output Exports AppShell component and AppShellProps with SSR-safe mobile layout
+ * @output Exports AppShell component and AppShellProps with SSR-safe mobile layout.
+ *   Under a finger, a page-scrolling shell pins an iOS 26 bar and its scroll edge effect.
  * @position Page shell for an application — the top-level wrapper for any app.
  *   Composes Layout internally to provide header, sideNav, and main content areas.
  *   Use for any app that needs a top nav, side navigation, and scrollable content.
@@ -18,6 +19,8 @@ import React from 'react';
  * - /packages/core/src/AppShell/AppShell.test.tsx
  * - /apps/storybook/stories/AppShell.stories.tsx
  * - /packages/cli/assets/templates/blocks/components/AppShell/ (showcase blocks)
+ * - /packages/core/src/AppShell/AppShellScrollEdge.test.tsx (the touch bar)
+ * - /packages/core/src/AppShell/__tests__/AppShellScrollEdge.interaction.browser.spec.ts
  */
 
 import {
@@ -78,6 +81,8 @@ import {
 } from '../utils/focusOutline.stylex';
 import {useMediaQuery} from '../hooks/useMediaQuery';
 import {useTouchPresentation} from '../utils/touchPresentation';
+import {useScrollEdgeEffect} from '../motion/useScrollEdgeEffect';
+import {bars, registerBarsTable} from '../motion/uikit/bars';
 import {observeResize} from '../utils/sharedResizeObserver';
 import {themeProps} from '../utils/themeProps';
 import {useThemeDefinition} from '../theme/useTheme';
@@ -480,6 +485,46 @@ const styles = stylex.create({
     position: 'sticky',
     top: 0,
     zIndex: 1,
+    // The local stacking owner for the scroll edge veil's zIndex: -1.
+    isolation: 'isolate',
+  },
+  // Under a finger, a bar pinned over scrolling content paints no background,
+  // as iOS 26's bar does. The scroll edge effect separates the content
+  // instead, and a mouse keeps the opaque bar. The key spells the resolver's
+  // touch query literally: StyleX layers an imported at-rule key differently.
+  navAreaWashTouchBar: {
+    backgroundColor: {
+      default: colorVars['--color-background-body'],
+      '@media (pointer: coarse)': 'transparent',
+    },
+  },
+  navAreaSurfaceTouchBar: {
+    backgroundColor: {
+      default: colorVars['--color-background-surface'],
+      '@media (pointer: coarse)': 'transparent',
+    },
+  },
+  // A variant added by module augmentation paints no header fill with a mouse.
+  // Under a finger it is the same empty bar.
+  navAreaTouchBar: {
+    backgroundColor: {
+      default: null,
+      '@media (pointer: coarse)': 'transparent',
+    },
+  },
+  // The iOS 26 bar draws no hairline: the scroll edge effect separates the
+  // content instead. A coarse-pointer rule, not the resolver's guess, so a
+  // server render (`defaultIsMobile`) is right for either pointer.
+  headerDividerTouchBar: {
+    borderBlockEndWidth: {
+      default: 1,
+      '@media (pointer: coarse)': 0,
+    },
+  },
+  // The scroll edge effect's veil (useScrollEdgeEffect) sits behind the
+  // bar's content.
+  scrollEdgeBehind: {
+    zIndex: -1,
   },
   // The insets are zero unless the page sets `viewport-fit=cover`. The header
   // background goes under the status bar and to the screen sides, as a UIKit
@@ -819,9 +864,17 @@ export function AppShell({
         : undefined;
   // Section normally inherits the shell's surface background. Its auto-height
   // header needs to paint that surface itself while content scrolls beneath it.
-  const headerAreaStyle =
-    navAreaStyle ??
-    (isAuto && variant === 'section' ? styles.navAreaSurface : undefined);
+  // Under a finger the pinned header paints nothing (navArea*TouchBar), and the
+  // scroll edge effect fades the content under it into that colour. With a
+  // mouse, each variant keeps its own fill.
+  const barFillsWithBody = variant === 'wash' || variant === 'elevated';
+  const headerAreaStyle = !isAuto
+    ? navAreaStyle
+    : barFillsWithBody
+      ? styles.navAreaWashTouchBar
+      : variant === 'surface' || variant === 'section'
+        ? styles.navAreaSurfaceTouchBar
+        : styles.navAreaTouchBar;
   const contentAreaStyle =
     variant === 'wash'
       ? styles.contentBgWash
@@ -857,6 +910,24 @@ export function AppShell({
 
     return observeResize(headerEl, () => updateHeight());
   }, [isAuto]);
+
+  // =========================================================================
+  // iOS 26's scroll edge effect under the pinned header (touch, page scroll)
+  // =========================================================================
+  // Under a finger the pinned header is iOS 26's bar; a mouse keeps the opaque
+  // bar. The veil takes the bar's colour, and its edge is the header's bottom.
+  // AppShell hands the bars table's springs and registration to the effect.
+  const scrollEdge = useScrollEdgeEffect({
+    enabled: isAuto && isTouch,
+    edge: '100%',
+    color: barFillsWithBody
+      ? colorVars['--color-background-body']
+      : colorVars['--color-background-surface'],
+    layerXstyle: styles.scrollEdgeBehind,
+    springs: bars.scrollEdgeEffect,
+    registerSprings: registerBarsTable,
+  });
+  const scrollEdgeLayer = isAuto ? <div {...scrollEdge.layerProps} /> : null;
 
   // =========================================================================
   // Determine if sideNav should show as overlay (mobile) or inline
@@ -933,9 +1004,21 @@ export function AppShell({
     )
   ) : null;
 
+  // Under a finger the bar draws no hairline: the scroll edge effect separates
+  // the content (headerDividerTouchBar).
+  const dividerTouchBarStyle = isAuto ? styles.headerDividerTouchBar : null;
+  // A sidenav-only layout below the breakpoint renders its own top bar
+  // (autoMobileTopBar below); the scroll edge effect then belongs to it.
+  const shouldShowAutoToggle =
+    !mobileNavDisabled && mobileNavHasToggle && isBelowBreakpoint;
+  const autoMobileTopBarShown =
+    shouldShowAutoToggle && !hasTopNav && hasSideNav;
   const headerInner =
     hasTopNav || hasBanner ? (
-      <LayoutHeader padding={0} hasDivider={navHasDividers && hasTopNav}>
+      <LayoutHeader
+        padding={0}
+        hasDivider={navHasDividers && hasTopNav}
+        xstyle={navHasDividers && hasTopNav ? dividerTouchBarStyle : null}>
         {hasBanner && (
           <div {...stylex.props(styles.banner, navAreaStyle)}>{banner}</div>
         )}
@@ -958,6 +1041,7 @@ export function AppShell({
           styles.headerSafeAreaSides,
         ),
       )}>
+      {autoMobileTopBarShown ? null : scrollEdgeLayer}
       {headerInner}
     </div>
   ) : undefined;
@@ -1288,44 +1372,42 @@ export function AppShell({
   // Build auto mobile nav hamburger for TopNav
   // Injected into the headerContent when mobileNav is enabled and hasToggle
   // =========================================================================
-  const shouldShowAutoToggle =
-    !mobileNavDisabled && mobileNavHasToggle && isBelowBreakpoint;
-
   // For sidenav-only layouts with no TopNav, render the sideNav in topbar
   // mode — it shows heading + footer icons horizontally, with the hamburger
-  const autoMobileTopBar =
-    shouldShowAutoToggle && !hasTopNav && hasSideNav ? (
-      <div
-        // Banner landmark for the mobile top bar, so the sidenav-only layout
-        // exposes the same landmark structure as the topNav one. Only when
-        // there is no headerContent: a banner slot with no topNav renders both,
-        // and two sibling banner regions is worse than the one this restores.
-        role={headerContent == null ? 'banner' : undefined}
-        {...mergeProps(
-          themeProps('app-shell-header', {variant}),
-          stylex.props(
-            headerAreaStyle,
-            isAuto && styles.headerSticky,
-            styles.headerSafeAreaSides,
-            // Under a banner, the banner's wrapper pads the top inset. This top
-            // bar takes only the side insets.
-            headerContent == null && styles.headerSafeAreaTop,
-            isAuto && headerContent != null && styles.headerStickyBelowTopInset,
-          ),
-        )}>
-        <LayoutHeader padding={0} hasDivider={navHasDividers}>
-          <div
-            {...stylex.props(styles.autoMobileTopBar)}
-            role="navigation"
-            aria-label={t('@astryx.appShell.mobileNavigation')}>
-            <SideNavRenderContext value="topbar">
-              {sideNav}
-            </SideNavRenderContext>
-            <MobileNavToggle />
-          </div>
-        </LayoutHeader>
-      </div>
-    ) : undefined;
+  const autoMobileTopBar = autoMobileTopBarShown ? (
+    <div
+      // Banner landmark for the mobile top bar, so the sidenav-only layout
+      // exposes the same landmark structure as the topNav one. It applies
+      // only when there is no headerContent. A banner slot with no topNav
+      // renders both, and two sibling banner regions are worse than one.
+      role={headerContent == null ? 'banner' : undefined}
+      {...mergeProps(
+        themeProps('app-shell-header', {variant}),
+        stylex.props(
+          headerAreaStyle,
+          isAuto && styles.headerSticky,
+          styles.headerSafeAreaSides,
+          // Under a banner, the banner's wrapper pads the top inset. This top
+          // bar takes only the side insets.
+          headerContent == null && styles.headerSafeAreaTop,
+          isAuto && headerContent != null && styles.headerStickyBelowTopInset,
+        ),
+      )}>
+      {scrollEdgeLayer}
+      <LayoutHeader
+        padding={0}
+        hasDivider={navHasDividers}
+        xstyle={navHasDividers ? dividerTouchBarStyle : null}>
+        <div
+          {...stylex.props(styles.autoMobileTopBar)}
+          role="navigation"
+          aria-label={t('@astryx.appShell.mobileNavigation')}>
+          <SideNavRenderContext value="topbar">{sideNav}</SideNavRenderContext>
+          <MobileNavToggle />
+        </div>
+      </LayoutHeader>
+    </div>
+  ) : undefined;
 
   return (
     <AppShellMobileContext value={mobileContextValue}>
@@ -1359,6 +1441,7 @@ export function AppShell({
         <LayoutAreaContext value={null}>
           <LayoutSlotsContext value={DEFAULT_LAYOUT_SLOTS}>
             <LayoutDividerContext value={null}>
+              {isAuto && <div {...scrollEdge.sentinelProps} />}
               {/* Skip-to-content link */}
               <a
                 href={`#${MAIN_CONTENT_ID}`}

@@ -22,6 +22,7 @@ roles through `resolveMotion`.
 | `uikit/navigation.ts`                            | UINavigationController: push velocity, parallax, dimming, transition clock, interactive pop finish rule.                                                             |
 | `uikit/progressBar.ts`                           | UIProgressView's fill: the whole-track duration and curve, its minimum length and empty alpha; the reduced-motion pulse (three roles).                               |
 | `uikit/gestures.ts`                              | Gesture recognizer thresholds, the velocity filter and haptic stand-ins, as `{value, unit}` entries (sources in JSDoc).                                              |
+| `uikit/bars.ts`                                  | Bars: when the iOS 26 scroll edge effect under a navigation bar switches on and off, the springs it fades on, and how far its soft edge reaches.                     |
 | `uikit/segmented.ts`                             | UISegmentedControl: the selection indicator's spring; under Reduce Motion the animator's cross-fade replaces it.                                                     |
 | `uikit/switch.ts`                                | UISwitch on iOS 26.2: geometry, the lift, settle, travel and tracking springs, the flip distance, the track colour.                                                  |
 | `roles.ts`                                       | The internal motion roles: the springs, durations and curves `spec:AST-094` FR4 names, registered by the shared tables, and a role's CSS form read back.             |
@@ -39,6 +40,7 @@ roles through `resolveMotion`.
 | `animator.ts`                                    | Compositor animator: springs, coasts and any closed-form curve compiled to Web Animations, read back analytically.                                                   |
 | `presentation.ts`                                | Where each moving element is drawn relative to where the engine hit-tests it, reported by the animator while translate runs; read by the gesture host at touch-down. |
 | `reducedMotionPlan.ts`                           | The animator's Reduce Motion planner: what one call becomes, a cross-fade whose travel lands while transparent or at once.                                           |
+| `useScrollEdgeEffect.ts`                         | The iOS 26 scroll edge effect of a bar over scrolling content, under a finger: the veil, its sentinel and its fades (AppShell).                                      |
 | `__tests__/animator.interaction.browser.spec.ts` | Browser proofs on the interaction harness (Chromium and WebKit): busy main thread, end state through a block, no Layout / Paint, seeked curves, a dialog's backdrop. |
 
 Component-specific values (a sheet's detents, a switch's geometry, a context

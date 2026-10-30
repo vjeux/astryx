@@ -24,6 +24,7 @@ import {useMediaQuery} from '@astryxdesign/core/hooks';
 import {TextArea} from '@astryxdesign/core/TextArea';
 import {TextInput} from '@astryxdesign/core/TextInput';
 import * as stylex from '@stylexjs/stylex';
+import {colorVars} from '@astryxdesign/core/theme/tokens.stylex';
 import {
   HomeIcon,
   Cog6ToothIcon,
@@ -63,7 +64,40 @@ const styles = stylex.create({
     flexDirection: 'column' as const,
     gap: 32,
   },
+  // No top padding: the tiles meet the header, so they start passing under
+  // it at once.
+  tiles: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: 12,
+    paddingInline: 16,
+    paddingBlockEnd: 16,
+  },
+  tile: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    height: 120,
+    padding: 12,
+    borderRadius: 12,
+    color: colorVars['--color-on-dark'],
+    fontWeight: 600,
+  },
+  tileBlue: {backgroundColor: colorVars['--color-icon-blue']},
+  tileGreen: {backgroundColor: colorVars['--color-icon-green']},
+  tileOrange: {backgroundColor: colorVars['--color-icon-orange']},
+  tilePurple: {backgroundColor: colorVars['--color-icon-purple']},
+  tilePink: {backgroundColor: colorVars['--color-icon-pink']},
+  tileTeal: {backgroundColor: colorVars['--color-icon-teal']},
 });
+
+const TILE_COLORS = [
+  styles.tileBlue,
+  styles.tileGreen,
+  styles.tileOrange,
+  styles.tilePurple,
+  styles.tilePink,
+  styles.tileTeal,
+];
 
 // =============================================================================
 // Helpers
@@ -549,6 +583,37 @@ export const AdaptiveHeight: Story = {
           <Button label="New page" variant="primary" />
         </div>
         <MockContent paragraphs={20} />
+      </div>
+    </AppShell>
+  ),
+};
+
+/**
+ * The touch bar over scrolling content. Under a finger, when the page scrolls,
+ * the pinned header paints no background, as an iOS 26 bar does. The page
+ * scrolls with `height="auto"`, as here, or `height="adaptive"` on a phone.
+ * Scroll the tiles under the bar. Once they have moved 10px under it, a veil
+ * of the bar's colour fades in at the top. It fades out when they come back.
+ * With a mouse, the header stays opaque.
+ */
+export const TouchBarOverContent: Story = {
+  render: () => (
+    <AppShell
+      contentPadding={0}
+      topNav={<AppTopNav />}
+      height="auto"
+      variant="surface">
+      <div {...stylex.props(styles.tiles)}>
+        {Array.from({length: 18}, (_, index) => (
+          <div
+            key={index}
+            {...stylex.props(
+              styles.tile,
+              TILE_COLORS[index % TILE_COLORS.length],
+            )}>
+            Tile {index + 1}
+          </div>
+        ))}
       </div>
     </AppShell>
   ),
