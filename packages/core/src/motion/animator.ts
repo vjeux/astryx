@@ -76,9 +76,14 @@
  * animation (two animations on one property leave the compositor in both
  * engines), so the retarget keeps the velocity on screen.
  *
- * WebKit starts an animation created just before a block at its last frame
- * time before the block, so there the motion still skips into its curve;
- * Chromium starts it after the block.
+ * WebKit dates an animation created just before a block at its last frame
+ * time before the block, where the first frame after it would show the
+ * motion skipped into its curve; when the call's own task ran on more than
+ * two frames, the call's first read of that start moves it to that read, so
+ * WebKit delays the motion as Chromium's commit does (startAfterBlock). Every
+ * call of that task moves together, and a shorter task or a read that other
+ * tasks delay keeps the browser's start, so a sequence chained on a call's
+ * end (a Reduce Motion cross-fade's second half) keeps its clock.
  *
  * Promotion: Mobile Safari runs an animation whose start time is set from
  * script on its compositor at its first commit only if the element (or the
@@ -475,6 +480,12 @@ interface Segment {
   group?: StartGroup;
   /** The spring driving it, when one does (`rebase` keeps it). */
   spring?: SpringDescription;
+  /**
+   * What its curve is made of, when that alone fixes its shape (a spring
+   * from rest or a retarget's own spring): tracks of the same plan share
+   * their keyframes (plannedTrackCount).
+   */
+  readonly plan?: string;
 }
 
 /**
@@ -495,6 +506,13 @@ interface StartGroup {
   readonly animations: Animation[];
   readonly channels: Set<Channel>;
   resolved: boolean;
+  /**
+   * The first frame after the call has run: a start read later is the
+   * browser's, whatever it says (startAfterBlock).
+   */
+  framed?: boolean;
+  /** The task it was made in, with every call made in that task. */
+  task?: TaskMark;
   /** A later call in the same task that took over its curves. */
   adoptedBy?: StartGroup;
   readonly resolve: (start: number) => void;
@@ -624,6 +642,47 @@ const SAMPLE_GRID_MS = 1000 / 30;
 
 /** A curve that has not settled by then (an undamped spring) snaps. */
 const MAX_DURATION_MS = 30_000;
+
+/**
+ * How long a task must run on past its first call from rest before that
+ * counts as a block (WebKit; startAfterBlock): two frames at 60 Hz.
+ */
+// Browser start times are frame times and a task's end a live clock, so only a block longer than a frame plus the task's own length can be told apart from that quantization.
+const LATE_START_MS = 34;
+
+/**
+ * The task calls from rest are made in, shared by every call made in it
+ * (every animator's), so one motion's parts that are separate calls start
+ * together (startAfterBlock).
+ */
+interface TaskMark {
+  /**
+   * When its first call from rest created animations: the call itself, or a
+   * presented call's second frame.
+   */
+  readonly first: number;
+  /** When the task ended, at its first microtask. */
+  ended?: number;
+  /** The start every call of a blocked task moves to, set by its first read. */
+  at?: number;
+}
+
+/** The task the current calls from rest are made in, until it ends. */
+let openTask: TaskMark | null = null;
+
+/** The mark of the running task, opened by its first call from rest. */
+function markTask(time: number, clock: () => number): TaskMark {
+  if (openTask == null) {
+    const task: TaskMark = {first: time};
+    openTask = task;
+    queueMicrotask(() => {
+      task.ended = clock();
+      openTask = null;
+    });
+  }
+  return openTask;
+}
+
 /** Above this many keyframes the tolerance is relaxed. */
 const MAX_KEYFRAMES = 1200;
 /**
@@ -699,6 +758,71 @@ function format(
 }
 
 const shared = new WeakMap<HTMLElement, Map<string, Animator>>();
+
+/** How many times an animator has planned a track's keyframes. */
+let plannedTracks = 0;
+
+/**
+ * How many times any animator has planned a track's keyframes, for the tests
+ * that check repeated identical motions reuse their plan.
+ *
+ * @internal Not exported from the package.
+ */
+export function plannedTrackCount(): number {
+  return plannedTracks;
+}
+
+/** A track's keyframes and their span, by what fixes them (Segment.plan). */
+const plannedKeyframes = new Map<
+  string,
+  {readonly keyframes: Keyframe[]; readonly span: number}
+>();
+
+/** Distinct plans kept; the least recently used goes first. */
+const PLANNED_KEYFRAMES_MAX = 256;
+
+/**
+ * The times, from `begin` to `end`, at which linear interpolation between
+ * samples stays within `tolerance` of `value`: a 30 Hz grid, each interval
+ * split until the chord is within the tolerance at its quarter points, with
+ * `breaks` (jumps) kept as interval edges.
+ */
+function sampleTrack(
+  value: (t: number) => number,
+  valueBefore: (t: number) => number,
+  begin: number,
+  end: number,
+  breaks: ReadonlyArray<number>,
+  tolerance: number,
+): number[] {
+  const times: number[] = [begin];
+  const edges = [begin, ...breaks, end];
+  for (let e = 0; e + 1 < edges.length; e++) {
+    const a = edges[e];
+    const b = edges[e + 1];
+    const steps = Math.max(1, Math.ceil((b - a) / SAMPLE_GRID_MS));
+    const split = (t0: number, t1: number, depth: number) => {
+      const v0 = value(t0);
+      const v1 = t1 === b && breaks.includes(b) ? valueBefore(b) : value(t1);
+      let worst = 0;
+      for (const f of [0.25, 0.5, 0.75]) {
+        const t = t0 + (t1 - t0) * f;
+        worst = Math.max(worst, Math.abs(value(t) - (v0 + (v1 - v0) * f)));
+      }
+      if (worst > tolerance && depth < 10 && t1 - t0 > 0.25) {
+        const mid = (t0 + t1) / 2;
+        split(t0, mid, depth + 1);
+        split(mid, t1, depth + 1);
+      } else {
+        times.push(t1);
+      }
+    };
+    for (let i = 0; i < steps; i++) {
+      split(a + ((b - a) * i) / steps, a + ((b - a) * (i + 1)) / steps, 0);
+    }
+  }
+  return times;
+}
 
 /**
  * The one animator for `element` (and `options.pseudoElement`), created on
@@ -1002,10 +1126,6 @@ export function createAnimator(
     return segment.speed(time - segment.start);
   };
 
-  // The curve just before a jump at absolute time `time`.
-  const valueBefore = (property: MotionProperty, time: number): number =>
-    curveAt(property, time - 1e-6);
-
   // -- writing --------------------------------------------------------------
 
   const finalValue = (property: MotionProperty): number =>
@@ -1088,57 +1208,6 @@ export function createAnimator(
       // Identity leaves the element when nothing else would move it.
       releaseIdentity(channel);
     }
-  };
-
-  const sampleTimes = (
-    property: MotionProperty,
-    from: number,
-    to: number,
-    tolerance: number,
-  ): number[] => {
-    const segment = segments.get(property);
-    if (segment == null) {
-      return [];
-    }
-    const begin = Math.max(from, segment.start);
-    const end = Math.min(to, segment.start + segment.duration);
-    if (end <= begin) {
-      return [];
-    }
-    const times: number[] = [begin];
-    const value = (t: number) => curveAt(property, t);
-    const breaks = segment.jumps
-      .map(j => segment.start + j)
-      .filter(t => t > begin && t < end);
-    const edges = [begin, ...breaks, end];
-    for (let e = 0; e + 1 < edges.length; e++) {
-      const a = edges[e];
-      const b = edges[e + 1];
-      // A 30 Hz grid, each interval split until the chord is within the
-      // tolerance at its quarter points.
-      const steps = Math.max(1, Math.ceil((b - a) / SAMPLE_GRID_MS));
-      const split = (t0: number, t1: number, depth: number) => {
-        const v0 = value(t0);
-        const v1 =
-          t1 === b && breaks.includes(b) ? valueBefore(property, b) : value(t1);
-        let worst = 0;
-        for (const f of [0.25, 0.5, 0.75]) {
-          const t = t0 + (t1 - t0) * f;
-          worst = Math.max(worst, Math.abs(value(t) - (v0 + (v1 - v0) * f)));
-        }
-        if (worst > tolerance && depth < 10 && t1 - t0 > 0.25) {
-          const mid = (t0 + t1) / 2;
-          split(t0, mid, depth + 1);
-          split(mid, t1, depth + 1);
-        } else {
-          times.push(t1);
-        }
-      };
-      for (let i = 0; i < steps; i++) {
-        split(a + ((b - a) * i) / steps, a + ((b - a) * (i + 1)) / steps, 0);
-      }
-    }
-    return times;
   };
 
   /** A pseudo-element's resting value, held by a static filling animation. */
@@ -1263,57 +1332,126 @@ export function createAnimator(
     // Read where the keyframes are baked: a page moved to another screen
     // bakes its next motion for that screen.
     const devicePixel = 1 / Math.max(1, globalThis.devicePixelRatio || 1);
-    const collect = (scale: number) => {
-      const times = new Set<number>([from, end]);
-      for (const property of moving) {
-        const tolerance =
-          SAMPLE_TOLERANCE[property] *
-          scale *
-          (property === 'x' || property === 'y' ? devicePixel : 1);
-        for (const t of sampleTimes(property, from, end, tolerance)) {
-          times.add(t);
-        }
-      }
-      return times;
-    };
-    let scale = 1;
-    let all = collect(scale);
-    while (all.size > MAX_KEYFRAMES && scale < 64) {
-      scale *= 2;
-      all = collect(scale);
-    }
-    // Jumps become two keyframes at one offset: the value just before, then
-    // the value after. A jump on the last frame (fade out, then move) too.
-    const jumpTimes = new Set<number>();
+    // The track is planned on its own clock, from 0 at `from`, so the same
+    // curves give the same keyframes whenever they start, and a track whose
+    // curves all name their plan reuses the keyframes planned for it before:
+    // a control's press plays the same springs from the same values each time.
+    const offsets = new Map<MotionProperty, number>();
     for (const property of moving) {
-      const segment = segments.get(property) as Segment;
-      for (const j of segment.jumps) {
-        const t = segment.start + j;
-        if (t > from && t <= end) {
-          jumpTimes.add(t);
-          all.add(t);
+      offsets.set(property, (segments.get(property) as Segment).start - from);
+    }
+    const offsetOf = (property: MotionProperty) =>
+      offsets.get(property) as number;
+    const length = Math.min(
+      MAX_DURATION_MS,
+      Math.max(
+        ...moving.map(p => offsetOf(p) + (segments.get(p) as Segment).duration),
+      ),
+    );
+    const key = moving.every(p => (segments.get(p) as Segment).plan != null)
+      ? `${channel} ${devicePixel} ${length} ${CHANNELS[channel]
+          .map(p =>
+            segments.has(p)
+              ? `${p}:${(segments.get(p) as Segment).plan}@${offsetOf(p)}`
+              : `${p}=${resting[p]}`,
+          )
+          .join(';')}`
+      : null;
+    let planned = key == null ? undefined : plannedKeyframes.get(key);
+    if (planned != null && key != null) {
+      // The most recently used plan is kept longest.
+      plannedKeyframes.delete(key);
+      plannedKeyframes.set(key, planned);
+    } else {
+      plannedTracks += 1;
+      const valueOn = (property: MotionProperty, t: number): number => {
+        const segment = segments.get(property);
+        if (segment == null) {
+          return resting[property];
+        }
+        if (t >= offsetOf(property) + segment.duration) {
+          return segment.target;
+        }
+        return segment.at(Math.max(0, t - offsetOf(property)));
+      };
+      const collect = (scale: number) => {
+        const times = new Set<number>([0, length]);
+        for (const property of moving) {
+          const segment = segments.get(property) as Segment;
+          const begin = Math.max(0, offsetOf(property));
+          const stop = Math.min(length, offsetOf(property) + segment.duration);
+          if (stop <= begin) {
+            continue;
+          }
+          const tolerance =
+            SAMPLE_TOLERANCE[property] *
+            scale *
+            (property === 'x' || property === 'y' ? devicePixel : 1);
+          const breaks = segment.jumps
+            .map(j => offsetOf(property) + j)
+            .filter(t => t > begin && t < stop);
+          for (const t of sampleTrack(
+            u => valueOn(property, u),
+            u => valueOn(property, u - 1e-6),
+            begin,
+            stop,
+            breaks,
+            tolerance,
+          )) {
+            times.add(t);
+          }
+        }
+        return times;
+      };
+      let scale = 1;
+      let all = collect(scale);
+      while (all.size > MAX_KEYFRAMES && scale < 64) {
+        scale *= 2;
+        all = collect(scale);
+      }
+      // Jumps become two keyframes at one offset: the value just before, then
+      // the value after. A jump on the last frame (fade out, then move) too.
+      const jumpTimes = new Set<number>();
+      for (const property of moving) {
+        const segment = segments.get(property) as Segment;
+        for (const j of segment.jumps) {
+          const t = offsetOf(property) + j;
+          if (t > 0 && t <= length) {
+            jumpTimes.add(t);
+            all.add(t);
+          }
         }
       }
-    }
-    const times = [...all].sort((a, b) => a - b);
-    const span = end - from + END_HOLD_MS;
-    const keyframes: Keyframe[] = [];
-    for (const t of times) {
-      const offset = (t - from) / span;
-      if (jumpTimes.has(t)) {
+      const times = [...all].sort((a, b) => a - b);
+      const span = length + END_HOLD_MS;
+      const keyframes: Keyframe[] = [];
+      for (const t of times) {
+        const offset = t / span;
+        if (jumpTimes.has(t)) {
+          keyframes.push({
+            offset,
+            [channel]: format(channel, p => valueOn(p, t - 1e-6)),
+          });
+        }
         keyframes.push({
           offset,
-          [channel]: format(channel, p => valueBefore(p, t)),
+          [channel]: format(channel, p =>
+            t >= length ? finalValue(p) : valueOn(p, t),
+          ),
         });
       }
-      keyframes.push({
-        offset,
-        [channel]: format(channel, p =>
-          t >= end ? finalValue(p) : curveAt(p, t),
-        ),
-      });
+      keyframes.push({offset: 1, [channel]: format(channel, finalValue)});
+      planned = {keyframes, span};
+      if (key != null) {
+        plannedKeyframes.set(key, planned);
+        if (plannedKeyframes.size > PLANNED_KEYFRAMES_MAX) {
+          plannedKeyframes.delete(
+            plannedKeyframes.keys().next().value as string,
+          );
+        }
+      }
     }
-    keyframes.push({offset: 1, [channel]: format(channel, finalValue)});
+    const {keyframes, span} = planned;
     promote(channel);
     const animation = target.animate(keyframes, {
       duration: span,
@@ -1859,17 +1997,41 @@ export function createAnimator(
       // with its own two frames. Every other property starts here, whatever
       // its segment's group: a value Reduce Motion writes at once, or lands
       // under a dip, has no curve of this call's.
-      const own = changed.filter(
-        property =>
-          !CHANNELS[CHANNEL_OF[property]].some(other => {
-            const waiting = segments.get(other)?.group;
-            return (
+      const own: MotionProperty[] = [];
+      let handedTo: StartGroup | null = null;
+      for (const property of changed) {
+        const holder = CHANNELS[CHANNEL_OF[property]]
+          .map(other => segments.get(other)?.group)
+          .find(
+            waiting =>
               waiting != null &&
               waiting !== group &&
-              deferredCalls.some(call => call.group === waiting)
-            );
-          }),
-      );
+              deferredCalls.some(call => call.group === waiting),
+          );
+        if (holder == null) {
+          own.push(property);
+          continue;
+        }
+        // A curve of this call's in that channel never ran: the element held
+        // it at its start. It starts with the later call, which creates the
+        // channel, dated from that call's start, so the model reads what the
+        // screen shows.
+        const segment = segments.get(property);
+        if (segment != null && segment.group === group) {
+          segment.start += holder.provisional - group.provisional;
+          segment.group = holder;
+          holder.segments.push(segment);
+          group.segments.splice(group.segments.indexOf(segment), 1);
+          handedTo = holder;
+        }
+      }
+      if (own.length === 0 && handedTo != null) {
+        // Everything this call still plays starts with the later call.
+        const adopter = handedTo;
+        group.adoptedBy = adopter;
+        void adopter.started.then(start => resolveGroup(group, start));
+        continue;
+      }
       // From the call's own time: the curve starts at the browser's commit.
       startCall(group, own, group.provisional);
     }
@@ -1914,6 +2076,10 @@ export function createAnimator(
     }
     pendingGroups.add(group);
     group.fresh = true;
+    // The task that creates the animations, not the call's: a presented
+    // call's is its second frame's callback, wherever in its frame the call
+    // was made.
+    group.task = markTask(now(), now);
     queueMicrotask(() => {
       group.fresh = false;
     });
@@ -1930,7 +2096,10 @@ export function createAnimator(
     // or when its compositor starts them (Chromium). Read it in that first
     // frame, ahead of anything that might pause or seek the animations, and
     // when `ready` settles.
-    requestFrame?.(() => syncGroup(group));
+    requestFrame?.(() => {
+      syncGroup(group);
+      group.framed = true;
+    });
     ready.then(
       () => syncGroup(group),
       () => settleCancelled(group),
@@ -1987,7 +2156,10 @@ export function createAnimator(
     }
     for (const animation of group.animations) {
       if (animation.startTime != null) {
-        resolveGroup(group, Number(animation.startTime));
+        resolveGroup(
+          group,
+          startAfterBlock(group, Number(animation.startTime)),
+        );
         return;
       }
     }
@@ -2057,6 +2229,55 @@ export function createAnimator(
     }
   };
 
+  /**
+   * The start of a call from rest, on the frame that commits it. Chromium,
+   * like Core Animation, starts a pending animation when it commits it, so a
+   * main-thread block later in the call's task delays the motion; WebKit
+   * dates it at its last frame time before that task, so the first frame
+   * after the block would show it skipped into its curve. When the task ran
+   * on more than LATE_START_MS past its first call, a start the browser put
+   * by the task's first animations (a presented call's second frame, not the
+   * call) and more than LATE_START_MS before the call's first read (its
+   * `ready`, once the task has ended, or the first frame after it) moves to
+   * that read, with every animation of the call, and every call of the task
+   * moves to the same read. A shorter task, or a read other tasks delay,
+   * keeps the browser's start.
+   */
+  const startAfterBlock = (group: StartGroup, start: number): number => {
+    const timeline =
+      typeof document === 'undefined'
+        ? null
+        : (document.timeline?.currentTime as number | null | undefined);
+    // A start well after the animations were created is the browser's
+    // commit of them.
+    if (
+      timeline == null ||
+      group.framed === true ||
+      start > (group.task?.first ?? group.provisional) + LATE_START_MS
+    ) {
+      return start;
+    }
+    const {task} = group;
+    // A read in the task's first microtasks comes after its end too.
+    const ended = task?.ended ?? now();
+    if (task == null || ended - task.first <= LATE_START_MS) {
+      return start;
+    }
+    // Read once the task has ended (its `ready`) or in the first frame after
+    // it, both after the block; the task's other calls take the same read.
+    const at = task.at ?? Math.max(now(), timeline);
+    if (at - start <= LATE_START_MS) {
+      return start;
+    }
+    task.at = at;
+    for (const animation of group.animations) {
+      if (animation.playState !== 'idle') {
+        animation.startTime = at;
+      }
+    }
+    return at;
+  };
+
   /** Moves a call from rest onto the time the browser started it. */
   const resolveGroup = (group: StartGroup, start: number) => {
     if (group.resolved) {
@@ -2098,10 +2319,7 @@ export function createAnimator(
           .filter(segment => segment.owner === owner)
           .map(segment => segment.start + segment.duration);
         owner.timer = setTimeout(
-          () => {
-            owner.timer = null;
-            settle(owner, true);
-          },
+          () => settleAtEnd(owner),
           Math.max(0, Math.max(start, ...ends) - now()),
         );
       }
@@ -2139,6 +2357,39 @@ export function createAnimator(
     owner.resolve(finished);
   };
 
+  /**
+   * A handle whose curves have reached their end on the wall clock finishes,
+   * unless a sampler holds one of its animations (paused, or sought back):
+   * then it waits on that animation's own time, as retiring does
+   * (scheduleRetire), so `finished` never resolves under motion still on
+   * screen.
+   */
+  const settleAtEnd = (owner: HandleState) => {
+    owner.timer = null;
+    let wait = 0;
+    for (const [channel, animation] of running) {
+      if (
+        !CHANNELS[channel].some(
+          property => segments.get(property)?.owner === owner,
+        )
+      ) {
+        continue;
+      }
+      const remaining = remainingCurve(animation);
+      if (remaining != null && remaining > 0) {
+        wait = Math.max(
+          wait,
+          animation.playState === 'paused' ? RETIRE_RECHECK_MS : remaining,
+        );
+      }
+    }
+    if (wait > 0) {
+      owner.timer = setTimeout(() => settleAtEnd(owner), wait);
+      return;
+    }
+    settle(owner, true);
+  };
+
   const makeHandle = (
     owner: HandleState,
     properties: MotionProperty[],
@@ -2162,10 +2413,7 @@ export function createAnimator(
       // Interruptions settle false as they happen (interrupt); reaching the
       // end untouched is completion.
       owner.timer = setTimeout(
-        () => {
-          owner.timer = null;
-          settle(owner, true);
-        },
+        () => settleAtEnd(owner),
         Math.max(0, end - now()),
       );
     }
@@ -2270,6 +2518,7 @@ export function createAnimator(
       jumps: [],
       owner,
       spring: resolved,
+      plan: `spring ${JSON.stringify(toSpring(resolved))} ${from} ${to} ${velocity} ${duration}`,
     };
   };
 
@@ -2636,10 +2885,7 @@ export function createAnimator(
       settle(owner, true);
     } else {
       owner.timer = setTimeout(
-        () => {
-          owner.timer = null;
-          settle(owner, true);
-        },
+        () => settleAtEnd(owner),
         Math.max(0, end - now()),
       );
     }
@@ -3410,10 +3656,7 @@ export function createAnimator(
           }
         }
         owner.timer = setTimeout(
-          () => {
-            owner.timer = null;
-            settle(owner, true);
-          },
+          () => settleAtEnd(owner),
           Math.max(0, end - now()),
         );
       }

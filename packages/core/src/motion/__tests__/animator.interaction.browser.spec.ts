@@ -434,12 +434,7 @@ test('under Reduce Motion, a dip held before its first frame lands once the hold
 
 test('a spring started right before a block plays in full after it', async ({
   page,
-  browserName,
 }) => {
-  test.skip(
-    browserName === 'webkit',
-    'WebKit starts a pending animation at its last frame time before the block (animator header, known limits)',
-  );
   await open(page);
   const box = page.locator('#box');
   await markElement(box, {inset: MARKER_INSET});
@@ -483,20 +478,25 @@ test('a spring started right before a block plays in full after it', async ({
   const xs = tracked
     .filter(f => f.box != null)
     .map(f => ({t: f.t, x: (f.box?.x ?? NaN) - MARKER_INSET}));
-  const firstMoving = xs.find(f => f.x > 0.5);
+  // Judged on the first frame after the block, whatever the frames before
+  // it showed: it is at the start of the curve, and the frames after it
+  // move on from there.
+  const first = xs.find(f => f.t >= busy.to);
+  const later = xs.filter(f => f.t >= busy.to + 100);
   test.info().annotations.push({
-    type: 'first moving frame after the block',
+    type: 'first frame after the block',
     description: JSON.stringify({
-      x: firstMoving?.x,
-      after: firstMoving == null ? null : firstMoving.t - busy.to,
+      x: first?.x,
+      after: first == null ? null : first.t - busy.to,
     }),
   });
-  expect(firstMoving).toBeDefined();
+  expect(first).toBeDefined();
   // The curve starts after the block, as Core Animation commits it.
   expect(startedAt).toBeGreaterThan(busy.to - FRAME_MS);
-  // The first moving frame shows that curve: no further along than one that
-  // started a frame before the block ended, however sparse the frames a
-  // loaded machine sends. A curve dated at the call is 107 px in by then.
+  // The first frame after the block shows that curve: no further along than
+  // one that started a frame before the block ended, at that frame's own
+  // time, however sparse the frames a loaded machine sends. A curve dated at
+  // the call is 107 px in by then.
   const atMost = await page.evaluate(
     ({spring, travel, ms}) =>
       Motion.solveSpring(Motion.toSpring(spring), {from: 0, to: travel}).value(
@@ -505,10 +505,12 @@ test('a spring started right before a block plays in full after it', async ({
     {
       spring: SLOW,
       travel: TRAVEL,
-      ms: (firstMoving?.t ?? Infinity) - (busy.to - FRAME_MS),
+      ms: (first?.t ?? Infinity) - (busy.to - FRAME_MS),
     },
   );
-  expect(firstMoving?.x ?? Infinity).toBeLessThanOrEqual(atMost + 1);
+  expect(first?.x ?? Infinity).toBeLessThanOrEqual(atMost + 1);
+  expect(later.length).toBeGreaterThan(0);
+  expect(Math.max(...later.map(f => f.x))).toBeGreaterThan((first?.x ?? 0) + 1);
 });
 
 test('no Layout or Paint runs while it animates', async ({
