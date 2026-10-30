@@ -18,12 +18,14 @@
  * SYNC: Keep the README's busy-main-thread section equal to this contract.
  */
 
+import {inflateSync} from 'node:zlib';
 import type {Locator, Page} from '@playwright/test';
 import {
   frameStats,
   inPresentationOrder,
   MARKER_RGB,
   trackMarkerIn,
+  type CastFrame,
   type FrameStats,
   type Screencast,
   type TrackedFrame,
@@ -140,14 +142,122 @@ export async function startBusyControl(
 }
 
 /**
+ * The marker's box in a PNG cast frame, decoded here: a frame decoded in Node
+ * needs no scratch page, which a browser-wide compositor trace refuses
+ * (another page's frames would be credited to the traced one). Null for a
+ * PNG layout the screencast does not send (8-bit RGB or RGBA, no interlace).
+ */
+function markerInPng(
+  frame: CastFrame,
+  rgb: readonly [number, number, number],
+  tolerance = 40,
+): TrackedFrame | null {
+  const png = Buffer.from(frame.data, 'base64');
+  let width = 0;
+  let height = 0;
+  let layout = '';
+  const data: Buffer[] = [];
+  for (let at = 8; at + 8 <= png.length;) {
+    const length = png.readUInt32BE(at);
+    const type = png.toString('ascii', at + 4, at + 8);
+    const chunk = png.subarray(at + 8, at + 8 + length);
+    if (type === 'IHDR') {
+      width = chunk.readUInt32BE(0);
+      height = chunk.readUInt32BE(4);
+      layout = `${chunk[8]}/${chunk[9]}/${chunk[12]}`;
+    } else if (type === 'IDAT') {
+      data.push(chunk);
+    } else if (type === 'IEND') {
+      break;
+    }
+    at += 12 + length;
+  }
+  const channels = layout === '8/6/0' ? 4 : layout === '8/2/0' ? 3 : 0;
+  if (channels === 0) {
+    return null;
+  }
+  const raw = inflateSync(Buffer.concat(data));
+  const stride = width * channels;
+  const pixels = Buffer.alloc(height * stride);
+  for (let y = 0; y < height; y += 1) {
+    const filter = raw[y * (stride + 1)];
+    const line = y * (stride + 1) + 1;
+    const row = y * stride;
+    for (let x = 0; x < stride; x += 1) {
+      const left = x >= channels ? pixels[row + x - channels] : 0;
+      const up = y > 0 ? pixels[row - stride + x] : 0;
+      const upLeft =
+        y > 0 && x >= channels ? pixels[row - stride + x - channels] : 0;
+      let predicted = 0;
+      if (filter === 1) {
+        predicted = left;
+      } else if (filter === 2) {
+        predicted = up;
+      } else if (filter === 3) {
+        predicted = (left + up) >> 1;
+      } else if (filter === 4) {
+        const estimate = left + up - upLeft;
+        const toLeft = Math.abs(estimate - left);
+        const toUp = Math.abs(estimate - up);
+        const toUpLeft = Math.abs(estimate - upLeft);
+        predicted =
+          toLeft <= toUp && toLeft <= toUpLeft
+            ? left
+            : toUp <= toUpLeft
+              ? up
+              : upLeft;
+      }
+      pixels[row + x] = (raw[line + x] + predicted) & 0xff;
+    }
+  }
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let found = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const o = y * stride + x * channels;
+      if (
+        Math.abs(pixels[o] - rgb[0]) <= tolerance &&
+        Math.abs(pixels[o + 1] - rgb[1]) <= tolerance &&
+        Math.abs(pixels[o + 2] - rgb[2]) <= tolerance
+      ) {
+        found += 1;
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  const scale = width / frame.viewportWidth;
+  return {
+    t: frame.t,
+    box:
+      found === 0
+        ? null
+        : {
+            x: minX / scale,
+            y: minY / scale,
+            width: (maxX - minX + 1) / scale,
+            height: (maxY - minY + 1) / scale,
+          },
+    pixels: found,
+  };
+}
+
+/**
  * Waits until the screencast has presented the marked element moving: a new
- * position on `frames` consecutive cast frames (default 2), read from the
- * live cast as its frames arrive. Block the main thread after it, not after
- * the document timeline alone: in WebKit a just-started animation runs on the
- * timeline before its first frame is presented, 20 to 300 ms later for a
- * layer that must first be drawn (a blur, a shadow, a sheet's first
- * release), and a block started in that gap judges a hold that is not the
- * component's. Throws past `timeout` ms.
+ * position on `frames` consecutive cast frames (default 2) captured after the
+ * call (the last frame before it counts as where the element stood), read
+ * from the live cast as its frames arrive. Block the main thread after it,
+ * not after the document timeline alone: in WebKit a just-started animation
+ * runs on the timeline before its first frame is presented, 130 to 300 ms
+ * later for a sheet's release, and a block started in that gap judges a hold
+ * that is not the component's. PNG frames (Chromium's) are decoded in Node,
+ * so the wait opens no page under a compositor trace; JPEG frames (WebKit's)
+ * in one scratch page. Throws past `timeout` ms.
  */
 export async function waitForPresentedMotion(
   page: Page,
@@ -163,35 +273,36 @@ export async function waitForPresentedMotion(
   } = {},
 ): Promise<void> {
   const deadline = Date.now() + timeout;
-  // One scratch page for the whole wait: each poll would otherwise open one.
-  const scratch = await page.context().newPage();
+  let scratch: Page | null = null;
   try {
     const seen: TrackedFrame[] = [];
-    let read = 0;
+    let read = Math.max(0, cast.framesSoFar().length - 1);
     for (;;) {
-      const captured = cast.framesSoFar();
-      if (captured.length > read) {
-        seen.push(
-          ...(await trackMarkerIn(scratch, captured.slice(read), {rgb})),
-        );
-        read = captured.length;
-        const ordered = inPresentationOrder(seen);
-        let moved = 0;
-        for (let i = ordered.length - 1; i > 0; i -= 1) {
-          const now = ordered[i].box;
-          const before = ordered[i - 1].box;
-          if (
-            now == null ||
-            before == null ||
-            (now.x === before.x && now.y === before.y)
-          ) {
-            break;
-          }
-          moved += 1;
-        }
-        if (moved >= frames) {
-          return;
-        }
+      const fresh = cast.framesSoFar().slice(read);
+      read += fresh.length;
+      const inNode = fresh.map(f =>
+        f.format === 'png' ? markerInPng(f, rgb) : null,
+      );
+      const rest = fresh.filter((_, i) => inNode[i] == null);
+      if (rest.length > 0) {
+        scratch ??= await page.context().newPage();
+        seen.push(...(await trackMarkerIn(scratch, rest, {rgb})));
+      }
+      seen.push(...inNode.filter(f => f != null));
+      const ordered = inPresentationOrder(seen);
+      let moved = 0;
+      for (let i = 1; i < ordered.length && moved < frames; i += 1) {
+        const now = ordered[i].box;
+        const before = ordered[i - 1].box;
+        moved =
+          now != null &&
+          before != null &&
+          (now.x !== before.x || now.y !== before.y)
+            ? moved + 1
+            : 0;
+      }
+      if (moved >= frames) {
+        return;
       }
       if (Date.now() > deadline) {
         throw new Error(
@@ -201,7 +312,7 @@ export async function waitForPresentedMotion(
       await new Promise(resolve => setTimeout(resolve, 16));
     }
   } finally {
-    await scratch.close();
+    await scratch?.close();
   }
 }
 

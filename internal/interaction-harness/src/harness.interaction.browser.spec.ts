@@ -605,8 +605,9 @@ test.describe('frame evidence', () => {
     expect(proof.verdict.failures, proof.summary).toEqual([]);
   });
 
-  test('waitForPresentedMotion resolves once the cast shows the element moving, and names a cast that never does', async ({
+  test('waitForPresentedMotion resolves once the cast shows the element moving, however long the cast ran before, and names a cast that never does', async ({
     page,
+    browserName,
   }) => {
     await busyFixture(page);
     const box = page.locator('#box');
@@ -631,9 +632,34 @@ test.describe('frame evidence', () => {
     });
     await waitForPresentedMotion(page, cast);
     expect(Date.now()).toBeGreaterThan(startsAt);
-    // Two consecutive moves after the start: three positions at least.
-    const positions = (await trackMarker(page, await cast.stop()))
-      .filter(f => f.t > startsAt && f.box != null)
+    // A short move after a long-running cast: only frames from the call on
+    // are read, and two moves anywhere in them count, so it resolves even
+    // when the move has ended before it caught up. In Chromium its PNG frames
+    // are decoded without opening a page, which a browser-wide compositor
+    // trace would refuse.
+    await box.evaluate(el => el.getAnimations().forEach(a => a.cancel()));
+    await page.waitForTimeout(1500);
+    let opened = 0;
+    const onPage = () => {
+      opened += 1;
+    };
+    page.context().on('page', onPage);
+    await box.evaluate(el => {
+      el.animate(
+        [{transform: 'translateY(0px)'}, {transform: 'translateY(200px)'}],
+        {duration: 400, easing: 'linear'},
+      );
+    });
+    const shortStart = Date.now();
+    await waitForPresentedMotion(page, cast);
+    page.context().off('page', onPage);
+    if (browserName === 'chromium') {
+      expect(opened).toBe(0);
+    }
+    // Two consecutive moves after each start: three positions at least.
+    const tracked = await trackMarker(page, await cast.stop());
+    const positions = tracked
+      .filter(f => f.t > startsAt && f.t < shortStart && f.box != null)
       .map(f => f.box?.y);
     expect(new Set(positions).size).toBeGreaterThanOrEqual(3);
   });
