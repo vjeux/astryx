@@ -561,6 +561,9 @@ test('a second tap mid-scroll goes on to the month after', async ({page}) => {
   expect(await monthsIn(viewport)).toBeCloseTo(11, 2);
 });
 
+/** The busy proof's step speed: a quarter, so its whole block lies inside the step. */
+const STEP_RATE = 0.25;
+
 test('the arrow step keeps advancing every frame through a blocked main thread', async ({
   page,
   browserName,
@@ -575,12 +578,23 @@ test('the arrow step keeps advancing every frame through a blocked main thread',
   await markElement(incoming, {inset: 8});
   const cast = await startScreencast(page);
   await page.waitForTimeout(300);
-  // The tap and an 800 ms block scheduled from the page 90 ms in: a harness
-  // round trip would eat most of the 0.3 s motion.
-  const started = await page.evaluate(() => {
+  // The tap, the step slowed to a quarter of its speed as it starts, and an
+  // 800 ms block scheduled from the page 90 ms in: a harness round trip would
+  // eat most of the motion. At full speed the 0.3 s step left 110 to 125 ms
+  // of itself inside the block, too few frames to judge once a loaded
+  // machine's screencast delivered one every 30 ms; slowed, the whole block
+  // lies inside it. The step's own 0.3 s and its curve are other cases'
+  // proofs.
+  const started = await page.evaluate(rate => {
     document
       .querySelector<HTMLButtonElement>('button[aria-label="Next month"]')
       ?.click();
+    for (const animation of document.getAnimations()) {
+      const target = (animation.effect as KeyframeEffect | null)?.target;
+      if (target?.querySelector('[role="grid"]') != null) {
+        animation.playbackRate = rate;
+      }
+    }
     setTimeout(() => {
       const from = performance.timeOrigin + performance.now();
       const end = performance.now() + 800;
@@ -593,14 +607,17 @@ test('the arrow step keeps advancing every frame through a blocked main thread',
       };
     }, 90);
     return performance.timeOrigin + performance.now();
-  });
-  await page.waitForTimeout(1200);
+  }, STEP_RATE);
+  await page.waitForTimeout(STEP_MS / STEP_RATE + 300);
   const busy = await page.evaluate(
     () => (window as unknown as {busy: {from: number; to: number}}).busy,
   );
   const tracked = await trackMarker(page, await cast.stop());
-  const spanned = {...busy, to: Math.min(busy.to, started + STEP_MS)};
-  expect(spanned.to - spanned.from).toBeGreaterThan(150);
+  const spanned = {
+    ...busy,
+    to: Math.min(busy.to, started + STEP_MS / STEP_RATE),
+  };
+  expect(spanned.to - spanned.from).toBeGreaterThan(600);
   const proof = busyWindowProof(tracked, spanned, {
     axis: 'x',
     settledWithin: 1,
