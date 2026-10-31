@@ -9,8 +9,10 @@
  *   (motion/uikit/selection.ts): no transition is created and the first style
  *   the page computes after the change is the final one, for a checkbox, for
  *   both radios of a moving choice, and under Reduce Motion; a mouse keeps the
- *   theme's transition (the negative control); the presented frames of a tap
- *   show no colour between the two states (storyboard); and a main thread
+ *   theme's transition, and a screencast frame of it held at its midpoint
+ *   shows a colour between the two states (the negative control); the
+ *   presented frames of a tap show only the two states, each at rest or
+ *   under the finger's press overlay (storyboard); and a main thread
  *   blocked right after the change keeps showing the whole mark (judging the
  *   frames on screen during the block once the change showed, each the
  *   settled checked colour, after a precondition that the change showed by
@@ -54,15 +56,18 @@ const MARK = {
 /**
  * Watches the mark of the option named `name`: when React writes its new
  * state, the observer (a microtask, before any frame) computes its style once
- * and records the colour and any transition that computation started.
+ * and records the colour and any transition that computation started. With
+ * `hold`, it also pauses those animations where they begin, so nothing
+ * presents them until a test moves them (seekMark).
  */
 async function watchMark(
   page: Page,
   role: 'checkbox' | 'radio',
   name: string,
+  {hold = false}: {hold?: boolean} = {},
 ): Promise<void> {
   await page.getByRole(role, {name}).evaluate(
-    (input, {selector, key}) => {
+    (input, {selector, key, hold}) => {
       // The option's row: a CheckboxList `li`, a RadioList item.
       const row = input.closest('.astryx-item, li');
       const mark = row?.querySelector<HTMLElement>(selector);
@@ -86,11 +91,16 @@ async function watchMark(
             duration: Number(animation.effect?.getTiming().duration ?? 0),
           })),
         };
+        if (hold) {
+          for (const animation of mark.getAnimations()) {
+            animation.pause();
+          }
+        }
         observer.disconnect();
       });
       observer.observe(mark, {attributes: true, attributeFilter: ['class']});
     },
-    {selector: MARK[role], key: `${role}:${name}`},
+    {selector: MARK[role], key: `${role}:${name}`, hold},
   );
 }
 
@@ -128,6 +138,151 @@ async function settledColour(
     }
     return getComputedStyle(mark).backgroundColor;
   }, MARK[role]);
+}
+
+/**
+ * Moves the animations on the option's mark to `t` ms, or finishes them, or
+ * with 'midway' parks them where the mark's computed colour is furthest from
+ * both its start and its end (stepping through the duration), so the point
+ * is a blend whatever the theme's easing.
+ */
+async function seekMark(
+  page: Page,
+  role: 'checkbox' | 'radio',
+  name: string,
+  t: number | 'finish' | 'midway',
+): Promise<void> {
+  await page.getByRole(role, {name}).evaluate(
+    (input, {selector, t}) => {
+      const mark = input.closest('.astryx-item, li')?.querySelector(selector);
+      const animations = mark?.getAnimations() ?? [];
+      if (animations.length === 0) {
+        throw new Error('no animation on the mark');
+      }
+      if (t === 'midway') {
+        const end = Math.max(
+          ...animations.map(animation =>
+            Number(animation.effect?.getComputedTiming().endTime ?? 0),
+          ),
+        );
+        const colourAt = (time: number) => {
+          for (const animation of animations) {
+            animation.currentTime = time;
+          }
+          return (
+            getComputedStyle(mark as Element).backgroundColor.match(
+              /[\d.]+/g,
+            ) ?? []
+          )
+            .slice(0, 3)
+            .map(Number);
+        };
+        const start = colourAt(0);
+        const finish = colourAt(end);
+        const apart = (a: number[], b: number[]) =>
+          Math.max(...a.map((v, i) => Math.abs(v - b[i])));
+        let best = 0;
+        let bestApart = -1;
+        for (let step = 1; step < 50; step++) {
+          const time = (end * step) / 50;
+          const colour = colourAt(time);
+          const fromEnds = Math.min(
+            apart(colour, start),
+            apart(colour, finish),
+          );
+          if (fromEnds > bestApart) {
+            best = time;
+            bestApart = fromEnds;
+          }
+        }
+        colourAt(best);
+        return;
+      }
+      for (const animation of animations) {
+        if (t === 'finish') {
+          animation.finish();
+        } else {
+          animation.currentTime = t;
+        }
+      }
+    },
+    {selector: MARK[role], t},
+  );
+}
+
+/** Waits until no animation in the page is running: a state, not a time. */
+async function idle(page: Page): Promise<void> {
+  await expect
+    .poll(
+      async () =>
+        page.evaluate(
+          () =>
+            document
+              .getAnimations()
+              .filter(animation => animation.playState === 'running').length,
+        ),
+      {timeout: 30_000},
+    )
+    .toBe(0);
+}
+
+/**
+ * The colour at a CSS px point in the first frame a new screencast sends: the
+ * screen as it is now. Only a frame's arrival is waited for, never a time.
+ */
+async function castColour(
+  page: Page,
+  at: {x: number; y: number},
+): Promise<RGB> {
+  await frames(page, 2);
+  const cast = await startScreencast(page);
+  await expect
+    .poll(() => cast.frameCount(), {timeout: 30_000})
+    .toBeGreaterThan(0);
+  const shot = await cast.stop();
+  const [first] = await decodeFrames(page, shot.slice(0, 1), at);
+  return first.colour;
+}
+
+/**
+ * The press overlay the theme paints over a pressed control, as the page
+ * resolves `--color-overlay-pressed`: its colour and its opacity.
+ */
+async function pressOverlay(page: Page): Promise<{rgb: RGB; alpha: number}> {
+  const value = await page
+    .locator('#storybook-root > *')
+    .first()
+    .evaluate(host => {
+      const probe = document.createElement('div');
+      probe.style.backgroundColor = 'var(--color-overlay-pressed)';
+      host.append(probe);
+      const colour = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return colour;
+    });
+  const match = /^rgba?\(([^)]+)\)$/.exec(value);
+  if (match == null) {
+    throw new Error(`the press overlay is not an rgb colour: ${value}`);
+  }
+  const [r, g, b, a = '1'] = match[1].split(/[\s,/]+/).filter(Boolean);
+  return {rgb: [Number(r), Number(g), Number(b)], alpha: Number(a)};
+}
+
+/** Within `tolerance` of a colour between `a` and `b` (a blend of the two). */
+function nearSegment(c: RGB, a: RGB, b: RGB, tolerance: number): boolean {
+  const ab = b.map((v, i) => v - a[i]);
+  const length = ab.reduce((sum, v) => sum + v * v, 0);
+  const along =
+    length === 0
+      ? 0
+      : Math.min(
+          1,
+          Math.max(
+            0,
+            c.reduce((sum, v, i) => sum + (v - a[i]) * ab[i], 0) / length,
+          ),
+        );
+  return c.every((v, i) => Math.abs(v - (a[i] + along * ab[i])) <= tolerance);
 }
 
 async function centreOf(page: Page, name: string, role: 'checkbox' | 'radio') {
@@ -402,18 +557,18 @@ test.describe('selection marks under a finger', () => {
       expect(
         await page.evaluate(() => matchMedia('(pointer: coarse)').matches),
       ).toBe(false);
-      await watchMark(page, 'checkbox', 'SMS');
+      // The fade is frozen where it begins, in the task that starts it, so the
+      // frames below read it at set points however busy the page is: a fade
+      // runs on the main thread, and a busy one can present none of it.
+      await watchMark(page, 'checkbox', 'SMS', {hold: true});
       const at = await centreOf(page, 'SMS', 'checkbox');
       const sample = {x: at.x - at.w / 2 + 3, y: at.y};
-      // Hover first, so the frames below hold the click alone.
+      // Hover first, so the colours below differ by the click alone.
       await page.mouse.move(at.x, at.y);
-      await page.waitForTimeout(400);
-      const cast = await startScreencast(page);
-      await frames(page, 2);
+      await idle(page);
+      const before = await castColour(page, sample);
       await page.mouse.click(at.x, at.y);
       const read = await readMark(page, 'checkbox', 'SMS');
-      await page.waitForTimeout(400);
-      const shot = await cast.stop();
       const themeMs = await page.evaluate(() => {
         const value = getComputedStyle(document.documentElement)
           .getPropertyValue('--duration-fast')
@@ -427,19 +582,21 @@ test.describe('selection marks under a finger', () => {
         property: 'background-color',
         duration: themeMs,
       });
+      // The fade midway (where its colour is furthest from both ends), then
+      // finished, as screencast frames show them once every other animation
+      // (the hover, the press) is at rest.
+      await seekMark(page, 'checkbox', 'SMS', 'midway');
+      await idle(page);
+      const midway = await castColour(page, sample);
+      await seekMark(page, 'checkbox', 'SMS', 'finish');
+      await idle(page);
+      const after = await castColour(page, sample);
       expect(read.first).not.toBe(await settledColour(page, 'checkbox', 'SMS'));
-      // The instrument sees a blend when there is one: the theme's fade
-      // presents frames between the two states.
-      const colours = (await decodeFrames(page, shot, sample)).map(
-        frame => frame.colour,
-      );
-      const before = colours[0];
-      const after = colours[colours.length - 1];
-      const between = colours.filter(
-        c =>
-          !near(c, before, PRESS_TOLERANCE) && !near(c, after, PRESS_TOLERANCE),
-      );
-      expect(between.length).toBeGreaterThan(0);
+      // The instrument sees a blend when the screen shows one.
+      const summary = JSON.stringify({before, midway, after});
+      expect(near(before, after, PRESS_TOLERANCE), summary).toBe(false);
+      expect(near(midway, before, PRESS_TOLERANCE), summary).toBe(false);
+      expect(near(midway, after, PRESS_TOLERANCE), summary).toBe(false);
     } finally {
       await context.close();
     }
@@ -464,6 +621,9 @@ test.describe('selection marks under a finger', () => {
     await expect(page.getByRole('checkbox', {name: 'SMS'})).toBeChecked();
     await page.waitForTimeout(400);
     const shot = await cast.stop();
+    // Two frames at least, or the capture shows nothing between. Capped at
+    // 3 CPUs with 16 workers, WebKit's screencast can hold a single frame for
+    // the whole capture, which this reports: the engine's limit there.
     expect(shot.length).toBeGreaterThan(1);
     const clip = {
       x: Math.max(0, Math.floor(list.x) - 8),
@@ -475,9 +635,24 @@ test.describe('selection marks under a finger', () => {
     const colours = decoded.map(frame => frame.colour);
     const before = colours[0];
     const after = colours[colours.length - 1];
-    const between = colours.filter(
-      c =>
-        !near(c, before, PRESS_TOLERANCE) && !near(c, after, PRESS_TOLERANCE),
+    // The box shows two states, unchecked and checked, each at rest or under
+    // the press overlay: a finger paints it at touch-down, before the lift
+    // changes the mark, and it fades after. Until the mark first shows
+    // checked, a frame is the unchecked box; from then on, the checked one.
+    // Any other colour is a blend of the two marks.
+    const overlay = await pressOverlay(page);
+    const pressed = (c: RGB): RGB => [
+      c[0] * (1 - overlay.alpha) + overlay.rgb[0] * overlay.alpha,
+      c[1] * (1 - overlay.alpha) + overlay.rgb[1] * overlay.alpha,
+      c[2] * (1 - overlay.alpha) + overlay.rgb[2] * overlay.alpha,
+    ];
+    const unchecked = (c: RGB) =>
+      nearSegment(c, before, pressed(before), PRESS_TOLERANCE);
+    const checked = (c: RGB) =>
+      nearSegment(c, after, pressed(after), PRESS_TOLERANCE);
+    const changed = colours.findIndex(checked);
+    const between = colours.filter((c, i) =>
+      i < changed ? !unchecked(c) : !checked(c),
     );
     // The evidence is written first, so a failing run shows its blend.
     const storyboard = await castStoryboard(
@@ -503,7 +678,8 @@ test.describe('selection marks under a finger', () => {
       blendFrames: between.length,
     });
     expect(same(before, after)).toBe(false);
-    // Every presented frame shows one state or the other, never a blend.
+    // Every presented frame shows one state or the other, at rest or pressed,
+    // never a blend.
     expect(between).toEqual([]);
   });
 
