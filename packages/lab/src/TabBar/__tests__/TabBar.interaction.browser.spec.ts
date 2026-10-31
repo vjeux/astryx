@@ -154,6 +154,24 @@ async function lensCenterX(page: Page) {
   return box.x + box.width / 2;
 }
 
+/**
+ * The elements under test are on screen before anything is measured about
+ * them: `count` of them, each with a nonzero box.
+ */
+async function expectPainted(locator: Locator, count = 1) {
+  await expect(locator).toHaveCount(count);
+  const boxes = await locator.evaluateAll(elements =>
+    elements.map(element => {
+      const rect = element.getBoundingClientRect();
+      return {width: rect.width, height: rect.height};
+    }),
+  );
+  for (const box of boxes) {
+    expect(box.width, JSON.stringify(boxes)).toBeGreaterThan(0);
+    expect(box.height, JSON.stringify(boxes)).toBeGreaterThan(0);
+  }
+}
+
 /** A presented translateX, px (the animator drives `translate`). */
 const translateX = async (locator: Locator) =>
   locator.evaluate(element => {
@@ -2131,7 +2149,9 @@ test.describe('minimize on scroll', () => {
   }) => {
     await openBar(page, 'minimize-on-scroll');
     const lens = page.locator('[data-tab-bar-lens]');
-    await expect(lens).toBeVisible();
+    // On screen first: the lens and the glass it must draw over.
+    await expectPainted(lens);
+    await expectPainted(page.locator('[data-tab-bar-platter]'));
     // Paint order at the lens, topmost first. The bar takes no pointer, so
     // hit testing is turned on for this read only.
     const order = await lens.evaluate(element => {
@@ -2705,10 +2725,10 @@ test.describe('bottom accessory', () => {
     );
     await waitForAnimation(accessory(page));
     await holdAnimations(page, accessory(page));
-    const overhangs: {t: number; overhang: number}[] = [];
+    const overhangs: {t: number; overhang: number; visible: number}[] = [];
     for (const t of [0, 16.667, 50, 100, 140, 200, 300]) {
       await seekAnimations(page, t);
-      const overhang = await accessory(page).evaluate(element => {
+      const {overhang, visible} = await accessory(page).evaluate(element => {
         // The glass's trailing cap, and "Next" as it shows: its box cut by
         // every clipping box between it and the accessory.
         const glass = element.firstElementChild as HTMLElement;
@@ -2724,6 +2744,7 @@ test.describe('bottom accessory', () => {
           throw new Error('no Next');
         }
         let right = next.getBoundingClientRect().right;
+        let left = next.getBoundingClientRect().left;
         for (
           let node = next.parentElement;
           node != null && node !== element.parentElement;
@@ -2731,13 +2752,22 @@ test.describe('bottom accessory', () => {
         ) {
           if (getComputedStyle(node).overflow !== 'visible') {
             right = Math.min(right, node.getBoundingClientRect().right);
+            left = Math.max(left, node.getBoundingClientRect().left);
           }
         }
-        return right - cap.right;
+        return {overhang: right - cap.right, visible: right - left};
       });
-      overhangs.push({t, overhang});
+      overhangs.push({t, overhang, visible});
     }
     await releaseAnimations(page, {finish: true});
+    // On screen first: "Next" shows through the window while it is measured
+    // (a window closed to nothing would keep it inside the glass too).
+    await expectPainted(
+      accessory(page).getByRole('button', {name: 'Next', exact: true}),
+    );
+    for (const {t, visible} of overhangs.filter(sample => sample.t >= 200)) {
+      expect(visible, JSON.stringify({t, overhangs})).toBeGreaterThan(0);
+    }
     for (const {t, overhang} of overhangs) {
       expect(overhang, JSON.stringify({t, overhangs})).toBeLessThanOrEqual(0.5);
     }
@@ -3103,6 +3133,9 @@ test.describe('search tab', () => {
       'active',
     );
     await waitForRest(searchHost(page));
+    // On screen first: the field and the circle it covers.
+    await expectPainted(searchHost(page));
+    await expectPainted(circle(page));
     // The field covers the circle: a tap at its centre lands in the field.
     const box = await circle(page).boundingBox();
     if (box == null) {
@@ -3630,6 +3663,10 @@ test.describe('More tab', () => {
     await expect(tab(page, 'More')).toHaveAttribute('aria-selected', 'true');
     const settings = page.getByRole('button', {name: /Settings/});
     await expect(settings).toBeVisible();
+    // On screen first: the row's chevron.
+    await expectPainted(
+      page.locator('li', {has: settings}).locator('svg').last(),
+    );
     // The row's last glyph is its chevron (beside the label's button): flipped
     // on it or a wrapper.
     const transform = await settings.evaluate(button => {
@@ -3882,6 +3919,7 @@ test.describe('search tab, active above the keyboard', () => {
     await tapSearch(page, driver);
     await expect(page.getByRole('searchbox', {name: 'Search'})).toBeFocused();
     await waitForRest(searchFieldEnd(page));
+    await expectPainted(searchHost(page));
     await showKeyboard(page);
     const top = await page.evaluate(k => window.innerHeight - k, KEYBOARD);
     const bottom = async () => {
@@ -3901,7 +3939,13 @@ test.describe('search tab, active above the keyboard', () => {
     // Reported down, the hold ends and the bar is back.
     await showKeyboard(page, 0);
     await expect.poll(() => keyboardListeners(page)).toBe(0);
-    expect(await bottom()).not.toBe(Math.round(top - 8));
+    // On screen first: the bar and the field, then the field's new place (a
+    // field gone from the page is not at the raised place either).
+    await expectPainted(page.getByRole('tablist'));
+    await expectPainted(searchHost(page));
+    const rested = await bottom();
+    expect(rested).not.toBeNull();
+    expect(rested).not.toBe(Math.round(top - 8));
   });
 
   test("in Chrome on Android the field reads the browser's own keyboard report while it has focus", async ({
@@ -4006,6 +4050,9 @@ test.describe('search tab, the cancel button', () => {
     const circleGlass = page.locator('[data-tab-bar-search] > span').first();
     await waitForRest(page.locator('[data-tab-bar-search]'));
     await waitForRest(circleGlass);
+    // On screen first: the circle's glass and the Cancel button over it.
+    await expectPainted(circleGlass);
+    await expectPainted(cancel);
     const box = await cancel.boundingBox();
     if (box == null) {
       throw new Error('no cancel button');
