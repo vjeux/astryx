@@ -17,15 +17,15 @@
 import {describe, expect, it} from 'vitest';
 import {cubicBezier} from '../motion/bezier';
 import {rubberBand} from '../motion/rubberBand';
-import {motionRoleOf} from '../motion/roles';
+import {motionRoleIn, motionRoleOf} from '../motion/roles';
 import {
   reducedMotionCrossFade,
   registerReducedMotionCrossFade,
 } from '../motion/uikit/timing';
-import {zoomMedia} from '../motion/uikit/zoomMedia';
+import {registerZoomMediaTable, zoomMedia} from '../motion/uikit/zoomMedia';
 import {
   IDENTITY,
-  RELEASED_ZOOM,
+  releasedZoomMotion,
   chromeBackgroundCurve,
   chromeFadeCurve,
   dismissBackdropAlpha,
@@ -162,6 +162,40 @@ describe('the settle (UIScrollView zoom animation)', () => {
     const t = curves.duration / 4;
     expect(curves.x.at(t)).toBeCloseTo(-100, 3);
     expect(curves.scale.at(t)).toBeCloseTo(1.5, 3);
+  });
+
+  it('names its springs and durations as motion roles (component:Lightbox FR5)', () => {
+    registerZoomMediaTable();
+    for (const [path, spring] of [
+      [
+        'dismiss.dismissPositionSpring',
+        zoomMedia.dismiss.dismissPositionSpring,
+      ],
+      ['dismiss.dismissSizeSpring', zoomMedia.dismiss.dismissSizeSpring],
+      ['dismiss.cancelPositionSpring', zoomMedia.dismiss.cancelPositionSpring],
+      ['dismiss.cancelSizeSpring', zoomMedia.dismiss.cancelSizeSpring],
+      ['transition.openSpring', zoomMedia.transition.openSpring],
+      ['transition.closeSpring', zoomMedia.transition.closeSpring],
+      ['transition.closeFadeSpring', zoomMedia.transition.closeFadeSpring],
+      ['pinchClose.closeSpring', zoomMedia.pinchClose.closeSpring],
+      ['pinchClose.returnSpring', zoomMedia.pinchClose.returnSpring],
+    ] as const) {
+      expect(motionRoleOf(spring)?.id).toBe(`zoomMedia.${path}`);
+    }
+    for (const [group, key, id] of [
+      [zoomMedia.settle, 'releasedMs', 'zoomMedia.settle.releasedMs'],
+      [zoomMedia.chrome, 'fadeMs', 'zoomMedia.chrome.fadeMs'],
+      [zoomMedia.chrome, 'backgroundMs', 'zoomMedia.chrome.backgroundMs'],
+      [
+        zoomMedia.chrome,
+        'backgroundHideDelayMs',
+        'zoomMedia.chrome.backgroundHideDelayMs',
+      ],
+    ] as const) {
+      expect(motionRoleIn(group, key)?.id).toBe(id);
+    }
+    // The keyboard's zoom plays the timing.curves.entrance role's leaf.
+    expect(releasedZoomMotion().curve).toEqual([0, 0, 0.58, 1]);
   });
 
   it('plays the timing.curves.move role: its curve is that leaf, not a copy', () => {
@@ -698,12 +732,8 @@ describe('the released zoom the mouse and the keyboard keep (spec:AST-017 FR59)'
   it("plays CSS's 200 ms ease-out, not the settle", () => {
     const from = {...IDENTITY, scale: 1};
     const to = releasedZoomTarget(g, from);
-    const curves = settleCurves(
-      from,
-      to,
-      RELEASED_ZOOM.curve,
-      RELEASED_ZOOM.seconds,
-    );
+    const released = releasedZoomMotion();
+    const curves = settleCurves(from, to, released.curve, released.seconds);
     expect(curves.duration).toBe(0.2);
     expect(settleSeconds(from.scale, to.scale)).not.toBe(0.2);
     const ease = cubicBezier([0, 0, 0.58, 1]);

@@ -45,7 +45,7 @@ import {
   isZoomed,
   maxScaleFor,
   pannedBy,
-  RELEASED_ZOOM,
+  releasedZoomMotion,
   releasedZoomTarget,
   restingTransform,
   restRange,
@@ -346,7 +346,10 @@ export function useZoomCore(options: UseZoomCoreOptions): ZoomCore {
       // ease-out.
       registerReducedMotionCrossFade();
       const curves = released
-        ? settleCurves(from, target, RELEASED_ZOOM.curve, RELEASED_ZOOM.seconds)
+        ? (() => {
+            const released = releasedZoomMotion();
+            return settleCurves(from, target, released.curve, released.seconds);
+          })()
         : settleCurves(
             from,
             target,

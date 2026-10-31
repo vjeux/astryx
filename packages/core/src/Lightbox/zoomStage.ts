@@ -35,8 +35,11 @@
 import {cubicBezier} from '../motion/bezier';
 import {project} from '../motion/projection';
 import {rubberBandClamp, rubberBandUnclamp} from '../motion/rubberBand';
-import {zoomMedia} from '../motion/uikit/zoomMedia';
+import {registerTimingTable, timing} from '../motion/uikit/timing';
+import {registerZoomMediaTable, zoomMedia} from '../motion/uikit/zoomMedia';
+import {resolveMotion} from '../motion/resolveMotion';
 import type {MotionCurve} from '../motion/animator';
+import type {MotionCurvePoints} from '../motion/roles';
 
 export interface StagePoint {
   readonly x: number;
@@ -438,12 +441,19 @@ export function settleCurves(
  * pointer's double-click is the stage's double tap instead (spec:AST-094
  * FR43).
  */
-export const RELEASED_ZOOM = {
-  seconds: 0.2,
-  curve: [0, 0, 0.58, 1] as readonly [number, number, number, number],
-};
+export function releasedZoomMotion(): {
+  curve: MotionCurvePoints;
+  seconds: number;
+} {
+  registerTimingTable();
+  registerZoomMediaTable();
+  return {
+    curve: resolveMotion(null, timing.curves.entrance),
+    seconds: resolveMotion(null, zoomMedia.settle, 'releasedMs') / 1000,
+  };
+}
 
-/** Where a zoom key goes from `from` (see RELEASED_ZOOM). */
+/** Where a zoom key goes from `from` (see `releasedZoomMotion`). */
 export function releasedZoomTarget(
   geometry: ZoomGeometry,
   from: ZoomTransform,
@@ -620,8 +630,14 @@ export function easedCurve(
  * 0.2 s easeInEaseOut fade.
  */
 export function chromeFadeCurve(from: number, isHidden: boolean): MotionCurve {
-  const {fadeSeconds, fadeCurve} = zoomMedia.chrome;
-  return easedCurve(from, isHidden ? 0 : 1, fadeSeconds, fadeCurve);
+  registerZoomMediaTable();
+  const {chrome} = zoomMedia;
+  return easedCurve(
+    from,
+    isHidden ? 0 : 1,
+    resolveMotion(null, chrome, 'fadeMs') / 1000,
+    chrome.fadeCurve,
+  );
 }
 
 /**
@@ -632,14 +648,14 @@ export function chromeBackgroundCurve(
   from: number,
   isHidden: boolean,
 ): MotionCurve {
-  const {backgroundSeconds, backgroundHideDelaySeconds, fadeCurve} =
-    zoomMedia.chrome;
+  registerZoomMediaTable();
+  const {chrome} = zoomMedia;
   return easedCurve(
     from,
     isHidden ? 1 : 0,
-    backgroundSeconds,
-    fadeCurve,
-    isHidden ? backgroundHideDelaySeconds : 0,
+    resolveMotion(null, chrome, 'backgroundMs') / 1000,
+    chrome.fadeCurve,
+    isHidden ? resolveMotion(null, chrome, 'backgroundHideDelayMs') / 1000 : 0,
   );
 }
 

@@ -34,6 +34,7 @@
  * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md
  */
 
+import {registerMotionTable} from '../roles';
 import {reducedMotionCrossFade} from './timing';
 
 /**
@@ -57,6 +58,12 @@ export const zoomMedia = {
     limitFactor: 2,
   },
   settle: {
+    /**
+     * The keyboard's zoom and pan (a `+`, `-` or arrow key, Enter on the
+     * photo): CSS's 200 ms, on the `timing.curves.entrance` role's ease-out.
+     * @source the released Lightbox's CSS transition (200 ms ease-out)
+     */
+    releasedMs: 200,
     /**
      * The return from past a limit, and `zoom(to:animated:)` /
      * `setZoomScale(_:animated:)`: a CABasicAnimation on the image view's
@@ -281,7 +288,7 @@ export const zoomMedia = {
      *   fitted size, and a cancelled drag with the chrome hidden, the chrome
      *   and the background per frame, Oct 24 2026
      */
-    fadeSeconds: 0.2,
+    fadeMs: 200,
     /**
      * The chrome fade's timing function: easeInEaseOut, the
      * `timing.curves.move` leaf itself, so the fade plays that role
@@ -297,7 +304,7 @@ export const zoomMedia = {
      *   backgroundColor CAAnimations at the same taps (duration 0.1) and the
      *   background colour per frame, Oct 24 2026
      */
-    backgroundSeconds: 0.1,
+    backgroundMs: 100,
     /**
      * Hiding, the background waits this long, s, before it turns; showing,
      * it turns at once.
@@ -305,7 +312,7 @@ export const zoomMedia = {
      *   UIView animation that carries the background (delay 0.1 when the
      *   chrome hides, 0 when it shows), Oct 24 2026
      */
-    backgroundHideDelaySeconds: 0.1,
+    backgroundHideDelayMs: 100,
   },
   pinchClose: {
     /**
@@ -386,3 +393,33 @@ export const zoomMedia = {
     returnSpring: {response: 0.238, dampingRatio: 1},
   },
 } as const;
+
+/**
+ * Registers this table with the motion registry (motion/roles.ts), naming as
+ * roles the springs and durations Lightbox's touch motion plays
+ * (component:Lightbox FR5: the keyboard's zoom, the dismiss and its cancel,
+ * the pinch close and its return, the controls fade, and the zoom
+ * transition; spec:AST-094 FR4 and DEC-5). The settle's curve already plays
+ * the `timing.curves.move` role. The measured gesture values (thresholds,
+ * projection, fades per travel) stay internal constants. Nothing registers
+ * on import, and a second call does nothing.
+ */
+export function registerZoomMediaTable(): void {
+  registerMotionTable('zoomMedia', zoomMedia, {
+    roles: [
+      'settle.releasedMs',
+      'dismiss.dismissPositionSpring',
+      'dismiss.dismissSizeSpring',
+      'dismiss.cancelPositionSpring',
+      'dismiss.cancelSizeSpring',
+      'transition.openSpring',
+      'transition.closeSpring',
+      'transition.closeFadeSpring',
+      'chrome.fadeMs',
+      'chrome.backgroundMs',
+      'chrome.backgroundHideDelayMs',
+      'pinchClose.closeSpring',
+      'pinchClose.returnSpring',
+    ],
+  });
+}
