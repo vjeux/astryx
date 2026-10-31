@@ -588,10 +588,9 @@ export class SwitchTouchController {
     // shift and is sent to the new rest below; a reduced-motion dip shifts
     // whole, its end included, and keeps going.
     const springs = thumb.reducedMotion() === 'off';
-    thumb.rebase(
-      {x: this.direction * (this.rest(previous) - this.rest(isOn))},
-      {at: time},
-    );
+    thumb.rebase({
+      x: this.direction * (this.rest(previous) - this.rest(isOn)),
+    });
     // Each state has its own thumb size (the circle a mouse sees, Switch
     // FR13): the box the CSS now renders is the new value's, so its scale
     // takes the old size over and grows or shrinks it from there.
@@ -653,11 +652,13 @@ export class SwitchTouchController {
   /** Passive: a mouse, a pen or a finger on the switch, UIControl's events (FR43). */
   private onControlEvent(event: ControlEvent, touch: GestureTouch): void {
     const travel = touch.x - touch.startX;
-    // The motion an event starts is dated when the switch handles it, one
-    // clock for all its animators: a catch starts from the thumb the screen
-    // shows (spec:AST-094 FR6). The event's own time is the recognizers'
-    // (FR16); a busy main thread hands the switch an event late, and a curve
-    // dated back to the event would step back from the frame on screen.
+    // The switch reads the thumb when it handles the event, and its motion
+    // carries no start of its own: a call that continues motion starts then,
+    // from the curve on screen (spec:AST-094 FR6), and a call from rest at
+    // the frame that shows it, as Core Animation starts an animation at its
+    // commit. A busy main thread hands the switch an event late and commits
+    // its frame late: the motion is delayed, never stepped back or skipped
+    // into. The event's own time is the recognizers' (FR16).
     const time = now();
     switch (event) {
       case 'touchDown':
@@ -765,7 +766,7 @@ export class SwitchTouchController {
     if (thumb != null) {
       const target = this.toX(dragTarget(drag.start, x, this.geometry));
       if (thumb.reducedMotion() === 'off') {
-        thumb.animate({x: target}, {spring: TRACKING}, {at: time});
+        thumb.animate({x: target}, {spring: TRACKING});
       } else {
         thumb.set({x: target});
       }
@@ -894,7 +895,7 @@ export class SwitchTouchController {
           : switchControl.wellOff,
         velocity: velocity == null ? undefined : {opacity: velocity},
       },
-      {at: time, touchRelease},
+      {touchRelease},
     );
   }
 
@@ -911,7 +912,7 @@ export class SwitchTouchController {
     const opacity = fade.get('opacity', time);
     const fadeVelocity = fade.getVelocity('opacity', time);
     this.paintFade();
-    fade.rebase({opacity: 1 - 2 * opacity}, {at: time});
+    fade.rebase({opacity: 1 - 2 * opacity});
     this.animateFade(time, -fadeVelocity);
   }
 
@@ -979,7 +980,7 @@ export class SwitchTouchController {
         spring: TRAVEL,
         velocity: velocity == null ? undefined : {x: velocity},
       },
-      {at: time, touchRelease},
+      {touchRelease},
     );
   }
 
@@ -1005,13 +1006,18 @@ export class SwitchTouchController {
       return;
     }
     this.liftTime = time;
-    const options = {at: time} as const;
-    this.thumb.animate(
+    const lift = this.thumb.animate(
       {scaleX: this.geometry.liftScaleX, scaleY: this.geometry.liftScaleY},
       {spring: switchControl.lift},
-      options,
     );
-    this.shadow?.animate({opacity: 1}, {spring: switchControl.lift}, options);
+    this.shadow?.animate({opacity: 1}, {spring: switchControl.lift});
+    // A lift from rest starts at the frame that shows it: the minimum lift
+    // counts from there.
+    void lift.started.then(start => {
+      if (this.liftTime === time) {
+        this.liftTime = start;
+      }
+    });
   }
 
   /**
@@ -1054,7 +1060,7 @@ export class SwitchTouchController {
             settle,
           }),
         },
-        {at: time, touchRelease},
+        {touchRelease},
       );
     };
     play(this.thumb, 'scaleX', this.geometry.liftScaleX, 1, 1e-4);
@@ -1091,21 +1097,18 @@ export class SwitchTouchController {
       ['scaleY', before.thumbHeight / after.thumbHeight, before.liftScaleY],
     ] as const) {
       const keep = lifted * factor;
-      thumb.play(
-        {
-          [property]: liftThenSettle({
-            from: thumb.get(property, time) * factor,
-            velocity: thumb.getVelocity(property, time) * factor,
-            lifted: keep,
-            rest: held ? keep : 1,
-            holdSeconds: held ? 0 : hold,
-            threshold: 1e-4,
-            lift: switchControl.lift,
-            settle: switchControl.settle,
-          }),
-        },
-        {at: time},
-      );
+      thumb.play({
+        [property]: liftThenSettle({
+          from: thumb.get(property, time) * factor,
+          velocity: thumb.getVelocity(property, time) * factor,
+          lifted: keep,
+          rest: held ? keep : 1,
+          holdSeconds: held ? 0 : hold,
+          threshold: 1e-4,
+          lift: switchControl.lift,
+          settle: switchControl.settle,
+        }),
+      });
     }
   }
 
