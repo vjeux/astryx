@@ -8,8 +8,8 @@ import {
   ContextMenuRadioGroup,
   ContextMenuRadioItem,
   createContextMenu,
-  useContextMenu,
 } from '@astryxdesign/core/ContextMenu';
+import {useContextMenu} from '@astryxdesign/core/hooks';
 import {Divider} from '@astryxdesign/core/Divider';
 import {
   PencilIcon,
