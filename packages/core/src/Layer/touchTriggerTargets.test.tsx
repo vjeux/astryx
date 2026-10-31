@@ -514,8 +514,8 @@ describe('a disabled field inside a clickable card or row', () => {
   });
 });
 
-describe('a tap on an enabled control is left to the trigger, as before', () => {
-  it('a truncated label inside a link still opens its tooltip, and the link still runs', async () => {
+describe('a tap that already acts goes to that control alone (DEC-1, the auto rule)', () => {
+  it('a truncated label inside a link follows the link and opens no tooltip', async () => {
     const follow = vi.fn((event: MouseEvent) => event.preventDefault());
     render(
       <a href="/doc" onClick={follow}>
@@ -525,9 +525,8 @@ describe('a tap on an enabled control is left to the trigger, as before', () => 
       </a>,
     );
     tap(screen.getByText('A very long document…'));
-    await waitFor(() => {
-      expect(isOpen('A very long document title')).toBe(true);
-    });
     expect(follow).toHaveBeenCalledTimes(1);
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(isOpen('A very long document title')).toBe(false);
   });
 });

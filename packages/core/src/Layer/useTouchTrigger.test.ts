@@ -15,7 +15,11 @@
  */
 
 import {describe, it, expect} from 'vitest';
-import {isActionTrigger, tapLandsOnDisabledControl} from './useTouchTrigger';
+import {
+  isActionTrigger,
+  tapHasDestination,
+  tapLandsOnDisabledControl,
+} from './useTouchTrigger';
 
 function element(html: string): HTMLElement {
   const host = document.createElement('div');
@@ -144,5 +148,30 @@ describe('tapLandsOnDisabledControl', () => {
     ['<p>Read the <span data-tapped>WCAG</span> notes.</p>'],
   ])('leaves the tap to the trigger: %s', html => {
     expect(tapLandsOnDisabledControl(tappedIn(html))).toBe(false);
+  });
+});
+
+describe('tapHasDestination (the auto rule, DEC-1)', () => {
+  it.each([
+    // A truncated label inside a link, a button, an option, a menu item.
+    ['<a href="/doc"><span data-tapped>A very long title</span></a>'],
+    ['<button type="button"><span data-tapped>Label</span></button>'],
+    ['<div role="option"><span data-tapped>Option</span></div>'],
+    ['<div role="menuitem"><span><span data-tapped>Item</span></span></div>'],
+    // A checkbox row: tapping its label toggles the box.
+    ['<label><input type="checkbox" /><span data-tapped>Notify</span></label>'],
+    // A clickable row or card with no role.
+    ['<div data-pressable-container="true"><span data-tapped>ID</span></div>'],
+  ])('gives the tap to the control around it: %s', html => {
+    expect(tapHasDestination(tappedIn(html))).toBe(true);
+  });
+
+  it.each([
+    ['<p>Read the <span data-tapped>WCAG</span> notes.</p>'],
+    ['<button type="button" aria-disabled="true"><span data-tapped>Publish</span></button>'],
+    ['<div data-pressable-container="true"><input aria-disabled="true" data-tapped /></div>'],
+    ['<div data-pressable-container="disabled"><span data-tapped>Owner</span></div>'],
+  ])('leaves the tap to the layer: %s', html => {
+    expect(tapHasDestination(tappedIn(html))).toBe(false);
   });
 });

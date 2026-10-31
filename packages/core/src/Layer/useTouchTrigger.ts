@@ -195,6 +195,28 @@ export function tapLandsOnDisabledControl(tapped: Element): boolean {
 }
 
 /**
+ * Whether a tap already acts (component:Tooltip and component:HoverCard
+ * DEC-1, the `auto` rule): walking out from the tapped element, the trigger
+ * included, the innermost button, link, label, form control, option, menu
+ * item, or row or card made clickable with `useClickableContainer` decides.
+ * An enabled one is the tap's destination and the layer stays shut; a
+ * disabled one takes the tap itself, so its reason opens; with none, the tap
+ * is the layer's.
+ */
+export function tapHasDestination(tapped: Element): boolean {
+  const decider = innermostInteractive(
+    tapped,
+    null,
+    element =>
+      (element instanceof HTMLElement && isActionTrigger(element)) ||
+      matchesInteractiveSelectors(element) ||
+      element.tagName === 'LABEL' ||
+      isDisabledTarget(element),
+  );
+  return decider != null && !isDisabledTarget(decider);
+}
+
+/**
  * Whether typing into this element edits it. Reads the attribute as well as
  * the property: jsdom does not implement `isContentEditable`, and an editor
  * that is an action in the browser must not be inert under test.
@@ -401,10 +423,15 @@ export function useTouchTrigger(
     // A tap that landed in a disabled control is that control's: its reason
     // opens. Every other tap is the trigger's to decide.
     const tapped = tapEvent.target instanceof Element ? tapEvent.target : null;
+    // Under `auto`, a tap that already acts on the control it lands in, or on
+    // a control around it, leaves the layer shut (DEC-1); a disabled control
+    // takes the tap itself.
     const mode =
       touchTrigger === 'auto'
-        ? tapped != null && tapLandsOnDisabledControl(tapped)
-          ? 'tap'
+        ? tapped != null
+          ? tapHasDestination(tapped)
+            ? 'none'
+            : 'tap'
           : trigger != null && isActionTrigger(trigger)
             ? 'none'
             : 'tap'
