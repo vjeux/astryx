@@ -1407,6 +1407,10 @@
     "defaultMessage": "Zoomed out",
     "description": "Polite screen-reader announcement after zooming back out of a Lightbox image. Pairs with `lightbox.zoomedIn`."
   },
+  "@astryx.lightbox.zoomLevel": {
+    "defaultMessage": "Zoomed to {level, number, percent}, use arrow keys to pan",
+    "description": "Polite screen-reader announcement when a zoom of a Lightbox image comes to rest, with its new zoom level relative to the fitted size: `{level}` is that factor, so 2 reads as `Zoomed to 200%, use arrow keys to pan`. Includes the hint that arrow keys pan while zoomed. Pairs with `lightbox.zoomedOut`, announced when the image is back at its fitted size."
+  },
   "@astryx.metadataList.showMore": {
     "defaultMessage": "Show more",
     "description": "Button label under a MetadataList that reveals items hidden beyond the configured maximum. Toggles with `metadataList.showLess` — keep the pair parallel in your language."

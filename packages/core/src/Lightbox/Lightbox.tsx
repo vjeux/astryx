@@ -89,6 +89,7 @@ import {
   dismissChromeAlpha,
   pinchCloseBackdropAlpha,
   pinchCloseChromeAlpha,
+  ZOOMED_EPSILON,
 } from './zoomStage';
 /**
  * Media type for lightbox items.
@@ -1132,14 +1133,20 @@ export function Lightbox({
     surfaceRef: isGallery ? trackRef : imageWrapperRef,
     isEnabled: isOpen && isZoomTarget,
     itemKey: viewedItem,
+    // Every zoom change, by any input, announces the level it rests at, or
+    // that the photo is back at its fitted size (component:Lightbox AR4).
+    onZoomSettle: scale => {
+      if (dialogRef.current?.open === true && isOpen) {
+        announce(
+          scale > 1 + ZOOMED_EPSILON
+            ? t('@astryx.lightbox.zoomLevel', {level: scale})
+            : t('@astryx.lightbox.zoomedOut'),
+        );
+      }
+    },
     onZoomedChange: next => {
       setIsZoomed(next);
       if (dialogRef.current?.open === true && isOpen) {
-        announce(
-          next
-            ? t('@astryx.lightbox.zoomedIn')
-            : t('@astryx.lightbox.zoomedOut'),
-        );
         // Photos hides the controls as a gesture zooms, a mouse's, a pen's
         // or a finger's alike (spec:AST-094 FR43); a zoom from the keyboard
         // leaves them, so the keys that zoomed can reach them.

@@ -965,8 +965,9 @@ describe('Lightbox', () => {
         />,
       );
       fireEvent.keyDown(zoomTarget(), {key: 'Enter'});
+      // The level it rests at, not only that it zoomed (AR4).
       await waitFor(() => {
-        expect(politeRegion()).toHaveTextContent('Zoomed in');
+        expect(politeRegion()).toHaveTextContent('Zoomed to 200%');
       });
       fireEvent.keyDown(zoomTarget(), {key: 'Enter'});
       await waitFor(() => {
@@ -1185,7 +1186,7 @@ describe('Lightbox gestures for a mouse and a pen (spec:AST-094 FR43)', () => {
     };
   }
 
-  it("zooms a mouse double-click where a finger's double tap zooms, and back", async () => {
+  it("zooms a mouse double-click 2x about the clicked point, where a finger's double tap fills the stage, and back", async () => {
     const restoreCoarse = stubCoarsePointer();
     let finger: {translate: string; scale: string};
     try {
@@ -1196,12 +1197,16 @@ describe('Lightbox gestures for a mouse and a pen (spec:AST-094 FR43)', () => {
     } finally {
       restoreCoarse();
     }
-    // Near the photo's top-left corner: Photos' double tap zooms the photo
-    // in about that point, whatever the pointer.
+    // Near the photo's top-left corner: a finger's double tap goes to the
+    // larger of filling the stage and 2x and brings the point toward the
+    // centre (FR6); a mouse's double-click zooms exactly 2x and keeps the
+    // point under the pointer (FR11).
     expect(finger.scale).not.toBe('');
     const {stage, img} = renderPhoto();
     doubleClick(stage, 'mouse', 20, 220);
-    expect(photoTransform(img)).toEqual(finger);
+    const mouse = photoTransform(img);
+    expect(parseFloat(mouse.scale)).toBe(2);
+    expect(mouse).not.toEqual(finger);
     expect(stage).toHaveAttribute('aria-pressed', 'true');
     // The next double tap reads where the photo shows: let the zoom land.
     await act(async () => {

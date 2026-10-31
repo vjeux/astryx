@@ -40,17 +40,18 @@ import {zoomMedia} from '../motion/uikit/zoomMedia';
 import {useAnimator} from '../motion/useAnimator';
 import {observeResize} from '../utils/sharedResizeObserver';
 import {
-  IDENTITY,
-  RELEASED_ZOOM,
   doubleTapScaleFor,
+  IDENTITY,
   isZoomed,
   maxScaleFor,
   pannedBy,
+  RELEASED_ZOOM,
   releasedZoomTarget,
-  restRange,
   restingTransform,
+  restRange,
   settleCurves,
   transformForResize,
+  ZOOMED_EPSILON,
   type StagePoint,
   type ZoomGeometry,
   type ZoomTransform,
@@ -78,6 +79,13 @@ export interface UseZoomCoreOptions {
   itemKey: unknown;
   /** The photo became zoomed or returned to the fitted size. */
   onZoomedChange: (isZoomed: boolean) => void;
+  /**
+   * The zoom level a change comes to rest at, relative to the fitted size
+   * (1 is fitted), reported once per change as its settle starts, a pinch's
+   * at its release (component:Lightbox AR4). A settle back to where it rested
+   * reports nothing.
+   */
+  onZoomSettle?: (scale: number) => void;
 }
 
 /** A box in client px. */
@@ -172,6 +180,8 @@ export function useZoomCore(options: UseZoomCoreOptions): ZoomCore {
   });
   const contentElementRef = useRef<HTMLElement | null>(null);
   const geometryRef = useRef<ZoomGeometry | null>(null);
+  /** The level the last reported zoom change rests at (`onZoomSettle`). */
+  const restingScaleRef = useRef(1);
   /** Client px of the stage's top-left corner when last measured. */
   const originRef = useRef<Point>({x: 0, y: 0});
   const zoomedRef = useRef(false);
@@ -320,6 +330,10 @@ export function useZoomCore(options: UseZoomCoreOptions): ZoomCore {
       }
       targetRef.current = target;
       setZoomed(isZoomed(geometry, target));
+      if (Math.abs(target.scale - restingScaleRef.current) > ZOOMED_EPSILON) {
+        restingScaleRef.current = target.scale;
+        optionsRef.current.onZoomSettle?.(target.scale);
+      }
       if (
         from.x === target.x &&
         from.y === target.y &&
@@ -357,6 +371,7 @@ export function useZoomCore(options: UseZoomCoreOptions): ZoomCore {
     targetRef.current = IDENTITY;
     zoomedRef.current = false;
     geometryRef.current = null;
+    restingScaleRef.current = 1;
   }, [animator, options.itemKey]);
 
   // A rotation or resize keeps the same photo point centred at the same
