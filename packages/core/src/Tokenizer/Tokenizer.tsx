@@ -79,6 +79,7 @@ import {OverflowList} from '../OverflowList';
 import {useLayer} from '../Layer/useLayer';
 import {useTooltip} from '../Tooltip';
 import {useAnnounce} from '../hooks/useAnnounce';
+import {useTouchPresentation} from '../utils/touchPresentation';
 import {
   colorVars,
   spacingVars,
@@ -86,7 +87,7 @@ import {
   typeScaleVars,
 } from '../theme/tokens.stylex';
 import type {SearchableItem, SearchSource} from '../Typeahead/types';
-import {composeEventHandlers, mergeProps} from '../utils';
+import {composeEventHandlers, isRenderable, mergeProps} from '../utils';
 import {joinAriaIDs} from '../utils/inputAria';
 import {isFocusDetached} from '../utils/focusReturn';
 import {
@@ -387,6 +388,13 @@ const styles = stylex.create({
     position: 'relative',
     zIndex: 1,
   },
+  // A token selected by the first Delete on a touch screen: the accent fill
+  // and its text colour, as a UIKit search token's selected look (iOS 26.2:
+  // the tint fill with white text), with no animation.
+  tokenSelected: {
+    backgroundColor: colorVars['--color-accent'],
+    color: colorVars['--color-on-accent'],
+  },
   token: {
     display: 'flex',
     flexShrink: 0,
@@ -610,7 +618,9 @@ function TokenizerSheetHost<T extends SearchableItem>(
  *
  * Composes BaseTypeahead for search and Token for selected items.
  * Tokens render inline before the text input. Selecting an item adds a token
- * and clears the query. Backspace on empty input removes the last token.
+ * and clears the query. Backspace on empty input removes the last token; on a
+ * touch screen the first Backspace selects it and the second removes it, as
+ * UIKit's search tokens do.
  *
  * @example
  * ```
@@ -794,6 +804,7 @@ export function Tokenizer<T extends SearchableItem>({
   const fieldLabelId = useId();
   const descriptionId = useId();
   const statusMessageId = useId();
+  const selectionDescriptionId = useId();
   // A caller aria-labelledby names the input together with the field's own
   // label, which it would otherwise replace.
   const fieldLabelledBy =
@@ -1151,6 +1162,7 @@ export function Tokenizer<T extends SearchableItem>({
         // Focus left the field: no hand-off is owed any more.
         isFocusPendingHandOffRef.current = false;
         setIsFocusedWithin(false);
+        setSelectedId(null);
         onBlur?.(e);
         if (isLayerMode) {
           layer.hide();
@@ -1369,7 +1381,23 @@ export function Tokenizer<T extends SearchableItem>({
     [value, onChange, isDisabled, announce, clearAllMessage],
   );
 
-  // Handle backspace on empty input — remove last token
+  // Backspace (the keyboard's Delete key) on the empty input removes the
+  // last token. On a touch screen it takes two presses, as with UIKit's
+  // search tokens (measured on iOS 26.2): the first selects the last token,
+  // the second removes it. Typing anything else while a token is selected
+  // keeps the token and goes on after it.
+  const {isTouch} = useTouchPresentation();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // A selection only lives while it names a current token.
+  const selectedItem =
+    selectedId == null ? null : (value.find(v => v.id === selectedId) ?? null);
+  // When the selected token leaves (its ×, Clear all, or the app's own
+  // change), the selection goes with it, so the same item added back later
+  // starts unselected instead of going on the next Delete. (Adjusted while
+  // rendering, as React recommends for state derived from props.)
+  if (selectedId != null && selectedItem == null) {
+    setSelectedId(null);
+  }
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (
@@ -1378,11 +1406,38 @@ export function Tokenizer<T extends SearchableItem>({
         value.length > 0
       ) {
         e.preventDefault();
-        const lastItem = value[value.length - 1];
-        handleRemove(lastItem);
+        // A custom `renderToken` draws no selected look, so it keeps the
+        // one-press removal.
+        if (isTouch && renderToken == null && selectedItem == null) {
+          const lastItem = value[value.length - 1];
+          setSelectedId(lastItem.id);
+          announce(
+            t('@astryx.tokenizer.tokenSelected', {label: lastItem.label}),
+          );
+          return;
+        }
+        setSelectedId(null);
+        handleRemove(selectedItem ?? value[value.length - 1]);
+        return;
+      }
+      if (
+        selectedItem != null &&
+        !['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)
+      ) {
+        setSelectedId(null);
       }
     },
-    [value, handleRemove],
+    [value, handleRemove, isTouch, renderToken, selectedItem, announce, t],
+  );
+  // Text arriving with no key press (a paste, dictation, a keyboard
+  // suggestion) goes on after the selected token too: the selection goes,
+  // so Delete erases text again.
+  const handleChangeQuery = useCallback(
+    (query: string) => {
+      setSelectedId(null);
+      onChangeQuery?.(query);
+    },
+    [onChangeQuery],
   );
 
   // Click wrapper to focus input
@@ -1401,9 +1456,18 @@ export function Tokenizer<T extends SearchableItem>({
     }
   }, [isDisabled, isLayerMode, layer]);
 
+  // A selected token stays findable after its one-time announcement: the
+  // token itself carries the description, and so does the input, where
+  // focus is while Delete selects and removes (WCAG 2.2 4.1.2).
+  const selectionDescription =
+    selectedItem == null
+      ? null
+      : t('@astryx.tokenizer.tokenSelected', {label: selectedItem.label});
+
   const ariaDescribedBy =
     [
       description ? descriptionId : null,
+      selectionDescription != null ? selectionDescriptionId : null,
       status?.message ? statusMessageId : null,
       showsDisabledMessage ? disabledMessageTooltip.describedBy : null,
     ]
@@ -1431,7 +1495,16 @@ export function Tokenizer<T extends SearchableItem>({
         size={size}
         onRemove={isDisabled ? undefined : onRemoveItem}
         isDisabled={isDisabled}
-        xstyle={styles.token}
+        data-selected={item.id === selectedItem?.id || undefined}
+        description={
+          item.id === selectedItem?.id
+            ? (selectionDescription ?? undefined)
+            : undefined
+        }
+        xstyle={[
+          styles.token,
+          item.id === selectedItem?.id && styles.tokenSelected,
+        ]}
       />
     );
   });
@@ -1539,7 +1612,7 @@ export function Tokenizer<T extends SearchableItem>({
                 .filter(Boolean)
                 .join(' ') || undefined
             }
-            onChangeQuery={onChangeQuery}
+            onChangeQuery={handleChangeQuery}
             // The resolved required state reaches the combobox, also when a
             // FormLayout default hides the visible marker (component:FormLayout
             // FR5, AR2).
@@ -1876,6 +1949,11 @@ export function Tokenizer<T extends SearchableItem>({
       labelTooltip={labelTooltip}
       width={width}>
       {tokenizerContent}
+      {isRenderable(selectionDescription) && (
+        <VisuallyHidden id={selectionDescriptionId}>
+          {selectionDescription}
+        </VisuallyHidden>
+      )}
       {showsDisabledMessage &&
         disabledMessageTooltip.renderTooltip(disabledMessage)}
     </Field>
