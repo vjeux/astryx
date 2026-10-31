@@ -428,6 +428,23 @@ describe('build-css astryx.css', () => {
     const rules = () => astryxCss.split('\n').map(line => line.trim());
 
     it('keeps the dividers drawn beside a pressed row', () => {
+      // Present first: a divided row's divider (StyleX writes ListItem's
+      // block-end border as the bottom one) and the press states are in the
+      // stylesheet, so the check below finds nothing only when nothing hides
+      // the divider.
+      for (const declaration of [
+        '{border-bottom-width:var(--border-width)}',
+        '{border-bottom-style:solid}',
+        '{border-bottom-color:var(--color-border)}',
+      ]) {
+        expect(
+          rules().some(rule => rule.includes(declaration)),
+          declaration,
+        ).toBe(true);
+      }
+      expect(rules().some(rule => rule.includes('[data-astryx-press='))).toBe(
+        true,
+      );
       // No press state hides a divider or reaches the press layer over one.
       expect(
         rules().filter(

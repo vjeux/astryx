@@ -158,6 +158,8 @@ describe('useTouchHitArea', () => {
       removeEventListener: () => {},
     }));
     render(<Host enabled target="60px" />);
+    // Present first: the hit area is on, watching the element.
+    expect(watches).toHaveLength(1);
     expect(listeners).toEqual([]);
   });
 
