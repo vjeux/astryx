@@ -3,8 +3,10 @@
 /**
  * @file playingCardsTemplates.test.tsx
  * @input The CLI's two playing-card examples of the public animator (the
- *   `useAnimator` one and the plain-JavaScript `createAnimator` one), each
- *   rendered with a recording animator in place of the real one.
+ *   `useAnimator` one, which drags through `usePanGesture`, and the
+ *   plain-JavaScript `createAnimator` one), each rendered with a recording
+ *   animator in place of the real one, and the React one with a recording
+ *   pan whose drags the test reports.
  * @output Tests that a drag held still before its release springs back
  *   instead of being thrown, that a thrown card's successor is dealt and
  *   announced once the thrown card has faded, without waiting for its coast,
@@ -38,6 +40,12 @@ const recorder = vi.hoisted(() => {
   const state = {
     calls: [] as {method: string; values?: unknown}[],
     finishFade: () => {},
+    /** The React example's pan listener, as usePanGesture received it. */
+    onPan: (_event: {
+      state: 'began' | 'changed' | 'ended' | 'cancelled';
+      translation: {x: number; y: number};
+      velocity: {x: number; y: number};
+    }) => {},
   };
   const animator = {
     animate: async (values: {opacity?: number}) => {
@@ -67,6 +75,12 @@ const recorder = vi.hoisted(() => {
 vi.mock('@astryxdesign/core/hooks', async importOriginal => ({
   ...(await importOriginal<object>()),
   useAnimator: () => recorder.animator,
+  usePanGesture: (
+    _ref: unknown,
+    options: {onPan: typeof recorder.state.onPan},
+  ) => {
+    recorder.state.onPan = options.onPan;
+  },
 }));
 vi.mock('@astryxdesign/core', async importOriginal => ({
   ...(await importOriginal<object>()),
@@ -93,13 +107,39 @@ function pointer(
   });
 }
 
-/** A 150 px drag over 100 ms, released at `releasedAt`. */
-function drag(card: Element, releasedAt: number) {
+/**
+ * A 150 px drag over 100 ms, released at `releasedAt`, through the card's
+ * pointer events (the plain-JavaScript example samples them itself).
+ */
+function pointerDrag(card: Element, releasedAt: number) {
   pointer(card, 'pointerdown', 0, 1000);
   for (let step = 1; step <= 10; step++) {
     pointer(card, 'pointermove', step * 15, 1000 + step * 10);
   }
   pointer(card, 'pointerup', 150, releasedAt);
+}
+
+/**
+ * The same drag as the pan reports it to the React example: a finger that
+ * rested before lifting releases at 0 px/s, a flick at its speed.
+ */
+function panDrag(isStill: boolean) {
+  const report = recorder.state.onPan;
+  act(() => {
+    report({state: 'began', translation: {x: 0, y: 0}, velocity: {x: 0, y: 0}});
+    for (let step = 1; step <= 10; step++) {
+      report({
+        state: 'changed',
+        translation: {x: step * 15, y: 0},
+        velocity: {x: 1500, y: 0},
+      });
+    }
+    report({
+      state: 'ended',
+      translation: {x: 150, y: 0},
+      velocity: isStill ? {x: 0, y: 0} : {x: 1500, y: 0},
+    });
+  });
 }
 
 const methods = () => recorder.state.calls.map(call => call.method);
@@ -108,20 +148,25 @@ const EXAMPLES = [
   {
     name: 'the useAnimator example',
     mount: () => render(<AnimatorPlayingCards />),
-    card: () => screen.getByLabelText('Ace of spades'),
+    // Held still for 600 ms before the release, or flicked.
+    drag: (isStill: boolean) => panDrag(isStill),
     discardButton: 'Discard Ace of spades',
     announced: 'Ace of spades discarded',
   },
   {
     name: 'the createAnimator example',
     mount: () => render(<AnimatorPlayingCardsVanilla />),
-    card: () => screen.getByLabelText('Top card'),
+    drag: (isStill: boolean) =>
+      pointerDrag(
+        screen.getByLabelText('Top card'),
+        isStill ? 1100 + 600 : 1100,
+      ),
     discardButton: 'Discard the top card',
     announced: 'A\u2660 discarded',
   },
 ];
 
-describe.each(EXAMPLES)('$name', ({mount, card, discardButton, announced}) => {
+describe.each(EXAMPLES)('$name', ({mount, drag, discardButton, announced}) => {
   beforeEach(() => {
     recorder.state.calls = [];
     HTMLElement.prototype.setPointerCapture = () => {};
@@ -132,7 +177,7 @@ describe.each(EXAMPLES)('$name', ({mount, card, discardButton, announced}) => {
 
   it('a drag held still for 600 ms before its release springs back, not thrown', () => {
     mount();
-    drag(card(), 1100 + 600);
+    drag(true);
     expect(methods()).not.toContain('decay');
     expect(recorder.state.calls.at(-1)).toMatchObject({
       method: 'animate',
@@ -142,7 +187,7 @@ describe.each(EXAMPLES)('$name', ({mount, card, discardButton, announced}) => {
 
   it('a flick deals and announces the next card once the thrown one fades, during its coast', async () => {
     mount();
-    drag(card(), 1100);
+    drag(false);
     expect(methods()).toContain('decay');
     expect(screen.queryByText(announced)).toBeNull();
     await act(async () => {
