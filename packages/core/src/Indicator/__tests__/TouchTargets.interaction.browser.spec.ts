@@ -79,6 +79,20 @@ async function radioRows(page: Page): Promise<Rect[]> {
 
 const centre = (r: Rect) => ({x: r.x + r.width / 2, y: r.y + r.height / 2});
 
+/**
+ * What a check measures is on screen and painted: at least `min` boxes, each
+ * with a width and a height. A size or geometry check that passes with
+ * nothing drawn proves nothing, so each one runs after this.
+ */
+function expectPainted(rects: ReadonlyArray<Rect>, min = 1): void {
+  const summary = JSON.stringify(rects);
+  expect(rects.length, summary).toBeGreaterThanOrEqual(min);
+  for (const r of rects) {
+    expect(r.width, summary).toBeGreaterThan(0);
+    expect(r.height, summary).toBeGreaterThan(0);
+  }
+}
+
 /** A hit area's insets on an element, px, as `watchHitArea` writes them. */
 async function hitInsets(page: Page, selector: string, index = 0) {
   return page
@@ -206,6 +220,7 @@ test.describe('selection controls under a finger', () => {
     ).toBe(`${SIZE}px`);
     const insets = await measuredInsets(page, CHECKBOX_ROW);
     const finger = await checkboxGeometry(page);
+    expectPainted([finger.input, finger.box, finger.row]);
     // The layer adds no layout: the same boxes without it.
     expect(finger).toEqual(
       await withoutLayer(page, CHECKBOX_ROW, async () =>
@@ -244,7 +259,7 @@ test.describe('selection controls under a finger', () => {
       });
       await measuredInsets(page, RADIO_ROW);
       const finger = await radioRows(page);
-      expect(finger.length).toBeGreaterThan(1);
+      expectPainted(finger, 2);
       expect(finger).toEqual(
         await withoutLayer(page, RADIO_ROW, async () => radioRows(page)),
       );
@@ -282,7 +297,7 @@ test.describe('selection controls under a finger', () => {
         density,
       });
       const finger = await checkboxListRows(page);
-      expect(finger.length).toBeGreaterThan(1);
+      expectPainted(finger, 2);
       expect(finger).toEqual(
         await withoutLayer(page, LIST_ROW, async () => checkboxListRows(page)),
       );
@@ -359,6 +374,11 @@ test.describe('selection controls under a finger', () => {
           }, rowSelector);
       const today = await read();
       expect(today.rows.length).toBeGreaterThan(1);
+      for (const row of today.rows) {
+        expect(row.height, JSON.stringify(today.rows)).toBeGreaterThan(0);
+      }
+      expect(today.input.width).toBeGreaterThan(0);
+      expect(today.input.height).toBeGreaterThan(0);
       if (rowSelector === 'li') {
         // Each task item is its text's lines plus its padding: no touch
         // floor, so the pitch is the one `main` has under a finger (a
@@ -404,6 +424,10 @@ test.describe('selection controls under a finger', () => {
         input: {width: r.width, height: r.height},
       };
     });
+    // The option and its box are drawn before their sizes count.
+    expect(marker.option).toBeGreaterThan(0);
+    expect(marker.input.width).toBeGreaterThan(0);
+    expect(marker.input.height).toBeGreaterThan(0);
     expect(marker.option).toBeLessThan(SIZE);
     expect(marker.input.width).toBeLessThanOrEqual(24.5);
     expect(marker.input.height).toBeLessThanOrEqual(24.5);
@@ -431,6 +455,7 @@ test.describe('selection controls under a finger', () => {
         await mousePage.evaluate(() => matchMedia('(pointer: coarse)').matches),
       ).toBe(false);
       const {input, box, row} = await checkboxGeometry(mousePage);
+      expectPainted([input, box, row]);
       expect(input.width).toBeCloseTo(box.width, 0);
       expect(row.height).toBeLessThan(SIZE);
       await mousePage.waitForTimeout(100);

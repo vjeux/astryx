@@ -118,7 +118,14 @@ async function measuredRowsOf(page: Page): Promise<Row[]> {
       return settled;
     })
     .toBe(true);
-  return rowsOf(page);
+  const rows = await rowsOf(page);
+  // The rows are on screen and painted before anything is measured against
+  // them: a check that passes with nothing drawn proves nothing.
+  expect(rows.length, JSON.stringify(rows)).toBeGreaterThan(0);
+  for (const row of rows) {
+    expect(row.height, JSON.stringify(rows)).toBeGreaterThan(0);
+  }
+  return rows;
 }
 
 /** A theme that sets the touch target size, before the story renders. */
@@ -150,6 +157,11 @@ const isTouch = async (page: Page) =>
 
 /** FR42's invariant: no row's area reaches into the next row's area. */
 function expectNoOverlap(rows: ReadonlyArray<Row>): void {
+  // Two painted rows at least, or there is nothing to keep apart.
+  expect(rows.length, JSON.stringify(rows)).toBeGreaterThan(1);
+  for (const row of rows) {
+    expect(row.height, JSON.stringify(rows)).toBeGreaterThan(0);
+  }
   for (let i = 0; i + 1 < rows.length; i++) {
     expect(
       rows[i].bottom + rows[i].layer.bottom,
