@@ -5,7 +5,8 @@
 /**
  * @file useClickableContainer.ts
  * @input Container ref, interactive element ref, click/href handlers
- * @output onClick and onMouseUp handlers for the container; INTERACTIVE_SELECTORS list
+ * @output onClick and onMouseUp handlers for the container; INTERACTIVE_SELECTORS list;
+ *   hasInteractiveAncestor and the shared innermostInteractive walk
  * @position Core hook for clickable containers that safely handle nested interactive elements
  *
  * Solves the "nested interactive elements" problem: when a card is clickable
@@ -22,6 +23,17 @@
 
 import {useCallback, useEffect, type RefObject, type MouseEvent} from 'react';
 import {isSafeUrl} from '../utils/safeUrl';
+
+/**
+ * The attribute this hook sets on the container it makes clickable: "true"
+ * while it takes clicks, "disabled" while it does not. A click inside a
+ * nested marked container belongs to that container (see
+ * INTERACTIVE_SELECTORS), and a hover layer reads the mark: a tap that lands
+ * in a container marked disabled opens the layer with its reason.
+ *
+ * SYNC: /packages/core/src/Layer/useTouchTrigger.ts (tapLandsOnDisabledControl)
+ */
+export const PRESSABLE_CONTAINER_ATTRIBUTE = 'data-pressable-container';
 
 /**
  * Canonical list of interactive element selectors — native controls plus
@@ -52,15 +64,48 @@ export const INTERACTIVE_SELECTORS = [
   '[role="listbox"]',
   '[role="slider"]',
   '[role="spinbutton"]',
-  '[data-pressable-container]',
+  `[${PRESSABLE_CONTAINER_ATTRIBUTE}]`,
 ].join(',');
 
 const NON_INTERACTIVE_SELECTORS = '[aria-readonly="true"]';
 
 /**
- * Check whether an element has an interactive ancestor between it and the root.
- * If the click target is inside a nested button/link/etc., we should NOT
- * handle it at the container level.
+ * Whether this element is interactive by INTERACTIVE_SELECTORS: a control,
+ * link, editor, or nested clickable container, and not marked read-only.
+ */
+export function matchesInteractiveSelectors(element: Element): boolean {
+  return (
+    element.matches(INTERACTIVE_SELECTORS) &&
+    !element.matches(NON_INTERACTIVE_SELECTORS)
+  );
+}
+
+/**
+ * The innermost element, from `el` up to (not including) `rootEl` or the
+ * document body, that `isInteractive` accepts: by default the
+ * INTERACTIVE_SELECTORS match. The one walk every "does this event belong
+ * to a control" check shares; a hover layer's tap passes its own test
+ * (useTouchTrigger's `tapLandsOnDisabledControl`).
+ */
+export function innermostInteractive(
+  el: Element,
+  rootEl: Element | null,
+  isInteractive: (element: Element) => boolean = matchesInteractiveSelectors,
+): Element | null {
+  let current: Element | null = el;
+  while (current != null && current !== rootEl && current !== document.body) {
+    if (isInteractive(current)) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return null;
+}
+
+/**
+ * Check whether an element has an interactive ancestor between it and the
+ * root (the element itself included). If the click target is inside a nested
+ * button/link/etc., we should NOT handle it at the container level.
  *
  * Exported for containers that cannot use the hook itself — a `<tr>` whose
  * props are assembled inside a Table plugin's `transformBodyRow`, for
@@ -69,17 +114,7 @@ const NON_INTERACTIVE_SELECTORS = '[aria-readonly="true"]';
  * instead of a short hand-rolled selector list per caller.
  */
 export function hasInteractiveAncestor(el: Element, rootEl: Element): boolean {
-  let current: Element | null = el;
-  while (current != null && current !== rootEl && current !== document.body) {
-    if (
-      current.matches(INTERACTIVE_SELECTORS) &&
-      !current.matches(NON_INTERACTIVE_SELECTORS)
-    ) {
-      return true;
-    }
-    current = current.parentElement;
-  }
-  return false;
+  return innermostInteractive(el, rootEl) != null;
 }
 
 /**
@@ -160,13 +195,21 @@ export function useClickableContainer({
   target,
   disabled = false,
 }: UseClickableContainerOptions): ClickableContainerResult {
-  // Mark container as pressable for the interactive selector check
+  // Mark container as pressable for the interactive selector check. The value
+  // says whether it takes a click right now: "true" while clickable,
+  // "disabled" while not, so a layer on a disabled container (a disabled
+  // field's reason) opens on a tap (useTouchTrigger's
+  // `tapLandsOnDisabledControl`). Either value counts for the nested-control
+  // check.
   useEffect(() => {
     const el = containerRef.current;
     if (el) {
-      el.setAttribute('data-pressable-container', 'true');
+      el.setAttribute(
+        PRESSABLE_CONTAINER_ATTRIBUTE,
+        disabled ? 'disabled' : 'true',
+      );
     }
-  }, [containerRef]);
+  }, [containerRef, disabled]);
 
   const onClick = useCallback(
     (event: MouseEvent<HTMLElement>) => {
