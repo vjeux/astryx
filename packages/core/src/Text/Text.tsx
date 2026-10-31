@@ -23,6 +23,8 @@ import {
   useCallback,
   useRef,
   useState,
+  type MouseEvent,
+  type PointerEvent,
   type ReactNode,
 } from 'react';
 import * as stylex from '@stylexjs/stylex';
@@ -108,7 +110,8 @@ export interface TextProps extends Omit<BaseProps, 'children'> {
   /**
    * Maximum lines before truncation. 0 = no truncation.
    * When set, truncated content shows its full text in a tooltip on hover,
-   * and is a tab stop so the tooltip opens on keyboard focus too (FR4).
+   * and is a tab stop so the tooltip opens on keyboard focus too (FR4); a tap
+   * on it opens the tooltip as well.
    * @default 0
    */
   maxLines?: number;
@@ -246,6 +249,11 @@ const CONTROL_SELECTOR = [
   '[role="radio"]',
 ].join(', ');
 
+// The pointers whose press is a tap: a finger, or a pen touching the screen.
+// SYNC: /packages/core/src/Layer/useTouchTrigger.ts (TOUCH_POINTER_TYPES); a
+// copy, so Text keeps loading Tooltip lazily.
+const TAP_POINTER_TYPES = new Set(['touch', 'pen']);
+
 /**
  * Semantic text component. Renders text with type-based styling from the theme.
  *
@@ -367,6 +375,28 @@ export function Text({
   const isTabStop =
     tooltipEnabled && !isExcludedByAncestor && !isInsideFocusOwner;
 
+  // A truncated Text that is its own tab stop owns its tap as it owns its
+  // focus: a tap by finger or pen opens or closes the full text
+  // (`touchTrigger="tap"`) and stops there. It does not go on to activate a
+  // label's control or a pressable container the Text sits in, as a press
+  // anywhere else in them would. A mouse click and the keyboard are unchanged.
+  const pressIsTapRef = useRef(false);
+  const {onPointerDown: callerOnPointerDown, onClick: callerOnClick} = props;
+  const handleTapPointerDown = (event: PointerEvent<HTMLElement>) => {
+    callerOnPointerDown?.(event);
+    pressIsTapRef.current = TAP_POINTER_TYPES.has(event.pointerType);
+  };
+  const handleTapClick = (event: MouseEvent<HTMLElement>) => {
+    callerOnClick?.(event);
+    if (pressIsTapRef.current) {
+      // The label's activation is the click's default action; a pressable
+      // container runs its handler as the click bubbles.
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    pressIsTapRef.current = false;
+  };
+
   // Keep the merged ref stable across rerenders.
   const mergedRef = useMergedRefs(
     ref,
@@ -414,7 +444,10 @@ export function Text({
           {...style, ...inlineStyle},
         )}
         tabIndex={isTabStop ? 0 : undefined}
-        {...props}>
+        {...props}
+        {...(isTabStop
+          ? {onPointerDown: handleTapPointerDown, onClick: handleTapClick}
+          : null)}>
         {children}
       </Component>
       {tooltipEnabled && (
@@ -432,6 +465,9 @@ export function Text({
             focusTrigger={
               isTabStop && callerTabIndex == null ? 'always' : 'auto'
             }
+            // A tab stop's tap opens the full text even where a tap would
+            // otherwise go to a control around it (see handleTapClick).
+            touchTrigger={isTabStop ? 'tap' : 'auto'}
           />
         </Suspense>
       )}

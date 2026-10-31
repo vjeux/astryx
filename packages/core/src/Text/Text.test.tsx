@@ -13,7 +13,7 @@ import {CheckboxList} from '../CheckboxList/CheckboxList';
 import {CheckboxListItem} from '../CheckboxList/CheckboxListItem';
 import {RadioList} from '../RadioList/RadioList';
 import {RadioListItem} from '../RadioList/RadioListItem';
-import {describe, it, expect, vi} from 'vitest';
+import {afterEach, beforeEach, describe, it, expect, vi} from 'vitest';
 import {Text} from './Text';
 import type {TextType} from './Text';
 import type {TextColor} from '../theme/types';
@@ -341,6 +341,175 @@ describe('truncated text shows one tooltip, not two', () => {
       }
     };
   }
+
+  describe('a tap on a truncated Text that is its own tab stop (FR4)', () => {
+    const SENTENCE = 'A label far wider than the space it has been given';
+
+    /** A finger's (or a pen's) tap, in the order a browser dispatches it. */
+    const tap = (element: HTMLElement, pointerType = 'touch') => {
+      fireEvent.pointerEnter(element, {pointerType});
+      fireEvent.pointerDown(element, {pointerType});
+      fireEvent.pointerUp(element, {pointerType});
+      fireEvent.mouseEnter(element);
+      fireEvent.click(element);
+    };
+
+    /** A mouse click, with no hover first. */
+    const click = (element: HTMLElement) => {
+      fireEvent.pointerDown(element, {pointerType: 'mouse'});
+      fireEvent.pointerUp(element, {pointerType: 'mouse'});
+      fireEvent.click(element);
+    };
+
+    /**
+     * The Text once it is a tab stop and its lazily loaded tooltip has
+     * mounted, attaching its listeners to the text in the same commit.
+     */
+    async function readyText(text: string) {
+      const element = textElement(text);
+      await waitFor(() => expect(element).toHaveAttribute('tabindex', '0'));
+      await waitFor(() =>
+        expect(
+          screen
+            .queryAllByRole('tooltip', {hidden: true})
+            .some(tooltip => tooltip.textContent === text),
+        ).toBe(true),
+      );
+      return element;
+    }
+
+    // The popovers shown, by text: the tooltip shows itself with
+    // `showPopover()`, which jsdom leaves to the test.
+    let shown: string[] = [];
+    let restorePopover = () => {};
+    beforeEach(() => {
+      shown = [];
+      const proto = HTMLElement.prototype as {showPopover?: () => void};
+      const original = proto.showPopover;
+      proto.showPopover = function (this: HTMLElement) {
+        shown.push(this.textContent ?? '');
+        original?.call(this);
+      };
+      restorePopover = () => {
+        proto.showPopover = original;
+      };
+    });
+    afterEach(() => restorePopover());
+
+    const timesShown = () => shown.filter(text => text === SENTENCE).length;
+
+    it('opens the full text on a finger or pen tap where a tap would otherwise go elsewhere', async () => {
+      // A label is a trigger whose tap the tooltip leaves alone by default.
+      const restore = withOverflow();
+      try {
+        render(
+          <Text type="body" as="label" maxLines={1}>
+            {SENTENCE}
+          </Text>,
+        );
+        const text = await readyText(SENTENCE);
+        tap(text);
+        await waitFor(() => expect(timesShown()).toBe(1));
+        // The next tap closes it; a pen's tap opens it again.
+        tap(text);
+        tap(text, 'pen');
+        await waitFor(() => expect(timesShown()).toBe(2));
+      } finally {
+        restore();
+      }
+    });
+
+    it('opens the full text on a tap without pressing a pressable container it sits in', async () => {
+      const restore = withOverflow();
+      const onPress = vi.fn();
+      try {
+        render(
+          <div data-pressable-container="true" onClick={onPress}>
+            <Text type="body" maxLines={1}>
+              {SENTENCE}
+            </Text>
+          </div>,
+        );
+        tap(await readyText(SENTENCE));
+        await waitFor(() => expect(timesShown()).toBe(1));
+        expect(onPress).not.toHaveBeenCalled();
+      } finally {
+        restore();
+      }
+    });
+
+    it('leaves a mouse click to the container, as before', async () => {
+      const restore = withOverflow();
+      const onPress = vi.fn();
+      try {
+        render(
+          <div data-pressable-container="true" onClick={onPress}>
+            <Text type="body" maxLines={1}>
+              {SENTENCE}
+            </Text>
+          </div>,
+        );
+        click(await readyText(SENTENCE));
+        expect(onPress).toHaveBeenCalledTimes(1);
+      } finally {
+        restore();
+      }
+    });
+
+    it('still runs the caller\u2019s own press handlers on a tap', async () => {
+      const restore = withOverflow();
+      const onPointerDown = vi.fn();
+      const onClick = vi.fn();
+      try {
+        render(
+          <Text
+            type="body"
+            maxLines={1}
+            onPointerDown={onPointerDown}
+            onClick={onClick}>
+            {SENTENCE}
+          </Text>,
+        );
+        tap(await readyText(SENTENCE));
+        expect(onPointerDown).toHaveBeenCalledTimes(1);
+        expect(onClick).toHaveBeenCalledTimes(1);
+      } finally {
+        restore();
+      }
+    });
+
+    it('leaves the tap to a link it sits in, where it is no tab stop', async () => {
+      const restore = withOverflow();
+      const onLinkClick = vi.fn((event: {preventDefault: () => void}) =>
+        event.preventDefault(),
+      );
+      try {
+        render(
+          <>
+            <a href="/docs" onClick={onLinkClick}>
+              <Text type="body" maxLines={1}>
+                Inside a link, wider than the space it has
+              </Text>
+            </a>
+            <Text type="body" maxLines={1}>
+              {SENTENCE}
+            </Text>
+          </>,
+        );
+        // The standalone sibling, measured in the same pass, is a tab stop:
+        // the one in the link has been measured as truncated too.
+        await readyText(SENTENCE);
+        const inLink = textElement(
+          'Inside a link, wider than the space it has',
+        );
+        expect(inLink).not.toHaveAttribute('tabindex');
+        tap(inLink);
+        expect(onLinkClick).toHaveBeenCalledTimes(1);
+      } finally {
+        restore();
+      }
+    });
+  });
 
   it('is a tab stop while truncated, so its tooltip opens from the keyboard (FR4)', async () => {
     const restore = withOverflow();
