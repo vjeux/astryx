@@ -12,6 +12,11 @@
  * @output Exports ListItem component, ListItemProps type
  * @position Core implementation; consumed by List, index.ts, tested by List.test.tsx
  *
+ * In a reorderable List (`List reorderable`), each row with an `itemKey`
+ * that the reorderable object lets move ends with its handle, which comes
+ * through ListContext's `reorder` with the rest of the reorder machinery
+ * (List/listReorderContext.ts); a row without one keeps its place.
+ *
  * Composes Item for the shared start content + label + description + end content layout
  * and the invisible button/anchor interactive pattern.
  *
@@ -23,7 +28,7 @@
  * - /packages/cli/assets/templates/blocks/components/List/ (showcase blocks)
  */
 
-import {use, useRef, type ReactNode} from 'react';
+import {use, useMemo, useRef, type ReactNode} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import type {StyleXStyles} from '@stylexjs/stylex';
 import {
@@ -36,6 +41,7 @@ import type {BaseProps} from '../BaseProps';
 import {ListContext, type ListMarker} from './ListContext';
 import {CheckboxInput} from '../CheckboxInput';
 import {mergeProps} from '../utils';
+import {ItemTrailingContext} from '../Item/ItemTrailingContext';
 import {Item} from '../Item';
 import {servesSwipeActions} from '../Item/Item';
 import type {ItemAlign, ItemSwipeActions, ItemSwipeBehavior} from '../Item';
@@ -142,8 +148,11 @@ export interface ListItemProps extends BaseProps<HTMLLIElement> {
   /**
    * The row's item key, a string or a number from the data (the shape
    * Table's `idKey` returns): the row's identity for the list's animated
-   * layout (`animatedLayout`, `component:List` FR12). A row without one
-   * changes at once. Separate from React's `key`, which stays React's own.
+   * layout (`animatedLayout`, `component:List` FR12), and, in a reorderable
+   * List (`List reorderable`), the key the reorderable object's `onReorder`
+   * reports as given and `isReorderable` is asked about. A row without one
+   * changes at once and has no reorder handle. Separate from React's `key`,
+   * which stays React's own.
    */
   itemKey?: string | number;
 
@@ -427,6 +436,44 @@ export function ListItem({
   // header (`spec:AST-027` FR1–FR2). Outside a List nothing bounds a raise,
   // so a row raises nothing there.
   const isInList = ctx != null;
+  // In a reorderable List: a trailing handle, or a row that stays put.
+  const reorder = ctx?.reorder;
+  const hasHandle =
+    reorder != null &&
+    itemKey != null &&
+    (reorder.options.isReorderable?.(itemKey) ?? true);
+  // The handle is the one element reordering adds to a row (spec:AST-103
+  // FR5): with end content it joins the end slot; without, it is the row's
+  // own child (ItemTrailingContext), since an end slot of its own would be a
+  // second element.
+  const isHandleInRow = hasHandle && endContent == null;
+  const rowLabel = restProps['aria-label'];
+  const rowLabelledBy = restProps['aria-labelledby'];
+  const rowAlign = isHandleInRow ? (align ?? 'center') : undefined;
+  const Handle = reorder?.session.Handle;
+  const reorderHandle = useMemo(
+    () =>
+      hasHandle && Handle != null && itemKey != null ? (
+        <Handle
+          label={label}
+          itemKey={itemKey}
+          isDisabled={isDisabled}
+          rowLabel={rowLabel}
+          rowLabelledBy={rowLabelledBy}
+          rowAlign={rowAlign}
+        />
+      ) : null,
+    [
+      Handle,
+      hasHandle,
+      isDisabled,
+      itemKey,
+      label,
+      rowAlign,
+      rowLabel,
+      rowLabelledBy,
+    ],
+  );
   // Under a finger, an interactive row's hit target grows toward the touch
   // target where its neighbors leave room, with no visual or layout change
   // (`spec:AST-094` FR42; `component:List` FR10): useTouchHitArea keeps the row's insets live, and
@@ -488,7 +535,15 @@ export function ListItem({
       <span {...stylex.props(markerStyles.number, NUMBER_STYLES[markerKind])} />
     ) : null;
 
-  return (
+  // A row without a handle in a reorderable List still has a name for the
+  // announcements of the moves beside it. It follows the row, so the row's
+  // element is set when it records it.
+  const reorderName =
+    reorder && !reorderHandle ? (
+      <reorder.session.RowName row={rowRef} label={label} />
+    ) : null;
+
+  const row = (
     <Item
       as="li"
       ref={mergedRef}
@@ -496,7 +551,16 @@ export function ListItem({
       startContent={startContent}
       label={label}
       description={description}
-      endContent={endContent}
+      endContent={
+        reorderHandle != null && !isHandleInRow ? (
+          <>
+            {endContent}
+            {reorderHandle}
+          </>
+        ) : (
+          endContent
+        )
+      }
       onClick={onClick}
       interactiveRef={interactiveRef}
       href={href}
@@ -518,6 +582,9 @@ export function ListItem({
           edge === 'flush' && styles.edgeFlush,
           edge === 'outset' && styles.edgeOutset,
           edge === 'bleed' && styles.edgeBleed,
+          // A focused handle rings itself; the row's focus-within ring stays
+          // off for it (two rings, and the list clips the row's sides).
+          reorderHandle && reorder?.session.rowStyle,
           xstyle,
         ] as StyleXStyles
       }
@@ -527,6 +594,16 @@ export function ListItem({
       {...(itemKey != null ? {[ITEM_KEY_ATTRIBUTE]: String(itemKey)} : null)}
       {...restProps}
     />
+  );
+  return (
+    <>
+      {/* One shape whether or not the handle is the row's own child, so the
+          row keeps its element when that changes. */}
+      <ItemTrailingContext value={isHandleInRow ? reorderHandle : null}>
+        {row}
+      </ItemTrailingContext>
+      {reorderName}
+    </>
   );
 }
 

@@ -5,7 +5,8 @@
 /**
  * @file Item.tsx
  * @input Uses React, ReactNode, StyleXStyles, theme tokens, useClickableContainer,
- *   the shared press overlays and the compositor press layer
+ *   the shared press overlays and the compositor press layer, and a row's
+ *   trailing control (ItemTrailingContext)
  * @output Exports Item component, ItemProps type; publishes the shared inline inset
  * @position Core layout primitive; consumed by index.ts, tested by Item.test.tsx
  *
@@ -29,6 +30,7 @@
 import {
   lazy,
   Suspense,
+  use,
   useCallback,
   useId,
   useRef,
@@ -46,6 +48,8 @@ import {
 import type {BaseProps} from '../BaseProps';
 import {isRenderable, mergeProps} from '../utils';
 import {ItemDescriptionContext} from './ItemDescriptionContext';
+import {ItemLabelContext} from './ItemLabelContext';
+import {ItemTrailingContext} from './ItemTrailingContext';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 import {computeTargetAndRel} from '../Link/computeTargetAndRel';
 import {useLinkComponent} from '../Link/useLinkComponent';
@@ -714,6 +718,10 @@ export function Item({
   // only once React runs it, such as an empty fragment, still publishes an id.
   const descriptionID = useId();
   const hasRenderableDescription = isRenderable(description);
+  // The label element's id, published through ItemLabelContext for a control
+  // Item renders in a slot that is named after the row (`aria-labelledby`).
+  const labelID = useId();
+  const hasRenderableLabel = isRenderable(label);
 
   const isStringLabel = typeof label === 'string';
   const isStringDescription = typeof description === 'string';
@@ -743,6 +751,7 @@ export function Item({
   const labelAndDescription = (
     <>
       <span
+        id={hasRenderableLabel ? labelID : undefined}
         {...stylex.props(
           styles.label,
           isInline && styles.inlineLabel,
@@ -815,6 +824,10 @@ export function Item({
     }
     onClick?.(e);
   };
+
+  // A control a row adds after the slots, unwrapped (ItemTrailingContext):
+  // a List row's reorder handle when the row has no end content.
+  const trailing = use(ItemTrailingContext);
 
   const innerContent = (
     <>
@@ -889,6 +902,7 @@ export function Item({
           {endContent}
         </span>
       )}
+      {trailing}
     </>
   );
 
@@ -981,10 +995,14 @@ export function Item({
       )}
       role={role}
       onClick={rootOnClick}>
-      <ItemDescriptionContext
-        value={hasRenderableDescription ? descriptionID : null}>
-        {innerContent}
-      </ItemDescriptionContext>
+      <ItemTrailingContext value={null}>
+        <ItemDescriptionContext
+          value={hasRenderableDescription ? descriptionID : null}>
+          <ItemLabelContext value={hasRenderableLabel ? labelID : null}>
+            {innerContent}
+          </ItemLabelContext>
+        </ItemDescriptionContext>
+      </ItemTrailingContext>
       {hasSwipe && (
         // The panels: out-of-flow children of this root, so the DOM is the one
         // the row had before the split. Suspense and lazy add no element, and

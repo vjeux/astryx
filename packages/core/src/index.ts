@@ -172,6 +172,15 @@ export * from './Outline';
 // Overflow list
 export * from './OverflowList';
 
+// Reorder (a collection's `reorderable` prop), from the package root only:
+// it has no subpath of its own.
+export {
+  createReorderable,
+  type Reorderable,
+  type ReorderableOptions,
+  type ReorderMove,
+} from './reorderable/createReorderable';
+
 // Hooks
 export * from './hooks';
 

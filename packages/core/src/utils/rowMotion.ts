@@ -10,9 +10,12 @@
  *   lane that moves it (`animatorFor`, `motionOf` for its latest motion),
  *   `springHome` (spring a property to its resting value after the layout
  *   moved the element, keeping the velocity on screen), `springTo`,
+ *   `animateRow` (a spring from the value on screen at a given starting
+ *   velocity, such as a drop's release),
  *   `releaseMotion` (clear the identity inline values once it rests) and
  *   `motionNow` (the motion clock)
- * @position Internal utility for row motion (TreeList's expansion today),
+ * @position Internal utility for row motion (TreeList's expansion and the
+ *   List reorder's glides),
  *   shared by any code that moves a list row, so two motions never drive one
  *   row through two animators: every spring plays on the motion foundation's
  *   shared per-element `animatorFor`, never a local animator.
@@ -22,7 +25,8 @@
  * it home. A row moved again mid-motion keeps its velocity, so consecutive
  * updates blend instead of restarting.
  *
- * SYNC: When modified, update TreeList/useTreeExpansionMotion.ts.
+ * SYNC: When modified, update TreeList/useTreeExpansionMotion.ts and
+ * List/ListReorderTouch.ts.
  */
 
 import {animatorFor, type MotionHandle} from '../motion/animator';
@@ -126,6 +130,32 @@ export async function springTo(
       moving ? {at, crossfadeAs} : {crossfadeAs},
     ),
   ).finished;
+}
+
+/**
+ * Springs `element` toward `to` from the value on screen, at `velocity` when
+ * one is given (a drop's release speed, in units per second), on its shared
+ * animator, and records it like `springTo`, so `isMoving`, `motionOf` and
+ * `releaseMotion` see it. For a row a gesture hands over with a speed of its
+ * own, such as the List reorder's dropped row.
+ */
+export function animateRow(
+  element: HTMLElement,
+  to: Partial<Record<'y' | 'rotate' | 'opacity', number>>,
+  spring: SpringDescription,
+  options: {
+    at?: number;
+    velocity?: Partial<Record<'y' | 'rotate' | 'opacity', number>>;
+  } = {},
+): MotionHandle {
+  return track(
+    element,
+    animatorFor(element).animate(
+      to,
+      {spring, velocity: options.velocity},
+      {at: options.at},
+    ),
+  );
 }
 
 /**
