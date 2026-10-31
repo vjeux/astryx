@@ -7,9 +7,10 @@
  * @input The reorder's options, and List's reorder machinery
  *   (List/listReorderEngine.ts: the session, its handle and its touch layer)
  * @output `createReorderable`, which makes the object a collection's
- *   `reorderable` prop takes, whose one public method, `start(key)`, enters
- *   reorder mode from the app's own UI; and its types: `Reorderable`,
- *   `ReorderableOptions`, `ReorderMove`
+ *   `reorderable` prop takes, with `start(key)`, which enters reorder mode
+ *   from the app's own UI, and `attach(container, {items})`, which reorders
+ *   plain elements (List/listReorderAttach.tsx); and its types:
+ *   `Reorderable`, `ReorderableOptions`, `ReorderMove`, `ReorderableItem`
  * @position Public Core API (spec:AST-103), exported from the package root.
  *   The machinery ships here, on the object: a collection imports only the
  *   object's type, so one without `reorderable` loads no reorder code (FR2)
@@ -23,6 +24,7 @@ import {
   type ListReorderOptions,
   type ReorderableInternals,
 } from '../List/listReorderContext';
+import {attachReorder} from '../List/listReorderAttach';
 import {listReorderEngine} from '../List/listReorderEngine';
 
 /** A committed move: the item that moved and where it went. */
@@ -86,6 +88,33 @@ export interface Reorderable<
    * mode in the one mounted last.
    */
   start(key: TKey): void;
+  /**
+   * Reorders a container of plain elements, with no collection component
+   * (spec:AST-103 FR4b): `items()` returns one `{key, element, handle}` per
+   * item, in order. Each reorderable item's handle becomes reorder mode's
+   * toggle, named "Reorder" and the item's name, in the Tab order; the
+   * container gets the drag, reorder mode and their announcements. A move
+   * commits once `items()` reports the new order after `onReorder`; one whose
+   * order has not changed by the end of its task is refused and announced.
+   * `destroy` ends a drag or reorder mode calling nothing, and removes what
+   * `attach` added, putting back each handle's own role, name and tab order.
+   */
+  attach(
+    container: HTMLElement,
+    options: {readonly items: () => ReadonlyArray<ReorderableItem<TKey>>},
+  ): {destroy: () => void};
+}
+
+/** One plain element `attach` reorders (spec:AST-103 FR4b). */
+export interface ReorderableItem<
+  TKey extends string | number = string | number,
+> {
+  /** The key its moves report; an item without one cannot move. */
+  readonly key?: TKey | null;
+  /** The item: its accessible name, else its text, names it. */
+  readonly element: HTMLElement;
+  /** The element that drags it, and reorder mode's toggle. */
+  readonly handle: HTMLElement;
 }
 
 /**
@@ -118,6 +147,8 @@ export function createReorderable<
     options: options as unknown as ListReorderOptions,
     [REORDER_ENGINE]: listReorderEngine,
     start: key => listReorderEngine.start(internals.options, key),
+    attach: (container, {items}) =>
+      attachReorder(internals.options, container, items),
   };
   return internals as unknown as Reorderable<TKey, TTo>;
 }

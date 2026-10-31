@@ -98,10 +98,11 @@ const runningSprings = new WeakMap<MotionHandle, SpringDescription>();
 /** Starts a reorder motion on a row (rowMotion's `animateRow`), keeping its spring. */
 function startRow(
   element: HTMLElement,
+  to: {x?: number; y: number},
   spring: SpringDescription,
-  options: {at?: number; velocity?: {y: number}},
+  options: {at?: number; velocity?: {x?: number; y: number}},
 ): MotionHandle {
-  const handle = animateRow(element, {y: 0}, spring, options);
+  const handle = animateRow(element, to, spring, options);
   runningSprings.set(handle, spring);
   return handle;
 }
@@ -112,6 +113,21 @@ function releaseOnArrival(element: HTMLElement, arrived: Promise<boolean>) {
       releaseMotion(element, 'translate');
     }
   });
+}
+
+/**
+ * A row's offset: along the list (a number, its y), or on both axes in a
+ * slot layout (spec:AST-103 FR1, FR4b).
+ */
+type Shift = number | {readonly x: number; readonly y: number};
+
+function asShift(shift: Shift): {x?: number; y: number} {
+  return typeof shift === 'number' ? {y: shift} : {x: shift.x, y: shift.y};
+}
+
+/** The rest the offset goes to: 0 on each axis it moves on. */
+function zeroOf(shift: {x?: number; y: number}): {x?: number; y: number} {
+  return shift.x == null ? {y: 0} : {x: 0, y: 0};
 }
 
 /** UIKit's motion for the rows of a reorder under a finger. */
@@ -135,15 +151,17 @@ export const touchMotion = {
    */
   glide(
     element: HTMLElement,
-    shift: number,
+    shift: Shift,
     spring: SpringDescription,
     at: number,
-    velocity: number,
+    velocity: Shift,
   ): void {
-    animatorFor(element).rebase({y: shift}, {at});
+    const from = asShift(shift);
+    const speed = asShift(velocity);
+    animatorFor(element).rebase(from, {at});
     releaseOnArrival(
       element,
-      startRow(element, spring, {at, velocity: {y: velocity}}).finished,
+      startRow(element, zeroOf(from), spring, {at, velocity: speed}).finished,
     );
   },
   /**
@@ -158,7 +176,7 @@ export const touchMotion = {
   ): void {
     releaseOnArrival(
       element,
-      startRow(element, spring, {
+      startRow(element, {y: 0}, spring, {
         at,
         velocity: fromRest ? {y: 0} : undefined,
       }).finished,
@@ -172,14 +190,18 @@ export const touchMotion = {
    */
   follow(
     element: HTMLElement,
-    shift: number,
+    shift: Shift,
     spring: SpringDescription,
     at: number,
   ): void {
+    const from = asShift(shift);
     const handle = motionOf(element);
     const running =
       (handle != null ? runningSprings.get(handle) : null) ?? spring;
-    animatorFor(element).rebase({y: shift}, {at});
-    releaseOnArrival(element, startRow(element, running, {at}).finished);
+    animatorFor(element).rebase(from, {at});
+    releaseOnArrival(
+      element,
+      startRow(element, zeroOf(from), running, {at}).finished,
+    );
   },
 };

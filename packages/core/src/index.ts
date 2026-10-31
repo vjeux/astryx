@@ -177,6 +177,7 @@ export * from './OverflowList';
 export {
   createReorderable,
   type Reorderable,
+  type ReorderableItem,
   type ReorderableOptions,
   type ReorderMove,
 } from './reorderable/createReorderable';
