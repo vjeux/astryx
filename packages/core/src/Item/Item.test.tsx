@@ -1200,6 +1200,21 @@ describe('swipeActions', () => {
       expect(xOf(row)).toBe(72);
     });
 
+    it('closes a row a finger opened on a tap on its content, as on a phone', async () => {
+      expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
+      const {row, onClick} = renderRow();
+      dragLeading(row, 45);
+      await settled();
+      expect(xOf(row)).toBe(72);
+      const f = finger(screen.getByRole('button', {name: 'Conversation'}), 2);
+      f.down(150);
+      // Taken at the lift: no click reaches the row.
+      expect(f.up().defaultPrevented).toBe(true);
+      await settled();
+      expect(xOf(row)).toBe(0);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
     it('never swipes under a mouse', async () => {
       expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
       const {row} = renderRow();
@@ -1454,6 +1469,26 @@ describe('swipeActions', () => {
       expect(onClick).not.toHaveBeenCalled();
     });
 
+    it('fires a tapped entry while the row is still springing open: the row is open from its release', async () => {
+      const onActivate = vi.fn();
+      const onClick = vi.fn();
+      const {row} = renderRow({
+        leading: [{label: 'Unread', onActivate}],
+        onClick,
+      });
+      dragLeading(row, 45);
+      // Released past half the panel 16 ms ago: the settle has hundreds of
+      // milliseconds left, yet the row already counts as open, so its panel
+      // is live and an entry tapped now fires.
+      const panel = panelOf(row, 'leading') as HTMLElement;
+      expect(panel).not.toHaveAttribute('inert');
+      fireEvent.click(screen.getByRole('button', {name: 'Unread'}));
+      expect(onActivate).toHaveBeenCalledTimes(1);
+      await settled();
+      expect(xOf(row)).toBe(0);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
     it('opens on a flick from short of half the panel, and fires nothing', async () => {
       const onActivate = vi.fn();
       const {row} = renderRow({leading: [{label: 'Unread', onActivate}]});
@@ -1572,7 +1607,11 @@ describe('swipeActions', () => {
       await act(async () => {
         vi.advanceTimersByTime(16);
       });
-      expect(panelOf(row, 'leading')).toHaveAttribute('inert');
+      // Mid-fade the row has not travelled: it lands at the bottom of the
+      // dip. It is open from its release, as after a spring, so its panel is
+      // already live.
+      expect(xOf(row)).toBe(45);
+      expect(panelOf(row, 'leading')).not.toHaveAttribute('inert');
       await act(async () => {
         vi.advanceTimersByTime(534);
       });
@@ -1605,6 +1644,94 @@ describe('swipeActions', () => {
       expect(document.activeElement).toBe(
         screen.getByRole('button', {name: 'Conversation'}),
       );
+    });
+
+    it('closes a resting row on a tap on its own content, and the tap activates nothing', async () => {
+      const {row, onClick} = renderRow();
+      dragLeading(row, 45);
+      await settled();
+      expect(xOf(row)).toBe(72);
+      const f = finger(screen.getByRole('button', {name: 'Conversation'}), 2);
+      f.down(150);
+      // Taken at the lift: its touchend is cancelled, so the browser makes no
+      // click on the row.
+      expect(f.up().defaultPrevented).toBe(true);
+      await settled();
+      expect(xOf(row)).toBe(0);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('counts a row open from the release that opens it: a tap while it settles open closes it', async () => {
+      const {row, onClick} = renderRow();
+      dragLeading(row, 45);
+      // The spring is still on its way to rest open.
+      const f = finger(screen.getByRole('button', {name: 'Conversation'}), 2);
+      f.down(150);
+      expect(f.up().defaultPrevented).toBe(true);
+      await settled();
+      expect(xOf(row)).toBe(0);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('takes no press while open: the root is no pressable surface from the release that opens it until it closes', async () => {
+      const {row} = renderRow();
+      expect(row).toHaveAttribute('data-astryx-pressable');
+      dragLeading(row, 45);
+      // Settling open already counts as open.
+      expect(row).not.toHaveAttribute('data-astryx-pressable');
+      await settled();
+      expect(xOf(row)).toBe(72);
+      expect(row).not.toHaveAttribute('data-astryx-pressable');
+      const f = finger(screen.getByRole('button', {name: 'Conversation'}), 2);
+      f.down(150);
+      f.up();
+      // Closing: a pressable surface again, for the next tap.
+      expect(row).toHaveAttribute('data-astryx-pressable');
+      await settled();
+      expect(xOf(row)).toBe(0);
+    });
+
+    it('leaves a tap on a resting entry to the entry, and a tap on a closed row to the row', async () => {
+      const {row} = renderRow();
+      let f = finger(screen.getByRole('button', {name: 'Conversation'}), 2);
+      f.down(150);
+      expect(f.up().defaultPrevented).toBe(false);
+      dragLeading(row, 45);
+      await settled();
+      f = finger(screen.getByRole('button', {name: 'Unread'}), 3);
+      f.down(30);
+      expect(f.up().defaultPrevented).toBe(false);
+      expect(xOf(row)).toBe(72);
+    });
+
+    it('stays open on a scroll while focus is inside it, which may be the browser bringing a focused entry into view', async () => {
+      const {row} = renderRow();
+      dragLeading(row, 45);
+      await settled();
+      const entry = screen.getByRole('button', {name: 'Unread'});
+      act(() => {
+        entry.focus();
+      });
+      fireEvent.scroll(row.parentElement as HTMLElement);
+      await settled();
+      expect(xOf(row)).toBe(72);
+      expect(document.activeElement).toBe(entry);
+    });
+
+    it('closes a resting row when anything holding it scrolls, and not for another scroller', async () => {
+      const {row} = renderRow();
+      dragLeading(row, 45);
+      await settled();
+      const elsewhere = document.createElement('div');
+      document.body.append(elsewhere);
+      fireEvent.scroll(elsewhere);
+      await settled();
+      expect(xOf(row)).toBe(72);
+      // The row's parent stands in for the list: it scrolls, the row closes.
+      fireEvent.scroll(row.parentElement as HTMLElement);
+      await settled();
+      expect(xOf(row)).toBe(0);
+      elsewhere.remove();
     });
 
     it('fires the outermost entry and no other on a drag past the commit point, then springs back', async () => {

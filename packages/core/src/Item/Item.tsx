@@ -24,7 +24,7 @@
  * - /packages/cli/assets/templates/blocks/components/Item/ (showcase blocks)
  */
 
-import {useCallback, useId, useRef, type ReactNode} from 'react';
+import {useCallback, useId, useRef, useState, type ReactNode} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {
   colorVars,
@@ -260,7 +260,9 @@ export interface ItemProps extends BaseProps<HTMLElement> {
    * a touch accelerator and never a row's only path to a verb: a verb
    * reachable only by swipe is unreachable by keyboard and by mouse, so every
    * entry must also be reachable through the row's own content (a menu or a
-   * button in `endContent`).
+   * button in `endContent`). An open row closes on a tap on its own content,
+   * which activates nothing and paints no press, on a touch elsewhere, when
+   * the list or page scrolls with focus outside it, and on Escape.
    *
    * Available on a row whose role permits interactive descendants — a
    * `listitem`, a row with no role — and not served on one whose role forbids
@@ -637,6 +639,14 @@ export function Item({
   const setSwipeBridge = useCallback((bridge: ItemSwipeBridge | null) => {
     swipeBridgeRef.current = bridge;
   }, []);
+  // An open row's root is no pressable surface: a tap on its content only
+  // closes it, and UIKit's cell neither sees that touch nor highlights.
+  const [isSwipeOpen, setSwipeOpen] = useState(false);
+  // A row that stops serving swipe actions while open is open no longer: its
+  // root takes presses again from this render (react-component-runtime INV1).
+  if (isSwipeOpen && !hasSwipe) {
+    setSwipeOpen(false);
+  }
   const linkRootProps = isLinkRoot
     ? {
         // A disabled row keeps its place in the tree but goes nowhere.
@@ -841,7 +851,7 @@ export function Item({
         (isSelected && !allowsAriaSelected ? true : undefined)
       }
       aria-disabled={isDisabled || undefined}
-      {...(isInteractive ? pressable : undefined)}
+      {...(isInteractive && !isSwipeOpen ? pressable : undefined)}
       {...mergeProps(
         themeProps('item', {density, align}),
         focusOutlineProps.focusWithin(
@@ -872,6 +882,7 @@ export function Item({
         // the row had before the split; at rest a panel shows nothing.
         <ItemSwipeLayer
           onBridge={setSwipeBridge}
+          onOpenChange={setSwipeOpen}
           leading={leadingSwipe}
           trailing={trailingSwipe}
           behavior={swipeBehavior}

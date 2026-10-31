@@ -13,8 +13,10 @@
  *   velocity to the settle; a finger that lands on a settling row catches
  *   it without a jump; a close a blocked main thread holds back starts from
  *   where the row was; the drag and the settle do no Layout or Paint per
- *   frame; storyboards. Under Reduce Motion a release lands with no travel at
- *   the bottom of an opacity dip (design:reduced-motion DR2).
+ *   frame; a tap on a resting row's own content closes it and clicks
+ *   nothing, and a scroll that starts on it closes it; storyboards. Under
+ *   Reduce Motion a release and that tap land with no travel at the bottom
+ *   of an opacity dip (design:reduced-motion DR2).
  * @position Interaction proofs of Item's swipeActions (the shape of
  *   BottomSheetDetent.interaction.browser.spec.ts, the harness exemplar). The
  *   gesture writes the row's travel as a custom property on its root every
@@ -40,6 +42,7 @@ import {
   sampleRects,
   springStep,
   startScreencast,
+  tap,
   toTouchEvents,
   touchDriver,
   touchStoryboard,
@@ -608,6 +611,170 @@ test('a finger that lands on a settling row catches it where it is', async ({
   await waitForRest(row);
 });
 
+/** A held drag on `open`'s row past half its panel: it rests open. Resolves with the open width. */
+async function restOpen({driver, row, entries, start}: OpenRow) {
+  const openWidth = await openWidthOf(entries);
+  // The panel is there, with entries that have widths.
+  expect(openWidth).toBeGreaterThan(0);
+  await driver.play(heldDrag(start, -130));
+  await expect.poll(async () => xOf(row)).toBeCloseTo(-openWidth, 0);
+  return openWidth;
+}
+
+/**
+ * A tap through the engine's own tap path where clicks are concerned: WebKit's
+ * Linux build synthesises a click only from its tap gesture, not from injected
+ * touch events (the gesture system's browser tests note the same).
+ */
+async function engineTap(
+  page: Page,
+  browserName: string,
+  driver: TouchDriver,
+  at: {x: number; y: number},
+) {
+  if (browserName === 'webkit') {
+    await page.touchscreen.tap(Math.round(at.x), Math.round(at.y));
+  } else {
+    await driver.play(tap(at));
+  }
+}
+
+/**
+ * Records every press paint (`data-astryx-press`) written on `row` or inside
+ * it from now on; returns how many there have been.
+ */
+async function recordPresses(row: Locator) {
+  await row.evaluate(node => {
+    const log: string[] = [];
+    Object.assign(window, {__rowPresses: log});
+    new MutationObserver(records => {
+      for (const record of records) {
+        const value = (record.target as Element).getAttribute(
+          'data-astryx-press',
+        );
+        if (value != null) {
+          log.push(value);
+        }
+      }
+    }).observe(node, {
+      attributes: true,
+      attributeFilter: ['data-astryx-press'],
+      subtree: true,
+    });
+  });
+  return async () =>
+    row
+      .page()
+      .evaluate(
+        () =>
+          (window as unknown as {__rowPresses: string[]}).__rowPresses.length,
+      );
+}
+
+/** Counts the clicks that reach `row` (capture, before the row's own handlers). */
+async function countClicks(row: Locator) {
+  await row.evaluate(node => {
+    const counter = {clicks: 0};
+    Object.assign(window, {__rowClicks: counter});
+    node.addEventListener(
+      'click',
+      () => {
+        counter.clicks += 1;
+      },
+      true,
+    );
+  });
+  return async () =>
+    row
+      .page()
+      .evaluate(
+        () =>
+          (window as unknown as {__rowClicks: {clicks: number}}).__rowClicks
+            .clicks,
+      );
+}
+
+test('a tap on the resting row’s own content closes it, with no press paint, and no click reaches the row', async ({
+  page,
+  browserName,
+}) => {
+  const open = await openRow(page);
+  const {driver, row, rest} = open;
+  await restOpen(open);
+  const clicks = await countClicks(row);
+  const presses = await recordPresses(row);
+  // On the row's own content, clear of the open panel at its trailing end.
+  const content = {x: rest.x + 60, y: rest.y + rest.height / 2};
+  await engineTap(page, browserName, driver, content);
+  await expect.poll(async () => xOf(row)).toBeCloseTo(0, 0);
+  await page.waitForTimeout(400);
+  expect(await clicks()).toBe(0);
+  // UIKit's cell never sees that touch: nothing highlighted the row.
+  expect(await presses()).toBe(0);
+  // The same tap on the closed row is the row's own, and paints its press.
+  await engineTap(page, browserName, driver, content);
+  await expect.poll(clicks).toBe(1);
+  await expect.poll(presses).toBeGreaterThan(0);
+});
+
+test('under Reduce Motion a tap on the resting row’s content closes it with no travel, at the bottom of an opacity dip', async ({
+  page,
+  browserName,
+}) => {
+  // design:reduced-motion: on a coarse primary pointer a close cross-fades
+  // (DR2), opacity only.
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  const open = await openRow(page);
+  const {driver, row, rest} = open;
+  await restOpen(open);
+  await waitForRest(row);
+  const content = {x: rest.x + 60, y: rest.y + rest.height / 2};
+  await expectCrossFade(page, row, 0, async () => {
+    await engineTap(page, browserName, driver, content);
+  });
+});
+
+test('a scroll that starts on the resting row closes it', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName === 'webkit',
+    'WebKit’s Linux build cannot scroll from injected touches; Mobile Safari on the simulator covers it',
+  );
+  await openStory(page, storybook(), 'core-item--swipe-actions');
+  const driver = await touchDriver(page);
+  // A row low on the page, and room below the list to scroll into.
+  await page.evaluate(() => {
+    document.body.style.minHeight = '3000px';
+  });
+  const row = page.locator('.astryx-item').nth(4);
+  await expect(row.locator('[data-swipe-panel="trailing"]')).toBeAttached();
+  const entries = row.locator('[data-swipe-panel="trailing"] > div');
+  const rest = await row.boundingBox();
+  if (rest == null) {
+    throw new Error('no row');
+  }
+  await restOpen({
+    driver,
+    row,
+    entries,
+    panel: row.locator('[data-swipe-panel="trailing"]'),
+    track: row.locator('[data-swipe-panel="trailing"] > div'),
+    rest,
+    start: {x: rest.x + rest.width - 24, y: rest.y + rest.height / 2},
+  });
+  // Up from the row's own content: the page scrolls, and the row closes.
+  const from = {x: rest.x + 60, y: rest.y + rest.height / 2};
+  await driver.play(
+    drag(from, {x: from.x, y: from.y - 200}, {durationMs: 300, hz: 60}),
+  );
+  await expect
+    .poll(async () => page.evaluate(() => scrollY))
+    .toBeGreaterThan(50);
+  await expect.poll(async () => xOf(row)).toBeCloseTo(0, 0);
+});
+
 test('the drag and the settle do no Layout or Paint per frame', async ({
   page,
   browserName,
@@ -758,6 +925,43 @@ test(
     const xs = settle.map(frame => frame.x);
     expect(xs[0]).toBeGreaterThan(20);
     expect(xs.every((x, i) => i === 0 || x <= xs[i - 1] + 0.5)).toBe(true);
+    expect(xs.at(-1)).toBeCloseTo(0, 0);
+  },
+);
+
+test(
+  'storyboard: a tap on the open row’s content closes it',
+  {tag: '@storyboard'},
+  async ({page, browserName}, testInfo) => {
+    const open = await openRow(page);
+    const {driver, row, rest} = open;
+    await restOpen(open);
+    await waitForRest(row);
+    await recordFrames(row);
+    await recordLift(page);
+    const cast =
+      browserName === 'chromium' ? await startScreencast(page) : null;
+    await engineTap(page, browserName, driver, {
+      x: rest.x + 60,
+      y: rest.y + rest.height / 2,
+    });
+    await waitForRest(row);
+    const castFrames = await cast?.stop();
+    const settle = await settleOf(page);
+    expect(settle.length).toBeGreaterThan(10);
+    if (castFrames != null) {
+      const film = await settleFilm(
+        page,
+        castFrames,
+        settle,
+        'item-swipe-tap-closes',
+      );
+      await film.write(testInfo);
+    }
+    const xs = settle.map(frame => frame.x);
+    // From open to closed without a step back: the settle spring, from rest.
+    expect(xs[0]).toBeLessThan(-100);
+    expect(xs.every((x, i) => i === 0 || x >= xs[i - 1] - 0.5)).toBe(true);
     expect(xs.at(-1)).toBeCloseTo(0, 0);
   },
 );

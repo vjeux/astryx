@@ -44,7 +44,7 @@ import {
 import {mergeProps} from '../utils';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
-import {useSwipeAction, type SwipeSide} from './useSwipeAction';
+import {isSwipeOpen, useSwipeAction, type SwipeSide} from './useSwipeAction';
 import type {ItemSwipeAction, ItemSwipeBehavior} from './Item';
 
 // =============================================================================
@@ -66,6 +66,13 @@ export interface ItemSwipeLayerProps {
    * of the layer, and with `null` when the layer leaves.
    */
   onBridge: (bridge: ItemSwipeBridge | null) => void;
+  /**
+   * Called with `true` when the row opens (from the release that opens it)
+   * and with `false` when it closes or the layer leaves. The root takes no
+   * press while open: a tap on an open row's content only closes it, as in
+   * UIKit, where the cell never sees that touch.
+   */
+  onOpenChange: (isOpen: boolean) => void;
   leading: ItemSwipeAction[];
   trailing: ItemSwipeAction[];
   behavior: ItemSwipeBehavior;
@@ -219,6 +226,7 @@ const swipeVariantStyles = stylex.create({
  */
 export default function ItemSwipeLayer({
   onBridge,
+  onOpenChange,
   leading,
   trailing,
   behavior,
@@ -232,6 +240,8 @@ export default function ItemSwipeLayer({
   });
   const swipe = useSwipeAction({
     behavior,
+    // An open row's root takes no press.
+    onOpenChange,
     fireOutermost: side => {
       const entries = entriesRef.current[side];
       const entry = entries[entries.length - 1];
@@ -257,11 +267,13 @@ export default function ItemSwipeLayer({
       onBridge(null);
     };
   });
-  const isSwipeResting = swipe.state.phase === 'resting';
+  // Open from the release that opens it (`isSwipeOpen`), as UIKit counts it:
+  // an entry the finger can see while the row springs open is tappable.
+  const isOpen = isSwipeOpen(swipe.state);
 
   // A side's panel: entries as real buttons under `reveal`, presentational
   // blocks under `commit`. Out of the accessibility tree and the tab order
-  // except while the row rests open on its side, so the row keeps one tab
+  // except while the row is open on its side, so the row keeps one tab
   // stop, the other side's entries (out of sight behind the row) are never
   // reached, and a pointer that can hover never meets it.
   const renderSwipePanel = (side: SwipeSide, entries: ItemSwipeAction[]) => {
@@ -270,7 +282,7 @@ export default function ItemSwipeLayer({
     }
     const outer = entries[entries.length - 1];
     const isCommit = behavior === 'commit';
-    const isLive = isSwipeResting && swipe.state.side === side && !isCommit;
+    const isLive = isOpen && swipe.state.side === side && !isCommit;
     const refs = swipe.panelRefs[side];
     return (
       <div
