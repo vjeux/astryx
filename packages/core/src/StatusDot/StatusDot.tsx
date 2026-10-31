@@ -23,6 +23,7 @@ import {colorVars} from '../theme/tokens.stylex';
 import type {BaseProps} from '../BaseProps';
 import {Tooltip} from '../Tooltip/Tooltip';
 import {isRenderable, mergeProps} from '../utils';
+import {focusOutlineStyles} from '../utils/focusOutline.stylex';
 import {themeProps} from '../utils/themeProps';
 import type {StatusDotVariantMap} from './index';
 
@@ -160,8 +161,12 @@ export interface StatusDotProps extends BaseProps<HTMLSpanElement> {
    */
   isPulsing?: boolean;
   /**
-   * Tooltip text shown on hover to explain the status meaning.
-   * When omitted, no tooltip is rendered.
+   * Text that explains the status. The dot then becomes a toggletip: a button
+   * named by `label`, in the tab order, whose tooltip hover and keyboard focus
+   * preview and a click, a tap, Enter, or Space pins (`component:Tooltip`
+   * FR9). The press stops at the dot, so a clickable row or card around it
+   * does not activate. When omitted, no tooltip renders and the dot is a
+   * static image.
    */
   tooltip?: string;
   /**
@@ -193,8 +198,8 @@ export interface StatusDotProps extends BaseProps<HTMLSpanElement> {
  * non-colour mark, or convey the status accessibly elsewhere. See the usage
  * guidance in the component docs.
  *
- * Renders as a non-focusable `<span>` with `role="img"` and
- * `aria-label` for accessibility. Styles use Astryx theme tokens via StyleX.
+ * Renders as a non-focusable `<span>` with `role="img"` and `aria-label`;
+ * with a `tooltip`, as a toggletip button in the tab order (`role="button"`). Styles use Astryx theme tokens via StyleX.
  * Wrap your app in `<Theme>` to apply a theme.
  *
  * @example
@@ -221,10 +226,15 @@ export function StatusDot({
   // Booleans and empty renders don't count (safe for `cond && <Icon />`) —
   // same contract as AvatarStatusDot.
   const showsIcon = isRenderable(icon);
+  // A dot with a tooltip is a toggletip: its explanation lives only in the
+  // tooltip, so the dot is a button that hover and focus preview and a press
+  // pins (component:Tooltip FR9 and DEC-1). Without one it is a static image.
+  const hasTooltip = Boolean(tooltip);
   const dot = (
     <span
       ref={ref}
-      role="img"
+      role={hasTooltip ? 'button' : 'img'}
+      tabIndex={hasTooltip ? 0 : undefined}
       aria-label={label}
       {...mergeProps(
         themeProps('status-dot', {variant}),
@@ -233,6 +243,7 @@ export function StatusDot({
           variants[variant],
           isPulsing && styles.pulsing,
           isPulsing && styles.reducedMotion,
+          hasTooltip && focusOutlineStyles.focusVisible,
           xstyle,
         ),
         className,
@@ -247,8 +258,12 @@ export function StatusDot({
     </span>
   );
 
-  if (tooltip) {
-    return <Tooltip content={tooltip}>{dot}</Tooltip>;
+  if (hasTooltip) {
+    return (
+      <Tooltip content={tooltip} pressTrigger="toggle">
+        {dot}
+      </Tooltip>
+    );
   }
 
   return dot;

@@ -1,7 +1,7 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
-import {describe, it, expect} from 'vitest';
-import {render, screen} from '@testing-library/react';
+import {describe, it, expect, vi, beforeAll, afterAll} from 'vitest';
+import {render, screen, fireEvent} from '@testing-library/react';
 import * as stylex from '@stylexjs/stylex';
 import {colorVars} from '../theme/tokens.stylex';
 import {StatusDot} from './StatusDot';
@@ -79,10 +79,13 @@ describe('StatusDot', () => {
     expect(dot).toBeInTheDocument();
   });
 
-  it('renders with tooltip', () => {
-    render(<StatusDot variant="success" label="Online" tooltip="Online" />);
-    const dot = screen.getByRole('img', {name: 'Online'});
-    expect(dot).toBeInTheDocument();
+  it('renders with tooltip as a toggletip button in the tab order', () => {
+    render(
+      <StatusDot variant="success" label="Online" tooltip="Synced 2 min ago" />,
+    );
+    const dot = screen.getByRole('button', {name: 'Online'});
+    expect(dot).toHaveAttribute('tabindex', '0');
+    expect(dot).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('renders every variant as a plain childless dot by default (design review #4373)', () => {
@@ -209,5 +212,90 @@ describe('StatusDot forced colors', () => {
     const css = getForcedColorsRules();
     expect(css).toContain('outline-style: solid;');
     expect(css).toContain('outline-color: canvastext;');
+  });
+});
+
+describe('StatusDot with a tooltip is a toggletip (component:Tooltip FR9)', () => {
+  const originalMatches = HTMLElement.prototype.matches;
+  const open = new WeakMap<HTMLElement, boolean>();
+
+  beforeAll(() => {
+    HTMLElement.prototype.showPopover = vi.fn(function (this: HTMLElement) {
+      open.set(this, true);
+    });
+    HTMLElement.prototype.hidePopover = vi.fn(function (this: HTMLElement) {
+      open.set(this, false);
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (HTMLElement.prototype as any).matches = function (
+      this: HTMLElement,
+      selector: string,
+    ): boolean {
+      return selector === ':popover-open'
+        ? (open.get(this) ?? false)
+        : originalMatches.call(this, selector);
+    };
+  });
+
+  afterAll(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (HTMLElement.prototype as any).matches = originalMatches;
+  });
+
+  const shows = (text: string) =>
+    screen
+      .getByText(text)
+      .closest<HTMLElement>('[popover]')
+      ?.matches(':popover-open') === true;
+
+  function tap(element: HTMLElement) {
+    fireEvent.pointerEnter(element, {pointerType: 'touch'});
+    fireEvent.pointerDown(element, {pointerType: 'touch'});
+    fireEvent.pointerUp(element, {pointerType: 'touch'});
+    fireEvent.mouseEnter(element);
+    fireEvent.click(element);
+  }
+
+  it('a click pins the explanation and the same click closes it', () => {
+    render(
+      <StatusDot variant="success" label="Online" tooltip="Synced 2 min ago" />,
+    );
+    const dot = screen.getByRole('button', {name: 'Online'});
+    fireEvent.click(dot, {detail: 1});
+    expect(shows('Synced 2 min ago')).toBe(true);
+    expect(dot).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(dot, {detail: 1});
+    expect(shows('Synced 2 min ago')).toBe(false);
+    expect(dot).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('Enter pins it from the keyboard', () => {
+    render(
+      <StatusDot variant="warning" label="Degraded" tooltip="2 of 5 regions" />,
+    );
+    const dot = screen.getByRole('button', {name: 'Degraded'});
+    fireEvent.keyDown(dot, {key: 'Enter'});
+    expect(shows('2 of 5 regions')).toBe(true);
+  });
+
+  it('a tap stops at the dot: the clickable row around it does not activate', () => {
+    const onRow = vi.fn();
+    render(
+      <div onClick={onRow}>
+        <StatusDot variant="error" label="Offline" tooltip="Last seen 3 h ago" />
+        Billing service
+      </div>,
+    );
+    tap(screen.getByRole('button', {name: 'Offline'}));
+    expect(shows('Last seen 3 h ago')).toBe(true);
+    expect(onRow).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText('Billing service'));
+    expect(onRow).toHaveBeenCalledTimes(1);
+  });
+
+  it('a dot without a tooltip stays a static image with no tab stop', () => {
+    render(<StatusDot variant="neutral" label="Idle" />);
+    const dot = screen.getByRole('img', {name: 'Idle'});
+    expect(dot.getAttribute('tabindex')).toBeNull();
   });
 });
