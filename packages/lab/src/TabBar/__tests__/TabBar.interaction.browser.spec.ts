@@ -148,6 +148,24 @@ async function lensCenterX(page: Page) {
   return box.x + box.width / 2;
 }
 
+/**
+ * The elements under test are on screen before anything is measured about
+ * them: `count` of them, each with a nonzero box.
+ */
+async function expectPainted(locator: Locator, count = 1) {
+  await expect(locator).toHaveCount(count);
+  const boxes = await locator.evaluateAll(elements =>
+    elements.map(element => {
+      const rect = element.getBoundingClientRect();
+      return {width: rect.width, height: rect.height};
+    }),
+  );
+  for (const box of boxes) {
+    expect(box.width, JSON.stringify(boxes)).toBeGreaterThan(0);
+    expect(box.height, JSON.stringify(boxes)).toBeGreaterThan(0);
+  }
+}
+
 /** A presented translateX, px (the animator drives `translate`). */
 const translateX = async (locator: Locator) =>
   locator.evaluate(element => {
@@ -1613,7 +1631,9 @@ test.describe('minimize on scroll', () => {
   }) => {
     await openBar(page, 'minimize-on-scroll');
     const lens = page.locator('[data-tab-bar-lens]');
-    await expect(lens).toBeVisible();
+    // On screen first: the lens and the glass it must draw over.
+    await expectPainted(lens);
+    await expectPainted(page.locator('[data-tab-bar-platter]'));
     // Paint order at the lens, topmost first. The bar takes no pointer, so
     // hit testing is turned on for this read only.
     const order = await lens.evaluate(element => {
@@ -2187,10 +2207,10 @@ test.describe('bottom accessory', () => {
     );
     await waitForAnimation(accessory(page));
     await holdAnimations(page, accessory(page));
-    const overhangs: {t: number; overhang: number}[] = [];
+    const overhangs: {t: number; overhang: number; visible: number}[] = [];
     for (const t of [0, 16.667, 50, 100, 140, 200, 300]) {
       await seekAnimations(page, t);
-      const overhang = await accessory(page).evaluate(element => {
+      const {overhang, visible} = await accessory(page).evaluate(element => {
         // The glass's trailing cap, and "Next" as it shows: its box cut by
         // every clipping box between it and the accessory.
         const glass = element.firstElementChild as HTMLElement;
@@ -2206,6 +2226,7 @@ test.describe('bottom accessory', () => {
           throw new Error('no Next');
         }
         let right = next.getBoundingClientRect().right;
+        let left = next.getBoundingClientRect().left;
         for (
           let node = next.parentElement;
           node != null && node !== element.parentElement;
@@ -2213,13 +2234,22 @@ test.describe('bottom accessory', () => {
         ) {
           if (getComputedStyle(node).overflow !== 'visible') {
             right = Math.min(right, node.getBoundingClientRect().right);
+            left = Math.max(left, node.getBoundingClientRect().left);
           }
         }
-        return right - cap.right;
+        return {overhang: right - cap.right, visible: right - left};
       });
-      overhangs.push({t, overhang});
+      overhangs.push({t, overhang, visible});
     }
     await releaseAnimations(page, {finish: true});
+    // On screen first: "Next" shows through the window while it is measured
+    // (a window closed to nothing would keep it inside the glass too).
+    await expectPainted(
+      accessory(page).getByRole('button', {name: 'Next', exact: true}),
+    );
+    for (const {t, visible} of overhangs.filter(sample => sample.t >= 200)) {
+      expect(visible, JSON.stringify({t, overhangs})).toBeGreaterThan(0);
+    }
     for (const {t, overhang} of overhangs) {
       expect(overhang, JSON.stringify({t, overhangs})).toBeLessThanOrEqual(0.5);
     }
