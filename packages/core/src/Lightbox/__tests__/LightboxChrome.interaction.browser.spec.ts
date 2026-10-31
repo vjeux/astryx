@@ -526,12 +526,17 @@ test('focus from assistive technology on a hidden control brings them back', asy
   const v = await openGallery(page);
   await hideByTap(v, page);
   // A screen reader moves focus to a control with no key press the page
-  // can see.
-  await page.evaluate(() => {
-    document
-      .querySelector<HTMLElement>('[data-lightbox-chrome] button')
-      ?.focus();
+  // can see: a control other than the one that has focus now.
+  const moved = await page.evaluate(() => {
+    const control = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(
+        '[data-lightbox-chrome] button',
+      ),
+    ).find(button => button !== document.activeElement && !button.disabled);
+    control?.focus();
+    return control != null && document.activeElement === control;
   });
+  expect(moved).toBe(true);
   await waitForAnimation(v.chrome);
   await waitForRest(v.chrome);
   expect(await v.alpha(v.chrome)).toBe(1);
