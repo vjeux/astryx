@@ -249,8 +249,19 @@ test('a second tap mid-slide turns the lens around from where it is, without a j
   // Every frame's lens position, sampled in the page while the taps land.
   const sampling = sampleRects(lensBody(page), 1300);
   await driver.tap(profile);
-  // Well past Library on its way to Profile.
-  await waitForAnimation(lensBody(page), {minProgressMs: 150});
+  // On the frame the lens passes Library, read in the page: the tap lands
+  // with most of the slide still ahead (a fixed wait into the slide left a
+  // loaded machine too little of it to react in).
+  await page.waitForFunction(
+    target => {
+      const box = document
+        .querySelector('[data-tab-bar-lens-body]')
+        ?.getBoundingClientRect();
+      return box != null && box.x + box.width / 2 > target;
+    },
+    library.x + 10,
+    {polling: 'raf'},
+  );
   await driver.tap(library);
   await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
   const turnedAt = await page.evaluate(
