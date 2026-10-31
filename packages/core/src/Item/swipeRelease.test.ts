@@ -19,13 +19,14 @@ import {swipeActions} from '../motion/uikit/swipeActions';
 import {confirmedOffset, confirmPoint, resolveRelease} from './swipeRelease';
 
 describe('resolveRelease', () => {
-  // The UIKit lab's releases (batch 10a: plain table, 402 pt rows, two
-  // trailing actions, a 156.67 pt open width; the full-swipe point far beyond
-  // them), as the swipe pan reported them when the finger lifted: the
-  // swipe's travel (past the 25 pt the pan needs to begin; negative when the
-  // finger came back past where it began) and its velocity in pt/s, positive
-  // toward open. A scripted "closing" release can still be opening when it
-  // lifts (the 36 pt one at +458), so the reported values are the inputs.
+  // The UIKit lab's releases (iOS 26.2 simulator, Oct 23 2026: plain table,
+  // 402 pt rows, two trailing actions, a 156.67 pt open width; the full-swipe
+  // point far beyond them), as the swipe pan reported them when the finger
+  // lifted: the swipe's travel (past the 25 pt the pan needs to begin;
+  // negative when the finger came back past where it began) and its velocity
+  // in pt/s, positive toward open. A scripted "closing" release can still be
+  // opening when it lifts (the 36 pt one at +458), so the reported values are
+  // the inputs.
   const OPEN_WIDTH = 156.67;
   const RELEASES: [travel: number, velocity: number, lands: string][] = [
     [35, -19, 'closed'],
@@ -93,7 +94,7 @@ describe('resolveRelease', () => {
     },
   );
 
-  it('goes the way a release moves from about 50 pt/s, and by where it is below that (batches 38c, 38d)', () => {
+  it('goes the way a release moves from about 50 pt/s, and by where it is below that (UIKit lab, iOS 26.2 simulator, Oct 23 2026)', () => {
     // 204.67 pt open width, released at 0.7 of it: past half. The speeds
     // are the pan's at its end, as UIKit read them.
     const base = {
@@ -166,14 +167,14 @@ describe('resolveRelease', () => {
   });
 });
 
-// Current `spec:AST-057` FR5 reads differently from the measured rule above in
-// four places; the owners decide which governs. Each case below is UIKit's own
-// reading (the lab's releases, as the pan reported them), so changing the rule
-// to FR5's wording breaks it.
-describe('where the measured rule departs from AST-057 FR5', () => {
+// `spec:AST-057` FR5 is UIKit's release rule: a release goes by its speed
+// first, then by half the panel; speed alone never fires an entry; a swipe
+// that confirmed and came back short of the confirm point closes. Each case
+// below is UIKit's own reading (the lab's releases, as the pan reported them).
+describe('spec:AST-057 FR5 against the UIKit lab', () => {
   const reveal = {behavior: 'reveal' as const, isConfirmed: false};
 
-  it('never fires on a fling, under either model (FR5: a fling fires): batch 10a opened every release at 1,002 to 2,082 pt/s', () => {
+  it('never fires an entry on speed alone, under either model: UIKit opened every release at 1,002 to 2,082 pt/s', () => {
     const flings: [travel: number, velocity: number][] = [
       [222.7, 1002],
       [64, 1058],
@@ -200,7 +201,7 @@ describe('where the measured rule departs from AST-057 FR5', () => {
     }
   });
 
-  it('closes a swipe that confirmed and backed out, even released at rest past the panel width (FR5: rests open): batch 38', () => {
+  it('closes a swipe that confirmed and came back short of the confirm point, even released at rest past the panel width', () => {
     expect(
       resolveRelease({
         ...reveal,
@@ -212,7 +213,7 @@ describe('where the measured rule departs from AST-057 FR5', () => {
     ).toBe('closed');
   });
 
-  it('closes a release past the panel width that is closing at the release speed or faster (FR5: rests open): batch 38', () => {
+  it('closes a release past the panel width that is closing at the release speed or faster', () => {
     expect(
       resolveRelease({
         ...reveal,
@@ -222,7 +223,8 @@ describe('where the measured rule departs from AST-057 FR5', () => {
         wasConfirmed: false,
       }),
     ).toBe('closed');
-    // The same release at rest, or still opening, stays open, as FR5 reads.
+    // The same release at rest, or still opening, stays open: slower than
+    // the release speed, it goes by where it is.
     for (const velocity of [0, 300]) {
       expect(
         resolveRelease({
@@ -236,7 +238,7 @@ describe('where the measured rule departs from AST-057 FR5', () => {
     }
   });
 
-  it('opens a release short of half the panel that is opening at the release speed or faster (FR5: springs back): batch 10a', () => {
+  it('opens a release short of half the panel that is opening at the release speed or faster', () => {
     // 156.67 pt open width: half of it is 78.3 pt.
     const opening: [travel: number, velocity: number][] = [
       [30.3, 293],
