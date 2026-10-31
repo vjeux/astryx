@@ -35,11 +35,26 @@
  * - /packages/core/src/hooks/useMenuPress.ts
  */
 
-/** How long the opening press must last before its release may act. */
+/**
+ * How long the opening press must last before its release may act.
+ * @deprecated The press machine leaves the public API at the next minor.
+ * Use `useMenuPress(menuRef, options)` in React, or
+ * `createMenuPress(menu, options)` without it.
+ */
 export const MENU_PRESS_SETTLE_MS = 300;
 
+/**
+ * @deprecated The press machine leaves the public API at the next minor.
+ * Use `useMenuPress(menuRef, options)` in React, or
+ * `createMenuPress(menu, options)` without it.
+ */
 export type MenuPressPointerType = 'mouse' | 'touch' | 'pen';
 
+/**
+ * @deprecated The press machine leaves the public API at the next minor.
+ * Use `useMenuPress(menuRef, options)` in React, or
+ * `createMenuPress(menu, options)` without it.
+ */
 export type MenuPressGesture<T> =
   | {phase: 'idle'}
   | {
@@ -61,6 +76,11 @@ export type MenuPressGesture<T> =
       row: T | null;
     };
 
+/**
+ * @deprecated The press machine leaves the public API at the next minor.
+ * Use `useMenuPress(menuRef, options)` in React, or
+ * `createMenuPress(menu, options)` without it.
+ */
 export type MenuPressEvent<T> =
   | {
       type: 'down';
@@ -83,6 +103,11 @@ export type MenuPressEvent<T> =
   /** The browser took the gesture: pointercancel, a second pointer, a scroll. */
   | {type: 'cancel'};
 
+/**
+ * @deprecated The press machine leaves the public API at the next minor.
+ * Use `useMenuPress(menuRef, options)` in React, or
+ * `createMenuPress(menu, options)` without it.
+ */
 export type MenuPressEffect<T> =
   | {type: 'none'}
   /** A mouse pressed the trigger: open the menu now, under the held pointer. */
@@ -97,6 +122,11 @@ export type MenuPressEffect<T> =
    */
   | {type: 'settle'; stray: boolean; dismiss: boolean};
 
+/**
+ * @deprecated The press machine leaves the public API at the next minor.
+ * Use `useMenuPress(menuRef, options)` in React, or
+ * `createMenuPress(menu, options)` without it.
+ */
 export interface MenuPressStep<T> {
   gesture: MenuPressGesture<T>;
   effect: MenuPressEffect<T>;
@@ -135,6 +165,9 @@ function release<T>(
 
 /**
  * Advance the gesture by one event. Pure: same inputs, same output.
+ * @deprecated The press machine leaves the public API at the next minor.
+ * Use `useMenuPress(menuRef, options)` in React, or
+ * `createMenuPress(menu, options)` without it.
  */
 export function menuPressStep<T>(
   gesture: MenuPressGesture<T>,
