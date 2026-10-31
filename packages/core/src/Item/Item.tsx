@@ -322,9 +322,6 @@ const ARIA_SELECTED_ROLES = new Set([
  */
 const SWIPE_ROLES = new Set(['listitem']);
 
-/** The travel the swipe writes on the row root, physical px (swipeMotion.ts). */
-const SWIPE_TRAVEL = 'var(--_item-swipe-travel, 0px)';
-
 // =============================================================================
 // Styles
 // =============================================================================
@@ -495,15 +492,20 @@ const styles = stylex.create({
     display: 'flex',
     marginInlineStart: 'auto',
   },
-  // Swipe actions. The root translates by the travel the gesture writes on
-  // it every frame (`spec:AST-057` FR2, see useSwipeAction); `pan-y` lets the
-  // browser keep scrolling the list while the row owns horizontal movement,
-  // and `pinch-zoom` leaves a two-finger pinch that starts on the row to the
-  // browser, so the page stays zoomable (WCAG 1.4.4).
+  // Swipe actions. The gesture moves the root with its `translate` property
+  // (compositor animations, see useSwipeAction), so the row's own `transform`
+  // stays free; `pan-y` lets the browser keep scrolling the list while the
+  // row owns horizontal movement, and `pinch-zoom` leaves a two-finger pinch
+  // that starts on the row to the browser, so the page stays zoomable
+  // (WCAG 1.4.4). The gesture writes the same value inline once it loads.
+  // Each swipe row is its own compositing layer from the start: where the
+  // rows beside a moving one have none, WebKit repaints them on every frame
+  // of its drag and settle, while promoting only the moving row changes
+  // nothing.
   swipeRoot: {
     isolation: 'isolate',
     touchAction: 'pan-y pinch-zoom',
-    transform: `translate3d(${SWIPE_TRAVEL}, 0, 0)`,
+    willChange: 'translate',
   },
 });
 

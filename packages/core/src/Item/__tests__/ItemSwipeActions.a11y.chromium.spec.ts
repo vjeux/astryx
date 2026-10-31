@@ -103,11 +103,11 @@ function paintedAtEdge(buffer: Buffer): number {
   return count;
 }
 
-/** The row's horizontal translation, from its computed transform. */
+/** The row's horizontal translation, from its `translate` property. */
 async function translationOf(row: Locator): Promise<number> {
   return row.evaluate(node => {
-    const matrix = new DOMMatrix(getComputedStyle(node).transform);
-    return matrix.e;
+    const value = parseFloat(getComputedStyle(node).translate);
+    return Number.isNaN(value) ? 0 : value;
   });
 }
 

@@ -20,20 +20,15 @@
  * element is added to the row for the swipe (spec AST-057, FR2).
  *
  * A panel is two boxes and the entries themselves, all moved by transforms
- * that read the travel the gesture writes on the root (`spec:AST-057` FR2,
- * see useSwipeAction): a window over the row's resting box that reads its
- * negation and clips to that box, a track inside it that moves with the row
- * and clips the entries to the space the row vacates, and the entries, each
- * translated back from the side's pin so they stay at the outer edge until
- * the row has uncovered them all, then riding the row. Past the open width
- * the outermost entry's colour, painted beside it, fills the rest out to
- * that edge; on a confirmed full swipe (the confirm the gesture writes on the
- * root) it slides to the row's edge while the others fade over the track's
+ * only (see useSwipeAction): a window over the row's resting box that clips
+ * to it, a track inside it that moves with the row and clips the entries to
+ * the space the row vacates, and the entries, each translated to stay pinned
+ * at the outer edge. Past the open width the outermost entry's colour,
+ * painted beside it, fills the rest out to that edge; on a confirmed full
+ * swipe it slides to the row's edge while the others fade over the track's
  * fill of its colour. No wrapper holds the entries (minimal DOM,
  * `architecture:component-style-authoring` INV7): the colours are
  * pseudo-elements.
- *
- * SYNC: the property names are swipeMotion.ts's and useSwipeAction.ts's.
  */
 
 import {useEffect, useRef} from 'react';
@@ -86,23 +81,6 @@ export interface ItemSwipeLayerProps {
 // Styles
 // =============================================================================
 
-/** The travel the gesture writes on the root, physical px (swipeMotion.ts). */
-const SWIPE_TRAVEL = 'var(--_item-swipe-travel, 0px)';
-/** How far a full swipe has confirmed, 0 to 1 (swipeMotion.ts). */
-const SWIPE_CONFIRM = 'var(--_item-swipe-confirm, 0)';
-// The side's geometry the gesture writes on its window (useSwipeAction.ts):
-// the pin, its physical sign, its open width and the outermost entry's slide.
-const SWIPE_PIN = 'var(--_item-swipe-pin, 0px)';
-const SWIPE_SIGN = 'var(--_item-swipe-sign, 1)';
-const SWIPE_OPEN = 'var(--_item-swipe-open, 0px)';
-const SWIPE_SLIDE = 'var(--_item-swipe-slide, 0px)';
-/**
- * Where the entries sit against the track: back by the travel the track
- * moves, so they stay pinned at the outer edge, until the row has uncovered
- * them all (the open width); past it they ride the row.
- */
-const SWIPE_ENTRIES_X = `calc(${SWIPE_PIN} - ${SWIPE_SIGN} * min(${SWIPE_SIGN} * ${SWIPE_TRAVEL}, ${SWIPE_OPEN}))`;
-
 const styles = stylex.create({
   // A side's window: the row's resting box. It is translated back by the
   // travel, so it stays where the row rests, and clips the track to that box
@@ -114,7 +92,6 @@ const styles = stylex.create({
     overflow: 'clip',
     borderRadius: 'inherit',
     pointerEvents: 'none',
-    transform: `translate3d(calc(-1 * ${SWIPE_TRAVEL}), 0, 0)`,
   },
   // The track: beside the window at rest (so not a pixel of it shows), moved
   // with the row, so the part inside the window is exactly the space the row
@@ -124,8 +101,8 @@ const styles = stylex.create({
   // row's outer edge until the row has uncovered them all, then riding the
   // row, on the surface it paints: the neutral variant is translucent and
   // shows what is under it. Its `::before` is the confirm fill: the
-  // outermost entry's colour, as opaque as the full swipe has confirmed,
-  // which shows through the others as they fade (swipeTrackFillStyles).
+  // outermost entry's colour, hidden until a full swipe confirms, which then
+  // shows through the others as they fade (swipeTrackFillStyles).
   swipeTrack: {
     position: 'absolute',
     insetBlock: 0,
@@ -135,13 +112,12 @@ const styles = stylex.create({
     display: 'flex',
     isolation: 'isolate',
     backgroundColor: colorVars['--color-background-surface'],
-    transform: `translate3d(${SWIPE_TRAVEL}, 0, 0)`,
     '::before': {
       content: '""',
       position: 'absolute',
       inset: 0,
       zIndex: -1,
-      opacity: SWIPE_CONFIRM,
+      opacity: 0,
       pointerEvents: 'none',
     },
   },
@@ -155,8 +131,36 @@ const styles = stylex.create({
   swipeTrackTrailing: {
     insetInlineStart: '100%',
   },
+  // The outermost entry: its colour, painted beside it out to the row's
+  // outer edge, fills whatever the row uncovers past the open width (the
+  // entry stretches), and a slide-out fills the row with it. Decoration
+  // only, on a pseudo-element; the entry's own fill, theme included.
+  swipeOuterEntry: {
+    position: 'relative',
+  },
+  swipeOuterEntryLeading: {
+    '::after': {
+      content: '""',
+      position: 'absolute',
+      insetBlock: 0,
+      insetInlineEnd: '100%',
+      width: '100vw',
+      backgroundColor: 'inherit',
+      pointerEvents: 'none',
+    },
+  },
+  swipeOuterEntryTrailing: {
+    '::after': {
+      content: '""',
+      position: 'absolute',
+      insetBlock: 0,
+      insetInlineStart: '100%',
+      width: '100vw',
+      backgroundColor: 'inherit',
+      pointerEvents: 'none',
+    },
+  },
   swipeEntry: {
-    transform: `translate3d(${SWIPE_ENTRIES_X}, 0, 0)`,
     flexShrink: 0,
     pointerEvents: 'auto',
     display: 'flex',
@@ -182,46 +186,10 @@ const styles = stylex.create({
     lineHeight: typeScaleVars['--text-supporting-leading'],
     whiteSpace: 'nowrap',
   },
-  // An entry other than the outermost fades on a confirmed full swipe.
-  swipeEntryFading: {
-    opacity: `calc(1 - ${SWIPE_CONFIRM})`,
-  },
   // Half strength as a filter, so the entry's own opacity stays free for the
   // full swipe's fade.
   swipeEntryDisabled: {
     filter: 'opacity(0.5)',
-  },
-  // The outermost entry: its colour, painted beside it out to the row's
-  // outer edge, fills whatever the row uncovers past the open width (the
-  // entry stretches), and a slide-out fills the row with it. Decoration
-  // only, on a pseudo-element; the entry's own fill, theme included.
-  // On a confirmed full swipe it slides to the row's edge with the entries'
-  // pin.
-  swipeOuterEntry: {
-    position: 'relative',
-    transform: `translate3d(calc(${SWIPE_ENTRIES_X} + ${SWIPE_SLIDE} * ${SWIPE_CONFIRM}), 0, 0)`,
-  },
-  swipeOuterEntryLeading: {
-    '::after': {
-      content: '""',
-      position: 'absolute',
-      insetBlock: 0,
-      insetInlineEnd: '100%',
-      width: '100vw',
-      backgroundColor: 'inherit',
-      pointerEvents: 'none',
-    },
-  },
-  swipeOuterEntryTrailing: {
-    '::after': {
-      content: '""',
-      position: 'absolute',
-      insetBlock: 0,
-      insetInlineStart: '100%',
-      width: '100vw',
-      backgroundColor: 'inherit',
-      pointerEvents: 'none',
-    },
   },
 });
 
@@ -343,8 +311,7 @@ export default function ItemSwipeLayer({
     const renderEntry = (entry: ItemSwipeAction) => {
       const variant = entry.variant ?? 'accent';
       const key = entry.id ?? entry.label;
-      // The outermost entry is the full swipe's moving part itself; the
-      // others fade.
+      // The outermost entry is the full swipe's moving part itself.
       const isOuter = entry === outer;
       const ref = isOuter ? refs.outer : refs.entry(key);
       const content = (
@@ -357,7 +324,6 @@ export default function ItemSwipeLayer({
         styles.swipeEntry,
         swipeVariantStyles[variant],
         entry.isDisabled === true && styles.swipeEntryDisabled,
-        !isOuter && styles.swipeEntryFading,
         isOuter && styles.swipeOuterEntry,
         isOuter &&
           (side === 'leading'
@@ -405,6 +371,7 @@ export default function ItemSwipeLayer({
         aria-hidden={isCommit ? true : undefined}
         {...stylex.props(styles.swipePanel)}>
         <div
+          ref={refs.track}
           {...mergeProps(
             themeProps('item-swipe-panel', {side}),
             stylex.props(
