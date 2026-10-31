@@ -630,6 +630,62 @@ test('a zoomed flick coasts and stops at the far edge', async ({page}) => {
   );
 });
 
+test('under Reduce Motion a zoomed flick still coasts: momentum is direct movement (design:reduced-motion DR2)', async ({
+  page,
+}) => {
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  const {driver, photo, state} = await openViewer(page);
+  const before = await state();
+  const mid = {x: 201, y: before.stage.y + before.stage.height / 2};
+  await driver.play(doubleTap(mid));
+  await waitForAnimation(photo);
+  await waitForRest(photo);
+  // Bring the photo within 160 px of its far edge with a slow drag held
+  // still before the lift (no coast): the flick's own 120 px leave 40 for
+  // the coast, which it reaches at any release velocity the run measures.
+  // Under load, Linux WebKit delivers a flick's moves in bursts, and its
+  // release velocity came out as low as ~350 px/s.
+  const near = await state();
+  const toEdge =
+    near.fit.x + near.x + near.fit.width * near.scale - near.stage.width;
+  const from = {x: near.stage.width - 20, y: mid.y};
+  await driver.play(
+    drag(
+      from,
+      {x: from.x - (toEdge - 160), y: from.y},
+      {durationMs: 600, restMs: 150},
+    ),
+  );
+  await waitForRest(photo);
+  const zoomed = await state();
+  const script = flick(mid, {
+    velocity: {x: -1500, y: 0},
+    durationMs: 80,
+    hz: 120,
+  });
+  let released = zoomed;
+  await driver.play(script, {
+    onEvent: async step => {
+      if (step.type === 'touchMove') {
+        released = await state();
+      }
+    },
+  });
+  await frames(page, 6);
+  const coasting = await state();
+  // The photo kept moving after the lift, at full opacity: no cross-fade
+  // replaces a throw.
+  expect(coasting.x).toBeLessThan(released.x - 5);
+  expect(await photo.evaluate(el => getComputedStyle(el).opacity)).toBe('1');
+  await waitForRest(photo, {timeout: 8_000});
+  const rest = await state();
+  // At the right edge: the photo's right edge on the stage's.
+  expect(rest.fit.x + rest.x + rest.fit.width * rest.scale).toBeCloseTo(
+    rest.stage.width,
+    0,
+  );
+});
+
 test('a finger landing on a coasting photo stops it where it shows', async ({
   page,
 }) => {
