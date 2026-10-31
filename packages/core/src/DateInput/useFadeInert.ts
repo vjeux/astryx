@@ -9,8 +9,9 @@
  *   toggle's cross-fade is running. Under a finger, both panels keep the
  *   `inert` they had until the outgoing panel's exit ends (the `transitionend` or
  *   `transitioncancel` of its `opacity` fade, or of the `visibility` the layer
- *   beneath holds for as long), and swap it then, or with the toggle when no
- *   exit runs; with a mouse they swap it with the toggle. Focus that was
+ *   beneath holds for as long; a transition that ran after the toggle, not one
+ *   already running when the title was tapped), and swap it then, or with the
+ *   toggle when no exit runs; with a mouse they swap it with the toggle. Focus that was
  *   inside the outgoing panel moves to the incoming one with the toggle,
  *   which is live from then on.
  * @position Internal hook of TouchDateField.tsx and TouchDateTimeField.tsx;
@@ -97,41 +98,69 @@ export function useFadeInert(
     const panels = [outgoing, incoming].filter(
       (panel): panel is HTMLElement => panel != null,
     );
-    let frame = 0;
+    let settleFrame = 0;
+    let checkFrame = 0;
     // One frame after the cross-fade's end, so the restyle lands after its
     // last frame is on screen rather than holding that frame back.
     const settle = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() =>
+      cancelAnimationFrame(settleFrame);
+      settleFrame = requestAnimationFrame(() =>
         setFade({settled: isWheelOpen, focusedFor: null}),
       );
+    };
+    // Two frames on, with the styles applied by the browser, a cross-fade
+    // with no exit running on either panel settles at once (one panel is not
+    // rendered, say).
+    const settleIfIdle = () => {
+      cancelAnimationFrame(checkFrame);
+      checkFrame = requestAnimationFrame(() => {
+        checkFrame = requestAnimationFrame(() => {
+          if (!panels.some(isExiting)) {
+            setFade({settled: isWheelOpen, focusedFor: null});
+          }
+        });
+      });
+    };
+    const isPanelExit = (event: Event): event is TransitionEvent =>
+      panels.includes(event.target as HTMLElement) &&
+      EXIT_PROPERTIES.has((event as TransitionEvent).propertyName);
+    const keyOf = (event: TransitionEvent) =>
+      `${panels.indexOf(event.target as HTMLElement)} ${event.propertyName}`;
+    // The cross-fade's own transitions: those that run after the toggle. A
+    // transition already running on a panel when the title is tapped (the
+    // wheels' warm-up holds `visibility`) can end after it, before the fade
+    // has even started; that end is not the fade's, so it only re-checks
+    // whether an exit still runs.
+    const own = new Set<string>();
+    const onRun = (event: Event) => {
+      if (isPanelExit(event)) {
+        own.add(keyOf(event));
+      }
     };
     // The cross-fade ends with whichever panel's own transition ends: the
     // outgoing panel's exit, or the incoming one's entrance where the layer
     // beneath has none (it stays visible, covered).
     const onEnd = (event: Event) => {
-      if (
-        panels.includes(event.target as HTMLElement) &&
-        EXIT_PROPERTIES.has((event as TransitionEvent).propertyName)
-      ) {
+      if (!isPanelExit(event)) {
+        return;
+      }
+      if (own.has(keyOf(event))) {
         settle();
+      } else {
+        settleIfIdle();
       }
     };
     for (const panel of panels) {
+      panel.addEventListener('transitionrun', onRun);
       panel.addEventListener('transitionend', onEnd);
       panel.addEventListener('transitioncancel', onEnd);
     }
-    frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => {
-        if (!panels.some(isExiting)) {
-          // No transition runs on either panel (one is not rendered, say).
-          setFade({settled: isWheelOpen, focusedFor: null});
-        }
-      });
-    });
+    settleIfIdle();
     return () => {
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(settleFrame);
+      cancelAnimationFrame(checkFrame);
       for (const panel of panels) {
+        panel.removeEventListener('transitionrun', onRun);
         panel.removeEventListener('transitionend', onEnd);
         panel.removeEventListener('transitioncancel', onEnd);
       }

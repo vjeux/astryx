@@ -56,11 +56,28 @@ function fading(...elements: HTMLElement[]) {
   }
 }
 
-async function fadeEnd(element: HTMLElement, type = 'transitionend') {
+/** A transition event on `element` for `propertyName`. */
+function transitionEvent(type: string, propertyName: string) {
   const event = new Event(type, {bubbles: true});
-  Object.assign(event, {propertyName: 'opacity'});
+  Object.assign(event, {propertyName});
+  return event;
+}
+
+/**
+ * The fade's own transition ends: it ran after the toggle (`transitionrun`),
+ * then ends. With `ran: false`, a transition that was already running at the
+ * toggle ends.
+ */
+async function fadeEnd(
+  element: HTMLElement,
+  type = 'transitionend',
+  {propertyName = 'opacity', ran = true} = {},
+) {
   act(() => {
-    element.dispatchEvent(event);
+    if (ran) {
+      element.dispatchEvent(transitionEvent('transitionrun', propertyName));
+    }
+    element.dispatchEvent(transitionEvent(type, propertyName));
   });
   // The swap lands one frame after the end.
   await act(async () => {
@@ -102,15 +119,57 @@ describe('useFadeInert', () => {
       ] as unknown as Animation[];
     view.rerender(<Panels isWheelOpen />);
     expect(calendar.hasAttribute('inert')).toBe(false);
-    const end = new Event('transitionend', {bubbles: true});
-    Object.assign(end, {propertyName: 'visibility'});
-    act(() => {
-      calendar.dispatchEvent(end);
+    await fadeEnd(calendar, 'transitionend', {propertyName: 'visibility'});
+    expect(calendar.hasAttribute('inert')).toBe(true);
+  });
+
+  it('does not take the end of a transition already running at the toggle for the fade’s', async () => {
+    const view = render(<Panels isWheelOpen={false} />);
+    const calendar = view.getByTestId('calendar');
+    const wheels = view.getByTestId('wheels');
+    // The calendar stays visible beneath; the wheels' warm-up still holds
+    // `visibility` as the title is tapped.
+    calendar.getAnimations = () => [];
+    wheels.getAnimations = () =>
+      [
+        {transitionProperty: 'visibility', playState: 'running'},
+      ] as unknown as Animation[];
+    view.rerender(<Panels isWheelOpen />);
+    // The warm-up's transition ends after the toggle: the fade has not.
+    await fadeEnd(wheels, 'transitionend', {
+      propertyName: 'visibility',
+      ran: false,
+    });
+    expect(calendar.hasAttribute('inert')).toBe(false);
+    expect(wheels.hasAttribute('inert')).toBe(true);
+    // The fade's own transition runs and ends: the panels swap.
+    fading(wheels);
+    await fadeEnd(wheels);
+    expect(calendar.hasAttribute('inert')).toBe(true);
+    expect(wheels.hasAttribute('inert')).toBe(false);
+  });
+
+  it('swaps two frames after a transition already running at the toggle ends, when no fade runs', async () => {
+    const view = render(<Panels isWheelOpen={false} />);
+    const calendar = view.getByTestId('calendar');
+    const wheels = view.getByTestId('wheels');
+    calendar.getAnimations = () => [];
+    wheels.getAnimations = () =>
+      [
+        {transitionProperty: 'visibility', playState: 'running'},
+      ] as unknown as Animation[];
+    view.rerender(<Panels isWheelOpen />);
+    // The warm-up ends and no fade runs after it.
+    wheels.getAnimations = () => [];
+    await fadeEnd(wheels, 'transitionend', {
+      propertyName: 'visibility',
+      ran: false,
     });
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 100));
     });
     expect(calendar.hasAttribute('inert')).toBe(true);
+    expect(wheels.hasAttribute('inert')).toBe(false);
   });
 
   it('swaps with the incoming panel\u2019s entrance when the outgoing one has no exit', async () => {

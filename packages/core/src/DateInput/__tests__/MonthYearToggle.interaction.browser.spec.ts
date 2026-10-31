@@ -46,7 +46,6 @@ import {
   type CastFrame,
   type TrackedFrame,
 } from '@astryxdesign/interaction-harness';
-import {SHEET_SETTLE_MS} from '../useWheelsWarmUp';
 import {datePicker} from '../../motion/uikit/datePicker';
 import {timing} from '../../motion/uikit/timing';
 
@@ -147,7 +146,10 @@ async function openCalendar(
   const wheels = page.locator('[data-panel="wheels"]').first();
   await expect
     .poll(async () => wheels.evaluate(e => getComputedStyle(e).visibility), {
-      timeout: SHEET_SETTLE_MS + 2000,
+      // The warm-up is readiness, not the subject: it waits for the sheet's
+      // settle timer and an idle main thread, which a loaded machine delays
+      // well past the settle time, so only the test's own timeout bounds it.
+      timeout: 0,
     })
     .toBe('visible');
   await waitForRest(wheels);
@@ -706,7 +708,8 @@ for (const [name, story, selector] of [
     await expect(page.locator(selector)).toBeAttached();
     await expect
       .poll(async () => (await wheelsState(page, selector)).visibility, {
-        timeout: SHEET_SETTLE_MS + 2000,
+        // Readiness, bounded by the test's own timeout (see openCalendar).
+        timeout: 0,
       })
       .toBe('visible');
     const state = await wheelsState(page, selector);
@@ -761,7 +764,8 @@ for (const [name, story, titleSelector, panelSelector, panelKey] of [
       .first();
     await expect
       .poll(async () => wheels.evaluate(e => getComputedStyle(e).visibility), {
-        timeout: SHEET_SETTLE_MS + 2000,
+        // Readiness, bounded by the test's own timeout (see openCalendar).
+        timeout: 0,
       })
       .toBe('visible');
     await page.evaluate(

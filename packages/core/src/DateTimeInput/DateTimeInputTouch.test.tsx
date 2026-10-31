@@ -737,11 +737,16 @@ describe('DateTimeInput touch surface', () => {
     if (title == null) {
       throw new Error('no month/year title');
     }
+    // The fade's own transition: it runs after the toggle, then ends.
     const fadeEnd = async (which: 'calendar' | 'wheels') => {
-      const event = new Event('transitionend', {bubbles: true});
-      Object.assign(event, {propertyName: 'opacity'});
+      const transition = (type: string) => {
+        const event = new Event(type, {bubbles: true});
+        Object.assign(event, {propertyName: 'opacity'});
+        return event;
+      };
       act(() => {
-        surface(which).dispatchEvent(event);
+        surface(which).dispatchEvent(transition('transitionrun'));
+        surface(which).dispatchEvent(transition('transitionend'));
       });
       // The swap lands one frame after the end.
       await act(async () => {

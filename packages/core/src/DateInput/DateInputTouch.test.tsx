@@ -2037,11 +2037,16 @@ describe('DateInput — month/year wheels', () => {
         button('Save'),
         button('Done'),
       ].map(isBlocked);
+    // The fade's own transition: it runs after the toggle, then ends.
     const fadeEnd = async (which: 'calendar' | 'wheels') => {
-      const event = new Event('transitionend', {bubbles: true});
-      Object.assign(event, {propertyName: 'opacity'});
+      const transition = (type: string) => {
+        const event = new Event(type, {bubbles: true});
+        Object.assign(event, {propertyName: 'opacity'});
+        return event;
+      };
       act(() => {
-        panel(which).dispatchEvent(event);
+        panel(which).dispatchEvent(transition('transitionrun'));
+        panel(which).dispatchEvent(transition('transitionend'));
       });
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 50));
