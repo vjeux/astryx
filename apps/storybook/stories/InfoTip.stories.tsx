@@ -1,12 +1,12 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
 import type {Meta, StoryObj} from '@storybook/react';
-import {InfoTip} from '@astryxdesign/lab/InfoTip';
+import {InfoTip} from '@astryxdesign/core/InfoTip';
 import {HStack} from '@astryxdesign/core/Layout';
 import {Text} from '@astryxdesign/core/Text';
 
 const meta: Meta<typeof InfoTip> = {
-  title: 'Lab/InfoTip',
+  title: 'Core/InfoTip',
   component: InfoTip,
   tags: ['autodocs'],
   argTypes: {
