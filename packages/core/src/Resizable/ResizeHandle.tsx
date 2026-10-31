@@ -359,7 +359,12 @@ export interface ResizeHandleProps extends Omit<
    */
   label?: string;
 
-  /** Resize props from useResizable region. */
+  /**
+   * Resize props from the configuration-object form of useResizable.
+   * @deprecated Give the handle's ref to `useResizable(handleRef, options)`
+   * instead: `<ResizeHandle ref={handleRef} />`. Its `isReversed` and
+   * `isDisabled` stay on the handle. Removed in the next minor.
+   */
   resizable?: ResizableProps;
 
   /** Custom handle content. Overrides the default pill. */
@@ -375,10 +380,10 @@ export interface ResizeHandleProps extends Omit<
  *
  * @example
  * ```
- * <ResizeHandle
- *   resizable={sidebar.props}
- *   direction="horizontal"
- *   hasDivider />
+ * const handleRef = useRef(null);
+ * const sidebar = useResizable(handleRef, {defaultSize: 260});
+ * <LayoutPanel width={sidebar.size}>…</LayoutPanel>
+ * <ResizeHandle ref={handleRef} direction="horizontal" hasDivider />
  * ```
  */
 
