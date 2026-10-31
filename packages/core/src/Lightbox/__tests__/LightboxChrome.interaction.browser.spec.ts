@@ -520,6 +520,34 @@ test('a keyboard focus on a hidden control brings them back', async ({
   expect(await v.alpha(v.chrome)).toBe(1);
 });
 
+test('focus from assistive technology on a hidden control brings them back', async ({
+  page,
+}) => {
+  const v = await openGallery(page);
+  await hideByTap(v, page);
+  // A screen reader moves focus to a control with no key press the page
+  // can see.
+  await page.evaluate(() => {
+    document
+      .querySelector<HTMLElement>('[data-lightbox-chrome] button')
+      ?.focus();
+  });
+  await waitForAnimation(v.chrome);
+  await waitForRest(v.chrome);
+  expect(await v.alpha(v.chrome)).toBe(1);
+});
+
+test('any key press inside the viewer brings hidden controls back', async ({
+  page,
+}) => {
+  const v = await openGallery(page);
+  await hideByTap(v, page);
+  await page.keyboard.press('a');
+  await waitForAnimation(v.chrome);
+  await waitForRest(v.chrome);
+  expect(await v.alpha(v.chrome)).toBe(1);
+});
+
 test('with the controls hidden, a tap where the caption sits shows them', async ({
   page,
 }) => {

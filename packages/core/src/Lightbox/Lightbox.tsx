@@ -951,14 +951,20 @@ export function Lightbox({
       const onPointerDown = (event: PointerEvent) => {
         lastInputRef.current = event.pointerType;
       };
+      // Hidden controls stay reachable (component:Lightbox AR5): any key
+      // press inside the viewer brings them back, and so does focus reaching
+      // a control, from the keyboard or from assistive technology, which
+      // moves focus with no key press the page can see.
       const onKeyDown = () => {
         lastInputRef.current = 'keyboard';
+        if (chromeHiddenRef.current) {
+          setChrome({hidden: false, immersive: immersiveRef.current});
+        }
       };
       const onFocusIn = (event: FocusEvent) => {
         const target = event.target instanceof Element ? event.target : null;
         if (
           chromeHiddenRef.current &&
-          lastInputRef.current === 'keyboard' &&
           target?.closest('[data-lightbox-chrome]') != null
         ) {
           setChrome({hidden: false, immersive: immersiveRef.current});
