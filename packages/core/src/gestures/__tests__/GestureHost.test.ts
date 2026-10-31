@@ -4674,6 +4674,112 @@ describe('gestures attach for every pointer (spec:AST-094 FR43, FR19, FR24)', ()
     );
   });
 
+  it('keeps listening under a fine primary pointer after the window blur, until a finger it cancelled lifts: that touchend is refused, then the listeners go (spec:AST-094 FR24, FR28)', async () => {
+    const {box} = mount('<div id="box"></div>');
+    const fine = new GestureHost(document, {
+      clock,
+      isPrimaryPointerCoarse: () => false,
+    });
+    detachers.push(fine.attach(box, new TapGestureRecognizer({name: 'tap'})));
+    const isInstalled = () =>
+      (fine as unknown as {isInstalled: boolean}).isInstalled;
+    pointer('pointerdown', box, {
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    const finger = {id: 3, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    window.dispatchEvent(new Event('blur'));
+    await Promise.resolve();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    // The browser kept the finger down: the host still listens for its lift.
+    expect(isInstalled()).toBe(true);
+    expect(touch('touchend', box, [finger], [], 900).defaultPrevented).toBe(
+      true,
+    );
+    // Nothing is owed any more: the page listeners go (FR24).
+    await Promise.resolve();
+    expect(isInstalled()).toBe(false);
+  });
+
+  it('stops keeping its listeners for a blur-cancelled finger at the next pointerdown: a new press ends the wait (spec:AST-094 FR24, FR28)', async () => {
+    const {box} = mount('<div id="box"></div>');
+    const fine = new GestureHost(document, {
+      clock,
+      isPrimaryPointerCoarse: () => false,
+    });
+    detachers.push(fine.attach(box, new TapGestureRecognizer({name: 'tap'})));
+    const isInstalled = () =>
+      (fine as unknown as {isInstalled: boolean}).isInstalled;
+    pointer('pointerdown', box, {
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    const finger = {id: 3, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    window.dispatchEvent(new Event('blur'));
+    await Promise.resolve();
+    expect(isInstalled()).toBe(true);
+    // A new press, a mouse's: once it ends, nothing keeps the listeners.
+    pointer('pointerdown', box, {
+      id: 9,
+      pointerType: 'mouse',
+      x: 50,
+      y: 10,
+      buttons: 1,
+      time: 500,
+    });
+    pointer('pointerup', box, {
+      id: 9,
+      pointerType: 'mouse',
+      x: 50,
+      y: 10,
+      time: 520,
+    });
+    await Promise.resolve();
+    expect(isInstalled()).toBe(false);
+  });
+
+  it('stops keeping its listeners for a blur-cancelled finger once its time has passed (spec:AST-094 FR24, FR28)', async () => {
+    const timers: (() => void)[] = [];
+    const timerClock = {
+      now: () => clock.time,
+      setTimeout: (run: () => void) => timers.push(run),
+      clearTimeout: () => {},
+    };
+    const {box} = mount('<div id="box"></div>');
+    const fine = new GestureHost(document, {
+      clock: timerClock,
+      isPrimaryPointerCoarse: () => false,
+    });
+    detachers.push(fine.attach(box, new TapGestureRecognizer({name: 'tap'})));
+    const isInstalled = () =>
+      (fine as unknown as {isInstalled: boolean}).isInstalled;
+    pointer('pointerdown', box, {
+      pointerType: 'touch',
+      x: 10,
+      y: 10,
+      buttons: 1,
+      time: 0,
+    });
+    const finger = {id: 3, x: 10, y: 10};
+    touch('touchstart', box, [finger], [finger], 0);
+    window.dispatchEvent(new Event('blur'));
+    await Promise.resolve();
+    expect(isInstalled()).toBe(true);
+    clock.time = 10_000;
+    for (const run of timers.splice(0)) {
+      run();
+    }
+    expect(isInstalled()).toBe(false);
+  });
+
   it('keeps no touchend listener under a fine primary pointer where the browser sends no Touch Events: no touchend ever comes (spec:AST-094 FR24)', () => {
     let owner: object | null = window;
     while (

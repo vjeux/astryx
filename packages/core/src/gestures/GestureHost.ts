@@ -345,6 +345,14 @@ const CLAIMED_LIFT_MS = 500;
 /** At most this many claimed lifts wait for their `touchend` at once (FR24). */
 const CLAIMED_LIFT_LIMIT = 8;
 
+/**
+ * How long a fine pointer's page keeps its listeners for a lift the window's
+ * blur left owed a refusal, ms: a guess, long enough for a finger kept down
+ * through a focus change to lift (FR28), short enough that the page soon
+ * stops listening (FR24).
+ */
+const OWED_REFUSAL_MS = 3000;
+
 /** A touchstart and a pointerdown describe one finger: same target, same spot. */
 function isSamePlace(a: PlacedContact, b: PlacedContact): boolean {
   return (
@@ -492,6 +500,12 @@ export class GestureHost {
   private readonly claimedLifts: (PlacedContact & {time: number})[] = [];
   /** The one timer that drops claimed lifts whose `touchend` never came. */
   private claimedLiftTimer: unknown = null;
+  /**
+   * Whether a fine pointer's page keeps listening for the lifts a blur left
+   * owed a refusal: until they come, the next press, or OWED_REFUSAL_MS.
+   */
+  private keepsForRefusals = false;
+  private refusalTimer: unknown = null;
   /** The arena's clock, which the claimed lifts' timer runs on too. */
   private readonly clock: GestureClock;
   /** Fingers still waiting for their pointerdown, by arena id. */
@@ -1390,17 +1404,29 @@ export class GestureHost {
     }
   }
 
-  /** After a contact ends: an armed press that is over stops listening. */
+  /**
+   * After a contact ends: an armed press that is over stops listening, and
+   * so does a fine pointer's page once the lifts a blur left owed are refused
+   * (FR24, FR28).
+   */
   private releaseArmedPress(): void {
-    if (!this.isArmedPress) {
+    const owesRefusal =
+      this.isInstalled && !this.isCoarse && this.keepsForRefusals;
+    if (!this.isArmedPress && !owesRefusal) {
       return;
     }
     queueMicrotask(() => {
-      if (this.isArmedPress && this.arena.touches.length === 0) {
+      if (this.arena.touches.length > 0) {
+        return;
+      }
+      if (this.isArmedPress) {
         this.isArmedPress = false;
         this.syncKeptPresses();
-        this.syncListeners();
       }
+      if (this.cancelledFingers.size === 0) {
+        this.endRefusalKeep();
+      }
+      this.syncListeners();
     });
   }
 
@@ -1524,8 +1550,14 @@ export class GestureHost {
       }
     }
     // Where the primary pointer is fine, only while a press an element armed
-    // is held (syncArmed, FR24, FR43).
-    return isUsed && (this.isCoarse || this.isArmedPress);
+    // is held (syncArmed, FR24, FR43), or while a finger the window's blur
+    // cancelled may still lift: its lift is refused (FR28).
+    return (
+      isUsed &&
+      (this.isCoarse ||
+        this.isArmedPress ||
+        (this.keepsForRefusals && this.cancelledFingers.size > 0))
+    );
   }
 
   // --- Listeners -------------------------------------------------------------
@@ -1603,6 +1635,7 @@ export class GestureHost {
       unsubscribe();
     }
     this.cancelEverything(this.arena.now());
+    this.endRefusalKeep();
     // A claimed lift's note stays: its touchend comes in a later task than
     // the pointerup, often after an armed press's listeners have gone, and
     // the element's own listener still takes it (noteClaimedLift).
@@ -2449,6 +2482,12 @@ export class GestureHost {
   // --- Pointer events --------------------------------------------------------
 
   private readonly onPointerDown = (event: PointerEvent): void => {
+    // A new press ends any wait for the lifts a blur left owed, and holds
+    // the listeners as an armed press does, until it ends (FR24).
+    if (this.keepsForRefusals) {
+      this.endRefusalKeep();
+      this.isArmedPress = true;
+    }
     // A new press: whatever click is still owed to the last one is not this.
     disarmClickGuard(this.doc);
     if (!isPointerKind(event.pointerType)) {
@@ -2858,10 +2897,36 @@ export class GestureHost {
 
   private readonly onBlur = (): void => {
     this.cancelEverything(this.arena.now());
+    // A finger the browser keeps down still lifts later, and that lift is
+    // refused: a fine pointer's page keeps listening for it, for a while.
+    if (!this.isCoarse && this.cancelledFingers.size > 0) {
+      this.keepForRefusals();
+    }
     // The press a blur ends sends no further pointer event: an armed press's
     // page listeners go now, as at its lift (FR24).
     this.releaseArmedPress();
   };
+
+  /** Keep listening for the lifts a blur left owed, until OWED_REFUSAL_MS. */
+  private keepForRefusals(): void {
+    this.keepsForRefusals = true;
+    if (this.refusalTimer == null) {
+      this.refusalTimer = this.clock.setTimeout(() => {
+        this.refusalTimer = null;
+        this.endRefusalKeep();
+        this.syncListeners();
+      }, OWED_REFUSAL_MS);
+    }
+  }
+
+  /** Stop keeping the listeners for owed lifts, and drop the timer. */
+  private endRefusalKeep(): void {
+    this.keepsForRefusals = false;
+    if (this.refusalTimer != null) {
+      this.clock.clearTimeout(this.refusalTimer);
+      this.refusalTimer = null;
+    }
+  }
 
   /** Whether the browser sends Touch Events at all (`ontouchstart`). */
   private sendsTouchEvents(): boolean {
