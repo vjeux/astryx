@@ -686,7 +686,7 @@ test(
   },
 );
 
-/** Records every animation under `column`, every frame: its animated properties, length, translations, opacities and keyframe offsets, and whether it animates a row. */
+/** Records every animation under `column`, every frame: its animated properties, length, translations, opacities and keyframe offsets, whether it animates a row, and when it started (epoch ms, once its start time resolves). The record outlives the animation: the animator cancels one it has retired, which then reports nothing. */
 async function recordAnimations(column: Locator) {
   await column.evaluate(element => {
     const seen = new Map<
@@ -698,10 +698,15 @@ async function recordAnimations(column: Locator) {
         opacities: number[];
         offsets: number[];
         isRow: boolean;
+        startedAt: number | null;
       }
     >();
     (window as unknown as {wheelAnimations: typeof seen}).wheelAnimations =
       seen;
+    const startOf = (animation: Animation) =>
+      animation.startTime == null
+        ? null
+        : performance.timeOrigin + Number(animation.startTime);
     const sample = () => {
       for (const animation of document.getAnimations()) {
         const effect = animation.effect;
@@ -709,11 +714,12 @@ async function recordAnimations(column: Locator) {
           continue;
         }
         const target = effect.target;
-        if (
-          target == null ||
-          !element.contains(target) ||
-          seen.has(animation)
-        ) {
+        if (target == null || !element.contains(target)) {
+          continue;
+        }
+        const known = seen.get(animation);
+        if (known != null) {
+          known.startedAt ??= startOf(animation);
           continue;
         }
         const props = new Set<string>();
@@ -744,6 +750,7 @@ async function recordAnimations(column: Locator) {
           offsets,
           isRow:
             target instanceof Element && target.matches('[data-wheel-row]'),
+          startedAt: startOf(animation),
         });
       }
       requestAnimationFrame(sample);
@@ -763,6 +770,7 @@ async function recordAnimations(column: Locator) {
               opacities: number[];
               offsets: number[];
               isRow: boolean;
+              startedAt: number | null;
             }
           >;
         }
@@ -861,21 +869,39 @@ test('under reduced motion, a tap’s cross-fade never shows the old row again w
   const chip = page.locator('[data-harness-marker-chip]');
   const from = await chip.boundingBox();
   const cast = await startScreencast(page);
+  // The fade lasts 200 ms, less than a busy machine's round trip from the
+  // test, and the animator cancels each half once it has retired it: the
+  // page records the strip's animations from before the tap, and itself
+  // starts the block once the cross-fade has run a frame on the compositor
+  // (blockMainThread's `during`), so the block covers the fade's midpoint
+  // and its end however late the test reads them.
+  const read = await recordAnimations(minutes);
+  const blocking = blockMainThread(page, 700, {during: strip});
   // The row below the band, minute 01, in sight before and after (today’s
-  // rows fade toward the edges). The block starts once the tap’s
-  // cross-fade plays on the compositor, and covers its midpoint and its end.
+  // rows fade toward the edges).
   await driver.tap({
     x: Math.round(box.x + box.width / 2),
     y: Math.round(box.y + box.height / 2 + ROW),
   });
-  const fade = (await waitForAnimation(strip, {minProgressMs: 16})).find(
-    animation =>
-      (animation.keyframes ?? []).some(frame => frame.opacity != null),
+  const block = await blocking;
+  // The fade out: the opacity animation the tap started, falling to 0.
+  const fade = (await read()).find(
+    animation => animation.opacities.includes(0) && animation.startedAt != null,
   );
-  if (fade == null) {
+  if (fade?.startedAt == null) {
     throw new Error('no cross-fade');
   }
-  const block = await blockMainThread(page, 700);
+  const fadeMs = 200;
+  const midpoint = fade.startedAt + fadeMs / 2;
+  // Presence first: the block spans the fade's midpoint, where the animator
+  // lands the row.
+  expect(
+    block.from,
+    'the block starts before the fade’s midpoint',
+  ).toBeLessThan(midpoint);
+  expect(block.to, 'the block ends after the fade’s midpoint').toBeGreaterThan(
+    midpoint,
+  );
   await page.waitForTimeout(150);
   const frames = await cast.stop();
   await expect(field).toHaveValue('01', {timeout: 3000});
@@ -889,10 +915,9 @@ test('under reduced motion, a tap’s cross-fade never shows the old row again w
   // Every frame with the row in sight after the fade's midpoint has the row
   // at the band, through the block and after it: the old row never comes
   // back.
-  const fadeMs = 200;
   const tracked = await trackMarker(page, frames);
   const afterMidpoint = tracked.filter(
-    frame => frame.box != null && frame.t >= fade.from + fadeMs / 2 + 10,
+    frame => frame.box != null && frame.t >= midpoint + 10,
   );
   const timeline = tracked
     .map(
