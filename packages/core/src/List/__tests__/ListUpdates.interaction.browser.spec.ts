@@ -55,6 +55,40 @@ const leaving = (page: Page) =>
  * glides last under half a second, so reading them one by one would miss the
  * later ones.
  */
+/**
+ * Records the keyframes of every script animation made from now on, however
+ * short: a reduced-motion cross-fade can end before a later read sees it.
+ */
+async function recordMadeAnimations(
+  page: Page,
+): Promise<() => Promise<Record<string, unknown>[][]>> {
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __madeAnimations?: Record<string, unknown>[][];
+    };
+    w.__madeAnimations = [];
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      ...args: Parameters<Element['animate']>
+    ) {
+      const animation = animate.apply(this, args);
+      w.__madeAnimations?.push(
+        (animation.effect as KeyframeEffect)
+          .getKeyframes()
+          .map(frame => ({...frame})),
+      );
+      return animation;
+    };
+  });
+  return async () =>
+    page.evaluate(
+      () =>
+        (window as unknown as {__madeAnimations: Record<string, unknown>[][]})
+          .__madeAnimations,
+    );
+}
+
 async function snapshot(
   page: Page,
 ): Promise<{glides: Record<string, number>; clipped: string[]}> {
@@ -246,7 +280,11 @@ test('a reorder: the row moved to the top glides up from its old place riding ab
       0,
     );
   }
-  // The list's height did not change: nothing after it moves.
+  // The list's height did not change: nothing after it moves. Present
+  // first: the content after the list is on screen.
+  const afterList = page.getByTestId('after-list');
+  await expect(afterList).toBeVisible();
+  expect((await afterList.boundingBox())?.height ?? 0).toBeGreaterThan(0);
   expect(glides['testid:after-list']).toBeUndefined();
   // It rides above them only while it glides.
   await expect(spam).not.toHaveAttribute('data-astryx-travelling', /.*/, {
@@ -276,23 +314,32 @@ test('under Reduce Motion: a finger cross-fades with no travel, a mouse changes 
 }) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
   await open(page);
+  // Present first: the row the removal takes, on screen.
+  await expect(row(page, 'Sent')).toBeVisible();
+  const made = await recordMadeAnimations(page);
   await press(page, 'Remove the second row');
   const {glides, clipped} = await snapshot(page);
   expect(glides).toEqual({});
   expect(clipped).toEqual([]);
-  const fades = await page.evaluate(() =>
-    document
-      .getAnimations()
-      .every(animation =>
-        (animation.effect as KeyframeEffect)
-          .getKeyframes()
-          .every(frame => frame.translate == null && frame.clipPath == null),
-      ),
-  );
-  expect(fades).toBe(true);
+  // Every animation the removal made, however short: at least one plays, a
+  // fade, and none of them travels.
+  const animations = await made();
+  const summary = JSON.stringify(animations);
+  expect(animations.length, summary).toBeGreaterThan(0);
+  expect(
+    animations.some(frames => frames.some(frame => frame.opacity != null)),
+    summary,
+  ).toBe(true);
+  expect(
+    animations.every(frames =>
+      frames.every(frame => frame.translate == null && frame.clipPath == null),
+    ),
+    summary,
+  ).toBe(true);
   await withMouse(browser, async mouse => {
     await mouse.emulateMedia({reducedMotion: 'reduce'});
     await open(mouse);
+    await expect(row(mouse, 'Sent')).toBeVisible();
     await press(mouse, 'Remove the second row');
     await expect(row(mouse, 'Sent')).toHaveCount(0);
     await expect(leaving(mouse)).toHaveCount(0);
@@ -366,7 +413,10 @@ test('removing the last row: its exit never paints over the content after the li
     );
     const after = document.querySelector<HTMLElement>('#storybook-root ul + *');
     if (exit == null || after == null) {
-      return {duration, rows: [] as {t: number; exit: number; after: number}[]};
+      return {
+        duration,
+        rows: [] as {t: number; exit: number; exitTop: number; after: number}[],
+      };
     }
     // The element a positioned or in-flow box is clipped by: its containing
     // blocks, up the page.
@@ -424,6 +474,7 @@ test('removing the last row: its exit never paints over the content after the li
       return {
         t,
         exit: paintedBottom(exit),
+        exitTop: exit.getBoundingClientRect().top,
         after: after.getBoundingClientRect().top,
       };
     });
@@ -433,6 +484,12 @@ test('removing the last row: its exit never paints over the content after the li
     return {duration, rows};
   });
   expect(samples.rows.length, JSON.stringify(samples)).toBe(6);
+  // Present first: an exit plays, and it starts on screen, painted.
+  expect(samples.duration, JSON.stringify(samples)).toBeGreaterThan(0);
+  expect(
+    samples.rows[0].exit - samples.rows[0].exitTop,
+    JSON.stringify(samples),
+  ).toBeGreaterThan(1);
   for (const sample of samples.rows) {
     expect(sample.exit, JSON.stringify(samples)).toBeLessThanOrEqual(
       sample.after + 1,
@@ -542,6 +599,7 @@ test('a row without swipe actions, moved across swipeable rows, rides above them
   await open(page, SWIPE_STORY);
   // Notes has no swipe actions; the rows it crosses do, and under a finger
   // each of them is raised.
+  await expect(row(page, 'Notes')).toBeVisible();
   await expect(row(page, 'Notes').locator('[data-swipe-panel]')).toHaveCount(0);
   const touch = await crossingHit(page, 'Move Notes first');
   expect(touch?.moved, JSON.stringify(touch)).toBe('Notes');

@@ -421,18 +421,30 @@ describe('List row updates through animatedLayout (component:List FR12)', () => 
   it('a re-render with the same rows in the same order plays nothing', async () => {
     render(<Demo initial={['Inbox', 'Sent']} />);
     await change(['Inbox', 'Sent']);
+    // Present first: both rows, in their order.
+    expect(
+      [...document.querySelectorAll('li')].map(row => row.textContent?.trim()),
+    ).toEqual(['Inbox', 'Sent']);
     expect(played).toEqual([]);
   });
 
   it('without a handle, the list changes at once', async () => {
     render(<Demo initial={['Inbox', 'Sent', 'Drafts']} withHandle={false} />);
     await change(['New', 'Inbox', 'Sent', 'Drafts']);
+    // Present first: the change happened, the new row first.
+    expect(
+      [...document.querySelectorAll('li')].map(row => row.textContent?.trim()),
+    ).toEqual(['New', 'Inbox', 'Sent', 'Drafts']);
     expect(played).toEqual([]);
   });
 
   it('a row without an itemKey changes at once: its insertion plays no entrance and reports nothing', async () => {
     render(<Demo initial={['Inbox', 'Sent', 'Drafts']} keyed={false} />);
     await change(['New', 'Inbox', 'Sent', 'Drafts']);
+    // Present first: the change happened, the new row first.
+    expect(
+      [...document.querySelectorAll('li')].map(row => row.textContent?.trim()),
+    ).toEqual(['New', 'Inbox', 'Sent', 'Drafts']);
     expect(played).toEqual([]);
   });
 
