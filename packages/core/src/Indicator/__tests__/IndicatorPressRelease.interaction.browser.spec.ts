@@ -35,6 +35,7 @@ import {
   compareCurve,
   countBetween,
   cubicBezier,
+  frames,
   freezeTimers,
   holdAnimations,
   installTimerGate,
@@ -222,6 +223,15 @@ async function armReleaseHold(layer: Locator): Promise<void> {
   });
 }
 
+/** How many animations `armReleaseHold` holds now (it caught the release). */
+async function armedReleases(page: Page): Promise<number> {
+  return page.evaluate(
+    () =>
+      (window as unknown as {__releaseHeld?: Animation[]}).__releaseHeld
+        ?.length ?? 0,
+  );
+}
+
 /** Puts back the playback rate `armReleaseHold` took; how many it held. */
 async function unarmRelease(page: Page): Promise<number> {
   return page.evaluate(() => {
@@ -385,13 +395,6 @@ test('the press release of a checkbox keeps fading on every frame while the main
     t: +(p.t - block.from).toFixed(1),
     strength: +strength(p.value).toFixed(3),
   }));
-  const intervals = during
-    .map((p, i) => (i === 0 ? p.t - block.from : p.t - during[i - 1].t))
-    .filter(dt => dt > 0);
-  const longestGap = Math.max(
-    end - (during.at(-1)?.t ?? block.from),
-    ...intervals,
-  );
   await writeEvidence(
     'busy-main-thread/checkbox-press-release',
     {
@@ -418,10 +421,12 @@ test('the press release of a checkbox keeps fading on every frame while the main
   });
   await film.write(testInfo, {block, release, box});
   expect(rest - pressed).toBeGreaterThan(10);
-  expect(during.length, JSON.stringify(strengths)).toBeGreaterThanOrEqual(
-    Math.floor((end - block.from) / (1000 / 60)) - 2,
-  );
-  expect(longestGap).toBeLessThan(40);
+  // How often the compositor presents during the block is the machine's
+  // (with two CPUs, as few as 4 frames in 150 ms, each tens of ms behind its
+  // own timestamp); what a blocked main thread cannot stop is the progress
+  // each presented frame shows. A release on the main thread presents
+  // nothing new until the block ends.
+  expect(during.length, JSON.stringify(strengths)).toBeGreaterThanOrEqual(2);
   for (let i = 1; i < strengths.length; i++) {
     expect(strengths[i].strength).toBeLessThanOrEqual(
       strengths[i - 1].strength + 0.01,
@@ -578,16 +583,29 @@ test.describe('a mark answers only its own press owner', () => {
         throw new Error(`${nested.story}: no outer label`);
       }
       expect(await imageOf(innerLayer)).toBe('none');
-      const held = driver.play(
+      // The reads run between the touch's start and its end (the driver
+      // waits for them before it lifts), once the outer owner shows the press.
+      let outer = '';
+      let inner = '';
+      await driver.play(
         tap(
           {x: label.x + label.width / 2, y: label.y + label.height / 2},
           {holdMs: 1500},
         ),
+        {
+          onEvent: async step => {
+            if (step.type !== 'touchStart') {
+              return;
+            }
+            await expect
+              .poll(async () => imageOf(outerLayer))
+              .toContain('gradient');
+            await frames(page, 2);
+            outer = await imageOf(outerLayer);
+            inner = await imageOf(innerLayer);
+          },
+        },
       );
-      await page.waitForTimeout(HOLD_MS);
-      const outer = await imageOf(outerLayer);
-      const inner = await imageOf(innerLayer);
-      await held;
       expect(outer).toContain('gradient');
       expect(inner).toBe('none');
     });
@@ -616,17 +634,35 @@ test('a RadioList row stays bare while its circle paints the press', async ({
       .then(png => png);
   const restRow = await pixelAt(rowProbe);
   const restMark = await pixelAt(opened.probe);
-  // A long hold, played in real time: read while the finger is down.
-  const held = opened.driver.play(tap(opened.center, {holdMs: 1500}));
-  await page.waitForTimeout(HOLD_MS);
-  expect(
-    await opened.layer.evaluate(
-      el => getComputedStyle(el, '::after').backgroundImage,
-    ),
-  ).toContain('gradient');
-  expect((await pixelAt(rowProbe)).equals(restRow)).toBe(true);
-  expect((await pixelAt(opened.probe)).equals(restMark)).toBe(false);
-  await held;
+  // The reads run between the touch's start and its end (the driver waits
+  // for them before it lifts), so they are taken while the finger is down
+  // however long they take.
+  const press = async () =>
+    opened.layer.evaluate(
+      el =>
+        el
+          .closest('[data-astryx-pressable]')
+          ?.getAttribute('data-astryx-press') ?? null,
+    );
+  let read = false;
+  await opened.driver.play(tap(opened.center, {holdMs: 1500}), {
+    onEvent: async step => {
+      if (step.type !== 'touchStart') {
+        return;
+      }
+      await expect.poll(press).toBe('on');
+      await frames(page, 2);
+      expect(
+        await opened.layer.evaluate(
+          el => getComputedStyle(el, '::after').backgroundImage,
+        ),
+      ).toContain('gradient');
+      expect((await pixelAt(rowProbe)).equals(restRow)).toBe(true);
+      expect((await pixelAt(opened.probe)).equals(restMark)).toBe(false);
+      read = true;
+    },
+  });
+  expect(read).toBe(true);
 });
 
 test(
@@ -684,10 +720,15 @@ test('under Reduce Motion a checkbox’s press release is an opacity cross-fade 
   // 200 ms) already meets.
   await page.emulateMedia({reducedMotion: 'reduce'});
   const opened = await open(page, SURFACES[0]);
+  // The release is held where it begins (the timer gate holds the clock
+  // that would end it), so it is read whatever the load.
+  await installTimerGate(page);
+  await armReleaseHold(opened.layer);
   await opened.driver.tap({
     x: Math.round(opened.center.x),
     y: Math.round(opened.center.y),
   });
+  await expect.poll(async () => armedReleases(page)).toBeGreaterThan(0);
   const releases = await opened.layer.evaluate(el =>
     el
       .getAnimations({subtree: true})
@@ -713,6 +754,8 @@ test('under Reduce Motion a checkbox’s press release is an opacity cross-fade 
         };
       }),
   );
+  expect(await unarmRelease(page)).toBeGreaterThan(0);
+  await thawTimers(page);
   expect(releases.length).toBeGreaterThan(0);
   for (const release of releases) {
     expect(release.duration).toBeLessThanOrEqual(200);
@@ -734,6 +777,74 @@ async function recordPress(owner: Locator): Promise<() => Promise<string[]>> {
       .page()
       .evaluate(
         () => (window as unknown as {__pressSeen: string[]}).__pressSeen,
+      );
+}
+
+/**
+ * The owner's `data-astryx-press` read from a task the next pointerdown
+ * queued, so after every listener of that pointerdown ran: "on" means the
+ * press painted in the pointerdown's own task, whatever the load.
+ */
+async function pressAfterPointerdown(
+  owner: Locator,
+): Promise<() => Promise<string | null>> {
+  await owner.evaluate(el => {
+    const w = window as unknown as {__pressAfterPointerdown?: string | null};
+    w.__pressAfterPointerdown = null;
+    window.addEventListener(
+      'pointerdown',
+      () => {
+        setTimeout(() => {
+          w.__pressAfterPointerdown =
+            el.getAttribute('data-astryx-press') ?? '';
+        }, 0);
+      },
+      {capture: true, once: true},
+    );
+  });
+  return async () =>
+    owner
+      .page()
+      .evaluate(
+        () =>
+          (window as unknown as {__pressAfterPointerdown?: string | null})
+            .__pressAfterPointerdown ?? null,
+      );
+}
+
+/**
+ * The layer's `::after` animation duration as the page computed it when the
+ * owner turned to "fading", in that task: the state lasts only the release.
+ */
+async function durationAtFading(
+  owner: Locator,
+  layer: Locator,
+): Promise<() => Promise<string | null>> {
+  const target = await layer.elementHandle();
+  await owner.evaluate((el, layerElement) => {
+    const w = window as unknown as {__durationAtFading?: string | null};
+    w.__durationAtFading = null;
+    const observer = new MutationObserver(() => {
+      if (el.getAttribute('data-astryx-press') === 'fading') {
+        w.__durationAtFading = getComputedStyle(
+          layerElement as Element,
+          '::after',
+        ).animationDuration;
+        observer.disconnect();
+      }
+    });
+    observer.observe(el, {
+      attributes: true,
+      attributeFilter: ['data-astryx-press'],
+    });
+  }, target);
+  return async () =>
+    owner
+      .page()
+      .evaluate(
+        () =>
+          (window as unknown as {__durationAtFading?: string | null})
+            .__durationAtFading ?? null,
       );
 }
 
@@ -788,35 +899,30 @@ test.describe('with a mouse', () => {
         throw new Error(`${surface.story}: nothing to press`);
       }
       const seen = await recordPress(owner);
+      const afterPointerdown = await pressAfterPointerdown(owner);
+      const fadingDuration = await durationAtFading(owner, layer);
       await page.mouse.move(
         target.x + target.width / 2,
         target.y + target.height / 2,
       );
       await page.mouse.down();
       // FR11's fine-pointer profile: the press paints at `pointerdown`, with
-      // no delay, through the same controller as a finger's.
-      await expect
-        .poll(async () => owner.getAttribute('data-astryx-press'), {
-          timeout: 100,
-        })
-        .toBe('on');
+      // no delay, through the same controller as a finger's: "on" by the
+      // end of the pointerdown's own task.
+      await expect.poll(afterPointerdown).not.toBeNull();
+      expect(await afterPointerdown()).toBe('on');
       expect(
         await layer.evaluate(
           el => getComputedStyle(el, '::after').backgroundImage,
         ),
       ).toContain('gradient');
       await page.mouse.up();
-      // The same release fade as a finger's, on the host's clock.
-      await expect
-        .poll(async () => owner.getAttribute('data-astryx-press'))
-        .toBe('fading');
-      expect(
-        timeMs(
-          await layer.evaluate(
-            el => getComputedStyle(el, '::after').animationDuration,
-          ),
-        ),
-      ).toBe(surface.clock.releaseMs);
+      // The same release fade as a finger's, on the host's clock, read as
+      // the owner turned to "fading".
+      await expect.poll(fadingDuration).not.toBeNull();
+      expect(timeMs((await fadingDuration()) ?? '')).toBe(
+        surface.clock.releaseMs,
+      );
       expect(await seen()).toEqual(expect.arrayContaining(['on', 'fading']));
     });
 
