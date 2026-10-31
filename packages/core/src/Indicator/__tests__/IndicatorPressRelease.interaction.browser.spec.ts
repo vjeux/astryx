@@ -11,8 +11,10 @@
  *   checkbox box or a radio circle: it follows its host's curve (a
  *   standalone checkbox is a control and takes the shared release; a checkbox
  *   or radio row is a cell and releases on the deselect), sampled frame by
- *   frame in both engines; it keeps fading on every frame while the main
- *   thread is blocked and does no Layout or Paint (Chromium); a RadioList row
+ *   frame in both engines (held where it begins, in the task that starts it);
+ *   it keeps fading on every frame while the main thread is blocked (the
+ *   block taken in the page, a frame into the release) and does no Layout or
+ *   Paint (Chromium); a RadioList row
  *   stays bare while its circle paints; a storyboard of the release, its trace
  *   asserted; with a mouse (spec:AST-094 FR11's fine-pointer profile, FR43) a
  *   checkbox and a CheckboxList row press through the same model at once and
@@ -46,6 +48,7 @@ import {
   touchDriver,
   traceRendering,
   waitForAnimation,
+  watchAnimations,
   webInputDriver,
   PEN_SKIP,
   withStorybook,
@@ -169,6 +172,69 @@ async function open(page: Page, surface: Surface): Promise<Opened> {
 const layerOpacity = async (layer: Locator) =>
   layer.evaluate(el => Number(getComputedStyle(el, '::after').opacity));
 
+/**
+ * Arms the page before a press so the release is caught where it begins, in
+ * the task that starts it, however busy the machine is: when the owner's
+ * `data-astryx-press` turns "fading", the timer gate freezes (the release
+ * timer, which removes the attribute, holds) and each animation that style
+ * starts on the layer stays where it begins (playback rate 0: still running,
+ * so holdAnimations takes it). `unarmRelease` puts the rate back and returns
+ * how many it held: none when the arm missed the release.
+ */
+async function armReleaseHold(layer: Locator): Promise<void> {
+  await layer.evaluate(el => {
+    const owner = el.closest('[data-astryx-pressable]');
+    if (owner == null) {
+      throw new Error('armReleaseHold: no press owner');
+    }
+    const w = window as unknown as {
+      __releaseHeld?: Animation[];
+      __harnessTimerGate?: {frozen: boolean};
+    };
+    w.__releaseHeld = [];
+    // Reading the style first starts what the new state starts.
+    const current = () => {
+      getComputedStyle(el, '::after').getPropertyValue('opacity');
+      return el.getAnimations({subtree: true});
+    };
+    const known = new Set<Animation>(current());
+    const observer = new MutationObserver(() => {
+      const animations = current();
+      if (owner.getAttribute('data-astryx-press') !== 'fading') {
+        animations.forEach(animation => known.add(animation));
+        return;
+      }
+      observer.disconnect();
+      if (w.__harnessTimerGate != null) {
+        w.__harnessTimerGate.frozen = true;
+      }
+      for (const animation of animations) {
+        if (!known.has(animation) && animation.playState === 'running') {
+          animation.playbackRate = 0;
+          w.__releaseHeld?.push(animation);
+        }
+      }
+    });
+    observer.observe(owner, {
+      attributes: true,
+      attributeFilter: ['data-astryx-press'],
+    });
+  });
+}
+
+/** Puts back the playback rate `armReleaseHold` took; how many it held. */
+async function unarmRelease(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const w = window as unknown as {__releaseHeld?: Animation[]};
+    const held = w.__releaseHeld ?? [];
+    for (const animation of held) {
+      animation.playbackRate = 1;
+    }
+    w.__releaseHeld = [];
+    return held.length;
+  });
+}
+
 for (const surface of SURFACES) {
   test(`the press release of ${surface.name} follows its host’s curve, sampled frame by frame`, async ({
     page,
@@ -178,11 +244,14 @@ for (const surface of SURFACES) {
     const expected = (t: number) =>
       1 - ease(Math.min(1, Math.max(0, t / surface.clock.releaseMs)));
     // Gate the page's timers before the press, so the release timer (which
-    // removes the attribute when the clock runs out) holds while seeking.
+    // removes the attribute when the clock runs out) holds while seeking,
+    // and arm the hold: the release stays where it begins until held.
     await installTimerGate(page);
+    await armReleaseHold(opened.layer);
     await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
     await freezeTimers(page);
     const held = await holdAnimations(page, opened.layer);
+    expect(await unarmRelease(page)).toBeGreaterThan(0);
     const release = held.find(
       a =>
         a.kind === 'CSSAnimation' && a.durationMs === surface.clock.releaseMs,
@@ -286,9 +355,22 @@ test('the press release of a checkbox keeps fading on every frame while the main
   const [surface] = SURFACES;
   const opened = await open(page, surface);
   const cast = await startScreencast(page);
+  // Both are taken before the press, in the page: the watch records the
+  // release however briefly it runs, and the block starts from a task queued
+  // in the frame that shows the release a frame in, on the compositor,
+  // however busy the machine is.
+  const watch = await watchAnimations(opened.layer);
+  const blocking = blockMainThread(page, 700, {
+    during: opened.layer,
+    minProgressMs: 16,
+  });
   await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
-  const [release] = await waitForAnimation(opened.layer, {minProgressMs: 16});
-  const block = await blockMainThread(page, 700);
+  const block = await blocking;
+  const [release] = await watch.started({minProgressMs: 16});
+  // The block began on the release, not on anything before it.
+  expect(block.from, JSON.stringify({block, release})).toBeGreaterThanOrEqual(
+    release.from,
+  );
   await page.waitForTimeout(150);
   const frames = await cast.stop();
   const pixels = await samplePixel(page, frames, opened.probe);
@@ -564,6 +646,7 @@ test(
         width: box.width + 24,
         height: box.height + 24,
       };
+      await armReleaseHold(opened.layer);
       await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
       await freezeTimers(page);
       const {storyboard} = await animationStoryboard(page, {
@@ -575,6 +658,7 @@ test(
         columns: 8,
         cellScale: 2,
       });
+      expect(await unarmRelease(page)).toBeGreaterThan(0);
       await releaseAnimations(page, {finish: true});
       await thawTimers(page);
       await storyboard.write(testInfo, {clock: surface.clock});
