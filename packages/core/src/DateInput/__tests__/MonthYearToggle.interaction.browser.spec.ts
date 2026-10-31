@@ -25,19 +25,20 @@
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
-  animationStoryboard,
   blockMainThread,
   busyWindowProof,
   freezeTimers,
+  holdAnimations,
   installTimerGate,
   markElement,
   openStory,
   releaseAnimations,
+  seekAnimations,
   startScreencast,
+  Storyboard,
   thawTimers,
   timeline,
   touchDriver,
-  waitForAnimation,
   waitForRest,
   watchAnimations,
   withStorybook,
@@ -236,6 +237,17 @@ test('DateTimeInput: the calendar and the wheels cross-fade on UIKit’s 0.25 s 
   await waitForRest(
     page.getByRole('dialog').locator('.astryx-bottom-sheet').first(),
   );
+  // The hidden wheels warm up once the sheet has settled; wait for that and
+  // for its end (as openCalendar does), so the watch below sees only the
+  // toggle's runs: on a loaded machine the warm-up's `visibility` ran inside
+  // it, ahead of the fade.
+  await expect
+    .poll(async () => wheels.evaluate(e => getComputedStyle(e).visibility), {
+      // Readiness, bounded by the test's own timeout (see openCalendar).
+      timeout: 0,
+    })
+    .toBe('visible');
+  await waitForRest(wheels);
   const chevron = page
     .locator('button[aria-label$="Choose month and year"] .astryx-icon')
     .first();
@@ -955,27 +967,65 @@ test.describe('with a mouse', () => {
   });
 });
 
+/**
+ * The storyboard's hold: a test stylesheet delays every transition and
+ * animation in the open sheet by this much, leaving their durations and
+ * curves as they are, so the hold finds the toggle's in their delay however
+ * late a loaded machine's round trips bring it; the film starts where the
+ * fade's delay ends. Without it, a hold taken once the tap had returned
+ * reached the 0.25 s fade after it had ended (Chromium pinned to two cores,
+ * and the CI WebKit lane).
+ */
+const STORYBOARD_DELAY_MS = 1000;
+
 test(
   'storyboard: the month/year toggle',
   {tag: '@storyboard'},
   async ({page}, testInfo) => {
     const {driver, sheet, wheels, titleAt} = await openCalendar(page);
+    await page.addStyleTag({
+      content: `dialog[open] * { transition-delay: ${STORYBOARD_DELAY_MS}ms !important; animation-delay: ${STORYBOARD_DELAY_MS}ms !important; }`,
+    });
     await installTimerGate(page);
     await driver.tap(titleAt);
-    await waitForAnimation(wheels);
+    // Hold until the fade is held, still in its delay. Each hold adds to the
+    // held set, so the title's press, a frame earlier, is held with it.
+    const isFade = (a: {name?: string | null; delayMs: number}) =>
+      a.name === 'opacity' && a.delayMs === STORYBOARD_DELAY_MS;
+    const deadline = Date.now() + STORYBOARD_DELAY_MS;
+    const held = await holdAnimations(page);
+    while (!held.some(isFade)) {
+      if (Date.now() > deadline) {
+        throw new Error(
+          `storyboard month-year-toggle: no fade held among ${JSON.stringify(held)}`,
+        );
+      }
+      held.push(...(await holdAnimations(page)));
+    }
+    const fade = held.find(isFade)!;
+    expect(fade.heldAtMs, JSON.stringify(fade)).toBeLessThan(
+      STORYBOARD_DELAY_MS,
+    );
     await freezeTimers(page);
-    const {storyboard} = await animationStoryboard(page, {
+    const storyboard = new Storyboard(page, {
       name: 'month-year-toggle',
       clip: sheet,
-      times: timeline(TOGGLE_MS, 1000 / 30),
       columns: 5,
       cellScale: 0.35,
-      measure: async () => ({
-        opacity: +(
-          await wheels.evaluate(el => Number(getComputedStyle(el).opacity))
-        ).toFixed(3),
-      }),
     });
+    // Each held animation keeps its own offset from the earliest held start.
+    const filmStart = fade.offsetMs + STORYBOARD_DELAY_MS;
+    for (const t of timeline(TOGGLE_MS, 1000 / 30)) {
+      // Labelled with the time the page presents, from the fade's start.
+      const presentedAt =
+        (await seekAnimations(page, filmStart + t)) - filmStart;
+      const opacity = +(
+        await wheels.evaluate(el => Number(getComputedStyle(el).opacity))
+      ).toFixed(3);
+      await storyboard.capture(`t=${+presentedAt.toFixed(1)} ms`, presentedAt, {
+        opacity,
+      });
+    }
     await storyboard.write(testInfo);
     await releaseAnimations(page, {finish: true});
     await thawTimers(page);
