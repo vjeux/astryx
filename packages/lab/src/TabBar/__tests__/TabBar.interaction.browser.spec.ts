@@ -3730,6 +3730,9 @@ test.describe('search tab, the cancel button', () => {
     const circleGlass = page.locator('[data-tab-bar-search] > span').first();
     await waitForRest(page.locator('[data-tab-bar-search]'));
     await waitForRest(circleGlass);
+    // On screen first: the circle's glass and the Cancel button over it.
+    await expectPainted(circleGlass);
+    await expectPainted(cancel);
     const box = await cancel.boundingBox();
     if (box == null) {
       throw new Error('no cancel button');
