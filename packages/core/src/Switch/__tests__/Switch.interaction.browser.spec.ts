@@ -1598,6 +1598,81 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     await expectCaughtWithoutAJump(page);
   });
 
+  test('P14 · a second tap whose lift the page handles late (its main thread busy for 100 ms) catches the thumb where the screen shows it, without a jump (spec:AST-094 FR6)', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'screencast frame evidence is Chromium-only in Playwright (WebKit: checked on the iOS simulator instead)',
+    );
+    const {driver, input, thumb, center} = await openSwitch(page);
+    await markElement(thumb, {size: 6, inset: 2});
+    // The page blocks at the second touch's start, so that touch's lift (30
+    // ms later, its timestamp the scripted one) waits for the block: the
+    // switch handles it about 70 ms after it happened, while the compositor
+    // keeps the first travel moving.
+    await page.evaluate(() => {
+      const w = window as unknown as {__block?: {from: number; to: number}};
+      let starts = 0;
+      addEventListener(
+        'touchstart',
+        () => {
+          starts += 1;
+          if (starts !== 2) {
+            return;
+          }
+          // In the touch's own dispatch, after the switch's listeners (they
+          // were added first): a task queued here can run after the lift.
+          const from = performance.timeOrigin + performance.now();
+          const end = performance.now() + 100;
+          while (performance.now() < end) {
+            // the page's main thread is busy
+          }
+          w.__block = {from, to: performance.timeOrigin + performance.now()};
+        },
+        {capture: true, passive: true},
+      );
+    });
+    const cast = await startScreencast(page);
+    await secondTapMidTravel(page, driver, center);
+    await waitForSwitchRest(page, thumb);
+    const castFrames = await cast.stop();
+    await expect(input).not.toBeChecked();
+    const block = await page.evaluate(
+      () =>
+        (window as unknown as {__block?: {from: number; to: number}}).__block,
+    );
+    expect(block, 'the page was busy when the lift came').toBeDefined();
+    const tracked = await trackMarker(page, castFrames);
+    // Present and painted first: the marked thumb in the frames, with a box.
+    const shown = tracked.filter(
+      (f): f is typeof f & {box: NonNullable<typeof f.box>} =>
+        f.box != null && f.box.width > 0 && f.box.height > 0,
+    );
+    expect(shown.length).toBeGreaterThan(10);
+    const samples = shown.map(
+      f => [f.t, f.box.x + f.box.width / 2] as [number, number],
+    );
+    const xs = samples.map(([, x]) => x);
+    const farthest = Math.max(...xs) - xs[0];
+    // It turned around mid-travel, short of the on end...
+    expect(farthest).toBeGreaterThan(1);
+    expect(farthest).toBeLessThan(TRAVEL_PX - 1);
+    // ...from the place the screen showed when the late lift was handled: no
+    // presented frame moves it more than a few px from the one before,
+    // measured against the time the two frames span.
+    const FRAME_MS = 1000 / 60;
+    const perFrame = samples
+      .slice(1)
+      .map(
+        ([time, x], i) =>
+          (Math.abs(x - samples[i][1]) * FRAME_MS) /
+          Math.max(time - samples[i][0], FRAME_MS),
+      );
+    expect(Math.max(...perFrame), JSON.stringify(samples)).toBeLessThan(4);
+  });
+
   test('a disabled or busy switch stays inert under a finger', async ({
     page,
   }) => {
