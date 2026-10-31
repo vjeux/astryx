@@ -2613,6 +2613,9 @@ test.describe('search tab', () => {
       'active',
     );
     await waitForRest(searchHost(page));
+    // On screen first: the field and the circle it covers.
+    await expectPainted(searchHost(page));
+    await expectPainted(circle(page));
     // The field covers the circle: a tap at its centre lands in the field.
     const box = await circle(page).boundingBox();
     if (box == null) {
