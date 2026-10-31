@@ -1704,7 +1704,7 @@ describe('swipeActions', () => {
       expect(xOf(row)).toBe(72);
     });
 
-    it('stays open on a scroll while focus is inside it, which may be the browser bringing a focused entry into view', async () => {
+    it('stays open on a scroll while focus is inside its open panel, which may be the browser bringing a focused entry into view', async () => {
       const {row} = renderRow();
       dragLeading(row, 45);
       await settled();
@@ -1716,6 +1716,19 @@ describe('swipeActions', () => {
       await settled();
       expect(xOf(row)).toBe(72);
       expect(document.activeElement).toBe(entry);
+    });
+
+    it('closes on a scroll while focus is on its content, outside its open panel (spec:AST-057 FR7)', async () => {
+      const {row} = renderRow();
+      dragLeading(row, 45);
+      await settled();
+      const content = screen.getByRole('button', {name: 'Conversation'});
+      act(() => {
+        content.focus();
+      });
+      fireEvent.scroll(row.parentElement as HTMLElement);
+      await settled();
+      expect(xOf(row)).toBe(0);
     });
 
     it('closes a resting row when anything holding it scrolls, and not for another scroller', async () => {

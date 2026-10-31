@@ -50,10 +50,10 @@
  *
  * An open row (resting, or settling to rest open: UIKit counts a row open
  * from the release that opens it) closes on a pointer landing outside it, on
- * a scroll of anything that holds it while focus is outside it, on Escape
- * with focus inside it, and on a tap on its own content. That tap activates
- * nothing on the row, as in UIKit: a foundation tap recognizer takes it at
- * the lift, so the browser never clicks.
+ * a scroll of anything that holds it while focus is outside its open panel,
+ * on Escape with focus inside it, and on a tap on its own content. That tap
+ * activates nothing on the row, as in UIKit: a foundation tap recognizer
+ * takes it at the lift, so the browser never clicks.
  *
  * Motion is UIKit's. Every move of the finger starts a spring toward the
  * finger's offset from the row's presentation value and velocity, so the row
@@ -675,13 +675,24 @@ export function useSwipeAction({
       const root = rootRef.current;
       const {target} = event;
       if (
-        root != null &&
-        (target === document ||
-          (target instanceof Element && target.contains(root))) &&
-        // Focus inside the row means the scroll may be the browser bringing
-        // the focused entry into view (keyboard or VoiceOver): the row stays.
-        !root.contains(document.activeElement)
+        root == null ||
+        !(
+          target === document ||
+          (target instanceof Element && target.contains(root))
+        )
       ) {
+        return;
+      }
+      // Focus inside the open panel means the scroll may be the browser
+      // bringing the focused entry into view (keyboard or VoiceOver): the row
+      // stays. Focus anywhere else, the row's own content included, closes it
+      // (spec:AST-057 FR7).
+      const side = layoutRef.current?.side;
+      const panel =
+        side == null
+          ? null
+          : root.querySelector(`[data-swipe-panel="${side}"]`);
+      if (panel?.contains(document.activeElement) !== true) {
         close();
       }
     };
