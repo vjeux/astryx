@@ -3599,6 +3599,7 @@ test.describe('search tab, active above the keyboard', () => {
     await tapSearch(page, driver);
     await expect(page.getByRole('searchbox', {name: 'Search'})).toBeFocused();
     await waitForRest(searchFieldEnd(page));
+    await expectPainted(searchHost(page));
     await showKeyboard(page);
     const top = await page.evaluate(k => window.innerHeight - k, KEYBOARD);
     const bottom = async () => {
@@ -3618,7 +3619,13 @@ test.describe('search tab, active above the keyboard', () => {
     // Reported down, the hold ends and the bar is back.
     await showKeyboard(page, 0);
     await expect.poll(() => keyboardListeners(page)).toBe(0);
-    expect(await bottom()).not.toBe(Math.round(top - 8));
+    // On screen first: the bar and the field, then the field's new place (a
+    // field gone from the page is not at the raised place either).
+    await expectPainted(page.getByRole('tablist'));
+    await expectPainted(searchHost(page));
+    const rested = await bottom();
+    expect(rested).not.toBeNull();
+    expect(rested).not.toBe(Math.round(top - 8));
   });
 
   test("in Chrome on Android the field reads the browser's own keyboard report while it has focus", async ({
