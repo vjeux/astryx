@@ -48,6 +48,7 @@ import {
   innermostInteractive,
   matchesInteractiveSelectors,
 } from '../hooks/useClickableContainer';
+import {isDisabledControl} from '../utils/pressDisabled';
 import {
   getInteractionModality,
   useInteractionModalityTracking,
@@ -136,21 +137,6 @@ export function isActionTrigger(element: HTMLElement): boolean {
       return element.hasAttribute('href');
     default:
       return isEditable(element);
-  }
-}
-
-/**
- * Whether this element is a disabled control: `aria-disabled="true"`, or a
- * form control the browser counts as `:disabled`.
- */
-function isDisabledControl(element: Element): boolean {
-  if (element.getAttribute('aria-disabled') === 'true') {
-    return true;
-  }
-  try {
-    return element.matches(':disabled');
-  } catch {
-    return false;
   }
 }
 

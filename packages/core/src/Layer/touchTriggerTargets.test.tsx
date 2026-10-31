@@ -47,6 +47,7 @@ import type {SearchSource, SearchableItem} from '../Typeahead/types';
 import {DropdownMenuItem} from '../DropdownMenu/DropdownMenuItem';
 import {ClickableCard} from '../ClickableCard/ClickableCard';
 import {Overlay} from '../Overlay/Overlay';
+import {HoverCard} from '../HoverCard/HoverCard';
 import {Tooltip} from '../Tooltip/Tooltip';
 import {__resetInteractionModalityForTest} from '../utils/interactionModality';
 
@@ -547,5 +548,45 @@ describe('a tap on an enabled control is left to the trigger, as before', () => 
       expect(isOpen('A very long document title')).toBe(true);
     });
     expect(follow).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('HoverCard: a disabled control performs no action', () => {
+  it('a tap on an aria-disabled trigger opens its hover card, and nothing activates', async () => {
+    const onOpenChange = vi.fn();
+    const publish = vi.fn();
+    render(
+      <HoverCard
+        content={<span>Publishing needs an editor</span>}
+        onOpenChange={onOpenChange}
+        delay={0}>
+        <button type="button" aria-disabled="true" onClick={publish}>
+          Publish
+        </button>
+      </HoverCard>,
+    );
+    tap(screen.getByRole('button', {name: 'Publish'}));
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(true);
+    });
+  });
+
+  it('a tap on a disabled checkbox inside an option-row trigger opens the row’s hover card', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <HoverCard
+        content={<span>Archived projects cannot be selected</span>}
+        onOpenChange={onOpenChange}
+        delay={0}>
+        <div role="option" aria-selected={false} tabIndex={0}>
+          <input type="checkbox" aria-disabled="true" aria-label="Apollo" />
+          Apollo
+        </div>
+      </HoverCard>,
+    );
+    tap(screen.getByRole('checkbox', {name: 'Apollo'}));
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(true);
+    });
   });
 });
