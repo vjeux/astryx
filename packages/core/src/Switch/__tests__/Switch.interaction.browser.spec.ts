@@ -1673,6 +1673,82 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     expect(Math.max(...perFrame), JSON.stringify(samples)).toBeLessThan(4);
   });
 
+  test('a tap whose first frame the page commits late (its main thread busy for 100 ms after the lift) starts the travel from rest on that frame, not partway into its curve', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'screencast frame evidence is Chromium-only in Playwright (WebKit: checked on the iOS simulator instead)',
+    );
+    const {driver, input, thumb, center} = await openSwitch(page);
+    await markElement(thumb, {size: 6, inset: 2});
+    // The page blocks in the lift's own dispatch, after the switch's
+    // listeners (they were added first) have started the travel: the frame
+    // that first shows the travel comes about 100 ms after the switch asked
+    // for it. As Core Animation starts an animation at its commit, a block
+    // before that frame delays the motion instead of skipping into it.
+    await page.evaluate(() => {
+      const w = window as unknown as {__block?: {from: number; to: number}};
+      addEventListener(
+        'touchend',
+        () => {
+          if (w.__block != null) {
+            return;
+          }
+          const from = performance.timeOrigin + performance.now();
+          const end = performance.now() + 100;
+          while (performance.now() < end) {
+            // the page's main thread is busy
+          }
+          w.__block = {from, to: performance.timeOrigin + performance.now()};
+        },
+        {capture: true, passive: true},
+      );
+    });
+    // The marker sits at the thumb's inline start: at rest it moves with the
+    // thumb's left edge (each state has its own thumb size, Switch FR13).
+    const restLeft = async () =>
+      thumb.evaluate(element => element.getBoundingClientRect().left);
+    const offLeft = await restLeft();
+    const cast = await startScreencast(page);
+    await driver.play(tap(center, {holdMs: 40}));
+    await expect(input).toBeChecked();
+    await waitForSwitchRest(page, thumb);
+    const castFrames = await cast.stop();
+    const onLeft = await restLeft();
+    const block = await page.evaluate(
+      () =>
+        (window as unknown as {__block?: {from: number; to: number}}).__block,
+    );
+    expect(block, 'the page was busy after the lift').toBeDefined();
+    const tracked = await trackMarker(page, castFrames);
+    // Present and painted first: the marked thumb in the frames, with a box.
+    const shown = tracked.filter(
+      (f): f is typeof f & {box: NonNullable<typeof f.box>} =>
+        f.box != null && f.box.width > 0 && f.box.height > 0,
+    );
+    expect(shown.length).toBeGreaterThan(10);
+    const samples = shown.map(
+      f => [f.t, f.box.x + f.box.width / 2] as [number, number],
+    );
+    const xs = samples.map(([, x]) => x);
+    // It travelled from the off rest to the on rest (the frames place the
+    // marker to the whole px)...
+    expect(Math.abs(xs.at(-1)! - xs[0] - (onLeft - offLeft))).toBeLessThan(1.5);
+    // ...from rest: no presented frame moves it more than a few px from the
+    // one before, measured against the time the two frames span.
+    const FRAME_MS = 1000 / 60;
+    const perFrame = samples
+      .slice(1)
+      .map(
+        ([time, x], i) =>
+          (Math.abs(x - samples[i][1]) * FRAME_MS) /
+          Math.max(time - samples[i][0], FRAME_MS),
+      );
+    expect(Math.max(...perFrame), JSON.stringify(samples)).toBeLessThan(4);
+  });
+
   test('a disabled or busy switch stays inert under a finger', async ({
     page,
   }) => {
