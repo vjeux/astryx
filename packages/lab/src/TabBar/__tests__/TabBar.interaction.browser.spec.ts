@@ -146,6 +146,24 @@ async function lensCenterX(page: Page) {
   return box.x + box.width / 2;
 }
 
+/**
+ * The elements under test are on screen before anything is measured about
+ * them: `count` of them, each with a nonzero box.
+ */
+async function expectPainted(locator: Locator, count = 1) {
+  await expect(locator).toHaveCount(count);
+  const boxes = await locator.evaluateAll(elements =>
+    elements.map(element => {
+      const rect = element.getBoundingClientRect();
+      return {width: rect.width, height: rect.height};
+    }),
+  );
+  for (const box of boxes) {
+    expect(box.width, JSON.stringify(boxes)).toBeGreaterThan(0);
+    expect(box.height, JSON.stringify(boxes)).toBeGreaterThan(0);
+  }
+}
+
 /** A presented translateX, px (the animator drives `translate`). */
 const translateX = async (locator: Locator) =>
   locator.evaluate(element => {
@@ -1607,7 +1625,9 @@ test.describe('minimize on scroll', () => {
   }) => {
     await openBar(page, 'minimize-on-scroll');
     const lens = page.locator('[data-tab-bar-lens]');
-    await expect(lens).toBeVisible();
+    // On screen first: the lens and the glass it must draw over.
+    await expectPainted(lens);
+    await expectPainted(page.locator('[data-tab-bar-platter]'));
     // Paint order at the lens, topmost first. The bar takes no pointer, so
     // hit testing is turned on for this read only.
     const order = await lens.evaluate(element => {
