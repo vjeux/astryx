@@ -366,12 +366,48 @@ test('the press release of a checkbox does no Layout or Paint per frame', async 
       passive: false,
     }),
   );
+  // What the release fades is drawn: the layer has a box, and the press
+  // paints its image there, read at each press write (touch-down and lift,
+  // outside the steady window). No Layout and no Paint also holds with
+  // nothing drawn, so that count runs after this.
+  const layerBox = await opened.layer.boundingBox();
+  expect(layerBox?.width ?? 0).toBeGreaterThan(0);
+  expect(layerBox?.height ?? 0).toBeGreaterThan(0);
+  const layerHandle = await opened.layer.elementHandle();
+  await page
+    .locator('#storybook-root [data-astryx-pressable]')
+    .first()
+    .evaluate((owner, layer) => {
+      const seen: {state: string; image: string}[] = [];
+      (window as unknown as {__releaseSeen: typeof seen}).__releaseSeen = seen;
+      new MutationObserver(() => {
+        seen.push({
+          state: owner.getAttribute('data-astryx-press') ?? '',
+          image: getComputedStyle(layer as Element, '::after').backgroundImage,
+        });
+      }).observe(owner, {
+        attributes: true,
+        attributeFilter: ['data-astryx-press'],
+      });
+    }, layerHandle);
   let release = {from: 0, to: 0};
   const trace = await traceRendering(page, async () => {
     await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
     [release] = await waitForAnimation(opened.layer);
     await page.waitForTimeout(CONTROL.releaseMs + 100);
   });
+  const seen = await page.evaluate(
+    () =>
+      (window as unknown as {__releaseSeen: {state: string; image: string}[]})
+        .__releaseSeen,
+  );
+  for (const state of ['on', 'fading']) {
+    expect(
+      seen.find(entry => entry.state === state)?.image ?? '',
+      JSON.stringify(seen),
+    ).toContain('gradient');
+  }
+  expect(release.to - release.from).toBeGreaterThan(0);
   // The steady part of the release: its first and last frames may commit.
   const during = countBetween(trace, release.from + 30, release.to - 30);
   const around = trace.events
