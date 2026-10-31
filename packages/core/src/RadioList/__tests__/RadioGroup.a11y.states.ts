@@ -281,11 +281,10 @@ export const RADIO_GROUP_BINDING_STATES = [
   {
     id: 'segmented-group-disabled',
     binding: 'SegmentedControl',
-    summary: 'a disabled segmented group outside the tab sequence',
+    summary: 'a disabled segmented group that keeps its one tab stop',
     facts: groupFacts({
       disabled: true,
       operable: false,
-      tabReachable: false,
       spaceSelection: false,
       pointerSelection: false,
       arrowSelection: false,
@@ -303,10 +302,9 @@ export const RADIO_GROUP_BINDING_STATES = [
     id: 'segmented-group-disabled-with-message',
     binding: 'SegmentedControl',
     summary:
-      'a disabled segmented group with an attached reason and one tab stop',
+      'a disabled segmented group with one tab stop, its reason on the focusable segment',
     facts: groupFacts({
       disabled: true,
-      description: 'Choose a project to switch views',
       operable: false,
       spaceSelection: false,
       pointerSelection: false,
@@ -357,13 +355,12 @@ export const RADIO_GROUP_BINDING_STATES = [
   {
     id: 'segmented-option-group-disabled',
     binding: 'SegmentedControlItem',
-    summary:
-      'a selected segment disabled by its group and removed from Tab order',
+    summary: 'a selected segment disabled by its group, still the Tab stop',
     facts: optionFacts({
       checked: true,
       disabled: true,
       operable: false,
-      tabReachable: false,
+      tabReachable: true,
       pointerCancellation: false,
     }),
     subjectName: 'List',
@@ -373,10 +370,11 @@ export const RADIO_GROUP_BINDING_STATES = [
     id: 'segmented-option-group-disabled-with-message',
     binding: 'SegmentedControlItem',
     summary:
-      'a selected unavailable segment kept tabReachable for the group reason',
+      'a selected unavailable segment, the Tab stop, described by the group reason',
     facts: optionFacts({
       checked: true,
       disabled: true,
+      description: 'Choose a project to switch views',
       operable: false,
       tabReachable: true,
       pointerCancellation: false,

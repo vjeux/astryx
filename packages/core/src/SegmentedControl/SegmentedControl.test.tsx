@@ -13,7 +13,7 @@
  */
 
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {render, screen, fireEvent, waitFor} from '@testing-library/react';
+import {act, render, screen, fireEvent, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {hasPressedArm} from '../__tests__/pressState';
 import {SegmentedControl} from './SegmentedControl';
@@ -953,7 +953,7 @@ describe("SegmentedControl keeps a caller's aria-describedby", () => {
     );
   });
 
-  it('describes the disabled radiogroup by the caller ids and then the reason', () => {
+  it('describes the disabled radiogroup by the caller ids, and its focusable segment by the reason', () => {
     render(
       <>
         <span id="caller-help">Applies to every board</span>
@@ -968,14 +968,246 @@ describe("SegmentedControl keeps a caller's aria-describedby", () => {
         </SegmentedControl>
       </>,
     );
-    const ids = screen
-      .getByRole('radiogroup')
-      .getAttribute('aria-describedby')
-      ?.split(' ');
-    expect(ids).toHaveLength(2);
-    expect(ids?.[0]).toBe('caller-help');
-    expect(document.getElementById(ids?.[1] ?? '')).toHaveTextContent(
-      'Choose a project to switch views',
+    expect(
+      screen.getByRole('radiogroup').getAttribute('aria-describedby'),
+    ).toBe('caller-help');
+    expect(
+      screen.getByRole('radio', {name: 'Grid', hidden: true}),
+    ).toHaveAccessibleDescription('Choose a project to switch views');
+  });
+});
+
+describe('SegmentedControl keeps one Tab stop, and the disabled reason is on it (spec:AST-085 FR1, FR5)', () => {
+  const REASON = 'Choose a project to switch views';
+  type Value = 'grid' | 'list' | 'table';
+  const NO_DISABLED_ITEMS: ReadonlyArray<Value> = [];
+  const ignoreChange = () => {};
+
+  /** The values of the segments that are Tab stops, once all three render. */
+  const tabStops = () => {
+    const radios = screen.getAllByRole('radio', {hidden: true});
+    expect(radios.map(radio => radio.getAttribute('data-value'))).toEqual([
+      'grid',
+      'list',
+      'table',
+    ]);
+    return radios
+      .filter(radio => radio.getAttribute('tabindex') === '0')
+      .map(radio => radio.getAttribute('data-value'));
+  };
+
+  function Control({
+    value,
+    onChange = ignoreChange,
+    isDisabled = false,
+    disabledMessage,
+    disabledItems = NO_DISABLED_ITEMS,
+  }: {
+    value: string;
+    onChange?: (value: string) => void;
+    isDisabled?: boolean;
+    disabledMessage?: string;
+    disabledItems?: ReadonlyArray<Value>;
+  }) {
+    return (
+      <SegmentedControl
+        value={value}
+        onChange={onChange}
+        label="View mode"
+        isDisabled={isDisabled}
+        disabledMessage={disabledMessage}>
+        <SegmentedControlItem
+          value="grid"
+          label="Grid"
+          isDisabled={disabledItems.includes('grid')}
+        />
+        <SegmentedControlItem
+          value="list"
+          label="List"
+          isDisabled={disabledItems.includes('list')}
+        />
+        <SegmentedControlItem
+          value="table"
+          label="Table"
+          isDisabled={disabledItems.includes('table')}
+        />
+      </SegmentedControl>
     );
+  }
+
+  it.each<[string, Parameters<typeof Control>[0], Value]>([
+    ['an enabled control: the selected segment', {value: 'list'}, 'list'],
+    [
+      'a selected segment disabled by itself keeps the stop',
+      {value: 'list', disabledItems: ['list']},
+      'list',
+    ],
+    [
+      'a value no segment carries: the first segment not disabled by itself',
+      {value: 'none', disabledItems: ['grid']},
+      'list',
+    ],
+    [
+      'a value no segment carries, every segment disabled by itself: the first segment',
+      {value: 'none', disabledItems: ['grid', 'list', 'table']},
+      'grid',
+    ],
+    [
+      'a control disabled without a reason keeps its stop',
+      {value: 'list', isDisabled: true},
+      'list',
+    ],
+    [
+      'a control disabled with a reason: the selected segment',
+      {value: 'list', isDisabled: true, disabledMessage: REASON},
+      'list',
+    ],
+    [
+      'a control disabled with a reason whose selected segment is disabled by itself',
+      {
+        value: 'list',
+        isDisabled: true,
+        disabledMessage: REASON,
+        disabledItems: ['list'],
+      },
+      'list',
+    ],
+    [
+      'a control disabled with a reason and a value no segment carries',
+      {
+        value: 'none',
+        isDisabled: true,
+        disabledMessage: REASON,
+        disabledItems: ['grid'],
+      },
+      'list',
+    ],
+  ])('%s', (_, props, expected) => {
+    render(<Control {...props} />);
+    expect(tabStops()).toEqual([expected]);
+  });
+
+  it('moves the stop off the fallback segment once a segment is selected', () => {
+    const {rerender} = render(<Control value="none" />);
+    expect(tabStops()).toEqual(['grid']);
+    rerender(<Control value="table" />);
+    expect(tabStops()).toEqual(['table']);
+  });
+
+  it('moves the stop with focus, and back to the selected segment when focus leaves', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Control value="grid" />
+        <button type="button">after</button>
+      </>,
+    );
+    screen.getByRole('radio', {name: 'Grid'}).focus();
+    // The parent keeps "grid": focus moves, the value does not.
+    await user.keyboard('{ArrowRight}');
+    expect(screen.getByRole('radio', {name: 'List'})).toHaveFocus();
+    expect(tabStops()).toEqual(['list']);
+    // Tab leaves the group from the focused segment.
+    await user.tab();
+    expect(screen.getByText('after')).toHaveFocus();
+    expect(tabStops()).toEqual(['grid']);
+  });
+
+  it('enters at a selected segment disabled by itself, and an arrow moves on to the next enabled one', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <>
+        <button type="button">before</button>
+        <Control value="list" disabledItems={['list']} onChange={onChange} />
+      </>,
+    );
+    screen.getByText('before').focus();
+    await user.tab();
+    expect(screen.getByRole('radio', {name: 'List'})).toHaveFocus();
+    expect(onChange).not.toHaveBeenCalled();
+    await user.keyboard('{ArrowRight}');
+    expect(screen.getByRole('radio', {name: 'Table'})).toHaveFocus();
+    expect(onChange).toHaveBeenCalledWith('table');
+  });
+
+  it('Tab reaches a control disabled without a reason, and nothing can be selected there', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <>
+        <button type="button">before</button>
+        <Control value="list" isDisabled onChange={onChange} />
+      </>,
+    );
+    screen.getByText('before').focus();
+    await user.tab();
+    const list = screen.getByRole('radio', {name: 'List', hidden: true});
+    expect(list).toHaveFocus();
+    expect(list).toHaveAttribute('aria-disabled', 'true');
+    await user.keyboard('{ArrowRight}{Space}');
+    expect(list).toHaveFocus();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('describes the focusable segment by the reason, and no other segment', () => {
+    render(<Control value="list" isDisabled disabledMessage={REASON} />);
+    expect(
+      screen.getByRole('radio', {name: 'List', hidden: true}),
+    ).toHaveAccessibleDescription(REASON);
+    for (const name of ['Grid', 'Table']) {
+      expect(
+        screen.getByRole('radio', {name, hidden: true}),
+      ).toHaveAccessibleDescription('');
+    }
+    expect(screen.getByRole('radiogroup')).toHaveAccessibleDescription('');
+  });
+
+  it('describes the fallback segment by the reason when no segment is selected', () => {
+    render(
+      <Control
+        value="none"
+        isDisabled
+        disabledMessage={REASON}
+        disabledItems={['grid']}
+      />,
+    );
+    expect(
+      screen.getByRole('radio', {name: 'List', hidden: true}),
+    ).toHaveAccessibleDescription(REASON);
+  });
+
+  it('describes the segment that takes focus by the reason', () => {
+    render(<Control value="list" isDisabled disabledMessage={REASON} />);
+    const table = screen.getByRole('radio', {name: 'Table', hidden: true});
+    // A pointer can focus another segment of a control disabled with a reason.
+    act(() => table.focus());
+    expect(table).toHaveAccessibleDescription(REASON);
+    expect(
+      screen.getByRole('radio', {name: 'List', hidden: true}),
+    ).toHaveAccessibleDescription('');
+  });
+
+  it("keeps a segment's own aria-describedby before the reason", () => {
+    render(
+      <>
+        <span id="segment-help">Shows every row</span>
+        <SegmentedControl
+          value="list"
+          onChange={() => {}}
+          label="View mode"
+          isDisabled
+          disabledMessage={REASON}>
+          <SegmentedControlItem
+            value="list"
+            label="List"
+            aria-describedby="segment-help"
+          />
+        </SegmentedControl>
+      </>,
+    );
+    expect(
+      screen.getByRole('radio', {name: 'List', hidden: true}),
+    ).toHaveAccessibleDescription(`Shows every row ${REASON}`);
   });
 });
