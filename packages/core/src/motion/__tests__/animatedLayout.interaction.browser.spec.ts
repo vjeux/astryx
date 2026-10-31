@@ -8,7 +8,10 @@
  * @output One proof per `spec:AST-105` Coverage row, and FR2–FR4: which
  *   elements glide after a reported size change, by how much, on one shared
  *   start and spring, never past the area and never scrolling it; nothing
- *   without a handle; Reduce Motion by pointer
+ *   without a handle; Reduce Motion by pointer; and FR9's edge reveal, a
+ *   block-end and an inline-edge reveal and conceal and the two-state form,
+ *   each element's moving edge on the content beside it on every frame, a
+ *   reversal included
  * @position Real-browser verification of `spec:AST-105` and
  *   `architecture:react-component-runtime` INV12
  */
@@ -39,6 +42,13 @@ declare global {
     }) => Promise<void>;
     /** Animations on an element: their first transform and timing. */
     motionOf: (selector: string) => MotionRead[];
+    /** The px an element's computed `inset()` clip hides from each side. */
+    insetOf: (element: Element) => {
+      top: number;
+      right: number;
+      bottom: number;
+      left: number;
+    };
   }
 }
 
@@ -79,6 +89,25 @@ window.change = async ({changed, mutate, area = '#area', handle = true}) => {
   report.animate();
   AnimatedLayout.playLayoutChange(layout, target);
   await new Promise(resolve => queueMicrotask(resolve));
+};
+window.insetOf = element => {
+  const box = element.getBoundingClientRect();
+  const out = {top: 0, right: 0, bottom: 0, left: 0};
+  const match = /^inset\\(([^)]*?)(?:\\s+round\\s[^)]*)?\\)$/.exec(
+    getComputedStyle(element).clipPath,
+  );
+  if (match == null) {
+    return out;
+  }
+  const [t, r = t, b = t, l = r] = match[1].trim().split(/\\s+/);
+  const px = (value, size) =>
+    value.endsWith('%') ? (parseFloat(value) / 100) * size : parseFloat(value);
+  return {
+    top: px(t, box.height),
+    right: px(r, box.width),
+    bottom: px(b, box.height),
+    left: px(l, box.width),
+  };
 };
 window.motionOf = selector => {
   const element = document.querySelector(selector);
@@ -1580,6 +1609,385 @@ test.describe('spec:AST-105 FR2–FR4', () => {
       expect(motion.duration, id).toBeLessThanOrEqual(200);
     }
   });
+});
+
+/** One frame of an edge reveal: the moving edge, the content beside it. */
+interface EdgeFrame {
+  phase: string;
+  /** Where the element's moving edge shows (its box less its clip). */
+  edge: number;
+  /** Where the facing edge of the content beside it shows. */
+  beside: number;
+  /** How much of the element shows along the edge's axis. */
+  shown: number;
+}
+
+test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
+  test('a block-end reveal keeps its edge on the content after it on every frame, and a conceal that reverses it starts from what it shows', async ({
+    page,
+  }) => {
+    await open(
+      page,
+      `<div id="area" class="area"><div class="row"></div>
+        <div id="content" style="height: 80px; background: #fd9; display: none">Details</div>
+        <div id="a" class="row"></div><div class="row"></div></div>`,
+    );
+    const frames = await page.evaluate(async () => {
+      const area = document.querySelector('#area');
+      const content = document.querySelector('#content') as HTMLElement;
+      const a = document.querySelector('#a') as HTMLElement;
+      const layout = window.AnimatedLayout.createAnimatedLayout(() => area);
+      const out: EdgeFrame[] = [];
+      const read = (phase: string) => {
+        const box = content.getBoundingClientRect();
+        const inset = window.insetOf(content);
+        out.push({
+          phase,
+          edge: box.bottom - inset.bottom,
+          beside: a.getBoundingClientRect().top,
+          shown: box.height - inset.top - inset.bottom,
+        });
+      };
+      const frame = async () =>
+        new Promise<void>(resolve => {
+          requestAnimationFrame(() => resolve());
+        });
+      await frame();
+      const opening = window.AnimatedLayout.reportLayoutChange(
+        layout,
+        () => content,
+      );
+      opening.measureBefore();
+      content.style.display = '';
+      opening.animate();
+      window.AnimatedLayout.playLayoutChange(layout, content);
+      for (let i = 0; i < 6; i++) {
+        await frame();
+        read('opening');
+      }
+      // Closed again while it opens, in a frame, as a press would land.
+      await new Promise<void>(resolve => {
+        requestAnimationFrame(() => {
+          read('reversed');
+          const closing = window.AnimatedLayout.reportLayoutChange(
+            layout,
+            () => content,
+          );
+          closing.measureBefore();
+          closing.animate();
+          window.AnimatedLayout.holdLayoutExit(layout, content, () => {});
+          resolve();
+        });
+      });
+      for (let i = 0; i < 60; i++) {
+        await frame();
+        read('closing');
+      }
+      return out;
+    });
+    const shown = frames.filter(f => f.shown > 0.5);
+    expect(shown.length).toBeGreaterThan(10);
+    // Wherever the row after it shows, the content shows down to it.
+    for (const f of shown) {
+      expect(Math.abs(f.beside - f.edge), JSON.stringify(f)).toBeLessThan(1.5);
+    }
+    // It closes from what it showed: no jump back to its whole height.
+    const reversed = frames.find(f => f.phase === 'reversed') as EdgeFrame;
+    const next = frames.find(f => f.phase === 'closing') as EdgeFrame;
+    expect(reversed.shown).toBeGreaterThan(5);
+    expect(reversed.shown).toBeLessThan(75);
+    expect(Math.abs(next.shown - reversed.shown)).toBeLessThan(16);
+  });
+
+  for (const direction of ['ltr', 'rtl'] as const) {
+    test(`an inline-end reveal and conceal keep its edge on the item after it on every frame (${direction})`, async ({
+      page,
+    }) => {
+      await open(
+        page,
+        `<div id="area" class="area" dir="${direction}"><div style="display: flex; align-items: flex-start">
+          <div style="width: 60px; height: 40px; flex: none; background: #ddd"></div>
+          <div id="content" style="width: 120px; height: 40px; flex: none; background: #fd9; display: none">Panel</div>
+          <div id="a" style="width: 100px; height: 40px; flex: none; background: #eef"></div>
+        </div></div>`,
+      );
+      const frames = await page.evaluate(async rtl => {
+        const area = document.querySelector('#area');
+        const content = document.querySelector('#content') as HTMLElement;
+        const a = document.querySelector('#a') as HTMLElement;
+        const layout = window.AnimatedLayout.createAnimatedLayout(() => area);
+        const out: EdgeFrame[] = [];
+        const read = (phase: string) => {
+          const box = content.getBoundingClientRect();
+          const next = a.getBoundingClientRect();
+          const inset = window.insetOf(content);
+          out.push({
+            phase,
+            edge: rtl ? box.left + inset.left : box.right - inset.right,
+            beside: rtl ? next.right : next.left,
+            shown: box.width - inset.left - inset.right,
+          });
+        };
+        const frame = async () =>
+          new Promise<void>(resolve => {
+            requestAnimationFrame(() => resolve());
+          });
+        await frame();
+        const opening = window.AnimatedLayout.reportLayoutChange(
+          layout,
+          () => content,
+        );
+        opening.measureBefore();
+        content.style.display = '';
+        opening.animate();
+        window.AnimatedLayout.playLayoutChange(layout, content, {
+          edge: 'inline-end',
+        });
+        for (let i = 0; i < 5; i++) {
+          await frame();
+          read('opening');
+        }
+        await new Promise<void>(resolve => {
+          requestAnimationFrame(() => {
+            read('reversed');
+            const closing = window.AnimatedLayout.reportLayoutChange(
+              layout,
+              () => content,
+            );
+            closing.measureBefore();
+            closing.animate();
+            window.AnimatedLayout.holdLayoutExit(layout, content, () => {}, {
+              edge: 'inline-end',
+            });
+            resolve();
+          });
+        });
+        for (let i = 0; i < 60; i++) {
+          await frame();
+          read('closing');
+        }
+        return out;
+      }, direction === 'rtl');
+      const shown = frames.filter(f => f.shown > 0.5);
+      expect(shown.length).toBeGreaterThan(10);
+      for (const f of shown) {
+        expect(Math.abs(f.beside - f.edge), JSON.stringify(f)).toBeLessThan(
+          1.5,
+        );
+      }
+      const reversed = frames.find(f => f.phase === 'reversed') as EdgeFrame;
+      const next = frames.find(f => f.phase === 'closing') as EdgeFrame;
+      expect(Math.abs(next.shown - reversed.shown)).toBeLessThan(24);
+    });
+  }
+
+  for (const direction of ['ltr', 'rtl'] as const) {
+    test(`the two-state form holds the old state as one copy and keeps the edge on the column it rides, a reversal included (${direction})`, async ({
+      page,
+    }) => {
+      await open(
+        page,
+        `<div id="area" class="area" dir="${direction}"><div id="row" style="display: flex; height: 300px">
+          <nav id="panel" style="width: 260px; flex: none; background: #ccf"><span>Projects</span></nav>
+          <div id="column" style="flex: 1; background: #efe">The page</div>
+        </div></div>`,
+        '#panel.narrow { width: 48px !important; }',
+      );
+      const result = await page.evaluate(async rtl => {
+        const area = document.querySelector('#area');
+        const row = document.querySelector('#row') as HTMLElement;
+        const panel = document.querySelector('#panel') as HTMLElement;
+        const column = document.querySelector('#column') as HTMLElement;
+        const AL = window.AnimatedLayout;
+        const layout = AL.createAnimatedLayout(() => area);
+        const frames: EdgeFrame[] = [];
+        let copies = 0;
+        const read = (phase: string, element: Element) => {
+          const box = element.getBoundingClientRect();
+          const next = column.getBoundingClientRect();
+          const inset = window.insetOf(element);
+          frames.push({
+            phase,
+            edge: rtl ? box.left + inset.left : box.right - inset.right,
+            beside: rtl ? next.right : next.left,
+            shown: box.width - inset.left - inset.right,
+          });
+        };
+        const copyOf = () =>
+          row.querySelector<HTMLElement>(
+            ':scope > [inert][aria-hidden="true"]',
+          );
+        const frame = async () =>
+          new Promise<void>(resolve => {
+            requestAnimationFrame(() => resolve());
+          });
+        await frame();
+        // Collapse: the old, wide panel is held and covered on its edge.
+        let hold = AL.holdLayoutEdge(layout, panel, {edge: 'inline-end'});
+        let report = AL.reportLayoutChange(layout, () => panel);
+        report.measureBefore();
+        panel.classList.add('narrow');
+        report.animate();
+        let motion = AL.playLayoutEdge(hold!, panel, layout, {
+          edge: 'inline-end',
+          rideWith: column,
+        });
+        for (let i = 0; i < 8; i++) {
+          await frame();
+          const copy = copyOf();
+          copies = Math.max(copies, copy == null ? 0 : 1);
+          if (copy != null) {
+            read('collapsing', copy);
+          }
+        }
+        // Expanded again partway: from the width it shows.
+        await new Promise<void>(resolve => {
+          requestAnimationFrame(() => {
+            const shown = motion.shown()?.extent ?? null;
+            motion.end();
+            hold = AL.holdLayoutEdge(layout, panel, {
+              edge: 'inline-end',
+              shown,
+            });
+            report = AL.reportLayoutChange(layout, () => panel);
+            report.measureBefore();
+            panel.classList.remove('narrow');
+            report.animate();
+            motion = AL.playLayoutEdge(hold!, panel, layout, {
+              edge: 'inline-end',
+              rideWith: column,
+            });
+            resolve();
+          });
+        });
+        for (let i = 0; i < 60; i++) {
+          await frame();
+          read('expanding', panel);
+        }
+        return {frames, copies, left: row.querySelectorAll('[inert]').length};
+      }, direction === 'rtl');
+      expect(result.copies).toBe(1);
+      // The copy is gone once the motion ends.
+      expect(result.left).toBe(0);
+      const moving = result.frames.filter(
+        f => f.shown > 48.5 && f.shown < 259.5,
+      );
+      expect(moving.length).toBeGreaterThan(5);
+      for (const f of moving) {
+        expect(Math.abs(f.beside - f.edge), JSON.stringify(f)).toBeLessThan(
+          1.5,
+        );
+      }
+      // The expand starts where the collapse got to.
+      const lastCollapse = result.frames
+        .filter(f => f.phase === 'collapsing')
+        .at(-1) as EdgeFrame;
+      const firstExpand = result.frames.find(
+        f => f.phase === 'expanding',
+      ) as EdgeFrame;
+      expect(Math.abs(firstExpand.shown - lastCollapse.shown)).toBeLessThan(30);
+    });
+  }
+
+  for (const [side, direction, collapsed] of [
+    ['start', 'ltr', 48],
+    ['start', 'rtl', 0],
+    ['end', 'ltr', 48],
+  ] as const) {
+    test(`a resized pane with no copy collapses and opens by the edge facing its handle, that edge on the handle on every frame, a reversal included (${side} pane, ${direction}, to ${collapsed} px)`, async ({
+      page,
+    }) => {
+      const pane = `<aside id="pane" style="width: 260px; flex: none; background: #ccf"><div style="width: 220px">Files</div></aside>`;
+      const grip = `<div id="grip" style="width: 8px; flex: none; background: #888"></div>`;
+      const content = `<main id="content" style="flex: 1; background: #efe">The page</main>`;
+      await open(
+        page,
+        `<div id="area" class="area" dir="${direction}"><div id="row" style="display: flex; height: 300px">${
+          side === 'start' ? pane + grip + content : content + grip + pane
+        }</div></div>`,
+        `#pane.collapsed { width: ${collapsed}px !important; }`,
+      );
+      const result = await page.evaluate(
+        async ({atStart, rtl}) => {
+          const area = document.querySelector('#area');
+          const paneEl = document.querySelector('#pane') as HTMLElement;
+          const gripEl = document.querySelector('#grip') as HTMLElement;
+          const AL = window.AnimatedLayout;
+          const layout = AL.createAnimatedLayout(() => area);
+          // The edge facing the handle, and the handle's side facing it.
+          const edge = atStart ? 'inline-end' : 'inline-start';
+          const physicalRight = atStart !== rtl;
+          const frames: EdgeFrame[] = [];
+          const read = (phase: string) => {
+            const box = paneEl.getBoundingClientRect();
+            const next = gripEl.getBoundingClientRect();
+            const inset = window.insetOf(paneEl);
+            frames.push({
+              phase,
+              edge: physicalRight
+                ? box.right - inset.right
+                : box.left + inset.left,
+              beside: physicalRight ? next.left : next.right,
+              shown: box.width - inset.left - inset.right,
+            });
+          };
+          const frame = async () =>
+            new Promise<void>(resolve => {
+              requestAnimationFrame(() => resolve());
+            });
+          const change = (collapse: boolean) => {
+            const report = AL.reportLayoutEdge(layout, () => paneEl, {edge});
+            report.measureBefore();
+            paneEl.classList.toggle('collapsed', collapse);
+            report.animate();
+          };
+          await frame();
+          change(true);
+          for (let i = 0; i < 8; i++) {
+            await frame();
+            read('collapsing');
+          }
+          // Opened again partway, in a frame, as a press would land.
+          await new Promise<void>(resolve => {
+            requestAnimationFrame(() => {
+              read('reversed');
+              change(false);
+              resolve();
+            });
+          });
+          for (let i = 0; i < 60; i++) {
+            await frame();
+            read('opening');
+          }
+          return {
+            frames,
+            held: paneEl.style.getPropertyValue('inline-size'),
+            rest: paneEl.getBoundingClientRect().width,
+          };
+        },
+        {atStart: side === 'start', rtl: direction === 'rtl'},
+      );
+      const moving = result.frames.filter(f => f.shown > 0.5);
+      expect(moving.length).toBeGreaterThan(10);
+      // Wherever the handle shows, the pane shows up to it: no gap opens.
+      for (const f of moving) {
+        expect(Math.abs(f.beside - f.edge), JSON.stringify(f)).toBeLessThan(
+          1.5,
+        );
+      }
+      // The open starts where the collapse got to.
+      const reversed = result.frames.find(
+        f => f.phase === 'reversed',
+      ) as EdgeFrame;
+      const next = result.frames.find(f => f.phase === 'opening') as EdgeFrame;
+      expect(reversed.shown).toBeGreaterThan(collapsed + 2);
+      expect(reversed.shown).toBeLessThan(258);
+      expect(Math.abs(next.shown - reversed.shown)).toBeLessThan(40);
+      // It lands open at its own size, holding nothing.
+      expect(result.held).toBe('');
+      expect(result.rest).toBeCloseTo(260, 0);
+    });
+  }
 });
 
 test.describe('spec:AST-105 FR5 and FR4 under a fine pointer', () => {

@@ -8,7 +8,9 @@
  * @output The adopters' browser proofs `spec:AST-105` Verification asks for:
  *   with a handle, through a ScrollableArea ref, opening glides the content
  *   after the component while the revealed content enters, and closing
- *   glides it while the closing content exits, inert, until it hides
+ *   glides it while the closing content exits, inert, until it hides; and a
+ *   Collapsible's block-end edge reveal (FR9), its edge on the content after
+ *   it on every frame, through a close while it opens
  * @position Testing; `component:Collapsible` FR10 and `component:TreeList`
  *   FR9. The module's own proofs are animatedLayout.interaction.browser.spec.ts
  *
@@ -135,6 +137,117 @@ test.describe('component:Collapsible FR10 and component:TreeList FR9 (spec:AST-1
       )
       .toBe('none');
     expect(await viewportScroll(page)).toBe(scrollBefore);
+  });
+
+  test("a Collapsible's revealed content keeps its block-end edge on the content after it on every frame, and a close while it opens conceals from what it shows (FR9)", async ({
+    page,
+  }) => {
+    await openStory(page);
+    await mark(page, 'A plain app div', 'after');
+    const trigger = page.getByRole('button', {name: 'Shipping details'});
+    const contentId = await trigger.getAttribute('aria-controls');
+    const result = await page.evaluate(async id => {
+      const button = [...document.querySelectorAll('button')].find(
+        element => element.getAttribute('aria-controls') === id,
+      ) as HTMLButtonElement;
+      const content = () => document.getElementById(id ?? '') as HTMLElement;
+      const after = document.querySelector(
+        '[data-test-id="after"]',
+      ) as HTMLElement;
+      const insetBottom = (element: HTMLElement) => {
+        const match = /^inset\(([^)]*)\)$/.exec(
+          getComputedStyle(element).clipPath,
+        );
+        if (match == null) {
+          return 0;
+        }
+        const [t, , b = t] = match[1].trim().split(/\s+/);
+        const box = element.getBoundingClientRect();
+        return b.endsWith('%')
+          ? (parseFloat(b) / 100) * box.height
+          : parseFloat(b);
+      };
+      const frames: {phase: string; gap: number; shown: number}[] = [];
+      const read = (phase: string) => {
+        const element = content();
+        const box = element.getBoundingClientRect();
+        const hidden = insetBottom(element);
+        frames.push({
+          phase,
+          gap: after.getBoundingClientRect().top - (box.bottom - hidden),
+          shown:
+            getComputedStyle(element).display === 'none'
+              ? 0
+              : box.height - hidden,
+        });
+      };
+      const frame = async () =>
+        new Promise<void>(resolve => {
+          requestAnimationFrame(() => resolve());
+        });
+      // The gap the layout leaves between the open content and what follows,
+      // and how much farther than the content's own height the content after
+      // it travels (a gap the open content adds in its own container, which
+      // no clip on the content can show).
+      const closedTop = after.getBoundingClientRect().top;
+      button.click();
+      for (let i = 0; i < 90; i++) {
+        await frame();
+      }
+      const box = content().getBoundingClientRect();
+      const openTop = after.getBoundingClientRect().top;
+      const restGap = openTop - box.bottom;
+      const height = box.height;
+      const beyond = Math.max(0, openTop - closedTop - height);
+      button.click();
+      for (let i = 0; i < 90; i++) {
+        await frame();
+      }
+      // Open, then close again partway, in a frame, as a press would land.
+      button.click();
+      for (let i = 0; i < 6; i++) {
+        await frame();
+        read('opening');
+      }
+      await new Promise<void>(resolve => {
+        requestAnimationFrame(() => {
+          read('reversed');
+          button.click();
+          resolve();
+        });
+      });
+      for (let i = 0; i < 60; i++) {
+        await frame();
+        read('closing');
+      }
+      return {frames, restGap, height, beyond};
+    }, contentId);
+    const shown = result.frames.filter(f => f.shown > 0.5);
+    expect(shown.length).toBeGreaterThan(8);
+    // The content after it travels the content's height and the gap it adds
+    // in the Collapsible; the clip can show only the content itself.
+    expect(result.beyond).toBeLessThan(8);
+    // Wherever the content after it shows, the revealed content reaches it:
+    // no gap opens past the one at rest, and none closes past what the
+    // Collapsible's own gap accounts for.
+    for (const f of shown) {
+      const detail = JSON.stringify({
+        ...f,
+        restGap: result.restGap,
+        beyond: result.beyond,
+      });
+      expect(f.gap, detail).toBeLessThan(result.restGap + 1.5);
+      expect(f.gap, detail).toBeGreaterThan(
+        result.restGap - result.beyond - 1.5,
+      );
+    }
+    const reversed = result.frames.find(f => f.phase === 'reversed');
+    const next = result.frames.find(f => f.phase === 'closing');
+    expect(reversed?.shown).toBeGreaterThan(2);
+    expect(reversed?.shown).toBeLessThan(result.height - 2);
+    expect(Math.abs((next?.shown ?? 0) - (reversed?.shown ?? 0))).toBeLessThan(
+      result.height / 4,
+    );
   });
 
   test('a TreeList row glides the rows after it as it expands and collapses, and the collapsing group exits inert until it unmounts', async ({
