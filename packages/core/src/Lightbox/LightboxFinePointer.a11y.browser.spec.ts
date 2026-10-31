@@ -317,7 +317,7 @@ test('in a gallery, a mouse click beside the photo closes the viewer', async ({
   });
 });
 
-test('a mouse double-click zooms in about where it lands, as a finger’s double tap, hiding the controls, and the next zooms back', async ({
+test('a mouse double-click zooms 2x about where it lands, hiding the controls, and the next zooms back', async ({
   page,
 }) => {
   const {stage, img, fitted, stageBox} = await openViewer(page);
@@ -329,17 +329,21 @@ test('a mouse double-click zooms in about where it lands, as a finger’s double
         ).opacity,
       ),
     );
-  // A quarter of the way in from the photo's top-left corner: the stage's
-  // double tap (spec:AST-094 FR43) zooms to the aspect fill about that point,
-  // where the released zoom went 2x about the centre.
-  await page.mouse.dblclick(
-    fitted.x + fitted.width / 4,
-    fitted.y + fitted.height / 4,
-  );
+  // A quarter of the way in from the photo's top-left corner: a double-click
+  // zooms 2x about that point (component:Lightbox FR11), where a finger's
+  // double tap goes to the larger of filling the stage and 2x.
+  const clicked = {
+    x: fitted.x + fitted.width / 4,
+    y: fitted.y + fitted.height / 4,
+  };
+  await page.mouse.dblclick(clicked.x, clicked.y);
   await expect(stage).toHaveAttribute('aria-pressed', 'true');
   await settled(page);
   const zoomed = await boxOf(img);
-  expect(zoomed.width / fitted.width).toBeGreaterThan(1.03);
+  expect(fitted.width).toBeGreaterThan(0);
+  expect(zoomed.width / fitted.width).toBeCloseTo(2, 2);
+  // The photo point under the pointer stays under it across the stage's width.
+  expect(zoomed.x + zoomed.width / 4).toBeCloseTo(clicked.x, 0);
   // The photo moved toward the clicked point: no longer centred.
   expect(centre(zoomed).y - centre(stageBox).y).toBeGreaterThan(5);
   // A zoom by a pointer hides the controls, as a finger's does.

@@ -1150,6 +1150,7 @@ export function Lightbox({
     },
   });
   const stage = useZoomStage(zoom, {
+    pressPointerType: () => lastInputRef.current,
     stageRef: isGallery ? pageMediaRef : imageWrapperRef,
     surfaceRef: isGallery ? trackRef : imageWrapperRef,
     isEnabled: isOpen && isZoomTarget,

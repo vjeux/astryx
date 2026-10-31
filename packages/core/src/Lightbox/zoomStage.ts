@@ -321,6 +321,31 @@ export function doubleTapTarget(
 }
 
 /**
+ * Where a double-click by a mouse or a pen settles the photo
+ * (component:Lightbox FR11): 2× the fitted size about the clicked point,
+ * which stays under the pointer as far as the stage's edges allow, or back to
+ * the fitted size from any zoom. A finger's double tap goes to
+ * `doubleTapTarget` instead.
+ */
+export function doubleClickTarget(
+  geometry: ZoomGeometry,
+  from: ZoomTransform,
+  point: StagePoint,
+): ZoomTransform {
+  if (isZoomed(geometry, from)) {
+    return restingTransform(geometry, {...IDENTITY, scale: geometry.minScale});
+  }
+  const scale = Math.min(
+    geometry.maxScale,
+    Math.max(geometry.minScale, zoomMedia.viewer.filledDoubleTapScale),
+  );
+  return restingTransform(
+    geometry,
+    transformKeepingPoint(geometry, from, point, point, scale),
+  );
+}
+
+/**
  * The resting transform a release goes to: inside the limits, `shown`
  * itself (a drag's coast settles any edge); past a limit, the limit, with
  * the point under the last centroid kept where it is, then kept inside the

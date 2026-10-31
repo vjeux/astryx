@@ -34,6 +34,7 @@ import {
   dismissExitY,
   dismissTransform,
   doubleTapScaleFor,
+  doubleClickTarget,
   doubleTapTarget,
   draggedTransform,
   easedCurve,
@@ -243,6 +244,17 @@ describe("Photos' double tap and maximum zoom (iOS 26.2)", () => {
     const target = doubleTapTarget(geometry, IDENTITY, {x: 20, y: 437});
     // The photo's left edge rests on the screen's left edge.
     expect(geometry.fit.x + target.x).toBeCloseTo(0, 9);
+  });
+
+  it('zooms a double-click 2x and keeps the clicked point under the pointer', () => {
+    const geometry = landscape();
+    // A third of the way across the photo.
+    const target = doubleClickTarget(geometry, IDENTITY, {x: 134, y: 437});
+    expect(target.scale).toBeCloseTo(2, 9);
+    expect(shown(geometry, target, 134, 134).x).toBeCloseTo(134, 9);
+    expect(doubleClickTarget(geometry, target, {x: 50, y: 50})).toEqual(
+      IDENTITY,
+    );
   });
 
   it('returns to the fitted size when zoomed', () => {

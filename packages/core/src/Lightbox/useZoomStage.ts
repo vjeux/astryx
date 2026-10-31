@@ -92,6 +92,7 @@ import {
   dismissCommits,
   dismissExitY,
   dismissTransform,
+  doubleClickTarget,
   doubleTapTarget,
   draggedTransform,
   isZoomed,
@@ -125,6 +126,13 @@ export const ZOOM_DISMISSING_ATTRIBUTE = 'data-zoom-dismissing';
 export interface UseZoomStageOptions {
   /** The stage: the box the photo is fitted and centred in, clipping it. */
   stageRef: RefObject<HTMLElement | null>;
+  /**
+   * The pointer type of the latest press, read when a double tap ends: a
+   * double-click by a mouse or a pen zooms 2× about the point
+   * (component:Lightbox FR11), a finger's double tap to the larger of filling
+   * the stage and 2× (FR6).
+   */
+  pressPointerType?: () => string | null;
   /** Where the recognizers attach: the stage by default, a pager's track. */
   surfaceRef?: RefObject<HTMLElement | null>;
   /** The gestures are on (zoom is on), for every pointer. */
@@ -701,7 +709,16 @@ export function useZoomStage(
         return;
       }
       const point = toStage(doubleTap.location());
-      settleTo(geometry, doubleTapTarget(geometry, current(), point));
+      const pointerType =
+        doubleTap.trackedTouches[0]?.pointerType ??
+        optionsRef.current.pressPointerType?.() ??
+        'touch';
+      settleTo(
+        geometry,
+        pointerType === 'touch'
+          ? doubleTapTarget(geometry, current(), point)
+          : doubleClickTarget(geometry, current(), point),
+      );
     },
     recognizerOptions,
   );
