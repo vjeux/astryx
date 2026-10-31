@@ -247,6 +247,7 @@ test('a collapse from rest removes the group at its commit and starts the chevro
   await open(page);
   const {toggle, parent, child} = parts(page);
   await tapToggle(page);
+  await expect(child).toBeVisible();
   await expect.poll(async () => translateY(child)).toBe(0);
   await expect
     .poll(async () =>
@@ -368,6 +369,10 @@ test('a toggle mid-expand removes the group at once and turns the chevron around
     return {samples: [...w.samples], turnedAt: w.turnedAt};
   });
   expect(turnedAt, JSON.stringify(samples.slice(0, 6))).toBeGreaterThan(0);
+  // Frames came after the toggle, so the check below reads something.
+  expect(samples.length, JSON.stringify(samples.slice(-4))).toBeGreaterThan(
+    turnedAt + 1,
+  );
   // The group left at the toggle: no frame after it shows a child.
   expect(
     samples.slice(turnedAt + 1).every(sample => sample.y == null),

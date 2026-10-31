@@ -163,6 +163,11 @@ describe('TreeList expansion presence', () => {
     const chevron = row('components')?.querySelector<HTMLElement>(
       '[data-tree-chevron]',
     ) as HTMLElement;
+    // Present first: the expanded group, its rows and the chevron.
+    expect(group()).not.toBeNull();
+    expect(row('button')).not.toBeNull();
+    expect(row('card')).not.toBeNull();
+    expect(chevron).not.toBeNull();
     fireEvent.click(toggle() as HTMLElement);
     expect(row('components')).toHaveAttribute('aria-expanded', 'false');
     // Gone at the tap: nothing holds the rows after the group in place.
@@ -211,6 +216,9 @@ describe('with an animated-layout handle', () => {
     stubPointer('touch');
     render(<WithHandle />);
     await act(async () => undefined);
+    // Present first: the expanded group and its rows.
+    expect(group()).not.toBeNull();
+    expect(row('button')).not.toBeNull();
     fireEvent.click(toggle() as HTMLElement);
     expect(row('components')).toHaveAttribute('aria-expanded', 'false');
     // jsdom has no layout, so the handle holds no exit: the group goes at
@@ -244,7 +252,12 @@ describe('content after the tree', () => {
     render(<Page />);
     await act(async () => undefined);
     fireEvent.click(toggle() as HTMLElement);
+    // Present first: the group's row, the row after the group and the
+    // content after the tree.
+    expect(row('button')).not.toBeNull();
+    expect(row('app')).not.toBeNull();
     const below = screen.getByTestId('below');
+    expect(below).toBeInTheDocument();
     expect(motionOf(below)).toBeUndefined();
     expect(below.style.translate).toBe('');
     // With no animated layout handle the row after the group takes its new
@@ -261,12 +274,17 @@ describe('content after the tree', () => {
     render(<Page />);
     await act(async () => undefined);
     fireEvent.click(toggle() as HTMLElement);
+    // Present first: the expanded group's row, until its slide ends.
+    expect(row('button')).not.toBeNull();
     await waitFor(
       () => expect(motionOf(row('button') as HTMLElement)).toBeUndefined(),
       {timeout: 3000},
     );
+    expect(row('button')).not.toBeNull();
     fireEvent.click(toggle() as HTMLElement);
     const below = screen.getByTestId('below');
+    expect(below).toBeInTheDocument();
+    expect(row('app')).not.toBeNull();
     // The group leaves at the tap, and nothing after it moves.
     expect(row('button')).toBeNull();
     expect(motionOf(row('app') as HTMLElement)).toBeUndefined();
@@ -297,6 +315,8 @@ describe('content after the tree', () => {
     // Expand, and take the tree away while it runs: the row after the
     // group was never moved, and nothing is left moving.
     fireEvent.click(toggle() as HTMLElement);
+    expect(row('app')).not.toBeNull();
+    expect(row('button')).not.toBeNull();
     const app = row('app') as HTMLElement;
     const child = row('button') as HTMLElement;
     expect(motionOf(child)).toBeDefined();
@@ -317,6 +337,11 @@ describe('content after the tree', () => {
     render(<Page />);
     await act(async () => undefined);
     fireEvent.click(toggle() as HTMLElement);
+    // Present first: the group a mouse expanded at once, the row after it
+    // and the content after the tree.
+    expect(row('button')).not.toBeNull();
+    expect(row('app')).not.toBeNull();
+    expect(screen.getByTestId('below')).toBeInTheDocument();
     expect(motionOf(screen.getByTestId('below'))).toBeUndefined();
     expect(motionOf(row('app') as HTMLElement)).toBeUndefined();
   });
