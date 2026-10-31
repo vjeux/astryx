@@ -837,7 +837,7 @@ describe('swipeActions', () => {
    */
   const caughtUp = () => {
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1500);
     });
   };
 
@@ -862,6 +862,10 @@ describe('swipeActions', () => {
         '--_item-swipe-travel',
       ) || '0',
     );
+
+  /** How far a full swipe has confirmed, as the swipe writes it on the root. */
+  const confirmOf = (row: HTMLElement) =>
+    parseFloat(row.style.getPropertyValue('--_item-swipe-confirm') || '0');
 
   /** The window of a side: the out-of-flow child of the root carrying it. */
   const panelOf = (row: HTMLElement, side: 'leading' | 'trailing') =>
@@ -1061,31 +1065,42 @@ describe('swipeActions', () => {
     expect(xOf(row)).toBe(60);
     // The root moves by it; the window reads its negation, so it stays over
     // the resting box; the track moves with the row; every entry stays
-    // pinned at the outer edge (144 px of entries, the pin the gesture wrote
-    // on the window), as one block with no wrapper.
+    // pinned at the outer edge until the row has uncovered them all (the
+    // side's geometry the gesture wrote on the window: 144 px of entries),
+    // as one block with no wrapper; the outermost adds its slide by the full
+    // swipe's confirm, and the other fades by it.
     const travel = 'var(--_item-swipe-travel,0px)';
-    const transformOf = (element: Element | null) =>
+    const confirm = 'var(--_item-swipe-confirm,0)';
+    const declared = (element: Element | null, property: string) =>
       rulesDeclaredFor(element as HTMLElement)
         .flatMap(rule =>
           rule.slice(rule.indexOf('{') + 1, rule.lastIndexOf('}')).split(';'),
         )
         .map(declaration => declaration.replace(/\s+/g, ''))
-        .filter(declaration => declaration.startsWith('transform:'));
-    expect(transformOf(row)).toEqual([`transform:translate3d(${travel},0,0)`]);
-    expect(transformOf(panelOf(row, 'leading'))).toEqual([
-      `transform:translate3d(calc(-1*${travel}),0,0)`,
-    ]);
-    expect(transformOf(trackOf(row, 'leading'))).toEqual([
+        .filter(declaration => declaration.startsWith(`${property}:`));
+    const pinned = `calc(var(--_item-swipe-pin,0px)-var(--_item-swipe-sign,1)*min(var(--_item-swipe-sign,1)*${travel},var(--_item-swipe-open,0px)))`;
+    expect(declared(row, 'transform')).toEqual([
       `transform:translate3d(${travel},0,0)`,
     ]);
-    for (const entry of entriesOf(row, 'leading')) {
-      expect(transformOf(entry)).toEqual([
-        `transform:translate3d(calc(var(--_item-swipe-pin,0px)-${travel}),0,0)`,
-      ]);
-    }
-    expect(
-      panelOf(row, 'leading')?.style.getPropertyValue('--_item-swipe-pin'),
-    ).toBe('144px');
+    expect(declared(panelOf(row, 'leading'), 'transform')).toEqual([
+      `transform:translate3d(calc(-1*${travel}),0,0)`,
+    ]);
+    expect(declared(trackOf(row, 'leading'), 'transform')).toEqual([
+      `transform:translate3d(${travel},0,0)`,
+    ]);
+    const [other, outermost] = entriesOf(row, 'leading');
+    expect(declared(other, 'transform')).toEqual([
+      `transform:translate3d(${pinned},0,0)`,
+    ]);
+    expect(declared(other, 'opacity')).toEqual([`opacity:calc(1-${confirm})`]);
+    expect(declared(outermost, 'transform')).toEqual([
+      `transform:translate3d(calc(${pinned}+var(--_item-swipe-slide,0px)*${confirm}),0,0)`,
+    ]);
+    const geometry = (panelOf(row, 'leading') as HTMLElement).style;
+    expect(geometry.getPropertyValue('--_item-swipe-pin')).toBe('144px');
+    expect(geometry.getPropertyValue('--_item-swipe-sign')).toBe('1');
+    expect(geometry.getPropertyValue('--_item-swipe-open')).toBe('144px');
+    expect(geometry.getPropertyValue('--_item-swipe-slide')).toBe('72px');
     // No layout property is ever written, nor a transform of its own.
     for (const element of [
       row,
@@ -1769,7 +1784,7 @@ describe('swipeActions', () => {
       elsewhere.remove();
     });
 
-    it('fires the outermost entry and no other on a drag past the commit point, then springs back', async () => {
+    it('fires the outermost entry and no other on a confirmed full swipe, then springs back', async () => {
       const inner = vi.fn();
       const outer = vi.fn();
       const {row} = renderRow({
@@ -1778,15 +1793,17 @@ describe('swipeActions', () => {
           {label: 'Pin', onActivate: outer},
         ],
       });
-      // Two entries: a 144 px panel; the commit point is 192 (panel + 48),
-      // past half the 300 px row.
-      dragLeading(row, 200);
+      // Two entries: a 144 px panel. The full swipe confirms 0.69 of the way
+      // from it to 271 px (the 300 px row less 29): about 232 px.
+      dragLeading(row, 240);
       expect(outer).not.toHaveBeenCalled();
       // One beat: the slide out, then the entry fires.
+      const released = xOf(row);
       await act(async () => {
         vi.advanceTimersByTime(100);
       });
-      expect(xOf(row)).toBeGreaterThan(200);
+      // On its way out, past where it was let go.
+      expect(xOf(row)).toBeGreaterThan(released + 20);
       await settled();
       expect(outer).toHaveBeenCalledTimes(1);
       expect(inner).not.toHaveBeenCalled();
@@ -1795,175 +1812,316 @@ describe('swipeActions', () => {
       expect(xOf(row)).toBe(0);
     });
 
-    it("fires the outermost entry once the row's content has left its box, long before the slide-out comes to rest", async () => {
-      const outer = vi.fn();
-      const {row} = renderRow({
-        leading: [
-          {label: 'Unread', onActivate: vi.fn()},
-          {label: 'Pin', onActivate: outer},
-        ],
-      });
-      // Released held still just past the commit point (192), inside the
-      // 300 px row: nothing has fired yet.
-      dragLeading(row, 200);
-      expect(outer).not.toHaveBeenCalled();
-      // UIKit calls the handler at the lift; the row fires once its content
-      // has left its box (300 px), about a third of a second into a
-      // slide-out whose tail toward 324 px lasts another 0.7 s.
-      await act(async () => {
-        vi.advanceTimersByTime(450);
-      });
-      expect(outer).toHaveBeenCalledTimes(1);
-    });
-
-    it("fires a slide-out whose first frame comes late once the row's content has left its box, timed from that frame", async () => {
-      const outer = vi.fn();
-      const {row} = renderRow({
-        leading: [
-          {label: 'Unread', onActivate: vi.fn()},
-          {label: 'Pin', onActivate: outer},
-        ],
-      });
-      // Held still past the commit point until the row is at rest under the
-      // finger, so the slide-out starts from rest.
-      const f = finger(row);
-      f.down(10);
-      f.move(20);
-      f.move(35);
-      f.move(135);
-      f.move(235);
-      f.rest(1500);
-      // Like a browser on a busy page: the slide-out starts at the frame
-      // that runs it, and until then the row is where it was on screen.
-      const frames: FrameRequestCallback[] = [];
-      const raf = vi
-        .spyOn(globalThis, 'requestAnimationFrame')
-        .mockImplementation(callback => {
-          frames.push(callback);
-          return frames.length;
+    describe('the full swipe', () => {
+      const twoEntries = () =>
+        renderRow({
+          leading: [
+            {label: 'Unread', onActivate: vi.fn()},
+            {label: 'Pin', onActivate: vi.fn()},
+          ],
         });
-      try {
+      it('lets the entries ride the row past the open width, the outermost stretching to the edge', () => {
+        const {row} = twoEntries();
+        // Where the entries' transform puts them against the track, from the
+        // travel and the side's geometry the swipe writes (ItemSwipeLayer's
+        // rule, which a browser computes; jsdom computes no calc()).
+        const entriesX = () => {
+          const style = (panelOf(row, 'leading') as HTMLElement).style;
+          const read = (name: string) =>
+            parseFloat(style.getPropertyValue(name));
+          const sign = read('--_item-swipe-sign');
+          return (
+            read('--_item-swipe-pin') -
+            sign * Math.min(sign * xOf(row), read('--_item-swipe-open'))
+          );
+        };
+        const f = finger(row);
+        f.down(10);
+        f.move(20);
+        f.move(35);
+        f.move(35 + 100);
+        caughtUp();
+        // Short of the open width: every entry pinned at the outer edge.
+        expect(entriesX()).toBe(44);
+        f.move(35 + 200);
+        caughtUp();
+        // Past it: beside the row, the outermost entry's colour filling out
+        // to the edge.
+        expect(entriesX()).toBe(0);
         f.up();
-        await act(async () => {
-          vi.advanceTimersByTime(600);
+      });
+
+      it("confirms on the finger's travel: the row runs ahead to the confirmation offset, the outermost entry covers the space, and the others fade", () => {
+        const {row} = twoEntries();
+        const f = finger(row);
+        f.down(10);
+        f.move(20);
+        f.move(35);
+        f.move(35 + 220);
+        caughtUp();
+        // Not yet: the row follows the finger.
+        expect(xOf(row)).toBe(220);
+        expect(confirmOf(row)).toBe(0);
+        f.move(35 + 240);
+        caughtUp();
+        // Confirmed: ahead to 271 px (the 300 px row less 29), the outermost
+        // entry slid by its full slide past the other to the row's edge (72
+        // px, the side's geometry), the other faded (its opacity reads
+        // 1 - confirm).
+        expect(xOf(row)).toBe(271);
+        expect(confirmOf(row)).toBe(1);
+        expect(
+          (panelOf(row, 'leading') as HTMLElement).style.getPropertyValue(
+            '--_item-swipe-slide',
+          ),
+        ).toBe('72px');
+        // Backed out: the look undone, the row on the finger again.
+        f.move(35 + 200);
+        caughtUp();
+        expect(xOf(row)).toBe(200);
+        expect(confirmOf(row)).toBe(0);
+        f.up();
+      });
+
+      it('closes a swipe that confirmed and backed out, even at rest past half the panel, and fires nothing', async () => {
+        const onActivate = vi.fn();
+        const {row} = renderRow({leading: [{label: 'Unread', onActivate}]});
+        const f = finger(row);
+        f.down(10);
+        f.move(20);
+        f.move(35);
+        f.move(35 + 230);
+        f.move(35 + 150);
+        f.rest();
+        f.up();
+        await settled();
+        expect(xOf(row)).toBe(0);
+        expect(onActivate).not.toHaveBeenCalled();
+      });
+
+      it('fires from a confirmed release whatever its velocity, even moving back', async () => {
+        const onActivate = vi.fn();
+        const {row} = renderRow({leading: [{label: 'Unread', onActivate}]});
+        const f = finger(row);
+        f.down(10);
+        f.move(20);
+        f.move(35);
+        f.move(35 + 150);
+        f.move(35 + 260);
+        // Coming back fast, still past the confirm point when it lifts.
+        f.move(35 + 240);
+        f.move(35 + 222);
+        f.up({afterMs: 0});
+        await settled();
+        expect(onActivate).toHaveBeenCalledTimes(1);
+      });
+
+      it('never confirms toward a disabled outermost entry', async () => {
+        const onActivate = vi.fn();
+        const {row} = renderRow({
+          leading: [{label: 'Unread', onActivate, isDisabled: true}],
         });
+        const f = finger(row);
+        f.down(10);
+        f.move(20);
+        f.move(35);
+        f.move(35 + 260);
+        caughtUp();
+        // No run ahead: the row stays on the finger, unconfirmed.
+        expect(xOf(row)).toBe(260);
+        expect(confirmOf(row)).toBe(0);
+        f.rest();
+        f.up();
+        await settled();
+        expect(onActivate).not.toHaveBeenCalled();
+        // A slow release past half the panel rests open.
+        expect(xOf(row)).toBe(72);
+      });
+
+      it("fires the outermost entry once the row's content has left its box, long before the slide-out comes to rest", async () => {
+        const outer = vi.fn();
+        const {row} = renderRow({
+          leading: [
+            {label: 'Unread', onActivate: vi.fn()},
+            {label: 'Pin', onActivate: outer},
+          ],
+        });
+        // Confirmed (the confirm point is 231.6 px for the 144 px panel on
+        // the 300 px row), the row runs ahead to 271 px, inside its box:
+        // nothing has fired yet.
+        dragLeading(row, 250);
         expect(outer).not.toHaveBeenCalled();
-        // The frame runs now; the entry fires once the row's content has
-        // left its box, a third of a second later.
-        raf.mockRestore();
-        const at = performance.now();
-        act(() => {
-          for (const frame of frames.splice(0)) {
-            frame(at);
-          }
-        });
+        // UIKit calls the handler at the lift; the row fires once its
+        // content has left its box (300 px), a fraction of a second into a
+        // slide-out whose tail toward 324 px lasts most of a second.
         await act(async () => {
-          vi.advanceTimersByTime(300);
-        });
-        expect(outer).not.toHaveBeenCalled();
-        await act(async () => {
-          vi.advanceTimersByTime(150);
+          vi.advanceTimersByTime(450);
         });
         expect(outer).toHaveBeenCalledTimes(1);
-      } finally {
-        raf.mockRestore();
-      }
-    });
-
-    it("drops a slide-out's pending fire when the row leaves, after a second slide-out replaced the first", async () => {
-      const outer = vi.fn();
-      const {row, unmount} = renderRow({
-        leading: [
-          {label: 'Unread', onActivate: vi.fn()},
-          {label: 'Pin', onActivate: outer},
-        ],
       });
-      // When each slide-out's fire is due.
-      const due: number[] = [];
-      const schedule = window.setTimeout;
-      vi.spyOn(window, 'setTimeout').mockImplementation(((
-        callback: TimerHandler,
-        delay?: number,
-        ...rest: unknown[]
-      ) => {
-        if (typeof callback === 'function' && callback.name === 'fireIfStill') {
-          due.push(performance.now() + (delay ?? 0));
+
+      it("fires at once when the release is already past the row's edge", () => {
+        const outer = vi.fn();
+        const {row} = renderRow({
+          leading: [
+            {label: 'Unread', onActivate: vi.fn()},
+            {label: 'Pin', onActivate: outer},
+          ],
+        });
+        const f = finger(row);
+        f.down(10);
+        f.move(20);
+        f.move(35);
+        f.move(35 + 160);
+        f.move(35 + 330);
+        f.rest(1200);
+        expect(xOf(row)).toBeGreaterThan(300);
+        f.up();
+        expect(outer).toHaveBeenCalledTimes(1);
+      });
+
+      it("fires a slide-out whose first frame comes late once the row's content has left its box, timed from that frame", async () => {
+        const outer = vi.fn();
+        const {row} = renderRow({
+          leading: [
+            {label: 'Unread', onActivate: vi.fn()},
+            {label: 'Pin', onActivate: outer},
+          ],
+        });
+        // A confirmed full swipe, held still until the row is at rest at the
+        // confirmation offset, so the slide-out starts from rest.
+        const f = finger(row);
+        f.down(10);
+        f.move(20);
+        f.move(35);
+        f.move(35 + 100);
+        f.move(35 + 240);
+        f.rest(1500);
+        // Like a browser on a busy page: the slide-out starts at the frame
+        // that runs it, and until then the row is where it was on screen.
+        const frames: FrameRequestCallback[] = [];
+        const raf = vi
+          .spyOn(globalThis, 'requestAnimationFrame')
+          .mockImplementation(callback => {
+            frames.push(callback);
+            return frames.length;
+          });
+        try {
+          f.up();
+          await act(async () => {
+            vi.advanceTimersByTime(600);
+          });
+          expect(outer).not.toHaveBeenCalled();
+          // The frame runs now; from 271 px the row's content has left its
+          // box (300 px) between 0.1 and 0.2 s later.
+          raf.mockRestore();
+          const at = performance.now();
+          act(() => {
+            for (const frame of frames.splice(0)) {
+              frame(at);
+            }
+          });
+          await act(async () => {
+            vi.advanceTimersByTime(100);
+          });
+          expect(outer).not.toHaveBeenCalled();
+          await act(async () => {
+            vi.advanceTimersByTime(350);
+          });
+          expect(outer).toHaveBeenCalledTimes(1);
+        } finally {
+          raf.mockRestore();
         }
-        return schedule(callback, delay, ...rest);
-      }) as typeof window.setTimeout);
-      dragLeading(row, 200);
-      await act(async () => {});
-      // A finger catches the sliding row, pulls it back in, and flings it
-      // out past the commit point again before the first fire is due.
-      const f = finger(row, 2);
-      f.down(150);
-      f.move(140);
-      f.move(110);
-      f.move(80);
-      f.move(400);
-      f.up();
-      // Each fire is timed from its slide-out's start, read when it resolves.
-      await act(async () => {});
-      expect(due).toHaveLength(2);
-      expect(due[0]).toBeLessThan(due[1]);
-      // The first comes due (the catch cancelled it); then the row leaves
-      // while the second is pending.
-      await act(async () => {
-        vi.advanceTimersByTime(due[0] - performance.now() + 1);
       });
-      unmount();
-      await act(async () => {
-        vi.advanceTimersByTime(3000);
-      });
-      expect(outer).not.toHaveBeenCalled();
-    });
 
-    it("fires at once when the release is already past the row's edge", () => {
-      const outer = vi.fn();
-      const {row} = renderRow({leading: [{label: 'Pin', onActivate: outer}]});
-      // 72 px panel, commit point 150: 640 px of swipe resist to 321.5 px,
-      // past the 300 px row, and the row is there when the finger lifts.
-      const f = finger(row);
-      f.down(10);
-      f.move(20);
-      f.move(35);
-      f.move(35 + 320);
-      f.move(35 + 640);
-      f.rest(1200);
-      expect(xOf(row)).toBeGreaterThan(300);
-      f.up();
-      expect(outer).toHaveBeenCalledTimes(1);
-    });
-
-    it("a disabled outermost entry's fill beside it takes the disabled entry's look", () => {
-      const {row} = renderRow({
-        trailing: [
-          {label: 'Archive', onActivate: vi.fn()},
-          {
-            label: 'Delete',
-            onActivate: vi.fn(),
-            variant: 'destructive',
-            isDisabled: true,
-          },
-        ],
+      it("drops a slide-out's pending fire when the row leaves, after a second slide-out replaced the first", async () => {
+        const outer = vi.fn();
+        const {row, unmount} = renderRow({
+          leading: [
+            {label: 'Unread', onActivate: vi.fn()},
+            {label: 'Pin', onActivate: outer},
+          ],
+        });
+        // When each slide-out's fire is due.
+        const due: number[] = [];
+        const schedule = window.setTimeout;
+        vi.spyOn(window, 'setTimeout').mockImplementation(((
+          callback: TimerHandler,
+          delay?: number,
+          ...rest: unknown[]
+        ) => {
+          if (
+            typeof callback === 'function' &&
+            callback.name === 'fireIfStill'
+          ) {
+            due.push(performance.now() + (delay ?? 0));
+          }
+          return schedule(callback, delay, ...rest);
+        }) as typeof window.setTimeout);
+        // Confirmed past about 232 px: out it goes, its fire pending.
+        dragLeading(row, 240);
+        await act(async () => {});
+        // A finger catches the sliding row, backs it out of the full swipe,
+        // and confirms it again before the first fire is due.
+        const f = finger(row, 2);
+        f.down(150);
+        f.move(140);
+        f.move(110);
+        f.move(80);
+        f.move(20);
+        caughtUp();
+        expect(xOf(row)).toBeLessThan(232);
+        f.move(140);
+        caughtUp();
+        expect(xOf(row)).toBe(271);
+        f.up();
+        // Each fire is timed from its slide-out's start, read when it resolves
+        // (the slide-out's first frame).
+        await act(async () => {
+          vi.advanceTimersByTime(16);
+        });
+        expect(due).toHaveLength(2);
+        expect(due[0]).toBeLessThan(due[1]);
+        // The first comes due (the catch cancelled it; the finger held the
+        // row long enough for that); then the row leaves while the second is
+        // pending.
+        await act(async () => {
+          vi.advanceTimersByTime(Math.max(0, due[0] - performance.now() + 1));
+        });
+        unmount();
+        await act(async () => {
+          vi.advanceTimersByTime(3000);
+        });
+        expect(outer).not.toHaveBeenCalled();
       });
-      // The disabled entry is its colour at half strength, and so is the
-      // fill painted beside it (its own pseudo-element, which the entry's
-      // opacity covers): never the full colour of a verb that cannot fire.
-      const [, outer] = entriesOf(row, 'trailing');
-      const rules = rulesDeclaredFor(outer);
-      expect(rules.some(r => r.includes('opacity: 0.5'))).toBe(true);
-      expect(
-        rules.some(
-          r => r.includes('::after') && r.includes('background-color: inherit'),
-        ),
-      ).toBe(true);
-      // The track paints only the surface the entries sit on.
-      expect(
-        rulesDeclaredFor(trackOf(row, 'trailing')).some(r =>
-          r.includes('::before'),
-        ),
-      ).toBe(false);
+
+      it("a disabled outermost entry's fill beside it takes the disabled entry's look", () => {
+        const {row} = renderRow({
+          trailing: [
+            {label: 'Archive', onActivate: vi.fn()},
+            {
+              label: 'Delete',
+              onActivate: vi.fn(),
+              variant: 'destructive',
+              isDisabled: true,
+            },
+          ],
+        });
+        // The disabled entry is its colour at half strength, and so is the
+        // fill painted beside it (its own pseudo-element, under the entry's
+        // filter): never the full colour of a verb that cannot fire. Its
+        // opacity stays free for the full swipe's fade, and a disabled
+        // outermost entry never confirms, so the track's fill never shows.
+        const [, outer] = entriesOf(row, 'trailing');
+        const rules = rulesDeclaredFor(outer);
+        expect(rules.some(r => /filter: opacity\(0?\.5\)/.test(r))).toBe(true);
+        expect(
+          rules.some(
+            r =>
+              r.includes('::after') && r.includes('background-color: inherit'),
+          ),
+        ).toBe(true);
+      });
     });
 
     it('lays the entries outermost last: at the leading edge the row of entries runs in reverse', () => {
@@ -1989,27 +2147,30 @@ describe('swipeActions', () => {
           r.includes('flex-direction: row-reverse'),
         ),
       ).toBe(false);
-      // The outermost entry's colour is painted beside it out to the outer
-      // edge (a pseudo-element, no element), so a slide-out fills the row
-      // with it; the other entries carry none.
+      // The outermost entry is the last one, at the outer end; its colour is
+      // painted beside it out to the outer edge (a pseudo-element, no
+      // element), so a slide-out fills the row with it. The track keeps the
+      // same colour as its confirm fill, hidden until a full swipe confirms.
+      const [archiveEntry, deleteEntry] = entriesOf(row, 'trailing');
+      expect(deleteEntry).toHaveTextContent('Delete');
       const outerFill = (entry: HTMLElement) =>
         rulesDeclaredFor(entry).some(
           r => r.includes('::after') && r.includes('background-color: inherit'),
         );
-      expect(outerFill(entriesOf(row, 'trailing')[1])).toBe(true);
-      expect(outerFill(entriesOf(row, 'trailing')[0])).toBe(false);
-      expect(outerFill(entriesOf(row, 'leading')[1])).toBe(true);
-      const trackClasses = trackOf(row, 'trailing').className;
-      const deleteClasses = (trailing.lastElementChild as HTMLElement)
-        .className;
-      expect(trackClasses.split(' ').some(c => deleteClasses.includes(c))).toBe(
-        true,
-      );
+      expect(outerFill(deleteEntry)).toBe(true);
+      expect(outerFill(archiveEntry)).toBe(false);
+      expect(
+        rulesDeclaredFor(trailing).some(
+          r =>
+            r.includes('::before') &&
+            r.includes('background-color: var(--color-error'),
+        ),
+      ).toBe(true);
     });
   });
 
   describe('commit', () => {
-    it('slides out and fires on a release past the commit point; nothing rests', async () => {
+    it('slides out and fires on a confirmed full swipe; nothing rests', async () => {
       const onActivate = vi.fn();
       const {row} = renderRow({
         behavior: 'commit',
@@ -2019,12 +2180,12 @@ describe('swipeActions', () => {
       // Presentational at all times: nothing in it is ever tappable.
       expect(panel).toHaveAttribute('aria-hidden', 'true');
       expect(panel.querySelector('button')).toBeNull();
-      // One entry: 72 px panel; the commit point is half the 300 px row.
-      dragLeading(row, 160);
+      // One entry: a 72 px panel; the full swipe confirms at about 209 px.
+      dragLeading(row, 220);
       await act(async () => {
         vi.advanceTimersByTime(100);
       });
-      expect(xOf(row)).toBeGreaterThan(160);
+      expect(xOf(row)).toBeGreaterThan(220);
       await settled();
       expect(onActivate).toHaveBeenCalledTimes(1);
       await settled();
@@ -2068,7 +2229,7 @@ describe('swipeActions', () => {
         behavior: 'commit',
         leading: [{label: 'Archive', onActivate, hasRemoval: true}],
       });
-      dragLeading(row, 160);
+      dragLeading(row, 220);
       await settled();
       expect(onActivate).toHaveBeenCalledTimes(1);
       await settled();

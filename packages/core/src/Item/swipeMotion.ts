@@ -4,9 +4,9 @@
  * @file swipeMotion.ts
  * @input The row root; a curve per channel (a spring motion/spring.ts
  *   solved); the Reduced Motion fade (motion/reducedMotion.ts)
- * @output Exports createSwipeMotion — the swipe's travel as a custom
- *   property on the row root, written on every animation frame while it
- *   moves — and the property's name
+ * @output Exports createSwipeMotion — the swipe's travel and its full
+ *   swipe's confirm as custom properties on the row root, written on every
+ *   animation frame while they move — and the properties' names
  * @position Internal to Item's swipe actions, driven by useSwipeAction;
  *   tested by swipeMotion.test.ts and through Item.test.tsx
  *
@@ -14,7 +14,9 @@
  * property on the root (`--_item-swipe-travel`, physical px); the root's
  * transform reads it and each panel's transform its negation
  * (ItemSwipeLayer), so the row moves and the panel appears fixed in the space
- * the row vacates. A motion plays a curve per channel by writing, on every
+ * the row vacates. The full swipe's confirm (`--_item-swipe-confirm`, 0 to
+ * 1) is written beside it: the outermost entry slides by it and the others
+ * fade by it. A motion plays a curve per channel by writing, on every
  * animation frame, the value the curve has at that frame's time: one style
  * write per frame, on the main thread. A motion from rest starts at the
  * browser's next frame, so a frame held back (iOS during a smooth scroll)
@@ -33,12 +35,15 @@ import type {ReducedMotionFade} from '../motion/reducedMotion';
 
 /** The travel the root's transform reads, physical px (ItemSwipeLayer, Item). */
 export const SWIPE_TRAVEL_PROPERTY = '--_item-swipe-travel';
+/** How far a full swipe has confirmed, 0 to 1 (ItemSwipeLayer). */
+export const SWIPE_CONFIRM_PROPERTY = '--_item-swipe-confirm';
 
-/** What a motion moves: the row's travel. */
-export type SwipeChannel = 'x';
+/** What a motion moves: the row's travel, and the full swipe's confirm. */
+export type SwipeChannel = 'x' | 'confirm';
 
 const PROPERTIES: Record<SwipeChannel, {name: string; unit: string}> = {
   x: {name: SWIPE_TRAVEL_PROPERTY, unit: 'px'},
+  confirm: {name: SWIPE_CONFIRM_PROPERTY, unit: ''},
 };
 
 const CHANNELS = Object.keys(PROPERTIES) as SwipeChannel[];
@@ -126,11 +131,11 @@ const now = (): number =>
 
 /** A value as the property writes it: sub-pixel, without float noise. */
 const format = (value: number): string =>
-  String(Math.round(value * 1000) / 1000);
+  String(Math.round(value * 10000) / 10000);
 
 export function createSwipeMotion(): SwipeMotion {
   let root: HTMLElement | null = null;
-  const resting: Record<SwipeChannel, number> = {x: 0};
+  const resting: Record<SwipeChannel, number> = {x: 0, confirm: 0};
   const segments = new Map<SwipeChannel, Segment>();
   let dip: Dip | null = null;
   let frame: number | null = null;

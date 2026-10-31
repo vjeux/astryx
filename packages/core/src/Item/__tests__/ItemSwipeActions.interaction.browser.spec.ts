@@ -14,9 +14,12 @@
  *   it without a jump; a close a blocked main thread holds back starts from
  *   where the row was; the drag and the settle do no Layout or Paint per
  *   frame; a tap on a resting row's own content closes it and clicks
- *   nothing, and a scroll that starts on it closes it; storyboards. Under
- *   Reduce Motion a release and that tap land with no travel at the bottom
- *   of an opacity dip (design:reduced-motion DR2).
+ *   nothing, and a scroll that starts on it closes it; a full swipe
+ *   confirms on the finger (the row runs ahead, the outermost entry covers
+ *   the space) and fires, and one that backs out closes with the entries
+ *   pinned or riding at every frame; storyboards. Under Reduce Motion a
+ *   release, that tap, a confirm and a back-out land with no travel at the
+ *   bottom of an opacity dip (design:reduced-motion DR2).
  * @position Interaction proofs of Item's swipeActions (the shape of
  *   BottomSheetDetent.interaction.browser.spec.ts, the harness exemplar). The
  *   gesture writes the row's travel as a custom property on its root every
@@ -105,11 +108,11 @@ async function openRow(page: Page): Promise<OpenRow> {
   };
 }
 
-/** How far the row opens: the entries' natural widths together. */
+/** How far the row opens: the entries' widths together, read as the row reads them (`offsetWidth`). */
 const openWidthOf = async (track: Locator) =>
   track.evaluate(node =>
     Array.from(node.children).reduce(
-      (width, entry) => width + entry.getBoundingClientRect().width,
+      (width, entry) => width + (entry as HTMLElement).offsetWidth,
       0,
     ),
   );
@@ -213,22 +216,10 @@ const settleOf = async (page: Page): Promise<Frame[]> => {
  * UIKit's velocity filter (which never decays on its own) reads nearly zero,
  * and the row has caught up with the finger when it lifts.
  */
-/**
- * `design:reduced-motion` DR1 and DR2 for a change of the row under Reduce
- * Motion that `act` starts with a lift: no travel (the gesture writes the
- * travel once after the lift, in one step, while the row is transparent) and
- * an opacity-only cross-fade of the row that dips and is over within 200 ms.
- * Then the row is at `to`, fully opaque.
- */
-async function expectCrossFade(
-  page: Page,
-  row: Locator,
-  to: number,
-  act: () => Promise<void>,
-): Promise<void> {
+/** Starts logging the row's frames and its opacity at every frame. */
+async function watchCrossFade(page: Page, row: Locator): Promise<void> {
   await recordFrames(row);
   await recordLift(page);
-  // The row's opacity at every frame from now on.
   await row.evaluate(node => {
     const opacity: {at: number; value: number}[] = [];
     const sample = () => {
@@ -236,18 +227,37 @@ async function expectCrossFade(
         at: performance.now(),
         value: Number(getComputedStyle(node).opacity),
       });
-      if (opacity.length < 600) {
+      if (opacity.length < 900) {
         requestAnimationFrame(sample);
       }
     };
     requestAnimationFrame(sample);
     Object.assign(window, {__swipeOpacity: opacity});
   });
-  await act();
+}
+
+/** The page's clock now (ms, `performance.now()`). */
+const nowOf = async (page: Page): Promise<number> =>
+  page.evaluate(() => performance.now());
+
+/**
+ * `design:reduced-motion` DR1 and DR2 for a change of the row under Reduce
+ * Motion started at `since` (the page's clock), with `watchCrossFade`
+ * logging: no travel (the gesture writes the travel once, in one step, while
+ * the row is transparent) and an opacity-only cross-fade of the row that
+ * dips and is over within 200 ms. Then the row is at `to`, fully opaque.
+ */
+async function expectCrossFadeSince(
+  page: Page,
+  row: Locator,
+  to: number,
+  since: number,
+): Promise<void> {
   await page.waitForTimeout(400);
-  const lift = await liftOf(page);
-  const landing = await settleOf(page);
-  // One write after the lift, while nothing showed.
+  const landing = (await framesOf(page)).filter(
+    frame => frame.at >= since && frame.at <= since + 250,
+  );
+  // One write, while nothing showed.
   expect(landing.length, JSON.stringify(landing)).toBe(1);
   expect(landing[0].x).toBeCloseTo(to, 0);
   expect(landing[0].opacity).toBeLessThan(0.05);
@@ -257,7 +267,7 @@ async function expectCrossFade(
         (window as unknown as {__swipeOpacity: {at: number; value: number}[]})
           .__swipeOpacity,
     )
-  ).filter(sample => sample.at >= lift);
+  ).filter(sample => sample.at >= since - 50);
   const dip = opacity.findIndex(sample => sample.value < 1);
   expect(dip, JSON.stringify(opacity)).toBeGreaterThanOrEqual(0);
   expect(Math.min(...opacity.map(sample => sample.value))).toBeLessThan(0.05);
@@ -270,6 +280,34 @@ async function expectCrossFade(
   expect(
     await row.evaluate(node => Number(getComputedStyle(node).opacity)),
   ).toBe(1);
+}
+
+/** `expectCrossFadeSince` for a change `act` starts with a lift. */
+async function expectCrossFade(
+  page: Page,
+  row: Locator,
+  to: number,
+  act: () => Promise<void>,
+): Promise<void> {
+  await watchCrossFade(page, row);
+  await act();
+  await expectCrossFadeSince(page, row, to, await liftOf(page));
+}
+
+/** How many of the row's own animations (not its entries') dip its opacity. */
+async function rowDipsOf(row: Locator): Promise<number> {
+  return row.evaluate(
+    node =>
+      node
+        .getAnimations()
+        .filter(animation =>
+          (animation.effect as KeyframeEffect)
+            .getKeyframes()
+            .some(
+              frame => frame.opacity != null && Number(frame.opacity) < 0.05,
+            ),
+        ).length,
+  );
 }
 
 function heldDrag(from: {x: number; y: number}, dx: number) {
@@ -793,6 +831,348 @@ test('a scroll that starts on the resting row closes it', async ({
     .toBeGreaterThan(50);
   await expect.poll(async () => xOf(row)).toBeCloseTo(0, 0);
 });
+
+/**
+ * Where each part of the trailing side is drawn now: the root and the
+ * outermost entry (its pin and slide toward the row) by their computed
+ * transforms, the other entries by their opacity, and the track's confirm
+ * fill (its `::before`) by its opacity.
+ */
+const drawnOf = async (row: Locator) =>
+  row.evaluate(node => {
+    const track = node.querySelector(
+      '[data-swipe-panel="trailing"]',
+    )?.firstElementChild;
+    const entries = Array.from(track?.children ?? []);
+    const inner = entries[0];
+    const outer = entries[entries.length - 1];
+    const x = (el: Element | undefined) =>
+      el == null
+        ? Number.NaN
+        : new DOMMatrixReadOnly(getComputedStyle(el).transform).m41;
+    return {
+      root: x(node),
+      outer: x(outer),
+      inner:
+        inner == null ? Number.NaN : Number(getComputedStyle(inner).opacity),
+      fill:
+        track == null
+          ? Number.NaN
+          : Number(getComputedStyle(track, '::before').opacity),
+    };
+  });
+
+/** The swipe at which the story's first row confirms a full swipe. */
+function confirmPointOf(openWidth: number, rowWidth: number) {
+  const confirmAt = rowWidth - swipeActions.confirmInset;
+  return openWidth + (confirmAt - openWidth) * swipeActions.confirmFraction;
+}
+
+test('a full swipe confirms on the finger: the row runs ahead to the confirmation offset, the outermost entry covers the space, and the release fires it', async ({
+  page,
+}) => {
+  const {driver, row, entries, rest, start} = await openRow(page);
+  const rows = page.locator('.astryx-item');
+  const before = await rows.count();
+  const openWidth = await openWidthOf(entries);
+  const outerWidth = await entries.evaluate(
+    node =>
+      (node.lastElementChild as HTMLElement).getBoundingClientRect().width,
+  );
+  const confirmAt = confirmPointOf(openWidth, rest.width);
+  const confirmedOffset = rest.width - swipeActions.confirmInset;
+  // A slow drag to 40 px of swipe past the confirm point (the swipe is the
+  // finger's travel past the pan's 25 px), held, then lifted.
+  const reach = confirmAt + 40 + swipeActions.hysteresis;
+  const script = drag(
+    start,
+    {x: start.x - reach, y: start.y},
+    {durationMs: 1400, hz: 60, restMs: 500},
+  );
+  const moves = toTouchEvents(script).filter(e => e.type === 'touchMove');
+  const seen: {
+    short?: Awaited<ReturnType<typeof drawnOf>>;
+    past?: Awaited<ReturnType<typeof drawnOf>>;
+  } = {};
+  let index = 0;
+  await driver.play(script, {
+    onEvent: async step => {
+      if (step.type !== 'touchMove') {
+        return;
+      }
+      const swipe = start.x - step.fingers[0].x - swipeActions.hysteresis;
+      index += 1;
+      if (seen.short == null && swipe >= confirmAt - 12) {
+        seen.short = await drawnOf(row);
+      }
+      if (index === moves.length) {
+        // The finger held there until every spring has come to rest.
+        await page.waitForTimeout(800);
+        seen.past = await drawnOf(row);
+      }
+    },
+  });
+  // Short of the confirm point the row trails the finger, and the entries
+  // look as they always do.
+  const {short, past} = seen;
+  expect(short).toBeDefined();
+  expect(short?.root).toBeGreaterThan(-confirmAt);
+  expect(short?.outer).toBeCloseTo(0, 1);
+  expect(short?.inner).toBeCloseTo(1, 2);
+  expect(short?.fill).toBeCloseTo(0, 2);
+  // Past it the row has run ahead of the finger to the confirmation offset,
+  // the outermost entry has slid past the others to the row's edge, and the
+  // others have faded.
+  expect(past?.root).toBeCloseTo(-confirmedOffset, 0);
+  expect(past?.outer).toBeCloseTo(-(openWidth - outerWidth), 0);
+  expect(past?.inner).toBeCloseTo(0, 2);
+  // Under the fading others the track shows the outermost entry's colour.
+  expect(past?.fill).toBeCloseTo(1, 2);
+  // Lifted there: Delete fires and the story removes the row.
+  await expect(rows).toHaveCount(before - 1);
+});
+
+test('backing out of a confirmed full swipe closes the row and fires nothing; the entries stay pinned below the open width and ride the row above it, frame by frame', async ({
+  page,
+}) => {
+  const {driver, row, entries, rest, start} = await openRow(page);
+  const rows = page.locator('.astryx-item');
+  const before = await rows.count();
+  const openWidth = await openWidthOf(entries);
+  const confirmAt = confirmPointOf(openWidth, rest.width);
+  await recordFrames(row);
+  await recordLift(page);
+  // Out past the confirm point, then back to 200 px of swipe (past the open
+  // width, short of the confirm point), held still, then lifted.
+  const h = swipeActions.hysteresis;
+  const out = drag(
+    start,
+    {x: start.x - (confirmAt + 40 + h), y: start.y},
+    {durationMs: 900, hz: 60},
+  ).slice(0, -1);
+  const last = out[out.length - 1];
+  const back = drag(
+    last.fingers[0],
+    {x: start.x - (200 + h), y: start.y},
+    {durationMs: 500, hz: 60, restMs: 600},
+  ).map(frame => ({...frame, t: frame.t + last.t + 16}));
+  await driver.play([...out, ...back.slice(1)]);
+  // A swipe that confirmed and backed out closes, whatever its position.
+  await waitForRest(row);
+  const samples = (await settleOf(page)).map(frame => frame.parts);
+  expect(samples.length).toBeGreaterThan(10);
+  // The settle crosses the open width: above it the entries ride the row,
+  // below it they are pinned at the outer edge, at every frame.
+  let crossed = 0;
+  for (const part of samples) {
+    const travel = -part.root;
+    if (travel > openWidth + 0.5) {
+      expect(part.entries).toBeCloseTo(0, 0);
+    } else if (travel < openWidth - 0.5) {
+      crossed += 1;
+      expect(part.track + part.entries).toBeCloseTo(-openWidth, 0);
+    }
+  }
+  expect(samples[0].root).toBeLessThan(-openWidth);
+  expect(crossed).toBeGreaterThan(0);
+  await expect.poll(async () => xOf(row)).toBeCloseTo(0, 0);
+  await expect(rows).toHaveCount(before);
+});
+
+test('under Reduce Motion a full swipe confirms with no travel: the row steps to the confirmation offset at the bottom of an opacity dip', async ({
+  page,
+}) => {
+  // design:reduced-motion DR2: the finger's drag is direct manipulation, but
+  // a confirm is a change of state, so the row cross-fades to it.
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  const {driver, row, entries, rest, start} = await openRow(page);
+  const openWidth = await openWidthOf(entries);
+  const confirmAt = confirmPointOf(openWidth, rest.width);
+  const confirmedOffset = rest.width - swipeActions.confirmInset;
+  const h = swipeActions.hysteresis;
+  const script = drag(
+    start,
+    {x: start.x - (confirmAt + h + 4), y: start.y},
+    {durationMs: 900, hz: 60, restMs: 300},
+  );
+  await watchCrossFade(page, row);
+  let checked = false;
+  await driver.play(script, {
+    onEvent: async step => {
+      const swipe = start.x - (step.fingers[0]?.x ?? start.x) - h;
+      if (!checked && step.type === 'touchMove' && swipe >= confirmAt) {
+        // The move that confirms: the row is now fading out, to land at the
+        // confirmation offset while transparent and fade back in.
+        checked = true;
+        const since = await nowOf(page);
+        expect(await rowDipsOf(row)).toBeGreaterThan(0);
+        await expectCrossFadeSince(page, row, -confirmedOffset, since);
+      }
+    },
+  });
+  expect(checked).toBe(true);
+});
+
+test('under Reduce Motion backing out of a confirmed full swipe returns to the finger with no travel, at the bottom of an opacity dip', async ({
+  page,
+}) => {
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  const {driver, row, entries, rest, start} = await openRow(page);
+  const openWidth = await openWidthOf(entries);
+  const confirmAt = confirmPointOf(openWidth, rest.width);
+  const h = swipeActions.hysteresis;
+  // Out past the confirm point and held there while the confirm's fade
+  // plays out, then back short of it, held, and lifted. The way back is
+  // 39 px, not 40, so no move lands exactly on the confirm point: the moves
+  // straddle it by half a pixel or more, and the move that backs out is the
+  // same for the row and for this test, whatever rounding each one's sum
+  // carries.
+  const out = drag(
+    start,
+    {x: start.x - (confirmAt + h + 20), y: start.y},
+    {durationMs: 900, hz: 60, restMs: 400},
+  ).slice(0, -1);
+  const last = out[out.length - 1];
+  const back = drag(
+    last.fingers[0],
+    {x: start.x - (confirmAt + h - 19), y: start.y},
+    {durationMs: 300, hz: 60, restMs: 300},
+  ).map(frame => ({...frame, t: frame.t + last.t + 16}));
+  await watchCrossFade(page, row);
+  let confirmed = false;
+  let checked = false;
+  await driver.play([...out, ...back.slice(1)], {
+    onEvent: async step => {
+      if (step.type !== 'touchMove' || checked) {
+        return;
+      }
+      const swipe = start.x - (step.fingers[0]?.x ?? start.x) - h;
+      if (swipe >= confirmAt) {
+        confirmed = true;
+      } else if (confirmed) {
+        // The move that backs out: the row fades out, lands under the
+        // finger while transparent and fades back in.
+        checked = true;
+        const since = await nowOf(page);
+        expect(await rowDipsOf(row)).toBeGreaterThan(0);
+        await expectCrossFadeSince(page, row, -swipe, since);
+      }
+    },
+  });
+  expect(checked).toBe(true);
+  // Lifted backed out: the row closes and fires nothing.
+  await expect.poll(async () => xOf(row)).toBeCloseTo(0, 0);
+});
+
+test(
+  'storyboard: a full swipe confirms, the row runs ahead and the outermost entry covers the space',
+  {tag: '@storyboard'},
+  async ({page, browserName}, testInfo) => {
+    test.skip(
+      browserName !== 'chromium',
+      'screencast frames are Chromium-only in Playwright',
+    );
+    const {driver, row, entries, rest, start} = await openRow(page);
+    const openWidth = await openWidthOf(entries);
+    const confirmAt = confirmPointOf(openWidth, rest.width);
+    await markElement(row, {mode: 'outline'});
+    const cast = await startScreencast(page);
+    const began = Date.now();
+    await driver.play(
+      drag(
+        start,
+        {
+          x: start.x - (confirmAt + 30 + swipeActions.hysteresis),
+          y: start.y,
+        },
+        {durationMs: 1200, hz: 60, restMs: 400},
+      ),
+    );
+    await page.waitForTimeout(600);
+    const castFrames = await cast.stop();
+    const tracked = await trackMarker(page, castFrames);
+    const film = await castStoryboard(page, castFrames, {
+      name: 'item-swipe-full-swipe',
+      zero: began,
+      from: began,
+      to: Date.now(),
+      columns: 8,
+      cellScale: 0.35,
+      // The row's trailing edge: its leading part leaves through the list's
+      // clip, which pins the box's left edge.
+      data: t => {
+        const box = tracked.find(f => f.t === t)?.box;
+        return {right: box == null ? -1 : box.x + box.width};
+      },
+    });
+    await film.write(testInfo);
+    // The trace: the row's edge runs out to the confirmation offset, ahead
+    // of the finger, and on out of the list as Delete fires.
+    const rights = tracked
+      .filter(f => f.t >= began && f.box != null)
+      .map(f => (f.box?.x as number) + (f.box?.width as number));
+    expect(Math.min(...rights)).toBeLessThan(
+      rest.x + rest.width - (rest.width - swipeActions.confirmInset) + 1,
+    );
+  },
+);
+
+test(
+  'storyboard: a full swipe that backs out undoes the look and closes the row',
+  {tag: '@storyboard'},
+  async ({page, browserName}, testInfo) => {
+    test.skip(
+      browserName !== 'chromium',
+      'screencast frames are Chromium-only in Playwright',
+    );
+    const {driver, row, entries, rest, start} = await openRow(page);
+    const openWidth = await openWidthOf(entries);
+    const confirmAt = confirmPointOf(openWidth, rest.width);
+    const h = swipeActions.hysteresis;
+    const out = drag(
+      start,
+      {x: start.x - (confirmAt + 40 + h), y: start.y},
+      {durationMs: 900, hz: 60},
+    ).slice(0, -1);
+    const last = out[out.length - 1];
+    const back = drag(
+      last.fingers[0],
+      {x: start.x - (200 + h), y: start.y},
+      {durationMs: 600, hz: 60, restMs: 400},
+    ).map(frame => ({...frame, t: frame.t + last.t + 16}));
+    await markElement(row, {mode: 'outline'});
+    const cast = await startScreencast(page);
+    const began = Date.now();
+    await driver.play([...out, ...back.slice(1)]);
+    await page.waitForTimeout(1200);
+    const castFrames = await cast.stop();
+    const tracked = await trackMarker(page, castFrames);
+    const film = await castStoryboard(page, castFrames, {
+      name: 'item-swipe-full-swipe-back-out',
+      zero: began,
+      from: began,
+      to: Date.now(),
+      columns: 8,
+      cellScale: 0.35,
+      data: t => {
+        const box = tracked.find(f => f.t === t)?.box;
+        return {right: box == null ? -1 : box.x + box.width};
+      },
+    });
+    await film.write(testInfo);
+    // The trace: out to the confirmation offset, back with the finger, then
+    // home on the release. The row comes to the offset itself, and screencast
+    // boxes are whole pixels, so its closest frame reads that pixel or the
+    // next (a frame between keyframes sits up to a quarter pixel short).
+    const rights = tracked
+      .filter(f => f.t >= began && f.box != null)
+      .map(f => (f.box?.x as number) + (f.box?.width as number));
+    expect(Math.min(...rights)).toBeLessThanOrEqual(
+      rest.x + swipeActions.confirmInset + 1,
+    );
+    expect(rights.at(-1)).toBeCloseTo(rest.x + rest.width, 0);
+  },
+);
 
 test('the drag and the settle do no Layout or Paint per frame', async ({
   page,
