@@ -22,6 +22,7 @@ import {
   waitForRest,
   withStorybook,
 } from '@astryxdesign/interaction-harness';
+import {WHEEL_ROW_HEIGHT} from '../wheelOptions';
 
 const storybook = withStorybook(test);
 
@@ -29,6 +30,8 @@ interface Activation {
   /** Year options listed, and the year rows drawn (each option is one). */
   yearOptions: number;
   yearRowsDrawn: number;
+  /** Year rows painted: a box one row tall. */
+  yearRowsPainted: number;
   /**
    * The year wheel's elements the opening wrote (any attribute) or added,
    * from the tap that shows the wheels until the year wheel rests.
@@ -95,12 +98,22 @@ async function openMonthYearWheels(
   const years = page.getByRole('listbox', {name: 'Year'});
   await expect(years).toBeVisible();
   await waitForRest(years.locator('[data-wheel-strip]'));
+  // The committed year is drawn where the wheel shows it.
+  await expect(years.getByRole('option', {selected: true})).toBeVisible();
   return {
     yearOptions: await years.getByRole('option').count(),
     // Every row the wheel draws: each option is its own row, and nothing
     // else draws a year.
     yearRowsDrawn: await years.evaluate(
       list => list.querySelectorAll('[data-wheel-row]').length,
+    ),
+    yearRowsPainted: await years.evaluate(
+      (list, rowHeight) =>
+        Array.from(list.querySelectorAll('[data-wheel-row]')).filter(row => {
+          const box = row.getBoundingClientRect();
+          return box.width > 0 && Math.abs(box.height - rowHeight) < 0.5;
+        }).length,
+      WHEEL_ROW_HEIGHT,
     ),
     yearElementsWritten: await page.evaluate(
       () =>
@@ -131,6 +144,9 @@ test('the month and year wheels draw each year once, and opening them writes no 
   // Each year is drawn once, as its own row.
   expect(narrow.yearRowsDrawn).toBe(2);
   expect(wide.yearRowsDrawn).toBe(200);
+  // And painted: each one a box one row tall.
+  expect(narrow.yearRowsPainted).toBe(2);
+  expect(wide.yearRowsPainted).toBe(200);
   // What opening costs, counted: the year wheel parks its strip on its year
   // and marks the band's row, beside what the two-year wheel writes. A cost
   // per year (every row written as the wheel opens) shows here as 200 or

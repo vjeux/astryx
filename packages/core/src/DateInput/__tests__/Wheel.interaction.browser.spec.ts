@@ -119,6 +119,7 @@ async function openWheel(page: Page): Promise<OpenWheel> {
   if (column == null) {
     throw new Error('no minute column');
   }
+  await expectRowsPainted(minutes, column);
   return {
     driver,
     field,
@@ -129,6 +130,47 @@ async function openWheel(page: Page): Promise<OpenWheel> {
       y: Math.round(column.y + column.height * 0.8),
     },
   };
+}
+
+/**
+ * Presence first: what a proof tracks is on screen before it acts. The strip
+ * and its 60 rows are there, each row a painted box one row tall, the strip
+ * opaque, and the committed row drawn inside the column. A proof that would
+ * pass with nothing painted proves nothing.
+ */
+async function expectRowsPainted(
+  minutes: Locator,
+  column: {y: number; height: number},
+) {
+  const strip = minutes.locator('[data-wheel-strip]');
+  await expect(strip).toHaveCount(1);
+  await expect(strip).toHaveCSS('opacity', '1');
+  await expect(strip).toHaveCSS('visibility', 'visible');
+  const rows = minutes.locator('[data-wheel-row]');
+  await expect(rows).toHaveCount(MINUTES.rowCount);
+  const sizes = await rows.evaluateAll(elements =>
+    elements.map(element => {
+      const box = element.getBoundingClientRect();
+      return {width: box.width, height: box.height};
+    }),
+  );
+  expect(
+    sizes.filter(
+      ({width, height}) => width > 0 && Math.abs(height - ROW) < 0.5,
+    ),
+    'every row is a painted row',
+  ).toHaveLength(MINUTES.rowCount);
+  const committed = minutes.getByRole('option', {selected: true});
+  await expect(committed).toBeVisible();
+  const box = await committed.boundingBox();
+  if (box == null) {
+    throw new Error('the committed row has no box');
+  }
+  expect(
+    box.y,
+    'the committed row is drawn in the column',
+  ).toBeGreaterThanOrEqual(column.y);
+  expect(box.y + box.height).toBeLessThanOrEqual(column.y + column.height);
 }
 
 /** The flick's script, and the offset the rows show at its lift. */
@@ -341,7 +383,7 @@ test('a flick coasts on UIKit’s curve onto the row it projects, and commits it
 test('the coast keeps advancing every frame while the main thread is blocked', async ({
   page,
 }, testInfo) => {
-  const {driver, strip, start} = await openWheel(page);
+  const {driver, minutes, strip, start} = await openWheel(page);
   test.skip(!driver.scriptedTimestamps, SCRIPTED_RELEASE_SKIP);
   // Markers riding the strip itself, every few rows in three colours. They move
   // with the coast and never turn or fade as the rows do, so their steps are
@@ -368,6 +410,30 @@ test('the coast keeps advancing every frame while the main thread is blocked', a
     },
     {rows: STRIP_MARKER_ROWS, rowHeight: ROW, colours: STRIP_MARKER_RGB},
   );
+  // Presence first: the markers ride the strip, and those in the column are
+  // painted there before the flick.
+  const markers = strip.locator('[data-busy-marker]');
+  await expect(markers).toHaveCount(STRIP_MARKER_ROWS.length);
+  const columnBox = await minutes.boundingBox();
+  if (columnBox == null) {
+    throw new Error('no minute column');
+  }
+  expect(
+    await markers.evaluateAll(
+      (elements, column) =>
+        elements.filter(element => {
+          const box = element.getBoundingClientRect();
+          return (
+            box.width > 0 &&
+            box.height > 0 &&
+            box.top >= column.y &&
+            box.bottom <= column.y + column.height
+          );
+        }).length,
+      columnBox,
+    ),
+    'a marker is painted in the column',
+  ).toBeGreaterThan(0);
   // A compositor-only control in the page's top edge, recorded in the same
   // frames: the coast is judged against what this machine presented.
   const control = await startBusyControl(page);
@@ -409,6 +475,17 @@ test('the coast keeps advancing every frame while the main thread is blocked', a
     rgb: CONTROL_RGB,
   });
   await control.remove();
+  // Every marker colour, and the control, is in the recorded frames.
+  tracks.forEach((track, i) =>
+    expect(
+      track.some(frame => frame.box != null),
+      `marker colour ${i} is in the frames`,
+    ).toBe(true),
+  );
+  expect(
+    controlFrames.some(frame => frame.box != null),
+    'the control is in the frames',
+  ).toBe(true);
   // Each marker is judged while it is within reach of the band, inside the
   // column; neighbours' reaches overlap, so a marker in sight for only a
   // sliver of the block is left out where its neighbour covers that time.
@@ -503,6 +580,11 @@ test('the coast does no Layout or Paint per frame', async ({
     coast = await stripCoastTiming(strip);
     await waitForRest(strip);
   });
+  // Presence first: the window is a real coast, which ran and moved the rows.
+  expect(coast.to - coast.from, 'the coast ran').toBeGreaterThan(500);
+  expect(await stripOffset(strip), 'the rows travelled').toBeGreaterThanOrEqual(
+    3 * ROW,
+  );
   const during = countBetween(trace, coast.from + 50, coast.to - 50);
   expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
   expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
@@ -513,6 +595,7 @@ test('a finger landing on the coasting wheel stops it where it is, then it eases
   page,
 }) => {
   const {driver, field, strip, start} = await openWheel(page);
+  const before = await stripOffset(strip);
   await driver.play(flickUp(start).script);
   const coast = stripAnimationOf(
     await waitForAnimation(strip, {minProgressMs: 16}),
@@ -534,6 +617,8 @@ test('a finger landing on the coasting wheel stops it where it is, then it eases
       }
     },
   });
+  // Presence first: the wheel was moving when the finger landed.
+  expect(caught, 'it moved before the catch').toBeGreaterThan(before + ROW);
   expect(held).toBeCloseTo(caught, 0);
   // It was caught mid-run, short of where the coast was heading.
   expect(caught).toBeLessThan(coastEnd - ROW / 2);
