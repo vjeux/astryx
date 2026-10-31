@@ -354,6 +354,13 @@ test('a finger on the AM/PM column mid-turn stops it; the lift rests it on the n
     'core-timeinput--bottom-sheet-wheels',
   );
   const field = page.locator('input').first();
+  const offsetOf = async () =>
+    stripOf(meridiem).evaluate(
+      element => new DOMMatrixReadOnly(getComputedStyle(element).transform).m42,
+    );
+  // Where the strip rests on AM, and on PM one row on.
+  const restAM = await offsetOf();
+  const restPM = restAM - WHEEL_ROW_PITCH;
   await turnOneRowDown(driver, hour);
   // Early in the turn, while AM is still the nearer row.
   await stripOf(meridiem).evaluate(
@@ -402,9 +409,21 @@ test('a finger on the AM/PM column mid-turn stops it; the lift rests it on the n
   // Stopped where the finger caught it: still at most 1 px of drift.
   const tail = held.slice(Math.floor(held.length / 2));
   expect(Math.max(...tail) - Math.min(...tail)).toBeLessThan(1);
+  // Caught mid-turn, between the two rows. Where depends on how long the
+  // harness's round trips took to land the finger (a loaded machine lands it
+  // past the middle), so the row the lift must rest on is the nearer one.
+  const caughtAt = tail[tail.length - 1];
+  expect(caughtAt, JSON.stringify({restAM, restPM, held})).toBeLessThan(
+    restAM - 1,
+  );
+  expect(caughtAt, JSON.stringify({restAM, restPM, held})).toBeGreaterThan(
+    restPM + 1,
+  );
+  const nearer =
+    Math.abs(caughtAt - restAM) <= Math.abs(caughtAt - restPM) ? 'AM' : 'PM';
   await waitForRest(meridiem);
-  await expect.poll(async () => restingLabel(meridiem)).toBe('AM');
-  await expect(field).toHaveValue('12:58 AM');
+  await expect.poll(async () => restingLabel(meridiem)).toBe(nearer);
+  await expect(field).toHaveValue(`12:58 ${nearer}`);
 });
 
 test.describe('with a mouse', () => {
