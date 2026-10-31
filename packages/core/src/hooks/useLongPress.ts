@@ -7,10 +7,12 @@
  * @input Long-press options: onLongPress callback, disabled, delayMs, moveCancelPx
  * @output Touch handlers to spread onto an element, plus the same detection
  *   driven by hand for a caller already observing pointer events
- * @position Core hook for long-press invocation; used by ContextMenu and by
- *   `useMenuPress` for the held-finger menu open
+ * @position Core hook for long-press invocation; used by ContextMenu. Its
+ *   detector (longPressDetector.ts) also times createMenuPress's held finger
+ *   on a menu trigger
  *
  * SYNC: When modified, update the hooks barrel /packages/core/src/hooks/index.ts
+ * and the detector it wraps, /packages/core/src/hooks/longPressDetector.ts
  *
  * Detects a single-finger long-press: fires `onLongPress` with the press
  * start point after `delayMs`. Cancels if the finger moves past
@@ -24,27 +26,21 @@
  * not measured yet (motion/MEASUREMENTS.md M-CM3, M-CM6).
  *
  * Two ways in, one detector. Spread the touch handlers onto an element, or —
- * when the caller already runs its own pointer-event machine, as
- * `useMenuPress` does — call `start`, `moveTo` and `cancel` from it. Either
- * way the hold duration, the movement tolerance and the timer are this
- * hook's, so a long press cannot come to mean one thing on a context menu
- * and another on a menu trigger.
+ * when the caller already runs its own pointer-event machine — call `start`,
+ * `moveTo` and `cancel` from it. Either way the hold duration, the movement
+ * tolerance and the timer are longPressDetector's, which createMenuPress
+ * drives for a menu trigger too, so a long press cannot come to mean one
+ * thing on a context menu and another on a menu trigger.
  *
  * Motivation: iOS Safari never synthesizes a `contextmenu` event on
  * long-press, so long-press is the only touch affordance for opening
  * cursor-positioned surfaces.
  */
 
-import {useCallback, useEffect, useRef} from 'react';
-import {
-  LONG_PRESS_ALLOWABLE_MOVEMENT_PX,
-  LONG_PRESS_DURATION_MS,
-} from '../motion/uikit/longPress';
+import {useCallback, useEffect, useState} from 'react';
+import {longPressDetector, type LongPressTolerance} from './longPressDetector';
 
-// The long-press numbers have one source, shared with the gesture
-// recognizers (motion/uikit/longPress.ts).
-const DEFAULT_DELAY_MS = LONG_PRESS_DURATION_MS;
-const DEFAULT_MOVE_CANCEL_PX = LONG_PRESS_ALLOWABLE_MOVEMENT_PX;
+export type {LongPressTolerance} from './longPressDetector';
 
 export interface UseLongPressOptions {
   /** Fired with the touch start point once the press is held for `delayMs`. */
@@ -54,14 +50,6 @@ export interface UseLongPressOptions {
   /** Hold duration before the press fires, in ms. Defaults to 500. */
   delayMs?: number;
   /** Movement past this distance (px, either axis) cancels the press. Defaults to 10. */
-  moveCancelPx?: number;
-}
-
-/**
- * @internal A press's own movement tolerance, for a core caller that decides
- * it as the press starts (useMenuPress's trigger). Not in the hooks entry.
- */
-export interface LongPressTolerance {
   moveCancelPx?: number;
 }
 
@@ -87,9 +75,8 @@ export interface UseLongPressHandlers {
 
 /**
  * @internal The handlers with a per-press tolerance on `start`, for a core
- * caller that decides it as the press starts (useMenuPress's trigger). Not in
- * the hooks entry: the public `useLongPress` takes its tolerance from
- * `moveCancelPx`.
+ * caller that decides it as the press starts. Not in the hooks entry: the
+ * public `useLongPress` takes its tolerance from `moveCancelPx`.
  */
 export interface LongPressDetectorHandlers extends Omit<
   UseLongPressHandlers,
@@ -118,70 +105,11 @@ export function useLongPress(
 export function useLongPressDetector(
   options: UseLongPressOptions,
 ): LongPressDetectorHandlers {
-  const {
-    onLongPress,
-    disabled = false,
-    delayMs = DEFAULT_DELAY_MS,
-    moveCancelPx = DEFAULT_MOVE_CANCEL_PX,
-  } = options;
-
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startRef = useRef<{x: number; y: number} | null>(null);
-  // The press in progress's tolerance, when its caller chose one at start.
-  const pressToleranceRef = useRef<LongPressTolerance | null>(null);
-  // Keep the latest callback without re-creating handlers on every render.
-  const onLongPressRef = useRef(onLongPress);
-  onLongPressRef.current = onLongPress;
-
-  const clear = useCallback(() => {
-    if (timerRef.current != null) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    startRef.current = null;
-  }, []);
-
-  const start = useCallback(
-    (point: {x: number; y: number}, tolerance?: LongPressTolerance) => {
-      if (disabled) {
-        return;
-      }
-      // Clear any stale timer first, THEN record the start point — clearing
-      // also nulls startRef, so order matters.
-      clear();
-      startRef.current = {x: point.x, y: point.y};
-      pressToleranceRef.current = tolerance ?? null;
-      timerRef.current = setTimeout(() => {
-        const from = startRef.current;
-        if (from == null) {
-          return;
-        }
-        onLongPressRef.current({x: from.x, y: from.y});
-      }, delayMs);
-    },
-    [disabled, delayMs, clear],
-  );
-
-  const moveTo = useCallback(
-    (point: {x: number; y: number}): boolean => {
-      const from = startRef.current;
-      if (from == null) {
-        return false;
-      }
-      // This press's own tolerance when its caller chose one, on either axis.
-      const limit = pressToleranceRef.current?.moveCancelPx ?? moveCancelPx;
-      if (
-        Math.abs(point.x - from.x) > limit ||
-        Math.abs(point.y - from.y) > limit
-      ) {
-        // Treat as a scroll/drag, not a long-press.
-        clear();
-        return false;
-      }
-      return true;
-    },
-    [moveCancelPx, clear],
-  );
+  const disabled = options.disabled ?? false;
+  // One detector for the component's life; it reads the latest options at
+  // each start, move and fire, so the handlers need not be re-created.
+  const [detector] = useState(() => longPressDetector(options));
+  detector.setOptions(options);
 
   const onTouchStart = useCallback(
     (e: React.TouchEvent) => {
@@ -190,41 +118,41 @@ export function useLongPressDetector(
       }
       if (e.touches.length !== 1) {
         // Multi-touch cancels any pending long-press.
-        clear();
+        detector.cancel();
         return;
       }
       const touch = e.touches[0];
-      start({x: touch.clientX, y: touch.clientY});
+      detector.start({x: touch.clientX, y: touch.clientY});
     },
-    [disabled, clear, start],
+    [disabled, detector],
   );
 
   const onTouchMove = useCallback(
     (e: React.TouchEvent) => {
-      if (startRef.current == null) {
+      if (!detector.isPending()) {
         return;
       }
       if (e.touches.length !== 1) {
         // Multi-touch cancels the pending long-press.
-        clear();
+        detector.cancel();
         return;
       }
       const touch = e.touches[0];
-      moveTo({x: touch.clientX, y: touch.clientY});
+      detector.moveTo({x: touch.clientX, y: touch.clientY});
     },
-    [clear, moveTo],
+    [detector],
   );
 
   // Cancel any pending long-press timer on unmount.
-  useEffect(() => clear, [clear]);
+  useEffect(() => detector.cancel, [detector]);
 
   return {
     onTouchStart,
     onTouchMove,
-    onTouchEnd: clear,
-    onTouchCancel: clear,
-    start,
-    moveTo,
-    cancel: clear,
+    onTouchEnd: detector.cancel,
+    onTouchCancel: detector.cancel,
+    start: detector.start,
+    moveTo: detector.moveTo,
+    cancel: detector.cancel,
   };
 }

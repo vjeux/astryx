@@ -1406,8 +1406,7 @@ export function Selector<T extends SelectorOptionType>(
     filteredItems.length,
     surface.isOpen,
   );
-  const listboxPress = useMenuPress({
-    menuRef: listboxRef,
+  useMenuPress(listboxRef, {
     itemSelector: '[role="option"]:not([aria-disabled="true"])',
     onHighlight: row => {
       if (row == null) {
@@ -1828,7 +1827,6 @@ export function Selector<T extends SelectorOptionType>(
         id={listboxId}
         role="listbox"
         aria-labelledby={triggerId}
-        {...listboxPress.menuProps}
         {...stylex.props(
           styles.dropdown,
           listboxHasOverflow
@@ -1846,7 +1844,6 @@ export function Selector<T extends SelectorOptionType>(
       ref={attachListbox}
       id={listboxId}
       role="listbox"
-      {...listboxPress.menuProps}
       // The bottom sheet is a modal layer, so Chromium drops the trigger
       // outside it from the accessibility tree and a reference to it yields
       // no name. Name only this no-search sheet directly from the component's

@@ -720,8 +720,7 @@ export function ContextMenu({
   // The press model: the row under a release acts, the highlight follows a
   // held pointer, a mouse released outside dismisses and a finger leaves the
   // menu open.
-  const menuPress = useMenuPress({
-    menuRef: listRef,
+  useMenuPress(listRef, {
     itemSelector: MENU_ITEM_SELECTOR,
     onDismiss: closeMenu,
     isEnabled: !usesBottomSheet,
@@ -737,7 +736,6 @@ export function ContextMenu({
       aria-label={label}
       onKeyDown={listKeyDown}
       onContextMenu={e => e.preventDefault()}
-      {...menuPress.menuProps}
       {...mergeProps(
         themeProps('context-menu'),
         stylex.props(

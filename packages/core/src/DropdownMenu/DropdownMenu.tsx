@@ -364,7 +364,20 @@ export interface DropdownMenuTriggerProps {
   id: string;
   onClick: (event: React.MouseEvent<HTMLElement>) => void;
   onClickCapture: (event: React.MouseEvent<HTMLElement>) => void;
+  /**
+   * The menu's press on the control: a mouse press opens the menu, a held
+   * finger opens it. Spread it with the other props.
+   * @deprecated Still drives the menu. At the next minor the menu's press
+   * reaches the control through `ref` and this field is removed: spread every
+   * given prop, `ref` included, rather than calling it yourself.
+   */
   onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
+  /**
+   * Keeps the browser's own context menu off a finger held on the control.
+   * @deprecated Still drives the menu. At the next minor the menu's press
+   * reaches the control through `ref` and this field is removed: spread every
+   * given prop, `ref` included, rather than calling it yourself.
+   */
   onContextMenu: (event: React.MouseEvent<HTMLElement>) => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
   onFocus: (event: React.FocusEvent<HTMLElement>) => void;

@@ -17,19 +17,20 @@ export const docs = {
     'listbox',
     'macos',
     'ios',
+    'createMenuPress',
   ],
   params: [
     {
-      name: 'options',
-      type: 'UseMenuPressOptions',
-      description: 'Configuration object.',
+      name: 'menuRef',
+      type: 'RefObject<HTMLElement | null>',
+      description:
+        'The menu or listbox root — the surface whose rows a press picks from. The hook creates one press for the element behind the ref, hands it the latest options at each commit, creates a new one when the ref moves to another node, and destroys it at unmount.',
       required: true,
     },
     {
-      name: 'options.menuRef',
-      type: 'RefObject<HTMLElement | null>',
-      description:
-        'The menu or listbox root — the surface whose rows a press picks from.',
+      name: 'options',
+      type: 'UseMenuPressRefOptions',
+      description: 'Configuration object.',
       required: true,
     },
     {
@@ -91,18 +92,6 @@ export const docs = {
   ],
   returns: [
     {
-      name: 'menuProps',
-      type: '{onPointerDown; "data-astryx-menu-press": ""}',
-      description:
-        'Spread onto the menu root. Claims presses that begin inside it and marks the root as carrying the press model.',
-    },
-    {
-      name: 'triggerProps',
-      type: '{onPointerDown; onContextMenu}',
-      description:
-        'Spread onto the trigger: a mouse press opens the menu at once; a finger held for the delay opens it with the finger still down.',
-    },
-    {
       name: 'isTriggerClickFromPress',
       type: '() => boolean',
       description:
@@ -112,7 +101,7 @@ export const docs = {
       name: 'cancel',
       type: '() => void',
       description:
-        'End the gesture in flight with nothing acting, for when the menu closes under it.',
+        'End the gesture in flight with nothing acting, for when the menu closes under it. Nothing is spread: the press listens on the menu and its trigger itself and marks the menu root with data-astryx-menu-press. Without React, createMenuPress(menu, options) takes the same options with the trigger as an element (trigger) and returns {isTriggerClickFromPress, cancel, update, destroy}; destroy removes every listener it added.',
     },
   ],
   usage: {
@@ -144,6 +133,11 @@ export const docs = {
         description:
           'Read a row click with detail 0 as a keyboard activation; the hook dispatches its pointer activation with detail 0 too. Use isMenuPressActivation() to tell them apart.',
       },
+      {
+        guidance: false,
+        description:
+          'Use the options form, useMenuPress({menuRef, …}), which returns menuProps and triggerProps to spread: it is deprecated and removed at the next minor. Pass the menu’s ref first, useMenuPress(menuRef, {triggerRef, …}), and drop the spreads.',
+      },
     ],
   },
   relatedComponents: ['DropdownMenu', 'ContextMenu', 'Selector'],
@@ -157,8 +151,9 @@ export const docsDense = {
   description:
     'macOS/iOS menu press model for any pointer: the row under the RELEASE acts, the highlight follows a held pointer, a mouse opens on press and drags in, a held finger opens with the finger down. Document-level pointerId tracking; the browser stray click after a touch is swallowed. Already mounted by DropdownMenu / ContextMenu / DropdownMenuSubMenu / Selector / menu bottom sheet.',
   paramDescriptions: {
+    menuRef:
+      'menu / listbox root; one press per element, destroyed at unmount.',
     options: 'config.',
-    'options.menuRef': 'menu / listbox root.',
     'options.itemSelector': 'selector for ENABLED rows; anything else clears.',
     'options.triggerRef': 'the control that opens the menu.',
     'options.onTriggerPress':
@@ -174,11 +169,10 @@ export const docsDense = {
     'options.isEnabled': 'false = inert.',
   },
   returnDescriptions: {
-    menuProps: 'spread on menu root (claims presses, marks the root).',
-    triggerProps: 'spread on trigger (press-open, held-finger open).',
     isTriggerClickFromPress:
       'true = the trigger click belongs to the press that already opened / closed; ignore it.',
-    cancel: 'end the gesture w/o acting.',
+    cancel:
+      'end the gesture w/o acting. Nothing to spread. No React: createMenuPress(menu, {trigger, …}) → {isTriggerClickFromPress, cancel, update, destroy}.',
   },
   usage: {
     description:
@@ -207,6 +201,11 @@ export const docsDense = {
         guidance: false,
         description:
           'Treat a detail-0 row click as keyboard; the hook dispatches w/ detail 0 too — use isMenuPressActivation().',
+      },
+      {
+        guidance: false,
+        description:
+          'useMenuPress({menuRef, …}) + menuProps / triggerProps spreads: deprecated, gone at the next minor; use useMenuPress(menuRef, {triggerRef, …}).',
       },
     ],
   },
