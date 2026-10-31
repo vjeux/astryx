@@ -173,7 +173,22 @@ async function expectRowsPainted(
   expect(box.y + box.height).toBeLessThanOrEqual(column.y + column.height);
 }
 
-/** The flick's script, and the offset the rows show at its lift. */
+/**
+ * The flick's script, and the offset the rows show at its lift.
+ *
+ * WebKit's injected touches carry only real dispatch time (README: engine
+ * limits), so the release velocity the page reads from them is only as good
+ * as the machine's pace. Under podman `--cpus=3` with 16 workers (Oct 31,
+ * three sweeps of 18 runnable runs each) the 120 Hz script's moves arrived in
+ * bursts and stalls: gaps up to 99 ms where the script has 8.3 ms, the lift
+ * up to 95 ms after the last move, and a tail velocity of 150 to 3,750 px/s
+ * for the scripted 900. The proofs that read the coast a flick starts (the
+ * UIKit curve, a finger catching the coast, the reduced-motion momentum and
+ * the storyboard) then failed 5 or 6 runs of each sweep: an engine limit of
+ * WebKit's real-time input, not a pass. Under the CI WebKit lane's own
+ * profile (`--cpus=4`, `CI=1`, 1 worker, ×10) the moves arrived every 8 ms
+ * (at most 11) and all 60 runs passed.
+ */
 function flickUp(start: {x: number; y: number}) {
   const script = flick(start, {
     velocity: {x: 0, y: -FLICK_VELOCITY},
