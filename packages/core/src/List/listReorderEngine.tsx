@@ -130,6 +130,7 @@ import {
   type ReorderLine,
   type ReorderSlot,
   slotLine,
+  slotsOf,
   stepLine,
 } from './reorderModel';
 
@@ -496,9 +497,9 @@ interface DragSession {
   /** The edge autoscroll's timer, on UIKit's 20 ms clock. */
   readonly edge: EdgeAutoscroll;
   /**
-   * An attached container's slots when its items are not one column
-   * (spec:AST-103 FR1, FR4b), whose nearest centre a drag proposes; null for
-   * a column.
+   * The slots `positions()` gives, or an attached container's measured slots
+   * when its items are not one column (spec:AST-103 FR1, FR4b), whose
+   * nearest centre a drag proposes; null for a column.
    */
   readonly slots: ReadonlyArray<ReorderSlot> | null;
   /** The container's padding box left in the viewport at the begin. */
@@ -759,6 +760,11 @@ export class ListReorderController implements ListReorderSession {
   private endMouse: (() => void) | null = null;
   /** Whether a list whose rows have no item key has been warned about. */
   private warnedUnkeyed = false;
+  /**
+   * Whether `positions()` giving other than one slot per item has been
+   * warned about.
+   */
+  private warnedPositions = false;
   /**
    * What a move the caller did not apply announces: the place its row kept
    * (a List), or that it cannot move (an attached container, spec:AST-103
@@ -1425,7 +1431,7 @@ export class ListReorderController implements ListReorderSession {
     const row = geometry.rows[dragged];
     const origin = session.origin - session.scrolled;
     // In a slot layout the item follows the pointer freely: the list's own
-    // ends bound a vertical list's rows, not a grid's.
+    // ends bound a vertical list's rows, not a grid's or a fan's.
     const top =
       slots != null ? y - session.grabOffset : this.draggedTop(session, y);
     const shiftY = top - (origin + row.top);
@@ -1946,16 +1952,33 @@ export class ListReorderController implements ListReorderSession {
   }
 
   /**
-   * The slots a drag and the arrows use: an attached container's measured
-   * slots when its items are not one column; null for a column (a List's
-   * rows), whose drags use the row model (List/reorderModel.ts).
+   * The slots a drag and the arrows use: `positions()`, else an attached
+   * container's measured slots when its items are not one column; null for
+   * a column (a List's rows), whose drags use the row model
+   * (List/reorderModel.ts).
    */
   private slotsFor(
     list: HTMLElement,
     rows: ReadonlyArray<HTMLElement>,
   ): ReadonlyArray<ReorderSlot> | null {
-    if (this.itemElements == null || rows.length < 2) {
-      return null;
+    const positions = this.options?.positions?.();
+    if (
+      positions != null &&
+      positions.length !== rows.length &&
+      !this.warnedPositions
+    ) {
+      // Once per collection: the slots are read again on every drag and key.
+      this.warnedPositions = true;
+      devWarn(
+        'createReorderable',
+        `\`positions()\` gave ${positions.length} slots for ${rows.length} ` +
+          'items, so drops follow the measured layout: give one `{x, y}` ' +
+          'per item, in item order.',
+      );
+    }
+    const given = slotsOf(positions, rows.length);
+    if (given != null || this.itemElements == null || rows.length < 2) {
+      return given;
     }
     // Their layout places (transforms left out), from the container's
     // padding box.
@@ -2189,8 +2212,8 @@ export class ListReorderController implements ListReorderSession {
 
   /**
    * The layout's rows in reading order, for reorder mode's arrows and its
-   * announcements: an attached container's measured items; a List's rows
-   * are one column.
+   * announcements: from `positions()`, else an attached container's measured
+   * items; a List's rows are one column.
    */
   private keyGrid(
     list: HTMLElement,

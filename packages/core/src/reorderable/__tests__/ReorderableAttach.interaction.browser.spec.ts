@@ -5,9 +5,10 @@
  * @input The Core/createReorderable stories' built Storybook, real mouse,
  *   pen and touch input (the interaction harness's drivers)
  * @output Browser proofs of createReorderable's attach on plain elements laid
- *   out by CSS (spec:AST-103 FR1, FR3, FR4b): a mouse and a pen drag a grip
- *   at once, a finger holds it first, each drop reports once, and the dropped
- *   card settles on its measured slot's centre on both axes
+ *   out by CSS, and in a fanned hand whose slots positions() gives
+ *   (spec:AST-103 FR1, FR3, FR4b): a mouse and a pen drag a grip at once, a
+ *   finger holds it first, each drop reports once, and the dropped card
+ *   settles on its slot's centre on both axes
  * @position Interaction proofs for reorderable/createReorderable.ts's attach
  */
 
@@ -25,6 +26,7 @@ import {reorder} from '../../motion/uikit/reorder';
 const storybook = withStorybook(test);
 
 const STORY = 'core-createreorderable--attached-cards-in-a-row';
+const FAN_STORY = 'core-createreorderable--attached-cards-in-a-fan';
 const ANEW_STORY = 'core-createreorderable--attached-cards-rendered-anew';
 const WRAP_STORY = 'core-createreorderable--attached-cards-wrapping';
 const ROWS_STORY = 'core-createreorderable--attached-rows-in-a-column';
@@ -52,6 +54,14 @@ const lineBox = async (page: Page) =>
           height: box.height,
         };
   });
+/** The fan's slot centres, as its story's positions() gives them. */
+const FAN = [-24, -12, 0, 12, 24].map(angle => {
+  const radians = (angle * Math.PI) / 180;
+  return {
+    x: Math.round(220 + 160 * Math.sin(radians)),
+    y: Math.round(230 - 160 * Math.cos(radians)),
+  };
+});
 /** The cards' slot centres, where the story's CSS row places them. */
 const SLOTS = [0, 1, 2, 3, 4].map(index => ({x: 44 + index * 88, y: 56}));
 const HOLD_MS = reorder.claim.delayMs + 80;
@@ -136,6 +146,31 @@ test.describe('with a mouse or a pen', () => {
     const centre = await centreOf(page, 'A');
     expect(Math.abs((centre?.x ?? Number.NaN) - SLOTS[2].x)).toBeLessThan(0.5);
     expect(Math.abs((centre?.y ?? Number.NaN) - SLOTS[2].y)).toBeLessThan(0.5);
+  });
+
+  test('in a fanned hand, a dragged card drops on the slot nearest its centre and settles on it', async ({
+    page,
+  }) => {
+    await openStory(page, storybook(), FAN_STORY);
+    const before = await moves(page);
+    const from = await gripOf(page, 'A');
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    // Toward the fourth slot's centre, from the first's.
+    await page.mouse.move(
+      from.x + (FAN[3].x - FAN[0].x),
+      from.y + (FAN[3].y - FAN[0].y),
+      {steps: 12},
+    );
+    await page.mouse.up();
+    await expect
+      .poll(async () => order(page))
+      .toEqual(['K', 'Q', 'J', 'A', '10']);
+    expect(await moves(page)).toBe(before + 1);
+    await waitForRest(page);
+    const centre = await centreOf(page, 'A');
+    expect(Math.abs((centre?.x ?? Number.NaN) - FAN[3].x)).toBeLessThan(0.5);
+    expect(Math.abs((centre?.y ?? Number.NaN) - FAN[3].y)).toBeLessThan(0.5);
   });
 
   test("when the app renders the cards anew, reorder mode and the focus stay on the moved card's new grip", async ({

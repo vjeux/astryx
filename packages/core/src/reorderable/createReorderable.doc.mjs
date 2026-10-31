@@ -35,6 +35,12 @@ export const docs = {
       description:
         'Whether the item with this key can move. An item it rejects shows no handle and cannot be picked up; one at either end of the collection also bounds the others, so nothing drops beyond it and a keyboard move into it is refused. Every item moves without it.',
     },
+    {
+      name: 'positions',
+      type: '() => ReadonlyArray<{x: number; y: number}>',
+      description:
+        "For a layout such as a grid or a fanned hand: one `{x, y}` per item, in item order, the centre of that item's slot in pixels from the top-left of the container's padding box (where an absolutely placed item is measured from). A drag drops the item on the slot within its range whose centre is nearest its own, and the item settles on that slot's centre; the arrow keys follow the layout's rows and columns. An array of another length is ignored, with a warning in development, and the measured layout decides.",
+    },
   ],
   returns: [
     {
@@ -66,7 +72,7 @@ export const docs = {
       {
         guidance: true,
         description:
-          'For plain elements, call `reorderable.attach(container, {items})` once the elements exist, and call its `destroy()` when they go.',
+          'For plain elements, call `reorderable.attach(container, {items})` once the elements exist, give `positions` for a grid or a fan, and call its `destroy()` when they go.',
       },
       {
         guidance: false,
@@ -89,6 +95,8 @@ export const docsDense = {
       '({key, to}) once per committed move; to is the index after the move.',
     isReorderable:
       '(key) => boolean; a rejected row has no handle, and at an end bounds the drop.',
+    positions:
+      '() => one {x, y} slot centre per item (grid, fan): drops on the nearest slot.',
   },
   returnDescriptions: {
     reorderable:
