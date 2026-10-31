@@ -21,6 +21,10 @@
  *   (every page with the input log), Chromium answers the dispatch at once
  *   and delivers the step to the page afterwards, so `wheel` waits, through a
  *   one-shot passive listener, until the page has the step.
+ * - A burst that holds the page's timers (`holdTimers`) stamps each step with
+ *   its scripted time (`timestamp`), `everyMs` apart: the page's `timeStamp`s
+ *   are those times, whenever the runner sends the step. (WebKit takes no
+ *   timestamp: a held burst goes out back to back there.)
  * - A pen stroke is pressed at its first point, moved through every point and
  *   released at the last, with `pointerType: 'pen'`, a pressure and an
  *   optional tilt, each event stamped with its scripted time: the page
@@ -45,6 +49,7 @@
  */
 
 import type {CDPSession, JSHandle, Page, TestInfo} from '@playwright/test';
+import {freezeTimers, thawTimers} from './story';
 import type {Engine} from './touch';
 
 /** One wheel step: the page receives exactly `dx`, `dy` CSS px. */
@@ -75,6 +80,22 @@ export interface WheelBurst {
    * `WheelPacingError` otherwise.
    */
   readonly maxGapMs?: number;
+  /**
+   * Hold the page's gated timers and frame callbacks (story.ts
+   * `installTimerGate`, required) from before the first step until the page
+   * has the whole run, then run them in the order they came due; in Chromium,
+   * also stamp each step with its scripted time (`everyMs` apart). A
+   * component that ends a wheel gesture on a timer after its last step, or
+   * when a step's `timeStamp` comes too long after the one before, then sees
+   * one gesture however late a loaded runner delivers the steps. WebKit
+   * takes no timestamp for injected input, so there the held run's steps go
+   * out back to back instead of on `everyMs`: paced on the wall clock, a
+   * loaded runner spaces them past a gesture's end by their real stamps
+   * (CI WebKit lane, 16 ms apart: every run off pace), while back to back the
+   * engine coalesces the ones the page is still busy for, as it does a
+   * trackpad's. `maxGapMs` still judges the gaps the page saw.
+   */
+  readonly holdTimers?: boolean;
 }
 
 /**
@@ -134,7 +155,8 @@ const HELD_BACK_MS = 20;
 
 /**
  * When each received step of a burst reached the page, ms on the page clock:
- * its `timeStamp` in Chromium, which stamps a step with its dispatch time; in
+ * its `timeStamp` in Chromium, which stamps a step with its dispatch time (its
+ * scripted time in a burst that holds the page's timers); in
  * WebKit, when the page's first listener received it. WebKit coalesces the
  * steps it holds while the page's main thread is busy, and the coalesced step
  * keeps the stamp of the step before it, so its stamp cannot show how long the
@@ -518,7 +540,7 @@ async function untilRunReceived(
 async function dispatchOnSchedule<T>(
   steps: readonly T[],
   everyMs: number,
-  send: (step: T) => Promise<unknown>,
+  send: (step: T, index: number) => Promise<unknown>,
 ): Promise<number[]> {
   const start = Date.now();
   const sent: Promise<unknown>[] = [];
@@ -529,10 +551,40 @@ async function dispatchOnSchedule<T>(
       await sleep(wait);
     }
     sentAt.push(Date.now());
-    sent.push(send(step));
+    sent.push(send(step, i));
   }
   await Promise.all(sent);
   return sentAt;
+}
+
+/**
+ * Runs `send` with the page's gated timers and frame callbacks held when
+ * `holdTimers` is set (`WheelBurst.holdTimers`), and releases them however it
+ * ends.
+ */
+async function withTimersHeld<T>(
+  page: Page,
+  holdTimers: boolean,
+  send: () => Promise<T>,
+): Promise<T> {
+  if (!holdTimers) {
+    return send();
+  }
+  await page.evaluate(() => {
+    const gate = (window as unknown as {__harnessTimerGate?: {frozen: boolean}})
+      .__harnessTimerGate;
+    if (gate == null) {
+      throw new Error(
+        'webInputDriver: holdTimers needs the timer gate: call installTimerGate first',
+      );
+    }
+  });
+  await freezeTimers(page);
+  try {
+    return await send();
+  } finally {
+    await thawTimers(page);
+  }
 }
 
 async function chromiumWebInput(page: Page): Promise<WebInputDriver> {
@@ -556,31 +608,47 @@ async function chromiumWebInput(page: Page): Promise<WebInputDriver> {
       });
       await untilReceived(page, armed);
     },
-    async wheelBurst({x, y, steps, everyMs = 16, ctrl = false, maxGapMs}) {
+    async wheelBurst({
+      x,
+      y,
+      steps,
+      everyMs = 16,
+      ctrl = false,
+      maxGapMs,
+      holdTimers = false,
+    }) {
       const scale = await page.evaluate(
         () => window.devicePixelRatio * (window.visualViewport?.scale ?? 1),
       );
-      const armed = await armWheelRun(page);
-      const sentAt = await dispatchOnSchedule(
-        steps,
-        everyMs,
-        ({dx = 0, dy = 0}) =>
-          cdp.send('Input.dispatchMouseEvent', {
-            type: 'mouseWheel',
-            x,
-            y,
-            deltaX: dx * scale,
-            deltaY: dy * scale,
-            modifiers: ctrl ? 2 : 0,
-          }),
-      );
-      return untilRunReceived(
-        page,
-        'chromium',
-        armed,
-        {steps, maxGapMs},
-        sentAt,
-      );
+      return withTimersHeld(page, holdTimers, async () => {
+        const armed = await armWheelRun(page);
+        // Held, each step carries its scripted time: the page's stamps are
+        // `everyMs` apart however late the runner sends it.
+        const startStamp = Date.now() / 1000;
+        const sentAt = await dispatchOnSchedule(
+          steps,
+          everyMs,
+          ({dx = 0, dy = 0}, i) =>
+            cdp.send('Input.dispatchMouseEvent', {
+              type: 'mouseWheel',
+              x,
+              y,
+              deltaX: dx * scale,
+              deltaY: dy * scale,
+              modifiers: ctrl ? 2 : 0,
+              ...(holdTimers
+                ? {timestamp: startStamp + (i * everyMs) / 1000}
+                : {}),
+            }),
+        );
+        return untilRunReceived(
+          page,
+          'chromium',
+          armed,
+          {steps, maxGapMs},
+          sentAt,
+        );
+      });
     },
     async pen(points) {
       if (points.length === 0) {
@@ -661,7 +729,15 @@ async function webkitWebInput(page: Page): Promise<WebInputDriver> {
         }
       }
     },
-    async wheelBurst({x, y, steps, everyMs = 16, ctrl = false, maxGapMs}) {
+    async wheelBurst({
+      x,
+      y,
+      steps,
+      everyMs = 16,
+      ctrl = false,
+      maxGapMs,
+      holdTimers = false,
+    }) {
       if (mobile) {
         throw new Error(`webInputDriver: ${WHEEL_SKIP}`);
       }
@@ -670,19 +746,21 @@ async function webkitWebInput(page: Page): Promise<WebInputDriver> {
         await page.keyboard.down('Control');
       }
       try {
-        const armed = await armWheelRun(page);
-        const sentAt = await dispatchOnSchedule(
-          steps,
-          everyMs,
-          ({dx = 0, dy = 0}) => page.mouse.wheel(dx, dy),
-        );
-        return await untilRunReceived(
-          page,
-          'webkit',
-          armed,
-          {steps, maxGapMs},
-          sentAt,
-        );
+        return await withTimersHeld(page, holdTimers, async () => {
+          const armed = await armWheelRun(page);
+          const sentAt = await dispatchOnSchedule(
+            steps,
+            holdTimers ? 0 : everyMs,
+            ({dx = 0, dy = 0}) => page.mouse.wheel(dx, dy),
+          );
+          return untilRunReceived(
+            page,
+            'webkit',
+            armed,
+            {steps, maxGapMs},
+            sentAt,
+          );
+        });
       } finally {
         if (ctrl) {
           await page.keyboard.up('Control');

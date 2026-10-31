@@ -3682,3 +3682,93 @@ test.describe('storyboards', {tag: '@storyboard'}, () => {
     expect(state.heldFor).toBeGreaterThanOrEqual(140);
   });
 });
+
+test.describe('wheel bursts that hold the page timers', () => {
+  const page = (busyFirstMs: number) =>
+    `<!doctype html><body style="margin:0;height:3000px"><script>let n=0;window.__held={fired:null,steps:[]};addEventListener("wheel",e=>{e.preventDefault();window.__held.steps.push(performance.now());if(n++===0){setTimeout(()=>{window.__held.fired=performance.now();},0);const end=performance.now()+${busyFirstMs};while(performance.now()<end){}}},{passive:false});</script></body>`;
+
+  test('the page runs no gated timer until it has the whole run, in both engines', async ({
+    browser,
+  }) => {
+    // GestureHost ends a wheel gesture on a 100 ms timer after its last step:
+    // held, a timer set during the run cannot fire between two steps.
+    const context = await browser.newContext({
+      viewport: {width: 402, height: 714},
+      isMobile: false,
+      hasTouch: false,
+    });
+    try {
+      const p = await context.newPage();
+      await p.route('http://wheel-held-timers.test/', route =>
+        route.fulfill({contentType: 'text/html', body: page(0)}),
+      );
+      await p.goto('http://wheel-held-timers.test/');
+      await installTimerGate(p);
+      const driver = await webInputDriver(p);
+      test.skip(!driver.wheels, WHEEL_SKIP);
+      await driver.wheelBurst({
+        x: 200,
+        y: 300,
+        steps: Array.from({length: 6}, () => ({dx: 10})),
+        everyMs: 40,
+        holdTimers: true,
+      });
+      const held = await p.evaluate(
+        () =>
+          (
+            window as unknown as {
+              __held: {fired: number | null; steps: number[]};
+            }
+          ).__held,
+      );
+      expect(held.steps.length).toBeGreaterThan(0);
+      expect(held.fired).not.toBeNull();
+      expect(held.fired as number).toBeGreaterThanOrEqual(
+        held.steps.at(-1) as number,
+      );
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('in Chromium a held burst carries its scripted times through a page that holds its main thread 150 ms', async ({
+    browser,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'WebKit takes no timestamp for injected input: its steps carry their real dispatch time',
+    );
+    const context = await browser.newContext({
+      viewport: {width: 402, height: 714},
+      isMobile: false,
+      hasTouch: false,
+    });
+    try {
+      const p = await context.newPage();
+      await p.route('http://wheel-held-stamps.test/', route =>
+        route.fulfill({contentType: 'text/html', body: page(150)}),
+      );
+      await p.goto('http://wheel-held-stamps.test/');
+      await installTimerGate(p);
+      const driver = await webInputDriver(p);
+      const {receivedSteps, receivedGapsMs} = await driver.wheelBurst({
+        x: 200,
+        y: 300,
+        steps: Array.from({length: 6}, () => ({dx: 10})),
+        everyMs: 16,
+        maxGapMs: 100,
+        holdTimers: true,
+      });
+      // The page coalesces the steps it gets while busy, so it may receive
+      // fewer; every gap between their stamps is a whole number of steps.
+      expect(receivedSteps).toBeGreaterThan(0);
+      for (const gap of receivedGapsMs) {
+        expect(gap).toBeLessThanOrEqual(100);
+        expect(Math.abs(gap / 16 - Math.round(gap / 16))).toBeLessThan(0.1);
+      }
+    } finally {
+      await context.close();
+    }
+  });
+});
