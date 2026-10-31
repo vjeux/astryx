@@ -23,8 +23,10 @@
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
   drag,
+  installTimerGate,
   openStory,
   tap,
+  thawTimers,
   touchDriver,
   touchStoryboard,
   waitForRest,
@@ -408,6 +410,34 @@ test(
       width: box.width + 16,
       height: box.height + 16,
     };
+    // Cancel's release fade ends on its own timer: once it begins, the
+    // page's timers are held until the board is done, so the frame after the
+    // lift shows the fade however long the photograph takes.
+    await installTimerGate(page);
+    await page.evaluate(() => {
+      const button = [...document.querySelectorAll('dialog button')].find(
+        element => element.textContent === 'Cancel',
+      );
+      if (button == null) {
+        throw new Error('no Cancel button');
+      }
+      const observer = new MutationObserver(() => {
+        if (button.getAttribute('data-astryx-press') !== 'fading') {
+          return;
+        }
+        observer.disconnect();
+        const gate = (
+          window as unknown as {__harnessTimerGate?: {frozen: boolean}}
+        ).__harnessTimerGate;
+        if (gate != null) {
+          gate.frozen = true;
+        }
+      });
+      observer.observe(button, {
+        attributes: true,
+        attributeFilter: ['data-astryx-press'],
+      });
+    });
     const board = await touchStoryboard(
       page,
       driver,
@@ -424,6 +454,7 @@ test(
       },
     );
     await board.write(testInfo);
+    await thawTimers(page);
     // The trace is the assertion; the sheet is the evidence.
     const frames = board.frames.map(
       f => `${String(f.data.del)}/${String(f.data.cancel)}`,
@@ -432,8 +463,9 @@ test(
     expect(frames[1]).toBe('on/none'); // touch-down on Delete
     expect(frames).toContain('none/on'); // over Cancel
     // The lift runs Cancel. Under a finger the alert then leaves with a
-    // fade, and Cancel's release fade plays through it: 100 ms after the
-    // lift it is still fading, and it ends before the alert is hidden.
+    // fade, and Cancel's release fade plays through it: in the frame after
+    // the lift it is fading (its timer held there), and it ends before the
+    // alert is hidden.
     expect(frames.at(-1)).toBe('none/fading');
     expect(frames.indexOf('none/on')).toBeGreaterThan(1);
     await expect(dialog).toBeHidden();

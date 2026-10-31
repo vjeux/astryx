@@ -20,7 +20,9 @@
  *   software; no Layout or Paint per frame); a tap during either transition
  *   reaches nothing (an input that must land while it presents lands with the
  *   presentation held where it starts, its animations paused as they are
- *   created, so under its input hold however busy the page is); under
+ *   created, so under its input hold however busy the page is; a transition
+ *   that is sampled or filmed crawls from its first frame, for the same
+ *   reason); under
  *   reduced motion the alert and the dimming cross-fade in and out, opacity
  *   only, settled within 200 ms (design:reduced-motion DR1, DR2); a finger in
  *   Chrome's engine gets the same presentation; a mouse keeps the theme's
@@ -38,16 +40,16 @@ import {
   type Page,
 } from '@playwright/test';
 import {
-  animationStoryboard,
-  blockMainThread,
+  Storyboard,
   compareCurve,
   countBetween,
   drag,
-  freezeTimers,
+  holdAnimations,
   installTimerGate,
   openStory,
   pinch,
   releaseAnimations,
+  seekAnimations,
   springStep,
   startScreencast,
   thawTimers,
@@ -118,8 +120,11 @@ async function openPage(page: Page): Promise<Opened> {
  * Opens the alert and closes it 100 ms into its presentation, inside the
  * page on its own clock (no round trip between the presentation's start and
  * the close). Returns the presentation's and the fade's timing, the
- * presented value at the close, and the alert's opacity at every frame until
- * the dialog has closed.
+ * presented value at the close, and the alert's opacity as the page presents
+ * it every 1/60 s across the fade. The fade is sampled in the close's own
+ * task: every animation on the alert is paused and moved to each time
+ * together, then given back where it was, so a busy page that paints few
+ * frames samples the same curve.
  */
 async function closeMidPresentation(page: Page) {
   const {trigger} = await openPage(page);
@@ -128,7 +133,7 @@ async function closeMidPresentation(page: Page) {
   await trigger.evaluate(async opener => {
     (opener as HTMLElement).click();
   });
-  return page.evaluate(async () => {
+  return page.evaluate(async fadeMs => {
     const element = document.querySelector('dialog') as HTMLElement;
     const opacityAnimations = () =>
       element.getAnimations().filter(animation => {
@@ -208,23 +213,38 @@ async function closeMidPresentation(page: Page) {
     const from = Number(
       (fade.effect as KeyframeEffect).getKeyframes()[0].opacity,
     );
-    // Every frame until the dialog has closed, however far apart the
-    // browser puts them.
-    const frames: number[] = [];
-    let openFrames = 0;
-    await new Promise<void>(resolve => {
-      const tick = () => {
-        frames.push(Number(getComputedStyle(element).opacity));
-        const isOpen = element.matches('[open]');
-        openFrames += isOpen ? 1 : 0;
-        if (isOpen && frames.length < 90) {
-          requestAnimationFrame(tick);
-        } else {
-          resolve();
-        }
-      };
-      requestAnimationFrame(tick);
-    });
+    // What the page presents at each time across the fade: every animation
+    // on the alert that still runs (the fade, and any of the presentation
+    // that did not give way) moved there together, as a frame at that time
+    // would show them. Then each goes back where it was and plays on.
+    const running = element
+      .getAnimations()
+      .filter(
+        animation =>
+          (animation.effect as KeyframeEffect).target === element &&
+          animation.playState === 'running' &&
+          animation.startTime != null,
+      )
+      .map(animation => ({
+        animation,
+        start: Number(animation.startTime),
+        rate: animation.playbackRate,
+        at: Number(animation.currentTime),
+      }));
+    for (const {animation} of running) {
+      animation.pause();
+    }
+    const samples: number[] = [];
+    for (let t = 0; t <= fadeMs; t += 1000 / 60) {
+      for (const {animation, start, rate} of running) {
+        animation.currentTime = Math.max(0, (fadeStart + t - start) * rate);
+      }
+      samples.push(Number(getComputedStyle(element).opacity));
+    }
+    for (const {animation, at} of running) {
+      animation.currentTime = at;
+      animation.play();
+    }
     return {
       presentStart,
       closedAt,
@@ -232,10 +252,9 @@ async function closeMidPresentation(page: Page) {
       fadeStart,
       from,
       presentedAtClose: presentedAt(fadeStart),
-      frames,
-      openFrames,
+      samples,
     };
-  });
+  }, DISMISS_MS);
 }
 
 interface AnimateCall {
@@ -410,6 +429,199 @@ async function presentHeld(
   await expect(page.locator('dialog[open] > [popover]')).toHaveCount(1);
 }
 
+/**
+ * Slows the animations the next transition starts on the dialog (its own and
+ * its `::backdrop`'s) to a crawl as they are created, so a busy page cannot
+ * play them out before a case holds and samples them. They keep running, so
+ * the harness holds them as any other. With `freeze`, the timer gate (install
+ * it first) freezes in the same task, so a timer the transition sets (the
+ * exit's backstop) cannot end it behind the case's back.
+ * restoreDialogAnimationSpeed gives them their speed back.
+ */
+async function slowNextDialogTransition(
+  page: Page,
+  {freeze = false}: {freeze?: boolean} = {},
+): Promise<void> {
+  await page.evaluate(shouldFreeze => {
+    const w = window as unknown as {
+      __slowedDialogAnimations?: Animation[];
+      __harnessTimerGate?: {frozen: boolean};
+    };
+    if (shouldFreeze && w.__harnessTimerGate == null) {
+      throw new Error('slowNextDialogTransition: install the timer gate first');
+    }
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function slow(
+      this: Element,
+      ...args: Parameters<Element['animate']>
+    ) {
+      const animation = animate.apply(this, args);
+      if (this instanceof HTMLDialogElement) {
+        animation.playbackRate = 1 / 600;
+        w.__slowedDialogAnimations = [
+          ...(w.__slowedDialogAnimations ?? []),
+          animation,
+        ];
+        if (shouldFreeze && w.__harnessTimerGate != null) {
+          w.__harnessTimerGate.frozen = true;
+        }
+        // The transition's animations start together, in one task.
+        queueMicrotask(() => {
+          Element.prototype.animate = animate;
+        });
+      }
+      return animation;
+    };
+  }, freeze);
+}
+
+/** Gives the animations slowNextDialogTransition slowed their speed back. */
+async function restoreDialogAnimationSpeed(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as {__slowedDialogAnimations?: Animation[]};
+    for (const animation of w.__slowedDialogAnimations ?? []) {
+      animation.playbackRate = 1;
+    }
+    w.__slowedDialogAnimations = [];
+  });
+}
+
+/**
+ * Arms a main-thread block for the next transition on the dialog, before the
+ * action that starts it: once one of its animations has presented
+ * `minProgressMs`, a task queued in that frame holds the main thread for
+ * `ms`, as blockMainThread's `during` does, with no round trip between the
+ * start and the block, so a busy page cannot start the block after the
+ * transition has ended. awaitArmedBlock returns the window held and when the
+ * animation started, epoch ms on the page's clock.
+ */
+async function armBlockOnNextDialogTransition(
+  page: Page,
+  ms: number,
+  minProgressMs = 16,
+): Promise<void> {
+  await page.evaluate(
+    ({duration, minProgress}) => {
+      const w = window as unknown as {
+        __armedBlock?: {from: number; to: number; start: number} | null;
+        __harnessTimerGate?: {
+          frame?: typeof requestAnimationFrame;
+          timeout?: typeof setTimeout;
+        };
+      };
+      w.__armedBlock = null;
+      // The harness's own waits run on the real timers.
+      const gate = w.__harnessTimerGate;
+      const frame = gate?.frame ?? window.requestAnimationFrame.bind(window);
+      const later = gate?.timeout ?? window.setTimeout.bind(window);
+      // Any of the transition's animations, as blockMainThread's `during`
+      // reads them: its first call may be a 1 ms preset the next one
+      // replaces.
+      const watch = (dialog: Element) => {
+        const deadline = performance.now() + 5000;
+        const tick = () => {
+          const running = dialog
+            .getAnimations()
+            .find(
+              a =>
+                a.playState === 'running' &&
+                !a.pending &&
+                Number(a.currentTime ?? 0) >= minProgress,
+            );
+          if (running != null) {
+            later(() => {
+              const from = performance.timeOrigin + performance.now();
+              const end = performance.now() + duration;
+              while (performance.now() < end) {
+                // Busy: nothing else runs.
+              }
+              w.__armedBlock = {
+                from,
+                to: performance.timeOrigin + performance.now(),
+                start: performance.timeOrigin + Number(running.startTime),
+              };
+            }, 0);
+          } else if (performance.now() < deadline) {
+            frame(tick);
+          }
+        };
+        frame(tick);
+      };
+      const animate = Element.prototype.animate;
+      Element.prototype.animate = function armed(
+        this: Element,
+        ...args: Parameters<Element['animate']>
+      ) {
+        const animation = animate.apply(this, args);
+        if (this instanceof HTMLDialogElement) {
+          Element.prototype.animate = animate;
+          watch(this);
+        }
+        return animation;
+      };
+    },
+    {duration: ms, minProgress: minProgressMs},
+  );
+}
+
+/** The window the armed block held, once it has run. */
+async function awaitArmedBlock(
+  page: Page,
+): Promise<{from: number; to: number; start: number}> {
+  const read = async () =>
+    page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __armedBlock?: {from: number; to: number; start: number} | null;
+          }
+        ).__armedBlock ?? null,
+    );
+  await expect.poll(async () => (await read()) != null).toBe(true);
+  const block = await read();
+  if (block == null) {
+    throw new Error('the armed block did not run');
+  }
+  return block;
+}
+
+/**
+ * Films the transition slowNextDialogTransition slowed: holds it, gives it its
+ * speed back where it is, then seeks it to each time and photographs the
+ * page, as animationStoryboard films a running one.
+ */
+async function filmSlowedTransition(
+  page: Page,
+  dialog: Locator,
+  options: {
+    name: string;
+    times: ReadonlyArray<number>;
+    measure: () => Promise<Readonly<Record<string, unknown>>>;
+  },
+): Promise<Storyboard> {
+  const held = await holdAnimations(page, dialog);
+  expect(held.length, 'the transition is held').toBeGreaterThan(0);
+  await restoreDialogAnimationSpeed(page);
+  const ending = held.filter(animation =>
+    Number.isFinite(animation.curveEndMs),
+  );
+  const origin = Math.min(...ending.map(animation => animation.offsetMs));
+  const board = new Storyboard(page, {
+    name: options.name,
+    columns: 7,
+    cellScale: 0.35,
+  });
+  for (const t of options.times) {
+    const presentedAt = (await seekAnimations(page, origin + t)) - origin;
+    await board.capture(
+      `t=${+presentedAt.toFixed(1)} ms`,
+      presentedAt,
+      await options.measure(),
+    );
+  }
+  return board;
+}
+
 async function sampleAlert(
   page: Page,
   times: ReadonlyArray<number>,
@@ -578,12 +790,14 @@ test.describe('under a finger', () => {
     await driver.tap(await centerOf(trigger));
     await waitForRest(dialog);
     await installTimerGate(page);
+    // The exit crawls from its first frame, so it is still running when it
+    // is held, however busy the page; the exit's backstop timer must not
+    // close the dialog meanwhile.
+    await slowNextDialogTransition(page, {freeze: true});
     await driver.tap(
       await centerOf(dialog.getByRole('button', {name: 'Cancel'})),
     );
     await waitForAnimation(dialog);
-    // The exit's backstop timer must not close the dialog while it is held.
-    await freezeTimers(page);
     const {held, samples} = await sampleAlert(page, timeline(DISMISS_MS));
     // The alert's opacity and the dimming's: nothing scales.
     expect(held).toBe(2);
@@ -603,6 +817,7 @@ test.describe('under a finger', () => {
     expect(await dialog.evaluate(el => (el as HTMLDialogElement).open)).toBe(
       true,
     );
+    await restoreDialogAnimationSpeed(page);
     await releaseAnimations(page);
     await thawTimers(page);
     await writeEvidence(
@@ -653,14 +868,7 @@ test.describe('under a finger', () => {
   test('closed right after opening, it fades from where it is: from the presented value at the close, with its velocity, and never above that fade', async ({
     page,
   }) => {
-    // A take in which the renderer painted no frame while the alert faded
-    // measured nothing: the WebKit container can stall a second under load
-    // (its first frame came 1.3 s after the close, with the dialog already
-    // closed). Such a take is taken again.
-    let result = await closeMidPresentation(page);
-    for (let take = 1; take < 3 && result.openFrames < 2; take += 1) {
-      result = await closeMidPresentation(page);
-    }
+    const result = await closeMidPresentation(page);
     const detail = JSON.stringify(result);
     // Closed mid-presentation.
     expect(result.presentedAtClose, detail).toBeGreaterThan(0.2);
@@ -674,8 +882,8 @@ test.describe('under a finger', () => {
       detail,
     ).toBeLessThanOrEqual(OPACITY_TOLERANCE);
     // ...with the presentation's velocity there: the fade rises to its own
-    // peak, then falls. No frame goes above that peak (the presented alert
-    // would), and none rises again after it.
+    // peak, then falls. No moment of it goes above that peak (the presented
+    // alert would), and none rises again after it.
     const velocity = solveSpring(toSpring(springs.alertPresent), {
       from: 0,
       to: 1,
@@ -689,23 +897,21 @@ test.describe('under a finger', () => {
     for (let t = 0; t <= 0.1; t += 0.0001) {
       fadePeak = Math.max(fadePeak, fade.value(t));
     }
-    expect(result.openFrames, detail).toBeGreaterThanOrEqual(2);
-    const peak = Math.max(...result.frames);
-    const peakAt = result.frames.indexOf(peak);
+    expect(result.samples.length, detail).toBeGreaterThan(2);
+    const peak = Math.max(...result.samples);
+    const peakAt = result.samples.indexOf(peak);
     expect(peak, detail).toBeLessThanOrEqual(fadePeak + OPACITY_TOLERANCE);
-    // Before its peak the fade has only risen from where it started: no frame
-    // there shows less (the fade's end, say, painted early).
-    for (const value of result.frames.slice(0, peakAt)) {
+    // Before its peak the fade has only risen from where it started: no
+    // moment there shows less (the fade's end, say, painted early).
+    for (const value of result.samples.slice(0, peakAt)) {
       expect(value, detail).toBeGreaterThanOrEqual(
         result.from - OPACITY_TOLERANCE,
       );
     }
     // After it, the fade only falls. The engine's own rounding of computed
-    // values (WebKit's animation clock can put two frames a fraction of a
-    // millisecond apart, out of order) is the measurement's precision, as for
-    // every curve here.
+    // values is the measurement's precision, as for every curve here.
     let previous = peak;
-    for (const value of result.frames.slice(peakAt)) {
+    for (const value of result.samples.slice(peakAt)) {
       expect(value, detail).toBeLessThanOrEqual(previous + OPACITY_TOLERANCE);
       previous = value;
     }
@@ -1045,6 +1251,10 @@ test.describe('under a finger', () => {
     const proofs: Record<string, ReturnType<typeof cadence>> = {};
     for (const phase of ['present', 'dismiss'] as const) {
       const cast = await startScreencast(page, {format: 'jpeg', quality: 40});
+      // The block is armed before the tap, so it starts 16 ms into the
+      // transition however busy the page (a block started from here after
+      // the tap's round trip could miss a 404 ms transition altogether).
+      await armBlockOnNextDialogTransition(page, 250);
       await driver.tap(
         await centerOf(
           phase === 'present'
@@ -1052,12 +1262,11 @@ test.describe('under a finger', () => {
             : dialog.getByRole('button', {name: 'Cancel'}),
         ),
       );
-      const [running] = await waitForAnimation(dialog, {minProgressMs: 16});
-      const block = await blockMainThread(page, 250);
+      const block = await awaitArmedBlock(page);
       const frames = await cast.stop();
       // The curve's own end: the animation keeps holding its end state after.
       const curveEnd =
-        running.from + (phase === 'present' ? PRESENT_MS : DISMISS_MS);
+        block.start + (phase === 'present' ? PRESENT_MS : DISMISS_MS);
       proofs[phase] = cadence(
         frames.map(f => f.t),
         {from: block.from + 20, to: Math.min(block.to, curveEnd) - 20},
@@ -1190,33 +1399,30 @@ test.describe('under a finger', () => {
             dim: Number(getComputedStyle(element, '::backdrop').opacity),
           };
         });
+      // Each transition crawls from its first frame, so it is still running
+      // when the board holds it, however busy the page; the page's timers
+      // stay frozen until its board is done.
+      await slowNextDialogTransition(page, {freeze: true});
       await driver.tap(await centerOf(trigger));
       await waitForAnimation(dialog);
-      await freezeTimers(page);
-      const {storyboard: presentBoard} = await animationStoryboard(page, {
+      const presentBoard = await filmSlowedTransition(page, dialog, {
         name: 'alertdialog-present',
-        scope: dialog,
         times: timeline(PRESENT_MS, 1000 / 30),
         measure,
-        columns: 7,
-        cellScale: 0.35,
       });
       await presentBoard.write(testInfo, {spring: springs.alertPresent});
       await releaseAnimations(page);
       await thawTimers(page);
       await waitForRest(dialog);
+      await slowNextDialogTransition(page, {freeze: true});
       await driver.tap(
         await centerOf(dialog.getByRole('button', {name: 'Cancel'})),
       );
       await waitForAnimation(dialog);
-      await freezeTimers(page);
-      const {storyboard: dismissBoard} = await animationStoryboard(page, {
+      const dismissBoard = await filmSlowedTransition(page, dialog, {
         name: 'alertdialog-dismiss',
-        scope: dialog,
         times: timeline(DISMISS_MS, 1000 / 30),
         measure,
-        columns: 7,
-        cellScale: 0.35,
       });
       await dismissBoard.write(testInfo, {spring: springs.alertDismiss});
       await releaseAnimations(page);
