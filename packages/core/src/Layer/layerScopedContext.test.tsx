@@ -279,6 +279,8 @@ describe.each(boundaries)('%s provider boundary', (name, boundary) => {
       size: 'lg',
       layout: 'fill',
       isDisabled: true,
+      tabStopValue: 'outer',
+      registerSegment: () => () => {},
     } as const;
     const radios: RadioListContextValue = {
       name: 'outer',
@@ -296,6 +298,7 @@ describe.each(boundaries)('%s provider boundary', (name, boundary) => {
       value: 'inner',
       onChange: localChange,
       isDisabled: false,
+      tabStopValue: 'inner',
     };
     const localRadios = {
       ...radios,

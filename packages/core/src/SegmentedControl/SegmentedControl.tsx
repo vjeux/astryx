@@ -15,10 +15,19 @@
  * - /packages/cli/assets/templates/blocks/components/SegmentedControl/ (showcase blocks)
  */
 
-import React, {useMemo, useCallback, type ReactNode} from 'react';
+import React, {
+  useMemo,
+  useCallback,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {colorVars, spacingVars, radiusVars} from '../theme/tokens.stylex';
-import {SegmentedControlContext} from './SegmentedControlContext';
+import {
+  SegmentedControlContext,
+  type SegmentedControlSegment,
+} from './SegmentedControlContext';
 import {useListFocus} from '../hooks/useListFocus';
 import {useKeyboardHint} from '../hooks/useKeyboardHint';
 import {useTooltip} from '../Tooltip';
@@ -27,7 +36,6 @@ import type {
   SegmentedControlLayout,
 } from './SegmentedControlContext';
 import {mergeProps, composeEventHandlers} from '../utils';
-import {joinAriaIDs} from '../utils/inputAria';
 import {useSize} from '../SizeContext/SizeContext';
 import type {BaseProps} from '../BaseProps';
 import {themeProps} from '../utils/themeProps';
@@ -72,8 +80,10 @@ export interface SegmentedControlProps extends Omit<
    * Explains why the control is disabled. Applies to the whole-group disabled
    * state (`isDisabled`), not individual segments. When set together with
    * `isDisabled`, the control shows a tooltip with this text on hover and
-   * keyboard focus, and stays focusable (via `aria-disabled`) so the reason is
-   * discoverable by keyboard and assistive technology. Selection stays blocked.
+   * keyboard focus, and the text describes the segment that takes focus, so
+   * the reason is discoverable by keyboard and assistive technology. A
+   * disabled control stays focusable (via `aria-disabled`) with or without a
+   * reason. Selection stays blocked.
    *
    * Use this instead of wrapping a disabled control in `Tooltip` — disabled
    * controls don't emit the pointer events an external tooltip needs.
@@ -193,17 +203,32 @@ export function SegmentedControl({
     isEnabled: showsDisabledMessage,
   });
 
-  // Roving tabindex + arrow/Home/End navigation is owned by the shared
-  // useListFocus primitive: it stamps a single tab stop (tabIndex 0/-1) across
-  // the radios, skips disabled ones, wraps at the ends, handles Home/End, and
-  // repairs the tab stop on mount and whenever items mount/disable — replacing
-  // the component's former inline keyboard handler and tab-stop repair effect.
-  const {listRef, handleKeyDown, handleFocus} = useListFocus<HTMLDivElement>({
-    itemSelector: '[role="radio"]:not([aria-disabled="true"])',
-    hasRovingTabIndex: true,
+  // Arrow/Home/End navigation is the shared useListFocus primitive's: it
+  // moves focus between enabled radios, wraps at the ends, and handles
+  // Home/End. Disabled radios stay in its list so an arrow from a focused
+  // disabled segment moves on from where that segment is; navigation itself
+  // skips them.
+  const {listRef, handleKeyDown} = useListFocus<HTMLDivElement>({
+    itemSelector: '[role="radio"]',
     wrap: true,
     orientation: 'horizontal',
   });
+
+  // The one Tab stop is this component's (spec:AST-085 FR1): a disabled
+  // control keeps the stop it has enabled, and a selected segment keeps it
+  // even when it is disabled. The segments register themselves, so the
+  // fallback for a value no segment carries is the first one not disabled by
+  // its own isDisabled, in document order. While focus is in the group the
+  // stop is the focused segment, so Tab leaves from it; when focus leaves, the
+  // stop returns to the selected segment.
+  const [segments] = useState(createSegmentRegistry);
+  const registered = useSyncExternalStore(
+    segments.subscribe,
+    segments.getSnapshot,
+    segments.getServerSnapshot,
+  );
+  const [focusedValue, setFocusedValue] = useState<string | null>(null);
+  const tabStopValue = resolveTabStop(registered, value, focusedValue);
 
   const hint = useKeyboardHint({
     orientation: 'horizontal',
@@ -232,19 +257,25 @@ export function SegmentedControl({
   const handleContainerFocus = useCallback(
     (e: React.FocusEvent<HTMLDivElement>) => {
       onFocusProp?.(e);
+      // The Tab stop follows focus whatever the caller's handler did: it is
+      // not behavior the public API lets a caller cancel.
+      setFocusedValue(
+        (e.target as HTMLElement | null)?.closest<HTMLElement>(
+          '[role="radio"][data-value]',
+        )?.dataset.value ?? null,
+      );
       if (e.defaultPrevented) {
         return;
       }
       hint.onFocus(e);
-      handleFocus(e);
       if (isDisabled) {
         return;
       }
       // Only select when focus moved WITHIN the group (arrow/Home/End — APG
       // selection-follows-focus). When focus is entering from outside, Tab
-      // must stay a pure focus move: with an unmatched or disabled-selected
-      // value the roving tab stop falls back to the first enabled radio, and
-      // selecting it here would rewrite the form value on mere traversal.
+      // must stay a pure focus move: with an unmatched value the Tab stop is
+      // the fallback segment, and selecting it here would rewrite the form
+      // value on mere traversal.
       // Clicks are unaffected: the item's own handleClick selects.
       if (!e.currentTarget.contains(e.relatedTarget)) {
         return;
@@ -260,9 +291,22 @@ export function SegmentedControl({
         onChange(nextValue);
       }
     },
-    [onFocusProp, hint, handleFocus, isDisabled, onChange, value],
+    [onFocusProp, hint, isDisabled, onChange, value],
   );
 
+  const handleContainerBlur = useCallback(
+    (e: React.FocusEvent<HTMLDivElement>) => {
+      if (!e.currentTarget.contains(e.relatedTarget)) {
+        setFocusedValue(null);
+      }
+      composeEventHandlers(onBlurProp, hint.onBlur)(e);
+    },
+    [onBlurProp, hint],
+  );
+
+  const disabledReasonId = showsDisabledMessage
+    ? disabledMessageTooltip.describedBy
+    : undefined;
   const contextValue = useMemo(
     () => ({
       value,
@@ -270,9 +314,20 @@ export function SegmentedControl({
       size,
       layout,
       isDisabled,
-      hasDisabledMessage: showsDisabledMessage,
+      tabStopValue,
+      disabledReasonId,
+      registerSegment: segments.register,
     }),
-    [value, onChange, size, layout, isDisabled, showsDisabledMessage],
+    [
+      value,
+      onChange,
+      size,
+      layout,
+      isDisabled,
+      tabStopValue,
+      disabledReasonId,
+      segments,
+    ],
   );
 
   return (
@@ -283,14 +338,12 @@ export function SegmentedControl({
         role="radiogroup"
         aria-label={label}
         aria-disabled={isDisabled || undefined}
-        // A caller aria-describedby comes before the disabled reason.
-        aria-describedby={joinAriaIDs(
-          ariaDescribedByProp,
-          showsDisabledMessage ? disabledMessageTooltip.describedBy : undefined,
-        )}
+        // A caller's description stays on the group; the disabled reason
+        // describes the segment that takes focus (SegmentedControlItem.tsx).
+        aria-describedby={ariaDescribedByProp}
         onKeyDown={handleContainerKeyDown}
         onFocus={handleContainerFocus}
-        onBlur={composeEventHandlers(onBlurProp, hint.onBlur)}
+        onBlur={handleContainerBlur}
         {...mergeProps(
           themeProps('segmented-control', {size}),
           stylex.props(
@@ -316,3 +369,62 @@ export function SegmentedControl({
 }
 
 SegmentedControl.displayName = 'SegmentedControl';
+
+const NO_SEGMENTS: ReadonlyArray<SegmentedControlSegment> = [];
+
+/** The mounted segments, in document order, as an external store. */
+function createSegmentRegistry() {
+  let snapshot: ReadonlyArray<SegmentedControlSegment> = NO_SEGMENTS;
+  const listeners = new Set<() => void>();
+  const notify = () => {
+    for (const listener of listeners) {
+      listener();
+    }
+  };
+  return {
+    register(segment: SegmentedControlSegment): () => void {
+      snapshot = [...snapshot, segment].sort((a, b) =>
+        a.element.compareDocumentPosition(b.element) &
+        Node.DOCUMENT_POSITION_PRECEDING
+          ? 1
+          : -1,
+      );
+      notify();
+      return () => {
+        snapshot = snapshot.filter(entry => entry !== segment);
+        notify();
+      };
+    },
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSnapshot: () => snapshot,
+    getServerSnapshot: () => NO_SEGMENTS,
+  };
+}
+
+/**
+ * The value of the segment that holds the group's one Tab stop: the focused
+ * segment, else the selected one, else the first segment not disabled by its
+ * own isDisabled, else the first segment. Before the segments register (the
+ * first render, the server), the selected segment.
+ */
+function resolveTabStop(
+  segments: ReadonlyArray<SegmentedControlSegment>,
+  value: string,
+  focusedValue: string | null,
+): string {
+  if (
+    focusedValue != null &&
+    segments.some(segment => segment.value === focusedValue)
+  ) {
+    return focusedValue;
+  }
+  const fallback = segments.some(segment => segment.value === value)
+    ? undefined
+    : (segments.find(segment => !segment.isDisabled) ?? segments[0]);
+  return fallback?.value ?? value;
+}

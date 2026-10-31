@@ -15,7 +15,7 @@
  * - /packages/cli/assets/templates/blocks/components/SegmentedControl/ (showcase blocks)
  */
 
-import React, {type ReactNode} from 'react';
+import React, {useRef, type ReactNode} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {
   colorVars,
@@ -30,6 +30,9 @@ import {
 import {useSegmentedControlContext} from './SegmentedControlContext';
 import type {SegmentedControlSize} from './SegmentedControlContext';
 import {mergeProps, composeEventHandlers} from '../utils';
+import {joinAriaIDs} from '../utils/inputAria';
+import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
+import {useMergedRefs} from '../hooks/useMergedRefs';
 import type {BaseProps} from '../BaseProps';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
@@ -191,6 +194,7 @@ export function SegmentedControlItem({
   icon,
   isDisabled = false,
   onClick: onClickProp,
+  'aria-describedby': ariaDescribedByProp,
   xstyle,
   ...rest
 }: SegmentedControlItemProps) {
@@ -199,12 +203,19 @@ export function SegmentedControlItem({
 
   const isSelected = ctx.value === value;
   const isItemDisabled = isDisabled || ctx.isDisabled;
-  // When the whole group is disabled with a disabledMessage, keep the selected
-  // segment focusable so the group's reason tooltip is keyboard-discoverable.
-  // Per-item disabling (`isDisabled` on the item) always drops out of the tab
-  // order. Activation stays blocked by the isItemDisabled guard in handleClick.
-  const keepsSelectedFocusable =
-    isSelected && (ctx.hasDisabledMessage ?? false) && !isDisabled;
+  // The group has one Tab stop, which SegmentedControl resolves; a disabled
+  // segment can hold it (spec:AST-085 FR1). Activation stays blocked by the
+  // isItemDisabled guard in handleClick.
+  const isTabStop = ctx.tabStopValue === value;
+  const elementRef = useRef<HTMLButtonElement>(null);
+  const {registerSegment} = ctx;
+  useIsomorphicLayoutEffect(() => {
+    const element = elementRef.current;
+    if (element == null) {
+      return;
+    }
+    return registerSegment({value, isDisabled, element});
+  }, [registerSegment, value, isDisabled]);
   const size: SegmentedControlSize = ctx.size;
   const isFill = ctx.layout === 'fill';
 
@@ -228,23 +239,22 @@ export function SegmentedControlItem({
 
   return (
     <button
-      ref={ref}
+      ref={useMergedRefs(ref, elementRef)}
       {...rest}
       type="button"
       role="radio"
       aria-checked={isSelected}
       aria-disabled={isItemDisabled || undefined}
       aria-label={isLabelHidden ? label : undefined}
+      // The group's disabled reason describes the segment that takes focus
+      // (spec:AST-085 FR5), after the caller's own description.
+      aria-describedby={joinAriaIDs(
+        ariaDescribedByProp,
+        isTabStop ? ctx.disabledReasonId : undefined,
+      )}
       data-value={value}
       {...(!isSelected && !isItemDisabled ? pressable : undefined)}
-      // Disabled items (including when the whole group is disabled) are not tab
-      // stops — otherwise the selected segment stays keyboard-focusable but is
-      // silently dead (arrows and activation are no-ops) (navigation-13). The
-      // exception is a whole-group disabledMessage, where the selected segment
-      // stays focusable so the reason tooltip is keyboard-discoverable.
-      tabIndex={
-        (isSelected && !isItemDisabled) || keepsSelectedFocusable ? 0 : -1
-      }
+      tabIndex={isTabStop ? 0 : -1}
       onClick={handleClick}
       {...mergeProps(
         themeProps('segmented-control-item', {
