@@ -2207,10 +2207,10 @@ test.describe('bottom accessory', () => {
     );
     await waitForAnimation(accessory(page));
     await holdAnimations(page, accessory(page));
-    const overhangs: {t: number; overhang: number}[] = [];
+    const overhangs: {t: number; overhang: number; visible: number}[] = [];
     for (const t of [0, 16.667, 50, 100, 140, 200, 300]) {
       await seekAnimations(page, t);
-      const overhang = await accessory(page).evaluate(element => {
+      const {overhang, visible} = await accessory(page).evaluate(element => {
         // The glass's trailing cap, and "Next" as it shows: its box cut by
         // every clipping box between it and the accessory.
         const glass = element.firstElementChild as HTMLElement;
@@ -2226,6 +2226,7 @@ test.describe('bottom accessory', () => {
           throw new Error('no Next');
         }
         let right = next.getBoundingClientRect().right;
+        let left = next.getBoundingClientRect().left;
         for (
           let node = next.parentElement;
           node != null && node !== element.parentElement;
@@ -2233,13 +2234,22 @@ test.describe('bottom accessory', () => {
         ) {
           if (getComputedStyle(node).overflow !== 'visible') {
             right = Math.min(right, node.getBoundingClientRect().right);
+            left = Math.max(left, node.getBoundingClientRect().left);
           }
         }
-        return right - cap.right;
+        return {overhang: right - cap.right, visible: right - left};
       });
-      overhangs.push({t, overhang});
+      overhangs.push({t, overhang, visible});
     }
     await releaseAnimations(page, {finish: true});
+    // On screen first: "Next" shows through the window while it is measured
+    // (a window closed to nothing would keep it inside the glass too).
+    await expectPainted(
+      accessory(page).getByRole('button', {name: 'Next', exact: true}),
+    );
+    for (const {t, visible} of overhangs.filter(sample => sample.t >= 200)) {
+      expect(visible, JSON.stringify({t, overhangs})).toBeGreaterThan(0);
+    }
     for (const {t, overhang} of overhangs) {
       expect(overhang, JSON.stringify({t, overhangs})).toBeLessThanOrEqual(0.5);
     }
