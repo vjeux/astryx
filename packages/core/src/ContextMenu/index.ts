@@ -4,7 +4,8 @@
 /**
  * @file index.ts
  * @output Exports ContextMenu, ContextMenuItem and related types, and the
- *   headless createContextMenu and useContextMenu (spec:AST-107 FR8)
+ *   headless createContextMenu (spec:AST-107 FR8); its React wrapper,
+ *   useContextMenu, is exported from the hooks entry
  * @position Public API entry point
  */
 
@@ -24,11 +25,6 @@ export {
   type ContextMenuPoint,
   type CreateContextMenuOptions,
 } from './createContextMenu';
-export {
-  useContextMenu,
-  type UseContextMenuOptions,
-  type UseContextMenuResult,
-} from './useContextMenu';
 
 export {
   DropdownMenuItem as ContextMenuItem,
