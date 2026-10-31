@@ -1539,6 +1539,8 @@ test.describe('a mouse or a pen drags the lens too (spec:AST-094 FR43)', () => {
     page,
   }) => {
     await openFine(page);
+    // On screen first: the lens.
+    await expectPainted(lensBody(page));
     const home = await itemCenter(page, 'Home');
     const browse = await mouseDragTo(page, 'Home', 'Browse');
     await expect
