@@ -481,6 +481,19 @@ async function chipShades(
   }
 }
 
+/**
+ * The busy proof's fade, stretched by a test stylesheet as the second-tap case
+ * does, and its block. The proof needs four frames inside the block to judge:
+ * the 0.25 s fade left 150 to 180 ms of itself there, under four frames once a
+ * loaded machine's screencast delivered one every 50 ms. With the fade
+ * stretched, the whole 1 s block lies inside it, and on a linear curve every
+ * frame moves the chip by a resolvable step (an eased 2 s fade's slow start
+ * moved it by under one colour step a frame). The fade's own 0.25 s and its
+ * curve are the timing case's proof.
+ */
+const BUSY_FADE_MS = 2000;
+const BUSY_BLOCK_MS = 1000;
+
 test('the wheels keep fading in every frame through a blocked main thread', async ({
   page,
   browserName,
@@ -497,17 +510,21 @@ test('the wheels keep fading in every frame through a blocked main thread', asyn
   if (rect == null) {
     throw new Error('no chip');
   }
+  await page.addStyleTag({
+    content: `[data-panel] { transition-duration: ${BUSY_FADE_MS}ms !important; transition-timing-function: linear !important; }`,
+  });
   const cast = await startScreencast(page);
   await page.waitForTimeout(300);
   await driver.tap(titleAt);
   // The page blocks itself once the fade has run 32 ms: started, and on
   // screen. This guards the compositor path once a fade is on screen, which
   // a CSS fade passes too; the next case is what the animator changes.
-  const busy = await blockMainThread(page, 600, {
+  const busy = await blockMainThread(page, BUSY_BLOCK_MS, {
     during: wheels,
     minProgressMs: 32,
   });
-  await page.waitForTimeout(600);
+  // Past the fade's end, so the last frames show where the chip ends.
+  await page.waitForTimeout(BUSY_FADE_MS - BUSY_BLOCK_MS + 200);
   const shades = await chipShades(page, await cast.stop(), rect);
   const before = shades[0]?.green;
   const end = shades.at(-1)?.green;
@@ -526,8 +543,8 @@ test('the wheels keep fading in every frame through a blocked main thread', asyn
     pixels: 1,
   }));
   const started = busy.from - 32;
-  const spanned = {...busy, to: Math.min(busy.to, started + TOGGLE_MS)};
-  expect(spanned.to - spanned.from).toBeGreaterThan(150);
+  const spanned = {...busy, to: Math.min(busy.to, started + BUSY_FADE_MS)};
+  expect(spanned.to - spanned.from).toBeGreaterThan(BUSY_BLOCK_MS - 50);
   const proof = busyWindowProof(tracked, spanned, {
     axis: 'x',
     settledWithin: 10,
