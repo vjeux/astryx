@@ -21,6 +21,13 @@ import userEvent from '@testing-library/user-event';
 import {AlertDialog} from './AlertDialog';
 import {useImperativeAlertDialog} from './useImperativeAlertDialog';
 
+// The scroll lock's page hold reads the primary pointer as it starts
+// (gestures/pageHold.ts). The stub keeps every `matchMedia` call in this file
+// to AlertDialog's own button layout, which never reads the pointer.
+vi.mock('../gestures/pageHold', () => ({
+  holdPageScroll: () => () => {},
+}));
+
 function stubAlertDialogMedia({
   smallScreen,
   coarsePointer,

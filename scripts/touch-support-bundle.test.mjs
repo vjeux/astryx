@@ -146,6 +146,32 @@ const GESTURE_USERS = new Set([
   'SegmentedControl',
   // DateTimeInput: through the SegmentedControl its touch field renders.
   'DateTimeInput',
+  // useScrollLock's page hold, and the imports that reach it.
+  'hooks: useScrollLock',
+  'AlertDialog',
+  'AppShell',
+  'BottomSheet',
+  'CommandPalette',
+  'ContextMenu',
+  'DateInput',
+  'Dialog',
+  'Drawer',
+  'DropdownMenu',
+  'Layer',
+  'Lightbox',
+  'Markdown',
+  'MobileNav',
+  'MoreMenu',
+  'MultiSelector',
+  'Pagination',
+  'Popover',
+  'PowerSearch',
+  'Selector',
+  'SideNav',
+  'Table',
+  'TimeInput',
+  'Tokenizer',
+  'TopNav',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
