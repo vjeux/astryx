@@ -3339,6 +3339,10 @@ test.describe('More tab', () => {
     await expect(tab(page, 'More')).toHaveAttribute('aria-selected', 'true');
     const settings = page.getByRole('button', {name: /Settings/});
     await expect(settings).toBeVisible();
+    // On screen first: the row's chevron.
+    await expectPainted(
+      page.locator('li', {has: settings}).locator('svg').last(),
+    );
     // The row's last glyph is its chevron (beside the label's button): flipped
     // on it or a wrapper.
     const transform = await settings.evaluate(button => {
