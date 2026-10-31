@@ -252,76 +252,76 @@ test('a selection made with the keys slides the lens on UIKit’s spring, the se
 test('a second tap mid-slide turns the lens around from where it is, without a jump', async ({
   page,
 }) => {
-  // Software-rendered WebKit can stall input for hundreds of milliseconds
-  // around a tap, so the second finger may reach the page only after the
-  // first slide has ended: then it was no second tap mid-slide. Where the
-  // lens was when the second finger landed is read in the page; such a late
-  // run is played again (at most three times) and every run's motion is
-  // checked.
-  for (let attempt = 1; ; attempt += 1) {
-    const {driver} = await openBar(page);
-    const home = await itemCenter(page, 'Home');
-    const profile = await itemCenter(page, 'Profile');
-    const library = await itemCenter(page, 'Library');
-    // Records the lens's centre as each finger lands: under a finger the
-    // lens turns for the second finger the moment it lands.
-    await page.evaluate(() => {
-      const lens = document.querySelector('[data-tab-bar-lens-body]');
-      const landings: number[] = [];
-      (window as unknown as {__landings: number[]}).__landings = landings;
-      window.addEventListener(
-        'touchstart',
-        () => {
-          const box = lens?.getBoundingClientRect();
-          if (box != null) {
-            landings.push(box.x + box.width / 2);
-          }
-        },
-        {capture: true},
-      );
-    });
-    // Every frame's lens position, sampled in the page while the taps land.
-    const sampling = sampleRects(lensBody(page), 1300);
-    await driver.tap(profile);
-    // Well past Library on its way to Profile.
-    await waitForAnimation(lensBody(page), {minProgressMs: 150});
-    await driver.tap(library);
-    await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
-    const turnedAt = await page.evaluate(
-      () => (window as unknown as {__landings: number[]}).__landings[1],
+  const {driver} = await openBar(page);
+  const home = await itemCenter(page, 'Home');
+  const profile = await itemCenter(page, 'Profile');
+  const library = await itemCenter(page, 'Library');
+  // Records the lens's centre as each finger lands: under a finger the
+  // lens turns for the second finger the moment it lands.
+  await page.evaluate(() => {
+    const lens = document.querySelector('[data-tab-bar-lens-body]');
+    const landings: number[] = [];
+    (window as unknown as {__landings: number[]}).__landings = landings;
+    window.addEventListener(
+      'touchstart',
+      () => {
+        const box = lens?.getBoundingClientRect();
+        if (box != null) {
+          landings.push(box.x + box.width / 2);
+        }
+      },
+      {capture: true},
     );
-    const samples = (await sampling).flatMap(sample =>
-      sample.box == null
-        ? []
-        : [{t: sample.t, x: sample.box.x + sample.box.width / 2}],
+  });
+  // Every frame's lens position, sampled in the page while the taps land.
+  const sampling = sampleRects(lensBody(page), 1300);
+  await driver.tap(profile);
+  // On the frame the lens passes Library, read in the page: the tap lands
+  // with most of the slide still ahead (a fixed wait into the slide left a
+  // loaded machine too little of it to react in).
+  await page.waitForFunction(
+    target => {
+      const box = document
+        .querySelector('[data-tab-bar-lens-body]')
+        ?.getBoundingClientRect();
+      return box != null && box.x + box.width / 2 > target;
+    },
+    library.x + 10,
+    {polling: 'raf'},
+  );
+  await driver.tap(library);
+  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
+  const turnedAt = await page.evaluate(
+    () => (window as unknown as {__landings: number[]}).__landings[1],
+  );
+  const samples = (await sampling).flatMap(sample =>
+    sample.box == null
+      ? []
+      : [{t: sample.t, x: sample.box.x + sample.box.width / 2}],
+  );
+  // It headed for Profile and came back to Library, never jumping: a jump
+  // to either end would cover the whole remaining distance (over 100 px)
+  // in one frame. (A frame the second tap makes long, as it reports the
+  // first tap to the app, can cover 60.) Only consecutive frames are
+  // compared, never samples a stall kept apart.
+  const steps = samples
+    .slice(1)
+    .flatMap((sample, i) =>
+      sample.t - samples[i].t <= 34 ? [sample.x - samples[i].x] : [],
     );
-    // It headed for Profile and came back to Library, never jumping: a jump
-    // to either end would cover the whole remaining distance (over 100 px)
-    // in one frame. (A frame the second tap makes long, as it reports the
-    // first tap to the app, can cover 60.) Only consecutive frames are
-    // compared, never samples a stall kept apart.
-    const steps = samples
-      .slice(1)
-      .flatMap((sample, i) =>
-        sample.t - samples[i].t <= 34 ? [sample.x - samples[i].x] : [],
-      );
-    expect(
-      Math.max(...steps.map(Math.abs)),
-      JSON.stringify(samples),
-    ).toBeLessThan(90);
-    expect(Math.min(...samples.map(sample => sample.x))).toBeGreaterThan(
-      home.x - 1,
-    );
-    await waitForRest(lensBody(page));
-    expect(Math.abs((await lensCenterX(page)) - library.x)).toBeLessThan(0.5);
-    // Mid-slide: past Library, short of Profile, when the second finger
-    // landed.
-    expect(turnedAt).toBeGreaterThan(library.x + 5);
-    if (turnedAt < profile.x - 20 || attempt === 3) {
-      expect(turnedAt, `attempt ${attempt}`).toBeLessThan(profile.x - 20);
-      return;
-    }
-  }
+  expect(
+    Math.max(...steps.map(Math.abs)),
+    JSON.stringify(samples),
+  ).toBeLessThan(90);
+  expect(Math.min(...samples.map(sample => sample.x))).toBeGreaterThan(
+    home.x - 1,
+  );
+  await waitForRest(lensBody(page));
+  expect(Math.abs((await lensCenterX(page)) - library.x)).toBeLessThan(0.5);
+  // Mid-slide: past Library, short of Profile, when the second finger
+  // landed.
+  expect(turnedAt).toBeGreaterThan(library.x + 5);
+  expect(turnedAt).toBeLessThan(profile.x - 20);
 });
 
 test('a finger landing before the last lift reaches the app keeps the lens heading for it', async ({
