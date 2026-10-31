@@ -22,6 +22,7 @@ import {LayerContext} from '../Layer/LayerContext';
 import {useLayerDismissal} from '../Layer/useLayerDismissal';
 import {dataAttr} from '../naming';
 import * as hooks from '../hooks';
+import * as contextMenuEntry from './index';
 import {createContextMenu} from './createContextMenu';
 import {useContextMenu, type UseContextMenuOptions} from './useContextMenu';
 
@@ -268,6 +269,11 @@ describe('useContextMenu', () => {
 describe('useContextMenu: its element and its React roots', () => {
   it('is exported from the hooks entry point, as AST-107 imports it (spec:AST-107 FR6)', () => {
     expect(hooks.useContextMenu).toBe(useContextMenu);
+  });
+
+  it('is exported from that one entry, as the other public gesture hooks are: ContextMenu\u2019s entry carries the factory, not the hook (spec:AST-107 FR6)', () => {
+    expect(contextMenuEntry.createContextMenu).toBe(createContextMenu);
+    expect(Object.keys(contextMenuEntry)).not.toContain('useContextMenu');
   });
 
   it('attaches to the element its ref points at now, when that element changes', () => {
