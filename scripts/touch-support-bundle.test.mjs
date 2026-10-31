@@ -153,6 +153,8 @@ const GESTURE_USERS = new Set([
   'SegmentedControl',
   // DateTimeInput: through the SegmentedControl its touch field renders.
   'DateTimeInput',
+  // The public pan, which the root's createPanGesture shares.
+  'hooks: usePanGesture',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */

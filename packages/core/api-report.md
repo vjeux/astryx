@@ -2919,6 +2919,7 @@ hook useOutlineFromDOM: (containerRef: React.RefObject<HTMLElement | null>) => O
 hook useOutlineFromMarkdown: <Node extends MarkdownExtensionNode = never>(markdown: string, options?: ParseOutlineFromMarkdownOptions<Node>) => OutlineItem[]
 hook useOverflow: (itemCount: number, options?: UseOverflowOptions) => UseOverflowReturn
 hook useOverlay: ({…}?: UseOverlayOptions) => UseOverlayResult
+hook usePanGesture: (ref: RefObject<Element | null>, options: PanGestureOptions) => void
 hook usePopover: (options?: UsePopoverOptions) => UsePopoverReturn
 hook usePowerSearchConfig: <const D extends ReadonlyArray<FieldDefinition>>(definitions: D, configName?: string) => { config: PowerSearchConfig; applyFilters: <T extends InferData<D>>(filters: ReadonlyArray<PowerSearchFilter>, data: ReadonlyArray<T>) => T[] }
 hook usePressFeedback: () => typeof pressableProps
@@ -2983,6 +2984,7 @@ function createAnimator: (element: HTMLElement) => Animator
 function createCodeLanguage: ({…}: CreateCodeLanguageOptions) => CodeLanguage
 function createISOTimeString: (value: string) => ISOTimeString | null
 function createIncrementalState: <MathEnabled extends boolean = false>() => IncrementalState<MathEnabled>
+function createPanGesture: (element: Element, options: PanGestureOptions) => PanGesture
 function createPowerSearchConfig: <const D extends ReadonlyArray<FieldDefinition>>(definitions: D, configName?: string) => { config: PowerSearchConfig; applyFilters: <T extends InferData<D>>(filters: ReadonlyArray<PowerSearchFilter>, data: ReadonlyArray<T>) => T[] }
 function createStaticSource: <T extends SearchableItem>(items: T[], options?: CreateStaticSourceOptions<T>) => SearchSource<T>
 function dateToISO: (pd: PlainDate) => ISODateString
@@ -4917,6 +4919,16 @@ interface PaginationVariantMap
   input: true
   none: true
   pages: true
+interface PanGesture
+  destroy: () => void
+interface PanGestureEvent
+  state: PanGestureState
+  translation: { x: number; y: number }
+  velocity: { x: number; y: number }
+interface PanGestureOptions
+  axis?: 'x' | 'y'
+  onPan: (event: PanGestureEvent) => void
+type PanGestureState = 'began' | 'changed' | 'ended' | 'cancelled'
 type ParseOptions<Plugins extends ReadonlyArray<MarkdownPluginEntry> = readonly []> = CommonParseOptions<Plugins> & { math?: false | undefined }
 interface ParseOutlineFromMarkdownOptions<Node extends MarkdownExtensionNode = never>
   isFinal?: boolean
@@ -9079,6 +9091,10 @@ MenuPressEvent (.)
 MenuPressGesture (.)
 MenuPressPointerType (.)
 MenuPressStep (.)
+PanGesture (.)
+PanGestureEvent (.)
+PanGestureOptions (.)
+PanGestureState (.)
 ScrollAxis (.)
 ScrollAxisState (.)
 ScrollKeyboardAccess (.)
@@ -9149,6 +9165,7 @@ useMediaQuery (.)
 useMenuPress (.)
 useMergedRefs (.)
 useOverflow (.)
+usePanGesture (.)
 usePressFeedback (.)
 useScrollLock (.)
 useScrollOverflow (.)
