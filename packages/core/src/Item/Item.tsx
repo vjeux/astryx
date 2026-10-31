@@ -98,10 +98,12 @@ export interface ItemSwipeActions {
 }
 
 /**
- * `reveal`: past half the panel the row rests open with every entry a real
- * button; a long drag or a fling fires the outermost. `commit`: a release
- * past the commit point slides the row out and fires the outermost entry;
- * nothing rests, and the panel is presentational.
+ * `reveal`: every entry of a resting row is a real button, and a long drag
+ * fires the outermost. As in a UIKit list, a fast release goes the way it
+ * moves (a flick opens the row, a flick back closes it) and a slow one rests
+ * the row open past half the panel. `commit`: a
+ * release past the commit point slides the row out and fires the outermost
+ * entry; nothing rests, and the panel is presentational.
  */
 export type ItemSwipeBehavior = 'reveal' | 'commit';
 
@@ -276,8 +278,10 @@ export interface ItemProps extends BaseProps<HTMLElement> {
 
   /**
    * What a swipe does: `reveal` rests the row open with every entry tappable
-   * and fires the outermost on a long drag; `commit` slides the row out and
-   * fires the outermost on release. `commit` fits one entry per side.
+   * (a flick opens it and a flick back closes it, as in a UIKit list) and
+   * fires the outermost on a long drag;
+   * `commit` slides the row out and fires the outermost on a release past
+   * the commit point. `commit` fits one entry per side.
    * @default 'reveal'
    */
   swipeBehavior?: ItemSwipeBehavior;
@@ -313,10 +317,8 @@ const ARIA_SELECTED_ROLES = new Set([
  */
 const SWIPE_ROLES = new Set(['listitem']);
 
-/** The travel a drag writes on the row root, in physical px (see useSwipeAction). */
+/** The travel the swipe writes on the row root, physical px (swipeMotion.ts). */
 const SWIPE_TRAVEL = 'var(--_item-swipe-travel, 0px)';
-/** The settle clock, `0s` while the finger drives the row. */
-const SWIPE_DURATION = 'var(--_item-swipe-duration, 0s)';
 
 // =============================================================================
 // Styles
@@ -488,19 +490,15 @@ const styles = stylex.create({
     display: 'flex',
     marginInlineStart: 'auto',
   },
-  // Swipe actions. The root translates by the drag's travel and settles on
-  // the clock the gesture writes; `pan-y` lets the browser keep scrolling the
-  // list while the row owns horizontal movement, and `pinch-zoom` leaves a
-  // two-finger pinch that starts on the row to the browser, so the page stays
-  // zoomable (WCAG 1.4.4). The hover transition keeps its own clock beside
-  // the transform's.
+  // Swipe actions. The root translates by the travel the gesture writes on
+  // it every frame (`spec:AST-057` FR2, see useSwipeAction); `pan-y` lets the
+  // browser keep scrolling the list while the row owns horizontal movement,
+  // and `pinch-zoom` leaves a two-finger pinch that starts on the row to the
+  // browser, so the page stays zoomable (WCAG 1.4.4).
   swipeRoot: {
     isolation: 'isolate',
     touchAction: 'pan-y pinch-zoom',
     transform: `translate3d(${SWIPE_TRAVEL}, 0, 0)`,
-    transitionProperty: 'background-color, transform',
-    transitionDuration: `${durationVars['--duration-fast-min']}, ${SWIPE_DURATION}`,
-    transitionTimingFunction: `${easeVars['--ease-standard']}, ease-out`,
   },
 });
 
@@ -633,7 +631,6 @@ export function Item({
       swipeBehavior === 'commit' &&
       (leadingSwipe.length > 1 || trailingSwipe.length > 1),
   );
-  const swipeRootRef = useRef<HTMLElement | null>(null);
   // Filled by the swipe layer once it has mounted; empty until then and on a
   // row without swipe actions, when the forwarders below do nothing.
   const swipeBridgeRef = useRef<ItemSwipeBridge | null>(null);
@@ -805,10 +802,7 @@ export function Item({
   );
 
   const mergedRef = useMergedRefs(ref, containerRef);
-  const rootRef = useMergedRefs(
-    (isDelegate ? mergedRef : ref) as React.Ref<HTMLElement>,
-    hasSwipe ? swipeRootRef : undefined,
-  );
+  const rootRef = isDelegate ? mergedRef : ref;
 
   // The row's own primary. The click the browser synthesizes after a swipe
   // never reaches it: the gesture system swallows it.
@@ -877,7 +871,6 @@ export function Item({
         // The panels: out-of-flow children of this root, so the DOM is the one
         // the row had before the split; at rest a panel shows nothing.
         <ItemSwipeLayer
-          rootRef={swipeRootRef}
           onBridge={setSwipeBridge}
           leading={leadingSwipe}
           trailing={trailingSwipe}
