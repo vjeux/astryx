@@ -653,12 +653,18 @@ export class SwitchTouchController {
   /** Passive: a mouse, a pen or a finger on the switch, UIControl's events (FR43). */
   private onControlEvent(event: ControlEvent, touch: GestureTouch): void {
     const travel = touch.x - touch.startX;
+    // The motion an event starts is dated when the switch handles it, one
+    // clock for all its animators: a catch starts from the thumb the screen
+    // shows (spec:AST-094 FR6). The event's own time is the recognizers'
+    // (FR16); a busy main thread hands the switch an event late, and a curve
+    // dated back to the event would step back from the frame on screen.
+    const time = now();
     switch (event) {
       case 'touchDown':
         this.isTracking = true;
         this.clickGuardUntil = 0;
         this.startPressListeners();
-        this.touchDown(touch.startTime);
+        this.touchDown(time);
         return;
       case 'touchDragInside':
       case 'touchDragOutside':
@@ -670,9 +676,9 @@ export class SwitchTouchController {
             return;
           }
           // A pan would begin here: the switch takes the horizontal drag.
-          this.pressBegan(touch.time);
+          this.pressBegan(time);
         }
-        this.move(touch.time, travel);
+        this.move(time, travel);
         return;
       case 'touchUpInside':
       case 'touchUpOutside':
@@ -682,14 +688,14 @@ export class SwitchTouchController {
         }
         // The finger's lift is a step of its own: a flip armed by the last
         // move happens here (a fast swipe flips on the lift).
-        this.move(touch.time, travel);
+        this.move(time, travel);
         if (this.drag?.flip.didFlip !== true && event === 'touchUpInside') {
           // A tap, a hold or a short drag: the browser's click activates it.
           // Only a finger's lift can come with no click (a hold); a mouse or
           // a pen gets one whenever it is released on the input, so with no
           // click it was released off the input, inside the tracking slop,
           // and the switch is left alone, as the native checkbox is.
-          this.release(touch.time, {
+          this.release(time, {
             byBrowserClick: true,
             clicksIfNoBrowserClick: touch.pointerType === 'touch',
           });
@@ -701,7 +707,7 @@ export class SwitchTouchController {
           // the switch is left alone, as the native checkbox is (the
           // reversible-toggle exception, Switch FR15, is a finger's).
           this.released = true;
-          this.abandon(touch.time);
+          this.abandon(time);
           this.endPressListeners(0);
           return;
         }
@@ -713,7 +719,7 @@ export class SwitchTouchController {
         // cancel left armed would take the next finger tap's click.
         this.cancelsTouchEnd = touch.pointerType === 'touch';
         this.clickGuardUntil = now() + CLICK_GUARD_MS;
-        this.release(touch.time);
+        this.release(time);
         this.endPressListeners(CLICK_GUARD_MS);
         return;
       case 'touchCancel':
@@ -722,7 +728,7 @@ export class SwitchTouchController {
         this.isTracking = false;
         if (!this.released) {
           this.released = true;
-          this.abandon(touch.time);
+          this.abandon(time);
         }
         this.endPressListeners(0);
         return;
