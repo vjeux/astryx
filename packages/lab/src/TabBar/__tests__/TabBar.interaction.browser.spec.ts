@@ -165,74 +165,64 @@ test('a tap on another tab slides the lens on UIKit’s spring, the selected cop
 test('a second tap mid-slide turns the lens around from where it is, without a jump', async ({
   page,
 }) => {
-  // Software-rendered WebKit can stall input for hundreds of milliseconds
-  // around a tap, so the second tap may reach the page only after the first
-  // slide has ended: then it was no second tap mid-slide. Where the lens was
-  // when the second tap took effect is read in the page; such a late run is
-  // played again (at most three times) and every run's motion is checked.
-  for (let attempt = 1; ; attempt += 1) {
-    const {driver} = await openBar(page);
-    const home = await itemCenter(page, 'Home');
-    const profile = await itemCenter(page, 'Profile');
-    const library = await itemCenter(page, 'Library');
-    // Records the lens's centre in the frame the second tap selects Library.
-    await page.evaluate(() => {
-      const target = [...document.querySelectorAll('[role="tab"]')].find(
-        element => element.textContent?.startsWith('Library'),
-      );
-      const lens = document.querySelector('[data-tab-bar-lens-body]');
-      const observer = new MutationObserver(() => {
-        if (target?.getAttribute('aria-selected') === 'true' && lens != null) {
-          const box = lens.getBoundingClientRect();
-          (window as unknown as {__turnedAt: number}).__turnedAt =
-            box.x + box.width / 2;
-          observer.disconnect();
-        }
-      });
-      if (target != null) {
-        observer.observe(target, {attributeFilter: ['aria-selected']});
+  const {driver} = await openBar(page);
+  const home = await itemCenter(page, 'Home');
+  const profile = await itemCenter(page, 'Profile');
+  const library = await itemCenter(page, 'Library');
+  // Records the lens's centre in the frame the second tap selects Library.
+  await page.evaluate(() => {
+    const target = [...document.querySelectorAll('[role="tab"]')].find(
+      element => element.textContent?.startsWith('Library'),
+    );
+    const lens = document.querySelector('[data-tab-bar-lens-body]');
+    const observer = new MutationObserver(() => {
+      if (target?.getAttribute('aria-selected') === 'true' && lens != null) {
+        const box = lens.getBoundingClientRect();
+        (window as unknown as {__turnedAt: number}).__turnedAt =
+          box.x + box.width / 2;
+        observer.disconnect();
       }
     });
-    // Every frame's lens position, sampled in the page while the taps land.
-    const sampling = sampleRects(lensBody(page), 1300);
-    await driver.tap(profile);
-    await waitForAnimation(lensBody(page), {minProgressMs: 90});
-    await driver.tap(library);
-    await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
-    const turnedAt = await page.evaluate(
-      () => (window as unknown as {__turnedAt: number}).__turnedAt,
-    );
-    const samples = (await sampling).flatMap(sample =>
-      sample.box == null
-        ? []
-        : [{t: sample.t, x: sample.box.x + sample.box.width / 2}],
-    );
-    // It headed for Profile and came back to Library, never jumping: a jump
-    // to either end would cover the whole remaining distance (over 100 px)
-    // in one frame. Only consecutive frames are compared, never samples a
-    // stall kept apart.
-    const steps = samples
-      .slice(1)
-      .flatMap((sample, i) =>
-        sample.t - samples[i].t <= 34 ? [sample.x - samples[i].x] : [],
-      );
-    expect(
-      Math.max(...steps.map(Math.abs)),
-      JSON.stringify(samples),
-    ).toBeLessThan(60);
-    expect(Math.min(...samples.map(sample => sample.x))).toBeGreaterThan(
-      home.x - 1,
-    );
-    await waitForRest(lensBody(page));
-    expect(Math.abs((await lensCenterX(page)) - library.x)).toBeLessThan(0.5);
-    // Mid-slide: past Library, short of Profile, when the second tap took
-    // effect.
-    expect(turnedAt).toBeGreaterThan(library.x + 20);
-    if (turnedAt < profile.x - 20 || attempt === 3) {
-      expect(turnedAt, `attempt ${attempt}`).toBeLessThan(profile.x - 20);
-      return;
+    if (target != null) {
+      observer.observe(target, {attributeFilter: ['aria-selected']});
     }
-  }
+  });
+  // Every frame's lens position, sampled in the page while the taps land.
+  const sampling = sampleRects(lensBody(page), 1300);
+  await driver.tap(profile);
+  await waitForAnimation(lensBody(page), {minProgressMs: 90});
+  await driver.tap(library);
+  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
+  const turnedAt = await page.evaluate(
+    () => (window as unknown as {__turnedAt: number}).__turnedAt,
+  );
+  const samples = (await sampling).flatMap(sample =>
+    sample.box == null
+      ? []
+      : [{t: sample.t, x: sample.box.x + sample.box.width / 2}],
+  );
+  // It headed for Profile and came back to Library, never jumping: a jump
+  // to either end would cover the whole remaining distance (over 100 px)
+  // in one frame. Only consecutive frames are compared, never samples a
+  // stall kept apart.
+  const steps = samples
+    .slice(1)
+    .flatMap((sample, i) =>
+      sample.t - samples[i].t <= 34 ? [sample.x - samples[i].x] : [],
+    );
+  expect(
+    Math.max(...steps.map(Math.abs)),
+    JSON.stringify(samples),
+  ).toBeLessThan(60);
+  expect(Math.min(...samples.map(sample => sample.x))).toBeGreaterThan(
+    home.x - 1,
+  );
+  await waitForRest(lensBody(page));
+  expect(Math.abs((await lensCenterX(page)) - library.x)).toBeLessThan(0.5);
+  // Mid-slide: past Library, short of Profile, when the second tap took
+  // effect.
+  expect(turnedAt).toBeGreaterThan(library.x + 20);
+  expect(turnedAt).toBeLessThan(profile.x - 20);
 });
 
 test('choosing the selected tab again reselects and moves nothing', async ({
