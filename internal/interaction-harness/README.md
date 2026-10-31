@@ -53,7 +53,7 @@ committed: a pull request links or attaches it.
 | `scripts.ts`    | Touch scripts as data: `tap`, `drag` (hold, rest), `flick` (exact final-move speed, velocity profiles), `holdThenDrag`, `pinch`, `rotate`, `path`, `merge` (a second finger mid-gesture), `releaseVelocity`, `toTouchEvents`.                                                |
 | `touch.ts`      | `touchDriver(page).play(script)`: the script as real engine input. `installInputLog` / `readInputLog`: what the page received.                                                                                                                                               |
 | `frames.ts`     | `startScreencast` (timestamped composited frames), `markElement` (a marker chip or outline), `trackMarker` (marker box per frame), `sampleRects` (per-rAF rects), `frameStats`.                                                                                              |
-| `busy.ts`       | `blockMainThread(page, ms)` and `busyWindowProof(tracked, window)`: frames presented, frames that moved, longest stall, a verdict; `presented` adds the compositor's own frames.                                                                                             |
+| `busy.ts`       | `blockMainThread(page, ms)`, `armBlockMainThread(page, ms, {during})` and `busyWindowProof(tracked, window)`: frames presented, frames that moved, longest stall, a verdict; `presented` adds the compositor's own frames.                                                                                             |
 | `webInput.ts`   | `webInputDriver(page)`: `wheel({x, y, dx, dy, ctrl})` and `pen(points)` as real engine input, for proofs across pointers (`spec:AST-100` FR4); `wheel` resolves once the page has the step; read back through the input log.                                                 |
 | `trace.ts`      | `traceRendering(page, body)`: main-thread counts of UpdateLayoutTree / Layout / PrePaint / Paint / Layerize / UpdateLayer / ScrollLayer / HitTest, `countBetween`, long tasks; `installLongTaskLog` / `readLongTasks`; `startCompositorTrace`: when the compositor presents. |
 | `curves.ts`     | `holdAnimations`, `seekAnimations`, `sampleCurve` (presented transform / opacity at any t), `waitForAnimation`, `watchAnimations`, `waitForRest`, `releaseAnimations`.                                                                                                       |
@@ -142,9 +142,12 @@ the block. With
 `during`, `blockMainThread` starts the loop from a task queued in the frame
 that saw the animation, after that frame's rendering update: WebKit hands a
 newly started animation to its compositor there, and a loop inside the rAF
-callback would freeze even a compositor animation. Call it before the release
-that starts a settle and await it after, so the page is already waiting when
-the settle begins. An animation counts once it is no longer pending and has
+callback would freeze even a compositor animation. To catch a settle near its
+start, arm the block before the release that starts it with
+`armBlockMainThread(page, ms, {during})` and await its `result()` after, so
+the page is already waiting when the settle begins; awaiting
+`blockMainThread` across the gesture does not work in WebKit, where an
+evaluation still pending holds the driver's injected touches. An animation counts once it is no longer pending and has
 run at least one frame: a `minProgressMs` under 16 is raised to 16, since one
 created in the frame the page looks is not on the compositor yet. The `verdict` judges the
 frames the screencast delivered, whatever its rate (a loaded machine's can

@@ -139,12 +139,19 @@ async function decoded(img: Locator) {
     .toBe(3000);
 }
 
+/**
+ * A quick double tap: 60 ms between the first lift and the second press, well
+ * inside `maximumIntervalBetweenTaps`. WebKit's injected touches carry only
+ * their real dispatch time (no timestamp parameter), so the shorter gap
+ * leaves a stalled runner more margin before the second tap counts as a new
+ * single tap (CI WebKit lane, 120 ms gap: a double tap missed in 1 of 10).
+ */
 function doubleTap(at: {x: number; y: number}): TouchScript {
   return [
     {t: 0, fingers: [{id: 0, ...at}]},
     {t: 50, fingers: []},
-    {t: 170, fingers: [{id: 0, ...at}]},
-    {t: 220, fingers: []},
+    {t: 110, fingers: [{id: 0, ...at}]},
+    {t: 160, fingers: []},
   ];
 }
 
@@ -265,15 +272,20 @@ test('under Reduce Motion a double tap cross-fades to its zoom instead of travel
   );
   expect(Math.min(...opacity)).toBeLessThan(0.1);
   // The landing is a timed write between the fade out and the fade back in
-  // (no animation runs then): wait for the photo to be opaque again.
+  // (no animation runs then): wait for the photo to be zoomed and opaque
+  // again. Waiting for opacity alone could pass on a sample taken before the
+  // fade out's first frame, when the photo is still opaque and unzoomed.
   await expect
     .poll(async () =>
-      img.evaluate(el => parseFloat(getComputedStyle(el).opacity)),
+      img.evaluate(el => {
+        const style = getComputedStyle(el);
+        return {
+          opacity: parseFloat(style.opacity),
+          zoomed: parseFloat(style.scale) > 1.5,
+        };
+      }),
     )
-    .toBe(1);
-  expect(
-    await img.evaluate(el => parseFloat(getComputedStyle(el).scale)),
-  ).toBeGreaterThan(1.5);
+    .toEqual({opacity: 1, zoomed: true});
 });
 
 test('with a mouse a zoomed drag rubber-bands past the edge and springs back to it, as a finger’s does', async ({

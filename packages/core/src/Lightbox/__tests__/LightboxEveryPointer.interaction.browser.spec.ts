@@ -253,11 +253,12 @@ test('a trackpad’s horizontal scroll pages a gallery', async ({browser}) => {
     const counter = dialog.getByText(/^\d+ \/ \d+$/);
     await expect(counter).toHaveText('1 / 4');
     await page.mouse.move(centre.x, centre.y);
-    // Past half a page, so the gesture pages on its travel alone.
-    for (let i = 0; i < 20; i++) {
-      await wheel(40, 0);
-      await page.waitForTimeout(16);
-    }
+    // Past half a page, so the gesture pages on its travel alone. One
+    // trackpad gesture: the wheels are queued back to back without waiting
+    // for each round trip, so a slow round trip on a loaded machine cannot
+    // open a gap past the 100 ms that ends a wheel gesture, which would split
+    // it into shorter gestures that each spring back.
+    await Promise.all(Array.from({length: 20}, () => wheel(40, 0)));
     await expect(counter).toHaveText('2 / 4');
   } finally {
     await context.close();

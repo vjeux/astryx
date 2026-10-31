@@ -25,7 +25,7 @@
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
-  blockMainThread,
+  armBlockMainThread,
   busyWindowProof,
   compareCurve,
   CONTROL_RGB,
@@ -474,7 +474,20 @@ test('a pinch that starts zoomed gives way below the fitted size and never close
 
 test('the close keeps moving every frame while the main thread is blocked', async ({
   page,
+  browserName,
 }, testInfo) => {
+  // A Chromium proof, with iOS 26.2 simulator evidence for WebKit: the
+  // harness's rule for busy-main-thread finger proofs (README, busy.ts). In
+  // Playwright's WebKit the main thread presents a frame only every 50-70 ms
+  // on the CI WebKit lane (podman --cpus=4, 1 worker), so the earliest safe
+  // block, one frame after the close stops pending, starts 60-80 ms into the
+  // ~180 ms close and leaves a 73-93 ms window against the 100 ms this proof
+  // judges: 0 of 10 there, an engine limit of WebKit's real-time frames, not
+  // a pass.
+  test.skip(
+    browserName === 'webkit',
+    'WebKit engine limit (CI WebKit lane 0/10, window 73-93 ms < 100 ms): proven on the iOS 26.2 simulator instead',
+  );
   const v = await openViewer(page);
   const rect = await v.photo.boundingBox();
   if (rect == null) {
@@ -484,6 +497,20 @@ test('the close keeps moving every frame while the main thread is blocked', asyn
   // compositor presented while the main thread spun, on this machine.
   await startBusyControl(page);
   const cast = await startScreencast(page);
+  // Blocked inside the page one frame into the close (the helper waits there
+  // for it), so nearly all of the close falls in the block. Not sooner: a
+  // block must find the close already on the compositor, and an animation is
+  // there only a frame after it starts (at 0 ms Chromium's is still pending;
+  // at 1 ms WebKit's start time has resolved but its layers are not flushed),
+  // or nothing can move during the block. Armed in the page before the
+  // release that starts the close (busy.ts): the page is already waiting when
+  // the close begins, however late the gesture's round trip returns on a
+  // loaded machine. The pinch itself writes the photo's transform directly,
+  // so no animation on the photo starts before the close.
+  const armed = await armBlockMainThread(page, 400, {
+    during: v.photo,
+    minProgressMs: 16,
+  });
   // 300 → 265 px: the recognizer reads 0.91, which closes.
   await v.driver.play(
     pinch({
@@ -493,16 +520,7 @@ test('the close keeps moving every frame while the main thread is blocked', asyn
       durationMs: 300,
     }),
   );
-  // Blocked inside the page one frame into the close (the helper waits there
-  // for it), so nearly all of the close falls in the block. Not sooner: a
-  // block must find the close already on the compositor, and an animation is
-  // there only a frame after it starts (at 0 ms Chromium's is still pending;
-  // at 1 ms WebKit's start time has resolved but its layers are not flushed),
-  // or nothing can move during the block.
-  const block = await blockMainThread(page, 400, {
-    during: v.photo,
-    minProgressMs: 16,
-  });
+  const block = await armed.result();
   await page.waitForTimeout(100);
   const castFrames = await cast.stop();
   const signal = await regionSignal(page, castFrames, rect);

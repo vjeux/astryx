@@ -4,7 +4,8 @@
  * @file busy.ts
  * @input Uses a Playwright `Page`
  * @output `blockMainThread` — a synchronous busy loop on the page's main thread
- *   that reports exactly when it ran —, `startBusyControl` — a plain
+ *   that reports exactly when it ran —, `armBlockMainThread` — the same loop
+ *   armed in the page before a gesture and read after it —, `startBusyControl` — a plain
  *   compositor-only control animation recorded in the same window — and
  *   `busyWindowProof`, which reads frame evidence for that window, against
  *   the control when it has one.
@@ -154,10 +155,12 @@ export interface BusyWindow {
  * runs after the frame's rendering update, which is where WebKit hands a newly
  * started animation to its compositor: a loop inside the rAF callback itself
  * holds that hand-off, and even a compositor animation freezes. To catch a
- * settle near its start, call it before the release that starts the settle and
- * await it after: the page is already waiting when the animation begins. Any
- * animation inside `during` counts, so pick an element that runs nothing
- * else meanwhile.
+ * settle near its start, arm the block before the release that starts the
+ * settle with `armBlockMainThread` and read it after: the page is already
+ * waiting when the animation begins. (Awaiting this function across the
+ * gesture does not work in WebKit: an evaluation still pending holds the
+ * driver's injected touches until it ends.) Any animation inside `during`
+ * counts, so pick an element that runs nothing else meanwhile.
  *
  * An animation counts once it is no longer pending and has run at least one
  * frame (`minProgressMs` below 16 ms is raised to 16). One created in the
@@ -238,6 +241,108 @@ export async function blockMainThread(
       }),
     {duration: ms, minProgress, wait: timeout},
   );
+}
+
+let armedBlocks = 0;
+
+/** A block armed in the page; `result` resolves once it has run. */
+export interface ArmedBlock {
+  result(): Promise<BusyWindow>;
+}
+
+/**
+ * `blockMainThread` with `during`, armed now and read later: the page starts
+ * waiting for an animation inside `during` to run `minProgressMs` before this
+ * resolves, and blocks from a task in that frame without the test. Arm it
+ * before the gesture or release that starts the animation, play the gesture,
+ * then await `result()`. Unlike awaiting `blockMainThread` across the gesture,
+ * no evaluation stays pending meanwhile, so WebKit delivers the gesture's
+ * injected touches on time, and however late the gesture's round trip
+ * returns on a loaded machine, the block starts one frame into the
+ * animation.
+ */
+export async function armBlockMainThread(
+  page: Page,
+  ms: number,
+  {
+    during,
+    minProgressMs = 16,
+    timeout = 5_000,
+  }: {during: Locator; minProgressMs?: number; timeout?: number},
+): Promise<ArmedBlock> {
+  const minProgress = Math.max(minProgressMs, ONE_FRAME_MS);
+  armedBlocks += 1;
+  const key = `__harnessArmedBlock${armedBlocks}`;
+  await during.evaluate(
+    (element, {duration, minProgress, wait, key}) => {
+      const store = window as unknown as Record<string, unknown>;
+      store[key] = {state: 'waiting'};
+      const gate = (
+        window as unknown as {
+          __harnessTimerGate?: {
+            frame?: typeof requestAnimationFrame;
+            timeout?: typeof setTimeout;
+          };
+        }
+      ).__harnessTimerGate;
+      const frame = gate?.frame ?? window.requestAnimationFrame.bind(window);
+      const later = gate?.timeout ?? window.setTimeout.bind(window);
+      const deadline = performance.now() + wait;
+      const tick = () => {
+        const running = element
+          .getAnimations({subtree: true})
+          .some(
+            a =>
+              a.playState === 'running' &&
+              !a.pending &&
+              Number(a.currentTime ?? 0) >= minProgress,
+          );
+        if (running) {
+          later(() => {
+            const from = performance.timeOrigin + performance.now();
+            const end = performance.now() + duration;
+            while (performance.now() < end) {
+              // Busy: nothing else runs.
+            }
+            store[key] = {
+              state: 'done',
+              from,
+              to: performance.timeOrigin + performance.now(),
+            };
+          }, 0);
+        } else if (performance.now() > deadline) {
+          store[key] = {state: 'failed'};
+        } else {
+          frame(tick);
+        }
+      };
+      frame(tick);
+    },
+    {duration: ms, minProgress, wait: timeout, key},
+  );
+  return {
+    result: async () => {
+      const handle = await page.waitForFunction(
+        k => {
+          const entry = (window as unknown as Record<string, unknown>)[k] as
+            | {state: string}
+            | undefined;
+          return entry != null && entry.state !== 'waiting' ? entry : null;
+        },
+        key,
+        {timeout: timeout + ms + 2_000},
+      );
+      const entry = (await handle.jsonValue()) as {
+        state: string;
+        from?: number;
+        to?: number;
+      };
+      if (entry.state !== 'done' || entry.from == null || entry.to == null) {
+        throw new Error('armBlockMainThread: no animation started');
+      }
+      return {from: entry.from, to: entry.to};
+    },
+  };
 }
 
 export interface BusyVerdict {
