@@ -33,7 +33,7 @@ export const docs = {
     bestPractices: [
       { guidance: true, description: 'Keep tooltip content concise, plain, and non-interactive; use Popover or HoverCard for links and buttons.' },
       { guidance: true, description: 'Override label when "More information" is too generic, e.g. "About this metric".' },
-      { guidance: true, description: 'Rely on InfoTip rather than a hand-rolled info button on touch: it sets Tooltip touchTrigger to tap, so a tap opens the tooltip even though the trigger is a button, and a tap outside dismisses it.' },
+      { guidance: true, description: 'Rely on InfoTip rather than a hand-rolled info button on touch: it sets Tooltip pressTrigger to toggle, so a tap, a click, Enter, or Space pins the tooltip even though the trigger is a button, and a tap outside dismisses it.' },
       { guidance: false, description: 'Hand-compose Icon inside Tooltip for info affordances; the bare Icon is aria-hidden and unfocusable, so keyboard and screen-reader users never see it.' },
       { guidance: false, description: 'Use InfoTip for essential information users must see to complete a task; put that text inline instead.' },
     ],
@@ -70,7 +70,7 @@ export const docsZh = {
     bestPractices: [
       { guidance: true, description: 'Keep tooltip content concise, plain, and non-interactive; use Popover or HoverCard for links and buttons.' },
       { guidance: true, description: 'Override label when "More information" is too generic, e.g. "About this metric".' },
-      { guidance: true, description: 'Rely on InfoTip rather than a hand-rolled info button on touch: it sets Tooltip touchTrigger to tap, so a tap opens the tooltip even though the trigger is a button, and a tap outside dismisses it.' },
+      { guidance: true, description: 'Rely on InfoTip rather than a hand-rolled info button on touch: it sets Tooltip pressTrigger to toggle, so a tap, a click, Enter, or Space pins the tooltip even though the trigger is a button, and a tap outside dismisses it.' },
       { guidance: false, description: 'Hand-compose Icon inside Tooltip for info affordances; the bare Icon is aria-hidden and unfocusable, so keyboard and screen-reader users never see it.' },
       { guidance: false, description: 'Use InfoTip for essential information users must see to complete a task; put that text inline instead.' },
     ],
@@ -87,7 +87,7 @@ export const docsDense = {
     bestPractices: [
       { guidance: true, description: 'Keep tooltip content concise, plain, and non-interactive; use Popover or HoverCard for links and buttons.' },
       { guidance: true, description: 'Override label when "More information" is too generic, e.g. "About this metric".' },
-      { guidance: true, description: 'Rely on InfoTip rather than a hand-rolled info button on touch: it sets Tooltip touchTrigger to tap, so a tap opens the tooltip even though the trigger is a button, and a tap outside dismisses it.' },
+      { guidance: true, description: 'Rely on InfoTip rather than a hand-rolled info button on touch: it sets Tooltip pressTrigger to toggle, so a tap, a click, Enter, or Space pins the tooltip even though the trigger is a button, and a tap outside dismisses it.' },
       { guidance: false, description: 'Hand-compose Icon inside Tooltip for info affordances; the bare Icon is aria-hidden and unfocusable.' },
       { guidance: false, description: 'Use InfoTip for essential information users must see to complete a task; put that text inline instead.' },
     ],
