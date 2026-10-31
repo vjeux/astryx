@@ -110,11 +110,10 @@ export function InfoTip({
   return (
     <Tooltip
       content={content}
-      // The trigger is a real button, so Tooltip's `auto` touch rule would
-      // give the tap to the control and suppress the tooltip. Here the tooltip
-      // IS the control's only purpose, so the tap has to open it — otherwise
-      // an InfoTip's content is unreachable on a phone.
-      touchTrigger="tap">
+      // The tooltip IS the button's only purpose: a click, a tap, Enter, or
+      // Space pins it open and the press stops at the button, so an InfoTip's
+      // content is reachable on a phone and from the keyboard alike.
+      pressTrigger="toggle">
       <button
         type="button"
         aria-label={label}

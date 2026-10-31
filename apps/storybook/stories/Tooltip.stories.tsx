@@ -366,11 +366,11 @@ export const TouchTriggers: Story = {
         <Tooltip content="Tooltip on inline text!" placement="above">
           hover-able term
         </Tooltip>
-        {/* A button whose only job is the tooltip — say so with `tap`. */}
+        {/* A button whose only job is the tooltip: a press pins it. */}
         <Tooltip
           content="Rows are ranked by how many places import the icon"
           placement="above"
-          touchTrigger="tap">
+          pressTrigger="toggle">
           <Button label="What is this?" variant="secondary">
             ?
           </Button>
