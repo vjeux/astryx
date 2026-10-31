@@ -76,6 +76,7 @@ import {useZoomCore} from './useZoomCore';
 import {usePager, type Pager} from '../hooks/usePager';
 import {UIKIT_TAP} from '../motion/uikit/gestures';
 import {zoomMedia} from '../motion/uikit/zoomMedia';
+import {useZoomWheel} from './useZoomWheel';
 import {useZoomStage, type ZoomStage} from './useZoomStage';
 import {lightboxScope} from './lightbox.markers.stylex';
 import {useTouchPresentation} from '../utils/touchPresentation';
@@ -1155,6 +1156,13 @@ export function Lightbox({
         }
       }
     },
+  });
+  // A wheel or trackpad over the photo, Lightbox-local (FR11): a pinch or a
+  // ctrl-wheel zooms about the pointer and can close the viewer, and a plain
+  // wheel pans a zoomed photo.
+  useZoomWheel(zoom, isGallery ? trackRef : imageWrapperRef, {
+    isEnabled: isOpen && isZoomTarget,
+    onPinchClose: handleClose,
   });
   const stage = useZoomStage(zoom, {
     pressPointerType: () => lastInputRef.current,
