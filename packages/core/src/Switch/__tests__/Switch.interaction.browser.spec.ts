@@ -815,6 +815,32 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     // Gate the page's timers before the press, so the release timer (which
     // removes the attribute when the clock runs out) holds while seeking.
     await installTimerGate(page);
+    // Hold each CSS animation of the row from its start, in the page: a
+    // loaded machine reaches the hold below after a 250 ms release could
+    // have ended. Its keyframes and timing are untouched; the curve is read
+    // by seeking.
+    await page.evaluate(() => {
+      const row = document.querySelector(
+        '#storybook-root [data-astryx-pressable]',
+      )!;
+      row.addEventListener(
+        'animationstart',
+        event => {
+          for (const animation of (event.target as Element).getAnimations({
+            subtree: false,
+          })) {
+            if (
+              animation instanceof CSSAnimation &&
+              animation.animationName ===
+                (event as AnimationEvent).animationName
+            ) {
+              animation.playbackRate = 0;
+            }
+          }
+        },
+        {capture: true},
+      );
+    });
     await driver.play(tap(center, {holdMs: 400}));
     expect(await pressState(page)).toBe('fading');
     await freezeTimers(page);
@@ -1528,7 +1554,33 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     }, everyNthFrame);
   }
 
-  /** P14's two taps: the second lands 70 ms into the first one's travel. */
+  /**
+   * Resolves once the thumb's travel is on screen: its newest `translate`
+   * animation running, started, and one frame into its curve. A page-side
+   * wait, so a loaded machine starts what follows at the same point of the
+   * travel, not at a fixed time after the tap.
+   */
+  async function travelOnScreen(page: Page): Promise<void> {
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector<HTMLElement>('#storybook-root .astryx-switch-thumb')!
+          .getAnimations()
+          .some(
+            a =>
+              a.playState === 'running' &&
+              !a.pending &&
+              Number(a.currentTime ?? 0) >= 16 &&
+              (a.effect as KeyframeEffect)
+                .getKeyframes()
+                .some(k => 'translate' in k),
+          ),
+      undefined,
+      {polling: 'raf'},
+    );
+  }
+
+  /** P14's two taps: the second lands once the first one's travel is on screen. */
   async function secondTapMidTravel(
     page: Page,
     driver: TouchDriver,
@@ -1539,14 +1591,17 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     // path).
     if (driver.engine === 'webkit') {
       await driver.tap(center);
-      await page.waitForTimeout(70);
+      await travelOnScreen(page);
       await driver.tap(center);
     } else {
       await driver.play([
         {t: 0, fingers: [finger]},
         {t: 40, fingers: []},
-        {t: 110, fingers: [finger]},
-        {t: 140, fingers: []},
+      ]);
+      await travelOnScreen(page);
+      await driver.play([
+        {t: 0, fingers: [finger]},
+        {t: 30, fingers: []},
       ]);
     }
   }
@@ -1822,10 +1877,11 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     );
     const {driver, input, thumb, center} = await openSwitch(page);
     await markElement(thumb, {size: 6, inset: 2});
-    // The block starts in the page two frames after the value changes, so the
-    // travel has just begun whatever the page's own timing (the lift, which
-    // starts at touch-down, is the thumb's first animation, and a round trip
-    // from here would start the block late).
+    // The block starts in the page once the travel is one frame into its
+    // curve, from a task queued in that frame, so it holds the same part of
+    // the travel whatever the page's own timing (the lift, which starts at
+    // touch-down, is the thumb's first animation, and a round trip from here
+    // would start the block late).
     await page.evaluate(() => {
       const w = window as unknown as {
         __block?: {from: number; to: number; spins: number};
@@ -1835,49 +1891,61 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       const thumb = document.querySelector<HTMLElement>(
         '#storybook-root .astryx-switch-thumb',
       )!;
+      const onScreen = () =>
+        thumb
+          .getAnimations()
+          .filter(
+            a =>
+              a.playState === 'running' &&
+              !a.pending &&
+              Number(a.currentTime ?? 0) >= 16 &&
+              (a.effect as KeyframeEffect)
+                .getKeyframes()
+                .some(k => 'translate' in k),
+          )
+          .at(-1);
+      const whenOnScreen = (run: () => void) => {
+        const tick = () => {
+          if (onScreen() == null) {
+            requestAnimationFrame(tick);
+          } else {
+            setTimeout(run, 0);
+          }
+        };
+        requestAnimationFrame(tick);
+      };
       input.addEventListener(
         'change',
         () =>
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => {
-              const travel = thumb
-                .getAnimations()
-                .filter(
-                  a =>
-                    a.playState === 'running' &&
-                    (a.effect as KeyframeEffect)
-                      .getKeyframes()
-                      .some(k => 'translate' in k),
-                )
-                .at(-1);
-              if (travel?.startTime != null) {
-                const effect = travel.effect as KeyframeEffect;
-                const from = performance.timeOrigin + Number(travel.startTime);
-                const ends = effect
-                  .getKeyframes()
-                  .map(k => k.computedOffset)
-                  .filter(o => o < 1);
-                w.__travel = {
-                  from,
-                  to:
-                    from +
-                    Number(effect.getComputedTiming().activeDuration) *
-                      Math.max(...ends),
-                };
-              }
-              const from = performance.timeOrigin + performance.now();
-              const end = performance.now() + 700;
-              let spins = 0;
-              while (performance.now() < end) {
-                spins++;
-              }
-              w.__block = {
+          whenOnScreen(() => {
+            const travel = onScreen();
+            if (travel?.startTime != null) {
+              const effect = travel.effect as KeyframeEffect;
+              const from = performance.timeOrigin + Number(travel.startTime);
+              const ends = effect
+                .getKeyframes()
+                .map(k => k.computedOffset)
+                .filter(o => o < 1);
+              w.__travel = {
                 from,
-                to: performance.timeOrigin + performance.now(),
-                spins,
+                to:
+                  from +
+                  Number(effect.getComputedTiming().activeDuration) *
+                    Math.max(...ends),
               };
-            }),
-          ),
+            }
+            const from = performance.timeOrigin + performance.now();
+            const end = performance.now() + 700;
+            let spins = 0;
+            while (performance.now() < end) {
+              spins++;
+            }
+            w.__block = {
+              from,
+              to: performance.timeOrigin + performance.now(),
+              spins,
+            };
+          }),
         {once: true},
       );
     });
@@ -2226,9 +2294,13 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       );
       await board.write(testInfo);
       const ons = board.frames.map(f => f.data.on as number);
-      // Off until the flip, then the track color rises.
+      // Off until the flip, then the track color rises: waited for in the
+      // page, since a loaded machine can take the last frame before the
+      // rise shows.
       expect(ons[0]).toBeCloseTo(0, 2);
-      expect(ons.at(-1)!).toBeGreaterThan(0.05);
+      await expect
+        .poll(async () => (await presented(page)).on)
+        .toBeGreaterThan(0.05);
     },
   );
 });
