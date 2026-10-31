@@ -331,7 +331,8 @@ the app reaches every layer instead of the components that happen to read it.
 
 - Supported feature/engine floor: CSS Anchor Positioning (`anchor()`,
   `anchor-size()`, `anchor-center`, `position-try-fallbacks`, and
-  `position-area` for the anchor-clear fit options) and the Popover API, as
+  `position-area` for the anchor-clear fit options and for a layer that does
+  not flow horizontally on a horizontally flowing page) and the Popover API, as
   `architecture:layer-runtime` already requires for anchor mode. FR5 needs
   the runtime to know whether the anchor is in view; a synchronous read before
   first paint plus an observation while open is the layer's mechanism to own.

@@ -26,10 +26,16 @@ import {
   useKeepLayerOpenProps,
   useLayer,
   useLayerInternal,
+  getInsetSelfAlignment,
+  getInsetTryFallbacks,
+  getPositionArea,
   getPositionTryFallbacks,
   getSelfAlignment,
 } from './useLayer';
-import {getAnchorClearFallbacks} from './layerSlideRules';
+import {
+  getAnchorClearFallbacks,
+  getInsetAnchorClearFallbacks,
+} from './layerSlideRules';
 import {typeScaleVars} from '../theme/tokens.stylex';
 import type {
   LayerPlacement,
@@ -212,27 +218,27 @@ describe('useLayer identity', () => {
   });
 });
 
-describe('getPositionTryFallbacks (issue #3671, spec:AST-059 FR4)', () => {
+describe('getInsetTryFallbacks (issue #3671, spec:AST-059 FR4)', () => {
   const FLIPS = 'flip-block, flip-inline, flip-block flip-inline';
   const slides = (p: LayerPlacement, a: LayerAlignment) =>
-    `--astryx-layer-slide-${p}-${a}-same, --astryx-layer-slide-${p}-${a}-opposite`;
+    `--astryx-layer-anchor-slide-${p}-${a}-same, --astryx-layer-anchor-slide-${p}-${a}-opposite`;
   const spans = (side: string, first: string, second: string) =>
     `--astryx-layer-span-${side}-${first}, --astryx-layer-span-${side}-${second}`;
 
   it('appends inline span fallbacks for centered above/below layers so inline overflow can resolve (flip-inline is a no-op on center), then the named slides', () => {
-    expect(getPositionTryFallbacks('above', 'center')).toBe(
+    expect(getInsetTryFallbacks('above', 'center')).toBe(
       `${FLIPS}, ${spans('top', 'left', 'right')}, ${spans('bottom', 'left', 'right')}, ${slides('above', 'center')}`,
     );
-    expect(getPositionTryFallbacks('below', 'center')).toBe(
+    expect(getInsetTryFallbacks('below', 'center')).toBe(
       `${FLIPS}, ${spans('bottom', 'left', 'right')}, ${spans('top', 'left', 'right')}, ${slides('below', 'center')}`,
     );
   });
 
   it('appends block span fallbacks for centered start/end layers so block overflow can resolve (flip-block is a no-op on center), then the named slides', () => {
-    expect(getPositionTryFallbacks('start', 'center')).toBe(
+    expect(getInsetTryFallbacks('start', 'center')).toBe(
       `${FLIPS}, ${spans('left', 'top', 'bottom')}, ${spans('right', 'top', 'bottom')}, ${slides('start', 'center')}`,
     );
-    expect(getPositionTryFallbacks('end', 'center')).toBe(
+    expect(getInsetTryFallbacks('end', 'center')).toBe(
       `${FLIPS}, ${spans('right', 'top', 'bottom')}, ${spans('left', 'top', 'bottom')}, ${slides('end', 'center')}`,
     );
   });
@@ -240,7 +246,7 @@ describe('getPositionTryFallbacks (issue #3671, spec:AST-059 FR4)', () => {
   it('gives aligned layers the flips, then the named slide on the same side and on the opposite side', () => {
     for (const placement of ['above', 'below', 'start', 'end'] as const) {
       for (const alignment of ['start', 'end'] as const) {
-        expect(getPositionTryFallbacks(placement, alignment)).toBe(
+        expect(getInsetTryFallbacks(placement, alignment)).toBe(
           `${FLIPS}, ${slides(placement, alignment)}`,
         );
       }
@@ -262,10 +268,10 @@ describe('getPositionTryFallbacks (issue #3671, spec:AST-059 FR4)', () => {
     const css =
       document.getElementById('astryx-layer-slide-rules')?.textContent ?? '';
     expect(css).toContain(
-      '@position-try --astryx-layer-slide-below-start-same{margin-block-start:var(--_astryx-layer-clearance, 0px);',
+      '@position-try --astryx-layer-anchor-slide-below-start-same{margin-block-start:var(--_astryx-layer-clearance, 0px);',
     );
     expect(css).toContain(
-      '@position-try --astryx-layer-slide-below-start-opposite{margin-block-end:var(--_astryx-layer-clearance, 0px);',
+      '@position-try --astryx-layer-anchor-slide-below-start-opposite{margin-block-end:var(--_astryx-layer-clearance, 0px);',
     );
     expect(css).toMatch(
       /margin-inline-start:[^;]*;margin-inline-start:[^;]*env\(safe-area-inset-left/,
@@ -273,18 +279,28 @@ describe('getPositionTryFallbacks (issue #3671, spec:AST-059 FR4)', () => {
     // Placed by insets across the whole alignment axis, centered on the
     // anchor there unless the anchor is out of view (FR5).
     expect(css).toMatch(
-      /--astryx-layer-slide-below-start-same\{[^}]*inset-inline-start:0;inset-inline-end:0;inset-block-start:anchor\(self-end\);inset-block-end:0;align-self:var\(--_astryx-layer-pin,\) self-start;justify-self:var\(--_astryx-layer-slide-align,anchor-center\);\}/,
+      /--astryx-layer-anchor-slide-below-start-same\{[^}]*inset-inline-start:0;inset-inline-end:0;inset-block-start:anchor\(self-end\);inset-block-end:0;align-self:var\(--_astryx-layer-pin,\) self-start;justify-self:var\(--_astryx-layer-slide-align,anchor-center\);\}/,
     );
-    // No option but the anchor-clear `fit` is placed by `position-area`.
-    expect(css.match(/position-area:/g)).toHaveLength(2);
+    // No inset-placed option but the anchor-clear `fit` is placed by
+    // `position-area`; every option of an area-placed layer is.
+    const options = css.match(/@position-try [^{]+\{[^}]*\}/g) ?? [];
+    const inset = options.filter(o =>
+      o.startsWith('@position-try --astryx-layer-anchor-'),
+    );
+    expect(inset.filter(o => o.includes('position-area:'))).toHaveLength(2);
+    const area = options.filter(o =>
+      /^@position-try --astryx-layer-(slide|beside|fit)-/.test(o),
+    );
+    expect(area).toHaveLength(28);
+    expect(area.every(o => o.includes('position-area:'))).toBe(true);
   });
 
   it('defaults to above/center when called without arguments (matches renderContext defaults)', () => {
-    expect(getPositionTryFallbacks()).toBe(
-      getPositionTryFallbacks('above', 'center'),
+    expect(getInsetTryFallbacks()).toBe(
+      getInsetTryFallbacks('above', 'center'),
     );
-    expect(getPositionTryFallbacks(undefined, undefined)).toBe(
-      getPositionTryFallbacks('above', 'center'),
+    expect(getInsetTryFallbacks(undefined, undefined)).toBe(
+      getInsetTryFallbacks('above', 'center'),
     );
   });
 
@@ -293,16 +309,16 @@ describe('getPositionTryFallbacks (issue #3671, spec:AST-059 FR4)', () => {
     const alignments: LayerAlignment[] = ['start', 'center', 'end'];
     const spanPattern: Record<LayerPlacement, RegExp> = {
       above:
-        /^--astryx-layer-span-(top|bottom)-(left|right)$|^--astryx-layer-slide-above-/,
+        /^--astryx-layer-span-(top|bottom)-(left|right)$|^--astryx-layer-anchor-slide-above-/,
       below:
-        /^--astryx-layer-span-(top|bottom)-(left|right)$|^--astryx-layer-slide-below-/,
+        /^--astryx-layer-span-(top|bottom)-(left|right)$|^--astryx-layer-anchor-slide-below-/,
       start:
-        /^--astryx-layer-span-(left|right)-(top|bottom)$|^--astryx-layer-slide-start-/,
-      end: /^--astryx-layer-span-(left|right)-(top|bottom)$|^--astryx-layer-slide-end-/,
+        /^--astryx-layer-span-(left|right)-(top|bottom)$|^--astryx-layer-anchor-slide-start-/,
+      end: /^--astryx-layer-span-(left|right)-(top|bottom)$|^--astryx-layer-anchor-slide-end-/,
     };
     for (const placement of placements) {
       for (const alignment of alignments) {
-        const items = getPositionTryFallbacks(placement, alignment).split(', ');
+        const items = getInsetTryFallbacks(placement, alignment).split(', ');
         expect(items.slice(0, 3)).toEqual([
           'flip-block',
           'flip-inline',
@@ -330,12 +346,12 @@ describe('getPositionTryFallbacks (issue #3671, spec:AST-059 FR4)', () => {
 
     rerender(<ContextLayerHarness placement="above" alignment="start" />);
     expect(layerEl.style.positionTryFallbacks).toBe(
-      getPositionTryFallbacks('above', 'start'),
+      getInsetTryFallbacks('above', 'start'),
     );
 
     rerender(<ContextLayerHarness placement="start" alignment="center" />);
     expect(layerEl.style.positionTryFallbacks).toBe(
-      getPositionTryFallbacks('start', 'center'),
+      getInsetTryFallbacks('start', 'center'),
     );
   });
 
@@ -358,8 +374,87 @@ describe('getPositionTryFallbacks (issue #3671, spec:AST-059 FR4)', () => {
     const layerEl = container.querySelector('[popover]') as HTMLElement;
     expect(layerEl).not.toBeNull();
     expect(layerEl.style.positionTryFallbacks).toBe(
-      getPositionTryFallbacks('above', 'center'),
+      getInsetTryFallbacks('above', 'center'),
     );
+  });
+});
+
+describe('the area placement: a layer that does not flow horizontally on a horizontally flowing page (spec:AST-059 FR4)', () => {
+  afterEach(() => {
+    document.documentElement.style.removeProperty('writing-mode');
+  });
+
+  it('maps placement and alignment to a self-* position-area', () => {
+    expect(getPositionArea()).toBe('self-block-start');
+    expect(getPositionArea('above', 'start')).toBe(
+      'self-block-start span-self-inline-end',
+    );
+    expect(getPositionArea('below', 'end')).toBe(
+      'self-block-end span-self-inline-start',
+    );
+    expect(getPositionArea('start', 'center')).toBe('self-inline-start');
+    expect(getPositionArea('end', 'start')).toBe(
+      'self-inline-end span-self-block-end',
+    );
+  });
+
+  it("lists the flips, then a centered layer's position-area spans, then its own slides", () => {
+    expect(getPositionTryFallbacks('above', 'center')).toBe(
+      'flip-block, flip-inline, flip-block flip-inline, top span-left, top span-right, bottom span-left, bottom span-right, --astryx-layer-slide-above-center-same, --astryx-layer-slide-above-center-opposite',
+    );
+    expect(getPositionTryFallbacks('start', 'end')).toBe(
+      'flip-block, flip-inline, flip-block flip-inline, --astryx-layer-slide-start-end-same, --astryx-layer-slide-start-end-opposite',
+    );
+  });
+
+  it('pins an aligned layer unsafe toward its anchor only while the anchor is out of view (FR5)', () => {
+    expect(getSelfAlignment('below', 'start', true)).toEqual({});
+    expect(getSelfAlignment('below', 'center', false)).toEqual({});
+    expect(getSelfAlignment('below', 'start', false)).toEqual({
+      justifySelf: 'unsafe self-start',
+    });
+    expect(getSelfAlignment('end', 'end', false)).toEqual({
+      alignSelf: 'unsafe self-end',
+    });
+  });
+
+  it('keeps its anchor clear with its own beside and fit options', () => {
+    expect(getAnchorClearFallbacks('above')).toBe(
+      '--astryx-layer-beside-end, --astryx-layer-beside-start, flip-block, --astryx-layer-fit-above, --astryx-layer-fit-below',
+    );
+    expect(getAnchorClearFallbacks('start')).toBe('');
+  });
+
+  it('is placed by its area from the frame it opens in when the page flows vertically', async () => {
+    const user = userEvent.setup();
+    document.documentElement.style.setProperty('writing-mode', 'vertical-rl');
+    const {container} = render(
+      <ContextLayerHarness placement="below" alignment="start" />,
+    );
+    const layerEl = () => container.querySelector('[popover]') as HTMLElement;
+    // What the layer is placed with as it opens.
+    let placedAtOpen: Record<string, string> | null = null;
+    const element = layerEl();
+    const showPopover = element.showPopover.bind(element);
+    element.showPopover = () => {
+      placedAtOpen = {
+        area: element.style.positionArea,
+        inset: element.style.insetBlockStart,
+        fallbacks: element.style.positionTryFallbacks,
+      };
+      showPopover();
+    };
+    await user.click(container.querySelector('button')!);
+    expect(placedAtOpen).toEqual({
+      area: 'self-block-end span-self-inline-end',
+      inset: '',
+      fallbacks: getPositionTryFallbacks('below', 'start'),
+    });
+    // The render that follows agrees.
+    expect(layerEl().style.positionArea).toBe(
+      'self-block-end span-self-inline-end',
+    );
+    expect(layerEl().style.insetBlockStart).toBe('');
   });
 });
 
@@ -438,30 +533,30 @@ describe('viewport inset (spec:AST-059)', () => {
       '--_astryx-layer-pin': 'unsafe',
       '--_astryx-layer-slide-align': edge,
     });
-    expect(getSelfAlignment('below', 'start', true)).toEqual({});
-    expect(getSelfAlignment('below', 'center', true)).toEqual({});
-    expect(getSelfAlignment('below', 'start', false)).toEqual({
+    expect(getInsetSelfAlignment('below', 'start', true)).toEqual({});
+    expect(getInsetSelfAlignment('below', 'center', true)).toEqual({});
+    expect(getInsetSelfAlignment('below', 'start', false)).toEqual({
       justifySelf: 'unsafe self-start',
       ...pin('unsafe self-start'),
     });
-    expect(getSelfAlignment('above', 'end', false)).toEqual({
+    expect(getInsetSelfAlignment('above', 'end', false)).toEqual({
       justifySelf: 'unsafe self-end',
       ...pin('unsafe self-end'),
     });
-    expect(getSelfAlignment('end', 'start', false)).toEqual({
+    expect(getInsetSelfAlignment('end', 'start', false)).toEqual({
       alignSelf: 'unsafe self-start',
       ...pin('unsafe self-start'),
     });
-    expect(getSelfAlignment('start', 'end', false)).toEqual({
+    expect(getInsetSelfAlignment('start', 'end', false)).toEqual({
       alignSelf: 'unsafe self-end',
       ...pin('unsafe self-end'),
     });
     // A centered layer stays centered on its anchor, without the shift.
-    expect(getSelfAlignment('below', 'center', false)).toEqual({
+    expect(getInsetSelfAlignment('below', 'center', false)).toEqual({
       justifySelf: 'unsafe anchor-center',
       ...pin('unsafe anchor-center'),
     });
-    expect(getSelfAlignment('start', 'center', false)).toEqual({
+    expect(getInsetSelfAlignment('start', 'center', false)).toEqual({
       alignSelf: 'unsafe anchor-center',
       ...pin('unsafe anchor-center'),
     });
@@ -514,7 +609,7 @@ describe('viewport inset (spec:AST-059)', () => {
     );
     // The fallback list stays; only the overflow shift is withdrawn.
     expect(layerEl.style.positionTryFallbacks).toBe(
-      getPositionTryFallbacks('below', 'start'),
+      getInsetTryFallbacks('below', 'start'),
     );
 
     act(() => {
@@ -2010,19 +2105,19 @@ describe('a layer that keeps its anchor clear (spec:AST-059 FR4)', () => {
   });
 
   it('lists beside the trigger, then the other block side at its own size, and only then each block side sized to its room', () => {
-    expect(getAnchorClearFallbacks('above')).toBe(
-      '--astryx-layer-beside-end, --astryx-layer-beside-start, flip-block, --astryx-layer-fit-above, --astryx-layer-fit-below',
+    expect(getInsetAnchorClearFallbacks('above')).toBe(
+      '--astryx-layer-anchor-beside-end, --astryx-layer-anchor-beside-start, flip-block, --astryx-layer-anchor-fit-above, --astryx-layer-anchor-fit-below',
     );
-    expect(getAnchorClearFallbacks('below')).toBe(
-      '--astryx-layer-beside-end, --astryx-layer-beside-start, flip-block, --astryx-layer-fit-below, --astryx-layer-fit-above',
+    expect(getInsetAnchorClearFallbacks('below')).toBe(
+      '--astryx-layer-anchor-beside-end, --astryx-layer-anchor-beside-start, flip-block, --astryx-layer-anchor-fit-below, --astryx-layer-anchor-fit-above',
     );
     // Side placements already slide along the block axis at full height.
-    expect(getAnchorClearFallbacks('start')).toBe('');
-    expect(getAnchorClearFallbacks('end')).toBe('');
+    expect(getInsetAnchorClearFallbacks('start')).toBe('');
+    expect(getInsetAnchorClearFallbacks('end')).toBe('');
     // Chromium tries no more than five options.
     for (const placement of ['above', 'below'] as const) {
       expect(
-        getAnchorClearFallbacks(placement).split(', ').length,
+        getInsetAnchorClearFallbacks(placement).split(', ').length,
       ).toBeLessThanOrEqual(5);
     }
   });
@@ -2036,13 +2131,13 @@ describe('a layer that keeps its anchor clear (spec:AST-059 FR4)', () => {
     // Beside: an inline side spanning the block axis, at the content's own
     // inline size so a content-sized layer cannot squeeze into a sliver.
     expect(css).toContain(
-      '@position-try --astryx-layer-beside-end{margin-inline-start:var(--_astryx-layer-clearance, 0px);',
+      '@position-try --astryx-layer-anchor-beside-end{margin-inline-start:var(--_astryx-layer-clearance, 0px);',
     );
     expect(css).toMatch(
-      /--astryx-layer-beside-end\{[^}]*inset-inline-start:anchor\(self-end\);inset-inline-end:0;[^}]*align-self:var\(--_astryx-layer-pin,\) anchor-center;/,
+      /--astryx-layer-anchor-beside-end\{[^}]*inset-inline-start:anchor\(self-end\);inset-inline-end:0;[^}]*align-self:var\(--_astryx-layer-pin,\) anchor-center;/,
     );
     expect(css).toMatch(
-      /@position-try --astryx-layer-beside-start\{[^}]*inline-size:max-content;\}/,
+      /@position-try --astryx-layer-anchor-beside-start\{[^}]*inline-size:max-content;\}/,
     );
     // Fit: sized to the room on its side and never less than half of the
     // room the trigger leaves on the block axis, so it fits only on the
@@ -2054,12 +2149,14 @@ describe('a layer that keeps its anchor clear (spec:AST-059 FR4)', () => {
     ]) {
       expect(css).toMatch(
         new RegExp(
-          `@position-try --astryx-layer-fit-${side}\\{position-area:${area} span-all;inset-block-start:0;inset-block-end:0;[^}]*block-size:max\\(calc\\(100% - [^}]*anchor-size\\(block\\)[^}]*100dvb`,
+          `@position-try --astryx-layer-anchor-fit-${side}\\{position-area:${area} span-all;inset-block-start:0;inset-block-end:0;[^}]*block-size:max\\(calc\\(100% - [^}]*anchor-size\\(block\\)[^}]*100dvb`,
         ),
       );
     }
-    expect(css).not.toMatch(/--astryx-layer-fit-[a-z]+-roomier/);
-    expect(css.match(/@position-try --astryx-layer-fit-/g)).toHaveLength(2);
+    expect(css).not.toMatch(/--astryx-layer-anchor-fit-[a-z]+-roomier/);
+    expect(css.match(/@position-try --astryx-layer-anchor-fit-/g)).toHaveLength(
+      2,
+    );
     expect(css).toContain(
       '[data-astryx-clears-anchor]{--_astryx-layer-try-fallbacks:var(--_astryx-layer-clear-fallbacks);}',
     );
@@ -2071,11 +2168,11 @@ describe('a layer that keeps its anchor clear (spec:AST-059 FR4)', () => {
     await user.click(container.querySelector('button')!);
     const layerEl = container.querySelector('[popover]') as HTMLElement;
     expect(layerEl.style.positionTryFallbacks).toBe(
-      `var(--_astryx-layer-try-fallbacks, ${getPositionTryFallbacks('below', 'center')})`,
+      `var(--_astryx-layer-try-fallbacks, ${getInsetTryFallbacks('below', 'center')})`,
     );
     expect(
       layerEl.style.getPropertyValue('--_astryx-layer-clear-fallbacks'),
-    ).toBe(getAnchorClearFallbacks('below'));
+    ).toBe(getInsetAnchorClearFallbacks('below'));
   });
 
   it('switches to the clear list when the shown layer covers its trigger', async () => {
@@ -2529,7 +2626,7 @@ describe('a layer that keeps its anchor clear (spec:AST-059 FR4)', () => {
     const layerEl = container.querySelector('[popover]') as HTMLElement;
     expect(layerEl).not.toHaveAttribute('data-astryx-clears-anchor');
     expect(layerEl.style.positionTryFallbacks).toBe(
-      getPositionTryFallbacks('above', 'center'),
+      getInsetTryFallbacks('above', 'center'),
     );
     expect(
       layerEl.style.getPropertyValue('--_astryx-layer-clear-fallbacks'),

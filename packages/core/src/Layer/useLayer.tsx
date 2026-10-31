@@ -46,6 +46,8 @@ import {
   LAYER_TRY_FALLBACKS_PROPERTY,
   ensureSlideRules,
   getAnchorClearFallbacks,
+  getInsetAnchorClearFallbacks,
+  insetSlideRuleName,
   slideRuleName,
   spanRuleName,
   type PhysicalSide,
@@ -965,6 +967,69 @@ function readPortalWritingContext(
 }
 
 /**
+ * Map logical placement/alignment to a CSS position-area value, for a layer
+ * that does not flow horizontally on a horizontally flowing page
+ * (`isInsetPlaced`).
+ *
+ * Uses the self-* logical keyword family: the inline axis resolves against
+ * the popover's own direction (inherited inline or preserved when portaled),
+ * so it mirrors in RTL without placement-specific JS. The block axis is
+ * direction-neutral but must come from the same keyword family — mixing
+ * physical `top` with `self-inline-*` produces an invalid position-area
+ * (computes to `none`, which pins the popover to the viewport corner because
+ * styles.base zeroes the UA margins).
+ *
+ * Note the plain logical family (`inline-start`, no `self-`) is NOT a
+ * substitute: it resolves against the containing block — the page root for
+ * a top-layer popover — so it ignores `direction` set on a subtree, which
+ * is exactly #3389's repro.
+ */
+export function getPositionArea(
+  placement: LayerPlacement = 'above',
+  alignment: LayerAlignment = 'center',
+): string {
+  if (placement === 'above' || placement === 'below') {
+    const block = placement === 'above' ? 'self-block-start' : 'self-block-end';
+    if (alignment === 'start') {
+      return `${block} span-self-inline-end`;
+    }
+    if (alignment === 'end') {
+      return `${block} span-self-inline-start`;
+    }
+    return block; // center
+  }
+
+  const inline =
+    placement === 'start' ? 'self-inline-start' : 'self-inline-end';
+  if (alignment === 'start') {
+    return `${inline} span-self-block-end`;
+  }
+  if (alignment === 'end') {
+    return `${inline} span-self-block-start`;
+  }
+  return inline; // center
+}
+
+/**
+ * Whether a layer is placed by `anchor()` insets (`getAnchorInsets`): only
+ * while the layer and the page root both flow horizontally, where the inset
+ * placement was measured to spare WebKit a layout of the whole document on
+ * every style change. Across writing modes the engines resolve logical
+ * insets differently (Chromium in the layer's own writing mode, WebKit in its
+ * containing block's), so any other layer is placed by a `position-area`
+ * (`getPositionArea`), which both resolve alike. Read when the layer opens.
+ */
+function isInsetPlaced(layer: HTMLElement): boolean {
+  const view = layer.ownerDocument.defaultView;
+  if (view == null) {
+    return true;
+  }
+  const vertical = (element: Element) =>
+    /^(vertical|sideways)/.test(view.getComputedStyle(element).writingMode);
+  return !vertical(layer) && !vertical(layer.ownerDocument.documentElement);
+}
+
+/**
  * The `anchor()` insets and self-alignment that place a layer on its
  * placement's side of the anchor, aligned on the other axis
  * (spec:AST-059 FR4; layer-runtime INV5).
@@ -1056,12 +1121,11 @@ export function getAnchorInsets(
  * Compute the `position-try-fallbacks` list for a placement/alignment pair
  * (spec:AST-059 FR4).
  *
- * Flips first; they mirror the insets, the alignment, the placement-axis
- * margins (clearance and gutter) and the alignment-axis gutter. Centered
- * layers then try the one-sided spans, named `@position-try` options that
- * keep the base margins (`layerSlideRules.ts`). Then the slide: named
- * `@position-try` options that span the whole alignment axis, same side of
- * the trigger first, opposite side second. Flips alone cannot rescue a layer wider than the room on either
+ * Flips first; they mirror the placement-axis margins (clearance and gutter)
+ * and the alignment-axis gutter with the area. Then the slide: named
+ * `@position-try` options whose area spans the whole alignment axis
+ * (`layerSlideRules.ts`), same side of the trigger first, opposite side
+ * second. Flips alone cannot rescue a layer wider than the room on either
  * side of its trigger — every flipped option overflows the alignment axis
  * too, and the browser keeps the base option, so the layer never moves to the
  * side of the trigger that has room on the placement axis (#3671 for centered
@@ -1077,6 +1141,35 @@ export function getPositionTryFallbacks(
 ): string {
   const flips = 'flip-block, flip-inline, flip-block flip-inline';
   const slides = `${slideRuleName(placement, alignment, 'same')}, ${slideRuleName(placement, alignment, 'opposite')}`;
+
+  if (alignment !== 'center') {
+    return `${flips}, ${slides}`;
+  }
+
+  if (placement === 'above' || placement === 'below') {
+    const [same, opposite] =
+      placement === 'above' ? ['top', 'bottom'] : ['bottom', 'top'];
+    return `${flips}, ${same} span-left, ${same} span-right, ${opposite} span-left, ${opposite} span-right, ${slides}`;
+  }
+
+  const [same, opposite] =
+    placement === 'start' ? ['left', 'right'] : ['right', 'left'];
+  return `${flips}, ${same} span-top, ${same} span-bottom, ${opposite} span-top, ${opposite} span-bottom, ${slides}`;
+}
+
+/**
+ * `getPositionTryFallbacks` for an inset-placed layer (`isInsetPlaced`). The
+ * flips mirror the insets and the alignment too; centered layers then try the
+ * one-sided spans, named `@position-try` options that keep the base margins,
+ * and every layer then its slides, named `anchor-` options
+ * (`layerSlideRules.ts`).
+ */
+export function getInsetTryFallbacks(
+  placement: LayerPlacement = 'above',
+  alignment: LayerAlignment = 'center',
+): string {
+  const flips = 'flip-block, flip-inline, flip-block flip-inline';
+  const slides = `${insetSlideRuleName(placement, alignment, 'same')}, ${insetSlideRuleName(placement, alignment, 'opposite')}`;
 
   if (alignment !== 'center') {
     return `${flips}, ${slides}`;
@@ -1115,8 +1208,36 @@ function anchorViewOf(
 }
 
 /**
- * The self-alignment an aligned layer uses while its anchor is out of view
- * (spec:AST-059 FR5). A box that overflows the room beside its anchor is
+ * The self-alignment an aligned area-placed layer uses while its anchor is
+ * out of view (spec:AST-059 FR5). A position-area box that overflows the room
+ * beside its anchor is shifted by default to stay inside the viewport — the
+ * slide an aligned layer relies on when it fits on neither side (FR4). Once
+ * the anchor has left the viewport that shift would pin the layer into the
+ * narrowest strip at the edge, so the alignment is pinned `unsafe` toward the
+ * anchor instead and the layer holds the position its flips give it. `self-*`
+ * keywords resolve against the layer's own direction, matching the `self-*`
+ * position-area family; the flip tactics swap start/end with the area.
+ *
+ * Centered layers already slide through their span fallbacks and are
+ * unchanged; a visible anchor keeps the browser's default alignment.
+ */
+export function getSelfAlignment(
+  placement: LayerPlacement,
+  alignment: LayerAlignment,
+  isAnchorInView: boolean,
+): React.CSSProperties {
+  if (isAnchorInView || alignment === 'center') {
+    return {};
+  }
+  const edge = alignment === 'start' ? 'unsafe self-start' : 'unsafe self-end';
+  return placement === 'above' || placement === 'below'
+    ? {justifySelf: edge}
+    : {alignSelf: edge};
+}
+
+/**
+ * The self-alignment an inset-placed layer uses while its anchor is out of
+ * view (spec:AST-059 FR5). A box that overflows the room beside its anchor is
  * shifted by default to stay inside the viewport — the slide an aligned
  * layer relies on when it fits on neither side (FR4). Once the anchor has
  * left the viewport that shift would pin the layer into the narrowest strip
@@ -1131,7 +1252,7 @@ function anchorViewOf(
  * axis keeps the centered layer's shift, as it is in view along the axis the
  * shift runs on. A visible anchor keeps each position's own alignment.
  */
-export function getSelfAlignment(
+export function getInsetSelfAlignment(
   placement: LayerPlacement,
   alignment: LayerAlignment,
   isAnchorInView: boolean,
@@ -1155,6 +1276,82 @@ export function getSelfAlignment(
   return placement === 'above' || placement === 'below'
     ? {justifySelf: edge, ...pin}
     : {alignSelf: edge, ...pin};
+}
+
+/**
+ * A layer's anchor-positioning styles: placed by `anchor()` insets or by a
+ * `position-area` (`isInsetPlaced`), with that family's fallbacks, its
+ * self-alignment for an anchor out of view, and, for a layer that keeps its
+ * anchor clear, its second fallback list.
+ */
+function anchorPositionStyle(
+  insetPlaced: boolean,
+  placement: LayerPlacement,
+  alignment: LayerAlignment,
+  keepsAnchorClear: boolean,
+  anchorView: AnchorView,
+): React.CSSProperties {
+  const isAnchorInView = anchorView === 'visible';
+  const standardFallbacks = insetPlaced
+    ? getInsetTryFallbacks(placement, alignment)
+    : getPositionTryFallbacks(placement, alignment);
+  // A layer that keeps its anchor clear carries a second list; `show()`
+  // switches to it when the standard list settles over the anchor (FR4).
+  const clearFallbacks = !keepsAnchorClear
+    ? ''
+    : insetPlaced
+      ? getInsetAnchorClearFallbacks(placement)
+      : getAnchorClearFallbacks(placement);
+  const clearFallbacksProperty: Record<string, string> = clearFallbacks
+    ? {[LAYER_CLEAR_FALLBACKS_PROPERTY]: clearFallbacks}
+    : {};
+  const positionTryFallbacks = clearFallbacks
+    ? `var(${LAYER_TRY_FALLBACKS_PROPERTY}, ${standardFallbacks})`
+    : standardFallbacks;
+  if (!insetPlaced) {
+    return {
+      positionArea: getPositionArea(placement, alignment),
+      positionTryFallbacks,
+      ...getSelfAlignment(placement, alignment, isAnchorInView),
+      ...clearFallbacksProperty,
+    };
+  }
+  return {
+    ...getAnchorInsets(placement, alignment),
+    positionTryFallbacks,
+    ...getInsetSelfAlignment(
+      placement,
+      alignment,
+      isAnchorInView,
+      placement === 'above' || placement === 'below'
+        ? anchorView !== 'off-x' && anchorView !== 'off'
+        : anchorView !== 'off-y' && anchorView !== 'off',
+    ),
+    ...clearFallbacksProperty,
+  };
+}
+
+/** Writes `next` over `previous` on an element's inline style. */
+function replaceInlineStyle(
+  element: HTMLElement,
+  previous: React.CSSProperties,
+  next: React.CSSProperties,
+  keep: React.CSSProperties | undefined,
+): void {
+  const name = (key: string) =>
+    key.startsWith('--')
+      ? key
+      : key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
+  for (const key of Object.keys(previous)) {
+    if (!(key in next) && !(keep != null && key in keep)) {
+      element.style.removeProperty(name(key));
+    }
+  }
+  for (const [key, value] of Object.entries(next)) {
+    if (!(keep != null && key in keep)) {
+      element.style.setProperty(name(key), String(value));
+    }
+  }
 }
 
 /**
@@ -1259,7 +1456,6 @@ function useLayerImplementation(
   // Along which physical axes the anchor is out of view: a centered layer
   // pins only along its alignment axis (`getSelfAlignment`).
   const [anchorView, setAnchorView] = useState<AnchorView>('visible');
-  const isAnchorInView = anchorView === 'visible';
   // Mirror so the pre-paint read commits nothing when the answer is unchanged.
   const anchorViewRef = useRef<AnchorView>('visible');
   const updateAnchorInView = useCallback((view: AnchorView) => {
@@ -1268,6 +1464,18 @@ function useLayerImplementation(
       setAnchorView(view);
     }
   }, []);
+  // Whether the layer is placed by insets (`isInsetPlaced`), read as it
+  // opens. Every layer starts so; one that does not flow horizontally on a
+  // horizontally flowing page switches to a position-area before its first
+  // open frame (`show()` rewrites the placement the last render wrote).
+  const [insetPlaced, setInsetPlaced] = useState(true);
+  const insetPlacedRef = useRef(true);
+  const placementRenderRef = useRef<{
+    placement: LayerPlacement;
+    alignment: LayerAlignment;
+    style: React.CSSProperties;
+    extraStyle: React.CSSProperties | undefined;
+  } | null>(null);
   // The inset the app declared on LayerProvider (FR6). Read through context
   // and written inline on the layer, so a corrective portal cannot escape it
   // and no measurement is needed to apply it.
@@ -1475,6 +1683,26 @@ function useLayerImplementation(
       popover.removeAttribute(LAYER_CLEARS_ANCHOR_ATTRIBUTE);
       popover.removeAttribute(LAYER_SCROLLS_ATTRIBUTE);
       applyDeferredWritingContext(popover);
+      // The writing context is in place now: a layer that does not flow
+      // horizontally on a horizontally flowing page is placed by its area
+      // from its first open frame, and the render that follows agrees.
+      const placed = placementRenderRef.current;
+      if (placed != null) {
+        const insets = isInsetPlaced(popover);
+        if (insets !== insetPlacedRef.current) {
+          insetPlacedRef.current = insets;
+          const next = anchorPositionStyle(
+            insets,
+            placed.placement,
+            placed.alignment,
+            keepsAnchorClear,
+            anchorViewRef.current,
+          );
+          replaceInlineStyle(popover, placed.style, next, placed.extraStyle);
+          placed.style = next;
+          setInsetPlaced(insets);
+        }
+      }
       showPopoverElement(popover);
       if (keepsAnchorClear) {
         keepAnchorClear(popover, triggerRef.current);
@@ -1840,37 +2068,28 @@ function useLayerImplementation(
         onMouseLeave,
       } = props || {};
 
-      // CSS anchor positioning (dynamic, not in StyleX)
-      const standardFallbacks = getPositionTryFallbacks(placement, alignment);
-      // A layer that keeps its anchor clear carries a second list; `show()`
-      // switches to it when the standard list settles over the anchor (FR4).
-      const clearFallbacks =
-        keepsAnchorClear && positioning === 'anchor'
-          ? getAnchorClearFallbacks(placement)
-          : '';
-      const clearFallbacksProperty: Record<string, string> = clearFallbacks
-        ? {[LAYER_CLEAR_FALLBACKS_PROPERTY]: clearFallbacks}
-        : {};
-      const anchorStyle: React.CSSProperties =
+      // CSS anchor positioning (dynamic, not in StyleX): by insets or by an
+      // area (`isInsetPlaced`), with that family's fallbacks.
+      const placementStyle: React.CSSProperties =
         positioning === 'custom'
-          ? // Consumer authors its own position styles via `style` — keep
-            // only the anchor wiring, derive nothing from placement.
-            {positionAnchor: anchorId}
-          : {
-              positionAnchor: anchorId,
-              ...getAnchorInsets(placement, alignment),
-              positionTryFallbacks: clearFallbacks
-                ? `var(${LAYER_TRY_FALLBACKS_PROPERTY}, ${standardFallbacks})`
-                : standardFallbacks,
-              ...getSelfAlignment(
-                placement,
-                alignment,
-                isAnchorInView,
-                placement === 'above' || placement === 'below'
-                  ? anchorView !== 'off-x' && anchorView !== 'off'
-                  : anchorView !== 'off-y' && anchorView !== 'off',
-              ),
-            };
+          ? {}
+          : anchorPositionStyle(
+              insetPlaced,
+              placement,
+              alignment,
+              keepsAnchorClear,
+              anchorView,
+            );
+      placementRenderRef.current =
+        positioning === 'custom'
+          ? null
+          : {placement, alignment, style: placementStyle, extraStyle};
+      // A consumer that authors its own position styles via `style` keeps
+      // only the anchor wiring; nothing is derived from placement.
+      const anchorStyle: React.CSSProperties = {
+        positionAnchor: anchorId,
+        ...placementStyle,
+      };
 
       const clearance = offset ? toCssLength(offset) : null;
       const clearanceProperty: Record<string, string> =
@@ -1930,7 +2149,6 @@ function useLayerImplementation(
             ...stylexResult.style,
             ...anchorStyle,
             ...clearanceProperty,
-            ...clearFallbacksProperty,
             ...layerInsetProperties(declaredInset),
             ...mount.portalStyle,
             ...extraStyle,
@@ -1954,7 +2172,7 @@ function useLayerImplementation(
       declaredInset,
       anchorView,
       id,
-      isAnchorInView,
+      insetPlaced,
       keepsAnchorClear,
       lightDismiss,
       mountStore,

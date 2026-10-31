@@ -130,7 +130,7 @@ describe('Tooltip', () => {
       expect(
         tooltip.style.getPropertyValue('--_astryx-layer-clear-fallbacks'),
       ).toBe(
-        '--astryx-layer-beside-end, --astryx-layer-beside-start, flip-block, --astryx-layer-fit-below, --astryx-layer-fit-above',
+        '--astryx-layer-anchor-beside-end, --astryx-layer-anchor-beside-start, flip-block, --astryx-layer-anchor-fit-below, --astryx-layer-anchor-fit-above',
       );
     });
   });

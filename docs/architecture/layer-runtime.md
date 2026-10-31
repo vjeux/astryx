@@ -121,7 +121,8 @@ owns Theme provider behavior; this record owns where a layer's DOM is hosted.
 
 - **context / anchor:** the trigger receives a unique CSS `anchor-name`; the
   surface receives `position-anchor`, logical `anchor()` insets with their
-  self-alignment, and ordered fallback positions;
+  self-alignment (a `position-area` where the surface or the page root does
+  not flow horizontally), and ordered fallback positions;
 - **context / custom:** the trigger and `position-anchor` relationship remain,
   while the caller owns geometry, fallback, offset, and direction handling; and
 - **fixed:** the caller supplies viewport `x` and `y` coordinates and receives no
@@ -132,7 +133,13 @@ clobbering one another. Standard placement uses the `self-*` logical keyword
 family so inherited direction controls RTL behavior. Placement uses
 `anchor()` insets, not `position-area`: while any element on a page is placed
 by `position-area`, WebKit lays out the whole document on every style change.
-The anchor-clear list's `fit` options are the exception, sized to the room on
+Insets place a surface that flows horizontally on a page whose root does too,
+as read when the surface opens. Across writing modes the engines resolve
+logical insets differently, Chromium in the surface's own writing mode and
+WebKit in its containing block's, so a surface in a vertical writing mode, or
+on a page whose root flows vertically, is placed by a `self-*` `position-area`
+with its own family of fallback options. Among the inset family, the
+anchor-clear list's `fit` options are the exception, sized to the room on
 their side as a percentage of an area, and in effect only while a layer taller
 than that room on both sides is shown. Every anchored placement
 can flip across either axis. Centered placements also gain span fallbacks so the

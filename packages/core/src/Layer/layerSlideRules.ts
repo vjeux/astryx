@@ -9,11 +9,16 @@
  * @position Layer runtime geometry; the spans and the slide of
  *   spec:AST-059 FR4
  *
- * Every option but `fit` places the layer with `anchor()` insets, as its base
- * position does (useLayer's `getAnchorInsets`): on each axis the room from
- * the anchor's edge to the viewport's far edge, aligned toward the anchor, or
- * the whole axis centered on the anchor. Each option sets all four insets and
- * both alignments, so nothing of the base position carries over.
+ * Two families of options, one for each way useLayer places a layer. A layer
+ * that flows horizontally on a horizontally flowing page is placed by
+ * `anchor()` insets (useLayer's `getAnchorInsets`), and so is every option of
+ * its family (`anchor-` names) but `fit`: on each axis the room from the
+ * anchor's edge to the viewport's far edge, aligned toward the anchor, or the
+ * whole axis centered on the anchor. Each sets all four insets and both
+ * alignments, so nothing of the base position carries over. Any other layer
+ * is placed by a `position-area`, and so are its options (the unprefixed
+ * names): the engines resolve logical insets differently once a layer's
+ * writing mode is orthogonal to its containing block's.
  *
  * A span option (a centered layer's fallback) lands on one physical side,
  * aligned to the anchor's edge on the other axis, and keeps the base margins.
@@ -78,12 +83,22 @@ const SLIDE_ALIGN = `var(${LAYER_SLIDE_ALIGN_PROPERTY},anchor-center)`;
 
 type Side = 'same' | 'opposite';
 
+/** The name of an area-placed layer's slide option. */
 export function slideRuleName(
   placement: LayerPlacement,
   alignment: LayerAlignment,
   side: Side,
 ): string {
   return `--astryx-layer-slide-${placement}-${alignment}-${side}`;
+}
+
+/** The name of an inset-placed layer's slide option. */
+export function insetSlideRuleName(
+  placement: LayerPlacement,
+  alignment: LayerAlignment,
+  side: Side,
+): string {
+  return `--astryx-layer-anchor-slide-${placement}-${alignment}-${side}`;
 }
 
 const CLEARANCE = `var(${LAYER_CLEARANCE_PROPERTY}, 0px)`;
@@ -115,6 +130,19 @@ const OPPOSITE: Record<LayerPlacement, LayerPlacement> = {
   start: 'end',
   end: 'start',
 };
+
+function areaFor(placement: LayerPlacement): string {
+  switch (placement) {
+    case 'above':
+      return 'self-block-start span-all';
+    case 'below':
+      return 'self-block-end span-all';
+    case 'start':
+      return 'self-inline-start span-all';
+    case 'end':
+      return 'self-inline-end span-all';
+  }
+}
 
 /**
  * The placement-axis insets and alignment of a layer resting on `placement`'s
@@ -217,7 +245,16 @@ function rule(
   side: Side,
 ): string {
   const lands = side === 'same' ? placement : OPPOSITE[placement];
-  return `@position-try ${slideRuleName(placement, alignment, side)}{${placementMargins(lands)}${alignmentMargins(lands)}${landing(lands, SLIDE_ALIGN)}}`;
+  return `@position-try ${slideRuleName(placement, alignment, side)}{position-area:${areaFor(lands)};${placementMargins(lands)}${alignmentMargins(lands)}}`;
+}
+
+function insetRule(
+  placement: LayerPlacement,
+  alignment: LayerAlignment,
+  side: Side,
+): string {
+  const lands = side === 'same' ? placement : OPPOSITE[placement];
+  return `@position-try ${insetSlideRuleName(placement, alignment, side)}{${placementMargins(lands)}${alignmentMargins(lands)}${landing(lands, SLIDE_ALIGN)}}`;
 }
 
 const PLACEMENTS: ReadonlyArray<LayerPlacement> = [
@@ -233,6 +270,11 @@ export function besideRuleName(side: 'start' | 'end'): string {
   return `--astryx-layer-beside-${side}`;
 }
 
+/** The `beside` option of an inset-placed layer. */
+export function insetBesideRuleName(side: 'start' | 'end'): string {
+  return `--astryx-layer-anchor-beside-${side}`;
+}
+
 /**
  * The name of the `fit` option that lands on `side` sized to the room there,
  * which fits only while that side holds at least half of the room the trigger
@@ -242,13 +284,22 @@ export function fitRuleName(side: 'above' | 'below'): string {
   return `--astryx-layer-fit-${side}`;
 }
 
+/** The `fit` option of an inset-placed layer. */
+export function insetFitRuleName(side: 'above' | 'below'): string {
+  return `--astryx-layer-anchor-fit-${side}`;
+}
+
 /**
  * `beside`: the slide's geometry on an inline side, at the content's own
  * inline size. A content-sized layer would otherwise wrap to whatever sliver
  * of room the trigger leaves and always fit.
  */
 function besideRule(side: 'start' | 'end'): string {
-  return `@position-try ${besideRuleName(side)}{${placementMargins(side)}${alignmentMargins(side)}${landing(side, `${PIN} anchor-center`)}inline-size:max-content;}`;
+  return `@position-try ${besideRuleName(side)}{position-area:${areaFor(side)};${placementMargins(side)}${alignmentMargins(side)}inline-size:max-content;}`;
+}
+
+function insetBesideRule(side: 'start' | 'end'): string {
+  return `@position-try ${insetBesideRuleName(side)}{${placementMargins(side)}${alignmentMargins(side)}${landing(side, `${PIN} anchor-center`)}inline-size:max-content;}`;
 }
 
 /**
@@ -294,7 +345,18 @@ function fitRule(side: 'above' | 'below'): string {
     size('100vh', layerViewportInset.gutterBlockFallback),
     size('100dvb', layerViewportInset.gutterBlock),
   );
-  return `@position-try ${fitRuleName(side)}{position-area:${fitArea(side)};inset-block-start:0;inset-block-end:0;align-self:normal;justify-self:var(${LAYER_SLIDE_ALIGN_PROPERTY},normal);${placementMargins(side)}${alignmentMargins(side)}${blockSize}}`;
+  return `@position-try ${fitRuleName(side)}{position-area:${areaFor(side)};${placementMargins(side)}${alignmentMargins(side)}${blockSize}}`;
+}
+
+function insetFitRule(side: 'above' | 'below'): string {
+  const size = (viewport: string, gutter: string) =>
+    `max(${roomCap(gutter)}, ${halfRoom(viewport, gutter)})`;
+  const blockSize = pair(
+    'block-size',
+    size('100vh', layerViewportInset.gutterBlockFallback),
+    size('100dvb', layerViewportInset.gutterBlock),
+  );
+  return `@position-try ${insetFitRuleName(side)}{position-area:${fitArea(side)};inset-block-start:0;inset-block-end:0;align-self:normal;justify-self:var(${LAYER_SLIDE_ALIGN_PROPERTY},normal);${placementMargins(side)}${alignmentMargins(side)}${blockSize}}`;
 }
 
 /**
@@ -316,6 +378,17 @@ export function getAnchorClearFallbacks(placement: LayerPlacement): string {
   }
   const opposite = placement === 'above' ? 'below' : 'above';
   return `${besideRuleName('end')}, ${besideRuleName('start')}, flip-block, ${fitRuleName(placement)}, ${fitRuleName(opposite)}`;
+}
+
+/** `getAnchorClearFallbacks` for an inset-placed layer. */
+export function getInsetAnchorClearFallbacks(
+  placement: LayerPlacement,
+): string {
+  if (placement !== 'above' && placement !== 'below') {
+    return '';
+  }
+  const opposite = placement === 'above' ? 'below' : 'above';
+  return `${insetBesideRuleName('end')}, ${insetBesideRuleName('start')}, flip-block, ${insetFitRuleName(placement)}, ${insetFitRuleName(opposite)}`;
 }
 
 /** The custom property a layer writes its anchor-clear fallback list to. */
@@ -356,13 +429,19 @@ export function slideRulesCss(): string {
       ALIGNMENTS.flatMap(alignment => [
         rule(placement, alignment, 'same'),
         rule(placement, alignment, 'opposite'),
+        insetRule(placement, alignment, 'same'),
+        insetRule(placement, alignment, 'opposite'),
       ]),
     ),
     ...SPANS.map(([side, span]) => spanRule(side, span)),
     besideRule('end'),
     besideRule('start'),
+    insetBesideRule('end'),
+    insetBesideRule('start'),
     fitRule('above'),
     fitRule('below'),
+    insetFitRule('above'),
+    insetFitRule('below'),
     clearSwitchCss(),
   ].join('');
 }
