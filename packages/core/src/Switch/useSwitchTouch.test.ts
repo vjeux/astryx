@@ -56,7 +56,11 @@ vi.mock('../motion/animator', async importOriginal => {
         (name: string) =>
         (...args: unknown[]) => {
           fake.calls.push({name, args});
-          return {finished: Promise.resolve()};
+          // The browser has not started the motion within a test.
+          return {
+            finished: Promise.resolve(),
+            started: new Promise<number>(() => {}),
+          };
         };
       return {
         element,
@@ -165,17 +169,20 @@ describe('the colour layer when the value changes', () => {
     ).toEqual([]);
     const rebase = fade.calls.find(call => call.name === 'rebase');
     expect(rebase?.args[0]).toEqual({opacity: expect.closeTo(0.4, 9)});
-    // The swapped curve continues on the same clock, its velocity mirrored,
-    // and the layer ends clear (the track shows the new value's fill).
+    // The swapped curve continues from the swap, its velocity mirrored, and
+    // the layer ends clear (the track shows the new value's fill). Neither
+    // carries a start of its own: the animator starts a curve that continues
+    // motion at the call, so it is never dated back or ahead of the frame on
+    // screen (spec:AST-094 FR6).
     const animates = fade.calls.filter(call => call.name === 'animate');
     expect(animates.length).toBeGreaterThan(0);
     const [first] = animates;
     expect((first.args[1] as {velocity?: unknown}).velocity).toEqual({
       opacity: -2,
     });
-    const at = (rebase?.args[1] as {at: number}).at;
+    expect((rebase?.args[1] as {at?: number} | undefined)?.at).toBeUndefined();
     for (const call of animates) {
-      expect((call.args[2] as {at: number}).at).toBe(at);
+      expect((call.args[2] as {at?: number} | undefined)?.at).toBeUndefined();
     }
     expect(animates[animates.length - 1].args[0]).toEqual({opacity: 0});
   });
