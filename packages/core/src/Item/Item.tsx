@@ -73,9 +73,11 @@ export interface ItemSwipeAction {
   /** Drawn above the label. */
   icon?: ReactNode;
   /**
-   * Fires at activation: a tap on a resting entry, the full-swipe
-   * accelerator, or a `commit` release. May return a Promise; the row
-   * waits for nothing.
+   * Fires on a tap on a resting entry, on the full-swipe accelerator, or on
+   * a `commit` release. When the row slides out (a full swipe, a commit, a
+   * tapped entry with `hasRemoval`) it fires once the row's content has left
+   * its box; a tapped entry without `hasRemoval` fires at the tap. May return
+   * a Promise; the row waits for nothing.
    */
   onActivate: () => void | Promise<void>;
   isDisabled?: boolean;

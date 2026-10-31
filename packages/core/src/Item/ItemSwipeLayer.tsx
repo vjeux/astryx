@@ -386,8 +386,7 @@ export default function ItemSwipeLayer({
           onClick={() =>
             swipe.activateEntry(() => {
               void entry.onActivate();
-              return entry.hasRemoval === true;
-            })
+            }, entry.hasRemoval === true)
           }
           {...mergeProps(
             themeProps('item-swipe-action', {variant}),

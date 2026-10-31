@@ -21,10 +21,11 @@
  * UIKit's confirmation offset and the outermost entry covers the space, and
  * letting go there fires it; backing out undoes the look, and a swipe that
  * backed out closes. Under `commit` only a confirmed full swipe fires, and
- * nothing rests (swipeRelease.ts). The outermost entry fires once the row's
- * content has left its box, at once when the release is already past that
- * edge: UIKit calls the handler at the lift, and firing when the content is
- * gone means a row its app removes at once never vanishes mid-slide. After
+ * nothing rests (swipeRelease.ts). Whenever the row slides out (a full
+ * swipe, or a tapped entry with `hasRemoval`) the entry fires once the row's
+ * content has left its box, at once when the row is already past that edge:
+ * UIKit calls the handler at the lift or the tap, and firing when the content
+ * is gone means a row its app removes at once never vanishes mid-slide. After
  * an entry fires the row springs back, or holds out when the entry has
  * `hasRemoval`.
  *
@@ -206,10 +207,11 @@ export interface UseSwipeActionResult {
   /** Attach each side's moving panel parts. */
   panelRefs: Record<SwipeSide, SwipePanelRefs>;
   /**
-   * A resting panel's entry was tapped: fire it, then hold the row out
-   * (`hasRemoval`) or close.
+   * A resting panel's entry was tapped. Without `hasRemoval` (`holdsOut`) it
+   * fires at once and the row closes; with it the row slides out, the entry
+   * fires once the row's content has left its box, and the row holds out.
    */
-  activateEntry: (fire: () => boolean) => void;
+  activateEntry: (fire: () => void, holdsOut: boolean) => void;
   /** Close a resting row. */
   close: () => void;
   /** Escape closes a resting row with focus inside it. */
@@ -643,26 +645,23 @@ export function useSwipeAction({
   );
 
   /**
-   * A confirmed full swipe: out with the outermost entry covering the row's
-   * place; the entry fires as the row leaves, then it holds out or springs
-   * back.
+   * Slide the row out toward the edge it travelled toward, and fire once its
+   * content has left its box (`spec:AST-057` FR5). `confirm` is 1 for a
+   * confirmed full swipe, whose outermost entry covers the row's place.
    */
-  const slideOutAndFire = useCallback(
-    (layout: SwipeLayout, cause: SettleCause) => {
-      const fire = () => {
-        const holdsOut = latestRef.current.fireOutermost(layout.side);
-        if (holdsOut) {
-          return false;
-        }
-        settle(layout, 0, 'idle', undefined, cause);
-        return true;
-      };
-      // UIKit calls the handler at the lift. The row fires once its content
-      // has left its box, so a row its app removes at once never vanishes
-      // mid-slide; at once when the release is already past that edge.
+  const slideOutThenFire = useCallback(
+    (
+      layout: SwipeLayout,
+      cause: SettleCause,
+      confirm: number,
+      fire: () => void,
+    ) => {
+      // UIKit calls the handler at the lift or the tap. The row fires once
+      // its content has left its box, so a row its app removes at once never
+      // vanishes mid-slide; at once when the row is already past that edge.
       const sign = physicalSign(layout.side, layout.inlineSign);
       const edge = sign * (rootRef.current?.clientWidth ?? 0);
-      settle(layout, outTravel(), 'held', undefined, cause, 1);
+      settle(layout, outTravel(), 'held', undefined, cause, confirm);
       const generation = motionRef.current;
       const handle = rootMotionRef.current;
       const fade = reducedMotionFade(rootRef.current, {
@@ -715,6 +714,22 @@ export function useSwipeAction({
     [motion, outTravel, rootRef, settle],
   );
 
+  /**
+   * A confirmed full swipe: out with the outermost entry covering the row's
+   * place; the entry fires as the row leaves, then it holds out or springs
+   * back.
+   */
+  const slideOutAndFire = useCallback(
+    (layout: SwipeLayout, cause: SettleCause) => {
+      slideOutThenFire(layout, cause, 1, () => {
+        if (!latestRef.current.fireOutermost(layout.side)) {
+          settle(layout, 0, 'idle', undefined, cause);
+        }
+      });
+    },
+    [settle, slideOutThenFire],
+  );
+
   const close = useCallback(() => {
     const layout = layoutRef.current;
     if (!isOpen() || layout == null) {
@@ -728,7 +743,7 @@ export function useSwipeAction({
   }, [isOpen, rootRef, settle]);
 
   const activateEntry = useCallback(
-    (fire: () => boolean) => {
+    (fire: () => void, holdsOut: boolean) => {
       const layout = layoutRef.current;
       // From the release that opens the row, not only once it rests.
       if (!isSwipeOpen(stateRef.current) || layout == null) {
@@ -738,13 +753,14 @@ export function useSwipeAction({
       if (root != null && root.contains(document.activeElement)) {
         focusRowContent(root);
       }
-      if (fire()) {
-        settle(layout, outTravel(), 'held');
-      } else {
-        settle(layout, 0, 'idle');
+      if (holdsOut) {
+        slideOutThenFire(layout, 'other', 0, fire);
+        return;
       }
+      fire();
+      settle(layout, 0, 'idle');
     },
-    [outTravel, rootRef, settle],
+    [rootRef, settle, slideOutThenFire],
   );
 
   // An open row closes on a pointer landing anywhere outside it, which is

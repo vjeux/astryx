@@ -1564,7 +1564,7 @@ describe('swipeActions', () => {
       expect(xOf(row)).toBe(72);
     });
 
-    it('holds the row out after a tapped entry with hasRemoval', async () => {
+    it("holds the row out after a tapped entry with hasRemoval, and fires it once the row's content has left its box (spec:AST-057 FR5)", async () => {
       const onActivate = vi.fn();
       const {row} = renderRow({
         trailing: [{label: 'Archive', onActivate, hasRemoval: true}],
@@ -1581,8 +1581,21 @@ describe('swipeActions', () => {
       await settled();
       expect(xOf(row)).toBe(-72);
       fireEvent.click(screen.getByRole('button', {name: 'Archive'}));
+      // Not at the tap: the row slides out first and the entry fires once the
+      // row's content has left its box (300 px), so a row its app removes at
+      // once never vanishes mid-slide. From rest at 72 px the settle passes
+      // 300 px about 0.4 s in, on its way to 324 px.
+      expect(onActivate).not.toHaveBeenCalled();
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(onActivate).not.toHaveBeenCalled();
+      await act(async () => {
+        vi.advanceTimersByTime(150);
+      });
       expect(onActivate).toHaveBeenCalledTimes(1);
       await settled();
+      expect(onActivate).toHaveBeenCalledTimes(1);
       // Out past the edge it travelled toward, and staying there: the
       // caller removes the row, or it sits off-screen (their bug).
       expect(xOf(row)).toBe(-324);
