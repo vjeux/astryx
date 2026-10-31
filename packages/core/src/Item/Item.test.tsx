@@ -1661,6 +1661,28 @@ describe('swipeActions', () => {
       expect(onClick).not.toHaveBeenCalled();
     });
 
+    it('leaves activation without a touch unchanged while open: Enter, or a click with no touch before it (a screen reader’s), activates the row, which stays open (spec:AST-057 AR3)', async () => {
+      const {row, onClick} = renderRow();
+      dragLeading(row, 45);
+      await settled();
+      expect(xOf(row)).toBe(72);
+      const content = screen.getByRole('button', {name: 'Conversation'});
+      act(() => {
+        content.focus();
+      });
+      // Enter on a focused button: the browser clicks it, with no pointer.
+      fireEvent.keyDown(content, {key: 'Enter'});
+      fireEvent.click(content, {detail: 0});
+      fireEvent.keyUp(content, {key: 'Enter'});
+      expect(onClick).toHaveBeenCalledTimes(1);
+      // VoiceOver and TalkBack activate with a click and no touch: only a
+      // touch tap on the content closes the row (FR7).
+      fireEvent.click(content);
+      expect(onClick).toHaveBeenCalledTimes(2);
+      await settled();
+      expect(xOf(row)).toBe(72);
+    });
+
     it('counts a row open from the release that opens it: a tap while it settles open closes it', async () => {
       const {row, onClick} = renderRow();
       dragLeading(row, 45);

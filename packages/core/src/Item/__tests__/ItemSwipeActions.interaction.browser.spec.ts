@@ -717,6 +717,25 @@ test('a tap on the resting row’s own content closes it, with no press paint, a
   await expect.poll(presses).toBeGreaterThan(0);
 });
 
+test('Enter on the open row’s focused content activates the row and leaves it open, as a screen reader’s activation does (spec:AST-057 AR3)', async ({
+  page,
+}) => {
+  const open = await openRow(page);
+  const {row} = open;
+  const openWidth = await restOpen(open);
+  const clicks = await countClicks(row);
+  // The row's own primary: its first button outside the swipe panels.
+  const primary = row.locator('button:not([data-swipe-panel] *)').first();
+  await primary.focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(clicks).toBe(1);
+  // Only a touch tap on the content closes the row (FR7); a click with no
+  // touch before it, the keyboard's or VoiceOver's and TalkBack's, leaves the
+  // row open.
+  await page.waitForTimeout(400);
+  expect(await xOf(row)).toBeCloseTo(-openWidth, 0);
+});
+
 test('under Reduce Motion a tap on the resting row’s content closes it with no travel, at the bottom of an opacity dip', async ({
   page,
   browserName,
