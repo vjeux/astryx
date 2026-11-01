@@ -27,12 +27,16 @@
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
+  advanceFrozenPage,
   animationStoryboard,
   blockMainThread,
   busyWindowProof,
   castStoryboard,
   countBetween,
+  freezePage,
   holdAnimations,
+  installPageFreeze,
+  installTimerGate,
   markElement,
   openStory,
   releaseAnimations,
@@ -40,6 +44,7 @@ import {
   sampleRects,
   springStep,
   startScreencast,
+  thawPage,
   touchDriver,
   traceRendering,
   trackMarker,
@@ -122,6 +127,17 @@ async function openBar(page: Page, story = 'default') {
   const bar = page.getByRole('tablist', {name: 'Sections'});
   await expect(bar).toBeVisible();
   return {driver, bar};
+}
+
+/**
+ * `openBar` on a page whose scene the test can freeze: the page clock goes in
+ * before the story loads, the timer gate after.
+ */
+async function openFreezableBar(page: Page, story = 'default') {
+  await installPageFreeze(page);
+  const opened = await openBar(page, story);
+  await installTimerGate(page);
+  return opened;
 }
 
 const tab = (page: Page, name: string | RegExp) =>
@@ -212,7 +228,7 @@ test('a tap on another tab slides the lens on UIKit’s spring, the selected cop
 test('a second tap mid-slide turns the lens around from where it is, without a jump', async ({
   page,
 }) => {
-  const {driver} = await openBar(page);
+  const {driver} = await openFreezableBar(page);
   const home = await itemCenter(page, 'Home');
   const profile = await itemCenter(page, 'Profile');
   const library = await itemCenter(page, 'Library');
@@ -236,13 +252,32 @@ test('a second tap mid-slide turns the lens around from where it is, without a j
   });
   // Every frame's lens position, sampled in the page while the taps land.
   const sampling = sampleRects(lensBody(page), 1300);
+  // The scene stands still from before the first tap: the slide it starts is
+  // held at its start, then stepped on by the scene's own time until the lens
+  // is past Library, however late the test process is, and the second tap
+  // lands there, with most of the slide still ahead.
+  await freezePage(page);
   await driver.tap(profile);
-  await waitForAnimation(lensBody(page), {minProgressMs: 90});
+  let frozenAt = await lensCenterX(page);
+  for (
+    let stepped = 0;
+    frozenAt <= library.x + 25 && stepped < 1_000;
+    stepped += 4
+  ) {
+    await advanceFrozenPage(page, 4);
+    frozenAt = await lensCenterX(page);
+  }
+  // Mid-slide: past Library, short of Profile.
+  expect(frozenAt).toBeGreaterThan(library.x + 20);
+  expect(frozenAt).toBeLessThan(profile.x - 20);
   await driver.tap(library);
+  await thawPage(page);
   await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
   const turnedAt = await page.evaluate(
     () => (window as unknown as {__turnedAt: number}).__turnedAt,
   );
+  // The second tap took effect where the scene stood.
+  expect(Math.abs(turnedAt - frozenAt)).toBeLessThan(0.5);
   const samples = (await sampling).flatMap(sample =>
     sample.box == null
       ? []
@@ -266,10 +301,6 @@ test('a second tap mid-slide turns the lens around from where it is, without a j
   );
   await waitForRest(lensBody(page));
   expect(Math.abs((await lensCenterX(page)) - library.x)).toBeLessThan(0.5);
-  // Mid-slide: past Library, short of Profile, when the second tap took
-  // effect.
-  expect(turnedAt).toBeGreaterThan(library.x + 20);
-  expect(turnedAt).toBeLessThan(profile.x - 20);
 });
 
 test('choosing the selected tab again reselects and moves nothing', async ({
