@@ -40,7 +40,6 @@ import {
   timeline,
   touchDriver,
   waitForRest,
-  watchAnimations,
   withStorybook,
   writeEvidence,
   type ActiveAnimation,
@@ -170,7 +169,166 @@ async function openCalendar(
   };
 }
 
-/** Every running animation under `root`: its animated properties and duration. */
+/**
+ * Watches `locator`'s element and what it holds for the runs an action
+ * starts (CSS transitions and animations, and script animations such as the
+ * Reduced Motion chevron's dip), recorded in the page as each is created:
+ * its property or name, duration, easing and keyframes. The harness's watch
+ * reports only runs that finished, and its wait counts from the call; on a
+ * loaded machine the tap reached the page late, and a run cancelled before
+ * its end (a fade turned around or settled early) never counts. `started()`
+ * waits, bounded by the test's timeout, for the action's first run, then a
+ * frame for runs started with it.
+ */
+async function watchRuns(
+  locator: Locator,
+): Promise<{started: () => Promise<ActiveAnimation[]>}> {
+  const key = `runs${Math.random().toString(36).slice(2)}`;
+  await locator.evaluate((element, name) => {
+    const runs: Record<string, unknown>[] = [];
+    (window as unknown as Record<string, unknown>)[name] = runs;
+    const record = (run: Animation | undefined, runName: string) => {
+      const effect = run?.effect as KeyframeEffect | undefined;
+      if (effect == null) {
+        return;
+      }
+      const timing = effect.getTiming();
+      runs.push({
+        name: runName,
+        durationMs: Number(timing.duration),
+        delayMs: Number(timing.delay ?? 0),
+        easing: String(timing.easing),
+        keyframes: effect.getKeyframes().map(frame => ({...frame})),
+      });
+    };
+    element.ownerDocument.addEventListener(
+      'transitionrun',
+      event => {
+        const target = event.target;
+        if (!(target instanceof Element) || !element.contains(target)) {
+          return;
+        }
+        const property = (event as TransitionEvent).propertyName;
+        record(
+          target
+            .getAnimations()
+            .find(
+              candidate =>
+                candidate instanceof CSSTransition &&
+                candidate.transitionProperty === property,
+            ),
+          property,
+        );
+      },
+      true,
+    );
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      ...args: Parameters<Element['animate']>
+    ) {
+      const animation = animate.apply(this, args);
+      if (element.contains(this)) {
+        const frames = (animation.effect as KeyframeEffect).getKeyframes();
+        const property =
+          Object.keys(frames[0] ?? {}).find(
+            key =>
+              !['offset', 'easing', 'composite', 'computedOffset'].includes(
+                key,
+              ),
+          ) ?? '';
+        record(animation, property);
+      }
+      return animation;
+    };
+    element.ownerDocument.addEventListener(
+      'animationstart',
+      event => {
+        const target = event.target;
+        if (!(target instanceof Element) || !element.contains(target)) {
+          return;
+        }
+        const animationName = (event as AnimationEvent).animationName;
+        record(
+          target
+            .getAnimations()
+            .find(
+              candidate =>
+                candidate instanceof CSSAnimation &&
+                candidate.animationName === animationName,
+            ),
+          animationName,
+        );
+      },
+      true,
+    );
+  }, key);
+  return {
+    started: async () =>
+      locator.page().evaluate(
+        async name =>
+          new Promise<ActiveAnimation[]>(resolve => {
+            const runs = (window as unknown as Record<string, unknown[]>)[name];
+            const check = () => {
+              if (runs.length === 0) {
+                requestAnimationFrame(check);
+                return;
+              }
+              requestAnimationFrame(() =>
+                resolve(runs.splice(0) as ActiveAnimation[]),
+              );
+            };
+            check();
+          }),
+        key,
+      ),
+  };
+}
+
+/**
+ * Arms the page to report the next click; the returned function waits for
+ * it, bounded by the test's timeout, and requires it on `selector` (the
+ * toggle). A case waits for its tap's click before its runs, so a tap that
+ * never produced a click, or whose click landed elsewhere, fails here, with
+ * what it hit, instead of in the wait for a run.
+ */
+async function armClick(
+  page: Page,
+  selector: string,
+): Promise<() => Promise<void>> {
+  const key = `click${Math.random().toString(36).slice(2)}`;
+  await page.evaluate(
+    ({name, on}) => {
+      (window as unknown as Record<string, Promise<string | null>>)[name] =
+        new Promise(resolve => {
+          window.addEventListener(
+            'click',
+            event => {
+              const target = event.target as Element | null;
+              resolve(
+                target?.closest(on) != null
+                  ? null
+                  : `the tap's click landed on ${target?.outerHTML.slice(0, 160) ?? 'nothing'}`,
+              );
+            },
+            {capture: true, once: true},
+          );
+        });
+    },
+    {name: key, on: selector},
+  );
+  return async () => {
+    const missed = await page.evaluate(
+      async name =>
+        (window as unknown as Record<string, Promise<string | null>>)[name],
+      key,
+    );
+    if (missed != null) {
+      throw new Error(missed);
+    }
+  };
+}
+
 /** The properties a watched run animates, from its keyframes. */
 function propertiesOf(run: ActiveAnimation): string[] {
   return [
@@ -192,9 +350,11 @@ test('the wheels fade in and the chevron turns on UIKit’s 0.25 s ease-in-ease-
   const chevron = page
     .locator('[data-title="month-year"] .astryx-icon')
     .first();
-  const fade = await watchAnimations(wheels);
-  const turn = await watchAnimations(chevron);
+  const fade = await watchRuns(wheels);
+  const turn = await watchRuns(chevron);
+  const clicked = await armClick(page, '[data-title="month-year"]');
   await driver.tap(titleAt);
+  await clicked();
   expectToggleRun(await fade.started(), 'opacity', ['0', '1']);
   expectToggleRun(await turn.started(), 'transform', [
     'rotate(-90deg)',
@@ -234,9 +394,14 @@ test('DateTimeInput: the calendar and the wheels cross-fade on UIKit’s 0.25 s 
   const chevron = page
     .locator('button[aria-label$="Choose month and year"] .astryx-icon')
     .first();
-  const fade = await watchAnimations(wheels);
-  const turn = await watchAnimations(chevron);
+  const fade = await watchRuns(wheels);
+  const turn = await watchRuns(chevron);
+  const clicked = await armClick(
+    page,
+    'button[aria-label$="Choose month and year"]',
+  );
   await tapCenter('button[aria-label$="Choose month and year"]');
+  await clicked();
   expectToggleRun(await fade.started(), 'opacity', ['0', '1']);
   expectToggleRun(await turn.started(), 'transform', [
     'rotate(-90deg)',
@@ -263,10 +428,13 @@ test('a second tap mid-fade turns the fade around from where it is', async ({
   await wheels.evaluate(element => {
     const state = {log: [] as [number, number][], stop: false};
     (window as unknown as {fade: typeof state}).fade = state;
+    // On each frame's own time, the time the fade is presented at: a
+    // callback that runs late in its frame would otherwise read a frame's
+    // worth of fall over a millisecond.
     const t0 = performance.now();
-    const tick = () => {
+    const tick = (frameTime: number) => {
       state.log.push([
-        performance.now() - t0,
+        frameTime - t0,
         Number(getComputedStyle(element).opacity),
       ]);
       if (!state.stop) {
@@ -275,20 +443,10 @@ test('a second tap mid-fade turns the fade around from where it is', async ({
     };
     requestAnimationFrame(tick);
   });
+  // Held halfway until the second tap's click arrives (holdFadeMidway).
+  const held = await holdFadeMidway(wheels);
   await driver.tap(titleAt);
-  await wheels.evaluate(
-    async element =>
-      new Promise<void>(resolve => {
-        const check = () => {
-          if (Number(getComputedStyle(element).opacity) > 0.3) {
-            resolve();
-          } else {
-            requestAnimationFrame(check);
-          }
-        };
-        check();
-      }),
-  );
+  await held();
   await driver.tap(titleAt);
   await waitForRest(wheels);
   const fade = await page.evaluate(() => {
@@ -314,6 +472,66 @@ test('a second tap mid-fade turns the fade around from where it is', async ({
   }
   expect(fade.at(-1)?.[1]).toBe(0);
 });
+
+/**
+ * Arms the page to hold the toggle's fade halfway: when `locator`'s opacity
+ * transition starts, the open sheet's running transitions are paused and set
+ * to the middle of their run, and they resume as the next click reaches the
+ * page, before the page handles it. The tap sent next lands on the fade at
+ * its middle. Sent when the harness saw the fade past 0.3 instead, the tap
+ * reached the page after the stretched 2 s fade had ended on a loaded
+ * machine: the harness sends a tap after a round trip, WebKit's injected
+ * touches carry no timestamps, and frames came seconds apart there. Armed
+ * (awaited) before the tap that starts the fade; the returned function waits
+ * for the hold.
+ */
+async function holdFadeMidway(locator: Locator): Promise<() => Promise<void>> {
+  const key = `hold${Math.random().toString(36).slice(2)}`;
+  await locator.evaluate((element, name) => {
+    (window as unknown as Record<string, Promise<void>>)[name] = new Promise(
+      resolve => {
+        const onRun = (event: Event) => {
+          if (
+            event.target !== element ||
+            (event as TransitionEvent).propertyName !== 'opacity'
+          ) {
+            return;
+          }
+          document.removeEventListener('transitionrun', onRun, true);
+          const held = (element.closest('dialog') ?? document.documentElement)
+            .getAnimations({subtree: true})
+            .filter(animation => animation.playState === 'running');
+          for (const animation of held) {
+            animation.pause();
+            const timing = animation.effect?.getComputedTiming();
+            animation.currentTime =
+              Number(timing?.delay ?? 0) + Number(timing?.duration ?? 0) / 2;
+          }
+          window.addEventListener(
+            'click',
+            () => {
+              for (const animation of held) {
+                animation.play();
+              }
+            },
+            {capture: true, once: true},
+          );
+          resolve();
+        };
+        document.addEventListener('transitionrun', onRun, true);
+      },
+    );
+  }, key);
+  return async () => {
+    await locator
+      .page()
+      .evaluate(
+        async name =>
+          (window as unknown as Record<string, Promise<void>>)[name],
+        key,
+      );
+  };
+}
 
 /** Resolves once `locator`'s element shows more than `opacity`, page-side. */
 async function waitForOpacityAbove(locator: Locator, opacity: number) {
@@ -354,8 +572,10 @@ test('a tap on Done during the opening fade does not reach Save beneath it', asy
       });
     });
   await page.addStyleTag({content: STRETCH_SHEET_FADES});
+  // Held halfway until the tap on Done's click arrives (holdFadeMidway).
+  const held = await holdFadeMidway(wheels);
   await driver.tap(titleAt);
-  await waitForOpacityAbove(wheels, 0.3);
+  await held();
   const done = await page
     .locator('dialog[open] button', {hasText: /^Done$/})
     .boundingBox();
@@ -583,13 +803,15 @@ test('Reduced Motion: the wheels cross-fade in at most 200 ms and the chevron di
   // Watched from before the tap, so a run of 200 ms or less that has ended
   // by the time a loaded machine's harness looks is still read (read after
   // the tap, the chevron's dip had ended on a loaded machine).
-  const panelWatch = await watchAnimations(
+  const panelWatch = await watchRuns(
     page.locator('[data-panel="wheels"]').first(),
   );
-  const chevronWatch = await watchAnimations(
+  const chevronWatch = await watchRuns(
     page.locator('[data-title="month-year"] .astryx-icon').first(),
   );
+  const clicked = await armClick(page, '[data-title="month-year"]');
   await driver.tap(titleAt);
+  await clicked();
   const panel = await panelWatch.started();
   expect(panel.flatMap(propertiesOf)).toContain('opacity');
   for (const run of panel) {
