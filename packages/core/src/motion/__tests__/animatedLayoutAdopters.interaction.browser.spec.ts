@@ -112,12 +112,21 @@ interface EdgeRide {
  * on the module's own clock: the clip from its animation's keyframes and the
  * content after it from its glide's keyframes, at their current time (WebKit
  * evaluates a main-thread clip and a compositor translate a little apart).
+ * With `closeBlockMs`, the close's task runs that long before the page
+ * handles the click, as a tap on a slow device's busy main thread does.
  */
 async function edgeRide(
   page: Page,
-  selectors: {trigger: string; content: string; after: string},
+  selectors: {
+    trigger: string;
+    content: string;
+    after: string;
+    closeBlockMs?: number;
+  },
 ): Promise<EdgeRide> {
-  return page.evaluate(async ({trigger, content: contentSelector, after}) => {
+  return page.evaluate(async options => {
+    const {trigger, content: contentSelector, after} = options;
+    const closeBlockMs = options.closeBlockMs ?? 0;
     const button = document.querySelector(trigger) as HTMLElement;
     const content = () => document.querySelector<HTMLElement>(contentSelector);
     const next = document.querySelector(after) as HTMLElement;
@@ -254,6 +263,18 @@ async function edgeRide(
         )
         .at(-1) ?? null;
     const opening = clipOf();
+    if (closeBlockMs > 0) {
+      window.addEventListener(
+        'click',
+        () => {
+          const until = performance.now() + closeBlockMs;
+          while (performance.now() < until) {
+            // The close's task, running long before the page handles it.
+          }
+        },
+        {capture: true, once: true},
+      );
+    }
     button.click();
     // Until the close commits (a component may commit its state in a later
     // task), with every animation still paused where the close found it.
@@ -383,6 +404,24 @@ test.describe('component:Collapsible FR10 and component:TreeList FR9 (spec:AST-1
         trigger: '[data-tree-id="docs"] [data-tree-toggle]',
         content: '[data-tree-id="docs"] > [role="group"]',
         after: '[data-tree-id="notes"]',
+      }),
+    );
+  });
+
+  test("a TreeList row's collapse made in a long task conceals from what it shows, with none of the conceal spent before its first frame (FR9)", async ({
+    page,
+  }) => {
+    // The close's task runs 300 ms before the page handles the tap. The
+    // conceal must start at the change, not at the frame before the task:
+    // dated there, its first 300 ms were over before its first frame, which
+    // showed it 31 px below what the reveal showed.
+    await openStory(page);
+    expectEdgeRide(
+      await edgeRide(page, {
+        trigger: '[data-tree-id="docs"] [data-tree-toggle]',
+        content: '[data-tree-id="docs"] > [role="group"]',
+        after: '[data-tree-id="notes"]',
+        closeBlockMs: 300,
       }),
     );
   });
