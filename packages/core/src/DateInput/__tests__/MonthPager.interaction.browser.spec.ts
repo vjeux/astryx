@@ -450,8 +450,9 @@ test('past the range’s last and first months the calendar rubber-bands, then r
   );
   const past = (Math.max(...offsets) - 11) * width;
   // It gives under the finger, less than the finger moved, then comes back.
-  expect(past).toBeGreaterThan(5);
-  expect(past).toBeLessThan(0.6 * 120);
+  const gesture = await lastGestureTiming(page);
+  expect(past, gesture).toBeGreaterThan(5);
+  expect(past, gesture).toBeLessThan(0.6 * 120);
   expect(await monthsIn(viewport)).toBeCloseTo(11, 2);
   await expect(title).toHaveText('December 2026');
 
@@ -521,8 +522,9 @@ test('in RTL a drag to the right pages to the next month, and the arrows follow 
  * page in bursts: up to 18 of a drag's 30 moves within 2 ms of the previous
  * one, with gaps of 60 to 100 ms between bursts. The release then reads a
  * velocity the script never gave: the slow release paged in 8 of 10 runs, the
- * fast flick stayed on its month in 5 of 10, and the fast 55° drag in the
- * sheet in 2 of 10. That is a limit of WebKit's real-time input. The required
+ * fast flick stayed on its month in 5 of 10, the fast 55° drag in the sheet in
+ * 2 of 10, and the drag past the last month overshot its rubber band in 1 of
+ * 10. That is a limit of WebKit's real-time input. The required
  * CI WebKit profile, the same cap with 1 worker, and Chromium pass.
  */
 async function lastGestureTiming(page: Page): Promise<string> {
