@@ -38,13 +38,19 @@
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import type {TouchDriver} from '@astryxdesign/interaction-harness';
 import {
+  advanceFrozenPage,
   animationStoryboard,
   blockMainThread,
   busyWindowProof,
   castStoryboard,
   countBetween,
   drag,
+  freezePage,
+  freezePageOn,
+  freezePageWhen,
   holdAnimations,
+  installPageFreeze,
+  installTimerGate,
   markElement,
   merge,
   openStory,
@@ -56,6 +62,7 @@ import {
   springStep,
   startScreencast,
   tap as tapScript,
+  thawPage,
   touchDriver,
   touchStoryboard,
   traceRendering,
@@ -174,6 +181,17 @@ async function openBar(page: Page, story = 'default') {
   return {driver, bar};
 }
 
+/**
+ * `openBar` on a page whose scene the test can freeze: the page clock goes in
+ * before the story loads, the timer gate after.
+ */
+async function openFreezableBar(page: Page, story = 'default') {
+  await installPageFreeze(page);
+  const opened = await openBar(page, story);
+  await installTimerGate(page);
+  return opened;
+}
+
 const tab = (page: Page, name: string | RegExp) =>
   page.getByRole('tab', {name});
 
@@ -245,16 +263,20 @@ async function capsuleLeft(page: Page) {
 test('a selection made with the keys slides the lens on UIKit’s spring, the selected copy counter-moving', async ({
   page,
 }, testInfo) => {
-  await openBar(page);
+  await openFreezableBar(page);
   const from = await itemCenter(page, 'Home');
   const to = await itemCenter(page, 'Browse');
   await tab(page, 'Home').focus();
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight');
+  // The scene stands still from before the key: the slide it starts is held
+  // at its start, and the copy that rides in the lens only while it slides
+  // stays mounted, however slowly the test process reads them.
+  await freezePage(page);
   await page.keyboard.press('Enter');
   await expect(tab(page, 'Browse')).toHaveAttribute('aria-selected', 'true');
   const body = lensBody(page);
-  await waitForAnimation(body);
+  await waitForAnimation(body, {minProgressMs: 0});
   await holdAnimations(page);
 
   const times = Array.from({length: 49}, (_, i) => i * 16.667);
@@ -270,6 +292,7 @@ test('a selection made with the keys slides the lens on UIKit’s spring, the se
     analytic: start * (1 - springStep(LENS_TRAVEL, t)),
   }));
   await releaseAnimations(page, {finish: true});
+  await thawPage(page);
   await writeEvidence(
     'curves/tabbar-lens-travel',
     {
@@ -302,7 +325,7 @@ test('a selection made with the keys slides the lens on UIKit’s spring, the se
 test('a second tap mid-slide turns the lens around from where it is, without a jump', async ({
   page,
 }) => {
-  const {driver} = await openBar(page);
+  const {driver} = await openFreezableBar(page);
   const home = await itemCenter(page, 'Home');
   const profile = await itemCenter(page, 'Profile');
   const library = await itemCenter(page, 'Library');
@@ -325,25 +348,32 @@ test('a second tap mid-slide turns the lens around from where it is, without a j
   });
   // Every frame's lens position, sampled in the page while the taps land.
   const sampling = sampleRects(lensBody(page), 1300);
+  // The scene stands still from before the first tap: the slide it starts is
+  // held at its start, then stepped on by the scene's own time until the lens
+  // is past Library, however late the test process is, and the second tap
+  // lands there, with most of the slide still ahead.
+  await freezePage(page);
   await driver.tap(profile);
-  // On the frame the lens passes Library, read in the page: the tap lands
-  // with most of the slide still ahead (a fixed wait into the slide left a
-  // loaded machine too little of it to react in).
-  await page.waitForFunction(
-    target => {
-      const box = document
-        .querySelector('[data-tab-bar-lens-body]')
-        ?.getBoundingClientRect();
-      return box != null && box.x + box.width / 2 > target;
-    },
-    library.x + 10,
-    {polling: 'raf'},
-  );
+  let frozenAt = await lensCenterX(page);
+  for (
+    let stepped = 0;
+    frozenAt <= library.x + 25 && stepped < 1_000;
+    stepped += 4
+  ) {
+    await advanceFrozenPage(page, 4);
+    frozenAt = await lensCenterX(page);
+  }
+  // Mid-slide: past Library, short of Profile.
+  expect(frozenAt).toBeGreaterThan(library.x + 5);
+  expect(frozenAt).toBeLessThan(profile.x - 20);
   await driver.tap(library);
+  await thawPage(page);
   await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
   const turnedAt = await page.evaluate(
     () => (window as unknown as {__landings: number[]}).__landings[1],
   );
+  // The second finger landed on the lens where the scene stood.
+  expect(Math.abs(turnedAt - frozenAt)).toBeLessThan(0.5);
   const samples = (await sampling).flatMap(sample =>
     sample.box == null
       ? []
@@ -368,24 +398,23 @@ test('a second tap mid-slide turns the lens around from where it is, without a j
   );
   await waitForRest(lensBody(page));
   expect(Math.abs((await lensCenterX(page)) - library.x)).toBeLessThan(0.5);
-  // Mid-slide: past Library, short of Profile, when the second finger
-  // landed.
-  expect(turnedAt).toBeGreaterThan(library.x + 5);
-  expect(turnedAt).toBeLessThan(profile.x - 20);
 });
 
 test('a finger landing before the last lift reaches the app keeps the lens heading for it', async ({
   page,
 }) => {
-  const {driver} = await openBar(page);
+  const {driver} = await openFreezableBar(page);
   const profile = await itemCenter(page, 'Profile');
   const library = await itemCenter(page, 'Library');
   const sampling = sampleRects(lensBody(page), 1400);
   // A tap on Profile, then a finger held on Library from right after that
   // lift: inside the frames before the tap's choice reaches the app, which
   // then moves the lens's resting place under the held finger. The events go
-  // back to back (no wall-clock gap a loaded box could stretch); the hold
-  // is a wait after the landing.
+  // back to back, and the scene freezes as the first finger lands and thaws
+  // once the second is down, so they land at one instant of the scene's time
+  // however a loaded box stretches the gaps between them. The hold is a wait
+  // after the landing.
+  await freezePageOn(page, 'touchstart');
   await driver.play(
     [
       {t: 0, fingers: [{id: 0, ...profile}]},
@@ -397,6 +426,7 @@ test('a finger landing before the last lift reaches the app keeps the lens headi
       realtime: false,
       onEvent: async (_step, index) => {
         if (index === 2) {
+          await thawPage(page);
           await page.waitForTimeout(500);
         }
       },
@@ -603,7 +633,7 @@ test('badges appear, change and clear without animating', async ({page}) => {
 test('a finger landing lifts the lens and flexes the bar on UIKit’s springs, the lens heading for the finger', async ({
   page,
 }, testInfo) => {
-  const {driver} = await openBar(page);
+  const {driver} = await openFreezableBar(page);
   const home = await itemCenter(page, 'Home');
   const browse = await itemCenter(page, 'Browse');
   const capsule = page.getByRole('tablist');
@@ -617,12 +647,16 @@ test('a finger landing lifts the lens and flexes the bar on UIKit’s springs, t
     glass: number;
     x: number;
   }[] = [];
+  // The scene freezes as the finger lands, so the lift, the flex and the
+  // travel it starts are held at their start however slowly the test process
+  // reads them.
+  await freezePageOn(page, 'touchstart');
   await driver.play(tapScript(browse, {holdMs: 1200}), {
     onEvent: async (_step, index) => {
       if (index !== 0) {
         return;
       }
-      await waitForAnimation(capsule);
+      await waitForAnimation(capsule, {minProgressMs: 0});
       await holdAnimations(page);
       const flex = await sampleCurve(capsule, times);
       const body = await sampleCurve(lensBody(page), times);
@@ -639,6 +673,7 @@ test('a finger landing lifts the lens and flexes the bar on UIKit’s springs, t
         x: body[i].transform.translateX,
       }));
       await releaseAnimations(page);
+      await thawPage(page);
     },
   });
   await writeEvidence(
@@ -733,22 +768,26 @@ test('the lift reports its choice from its own event, the settle already started
 test('the lift settles the lens and relaxes the lift and the flex on UIKit’s springs', async ({
   page,
 }) => {
-  const {driver} = await openBar(page);
+  const {driver} = await openFreezableBar(page);
   const browse = await itemCenter(page, 'Browse');
   const capsule = page.getByRole('tablist');
   const LIFTED = await liftedScale(page);
+  // The scene freezes as the finger lifts, so the settle the lift starts is
+  // held at its start however slowly the test process reads it.
+  await freezePageOn(page, 'touchend');
   // Held long enough for the press springs to settle.
   await driver.play(tapScript(browse, {holdMs: 1200}));
   // The choice reaches the app from the lift itself and restarts the lens's
   // travel from its new resting place; hold the curves after that, so no
   // held animation is one the animator has since replaced.
   await expect(tab(page, 'Browse')).toHaveAttribute('aria-selected', 'true');
-  await waitForAnimation(capsule);
+  await waitForAnimation(capsule, {minProgressMs: 0});
   await holdAnimations(page);
   const times = Array.from({length: 37}, (_, i) => i * 16.667);
   const flex = await sampleCurve(capsule, times);
   const body = await sampleCurve(lensBody(page), times);
   await releaseAnimations(page, {finish: true});
+  await thawPage(page);
   times.forEach((t, i) => {
     const where = JSON.stringify({t, flex: flex[i].transform.scaleX});
     expect(
@@ -2245,7 +2284,7 @@ test.describe('minimize on scroll', () => {
   test('collapsing carries the lens into the circle on UIKit’s springs while the platter contracts', async ({
     page,
   }, testInfo) => {
-    const {driver} = await openBar(page, 'minimize-on-scroll');
+    const {driver} = await openFreezableBar(page, 'minimize-on-scroll');
     const body = lensBody(page);
     const restBox = await body.boundingBox();
     const circleBox = await circle(page).boundingBox();
@@ -2255,8 +2294,21 @@ test.describe('minimize on scroll', () => {
     const travel =
       circleBox.x + circleBox.width / 2 - (restBox.x + restBox.width / 2);
     const endScale = MINIMIZED_SIZE / restBox.width;
+    // The scene freezes on the first frame the collapse runs, however slowly
+    // the test process reads it: the curves are sampled by their own time.
+    const collapsing = freezePageWhen(
+      page,
+      () =>
+        document
+          .querySelector('[data-tab-bar-lens-body]')
+          ?.getAnimations()
+          .some(animation => animation.playState === 'running') ?? false,
+      null,
+      {timeout: 10_000},
+    );
     await scrollByFinger(page, driver, 200);
-    await waitForAnimation(body);
+    await collapsing;
+    await waitForAnimation(body, {minProgressMs: 0});
     await holdAnimations(page);
     const times = Array.from({length: 61}, (_, i) => i * 16.667);
     const bodySamples = await sampleCurve(body, times);
@@ -2269,6 +2321,7 @@ test.describe('minimize on scroll', () => {
       analyticScaleX: 1 + (endScale - 1) * springStep(COLLAPSE_SIZE, t),
     }));
     await releaseAnimations(page, {finish: true});
+    await thawPage(page);
     await writeEvidence(
       'curves/tabbar-collapse',
       {
