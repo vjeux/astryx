@@ -96,15 +96,31 @@ export async function startBusyControl(
         // The harness's own waits run on the real timers (see blockMainThread).
         const gate = (
           window as unknown as {
-            __harnessTimerGate?: {frame?: typeof requestAnimationFrame};
+            __harnessTimerGate?: {
+              frame?: typeof requestAnimationFrame;
+              now?: () => number;
+            };
           }
         ).__harnessTimerGate;
+        // A frozen page holds the control's own animation.
+        if (
+          (window as unknown as {__harnessFreeze?: {frozen: boolean}})
+            .__harnessFreeze?.frozen === true
+        ) {
+          reject(
+            new Error(
+              'startBusyControl: the page is frozen; start the control first',
+            ),
+          );
+          return;
+        }
         const frame = gate?.frame ?? window.requestAnimationFrame.bind(window);
-        const deadline = performance.now() + 5_000;
+        const realNow = gate?.now ?? (() => performance.now());
+        const deadline = realNow() + 5_000;
         const tick = () => {
           if (!animation.pending && Number(animation.currentTime ?? 0) >= 16) {
             resolve();
-          } else if (performance.now() > deadline) {
+          } else if (realNow() > deadline) {
             reject(new Error('startBusyControl: the control did not start'));
           } else {
             frame(tick);
@@ -218,11 +234,18 @@ export async function blockMainThread(
       // One reading starts the loop and one ends it. A coarsened clock can
       // step back between two reads, so a separate read would end it early.
       // The loop tests the span it returns, which a sum rounded down would not.
-      const start = performance.now();
+      // With a page freeze installed it reads the real clock: the page's own
+      // stands still while frozen and trails the frames after a thaw.
+      const freeze = (
+        window as unknown as {__harnessFreeze?: {realNow(): number}}
+      ).__harnessFreeze;
+      const read =
+        freeze == null ? () => performance.now() : () => freeze.realNow();
+      const start = read();
       let now = start;
       let spins = 0;
       while (now - start < duration) {
-        now = performance.now();
+        now = read();
         spins += 1;
       }
       return {
@@ -242,13 +265,15 @@ export async function blockMainThread(
           window as unknown as {
             __harnessTimerGate?: {
               frame?: typeof requestAnimationFrame;
+              now?: () => number;
               timeout?: typeof setTimeout;
             };
           }
         ).__harnessTimerGate;
         const frame = gate?.frame ?? window.requestAnimationFrame.bind(window);
         const later = gate?.timeout ?? window.setTimeout.bind(window);
-        const deadline = performance.now() + wait;
+        const realNow = gate?.now ?? (() => performance.now());
+        const deadline = realNow() + wait;
         // The busy-window control animates on its own, inside a dialog with
         // `within`: it never stands for the animation under test.
         const isControl = (a: Animation) => {
@@ -273,10 +298,17 @@ export async function blockMainThread(
             // the animation: it runs once that frame's rendering update has
             // handed the animation to the compositor.
             later(() => {
-              const start = performance.now();
+              const freeze = (
+                window as unknown as {__harnessFreeze?: {realNow(): number}}
+              ).__harnessFreeze;
+              const read =
+                freeze == null
+                  ? () => performance.now()
+                  : () => freeze.realNow();
+              const start = read();
               let now = start;
               while (now - start < duration) {
-                now = performance.now();
+                now = read();
               }
               resolve({
                 from: performance.timeOrigin + start,
@@ -284,7 +316,7 @@ export async function blockMainThread(
                 spanMs: now - start,
               });
             }, 0);
-          } else if (performance.now() > deadline) {
+          } else if (realNow() > deadline) {
             reject(new Error('blockMainThread: no animation started'));
           } else {
             frame(tick);

@@ -433,17 +433,20 @@ export async function sampleRects(
           window as unknown as {
             __harnessTimerGate?: {
               frame?: typeof requestAnimationFrame;
+              now?: () => number;
             };
           }
         ).__harnessTimerGate;
         const frame = gate?.frame ?? window.requestAnimationFrame.bind(window);
+        // The deadline reads the real clock, which a page freeze does not stop.
+        const realNow = gate?.now ?? (() => performance.now());
         const samples: {
           t: number;
           box: {x: number; y: number; width: number; height: number} | null;
           transform: string;
           opacity: number;
         }[] = [];
-        const end = performance.now() + duration;
+        const end = realNow() + duration;
         const tick = (now: number) => {
           const rect = element.getBoundingClientRect();
           const style = getComputedStyle(element);
@@ -453,7 +456,7 @@ export async function sampleRects(
             transform: style.transform,
             opacity: Number(style.opacity),
           });
-          if (now < end) {
+          if (realNow() < end) {
             frame(tick);
           } else {
             resolve(samples);

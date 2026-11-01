@@ -709,6 +709,7 @@ export async function armHold(
         ) => unknown[];
         __harnessTimerGate?: {
           frame?: typeof requestAnimationFrame;
+          now?: () => number;
           timeout?: typeof setTimeout;
         };
         __harnessArmed?: Record<number, Promise<unknown[]>>;
@@ -720,7 +721,9 @@ export async function armHold(
         window.requestAnimationFrame.bind(window);
       const later =
         w.__harnessTimerGate?.timeout ?? window.setTimeout.bind(window);
-      const deadline = performance.now() + wait;
+      // The deadline reads the real clock, which a page freeze does not stop.
+      const realNow = w.__harnessTimerGate?.now ?? (() => performance.now());
+      const deadline = realNow() + wait;
       // With `newOnly`, what the document has when armed neither counts nor
       // joins the hold: a motion already running goes on, and the page holds
       // the one that starts after it.
@@ -773,7 +776,7 @@ export async function armHold(
             } catch (error) {
               reject(error);
             }
-          } else if (performance.now() > deadline) {
+          } else if (realNow() > deadline) {
             done = true;
             reject(
               new Error(
@@ -1591,7 +1594,15 @@ export async function waitForRest(
       await locator.evaluate(
         (element, {ms, need}) =>
           new Promise<void>((resolve, reject) => {
-            const deadline = performance.now() + ms;
+            // The deadline reads the real clock, which a page freeze does not
+            // stop.
+            const realNow =
+              (
+                window as unknown as {
+                  __harnessTimerGate?: {now?: () => number};
+                }
+              ).__harnessTimerGate?.now ?? (() => performance.now());
+            const deadline = realNow() + ms;
             const curveEnd = (
               window as unknown as {__harnessCurveEnd: (a: Animation) => number}
             ).__harnessCurveEnd;
@@ -1639,7 +1650,7 @@ export async function waitForRest(
                   }
                 ).__harnessAnimations?.arm();
                 resolve();
-              } else if (performance.now() > deadline) {
+              } else if (realNow() > deadline) {
                 reject(new Error(`waitForRest: still moving (${now})`));
               } else {
                 frame(tick);
