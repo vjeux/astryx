@@ -23,6 +23,7 @@
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
   animationStoryboard,
+  blockMainThread,
   busyWindowProof,
   compareCurve,
   curveOf,
@@ -35,6 +36,7 @@ import {
   openStory,
   releaseAnimations,
   sampleCurve,
+  startCompositorTrace,
   startScreencast,
   thawTimers,
   timeline,
@@ -563,6 +565,8 @@ test('a second tap mid-scroll goes on to the month after', async ({page}) => {
 
 /** The busy proof's step speed: a quarter, so its whole block lies inside the step. */
 const STEP_RATE = 0.25;
+/** The busy proof's block, ms. */
+const BLOCK_MS = 800;
 
 test('the arrow step keeps advancing every frame through a blocked main thread', async ({
   page,
@@ -577,14 +581,26 @@ test('the arrow step keeps advancing every frame through a blocked main thread',
   const incoming = page.getByRole('grid', {name: 'November 2026'});
   await markElement(incoming, {inset: 8});
   const cast = await startScreencast(page);
+  // When the compositor presented each frame: a frame the screencast skipped
+  // while the compositor presented it is a recorder skip, not a stall (on a
+  // loaded machine the screencast skipped up to 139 ms of frames the
+  // compositor presented, every one of them moved).
+  const compositor = await startCompositorTrace(page);
   await page.waitForTimeout(300);
-  // The tap, the step slowed to a quarter of its speed as it starts, and an
-  // 800 ms block scheduled from the page 90 ms in: a harness round trip would
-  // eat most of the motion. At full speed the 0.3 s step left 110 to 125 ms
-  // of itself inside the block, too few frames to judge once a loaded
-  // machine's screencast delivered one every 30 ms; slowed, the whole block
-  // lies inside it. The step's own 0.3 s and its curve are other cases'
+  // The page waits for the step to run 32 ms, then blocks the main thread
+  // from a task after that frame's rendering update (blockMainThread), armed
+  // before the tap. The step is slowed to a quarter of its speed as it
+  // starts, from the page: at full speed the 0.3 s step left 110 to 125 ms of
+  // itself inside the block, too few frames to judge once a loaded machine's
+  // screencast delivered one every 30 ms; slowed, the whole block lies inside
+  // it. Blocked from a timer 90 ms after the tap instead, the block began
+  // mid-frame, and on a loaded machine nothing was presented for 66 to 189 ms
+  // at its start. The step's own 0.3 s and its curve are other cases'
   // proofs.
+  const blocked = blockMainThread(page, BLOCK_MS, {
+    during: page.locator('[data-month-track]'),
+    minProgressMs: 32,
+  });
   const started = await page.evaluate(rate => {
     document
       .querySelector<HTMLButtonElement>('button[aria-label="Next month"]')
@@ -595,32 +611,22 @@ test('the arrow step keeps advancing every frame through a blocked main thread',
         animation.playbackRate = rate;
       }
     }
-    setTimeout(() => {
-      const from = performance.timeOrigin + performance.now();
-      const end = performance.now() + 800;
-      while (performance.now() < end) {
-        // Busy.
-      }
-      (window as unknown as {busy: unknown}).busy = {
-        from,
-        to: performance.timeOrigin + performance.now(),
-      };
-    }, 90);
     return performance.timeOrigin + performance.now();
   }, STEP_RATE);
-  await page.waitForTimeout(STEP_MS / STEP_RATE + 300);
-  const busy = await page.evaluate(
-    () => (window as unknown as {busy: {from: number; to: number}}).busy,
-  );
+  const busy = await blocked;
+  // Past the step's end, so the last frames show where it rests.
+  await page.waitForTimeout(STEP_MS / STEP_RATE);
+  const presented = await compositor.stop();
   const tracked = await trackMarker(page, await cast.stop());
   const spanned = {
     ...busy,
     to: Math.min(busy.to, started + STEP_MS / STEP_RATE),
   };
-  expect(spanned.to - spanned.from).toBeGreaterThan(600);
+  expect(spanned.to - spanned.from).toBeGreaterThan(BLOCK_MS - 100);
   const proof = busyWindowProof(tracked, spanned, {
     axis: 'x',
     settledWithin: 1,
+    presented,
   });
   await writeEvidence(
     'busy-main-thread/month-pager-arrow-step',
@@ -666,23 +672,81 @@ test('in the sheet, a drag is decided once it has moved 10 px either way: slow 3
     x: center.x - length * Math.cos((degrees * Math.PI) / 180),
     y: center.y + length * Math.sin((degrees * Math.PI) / 180),
   });
-  /** Plays `script`, sampling the sheet's drop and the grid's offset per move. */
+  /**
+   * Plays `script`, recording the sheet's drop and the grid's offset in the
+   * page on every frame from the touch to a frame after the lift. Sampled
+   * from the harness after each move instead, the round trips delayed the
+   * next event in real time (WebKit's injected touches carry no timestamps),
+   * and on a loaded machine the lift came more than the 40 ms stillness
+   * interval after the last move, so the fast flick released at 0 px/s.
+   */
   const play = async (script: Parameters<typeof driver.play>[0]) => {
-    const seen = {sheetDrop: 0, monthsMin: Infinity, monthsMax: -Infinity};
-    await driver.play(script, {
-      onEvent: async step => {
-        if (step.type === 'touchMove') {
+    await page.evaluate(
+      ([element, sheetElement, top]) => {
+        if (element == null || sheetElement == null) {
+          throw new Error('no month scroller or sheet');
+        }
+        const seen = {sheetDrop: 0, monthsMin: Infinity, monthsMax: -Infinity};
+        const record = () => {
           seen.sheetDrop = Math.max(
             seen.sheetDrop,
-            Math.abs((await sheetTop()) - topBefore),
+            Math.abs(sheetElement.getBoundingClientRect().y - top),
           );
-          const months = await monthsIn(viewport);
-          seen.monthsMin = Math.min(seen.monthsMin, months);
-          seen.monthsMax = Math.max(seen.monthsMax, months);
-        }
+          const track = element.querySelector('[data-month-track]');
+          if (track != null) {
+            const box = element.getBoundingClientRect();
+            const months =
+              (box.left - track.getBoundingClientRect().left) / box.width;
+            seen.monthsMin = Math.min(seen.monthsMin, months);
+            seen.monthsMax = Math.max(seen.monthsMax, months);
+          }
+        };
+        let touching = false;
+        let frame = 0;
+        const tick = () => {
+          record();
+          frame = touching ? requestAnimationFrame(tick) : 0;
+        };
+        const options = {capture: true, passive: true};
+        const onStart = () => {
+          touching = true;
+          frame ||= requestAnimationFrame(tick);
+        };
+        // One more frame after the lift, with its effect applied.
+        const onEnd = () => {
+          touching = false;
+        };
+        window.addEventListener('touchstart', onStart, options);
+        window.addEventListener('touchend', onEnd, options);
+        (window as unknown as {dragSeen: () => typeof seen}).dragSeen = () => {
+          window.removeEventListener('touchstart', onStart, options);
+          window.removeEventListener('touchend', onEnd, options);
+          cancelAnimationFrame(frame);
+          return seen;
+        };
       },
-    });
-    return seen;
+      [
+        await viewport.elementHandle(),
+        await sheet.elementHandle(),
+        topBefore,
+      ] as const,
+    );
+    await driver.play(script);
+    // The frame after the lift has run.
+    await page.evaluate(
+      () => new Promise(resolve => requestAnimationFrame(() => resolve(null))),
+    );
+    return page.evaluate(() =>
+      (
+        window as unknown as {
+          dragSeen: () => {
+            sheetDrop: number;
+            monthsMin: number;
+            monthsMax: number;
+          };
+        }
+      ).dragSeen(),
+    );
   };
 
   // 35°, slow (4 px steps): the sideways travel reaches 10 px first. The
@@ -711,7 +775,11 @@ test('in the sheet, a drag is decided once it has moved 10 px either way: slow 3
   );
   expect(steep.sheetDrop).toBeGreaterThan(20);
   expect(steep.monthsMax - steep.monthsMin).toBeLessThan(0.01);
-  expect(await monthsIn(viewport)).toBeCloseTo(10, 2);
+  // On October throughout the sheet's drag. What the sheet does on the
+  // release is its own: read after it, WebKit's real-time pacing could close
+  // up the rest before the lift on a loaded machine, and the sheet then took
+  // the release as a fling and closed.
+  expect(steep.monthsMin).toBeCloseTo(10, 2);
 });
 
 test(
