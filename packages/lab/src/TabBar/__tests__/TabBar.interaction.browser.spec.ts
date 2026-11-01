@@ -46,6 +46,7 @@ import {
   drag,
   freezePage,
   freezePageOn,
+  freezePageWhen,
   holdAnimations,
   installPageFreeze,
   installTimerGate,
@@ -2089,7 +2090,7 @@ test.describe('minimize on scroll', () => {
   test('collapsing carries the lens into the circle on UIKit’s springs while the platter contracts', async ({
     page,
   }, testInfo) => {
-    const {driver} = await openBar(page, 'minimize-on-scroll');
+    const {driver} = await openFreezableBar(page, 'minimize-on-scroll');
     const body = lensBody(page);
     const restBox = await body.boundingBox();
     const circleBox = await circle(page).boundingBox();
@@ -2099,8 +2100,21 @@ test.describe('minimize on scroll', () => {
     const travel =
       circleBox.x + circleBox.width / 2 - (restBox.x + restBox.width / 2);
     const endScale = MINIMIZED_SIZE / restBox.width;
+    // The scene freezes on the first frame the collapse runs, however slowly
+    // the test process reads it: the curves are sampled by their own time.
+    const collapsing = freezePageWhen(
+      page,
+      () =>
+        document
+          .querySelector('[data-tab-bar-lens-body]')
+          ?.getAnimations()
+          .some(animation => animation.playState === 'running') ?? false,
+      null,
+      {timeout: 10_000},
+    );
     await scrollByFinger(page, driver, 200);
-    await waitForAnimation(body);
+    await collapsing;
+    await waitForAnimation(body, {minProgressMs: 0});
     await holdAnimations(page);
     const times = Array.from({length: 61}, (_, i) => i * 16.667);
     const bodySamples = await sampleCurve(body, times);
@@ -2113,6 +2127,7 @@ test.describe('minimize on scroll', () => {
       analyticScaleX: 1 + (endScale - 1) * springStep(COLLAPSE_SIZE, t),
     }));
     await releaseAnimations(page, {finish: true});
+    await thawPage(page);
     await writeEvidence(
       'curves/tabbar-collapse',
       {
