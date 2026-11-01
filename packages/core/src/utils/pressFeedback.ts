@@ -43,6 +43,7 @@ import {
   pressGestureStep,
 } from './pressGesture';
 import {isCoarsePointer, watchCoarsePointer} from './coarsePointer';
+import {isPressHeld} from '../privateAttributes/pressHeld.stylex';
 import {subscribeInput} from './inputStream';
 import {TOUCH_QUERY} from './touchPresentation';
 import {holdsPressThroughDrag} from '../privateAttributes/pressHoldsDrag.stylex';
@@ -251,7 +252,13 @@ function surfaceAt(target: EventTarget | null): HTMLElement | null {
     return null;
   }
   const found = target.closest(`[${PRESSABLE_ATTRIBUTE}]`);
-  if (!(found instanceof HTMLElement) || found.matches(DISABLED)) {
+  // A held surface (an open swipe row) is read as a disabled one: it takes
+  // the press and paints nothing (privateAttributes/pressHeld.stylex.ts).
+  if (
+    !(found instanceof HTMLElement) ||
+    found.matches(DISABLED) ||
+    isPressHeld(found)
+  ) {
     return null;
   }
   return found;

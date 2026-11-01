@@ -6,7 +6,7 @@
  * @output Exports resolveRelease (where a swipe-action release lands: closed,
  *   open, or the outermost entry fires), confirmPoint (where a full swipe
  *   confirms) and confirmedOffset
- * @position Pure pieces of Item's swipe actions, beside useSwipeAction;
+ * @position Pure pieces of a row's swipe actions, beside useSwipeAction;
  *   tested by swipeRelease.test.ts against the UIKit lab's releases
  *
  * Travel and velocity here are logical: measured toward the side being
@@ -15,7 +15,7 @@
 
 import {swipeActions} from '../motion/uikit/swipeActions';
 
-/** What a swipe does (Item's `swipeBehavior`). */
+/** What a swipe does (`createSwipe`'s `behavior`). */
 export type SwipeReleaseBehavior = 'reveal' | 'commit';
 
 /** Where a release lands. */
