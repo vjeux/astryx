@@ -1216,7 +1216,13 @@ export function createResizableAs(
       if (isDestroyed) {
         return;
       }
+      const wasReversed = isReversed();
       handleConfig = config;
+      if (isReversed() !== wasReversed) {
+        // The pane sits on the other side of the handle now: look for it
+        // there, and tell it whether the region is collapsed.
+        commit();
+      }
       refreshView();
     },
     subscribe(listener) {
