@@ -174,13 +174,17 @@ const translateX = async (locator: Locator) =>
 test('a tap on another tab slides the lens on UIKit’s spring, the selected copy counter-moving', async ({
   page,
 }, testInfo) => {
-  const {driver} = await openBar(page);
+  const {driver} = await openFreezableBar(page);
   const from = await itemCenter(page, 'Home');
   const to = await itemCenter(page, 'Browse');
+  // The scene stands still from before the tap: the slide it starts is held
+  // at its start, and the copy that rides in the lens only while it slides
+  // stays mounted, however slowly the test process reads them.
+  await freezePage(page);
   await driver.tap(to);
   await expect(tab(page, 'Browse')).toHaveAttribute('aria-selected', 'true');
   const body = lensBody(page);
-  await waitForAnimation(body);
+  await waitForAnimation(body, {minProgressMs: 0});
   await holdAnimations(page);
 
   const times = Array.from({length: 49}, (_, i) => i * 16.667);
@@ -196,6 +200,7 @@ test('a tap on another tab slides the lens on UIKit’s spring, the selected cop
     analytic: start * (1 - springStep(LENS_TRAVEL, t)),
   }));
   await releaseAnimations(page, {finish: true});
+  await thawPage(page);
   await writeEvidence(
     'curves/tabbar-lens-travel',
     {
