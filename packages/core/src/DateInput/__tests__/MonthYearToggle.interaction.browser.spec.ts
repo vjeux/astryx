@@ -171,35 +171,18 @@ async function openCalendar(
 }
 
 /** Every running animation under `root`: its animated properties and duration. */
-async function runningAnimations(page: Page, selector: string) {
-  return page
-    .locator(selector)
-    .first()
-    .evaluate(root =>
-      root.getAnimations({subtree: true}).map(animation => {
-        const effect = animation.effect as KeyframeEffect;
-        return {
-          properties: [
-            ...new Set(
-              effect
-                .getKeyframes()
-                .flatMap(frame =>
-                  Object.keys(frame).filter(
-                    key =>
-                      ![
-                        'offset',
-                        'easing',
-                        'composite',
-                        'computedOffset',
-                      ].includes(key),
-                  ),
-                ),
-            ),
-          ],
-          duration: Number(effect.getTiming().duration),
-        };
-      }),
-    );
+/** The properties a watched run animates, from its keyframes. */
+function propertiesOf(run: ActiveAnimation): string[] {
+  return [
+    ...new Set(
+      run.keyframes.flatMap(frame =>
+        Object.keys(frame).filter(
+          key =>
+            !['offset', 'easing', 'composite', 'computedOffset'].includes(key),
+        ),
+      ),
+    ),
+  ];
 }
 
 test('the wheels fade in and the chevron turns on UIKit’s 0.25 s ease-in-ease-out', async ({
@@ -597,26 +580,33 @@ test('Reduced Motion: the wheels cross-fade in at most 200 ms and the chevron di
   // of its dip.
   await page.emulateMedia({reducedMotion: 'reduce'});
   const {driver, wheels, titleAt} = await openCalendar(page);
-  await driver.tap(titleAt);
-  const panel = await runningAnimations(page, '[data-panel="wheels"]');
-  expect(panel.map(animation => animation.properties).flat()).toContain(
-    'opacity',
+  // Watched from before the tap, so a run of 200 ms or less that has ended
+  // by the time a loaded machine's harness looks is still read (read after
+  // the tap, the chevron's dip had ended on a loaded machine).
+  const panelWatch = await watchAnimations(
+    page.locator('[data-panel="wheels"]').first(),
   );
-  for (const animation of panel) {
-    for (const property of animation.properties) {
+  const chevronWatch = await watchAnimations(
+    page.locator('[data-title="month-year"] .astryx-icon').first(),
+  );
+  await driver.tap(titleAt);
+  const panel = await panelWatch.started();
+  expect(panel.flatMap(propertiesOf)).toContain('opacity');
+  for (const run of panel) {
+    for (const property of propertiesOf(run)) {
       expect(['opacity', 'visibility']).toContain(property);
     }
-    expect(animation.duration).toBeLessThanOrEqual(200);
+    expect(run.durationMs).toBeLessThanOrEqual(200);
   }
   // The chevron dips; its turn is a zero-length transition at the dip's
   // middle, an instant change rather than travel.
-  const chevron = (
-    await runningAnimations(page, '[data-title="month-year"] .astryx-icon')
-  ).filter(animation => animation.duration > 0);
+  const chevron = (await chevronWatch.started()).filter(
+    run => run.durationMs > 0,
+  );
   expect(chevron.length).toBeGreaterThan(0);
-  for (const animation of chevron) {
-    expect(animation.properties).toEqual(['opacity']);
-    expect(animation.duration).toBeLessThanOrEqual(200);
+  for (const run of chevron) {
+    expect(propertiesOf(run)).toEqual(['opacity']);
+    expect(run.durationMs).toBeLessThanOrEqual(200);
   }
   const turn = await page
     .locator('[data-title="month-year"] .astryx-icon')
