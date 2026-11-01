@@ -1007,16 +1007,22 @@ test('a press, its lift, flex and travel, does no Layout or Paint per frame', as
   const target = await itemCenter(page, 'Profile');
   let press = {from: 0, to: 0};
   // Held for 700 ms: the lens travels, lifts and the bar flexes with no
-  // render at all. Counted while every curve is moving: the first frame
-  // composites the layers, and each animation's end may repaint once as its
-  // layer is folded back (the lift ends at ~0.39 s).
+  // render at all. Counted while every curve is moving, from three frames
+  // after the press's own DOM change (its render, then the layers its new
+  // animations take), not from a fixed delay, until before the lift ends
+  // (~0.39 s), where each animation's end may repaint once as its layer is
+  // folded back.
+  await noteSettle(page);
   const trace = await traceRendering(page, async () => {
     const playing = driver.play(tapScript(target, {holdMs: 700}));
     [press] = await waitForAnimation(capsule);
     await playing;
     await waitForRest(capsule);
   });
-  const during = countBetween(trace, press.from + 50, press.from + 340);
+  const from = await settledAt(page);
+  expect(from, 'the press changed no DOM').toBeGreaterThan(0);
+  expect(press.from + 340 - from, 'counted window, ms').toBeGreaterThan(100);
+  const during = countBetween(trace, from, press.from + 340);
   const when = trace.events
     .filter(e => e.name === 'Layout' || e.name === 'Paint')
     .map(e => `${e.name}@${Math.round(e.t - press.from)}`);
@@ -1223,14 +1229,10 @@ test.describe('with Reduce Motion (design:reduced-motion)', () => {
     expect(held).toEqual({lens: {x: 1, y: 1}, bar: {x: 1, y: 1}});
     // The lens follows the finger through the drag (direct manipulation); the
     // settle its release starts is a transition, so it cross-fades (DR2).
-    let released = 0;
-    await driver.play(drag(home, library, {durationMs: 400, restMs: 300}), {
-      onEvent: async step => {
-        if (step.type === 'touchEnd') {
-          released = await timelineNow(page);
-        }
-      },
-    });
+    await driver.play(drag(home, library, {durationMs: 400, restMs: 300}));
+    // Since the page's own lift, not a read the test makes after it.
+    const released = await liftedAt(page);
+    expect(released, 'no lift reached the page').toBeGreaterThan(0);
     // The fade starts with the input; what it changes follows a few
     // frames later.
     await expectCrossFade(page, released);
