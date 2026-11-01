@@ -1233,11 +1233,10 @@ test('a press, its lift, flex and travel, does no Layout or Paint per frame', as
   const target = await itemCenter(page, 'Profile');
   let press = {from: 0, to: 0};
   // Held for 700 ms: the lens travels, lifts and the bar flexes with no
-  // render at all. Counted while every curve is moving, from three frames
-  // after the press's own DOM change (its render, then the layers its new
-  // animations take), not from a fixed delay, until before the lift ends
-  // (~0.39 s), where each animation's end may repaint once as its layer is
-  // folded back.
+  // render at all. Counted from three frames after the press's own DOM
+  // change (its render, then the layers its new animations take), not from
+  // a fixed delay, until the finger lifts, by the page's own lift time:
+  // nothing renders in between, the curves' ends included.
   await noteSettle(page);
   const trace = await traceRendering(page, async () => {
     const playing = driver.play(tapScript(target, {holdMs: 700}));
@@ -1247,8 +1246,13 @@ test('a press, its lift, flex and travel, does no Layout or Paint per frame', as
   });
   const from = await settledAt(page);
   expect(from, 'the press changed no DOM').toBeGreaterThan(0);
-  expect(press.from + 340 - from, 'counted window, ms').toBeGreaterThan(100);
-  const during = countBetween(trace, from, press.from + 340);
+  const to = await page.evaluate(
+    () =>
+      performance.timeOrigin +
+      ((window as unknown as {__tabBarLifted?: number}).__tabBarLifted ?? 0),
+  );
+  expect(to - from, 'counted window, ms').toBeGreaterThan(100);
+  const during = countBetween(trace, from, to);
   const when = trace.events
     .filter(e => e.name === 'Layout' || e.name === 'Paint')
     .map(e => `${e.name}@${Math.round(e.t - press.from)}`);
@@ -1477,13 +1481,40 @@ const cssSlide = async (page: Page) =>
   }));
 
 /**
+ * Counts, on the page from now, the CSS transitions the lens starts (one
+ * transitionrun per property), for `expectCssSlide`. Call it before the
+ * action that slides the lens.
+ */
+async function watchCssSlide(page: Page) {
+  await page.locator('[data-tab-bar-lens]').evaluate(element => {
+    const w = window as unknown as {__tabBarSlides?: number};
+    w.__tabBarSlides = 0;
+    element.addEventListener('transitionrun', event => {
+      if (event.target === element) {
+        w.__tabBarSlides = (w.__tabBarSlides ?? 0) + 1;
+      }
+    });
+  });
+}
+
+/**
  * Under a mouse the lens slides in CSS on the theme's motion, and its body,
  * which the animator moves under a finger, never animates.
  */
 async function expectCssSlide(page: Page, {isRunning = true} = {}) {
   expect((await cssSlide(page)).duration).not.toBe('0s');
   if (isRunning) {
-    await expect.poll(async () => (await cssSlide(page)).transitions).toBe(1);
+    // Counted on the page from `watchCssSlide`, so a short slide that ends
+    // before this looks is still seen.
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as unknown as {__tabBarSlides?: number}).__tabBarSlides ??
+            0,
+        ),
+      )
+      .toBe(1);
   }
   expect(
     await lensBody(page).evaluate(element => element.getAnimations().length),
@@ -1566,6 +1597,7 @@ test.describe('touch work costs nothing under a fine pointer', () => {
       await expectFinePointer(page);
       await openStory(page, storybook(), 'lab-tabbar--default');
       await expect(page.getByRole('tablist', {name: 'Sections'})).toBeVisible();
+      await watchCssSlide(page);
       await tab(page, 'Browse').click();
       await expect(tab(page, 'Browse')).toHaveAttribute(
         'aria-selected',
@@ -2898,8 +2930,21 @@ test.describe('bottom accessory', () => {
       });
     // Just past the trigger, the finger at rest long enough that the page
     // doesn't fling (a tap on a flinging page only stops it), then the circle
-    // tapped at once: the turn comes while the accessory still moves.
-    await scrollByFinger(page, driver, 80, {settle: false, restMs: 100});
+    // tapped at once: the turn comes while the accessory still moves. The
+    // person scrolls most of the way first, and a second drag crosses the
+    // 66 px trigger near its end: a finger's own scroll keeps a few pixels as
+    // slop, so how far the first got is read rather than assumed.
+    await scrollByFinger(page, driver, 50);
+    const scrolled = await page.evaluate(() => window.scrollY);
+    expect(scrolled).toBeLessThan(66);
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'expanded',
+    );
+    await scrollByFinger(page, driver, 66 - scrolled + 30, {
+      settle: false,
+      restMs: 100,
+    });
     await expect(accessory(page)).toHaveAttribute(
       'data-tab-bar-accessory',
       'inline',
