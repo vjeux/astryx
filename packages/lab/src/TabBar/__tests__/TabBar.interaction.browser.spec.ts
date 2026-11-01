@@ -107,7 +107,54 @@ async function liftedScale(page: Page) {
  * Opens a TabBar story on the harness's phone: a coarse primary pointer, so
  * the touch presentation applies, whatever the engine (one touch model).
  */
+/**
+ * Page side, from before the story loads: every script animation the page
+ * makes (the animator's), with the document time it was made, and when a
+ * finger last lifted. design:reduced-motion's checks read a short cross-fade
+ * from it after the fade has ended, and date "since the lift" by the page's
+ * own lift rather than a read the test makes afterwards.
+ */
+function animationLog(): void {
+  const w = window as unknown as {
+    __tabBarMade?: {animation: Animation; at: number}[];
+    __tabBarLifted?: number;
+  };
+  if (w.__tabBarMade != null) {
+    return;
+  }
+  const made: {animation: Animation; at: number}[] = [];
+  w.__tabBarMade = made;
+  w.__tabBarLifted = 0;
+  const now = () => Number(document.timeline.currentTime ?? 0);
+  const animate = Element.prototype.animate;
+  Element.prototype.animate = function (
+    this: Element,
+    ...args: Parameters<Element['animate']>
+  ) {
+    const animation = animate.apply(this, args);
+    made.push({animation, at: now()});
+    if (made.length > 5000) {
+      made.splice(0, made.length - 5000);
+    }
+    return animation;
+  };
+  window.addEventListener(
+    'touchend',
+    () => {
+      w.__tabBarLifted = now();
+    },
+    true,
+  );
+}
+
+/** When a finger last lifted on the page, on the document timeline (0: never). */
+const liftedAt = (page: Page) =>
+  page.evaluate(
+    () => (window as unknown as {__tabBarLifted?: number}).__tabBarLifted ?? 0,
+  );
+
 async function openBar(page: Page, story = 'default') {
+  await page.addInitScript(animationLog);
   await openStory(page, storybook(), `lab-tabbar--${story}`);
   const driver = await touchDriver(page);
   const bar = page.getByRole('tablist', {name: 'Sections'});
@@ -902,6 +949,54 @@ test('the slide keeps advancing every frame while the main thread is blocked', a
   ).toBe(true);
 });
 
+/**
+ * Notes, on the page, when the DOM change an action makes has rendered: three
+ * frames after the first change once armed (with `attribute`, the first that
+ * changes it), which are the frame that styles, lays out and paints it, the
+ * frame that paints the layers its new animations take, and a clean one. A
+ * rendering proof counts per-frame work from there, not from a fixed delay a
+ * loaded machine stretches.
+ */
+async function noteSettle(page: Page, attribute?: string) {
+  await page.evaluate(attribute => {
+    const w = window as unknown as {__tabBarSettledAt?: number};
+    w.__tabBarSettledAt = 0;
+    const observer = new MutationObserver(records => {
+      if (
+        attribute != null &&
+        !records.some(record => record.attributeName === attribute)
+      ) {
+        return;
+      }
+      observer.disconnect();
+      let frames = 3;
+      const next = () => {
+        frames -= 1;
+        if (frames === 0) {
+          w.__tabBarSettledAt = performance.timeOrigin + performance.now();
+          return;
+        }
+        requestAnimationFrame(next);
+      };
+      requestAnimationFrame(next);
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+  }, attribute ?? null);
+}
+
+/** When `noteSettle` noted the render, epoch ms on the page's clock (0: not yet). */
+const settledAt = (page: Page) =>
+  page.evaluate(
+    () =>
+      (window as unknown as {__tabBarSettledAt?: number}).__tabBarSettledAt ??
+      0,
+  );
+
 test('a press, its lift, flex and travel, does no Layout or Paint per frame', async ({
   page,
   browserName,
@@ -939,50 +1034,61 @@ const timelineNow = (page: Page) =>
  * started at or after `since`, as design:reduced-motion's checks read it: the
  * properties its keyframes interpolate (a value that only jumps, at one
  * offset, moves nothing on screen), and when its curve reaches its end value
- * (the animator holds the end after it).
+ * (the animator holds the end after it). The animator's own are read from the
+ * page's log too, so one that ended before the read (a cross-fade is short)
+ * is still read.
  */
 async function runningAnimations(page: Page, since = 0) {
   return page.evaluate(since => {
     const meta = ['offset', 'computedOffset', 'easing', 'composite'];
-    return document
+    const made = (
+      (
+        window as unknown as {
+          __tabBarMade?: {animation: Animation; at: number}[];
+        }
+      ).__tabBarMade ?? []
+    )
+      .filter(entry => entry.at >= since - 50)
+      .map(entry => entry.animation);
+    const running = document
       .getAnimations()
       .filter(
         animation =>
           animation.startTime == null ||
           Number(animation.startTime) >= since - 50,
-      )
-      .map(animation => {
-        const effect = animation.effect as KeyframeEffect;
-        const frames = effect.getKeyframes();
-        const keys = [
-          ...new Set(frames.flatMap(frame => Object.keys(frame))),
-        ].filter(key => !meta.includes(key));
-        const value = (frame: ComputedKeyframe, key: string) =>
-          String(frame[key]);
-        const interpolated = keys.filter(key =>
-          frames.some(
-            (frame, index) =>
-              index > 0 &&
-              frame.computedOffset !== frames[index - 1].computedOffset &&
-              value(frame, key) !== value(frames[index - 1], key),
-          ),
-        );
-        const last = frames[frames.length - 1];
-        let end = frames.length - 1;
-        while (
-          end > 0 &&
-          keys.every(key => value(frames[end - 1], key) === value(last, key))
-        ) {
-          end -= 1;
-        }
-        const timing = effect.getTiming();
-        return {
-          properties: interpolated,
-          endsMs:
-            Number(timing.delay ?? 0) +
-            (frames[end]?.computedOffset ?? 0) * Number(timing.duration),
-        };
-      });
+      );
+    return [...new Set([...running, ...made])].map(animation => {
+      const effect = animation.effect as KeyframeEffect;
+      const frames = effect.getKeyframes();
+      const keys = [
+        ...new Set(frames.flatMap(frame => Object.keys(frame))),
+      ].filter(key => !meta.includes(key));
+      const value = (frame: ComputedKeyframe, key: string) =>
+        String(frame[key]);
+      const interpolated = keys.filter(key =>
+        frames.some(
+          (frame, index) =>
+            index > 0 &&
+            frame.computedOffset !== frames[index - 1].computedOffset &&
+            value(frame, key) !== value(frames[index - 1], key),
+        ),
+      );
+      const last = frames[frames.length - 1];
+      let end = frames.length - 1;
+      while (
+        end > 0 &&
+        keys.every(key => value(frames[end - 1], key) === value(last, key))
+      ) {
+        end -= 1;
+      }
+      const timing = effect.getTiming();
+      return {
+        properties: interpolated,
+        endsMs:
+          Number(timing.delay ?? 0) +
+          (frames[end]?.computedOffset ?? 0) * Number(timing.duration),
+      };
+    });
   }, since);
 }
 
