@@ -2093,19 +2093,22 @@ test.describe('minimize on scroll', () => {
     const end = page.locator('[data-tab-bar-platter-end]');
     await markElement(end);
     const cast = await startScreencast(page);
-    // Just past the trigger, then block as soon as the collapse is running.
+    // Armed before the drag, the page blocks itself in the frame that sees
+    // the collapse running: one evaluate sees it and blocks, so no runner
+    // latency between the two can eat the collapse first. The judged part
+    // ends where the platter settles (settledWithin).
+    const blocking = blockMainThread(page, 600, {during: end});
+    // Just past the trigger.
     await driver.play(
       drag({x: 200, y: 520}, {x: 200, y: 420}, {durationMs: 300, restMs: 150}),
     );
-    const [collapse] = await waitForAnimation(end, {minProgressMs: 16});
-    // Blocked by the page itself in the frame that sees the collapse running.
-    const block = await blockMainThread(page, 600, {during: end});
+    const block = await blocking;
     await page.waitForTimeout(150);
     const castFrames = await cast.stop();
     const tracked = await trackMarker(page, castFrames);
     const proof = busyWindowProof(
       tracked,
-      {from: block.from, to: Math.min(block.to, collapse.to)},
+      {from: block.from, to: block.to},
       {
         axis: 'x',
         settledWithin: 2,
