@@ -1450,7 +1450,7 @@ component LayoutPanel(props: LayoutPanelProps)
   prop label?: string
   prop padding?: SpacingStep
   prop ref?: React.Ref<HTMLDivElement>
-  prop resizable?: ResizableProps
+  prop resizable?: ResizableProps @deprecated
   prop role?: AriaRole
   prop width?: SizeValue
   prop xstyle?: StyleXStyles
@@ -1928,7 +1928,7 @@ component ResizeHandle(props: ResizeHandleProps)
   prop pillPlacement?: PillPlacement = 'auto'
   prop position?: 'inline' | 'overlay' = 'inline'
   prop ref?: React.Ref<HTMLDivElement>
-  prop resizable?: ResizableProps
+  prop resizable?: ResizableProps @deprecated
   prop xstyle?: StyleXStyles
   inherits AriaAttributes, DOMAttributes, HTMLAttributes
 component ScrollableArea(props: ScrollableAreaProps)
@@ -5073,7 +5073,7 @@ interface ResizableController
   subscribe: (listener: () => void) => () => void
   update: (options: CreateResizableOptions) => void
 type ResizablePercentSize = { type: 'percent'; value: number } & ({ min: PixelWidth; max?: never } | { min?: never; max: PixelWidth })
-interface ResizableProps
+interface ResizableProps @deprecated
   _collapsedSize: number
   _collapsible: boolean
   _direction?: ResizableDirection
@@ -5087,14 +5087,14 @@ interface ResizableProps
   _onResizeStart: () => void
   _size: number
   _snaps: number[]
-interface ResizableRegion
+interface ResizableRegion @deprecated
   collapse: () => void
   expand: () => void
   isCollapsed: boolean
   props: ResizableProps
   resize: (size: number) => void
   size: number
-type ResizableRegionConfig = ResizableRegionSizing & ResizableMinConfig & ResizableMaxConfig
+type ResizableRegionConfig @deprecated = ResizableRegionSizing & ResizableMinConfig & ResizableMaxConfig
 type ResizableSize = number | `${number}px` | `${number}%` | PixelWidth | ResizablePercentSize
 interface ResizeHandleProps extends Omit<BaseProps<HTMLDivElement>, 'style'> (props of ResizeHandle)
 interface ResolveThemeTokenOptions extends ResolveThemeTokensOptions
@@ -6087,7 +6087,7 @@ interface UsePopoverReturn
   toggle: () => void
   triggerProps: { 'aria-haspopup': 'dialog' | 'true'; 'aria-expanded': boolean; 'aria-controls': string }
   triggerRef: (el: HTMLElement | null) => void
-interface UseResizableMultiConfig
+interface UseResizableMultiConfig @deprecated
   autoSaveId?: string
   containerRef?: RefObject<HTMLElement | null>
   direction?: ResizableDirection = 'horizontal'
@@ -6098,7 +6098,7 @@ interface UseResizableResult
   isCollapsed: boolean
   resize: (size: number) => void
   size: number
-type UseResizableSingleConfig = ResizableRegionConfig & UseResizableSingleOptions
+type UseResizableSingleConfig @deprecated = ResizableRegionConfig & UseResizableSingleOptions
 interface UseScrollableAreaOptions
   axis: ScrollAxis
   keyboardAccess: ScrollKeyboardAccess
