@@ -187,6 +187,14 @@ async function watchRuns(
   await locator.evaluate((element, name) => {
     const runs: Record<string, unknown>[] = [];
     (window as unknown as Record<string, unknown>)[name] = runs;
+    // The last frame's time: a page's run events are sent at the frame after
+    // the one that started the run.
+    let lastFrame = Number(document.timeline.currentTime);
+    const onFrame = (time: number) => {
+      lastFrame = time;
+      requestAnimationFrame(onFrame);
+    };
+    requestAnimationFrame(onFrame);
     const record = (run: Animation | undefined, runName: string) => {
       const effect = run?.effect as KeyframeEffect | undefined;
       if (effect == null) {
@@ -217,13 +225,14 @@ async function watchRuns(
               candidate.transitionProperty === property,
           );
         if (transition == null) {
-          // Already over when its run event fires: WebKit dates a transition
-          // at the style change, so after a long task its first frame can
-          // come after its end, and no frame of it is presented.
+          // Already over when its run event fires: it started at the last
+          // frame, and the next one came after its end, so no frame of it
+          // was presented (a starved machine's frames come seconds apart).
           runs.push({
             name: property,
             endedBeforeFirstFrame: true,
-            firstFrameAt: Number(document.timeline.currentTime),
+            startedFrameAt: lastFrame,
+            nextFrameAt: Number(document.timeline.currentTime),
           });
           return;
         }
@@ -302,8 +311,12 @@ async function watchRuns(
                 .endedBeforeFirstFrame === true,
           );
           if (skipped != null) {
+            const {startedFrameAt, nextFrameAt} = skipped as unknown as {
+              startedFrameAt: number;
+              nextFrameAt: number;
+            };
             throw new Error(
-              `the ${skipped.name} transition had ended before its first frame (its run and end fired together at timeline ${Math.round((skipped as unknown as {firstFrameAt: number}).firstFrameAt)} ms): no frame of it was presented`,
+              `frame starvation: the ${skipped.name} transition started at the frame at ${Math.round(startedFrameAt)} ms, and the next frame came at ${Math.round(nextFrameAt)} ms, ${Math.round(nextFrameAt - startedFrameAt)} ms later and after its end, so no frame of it was presented`,
             );
           }
           return runs;
