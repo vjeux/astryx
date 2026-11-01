@@ -395,6 +395,13 @@ test('the press release of a checkbox keeps fading on every frame while the main
     t: +(p.t - block.from).toFixed(1),
     strength: +strength(p.value).toFixed(3),
   }));
+  const intervals = during
+    .map((p, i) => (i === 0 ? p.t - block.from : p.t - during[i - 1].t))
+    .filter(dt => dt > 0);
+  const longestGap = Math.max(
+    end - (during.at(-1)?.t ?? block.from),
+    ...intervals,
+  );
   await writeEvidence(
     'busy-main-thread/checkbox-press-release',
     {
@@ -421,12 +428,14 @@ test('the press release of a checkbox keeps fading on every frame while the main
   });
   await film.write(testInfo, {block, release, box});
   expect(rest - pressed).toBeGreaterThan(10);
-  // How often the compositor presents during the block is the machine's
-  // (with two CPUs, as few as 4 frames in 150 ms, each tens of ms behind its
-  // own timestamp); what a blocked main thread cannot stop is the progress
-  // each presented frame shows. A release on the main thread presents
-  // nothing new until the block ends.
-  expect(during.length, JSON.stringify(strengths)).toBeGreaterThanOrEqual(2);
+  // Every display frame of the block, each further along. With two CPUs
+  // shared by four browsers the compositor can present fewer during it
+  // (4 frames in 150 ms, gaps up to 56 ms, in 1 run of 10), which this
+  // reports as a failure: the machine's limit there, not the release's.
+  expect(during.length, JSON.stringify(strengths)).toBeGreaterThanOrEqual(
+    Math.floor((end - block.from) / (1000 / 60)) - 2,
+  );
+  expect(longestGap).toBeLessThan(40);
   for (let i = 1; i < strengths.length; i++) {
     expect(strengths[i].strength).toBeLessThanOrEqual(
       strengths[i - 1].strength + 0.01,
