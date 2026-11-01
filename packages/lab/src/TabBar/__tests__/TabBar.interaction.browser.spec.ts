@@ -576,7 +576,9 @@ test('a press ends without a choice when the tab list changes under it', async (
       await expect(tab(page, 'Profile')).toHaveCount(0);
     },
   });
-  await page.waitForTimeout(400);
+  // Settled before anything is read: the lens comes back onto Home after the
+  // lift, however long a loaded machine takes.
+  await waitForRest(lensBody(page));
   expect(errors).toEqual([]);
   expect(
     await page.evaluate(
