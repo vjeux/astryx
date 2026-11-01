@@ -269,12 +269,20 @@ test('a horizontal trackpad swipe pages one month per gesture', async ({
     'Playwright cannot send wheel events to mobile WebKit',
   );
   const {track, title, center} = await openCalendar(page);
+  await installTimerGate(page);
   await page.mouse.move(center.x, center.y);
   // One gesture: its momentum keeps sending wheel events. (The phone's
-  // device pixel ratio of 3 divides the deltas the page sees.)
+  // device pixel ratio of 3 divides the deltas the page sees.) A gesture ends
+  // after 120 ms without a wheel event, on a timer; a trackpad sends its
+  // momentum every frame, but the harness sends each event after a round
+  // trip, and on a loaded machine those came more than 120 ms apart: the
+  // burst read as two gestures and paged twice. The gated timers are held
+  // through the burst, so its gaps cannot end it.
+  await freezeTimers(page);
   for (let i = 0; i < 6; i++) {
     await page.mouse.wheel(60, 0);
   }
+  await thawTimers(page);
   await waitForRest(track);
   await expect(title).toHaveText('November 2026');
   // A new gesture, after a pause, pages again.
