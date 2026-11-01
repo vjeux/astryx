@@ -709,6 +709,7 @@ export async function armHold(
         ) => unknown[];
         __harnessTimerGate?: {
           frame?: typeof requestAnimationFrame;
+          now?: () => number;
           timeout?: typeof setTimeout;
         };
         __harnessArmed?: Record<number, Promise<unknown[]>>;
@@ -720,7 +721,9 @@ export async function armHold(
         window.requestAnimationFrame.bind(window);
       const later =
         w.__harnessTimerGate?.timeout ?? window.setTimeout.bind(window);
-      const deadline = performance.now() + wait;
+      // The deadline reads the real clock, which a page freeze does not stop.
+      const realNow = w.__harnessTimerGate?.now ?? (() => performance.now());
+      const deadline = realNow() + wait;
       // With `newOnly`, what the document has when armed neither counts nor
       // joins the hold: a motion already running goes on, and the page holds
       // the one that starts after it.
@@ -773,7 +776,7 @@ export async function armHold(
             } catch (error) {
               reject(error);
             }
-          } else if (performance.now() > deadline) {
+          } else if (realNow() > deadline) {
             done = true;
             reject(
               new Error(
@@ -1294,6 +1297,12 @@ export async function waitForAnimation(
             const curveEnd = w.__harnessCurveEnd;
             const recorder = w.__harnessAnimations;
             recorder.record();
+            // Page times trail real time by the span a page freeze stood still.
+            // The epoch stamps add it back, so they share the trace's clock.
+            const epoch =
+              performance.timeOrigin +
+              ((window as unknown as {__harnessFreeze?: {offset: number}})
+                .__harnessFreeze?.offset ?? 0);
             const describe = (
               a: Animation,
               finishedAt: number | null,
@@ -1319,8 +1328,7 @@ export async function waitForAnimation(
                     : rate < 0
                       ? Number(a.startTime) - endTime / speed
                       : Number(a.startTime);
-              const startedAt =
-                performance.timeOrigin + Number(start ?? Number.NaN);
+              const startedAt = epoch + Number(start ?? Number.NaN);
               const name =
                 'transitionProperty' in a
                   ? (a as unknown as {transitionProperty: string})
@@ -1347,10 +1355,7 @@ export async function waitForAnimation(
                 keyframes: (effect?.getKeyframes() ?? []).map(
                   (k): Record<string, unknown> => ({...k}),
                 ),
-                finishedAt:
-                  finishedAt == null
-                    ? null
-                    : performance.timeOrigin + finishedAt,
+                finishedAt: finishedAt == null ? null : epoch + finishedAt,
               };
             };
             const inside = (a: Animation) => {
@@ -1591,7 +1596,15 @@ export async function waitForRest(
       await locator.evaluate(
         (element, {ms, need}) =>
           new Promise<void>((resolve, reject) => {
-            const deadline = performance.now() + ms;
+            // The deadline reads the real clock, which a page freeze does not
+            // stop.
+            const realNow =
+              (
+                window as unknown as {
+                  __harnessTimerGate?: {now?: () => number};
+                }
+              ).__harnessTimerGate?.now ?? (() => performance.now());
+            const deadline = realNow() + ms;
             const curveEnd = (
               window as unknown as {__harnessCurveEnd: (a: Animation) => number}
             ).__harnessCurveEnd;
@@ -1639,7 +1652,7 @@ export async function waitForRest(
                   }
                 ).__harnessAnimations?.arm();
                 resolve();
-              } else if (performance.now() > deadline) {
+              } else if (realNow() > deadline) {
                 reject(new Error(`waitForRest: still moving (${now})`));
               } else {
                 frame(tick);
