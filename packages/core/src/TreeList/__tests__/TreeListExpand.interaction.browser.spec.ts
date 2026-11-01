@@ -149,12 +149,7 @@ async function open(page: Page) {
 
 test('a busy first frame delays the expand instead of skipping into it', async ({
   page,
-  browserName,
 }, testInfo) => {
-  test.skip(
-    browserName !== 'chromium',
-    'WebKit starts an animation created just before a block at its last frame time (motion/animator.ts, known limits)',
-  );
   await open(page);
   const {toggle, parent} = parts(page);
   // The toggle's handler commits the expand and starts its motions; 150 ms
@@ -232,7 +227,10 @@ test('a busy first frame delays the expand instead of skipping into it', async (
   } else {
     // This browser stamped the frame that started the motions with a time
     // inside the block, so no first frame can show the start the commit
-    // would set; what the component controls is asserted above.
+    // would set; what the component controls is asserted above. WebKit does
+    // this (motion/animator.ts, known limits): under the CI WebKit lane's
+    // profile, the first frame after the 150 ms block shows the child at
+    // -11.8 px of -126 px.
     testInfo.annotations.push({
       type: 'start stamped inside the block',
       description: `first frame at ${result.first.toFixed(1)} px of ${(-height).toFixed(1)} px`,
