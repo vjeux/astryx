@@ -333,6 +333,11 @@ export {
   type MobilePowerSearchProps,
 } from './MobilePowerSearch';
 
+// PageControl — UIPageControl's row of page indicators: measured geometry,
+// one page per tap on either side of the current indicator, one adjustable
+// element for assistive technology.
+export {PageControl, type PageControlProps} from './PageControl';
+
 // SearchField — the phone search field of iOS 26's UISearchController: it
 // activates into its host's bar with a glass close button, on UIKit's clock,
 // with values measured on iOS and Core's internal motion foundation.
