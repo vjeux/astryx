@@ -1011,11 +1011,10 @@ test('a press, its lift, flex and travel, does no Layout or Paint per frame', as
   const target = await itemCenter(page, 'Profile');
   let press = {from: 0, to: 0};
   // Held for 700 ms: the lens travels, lifts and the bar flexes with no
-  // render at all. Counted while every curve is moving, from three frames
-  // after the press's own DOM change (its render, then the layers its new
-  // animations take), not from a fixed delay, until before the lift ends
-  // (~0.39 s), where each animation's end may repaint once as its layer is
-  // folded back.
+  // render at all. Counted from three frames after the press's own DOM
+  // change (its render, then the layers its new animations take), not from
+  // a fixed delay, until the finger lifts, by the page's own lift time:
+  // nothing renders in between, the curves' ends included.
   await noteSettle(page);
   const trace = await traceRendering(page, async () => {
     const playing = driver.play(tapScript(target, {holdMs: 700}));
@@ -1025,8 +1024,13 @@ test('a press, its lift, flex and travel, does no Layout or Paint per frame', as
   });
   const from = await settledAt(page);
   expect(from, 'the press changed no DOM').toBeGreaterThan(0);
-  expect(press.from + 340 - from, 'counted window, ms').toBeGreaterThan(100);
-  const during = countBetween(trace, from, press.from + 340);
+  const to = await page.evaluate(
+    () =>
+      performance.timeOrigin +
+      ((window as unknown as {__tabBarLifted?: number}).__tabBarLifted ?? 0),
+  );
+  expect(to - from, 'counted window, ms').toBeGreaterThan(100);
+  const during = countBetween(trace, from, to);
   const when = trace.events
     .filter(e => e.name === 'Layout' || e.name === 'Paint')
     .map(e => `${e.name}@${Math.round(e.t - press.from)}`);
