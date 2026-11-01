@@ -38,7 +38,6 @@ import {
   holdAnimations,
   markElement,
   openStory,
-  phone,
   releaseAnimations,
   sampleCurve,
   startScreencast,
@@ -55,31 +54,6 @@ import {readFades, recordFades} from './fadeRecorder';
 import {MIDDLE, partBox, samplePart, waitForPartRest} from './pseudoParts';
 
 const storybook = withStorybook(test);
-
-// The first page of a fresh WebKit worker stops presenting frames for about
-// a second after its first composited animation starts (the engine setting up
-// compositing), long enough to swallow a 383 ms activation. One throwaway
-// activation pays that cost before the proofs run.
-test.beforeAll(async ({browser, browserName}) => {
-  if (browserName !== 'webkit') {
-    return;
-  }
-  const context = await browser.newContext(phone);
-  const page = await context.newPage();
-  await openStory(page, storybook(), 'lab-searchfield--default');
-  const field = page.getByRole('searchbox', {name: 'Search'});
-  const box = await field.boundingBox();
-  if (box != null) {
-    await (
-      await touchDriver(page)
-    ).tap({
-      x: box.x + box.width / 2,
-      y: box.y + box.height / 2,
-    });
-    await page.waitForTimeout(2000);
-  }
-  await context.close();
-});
 
 /** UIKit's search activation on iOS 26.2 (uikit/search.ts). */
 const ACTIVATION_MS = 383.3;
