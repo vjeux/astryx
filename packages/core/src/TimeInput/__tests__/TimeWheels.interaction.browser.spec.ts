@@ -21,21 +21,18 @@
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
-  animationStoryboard,
   blockMainThread,
   busyWindowProof,
   compareCurve,
   drag,
-  freezeTimers,
   installTimerGate,
   openStory,
-  releaseAnimations,
   startScreencast,
+  Storyboard,
   tap as press,
   thawTimers,
   timeline,
   touchDriver,
-  waitForAnimation,
   waitForRest,
   withStorybook,
   writeEvidence,
@@ -94,6 +91,56 @@ async function restingLabel(column: Locator): Promise<string | null> {
 }
 
 /** A slow drag that rests before the lift: one row up, no fling. */
+/** Records, in the page, the touches the hour column receives. */
+async function logHourTouches(hour: Locator) {
+  await hour.evaluate(column => {
+    const seen: [string, number][] = [];
+    (window as unknown as {hourTouches: typeof seen}).hourTouches = seen;
+    for (const type of ['touchstart', 'touchmove', 'touchend']) {
+      column.addEventListener(
+        type,
+        event => seen.push([type, Math.round(event.timeStamp)]),
+        {capture: true, passive: true},
+      );
+    }
+  });
+}
+
+/**
+ * Waits for the hour to rest and requires it on 12: a drag that did not turn
+ * it exactly one row fails here, with its touches as the page received them,
+ * rather than waiting on a turn of the AM/PM column that never comes.
+ *
+ * WebKit's injected touches carry no timestamps. Under a 3-CPU cap with 16
+ * workers (a report-only profile), they reach the page in bursts (three
+ * moves within 2 ms, then 60 ms or more without one), so the release reads as
+ * a fling and the hour turns several rows (it rested on 5 to 8 in 5 of 10
+ * runs): a limit of WebKit's real-time input, which this check names. The
+ * required CI WebKit profile and Chromium pass.
+ */
+async function expectHourOn12(hour: Locator) {
+  await waitForRest(hour);
+  const label = await restingLabel(hour);
+  if (label !== '12') {
+    const touches = await hour
+      .page()
+      .evaluate(
+        () =>
+          (window as unknown as {hourTouches: [string, number][]}).hourTouches,
+      );
+    throw new Error(
+      `the drag did not turn the hour one row (it rests on ${label}); its touches as the page received them: ${JSON.stringify(touches)}`,
+    );
+  }
+}
+
+/** Turns the hour from 11 to 12 and waits for it to rest there. */
+async function turnHourTo12(driver: TouchDriver, hour: Locator) {
+  await logHourTouches(hour);
+  await turnOneRowDown(driver, hour);
+  await expectHourOn12(hour);
+}
+
 async function turnOneRowDown(driver: TouchDriver, column: Locator) {
   const box = await column.boundingBox();
   if (box == null) {
@@ -171,7 +218,7 @@ test('the AM/PM column follows the hour from 11 to 12 on UIDatePicker’s turn',
   // below finds it however late a loaded machine's round trips bring it:
   // waiting for it from the harness, the 0.3 s turn had ended by the hold.
   const caught = catchTurn(meridiem);
-  await turnOneRowDown(driver, hour);
+  await turnHourTo12(driver, hour);
   await caught;
   // Sampled in the page: the turn's animations seek together to each time,
   // and the strip's presented offset is read there.
@@ -357,8 +404,12 @@ test('Reduced Motion: the AM/PM column cross-fades onto PM instead of turning', 
     page,
     'core-timeinput--bottom-sheet-wheels',
   );
-  await turnOneRowDown(driver, hour);
-  await expect.poll(async () => restingLabel(hour)).toBe('12');
+  // Caught as it is created (catchTurn): the cross-fade is 200 ms or less,
+  // and read once the hour had come to rest it had ended on a loaded machine.
+  await installTimerGate(page);
+  const caught = catchTurn(meridiem);
+  await turnHourTo12(driver, hour);
+  await caught;
   const animations = await meridiem.evaluate(root =>
     root.getAnimations({subtree: true}).map(animation => {
       const effect = animation.effect as KeyframeEffect;
@@ -399,6 +450,8 @@ test('Reduced Motion: the AM/PM column cross-fades onto PM instead of turning', 
     expect(end.transform).toBe(landed.transform);
     expect(held.offset * landing.duration).toBeCloseTo(fadeMs / 2, 0);
   }
+  // The held end timer finishes the turn, as it would have.
+  await thawTimers(page);
   await expect.poll(async () => restingLabel(meridiem)).toBe('PM');
 });
 
@@ -419,6 +472,10 @@ test('Reduced Motion: the AM/PM column cross-fades onto PM instead of turning', 
  * WebKit's injected touches carry no timestamps (the page sees the real
  * dispatch time), so there the touch lands when the harness gets to it after
  * the turn has run 20 ms, and the lift rests on whichever row is nearer.
+ * Under a 3-CPU cap with 16 workers (a report-only profile), the press
+ * reached the page after the 0.3 s turn had ended in 2 of 10 runs, and the
+ * hour's drag missed its row in more (see expectHourOn12): limits of
+ * WebKit's real-time input. The required CI WebKit profile and Chromium pass.
  */
 test('a finger on the AM/PM column mid-turn stops it; the lift rests it on the nearest row', async ({
   page,
@@ -481,28 +538,48 @@ test('a finger on the AM/PM column mid-turn stops it; the lift rests it on the n
   );
   if (browserName === 'chromium') {
     await installTimerGate(page);
-    await turnOneRowDown(driver, hour);
-    // Once the turn has started: hold the gated timers (its end among them)
-    // and read its start on the epoch clock the touch's timestamp is on.
-    const startedAt = await stripOf(meridiem).evaluate(
+    // Armed before the drag: as the turn is created the page holds the gated
+    // timers (its end among them), so the turn cannot end before the touch
+    // is in, and it reports the turn's start on the epoch clock the touch's
+    // timestamp is on.
+    const turnStart = stripOf(meridiem).evaluate(
       element =>
         new Promise<number>(resolve => {
-          const check = () => {
-            const animation = element
-              .getAnimations()
-              .find(candidate => candidate.startTime != null);
-            if (animation == null) {
-              requestAnimationFrame(check);
+          const gate = (
+            window as unknown as {
+              __harnessTimerGate: {
+                frozen: boolean;
+                frame?: typeof requestAnimationFrame;
+              };
+            }
+          ).__harnessTimerGate;
+          const frame = gate.frame ?? requestAnimationFrame;
+          const observer = new MutationObserver(() => {
+            if (element.getAnimations().length === 0) {
               return;
             }
-            (
-              window as unknown as {__harnessTimerGate: {frozen: boolean}}
-            ).__harnessTimerGate.frozen = true;
-            resolve(performance.timeOrigin + Number(animation.startTime));
-          };
-          check();
+            observer.disconnect();
+            gate.frozen = true;
+            const check = () => {
+              const animation = element
+                .getAnimations()
+                .find(candidate => candidate.startTime != null);
+              if (animation == null) {
+                frame(check);
+                return;
+              }
+              resolve(performance.timeOrigin + Number(animation.startTime));
+            };
+            check();
+          });
+          observer.observe(element, {
+            attributes: true,
+            attributeFilter: ['style'],
+          });
         }),
     );
+    await turnHourTo12(driver, hour);
+    const startedAt = await turnStart;
     const cdp = await page.context().newCDPSession(page);
     const points = [
       {x: at.x, y: at.y, id: 1, radiusX: 1, radiusY: 1, force: 1},
@@ -522,16 +599,17 @@ test('a finger on the AM/PM column mid-turn stops it; the lift rests it on the n
     });
     await cdp.detach();
   } else {
-    await turnOneRowDown(driver, hour);
-    // Early in the turn, while AM is still the nearer row.
-    await stripOf(meridiem).evaluate(
+    await logHourTouches(hour);
+    // Early in the turn, while AM is still the nearer row; watched from
+    // before the drag.
+    const running = stripOf(meridiem).evaluate(
       async element =>
         new Promise<void>(resolve => {
           const check = () => {
-            const running = element
+            const isRunning = element
               .getAnimations()
               .some(a => Number(a.currentTime ?? 0) >= 20);
-            if (running) {
+            if (isRunning) {
               resolve();
             } else {
               requestAnimationFrame(check);
@@ -540,6 +618,13 @@ test('a finger on the AM/PM column mid-turn stops it; the lift rests it on the n
           check();
         }),
     );
+    await turnOneRowDown(driver, hour);
+    // The turn starts once the hour rests on 12; a drag that left it on
+    // another row fails at once (expectHourOn12).
+    await Promise.race([
+      running,
+      expectHourOn12(hour).then(() => new Promise<never>(() => {})),
+    ]);
     // A press held in place for 250 ms, then the lift.
     await driver.play(press(at, {holdMs: 250}));
   }
@@ -606,30 +691,38 @@ test(
       page,
       'core-timeinput--bottom-sheet-wheels',
     );
+    // Caught as it is created (catchTurn), so a late harness still films
+    // the turn from its start: held after waitForAnimation instead, the
+    // 0.3 s turn had ended on a loaded machine.
     await installTimerGate(page);
-    await turnOneRowDown(driver, hour);
-    await waitForAnimation(stripOf(meridiem));
-    await freezeTimers(page);
+    const caught = catchTurn(meridiem);
+    await turnHourTo12(driver, hour);
+    await caught;
     const clip = (await sheet.boundingBox()) ?? undefined;
-    const {storyboard} = await animationStoryboard(page, {
+    const storyboard = new Storyboard(page, {
       name: 'timewheels-meridiem-follows-hour',
       clip,
-      scope: meridiem,
-      times: timeline(TURN_MS, 1000 / 30),
       columns: 6,
       cellScale: 0.4,
-      measure: async () => ({
-        y: await stripOf(meridiem).evaluate(element =>
-          Number(
-            new DOMMatrixReadOnly(
-              getComputedStyle(element).transform,
-            ).m42.toFixed(2),
-          ),
-        ),
-      }),
     });
+    for (const t of timeline(TURN_MS, 1000 / 30)) {
+      const y = await meridiem.evaluate((column, time) => {
+        for (const animation of column.getAnimations({subtree: true})) {
+          animation.currentTime = time;
+        }
+        const strip = column.querySelector('[data-wheel-strip]');
+        return strip == null
+          ? NaN
+          : Number(
+              new DOMMatrixReadOnly(
+                getComputedStyle(strip).transform,
+              ).m42.toFixed(2),
+            );
+      }, t);
+      await storyboard.capture(`t=${+t.toFixed(1)} ms`, t, {y});
+    }
     await storyboard.write(testInfo);
-    await releaseAnimations(page, {finish: true});
+    // The held end timer finishes the turn.
     await thawTimers(page);
   },
 );
