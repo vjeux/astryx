@@ -217,28 +217,6 @@ const touchActionOf = async (page: Page) =>
 const rootAnimations = async (page: Page) =>
   root(page).evaluate(element => element.getAnimations().length);
 
-// The first page of a fresh WebKit worker stops presenting frames for about
-// a second after its first composited animation starts (the engine setting
-// up compositing). One throwaway activation pays that cost first.
-test.beforeAll(async ({browser, browserName}) => {
-  if (browserName !== 'webkit') {
-    return;
-  }
-  const context = await browser.newContext(phone);
-  const page = await context.newPage();
-  await installKeyboard(page);
-  await openStory(page, storybook(), 'lab-searchfield--bottom');
-  const field = page.getByRole('searchbox', {name: 'Search'});
-  const box = await field.boundingBox();
-  if (box != null) {
-    await (
-      await touchDriver(page)
-    ).tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
-    await page.waitForTimeout(2000);
-  }
-  await context.close();
-});
-
 async function openBottom(
   page: Page,
   {virtualKeyboardApi = false}: {virtualKeyboardApi?: boolean} = {},
