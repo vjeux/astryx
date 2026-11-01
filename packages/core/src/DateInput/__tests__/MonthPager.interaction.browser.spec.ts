@@ -22,27 +22,22 @@
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
-  animationStoryboard,
   blockMainThread,
   busyWindowProof,
   compareCurve,
-  curveOf,
   drag,
   flick,
   freezeTimers,
-  holdAnimations,
   installTimerGate,
   markElement,
   openStory,
-  releaseAnimations,
-  sampleCurve,
   startCompositorTrace,
   startScreencast,
+  Storyboard,
   thawTimers,
   timeline,
   touchDriver,
   trackMarker,
-  waitForAnimation,
   waitForRest,
   withStorybook,
   writeEvidence,
@@ -86,6 +81,18 @@ async function openCalendar(
   } else {
     await openStory(page, storybook(), STORY);
   }
+  // Every touch as the page receives it, for the real-time cases' messages.
+  await page.evaluate(() => {
+    const log: [string, number][] = [];
+    (window as unknown as {touchLog: typeof log}).touchLog = log;
+    for (const type of ['touchstart', 'touchmove', 'touchend']) {
+      window.addEventListener(
+        type,
+        event => log.push([type, event.timeStamp]),
+        {capture: true, passive: true},
+      );
+    }
+  });
   const driver = await touchDriver(page);
   const opener = page.getByRole('button', {name: /calendar/i}).first();
   const box = await opener.boundingBox();
@@ -172,13 +179,19 @@ test('a slow release before half a month returns; past it, the next month', asyn
   // 30 % of a page (finger travel; the pan's hysteresis comes off it).
   await driver.play(slowDrag(center, -0.3 * width));
   await waitForRest(track);
-  expect(await monthsIn(viewport)).toBeCloseTo(9, 2);
+  expect(await monthsIn(viewport), await lastGestureTiming(page)).toBeCloseTo(
+    9,
+    2,
+  );
   await expect(title).toHaveText('October 2026');
 
   // 70 %: the next month.
   await driver.play(slowDrag(center, -0.7 * width));
   await waitForRest(track);
-  expect(await monthsIn(viewport)).toBeCloseTo(10, 2);
+  expect(await monthsIn(viewport), await lastGestureTiming(page)).toBeCloseTo(
+    10,
+    2,
+  );
   await expect(title).toHaveText('November 2026');
 });
 
@@ -257,7 +270,9 @@ test('a flick released before half a month turns the title as the settle crosses
   expect(await title.textContent()).toBe('October 2026');
   await thawTimers(page);
   await waitForRest(track);
-  await expect(title).toHaveText('November 2026');
+  await expect(title, await lastGestureTiming(page)).toHaveText(
+    'November 2026',
+  );
 });
 
 test('a horizontal trackpad swipe pages one month per gesture', async ({
@@ -312,15 +327,20 @@ test('the arrow names the month at the tap and scrolls on the 0.3 s sinusoid', a
   if (box == null) {
     throw new Error('no arrow');
   }
+  // Caught as it is created, so a late harness still samples the 0.3 s step
+  // from its start: waited for and held from the harness instead, it had
+  // ended on a loaded machine.
+  const caught = await catchNextAnimation(track);
   await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
+  await caught();
   await expect(title).toHaveText('November 2026');
-  await waitForAnimation(track);
-  await freezeTimers(page);
-  await holdAnimations(page, track);
-  const samples = curveOf(
-    await sampleCurve(track, timeline(STEP_MS, 1000 / 60)),
-    'translateX',
-  );
+  const samples: {t: number; value: number}[] = [];
+  for (const t of timeline(STEP_MS, 1000 / 60)) {
+    samples.push({
+      t,
+      value: await seekCaught(page, t, 'trackX'),
+    });
+  }
   const start = samples[0].value;
   const end = samples[samples.length - 1].value;
   expect(Math.abs(end - start)).toBeCloseTo(width, 0);
@@ -329,7 +349,7 @@ test('the arrow names the month at the tap and scrolls on the 0.3 s sinusoid', a
     value: (value - start) / (end - start),
   }));
   const fit = compareCurve(progress, sinusoid, 0.02);
-  await releaseAnimations(page, {finish: true});
+  await finishCaught(page);
   await thawTimers(page);
   expect(fit.pass, JSON.stringify(fit.worst)).toBe(true);
   await waitForRest(track);
@@ -492,38 +512,248 @@ test('in RTL a drag to the right pages to the next month, and the arrows follow 
  * active length, the time at which its last keyframe change lands (an
  * animation may hold its end value for the rest of its span).
  */
-async function runningAnimations(locator: Locator) {
-  return locator.evaluate(root =>
-    root.getAnimations({subtree: true}).map(animation => {
-      const effect = animation.effect as KeyframeEffect;
+/**
+ * The last gesture's touches as the page received them, for a real-time
+ * case's failure message: WebKit's injected touches carry no timestamps, so
+ * how they reached the page decides the release's velocity.
+ *
+ * Under a 3-CPU cap with 16 workers (a report-only profile), they reached the
+ * page in bursts: up to 18 of a drag's 30 moves within 2 ms of the previous
+ * one, with gaps of 60 to 100 ms between bursts. The release then reads a
+ * velocity the script never gave: the slow release paged in 8 of 10 runs, the
+ * fast flick stayed on its month in 5 of 10, and the fast 55° drag in the
+ * sheet in 2 of 10. That is a limit of WebKit's real-time input. The required
+ * CI WebKit profile, the same cap with 1 worker, and Chromium pass.
+ */
+async function lastGestureTiming(page: Page): Promise<string> {
+  const log = await page.evaluate(
+    () => (window as unknown as {touchLog: [string, number][]}).touchLog,
+  );
+  const start = log.map(([type]) => type).lastIndexOf('touchstart');
+  const gesture = log.slice(Math.max(0, start));
+  const moves = gesture
+    .filter(([type]) => type === 'touchmove')
+    .map(([, t]) => t);
+  const end = gesture.find(([type]) => type === 'touchend')?.[1];
+  const gaps = moves.slice(1).map((t, k) => t - moves[k]);
+  return `last gesture as the page received it: ${moves.length} moves, longest gap ${Math.round(Math.max(0, ...gaps))} ms, ${gaps.filter(g => g <= 2).length} moves within 2 ms of the previous one, lift ${end == null || moves.length === 0 ? '?' : Math.round(end - moves[moves.length - 1])} ms after the last move`;
+}
+
+/**
+ * Arms the page to catch the next animation created inside `root`: in the
+ * task that creates it, the page holds the gated timers and pauses it (and
+ * any created with it), so a harness that looks late still finds it at its
+ * start. Armed (awaited) before the action, since an injected tap can reach
+ * the page before a script sent ahead of it; the returned function waits for
+ * the catch. Needs installTimerGate first. Seek the caught animations with
+ * seekCaught; finish them with finishCaught.
+ */
+async function catchNextAnimation(root: Locator): Promise<() => Promise<void>> {
+  await root.evaluate(element => {
+    const w = window as unknown as {
+      __harnessTimerGate?: {frozen: boolean};
+      caughtAnimations?: Animation[];
+      caughtDone?: Promise<void>;
+    };
+    const gate = w.__harnessTimerGate;
+    if (gate == null) {
+      throw new Error('catchNextAnimation: call installTimerGate first');
+    }
+    const caught: Animation[] = [];
+    w.caughtAnimations = caught;
+    w.caughtDone = new Promise<void>(resolve => {
+      const original = Element.prototype.animate;
+      Element.prototype.animate = function (
+        this: Element,
+        ...args: Parameters<Element['animate']>
+      ) {
+        const animation = original.apply(this, args);
+        if (this === element || element.contains(this)) {
+          animation.pause();
+          caught.push(animation);
+          if (!gate.frozen) {
+            gate.frozen = true;
+            // The rest of the task's animations, then the catch is done.
+            queueMicrotask(() => {
+              Element.prototype.animate = original;
+              for (const other of element.getAnimations({subtree: true})) {
+                if (!caught.includes(other)) {
+                  other.pause();
+                  caught.push(other);
+                }
+              }
+              resolve();
+            });
+          }
+        }
+        return animation;
+      };
+    });
+  });
+  return async () => {
+    await root
+      .page()
+      .evaluate(
+        async () =>
+          (window as unknown as {caughtDone: Promise<void>}).caughtDone,
+      );
+  };
+}
+
+/**
+ * Seeks the caught animations to `t` ms and reads, in the page, the track's
+ * translateX (`trackX`) or where the month grid rests in months (`months`).
+ */
+async function seekCaught(
+  page: Page,
+  t: number,
+  measure: 'trackX' | 'months',
+): Promise<number> {
+  return page.evaluate(
+    ({time, kind}) => {
+      for (const animation of (
+        window as unknown as {caughtAnimations: Animation[]}
+      ).caughtAnimations) {
+        animation.currentTime = time;
+      }
+      const viewport = document.querySelector('[data-scroller="months"]');
+      const track = viewport?.querySelector('[data-month-track]');
+      if (viewport == null || track == null) {
+        return NaN;
+      }
+      const box = viewport.getBoundingClientRect();
+      if (kind === 'trackX') {
+        // The animator writes the individual `translate` property, which
+        // `transform` does not include; the box shows both.
+        return track.getBoundingClientRect().left - box.left;
+      }
+      return (box.left - track.getBoundingClientRect().left) / box.width;
+    },
+    {time: t, kind: measure},
+  );
+}
+
+/**
+ * When the caught animations' motion ends, ms: the last keyframe that
+ * changes a value (a settle holds its end value for a long tail after).
+ */
+async function caughtMotionEnd(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    let end = 0;
+    for (const animation of (
+      window as unknown as {caughtAnimations: Animation[]}
+    ).caughtAnimations) {
+      const effect = animation.effect as KeyframeEffect | null;
+      if (effect == null) {
+        continue;
+      }
       const frames = effect.getKeyframes();
-      const properties = [
-        ...new Set(
-          frames.flatMap(frame =>
-            Object.keys(frame).filter(
-              key =>
-                !['offset', 'easing', 'composite', 'computedOffset'].includes(
-                  key,
-                ),
-            ),
-          ),
-        ),
-      ];
-      let lastChange = 0;
+      const keys = (frame: ComputedKeyframe) =>
+        Object.keys(frame).filter(
+          key =>
+            !['offset', 'easing', 'composite', 'computedOffset'].includes(key),
+        );
       for (let index = 1; index < frames.length; index += 1) {
         if (
-          properties.some(
-            property => frames[index][property] !== frames[index - 1][property],
+          keys(frames[index]).some(
+            key => frames[index][key] !== frames[index - 1][key],
           )
         ) {
-          lastChange = frames[index].computedOffset ?? 0;
+          end = Math.max(
+            end,
+            frames[index].computedOffset * Number(effect.getTiming().duration),
+          );
         }
       }
-      return {
-        properties,
-        duration: lastChange * Number(effect.getTiming().duration),
-      };
-    }),
+    }
+    return end;
+  });
+}
+
+/** Finishes the caught animations, as their own end would have. */
+async function finishCaught(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    for (const animation of (
+      window as unknown as {caughtAnimations: Animation[]}
+    ).caughtAnimations) {
+      animation.finish();
+    }
+  });
+}
+
+/**
+ * Records, as they are created, the animations made inside `root`: what each
+ * animates and when its last change lands, ms (a run holds its end value
+ * after). Read at creation, a run that the animator cancels at its end (a
+ * reduced-motion dip of 200 ms or less) is still read on a loaded machine,
+ * where it had ended by the time the harness looked; the harness's watch
+ * counts only runs that finished, not ones cancelled at their end.
+ */
+async function recordCreatedRuns(root: Locator): Promise<void> {
+  await root.evaluate(element => {
+    const runs: {properties: string[]; duration: number}[] = [];
+    (window as unknown as {createdRuns: typeof runs}).createdRuns = runs;
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      ...args: Parameters<Element['animate']>
+    ) {
+      const animation = original.apply(this, args);
+      if (this === element || element.contains(this)) {
+        const effect = animation.effect as KeyframeEffect;
+        const frames = effect.getKeyframes();
+        const keys = (frame: ComputedKeyframe) =>
+          Object.keys(frame).filter(
+            key =>
+              !['offset', 'easing', 'composite', 'computedOffset'].includes(
+                key,
+              ),
+          );
+        const properties = [...new Set(frames.flatMap(keys))];
+        let lastChange = 0;
+        for (let index = 1; index < frames.length; index += 1) {
+          if (
+            properties.some(
+              key => frames[index][key] !== frames[index - 1][key],
+            )
+          ) {
+            lastChange = frames[index].computedOffset;
+          }
+        }
+        runs.push({
+          properties,
+          duration: lastChange * Number(effect.getTiming().duration),
+        });
+      }
+      return animation;
+    };
+  });
+}
+
+/**
+ * Waits for the runs an action created inside the recorded root
+ * (recordCreatedRuns), and takes them.
+ */
+async function takeCreatedRuns(
+  page: Page,
+): Promise<{properties: string[]; duration: number}[]> {
+  return page.evaluate(
+    async () =>
+      new Promise<{properties: string[]; duration: number}[]>(resolve => {
+        const runs = (
+          window as unknown as {
+            createdRuns: {properties: string[]; duration: number}[];
+          }
+        ).createdRuns;
+        const check = () => {
+          if (runs.length > 0) {
+            resolve(runs.splice(0));
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      }),
   );
 }
 
@@ -535,8 +765,14 @@ test('Reduced Motion: a release and the arrow step change the month through an o
   // from usePager's animator default (C23's #8146 on F1's #8076).
   await page.emulateMedia({reducedMotion: 'reduce'});
   const {driver, viewport, title, width, center} = await openCalendar(page);
+  // Read as each run is created (recordCreatedRuns), so a dip of 200 ms or
+  // less that has ended by the time a loaded machine's harness looks is still
+  // read, and present: read after the fact, the step's dip had ended.
+  await recordCreatedRuns(viewport);
   await driver.play(slowDrag(center, -0.7 * width));
-  for (const animation of await runningAnimations(viewport)) {
+  const settle = await takeCreatedRuns(page);
+  expect(settle.length).toBeGreaterThan(0);
+  for (const animation of settle) {
     expect(animation.properties).toEqual(['opacity']);
     expect(animation.duration).toBeLessThanOrEqual(200);
   }
@@ -544,7 +780,7 @@ test('Reduced Motion: a release and the arrow step change the month through an o
   await page.waitForTimeout(400);
   expect(await monthsIn(viewport)).toBeCloseTo(10, 2);
   await tapArrow(page, driver, 'Next month');
-  const step = await runningAnimations(viewport);
+  const step = await takeCreatedRuns(page);
   expect(step.length).toBeGreaterThan(0);
   for (const animation of step) {
     expect(animation.properties).toEqual(['opacity']);
@@ -766,7 +1002,10 @@ test('in the sheet, a drag is decided once it has moved 10 px either way: slow 3
   expect(shallow.sheetDrop).toBeLessThan(1);
   expect(shallow.monthsMax - 9).toBeGreaterThan(0.2);
   await waitForRest(track);
-  expect(await monthsIn(viewport)).toBeCloseTo(9, 2);
+  expect(await monthsIn(viewport), await lastGestureTiming(page)).toBeCloseTo(
+    9,
+    2,
+  );
 
   // 55°, fast (25 px steps, ~1500 px/s): the first move lands 14 px
   // sideways, so the grid takes the drag and the flick pages to October;
@@ -774,7 +1013,10 @@ test('in the sheet, a drag is decided once it has moved 10 px either way: slow 3
   const fast = await play(drag(center, along(55, 150), {durationMs: 100}));
   expect(fast.sheetDrop).toBeLessThan(1);
   await waitForRest(track);
-  expect(await monthsIn(viewport)).toBeCloseTo(10, 2);
+  expect(await monthsIn(viewport), await lastGestureTiming(page)).toBeCloseTo(
+    10,
+    2,
+  );
 
   // 60°, slow (3.3 px steps): the vertical travel reaches 10 px first, so
   // the sheet takes the drag and the grid never moves.
@@ -801,20 +1043,23 @@ test(
     if (box == null) {
       throw new Error('no arrow');
     }
+    const caught = await catchNextAnimation(track);
     await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
-    await waitForAnimation(track);
-    await freezeTimers(page);
-    const {storyboard} = await animationStoryboard(page, {
+    await caught();
+    const storyboard = new Storyboard(page, {
       name: 'month-pager-arrow-step',
       clip: viewport,
-      scope: track,
-      times: timeline(STEP_MS, 1000 / 30),
       columns: 6,
       cellScale: 0.4,
-      measure: async () => ({months: +(await monthsIn(viewport)).toFixed(3)}),
     });
+    for (const t of timeline(STEP_MS, 1000 / 30)) {
+      const months = await seekCaught(page, t, 'months');
+      await storyboard.capture(`t=${+t.toFixed(1)} ms`, t, {
+        months: +months.toFixed(3),
+      });
+    }
     await storyboard.write(testInfo);
-    await releaseAnimations(page, {finish: true});
+    await finishCaught(page);
     await thawTimers(page);
   },
 );
@@ -825,19 +1070,23 @@ test(
   async ({page}, testInfo) => {
     const {driver, viewport, track, width, center} = await openCalendar(page);
     await installTimerGate(page);
+    const caught = await catchNextAnimation(track);
     await driver.play(slowDrag(center, -0.7 * width));
-    await waitForAnimation(track);
-    await freezeTimers(page);
-    const {storyboard} = await animationStoryboard(page, {
+    await caught();
+    const storyboard = new Storyboard(page, {
       name: 'month-pager-release-settle',
       clip: viewport,
-      scope: track,
       columns: 6,
       cellScale: 0.4,
-      measure: async () => ({months: +(await monthsIn(viewport)).toFixed(3)}),
     });
+    for (const t of timeline(await caughtMotionEnd(page), 1000 / 60)) {
+      const months = await seekCaught(page, t, 'months');
+      await storyboard.capture(`t=${+t.toFixed(1)} ms`, t, {
+        months: +months.toFixed(3),
+      });
+    }
     await storyboard.write(testInfo);
-    await releaseAnimations(page, {finish: true});
+    await finishCaught(page);
     await thawTimers(page);
   },
 );
