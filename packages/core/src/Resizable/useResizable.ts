@@ -43,6 +43,11 @@ import {
   type ResizableDirection,
 } from './resizableModel';
 import {recordStartingView, watchHandleRef} from './resizeGesture';
+import {
+  createRegionPaneSlot,
+  registerPropsRegion,
+  type RegionPaneSlot,
+} from './resizablePane';
 
 registerEnglishFallback(english);
 
@@ -231,8 +236,10 @@ const EMPTY_SNAPS: number[] = [];
  * factory's region through them.
  */
 function useSingleResizable(config: UseResizableSingleConfig): ResizableRegion {
+  // The region's pane: the LayoutPanel that takes these props hands it over.
+  const [regionSlot] = useState(createRegionPaneSlot);
   const {getResizable, size, isCollapsed, snapshot, collapse, expand, resize} =
-    useResizableController(NO_HANDLE, config);
+    useResizableController(NO_HANDLE, config, undefined, regionSlot);
   // The region's side of the handle's gesture, read at each input, so a whole
   // drag reaches the factory as it is now.
   const model = useCallback(() => {
@@ -271,6 +278,9 @@ function useSingleResizable(config: UseResizableSingleConfig): ResizableRegion {
     _isResizableProps: true,
   };
   collapseControls.set(props, {collapse, expand});
+  // The LayoutPanel that takes these props hands its pane to the region, and
+  // the ResizeHandle that takes them says when a pointer drags it.
+  registerPropsRegion(props, regionSlot);
   // Without a configured maximum a measured extent stands in, only once it
   // is a real measurement (an observed container, or the window).
   if (snapshot.effectiveMaxPx != null) {
@@ -532,6 +542,7 @@ function useResizableController(
   ref: RefObject<HTMLElement | null>,
   options: CreateResizableOptions,
   collapsedText?: string,
+  regionSlot?: RegionPaneSlot,
 ): ResizableReading {
   const optionsRef = useRef(options);
   optionsRef.current = options;
@@ -575,8 +586,12 @@ function useResizableController(
     readResizableInternals(resizable)?.setCollapsedText(
       collapsedTextRef.current,
     );
+    if (regionSlot != null) {
+      // destroy() stops following the region.
+      readResizableInternals(resizable)?.followRegion(regionSlot);
+    }
     slot.set({element, resizable, createdWith});
-  }, [ref, slot]);
+  }, [ref, slot, regionSlot]);
   useIsomorphicLayoutEffect(() => {
     follow();
   });
