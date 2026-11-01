@@ -1017,14 +1017,10 @@ test('with Reduce Motion the settle back from a disabled tab cross-fades', async
   const {driver} = await openBar(page, 'disabled-tab');
   const home = await itemCenter(page, 'Home');
   const browse = await itemCenter(page, 'Browse');
-  let released = 0;
-  await driver.play(drag(home, browse, {durationMs: 400, restMs: 300}), {
-    onEvent: async step => {
-      if (step.type === 'touchEnd') {
-        released = await timelineNow(page);
-      }
-    },
-  });
+  await driver.play(drag(home, browse, {durationMs: 400, restMs: 300}));
+  // Since the page's own lift, not a read the test makes after it.
+  const released = await liftedAt(page);
+  expect(released, 'no lift reached the page').toBeGreaterThan(0);
   // The fade starts with the input; what it changes follows a few
   // frames later.
   await expectCrossFade(page, released);
