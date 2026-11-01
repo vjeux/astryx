@@ -178,16 +178,17 @@ async function expectRowsPainted(
  *
  * WebKit's injected touches carry only real dispatch time (README: engine
  * limits), so the release velocity the page reads from them is only as good
- * as the machine's pace. Under podman `--cpus=3` with 16 workers (Oct 31,
- * three sweeps of 18 runnable runs each) the 120 Hz script's moves arrived in
- * bursts and stalls: gaps up to 99 ms where the script has 8.3 ms, the lift
- * up to 95 ms after the last move, and a tail velocity of 150 to 3,750 px/s
- * for the scripted 900. The proofs that read the coast a flick starts (the
- * UIKit curve, a finger catching the coast, the reduced-motion momentum and
- * the storyboard) then failed 5 or 6 runs of each sweep: an engine limit of
- * WebKit's real-time input, not a pass. Under the CI WebKit lane's own
- * profile (`--cpus=4`, `CI=1`, 1 worker, ×10) the moves arrived every 8 ms
- * (at most 11) and all 60 runs passed.
+ * as the machine's pace. Under podman `--cpus=3` with 16 workers the 120 Hz
+ * script's moves arrive in bursts and stalls, with `LP_NUM_THREADS=3` too
+ * (Oct 31, A/B in one hour: 3 and 6 of 18 runs failed with it, 7 and 7
+ * without): median gaps of 1 to 2 ms with stalls up to 73 ms, where the
+ * script has 8.3 ms, and a failing flick coasts on to the end of the list
+ * (1,687 px where UIKit's plan rests at 719). The proofs that read the coast
+ * a flick starts (the UIKit curve, a finger catching the coast and the
+ * storyboard; the reduced-motion momentum too, without the flag) fail there:
+ * an engine limit of WebKit's real-time input, not a pass. Under the CI WebKit
+ * lane's own profile (`--cpus=4`, `LP_NUM_THREADS=4`, `CI=1`, 1 worker, ×10)
+ * the moves arrive every 8 ms (at most 11) and all 60 runs pass.
  */
 function flickUp(start: {x: number; y: number}) {
   const script = flick(start, {
