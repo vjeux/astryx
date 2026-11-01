@@ -34,6 +34,7 @@
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
   animationStoryboard,
+  armHold,
   holdAnimations,
   openStory,
   phone,
@@ -45,6 +46,7 @@ import {
   waitForRest,
   withStorybook,
   writeEvidence,
+  type HeldAnimation,
 } from '@astryxdesign/interaction-harness';
 
 import {readFades, recordFades} from './fadeRecorder';
@@ -377,26 +379,6 @@ test('a tap plays iOS’s measured activation on every part', async ({
 });
 
 /**
- * Waits for an animation on `locator` that started after `after` (epoch ms,
- * an earlier animation's `from`).
- */
-async function waitForNewAnimation(locator: Locator, after: number) {
-  const deadline = Date.now() + 5_000;
-  for (;;) {
-    const fresh = (await waitForAnimation(locator)).filter(
-      a => a.from > after + 1,
-    );
-    if (fresh.length > 0) {
-      return fresh;
-    }
-    if (Date.now() > deadline) {
-      throw new Error('no new animation started');
-    }
-    await locator.page().waitForTimeout(8);
-  }
-}
-
-/**
  * The trailing end's samples from its own start. The parts' turns start a few
  * ms apart (each is created after the one before it), and a hold samples from
  * the earliest start among them: until the end's own start it reads its first
@@ -438,23 +420,183 @@ const CANCEL_PEAK_MS = extremeMs(bottom.cancelFrames, 2, 'min');
 const FRAME_MS = 1000 / 60;
 
 /**
- * Whether a turn started at least two frames before the first motion's peak,
- * so that "keeps going for a moment, then turns once" can be checked: the gel
- * slows to a stop over the frames before its peak, where a first step no
- * longer shows it going. A slow runner's tap can land there or past the
- * peak, where the field already moves back and a turn that adds to it reads
- * like one that does not; then the test records, as an annotation naming the
- * measured start and the peak, that it checked only the rest.
+ * Where the change-of-mind proofs turn each motion, on its own clock, so the
+ * turn's own motion starts while the gel is still going toward its peak
+ * (270 ms and 151 ms): it starts a frame or two after the input, more on a
+ * busy runner, so the cancel is turned on its first frame. On a runner that
+ * shares three CPUs among 16 workers, the page runs no frame or timer for so
+ * long that it first sees the motion 109 to 1,204 ms in, past both points:
+ * no input can land in time there, and these two proofs fail (a busy main
+ * thread). With one worker on the same three CPUs, and on four, they pass.
  */
-function turnsBeforePeak(turnAtMs: number, peakMs: number, motion: string) {
-  if (turnAtMs < peakMs - 2 * FRAME_MS) {
-    return true;
+const ACTIVATION_TURN_AT_MS = 120;
+const CANCEL_TURN_AT_MS = 0;
+
+/** What armTurn's trigger saw when it turned the field. */
+interface Turn {
+  /** The motion's own time at the turning frame, ms. */
+  readonly atMs: number;
+  /** When the motion started, on the page clock (as `ActiveAnimation.from`). */
+  readonly motionFrom: number;
+  /** The trailing end's presented translate there, px, read just before. */
+  readonly endX: number;
+  /** When the turn's own motion started, on the page clock. */
+  readonly turnFrom: number;
+}
+
+/**
+ * Arms a turn in the page: on the first frame the trailing end's next motion
+ * (an animation that starts after this call) reaches `atMs` on its own clock,
+ * `close` clicks the close button and `focus` focuses the field. Armed before
+ * the input that starts the motion, the turn lands at that point of the
+ * motion however late a busy runner delivers either input; a scripted tap
+ * would land wherever the runner's delay put it, even past the peak. It
+ * also reports when the turn's own motion started.
+ */
+async function armTurn(page: Page, atMs: number, action: 'close' | 'focus') {
+  await page.evaluate(
+    ([ms, what]) => {
+      const w = window as unknown as {__turn?: Turn | {error: string}};
+      delete w.__turn;
+      const field = document.querySelector('[role="search"]');
+      const trailing = field?.querySelector('[data-search-field-end]');
+      if (field == null || !(trailing instanceof HTMLElement)) {
+        w.__turn = {error: 'armTurn: no search field on the page'};
+        return;
+      }
+      const armedAt = Number(document.timeline.currentTime);
+      const deadline = performance.now() + 10_000;
+      // Looks for the turn's motion (a trailing-end animation the turn
+      // started) right after the turn's own task, then on every frame and
+      // every 4 ms between them.
+      const findTurn = (
+        at: {atMs: number; motionFrom: number; endX: number},
+        before: Set<Animation>,
+      ) => {
+        let done = false;
+        let round = 0;
+        // Of the frame and the timer a round schedules, the first looks.
+        const schedule = () => {
+          const mine = ++round;
+          const run = () => {
+            if (mine === round) {
+              look();
+            }
+          };
+          requestAnimationFrame(run);
+          setTimeout(run, 4);
+        };
+        const look = () => {
+          if (done) {
+            return;
+          }
+          const fresh = trailing
+            .getAnimations()
+            .find(animation => !before.has(animation));
+          if (fresh != null) {
+            done = true;
+            const start =
+              fresh.startTime != null
+                ? Number(fresh.startTime)
+                : Number(document.timeline.currentTime) -
+                  Number(fresh.currentTime ?? 0);
+            w.__turn = {...at, turnFrom: performance.timeOrigin + start};
+          } else if (performance.now() > deadline) {
+            done = true;
+            w.__turn = {error: 'armTurn: the turn started no motion'};
+          } else {
+            schedule();
+          }
+        };
+        queueMicrotask(look);
+      };
+      const step = () => {
+        let motion: Animation | null = null;
+        for (const animation of trailing.getAnimations()) {
+          if (
+            animation.startTime != null &&
+            Number(animation.startTime) > armedAt &&
+            (motion == null ||
+              Number(animation.startTime) > Number(motion.startTime))
+          ) {
+            motion = animation;
+          }
+        }
+        const at = motion == null ? -1 : Number(motion.currentTime);
+        if (motion != null && at >= ms) {
+          const value = getComputedStyle(trailing).translate;
+          const turn = {
+            atMs: at,
+            motionFrom: performance.timeOrigin + Number(motion.startTime),
+            endX: value === 'none' ? 0 : parseFloat(value),
+          };
+          const target = field.querySelector(
+            what === 'close' ? '[data-search-field-close]' : 'input',
+          );
+          if (!(target instanceof HTMLElement)) {
+            w.__turn = {error: `armTurn: no ${what} target`};
+            return;
+          }
+          const before = new Set(trailing.getAnimations());
+          if (what === 'close') {
+            target.click();
+          } else {
+            target.focus({preventScroll: true});
+          }
+          findTurn(turn, before);
+          return;
+        }
+        if (performance.now() > deadline) {
+          w.__turn = {error: `armTurn: no motion reached ${ms} ms`};
+          return;
+        }
+        later();
+      };
+      // Looked at on every frame and every 4 ms between them, as `armHold`
+      // does: WebKit can present no frame for hundreds of milliseconds while
+      // its animations run on.
+      let round = 0;
+      const later = () => {
+        const mine = ++round;
+        const run = () => {
+          if (mine === round) {
+            step();
+          }
+        };
+        requestAnimationFrame(run);
+        setTimeout(run, 4);
+      };
+      later();
+    },
+    [atMs, action] as const,
+  );
+}
+
+/** Where the held trailing end's motion stops changing, ms from its start. */
+function curveMsOf(held: readonly HeldAnimation[]): number {
+  const motion = held.find(animation =>
+    animation.keyframes.some(keyframe => 'translate' in keyframe),
+  );
+  if (motion == null) {
+    throw new Error(
+      `the hold took no trailing-end motion: ${JSON.stringify(held)}`,
+    );
   }
-  test.info().annotations.push({
-    type: 'reduced',
-    description: `the turn started ${Math.round(turnAtMs)} ms into the ${motion}, not two frames before its peak at ${peakMs} ms: "keeps going, then turns once" not checked`,
-  });
-  return false;
+  return motion.curveEndMs;
+}
+
+/** The turn armTurn made, once it has. */
+async function turned(page: Page): Promise<Turn> {
+  const handle = await page.waitForFunction(
+    () => (window as unknown as {__turn?: Turn | {error: string}}).__turn,
+    null,
+    {timeout: 15_000},
+  );
+  const turn = (await handle.jsonValue()) as Turn | {error: string};
+  if ('error' in turn) {
+    throw new Error(turn.error);
+  }
+  return turn;
 }
 
 /** The largest step between neighbouring samples, px. */
@@ -497,15 +639,29 @@ const GEL_PEAK_STEP = Math.max(
 test('a cancel mid-activation turns around from where the field is, without a snap', async ({
   page,
 }) => {
-  const {driver, field} = await openBottom(page);
-  await driver.tap(await centerOf(field));
-  const [forward] = await waitForAnimation(end(page), {minProgressMs: 150});
-  const before = (await translate(end(page)))[0];
-  await driver.tap(await centerOf(close(page)));
-  const [reverse] = await waitForNewAnimation(end(page), forward.from);
-  await holdAnimations(page);
+  const {field} = await openBottom(page);
+  // The page holds the turn's own motion: armed before the activation, the
+  // hold counts only animations that start after it, once they have run as
+  // long as the turn may start at the latest; the activation's end at the
+  // turn, before that.
+  const hold = await armHold(page, end(page), {
+    newOnly: true,
+    minProgressMs: ACTIVATION_PEAK_MS - 2 * FRAME_MS,
+  });
+  // The close button's click lands ACTIVATION_TURN_AT_MS into the
+  // activation, on the activation's own clock. The activation starts in the
+  // page too, from the field's focus: a scripted tap's dispatch can keep the
+  // page from looking at the motion for hundreds of milliseconds as it starts
+  // on a busy runner (on two shared cores, 2 of 24 tap-started cancels were
+  // first seen 250 and 350 ms in; 0 of 24 click-started ones).
+  await armTurn(page, ACTIVATION_TURN_AT_MS, 'close');
+  await field.evaluate(element =>
+    (element as HTMLInputElement).focus({preventScroll: true}),
+  );
+  const turn = await turned(page);
+  const before = turn.endX;
+  const times = timeline(curveMsOf(await hold.held()));
   await expect(root(page)).not.toHaveAttribute('data-search-field-active');
-  const times = timeline(reverse.to - reverse.from);
   const xs = fromOwnStart(
     (await sampleCurve(end(page), times)).map(
       sample => sample.transform.translateX,
@@ -517,23 +673,15 @@ test('a cancel mid-activation turns around from where the field is, without a sn
   // screen). The turn adds to the curves on screen instead, as UIKit's
   // animations do: it starts where the activation had brought the field
   // (further along than before the second tap; the gel itself overshoots
-  // the end), keeps narrowing for a moment if the turn starts before the
+  // the end), keeps narrowing for a moment, since the turn starts before the
   // gel's peak, turns once and widens back to rest, never stepping faster
   // than the measured gel itself.
-  const turnAtMs = reverse.from - forward.from;
-  const detail = JSON.stringify({before, turnAtMs, xs});
-  if (turnsBeforePeak(turnAtMs, ACTIVATION_PEAK_MS, 'activation')) {
-    expect(xs[0], detail).toBeLessThanOrEqual(before + 0.5);
-    expect(xs[1], detail).toBeLessThan(xs[0]);
-    expect(turnsOf(xs), detail).toBe(1);
-  } else {
-    // Past the peak the field has moved back since `before`: the turn
-    // starts where the measured activation is at that time.
-    const there =
-      edgesAt(bottom.activationFrames, turnAtMs).trailing - REST.trailing;
-    expect(Math.abs(xs[0] - there), detail).toBeLessThan(1);
-    expect(turnsOf(xs), detail).toBeLessThanOrEqual(1);
-  }
+  const turnAtMs = turn.turnFrom - turn.motionFrom;
+  const detail = JSON.stringify({turn, turnAtMs, xs});
+  expect(turnAtMs, detail).toBeLessThan(ACTIVATION_PEAK_MS - 2 * FRAME_MS);
+  expect(xs[0], detail).toBeLessThanOrEqual(before + 0.5);
+  expect(xs[1], detail).toBeLessThan(xs[0]);
+  expect(turnsOf(xs), detail).toBe(1);
   expect(largestStep(xs), detail).toBeLessThan(GEL_PEAK_STEP + 0.5);
   await waitForRest(end(page));
   expect(Math.abs((await translate(end(page)))[0])).toBeLessThan(0.5);
@@ -542,19 +690,23 @@ test('a cancel mid-activation turns around from where the field is, without a sn
 test('focusing the field early in a cancel re-activates from where the field is, without a snap', async ({
   page,
 }) => {
-  const {driver, field} = await openActive(page);
-  await driver.tap(await centerOf(close(page)));
-  const [cancel] = await waitForAnimation(end(page), {minProgressMs: 60});
-  const before = (await translate(end(page)))[0];
+  await openActive(page);
+  // The page holds the turn's own motion, as in the cancel above.
+  const hold = await armHold(page, end(page), {
+    newOnly: true,
+    minProgressMs: CANCEL_PEAK_MS - 2 * FRAME_MS,
+  });
   // The bar is moving to its resting gap by then, faster than a scripted
-  // tap can land on it; the field's own tap focuses it this way.
-  await field.evaluate(element =>
-    (element as HTMLInputElement).focus({preventScroll: true}),
-  );
-  const [again] = await waitForNewAnimation(end(page), cancel.from);
-  await holdAnimations(page);
+  // tap can land on it; the field's own tap focuses it this way, here
+  // CANCEL_TURN_AT_MS into the cancel on the cancel's own clock.
+  await armTurn(page, CANCEL_TURN_AT_MS, 'focus');
+  // The cancel starts from the close button's click in the page, as the
+  // activation does above.
+  await close(page).evaluate(element => (element as HTMLElement).click());
+  const turn = await turned(page);
+  const before = turn.endX;
+  const times = timeline(curveMsOf(await hold.held()));
   await expect(root(page)).toHaveAttribute('data-search-field-active', 'true');
-  const times = timeline(again.to - again.from);
   const xs = fromOwnStart(
     (await sampleCurve(end(page), times)).map(
       sample => sample.transform.translateX,
@@ -562,23 +714,15 @@ test('focusing the field early in a cancel re-activates from where the field is,
   );
   await releaseAnimations(page, {finish: true});
   // From where the cancel had brought it (further toward rest than before
-  // the tap), it keeps widening for a moment if the turn starts before the
-  // cancel's peak, turns once and narrows again, never stepping faster than
-  // the measured gel itself.
-  const turnAtMs = again.from - cancel.from;
-  const detail = JSON.stringify({before, turnAtMs, xs});
-  if (turnsBeforePeak(turnAtMs, CANCEL_PEAK_MS, 'cancel')) {
-    expect(xs[0], detail).toBeGreaterThanOrEqual(before - 0.5);
-    expect(xs[1], detail).toBeGreaterThan(xs[0]);
-    expect(turnsOf(xs), detail).toBe(1);
-  } else {
-    // Past the peak the field has moved back since `before`: the turn
-    // starts where the measured cancel is at that time.
-    const there =
-      edgesAt(bottom.cancelFrames, turnAtMs).trailing - REST.trailing;
-    expect(Math.abs(xs[0] - there), detail).toBeLessThan(1);
-    expect(turnsOf(xs), detail).toBeLessThanOrEqual(1);
-  }
+  // the turn), it keeps widening for a moment, since the turn starts before
+  // the cancel's peak, turns once and narrows again, never stepping faster
+  // than the measured gel itself.
+  const turnAtMs = turn.turnFrom - turn.motionFrom;
+  const detail = JSON.stringify({turn, turnAtMs, xs});
+  expect(turnAtMs, detail).toBeLessThan(CANCEL_PEAK_MS - 2 * FRAME_MS);
+  expect(xs[0], detail).toBeGreaterThanOrEqual(before - 0.5);
+  expect(xs[1], detail).toBeGreaterThan(xs[0]);
+  expect(turnsOf(xs), detail).toBe(1);
   expect(largestStep(xs), detail).toBeLessThan(GEL_PEAK_STEP + 0.5);
   await waitForRest(end(page));
   expect((await translate(end(page)))[0]).toBeCloseTo(
