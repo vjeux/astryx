@@ -209,16 +209,25 @@ async function watchRuns(
           return;
         }
         const property = (event as TransitionEvent).propertyName;
-        record(
-          target
-            .getAnimations()
-            .find(
-              candidate =>
-                candidate instanceof CSSTransition &&
-                candidate.transitionProperty === property,
-            ),
-          property,
-        );
+        const transition = target
+          .getAnimations()
+          .find(
+            candidate =>
+              candidate instanceof CSSTransition &&
+              candidate.transitionProperty === property,
+          );
+        if (transition == null) {
+          // Already over when its run event fires: WebKit dates a transition
+          // at the style change, so after a long task its first frame can
+          // come after its end, and no frame of it is presented.
+          runs.push({
+            name: property,
+            endedBeforeFirstFrame: true,
+            firstFrameAt: Number(document.timeline.currentTime),
+          });
+          return;
+        }
+        record(transition, property);
       },
       true,
     );
@@ -265,23 +274,40 @@ async function watchRuns(
   }, key);
   return {
     started: async () =>
-      locator.page().evaluate(
-        async name =>
-          new Promise<ActiveAnimation[]>(resolve => {
-            const runs = (window as unknown as Record<string, unknown[]>)[name];
-            const check = () => {
-              if (runs.length === 0) {
-                requestAnimationFrame(check);
-                return;
-              }
-              requestAnimationFrame(() =>
-                resolve(runs.splice(0) as ActiveAnimation[]),
-              );
-            };
-            check();
-          }),
-        key,
-      ),
+      locator
+        .page()
+        .evaluate(
+          async name =>
+            new Promise<ActiveAnimation[]>(resolve => {
+              const runs = (window as unknown as Record<string, unknown[]>)[
+                name
+              ];
+              const check = () => {
+                if (runs.length === 0) {
+                  requestAnimationFrame(check);
+                  return;
+                }
+                requestAnimationFrame(() =>
+                  resolve(runs.splice(0) as ActiveAnimation[]),
+                );
+              };
+              check();
+            }),
+          key,
+        )
+        .then(runs => {
+          const skipped = runs.find(
+            run =>
+              (run as unknown as {endedBeforeFirstFrame?: boolean})
+                .endedBeforeFirstFrame === true,
+          );
+          if (skipped != null) {
+            throw new Error(
+              `the ${skipped.name} transition had ended before its first frame (its run and end fired together at timeline ${Math.round((skipped as unknown as {firstFrameAt: number}).firstFrameAt)} ms): no frame of it was presented`,
+            );
+          }
+          return runs;
+        }),
   };
 }
 
