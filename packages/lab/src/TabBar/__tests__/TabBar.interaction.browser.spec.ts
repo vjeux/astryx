@@ -653,13 +653,40 @@ const cssSlide = async (page: Page) =>
   }));
 
 /**
+ * Counts, on the page from now, the CSS transitions the lens starts (one
+ * transitionrun per property), for `expectCssSlide`. Call it before the
+ * action that slides the lens.
+ */
+async function watchCssSlide(page: Page) {
+  await page.locator('[data-tab-bar-lens]').evaluate(element => {
+    const w = window as unknown as {__tabBarSlides?: number};
+    w.__tabBarSlides = 0;
+    element.addEventListener('transitionrun', event => {
+      if (event.target === element) {
+        w.__tabBarSlides = (w.__tabBarSlides ?? 0) + 1;
+      }
+    });
+  });
+}
+
+/**
  * Under a mouse the lens slides in CSS on the theme's motion, and its body,
  * which the animator moves under a finger, never animates.
  */
 async function expectCssSlide(page: Page, {isRunning = true} = {}) {
   expect((await cssSlide(page)).duration).not.toBe('0s');
   if (isRunning) {
-    await expect.poll(async () => (await cssSlide(page)).transitions).toBe(1);
+    // Counted on the page from `watchCssSlide`, so a short slide that ends
+    // before this looks is still seen.
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as unknown as {__tabBarSlides?: number}).__tabBarSlides ??
+            0,
+        ),
+      )
+      .toBe(1);
   }
   expect(
     await lensBody(page).evaluate(element => element.getAnimations().length),
@@ -706,6 +733,7 @@ test.describe('touch work costs nothing under a fine pointer', () => {
       await expectFinePointer(page);
       await openStory(page, storybook(), 'lab-tabbar--default');
       await expect(page.getByRole('tablist', {name: 'Sections'})).toBeVisible();
+      await watchCssSlide(page);
       await tab(page, 'Browse').click();
       await expect(tab(page, 'Browse')).toHaveAttribute(
         'aria-selected',
