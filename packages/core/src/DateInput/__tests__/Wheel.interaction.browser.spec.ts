@@ -213,8 +213,14 @@ function flickUp(start: {x: number; y: number}) {
  * simulator capture of a coast through a 530 ms block; no real device, and
  * no 1 s block there.
  */
+// WebKit's busy-thread run is skipped: lifted under the CI WebKit lane's own
+// profile (Oct 31, podman `--cpus=4`, `LP_NUM_THREADS=4`, `CI=1`, ×10), 7 of
+// 10 runs failed. In 3, WebKit's real-time release was too slow for a coast
+// that outlasts the 1 s block. In 4, the coast moved on 94 to 97% of the
+// frames the control moved, its tail at 1.3 to 2 px a frame against WebKit's
+// 2 px screencast steps: it runs through the block, finer than the cast shows.
 const SCRIPTED_RELEASE_SKIP =
-  'the coast needs the scripted release velocity, which only an engine replaying the script timestamps gives (README: engine limits); Mobile Safari has an iOS simulator capture through a 530 ms block instead';
+  'the coast needs the scripted release velocity, which only an engine replaying the script timestamps gives, and its tail moves under WebKit\u2019s 2 px screencast step (README: engine limits); Mobile Safari has an iOS simulator capture through a 530 ms block instead';
 
 /** The y of a strip keyframe: the animator plays the strip's `translate`. */
 function stripYOf(frame: Record<string, unknown> | undefined): number {
