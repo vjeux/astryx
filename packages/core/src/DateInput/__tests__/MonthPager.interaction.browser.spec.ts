@@ -779,8 +779,12 @@ test('Reduced Motion: a release and the arrow step change the month through an o
     expect(animation.duration).toBeLessThanOrEqual(200);
   }
   await expect(title).toHaveText('November 2026');
-  await page.waitForTimeout(400);
-  expect(await monthsIn(viewport)).toBeCloseTo(10, 2);
+  // The grid rests on the month, waited for rather than given 400 ms: the
+  // dip swaps the month at its middle from a timer, and on a loaded machine
+  // that timer ran more than 400 ms after the title changed.
+  await expect
+    .poll(async () => monthsIn(viewport), {timeout: 0})
+    .toBeCloseTo(10, 2);
   await tapArrow(page, driver, 'Next month');
   const step = await takeCreatedRuns(page);
   expect(step.length).toBeGreaterThan(0);
@@ -789,8 +793,9 @@ test('Reduced Motion: a release and the arrow step change the month through an o
     expect(animation.duration).toBeLessThanOrEqual(200);
   }
   await expect(title).toHaveText('December 2026');
-  await page.waitForTimeout(400);
-  expect(await monthsIn(viewport)).toBeCloseTo(11, 2);
+  await expect
+    .poll(async () => monthsIn(viewport), {timeout: 0})
+    .toBeCloseTo(11, 2);
 });
 
 test('a second tap mid-scroll goes on to the month after', async ({page}) => {
