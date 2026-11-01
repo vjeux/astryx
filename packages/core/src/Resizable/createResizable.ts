@@ -2,8 +2,8 @@
 
 /**
  * @file createResizable.ts
- * @input A handle element, or null for a region with no handle yet, and the
- *   region's options
+ * @input A handle element, or null for a region with no handle yet, the
+ *   region's options, and the pane a LayoutPanel lends (resizablePane.ts)
  * @output createResizable; readInitialResizableState, createResizableAs and
  *   the internal channel for the hooks
  * @position The Resizable family's public factory. Its input is
@@ -45,6 +45,15 @@ import {
   type ResizeHandleConfig,
   type ResizeHandleView,
 } from './resizeGesture';
+import {
+  createPaneReveal,
+  resizablePaneBeside,
+  watchResizablePanes,
+  type LayoutEdge,
+  type PaneListener,
+  type RegionPaneSlot,
+  type ResizablePane,
+} from './resizablePane';
 import {separatorAttributes} from './separatorAttributes';
 import type {ResizableSize} from './utils';
 
@@ -329,6 +338,12 @@ interface ResizableInternals {
    * keys of a ResizeHandle given the configuration object's props.
    */
   model: ResizeGestureModel;
+  /**
+   * The configuration object's region: the pane its LayoutPanel hands over,
+   * and whether its ResizeHandle's pointer drags. Returns the function that
+   * stops following it.
+   */
+  followRegion(slot: RegionPaneSlot): () => void;
 }
 
 const internals = new WeakMap<ResizableController, ResizableInternals>();
@@ -508,6 +523,24 @@ export function createResizableAs(
   let mustWrite = false;
   let snapshot: ResizableSnapshot | null = null;
   const snapshotListeners = new Set<() => void>();
+
+  // The LayoutPanel that renders the pane, if any: found beside the handle,
+  // or handed over by the configuration object's region. Its edge reveal is
+  // decided here as the region collapses or opens, measured in the commit
+  // that renders the change, before the DOM changes, and played once the
+  // pane renders its new size, on the controller's own animated-layout
+  // handle over the pane's row, with no copy.
+  let pane: ResizablePane | null = null;
+  let regionSlot: RegionPaneSlot | null = null;
+  const paneReveal = createPaneReveal(
+    () => pane?.element.parentElement ?? null,
+  );
+  // A collapse or open this factory made, which the pane has not rendered
+  // yet; and one the pane rendered before the factory heard of it (a
+  // controlled isCollapsed), already measured.
+  let pendingFlip: {toCollapsed: boolean; isPlayable: boolean} | null = null;
+  let expectedFlip: boolean | null = null;
+  let isPointerReopening = false;
 
   const direction = (): ResizableDirection => opts.direction ?? 'horizontal';
   const collapsible = (): boolean => opts.collapsible ?? false;
@@ -711,10 +744,33 @@ export function createResizableAs(
     }
     refreshView();
     persist();
+    findPane();
     const reported = {
       size: derived.isCollapsed ? 0 : derived.size,
       isCollapsed: derived.isCollapsed,
     };
+    if (notified != null) {
+      if (notified.isCollapsed !== reported.isCollapsed) {
+        if (expectedFlip === reported.isCollapsed) {
+          // The pane rendered this change first and has measured it.
+          expectedFlip = null;
+          pendingFlip = null;
+        } else {
+          pendingFlip = {
+            toCollapsed: reported.isCollapsed,
+            isPlayable: !isPointerReopening,
+          };
+          if (isPointerReopening) {
+            // The pointer drives the edge: a running conceal lands at once.
+            paneReveal.land();
+          }
+        }
+      } else if (notified.size !== reported.size) {
+        // A resize that neither collapses nor opens lands a running motion.
+        paneReveal.land();
+      }
+    }
+    pane?.setCollapsed(reported.isCollapsed, handle);
     const next: ResizableSnapshot = {
       size: reported.size,
       isCollapsed: reported.isCollapsed,
@@ -749,6 +805,77 @@ export function createResizableAs(
         listener();
       }
     }
+  }
+
+  // --- The pane a LayoutPanel lends (component:LayoutPanel FR7) ---
+
+  /** The pane's edge that faces the handle, from the direction and reversal. */
+  function paneEdge(): LayoutEdge {
+    if (handle == null && pane != null) {
+      // Handed over by the configuration object: its own content-facing edge.
+      return pane.contentFacingEdge();
+    }
+    const reversed = isReversed();
+    if (direction() === 'vertical') {
+      return reversed ? 'block-start' : 'block-end';
+    }
+    return reversed ? 'inline-start' : 'inline-end';
+  }
+
+  const paneListener: PaneListener = {
+    beforeChange(toCollapsed) {
+      const current = pane;
+      if (current == null) {
+        return;
+      }
+      if (pendingFlip?.toCollapsed === toCollapsed) {
+        const {isPlayable} = pendingFlip;
+        pendingFlip = null;
+        if (isPlayable) {
+          paneReveal.measure(current, paneEdge());
+        } else {
+          paneReveal.land();
+        }
+        return;
+      }
+      // The pane renders a collapse or open this factory has not made yet,
+      // ahead of the size it reports: a controlled isCollapsed, which reaches
+      // the factory after this commit. It plays too.
+      const reportedSize = derived.isCollapsed ? 0 : derived.size;
+      const isAhead = toCollapsed ? reportedSize !== 0 : reportedSize === 0;
+      if (collapsible() && isAhead && derived.isCollapsed !== toCollapsed) {
+        expectedFlip = toCollapsed;
+        paneReveal.measure(current, paneEdge());
+      }
+    },
+    committed() {
+      if (pane != null) {
+        paneReveal.committed(pane);
+      }
+    },
+  };
+
+  function setPane(next: ResizablePane | null): void {
+    if (next === pane) {
+      return;
+    }
+    paneReveal.land();
+    pendingFlip = null;
+    expectedFlip = null;
+    // A pane this region no longer sizes is not held collapsed by it.
+    pane?.listen(null);
+    pane?.setCollapsed(false, null);
+    pane = next;
+    pane?.listen(paneListener);
+    pane?.setCollapsed(derived.isCollapsed, handle);
+  }
+
+  /** Follows the lent LayoutPanel beside the handle, on the pane's side. */
+  function findPane(): void {
+    if (regionSlot != null || handle == null) {
+      return;
+    }
+    setPane(resizablePaneBeside(handle, isReversed() ? 'after' : 'before'));
   }
 
   /** Nothing is written while the basis stands in, nor while a gesture runs. */
@@ -950,7 +1077,11 @@ export function createResizableAs(
       }
       const clamped = clampSize(raw, derived.min, derived.max, snaps());
       chosenSize = clamped;
+      // Only a pointer reopens without a reveal; a key's step plays one.
+      isPointerReopening =
+        reopens && (isDragging || regionSlot?.isPointerDragging() === true);
       commit();
+      isPointerReopening = false;
       if (reopens) {
         opts.onCollapseChange?.(false);
       }
@@ -1059,6 +1190,18 @@ export function createResizableAs(
   }
 
   bindHandle();
+  // A LayoutPanel lent beside the handle after this factory started: look for
+  // the pane again.
+  const stopWatchingPanes =
+    handle == null
+      ? null
+      : watchResizablePanes(() => {
+          if (!isDestroyed) {
+            findPane();
+          }
+        });
+  let stopFollowingRegion: (() => void) | null = null;
+
   commit();
 
   const binding: ResizeHandleBinding = {
@@ -1121,6 +1264,13 @@ export function createResizableAs(
       // than the factory's own, ends the same way.
       endGesture();
       isDestroyed = true;
+      stopWatchingPanes?.();
+      stopFollowingRegion?.();
+      stopFollowingRegion = null;
+      paneReveal.land();
+      pane?.listen(null);
+      pane?.setCollapsed(false, null);
+      pane = null;
       unbind?.();
       viewListeners.clear();
       if (!isSuspended) {
@@ -1183,6 +1333,25 @@ export function createResizableAs(
       if (element !== containerElement) {
         commit();
       }
+    },
+    followRegion(slot) {
+      stopFollowingRegion?.();
+      regionSlot = slot;
+      const stop = slot.follow(next => {
+        if (!isDestroyed) {
+          setPane(next);
+        }
+      });
+      stopFollowingRegion = () => {
+        stop();
+        if (regionSlot === slot) {
+          regionSlot = null;
+        }
+      };
+      return () => {
+        stopFollowingRegion?.();
+        stopFollowingRegion = null;
+      };
     },
   });
   return controller;
