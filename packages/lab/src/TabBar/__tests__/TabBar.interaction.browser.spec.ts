@@ -2414,8 +2414,21 @@ test.describe('bottom accessory', () => {
       });
     // Just past the trigger, the finger at rest long enough that the page
     // doesn't fling (a tap on a flinging page only stops it), then the circle
-    // tapped at once: the turn comes while the accessory still moves.
-    await scrollByFinger(page, driver, 80, {settle: false, restMs: 100});
+    // tapped at once: the turn comes while the accessory still moves. The
+    // person scrolls most of the way first, and a second drag crosses the
+    // 66 px trigger near its end: a finger's own scroll keeps a few pixels as
+    // slop, so how far the first got is read rather than assumed.
+    await scrollByFinger(page, driver, 50);
+    const scrolled = await page.evaluate(() => window.scrollY);
+    expect(scrolled).toBeLessThan(66);
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'expanded',
+    );
+    await scrollByFinger(page, driver, 66 - scrolled + 30, {
+      settle: false,
+      restMs: 100,
+    });
     await expect(accessory(page)).toHaveAttribute(
       'data-tab-bar-accessory',
       'inline',
