@@ -30,13 +30,17 @@
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
+  advanceFrozenPage,
   animationStoryboard,
   blockMainThread,
   busyWindowProof,
   castStoryboard,
   countBetween,
   drag,
+  freezePage,
   holdAnimations,
+  installPageFreeze,
+  installTimerGate,
   markElement,
   openStory,
   releaseAnimations,
@@ -45,6 +49,7 @@ import {
   springStep,
   startScreencast,
   tap as tapScript,
+  thawPage,
   touchDriver,
   touchStoryboard,
   traceRendering,
@@ -160,6 +165,17 @@ async function openBar(page: Page, story = 'default') {
   const bar = page.getByRole('tablist', {name: 'Sections'});
   await expect(bar).toBeVisible();
   return {driver, bar};
+}
+
+/**
+ * `openBar` on a page whose scene the test can freeze: the page clock goes in
+ * before the story loads, the timer gate after.
+ */
+async function openFreezableBar(page: Page, story = 'default') {
+  await installPageFreeze(page);
+  const opened = await openBar(page, story);
+  await installTimerGate(page);
+  return opened;
 }
 
 const tab = (page: Page, name: string | RegExp) =>
