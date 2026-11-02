@@ -118,7 +118,19 @@ function filesUnder(dir, pattern) {
  * gives a component its gesture adds that component's import, and each import
  * that reaches it, with a comment naming the gesture.
  */
-const GESTURE_USERS = new Set([]);
+const GESTURE_USERS = new Set([
+  // Under a finger, the bottom-sheet picker wheels drag and tap through the
+  // gesture system's pan and tap (DateInput/PickerWheel.tsx): DateInput's
+  // month and year wheels, and the time wheels of TimeInput and
+  // DateTimeInput.
+  'DateInput',
+  'DateTimeInput',
+  'TimeInput',
+  // A value editor reaches TimeInput's wheels: PowerSearch's edit popover
+  // and Table's filtering plugin.
+  'PowerSearch',
+  'Table',
+]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
 const NEVER_GESTURE_USERS = ['Button', 'TextInput'];
