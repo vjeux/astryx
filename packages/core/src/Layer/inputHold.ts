@@ -4,106 +4,25 @@
 
 /**
  * @file inputHold.ts
- * @input A layer's root element, what ends the hold (a promise, or an
- *   animator handle's `finished`), and its scope; the flat-tree walk
- *   (utils/flatTree)
- * @output holdInput, holdsTouch (which the gesture host asks for each touch),
- *   isInHeldLayer and isInputShield: input held away from a layer while its
- *   presentation runs
- * @position The Layer module's one input hold, for every component
- *   whose layer presents or dismisses under a finger
- *
- * UIKit delivers no touch while a presentation runs: until it completes, a
- * tap reaches nothing, and a dismissal drops every input until it ends
- * (measured on iOS 26.2 with UIAlertController: taps 400 ms into its
- * presentation ignored, 450 ms in handled). A hold covers one layer root
- * until what ends it settles, and decides by each event's pointer, never by
- * the primary pointer (spec:AST-094 FR35): a finger's or a pen's press is
- * held, a mouse's keeps today's behavior during a presentation, so a mouse
- * or a trackpad on a touch screen keeps its clicks:
- *
- * - `scope: 'viewport'` (a presentation): a touch, a pointer press or a
- *   click anywhere reaches nothing. A transparent shield inside the layer
- *   covers the viewport from the top layer, so a tap on it lands inside the
- *   layer (a light-dismissing layer stays open) and starts no pan (iOS
- *   drops that input too while it presents), while a pinch on it still
- *   zooms the page, which stays the browser's (spec:AST-094 FR10, FR18,
- *   FR35; WCAG 1.4.4); the gesture host holds
- *   the layer's touches away from every recognizer. Keys and assistive
- *   technology stay live, as on iOS.
- * - `scope: 'layer'` (a dismissal): the same shield, and the
- *   layer's content is inert (no focus, key or assistive-technology
- *   activation; a focused element inside it is blurred, since one that turns
- *   inert keeps its key activation). The layer element itself stays live, so
- *   the shield inside
- *   it still catches every hit: an inert subtree is no hit target, and a tap
- *   on it would otherwise land on whatever lies beneath. A modal dialog
- *   still receives its own `cancel` (Escape): the caller ignores it while
- *   held.
- * - `scope: 'surface'` (a non-modal presentation): as `'viewport'`, but only
- *   what lands on the layer itself is held, and the page around it stays
- *   live (spec:AST-094 FR35). Its shield covers the layer's own box, inside
- *   it rather than in the top layer, so the layer root must be its containing
- *   block (a popover or a dialog is); a press that lands outside the layer is
- *   not held.
- *
- * A finger's or a pen's press that lands anywhere while a layer is held is
- * held with its moves, its release, its click and the compatibility mouse
- * events a browser sends for it, to the end of that press, even when the
- * hold ends first: the whole tap reaches nothing. Window listeners, the first
- * stop of every event's capture path, swallow it, so neither the page nor the
- * gesture host hears it; a touch's start is never canceled (that would cancel
- * a pinch too), and a move is canceled, so that it pans nothing, only while
- * one finger is down. A click a key or assistive technology sends (`detail`
- * 0) passes. During a presentation a mouse passes too: once a mouse moves
- * with no button down, the shield stops taking hits and the gesture host
- * (asking `holdsTouch`) lets it through. A finger's press makes the shield take hits again,
- * and a finger that lands while it does not is captured to it, so its
- * release stays the hold's and a light-dismissing layer stays open. A mouse
- * press that begins on the shield stays the shield's to its end: its release
- * and click land on it, not on what lies beneath. Nothing listens while
- * nothing is held (spec:AST-094 FR24), so a hold cannot know a pointer used
- * before it began: a mouse press made before the mouse has moved during the
- * hold meets the shield. A dismissal's shield takes every hit, a mouse's
- * included: its content is inert, and a click would fall through it to the
- * page.
- *
- * The shield sets its own `pointer-events` and `visibility`, so a layer root
- * that takes no hits itself (its content or a backdrop child opts back in)
- * is held all the same. A hit test that must see past held input (a press
- * the finger that opened the layer continues, captured before the hold
- * began) skips shields and nothing else: the first element of
- * `elementsFromPoint` for which `isInputShield` is false, so an
- * overlay really above the layer still wins. The shield is a manual
- * popover, so its `toggle` events reach a document listener that logs
- * every popover's: such a log keeps to its own popovers.
- *
- * One hold per layer: holds on a held layer stack, and the layer comes back
- * when the last one ends (when what ends it settles, resolved or rejected;
- * when its release runs; on unmount, for the hook). Nothing is written to
- * the DOM but the shield and the content's `inert` attribute. The gesture
- * host asks `holdsTouch` itself for each touch: whether the target is in a
- * held layer, walking the flat tree as it does (a slotted node to its slot,
- * a shadow root to its host), for that event's pointer. This module imports
- * nothing from gestures/, so a component in the root entry can hold its
- * layer statically and bring no gesture code
- * (`architecture:react-component-runtime` INV13). While any of its layers
- * is held, a document has one set of window listeners, however many layers
- * are held; they go once the presses they hold have ended (spec:AST-094
- * FR24). A layer that leaves the document holds nothing more.
+ * @input A layer root, what ends its hold (a promise or an animator handle),
+ *   and the hold's scope
+ * @output holdInput, holdsTouch, isInHeldLayer and isInputShield: input held
+ *   away from a layer while it presents or dismisses
+ * @position The Layer module's one input hold, for components whose layer
+ *   presents under a finger
  *
  * SYNC: When modified, update inputHold.test.tsx,
- * __tests__/inputHold.interaction.browser.spec.ts and the components
- * that hold their layer (holdInput callers).
+ * __tests__/inputHold.interaction.browser.spec.ts and the holdInput callers.
  */
 
-import {parentAcrossShadow} from '../utils/flatTree';
+import {containsAlongFlatTree, parentAcrossShadow} from '../utils/flatTree';
+import {getLastPointerType, subscribeInput} from '../utils/inputStream';
 
 /**
- * What a hold does. `'viewport'` and `'layer'` add the same shield over the
- * whole viewport, and `'layer'` also makes the layer's content inert and
- * moves focus out of it; `'surface'` shields the layer's own box alone and
- * leaves the page around it live.
+ * What a hold does. `'viewport'` and `'layer'` add one shield over the whole
+ * viewport. `'layer'` also makes the layer's content inert and moves focus
+ * out of it. `'surface'` shields only the layer's own box, and the page
+ * around it stays live.
  */
 export type InputHoldScope = 'viewport' | 'layer' | 'surface';
 
@@ -150,8 +69,12 @@ const held = new WeakMap<Element, HeldLayer>();
 const heldDocuments = new WeakMap<Document, HeldDocument>();
 const pressHolds = new WeakMap<Document, PressHold>();
 const liveShields = new WeakSet<Node>();
-/** The latest pointer heard while the document's layers are held. */
-const latestPointer = new WeakMap<Document, string>();
+
+/** Whether the shared input stream last delivered a mouse's pointer event. */
+function isMouseLast(doc: Document | null): boolean {
+  const view = doc?.defaultView;
+  return view != null && getLastPointerType(view) === 'mouse';
+}
 
 /**
  * Whether `node` is the shield of a live hold. A hit test that must see past
@@ -162,9 +85,9 @@ export function isInputShield(node: Node | null): boolean {
 }
 
 /**
- * Whether `target` is inside a held layer, walking the flat tree as the
- * gesture host does (parentAcrossShadow: a slotted node to its slot, a
- * shadow root to its host).
+ * Whether `target` is inside a held layer. It walks the flat tree as the
+ * gesture host does: a slotted node goes to its slot, and a shadow root to
+ * its host.
  */
 export function isInHeldLayer(target: Node | null): boolean {
   for (
@@ -179,26 +102,13 @@ export function isInHeldLayer(target: Node | null): boolean {
   return false;
 }
 
-/** Whether `target` is `layer` or inside it, in the flat tree. */
-function isWithin(layer: Element, target: EventTarget | null): boolean {
-  for (
-    let node: Node | null = target instanceof Node ? target : null;
-    node != null;
-    node = parentAcrossShadow(node)
-  ) {
-    if (node === layer) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /**
- * Whether the gesture host holds `target` away for the pointer at hand: in a
- * dismissing layer always, in a presenting one unless that pointer is a
- * mouse (spec:AST-094 FR35: a mouse keeps today's behavior). The host asks
- * it for every touch; with nothing held it answers false, and nothing
- * listens (spec:AST-094 FR24).
+ * Whether the gesture host holds `target` away for the current pointer. A
+ * dismissing layer holds every pointer. A presenting layer holds every
+ * pointer but a mouse, which keeps today's behavior. The host asks this for
+ * every touch. So this module imports nothing from gestures/, and a
+ * root-entry component can hold its layer without gesture code. With nothing
+ * held, this answers false.
  */
 export function holdsTouch(target: Node): boolean {
   // What lands on a shield is held, a mouse's press included.
@@ -220,14 +130,13 @@ export function holdsTouch(target: Node): boolean {
     }
   }
   const doc = target instanceof Document ? target : target.ownerDocument;
-  return isHeld && (doc == null || latestPointer.get(doc) !== 'mouse');
+  return isHeld && !isMouseLast(doc);
 }
 
 /**
- * Starts holding `layer`. A document's first held layer turns its press
- * hold's window listeners on: once per document however many layers are
- * held (spec:AST-094 FR24). Nothing is remembered from before: a pointer
- * used while nothing was held went unheard.
+ * Starts holding `layer`. A document's first held layer turns its press hold
+ * on, with one stream subscription per event type, however many layers are
+ * held. The hold subscribes to nothing while nothing is held.
  */
 function startHolding(layer: Element): void {
   const doc = layer.ownerDocument;
@@ -247,10 +156,10 @@ function stopHolding(layer: Element): void {
 }
 
 /**
- * The document's held layers still in it, oldest first: a layer that has left
- * the document holds nothing more. When none is left, `holdsTouch` answers
- * false and the press hold stops holding new presses, its listeners going
- * once the presses it holds have ended (spec:AST-094 FR24).
+ * The document's held layers still in it, oldest first. A layer that has
+ * left the document holds nothing more. When none is left, `holdsTouch`
+ * answers false and the press hold takes no new press. Its subscriptions end
+ * once the presses it holds have ended.
  */
 function liveLayers(doc: Document): Element[] {
   const state = heldDocuments.get(doc);
@@ -266,7 +175,6 @@ function liveLayers(doc: Document): Element[] {
     return [...state.layers];
   }
   heldDocuments.delete(doc);
-  latestPointer.delete(doc);
   pressHolds.get(doc)?.release();
   return [];
 }
@@ -285,8 +193,8 @@ const SWALLOWED = [
 const swallow = (event: Event) => {
   // A touch's start stays uncancelled: cancelling it would cancel the page's
   // pinch-zoom too. The shield's `touch-action: pinch-zoom` keeps a finger
-  // from panning, and a tap's mouse events and click land on the shield,
-  // which swallows them.
+  // from panning. A tap's mouse events and click land on the shield, which
+  // swallows them.
   if (event.cancelable && event.type !== 'touchstart') {
     event.preventDefault();
   }
@@ -295,7 +203,9 @@ const swallow = (event: Event) => {
 
 /**
  * A transparent cover inside `layer`: of the viewport from the top layer
- * (`isFull`), or of the layer's own box alone.
+ * (`isFull`), or of the layer's own box alone. Because the cover is inside
+ * the layer, a tap on it lands in the layer, and a light-dismissing layer
+ * stays open.
  */
 function addShield(layer: Element, isFull: boolean): HTMLElement {
   const shield = layer.ownerDocument.createElement('div');
@@ -318,10 +228,10 @@ function addShield(layer: Element, isFull: boolean): HTMLElement {
     background: 'transparent',
     overflow: 'hidden',
     touchAction: 'pinch-zoom',
-    // The two inherited properties that decide hit-testing, set here so the
-    // shield takes hits whatever its layer root opts out of (a full-viewport
-    // layer that is `pointer-events: none` and lets a backdrop child take the
-    // hits): inherited, they would let a held tap fall through to the page.
+    // These two inherited properties decide hit-testing. A layer root can opt
+    // out of hits, as a full-viewport layer does when a backdrop child takes
+    // them. Inherited from such a root, they would let a held tap fall through
+    // to the page.
     pointerEvents: 'auto',
     visibility: 'visible',
   });
@@ -343,7 +253,10 @@ function addShield(layer: Element, isFull: boolean): HTMLElement {
 
 /**
  * Holds input away from `layer` until `until` settles. Returns the release
- * (idempotent), for a hold that ends early.
+ * (idempotent), for a hold that ends early. Holds on one layer stack, and
+ * the layer comes back when the last one ends. Each event is judged by its
+ * own pointer, never by the primary pointer. So a mouse on a touch screen
+ * keeps its clicks during a presentation.
  */
 export function holdInput(
   layer: Element,
@@ -372,12 +285,9 @@ export function holdInput(
   if (state.shield == null) {
     state.isShieldFull = isFull || state.viewport + state.layer > 0;
     state.shield = addShield(layer, state.isShieldFull);
-    // A presentation held while a mouse is the latest pointer heard lets it
-    // through from the start.
-    if (
-      scope !== 'layer' &&
-      latestPointer.get(layer.ownerDocument) === 'mouse'
-    ) {
+    // A presentation lets a mouse through from the start when the stream's
+    // last pointer was a mouse. A press where the mouse rests then acts.
+    if (scope !== 'layer' && isMouseLast(layer.ownerDocument)) {
       state.shield.style.pointerEvents = 'none';
     }
   }
@@ -465,8 +375,6 @@ const PRESS_EVENTS = [
   'contextmenu',
 ] as const;
 
-const WINDOW_LISTENER = {capture: true, passive: false} as const;
-
 /** The document's press hold, turned on if it is off. */
 function pressHoldFor(doc: Document): PressHold | null {
   let hold = pressHolds.get(doc) ?? null;
@@ -480,10 +388,14 @@ function pressHoldFor(doc: Document): PressHold | null {
 }
 
 /**
- * Holds every press of a finger or a pen that lands in `doc`'s window while
- * any of its layers is held, each to its own end, and lets a moving mouse
- * through a presentation's shield. One per document; its listeners go once
- * nothing is held and the held presses and their clicks have ended.
+ * Holds each finger or pen press that lands in `doc`'s window while any of
+ * its layers is held. Each press is held to its own end, even past the
+ * hold's end. A moving mouse passes through a presentation's shield. The
+ * hold hears input through the shared input stream and stops each held
+ * event there, so no document or element listener hears it. Subscribers that
+ * came first hear it too. The gesture host asks `holdsTouch` and skips it.
+ * There is one per document. Its subscriptions end once nothing is held and
+ * the held presses and their clicks have ended.
  */
 function createPressHold(doc: Document): PressHold | null {
   const view = doc.defaultView;
@@ -541,10 +453,10 @@ function createPressHold(doc: Document): PressHold | null {
   };
 
   /**
-   * Whether a new press that lands on `target` is held: anywhere while a
-   * layer is held over the viewport, and on the layer itself while it is
-   * held only to its box (a `'surface'` hold), where the page around it
-   * stays live.
+   * Whether a new press that lands on `target` is held. While a layer is held
+   * over the viewport, a press anywhere is held. While a layer is held only
+   * to its box (a `'surface'` hold), only a press on the layer is held. The
+   * page around it stays live.
    */
   const holdsPressAt = (target: EventTarget | null) => {
     if (!holdsNewPress()) {
@@ -558,7 +470,11 @@ function createPressHold(doc: Document): PressHold | null {
       if (state.viewport > 0 || state.layer > 0) {
         return true;
       }
-      if (state.surface > 0 && isWithin(layer, target)) {
+      if (
+        state.surface > 0 &&
+        target instanceof Node &&
+        containsAlongFlatTree(layer, target)
+      ) {
         return true;
       }
     }
@@ -572,7 +488,6 @@ function createPressHold(doc: Document): PressHold | null {
 
   /** A shield takes hits for a finger or a pen, not for a moving mouse. */
   const followPointer = (pointerType: string) => {
-    latestPointer.set(doc, pointerType);
     for (const layer of liveLayers(doc)) {
       const state = held.get(layer);
       if (state?.shield == null) {
@@ -587,11 +502,11 @@ function createPressHold(doc: Document): PressHold | null {
   };
 
   /**
-   * A held press that landed past the shield (it let a mouse through) is
-   * captured to it, so its release stays the hold's: a light-dismissing
-   * layer stays open. A synthetic press has no active pointer to capture
-   * (`setPointerCapture` throws NotFoundError for one); its events are
-   * swallowed all the same.
+   * A held press that landed past the shield, which had let a mouse through,
+   * is captured to the shield. Its release then stays the hold's, and a
+   * light-dismissing layer stays open. A synthetic press has no active
+   * pointer to capture, so `setPointerCapture` throws NotFoundError. Its
+   * events are swallowed all the same.
    */
   const captureToShield = (event: PointerEvent) => {
     if (!event.isTrusted) {
@@ -607,11 +522,10 @@ function createPressHold(doc: Document): PressHold | null {
 
   const onPointer = (event: Event) => {
     const {pointerId, pointerType, type} = event as PointerEvent;
-    // A finger or a pen raises the shields; only a mouse moving with no
-    // button down lowers them: a mouse press that began on a shield stays
-    // its own to its end, so its release and click land on the shield, not
-    // on what lies beneath (the click would go to the common ancestor of
-    // the two targets, a dialog that reads it as a backdrop click).
+    // A finger or a pen raises the shields. Only a mouse that moves with no
+    // button down lowers them. So a mouse press that began on a shield stays
+    // the shield's to its end. Otherwise its click would go to the two
+    // targets' common ancestor, a dialog that reads it as a backdrop click.
     const isFollowed = HELD_POINTERS.has(pointerType)
       ? type === 'pointerdown' || type === 'pointermove'
       : pointerType === 'mouse' &&
@@ -649,9 +563,9 @@ function createPressHold(doc: Document): PressHold | null {
     const {changedTouches, touches: down, type} = event as TouchEvent;
     const changed = Array.from(changedTouches);
     if (type === 'touchstart') {
-      // A held touch the screen no longer has ended unheard: its target left
-      // the document (the shield, removed at the release), so its end
-      // reached no listener here.
+      // A held touch that the screen no longer has ended unheard. Its target,
+      // the shield, left the document at the release, so its end reached no
+      // listener here.
       const live = new Set(Array.from(down, touch => touch.identifier));
       for (const identifier of touches) {
         if (!live.has(identifier)) {
@@ -703,9 +617,9 @@ function createPressHold(doc: Document): PressHold | null {
     if ((event as MouseEvent).detail === 0) {
       return;
     }
-    // A click that names its pointer is judged by it; a compatibility mouse
-    // event, or a click a browser sends as a plain mouse event, belongs to
-    // the last press.
+    // A click that names its pointer is judged by that pointer. A
+    // compatibility mouse event, or a click sent as a plain mouse event,
+    // belongs to the last press.
     const {pointerType} = event as Partial<PointerEvent>;
     const isHeldPress =
       lastPress === 'held' &&
@@ -728,26 +642,26 @@ function createPressHold(doc: Document): PressHold | null {
     if (timer !== undefined) {
       clearTimeout(timer);
     }
-    for (const type of POINTER_EVENTS) {
-      view?.removeEventListener(type, onPointer, WINDOW_LISTENER);
-    }
-    for (const type of TOUCH_EVENTS) {
-      view?.removeEventListener(type, onTouch, WINDOW_LISTENER);
-    }
-    for (const type of PRESS_EVENTS) {
-      view?.removeEventListener(type, onPress, WINDOW_LISTENER);
+    for (const unsubscribe of unsubscribers.splice(0)) {
+      unsubscribe();
     }
   }
 
-  for (const type of POINTER_EVENTS) {
-    view.addEventListener(type, onPointer, WINDOW_LISTENER);
-  }
-  for (const type of TOUCH_EVENTS) {
-    view.addEventListener(type, onTouch, WINDOW_LISTENER);
-  }
-  for (const type of PRESS_EVENTS) {
-    view.addEventListener(type, onPress, WINDOW_LISTENER);
-  }
+  // A touch's start and cancel are never canceled, so their subscriptions
+  // keep the stream passive for them.
+  const unsubscribers = [
+    ...POINTER_EVENTS.map(type =>
+      subscribeInput(view, type, onPointer, {cancels: true}),
+    ),
+    ...TOUCH_EVENTS.map(type =>
+      subscribeInput(view, type, onTouch, {
+        cancels: type === 'touchmove' || type === 'touchend',
+      }),
+    ),
+    ...PRESS_EVENTS.map(type =>
+      subscribeInput(view, type, onPress, {cancels: true}),
+    ),
+  ];
 
   const pressHold: PressHold = {
     hold() {
@@ -769,11 +683,12 @@ function createPressHold(doc: Document): PressHold | null {
 }
 
 /**
- * Makes the layer's content inert, the shield aside, and moves focus out of
- * it: an element that turns inert while focused keeps its focus, and with it
- * its key activation (Enter and Space still click a focused button), until
- * the engine's focus fixup runs, if it runs at all (measured in Chromium and
- * WebKit). Blurring it leaves focus on the document, as that fixup does.
+ * Makes the layer's content inert, except the shield, and moves focus out of
+ * it. An element that turns inert while focused keeps its focus and its key
+ * activation. Enter and Space still click such a button until the engine's
+ * focus fixup runs, if it runs. Blurring it leaves focus on the document, as
+ * that fixup does. The layer element itself stays live. An inert subtree is
+ * no hit target, so the shield inside the layer still catches every hit.
  */
 function makeContentInert(
   layer: Element,
@@ -789,7 +704,7 @@ function makeContentInert(
   const focused = deepActiveElement(layer.ownerDocument);
   if (
     focused instanceof HTMLElement &&
-    [...content.keys()].some(child => isInFlatTree(child, focused))
+    [...content.keys()].some(child => containsAlongFlatTree(child, focused))
   ) {
     focused.blur();
   }
@@ -803,20 +718,6 @@ function deepActiveElement(doc: Document): Element | null {
     active = active.shadowRoot.activeElement;
   }
   return active;
-}
-
-/** Whether `node` is `root` or inside it, walking the flat tree. */
-function isInFlatTree(root: Node, node: Node): boolean {
-  for (
-    let current: Node | null = node;
-    current != null;
-    current = parentAcrossShadow(current)
-  ) {
-    if (current === root) {
-      return true;
-    }
-  }
-  return false;
 }
 
 function restoreInert(content: Map<Element, boolean>): void {

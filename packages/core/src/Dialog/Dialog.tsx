@@ -20,11 +20,6 @@
  * (docs/design/reduced-motion.md): on a touch screen the dialog fades in
  * where it lands, in 200 ms or less; with a mouse it appears at once.
  *
- * Under a finger, on a touch screen, a tap or a drag that lands while the
- * dialog is still entering reaches nothing, and the dialog finishes entering
- * and stays open (spec:AST-094 FR35, through the Layer module's input hold).
- * Keys and assistive technology stay live, and a mouse is unchanged.
- *
  * Initial focus and the focus returned on close follow the last input
  * (docs/architecture/interaction-modality.md INV1): the shared focus indicator
  * is hidden after a pointer press and shown after a key press.
@@ -626,10 +621,9 @@ export function Dialog({
           focusForLastInput(autofocusTarget);
         }
       }
-      // Under a finger a tap or a drag that lands while the dialog is still
-      // entering reaches nothing; keys and assistive technology stay live
-      // (spec:AST-094 FR35). Released when the entrance ends, or by this
-      // effect's cleanup on a close or unmount.
+      // Under a finger, a tap or a drag during the entrance reaches nothing.
+      // Keys and assistive technology stay live. The hold ends with the
+      // entrance, or with this effect's cleanup on a close or unmount.
       return holdEntranceInput(dialog) ?? undefined;
     } else {
       if (dialog.open) {

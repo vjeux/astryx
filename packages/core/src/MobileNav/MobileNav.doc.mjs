@@ -203,7 +203,7 @@ export const docsZh = {
       name: 'onOpenChange',
       type: '(isOpen: boolean) => void',
       description:
-        '当抽屉可见性变化时调用（点击背景遮罩、按 Escape 键或点击关闭按钮）。使用手指操作时，抽屉滑入期间不接受输入；关闭后、对话框关闭之前也不接受输入，随后焦点回到打开它的元素。',
+        '当抽屉可见性变化时调用（点击背景遮罩、按 Escape 键或点击关闭按钮）。使用手指操作时，抽屉滑入期间不接受输入。关闭后，焦点会在对话框关闭时回到打开它的元素。',
       required: true,
     },
     {

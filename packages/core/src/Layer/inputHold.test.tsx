@@ -1,7 +1,16 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
-import {afterEach, describe, expect, it, onTestFinished, vi} from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  vi,
+} from 'vitest';
 import {GestureHost} from '../gestures/GestureHost';
+import {subscribeInput} from '../utils/inputStream';
 import {
   holdInput,
   holdsTouch,
@@ -262,12 +271,25 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     return release;
   };
 
+  /** Makes `type` the stream's last pointer, as a page's earlier input does. */
+  function lastPointerWas(type: string) {
+    const stop = subscribeInput(window, 'pointermove', () => {});
+    pointer(document.body, 'pointermove', type);
+    stop();
+  }
+
+  // Each case starts as after a finger: no earlier case's mouse lowers its
+  // shield.
+  beforeEach(() => {
+    lastPointerWas('touch');
+  });
+
   afterEach(() => {
     for (const release of releases.splice(0)) {
       release();
     }
     // A new press ends a released hold's click window (the held press's
-    // click can no longer come), so its window listeners go before the next
+    // click can no longer come), so its subscriptions end before the next
     // case rather than lingering into it.
     pointer(document.body, 'pointerdown', 'mouse');
     pointer(document.body, 'pointerup', 'mouse');
@@ -447,19 +469,40 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     expect(shield.style.pointerEvents).toBe('auto');
   });
 
-  it("remembers no pointer while nothing is held: a mouse that moved before a layer opened leaves its presentation's shield taking hits (spec:AST-094 FR24)", () => {
+  it("starts a presentation's shield lowered when the stream last heard a mouse: a press where the mouse rests reaches the layer (spec:AST-094 FR35)", () => {
     const {layer, child} = mountLayer();
-    // The mouse moved last, while nothing was held.
+    const {button, reached} = recorder(layer);
+    // Press feedback hears the page's pointer moves through the stream on any
+    // page with a pressable; the mouse moved last, before the layer opened.
+    const stop = subscribeInput(window, 'pointermove', () => {});
     pointer(document.body, 'pointermove', 'mouse');
+    stop();
+    hold(layer);
+    const shield = layer.lastElementChild as HTMLElement;
+    expect(isInputShield(shield)).toBe(true);
+    expect(shield.style.pointerEvents).toBe('none');
+    expect(holdsTouch(child)).toBe(false);
+    // A key opened the layer; the resting mouse presses without moving.
+    pointer(button, 'pointerdown', 'mouse', 1, 1);
+    pointer(button, 'pointerup', 'mouse');
+    click(button, 'mouse');
+    expect(reached).toEqual(['pointerdown', 'pointerup', 'click']);
+    // A dismissal's shield still takes every hit.
+    hold(layer, 'layer');
+    expect(shield.style.pointerEvents).toBe('auto');
+  });
+
+  it("starts a presentation's shield up when the stream last heard a finger, or no pointer at all", () => {
+    const {layer, child} = mountLayer();
+    lastPointerWas('touch');
     hold(layer);
     const shield = layer.lastElementChild as HTMLElement;
     expect(shield.style.pointerEvents).toBe('auto');
-    const isGated = holdsTouch;
-    expect(isGated(child)).toBe(true);
-    // Once it moves during the hold, it passes.
+    expect(holdsTouch(child)).toBe(true);
+    // Once a mouse moves during the hold, it passes.
     pointer(document.body, 'pointermove', 'mouse');
     expect(shield.style.pointerEvents).toBe('none');
-    expect(isGated(child)).toBe(false);
+    expect(holdsTouch(child)).toBe(false);
   });
 
   it('adds its window listeners only while a layer is held, once per document however many layers are held, and removes every one after the last hold ends (spec:AST-094 FR24)', () => {

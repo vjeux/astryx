@@ -23,6 +23,17 @@ affects_consumer_docs: []
 
 # Touch presentations feel native system spec
 
+<!-- path-applicability:v1 -->
+
+```json
+{
+  "paths": [
+    "packages/core/src/Layer/holdEntranceInput.ts",
+    "packages/core/src/Layer/inputHold.ts"
+  ]
+}
+```
+
 ## Intent
 
 A person using an Astryx product on a phone or tablet gets controls, sheets,

@@ -12,9 +12,9 @@
  *   dialog finishes entering and stays open; keys stay live and the content
  *   stays in the accessibility tree meanwhile; an alert's entrance holds its
  *   action alike. With a mouse, a click during the entrance acts as before:
- *   on a touch screen the hold decides by each event's pointer, and under a
- *   fine primary pointer nothing is held, a press where the mouse already
- *   rests included.
+ *   on a touch screen the hold decides by each event's pointer, and a press
+ *   where the mouse already rests acts once the page last heard a mouse;
+ *   under a fine primary pointer nothing is held.
  * @position Browser proof for Dialog's entrance hold (Dialog.tsx, through the
  *   Layer module's holdEntranceInput); the hold itself is proven in
  *   Layer/__tests__/inputHold.interaction.browser.spec.ts
@@ -351,7 +351,7 @@ test.describe('with a mouse on a touch screen', () => {
     await expect(openDialogs(page)).toHaveCount(0);
   });
 
-  test('while the dialog enters, a mouse press reaches its action once the mouse has moved; a press before any movement meets the hold', async ({
+  test('while the dialog enters, a press where the mouse already rests reaches its action: the page last heard a mouse (spec:AST-094 FR35)', async ({
     page,
   }) => {
     // Under Reduce Motion the dialog only fades in, so its action stays where
@@ -359,8 +359,8 @@ test.describe('with a mouse on a touch screen', () => {
     await page.emulateMedia({reducedMotion: 'reduce'});
     await openStory(page, storybook(), INFO);
     const opener = page.getByRole('button', {name: 'Open Info Modal'});
-    // A first presentation, which a mouse opens and a key closes: from it on
-    // the page's input hold knows the latest pointer.
+    // A first presentation, which a mouse opens and a key closes, finds where
+    // the action appears.
     await opener.click();
     await expect(openDialogs(page)).toHaveCount(1);
     await finishEntrance(page);
@@ -391,20 +391,14 @@ test.describe('with a mouse on a touch screen', () => {
 
     const clicks = async () =>
       page.evaluate(() => (window as unknown as {__clicks: string[]}).__clicks);
-    // A press where the mouse already is, with no movement first: nothing
-    // listened before the hold began, so the hold cannot tell it from a
-    // finger's, and it meets the shield (after the key's own click on the
-    // opener).
-    await page.mouse.down();
-    await page.mouse.up();
-    await frames(page);
-    expect(await clicks()).toEqual(['Open Info Modal', '']);
     await expect(openDialogs(page)).toHaveCount(1);
-    // Once the mouse moves, its press reaches the action.
-    await page.mouse.move(action.x + 2, action.y, {steps: 2});
+    await expect(page.getByRole('button', {name: 'Got it'})).toBeVisible();
+    // A press where the mouse already is, with no movement first. The page's
+    // input stream heard the mouse move last, so the hold lets it through,
+    // and it reaches the action (after the key's own click on the opener).
     await page.mouse.down();
     await page.mouse.up();
-    await expect.poll(clicks).toEqual(['Open Info Modal', '', 'Got it']);
+    await expect.poll(clicks).toEqual(['Open Info Modal', 'Got it']);
     await expect(openDialogs(page)).toHaveCount(0);
   });
 });

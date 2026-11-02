@@ -4,9 +4,8 @@
 
 /**
  * @file MobileNav.tsx
- * @input Uses React, useEffect, useRef, useCallback, ReactNode, StyleX,
- *   the Layer module's input hold, the touch presentation's coarse-pointer
- *   query
+ * @input Uses React, useEffect, useRef, useCallback, ReactNode, StyleX and
+ *   the Layer module's entrance hold
  * @output Exports MobileNav component and MobileNavProps
  * @position Core implementation; consumed by index.ts
  *
@@ -34,14 +33,6 @@
  * focus to `<body>`. The close itself is deferred past the slide-out, and the
  * restore has to follow it. Until close() runs the rest of the document is
  * inert and focus() on the opener is silently dropped.
- *
- * Under a finger, through the Layer module's input hold, nothing takes a
- * touch until the slide-in ends, on its transition's own end
- * (`spec:AST-094` FR35); a close holds nothing, since FR35 holds an entrance
- * only. The dialog closes on the same timing under every pointer: partway
- * into the slide-out, at most MAX_CLOSE_DELAY_MS after the request (FR5,
- * ORD3); the slide-out then finishes while the dialog's `display` transition
- * holds it rendered. Under a mouse nothing is held.
  *
  * SYNC: When modified, update these files to stay in sync:
  * - /packages/core/src/MobileNav/index.ts (exports if types change)
@@ -78,8 +69,7 @@ import {
   holdScrollbarGutter,
   type ScrollbarGutterHold,
 } from '../hooks/scrollbarGutter';
-import {holdInput} from '../Layer/inputHold';
-import {TOUCH_QUERY} from '../utils/touchPresentation';
+import {holdEntranceInput} from '../Layer/holdEntranceInput';
 import {mergeProps, composeEventHandlers} from '../utils';
 import {layerTextReset} from '../Layer/layerTextReset.stylex';
 import {layerStructureReset} from '../Layer/layerStructureReset.stylex';
@@ -294,14 +284,13 @@ const dynamicStyles = stylex.create({
 export const MAX_CLOSE_DELAY_MS = 250;
 /**
  * Longest the drawer slides out for, in ms. The slide-out runs for the
- * theme's `--duration-medium` (410 ms by default; the default scale's
- * `--duration-medium-max` is 545 ms), and it keeps playing after the dialog
- * has closed, while the dialog's `display` transition holds it rendered.
+ * theme's `--duration-medium`: 410 ms by default, and at most 545 ms on the
+ * default scale (`--duration-medium-max`). It keeps playing after the dialog
+ * closes, while the dialog's `display` transition keeps it rendered.
  *
- * Exported so `AppShell` keeps this drawer's `Activity` boundary visible for
- * at least this long after a close (`ACTIVITY_HIDE_BUFFER_MS` in
- * AppShell.tsx): Activity's `display: none !important` would otherwise cut
- * the slide-out off (#5701).
+ * `AppShell` keeps this drawer's `Activity` boundary visible at least this
+ * long after a close (`ACTIVITY_HIDE_BUFFER_MS`). Otherwise Activity's
+ * `display: none !important` would cut the slide-out off.
  */
 export const MAX_EXIT_MS = 550;
 /** Fraction of the hold to close at, so the close never lands on its boundary. */
@@ -365,39 +354,6 @@ function resolveCloseDelay(dialog: HTMLDialogElement): number {
   }
 
   return hold <= 0 ? 0 : Math.min(cap, hold * CLOSE_WITHIN_HOLD);
-}
-
-/**
- * Settles when the drawer's slide-in that has just started ends: when its own
- * transitions finish, or are cancelled (a close reverses them), and at most
- * MAX_EXIT_MS in, the cap a theme's duration gets. Reading the drawer's
- * animations updates its style, so the slide-in's transition exists by then;
- * a drawer with none has no slide-in to wait for. Without Web Animations
- * (outside a real browser) the end is unknown, and the cap ends it.
- *
- * The hold follows the transition itself rather than a timer of its duration
- * started as the drawer opens: the transition starts a frame or two after the
- * open, so such a timer ends the hold before the slide-in does, and under
- * load it can also run after it.
- */
-async function slideInEnd(drawer: HTMLElement | null): Promise<unknown> {
-  const cap = after(MAX_EXIT_MS);
-  if (drawer == null || typeof drawer.getAnimations !== 'function') {
-    return cap;
-  }
-  return Promise.race([
-    Promise.allSettled(
-      drawer.getAnimations().map(async animation => animation.finished),
-    ),
-    cap,
-  ]);
-}
-
-/** Resolves after `ms`. */
-async function after(ms: number): Promise<void> {
-  await new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
 }
 
 /**
@@ -561,8 +517,8 @@ export function MobileNav({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
-  // Under a finger, the input hold on the drawer's layer while it slides in
-  // (Layer/inputHold); null under a mouse and once the slide-in has ended.
+  // The input hold on the drawer's layer while it slides in under a finger.
+  // It is null under a mouse and once the slide-in has ended.
   const releaseHoldRef = useRef<(() => void) | null>(null);
   // Element that was focused when the drawer opened; focus goes back to it
   // once the native dialog has closed (see closeAndRestoreFocus).
@@ -640,15 +596,6 @@ export function MobileNav({
       return;
     }
 
-    // Under a finger nothing takes a touch until the slide-in has finished
-    // (`spec:AST-094` FR35); a close holds nothing, since FR35 holds an
-    // entrance only. Under a mouse nothing is held. The pointer is the one
-    // condition this presentation names (AST-094 FR13), read as the drawer
-    // opens.
-    const isTouch =
-      dialog.ownerDocument.defaultView?.matchMedia(TOUCH_QUERY).matches ??
-      false;
-
     if (isOpen) {
       // Taken first: every mutation below is one that can hide the scrollbar,
       // and the gutter has to be measured while it is still there.
@@ -670,12 +617,13 @@ export function MobileNav({
       // so there's no scroll bounce and no need to save/restore scroll position.
       releaseRootStyleRef.current ??= claimRootScrollStyle({overflow: 'clip'});
       gutterRef.current.settle();
-      if (isTouch) {
-        releaseHoldRef.current = holdInput(dialog, {
-          until: slideInEnd(drawerRef.current),
-          scope: 'viewport',
-        });
-      }
+      // Under a finger, nothing takes a touch until the slide-in ends, at most
+      // MAX_EXIT_MS in. A close holds nothing, because only an entrance is
+      // held. Under a mouse, nothing is held.
+      releaseHoldRef.current = holdEntranceInput(dialog, {
+        entrance: drawerRef.current,
+        capMs: MAX_EXIT_MS,
+      });
     } else if (dialog.open) {
       releaseRootStyle();
       releaseGutter();

@@ -1752,9 +1752,9 @@ export class GestureHost {
     const recognizers: GestureRecognizer[] = [];
     let consumer: TouchConsumer | null = null;
     let consumerElement: Element | null = null;
-    // A layer the input hold holds takes no touch while its presentation
-    // runs: the host asks the hold itself, so the hold imports nothing from
-    // gestures/ and a component in the root entry can use it statically.
+    // A layer that the input hold holds takes no touch while it presents.
+    // The host asks the hold, so the hold needs nothing from gestures/. A
+    // root-entry component can then use the hold with no gesture code.
     if (
       target instanceof Node &&
       (holdsTouch(target) || [...this.touchGates].some(gate => gate(target)))
@@ -1864,8 +1864,8 @@ export class GestureHost {
 
   /**
    * Hold touches away from every participant while `gate(target)` answers
-   * true. Returns the release. The input hold's held layers need none: the
-   * host asks `holdsTouch` for every touch.
+   * true. Returns the release. The input hold's held layers need no gate,
+   * because the host asks `holdsTouch` for every touch.
    */
   addTouchGate(gate: (target: Node) => boolean): () => void {
     this.touchGates.add(gate);

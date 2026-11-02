@@ -4,70 +4,76 @@
 
 /**
  * @file holdEntranceInput.ts
- * @input A layer root whose entrance (a CSS animation or transition) has just
- *   started
+ * @input A layer root whose CSS entrance has just started
  * @output holdEntranceInput: under a coarse primary pointer, a finger's or a
- *   pen's input held away from the layer until its entrance has played; a
- *   mouse's left alone
- * @position The entrance hold of the layers that enter through CSS (Dialog,
- *   Drawer), on the Layer module's one input hold (inputHold.ts)
- *
- * spec:AST-094 FR35: under a finger, a tap or a drag that lands while a
- * touch presentation is still entering reaches nothing, and the presentation
- * finishes entering and stays open. The hold keeps keys and assistive
- * technology live and the content in the accessibility tree, and a pinch
- * still zooms the page. Around a non-modal layer only what lands on the
- * layer is held (the `'surface'` scope), and the page stays live.
- *
- * A layer is held only under a coarse primary pointer, the condition of a
- * touch presentation (FR13), as MobileNav's own hold is: under a fine primary
- * pointer nothing is held and nothing listens, so a mouse keeps today's
- * behavior, a press made where it already rests included (FR35, DEC-16,
- * FR24). Under a coarse one the hold decides by each event's pointer, so a
- * mouse or a trackpad on a touch screen keeps its clicks once it moves. A
- * finger on a device whose primary pointer is fine (a touchscreen laptop) is
- * not held: an implementation gap on FR35's adoption.
- *
- * The entrance is read from the layer's own animations as it opens:
- * `getAnimations()` flushes styles, so a CSS animation or an `@starting-style`
- * transition the open has just started is in the list. A theme's duration,
- * Reduce Motion's shorter entrance and a canceled entrance (a close mid-way)
- * all end the hold when they end, and an animation without an end (a spinner
- * inside) is no entrance.
+ *   pen's input held away from the layer until its entrance ends
+ * @position The entrance hold for layers that enter through CSS (Dialog,
+ *   Drawer, MobileNav), on the Layer module's input hold (inputHold.ts)
  *
  * SYNC: When modified, update holdEntranceInput.test.ts and its callers
- * (Dialog.tsx, Drawer/useDrawerDialogPresence.ts).
+ * (Dialog.tsx, Drawer/useDrawerDialogPresence.ts, MobileNav/MobileNav.tsx).
  */
 
 import {TOUCH_QUERY} from '../utils/touchQueries';
 import {holdInput} from './inputHold';
 
+/** Options for {@link holdEntranceInput}. */
+export interface EntranceHoldOptions {
+  /**
+   * Holds input anywhere while true. While false, only what lands on the layer
+   * is held, and the page stays live.
+   * @default true
+   */
+  isModal?: boolean;
+  /**
+   * The element whose animations are the entrance, when it is not the layer
+   * itself (a drawer inside its dialog).
+   * @default the layer
+   */
+  entrance?: Element | null;
+  /** The longest the hold lasts, ms. An entrance that runs longer ends it. */
+  capMs?: number;
+}
+
 /**
- * Holds a finger's and a pen's input away from `layer` until the entrance it
- * is playing ends: input anywhere, or with `isModal: false` only what lands
- * on the layer. Returns the release, or `null` when nothing is held: no
- * entrance running, or a fine primary pointer.
+ * Holds a finger's and a pen's input away from `layer` until its entrance
+ * ends, or at most `capMs`. Returns the release, or `null` when nothing is
+ * held: no entrance runs, or the primary pointer is fine.
  */
 export function holdEntranceInput(
   layer: Element,
-  {isModal = true}: {isModal?: boolean} = {},
+  {isModal = true, entrance: animated = layer, capMs}: EntranceHoldOptions = {},
 ): (() => void) | null {
-  if (typeof layer.getAnimations !== 'function') {
+  if (animated == null || typeof animated.getAnimations !== 'function') {
     return null;
   }
-  const entrance = layer.getAnimations().filter(isEntrance);
+  // getAnimations() flushes styles, so it lists an entrance the open has just
+  // started. A theme's duration, a shorter reduced-motion entrance and a
+  // canceled entrance all end the hold when they end.
+  const entrance = animated.getAnimations().filter(isEntrance);
   if (entrance.length === 0) {
     return null;
   }
-  // A touch presentation only: read as the layer opens.
+  // A touch presentation only, read as the layer opens. A finger on a device
+  // whose primary pointer is fine, such as a touchscreen laptop, is not held.
   if (
     layer.ownerDocument.defaultView?.matchMedia?.(TOUCH_QUERY).matches !== true
   ) {
     return null;
   }
+  const ended = Promise.all(
+    entrance.map(async animation => animation.finished),
+  );
   return holdInput(layer, {
-    until: Promise.all(entrance.map(async animation => animation.finished)),
+    until: capMs == null ? ended : Promise.race([ended, after(capMs)]),
     scope: isModal ? 'viewport' : 'surface',
+  });
+}
+
+/** Resolves after `ms`. */
+async function after(ms: number): Promise<void> {
+  await new Promise(resolve => {
+    setTimeout(resolve, ms);
   });
 }
 

@@ -5,11 +5,10 @@
  * @input Uses vitest, @testing-library/react, MobileNav and the Layer
  *   module's input hold
  * @output Tests that under a finger the drawer takes no touch until its
- *   slide-in ends (when its transition ends, before or after a timer of its
- *   duration would) while keys and assistive technology stay live, and after a
- *   close takes no input until the dialog closes, on the mouse's timing (at
- *   most 250 ms in), and that under a mouse nothing is held and the close
- *   keeps its timing
+ *   slide-in ends, at most MAX_EXIT_MS in, while keys and assistive
+ *   technology stay live; that a close holds nothing and keeps the mouse's
+ *   timing; that a drawer with no slide-in holds nothing; and that under a
+ *   mouse nothing is held
  * @position Unit tests for MobileNav's touch presentation
  *
  * SYNC: When modified, update the header comment in MobileNav.tsx.
@@ -47,10 +46,9 @@ function Harness() {
   );
 }
 
-// jsdom has no Web Animations, so a slide-in's end is unknown and its hold
-// runs for MAX_EXIT_MS unless a test gives the drawer a transition; it
-// resolves no `var()`, so a close lands MAX_CLOSE_DELAY_MS in. A hold ends
-// when what ends it settles.
+// jsdom has no Web Animations, so a case under a finger gives the drawer a
+// slide-in (stubSlideIn) that ends when the case says, or at MAX_EXIT_MS.
+// jsdom resolves no `var()`, so a close lands MAX_CLOSE_DELAY_MS in.
 async function advance(ms: number) {
   await act(async () => {
     vi.advanceTimersByTime(ms);
@@ -88,18 +86,23 @@ afterEach(() => {
 });
 
 /**
- * Gives the drawer a slide-in transition (Web Animations' `getAnimations()`,
- * which jsdom lacks) whose end the test decides.
+ * Gives the drawer a running slide-in transition (Web Animations'
+ * `getAnimations()`, which jsdom lacks) whose end the test decides.
  */
 function stubSlideIn() {
   let end = () => {};
   const finished = new Promise<void>(resolve => {
     end = resolve;
   });
+  const slideIn = {
+    playState: 'running',
+    finished,
+    effect: {getComputedTiming: () => ({endTime: 410})},
+  };
   Object.defineProperty(Element.prototype, 'getAnimations', {
     configurable: true,
     value(this: Element) {
-      return this.matches('dialog [tabindex="-1"]') ? [{finished}] : [];
+      return this.matches('dialog [tabindex="-1"]') ? [slideIn] : [];
     },
   });
   return {
@@ -120,7 +123,8 @@ describe('MobileNav under a finger', () => {
     Reflect.deleteProperty(Element.prototype, 'getAnimations');
   });
 
-  it('takes no touch until the slide-in ends', async () => {
+  it('takes no touch until the slide-in ends, at most MAX_EXIT_MS in', async () => {
+    stubSlideIn();
     render(<Harness />);
     const open = screen.getByRole('button', {name: 'Open'});
     open.focus();
@@ -164,6 +168,7 @@ describe('MobileNav under a finger', () => {
   });
 
   it('keeps keys and assistive technology live while it slides in (spec:AST-094 FR35)', () => {
+    stubSlideIn();
     render(<Harness />);
     const open = screen.getByRole('button', {name: 'Open'});
     open.focus();
@@ -183,6 +188,7 @@ describe('MobileNav under a finger', () => {
   });
 
   it('holds nothing once a close is requested: the leaving drawer stays live until the dialog closes, at most 250 ms in (FR5), then gives focus back (spec:AST-094 FR35 holds entrances only)', async () => {
+    stubSlideIn();
     render(<Harness />);
     const open = screen.getByRole('button', {name: 'Open'});
     open.focus();
@@ -206,6 +212,7 @@ describe('MobileNav under a finger', () => {
   });
 
   it('reopened before the dialog closes, keeps focus in the drawer', async () => {
+    stubSlideIn();
     render(<Harness />);
     const open = screen.getByRole('button', {name: 'Open'});
     open.focus();
@@ -223,6 +230,13 @@ describe('MobileNav under a finger', () => {
     ).toBeNull();
 
     await advance(MAX_EXIT_MS + 10);
+    expect(dialog).toHaveAttribute('open');
+    expect(isInHeldLayer(dialog)).toBe(false);
+  });
+  it('holds nothing when the drawer has no slide-in to wait for', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', {name: 'Open'}));
+    const dialog = screen.getByTestId('mobile-nav');
     expect(dialog).toHaveAttribute('open');
     expect(isInHeldLayer(dialog)).toBe(false);
   });

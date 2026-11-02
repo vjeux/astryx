@@ -39,7 +39,7 @@ architecture:
     architecture:public-component-api,
   ]
 contributing: []
-system_specs: []
+system_specs: [spec:AST-094/FR13, spec:AST-094/FR35]
 ---
 
 # MobileNav component contract

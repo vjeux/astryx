@@ -19,12 +19,6 @@
  * for the now-non-top-layer `position: fixed` panel and it paints back inside
  * the page for one frame.
  *
- * Under a finger, on a touch screen, a tap or a drag that lands while the
- * drawer is still sliding in reaches nothing (spec:AST-094 FR35, through the
- * Layer module's input hold): anywhere around a modal drawer, and only on the
- * panel around a non-modal one, whose page stays live. Keys and assistive
- * technology stay live, and a mouse is unchanged.
- *
  * SYNC: When modified, update:
  * - /packages/core/src/Drawer/Drawer.test.tsx
  * - /packages/core/src/Drawer/__tests__/DrawerTouchEntrance.interaction.browser.spec.ts
@@ -147,11 +141,10 @@ export function useDrawerDialogPresence({
         // contract as Dialog).
         dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
       }
-      // Under a finger a tap or a drag that lands while the drawer is still
-      // sliding in reaches nothing: anywhere around a modal drawer, only on
-      // the panel around a non-modal one. Keys and assistive technology stay
-      // live (spec:AST-094 FR35). Released when the slide-in ends, or by
-      // this effect's cleanup on a close or unmount.
+      // Under a finger, a tap or a drag during the slide-in reaches nothing.
+      // A non-modal drawer holds only its panel, so its page stays live. Keys
+      // and assistive technology stay live. The hold ends with the slide-in,
+      // or with this effect's cleanup on a close or unmount.
       return holdEntranceInput(dialog, {isModal}) ?? undefined;
     }
 

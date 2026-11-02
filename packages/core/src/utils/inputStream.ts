@@ -4,7 +4,8 @@
  * @file inputStream.ts
  * @input A window, and subscribers to its input events (the press feedback
  *   controller, the gesture host)
- * @output Exports subscribeInput
+ * @output Exports subscribeInput, and getLastPointerType: the type of the
+ *   latest pointer event the stream delivered
  * @position The one entry for document-wide input listeners in core: one
  *   native listener per event type on the window's capture phase, shared by
  *   every subscriber
@@ -69,6 +70,18 @@ export interface InputSubscriptionOptions {
 export type InputEventMap = WindowEventMap & DocumentEventMap;
 
 const streams = new WeakMap<Window, Map<string, Channel>>();
+/** The type of the latest pointer event each window's stream delivered. */
+const lastPointerTypes = new WeakMap<Window, string>();
+
+/**
+ * The type of the latest pointer event `view`'s stream delivered: `mouse`,
+ * `pen` or `touch`, or `null` before any. The stream hears a pointer event
+ * type only while a subscriber listens to it, as press feedback does on any
+ * page with a pressable. Reading it adds no listener.
+ */
+export function getLastPointerType(view: Window): string | null {
+  return lastPointerTypes.get(view) ?? null;
+}
 
 /**
  * Listen to `type` on `view`'s capture phase through its shared native
@@ -137,12 +150,17 @@ function register(view: Window, type: string, channel: Channel): void {
   if (wanted == null) {
     return;
   }
-  const listener: InputListener = event => dispatch(channel, event);
+  const listener: InputListener = event => dispatch(view, channel, event);
   view.addEventListener(type, listener, {capture: true, passive: !wanted});
   channel.native = {listener, cancels: wanted};
 }
 
-function dispatch(channel: Channel, event: Event): void {
+function dispatch(view: Window, channel: Channel, event: Event): void {
+  // Recorded before any subscriber runs, so each reads the pointer at hand.
+  const {pointerType} = event as Partial<PointerEvent>;
+  if (typeof pointerType === 'string' && pointerType !== '') {
+    lastPointerTypes.set(view, pointerType);
+  }
   // A subscriber may subscribe or unsubscribe while the event runs; the
   // event goes to those subscribed when it arrived.
   for (const subscriber of [...channel.subscribers]) {

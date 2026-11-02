@@ -178,6 +178,49 @@ describe('holdEntranceInput', () => {
     ]);
   });
 
+  it("reads the entrance from another element and holds the layer until that element's entrance ends", async () => {
+    const layer = mountLayer([]);
+    const panel = mountLayer([]);
+    const slide = deferred();
+    Object.defineProperty(panel, 'getAnimations', {
+      configurable: true,
+      value: () => [fakeAnimation(slide.promise)],
+    });
+    const release = holdEntranceInput(layer, {entrance: panel});
+    expect(release).not.toBeNull();
+    releases.push(release as () => void);
+    expect(isInHeldLayer(layer)).toBe(true);
+    expect(isInHeldLayer(panel)).toBe(false);
+
+    slide.resolve();
+    await flush();
+    expect(isInHeldLayer(layer)).toBe(false);
+  });
+
+  it('ends the hold at `capMs` when the entrance runs longer, and not before', async () => {
+    vi.useFakeTimers();
+    try {
+      const layer = mountLayer([fakeAnimation(new Promise(() => {}))]);
+      const release = holdEntranceInput(layer, {capMs: 550});
+      releases.push(release as () => void);
+      vi.advanceTimersByTime(540);
+      await flush();
+      expect(isInHeldLayer(layer)).toBe(true);
+
+      vi.advanceTimersByTime(20);
+      await flush();
+      expect(isInHeldLayer(layer)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('holds nothing when the entrance element is missing', () => {
+    const layer = mountLayer([fakeAnimation(new Promise(() => {}))]);
+    expect(holdEntranceInput(layer, {entrance: null})).toBeNull();
+    expect(isInHeldLayer(layer)).toBe(false);
+  });
+
   it('holds nothing when no entrance runs: none, finished, or endless', () => {
     const never = new Promise(() => {});
     for (const animations of [

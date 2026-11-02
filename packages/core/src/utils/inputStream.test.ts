@@ -10,7 +10,9 @@
  *   window, stopImmediatePropagation on the document) starves no subscriber; events
  *   fired at the document reach the stream; a page of pressables registers
  *   no non-passive listener, and the gesture host none that holds a scroll;
- *   the press feedback controller imports nothing from gestures/
+ *   the press feedback controller imports nothing from gestures/; the
+ *   latest delivered pointer event's type is readable, and none is recorded
+ *   while no subscriber hears pointer events
  * @position Unit tests of packages/core/src/utils/inputStream.ts
  */
 
@@ -19,7 +21,7 @@ import path from 'node:path';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 import {getGestureHost} from '../gestures/GestureHost';
-import {subscribeInput} from './inputStream';
+import {getLastPointerType, subscribeInput} from './inputStream';
 import {installPressFeedback} from './pressFeedback';
 
 type Registration = {
@@ -202,6 +204,29 @@ describe('inputStream', () => {
     expect(blocking).not.toContain('touchmove');
     expect(blocking).not.toContain('wheel');
     detach();
+  });
+
+  it("records the latest delivered pointer event's type, before its subscribers run, and only while one hears pointer events", () => {
+    const view = document.defaultView as Window;
+    const heard: (string | null)[] = [];
+    const stop = subscribeInput(view, 'pointermove', () => {
+      heard.push(getLastPointerType(view));
+    });
+    document.body.dispatchEvent(
+      new PointerEvent('pointermove', {bubbles: true, pointerType: 'mouse'}),
+    );
+    expect(getLastPointerType(view)).toBe('mouse');
+    document.body.dispatchEvent(
+      new PointerEvent('pointermove', {bubbles: true, pointerType: 'touch'}),
+    );
+    expect(heard).toEqual(['mouse', 'touch']);
+    stop();
+
+    // No subscriber, no native listener: the stream hears nothing.
+    document.body.dispatchEvent(
+      new PointerEvent('pointermove', {bubbles: true, pointerType: 'pen'}),
+    );
+    expect(getLastPointerType(view)).toBe('touch');
   });
 
   it('keeps the press feedback controller free of the gesture system', () => {
