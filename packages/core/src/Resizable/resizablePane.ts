@@ -2,20 +2,11 @@
 
 /**
  * @file resizablePane.ts
- * @input A LayoutPanel's element, its commits, the width it renders and the
- *   edge facing its content; whether the resize controller that sizes it says
- *   its region is collapsed; and the shared edge reveal of
- *   motion/animatedLayout.ts
+ * @input A LayoutPanel's element, its commits and the width it renders; the
+ *   collapse state its resize controller reports; motion/animatedLayout.ts
  * @output The internal channel through which a LayoutPanel lends its element
- *   to the resize controller that sizes it (component:LayoutPanel FR7):
- *   `createResizablePaneLink` for LayoutPanel; `resizablePaneBeside` and
- *   `watchResizablePanes` for a factory that finds the panel beside its
- *   handle; `createRegionPaneSlot`, `registerPropsRegion` and
- *   `regionOfProps` for the configuration-object form, whose LayoutPanel
- *   hands its pane to the region in its callback ref; `createPaneReveal`, the
- *   edge reveal a controller plays (component:Resizable FR8); and
- *   `resizeHandleBeside`, the ResizeHandle a panel hands focus to
- *   (component:LayoutPanel AR2)
+ *   to the resize controller that sizes it, the edge reveal that controller
+ *   plays, and the ResizeHandle a collapsing panel hands focus to
  * @position Internal to Resizable and Layout; no entry point exports it. No
  *   React, and no DOM work on import
  */
@@ -53,9 +44,8 @@ export interface ResizablePane {
   contentFacingEdge(): LayoutEdge;
   /**
    * The controller says whether its region is collapsed, and which handle
-   * focus inside the panel moves to as it collapses: the panel is then inert
-   * and hidden from assistive technology while it is (component:LayoutPanel
-   * AR2).
+   * focus inside the panel moves to as it collapses. The panel is then inert
+   * and hidden from assistive technology while it is collapsed.
    */
   setCollapsed(isCollapsed: boolean, focusTarget: HTMLElement | null): void;
   /** The controller that sizes the pane listens to it; null stops it. */
@@ -98,8 +88,8 @@ export function resizablePaneBeside(
 }
 
 /**
- * The ResizeHandle beside a panel, on the side that faces the content: after
- * a start panel, before an end panel, and either for a panel elsewhere.
+ * The ResizeHandle beside a panel, on the side that faces the content. It is
+ * after a start panel, before an end panel, and on either side elsewhere.
  */
 export function resizeHandleBeside(
   panel: Element,
@@ -120,8 +110,8 @@ export function resizeHandleBeside(
 }
 
 /**
- * The configuration-object form's side of a region: the LayoutPanel that
- * takes the hook's own props hands its pane here in its callback ref, and the
+ * The configuration-object form's side of a region. The LayoutPanel that
+ * takes the hook's own props hands its pane here in its callback ref. The
  * factory the region has, now or later, follows it.
  */
 export interface RegionPaneSlot {
@@ -195,8 +185,8 @@ export interface ResizablePaneLink {
   focusTarget(): HTMLElement | null;
   /**
    * From the panel's callback ref: its element, lent beside its handle for a
-   * factory to find (`isFoundBeside`), or handed to a region; null takes it
-   * back. Returns the pane lent, if any.
+   * factory to find (`isFoundBeside`). Or the element is handed to a region.
+   * Null takes it back. Returns the pane lent, if any.
    */
   attach(
     element: HTMLElement | null,
@@ -297,10 +287,10 @@ export function createResizablePaneLink(): ResizablePaneLink {
 }
 
 /**
- * The edge reveal a resize controller plays for its pane
- * (component:Resizable FR8): measured before the DOM changes, played on the
- * pane's first commit at a new size, on the controller's own animated-layout
- * handle over the pane's row, with no copy.
+ * The edge reveal a resize controller plays for its pane. It measures before
+ * the DOM changes and plays on the pane's first commit at a new size. It runs
+ * on the controller's own animated-layout handle over the pane's row, with no
+ * copy.
  */
 export interface PaneReveal {
   /** Before the DOM changes: measures `pane` for its reveal from `edge`. */
