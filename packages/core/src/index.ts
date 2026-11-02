@@ -189,7 +189,6 @@ export {
 // Hooks
 export * from './hooks';
 
-// Gestures: the public layer over the gesture system
 export {createPanGesture} from './gestures/createPanGesture';
 
 // Utilities
