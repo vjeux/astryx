@@ -639,9 +639,9 @@ function failsAnchor(layer: HTMLElement, anchor: HTMLElement): boolean {
  * the anchor-move observer and read in the next frame, before it paints (FR8),
  * or in the frame after, if a scroll moved the anchor since that frame was
  * laid out (`observeAnchorClearance`).
- * Scroll events are not read: during one the
- * anchor has moved but the layer anchored to it not yet, so the read would
- * compare a moved anchor with a stale layer. Once switched, a layer keeps its
+ * A scroll event schedules a read but is not read itself: during one the
+ * anchor has moved but the layer anchored to it not yet, so the read waits
+ * until the layer has followed (`observeAnchorClearance`). Once switched, a layer keeps its
  * anchor-clear list until it next opens, so it never jumps back over its
  * trigger while open; it is placed afresh (`placeAfresh`) only when the switch
  * does not take effect at once, or when a later read finds it failing again.
@@ -804,7 +804,10 @@ function observeMove(
  * the anchor's position before the scroll, over the anchor, so the second
  * painted frame would still cover it. Read in the next frame, before it
  * paints, the fresh placement uses the moved anchor. Reports in one frame
- * share one read. A scroll that runs after the frame that laid the layer out
+ * share one read, and so does a scroll event on the anchor's document or one
+ * of its scrolled ancestors, which a scroll fires before the next frame's
+ * callbacks, ahead of a report that may come late. A scroll that runs after
+ * the frame that laid the layer out
  * moves the anchor at once, but the layer follows it only when the next frame
  * renders, so reading then would compare the moved anchor with the layer's
  * old box and could switch a layer that fits. The read therefore compares the
@@ -837,9 +840,14 @@ function observeAnchorClearance(
     observer.observe(anchor);
   }
   let moveFrame: number | null = null;
-  // Where the anchor was when the layer was last laid out: the box the latest
-  // move report saw, or the one read when a read was put off.
-  let laidOut: {top: number; left: number} | null = null;
+  // Where the anchor was when the layer was last laid out: its box when the
+  // watch began, the box the latest move report saw, or the one read when a
+  // read was put off.
+  const start = anchor.getBoundingClientRect();
+  let laidOut: {top: number; left: number} | null = {
+    top: start.top,
+    left: start.left,
+  };
   const readMove = () => {
     if (moveFrame !== null) {
       return;
@@ -865,6 +873,24 @@ function observeAnchorClearance(
       reported == null ? null : {top: reported.top, left: reported.left};
     readMove();
   });
+  // A scroll that carries the anchor fires its scroll event before the next
+  // frame's animation-frame callbacks, but the move report comes only after
+  // that frame paints, and later still on a busy page. The event schedules
+  // the read, which the check above puts off a frame, until the layer has
+  // followed, so the second painted frame is corrected whenever the report
+  // arrives.
+  const onScroll = (event: Event) => {
+    const target = event.target as Node | null;
+    if (
+      target === anchor.ownerDocument ||
+      (target != null &&
+        typeof target.contains === 'function' &&
+        target.contains(anchor))
+    ) {
+      readMove();
+    }
+  };
+  view.addEventListener('scroll', onScroll, {capture: true, passive: true});
   view.addEventListener('resize', reread);
   return () => {
     observer?.disconnect();
@@ -873,6 +899,7 @@ function observeAnchorClearance(
       view.cancelAnimationFrame(moveFrame);
       moveFrame = null;
     }
+    view.removeEventListener('scroll', onScroll, {capture: true});
     view.removeEventListener('resize', reread);
   };
 }

@@ -284,8 +284,10 @@ the app reaches every layer instead of the components that happen to read it.
   or because something scrolled, is reported by no observer that runs before
   paint, and a scroll event fires before the layer has followed its anchor;
   the runtime learns of the move from an intersection observer on the anchor,
-  which reports after paint, so on that one path at most one painted frame
-  shows the layer over its anchor before the next frame corrects it. An
+  which reports after paint, and of a scroll also from that scroll event,
+  whose read waits until the layer has followed, so on that one path at most
+  one painted frame shows the layer over its anchor before the next frame
+  corrects it, however late the observer reports. An
   anchor that a scrolled container hides is followed again when it comes
   back into view, which a second intersection observer reports. The runtime
   polls nothing. When a declared inset changes while a layer is open,

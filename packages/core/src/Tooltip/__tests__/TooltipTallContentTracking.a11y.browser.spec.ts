@@ -478,17 +478,10 @@ test('a scroll that lands between a move report and its read never switches a to
   // The runtime reads a reported move in the next frame. A scroll that lands
   // before that read moves the trigger at once, but the tooltip follows it
   // only when the frame renders, so judging then would compare a moved
-  // trigger with the tooltip's old box. This scrolls right after the report
-  // that queued a read, which a busy page can do at any time.
+  // trigger with the tooltip's old box. This scrolls right after the move
+  // report on the trigger, which a busy page can do at any time.
   await page.addInitScript(() => {
     const w = window as unknown as {scrollAfterReport?: number};
-    const frame = window.requestAnimationFrame.bind(window);
-    let inReport = false;
-    let queuedRead = false;
-    window.requestAnimationFrame = callback => {
-      queuedRead ||= inReport;
-      return frame(callback);
-    };
     const Observer = window.IntersectionObserver;
     window.IntersectionObserver = class extends Observer {
       constructor(
@@ -496,15 +489,13 @@ test('a scroll that lands between a move report and its read never switches a to
         options?: IntersectionObserverInit,
       ) {
         super((entries, observer) => {
-          inReport = true;
-          queuedRead = false;
-          try {
-            callback(entries, observer);
-          } finally {
-            inReport = false;
-          }
+          callback(entries, observer);
           const dy = w.scrollAfterReport;
-          if (queuedRead && dy !== undefined) {
+          const trigger = document.querySelector('#storybook-root button');
+          if (
+            dy !== undefined &&
+            entries.some(entry => entry.target === trigger)
+          ) {
             w.scrollAfterReport = undefined;
             window.scrollBy(0, dy);
           }
@@ -1238,4 +1229,88 @@ test('a short, wide tooltip carried past the viewport edge moves to the other si
   expect(grown.top).toBeGreaterThanOrEqual(trigger.bottom);
   expect(grown.bottom - grown.top).toBeLessThan(400);
   expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.clientHeight + 1);
+});
+
+test('a later scroll is corrected by the second painted frame even when its move report comes a frame late', async ({
+  page,
+}) => {
+  // The anchor-move report comes after a frame paints, and on a busy page
+  // after the next one too. This delays every intersection report by a frame,
+  // as a loaded main thread does, and repeats the instant scroll above: the
+  // scroll itself, not the late report, must bring the correction.
+  await page.addInitScript(() => {
+    const Observer = window.IntersectionObserver;
+    window.IntersectionObserver = class extends Observer {
+      constructor(
+        callback: IntersectionObserverCallback,
+        options?: IntersectionObserverInit,
+      ) {
+        super((entries, observer) => {
+          requestAnimationFrame(() => {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = () => callback(entries, observer);
+            channel.port2.postMessage(null);
+          });
+        }, options);
+      }
+    };
+  });
+  await openHeldTooltip(page, {width: 390, height: 700}, '', 150);
+  await expect.poll(async () => hasSwitched(page)).toBe(true);
+  const settle = async () =>
+    page.evaluate(async () => {
+      const frame = async () =>
+        new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      let last = Number.NaN;
+      let still = 0;
+      while (still < 5) {
+        await frame();
+        still = window.scrollY === last ? still + 1 : 0;
+        last = window.scrollY;
+      }
+    });
+  await page.evaluate(() => window.scrollBy({top: -440, behavior: 'smooth'}));
+  await settle();
+  await page.waitForTimeout(200);
+  const frames = await page.evaluate(
+    async ({sel, tip}) => {
+      const box = (el: Element) => {
+        const r = el.getBoundingClientRect();
+        return {top: r.top, bottom: r.bottom, left: r.left, right: r.right};
+      };
+      window.scrollBy(0, 240);
+      const out: {tooltip: Box; trigger: Box}[] = [];
+      for (let i = 0; i < 4; i++) {
+        await new Promise<void>(resolve => {
+          requestAnimationFrame(() => {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = () => resolve();
+            channel.port2.postMessage(null);
+          });
+        });
+        const t = document.querySelector(tip);
+        const a = document.querySelector(sel);
+        if (t != null && a != null) {
+          out.push({tooltip: box(t), trigger: box(a)});
+        }
+      }
+      return out;
+    },
+    {sel: TRIGGER, tip: TOOLTIP},
+  );
+  expect(frames.length).toBe(4);
+  for (const [i, frame] of frames.entries()) {
+    if (i === 0) {
+      continue;
+    }
+    expect(
+      overlaps(frame.tooltip, frame.trigger),
+      `painted frame ${i + 1} covers the trigger`,
+    ).toBe(false);
+    expect(
+      frame.tooltip.top,
+      `painted frame ${i + 1} leaves the viewport`,
+    ).toBeGreaterThanOrEqual(0);
+    expect(frame.tooltip.bottom).toBeLessThanOrEqual(700);
+  }
 });
