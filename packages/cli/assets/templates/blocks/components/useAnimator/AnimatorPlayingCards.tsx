@@ -3,10 +3,9 @@
 'use client';
 
 import {useRef, useState} from 'react';
-import type {PointerEvent} from 'react';
 import {Button} from '@astryxdesign/core/Button';
 import {Card} from '@astryxdesign/core/Card';
-import {useAnimator} from '@astryxdesign/core/hooks';
+import {useAnimator, usePanGesture} from '@astryxdesign/core/hooks';
 import {HStack, VStack} from '@astryxdesign/core/Layout';
 import {Text} from '@astryxdesign/core/Text';
 import {VisuallyHidden} from '@astryxdesign/core/VisuallyHidden';
@@ -23,38 +22,17 @@ const THROW_SPEED = 1000;
 /** The slowest throw, so a thrown card always leaves the table. */
 const MIN_THROW = 1600;
 
-interface Sample {
-  t: number;
-  x: number;
-  y: number;
-}
-
-/**
- * The release velocity in px/s, over the 80 ms before the release: a finger
- * that held still before letting go releases at rest.
- */
-function releaseVelocity(
-  samples: Sample[],
-  releasedAt: number,
-): {x: number; y: number} {
-  const recent = samples.filter(s => releasedAt - s.t <= 80);
-  const first = recent[0];
-  const last = recent.at(-1);
-  if (last == null || first == null || last.t === first.t) {
-    return {x: 0, y: 0};
-  }
-  const seconds = (last.t - first.t) / 1000;
-  return {x: (last.x - first.x) / seconds, y: (last.y - first.y) / seconds};
-}
-
 export default function AnimatorPlayingCards() {
   const ref = useRef<HTMLDivElement>(null);
   const animator = useAnimator(ref);
   const [top, setTop] = useState(0);
   const [status, setStatus] = useState('');
-  const drag = useRef<{start: Sample; samples: Sample[]} | null>(null);
   // One discard at a time: a press while a card leaves deals no second card.
   const discarding = useRef(false);
+  /** Where the card was when the drag began; the drag moves it from there. */
+  const origin = useRef({x: 0, y: 0});
+  /** The drag in progress met a discard: the rest of it moves nothing. */
+  const ignoringDrag = useRef(false);
   const card = DECK[top % DECK.length];
 
   // Announces the discard and deals the next card in place of the old one.
@@ -72,6 +50,7 @@ export default function AnimatorPlayingCards() {
       return;
     }
     discarding.current = true;
+    ignoringDrag.current = true;
     const speed = Math.hypot(velocity.x, velocity.y);
     const boost = speed < MIN_THROW ? MIN_THROW / Math.max(speed, 1) : 1;
     const throwX = speed < 1 ? MIN_THROW : velocity.x * boost;
@@ -90,57 +69,45 @@ export default function AnimatorPlayingCards() {
       return;
     }
     discarding.current = true;
+    // A drag in progress moves nothing more.
+    ignoringDrag.current = true;
     await animator.animate({x: 400, opacity: 0});
     await dealNext();
   };
 
-  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    animator.stop();
-    const {x, y} = animator.get();
-    const start = {
-      t: event.timeStamp,
-      x: event.clientX - x,
-      y: event.clientY - y,
-    };
-    drag.current = {start, samples: []};
-  };
-
-  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const current = drag.current;
-    if (current == null) {
-      return;
-    }
-    const x = event.clientX - current.start.x;
-    const y = event.clientY - current.start.y;
-    current.samples.push({t: event.timeStamp, x, y});
-    // The card follows the finger, turning a little with the drag.
-    animator.set({x, y, rotate: x / 18});
-  };
-
-  // A cancelled pointer was not let go, so the card springs back.
-  const onPointerCancel = () => {
-    if (drag.current == null) {
-      return;
-    }
-    drag.current = null;
-    void animator.animate({x: 0, y: 0, rotate: 0});
-  };
-
-  const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    const current = drag.current;
-    drag.current = null;
-    if (current == null) {
-      return;
-    }
-    const velocity = releaseVelocity(current.samples, event.timeStamp);
-    if (Math.abs(velocity.x) > THROW_SPEED) {
-      void discard(velocity);
-    } else {
-      // A gentle release springs back, carrying on as it was let go.
-      void animator.animate({x: 0, y: 0, rotate: 0}, {velocity});
-    }
-  };
+  // The drag comes from Core's pan on the same element. It claims at 10 pt
+  // and reports the release velocity for a finger, a mouse and a pen.
+  usePanGesture(ref, {
+    onPan: ({state, translation, velocity}) => {
+      if (state === 'began') {
+        // A drag that meets a discard is ignored to its end.
+        ignoringDrag.current = discarding.current;
+        if (!ignoringDrag.current) {
+          animator.stop();
+          // A drag that begins while the dealt card grows in finishes the
+          // deal, which the stop halted.
+          void animator.animate({scale: 1, opacity: 1});
+          const {x, y} = animator.get();
+          origin.current = {x, y};
+        }
+      }
+      if (ignoringDrag.current) {
+        return;
+      }
+      if (state === 'began' || state === 'changed') {
+        const x = origin.current.x + translation.x;
+        const y = origin.current.y + translation.y;
+        // The card follows the finger, turning a little with the drag.
+        animator.set({x, y, rotate: x / 18});
+      } else if (state === 'ended' && Math.abs(velocity.x) > THROW_SPEED) {
+        void discard(velocity);
+      } else {
+        // A gentle release springs back, carrying on as it was let go. A
+        // cancelled drag was not let go: its velocity is 0.
+        void animator.animate({x: 0, y: 0, rotate: 0}, {velocity});
+      }
+    },
+  });
 
   return (
     <VStack gap={4} style={{maxWidth: 360, padding: 16}}>
@@ -153,11 +120,7 @@ export default function AnimatorPlayingCards() {
           ref={ref}
           width={120}
           minHeight={170}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel}
-          style={{touchAction: 'none', cursor: 'grab', userSelect: 'none'}}
+          style={{cursor: 'grab', userSelect: 'none'}}
           role="img"
           aria-label={card.name}>
           <VStack gap={1} hAlign="center" style={{paddingBlock: 40}}>

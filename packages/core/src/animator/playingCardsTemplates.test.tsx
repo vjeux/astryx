@@ -2,23 +2,21 @@
 
 /**
  * @file playingCardsTemplates.test.tsx
- * @input The CLI's two playing-card examples of the public animator: the
- *   `useAnimator` one and the plain-JavaScript `createAnimator` one. Each
- *   renders with a recording animator in place of the real one.
- * @output Tests of each example's release logic. A drag held still before
- *   its release springs back instead of being thrown. A thrown card's
- *   successor is dealt and announced once the thrown card has faded, before
- *   its coast ends. The Discard button moves the card with `animate`, never
- *   `decay`, so Reduce Motion fades it in place (`design:reduced-motion`
- *   DR2). A cancelled drag springs back. The card is an image with its name,
- *   and one card leaves at a time.
- * @position The examples ship to products through the CLI, so their release
- *   logic is checked here, beside the animator they demonstrate.
+ * @input The CLI's two playing-card examples of the public animator, each
+ *   rendered with a recording animator and a stubbed pan.
+ * @output Tests of each example's release logic. A release at rest springs
+ *   back, and so does a cancel. A thrown card's successor is dealt and
+ *   announced once it has faded, before its coast ends. Discard uses
+ *   `animate`, never `decay`, so Reduce Motion fades the card in place
+ *   (`design:reduced-motion` DR2). The card is a named image. One card
+ *   leaves at a time, and a drag that meets a discard is ignored to its end.
+ * @position The examples ship through the CLI, so their release logic is
+ *   checked beside the animator they demonstrate.
  */
 
 import type {ComponentType} from 'react';
 import {act, render, screen} from '@testing-library/react';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 // The examples live in the CLI's templates, outside Core's type-checked
 // sources, so they load at run time; the CLI type-checks them itself.
@@ -71,7 +69,13 @@ const recorder = vi.hoisted(() => {
     },
     get: () => ({x: 0, y: 0, scale: 1, rotate: 0, opacity: 1}),
     getVelocity: () => ({x: 0, y: 0, scale: 0, rotate: 0, opacity: 0}),
-    stop: () => {},
+    // Stopping settles a running fade, as the animator's stop does.
+    stop: () => {
+      state.calls.push({method: 'stop'});
+      for (const finish of state.fades.splice(0)) {
+        finish();
+      }
+    },
     destroy: () => {
       state.calls.push({method: 'destroy'});
     },
@@ -79,42 +83,56 @@ const recorder = vi.hoisted(() => {
   return {state, animator};
 });
 
+type PanEvent = {
+  state: 'began' | 'changed' | 'ended' | 'cancelled';
+  translation: {x: number; y: number};
+  velocity: {x: number; y: number};
+};
+// The stubbed pan keeps the example's listener, so a case drives the drag.
+const pan = vi.hoisted(() => ({
+  onPan: null as null | ((event: PanEvent) => void),
+  destroyed: 0,
+}));
 vi.mock('@astryxdesign/core/hooks', async importOriginal => ({
   ...(await importOriginal<object>()),
   useAnimator: () => recorder.animator,
+  usePanGesture: (
+    _ref: unknown,
+    options: {onPan: (event: PanEvent) => void},
+  ) => {
+    pan.onPan = options.onPan;
+  },
 }));
 vi.mock('@astryxdesign/core', async importOriginal => ({
   ...(await importOriginal<object>()),
   createAnimator: () => recorder.animator,
+  createPanGesture: (
+    _element: unknown,
+    options: {onPan: (event: PanEvent) => void},
+  ) => {
+    pan.onPan = options.onPan;
+    return {
+      destroy: () => {
+        pan.destroyed += 1;
+      },
+    };
+  },
 }));
 
-/** Dispatches a pointer event at a given time stamp (ms). */
-function pointer(
-  target: Element,
-  type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel',
-  x: number,
-  t: number,
-) {
-  const event = new MouseEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    clientX: x,
-    clientY: 0,
-  });
-  Object.defineProperty(event, 'pointerId', {value: 1});
-  Object.defineProperty(event, 'timeStamp', {value: t});
+/** One pan event at `x` px, at `vx` px/s. */
+function panTo(state: PanEvent['state'], x: number, vx = 0) {
   act(() => {
-    target.dispatchEvent(event);
+    pan.onPan?.({state, translation: {x, y: 0}, velocity: {x: vx, y: 0}});
   });
 }
 
-/** A 150 px drag over 100 ms, released at `releasedAt`. */
-function drag(card: Element, releasedAt: number) {
-  pointer(card, 'pointerdown', 0, 1000);
-  for (let step = 1; step <= 10; step++) {
-    pointer(card, 'pointermove', step * 15, 1000 + step * 10);
+/** A 150 px drag the pan reports, released at `velocity` px/s. */
+function drag(velocity: number) {
+  panTo('began', 15);
+  for (let step = 2; step <= 10; step++) {
+    panTo('changed', step * 15);
   }
-  pointer(card, 'pointerup', 150, releasedAt);
+  panTo('ended', 150, velocity);
 }
 
 const methods = () => recorder.state.calls.map(call => call.method);
@@ -123,32 +141,26 @@ const EXAMPLES = [
   {
     name: 'the useAnimator example',
     mount: () => render(<AnimatorPlayingCards />),
-    card: () => screen.getByRole('img', {name: 'Ace of spades'}),
     discardButton: 'Discard Ace of spades',
     announced: 'Ace of spades discarded',
   },
   {
     name: 'the createAnimator example',
     mount: () => render(<AnimatorPlayingCardsVanilla />),
-    card: () => screen.getByRole('img', {name: 'Ace of spades'}),
     discardButton: 'Discard the top card',
     announced: 'Ace of spades discarded',
   },
 ];
 
-describe.each(EXAMPLES)('$name', ({mount, card, discardButton, announced}) => {
+describe.each(EXAMPLES)('$name', ({mount, discardButton, announced}) => {
   beforeEach(() => {
     recorder.state.calls = [];
     recorder.state.fades = [];
-    HTMLElement.prototype.setPointerCapture = () => {};
-  });
-  afterEach(() => {
-    Reflect.deleteProperty(HTMLElement.prototype, 'setPointerCapture');
   });
 
-  it('a drag held still for 600 ms before its release springs back, not thrown', () => {
+  it('a release the pan reports at rest springs back, not thrown', () => {
     mount();
-    drag(card(), 1100 + 600);
+    drag(0);
     expect(methods()).not.toContain('decay');
     expect(recorder.state.calls.at(-1)).toMatchObject({
       method: 'animate',
@@ -156,14 +168,13 @@ describe.each(EXAMPLES)('$name', ({mount, card, discardButton, announced}) => {
     });
   });
 
-  it('a drag that the browser cancels springs back, even after fast moves', () => {
+  it('a drag that the pan cancels springs back, even after fast moves', () => {
     mount();
-    const target = card();
-    pointer(target, 'pointerdown', 0, 1000);
-    for (let step = 1; step <= 10; step++) {
-      pointer(target, 'pointermove', step * 15, 1000 + step * 10);
+    panTo('began', 15);
+    for (let step = 2; step <= 10; step++) {
+      panTo('changed', step * 15);
     }
-    pointer(target, 'pointercancel', 150, 1100);
+    panTo('cancelled', 150);
     expect(methods()).not.toContain('decay');
     expect(recorder.state.calls.at(-1)).toMatchObject({
       method: 'animate',
@@ -173,7 +184,7 @@ describe.each(EXAMPLES)('$name', ({mount, card, discardButton, announced}) => {
 
   it('a flick deals and announces the next card once the thrown one fades, during its coast', async () => {
     mount();
-    drag(card(), 1100);
+    drag(1500);
     expect(methods()).toContain('decay');
     expect(screen.queryByText(announced)).toBeNull();
     await act(async () => {
@@ -225,14 +236,90 @@ const deals = () =>
 
 describe.each(EXAMPLES)(
   '$name, one discard at a time',
-  ({mount, card, discardButton}) => {
+  ({mount, discardButton}) => {
     beforeEach(() => {
       recorder.state.calls = [];
       recorder.state.fades = [];
-      HTMLElement.prototype.setPointerCapture = () => {};
     });
-    afterEach(() => {
-      Reflect.deleteProperty(HTMLElement.prototype, 'setPointerCapture');
+
+    /** Settles every running fade, as the animator ends them. */
+    async function finishFades() {
+      await act(async () => {
+        while (recorder.state.fades.length > 0) {
+          recorder.state.finishFade();
+          await Promise.resolve();
+        }
+      });
+    }
+
+    it('a pan that begins while a card leaves is ignored to its end: it stops nothing and moves nothing, and the next card is dealt once', async () => {
+      mount();
+      act(() => {
+        screen.getByRole('button', {name: discardButton}).click();
+      });
+      recorder.state.calls = [];
+      panTo('began', 15);
+      panTo('changed', 60);
+      expect(methods()).toEqual([]);
+      await finishFades();
+      expect(deals()).toHaveLength(1);
+      recorder.state.calls = [];
+      // The drag outlives the discard: the dealt card stays where it is.
+      panTo('changed', 90);
+      panTo('ended', 120, 2000);
+      expect(methods()).toEqual([]);
+    });
+
+    it('a pan a discard interrupts moves nothing more', async () => {
+      mount();
+      panTo('began', 15);
+      panTo('changed', 30);
+      act(() => {
+        screen.getByRole('button', {name: discardButton}).click();
+      });
+      recorder.state.calls = [];
+      panTo('changed', 60);
+      panTo('ended', 120, 2000);
+      expect(methods()).toEqual([]);
+      await finishFades();
+      expect(deals()).toHaveLength(1);
+    });
+
+    it('finishes the deal when a pan begins while the dealt card grows in', async () => {
+      mount();
+      act(() => {
+        screen.getByRole('button', {name: discardButton}).click();
+      });
+      await act(async () => {
+        recorder.state.finishFade();
+      });
+      expect(deals()).toHaveLength(1);
+      recorder.state.calls = [];
+      panTo('began', 15);
+      panTo('ended', 20);
+      // The pan's stop halts the deal's growth; the deal then finishes.
+      const afterStop = recorder.state.calls.slice(methods().indexOf('stop'));
+      expect(afterStop).toContainEqual({
+        method: 'animate',
+        values: {scale: 1, opacity: 1},
+      });
+    });
+
+    it('follows the next pan after an ignored one', async () => {
+      mount();
+      act(() => {
+        screen.getByRole('button', {name: discardButton}).click();
+      });
+      panTo('began', 15);
+      await finishFades();
+      panTo('ended', 30);
+      recorder.state.calls = [];
+      panTo('began', 15);
+      panTo('changed', 45);
+      expect(recorder.state.calls).toContainEqual({
+        method: 'set',
+        values: {x: 45, y: 0, rotate: 45 / 18},
+      });
     });
 
     it('a second Discard press while the card leaves deals one card, not two', async () => {
@@ -255,7 +342,7 @@ describe.each(EXAMPLES)(
 
     it('a Discard press while a flicked card fades deals one card, not two', async () => {
       mount();
-      drag(card(), 1100);
+      drag(1500);
       act(() => {
         screen.getByRole('button', {name: discardButton}).click();
       });
@@ -282,8 +369,10 @@ describe('the createAnimator example', () => {
     recorder.state.calls = [];
     const {unmount} = render(<AnimatorPlayingCardsVanilla />);
     expect(screen.getByRole('img', {name: 'Ace of spades'})).toBeTruthy();
+    const destroyed = pan.destroyed;
     unmount();
     expect(screen.queryByRole('img')).toBeNull();
     expect(methods()).toContain('destroy');
+    expect(pan.destroyed).toBe(destroyed + 1);
   });
 });

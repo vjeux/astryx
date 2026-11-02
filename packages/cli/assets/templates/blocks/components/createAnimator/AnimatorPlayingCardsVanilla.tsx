@@ -2,7 +2,7 @@
 
 'use client';
 
-import {createAnimator} from '@astryxdesign/core';
+import {createAnimator, createPanGesture} from '@astryxdesign/core';
 
 const DECK = [
   {face: 'A\u2660', name: 'Ace of spades'},
@@ -37,7 +37,6 @@ function mountDeck(table: HTMLElement, discardButton: HTMLButtonElement) {
     backgroundColor: 'var(--color-background-surface)',
     color: 'var(--color-text-primary)',
     boxShadow: '0 2px 8px var(--color-shadow)',
-    touchAction: 'none',
     cursor: 'grab',
     userSelect: 'none',
   });
@@ -56,6 +55,8 @@ function mountDeck(table: HTMLElement, discardButton: HTMLButtonElement) {
   const animator = createAnimator(card);
   // One discard at a time: a press while a card leaves deals no second card.
   let isDiscarding = false;
+  /** The drag in progress met a discard: the rest of it moves nothing. */
+  let isIgnoringDrag = false;
 
   // Announces the discard and deals the next card in place of the old one.
   async function dealNext() {
@@ -74,6 +75,7 @@ function mountDeck(table: HTMLElement, discardButton: HTMLButtonElement) {
       return;
     }
     isDiscarding = true;
+    isIgnoringDrag = true;
     const speed = Math.hypot(vx, vy);
     const boost = speed < MIN_THROW ? MIN_THROW / Math.max(speed, 1) : 1;
     // The card coasts on while it fades; once it is gone, the next card is
@@ -84,54 +86,39 @@ function mountDeck(table: HTMLElement, discardButton: HTMLButtonElement) {
     await dealNext();
   }
 
-  // The drag: follow the pointer, then read the 80 ms before the release, so
-  // a pointer that held still before letting go releases at rest.
-  let origin: {x: number; y: number} | null = null;
-  let samples: {t: number; x: number; y: number}[] = [];
-  function onDown(event: PointerEvent) {
-    card.setPointerCapture(event.pointerId);
-    animator.stop();
-    const {x, y} = animator.get();
-    origin = {x: event.clientX - x, y: event.clientY - y};
-    samples = [];
-  }
-  function onMove(event: PointerEvent) {
-    if (origin == null) {
-      return;
-    }
-    const x = event.clientX - origin.x;
-    const y = event.clientY - origin.y;
-    samples.push({t: event.timeStamp, x, y});
-    animator.set({x, y, rotate: x / 18});
-  }
-  // A cancelled pointer was not let go, so the card springs back.
-  function onCancel() {
-    if (origin == null) {
-      return;
-    }
-    origin = null;
-    void animator.animate({x: 0, y: 0, rotate: 0});
-  }
-  function onUp(event: PointerEvent) {
-    if (origin == null) {
-      return;
-    }
-    origin = null;
-    const recent = samples.filter(s => event.timeStamp - s.t <= 80);
-    const first = recent[0];
-    const last = recent.at(-1);
-    const seconds = last && first ? (last.t - first.t) / 1000 : 0;
-    const vx = seconds > 0 && last && first ? (last.x - first.x) / seconds : 0;
-    const vy = seconds > 0 && last && first ? (last.y - first.y) / seconds : 0;
-    if (Math.abs(vx) > THROW_SPEED) {
-      void discard(vx, vy);
-    } else {
-      void animator.animate(
-        {x: 0, y: 0, rotate: 0},
-        {velocity: {x: vx, y: vy}},
-      );
-    }
-  }
+  // The drag comes from Core's pan. It claims at 10 pt and reports the
+  // release velocity for a finger, a mouse and a pen.
+  let origin = {x: 0, y: 0};
+  const pan = createPanGesture(card, {
+    onPan: ({state, translation, velocity}) => {
+      if (state === 'began') {
+        // A drag that meets a discard is ignored to its end.
+        isIgnoringDrag = isDiscarding;
+        if (!isIgnoringDrag) {
+          animator.stop();
+          // A drag that begins while the dealt card grows in finishes the
+          // deal, which the stop halted.
+          void animator.animate({scale: 1, opacity: 1});
+          const {x, y} = animator.get();
+          origin = {x, y};
+        }
+      }
+      if (isIgnoringDrag) {
+        return;
+      }
+      if (state === 'began' || state === 'changed') {
+        const x = origin.x + translation.x;
+        const y = origin.y + translation.y;
+        animator.set({x, y, rotate: x / 18});
+      } else if (state === 'ended' && Math.abs(velocity.x) > THROW_SPEED) {
+        void discard(velocity.x, velocity.y);
+      } else {
+        // A gentle release springs back, carrying on as it was let go. A
+        // cancelled drag was not let go: its velocity is 0.
+        void animator.animate({x: 0, y: 0, rotate: 0}, {velocity});
+      }
+    },
+  });
   // The button moves the card off on the state-change motion: a planned
   // move, which Reduce Motion turns into a fade where the card is.
   async function discardWithButton() {
@@ -139,18 +126,17 @@ function mountDeck(table: HTMLElement, discardButton: HTMLButtonElement) {
       return;
     }
     isDiscarding = true;
+    // A drag in progress moves nothing more.
+    isIgnoringDrag = true;
     await animator.animate({x: 400, opacity: 0});
     await dealNext();
   }
   const onDiscard = () => void discardWithButton();
 
-  card.addEventListener('pointerdown', onDown);
-  card.addEventListener('pointermove', onMove);
-  card.addEventListener('pointerup', onUp);
-  card.addEventListener('pointercancel', onCancel);
   discardButton.addEventListener('click', onDiscard);
   return () => {
     discardButton.removeEventListener('click', onDiscard);
+    pan.destroy();
     animator.destroy();
     card.remove();
     status.remove();
