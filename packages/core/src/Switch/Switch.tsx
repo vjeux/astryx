@@ -94,8 +94,8 @@ const PRESS_FADING = '[data-astryx-press="fading"]';
 
 /**
  * The shared press release, for the press layers the switch fades on the
- * compositor: the clock, scaled by the theme's tempo, and the curve the
- * controller's own release runs on. Switch.test.tsx compares the two.
+ * compositor. The clock scales by the theme's tempo, and the curve is the
+ * controller's own. Switch.test.tsx compares the two.
  * SYNC: utils/interactionOverlay.stylex.ts PRESS_RELEASE_DURATION,
  * PRESS_RELEASE_DURATION_REDUCED and RELEASE_EASE.
  */
@@ -120,9 +120,9 @@ const wrapperSizeStyles = stylex.create({
   },
 });
 
-// Every touch value sits in the same property as the mouse value (a nested
-// condition), never in a later style: a later style that names a property
-// replaces all of it, mouse value included.
+// Every touch value sits in the same property as the mouse value, as a
+// nested condition, never in a later style. A later style that names a
+// property replaces all of it, mouse value included.
 const trackSizeStyles = stylex.create({
   sm: {
     width: 32,
@@ -137,9 +137,9 @@ const trackSizeStyles = stylex.create({
 });
 
 // The thumb is one circle under any pointer, at each state's size. Under a
-// finger it rests by insets instead of a transform, centered in
-// the track's height at each end, so the compositor moves and lifts it with
-// translate and scale alone (useSwitchTouch measures the box it renders).
+// finger it rests by insets instead of a transform, centered in the track's
+// height at each end. So the compositor moves and lifts it with translate and
+// scale alone; useSwitchTouch measures the box it renders.
 const thumbOffSizeStyles = stylex.create({
   sm: {
     width: 14,
@@ -226,10 +226,9 @@ const pressStrengthRelease = stylex.keyframes({
 const pressOwnerStyles = stylex.create({
   /**
    * Composed after `interactionOverlayStyles.pressedAlpha` on the row. Under
-   * a coarse primary pointer the track's and thumb's layers fade the press,
-   * so the strength holds through the release instead of animating on the
-   * main thread. With any other pointer the row keeps `pressedAlpha`'s own
-   * release.
+   * a coarse primary pointer the track's and thumb's layers fade the press.
+   * So the strength holds through the release, not animated on the main
+   * thread. With any other pointer the row keeps `pressedAlpha`'s release.
    */
   pressedAlphaLayered: {
     animationName: {
@@ -279,9 +278,8 @@ const styles = stylex.create({
     flexShrink: 0,
     isolation: 'isolate',
     // Horizontal touch moves are the switch's drag and vertical ones the
-    // page's scroll, under any primary pointer (a touchscreen laptop's finger
-    // too); set in CSS so it holds before hydration
-    // (useSwitchTouch.ts).
+    // page's scroll, under any primary pointer. A touchscreen laptop's finger
+    // counts too. It is set in CSS so it holds before hydration.
     touchAction: 'pan-y pinch-zoom',
   },
   input: {
@@ -297,9 +295,9 @@ const styles = stylex.create({
     zIndex: 1,
   },
   // The invisible input covers the track. Under a coarse pointer it is the
-  // hit area a finger needs: it grows toward 44 × 44 px by the
-  // insets utils/hitArea measures, each side stopping at half the gap to a
-  // neighbouring target, and its center moves with any uneven side; nothing
+  // hit area a finger needs. It grows toward 44 × 44 px by the insets
+  // utils/hitArea measures, each side stopping at half the gap to a
+  // neighbouring target. Its center moves with any uneven side, and nothing
   // visible grows. The insets are 0 until measured. Physical left and
   // translate, as centerInline: the insets are physical sides.
   inputCoarse: {
@@ -326,7 +324,7 @@ const styles = stylex.create({
     display: 'flex',
     alignItems: 'center',
     // Under a finger the press layer (::before), the colour fade (::after)
-    // and the thumb sit in the track, stacked in a context of the track's own.
+    // and the thumb sit in the track, in a stacking context of its own.
     position: {default: null, [TOUCH]: 'relative'},
     isolation: {default: null, [TOUCH]: 'isolate'},
     borderRadius: radiusVars['--radius-full'],
@@ -375,11 +373,10 @@ const styles = stylex.create({
       },
     },
     // The press, under a finger: a layer over the track's fill and colour
-    // fade and under the thumb, present only while the row the press
-    // controller writes to is pressed or releasing. Its opacity is the
-    // press: on at once, then the shared release's clock and curve, run on
-    // the compositor so the press never sticks while the main thread is
-    // busy.
+    // fade and under the thumb. It exists only while the row is pressed or
+    // releasing. Its opacity is the press: on at once, then the shared
+    // release's clock and curve. The release runs on the compositor, so the
+    // press never sticks while the main thread is busy.
     '::before': {
       content: {
         default: null,
@@ -445,11 +442,11 @@ const styles = stylex.create({
         },
       },
     },
-    // The colour fade, under a finger: over the track's own fill (themed in
-    // both states), it shows the fill the track is leaving (or, mid-drag,
-    // the one it is heading to) and fades it on the compositor. Its colour is
-    // the theme's, read from the track (switchFill.ts) into a variable; the
-    // animator owns its opacity, and at rest it is clear.
+    // The colour fade, under a finger: a layer over the track's own fill. It
+    // shows the fill the track is leaving, or mid-drag the one it heads to,
+    // and fades it on the compositor. Its colour is the theme's, read from
+    // the track (switchFill.ts). The animator owns its opacity, and at rest it
+    // is clear.
     '::after': {
       content: '""',
       display: {default: 'none', [TOUCH]: 'block'},
@@ -532,9 +529,8 @@ const styles = stylex.create({
     justifyContent: 'center',
     borderRadius: radiusVars['--radius-full'],
     // Under a finger it sits in the track, centered in its height, above the
-    // track's colour fade (::after) and press layer (::before), and
-    // useSwitchTouch moves and lifts it on the compositor: nothing of its
-    // own transitions.
+    // colour fade (::after) and the press layer (::before). useSwitchTouch
+    // moves and lifts it on the compositor: nothing of its own transitions.
     position: {default: null, [TOUCH]: 'absolute'},
     insetBlock: {default: null, [TOUCH]: 0},
     marginBlock: {default: null, [TOUCH]: 'auto'},
@@ -554,11 +550,9 @@ const styles = stylex.create({
     },
     transitionTimingFunction: easeVars['--ease-standard'],
     // The lifted shadow, under a finger: the theme's elevation on a layer the
-    // thumb's size, faded in with the lift on the compositor (useSwitchTouch
-    // owns its opacity). At rest it is clear.
-    // The press on the thumb too, under a finger (track and thumb both paint
-    // the pressed overlay): the same layer as the track's, over the thumb's
-    // fill.
+    // thumb's size. It fades in with the lift on the compositor, and at rest
+    // it is clear. The press on the thumb too, under a finger: the same layer
+    // as the track's, over the thumb's fill.
     '::before': {
       content: {
         default: null,
@@ -666,21 +660,18 @@ const styles = stylex.create({
     },
   },
   // ---------------------------------------------------------------------
-  // Under a finger the track keeps its own fill (the theme's) and a layer
-  // over it fades the outgoing fill out on the compositor. The thumb is a
-  // constant-size capsule in a box that useSwitchTouch moves and lifts on the
-  // compositor (translate / scale / opacity only), as UISwitch's (iOS 26.2).
-  // The thumb is the circle a mouse sees, at each state's size, resting at
-  // its inset from its own end (the size styles above). Where a touch value
-  // shares a property with the mouse (the fade; the thumb's place, travel and
-  // transition) it is a nested condition of that property above; the parts
-  // below exist only under a finger.
+  // Under a finger the track keeps its own fill, the theme's. A layer over it
+  // fades the outgoing fill out on the compositor. The thumb is a capsule of
+  // constant size, in a box that useSwitchTouch moves and lifts on the
+  // compositor, as UISwitch's (iOS 26.2). The thumb is the circle a mouse
+  // sees, at each state's size, resting at its inset from its own end. Where
+  // a touch value shares a property with the mouse, it is a nested condition
+  // of that property above. The parts below exist only under a finger.
   // ---------------------------------------------------------------------
-  // The fade layer: over the track's own fill (themed in both states), it
-  // shows the fill the track is leaving (or, mid-drag, the one it is heading
-  // to) and fades it on the compositor. Its colour is the theme's, read from
-  // the track (switchFill.ts) and set inline; at rest it is clear. The
-  // animator owns its opacity, so it has no transition of its own.
+  // The fade layer shows the fill the track is leaving, or mid-drag the one
+  // it heads to. Its colour is the theme's, read from the track
+  // (switchFill.ts) and set inline. The animator owns its opacity, so it has
+  // no transition of its own.
   labelWrapper: {
     display: 'flex',
     flexDirection: 'column',

@@ -20,8 +20,7 @@
  * The touch arms are asserted the same way: the paint reads the press's
  * strength (`--astryx-press-alpha`, see utils/interactionOverlay.stylex.ts)
  * and the element the controller writes to runs the release animation on the
- * machine's own clock; a surface that fades the press on a compositor layer
- * of its own (a Switch's track and thumb) runs that release on the layer.
+ * machine's own clock.
  *
  * SYNC: When modified, update this header.
  */
@@ -263,12 +262,11 @@ export function hasReleaseFade(el: Element): boolean {
 }
 
 /**
- * Does the element release the press on a compositor layer: an opacity
- * keyframe animation on `pseudo`'s fading arm, for exactly `releaseMs` and
- * filled both ways, with no release animation left on the element itself
- * wherever the layer releases (the strength's own, a main-thread animation,
- * is dropped)? A layer that exists only under a coarse primary pointer
- * passes when the element's own release stops there too.
+ * Does the element release the press on a compositor layer? The layer runs
+ * an opacity keyframe animation on `pseudo`'s fading arm, for exactly
+ * `releaseMs` and filled both ways. Wherever the layer releases, the element
+ * runs no release of its own. A layer that exists only under a coarse
+ * primary pointer passes when the element's own release stops there too.
  */
 export function releasesOnLayer(
   el: Element,

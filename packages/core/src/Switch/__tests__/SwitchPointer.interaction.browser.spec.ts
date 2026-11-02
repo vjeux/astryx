@@ -41,9 +41,9 @@ interface MouseSwitch {
 
 /**
  * The Default story in a context with no touch screen, so the primary
- * pointer is not coarse, or with `hasTouch`, a touch screen beside the mouse.
- * (Contexts made here inherit the project's phone options unless they are
- * named.)
+ * pointer is not coarse. With `hasTouch`, a touch screen sits beside the
+ * mouse. Contexts made here inherit the project's phone options unless they
+ * are named.
  */
 async function openMouseSwitch(
   browser: Browser,

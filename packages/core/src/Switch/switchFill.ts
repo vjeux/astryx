@@ -4,18 +4,13 @@
  * @file switchFill.ts
  * @input Switch's track element and the props its other state renders with
  * @output Exports TrackState, sameTrackState, trackStateOf, readInState and
- *   readFillOf: an element read in its other state (the track's fill as the
- *   theme paints it, the thumb's place), in place
+ *   readFillOf: an element read in its other state, in place
  * @position Shared by Switch.tsx and useSwitchTouch.ts for the colour fade
  *   under a finger
  *
- * Under a finger the track keeps its own fill in both states, so a theme's
- * `switch` target paints it as it does under a mouse, and a layer over it
- * fades the outgoing fill out (or, mid-drag, the coming one in) on the
- * compositor. That layer needs the fill of the state the track is not in,
- * whatever the theme makes it: readFillOf swaps the track to that state's
- * class and attributes, reads the computed colour and swaps back in the same
- * task, so nothing paints in between and the theme stays the one source.
+ * The colour fade needs the track's fill in its other state, as the theme
+ * paints it. readFillOf swaps the track's class and attributes, reads the
+ * colour and swaps back in the same task, so nothing paints in between.
  *
  * SYNC: When modified, update Switch.tsx and useSwitchTouch.ts.
  */

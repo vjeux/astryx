@@ -13,8 +13,8 @@
 const PRESS_HOLDS_DRAG = 'data-astryx-press-holds-drag';
 
 /**
- * Spread on a pressable whose own drag the finger moves (a Switch's thumb):
- * its travel is not a scroll, so the press stays painted through the drag.
+ * Spread on a pressable whose own drag the finger moves, such as a Switch's
+ * thumb. The drag is not a scroll, so the press stays painted.
  */
 export function pressHoldsDragProps(
   holdsDrag: boolean,

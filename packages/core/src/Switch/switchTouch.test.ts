@@ -8,12 +8,9 @@
  *   UISwitch on iOS 26.2; and the switch springs held to UIKit's own frames
  * @position Testing; the pure half of Switch's touch presentation
  *
- * The UIKit reference points below were read with the UIKit lab on the iOS
- * 26.2 simulator (a UISwitch in a host app, per-frame presentation samples of
- * its lens and the touch stream; switch-local pt, the lens at rest 37 × 24 in
- * a 63 × 28 track). They are the measurement the springs in
- * motion/uikit/switch.ts were fitted to, kept here so a change to the table
- * or to the spring math that leaves UIKit's curve fails.
+ * The UIKit points below were read from a UISwitch on the iOS 26.2
+ * simulator, in switch-local pt. The switch springs were fitted to them, so
+ * a change that leaves UIKit's curve fails here.
  */
 
 import {describe, expect, it} from 'vitest';
@@ -54,8 +51,8 @@ describe('switchTouchGeometry', () => {
     expect(UIKIT.inset).toBeCloseTo(2, 9);
     expect(UIKIT.travel).toBeCloseTo(22, 9);
     expect(UIKIT.flipDistance).toBeCloseTo(26, 9);
-    // The lift fills half the 2 pt gap on each side (UIKit's own lens grows
-    // to 58 × 38.3, past the track), and the band the other half.
+    // The lift fills half the 2 pt gap on each side, and the band the other
+    // half. UIKit's own lens grows to 58 × 38.3, past the track.
     expect(UIKIT.liftScaleX).toBeCloseTo(1 + 2 / 37, 9);
     expect(UIKIT.liftScaleY).toBeCloseTo(UIKIT.liftScaleX, 9);
     expect(UIKIT.rubberBandDimension).toBeCloseTo(1, 9);
@@ -207,8 +204,8 @@ describe('commitOnRelease (UIKit)', () => {
   });
 
   it('commits the side a flipped drag shows, wherever the finger lifts (UISwitch)', () => {
-    // Flipped on, then slid back past where it landed and off the far end:
-    // it shows the side it started on, so it commits that side.
+    // Flipped on, then slid back past where it landed and off the far end. It
+    // shows the side it started on, so it commits that side.
     expect(
       commitOnRelease(drag(false, [26, 27, 30, 0, -160]).at(-1)!, false),
     ).toBe(false);
@@ -271,7 +268,7 @@ describe('the switch springs against UIKit frames (iOS 26.2)', () => {
         [410.6, 36.23],
       ],
       // UIKit's own settings (0.5 s, 0.7) against frames whose start time is
-      // read to a frame; the best one-spring fit is 0.49 s (rms 0.065 pt).
+      // read to a frame. The best one-spring fit is 0.49 s (rms 0.065 pt).
       tolerance: 0.45,
     },
     {

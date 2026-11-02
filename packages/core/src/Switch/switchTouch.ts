@@ -9,28 +9,8 @@
  * @position Pure half of Switch's touch presentation; driven by
  *   useSwitchTouch.ts, tested by switchTouch.test.ts without a browser
  *
- * UISwitch on iOS 26.2 is the reference (see motion/uikit/switch.ts):
- *
- * - The thumb's box is measured where it renders (the switch draws one
- *   circle at each state's size). Without a measured box, UIKit's
- *   proportions are applied to the track (a 37 × 24 thumb in 63 × 28).
- * - The lift grows the thumb about its center, but only into half of the gap
- *   between the thumb and the track's edges; the drag's rubber band takes the
- *   other half. So a lifted, banded thumb still paints inside the track.
- * - Positions are offsets of the thumb from its off end, 0 … `travel`, in the
- *   writing direction; the caller mirrors them for right-to-left.
- * - A drag moves the thumb's TARGET with the finger's translation since it
- *   landed, rubber-banded past either end; the thumb chases the target on a
- *   spring (the caller animates that). The band never carries the thumb out
- *   of the track: its reach is capped at the gap between the thumb and the
- *   track's end, so the thumb paints inside the track at any overdrag, in
- *   either writing direction.
- * - The switch flips by the finger: once it is more than `flipDistance` (the
- *   track width minus the thumb width) from where it landed toward the other
- *   end, the next touch event shows the other side; coming back past where
- *   it landed shows the starting side again. Flips happen on events only.
- * - A release commits the side the drag shows if it ever flipped, or toggles
- *   when it flipped nothing (a tap, a hold, a slide off, a short drag).
+ * Positions are offsets of the thumb from its off end, 0 … `travel`, in the
+ * writing direction; the caller mirrors them for right-to-left.
  *
  * SYNC: When modified, update useSwitchTouch.ts and switchTouch.test.ts.
  */
@@ -49,16 +29,16 @@ export interface SwitchTouchGeometry {
   /** Offset of the thumb at the on end, px. */
   readonly travel: number;
   /**
-   * Scale of the lifted thumb: UIKit's lift, capped so the thumb grows into
-   * at most half the gap on each side (one scale on both axes).
+   * Scale of the lifted thumb, one value on both axes. It is UIKit's lift,
+   * capped so the thumb grows into at most half the gap on each side.
    */
   readonly liftScaleX: number;
   readonly liftScaleY: number;
   /**
-   * The drag's rubber-band dimension, px: UIKit's, scaled to the track, but
-   * never more than the gap the lift leaves (`inset` less the lifted growth),
-   * so a banded thumb stays inside the track (the band approaches its
-   * dimension and never reaches it).
+   * The drag's rubber-band dimension, px: UIKit's, scaled to the track. It
+   * never exceeds the gap the lift leaves (`inset` less the lifted growth).
+   * The band approaches its dimension and never reaches it, so a banded thumb
+   * stays inside the track.
    */
   readonly rubberBandDimension: number;
   /** How far the finger goes toward the other end before a flip, px. */
@@ -116,13 +96,12 @@ export function switchTouchGeometry(
 }
 
 /**
- * Where the drag puts the thumb's target: the offset it had when the finger
- * landed moved by the finger's translation along the writing direction,
- * rubber-banded past either end.
+ * Where the drag puts the thumb's target. It is the offset at the landing,
+ * moved by the finger's translation and rubber-banded past either end.
  *
- * `start` is the thumb's offset on screen when the finger landed (it may be
- * mid-flight, or banded); it is unbanded first, so a finger that grabs a
- * moving thumb continues from where the thumb is, without a jump.
+ * `start` is the thumb's offset on screen when the finger landed, mid-flight
+ * or banded. It is unbanded first, so a finger that grabs a moving thumb
+ * continues without a jump.
  */
 export function dragTarget(
   start: number,
@@ -183,7 +162,7 @@ export function stepFlip(
 /**
  * What a release commits: the side a drag flipped to; when nothing flipped,
  * the other side of the value, wherever the finger lifts. A press slid off
- * and lifted outside toggles too, as UISwitch's does (iOS 26.2): a toggle is
+ * and lifted outside toggles too, as UISwitch's does. A toggle is
  * reversible, so a stray release costs one more tap.
  */
 export function commitOnRelease(
@@ -194,8 +173,8 @@ export function commitOnRelease(
 }
 
 /**
- * When the lifted thumb may settle, on the document timeline (ms): at the
- * release, but never sooner than the minimum lift time after the lift began.
+ * When the lifted thumb may settle, on the document timeline (ms). It is the
+ * release, but never sooner than the minimum lift time after the lift.
  * A caller may pass the minimum it plays; the table's measured one by
  * default.
  */

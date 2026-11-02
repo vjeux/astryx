@@ -157,9 +157,9 @@ describe('the colour layer when the value changes', () => {
     fade.velocities.opacity = 2;
     fade.calls.length = 0;
     controller.setValue(true);
-    // A set would end the running fade and start the swapped curve from
-    // rest, at the frame that commits it: a long task in that frame would
-    // make the track step back toward the fill it left.
+    // A set would end the running fade and start the swapped curve from rest,
+    // at the frame that commits it. A long task in that frame would make the
+    // track step back toward the fill it left.
     expect(
       fade.calls.filter(
         call =>
@@ -170,10 +170,9 @@ describe('the colour layer when the value changes', () => {
     const rebase = fade.calls.find(call => call.name === 'rebase');
     expect(rebase?.args[0]).toEqual({opacity: expect.closeTo(0.4, 9)});
     // The swapped curve continues from the swap, its velocity mirrored, and
-    // the layer ends clear (the track shows the new value's fill). Neither
-    // carries a start of its own: the animator starts a curve that continues
-    // motion at the call, so it is never dated back or ahead of the frame on
-    // screen (spec:AST-094 FR6).
+    // the layer ends clear. Neither carries a start of its own. The animator
+    // starts a curve that continues motion at the call, never before or after
+    // the frame on screen.
     const animates = fade.calls.filter(call => call.name === 'animate');
     expect(animates.length).toBeGreaterThan(0);
     const [first] = animates;

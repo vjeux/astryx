@@ -98,9 +98,9 @@ const PAN_HYSTERESIS = UIKIT_GESTURES.pan.hysteresis.value;
 const CLICK_GUARD_MS = 1000;
 /**
  * Passive: how long a lift waits for the browser's own click before the
- * switch clicks its input itself, ms. The browser sends it with the lift's
- * `touchend` (the surface's `touch-action` leaves no double-tap delay), so
- * this only runs out for a lift the browser does not count as a click.
+ * switch clicks its input itself, ms. The browser sends that click with the
+ * lift's `touchend`. The surface's `touch-action` leaves no double-tap delay.
+ * So this only runs out for a lift the browser does not count as a click.
  */
 const BROWSER_CLICK_WAIT_MS = 300;
 
@@ -109,8 +109,8 @@ function now(): number {
 }
 
 /**
- * The lift spring until `holdSeconds`, then the settle spring from wherever
- * the lift had got to: one curve, so the settle starts on the compositor's
+ * The lift spring until `holdSeconds`, then the settle spring from where the
+ * lift got to. It is one curve, so the settle starts on the compositor's
  * clock.
  */
 function liftThenSettle({
@@ -171,45 +171,44 @@ interface Drag {
  * gesture state. No React state: a gesture never renders. UISwitch on iOS
  * 26.2 is the reference; every number is in motion/uikit/switch.ts.
  *
- * - The thumb's resting place is CSS (its inline-start inset), so the steady
+ * - The thumb's resting place is CSS (its inline-start inset). So the steady
  *   state needs no script and mirrors under RTL by itself. The animator only
  *   moves the thumb by a delta from that place (`translate`). When the value
- *   changes and the CSS place jumps, the delta is rebased in the same layout
- *   effect, so nothing moves on screen and the velocity is kept.
- * - Touches go to a press tracker, which never blocks a scroll: no
+ *   moves the CSS place, the delta is rebased in the same layout effect.
+ *   Nothing moves on screen, and the velocity is kept.
+ * - Touches go to a press tracker, which never blocks a scroll. No
  *   recognizer claims the touch. `touch-action: pan-y` (Switch.tsx) keeps
- *   horizontal moves for the switch, so a drag follows and flips it, and the
- *   release commits. A vertical drag is the page's scroll: the switch yields.
+ *   horizontal moves for the switch: a drag follows and flips it, and the
+ *   release commits. A vertical drag is the page's scroll, and the switch
+ *   yields.
  * - A tap, a hold or a short drag activates through the browser's own click.
- *   Where the browser sends no click for a finger's lift (a hold), the switch
- *   clicks its input once the click window passes. A mouse or a pen gets a
- *   click whenever it is released on the input. A drag that flipped the
- *   switch gets no click, so its `touchend` is cancelled and the switch
- *   clicks its input. A finger's press slid off and lifted outside toggles
- *   too, as UISwitch's does. Forms, `onChange` and the keyboard stay the
- *   native checkbox's.
+ *   The browser sends no click for a finger's hold, so the switch clicks its
+ *   input once the click window passes. A mouse or a pen gets a click when
+ *   it is released on the input. A drag that flipped the switch gets no
+ *   click, so the switch cancels its `touchend` and clicks its input. A
+ *   finger's press slid off and lifted outside toggles too, as UISwitch's
+ *   does. Forms, `onChange` and the keyboard stay the native checkbox's.
  * - The drag never renders: each move retargets the thumb's tracking spring
  *   and steps the flip rule on the finger's travel.
  * - The thumb lifts while a finger presses, into half of the gap around it,
- *   and its lifted shadow fades in. At the release it settles back, no
- *   sooner than the minimum lift time. The lift and the settle are one curve
- *   built at the release, so the settle starts on time on the compositor.
- * - The track keeps its own fill in both states. The colour change is a
- *   fade layer over it, painted with the track's other fill and faded on
- *   the compositor. When the value changes, the layer swaps to the other
- *   fill and to the complement of its opacity, so nothing changes on screen.
- *   A change the fade already heads to swaps nothing then: the track holds
- *   its previous fill inline until the fade lands. WebKit plays a curve
- *   built in a frame a long task holds from its start once the task ends,
- *   so a swap in that frame stepped the colour back. The layer is composited
- *   from the start (`will-change`, Switch.tsx), or iOS Safari runs its fade
- *   on the main thread.
+ *   and its shadow fades in. At the release it settles back, no sooner than
+ *   the minimum lift time. The lift and the settle are one curve, built at
+ *   the release, so the settle starts on time on the compositor.
+ * - The track keeps its own fill in both states. A fade layer over it,
+ *   painted with the track's other fill, fades the colour on the compositor.
+ *   When the value changes, the layer swaps to the other fill and to the
+ *   complement of its opacity. So nothing changes on screen. A change the
+ *   fade already heads to swaps nothing: the track holds its previous fill
+ *   inline until the fade lands. WebKit plays a curve built in a held frame
+ *   only once the long task ends, so a swap there stepped the colour back.
+ *   The layer is composited from the start (`will-change`, Switch.tsx), or
+ *   iOS Safari runs its fade on the main thread.
  * - Under reduced motion nothing travels or springs: a change plays the
  *   animator's Reduce Motion cross-fade. A dragging finger still moves the
  *   thumb: that is direct manipulation.
- * - Under a fine primary pointer the switch keeps its own look: the same
+ * - Under a fine primary pointer the switch keeps its own look. The same
  *   tracking, flip rule and release decide the value, with no animator, and
- *   the thumb moves when the value does. Only its press listens at rest; the
+ *   the thumb moves when the value does. Only its press listens at rest. The
  *   click guard and the context-menu block come with a press.
  */
 export class SwitchTouchController {
@@ -232,8 +231,8 @@ export class SwitchTouchController {
   private settleAt: number | null = null;
   private otherTrack: TrackState | null = null;
   /**
-   * A change landed mid-fade, the fade already heading to it: the track's own
-   * fill stays the previous value's (inline) until the fade lands, so the
+   * A change landed mid-fade, and the fade already heads to it. The track's
+   * own fill stays the previous value's (inline) until the fade lands. So the
    * change's frame builds no curve and repaints nothing. `baseHold` counts
    * holds, so a settled one ignores its late landing.
    */
@@ -255,8 +254,8 @@ export class SwitchTouchController {
   /** The current touch already ended in a release. */
   private released = false;
   /**
-   * Reduced motion: a release changed the value, and the thumb's travel waits
-   * for the value to commit, so its one cross-fade lands in the new frame.
+   * Reduced motion: a release changed the value. The thumb's travel waits for
+   * the value to commit, so its one cross-fade lands in the new frame.
    */
   private pendingTravel = false;
   /** Passive: a finger is down on the switch. */
@@ -319,10 +318,10 @@ export class SwitchTouchController {
 
   /**
    * Passive: UIControl's tracking, which never blocks a scroll. The press
-   * begins with the touch (same frame outside a scroller, after the content
-   * delay inside one) or with the first horizontal move a pan would begin
-   * on; every move follows and steps the flip rule; the release commits; a
-   * touch the browser takes for its scroll yields with no toggle.
+   * begins with the touch, or with the first horizontal move a pan would
+   * begin on. Inside a scroller the touch waits for the content delay. Every
+   * move steps the flip rule, and the release commits. A touch the browser
+   * takes for its scroll yields with no toggle.
    */
   private attachPassive(
     host: ReturnType<typeof getGestureHost>,
@@ -343,10 +342,10 @@ export class SwitchTouchController {
     });
     // The switch has already clicked its input at its own release, so the
     // browser must not click too. Cancelling the release's `touchend` stops
-    // its click and compatibility mouse events (no focus, no sticky hover),
-    // as the gesture host does for a claimed touch; a `touchend` listener
-    // never delays a scroll. The tracker hears the lift first (the host
-    // listens on the document, in the capture phase).
+    // its click and its compatibility mouse events, as the gesture host does
+    // for a claimed touch. A `touchend` listener never delays a scroll. The
+    // tracker hears the lift first: the host listens on the document, in the
+    // capture phase.
     const onTouchEnd = (event: TouchEvent) => {
       if (this.cancelsTouchEnd && event.cancelable) {
         event.preventDefault();
@@ -388,9 +387,9 @@ export class SwitchTouchController {
       };
     };
     if (this.presentation === 'pointer') {
-      // Under a fine pointer only the press the host arms listens at rest:
-      // the switch's own listeners come with a press (touchDown) and go once
-      // its click window is over.
+      // Under a fine pointer only the press the host arms listens at rest.
+      // The switch's own listeners come with a press and go after its click
+      // window.
       this.listenForPress = listen;
       return [
         host.attachConsumer(surface, tracker),
@@ -496,10 +495,9 @@ export class SwitchTouchController {
   }
 
   /**
-   * The thumb geometry from the rendered boxes: the track's, so a theme that
-   * resizes the track moves the thumb by its own size, and the thumb's, the
-   * circle of the current value (it rests by insets from the track's padding
-   * box, so the track's padding does not move it).
+   * The thumb geometry from the rendered boxes. The track's box lets a theme
+   * resize the track. The thumb's box is the circle of the current value. It
+   * rests by insets from the track's padding box, so padding does not move it.
    */
   private measureGeometry(): void {
     const track = this.elements?.track;
@@ -508,8 +506,8 @@ export class SwitchTouchController {
       return;
     }
     // Fractional boxes: the track's border box less its border (it has no
-    // transform), and the thumb's used size from its computed style (its
-    // scale does not change that): the circle of the current value.
+    // transform). The thumb's used size comes from its computed style, which
+    // its scale does not change.
     const box = track.getBoundingClientRect();
     const trackWidth = box.width - 2 * track.clientLeft;
     const trackHeight = box.height - 2 * track.clientTop;
@@ -530,8 +528,8 @@ export class SwitchTouchController {
 
   /**
    * The rendered value changed. The CSS has already moved the thumb's
-   * resting place, so the thumb's delta is rebased first (nothing moves on
-   * screen), then the visuals head for the new value.
+   * resting place. So the thumb's delta is rebased first, and nothing moves on
+   * screen. Then the visuals head for the new value.
    */
   setValue(isOn: boolean): void {
     if (isOn === this.isOn) {
@@ -546,32 +544,31 @@ export class SwitchTouchController {
     }
     const time = now();
     // The thumb's CSS rest moved with the value: shift it back by as much,
-    // so nothing moves on screen. A spring keeps its target through the
-    // shift and is sent to the new rest below; a reduced-motion dip shifts
-    // whole, its end included, and keeps going.
+    // so nothing moves on screen. A spring keeps its target through the shift
+    // and is sent to the new rest below. A reduced-motion dip shifts whole,
+    // its end included, and keeps going.
     const springs = thumb.reducedMotion() === 'off';
     thumb.rebase({
       x: this.direction * (this.rest(previous) - this.rest(isOn)),
     });
-    // Each state has its own thumb size (the circle a mouse sees): the box
-    // the CSS now renders is the new value's, so its scale takes the old
-    // size over and grows or shrinks it from there.
+    // Each state has its own thumb size, the circle a mouse sees. The box the
+    // CSS now renders is the new value's. Its scale takes the old size over
+    // and grows or shrinks it from there.
     const before = this.geometry;
     this.measureGeometry();
     if (springs) {
       this.rescaleThumb(before, this.geometry, time);
     }
-    // The track now shows the new value's fill: the fade layer swaps to the
-    // other fill and to the complement of its opacity, so nothing changes on
-    // screen, and keeps heading where the visuals head.
+    // The track now shows the new value's fill. The fade layer swaps to the
+    // other fill and to the complement of its opacity. Nothing changes on
+    // screen, and the fade keeps heading where the visuals head.
     const fade = this.fade;
     if (fade != null) {
       this.landBase(time);
-      // Already heading here (a release, a drag that flipped): the running
-      // fade carries the change, over the previous fill held as the track's
-      // own until it lands. WebKit plays a curve built in a frame that a long
-      // task holds from its start once the task ends, so a swap here would
-      // step the track back toward the fill it left (iOS 26.2).
+      // Already heading here (a release, a drag that flipped). The running
+      // fade carries the change over the previous fill, held as the track's
+      // own until it lands. WebKit plays a curve built in a held frame only
+      // once the long task ends. A swap here would step the colour back.
       if (this.isVisuallyOn !== isOn || !this.holdBase()) {
         this.swapFade(time);
       }
@@ -584,8 +581,8 @@ export class SwitchTouchController {
       this.released = true;
       this.pressEnded();
     }
-    // A release already sent the visuals here; any other change (the app's,
-    // or one mid-gesture) sends them now, and a spring heads for the new rest.
+    // A release already sent the visuals here. Any other change, the app's or
+    // one mid-gesture, sends them now, and a spring heads for the new rest.
     if (
       springs ||
       wasDragging ||
@@ -614,13 +611,13 @@ export class SwitchTouchController {
   /** Passive: a mouse, a pen or a finger on the switch, UIControl's events. */
   private onControlEvent(event: ControlEvent, touch: GestureTouch): void {
     const travel = touch.x - touch.startX;
-    // The switch reads the thumb when it handles the event, and its motion
-    // carries no start of its own: a call that continues motion starts then,
-    // from the curve on screen, and a call from rest at the frame that shows
-    // it, as Core Animation starts an animation at its
-    // commit. A busy main thread hands the switch an event late and commits
-    // its frame late: the motion is delayed, never stepped back or skipped
-    // into. The event's own time is the recognizers'.
+    // The switch reads the thumb when it handles the event. Its motion has no
+    // start of its own. A call that continues motion starts then, from the
+    // curve on screen. A call from rest starts at the frame that shows it, as
+    // Core Animation starts an animation at its commit. A busy main thread
+    // hands the switch an event late and commits its frame late. The motion
+    // is delayed, never stepped back or skipped into. The event's own time is
+    // the recognizers'.
     const time = now();
     switch (event) {
       case 'touchDown':
@@ -654,10 +651,10 @@ export class SwitchTouchController {
         this.move(time, travel);
         if (this.drag?.flip.didFlip !== true && event === 'touchUpInside') {
           // A tap, a hold or a short drag: the browser's click activates it.
-          // Only a finger's lift can come with no click (a hold); a mouse or
-          // a pen gets one whenever it is released on the input, so with no
-          // click it was released off the input, inside the tracking slop,
-          // and the switch is left alone, as the native checkbox is.
+          // Only a finger's lift can come with no click (a hold). A mouse or a
+          // pen gets one whenever it is released on the input. With no click,
+          // it was released off the input, inside the tracking slop. The
+          // switch is then left alone, as the native checkbox is.
           this.release(time, {
             byBrowserClick: true,
             clicksIfNoBrowserClick: touch.pointerType === 'touch',
@@ -674,11 +671,11 @@ export class SwitchTouchController {
           this.endPressListeners(0);
           return;
         }
-        // A drag that flipped, or a press slid off and lifted outside (it
-        // toggles, as UISwitch's does): no click comes from the browser, so
-        // the switch clicks its input and cancels the lift. Only a finger's
-        // lift has a `touchend` to cancel: a mouse or a pen sends none, and a
-        // cancel left armed would take the next finger tap's click.
+        // A drag that flipped, or a press slid off and lifted outside, which
+        // toggles as UISwitch's does. No click comes from the browser, so the
+        // switch clicks its input and cancels the lift. Only a finger's lift
+        // has a `touchend` to cancel. A cancel left armed would take the next
+        // finger tap's click.
         this.cancelsTouchEnd = touch.pointerType === 'touch';
         this.clickGuardUntil = now() + CLICK_GUARD_MS;
         this.release(time);
@@ -701,8 +698,8 @@ export class SwitchTouchController {
   }
 
   /**
-   * One touch event of a held or dragged switch: retarget the thumb at the
-   * finger (one style write) and step the flip rule on the finger's x.
+   * One touch event of a held or dragged switch. It retargets the thumb at the
+   * finger (one style write) and steps the flip rule.
    */
   private move(time: number, travel: number | null): void {
     const thumb = this.thumb;
@@ -720,10 +717,9 @@ export class SwitchTouchController {
       flip: startFlip(this.isOn),
     });
     // The thumb under the finger is direct manipulation, which reduced
-    // motion leaves alone: under it the thumb is placed at once, since the
-    // animator would cross-fade a move. Under a fine pointer nothing follows
-    // the pointer: the switch keeps its own look, and the value moves the
-    // thumb.
+    // motion leaves alone. Under it the thumb is placed at once: the animator
+    // would cross-fade a move. Under a fine pointer nothing follows the
+    // pointer. The switch keeps its own look, and the value moves the thumb.
     if (thumb != null) {
       const target = this.toX(dragTarget(drag.start, x, this.geometry));
       if (thumb.reducedMotion() === 'off') {
@@ -767,8 +763,8 @@ export class SwitchTouchController {
       this.thumb.reducedMotion({touchRelease: true}) !== 'off'
     ) {
       // Under reduced motion the travel is one cross-fade, played when the
-      // value commits (setValue) so that it lands in the new value's frame;
-      // the colour starts now.
+      // value commits (setValue). It lands in the new value's frame. The
+      // colour starts now.
       this.pendingTravel = true;
       this.showWell(commit, time, true);
     } else {
@@ -838,9 +834,9 @@ export class SwitchTouchController {
   }
 
   /**
-   * The fade layer heads for the visuals: clear when they show the value,
-   * opaque (the other fill) when they show the other side, on UIKit's well
-   * springs (on: 0.68 s, off: 0.40 s).
+   * The fade layer heads for the visuals, on UIKit's well springs (on:
+   * 0.68 s, off: 0.40 s). It is clear when they show the value. It is opaque,
+   * the other fill, when they show the other side.
    */
   private animateFade(
     time: number,
@@ -861,9 +857,9 @@ export class SwitchTouchController {
   }
 
   /**
-   * The track now shows the new value's fill: the fade layer swaps to the
+   * The track now shows the new value's fill. The fade layer swaps to the
    * other fill and to the complement of its opacity, so nothing changes on
-   * screen, and keeps heading where the visuals head (on the running clock).
+   * screen. It keeps heading where the visuals head, on the running clock.
    */
   private swapFade(time: number): void {
     const fade = this.fade;
@@ -900,9 +896,9 @@ export class SwitchTouchController {
 
   /**
    * Ends a held fill: the track shows its value's fill again and the fade
-   * layer swaps under it. Landed, the layer is opaque and nothing changes on
-   * screen; called early (a new touch, a new value, a new other state), the
-   * swap keeps the picture where it is.
+   * layer swaps under it. Once the fade has landed, the layer is opaque and
+   * nothing changes on screen. Called early, by a new touch, value or other
+   * state, the swap keeps the picture where it is.
    */
   private landBase(time: number): void {
     if (!this.baseHeld) {
@@ -983,8 +979,8 @@ export class SwitchTouchController {
 
   /**
    * The thumb settles back after the press, no sooner than the minimum lift
-   * time after it lifted: one curve per property, built now, so the settle
-   * starts on the compositor's clock.
+   * time after it lifted. One curve per property, built now, starts the
+   * settle on the compositor's clock.
    */
   private settle(time: number, touchRelease: boolean): void {
     const liftTime = this.liftTime;
@@ -1030,10 +1026,9 @@ export class SwitchTouchController {
   }
 
   /**
-   * The thumb's box changed size with the value (the on circle is larger):
-   * its scale carries the size it showed, so nothing jumps, and heads for
-   * the new box: back to it through the settle, or to the lift a held press
-   * keeps.
+   * The thumb's box changed size with the value: the on circle is larger.
+   * Its scale carries the size it showed, so nothing jumps. Then it heads for
+   * the new box through the settle, or to the lift a held press keeps.
    */
   private rescaleThumb(
     before: SwitchTouchGeometry,

@@ -5,25 +5,11 @@
  * @input The built Switch stories, real touch input (Chromium CDP / WebKit's
  *   input command) and @astryxdesign/interaction-harness
  * @output Interaction and animation proofs of Switch's touch presentation
- *   against UISwitch on iOS 26.2, one named case per path (P1–P14): a press
- *   lifts the thumb inside the track and toggles at the release, through the
- *   browser's click for a tap (spec:AST-094 FR11); a drag flips
- *   26/63 of the track from where the finger landed and commits at the release,
- *   back to the landing point commits nothing, shorter toggles like a tap; a
- *   vertical pan scrolls the page while a held switch keeps the touch; with
- *   reduced motion a change cross-fades (design:reduced-motion); right to
- *   left mirrors the ends and
- *   the drag; a second tap mid-travel turns the thumb around where it is; a
- *   disabled or busy switch stays inert; the travel and track-color
- *   curves match the UIKit springs when sampled; the motion and the touch
- *   press's release keep advancing through a blocked main thread and do no
- *   Layout or Paint; storyboards of
- *   a tap and of a drag.
+ *   against UISwitch on iOS 26.2, one named case per path (P1–P14), and
+ *   storyboards of a tap and of a drag
  * @position The browser layer of Switch's touch tests; the pure model is
- *   switchTouch.test.ts. Runs on the phone profile (coarse pointer), where
- *   the touch presentation is the one rendered, one model on every touch
- *   device (Chromium's and WebKit's alike); a mouse context keeps the
- *   desktop switch.
+ *   switchTouch.test.ts. Runs on the phone profile (coarse pointer); a mouse
+ *   context keeps the desktop switch.
  *
  * SYNC: useSwitchTouch.ts, switchTouch.ts, motion/uikit/switch.ts.
  */
@@ -303,10 +289,9 @@ interface Presented {
 }
 
 /**
- * A tap the browser turns into its own click (`spec:AST-094` FR11): the
- * scripted touch where the engine synthesises a click from it (Chromium), the
- * engine's tap path where it synthesises one only from that (WebKit, whose
- * tap path has no hold).
+ * A tap the browser turns into its own click. Chromium synthesises the click
+ * from the scripted touch. WebKit synthesises one only from its tap path,
+ * which has no hold.
  */
 async function tapForClick(
   driver: TouchDriver,
@@ -370,8 +355,8 @@ async function presented(page: Page): Promise<Presented> {
     const thumb = document.querySelector<HTMLElement>(
       '#storybook-root .astryx-switch-thumb',
     )!;
-    // The fade layer over the track shows the other side's fill: how far the
-    // colour shows on is its opacity while off, its complement while on.
+    // The fade layer over the track shows the other side's fill. How far the
+    // colour shows on is its opacity while off, and its complement while on.
     const fade = document.querySelector<HTMLElement>(
       '#storybook-root .astryx-switch',
     )!;
@@ -576,9 +561,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       },
     });
     expect(held).not.toBeNull();
-    // The thumb grows into half the gap around it and keeps its fill; the row
-    // is pressed, and the track's press layer (its ::before, under the
-    // thumb) shows the pressed overlay in full.
+    // The thumb grows into half the gap around it and keeps its fill. The row
+    // is pressed, and the track's press layer (its ::before, under the thumb)
+    // shows the pressed overlay in full.
     expect(held!.scaleX).toBeCloseTo(LIFT_SCALE, 2);
     expect(held!.scaleY).toBeCloseTo(LIFT_SCALE, 2);
     expect(held!.fill).toBeCloseTo(1, 2);
@@ -633,7 +618,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       });
       expect(boxes.length).toBeGreaterThan(10);
       // Present and painted first: one thumb in every read, with a box, on a
-      // track at its own size, so the bounds below hold for a real thumb.
+      // track at its own size. So the bounds below hold for a real thumb.
       for (const {thumbs, thumb, track} of boxes) {
         expect(thumbs).toBe(1);
         expect(thumb.width).toBeGreaterThan(0);
@@ -795,8 +780,8 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     expect(boxes.hit.right).toBeCloseTo(boxes.switch.right + gap / 2, 0);
     expect(boxes.hit.bottom - boxes.hit.top).toBeCloseTo(44, 0);
     const y = (boxes.switch.top + boxes.switch.bottom) / 2;
-    // 2 px inside the link: the link's (a tap in the gap is the engine's to
-    // adjust: WebKit moves it to the nearest target that takes taps).
+    // 2 px inside the link: the link's. A tap in the gap is the engine's to
+    // adjust: WebKit moves it to the nearest target that takes taps.
     await tapForClick(driver, {x: boxes.link.left + 2, y});
     await expect(input).not.toBeChecked();
     await expect(page).toHaveURL(/#wifi-details$/);
@@ -815,10 +800,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     // Gate the page's timers before the press, so the release timer (which
     // removes the attribute when the clock runs out) holds while seeking.
     await installTimerGate(page);
-    // Hold each CSS animation of the row from its start, in the page: a
-    // loaded machine reaches the hold below after a 250 ms release could
-    // have ended. Its keyframes and timing are untouched; the curve is read
-    // by seeking.
+    // Hold each CSS animation of the row from its start, in the page. A
+    // loaded machine can reach the hold below after the release has ended.
+    // Its keyframes and timing are untouched; the curve is read by seeking.
     await page.evaluate(() => {
       const row = document.querySelector(
         '#storybook-root [data-astryx-pressable]',
@@ -859,7 +843,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       expect(animation.durationMs).toBe(PRESS_RELEASE_MS);
     }
     // The lift's settle started at the lift's touch event, a frame or two
-    // before the attribute's change started the release: seek on the
+    // before the attribute's change started the release. So seek on the
     // release's own clock.
     const samples: {t: number; value: number}[] = [];
     for (const t of timeline(PRESS_RELEASE_MS)) {
@@ -965,8 +949,8 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
 
   /**
    * The element under a held finger, read 300 ms into a 600 ms hold and
-   * again after the lift: its role, how it selects text, and whether an
-   * inline lock is on it.
+   * again after the lift. It records its role, how it selects text, and
+   * whether an inline lock is on it.
    */
   interface HeldHit {
     role: string | null;
@@ -1011,9 +995,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
   test('P2 · a long press on the label selects natively, a tap selects nothing, and no press leaves selection suppressed (spec:AST-094 FR41)', async ({
     page,
   }) => {
-    // FR41 and DEC-9: the Switch defines no hold action, so like a checkbox
-    // row's label its label keeps the browser's long-press selection; a tap
-    // activates and never selects; any suppression lasts only for its press.
+    // The Switch defines no hold action. So, like a checkbox row's label, its
+    // label keeps the browser's long-press selection. A tap activates and
+    // never selects, and any suppression lasts only for its press.
     const {driver, input, center} = await openSwitch(page);
     const label = page
       .locator('#storybook-root')
@@ -1210,9 +1194,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
   test('P7 · on a page that scrolls, a press waits UIScrollView’s content delay before it shows', async ({
     page,
   }) => {
-    // The document is the page's scroll view, as a table is UIKit's: the
-    // press waits the content delay, so a scroll takes the touch first (in a
-    // table UIKit's press shows ~200 ms after touch-down).
+    // The document is the page's scroll view, as a table is UIKit's. The
+    // press waits the content delay, so a scroll takes the touch first. In a
+    // table UIKit's press shows ~200 ms after touch-down.
     const {driver, center} = await openSwitch(
       page,
       'core-switch--in-scrolling-list',
@@ -1284,8 +1268,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       'injected touches do not scroll natively in this engine (checked on the iOS simulator instead)',
     );
     // Held 300 ms, then dragged up 200 px: the page scrolls and the switch
-    // yields (AST-094 FR20), where UISwitch in a table cell would keep the
-    // touch.
+    // yields. UISwitch in a table cell would keep the touch.
     await driver.play(
       drag(
         center,
@@ -1379,12 +1362,10 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
   test('P11 · under a mouse the switch keeps its desktop look: the track’s fill and padding, the thumb’s size and slide', async ({
     browser,
   }) => {
-    // A context with no touch screen: the primary pointer is not coarse (a
-    // headless box reports no pointer at all), so no touch presentation rule
-    // applies and the switch must look as it always has (a later style that
-    // names a property replaces all of it).
-    // (Contexts made here inherit the project's phone options unless
-    // they are named.)
+    // A context with no touch screen: the primary pointer is not coarse. A
+    // headless box reports no pointer at all. So no touch presentation rule
+    // applies, and the switch must look as it always has. Contexts made here
+    // inherit the project's phone options unless they are named.
     const context = await browser.newContext({
       viewport: {width: 480, height: 320},
       screen: {width: 480, height: 320},
@@ -1683,9 +1664,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     // It turned around mid-travel, short of the on end...
     expect(farthest).toBeGreaterThan(1);
     expect(farthest).toBeLessThan(TRAVEL_PX - 1);
-    // ...from where it was: no frame moves it more than a few px. Each step
-    // is measured against the time its frames span, so a frame read late
-    // (two or more vsyncs of compositor motion in one sample) is not a jump.
+    // ...from where it was: no frame moves it more than a few px. Each step is
+    // measured against the time its frames span. So a frame read late, two
+    // vsyncs of motion in one sample, is not a jump.
     const FRAME_MS = 1000 / 60;
     const perFrame = samples
       .slice(1)
@@ -1731,10 +1712,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     );
     const {driver, input, thumb, center} = await openSwitch(page);
     await markElement(thumb, {size: 6, inset: 2});
-    // The page blocks at the second touch's start, so that touch's lift (30
-    // ms later, its timestamp the scripted one) waits for the block: the
-    // switch handles it about 70 ms after it happened, while the compositor
-    // keeps the first travel moving.
+    // The page blocks at the second touch's start, so that touch's lift waits
+    // for the block. The switch handles the lift about 70 ms after it
+    // happened, while the compositor keeps the first travel moving.
     await page.evaluate(() => {
       const w = window as unknown as {__block?: {from: number; to: number}};
       let starts = 0;
@@ -1782,7 +1762,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     // It turned around mid-travel, short of the on end...
     expect(farthest).toBeGreaterThan(1);
     expect(farthest).toBeLessThan(TRAVEL_PX - 1);
-    // ...from the place the screen showed when the late lift was handled: no
+    // ...from the place the screen showed when the late lift was handled. No
     // presented frame moves it more than a few px from the one before,
     // measured against the time the two frames span.
     const FRAME_MS = 1000 / 60;
@@ -1807,10 +1787,10 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const {driver, input, thumb, center} = await openSwitch(page);
     await markElement(thumb, {size: 6, inset: 2});
     // The page blocks in the lift's own dispatch, after the switch's
-    // listeners (they were added first) have started the travel: the frame
-    // that first shows the travel comes about 100 ms after the switch asked
-    // for it. As Core Animation starts an animation at its commit, a block
-    // before that frame delays the motion instead of skipping into it.
+    // listeners have started the travel. The frame that first shows the
+    // travel comes about 100 ms after the switch asked for it. As Core
+    // Animation starts an animation at its commit, a block before that frame
+    // delays the motion instead of skipping into it.
     await page.evaluate(() => {
       const w = window as unknown as {__block?: {from: number; to: number}};
       addEventListener(
@@ -1829,8 +1809,8 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
         {capture: true, passive: true},
       );
     });
-    // The marker sits at the thumb's inline start: at rest it moves with the
-    // thumb's left edge (each state has its own thumb size, Switch FR13).
+    // The marker sits at the thumb's inline start. At rest it moves with the
+    // thumb's left edge, since each state has its own thumb size.
     const restLeft = async () =>
       thumb.evaluate(element => element.getBoundingClientRect().left);
     const offLeft = await restLeft();
@@ -1946,10 +1926,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const {driver, input, thumb, center} = await openSwitch(page);
     await markElement(thumb, {size: 6, inset: 2});
     // The block starts in the page once the travel is one frame into its
-    // curve, from a task queued in that frame, so it holds the same part of
-    // the travel whatever the page's own timing (the lift, which starts at
-    // touch-down, is the thumb's first animation, and a round trip from here
-    // would start the block late).
+    // curve, from a task queued in that frame. So it holds the same part of
+    // the travel whatever the page's own timing. The lift starts at
+    // touch-down, and a round trip from here would start the block late.
     await page.evaluate(() => {
       const w = window as unknown as {
         __block?: {from: number; to: number; spins: number};
@@ -2037,10 +2016,10 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const proof = busyWindowProof(
       tracked,
       {from: block.from, to: Math.min(block.to, travel.to)},
-      // The screencast places the marker to the whole px. The 13 px travel on
-      // UISwitch's critically damped 0.3 s spring moves less than 1 px per
-      // 60 Hz frame once 4.3 px remain (110 ms in), so from there a frame
-      // can show no change while the thumb moves: judged until then.
+      // The screencast places the marker to the whole px. On UISwitch's 0.3 s
+      // spring, the 13 px travel moves under 1 px per frame once 4.3 px remain
+      // (110 ms). From there a frame can show no change while the thumb moves,
+      // so it is judged until then.
       {axis: 'x', settledWithin: 4.5},
     );
     await writeEvidence(
@@ -2083,9 +2062,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       'screencast frame evidence is Chromium-only in Playwright (WebKit: checked on the iOS simulator instead)',
     );
     const {driver, input, onLayer, center} = await openSwitch(page);
-    // Only the press layer may change the probe: the thumb is hidden (its
-    // animations still run), the colour fade is off, and the value stays
-    // off (every click is stopped before it reaches the input).
+    // Only the press layer may change the probe. The thumb is hidden, though
+    // its animations still run, and the colour fade is off. The value stays
+    // off: every click is stopped before it reaches the input.
     await page.addStyleTag({
       content:
         '#storybook-root .astryx-switch-thumb { visibility: hidden } #storybook-root .astryx-switch::after { display: none !important }',
@@ -2322,8 +2301,8 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     ).toEqual([]);
     await test.step('measured, not asserted: the first change’s own task after load', async () => {
       // The first change runs the switch's and the animator's code for the
-      // first time: tens of ms on a slow CPU (the pull request states the
-      // numbers). Reported with the run, never judged against a bound.
+      // first time: tens of ms on a slow CPU. The pull request states the
+      // numbers. Reported with the run, never judged against a bound.
       const changeTaskMs = await page.evaluate(
         () => (window as unknown as {__changeTaskMs?: number}).__changeTaskMs,
       );
@@ -2408,9 +2387,8 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       );
       await board.write(testInfo);
       const ons = board.frames.map(f => f.data.on as number);
-      // Off until the flip, then the track color rises: waited for in the
-      // page, since a loaded machine can take the last frame before the
-      // rise shows.
+      // Off until the flip, then the track color rises. It is waited for in
+      // the page: a loaded machine can take the last frame before it shows.
       expect(ons[0]).toBeCloseTo(0, 2);
       await expect
         .poll(async () => (await presented(page)).on)

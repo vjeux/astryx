@@ -8,28 +8,8 @@
  *   flip distance, and the release timing
  * @position The switch domain of the UIKit constants table (motion/uikit)
  *
- * The reference is UISwitch on iOS 26.2 (style `.sliding`): a white capsule
- * thumb (a `_UILiquidLensView`) that, while a finger is on the control, lifts
- * into a larger clear glass lens, follows a drag with a rubber band past
- * either end, and settles back to a white capsule when the finger lifts.
- * The track color is a wide image ("the well") that slides under the track
- * on a spring of its own. UISwitch plays no haptic.
- *
- * Values read with the UIKit lab (a UIKit host app with hooks injected) on
- * the iOS 26.2 simulator: subview frames, the `CASpringAnimation`s UIKit
- * attaches (read exactly), and per-frame presentation samples of the lens,
- * which UIKit drives from the main thread with presentation modifiers. The
- * lens springs are fits of those samples (closed-form spring step, least
- * squares, rms residual given per entry). Lengths are in pt (CSS px).
- *
- * Every leaf carries one or more `@source`; GUESS values also carry the
- * `@measure` task that will confirm or replace them. uikit.test.ts enforces
- * both.
- *
- * The springs and the minimum lift time are motion roles
- * (`switchControl.lift` and so on), registered by registerSwitchTable(); they
- * stay internal, so no theme overrides them yet. The geometry, rubber band,
- * flip distance, shadow and haptic are not motion: internal constants.
+ * The values are UISwitch's on iOS 26.2, read in a UIKit host app on the
+ * simulator. Lengths are in pt (CSS px). uikit.test.ts checks each `@source`.
  *
  * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md.
  */
@@ -37,6 +17,11 @@
 import {registerMotionTable} from '../roles';
 import {SWITCH_THUMB_MOVE_SPRING} from './springs';
 
+/**
+ * UISwitch on iOS 26.2. Under a finger its white thumb lifts into a clear
+ * glass lens, and a drag moves it with a rubber band. The track colour slides
+ * on a spring of its own. UISwitch plays no haptic.
+ */
 export const switchControl = {
   /**
    * The control's size (width × height): the track.
@@ -54,9 +39,9 @@ export const switchControl = {
    */
   thumbSize: [37, 24],
   /**
-   * The thumb lifted under a finger (width × height): the lens grows about
-   * its own center, overflowing the track, and holds this size while the
-   * finger stays down.
+   * The thumb lifted under a finger (width × height). The lens grows about
+   * its own center, past the track, and holds this size while the finger
+   * stays down.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, lens bounds settled at 58 × 38.33 during a 1 s hold
    *   (center unmoved), Oct 23 2026
@@ -96,9 +81,8 @@ export const switchControl = {
    */
   minimumLiftMs: 235,
   /**
-   * The thumb travelling to the committed end after a release (a tap, a
-   * hold, a drag) and on a programmatic change, from the thumb's own
-   * velocity.
+   * The thumb travelling to the committed end after a release or a
+   * programmatic change. It starts from the thumb's own velocity.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, the lens's position behavior read on a tap (damping 1,
    *   response 0.3); the lens center after a 50 ms tap and after a 1 s hold
@@ -117,20 +101,19 @@ export const switchControl = {
   tracking: {response: 0.36, dampingRatio: 1},
   /**
    * The drag's rubber band past either end: UIScrollView's
-   * `(1 − 1 ÷ (x·c ÷ d + 1))·d`, with this coefficient c and dimension d in pt
-   * for the 28 pt tall control (scale d with the track height).
+   * `(1 − 1 ÷ (x·c ÷ d + 1))·d`. The coefficient c and the dimension d are in
+   * pt for the 28 pt control. Scale d with the track height.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, the same drag fit: c 0.55, d 11.75–12 pt, the
    *   translation measured from where the finger landed, Oct 23 2026
    */
   rubberBand: {coefficient: 0.55, dimension: 12},
   /**
-   * A drag flips the switch by the finger, not the thumb: once the finger
-   * is more than this far from where it landed, toward the other end, in pt
-   * (the track width minus the thumb width: 63 − 37), the switch shows the
-   * other side; it shows the side it started on again once the finger comes
-   * back past where it landed. Flips happen on touch events only, so a fast
-   * swipe whose last move crosses the line flips on the lift.
+   * A drag flips the switch by the finger, not the thumb. Once the finger is
+   * this far from where it landed, toward the other end, the switch shows
+   * the other side. The distance is the track width minus the thumb width
+   * (63 − 37 pt). Back past where it landed, the starting side shows again.
+   * Flips happen on touch events only, so a fast swipe flips on the lift.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, `UISwitchModernVisualElement` ivars per frame and the
    *   "SwitchWellPosition" springs during 1 pt-step drags: the same 26 pt for

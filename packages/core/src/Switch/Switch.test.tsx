@@ -1084,12 +1084,11 @@ describe('Switch', () => {
       };
       const selector = (rule: string) => rule.slice(0, rule.indexOf('{'));
       const body = (rule: string) => rule.slice(rule.indexOf('{'));
-      // The controller writes the row. Under a finger the press is a layer
-      // on the track, under the thumb: it exists only while the row is
-      // pressed or releasing (no element and no box at rest), paints the
-      // pressed token, shows at once, and releases on a control's clock on
-      // the compositor.
-      // Track and thumb both paint it (design:user-states DR1).
+      // The controller writes the row. Under a finger the press is a layer on
+      // the track, under the thumb. It exists only while the row is pressed
+      // or releasing, with no element and no box at rest. It paints the
+      // pressed token, shows at once, and releases on the compositor. Track
+      // and thumb both paint it.
       for (const part of [track, thumb]) {
         const layer = rulesDeclaredFor(part).filter(rule =>
           selector(rule).includes('::before'),
@@ -1281,8 +1280,8 @@ describe('Switch', () => {
 
   describe('mouse look', () => {
     // jsdom applies no `@media (pointer: coarse)` rule, so these are the
-    // styles a mouse gets: the touch presentation must override none of
-    // them (a later style that names a property replaces all of it).
+    // styles a mouse gets. The touch presentation must override none of
+    // them: a later style that names a property replaces all of it.
     const look = (container: HTMLElement) => {
       const track = container.querySelector<HTMLElement>('.astryx-switch');
       const thumb = container.querySelector<HTMLElement>(
@@ -1454,8 +1453,8 @@ describe('touch listeners (spec:AST-094 FR24)', () => {
       }) as unknown as MediaQueryList;
     const listenersWhileRendering = (isDisabled: boolean) => {
       vi.spyOn(window, 'matchMedia').mockImplementation(fineMedia);
-      // The one shared press controller is FR24's allowed idle page listener:
-      // it is installed before the render is measured, so a count is the
+      // The one shared press controller is the allowed idle page listener. It
+      // is installed before the render is measured, so a count is the
       // switch's own.
       const releasePressController = installPressFeedback();
       const onElements: {

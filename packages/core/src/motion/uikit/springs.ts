@@ -16,11 +16,10 @@
  * uikit.test.ts enforces both.
  *
  * Most springs are measured on iOS 26.2 or documented by Apple; two are still
- * GUESSES (`segmentedThumb`, `banner`); `switchThumbMove` is the switch's
- * measured travel, which its own table (uikit/switch.ts) reads. A guess
- * starts from the nearest sourced spring and names it, so a component built
- * on the table gets the right value the moment its measurement lands,
- * without changing.
+ * GUESSES (`segmentedThumb`, `banner`). `switchThumbMove` is the switch's
+ * measured travel, which uikit/switch.ts reads. A guess starts from the
+ * nearest sourced spring and names it. A component built on the table gets
+ * the measured value the moment it lands, without changing.
  *
  * Press highlight in/out are fades, not springs: see timing.ts.
  *
