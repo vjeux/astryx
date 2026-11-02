@@ -8,7 +8,8 @@
  *   spring is valid and settles; the alert spring is UIKit's legacy
  *   derivation; a sheet's detent and presentation springs render alike;
  *   scroll-to-top and the rubber band reproduce what UIKit was measured doing;
- *   the press release curve is the press model's
+ *   the press release curve is the press model's; the date picker's
+ *   month/year toggle fades on the state-change clock
  * @position Testing; the source rules are uikit.test.ts
  */
 
@@ -25,7 +26,7 @@ import {
   toSpring,
   type SpringDescription,
 } from '../spring';
-import {scroll, springs} from '.';
+import {datePicker, scroll, springs, timing} from '.';
 import {press} from './timing';
 
 describe('UIKit constants table through the motion math', () => {
@@ -117,5 +118,13 @@ describe('UIKit constants table through the motion math', () => {
         return match == null ? [] : [match[1].split(',').map(Number)];
       });
     expect(curves).toEqual([[...press.highlightOutCurve]]);
+  });
+
+  it('the date picker\u2019s month/year toggle fades on the state-change clock', () => {
+    // UIKit's 0.25 s `UIView.animate` is the role a surface plays, so the
+    // measured leaf and the role must agree.
+    expect(datePicker.calendar.monthYearToggle.fadeMs).toBe(
+      timing.stateChangeMs,
+    );
   });
 });
