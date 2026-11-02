@@ -179,13 +179,14 @@ function createPlugin() {
       postcssPlugin: PLUGIN_NAME,
       plugins: [
         async function (root, result) {
-          if (process.env.TURBOPACK && process.env.ASTRYX_BUILD_TURBOPACK) {
+          if (process.env.ASTRYX_BUILD_SOURCE) {
             throw new Error(
-              'withAstryx() under Turbopack cannot run beside @astryxdesign/build/postcss, ' +
-                "the webpack setup's PostCSS plugin: its rules never match the classes " +
-                'Turbopack renders, so every Astryx component would be unstyled. Use ' +
-                "'@astryxdesign/build/next/postcss' and `@astryx;` (see the " +
-                '@astryxdesign/build README), or build with `next build --webpack`.',
+              'withAstryx() cannot run beside @astryxdesign/build/postcss: ' +
+                'withAstryx() compiles Astryx with the class names its prebuilt ' +
+                "stylesheets use, which this plugin's rules never match, so every " +
+                "Astryx component would be unstyled. Use '@astryxdesign/build/next/postcss' " +
+                'and `@astryx;`, and compile your own StyleX with its own plugin ' +
+                '(see the @astryxdesign/build README).',
             );
           }
           const fileName = result.opts.from;

@@ -1,18 +1,18 @@
 # @astryxdesign/build
 
-Build plugins for Astryx source builds. In the webpack and Vite setups, its babel, PostCSS, and Vite integrations compile Astryx library and product code with separate class name prefixes, which enables independent CSS layers:
+Build plugins for Astryx source builds. In Next.js, under webpack or Turbopack, `withAstryx()` and `@astryxdesign/build/next/postcss` compile Astryx the way its prebuilt stylesheets are compiled: the same class names, in `@layer astryx-base`, with your own CSS unlayered above it.
+
+The Vite setup and the Babel and PostCSS plugins compile Astryx library and product code with separate class name prefixes, which enables independent CSS layers:
 
 ```
 reset < astryx-base (library, astryx prefix) < astryx-theme < product (app, x prefix)
 ```
 
-Under Turbopack, `withAstryx()` and `@astryxdesign/build/next/postcss` compile Astryx the way its prebuilt stylesheets are compiled: the same class names, in `@layer astryx-base`.
-
 ## Why?
 
 StyleX generates atomic CSS: same declaration = same class name. Without separate prefixes, library and product classes collide and can't be placed in independent CSS layers, which breaks theme overrides.
 
-In the webpack and Vite setups, `@astryxdesign/build` solves this by:
+The Vite setup and the Babel and PostCSS plugins solve this by:
 
 1. Compiling Astryx library code with `astryx` prefix (`.astryx78zum5`)
 2. Compiling product code with default `x` prefix (`.x78zum5`)
@@ -21,13 +21,13 @@ In the webpack and Vite setups, `@astryxdesign/build` solves this by:
 
 ## Packages
 
-| Export                             | Purpose                                      | Platform                     |
-| ---------------------------------- | -------------------------------------------- | ---------------------------- |
-| `@astryxdesign/build/babel`        | Babel plugin: splits class prefixes per file | Next.js, any babel pipeline  |
-| `@astryxdesign/build/postcss`      | PostCSS plugin: compiles + splits CSS layers | Next.js (webpack)            |
-| `@astryxdesign/build/next`         | `withAstryx()`: the Next.js config helper    | Next.js (webpack, Turbopack) |
-| `@astryxdesign/build/next/postcss` | PostCSS plugin: `@astryx;`                   | Next.js (Turbopack)          |
-| `@astryxdesign/build/vite`         | Vite plugin: wraps unplugin + splits layers  | Vite, Storybook              |
+| Export                             | Purpose                                      | Platform                                 |
+| ---------------------------------- | -------------------------------------------- | ---------------------------------------- |
+| `@astryxdesign/build/next`         | `withAstryx()`: the Next.js config helper    | Next.js (webpack, Turbopack)             |
+| `@astryxdesign/build/next/postcss` | PostCSS plugin: `@astryx;`                   | Next.js (webpack, Turbopack)             |
+| `@astryxdesign/build/vite`         | Vite plugin: wraps unplugin + splits layers  | Vite, Storybook                          |
+| `@astryxdesign/build/babel`        | Babel plugin: splits class prefixes per file | Babel pipelines without `withAstryx()`   |
+| `@astryxdesign/build/postcss`      | PostCSS plugin: compiles + splits CSS layers | PostCSS pipelines without `withAstryx()` |
 
 ## Install
 
@@ -43,16 +43,16 @@ npm install -D @stylexjs/unplugin
 
 ---
 
-## Next.js Setup (Turbopack)
+## Next.js Setup
 
-Under Turbopack, the default bundler since Next.js 16, `withAstryx()` compiles the
+Under webpack or Turbopack (the default bundler since Next.js 16), `withAstryx()` compiles the
 Astryx modules your app imports from source as the prebuilt stylesheets are compiled,
 and `@astryxdesign/build/next/postcss` emits each source-built package's prebuilt
 stylesheet from that source: the same rules and selectors, in the same order, inside
 `@layer astryx-base`. Installed and workspace-linked packages both work; Astryx needs
 no Babel config.
 
-1. `next.config.mjs`, around your config and its own `turbopack.rules`:
+1. `next.config.mjs`, around your config and its own `turbopack.rules` or `webpack` hook:
 
    ```js
    import {withAstryx} from '@astryxdesign/build/next';
@@ -82,124 +82,45 @@ Your own Turbopack rules are kept off Astryx source. Your Babel config file is n
 and Babel's `ignore` cannot exclude Astryx: to keep it off, set
 `experimental.turbopackUseBuiltinBabel: false` and run `babel-loader` from a
 `turbopack.rules` entry, which `withAstryx()` keeps off Astryx source like any rule.
+Under webpack, Astryx modules reach your loaders and Babel config only after
+`withAstryx()` has compiled their StyleX, and Astryx needs no Babel config there
+either. A custom Babel config turns off Next.js's SWC compiler, which
+`next/font` needs (a fresh `create-next-app` layout imports `next/font/google`),
+and it also compiles your dependencies, where Next.js's Babel cannot compile
+Lexical, which Rich Text imports. So compile your own StyleX with a `webpack`
+rule on your own files rather than a Babel config.
 
-## Next.js Setup (webpack)
+## Migrating from the webpack setup
 
-These steps run under `next dev --webpack` and `next build --webpack`.
+Before 0.8, a webpack app compiled Astryx with `@astryxdesign/build/babel` and
+`@astryxdesign/build/postcss`, in `astryx`-prefixed classes and a `product` layer.
+`withAstryx()` now builds Astryx under webpack as under Turbopack, and the
+PostCSS plugin refuses to run beside it, naming these steps:
 
-### 1. babel.config.js
+1. `babel.config.js`: remove `@astryxdesign/build/babel`, and the file itself if
+   nothing else needs it. If your own code uses StyleX, compile it with a
+   `webpack` rule on your own files (above); keeping `@stylexjs/babel-plugin`
+   in a Babel config also works, without `next/font` or Rich Text.
+2. `postcss.config.js`: replace `@astryxdesign/build/postcss` with
+   `@astryxdesign/build/next/postcss`. If your own code uses StyleX, add
+   `@stylexjs/postcss-plugin` for it (its `include` covers your source, and its
+   `babelConfig` holds the plugins `babelPlugins` held).
+3. Your global stylesheet: add `@astryx;` (before `@stylex;`, if you keep it for
+   your own StyleX) and drop `product` from the `@layer` list: your own CSS is
+   unlayered and wins over every Astryx rule. `layers.css` is no longer needed.
+4. `next.config.mjs`: remove any `transpilePackages` or `conditionNames` you set
+   for Astryx by hand; `withAstryx()` sets them.
 
-```js
-const path = require('path');
+Astryx's class names change from `astryx…` to the prebuilt stylesheets' `x…`;
+select Astryx elements by their stable `astryx-*` classes rather than by
+compiled ones.
 
-module.exports = {
-  presets: ['next/babel'],
-  plugins: [
-    [
-      '@astryxdesign/build/babel',
-      {
-        dev: process.env.NODE_ENV !== 'production',
-        runtimeInjection: false,
-        propertyValidationMode: 'throw',
-        treeshakeCompensation: true,
-        enableInlinedConditionalMerge: true,
-        aliases: {
-          '@astryxdesign/core/*': [
-            path.join(__dirname, 'node_modules/@astryxdesign/core/*'),
-          ],
-          '@astryxdesign/core': [
-            path.join(__dirname, 'node_modules/@astryxdesign/core'),
-          ],
-        },
-        unstable_moduleResolution: {type: 'commonJS'},
-      },
-    ],
-  ],
-};
-```
-
-A custom Babel config turns off Next.js's SWC compiler, and `next/font` needs SWC. Remove `next/font` from your layout (a fresh `create-next-app` layout imports `next/font/google`), or the build fails with `"next/font" requires SWC although Babel is being used`.
-
-### 2. postcss.config.js
-
-```js
-const path = require('path');
-
-module.exports = {
-  plugins: {
-    '@astryxdesign/build/postcss': {
-      appDir: 'src',
-      babelPlugins: [
-        [
-          '@stylexjs/babel-plugin',
-          {
-            dev: process.env.NODE_ENV !== 'production',
-            runtimeInjection: false,
-            treeshakeCompensation: true,
-            enableInlinedConditionalMerge: true,
-            aliases: {
-              '@astryxdesign/core/*': [
-                path.join(__dirname, 'node_modules/@astryxdesign/core/*'),
-              ],
-              '@astryxdesign/core': [
-                path.join(__dirname, 'node_modules/@astryxdesign/core'),
-              ],
-            },
-            unstable_moduleResolution: {type: 'commonJS'},
-          },
-        ],
-      ],
-    },
-  },
-};
-```
-
-### 3. next.config.mjs
-
-Or `withAstryx()` from `@astryxdesign/build/next`, which sets both of these for you.
-Either way the work happens in the `webpack` hook, so the build has to run with
-`--webpack` — see the note at the top of this section.
-
-```js
-const nextConfig = {
-  transpilePackages: ['@astryxdesign/core', '@astryxdesign/theme-neutral'],
-  webpack: config => {
-    // Resolve to source TypeScript instead of dist
-    config.resolve.conditionNames = ['source', 'import', 'require', 'default'];
-    return config;
-  },
-};
-
-export default nextConfig;
-```
-
-### 4. CSS files
-
-`src/app/layers.css`:
-
-```css
-@layer reset, astryx-base, astryx-theme, product;
-```
-
-`src/app/globals.css`:
-
-```css
-@import './layers.css';
-@import '@astryxdesign/core/reset.css';
-@import '@astryxdesign/theme-neutral/theme.css';
-
-@stylex;
-```
-
-> `layers.css` must be a separate file because webpack hoists `@import` content above inline CSS.
-
-### 5. Browserslist
-
-```json
-{
-  "browserslist": ["last 1 Chrome version"]
-}
-```
+`astryx upgrade --from <your version> --apply` makes the mechanical part of
+steps 1 to 3: the Babel and PostCSS plugin entries (a PostCSS entry with
+options other than `appDir` and `babelPlugins` stays for you to move), the
+`product` layer, and `@astryx;` in a stylesheet that loads Core's `reset.css`.
+It keeps a Babel config for your own StyleX, as before; moving that to a
+`webpack` rule, for `next/font` or Rich Text, is yours.
 
 ---
 

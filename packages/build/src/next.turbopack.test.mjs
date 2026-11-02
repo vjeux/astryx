@@ -8,15 +8,16 @@
  *   plugin and no layer-order line of its own; Core linked from a workspace
  *   (with its own node_modules), the others installed, and every installed
  *   prebuilt package stylesheet deleted before the build
- * @output Proves (spec:AST-080 FR7, FR9) that Turbopack `next build` and
- *   `next dev` compile every package from source with the prebuilt class
- *   names and keep the app's rules to its files in their order; that in the
- *   served page, per package, the product's class and the product's StyleX
- *   rule beat the base rule and a theme beats the base in either load order,
- *   in the built app also with its stylesheet chunks reversed; that importing a
- *   source-built package's prebuilt stylesheet fails the build; and that an
- *   app with Core alone declares Core's data-colour defaults
- * @position End-to-end check for the Turbopack half of @astryxdesign/build, run
+ * @output Proves (spec:AST-080 FR7, FR9) that Turbopack's `next build` and
+ *   `next dev`, and webpack's `next build`, compile every package from source
+ *   with the prebuilt class names (and that Turbopack keeps the app's rules to
+ *   its files in their order); that in the served page, per package, the
+ *   product's class and the product's StyleX rule beat the base rule and a
+ *   theme beats the base in either load order, in each built app also with
+ *   its stylesheet chunks reversed; that importing a source-built package's
+ *   prebuilt stylesheet fails the build; and that an app with Core alone
+ *   declares Core's data-colour defaults
+ * @position End-to-end check for withAstryx() under both bundlers, run
  *   by `pnpm test:build` (the Build package's own CI job) or directly:
  *   ASTRYX_TURBOPACK_E2E=1 pnpm exec vitest run --project node packages/build/src/next.turbopack.test.mjs
  */
@@ -55,17 +56,24 @@ function unscratch(dir) {
   roots.delete(dir);
 }
 
-/** The page a build rendered, and its stylesheets. */
+/**
+ * The page a build rendered, and its stylesheets: Turbopack writes them to
+ * `static/chunks`, webpack to `static/css`.
+ */
 function built(dir) {
   const page = fs.readFileSync(
     path.join(dir, '.next/server/app/index.html'),
     'utf8',
   );
-  const chunks = path.join(dir, '.next/static/chunks');
-  const sheets = fs
-    .readdirSync(chunks)
-    .filter(file => file.endsWith('.css'))
-    .map(file => fs.readFileSync(path.join(chunks, file), 'utf8'));
+  const sheets = ['chunks', 'css']
+    .map(folder => path.join(dir, '.next/static', folder))
+    .filter(folder => fs.existsSync(folder))
+    .flatMap(folder =>
+      fs
+        .readdirSync(folder)
+        .filter(file => file.endsWith('.css'))
+        .map(file => fs.readFileSync(path.join(folder, file), 'utf8')),
+    );
   return {page, css: sheets.join('\n')};
 }
 
@@ -355,6 +363,8 @@ describe.runIf(process.env.ASTRYX_TURBOPACK_E2E === '1')(
     });
 
     describe("withAstryx() under Turbopack, importing a source-built package's prebuilt stylesheet", () => {
+      // The check lives in the @astryx PostCSS plugin, which runs the same
+      // under webpack; one bundler's build keeps test-build's time down.
       it('fails the build instead of taking rules from it', () => {
         const {dir, app: imports} = scratch({
           packages: [],
@@ -384,6 +394,52 @@ describe.runIf(process.env.ASTRYX_TURBOPACK_E2E === '1')(
           /@astryxdesign\/core is built from source[\s\S]*astryx\.css/,
         );
       }, 600_000);
+    });
+
+    describe('withAstryx() under webpack', () => {
+      let webpackDir, webpackApp, webpackHtml, webpackCss;
+
+      beforeAll(() => {
+        // The same app and config, with every installed prebuilt package
+        // stylesheet deleted, built by webpack. Under webpack an app's Babel
+        // config also compiles its dependencies, and Next.js's Babel cannot
+        // compile Lexical's build (`\p{L}` in a regular expression), which
+        // Rich Text imports: this app compiles its StyleX through its own
+        // webpack rule (next.config.mjs) instead.
+        ({dir: webpackDir, app: webpackApp} = scratch());
+        fs.rmSync(path.join(webpackApp, 'babel.config.js'));
+        execFileSync(
+          process.execPath,
+          [nextBin(webpackApp), 'build', '--webpack'],
+          {cwd: webpackApp, env},
+        );
+        ({page: webpackHtml, css: webpackCss} = built(webpackApp));
+      }, 600_000);
+
+      it('builds Core linked and Lab, Charts and Rich Text installed, with the prebuilt class names', () => {
+        expectStyled(webpackHtml, webpackCss);
+      });
+
+      it('emits Astryx rules in astryx-base layers, without a priority layer', () => {
+        expect(webpackCss).toContain('@layer astryx-base');
+        expect(webpackCss).not.toMatch(
+          /@layer priority|@layer [^{;]*\bproduct\b|\.astryx[a-z0-9]{5,}/,
+        );
+      });
+
+      it('keeps the product and a theme over each package base in the built app', async () => {
+        try {
+          await serving(webpackApp, 'start', origin =>
+            expectCascade(origin, {reversed: true}),
+          );
+        } finally {
+          // The app's last reader: the cases above read it, in this order.
+          unscratch(webpackDir);
+        }
+      }, 300_000);
+
+      // `next dev` runs the same withAstryx() configuration, checked under
+      // Turbopack; one served webpack build keeps test-build's time down.
     });
 
     describe('withAstryx() under Turbopack, with Core alone', () => {

@@ -106,7 +106,7 @@ function prebuiltApp() {
 function countingApp() {
   const app = sourceApp();
   const log = path.join(app, 'astryx-loader.log');
-  const loader = path.join(packageDir, 'src/turbopack-loader.js');
+  const loader = path.join(packageDir, 'src/source-loader.js');
   fs.writeFileSync(
     path.join(app, 'counting-loader.cjs'),
     [
@@ -127,7 +127,7 @@ function countingApp() {
           "const counting = require.resolve('./counting-loader.cjs');",
           "for (const rule of [config.turbopack.rules['*.{ts,tsx}']].flat()) {",
           '  for (const entry of rule.loaders ?? []) {',
-          '    if (entry.loader?.endsWith(`turbopack-loader.js`)) entry.loader = counting;',
+          '    if (entry.loader?.endsWith(`source-loader.js`)) entry.loader = counting;',
           '  }',
           '}',
           'export default config;',

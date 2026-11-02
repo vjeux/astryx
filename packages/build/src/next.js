@@ -6,7 +6,8 @@
  * @astryxdesign/build/next
  *
  * Next.js configuration helper for Astryx source builds, under webpack or
- * Turbopack.
+ * Turbopack: either way Astryx compiles as its prebuilt stylesheets are
+ * compiled, and `@astryxdesign/build/next/postcss` prints their rules.
  *
  * Usage in next.config.mjs:
  *   import {withAstryx} from '@astryxdesign/build/next';
@@ -20,16 +21,13 @@ const path = require('path');
 const {fileURLToPath} = require('url');
 const {
   ASTRYX_PACKAGES,
-  SOURCE_PACKAGES,
   findPackageDir,
   sourcePackages,
   stylexOptions,
 } = require('./source-stylesheet');
 
-const ASTRYX_MODULE = /[\\/]node_modules[\\/]@astryxdesign[\\/]/;
-
 const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const TURBOPACK_LOADER = require.resolve('./turbopack-loader.js');
+const SOURCE_LOADER = require.resolve('./source-loader.js');
 
 /**
  * Match a wildcard alias key such as `@astryxdesign/*` against a request. The
@@ -306,9 +304,7 @@ function turbopackConfig(turbopack = {}, cwd) {
     ...[rules[ASTRYX_RULE] ?? []].flat(),
     ...packages.map((pkg, i) => ({
       condition: {path: sourceRegExp(tails[i])},
-      loaders: [
-        {loader: TURBOPACK_LOADER, options: stylexOptions(pkg, packages)},
-      ],
+      loaders: [{loader: SOURCE_LOADER, options: stylexOptions(pkg, packages)}],
       as: '*',
     })),
   ];
@@ -316,10 +312,30 @@ function turbopackConfig(turbopack = {}, cwd) {
 }
 
 /**
- * Wraps a Next.js config to enable Astryx source builds.
+ * The webpack rules that compile each source-built package's modules with the
+ * prebuilt stylesheets' StyleX options, before any other loader runs on them
+ * (`enforce: 'pre'`), so an app's own Babel or StyleX setup only ever sees
+ * Astryx modules already compiled. A rule matches a package's source by its
+ * real path, which is the path webpack reports for a symlinked package.
+ */
+function sourceRules(from) {
+  const packages = sourcePackages(from);
+  return packages.map(pkg => ({
+    test: new RegExp(
+      `^${escapeRegExp(fs.realpathSync(pkg.srcDir) + path.sep)}`,
+    ),
+    enforce: 'pre',
+    use: [{loader: SOURCE_LOADER, options: stylexOptions(pkg, packages)}],
+  }));
+}
+
+/**
+ * Wraps a Next.js config to build Astryx from source.
  * - Adds transpilePackages for @astryxdesign/* packages
- * - webpack: sets conditionNames and aliases to resolve source exports
+ * - webpack: resolves the packages to their `source` exports and compiles
+ *   them with the prebuilt stylesheets' StyleX options (`sourceRules()`)
  * - Turbopack: see `turbopackConfig()`
+ * Either way `@astryxdesign/build/next/postcss` prints the matching rules.
  */
 function withAstryx(nextConfig = {}) {
   const astryxPackages = ASTRYX_PACKAGES;
@@ -327,16 +343,16 @@ function withAstryx(nextConfig = {}) {
   const existingTranspile = nextConfig.transpilePackages || [];
   const merged = Array.from(new Set([...existingTranspile, ...astryxPackages]));
 
+  // @astryxdesign/build/postcss, the former webpack setup's plugin, reads this
+  // and refuses to run: its rules never match the classes this build renders.
+  process.env.ASTRYX_BUILD_SOURCE = '1';
+
   // Next sets TURBOPACK whenever it bundles with Turbopack (its default since
   // Next 16) and leaves it unset under `--webpack`.
   if (process.env.TURBOPACK) {
-    // The webpack setup's PostCSS plugin reads this and refuses to run.
-    process.env.ASTRYX_BUILD_TURBOPACK = '1';
     return {
       ...nextConfig,
-      transpilePackages: Array.from(
-        new Set([...existingTranspile, ...SOURCE_PACKAGES]),
-      ),
+      transpilePackages: merged,
       turbopack: turbopackConfig(nextConfig.turbopack, projectDir()),
     };
   }
@@ -347,49 +363,21 @@ function withAstryx(nextConfig = {}) {
     ...nextConfig,
     transpilePackages: merged,
     webpack: (config, context) => {
-      // Astryx packages are consumed from their `source` export (raw TS) so
-      // the sandbox/docsite build straight from src without a prebuild step.
-      // Apply the `source` condition via a scoped, ALLOWLIST rule that only
-      // matches @astryxdesign packages — the global conditions stay as Next's
-      // defaults (webpack's `'...'` sentinel + react-server), which React JSX
-      // resolution depends on. Third-party deps (e.g. `lexical`, which also
-      // ships a `source` export) therefore resolve to their built output, not
-      // raw TS. This is robust to new third-party `source`-shipping deps.
+      // Each source-built package compiles with the prebuilt stylesheets'
+      // StyleX options before any other loader (`sourceRules()`).
       config.module = config.module || {};
       config.module.rules = config.module.rules || [];
-      // `Rule.test` matches the module being processed, by the path the
-      // resolver reports, and webpack reports a symlinked package by its real
-      // path. Under pnpm's isolated layout that path still runs through
-      // `node_modules/@astryxdesign/`, but a workspace link's does not
-      // (`packages/core/...`), so the rule also matches each installed
-      // package's real directory.
       const from = (context && context.dir) || process.cwd();
-      const realPackageDirs = astryxPackages
-        .map(name => findPackageDir(name, from))
-        .filter(dir => dir != null)
-        .map(dir => escapeRegExp(fs.realpathSync(dir) + path.sep));
-      config.module.rules.unshift({
-        test:
-          realPackageDirs.length === 0
-            ? ASTRYX_MODULE
-            : new RegExp(
-                `${ASTRYX_MODULE.source}|^(?:${realPackageDirs.join('|')})`,
-              ),
-        resolve: {
-          conditionNames: ['source', '...'],
-        },
-      });
+      config.module.rules.unshift(...sourceRules(from));
 
-      // The rule above only covers astryx-to-astryx imports: `Rule.test`
-      // matches the module being processed and `Rule.resolve` governs the
-      // requests that module makes, so an app's own `@astryxdesign/*` imports —
-      // issued from its sources, outside node_modules — never match it. Those
-      // resolve through `default` to dist, whose runtime class names are
-      // disjoint from the CSS the PostCSS pass compiles out of source, and the
-      // app renders unstyled without erroring. Rules cannot key on the request
-      // string, so point the packages at their `source` entry directly; the
-      // global conditions stay as Next's defaults for React and for
-      // third-party `source` shippers such as `lexical`.
+      // Every documented entry point resolves to its `source` file through an
+      // exact alias (below), for the app's imports and Astryx's own alike, as
+      // Turbopack's `resolveAlias` does. No rule adds a `source` condition:
+      // one scoped to Astryx modules would also reach the dependencies they
+      // import, and a dependency that ships a `source` export (Lexical does,
+      // for Rich Text) would then compile from its raw TypeScript. A module an
+      // alias does not cover resolves to `dist`, whose class names are the
+      // same since both compile with the prebuilt stylesheets' options.
       config.resolve = config.resolve || {};
 
       // Leave `resolve.symlinks` at webpack's default (true). Under pnpm's

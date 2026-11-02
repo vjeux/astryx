@@ -27,7 +27,7 @@ const {
   stylexOptions,
 } = require('./source-stylesheet.js');
 const astryxPostcss = require('./next-postcss.js');
-const turbopackLoader = require('./turbopack-loader.js');
+const sourceLoader = require('./source-loader.js');
 const {processStylexRules} = require('@stylexjs/babel-plugin');
 
 const repoRoot = path.resolve(
@@ -113,7 +113,7 @@ describe('a source build against the prebuilt stylesheets', () => {
     const core = packages.find(({name}) => name === '@astryxdesign/core');
     const file = path.join(core.srcDir, 'Button/Button.tsx');
     const code = await new Promise((resolve, reject) => {
-      turbopackLoader.call(
+      sourceLoader.call(
         {
           resourcePath: file,
           getOptions: () => stylexOptions(core, packages),

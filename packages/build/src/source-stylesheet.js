@@ -8,8 +8,8 @@
  * `@layer astryx-base` after the layer order. `stylexOptions()` holds the
  * options the prebuilt stylesheets use (scripts/build-css.mjs),
  * `packageModules()` the module set, and `renderPackage()` prints it. The
- * bundler compiles the same modules with the same options
- * (turbopack-loader.js), so rendered class names match the rules.
+ * bundler compiles the same modules with the same options (source-loader.js),
+ * so rendered class names match the rules.
  */
 
 const fs = require('node:fs');
@@ -21,19 +21,14 @@ const {globSync} = require('fast-glob');
 const babel = () => require('@babel/core');
 const stylexBabelPlugin = () => require('@stylexjs/babel-plugin');
 
-/** The packages the webpack setup of withAstryx() transpiles from source.
- * Rich Text and Charts keep their prebuilt stylesheets there. */
+/** The packages withAstryx() builds from source, under webpack and
+ * Turbopack, when installed with `source` entries, in the order their blocks
+ * print: every package with a prebuilt stylesheet. Theme packages ship none
+ * and keep their stylesheet. */
 const ASTRYX_PACKAGES = [
   '@astryxdesign/core',
   '@astryxdesign/theme-neutral',
   '@astryxdesign/lab',
-];
-
-/** The packages a Turbopack source build compiles, when installed with
- * `source` entries, in the order their blocks print: every package with a
- * prebuilt stylesheet. Theme packages ship none and keep their stylesheet. */
-const SOURCE_PACKAGES = [
-  ...ASTRYX_PACKAGES,
   '@astryxdesign/charts',
   '@astryxdesign/richtext',
 ];
@@ -85,13 +80,13 @@ function readManifest(dir) {
 }
 
 /**
- * The installed packages a source build compiles, in `SOURCE_PACKAGES`
+ * The installed packages a source build compiles, in `ASTRYX_PACKAGES`
  * order, each with its exact `source` entries (request → file). A package's
  * source directory is the one its root entry lives in.
  */
 function sourcePackages(from) {
   const packages = [];
-  for (const name of SOURCE_PACKAGES) {
+  for (const name of ASTRYX_PACKAGES) {
     const dir = findPackageDir(name, from);
     const exports = dir && readManifest(dir)?.exports;
     if (exports == null || typeof exports !== 'object') {
@@ -404,7 +399,6 @@ async function sourceStylesheet({cwd}) {
 
 module.exports = {
   ASTRYX_PACKAGES,
-  SOURCE_PACKAGES,
   PREBUILT_STYLESHEETS,
   prebuiltStylesheet,
   findPackageDir,

@@ -22,6 +22,7 @@ import {createRequire} from 'node:module';
 
 const require = createRequire(import.meta.url);
 const {withAstryx} = require('./next.js');
+const {sourcePackages, stylexOptions} = require('./source-stylesheet.js');
 const {configSchema} = require('next/dist/server/config-schema');
 const {ResolverFactory, CachedInputFileSystem} = require('enhanced-resolve');
 
@@ -75,6 +76,12 @@ beforeAll(() => {
 
 afterAll(() => {
   fs.rmSync(appDir, {recursive: true, force: true});
+});
+
+// withAstryx() flags the process for the former webpack setup's PostCSS
+// plugin; no case may leave that flag to the next.
+afterEach(() => {
+  delete process.env.ASTRYX_BUILD_SOURCE;
 });
 
 /** Run the helper's webpack hook the way Next.js does. */
@@ -294,16 +301,14 @@ describe('withAstryx', () => {
     expect(resolve.conditionNames).toEqual(['import']);
   });
 
-  it('still scopes the source condition to astryx modules', () => {
+  it("adds no source condition, which would reach Astryx's own dependencies", () => {
     const {module: mod} = resolveConfig();
 
-    expect(mod.rules[0].resolve.conditionNames).toEqual(['source', '...']);
-    expect('@astryxdesign/core'.match(mod.rules[0].test)).toBeNull();
-    expect(
-      '/app/node_modules/@astryxdesign/core/src/index.ts'.match(
-        mod.rules[0].test,
-      ),
-    ).not.toBeNull();
+    // Present first: the hook added its rules. None of them changes how a
+    // request resolves, so a dependency that ships a `source` export (Lexical
+    // does, for Rich Text) still resolves to its build.
+    expect(mod.rules.length).toBeGreaterThan(0);
+    expect(mod.rules.filter(rule => rule.resolve != null)).toEqual([]);
   });
 
   it('lets a prefix alias from the caller webpack hook win', () => {
@@ -378,14 +383,34 @@ describe('withAstryx', () => {
     expect(config.resolve.alias['@astryxdesign/core$']).toBeDefined();
   });
 
-  it('transpiles only Core and Lab under webpack: Rich Text and Charts keep their prebuilt stylesheets', () => {
+  it('transpiles every package with a prebuilt stylesheet under webpack too', () => {
     const {transpilePackages} = withAstryx({transpilePackages: ['other']});
     expect(transpilePackages).toEqual([
       'other',
       '@astryxdesign/core',
       '@astryxdesign/theme-neutral',
       '@astryxdesign/lab',
+      '@astryxdesign/charts',
+      '@astryxdesign/richtext',
     ]);
+  });
+
+  it('compiles each source-built package with the prebuilt stylesheet options before any other loader', () => {
+    const config = withAstryx().webpack({resolve: {}}, {dir: appDir});
+    const pre = config.module.rules.filter(rule => rule.enforce === 'pre');
+    // Present first: Core, the fixture's source-built package, has its rule.
+    const packages = sourcePackages(appDir);
+    expect(packages.map(({name}) => name)).toEqual(['@astryxdesign/core']);
+    expect(pre).toHaveLength(1);
+    expect(pre[0].use).toEqual([
+      {
+        loader: require.resolve('./source-loader.js'),
+        options: stylexOptions(packages[0], packages),
+      },
+    ]);
+    expect(pre[0].test.test(corePath('src/AlertDialog/index.ts'))).toBe(true);
+    expect(pre[0].test.test(corePath('dist/index.js'))).toBe(false);
+    expect(pre[0].test.test(path.join(appDir, 'src/page.tsx'))).toBe(false);
   });
 });
 
@@ -399,7 +424,6 @@ describe('withAstryx under Turbopack', () => {
 
   afterEach(() => {
     delete process.env.TURBOPACK;
-    delete process.env.ASTRYX_BUILD_TURBOPACK;
     vi.restoreAllMocks();
   });
 
@@ -438,7 +462,7 @@ describe('withAstryx under Turbopack', () => {
     expect(rule.as).toBe('*');
     expect(rule.loaders).toHaveLength(1);
     const [{loader, options}] = rule.loaders;
-    expect(loader).toBe(require.resolve('./turbopack-loader.js'));
+    expect(loader).toBe(require.resolve('./source-loader.js'));
     expect(options).toMatchObject({
       dev: false,
       runtimeInjection: false,
@@ -479,9 +503,7 @@ describe('withAstryx under Turbopack', () => {
     ]);
     // A caller rule under the key Astryx uses keeps its place, ahead of ours.
     const [shared, ours] = rules['*.{ts,tsx}'];
-    expect(ours.loaders[0].loader).toBe(
-      require.resolve('./turbopack-loader.js'),
-    );
+    expect(ours.loaders[0].loader).toBe(require.resolve('./source-loader.js'));
     const callerRules = [
       shared,
       rules['*.tsx'],
@@ -533,16 +555,16 @@ describe('withAstryx under Turbopack', () => {
     }
   });
 
-  it("makes the webpack setup's PostCSS plugin refuse to run beside it", async () => {
+  it("makes the former webpack setup's PostCSS plugin refuse to run beside it, under either bundler", async () => {
     const [run] = require('./index.js')({cwd: appDir}).plugins;
     const css = () => run({walkAtRules() {}}, {opts: {}});
-    // Alone under Turbopack it runs, as on main.
+    // Alone it runs, as on main.
     await expect(css()).resolves.toBeUndefined();
     withAstryx();
     await expect(css()).rejects.toThrow(/next\/postcss/);
-    // Under webpack Next.js leaves TURBOPACK unset.
+    // Under webpack Next.js leaves TURBOPACK unset: it refuses there too.
     delete process.env.TURBOPACK;
-    await expect(css()).resolves.toBeUndefined();
+    await expect(css()).rejects.toThrow(/next\/postcss/);
   });
 
   it('finds the project from its next.config when run from elsewhere', () => {
@@ -892,7 +914,7 @@ describe('withAstryx under symlinked installs', () => {
     ).toBe(path.join(store, 'intl-messageformat/index.js'));
   });
 
-  it("scopes the source condition to a workspace link's real path", () => {
+  it("compiles a workspace link's source where it really lives", () => {
     // A workspace package links from outside any `node_modules`, so its real
     // path has no `node_modules/@astryxdesign/` segment.
     const workspace = path.join(root, 'workspace');
@@ -904,7 +926,7 @@ describe('withAstryx under symlinked installs', () => {
     );
 
     const config = withAstryx({}).webpack({resolve: {}}, {dir: app});
-    const [rule] = config.module.rules;
+    const [rule] = config.module.rules.filter(r => r.enforce === 'pre');
     // Webpack's condition semantics: a RegExp tests the path, a string
     // matches it as a prefix.
     const matches = file =>
@@ -916,7 +938,7 @@ describe('withAstryx under symlinked installs', () => {
             : condition.test(file),
         );
 
-    expect(rule.resolve.conditionNames).toEqual(['source', '...']);
+    expect(rule.use[0].loader).toBe(require.resolve('./source-loader.js'));
     expect(matches(path.join(workspace, 'packages/core/src/index.ts'))).toBe(
       true,
     );
