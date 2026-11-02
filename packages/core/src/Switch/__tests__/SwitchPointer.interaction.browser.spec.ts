@@ -318,7 +318,12 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
 
   test('a devtools-protocol mouse drag shows the side it flips to as it goes, and back at the press point it shows the start and commits nothing (Switch FR13, FR15)', async ({
     browser,
+    browserName,
   }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'Chrome’s devtools protocol sends this mouse, as the real-Chrome report did (Playwright gives a devtools session in Chromium only)',
+    );
     const sw = await openMouseSwitch(browser);
     try {
       const shown: Record<number, boolean> = {};
@@ -349,7 +354,12 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
 
   test('a devtools-protocol mouse drag released past the flip commits the side it shows, once (Switch FR15)', async ({
     browser,
+    browserName,
   }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'Chrome’s devtools protocol sends this mouse, as the real-Chrome report did (Playwright gives a devtools session in Chromium only)',
+    );
     const sw = await openMouseSwitch(browser);
     try {
       await devtoolsMouseDrag(sw.page, sw.center, twoPxSteps(48), async dx => {
@@ -363,6 +373,32 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
       expect(await sw.isChecked()).toBe(true);
       expect(await sw.changes()).toBe(1);
       expect(await thumbShowsOn(sw.page)).toBe(true);
+    } finally {
+      await sw.close();
+    }
+  });
+
+  test('a mouse drag in 2 px steps shows the side it flips to, back at the press point shows the start, and commits only what it shows at the release (Switch FR13, FR15)', async ({
+    browser,
+  }) => {
+    const sw = await openMouseSwitch(browser);
+    try {
+      const {x, y} = sw.center;
+      await sw.page.mouse.move(x, y);
+      await sw.page.mouse.down();
+      for (const dx of twoPxSteps(48)) {
+        await sw.page.mouse.move(x + dx, y);
+      }
+      await expect.poll(async () => thumbShowsOn(sw.page)).toBe(true);
+      expect(await sw.isChecked()).toBe(false);
+      for (const dx of twoPxSteps(48, 0).slice(24)) {
+        await sw.page.mouse.move(x + dx, y);
+      }
+      await expect.poll(async () => thumbShowsOn(sw.page)).toBe(false);
+      await sw.page.mouse.up();
+      await afterClickWait(sw.page);
+      expect(await sw.isChecked()).toBe(false);
+      expect(await sw.changes()).toBe(0);
     } finally {
       await sw.close();
     }
