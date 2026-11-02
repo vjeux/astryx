@@ -34,8 +34,10 @@
  *   band's row does nothing. An end bounces on `scroll.bounce`. The curve
  *   and the bounce are resolved when their motion starts (internal roles,
  *   motion/resolveMotion.ts).
- * - A scroll wheel turns the rows by its delta and snaps onto the nearest
- *   row once it stops; a ctrl-wheel, as a trackpad pinch arrives, is a pinch
+ * - A trackpad's two-finger scroll drives the same pan as a finger: the rows
+ *   follow, coast on at the lift and rest on a row. A mouse wheel's notch
+ *   turns the wheel one row, as an arrow key does (`component:DateInput`
+ *   FR15). A ctrl-wheel, as a trackpad pinch arrives, is a pinch
  *   (`spec:AST-094` FR43), and with no pinch of its own the wheel leaves it
  *   to the page's zoom (FR10).
  * - The value commits when the wheel comes to rest, as UIPickerView's
@@ -85,6 +87,7 @@ import {
   useState,
 } from 'react';
 import * as stylex from '@stylexjs/stylex';
+import {scrollTypeOf} from '../gestures/GestureHost';
 import {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
 import {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
@@ -112,7 +115,6 @@ import {
   nearestIndex,
   offsetBounds,
   planRelease,
-  snapCurve,
   spinCurve,
   type WheelCurve,
   type WheelLayout,
@@ -128,12 +130,8 @@ import {
 const ROW_HEIGHT = WHEEL_ROW_HEIGHT;
 /** UIKit's picker measures scaled to today's row (UIKit's row is 32 pt). */
 const UIKIT_SCALE = ROW_HEIGHT / picker.geometry.rowHeight;
-/** UIPickerView's height at today's row: what a page of a scroll wheel turns. */
-const PAGE_HEIGHT = picker.geometry.height * UIKIT_SCALE;
 /** UIKit's rubber band dimension for the picker's table, at today's row. */
 const RUBBER_BAND_DIMENSION = picker.geometry.rubberBandDimension * UIKIT_SCALE;
-/** Wheel events stop moving the wheel after this long without one, ms. */
-const WHEEL_IDLE_MS = 160;
 
 const styles = stylex.create({
   // Today's column (Wheel.tsx): the same box, band and rows, moved by the
@@ -530,6 +528,10 @@ export function PickerWheel({
       new PanGestureRecognizer({
         name: 'wheel-pan',
         direction: 'vertical',
+        // A trackpad's two-finger scroll drives the pan as a finger does: the
+        // rows follow, coast on at the lift with the fingers' last speed, and
+        // rest by the rest rule (component:DateInput FR15, spec:AST-094 FR43).
+        allowedScrollTypes: ['continuous'],
         // A held finger on the wheel never starts text selection or the
         // callout.
         selectionLock: lockSelection,
@@ -640,49 +642,6 @@ export function PickerWheel({
     isPointerKept: true,
   });
 
-  // A mouse wheel or a trackpad turns the rows; the wheel eases onto the
-  // nearest row once the events stop.
-  useEffect(() => {
-    const column = columnRef.current;
-    if (column == null || !isActive) {
-      return;
-    }
-    let idle: number | undefined;
-    const onWheel = (event: WheelEvent) => {
-      // A ctrl-wheel is a pinch (a trackpad pinch arrives as one,
-      // `spec:AST-094` FR43). The wheel has no pinch, so it stays the page's
-      // zoom (FR10) and never turns the wheel.
-      if (event.ctrlKey) {
-        return;
-      }
-      event.preventDefault();
-      const currentLayout = latestRef.current.layout;
-      const delta =
-        event.deltaMode === 1
-          ? event.deltaY * ROW_HEIGHT
-          : event.deltaMode === 2
-            ? event.deltaY * PAGE_HEIGHT
-            : event.deltaY;
-      const {min, max} = offsetBounds(currentLayout);
-      const shown = motion.isMoving() ? motion.stop() : motion.offset();
-      motion.setOffset(Math.min(max, Math.max(min, shown + delta)), {
-        ticks: true,
-      });
-      window.clearTimeout(idle);
-      idle = window.setTimeout(() => {
-        const offset = motion.offset();
-        const target =
-          nearestIndex(offset, latestRef.current.layout) * ROW_HEIGHT;
-        move(snapCurve(offset, target, 1), {onEnd});
-      }, WHEEL_IDLE_MS);
-    };
-    column.addEventListener('wheel', onWheel, {passive: false});
-    return () => {
-      column.removeEventListener('wheel', onWheel);
-      window.clearTimeout(idle);
-    };
-  }, [isActive, motion, move, onEnd]);
-
   // A spin turns only onto a row a rest would keep (canSpinTo), so its
   // arrival commits that row and nothing turns on past it: it reports the
   // row it was asked for, as the scrolling column does.
@@ -764,6 +723,35 @@ export function PickerWheel({
     },
     [motion, turnToPosition],
   );
+
+  // A mouse wheel's notch turns the wheel one row, as an arrow key does, with
+  // no coast (component:DateInput FR15). The gesture host reads each wheel
+  // (scrollTypeOf) and leaves a mouse wheel's notches to what is under the
+  // pointer, which is this wheel; a trackpad's scroll is the pan's, and a
+  // wheel the pan took arrives here already prevented. A ctrl-wheel stays the
+  // page's zoom, and a sideways scroll the page's (spec:AST-094 FR43).
+  useEffect(() => {
+    const column = columnRef.current;
+    if (column == null || !isActive) {
+      return undefined;
+    }
+    const onWheel = (event: WheelEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.deltaY === 0 ||
+        Math.abs(event.deltaX) > Math.abs(event.deltaY) ||
+        scrollTypeOf(event) !== 'discrete'
+      ) {
+        return;
+      }
+      event.preventDefault();
+      moveBy(Math.sign(event.deltaY));
+    };
+    column.addEventListener('wheel', onWheel, {passive: false});
+    return () => column.removeEventListener('wheel', onWheel);
+  }, [isActive, moveBy]);
 
   // Home and End: the first and the last enabled row.
   const moveToEnd = useCallback(
