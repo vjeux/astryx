@@ -51,7 +51,7 @@ import {
 } from '../Layout/LayoutSlotsContext';
 import {layoutReset} from '../Layout/layoutReset';
 import {MobileNavToggle} from '../MobileNav/MobileNavToggle';
-import {MAX_CLOSE_DELAY_MS as MOBILE_NAV_MAX_CLOSE_DELAY_MS} from '../MobileNav/MobileNav';
+import {MAX_EXIT_MS as MOBILE_NAV_MAX_EXIT_MS} from '../MobileNav/MobileNav';
 import {SideNavRenderContext} from '../SideNav/SideNavRenderContext';
 import {SideNavShellContext, type SideNavShell} from '../SideNav/railMotion';
 import {useAnimatedLayout} from '../hooks/useAnimatedLayout';
@@ -115,16 +115,16 @@ const ActivityWrapper = HasActivity
 const MAIN_CONTENT_ID = 'astryx-app-shell-main';
 
 /**
- * Extra time, on top of MobileNav's own worst-case close delay, that
- * AppShell waits before flipping its `Activity` boundary to `'hidden'`.
+ * Extra time, on top of MobileNav's longest slide-out, that AppShell waits
+ * before it flips its `Activity` boundary to `'hidden'`.
  *
- * React's `Activity` hides its subtree with `display: none !important`
- * synchronously in the same commit as the mode flip, and re-runs the
- * cleanup of every effect inside it — which would otherwise clear
- * MobileNav's own scheduled `dialog.close()` before it fires, or cut off
- * its slide-out CSS transition before it plays (#5701). Waiting strictly
- * longer than MobileNav's own cap, rather than the same duration, means
- * this never turns into a race decided by browser timer-firing order.
+ * React's `Activity` hides its subtree with `display: none !important` in
+ * the commit that flips the mode. It also re-runs the cleanup of every
+ * effect inside it. Without the wait, that would clear MobileNav's scheduled
+ * `dialog.close()` before it fires, or cut the slide-out off before it ends.
+ * Waiting strictly longer than MobileNav's own cap, rather than the same
+ * duration, means this never turns into a race decided by browser
+ * timer-firing order.
  */
 const ACTIVITY_HIDE_BUFFER_MS = 50;
 
@@ -635,12 +635,11 @@ export function AppShell({
   const [uncontrolledMobileOpen, setUncontrolledMobileOpen] = useState(false);
   const isMobileNavOpen = mobileNavConfig?.isOpen ?? uncontrolledMobileOpen;
 
-  // Holds the mobile nav's `Activity` boundary visible for a beat after a
-  // close, so MobileNav's own close effect gets a real chance to run its
-  // slide-out transition and schedule its delayed `dialog.close()` before
-  // Activity hides the subtree (#5701). Only the CLOSE is deferred: opening
-  // reads `isMobileNavOpen` directly below, so a controlled open is visible in
-  // the commit that carries it instead of one effect later.
+  // Keeps the mobile nav's `Activity` boundary visible after a close. The
+  // drawer's slide-out then plays to its end, and MobileNav's own
+  // `dialog.close()` runs before Activity hides the subtree. Only the close is
+  // deferred. Opening reads `isMobileNavOpen` directly below, so a controlled
+  // open shows in the commit that carries it, not one effect later.
   const [isMobileNavCloseHeld, setIsMobileNavCloseHeld] =
     useState(isMobileNavOpen);
   // Arm the hold during render, from the open state itself, so no Effect has
@@ -657,7 +656,7 @@ export function AppShell({
     const delayMs = window.matchMedia('(prefers-reduced-motion: reduce)')
       .matches
       ? 0
-      : MOBILE_NAV_MAX_CLOSE_DELAY_MS + ACTIVITY_HIDE_BUFFER_MS;
+      : MOBILE_NAV_MAX_EXIT_MS + ACTIVITY_HIDE_BUFFER_MS;
     const timeout = setTimeout(() => {
       setIsMobileNavCloseHeld(false);
     }, delayMs);
