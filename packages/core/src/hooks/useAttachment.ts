@@ -10,7 +10,7 @@
  *   the ref holds across commits
  * @position Internal React helper, not in hooks/index.ts: the one attach
  *   and release lifecycle of the gesture hooks (useGestureRecognizer,
- *   usePressTracker, useFingerScroll)
+ *   usePressTracker, useFingerScroll) and of useAnimator
  *
  * SYNC: When modified, update gestures/__tests__/useGestureRecognizer.test.tsx
  * and gestures/__tests__/useFingerScroll.test.tsx.
