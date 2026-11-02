@@ -895,6 +895,74 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     expect(await pressLayer(page)).toBeNull();
   });
 
+  test('the press layers’ release follows the theme’s tempo, and Reduce Motion never lengthens it', async ({
+    page,
+  }) => {
+    // The shared release scales its clock by the theme's tempo, up to 1.5;
+    // under Reduce Motion a tempo may shorten it, never lengthen it.
+    const releaseMsUnder = async (
+      reducedMotion: 'reduce' | 'no-preference',
+    ): Promise<number[]> => {
+      await page.emulateMedia({reducedMotion});
+      const {driver, center} = await openSwitch(page);
+      await page.evaluate(() =>
+        document.documentElement.style.setProperty(
+          '--_astryx-motion-tempo',
+          '1.5',
+        ),
+      );
+      // Hold the release timer and each release animation from its start, so
+      // a loaded machine still reads them before the clock runs out.
+      await installTimerGate(page);
+      await page.evaluate(() => {
+        document
+          .querySelector('#storybook-root [data-astryx-pressable]')!
+          .addEventListener(
+            'animationstart',
+            event => {
+              for (const animation of (event.target as Element).getAnimations({
+                subtree: false,
+              })) {
+                if (animation instanceof CSSAnimation) {
+                  animation.playbackRate = 0;
+                }
+              }
+            },
+            {capture: true},
+          );
+      });
+      await driver.play(tap(center, {holdMs: 400}));
+      expect(await pressState(page)).toBe('fading');
+      await freezeTimers(page);
+      const row = page
+        .locator('#storybook-root [data-astryx-pressable]')
+        .first();
+      const css = (await holdAnimations(page, row)).filter(
+        a => a.kind === 'CSSAnimation',
+      );
+      // Present first: the track's layer and the thumb's.
+      expect(css.map(a => (a.target ?? '').split('.')[1]).sort()).toEqual([
+        'astryx-switch',
+        'astryx-switch-thumb',
+      ]);
+      await releaseAnimations(page, {finish: true});
+      await thawTimers(page);
+      return css.map(a => a.durationMs);
+    };
+    for (const [reducedMotion, releaseMs] of [
+      ['no-preference', PRESS_RELEASE_MS * 1.5],
+      ['reduce', PRESS_RELEASE_MS],
+    ] as const) {
+      const durations = await releaseMsUnder(reducedMotion);
+      for (const durationMs of durations) {
+        expect(durationMs, `${reducedMotion}: ${durations}`).toBeCloseTo(
+          releaseMs,
+          6,
+        );
+      }
+    }
+  });
+
   /**
    * The element under a held finger, read 300 ms into a 600 ms hold and
    * again after the lift: its role, how it selects text, and whether an
