@@ -13,12 +13,7 @@
  */
 
 /** Fields of the emitted `ThemingTarget` interface, in order. */
-export const THEMING_TARGET_FIELDS = [
-  'className',
-  'visualProps',
-  'states',
-  'guaranteedProperties',
-];
+export const THEMING_TARGET_FIELDS = ['className', 'visualProps', 'states'];
 
 /** Fields of the emitted `ComponentVar` interface. */
 export const COMPONENT_VAR_FIELDS = [
