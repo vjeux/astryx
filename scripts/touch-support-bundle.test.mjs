@@ -118,15 +118,28 @@ function filesUnder(dir, pattern) {
  * gives a component its gesture adds that component's import, and each import
  * that reaches it, with a comment naming the gesture.
  */
-const GESTURE_USERS = new Set([]);
+const GESTURE_USERS = new Set([
+  // createReorderable: the List reorder's touch hold, a long press on a row's
+  // handle that picks the row up (spec:AST-103 FR3, spec:AST-094 FR43),
+  // through the gesture host it attaches with.
+  'root: createReorderable',
+]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
 const NEVER_GESTURE_USERS = ['Button', 'TextInput'];
 
 /**
+ * Root exports with no subpath of their own: each is a public import as
+ * written, `import {name} from '@astryxdesign/core'`, built on its own as the
+ * root entry's single export.
+ */
+const ROOT_ONLY_EXPORTS = ['createReorderable'];
+
+/**
  * Each public import of Core, built alone as the size report builds one:
- * every subpath export but the root and the internal entries, and each export
- * of the hooks entry on its own, since that barrel gathers independent hooks.
+ * every subpath export but the root and the internal entries, each export of
+ * the hooks entry on its own, since that barrel gathers independent hooks, and
+ * each root export with no subpath of its own (ROOT_ONLY_EXPORTS).
  * The root re-exports all of them, so it is not one import: under INV13 a
  * component that uses a gesture imports it statically, and the root then
  * carries it by design.
@@ -161,6 +174,13 @@ function publicImports() {
         source: `export * from ${JSON.stringify(file)};\n`,
       });
     }
+  }
+  const root = path.join(REPO, 'packages/core', pkg.exports['.'].source);
+  for (const name of ROOT_ONLY_EXPORTS) {
+    imports.push({
+      name: `root: ${name}`,
+      source: `export {${name}} from ${JSON.stringify(root)};\n`,
+    });
   }
   return imports;
 }
