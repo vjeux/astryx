@@ -36,6 +36,13 @@ export const docs = {
         'Whether the item with this key can move. An item it rejects shows no handle and cannot be picked up; one at either end of the collection also bounds the others, so nothing drops beyond it and a keyboard move into it is refused. Every item moves without it.',
     },
     {
+      name: 'feedback',
+      type: "'insertion-line' | 'shift'",
+      default: "'insertion-line'",
+      description:
+        "How a drag shows where the item will land. `'insertion-line'`, the default, keeps the other items still and draws an accent line in the gap, precise for small targets such as a settings list's rows. `'shift'` slides the other items aside to open the gap as the item moves, the way a hand of playing cards makes room: the dragged item itself follows the pointer, with no copy and no line, the gap moves only once its centre passes another item's place, and the drop settles it into the gap. Every pointer gets the slide, and reorder mode's arrow moves slide the items too. Under Reduce Motion nothing travels: the gap cross-fades in place on a touch screen, and with a mouse the insertion line shows instead.",
+    },
+    {
       name: 'labels',
       type: 'ReorderableLabels',
       description:
@@ -52,7 +59,7 @@ export const docs = {
   ],
   usage: {
     description:
-      "Makes a collection's rows reorderable. On a touch screen a finger, or a pen where the primary pointer is coarse, held still on a row's handle for a moment picks it up (a flick on the handle still scrolls): the row stays in its place, dimmed, while a copy of it follows the finger and an accent line marks where it would land; the other rows stay still, the page scrolls near its edges, and on release the rows rearrange. A mouse, or a pen where the primary pointer is fine, drags a handle at once the same way, and the rows take their places without motion; only a primary click starts a drag. A cancelled drag puts everything back at once. Without a drag, the handle toggles reorder mode for its row (a click, Space or Enter): each arrow key moves the row a place at once, and Escape or another activation ends the mode, keeping the moves; screen readers hear each move with the row's place and neighbours, and a hint shows the moves and Done as buttons, for taps alone. The reorder code ships with this function: a collection without the prop loads none of it.",
+      "Makes a collection's rows reorderable. On a touch screen a finger, or a pen where the primary pointer is coarse, held still on a row's handle for a moment picks it up (a flick on the handle still scrolls): the row stays in its place, dimmed, while a copy of it follows the finger and an accent line marks where it would land; the other rows stay still, the page scrolls near its edges, and on release the rows rearrange. A mouse, or a pen where the primary pointer is fine, drags a handle at once the same way, and the rows take their places without motion; only a primary click starts a drag. A cancelled drag puts everything back at once. With `feedback: 'shift'` the other rows slide aside to open the gap instead of the line, as a hand of cards makes room. Without a drag, the handle toggles reorder mode for its row (a click, Space or Enter): each arrow key moves the row a place at once, and Escape or another activation ends the mode, keeping the moves; screen readers hear each move with the row's place and neighbours, and a hint shows the moves and Done as buttons, for taps alone. The reorder code ships with this function: a collection without the prop loads none of it.",
     bestPractices: [
       {
         guidance: true,
@@ -73,6 +80,11 @@ export const docs = {
         guidance: true,
         description:
           'For plain elements, call `reorderable.attach(container, {items})` once the elements exist, and call its `destroy()` when they go.',
+      },
+      {
+        guidance: true,
+        description:
+          "Use `feedback: 'shift'` for items that read as a physical stack, such as a hand of playing cards; keep the default line for lists with small drop targets.",
       },
       {
         guidance: true,
@@ -100,6 +112,8 @@ export const docsDense = {
       '({key, to}) once per committed move; to is the index after the move.',
     isReorderable:
       '(key) => boolean; a rejected row has no handle, and at an end bounds the drop.',
+    feedback:
+      "'insertion-line' (default) draws a line at the gap; 'shift' slides the other items aside to open it.",
     labels:
       "every string announced or shown (pickedUp, dropped, place…, handle, handleHint, moveUp, done…), each over the catalog's; a template keeps the catalog's ICU arguments.",
   },

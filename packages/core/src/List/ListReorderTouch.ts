@@ -10,7 +10,8 @@
  *   hold, which picks up a row from its handle under a finger, and
  *   `touchMotion`, the motion of the rows a reorder moves under a finger: the
  *   shared settle role under the list's theme, the drop's glide at the
- *   release's velocity, the way home, and the continuation across the commit
+ *   release's velocity, the way home, and the continuation across the commit;
+ *   and shift feedback's slide, which every pointer gets (spec:AST-103 FR9)
  * @position Imported by List/listReorderEngine.tsx alone: what the reorder
  *   runs only under a finger sits behind this one import
  *
@@ -166,21 +167,43 @@ export const touchMotion = {
   },
   /**
    * A row goes back to its place on `spring` (the dragged row from rest),
-   * and its offset goes once it arrives.
+   * on both axes when `bothAxes` (a slot layout's row away on x too), and
+   * its offset goes once it arrives.
    */
   home(
     element: HTMLElement,
     spring: SpringDescription,
     at: number,
     fromRest: boolean,
+    bothAxes = false,
   ): void {
+    const to = bothAxes ? {x: 0, y: 0} : {y: 0};
     releaseOnArrival(
       element,
-      startRow(element, {y: 0}, spring, {
+      startRow(element, to, spring, {
         at,
-        velocity: fromRest ? {y: 0} : undefined,
+        velocity: fromRest ? (bothAxes ? {x: 0, y: 0} : {y: 0}) : undefined,
       }).finished,
     );
+  },
+  /**
+   * Shift feedback's move (spec:AST-103 FR9), under every pointer: a row
+   * slides to `to`, its offset from its layout place, on `spring` from
+   * where it is shown; its offset goes once it rests back at its place.
+   * Under Reduce Motion the animator cross-fades it in place instead (on a
+   * fine pointer the insertion line shows, and nothing slides).
+   */
+  slide(
+    element: HTMLElement,
+    to: Shift,
+    spring: SpringDescription,
+    at: number,
+  ): void {
+    const target = asShift(to);
+    const handle = startRow(element, target, spring, {at});
+    if (target.y === 0 && (target.x ?? 0) === 0) {
+      releaseOnArrival(element, handle.finished);
+    }
   },
   /**
    * The layout moved a row by `shift` (a commit put it in its new place): its

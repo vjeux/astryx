@@ -4,14 +4,20 @@
  * @file ReorderableAttach.stories.tsx
  * @input createReorderable and plain elements laid out by the story
  * @output createReorderable's attach on plain elements laid out by CSS: a row
- *   of cards, cards that wrap, a column of rows and the row in a dialog
+ *   of cards, cards that wrap, a column of rows and the row in a dialog, the
+ *   row, the wrap and the column each with a Line | Shift toggle for the
+ *   drag's feedback (spec:AST-103 FR9), on Line by default
  * @position Storybook demonstrations for createReorderable consumers
  */
 
 import {useEffect, useMemo, useRef, useState} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import type {Meta, StoryObj} from '@storybook/react';
-import {createReorderable} from '@astryxdesign/core';
+import {
+  createReorderable,
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@astryxdesign/core';
 import {colorVars, radiusVars} from '@astryxdesign/core/theme/tokens.stylex';
 
 const meta: Meta = {
@@ -32,7 +38,40 @@ function moveKey(
   return next;
 }
 
+type Feedback = 'insertion-line' | 'shift';
+
+/**
+ * The drag's feedback: Line, the default, or Shift, where the other items
+ * slide aside to open the gap (spec:AST-103 FR9).
+ */
+function FeedbackToggle({
+  value,
+  onChange,
+}: {
+  value: Feedback;
+  onChange: (value: Feedback) => void;
+}) {
+  return (
+    <SegmentedControl
+      label="Drag feedback"
+      size="sm"
+      value={value}
+      onChange={next =>
+        onChange(next === 'shift' ? 'shift' : 'insertion-line')
+      }>
+      <SegmentedControlItem value="insertion-line" label="Line" />
+      <SegmentedControlItem value="shift" label="Shift" />
+    </SegmentedControl>
+  );
+}
+
 const styles = stylex.create({
+  demo: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
   dialog: {
     padding: 24,
     borderWidth: 1,
@@ -132,6 +171,7 @@ function AttachedCards({
   const tableRef = useRef<HTMLDivElement>(null);
   const [cards, setCards] = useState(['A', 'K', 'Q', 'J', '10']);
   const [moves, setMoves] = useState(0);
+  const [feedback, setFeedback] = useState<Feedback>('insertion-line');
   const reorderable = useMemo(
     () =>
       createReorderable<string>({
@@ -139,8 +179,9 @@ function AttachedCards({
           setMoves(count => count + 1);
           setCards(current => moveKey(current, key, to));
         },
+        feedback,
       }),
-    [],
+    [feedback],
   );
   // External system: the attached reorder on the table's plain elements,
   // destroyed on unmount.
@@ -162,7 +203,7 @@ function AttachedCards({
     });
     return destroy;
   }, [reorderable]);
-  return (
+  const table = (
     <div
       ref={tableRef}
       data-moves={moves}
@@ -184,6 +225,15 @@ function AttachedCards({
       ))}
     </div>
   );
+  if (rendersAnew) {
+    return table;
+  }
+  return (
+    <div {...stylex.props(styles.demo)}>
+      <FeedbackToggle value={feedback} onChange={setFeedback} />
+      {table}
+    </div>
+  );
 }
 
 export const AttachedCardsInARow: Story = {
@@ -196,7 +246,10 @@ export const AttachedCardsInARow: Story = {
           '{items})`, with no collection component: each card’s grip is its ' +
           'handle, and the cards’ measured places are their slots. Drag a ' +
           'grip (on a touch screen, hold it first), or activate it and use ' +
-          'the arrow keys.',
+          'the arrow keys. Line, the default, keeps the other cards still ' +
+          'and draws a line where the card would land; Shift ' +
+          "(`feedback: 'shift'`) slides them aside to open the gap, as a " +
+          'hand of cards makes room.',
       },
     },
   },
@@ -234,6 +287,7 @@ function AttachedRows() {
   const listRef = useRef<HTMLUListElement>(null);
   const [rows, setRows] = useState(['Inbox', 'Sent', 'Drafts', 'Archive']);
   const [moves, setMoves] = useState(0);
+  const [feedback, setFeedback] = useState<Feedback>('insertion-line');
   const reorderable = useMemo(
     () =>
       createReorderable<string>({
@@ -241,8 +295,9 @@ function AttachedRows() {
           setMoves(count => count + 1);
           setRows(current => moveKey(current, key, to));
         },
+        feedback,
       }),
-    [],
+    [feedback],
   );
   // External system: the attached reorder on the list's plain rows,
   // destroyed on unmount.
@@ -265,16 +320,19 @@ function AttachedRows() {
     return destroy;
   }, [reorderable]);
   return (
-    <ul ref={listRef} data-moves={moves} {...stylex.props(styles.rows)}>
-      {rows.map(row => (
-        <li key={row} data-row={row} {...stylex.props(styles.row)}>
-          <span data-grip="" {...stylex.props(styles.grip)}>
-            ⋮⋮
-          </span>
-          {row}
-        </li>
-      ))}
-    </ul>
+    <div {...stylex.props(styles.demo)}>
+      <FeedbackToggle value={feedback} onChange={setFeedback} />
+      <ul ref={listRef} data-moves={moves} {...stylex.props(styles.rows)}>
+        {rows.map(row => (
+          <li key={row} data-row={row} {...stylex.props(styles.row)}>
+            <span data-grip="" {...stylex.props(styles.grip)}>
+              ⋮⋮
+            </span>
+            {row}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -285,7 +343,8 @@ export const AttachedRowsInAColumn: Story = {
       description: {
         story:
           'A column of plain rows: a drag shows the same insertion line a ' +
-          'List does, at the gap where the row would land.',
+          'List does, at the gap where the row would land; under Shift the ' +
+          'rows slide aside to open it instead.',
       },
     },
   },

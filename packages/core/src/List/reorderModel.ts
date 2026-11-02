@@ -7,7 +7,9 @@
  * @output Pure functions of a reorder's drag: the position a dragged row proposes
  *   (where the insertion cue goes), from the measured rows or from an attached
  *   container's measured slots, the movable range that a fixed row at either
- *   end of the list bounds, the autoscroll step and the tracking clamp
+ *   end of the list bounds, the autoscroll step and the tracking clamp; and
+ *   shift feedback's candidate (the midpoint rule) and the offsets that open
+ *   its gap (spec:AST-103 FR9)
  * @position List internals; List/listReorderEngine.tsx drives a drag with
  *   them. No DOM, no React: unit tested, and replayed against the UIKit lab
  *   drag
@@ -82,25 +84,40 @@ export function dropPosition(
   dragged: number,
   center: number,
 ): number {
-  const {rows} = geometry;
-  const height = rows[dragged].height;
-  const slotCenter = (index: number): number => {
-    const row = rows[index];
-    return index <= dragged
-      ? row.top + height / 2
-      : row.top + row.height - height / 2;
-  };
-  const {start, end} = movableRange(rows, dragged);
+  const slots = columnSlots(geometry, dragged);
+  const {start, end} = movableRange(geometry.rows, dragged);
   let position = start;
-  let distance = Math.abs(slotCenter(start) - center);
+  let distance = Math.abs(slots[start].y - center);
   for (let index = start + 1; index <= end; index += 1) {
-    const next = Math.abs(slotCenter(index) - center);
+    const next = Math.abs(slots[index].y - center);
     if (next < distance) {
       position = index;
       distance = next;
     }
   }
   return position;
+}
+
+/**
+ * A column's slot centres for `dragged`: where its centre would rest at each
+ * position, on the column's one axis (`x` 0). Before the row at a position
+ * above its place, its top on that row's top; past the row at a position
+ * below, its bottom on that row's bottom. `dropPosition` and shift feedback's
+ * midpoint rule (`shiftCandidate`) both read them.
+ */
+export function columnSlots(
+  geometry: ReorderGeometry,
+  dragged: number,
+): ReorderSlot[] {
+  const {rows} = geometry;
+  const height = rows[dragged].height;
+  return rows.map((row, index) => ({
+    x: 0,
+    y:
+      index <= dragged
+        ? row.top + height / 2
+        : row.top + row.height - height / 2,
+  }));
 }
 
 /** A slot's centre: px from the top-left corner of the collection's container box. */
@@ -134,6 +151,97 @@ export function nearestSlot(
     }
   }
   return nearest;
+}
+
+/**
+ * Shift feedback's candidate, the midpoint rule (spec:AST-103 FR9,
+ * design:ordered-collection-reordering DEC-2): the candidate moves from
+ * `current` to another slot only once the dragged item's centre has passed
+ * that slot's centre, measured along the line from the current slot's centre
+ * to it; of the slots it has passed, the one nearest its centre wins. In a
+ * column a slot's centre is a neighbour's midpoint once that neighbour has
+ * moved aside, so a centre resting near a boundary moves nothing. Slots
+ * outside the drop range never qualify.
+ */
+export function shiftCandidate(
+  slots: ReadonlyArray<ReorderSlot>,
+  items: ReadonlyArray<Pick<ReorderRow, 'isFixed'>>,
+  dragged: number,
+  current: number,
+  center: ReorderSlot,
+): number {
+  const {start, end} = movableRange(items, dragged);
+  const from = slots[current];
+  let candidate = current;
+  let candidateDistance = Infinity;
+  for (let index = start; index <= end; index += 1) {
+    const dx = slots[index].x - from.x;
+    const dy = slots[index].y - from.y;
+    const length = dx * dx + dy * dy;
+    if (index === current || length === 0) {
+      continue;
+    }
+    // How far along the line from the current slot's centre to this one the
+    // item's centre is: 1 at this slot's centre.
+    const along =
+      ((center.x - from.x) * dx + (center.y - from.y) * dy) / length;
+    if (along < 1) {
+      continue;
+    }
+    const distance = Math.hypot(
+      slots[index].x - center.x,
+      slots[index].y - center.y,
+    );
+    if (distance < candidateDistance) {
+      candidate = index;
+      candidateDistance = distance;
+    }
+  }
+  return candidate;
+}
+
+/**
+ * Each row's offset while shift feedback opens the gap at `position` in a
+ * column (spec:AST-103 FR9): the rows between the dragged row's place and the
+ * gap move one place toward its place, by its height and the list's gap. The
+ * dragged row, which rides the pointer, and every other row stay at 0.
+ */
+export function shiftOffsets(
+  geometry: ReorderGeometry,
+  dragged: number,
+  position: number,
+): number[] {
+  const step = geometry.rows[dragged].height + geometry.gap;
+  return geometry.rows.map((_, index) => {
+    if (position > dragged && index > dragged && index <= position) {
+      return -step;
+    }
+    if (position < dragged && index >= position && index < dragged) {
+      return step;
+    }
+    return 0;
+  });
+}
+
+/**
+ * The same in a slot layout (spec:AST-103 FR9): each item between the
+ * dragged item's slot and the gap moves to its neighbour's slot, one place
+ * toward the dragged item's; every other item stays.
+ */
+export function slotShiftOffsets(
+  slots: ReadonlyArray<ReorderSlot>,
+  dragged: number,
+  position: number,
+): ReorderSlot[] {
+  return slots.map((slot, index) => {
+    const to =
+      position > dragged && index > dragged && index <= position
+        ? index - 1
+        : position < dragged && index >= position && index < dragged
+          ? index + 1
+          : index;
+    return {x: slots[to].x - slot.x, y: slots[to].y - slot.y};
+  });
 }
 
 /** An insertion cue: a line centred on `x, y`, `length` long, at `angle`°. */

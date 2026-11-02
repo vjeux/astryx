@@ -19,7 +19,11 @@
  *   it follows the pointer, an insertion line marks where it would land, and
  *   the list autoscrolls near the scroll edges; the drop reports the move
  *   once and the rows rearrange, the dragged one gliding from where its
- *   preview was. A cancelled drag restores everything at once. Activating a handle without
+ *   preview was. A cancelled drag restores everything at once. Under
+ *   `feedback: 'shift'` (spec:AST-103 FR9) the row itself follows the
+ *   pointer and the rows it passes slide aside to open the gap, which moves
+ *   only once its centre passes a slot's centre; the drop settles it into
+ *   the gap, and reorder mode's moves slide too. Activating a handle without
  *   a drag (a click, Space or Enter) turns on reorder mode for its row: each
  *   arrow moves it a place at once (one report each), announced with its
  *   place and neighbours, and Escape or another activation ends the mode,
@@ -29,11 +33,15 @@
  *   imports it, so a List without `reorderable` loads none of it (FR2);
  *   ListReorderHandle drives it from each row's handle
  *
- * The drag's look is design:ordered-collection-reordering's: the surrounding
- * rows stay still until the drop, the source is dimmed in place, a preview
- * follows the pointer one to one (its centre stopping at the scroll view's
- * edges) and an accent insertion line, shared by pointer and keyboard,
- * marks the candidate position. UIKit's edit-mode reorder (iOS 26.2,
+ * The drag's look is design:ordered-collection-reordering's: by default
+ * (DEC-1) the surrounding rows stay still until the drop, the source is
+ * dimmed in place, a preview follows the pointer one to one (its centre
+ * stopping at the scroll view's edges) and an accent insertion line, shared
+ * by pointer and keyboard, marks the candidate position. A collection that
+ * opts into shift feedback (DEC-2) gets the rows sliding aside instead, on
+ * the shared settle motion under every pointer; under Reduce Motion the
+ * animator cross-fades them in place on a coarse pointer, and on a fine one
+ * the insertion line shows instead. UIKit's edit-mode reorder (iOS 26.2,
  * measured) supplies the clocks: the hold, the rows' glide to their new
  * places on the table spring after the drop, and autoscroll, a 20 ms timer
  * whose step grows with how far the preview's edge is past the scroll edge.
@@ -91,6 +99,7 @@ import {colorVars, fontWeightVars, spacingVars} from '../theme/tokens.stylex';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import type {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
 import {VelocityTracker} from '../gestures/VelocityTracker';
+import {reducedMotionFade} from '../motion/reducedMotion';
 import {reorder} from '../motion/uikit/reorder';
 import {
   animatorFor,
@@ -125,6 +134,7 @@ import {
   autoscrollStep,
   cellOf,
   clampTop,
+  columnSlots,
   dropPosition,
   gridOf,
   nearestSlot,
@@ -132,7 +142,10 @@ import {
   type ReorderGeometry,
   type ReorderLine,
   type ReorderSlot,
+  shiftCandidate,
+  shiftOffsets,
   slotLine,
+  slotShiftOffsets,
   stepLine,
 } from './reorderModel';
 
@@ -519,8 +532,26 @@ interface DragSession {
   step: number;
   /** The dragged row's inline stacking before the drag. */
   readonly restore: RowRestore;
-  /** The copy of the dragged row that follows the pointer. */
-  readonly preview: HTMLElement;
+  /**
+   * The copy of the dragged row that follows the pointer; none under shift
+   * feedback, where the row itself does (spec:AST-103 FR5, FR9).
+   */
+  readonly preview: HTMLElement | null;
+  /** What follows the pointer: the preview, or under shift the dragged row. */
+  readonly moving: HTMLElement;
+  /** The dragged row's width at the begin, so a move reads no layout. */
+  readonly width: number;
+  /**
+   * Shift feedback (spec:AST-103 FR9): the rows the dragged row passes
+   * slide aside to open the gap, with no preview, line or dimmed source.
+   */
+  readonly shift: boolean;
+  /** Under shift, the slot centres its midpoint rule reads. */
+  readonly shiftSlots: ReadonlyArray<ReorderSlot> | null;
+  /** Under shift, the offset each row slides to, once set. */
+  readonly shifted: (ReorderSlot | null)[];
+  /** Under shift, the shared settle motion the rows slide on. */
+  readonly spring: ReturnType<typeof touchMotion.glideBase> | null;
 }
 
 /** The inline values a drag overrides until its rows rest. */
@@ -535,6 +566,11 @@ interface RowRestore {
    * (a numbered list's number).
    */
   readonly counterIncrement: string;
+  /**
+   * The dragged row's position, made relative under shift feedback so it
+   * stacks above the rows it passes.
+   */
+  readonly position: string;
   /** The list's position, made a containing block for the overlays. */
   readonly listPosition: string;
   /** The session's rows, whose identity offsets go once they rest. */
@@ -563,6 +599,8 @@ interface PendingDrop {
   readonly lefts: ReadonlyArray<number> | null;
   readonly droppedLeft: number;
   readonly velocityX: number;
+  /** Shift feedback: its rows glide into their places under every pointer. */
+  readonly shift: boolean;
 }
 
 /** A reorder mode move, reported and waiting for its commit. */
@@ -571,6 +609,10 @@ interface PendingMove {
   readonly rows: ReadonlyArray<HTMLElement>;
   /** The rows' layout tops before it, for the slide to their new places. */
   readonly tops: ReadonlyArray<number>;
+  /** Their layout lefts in a slot layout, where they slide on both axes. */
+  readonly lefts: ReadonlyArray<number> | null;
+  /** Shift feedback: the rows slide under every pointer (FR9). */
+  readonly shift: boolean;
 }
 
 /**
@@ -799,6 +841,22 @@ export class ListReorderController implements ListReorderSession {
 
   private get animates(): boolean {
     return this.presentation === 'uikit';
+  }
+
+  /**
+   * Whether a drag or a key move shows shift feedback (spec:AST-103 FR9):
+   * when the options ask for it (a value createReorderable does not know
+   * shows the line), unless motion is reduced on a fine primary pointer,
+   * where the insertion line shows instead (design:reduced-motion DR3). On
+   * a coarse one the animator cross-fades the gap in place (DR2). It asks
+   * the Reduce Motion policy, never the preference itself (DR4).
+   */
+  private get shifts(): boolean {
+    if (this.options?.feedback !== 'shift') {
+      return false;
+    }
+    const fade = reducedMotionFade();
+    return fade == null || fade.duration > 0;
   }
 
   /**
@@ -1318,24 +1376,30 @@ export class ListReorderController implements ListReorderSession {
     const listBox = list.getBoundingClientRect();
     const originX = listBox.left + list.clientLeft;
     const left = row.getBoundingClientRect().left - originX;
+    const width = row.offsetWidth;
     // Every row gets an identity offset for the session: a row's first offset
     // would otherwise change how it paints in the middle of the drag (a
     // layout and a paint); with one in place, neither a move nor a slide lays
     // out or paints. (`will-change` would make each slide's start repaint its
     // row.) The dragged row goes above its neighbours.
+    const shift = this.shifts;
     const restore: RowRestore = {
       zIndex: row.style.zIndex,
       backgroundColor: row.style.backgroundColor,
       opacity: row.style.opacity,
       counterIncrement: row.style.counterIncrement,
+      position: row.style.position,
       listPosition: list.style.position,
       rows,
     };
-    // The rows stay where they are until the drop
-    // (design:ordered-collection-reordering): the dragged row is dimmed in
-    // its place, a preview of it follows the pointer, and an insertion line
-    // marks where it would land. The preview has a background, as the row
-    // does: a row without its own takes the surface's behind the list.
+    // Under the insertion line, the default (design:ordered-collection-
+    // reordering DEC-1), the rows stay where they are until the drop: the
+    // dragged row is dimmed in its place, a preview of it follows the
+    // pointer, and an insertion line marks where it would land. Under shift
+    // feedback (spec:AST-103 FR9) the dragged row itself rides the pointer
+    // above the rows it passes, which slide aside to open the gap. What
+    // moves has a background, as the row does: a row without its own takes
+    // the surface's behind the list.
     const background = isTransparent(getComputedStyle(row).backgroundColor)
       ? surfaceColor(list)
       : null;
@@ -1347,14 +1411,25 @@ export class ListReorderController implements ListReorderSession {
     if (getComputedStyle(list).position === 'static') {
       list.style.position = 'relative';
     }
-    const preview = previewOf(row, tops[dragged], background);
-    // Right before its source: the preview counts for it, so in a numbered
-    // list it reads the source's number, and every other row keeps its place
-    // among its siblings (the last row its :last-child).
-    row.before(preview);
-    row.style.counterIncrement = 'none';
-    row.setAttribute(SOURCE_ATTRIBUTE, '');
-    row.style.opacity = MOVING_OPACITY;
+    let preview: HTMLElement | null = null;
+    if (shift) {
+      if (getComputedStyle(row).position === 'static') {
+        row.style.position = 'relative';
+      }
+      row.style.zIndex = '2';
+      if (background != null) {
+        row.style.backgroundColor = background;
+      }
+    } else {
+      preview = previewOf(row, tops[dragged], background);
+      // Right before its source: the preview counts for it, so in a
+      // numbered list it reads the source's number, and every other row
+      // keeps its place among its siblings (the last row its :last-child).
+      row.before(preview);
+      row.style.counterIncrement = 'none';
+      row.setAttribute(SOURCE_ATTRIBUTE, '');
+      row.style.opacity = MOVING_OPACITY;
+    }
     list.setAttribute(REORDERING_ATTRIBUTE, '');
     const session: DragSession = {
       list,
@@ -1383,6 +1458,12 @@ export class ListReorderController implements ListReorderSession {
       step: 0,
       restore,
       preview,
+      moving: preview ?? row,
+      width,
+      shift,
+      shiftSlots: shift ? (slots ?? columnSlots(geometry, dragged)) : null,
+      shifted: rows.map(() => null),
+      spring: shift ? touchMotion.glideBase(list) : null,
       slots,
       originX,
       left,
@@ -1433,40 +1514,63 @@ export class ListReorderController implements ListReorderSession {
       slots != null ? y - session.grabOffset : this.draggedTop(session, y);
     const shiftY = top - (origin + row.top);
     if (slots != null) {
-      // The preview follows the pointer on both axes; the drop position is
-      // the slot within the drag's range whose centre is nearest its own.
+      // What moves follows the pointer on both axes. The drop position is
+      // the slot within the drag's range whose centre is nearest its own;
+      // under shift feedback, the slot the midpoint rule picks (FR9).
       const shiftX = x - session.grabX - (session.originX + session.left);
-      animatorFor(session.preview).set({x: shiftX, y: shiftY});
-      const width = session.rows[dragged].offsetWidth;
-      const nearest = nearestSlot(slots, geometry.rows, dragged, {
-        x: session.left + shiftX + width / 2,
+      animatorFor(session.moving).set({x: shiftX, y: shiftY});
+      const center = {
+        x: session.left + shiftX + session.width / 2,
         y: row.top + shiftY + row.height / 2,
-      });
-      if (nearest !== session.position) {
-        this.moveTo(nearest);
+      };
+      const next =
+        session.shiftSlots != null
+          ? shiftCandidate(
+              session.shiftSlots,
+              geometry.rows,
+              dragged,
+              session.position,
+              center,
+            )
+          : nearestSlot(slots, geometry.rows, dragged, center);
+      if (next !== session.position) {
+        this.moveTo(next);
       }
       this.autoscroll(top, row.height);
       return;
     }
-    animatorFor(session.preview).set({y: shiftY});
-    const position = dropPosition(
-      geometry,
-      dragged,
-      top + row.height / 2 - origin,
-    );
+    animatorFor(session.moving).set({y: shiftY});
+    const center = top + row.height / 2 - origin;
+    const position =
+      session.shiftSlots != null
+        ? shiftCandidate(
+            session.shiftSlots,
+            geometry.rows,
+            dragged,
+            session.position,
+            {x: 0, y: center},
+          )
+        : dropPosition(geometry, dragged, center);
     if (position !== session.position) {
       this.moveTo(position);
     }
     this.autoscroll(top, row.height);
   }
 
-  /** Puts the insertion line where the dragged row would land at `position`. */
+  /**
+   * Shows where the dragged row would land at `position`: the insertion
+   * line, or under shift feedback the gap the other rows open.
+   */
   private moveTo(position: number): void {
     const session = this.session;
     if (session == null) {
       return;
     }
     session.position = position;
+    if (session.shift) {
+      this.shiftTo(session, position);
+      return;
+    }
     const row = session.rows[session.dragged];
     let line: ReorderLine | null;
     if (session.slots != null) {
@@ -1485,6 +1589,50 @@ export class ListReorderController implements ListReorderSession {
     }
     // A pointer drag announces its pick-up and its drop, not each place it
     // passes: announcing each crossed position is noisy.
+  }
+
+  /**
+   * Shift feedback (spec:AST-103 FR9): the rows the dragged row displaces
+   * at `position` slide one place toward its own, and every other row back
+   * to its place, on the shared settle motion from where each is shown, as
+   * compositor translates of the rows already rendered. Every pointer gets
+   * the slide; under Reduce Motion the animator cross-fades each row in
+   * place instead (design:reduced-motion DR2), and on a fine pointer a drag
+   * shows the insertion line and never gets here (`shifts`, DR3).
+   */
+  private shiftTo(session: DragSession, position: number): void {
+    const {rows, dragged, slots, spring} = session;
+    if (spring == null) {
+      return;
+    }
+    const targets =
+      slots != null
+        ? slotShiftOffsets(slots, dragged, position)
+        : shiftOffsets(session.geometry, dragged, position).map(y => ({
+            x: 0,
+            y,
+          }));
+    const at = motionNow();
+    for (const [index, element] of rows.entries()) {
+      const target = targets[index];
+      const previous = session.shifted[index];
+      if (
+        index === dragged ||
+        (previous != null && previous.x === target.x && previous.y === target.y)
+      ) {
+        continue;
+      }
+      session.shifted[index] = target;
+      if (
+        previous == null &&
+        motionOf(element) == null &&
+        Math.abs(shownY(element, at) - target.y) < MIN_MOVE_PX &&
+        Math.abs(shownX(element, at) - target.x) < MIN_MOVE_PX
+      ) {
+        continue;
+      }
+      touchMotion.slide(element, slots != null ? target : target.y, spring, at);
+    }
   }
 
   /**
@@ -1563,13 +1711,18 @@ export class ListReorderController implements ListReorderSession {
     const {geometry, dragged, position, rows, list} = session;
     const element = rows[dragged];
     // Where the preview is now: on the commit the dragged row glides from
-    // there into its new place, and the rows it passed to theirs.
+    // there into its new place, and the rows it passed to theirs. Under
+    // shift feedback the row itself is there already, carried by its own
+    // offset, and every row glides on from where it is shown.
+    const preview = session.preview;
     const droppedTop =
-      geometry.rows[dragged].top + shownY(session.preview, motionNow());
+      geometry.rows[dragged].top +
+      (preview == null ? 0 : shownY(preview, motionNow()));
     const droppedLeft =
       session.lefts == null
         ? 0
-        : session.lefts[dragged] + shownX(session.preview, motionNow());
+        : session.lefts[dragged] +
+          (preview == null ? 0 : shownX(preview, motionNow()));
     this.clearOverlays(session);
     const dropped = this.messages?.dropped(position + 1, rows.length) ?? '';
     const key = this.keyOf(element);
@@ -1577,10 +1730,15 @@ export class ListReorderController implements ListReorderSession {
     if (position === dragged || options == null || key == null) {
       if (position === dragged) {
         this.announce(dropped, 'polite');
+      }
+      if (position === dragged && !session.shift) {
         list.removeAttribute(REORDERING_ATTRIBUTE);
         this.restWhenDone(element, session.restore);
       } else {
-        this.springBack(list, rows, dragged, session.restore);
+        this.springBack(list, rows, dragged, session.restore, {
+          shift: session.shift,
+          velocity: {x: velocityX, y: velocity},
+        });
       }
       return;
     }
@@ -1605,6 +1763,7 @@ export class ListReorderController implements ListReorderSession {
       lefts: session.lefts,
       droppedLeft,
       velocityX,
+      shift: session.shift,
     };
     options.onReorder({key, to: position});
     // A consumer that does not apply the move by the end of the task gets
@@ -1628,13 +1787,15 @@ export class ListReorderController implements ListReorderSession {
     this.session = null;
     this.stopAutoscroll(session);
     // Nothing moved: the preview and the line go and the row is itself again
-    // at once (design:ordered-collection-reordering).
+    // at once (design:ordered-collection-reordering); under shift feedback
+    // every row glides home from where it is shown.
     this.clearOverlays(session);
     this.springBack(
       session.list,
       session.rows,
       session.dragged,
       session.restore,
+      {shift: session.shift},
     );
     this.announce(
       this.messages?.cancelled(session.dragged + 1, session.rows.length) ?? '',
@@ -1643,12 +1804,14 @@ export class ListReorderController implements ListReorderSession {
 
   /** Takes the preview and the line away and undims the dragged row. */
   private clearOverlays(session: DragSession): void {
-    session.preview.remove();
+    session.preview?.remove();
     hideLine(session.list);
     const row = session.rows[session.dragged];
-    row.removeAttribute(SOURCE_ATTRIBUTE);
-    row.style.opacity = session.restore.opacity;
-    row.style.counterIncrement = session.restore.counterIncrement;
+    if (!session.shift) {
+      row.removeAttribute(SOURCE_ATTRIBUTE);
+      row.style.opacity = session.restore.opacity;
+      row.style.counterIncrement = session.restore.counterIncrement;
+    }
     session.list.style.position = session.restore.listPosition;
   }
 
@@ -1657,22 +1820,54 @@ export class ListReorderController implements ListReorderSession {
     rows: ReadonlyArray<HTMLElement>,
     dragged: number,
     restore: RowRestore,
+    {
+      shift = false,
+      velocity,
+    }: {
+      /** Shift feedback: every row glides home, under every pointer (FR9). */
+      shift?: boolean;
+      /** The dragged row's release velocity, px/s, under shift feedback. */
+      velocity?: {x: number; y: number};
+    } = {},
   ): void {
     const at = motionNow();
-    for (const element of rows) {
+    for (const [index, element] of rows.entries()) {
       const value = shownY(element, at);
-      if (Math.abs(value) < MIN_MOVE_PX && motionOf(element) == null) {
+      const valueX = shownX(element, at);
+      if (
+        Math.abs(value) < MIN_MOVE_PX &&
+        Math.abs(valueX) < MIN_MOVE_PX &&
+        motionOf(element) == null
+      ) {
         continue;
       }
-      if (!this.animates) {
+      if (!this.animates && !shift) {
         animatorFor(element).set({y: 0});
         releaseMotion(element, 'translate');
+        continue;
+      }
+      if (shift && index === dragged && velocity != null) {
+        // The released row glides home from where it was let go, at the
+        // release's speed (spec:AST-094 FR6, FR38).
+        touchMotion.glide(
+          element,
+          {x: 0, y: 0},
+          touchMotion.glideBase(list),
+          at,
+          velocity,
+        );
         continue;
       }
       // A row still gliding (a drop's or a key move's glide) goes on home on
       // the shared settle role from where it is shown, at the speed it has
       // (spec:AST-094 FR4, FR6).
-      touchMotion.home(element, touchMotion.glideBase(list), at, false);
+      touchMotion.home(
+        element,
+        touchMotion.glideBase(list),
+        at,
+        false,
+        Math.abs(valueX) >= MIN_MOVE_PX,
+      );
     }
     list.removeAttribute(REORDERING_ATTRIBUTE);
     this.restWhenDone(rows[dragged], restore);
@@ -1695,6 +1890,7 @@ export class ListReorderController implements ListReorderSession {
       pending.rows,
       pending.dragged,
       pending.restore,
+      {shift: pending.shift},
     );
   }
 
@@ -1712,6 +1908,7 @@ export class ListReorderController implements ListReorderSession {
       }
       element.style.zIndex = restore.zIndex;
       element.style.backgroundColor = restore.backgroundColor;
+      element.style.position = restore.position;
       // Identity offsets go; a row still moving keeps its own.
       for (const row of restore.rows) {
         releaseMotion(row, 'translate');
@@ -1797,28 +1994,35 @@ export class ListReorderController implements ListReorderSession {
   }
 
   /**
-   * A reorder mode move landed: under a finger's presentation each row
-   * slides from its old place to its new one; otherwise they are there
-   * already.
+   * A reorder mode move landed: under a finger's presentation, and under
+   * shift feedback for every pointer (spec:AST-103 FR9), each row slides
+   * from its old place to its new one; otherwise they are there already.
    */
   private slideCommitted(move: PendingMove): void {
-    const {list} = move;
-    if (!this.animates) {
+    const {list, lefts} = move;
+    if (!this.animates && !move.shift) {
       list.removeAttribute(REORDERING_ATTRIBUTE);
       return;
     }
     const at = motionNow();
     for (const [index, element] of move.rows.entries()) {
-      if (element.parentElement !== list) {
+      if (!list.contains(element)) {
         continue;
       }
       const shift = move.tops[index] - layoutTop(element, list);
-      if (Math.abs(shift) < MIN_MOVE_PX) {
+      const shiftX =
+        lefts == null ? 0 : lefts[index] - layoutLeft(element, list);
+      if (Math.abs(shift) < MIN_MOVE_PX && Math.abs(shiftX) < MIN_MOVE_PX) {
         continue;
       }
       // A row still sliding from the previous move goes on from where it is
       // shown, as a drop's rows do.
-      touchMotion.follow(element, shift, touchMotion.glideBase(list), at);
+      touchMotion.follow(
+        element,
+        lefts == null ? shift : {x: shiftX, y: shift},
+        touchMotion.glideBase(list),
+        at,
+      );
     }
     list.removeAttribute(REORDERING_ATTRIBUTE);
   }
@@ -1858,7 +2062,9 @@ export class ListReorderController implements ListReorderSession {
         continue;
       }
       const moved = lefts == null ? shift : {x: shiftX, y: shift};
-      if (this.animates && index === pending.dragged) {
+      // Under shift feedback every pointer glides (FR9).
+      const glides = this.animates || pending.shift;
+      if (glides && index === pending.dragged) {
         // The dragged row glides from where its preview was dropped into its
         // new layout place, starting at the release's velocity
         // (spec:AST-094 FR6, FR38).
@@ -1871,7 +2077,7 @@ export class ListReorderController implements ListReorderSession {
             ? pending.velocity
             : {x: pending.velocityX, y: pending.velocity},
         );
-      } else if (this.animates) {
+      } else if (glides) {
         // Every other row's place after the drop is its new layout place, so
         // its running spring (a row's glide) goes on to 0 from the shifted
         // value, or the glide starts from rest.
@@ -1895,7 +2101,9 @@ export class ListReorderController implements ListReorderSession {
    */
   private placeModeLine(list: HTMLElement): void {
     const row = this.rowOf(this.modeHandle);
-    if (row == null) {
+    // Under shift feedback the moves slide the rows instead: no line
+    // (spec:AST-103 FR4, FR9).
+    if (row == null || this.shifts) {
       this.clearModeLine();
       return;
     }
@@ -2129,6 +2337,11 @@ export class ListReorderController implements ListReorderSession {
       list,
       rows,
       tops: rows.map(element => layoutTop(element, list)),
+      lefts:
+        this.slotsFor(list, rows) == null
+          ? null
+          : rows.map(element => layoutLeft(element, list)),
+      shift: this.shifts,
     };
     list.setAttribute(REORDERING_ATTRIBUTE, '');
     if (this.moveFallback != null) {

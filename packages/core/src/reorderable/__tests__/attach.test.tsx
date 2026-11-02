@@ -153,6 +153,19 @@ describe('createReorderable attach', () => {
     expect(reported).toEqual([]);
   });
 
+  it('warns in development, once, about a feedback it does not know (spec:AST-103 FR9)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    for (const feedback of [undefined, 'insertion-line', 'shift'] as const) {
+      createReorderable({onReorder: () => {}, feedback});
+    }
+    const unknown = 'slide' as unknown as 'shift';
+    createReorderable({onReorder: () => {}, feedback: unknown});
+    createReorderable({onReorder: () => {}, feedback: unknown});
+    const warned = warn.mock.calls.map(call => call.join(' '));
+    warn.mockRestore();
+    expect(warned).toEqual([expect.stringContaining("`feedback` is 'slide'")]);
+  });
+
   it('warns in development about an item with no accessible name and no text', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const {container, cards, items} = deck(['', 'Eggs']);

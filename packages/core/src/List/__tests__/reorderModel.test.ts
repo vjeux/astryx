@@ -7,7 +7,9 @@
  *   centre is nearest the dragged row's centre (spec:AST-103 FR1), replayed
  *   against the UIKit lab drag (iOS 26.2 simulator, a table of 44 pt rows with
  *   rows 6 and 9 at 88 pt), the movable range that only the fixed rows ending
- *   a list bound, the autoscroll steps and the tracking clamp
+ *   a list bound, the autoscroll steps and the tracking clamp; shift
+ *   feedback's midpoint rule and the places it opens the gap with
+ *   (spec:AST-103 FR9)
  * @position Tests for List/reorderModel.ts
  */
 
@@ -16,12 +18,16 @@ import {reorder} from '../../motion/uikit/reorder';
 import {
   autoscrollStep,
   clampTop,
+  columnSlots,
   dropPosition,
   movableRange,
   nearestSlot,
   type ReorderGeometry,
   type ReorderRow,
+  shiftCandidate,
+  shiftOffsets,
   slotLine,
+  slotShiftOffsets,
   stepLine,
 } from '../reorderModel';
 
@@ -399,5 +405,86 @@ describe('stepLine', () => {
       length: 40,
       angle: 90,
     });
+  });
+});
+
+describe('shiftCandidate: the midpoint rule (spec:AST-103 FR9)', () => {
+  // Five 44 px rows; the dragged row is the third, its slot centre at 110.
+  const geometry = table([44, 44, 44, 44, 44]);
+  const slots = columnSlots(geometry, 2);
+  const at = (y: number) => ({x: 0, y});
+
+  it("keeps the candidate until the dragged row's centre passes the next slot's centre: a neighbour's midpoint", () => {
+    expect(shiftCandidate(slots, geometry.rows, 2, 2, at(140))).toBe(2);
+    expect(shiftCandidate(slots, geometry.rows, 2, 2, at(153))).toBe(2);
+    expect(shiftCandidate(slots, geometry.rows, 2, 2, at(154))).toBe(3);
+  });
+
+  it('moves nothing under a centre resting near a boundary: back only once the centre passes the earlier slot centre', () => {
+    expect(shiftCandidate(slots, geometry.rows, 2, 3, at(150))).toBe(3);
+    expect(shiftCandidate(slots, geometry.rows, 2, 3, at(111))).toBe(3);
+    expect(shiftCandidate(slots, geometry.rows, 2, 3, at(110))).toBe(2);
+  });
+
+  it('takes the nearest of the slots a fast move passed', () => {
+    expect(shiftCandidate(slots, geometry.rows, 2, 2, at(200))).toBe(4);
+    expect(shiftCandidate(slots, geometry.rows, 2, 2, at(20))).toBe(0);
+  });
+
+  it('never passes the fixed rows that end the list', () => {
+    const bounded = table([44, 44, 44, 44, 44], {fixed: [4]});
+    expect(
+      shiftCandidate(columnSlots(bounded, 2), bounded.rows, 2, 2, at(250)),
+    ).toBe(3);
+  });
+
+  it('applies the same rule in two dimensions: a wrapping grid', () => {
+    // Three 88 px columns, rows 112 px apart.
+    const grid = [
+      {x: 44, y: 56},
+      {x: 132, y: 56},
+      {x: 220, y: 56},
+      {x: 44, y: 168},
+      {x: 132, y: 168},
+    ];
+    const items = grid.map(() => ({isFixed: false}));
+    expect(shiftCandidate(grid, items, 0, 0, {x: 131, y: 56})).toBe(0);
+    expect(shiftCandidate(grid, items, 0, 0, {x: 133, y: 60})).toBe(1);
+    expect(shiftCandidate(grid, items, 0, 0, {x: 50, y: 170})).toBe(3);
+  });
+
+  it("puts a column's slot centres where the dragged row's centre would rest, as dropPosition does", () => {
+    const uneven = table([44, 44, 88, 44], {gap: 4});
+    expect(columnSlots(uneven, 1).map(slot => slot.y)).toEqual([
+      22, 70, 162, 210,
+    ]);
+  });
+});
+
+describe('shiftOffsets and slotShiftOffsets (spec:AST-103 FR9)', () => {
+  it('move the rows between the dragged row and the gap one place toward it, by its height and the gap', () => {
+    const geometry = table([44, 44, 88, 44], {gap: 4});
+    expect(shiftOffsets(geometry, 1, 3)).toEqual([0, 0, -48, -48]);
+    expect(shiftOffsets(geometry, 3, 0)).toEqual([48, 48, 48, 0]);
+    expect(shiftOffsets(geometry, 1, 1)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("move each item between to its neighbour's slot in a slot layout", () => {
+    const row = [0, 1, 2, 3, 4].map(index => ({x: 44 + 88 * index, y: 56}));
+    const still = {x: 0, y: 0};
+    expect(slotShiftOffsets(row, 0, 2)).toEqual([
+      still,
+      {x: -88, y: 0},
+      {x: -88, y: 0},
+      still,
+      still,
+    ]);
+    expect(slotShiftOffsets(row, 3, 1)).toEqual([
+      still,
+      {x: 88, y: 0},
+      {x: 88, y: 0},
+      still,
+      still,
+    ]);
   });
 });

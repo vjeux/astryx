@@ -43,6 +43,12 @@ export interface ListReorderOptions {
   readonly onReorder: (move: {key: Key; to: number}) => void;
   /** Whether the item with `key` moves; every item does without it. */
   readonly isReorderable?: (key: Key) => boolean;
+  /**
+   * How a drag previews where the item lands: the insertion line, the
+   * default, or the other items sliding aside to open the gap
+   * (spec:AST-103 FR9).
+   */
+  readonly feedback?: 'insertion-line' | 'shift';
   /** The strings it announces or shows, each over the catalog's. */
   readonly labels?: ReorderableLabels;
 }

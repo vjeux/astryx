@@ -28,6 +28,10 @@ import {
 } from '../List/listReorderContext';
 import {attachReorder} from '../List/listReorderAttach';
 import {listReorderEngine} from '../List/listReorderEngine';
+import {devWarn} from '../utils/devWarning';
+
+/** The `feedback` values warned about, each once. */
+const warnedFeedback = new Set<unknown>();
 
 /** A committed move: the item that moved and where it went. */
 export interface ReorderMove<
@@ -65,6 +69,16 @@ export interface ReorderableOptions<
    * refused. Every item moves without it.
    */
   isReorderable?: (key: TKey) => boolean;
+  /**
+   * How a drag shows where the item will land. `'insertion-line'`, the
+   * default, keeps the other items still and draws a line in the gap, precise
+   * for small targets such as a settings list's rows. `'shift'` slides the
+   * other items aside to open the gap as the item moves, the way a hand of
+   * playing cards makes room; reorder mode's arrow moves slide them too.
+   * Under Reduce Motion nothing travels: the gap cross-fades in place on a
+   * touch screen, and with a mouse the insertion line shows instead.
+   */
+  feedback?: 'insertion-line' | 'shift';
   /**
    * The strings the reorder announces or shows, each optional: a given one
    * replaces the catalog's message, a provider's translation included; an
@@ -254,6 +268,20 @@ export function createReorderable<
   TKey extends string | number = string | number,
   TTo = number,
 >(options: ReorderableOptions<TKey, TTo>): Reorderable<TKey, TTo> {
+  const {feedback} = options;
+  if (
+    feedback != null &&
+    feedback !== 'insertion-line' &&
+    feedback !== 'shift' &&
+    !warnedFeedback.has(feedback)
+  ) {
+    warnedFeedback.add(feedback);
+    devWarn(
+      'createReorderable',
+      `\`feedback\` is '${String(feedback)}': give 'insertion-line' or 'shift'. ` +
+        'A drag shows the insertion line.',
+    );
+  }
   const internals: ReorderableInternals = {
     options: options as unknown as ListReorderOptions,
     [REORDER_ENGINE]: listReorderEngine,
