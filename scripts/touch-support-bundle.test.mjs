@@ -123,6 +123,17 @@ const GESTURE_USERS = new Set([
   'Slider',
   // Switch: its press tracking and its drag, for every pointer.
   'Switch',
+  // Under a finger, the bottom-sheet picker wheels drag and tap through the
+  // gesture system's pan and tap (DateInput/PickerWheel.tsx): DateInput's
+  // month and year wheels, and the time wheels of TimeInput and
+  // DateTimeInput.
+  'DateInput',
+  'DateTimeInput',
+  'TimeInput',
+  // A value editor reaches TimeInput's wheels: PowerSearch's edit popover
+  // and Table's filtering plugin.
+  'PowerSearch',
+  'Table',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
