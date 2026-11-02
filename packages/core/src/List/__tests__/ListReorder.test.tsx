@@ -1686,7 +1686,7 @@ describe('List reorderable labels (spec:AST-103 FR1, DEC-6)', () => {
     restorePointer = null;
   });
 
-  it('holds every string the List reorder announces or shows, each optional', () => {
+  it('holds every string the reorder announces or shows, List and attach alike, each optional', () => {
     expectTypeOf<keyof ReorderableLabels>().toEqualTypeOf<
       | 'pickedUp'
       | 'dropped'
@@ -1694,8 +1694,10 @@ describe('List reorderable labels (spec:AST-103 FR1, DEC-6)', () => {
       | 'place'
       | 'placeAtTop'
       | 'placeAtEnd'
+      | 'placeInGrid'
       | 'placeInTree'
       | 'refused'
+      | 'notMoved'
       | 'modeDone'
       | 'unnamedItem'
       | 'handle'
@@ -1704,6 +1706,8 @@ describe('List reorderable labels (spec:AST-103 FR1, DEC-6)', () => {
       | 'handleHint'
       | 'moveUp'
       | 'moveDown'
+      | 'moveLeft'
+      | 'moveRight'
       | 'done'
     >();
     expectTypeOf<ReorderableLabels>().toEqualTypeOf<

@@ -16,10 +16,13 @@ import {reorder} from '../../motion/uikit/reorder';
 import {
   autoscrollStep,
   clampTop,
-  movableRange,
   dropPosition,
+  movableRange,
+  nearestSlot,
   type ReorderGeometry,
   type ReorderRow,
+  slotLine,
+  stepLine,
 } from '../reorderModel';
 
 function table(
@@ -226,5 +229,175 @@ describe('clampTop', () => {
       listBottom: 2000,
     };
     expect(clampTop(900, 44, bounds)).toBe(778);
+  });
+});
+
+describe('nearestSlot', () => {
+  // A 3 x 2 grid of 80 x 40 slots.
+  const grid = [
+    {x: 40, y: 20},
+    {x: 120, y: 20},
+    {x: 200, y: 20},
+    {x: 40, y: 60},
+    {x: 120, y: 60},
+    {x: 200, y: 60},
+  ];
+  const free = grid.map(() => ({isFixed: false}));
+
+  it("proposes the slot whose centre is nearest the dragged item's centre (spec:AST-103 FR1)", () => {
+    expect(nearestSlot(grid, free, 0, {x: 125, y: 58})).toBe(4);
+    expect(nearestSlot(grid, free, 0, {x: 190, y: 25})).toBe(2);
+    // Where it started.
+    expect(nearestSlot(grid, free, 4, {x: 118, y: 61})).toBe(4);
+  });
+
+  it('stays within the drop range that fixed items at either end bound, and passes one in the middle', () => {
+    const fixedEnds = free.map((item, index) =>
+      index === 0 || index === 5 ? {isFixed: true} : item,
+    );
+    // Over the fixed first slot: the nearest slot in range is the one below.
+    expect(nearestSlot(grid, fixedEnds, 2, {x: 41, y: 19})).toBe(3);
+    // Over the fixed last slot: the nearest in range is the one above.
+    expect(nearestSlot(grid, fixedEnds, 1, {x: 199, y: 61})).toBe(2);
+    const fixedMiddle = free.map((item, index) =>
+      index === 3 ? {isFixed: true} : item,
+    );
+    expect(nearestSlot(grid, fixedMiddle, 0, {x: 41, y: 59})).toBe(3);
+  });
+});
+
+describe('slotLine', () => {
+  // A row of three 60 x 40 cards, 80 px apart.
+  const row = [
+    {x: 40, y: 20},
+    {x: 120, y: 20},
+    {x: 200, y: 20},
+  ];
+  const card = {width: 60, height: 40};
+
+  it("is a list's line turned across the step: between the target slot and the next one along the drag, as long as the item is across", () => {
+    // From the first slot to the second: between the second and the third.
+    expect(slotLine(row, 0, 1, card)).toEqual({
+      x: 160,
+      y: 20,
+      length: 40,
+      angle: 90,
+    });
+    // Back from the third to the second: between the second and the first.
+    expect(slotLine(row, 2, 1, card)).toEqual({
+      x: 80,
+      y: 20,
+      length: 40,
+      angle: 90,
+    });
+  });
+
+  it("past the last slot, half a step beyond it; none at the item's own place", () => {
+    expect(slotLine(row, 0, 2, card)).toEqual({
+      x: 240,
+      y: 20,
+      length: 40,
+      angle: 90,
+    });
+    expect(slotLine(row, 1, 1, card)).toBeNull();
+  });
+
+  it("in a column it is the list's line, across the item's width", () => {
+    const column = [
+      {x: 150, y: 22},
+      {x: 150, y: 66},
+      {x: 150, y: 110},
+    ];
+    expect(slotLine(column, 0, 1, {width: 300, height: 44})).toEqual({
+      x: 150,
+      y: 88,
+      length: 300,
+      angle: 0,
+    });
+  });
+});
+
+describe('slotLine in a wrapping grid', () => {
+  // Three 60 x 40 cards a row, 80 px apart, rows 60 px apart.
+  const grid = [
+    {x: 40, y: 20},
+    {x: 120, y: 20},
+    {x: 200, y: 20},
+    {x: 40, y: 80},
+    {x: 120, y: 80},
+    {x: 200, y: 80},
+  ];
+  const card = {width: 60, height: 40};
+
+  it("at a row's end, stands half a step beyond the last card of that row, not between the rows", () => {
+    // Onto the end of the first row: after C, at its right edge.
+    expect(slotLine(grid, 0, 2, card)).toEqual({
+      x: 240,
+      y: 20,
+      length: 40,
+      angle: 90,
+    });
+    // Back onto the start of the second row: before D, at its left edge.
+    expect(slotLine(grid, 5, 3, card)).toEqual({
+      x: 0,
+      y: 80,
+      length: 40,
+      angle: 90,
+    });
+  });
+});
+
+describe('stepLine', () => {
+  it("marks the leading edge of a key move's new slot, across the move", () => {
+    const card = {width: 60, height: 40};
+    const row = [
+      {x: 40, y: 20},
+      {x: 120, y: 20},
+    ];
+    const column = [
+      {x: 40, y: 20},
+      {x: 40, y: 80},
+    ];
+    // Right by one slot: the edge to the right of the new slot.
+    expect(stepLine(row, 0, 1, card)).toEqual({
+      x: 160,
+      y: 20,
+      length: 40,
+      angle: 90,
+    });
+    // Down by one row: the edge below the new slot.
+    expect(stepLine(column, 0, 1, card)).toEqual({
+      x: 40,
+      y: 110,
+      length: 60,
+      angle: 0,
+    });
+  });
+
+  it('after a move that wraps rows, marks the new slot along its row, inside the grid', () => {
+    const card = {width: 60, height: 40};
+    const grid = [
+      {x: 40, y: 20},
+      {x: 120, y: 20},
+      {x: 200, y: 20},
+      {x: 40, y: 80},
+      {x: 120, y: 80},
+      {x: 200, y: 80},
+    ];
+    // Right from the end of the first row to the start of the second: the
+    // edge between the new slot and the next one in its row.
+    expect(stepLine(grid, 2, 3, card)).toEqual({
+      x: 80,
+      y: 80,
+      length: 40,
+      angle: 90,
+    });
+    // Left from the start of the second row to the end of the first.
+    expect(stepLine(grid, 3, 2, card)).toEqual({
+      x: 160,
+      y: 20,
+      length: 40,
+      angle: 90,
+    });
   });
 });

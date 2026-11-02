@@ -141,11 +141,11 @@ export async function springTo(
  */
 export function animateRow(
   element: HTMLElement,
-  to: Partial<Record<'y' | 'rotate' | 'opacity', number>>,
+  to: Partial<Record<'x' | 'y' | 'rotate' | 'opacity', number>>,
   spring: SpringDescription,
   options: {
     at?: number;
-    velocity?: Partial<Record<'y' | 'rotate' | 'opacity', number>>;
+    velocity?: Partial<Record<'x' | 'y' | 'rotate' | 'opacity', number>>;
   } = {},
 ): MotionHandle {
   return track(

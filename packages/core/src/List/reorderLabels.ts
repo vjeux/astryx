@@ -13,8 +13,8 @@
  *   from the translator it wraps; and `useReorderTranslator`, the same under
  *   the provider around a component
  * @position Internal to the reorder (spec:AST-103 FR1, DEC-6): the engine,
- *   its handle and its hint read every string through it, so a given label
- *   replaces a message everywhere, a provider's translation included
+ *   its handle, its hint and attach read every string through it, so a given
+ *   label replaces a message everywhere, a provider's translation included
  */
 
 import {useMemo} from 'react';
@@ -31,8 +31,10 @@ export const REORDER_LABEL_KEYS = {
   place: '@astryx.list.reorderPlace',
   placeAtTop: '@astryx.list.reorderPlaceTop',
   placeAtEnd: '@astryx.list.reorderPlaceEnd',
+  placeInGrid: '@astryx.list.reorderPlaceGrid',
   placeInTree: '@astryx.list.reorderPlaceTree',
   refused: '@astryx.list.reorderRefused',
+  notMoved: '@astryx.list.reorderNotMoved',
   modeDone: '@astryx.list.reorderModeDone',
   unnamedItem: '@astryx.list.reorderItemAt',
   handle: '@astryx.list.reorderHandle',
@@ -41,6 +43,8 @@ export const REORDER_LABEL_KEYS = {
   handleHint: '@astryx.list.reorderHint',
   moveUp: '@astryx.list.reorderMoveUp',
   moveDown: '@astryx.list.reorderMoveDown',
+  moveLeft: '@astryx.list.reorderMoveLeft',
+  moveRight: '@astryx.list.reorderMoveRight',
   done: '@astryx.list.reorderDone',
 } as const satisfies Record<keyof ReorderableLabels, string>;
 
