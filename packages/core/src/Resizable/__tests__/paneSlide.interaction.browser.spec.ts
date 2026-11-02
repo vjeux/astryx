@@ -2,25 +2,13 @@
 
 /**
  * @file paneSlide.interaction.browser.spec.ts
- * @input Uses @playwright/test and the interaction harness (a built
- *   Storybook): Resizable's sliding-panel stories, a LayoutPanel at the size
- *   of a `useResizable(handleRef, options)` region beside its ResizeHandle,
- *   at the start and at the end of a Layout, and the configuration-object
- *   fixtures: a start LayoutPanel that takes the hook's own `props`, and one
- *   that takes a hand-built `ResizableProps` object
- * @output Proves the pane slides closed and open by spec:AST-105 FR9's edge
- *   reveal from the edge facing its handle, which it never leaves at any
- *   moment of the motion (component:Resizable FR8; component:LayoutPanel
- *   FR7), by every path: collapse() and Enter, a toggle, a controlled
- *   isCollapsed, a double-click, the grow arrow, and a drag past the
- *   threshold, while a drag that reopens follows the pointer with no slide;
- *   and that focus inside the collapsing pane moves to the handle and the
- *   collapsed pane is inert and hidden (component:LayoutPanel AR2), in
- *   Chromium and WebKit, with and without Reduce Motion; the hook's own props
- *   slide the same way, and a hand-built object collapses without a slide but
- *   still moves focus and goes inert
- * @position Interaction proof for packages/core/src/Resizable/createResizable.ts,
- *   resizablePane.ts and packages/core/src/Layout/LayoutPanel.tsx
+ * @input @playwright/test and the interaction harness: Resizable's
+ *   sliding-panel stories and the configuration-object fixtures
+ * @output Proves the pane slides closed and open from the edge facing its
+ *   handle, by every path, and that focus leaves a collapsing pane, which
+ *   goes inert, in Chromium and WebKit, with and without Reduce Motion
+ * @position Interaction proof for createResizable.ts, resizablePane.ts and
+ *   LayoutPanel.tsx
  */
 
 import {expect, test, type Page} from '@playwright/test';
@@ -61,13 +49,13 @@ interface Motion {
 }
 
 /**
- * Installs, in the page, the reader of one moment of the pane and its handle. The pane moves by
- * no transform: its box is its layout, and its clip says where it shows. The
- * handle shows at its layout place, which the pane's margin box ends at in
- * the row, plus its glide at the glide's own time; its own rect is not read,
- * because WebKit reports a compositor-run translate ahead of the frame time,
- * in the rect and in the computed style alike. In Chromium the two readings
- * agree.
+ * Installs, in the page, the reader of one moment of the pane and its handle.
+ * The pane moves by no transform: its box is its layout, and its clip says
+ * where it shows. The handle shows at its layout place plus its glide at the
+ * glide's own time. The pane's margin box ends at that layout place in the
+ * row. The handle's own rect is not read. WebKit reports a compositor-run
+ * translate ahead of the frame time, in the rect and in the computed style
+ * alike. In Chromium the two readings agree.
  */
 interface ReaderWindow {
   __readPaneFrame: (side: Side) => Frame;
@@ -171,10 +159,10 @@ interface CaptureWindow extends ReaderWindow {
 
 /**
  * Captures the collapse or open the input `trigger` starts at evenly spaced
- * moments. Every animation the change starts is paused the moment it is
- * created and held there (the module starts each one on the timeline's
- * current time by setting its start time, which would set it running), so
- * none advances while the test waits for a starved page. Then, in one task,
+ * moments. Every animation the change starts is paused as it is created and
+ * held there. The module starts each one by setting its start time to the
+ * timeline's current time, which would set it running. So none advances
+ * while the test waits for a starved page. Then, in one task,
  * each is set to the same moment before the geometry is read, and they
  * finish. Neither a renderer that skips frames nor a page that answers late
  * can hide a slide or fake one.
@@ -281,8 +269,8 @@ async function captureMotion(
 
 /**
  * Every captured moment keeps the pane's shown edge where it sits beside the
- * handle at rest (a panel without a divider overlaps its handle by its
- * collapsed spacing): no gap opens and the edge never runs ahead.
+ * handle at rest. No gap opens, and the edge never runs ahead. A panel
+ * without a divider overlaps its handle by its collapsed spacing.
  */
 function expectEdgeOnHandle(frames: Frame[]): void {
   const rest = frames[0].shownEdge - frames[0].handleEdge;
@@ -342,9 +330,10 @@ async function expectPresent(page: Page): Promise<void> {
 }
 
 /**
- * Proves one pane's slide: collapsed from a button inside it (focus moves to
- * the handle, the pane ends inert), then opened from the handle (no focus
- * moves), its shown edge on the handle at every captured moment of both.
+ * Proves one pane's slide. A button inside the pane collapses it: focus moves
+ * to the handle, and the pane ends inert. Then the handle opens it, and no
+ * focus moves. The shown edge stays on the handle at every captured moment of
+ * both.
  */
 async function expectSlide(
   page: Page,
@@ -360,9 +349,9 @@ async function expectSlide(
   const closing = await captureMotion(page, side, async () => {
     await page.keyboard.press('Enter');
   });
-  // A slide, not a jump: the pane clips and the handle glides, and the
-  // handle is on its way at many captured moments (a spring settles its last
-  // pixel late, so not all of them) ...
+  // A slide, not a jump: the pane clips and the handle glides. The handle is
+  // on its way at many captured moments, though not all: a spring settles its
+  // last pixel late ...
   expect(closing.clips).toBe(true);
   expect(closing.glides).toBe(true);
   expect(travelling(closing.frames)).toBeGreaterThanOrEqual(MOMENTS / 3);

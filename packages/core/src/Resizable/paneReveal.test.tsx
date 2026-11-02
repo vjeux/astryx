@@ -6,13 +6,8 @@
  *   ResizeHandle, useResizable in both forms, and a recording stand-in for
  *   the animated-layout module's edge reveal
  * @output Checks when a LayoutPanel's pane slides on collapse and open, from
- *   which edge, and around which commit (measured before the DOM changes,
- *   played once the pane renders its new size, a controlled change included,
- *   which the hook reports in the commit of the parent's state) (component:Resizable FR8,
- *   component:LayoutPanel FR7, spec:AST-105 FR9); and that focus inside a
- *   collapsing pane moves to its ResizeHandle and the collapsed pane is
- *   inert and hidden from assistive technology, in both forms
- *   (component:LayoutPanel AR2)
+ *   which edge and around which commit, and that focus leaves a collapsing
+ *   pane, which goes inert, in both forms
  * @position Integration tests for createResizable.ts, resizablePane.ts,
  *   LayoutPanel.tsx and ResizeHandle.tsx
  */
@@ -145,9 +140,9 @@ let propsRegion: ResizableRegion | undefined;
 const NO_CONFIG: UseResizableSingleConfig = {};
 
 /**
- * A Layout whose start (or, reversed, end) panel takes the configuration-
- * object hook's own `props`, or a hand-built copy of them: the same fields in
- * an object `useResizable` did not return.
+ * A Layout whose start panel, or end panel when reversed, takes the
+ * configuration-object hook's own `props`. Or it takes a hand-built copy: the
+ * same fields in an object `useResizable` did not return.
  */
 function PropsSplit({
   config = NO_CONFIG,

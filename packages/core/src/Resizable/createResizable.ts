@@ -525,19 +525,19 @@ export function createResizableAs(
   const snapshotListeners = new Set<() => void>();
 
   // The LayoutPanel that renders the pane, if any: found beside the handle,
-  // or handed over by the configuration object's region. Its edge reveal is
-  // decided here as the region collapses or opens, measured in the commit
-  // that renders the change, before the DOM changes, and played once the
-  // pane renders its new size, on the controller's own animated-layout
-  // handle over the pane's row, with no copy.
+  // or handed over by the configuration object's region. The factory decides
+  // the pane's edge reveal as the region collapses or opens. It measures in
+  // the commit that renders the change, before the DOM changes. It plays once
+  // the pane renders its new size. It runs on the controller's own
+  // animated-layout handle over the pane's row, with no copy.
   let pane: ResizablePane | null = null;
   let regionSlot: RegionPaneSlot | null = null;
   const paneReveal = createPaneReveal(
     () => pane?.element.parentElement ?? null,
   );
-  // A collapse or open this factory made, which the pane has not rendered
-  // yet; and one the pane rendered before the factory heard of it (a
-  // controlled isCollapsed), already measured.
+  // A collapse or open this factory made that the pane has not rendered yet.
+  // And one the pane rendered before the factory heard of it, already
+  // measured: a controlled isCollapsed.
   let pendingFlip: {toCollapsed: boolean; isPlayable: boolean} | null = null;
   let expectedFlip: boolean | null = null;
   let isPointerReopening = false;
@@ -807,7 +807,7 @@ export function createResizableAs(
     }
   }
 
-  // --- The pane a LayoutPanel lends (component:LayoutPanel FR7) ---
+  // --- The pane a LayoutPanel lends ---
 
   /** The pane's edge that faces the handle, from the direction and reversal. */
   function paneEdge(): LayoutEdge {
@@ -839,8 +839,8 @@ export function createResizableAs(
         return;
       }
       // The pane renders a collapse or open this factory has not made yet,
-      // ahead of the size it reports: a controlled isCollapsed, which reaches
-      // the factory after this commit. It plays too.
+      // ahead of the size it reports. A controlled isCollapsed does that: it
+      // reaches the factory after this commit. It plays too.
       const reportedSize = derived.isCollapsed ? 0 : derived.size;
       const isAhead = toCollapsed ? reportedSize !== 0 : reportedSize === 0;
       if (collapsible() && isAhead && derived.isCollapsed !== toCollapsed) {

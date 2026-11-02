@@ -4,19 +4,10 @@
 
 /**
  * @file LayoutPanel.tsx
- * @input Uses React StyleX, LayoutAreaContext, LayoutSlotsContext, the
- *   resize channel (Resizable/resizablePane.ts) and LayoutChangeSnapshot
+ * @input Uses React StyleX, LayoutAreaContext, LayoutSlotsContext, resizablePane.ts
  * @output Exports LayoutPanel component and LayoutPanelProps
- * @position Sidebar panel for Layout start/end slots. Use for navigation panels,
- *   settings sidebars, detail panels, or any fixed-width side content.
- *   Sized by a resize controller, it lends that controller its element in its
- *   callback ref, which slides it closed and open: beside the ResizeHandle of
- *   a useResizable(handleRef) region, or given the hook's own `resizable`
- *   props (component:LayoutPanel FR7). It tells the controller of a collapse
- *   or open before the DOM changes, in the commit that renders it. A
- *   hand-built `resizable` object never slides. A collapsing panel moves focus
- *   inside it to its ResizeHandle, then goes inert and aria-hidden while
- *   collapsed (component:LayoutPanel AR2)
+ * @position Sidebar panel for Layout start/end slots; its resize controller slides it.
+ *   Use for navigation panels, settings sidebars, detail panels, or any fixed-width side content.
  *
  * SYNC: When modified, update these files to stay in sync:
  * - /packages/core/src/Layout/Layout.doc.mjs
@@ -248,12 +239,11 @@ export function LayoutPanel({
   const effectiveWidth = resizable ? resizable._size : width;
 
   // A panel sized by a resize controller lends it its element in its callback
-  // ref, and the controller slides it on collapse and open
-  // (component:LayoutPanel FR7): beside the ResizeHandle of a
-  // useResizable(handleRef) region, which finds it from the handle and holds
-  // it collapsed; or handed to the region whose own `props` it takes. A
-  // hand-built `resizable` object has no region: it lends nothing and never
-  // slides.
+  // ref. The controller slides it on collapse and open. Beside the
+  // ResizeHandle of a useResizable(handleRef) region, the controller finds it
+  // from the handle and holds it collapsed. Given the hook's own `props`, the
+  // panel hands itself to that region. A hand-built `resizable` object has no
+  // region: it lends nothing and never slides.
   const [paneLink] = useState(createResizablePaneLink);
   const isHeldCollapsed = useSyncExternalStore(
     paneLink.subscribe,
@@ -272,8 +262,8 @@ export function LayoutPanel({
   );
   const contentFacingEdge = area === 'end' ? 'inline-start' : 'inline-end';
   // A collapse or open reaches the controller before the DOM changes, in the
-  // commit that renders it, whatever made it: the controller's own change or
-  // a controlled `isCollapsed` it hears of after this commit.
+  // commit that renders it. That holds for the controller's own change and
+  // for a controlled `isCollapsed` it hears of after this commit.
   const isAtZero = effectiveWidth === 0;
   const tellBeforeChange = useCallback(() => {
     paneLink.beforeChange(isAtZero);
@@ -282,15 +272,13 @@ export function LayoutPanel({
     paneLink.committed(effectiveWidth, contentFacingEdge);
   });
 
-  // A collapsing panel moves focus inside it to its ResizeHandle, then goes
-  // inert and hidden from assistive technology, a commit later, so inert never
-  // drops that focus to the page; opening drops both at once
-  // (component:LayoutPanel AR2). The region's collapse state is the one its
-  // ref-form controller holds, or the `resizable` props' own, whether the
-  // hook's or a hand-built object.
+  // A collapsing panel moves focus inside it to its ResizeHandle. It goes
+  // inert and hidden from assistive technology a commit later, so inert never
+  // drops that focus to the page. Opening drops both at once. Its ref-form
+  // controller holds the region's collapse state, or else the `resizable`
+  // props hold it.
   const elementRef = useRef<HTMLDivElement>(null);
-  // The ring on the handle follows the last input
-  // (`architecture:interaction-modality` INV1).
+  // The ring on the handle follows the last input.
   const {ref: modalityRef} = useInteractionModalityTracking();
   const isRegionCollapsed =
     resizable == null ? isHeldCollapsed : resizable._isCollapsed;

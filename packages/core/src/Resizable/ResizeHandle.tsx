@@ -497,7 +497,7 @@ export function ResizeHandle({
       isDragging => {
         setIsRegionDragging(isDragging);
         // The hook's region lets a pointer drag reopen its pane without a
-        // slide (component:Resizable FR8); a hand-built object has none.
+        // slide; a hand-built object has none.
         const region = resizableRef.current;
         if (region != null) {
           regionOfProps(region)?.setPointerDragging(isDragging);
