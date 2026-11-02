@@ -202,10 +202,7 @@ const thumbOnSizeStyles = stylex.create({
 // activate the row.
 const pressedImage = `linear-gradient(${colorVars['--color-overlay-pressed']}, ${colorVars['--color-overlay-pressed']})`;
 
-/**
- * The touch press's release: opacity 1 → 0, the same keyframes as a
- * control's release in controlPressLayer.ts (StyleX emits one rule).
- */
+/** The touch press's release on the press layer: opacity 1 → 0. */
 const pressLayerRelease = stylex.keyframes({
   from: {opacity: 1},
   to: {opacity: 0},
@@ -344,10 +341,9 @@ const styles = stylex.create({
     // The press, under a finger: a layer over the track's fill and colour
     // fade and under the thumb, present only while the row the press
     // controller writes to is pressed or releasing. Its opacity is the
-    // press: on at once, then a control's release (UIButton's clock and
-    // curve, shared with controlPressLayer.ts's `control`) that runs
-    // on the compositor, so it never sticks while the main thread is busy;
-    // under reduced motion the system's cross-fade (design:reduced-motion).
+    // press: on at once, then the shared release's clock and curve, run on
+    // the compositor so the press never sticks while the main thread is
+    // busy.
     '::before': {
       content: {
         default: null,

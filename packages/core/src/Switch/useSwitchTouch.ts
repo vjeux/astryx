@@ -98,7 +98,7 @@
 
 import {useMemo, useState, type RefObject} from 'react';
 import {getGestureHost} from '../gestures/GestureHost';
-import {PressTracker, type ControlEvent} from '../gestures/PressTracker';
+import {createPressTracker, type ControlEvent} from '../gestures/PressTracker';
 import type {GestureTouch} from '../gestures/types';
 import {isRtlElement} from '../hooks/isRtlElement';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
@@ -367,7 +367,7 @@ export class SwitchTouchController {
     elements: Elements,
   ): (() => void)[] {
     const {surface} = elements;
-    const tracker = new PressTracker({
+    const tracker = createPressTracker({
       view: surface,
       getBounds: () => surface.getBoundingClientRect(),
       isEnabled: () => this.isInteractive,

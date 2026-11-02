@@ -23,6 +23,7 @@
  */
 
 import {StrictMode} from 'react';
+import * as stylex from '@stylexjs/stylex';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {render, screen, fireEvent, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -38,10 +39,11 @@ import {
   rulesDeclaredFor,
   rulesWithSelector,
 } from '../__tests__/pressState';
-import {button as uikitButton} from '../motion/uikit/button';
+import {press as uikitPress} from '../motion/uikit/timing';
 import {__resetLiveRegionsForTest} from '../hooks/useAnnounce';
 import {InternationalizationProvider} from '../i18n';
 import {installPressFeedback} from '../utils/pressFeedback';
+import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
 import {docs as switchDocs} from './Switch.doc.mjs';
 
 afterEach(() => {
@@ -1113,7 +1115,7 @@ describe('Switch', () => {
       );
       for (const part of [track, thumb]) {
         expect(
-          releasesOnLayer(part, '::before', uikitButton.highlight.releaseMs),
+          releasesOnLayer(part, '::before', uikitPress.highlightOutMs),
         ).toBe(true);
       }
       // Nothing reads the strength under a finger, so its main-thread
@@ -1135,6 +1137,62 @@ describe('Switch', () => {
         );
         expect(readsPressStrength(part)).toBe(false);
       }
+    });
+
+    it('releases the touch press on the shared release’s clock and curve', () => {
+      render(
+        <>
+          <Switch label="Notifications" value={false} onChange={() => {}} />
+          <div
+            data-testid="shared-release"
+            {...stylex.props(interactionOverlayStyles.pressedAlpha)}
+          />
+        </>,
+      );
+      const track = document.querySelector('.astryx-switch');
+      if (track == null) {
+        throw new Error('the switch has no track');
+      }
+      const shared = screen.getByTestId('shared-release');
+      const fading = '[data-astryx-press="fading"]';
+      const reduced = /prefers-reduced-motion/;
+      const valuesOf = (rules: string[], property: string) => [
+        ...new Set(
+          rules.flatMap(rule => {
+            const match = rule.match(new RegExp(`${property}:\\s*([^;}]+)`));
+            // StyleX may write a time in s or ms: compare it in ms.
+            return match == null
+              ? []
+              : [
+                  match[1]
+                    .trim()
+                    .replace(
+                      /(\d*\.?\d+)(ms|s)\b/g,
+                      (_, n: string, unit: string) =>
+                        `${Number(n) * (unit === 's' ? 1000 : 1)}ms`,
+                    ),
+                ];
+          }),
+        ),
+      ];
+      const layer = (filter: {insideMedia?: RegExp; outsideMedia?: RegExp}) =>
+        rulesWithSelector(track, fading, filter).filter(rule =>
+          rule.slice(0, rule.indexOf('{')).includes('::before'),
+        );
+      const touch = layer({
+        insideMedia: /\(pointer: coarse\)/,
+        outsideMedia: reduced,
+      });
+      const own = rulesWithSelector(shared, fading, {outsideMedia: reduced});
+      for (const property of [
+        'animation-duration',
+        'animation-timing-function',
+      ]) {
+        expect(valuesOf(own, property)).toHaveLength(1);
+        expect(valuesOf(touch, property)).toEqual(valuesOf(own, property));
+      }
+      // Reduce Motion's arm nests one `@media` rule in another, which the
+      // test DOM drops: the browser proofs check it.
     });
   });
 

@@ -67,7 +67,7 @@ import {
   type CastFrame,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
-import {button} from '../../motion/uikit/button';
+import {press} from '../../motion/uikit/timing';
 
 const storybook = withStorybook(test);
 
@@ -93,9 +93,9 @@ const LIFT_SCALE = 1 + INSET / THUMB_OFF;
  * opacity-only cross-fade of this many ms or less.
  */
 const REDUCED_FADE_MAX_MS = 200;
-/** A control's press release (UIButton's, motion/uikit/button.ts), ms. */
-const PRESS_RELEASE_MS = button.highlight.releaseMs;
-const pressReleaseEase = cubicBezier(...button.highlight.releaseCurve);
+/** The shared press release (motion/uikit/timing.ts `press`), ms. */
+const PRESS_RELEASE_MS = press.highlightOutMs;
+const pressReleaseEase = cubicBezier(...press.highlightOutCurve);
 /** The press layer's opacity t ms into the release, 1 → 0. */
 const pressReleaseAt = (t: number) =>
   1 - pressReleaseEase(Math.min(1, Math.max(0, t / PRESS_RELEASE_MS)));
@@ -805,7 +805,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     await expect(input).toBeChecked();
   });
 
-  test('the touch press is a layer on the track, absent at rest, released on UIButton’s clock and curve on the compositor', async ({
+  test('the touch press is a layer on the track, absent at rest, released on the shared release’s clock and curve on the compositor', async ({
     page,
   }, testInfo) => {
     const {driver, center} = await openSwitch(page);
@@ -847,8 +847,8 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const row = page.locator('#storybook-root [data-astryx-pressable]').first();
     const held = await holdAnimations(page, row);
     // One CSS animation per press layer runs the release, the track's and
-    // the thumb's (design:user-states DR1), each its opacity on UIButton's
-    // clock. The row's strength has no release of its own under a finger (no
+    // the thumb's (design:user-states DR1), each its opacity on the shared
+    // release's clock. The row's strength has no release of its own under a finger (no
     // main-thread fade), and the lift and travel are the animator's.
     const css = held.filter(a => a.kind === 'CSSAnimation');
     expect(
@@ -875,7 +875,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
         [`${testInfo.project.name}.json`]: JSON.stringify(
           {
             releaseMs: PRESS_RELEASE_MS,
-            curve: button.highlight.releaseCurve,
+            curve: press.highlightOutCurve,
             held,
             samples,
             comparison,
