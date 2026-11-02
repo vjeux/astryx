@@ -1543,6 +1543,104 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     ).toBe(true);
   });
 
+  test('P12 · with Reduce Motion a drag’s release brings the thumb to rest by a cross-fade, not a slide (design:reduced-motion DR1, DR2)', async ({
+    page,
+  }) => {
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    const {driver, input, center} = await openSwitch(page);
+    // A short drag, held: it toggles at the release (Switch FR15).
+    const samples = await sampleChange(
+      page,
+      async () => {
+        await driver.play(
+          drag(
+            center,
+            {x: center.x + 9, y: center.y},
+            {durationMs: 300, holdMs: 250, restMs: 0},
+          ),
+        );
+      },
+      1200,
+    );
+    await expect(input).toBeChecked();
+    const start = samples[0].left;
+    const rest = samples.at(-1)!.left;
+    // The finger moved it first, at full opacity, short of its rest.
+    const moved = samples.filter(
+      s => s.opacity > 0.98 && s.left > start + 6 && s.left < rest - 3,
+    );
+    expect(moved.length).toBeGreaterThan(0);
+    const left = moved.at(-1)!;
+    const after = samples.slice(samples.indexOf(left));
+    // From where the finger left it, a frame shows it only there or at rest.
+    for (const sample of after) {
+      if (sample.opacity > 0.1) {
+        const atAnEnd = Math.min(
+          Math.abs(sample.left - left.left),
+          Math.abs(sample.left - rest),
+        );
+        expect(atAnEnd, JSON.stringify(sample)).toBeLessThan(0.75);
+      }
+    }
+    // A fade, not a jump: a frame shows it part-way.
+    expect(after.some(s => s.opacity > 0.1 && s.opacity < 0.9)).toBe(true);
+    // Both samples lie inside the fade, so a frame read late cannot lengthen
+    // it.
+    const fading = after.filter(s => s.opacity < 0.98);
+    expect(fading.at(-1)!.t - fading[0].t).toBeLessThanOrEqual(
+      REDUCED_FADE_MAX_MS,
+    );
+  });
+
+  test('P11 · under a mouse a click slides the thumb, on the theme’s transition, like any change of value', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: {width: 480, height: 320},
+      screen: {width: 480, height: 320},
+      deviceScaleFactor: 1,
+      isMobile: false,
+      hasTouch: false,
+    });
+    try {
+      const page = await context.newPage();
+      await openStory(page, storybook(), 'core-switch--default');
+      expect(
+        await page.evaluate(() => matchMedia('(pointer: coarse)').matches),
+      ).toBe(false);
+      // Each transition the thumb runs, from before the click.
+      await page.evaluate(() => {
+        const w = window as unknown as {__thumbRuns: string[]};
+        w.__thumbRuns = [];
+        document
+          .querySelector('#storybook-root .astryx-switch-thumb')!
+          .addEventListener('transitionrun', event => {
+            w.__thumbRuns.push((event as TransitionEvent).propertyName);
+          });
+      });
+      const input = page.locator('#storybook-root').getByRole('switch').first();
+      await input.click();
+      await page.mouse.move(1, 1);
+      await expect(input).toBeChecked();
+      await expect
+        .poll(async () =>
+          page.evaluate(
+            () => (window as unknown as {__thumbRuns: string[]}).__thumbRuns,
+          ),
+        )
+        .toContain('transform');
+      expect(
+        await page
+          .locator('#storybook-root .astryx-switch-thumb')
+          .first()
+          .evaluate(el => getComputedStyle(el).transitionDuration),
+      ).not.toBe('0s');
+      expect(await thumbOffset(page)).toBeCloseTo(TRAVEL_PX, 0);
+    } finally {
+      await context.close();
+    }
+  });
+
   test('P13 · RTL: the off thumb rests at the right, and a tap carries it to the left end and turns the track on', async ({
     page,
   }) => {
