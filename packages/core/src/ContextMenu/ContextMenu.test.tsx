@@ -294,6 +294,21 @@ describe('ContextMenu', () => {
     expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
   });
 
+  it('keeps a menuContent touch sheet as the press root of its rows', async () => {
+    render(
+      <ContextMenu
+        presentation="bottom-sheet"
+        label="Row actions"
+        menuContent={<DropdownMenuItem label="Rename" />}>
+        <div>Right-click me</div>
+      </ContextMenu>,
+    );
+    fireEvent.contextMenu(screen.getByText('Right-click me'));
+    const row = await screen.findByRole('menuitem', {name: 'Rename'});
+    // The rows leave their press paint to the press root they sit in.
+    expect(row.closest(`[${MENU_PRESS_MARKER}]`)).not.toBeNull();
+  });
+
   it('keeps the items sheet out of the press model, so its Back button keeps its press paint', async () => {
     const user = userEvent.setup();
     render(

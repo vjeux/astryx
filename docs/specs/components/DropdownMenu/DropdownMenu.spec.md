@@ -552,11 +552,10 @@ closing on Tab past either end, which leaves a modal dialog by Tab.
 **Decider:** `cixzhang`, 2026-10-31
 
 `DropdownMenuTriggerProps.onPointerDown` and `onContextMenu` carry the menu's
-press to a `renderTrigger` control. Their replacement is the control's `ref`:
-the minor that gives the press that path removes the two props. Their
-deprecation ships together with that path and the migration of every
-maintained caller (`spec:AST-017` FR29c), so no patch deprecates them without
-a working replacement.
+press to a `renderTrigger` control until the control's `ref` carries it.
+They are deprecated and removed only together with that path and the migration
+of every maintained caller (`spec:AST-017` FR29c). No patch deprecates them
+without a working replacement.
 
 ## Open questions
 

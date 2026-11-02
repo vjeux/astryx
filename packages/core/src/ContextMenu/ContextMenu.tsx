@@ -749,18 +749,20 @@ export function ContextMenu({
 
   // The press model: the row under a release acts, the highlight follows a
   // held pointer, a mouse released outside dismisses and a finger leaves the
-  // menu open. It runs on the pointer menu only. The touch sheet's controls
-  // keep their own press paint, which skips anything inside a press root.
+  // menu open. It runs on the menu element only, never on the items sheet's
+  // container. That container's Back keeps its press paint, which skips
+  // anything inside a press root.
   const pressMenuRef = useRef<HTMLDivElement>(null);
-  const pointerMenuRef = useMergedRefs(listRef, pressMenuRef);
+  const menuElementRef = useMergedRefs(listRef, pressMenuRef);
   useMenuPress(pressMenuRef, {
     itemSelector: MENU_ITEM_SELECTOR,
     onDismiss: closeMenu,
+    isEnabled: !usesBottomSheet,
   });
 
   const renderedMenu = (
     <div
-      ref={usesBottomSheet ? listRef : pointerMenuRef}
+      ref={menuElementRef}
       id={menuId}
       role="menu"
       data-autofocus={usesBottomSheet ? '' : undefined}

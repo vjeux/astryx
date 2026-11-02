@@ -161,8 +161,8 @@ export interface CreateMenuPressReturn {
 }
 
 // The core reads its menu, trigger and options at event time. createMenuPress
-// drives it from its own listeners; the deprecated options form of
-// useMenuPress drives it from the props it returns.
+// drives it from its own listeners; the options form of useMenuPress drives
+// it from the props it returns.
 
 /** @internal What the core reads at event time. */
 export interface MenuPressSource {
@@ -260,8 +260,8 @@ interface ResolvedPoint {
 
 /**
  * @internal The press model over a menu, a trigger and options read at event
- * time. createMenuPress and the deprecated options form of useMenuPress are
- * its two drivers; nothing else has behavior of its own.
+ * time. createMenuPress and the options form of useMenuPress are its two
+ * drivers; nothing else has behavior of its own.
  */
 export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
   let gesture: MenuPressGesture<HTMLElement> = IDLE_MENU_PRESS;

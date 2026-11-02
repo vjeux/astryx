@@ -6,7 +6,7 @@
  * @output Tests that useMenuPress is a thin wrapper over createMenuPress: the
  *   ref form creates one factory on the element behind the ref, hands it the
  *   latest options and destroys it at unmount, adds no listener of its own,
- *   and server-renders; the deprecated options form forwards its props into
+ *   and server-renders; the options form forwards its props into
  *   the same core (spec:AST-107 FR6, architecture:public-component-api INV22)
  * @position Testing; complements useMenuPress.test.tsx (the behavior, through
  *   the options form) and createMenuPress.test.ts (the factory alone).
@@ -369,7 +369,7 @@ describe('useMenuPress(menuRef, options) — a thin wrapper over createMenuPress
   });
 });
 
-describe('useMenuPress(options) — the deprecated options form forwards into the same core', () => {
+describe('useMenuPress(options) — the options form forwards into the same core', () => {
   function OptionsHarness({onSelect}: {onSelect: (label: string) => void}) {
     const menuRef = useRef<HTMLDivElement>(null);
     const press = useMenuPress({menuRef, itemSelector: ITEM_SELECTOR});

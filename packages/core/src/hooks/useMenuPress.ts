@@ -234,7 +234,9 @@ function factoryOptionsOf(
 /**
  * The press model for a menu: the row under the release acts, the highlight
  * follows a held pointer, a mouse opens on press. createMenuPress on the
- * element behind `menuRef`; see createMenuPress.ts.
+ * element behind `menuRef`; see createMenuPress.ts. The press attaches when the
+ * calling component commits, so a menu that a child mounts in a later commit
+ * attaches at the caller's next commit.
  *
  * @example
  * ```
