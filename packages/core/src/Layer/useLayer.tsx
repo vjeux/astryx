@@ -664,11 +664,13 @@ function failsAnchor(
  * A scroll can move the anchor after the layer was laid out, and the layer
  * follows it only when the next frame renders, so that read moves the layer's
  * box by the part of the anchor's move the layer has not followed (`shift`)
- * and judges it where the next frame draws it (`observeAnchorClearance`).
- * Scroll events are not read. Once switched, a layer keeps its anchor-clear
- * list until it next opens, so it never jumps back over its trigger while
- * open; it is placed afresh (`placeAfresh`) only when the switch does not take
- * effect at once, or when a later read finds it failing again.
+ * and judges it where the next frame draws it (`observeAnchorClearance`). A
+ * scroll that carries the anchor also schedules that read from its scroll
+ * event, so a late report does not hold the read back. Once switched, a layer
+ * keeps its anchor-clear list until it next opens, so it never jumps back over
+ * its trigger while open; it is placed afresh (`placeAfresh`) only when the
+ * switch does not take effect at once, or when a later read finds it failing
+ * again.
  */
 function keepAnchorClear(
   layer: HTMLElement,
@@ -851,30 +853,53 @@ function anchorWithLayer(
 }
 
 /**
+ * Whether a scroll on `target` carries `node`: `target` is the node's document
+ * or an element that holds the node, across shadow roots too.
+ */
+function scrollCarries(target: EventTarget | null, node: Node): boolean {
+  let current: Node | null = node;
+  while (current != null) {
+    if (current === target) {
+      return true;
+    }
+    current =
+      current.parentNode ??
+      (current.nodeType === current.DOCUMENT_FRAGMENT_NODE
+        ? ((current as ShadowRoot).host ?? null)
+        : null);
+  }
+  return false;
+}
+
+/**
  * Watch an open layer that keeps its anchor clear, and its anchor, for every
- * change that can re-settle the layer over the anchor or give it a scroll
- * range (spec:AST-059 FR4, FR8): the layer, its content or the anchor
- * resizing (ResizeObserver, before paint), the viewport resizing (before
- * paint), and the anchor moving on screen without resizing, in layout or by a
- * scroll (`observeMove`, reported after paint). Each calls `keepAnchorClear`
+ * change that can re-settle the layer over the anchor or give it a scroll range
+ * (spec:AST-059 FR4, FR8): the layer, its content or the anchor resizing
+ * (ResizeObserver, before paint), the viewport resizing (before paint), and the
+ * anchor moving on screen without resizing, in layout or by a scroll
+ * (`observeMove`, reported after paint, and for a scroll also its scroll event,
+ * which fires before the next frame's callbacks). Each calls `keepAnchorClear`
  * for this layer and anchor while `isCurrent` says they are still the live
  * pair. A move is read in the next animation frame, not in the task that
  * reports it: placing the layer afresh there, right after the frame that
- * scrolled its anchor, lets Chromium lay it out for one more frame against
- * the anchor's position before the scroll, over the anchor, so the second
- * painted frame would still cover it. Read in the next frame, before it
- * paints, the fresh placement uses the moved anchor. Reports in one frame
- * share one read. A scroll that runs after the frame that laid the layer out
- * moves the anchor at once, but the layer follows it only when the next frame
- * renders, so comparing the moved anchor with the layer's box as it stands
- * could switch a layer that fits. The read therefore moves the layer's box by
- * the part of the anchor's move since the layer was laid out that the layer
- * has not followed: the anchor's move less the layer's own, since a move in
- * layout reaches the layer as soon as its box is read. It judges the layer
- * where the coming frame draws it. Every read happens in the
- * frame after its report, so a move that spans many frames, such as a smooth
- * scroll, is followed frame by frame. Returns the function that removes every
- * observer and listener it added.
+ * scrolled its anchor, lets Chromium lay it out for one more frame against the
+ * anchor's position before the scroll, over the anchor, so the second painted
+ * frame would still cover it. Read in the next frame, before it paints, the
+ * fresh placement uses the moved anchor. Reports and scroll events in one frame
+ * share one read. A report comes after a frame paints, and on a busy page after
+ * more frames, so for a scroll the scroll event schedules the read, and the
+ * frame after the scroll is judged whenever the report arrives. A scroll that
+ * runs after the frame that laid the layer out moves the anchor at once, but
+ * the layer follows it only when the next frame renders, so comparing the moved
+ * anchor with the layer's box as it stands could switch a layer that fits. The
+ * read therefore moves the layer's box by the part of the anchor's move since
+ * the layer was laid out that the layer has not followed: the anchor's move
+ * less the layer's own, since a move in layout reaches the layer as soon as its
+ * box is read. It judges the layer where the coming frame draws it. Every read
+ * happens in the frame after its report, or in the frame its scroll event
+ * fires in, so a move that spans many frames, such as a smooth scroll, is
+ * followed frame by frame. Returns the function that removes every observer
+ * and listener it added.
  */
 function observeAnchorClearance(
   layer: HTMLElement,
@@ -972,6 +997,13 @@ function observeAnchorClearance(
     }
     readMove();
   });
+  const onScroll = (event: Event) => {
+    if (scrollCarries(event.target, anchor)) {
+      readMove();
+    }
+  };
+  // Element scroll events do not bubble, so the capture phase sees them.
+  view.addEventListener('scroll', onScroll, {capture: true, passive: true});
   view.addEventListener('resize', reread);
   return () => {
     observer?.disconnect();
@@ -980,6 +1012,7 @@ function observeAnchorClearance(
       view.cancelAnimationFrame(moveFrame);
       moveFrame = null;
     }
+    view.removeEventListener('scroll', onScroll, {capture: true});
     view.removeEventListener('resize', reread);
   };
 }
