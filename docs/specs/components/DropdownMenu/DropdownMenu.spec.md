@@ -545,6 +545,19 @@ pattern requires; Escape and a press outside close it. Without either prop
 the component is unchanged: a Menu Button whose Tab closes the menu. Rejected:
 closing on Tab past either end, which leaves a modal dialog by Tab.
 
+### DEC-11 — The trigger's press handlers leave only with a ref path
+
+**Reference:** `component:DropdownMenu/DEC-11`
+
+**Decider:** `cixzhang`, 2026-10-31
+
+`DropdownMenuTriggerProps.onPointerDown` and `onContextMenu` carry the menu's
+press to a `renderTrigger` control. Their replacement is the control's `ref`:
+the minor that gives the press that path removes the two props. Their
+deprecation ships together with that path and the migration of every
+maintained caller (`spec:AST-017` FR29c), so no patch deprecates them without
+a working replacement.
+
 ## Open questions
 
 - **OQ1 — Which shared owner should make disabled menu rows keyboard-discoverable

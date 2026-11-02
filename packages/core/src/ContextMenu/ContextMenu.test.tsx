@@ -23,6 +23,7 @@ import {
 import userEvent from '@testing-library/user-event';
 import {readFileSync} from 'node:fs';
 import {ContextMenu} from './ContextMenu';
+import {MENU_PRESS_MARKER} from '../hooks/menuPressMarker';
 import {ContextMenuGroup} from './index';
 import {
   ContextMenuItem,
@@ -291,6 +292,25 @@ describe('ContextMenu', () => {
     await waitFor(() => expect(actionList).toHaveFocus());
     expect(screen.getByRole('button', {name: 'Edit'})).not.toHaveFocus();
     expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+  });
+
+  it('keeps the items sheet out of the press model, so its Back button keeps its press paint', async () => {
+    const user = userEvent.setup();
+    render(
+      <ContextMenu
+        presentation="bottom-sheet"
+        label="Row actions"
+        items={[{label: 'Move to project', items: [{label: 'Apollo launch'}]}]}>
+        <div>Right-click me</div>
+      </ContextMenu>,
+    );
+    fireEvent.contextMenu(screen.getByText('Right-click me'));
+    await user.click(
+      await screen.findByRole('button', {name: 'Move to project'}),
+    );
+    const back = await screen.findByRole('button', {name: 'Back'});
+    // The press feedback skips any element inside a press root.
+    expect(back.closest(`[${MENU_PRESS_MARKER}]`)).toBeNull();
   });
 
   it('drills into nested data items inside the BottomSheet', async () => {

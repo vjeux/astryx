@@ -749,17 +749,18 @@ export function ContextMenu({
 
   // The press model: the row under a release acts, the highlight follows a
   // held pointer, a mouse released outside dismisses and a finger leaves the
-  // menu open.
-  const menuPress = useMenuPress({
-    menuRef: listRef,
+  // menu open. It runs on the pointer menu only. The touch sheet's controls
+  // keep their own press paint, which skips anything inside a press root.
+  const pressMenuRef = useRef<HTMLDivElement>(null);
+  const pointerMenuRef = useMergedRefs(listRef, pressMenuRef);
+  useMenuPress(pressMenuRef, {
     itemSelector: MENU_ITEM_SELECTOR,
     onDismiss: closeMenu,
-    isEnabled: !usesBottomSheet,
   });
 
   const renderedMenu = (
     <div
-      ref={listRef}
+      ref={usesBottomSheet ? listRef : pointerMenuRef}
       id={menuId}
       role="menu"
       data-autofocus={usesBottomSheet ? '' : undefined}
@@ -767,7 +768,6 @@ export function ContextMenu({
       aria-label={label}
       onKeyDown={listKeyDown}
       onContextMenu={e => e.preventDefault()}
-      {...menuPress.menuProps}
       {...mergeProps(
         themeProps('context-menu'),
         stylex.props(
