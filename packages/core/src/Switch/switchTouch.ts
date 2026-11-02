@@ -3,15 +3,14 @@
 /**
  * @file switchTouch.ts
  * @input The UIKit switch constants (motion/uikit/switch.ts) and a track size
- * @output Exports the pure model of Switch's touch presentation: the thumb
- *   geometry scaled to a track, the drag's thumb target, the flip rule, the
- *   commit on release and when the lifted thumb may settle
+ * @output The pure model of Switch's touch presentation: thumb geometry, the
+ *   drag's target, the flip rule, the commit on release and its click
+ *   windows, and when the lifted thumb may settle
  * @position Pure half of Switch's touch presentation; driven by
  *   useSwitchTouch.ts, tested by switchTouch.test.ts without a browser
  *
- * Positions are offsets of the thumb from its off end, 0 … `travel`, in the
- * writing direction; the caller mirrors them for right-to-left.
- *
+ * Positions are thumb offsets from the off end, 0 … `travel`, in the writing
+ * direction; the caller mirrors them for right-to-left.
  * SYNC: When modified, update useSwitchTouch.ts and switchTouch.test.ts.
  */
 
@@ -158,6 +157,19 @@ export function stepFlip(
   }
   return isPast === flip.isArmed ? flip : {...flip, isArmed: isPast};
 }
+
+/**
+ * How long after the switch's own release the browser's trusted
+ * click is swallowed, ms (it follows the release within a frame or two).
+ */
+export const CLICK_GUARD_MS = 1000;
+/**
+ * Passive: how long a lift waits for the browser's own click before the
+ * switch clicks its input itself, ms. The browser sends that click with the
+ * lift's `touchend`. The surface's `touch-action` leaves no double-tap delay.
+ * So this only runs out for a lift the browser does not count as a click.
+ */
+export const BROWSER_CLICK_WAIT_MS = 300;
 
 /**
  * What a release commits: the side a drag flipped to; when nothing flipped,

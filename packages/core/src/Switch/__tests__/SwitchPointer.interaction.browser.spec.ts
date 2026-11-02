@@ -21,6 +21,7 @@ import {
   webInputDriver,
   withStorybook,
 } from '@astryxdesign/interaction-harness';
+import {BROWSER_CLICK_WAIT_MS} from '../switchTouch';
 
 const storybook = withStorybook(test);
 
@@ -98,6 +99,28 @@ async function openMouseSwitch(
   };
 }
 
+/**
+ * Resolves once the switch's click wait after a release has run out, on the
+ * page's own timers. The release queued that wait first, so a timer queued
+ * now with the same delay runs after it, however late the page runs.
+ */
+async function afterClickWait(page: Page): Promise<void> {
+  await page.evaluate(async ms => {
+    await new Promise<void>(resolve => {
+      setTimeout(resolve, ms);
+    });
+  }, BROWSER_CLICK_WAIT_MS);
+}
+
+/** Resolves after the page renders two more frames. */
+async function afterTwoFrames(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    for (let frame = 0; frame < 2; frame++) {
+      await new Promise(requestAnimationFrame);
+    }
+  });
+}
+
 /** A mouse drag through `points`, pressed at the first and released at the last. */
 async function mouseDrag(
   page: Page,
@@ -110,8 +133,7 @@ async function mouseDrag(
     await page.mouse.move(point.x, point.y, {steps: 8});
   }
   await page.mouse.up();
-  // The release's click window (the switch's own click, or the guard).
-  await page.waitForTimeout(350);
+  await afterClickWait(page);
 }
 
 test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
@@ -214,7 +236,7 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
         thumb.x + thumb.width / 2,
         thumb.y + thumb.height / 2,
       );
-      await sw.page.waitForTimeout(350);
+      await afterClickWait(sw.page);
       expect(await sw.isChecked()).toBe(false);
       // The tap's click is the browser's (trusted), not the switch's
       // fallback click after a cancelled touchend.
@@ -231,12 +253,12 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
     try {
       const {x, y} = sw.center;
       await sw.page.mouse.click(x, y);
-      await sw.page.waitForTimeout(350);
+      await afterClickWait(sw.page);
       expect(await sw.isChecked()).toBe(true);
       expect(await sw.changes()).toBe(1);
       await sw.page.mouse.click(x, y, {button: 'right'});
       await sw.page.keyboard.press('Escape');
-      await sw.page.waitForTimeout(350);
+      await afterClickWait(sw.page);
       expect(await sw.isChecked()).toBe(true);
       expect(await sw.changes()).toBe(1);
     } finally {
@@ -278,7 +300,7 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
         {x: x + 60, y, t: 240},
         {x: x + 90, y, t: 300},
       ]);
-      await sw.page.waitForTimeout(350);
+      await afterClickWait(sw.page);
       expect(await sw.isChecked()).toBe(true);
       expect(await sw.changes()).toBe(1);
     } finally {
@@ -300,7 +322,7 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
         {x, y: y + 60, t: 120},
         {x, y: y + 120, t: 180},
       ]);
-      await sw.page.waitForTimeout(350);
+      await afterClickWait(sw.page);
       expect(await sw.isChecked()).toBe(false);
       expect(await sw.changes()).toBe(0);
     } finally {
@@ -317,7 +339,8 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
       await sw.page.mouse.move(x, y);
       await sw.page.mouse.down();
       await sw.page.mouse.move(x + 12, y, {steps: 4});
-      await sw.page.waitForTimeout(200);
+      // Any motion the moves started is on the thumb two frames later.
+      await afterTwoFrames(sw.page);
       const thumb = await sw.page.evaluate(() => {
         const t = document.querySelector<HTMLElement>(
           '#storybook-root .astryx-switch-thumb',

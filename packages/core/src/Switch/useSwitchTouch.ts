@@ -32,6 +32,8 @@ import {UIKIT_GESTURES} from '../motion/uikit/gestures';
 import {registerSwitchTable, switchControl} from '../motion/uikit/switch';
 import {useTouchPresentation} from '../utils/touchPresentation';
 import {
+  BROWSER_CLICK_WAIT_MS,
+  CLICK_GUARD_MS,
   commitOnRelease,
   dragTarget,
   settleTime,
@@ -91,18 +93,6 @@ const TRACKING = switchControl.tracking;
  * begins here), px.
  */
 const PAN_HYSTERESIS = UIKIT_GESTURES.pan.hysteresis.value;
-/**
- * How long after the switch's own release the browser's trusted
- * click is swallowed, ms (it follows the release within a frame or two).
- */
-const CLICK_GUARD_MS = 1000;
-/**
- * Passive: how long a lift waits for the browser's own click before the
- * switch clicks its input itself, ms. The browser sends that click with the
- * lift's `touchend`. The surface's `touch-action` leaves no double-tap delay.
- * So this only runs out for a lift the browser does not count as a click.
- */
-const BROWSER_CLICK_WAIT_MS = 300;
 
 function now(): number {
   return typeof performance === 'undefined' ? Date.now() : performance.now();
