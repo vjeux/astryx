@@ -2,7 +2,7 @@
 
 /**
  * @file touch.ts
- * @input The gesture core: the arena, the recognizers, and their geometry
+ * @input The gesture core and the motion, touch and direction modules Lab uses
  * @output `@astryxdesign/core/internal/touch`: the gesture core's primitives
  *   for Lab components, re-exported by name
  * @position An internal entry reserved for Astryx's own packages:
@@ -39,3 +39,19 @@ export {
 export {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
 export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
+export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
+export {isRtlElement} from '../hooks/isRtlElement';
+// The animator's internal factory, under a name no public factory has: the
+// public animator factory is `createAnimator`.
+export {createAnimator as createMotionAnimator} from '../motion/animator';
+export type {
+  AnimateOptions,
+  Animator as MotionAnimator,
+  AnimatorOptions as MotionAnimatorOptions,
+  MotionCurve,
+  MotionHandle,
+} from '../motion/animator';
+export {cubicBezier} from '../motion/bezier';
+export {timing} from '../motion/uikit/timing';
+export {subscribeInput} from '../utils/inputStream';
+export {useTouchPresentation} from '../utils/touchPresentation';
