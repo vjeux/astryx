@@ -506,9 +506,9 @@ export function SideNav({
   });
 
   // useResizable is the sole collapse owner in every SideNav mode. Keeping that
-  // owner mounted when resize is toggled preserves the current collapse state:
-  // its region answers collapse and expand with or without the handle, which
-  // renders only while the nav is resizable and expanded.
+  // owner mounted when resize is toggled preserves the current collapse state.
+  // Its region answers collapse and expand with or without the handle. The
+  // handle renders only while the nav is resizable and expanded.
   const resizeHandleRef = useRef<HTMLDivElement>(null);
   const resizableHook = useResizable(resizeHandleRef, {
     defaultSize: resizableConfig.defaultWidth ?? 260,
