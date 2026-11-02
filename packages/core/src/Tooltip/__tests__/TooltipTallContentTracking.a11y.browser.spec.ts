@@ -1376,3 +1376,97 @@ test('a short, wide tooltip carried past the viewport edge moves to the other si
   expect(grown.bottom - grown.top).toBeLessThan(400);
   expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.clientHeight + 1);
 });
+
+test('a later scroll is corrected by the second painted frame even when its move report comes a frame late', async ({
+  page,
+}) => {
+  // The anchor-move report comes after a frame paints, and on a busy page
+  // after the next one too. This delays every intersection report by a frame,
+  // as a loaded main thread does, and repeats the instant scroll above: the
+  // scroll itself, not the late report, must bring the correction.
+  await page.addInitScript(() => {
+    const Observer = window.IntersectionObserver;
+    window.IntersectionObserver = class extends Observer {
+      constructor(
+        callback: IntersectionObserverCallback,
+        options?: IntersectionObserverInit,
+      ) {
+        super((entries, observer) => {
+          requestAnimationFrame(() => {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = () => callback(entries, observer);
+            channel.port2.postMessage(null);
+          });
+        }, options);
+      }
+    };
+  });
+  await openHeldTooltip(page, {width: 390, height: 700}, '', 150);
+  await expect.poll(async () => hasSwitched(page)).toBe(true);
+  const settle = async () =>
+    page.evaluate(async () => {
+      const frame = async () =>
+        new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      let last = Number.NaN;
+      let still = 0;
+      while (still < 5) {
+        await frame();
+        still = window.scrollY === last ? still + 1 : 0;
+        last = window.scrollY;
+      }
+    });
+  await page.evaluate(() => window.scrollBy({top: -440, behavior: 'smooth'}));
+  await settle();
+  // The trigger sits low on the screen, with the tooltip clear above it.
+  const trigger = await rect(page, TRIGGER);
+  const tooltip = await rect(page, TOOLTIP);
+  expect(trigger.top).toBeGreaterThan(500);
+  expect(overlaps(tooltip, trigger), 'covers the trigger').toBe(false);
+  expect(tooltip.top).toBeGreaterThanOrEqual(0);
+  const frames = await page.evaluate(
+    async ({sel, tip}) => {
+      const box = (el: Element) => {
+        const r = el.getBoundingClientRect();
+        return {top: r.top, bottom: r.bottom, left: r.left, right: r.right};
+      };
+      window.scrollBy(0, 240);
+      const out: {tooltip: Box; trigger: Box}[] = [];
+      for (let i = 0; i < 4; i++) {
+        await new Promise<void>(resolve => {
+          requestAnimationFrame(() => {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = () => resolve();
+            channel.port2.postMessage(null);
+          });
+        });
+        const t = document.querySelector(tip);
+        const a = document.querySelector(sel);
+        if (t != null && a != null) {
+          out.push({tooltip: box(t), trigger: box(a)});
+        }
+      }
+      return out;
+    },
+    {sel: TRIGGER, tip: TOOLTIP},
+  );
+  // Each painted frame drew the trigger and the tooltip.
+  expect(frames.length).toBe(4);
+  for (const frame of frames) {
+    expect(frame.tooltip.bottom - frame.tooltip.top).toBeGreaterThan(0);
+    expect(frame.trigger.bottom - frame.trigger.top).toBeGreaterThan(0);
+  }
+  for (const [i, frame] of frames.entries()) {
+    if (i === 0) {
+      continue;
+    }
+    expect(
+      overlaps(frame.tooltip, frame.trigger),
+      `painted frame ${i + 1} covers the trigger`,
+    ).toBe(false);
+    expect(
+      frame.tooltip.top,
+      `painted frame ${i + 1} leaves the viewport`,
+    ).toBeGreaterThanOrEqual(0);
+    expect(frame.tooltip.bottom).toBeLessThanOrEqual(700);
+  }
+});
