@@ -22,6 +22,7 @@ import {
   type ReorderGeometry,
   type ReorderRow,
   slotLine,
+  slotsOf,
   stepLine,
 } from '../reorderModel';
 
@@ -229,6 +230,23 @@ describe('clampTop', () => {
       listBottom: 2000,
     };
     expect(clampTop(900, 44, bounds)).toBe(778);
+  });
+});
+
+describe('slotsOf', () => {
+  const slots = [
+    {x: 40, y: 20},
+    {x: 120, y: 20},
+    {x: 200, y: 20},
+  ];
+
+  it('takes positions() when it gives one slot per item (spec:AST-103 FR1)', () => {
+    expect(slotsOf(slots, 3)).toEqual(slots);
+  });
+
+  it('ignores positions() whose length differs from the item count, or none', () => {
+    expect(slotsOf(slots.slice(0, 2), 3)).toBeNull();
+    expect(slotsOf(undefined, 3)).toBeNull();
   });
 });
 

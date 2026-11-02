@@ -5,9 +5,10 @@
  * @input A list's row geometry (layout tops and heights inside the list) and
  *   the reorder values of the UIKit constants table (motion/uikit/reorder.ts)
  * @output Pure functions of a reorder's drag: the position a dragged row proposes
- *   (where the insertion cue goes), from the measured rows or from an attached
- *   container's measured slots, the movable range that a fixed row at either
- *   end of the list bounds, the autoscroll step and the tracking clamp
+ *   (where the insertion cue goes), from the measured rows, from the slots
+ *   `positions()` gives or from an attached container's measured slots, the
+ *   movable range that a fixed row at either end of the list bounds, the
+ *   autoscroll step and the tracking clamp
  * @position List internals; List/listReorderEngine.tsx drives a drag with
  *   them. No DOM, no React: unit tested, and replayed against the UIKit lab
  *   drag
@@ -110,6 +111,18 @@ export interface ReorderSlot {
 }
 
 /**
+ * The slots `positions()` gave (spec:AST-103 FR1): null without them, or when
+ * there are other than one per item, and drop positions then come from the
+ * measured layout.
+ */
+export function slotsOf(
+  slots: ReadonlyArray<ReorderSlot> | undefined,
+  count: number,
+): ReadonlyArray<ReorderSlot> | null {
+  return slots != null && slots.length === count ? slots : null;
+}
+
+/**
  * The drop position a dragged item proposes among `slots`: the slot within
  * its movable range whose centre is nearest the item's centre (spec:AST-103
  * FR1); the first of equally near slots.
@@ -203,8 +216,8 @@ function isAdjacent(
 }
 
 /**
- * The insertion cue of a drag in a slot layout (an attached container's
- * measured slots): a list's line, turned to lie between
+ * The insertion cue of a drag in a slot layout (`positions()`, or an
+ * attached container's measured slots): a list's line, turned to lie between
  * the target slot and the next slot along the drag, which is where the item
  * lands in the order. Where the next slot is on another row (a row's end in
  * a wrapping grid) or there is none, half a step beyond the target slot

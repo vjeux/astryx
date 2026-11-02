@@ -66,6 +66,16 @@ export interface ReorderableOptions<
    */
   isReorderable?: (key: TKey) => boolean;
   /**
+   * For a layout such as a grid or a fanned hand: one `{x, y}` per item, in
+   * item order, the centre of that item's slot in px from the top-left of the
+   * collection's container (its padding box, where an absolutely placed item
+   * is measured from). A drag drops an item on the slot within its range
+   * whose centre is nearest its own. An array of another length is ignored,
+   * with a warning in development, and drop positions then come from the
+   * measured layout, as without it.
+   */
+  positions?: () => ReadonlyArray<{readonly x: number; readonly y: number}>;
+  /**
    * The strings the reorder announces or shows, each optional: a given one
    * replaces the catalog's message, a provider's translation included; an
    * absent one keeps it (spec:AST-103 FR1, DEC-6).

@@ -3,8 +3,9 @@
 /**
  * @file ReorderableAttach.stories.tsx
  * @input createReorderable and plain elements laid out by the story
- * @output createReorderable's attach on plain elements laid out by CSS: a row
- *   of cards, cards that wrap, a column of rows and the row in a dialog
+ * @output createReorderable's attach on plain elements laid out by CSS (a row
+ *   of cards, cards that wrap, a column of rows and the row in a dialog), and
+ *   a fanned hand whose slots positions() gives
  * @position Storybook demonstrations for createReorderable consumers
  */
 
@@ -21,6 +22,19 @@ const meta: Meta = {
 
 export default meta;
 type Story = StoryObj;
+
+/**
+ * A fanned hand: five slots on an arc of radius 160 around (220, 230), 12°
+ * apart, each card turned to its slot's angle.
+ */
+const FAN = [-24, -12, 0, 12, 24].map(angle => {
+  const radians = (angle * Math.PI) / 180;
+  return {
+    x: Math.round(220 + 160 * Math.sin(radians)),
+    y: Math.round(230 - 160 * Math.cos(radians)),
+    angle,
+  };
+});
 
 function moveKey(
   keys: ReadonlyArray<string>,
@@ -54,6 +68,11 @@ const styles = stylex.create({
     boxSizing: 'border-box',
     inlineSize: 88 * 5,
     blockSize: 112,
+  },
+  // The fanned hand: each card placed on its slot, which positions() gives.
+  fanTable: {
+    inlineSize: 88 * 5,
+    blockSize: 160,
   },
   // Cards that wrap, three to a row.
   wrapTable: {
@@ -99,7 +118,14 @@ const styles = stylex.create({
     color: colorVars['--color-text-primary'],
     fontSize: 24,
   },
-  // At the card's top-left corner.
+  slot: (x: number, y: number, angle: number) => ({
+    position: 'absolute',
+    insetInlineStart: x - 36,
+    top: y - 48,
+    rotate: `${angle}deg`,
+  }),
+  // At the card's top-left corner, the part of each card a fanned hand
+  // leaves showing.
   grip: {
     position: 'absolute',
     top: 4,
@@ -116,16 +142,19 @@ const styles = stylex.create({
 });
 
 /**
- * Plain elements, laid out by CSS, reordered through `reorderable.attach`:
- * each card's grip is its handle, and the cards' measured places are their
- * slots (spec:AST-103 FR1, FR4b).
+ * Plain elements reordered through `reorderable.attach`: each card's grip is
+ * its handle, and the cards' measured places are their slots, or `positions()`
+ * gives them (spec:AST-103 FR1, FR4b).
  */
 function AttachedCards({
   layout = 'row',
+  slots,
   rendersAnew = false,
 }: {
   /** One row of five, or cards that wrap three to a row. */
   layout?: 'row' | 'wrap';
+  /** Each card's slot, given through `positions()`, which places the cards. */
+  slots?: ReadonlyArray<{x: number; y: number; angle: number}>;
   /** Each move renders every card anew: new elements, the same keys. */
   rendersAnew?: boolean;
 }) {
@@ -139,8 +168,9 @@ function AttachedCards({
           setMoves(count => count + 1);
           setCards(current => moveKey(current, key, to));
         },
+        positions: slots == null ? undefined : () => slots,
       }),
-    [],
+    [slots],
   );
   // External system: the attached reorder on the table's plain elements,
   // destroyed on unmount.
@@ -168,14 +198,22 @@ function AttachedCards({
       data-moves={moves}
       {...stylex.props(
         styles.table,
-        layout === 'row' ? styles.rowTable : styles.wrapTable,
+        slots != null
+          ? styles.fanTable
+          : layout === 'row'
+            ? styles.rowTable
+            : styles.wrapTable,
       )}>
-      {cards.map(card => (
+      {cards.map((card, index) => (
         <div
           key={rendersAnew ? `${card}:${moves}` : card}
           data-card={card}
           aria-label={`Card ${card}`}
-          {...stylex.props(styles.card)}>
+          {...stylex.props(
+            styles.card,
+            slots != null &&
+              styles.slot(slots[index].x, slots[index].y, slots[index].angle),
+          )}>
           <span>{card}</span>
           <span data-grip="" {...stylex.props(styles.grip)}>
             ⋮⋮
@@ -197,6 +235,19 @@ export const AttachedCardsInARow: Story = {
           'handle, and the cards’ measured places are their slots. Drag a ' +
           'grip (on a touch screen, hold it first), or activate it and use ' +
           'the arrow keys.',
+      },
+    },
+  },
+};
+
+export const AttachedCardsInAFan: Story = {
+  render: () => <AttachedCards slots={FAN} />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A fanned hand: `positions()` gives each card a slot on an arc, and ' +
+          'a dragged card drops on the slot whose centre is nearest its own.',
       },
     },
   },
