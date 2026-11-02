@@ -4,7 +4,7 @@
 
 /**
  * @file TouchDateTimeField.tsx
- * @input Uses React, Field, BottomSheet, SegmentedControl, DateInput month picker primitives, Wheel, StyleX intrinsic flex layout
+ * @input Uses React, Field, BottomSheet, SegmentedControl, DateInput month picker primitives, Wheel and the pickers' touch layer (TimeWheels), the touch presentation, StyleX intrinsic flex layout
  * @output Exports TouchDateTimeField — the coarse-pointer surface behind DateTimeInput
  * @position Internal component; consumed by DateTimeInput.tsx
  *
@@ -12,7 +12,8 @@
  * contract so the desktop and touch surfaces are interchangeable. The desktop
  * only props `timeIncrement` and `timeOptionInterval` remain accepted but are
  * intentionally ignored here: time is selected with wheels instead of a typed
- * field or preset list.
+ * field or preset list. Under a finger the wheels are UIDatePicker's
+ * (TimeWheels); with a mouse they are today's independent columns.
  *
  * SYNC: When modified, update these files to stay in sync:
  * - /packages/core/src/DateTimeInput/DateTimeInput.tsx
@@ -20,6 +21,7 @@
  * - /packages/core/src/DateTimeInput/DateTimeInputTouch.test.tsx
  * - /apps/storybook/stories/DateTimeInput.stories.tsx
  * - /packages/cli/assets/templates/blocks/components/DateTimeInput/
+ * - /packages/core/src/DateInput/datePickerTouch.ts
  */
 
 import {
@@ -97,6 +99,8 @@ import {
 } from '../DateInput/MonthScroller';
 import {MonthYearWheels} from '../DateInput/MonthYearWheels';
 import {Wheel, type WheelOption} from '../DateInput/Wheel';
+import {TimeWheels} from '../DateInput/datePickerTouch';
+import {useTouchPresentation} from '../utils/touchPresentation';
 import {
   dateInputTouchGeometry,
   dateInputTouchSizes,
@@ -584,6 +588,8 @@ export function TouchDateTimeField({
   );
   const [activePanel, setActivePanel] = useState<TouchDateTimePanel>('date');
   const [isWheelOpen, setIsWheelOpen] = useState(false);
+  // A finger gets UIDatePicker's time wheels; a mouse keeps today's.
+  const {isTouch} = useTouchPresentation();
   const [draftTime, setDraftTime] = useState<ISOTimeString | undefined>(() =>
     normalizeISOTime(splitDateTime(value).time, hasSeconds),
   );
@@ -1230,49 +1236,69 @@ export function TouchDateTimeField({
             activePanel !== 'time' && styles.touchPanelHidden,
           )}>
           <div {...stylex.props(styles.touchTimeWheels)}>
-            <Wheel
-              label={t('@astryx.dateTimeInput.hourWheel')}
-              options={hourOptions}
-              value={
-                hourFormat === '24h'
-                  ? parsedWheelTime.hour
-                  : hour12From24(parsedWheelTime.hour)
-              }
-              isActive={activePanel === 'time'}
-              onChange={hour =>
-                commitWheelTime(
-                  hourFormat === '24h'
-                    ? composeWheelTime({hour24: hour})
-                    : composeWheelTime({hour12: hour}),
-                )
-              }
-            />
-            <Wheel
-              label={t('@astryx.dateTimeInput.minuteWheel')}
-              options={minuteOptions}
-              value={parsedWheelTime.minute}
-              isActive={activePanel === 'time'}
-              onChange={minute => commitWheelTime(composeWheelTime({minute}))}
-            />
-            {hasSeconds && (
-              <Wheel
-                label={t('@astryx.dateTimeInput.secondWheel')}
-                options={secondOptions}
-                value={parsedWheelTime.second}
+            {isTouch ? (
+              <TimeWheels
+                time={parsedWheelTime}
+                hourFormat={hourFormat}
+                hasSeconds={hasSeconds}
+                min={timeBounds.min}
+                max={timeBounds.max}
                 isActive={activePanel === 'time'}
-                onChange={second => commitWheelTime(composeWheelTime({second}))}
-              />
-            )}
-            {hourFormat === '12h' && (
-              <Wheel
-                label={t('@astryx.dateTimeInput.meridiemWheel')}
-                options={meridiemOptions}
-                value={parsedWheelTime.hour < 12 ? 0 : 1}
-                isActive={activePanel === 'time'}
-                onChange={meridiem =>
-                  commitWheelTime(composeWheelTime({meridiem}))
+                onCommit={time =>
+                  commitWheelTime(formatISOTime(time, hasSeconds))
                 }
               />
+            ) : (
+              <>
+                <Wheel
+                  label={t('@astryx.dateTimeInput.hourWheel')}
+                  options={hourOptions}
+                  value={
+                    hourFormat === '24h'
+                      ? parsedWheelTime.hour
+                      : hour12From24(parsedWheelTime.hour)
+                  }
+                  isActive={activePanel === 'time'}
+                  onChange={hour =>
+                    commitWheelTime(
+                      hourFormat === '24h'
+                        ? composeWheelTime({hour24: hour})
+                        : composeWheelTime({hour12: hour}),
+                    )
+                  }
+                />
+                <Wheel
+                  label={t('@astryx.dateTimeInput.minuteWheel')}
+                  options={minuteOptions}
+                  value={parsedWheelTime.minute}
+                  isActive={activePanel === 'time'}
+                  onChange={minute =>
+                    commitWheelTime(composeWheelTime({minute}))
+                  }
+                />
+                {hasSeconds && (
+                  <Wheel
+                    label={t('@astryx.dateTimeInput.secondWheel')}
+                    options={secondOptions}
+                    value={parsedWheelTime.second}
+                    isActive={activePanel === 'time'}
+                    onChange={second =>
+                      commitWheelTime(composeWheelTime({second}))
+                    }
+                  />
+                )}
+                {hourFormat === '12h' && (
+                  <Wheel
+                    label={t('@astryx.dateTimeInput.meridiemWheel')}
+                    options={meridiemOptions}
+                    value={parsedWheelTime.hour < 12 ? 0 : 1}
+                    isActive={activePanel === 'time'}
+                    onChange={meridiem =>
+                      commitWheelTime(composeWheelTime({meridiem}))
+                    }
+                  />
+                )}
+              </>
             )}
           </div>
           <div {...stylex.props(styles.touchFooter)}>
