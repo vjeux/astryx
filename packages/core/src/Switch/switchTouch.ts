@@ -142,7 +142,7 @@ export function stepFlip(
   // Travel toward the other end: right from off, left from on.
   const toward = flip.startedOn ? -translation : translation;
   if (flip.isVisuallyOn !== flip.startedOn) {
-    return toward < 0
+    return toward <= 0
       ? {...flip, isVisuallyOn: flip.startedOn, isArmed: false}
       : flip;
   }

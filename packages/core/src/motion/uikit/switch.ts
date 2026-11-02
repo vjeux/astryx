@@ -112,7 +112,7 @@ export const switchControl = {
    * A drag flips the switch by the finger, not the thumb. Once the finger is
    * this far from where it landed, toward the other end, the switch shows
    * the other side. The distance is the track width minus the thumb width
-   * (63 − 37 pt). Back past where it landed, the starting side shows again.
+   * (63 − 37 pt). Back at where it landed, the starting side shows again.
    * Flips happen on touch events only, so a fast swipe flips on the lift.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, `UISwitchModernVisualElement` ivars per frame and the

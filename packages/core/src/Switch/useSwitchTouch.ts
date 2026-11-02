@@ -80,6 +80,11 @@ export interface SwitchTouchOptions {
    * and fill), for the fade layer's colour.
    */
   readonly otherTrackProps: object;
+  /**
+   * Under a fine pointer: the side a drag shows while it differs from the
+   * value, else null. The switch renders that side until the value catches up.
+   */
+  readonly onShownSide?: (isOn: boolean | null) => void;
 }
 
 /** The fade layer's colour, set on the track for its ::after (Switch.tsx). */
@@ -208,6 +213,9 @@ export class SwitchTouchController {
   private isInteractive = true;
   /** The side the visuals show or head to. */
   private isVisuallyOn: boolean;
+  /** Under a fine pointer: who renders the side a drag shows, and that side. */
+  private onShownSide: ((isOn: boolean | null) => void) | null = null;
+  private shownSide: boolean | null = null;
   /** +1 left-to-right, −1 right-to-left. */
   private direction = 1;
   private thumb: Animator | null = null;
@@ -458,6 +466,29 @@ export class SwitchTouchController {
     this.drag = null;
     this.isTracking = false;
     this.clickGuardUntil = 0;
+    this.isVisuallyOn = this.isOn;
+    this.noteShownSide();
+  }
+
+  setShownSideListener(
+    listener: ((isOn: boolean | null) => void) | null,
+  ): void {
+    this.onShownSide = listener;
+  }
+
+  /**
+   * Under a fine pointer no animator shows the visuals. The switch renders
+   * the side a drag shows, until the value catches up or the drag goes back.
+   */
+  private noteShownSide(): void {
+    const shown =
+      this.presentation === 'pointer' && this.isVisuallyOn !== this.isOn
+        ? this.isVisuallyOn
+        : null;
+    if (shown !== this.shownSide) {
+      this.shownSide = shown;
+      this.onShownSide?.(shown);
+    }
   }
 
   setInteractive(isInteractive: boolean): void {
@@ -530,6 +561,7 @@ export class SwitchTouchController {
     const thumb = this.thumb;
     if (thumb == null) {
       this.isVisuallyOn = isOn;
+      this.noteShownSide();
       return;
     }
     const time = now();
@@ -709,7 +741,8 @@ export class SwitchTouchController {
     // The thumb under the finger is direct manipulation, which reduced
     // motion leaves alone. Under it the thumb is placed at once: the animator
     // would cross-fade a move. Under a fine pointer nothing follows the
-    // pointer. The switch keeps its own look, and the value moves the thumb.
+    // pointer. The switch keeps its own look and shows the side the drag
+    // flipped it to (noteShownSide).
     if (thumb != null) {
       const target = this.toX(dragTarget(drag.start, x, this.geometry));
       if (thumb.reducedMotion() === 'off') {
@@ -819,6 +852,7 @@ export class SwitchTouchController {
 
   private showWell(isOn: boolean, time: number, touchRelease = false): void {
     this.isVisuallyOn = isOn;
+    this.noteShownSide();
     this.paintFade();
     this.animateFade(time, undefined, touchRelease);
   }
@@ -1084,6 +1118,7 @@ export function useSwitchTouch(
     isDisabled,
     trackSize,
     otherTrackProps,
+    onShownSide,
   }: SwitchTouchOptions,
 ): void {
   const {isTouch} = useTouchPresentation();
@@ -1103,6 +1138,11 @@ export function useSwitchTouch(
     controller.setOtherTrack(otherTrack);
     controller.setValue(isOn);
   });
+
+  // Syncs who renders the side a pointer drag shows.
+  useIsomorphicLayoutEffect(() => {
+    controller.setShownSideListener(onShownSide ?? null);
+  }, [controller, onShownSide]);
 
   // Syncs the controller's thumb geometry with the track's size.
   useIsomorphicLayoutEffect(() => {

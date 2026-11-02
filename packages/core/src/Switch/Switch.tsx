@@ -24,6 +24,7 @@ import {
   useTransition,
   useEffect,
   useRef,
+  useState,
   type ChangeEvent,
   type FocusEvent,
   type ReactNode,
@@ -904,6 +905,10 @@ export function Switch({
   }, [announce, isBusy, t]);
 
   const isOn = optimisticValue === true;
+  // Under a fine pointer a drag shows the side it flips to before the release
+  // commits it (useSwitchTouch). The track and thumb render that side.
+  const [shownSide, setShownSide] = useState<boolean | null>(null);
+  const isShownOn = shownSide ?? isOn;
 
   // Disabled-reason tooltip. Disabled controls swallow pointer events, so the
   // tooltip listeners attach to the switch row (which already exists) and the
@@ -990,6 +995,7 @@ export function Switch({
     isDisabled,
     trackSize: TRACK_SIZE[size],
     otherTrackProps: trackPropsFor(!isOn),
+    onShownSide: setShownSide,
   });
 
   const switchElement = (
@@ -1045,18 +1051,18 @@ export function Switch({
           switchFocusInput,
         )}
       />
-      <div ref={trackRef} aria-hidden="true" {...trackPropsFor(isOn)}>
+      <div ref={trackRef} aria-hidden="true" {...trackPropsFor(isShownOn)}>
         <div
           ref={thumbRef}
           {...mergeProps(
             themeProps('switch-thumb', {
-              checked: isOn ? 'checked' : null,
+              checked: isShownOn ? 'checked' : null,
               size,
             }),
             stylex.props(
               styles.thumb,
-              isOn ? thumbOnSizeStyles[size] : thumbOffSizeStyles[size],
-              isOn ? styles.thumbOn : styles.thumbOff,
+              isShownOn ? thumbOnSizeStyles[size] : thumbOffSizeStyles[size],
+              isShownOn ? styles.thumbOn : styles.thumbOff,
             ),
           )}>
           {isBusy && <Spinner size="sm" />}

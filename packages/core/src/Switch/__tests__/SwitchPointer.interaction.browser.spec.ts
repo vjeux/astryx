@@ -121,6 +121,76 @@ async function afterTwoFrames(page: Page): Promise<void> {
   });
 }
 
+/**
+ * A mouse as Chrome's devtools protocol sends one (`Input.dispatchMouseEvent`).
+ * It presses at `from`, moves along x through `steps` (offsets from `from`),
+ * and releases at the last step. `onStep` runs after each move.
+ */
+async function devtoolsMouseDrag(
+  page: Page,
+  from: {x: number; y: number},
+  steps: ReadonlyArray<number>,
+  onStep?: (dx: number) => Promise<void>,
+): Promise<void> {
+  const devtools = await page.context().newCDPSession(page);
+  const at = (dx: number) => ({x: from.x + dx, y: from.y});
+  await devtools.send('Input.dispatchMouseEvent', {
+    type: 'mouseMoved',
+    ...at(0),
+  });
+  await devtools.send('Input.dispatchMouseEvent', {
+    type: 'mousePressed',
+    ...at(0),
+    button: 'left',
+    buttons: 1,
+    clickCount: 1,
+  });
+  for (const dx of steps) {
+    await devtools.send('Input.dispatchMouseEvent', {
+      type: 'mouseMoved',
+      ...at(dx),
+      button: 'left',
+      buttons: 1,
+    });
+    await onStep?.(dx);
+  }
+  await devtools.send('Input.dispatchMouseEvent', {
+    type: 'mouseReleased',
+    ...at(steps.at(-1) ?? 0),
+    button: 'left',
+    buttons: 0,
+    clickCount: 1,
+  });
+  await devtools.detach();
+}
+
+/** Offsets from 0 to `to` and back to `back`, in 2 px steps. */
+function twoPxSteps(to: number, back?: number): number[] {
+  const steps: number[] = [];
+  for (let dx = 2; dx <= to; dx += 2) {
+    steps.push(dx);
+  }
+  if (back != null) {
+    for (let dx = to - 2; dx >= back; dx -= 2) {
+      steps.push(dx);
+    }
+  }
+  return steps;
+}
+
+/** Which side the thumb shows: past the track's middle is the on side. */
+async function thumbShowsOn(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const thumb = document
+      .querySelector('#storybook-root .astryx-switch-thumb')!
+      .getBoundingClientRect();
+    const track = document
+      .querySelector('#storybook-root .astryx-switch')!
+      .getBoundingClientRect();
+    return thumb.left + thumb.width / 2 > track.left + track.width / 2;
+  });
+}
+
 /** A mouse drag through `points`, pressed at the first and released at the last. */
 async function mouseDrag(
   page: Page,
@@ -241,6 +311,58 @@ test.describe('Switch under a mouse (spec:AST-094 FR43)', () => {
       // The tap's click is the browser's (trusted), not the switch's
       // fallback click after a cancelled touchend.
       expect((await sw.clicks()).at(-1)).toBe(true);
+    } finally {
+      await sw.close();
+    }
+  });
+
+  test('a devtools-protocol mouse drag shows the side it flips to as it goes, and back at the press point it shows the start and commits nothing (Switch FR13, FR15)', async ({
+    browser,
+  }) => {
+    const sw = await openMouseSwitch(browser);
+    try {
+      const shown: Record<number, boolean> = {};
+      await devtoolsMouseDrag(
+        sw.page,
+        sw.center,
+        twoPxSteps(48, 0),
+        async dx => {
+          if (dx === 48 || (dx === 0 && Object.keys(shown).length > 0)) {
+            // The thumb slides on the theme's transition: wait for its end.
+            await expect
+              .poll(async () => thumbShowsOn(sw.page))
+              .toBe(dx === 48);
+            shown[dx] = await thumbShowsOn(sw.page);
+          }
+        },
+      );
+      await afterClickWait(sw.page);
+      expect(shown).toEqual({48: true, 0: false});
+      // The value moves only at the release, and this one commits nothing.
+      expect(await sw.isChecked()).toBe(false);
+      expect(await sw.changes()).toBe(0);
+      expect(await thumbShowsOn(sw.page)).toBe(false);
+    } finally {
+      await sw.close();
+    }
+  });
+
+  test('a devtools-protocol mouse drag released past the flip commits the side it shows, once (Switch FR15)', async ({
+    browser,
+  }) => {
+    const sw = await openMouseSwitch(browser);
+    try {
+      await devtoolsMouseDrag(sw.page, sw.center, twoPxSteps(48), async dx => {
+        if (dx === 48) {
+          await expect.poll(async () => thumbShowsOn(sw.page)).toBe(true);
+          // Shown, not yet committed.
+          expect(await sw.isChecked()).toBe(false);
+        }
+      });
+      await afterClickWait(sw.page);
+      expect(await sw.isChecked()).toBe(true);
+      expect(await sw.changes()).toBe(1);
+      expect(await thumbShowsOn(sw.page)).toBe(true);
     } finally {
       await sw.close();
     }

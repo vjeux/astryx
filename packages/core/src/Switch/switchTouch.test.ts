@@ -159,6 +159,12 @@ describe('stepFlip (UIKit, 1 pt steps)', () => {
     expect(states[5].didFlip).toBe(true);
   });
 
+  it('flips back at the press point itself, where a mouse comes back exactly', () => {
+    const states = drag(false, [26, 27, 40, 0]);
+    expect(states.map(s => s.isVisuallyOn)).toEqual([false, true, true, false]);
+    expect(states[3].didFlip).toBe(true);
+  });
+
   it('mirrors on an on switch: off 27 pt to the left, back on past the press', () => {
     const states = drag(true, [-26, -27, -0.33, 0.67]);
     expect(states.map(s => s.isVisuallyOn)).toEqual([true, false, false, true]);
