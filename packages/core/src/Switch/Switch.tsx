@@ -973,10 +973,10 @@ export function Switch({
         isDisabled && !on && styles.trackDisabledOff,
       ),
     );
-  // Under a coarse pointer, the hit area's insets toward 44 px, stopping at
-  // half the gap to each neighbouring target. A disabled switch watches
-  // nothing; the watch itself starts its
-  // observers only while the primary pointer is coarse.
+  // Syncs the hit area's insets with the layout around the switch, through
+  // utils/hitArea's observers. Under a coarse pointer they grow toward 44 px,
+  // stopping at half the gap to each neighbouring target. A disabled switch
+  // watches nothing.
   useIsomorphicLayoutEffect(() => {
     const surface = surfaceRef.current;
     if (surface == null || isDisabled) {

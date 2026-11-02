@@ -1107,21 +1107,25 @@ export function useSwitchTouch(
     () => new SwitchTouchController(isOn, geometry),
   );
 
-  // Value first: the CSS place of the thumb has just changed with it, and the
-  // track's fill.
+  // Syncs the touch controller's animators with the value. It runs first: the
+  // thumb's CSS place and the track's fill have just changed with the value.
   useIsomorphicLayoutEffect(() => {
     controller.setOtherTrack(otherTrack);
     controller.setValue(isOn);
   });
 
+  // Syncs the controller's thumb geometry with the track's size.
   useIsomorphicLayoutEffect(() => {
     controller.setGeometry(geometry);
   }, [controller, geometry]);
 
+  // Syncs whether the controller's gestures take a press.
   useIsomorphicLayoutEffect(() => {
     controller.setInteractive(isInteractive);
   }, [controller, isInteractive]);
 
+  // Attaches the controller's DOM listeners and animators to the switch's
+  // parts, and detaches them on cleanup.
   useIsomorphicLayoutEffect(() => {
     const surface = parts.surface.current;
     const input = parts.input.current;
