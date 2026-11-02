@@ -42,6 +42,13 @@ describe('internal/touch', () => {
     expect(entry.createMotionAnimator).toBe(animator.createAnimator);
     expect(entry.cubicBezier).toBe(bezier.cubicBezier);
     expect(entry.timing).toBe(uikitTiming.timing);
+    // The pan recognizer, an element's shared animator and the Reduce Motion
+    // cross-fade, as Lab's PageControl reads them.
+    const pan = await import('../gestures/PanGestureRecognizer');
+    const reduced = await import('../motion/reducedMotion');
+    expect(entry.PanGestureRecognizer).toBe(pan.PanGestureRecognizer);
+    expect(entry.animatorFor).toBe(animator.animatorFor);
+    expect(entry.reducedMotionFade).toBe(reduced.reducedMotionFade);
     // No internal factory shares a public factory's name
     // (architecture:react-component-runtime INV13, spec:AST-107 FR6).
     for (const name of [

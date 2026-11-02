@@ -3,9 +3,10 @@
 /**
  * @file touch.ts
  * @input The gesture core: the arena, the recognizers, their geometry and
- *   their React hook; the animator, the cubic-bézier solver and UIKit's
- *   timing table; the touch-presentation hook; the writing-direction read;
- *   whether the click guard is armed
+ *   their React hook; the animator, an element's shared animator, the
+ *   Reduce Motion cross-fade, the cubic-bézier solver and UIKit's timing
+ *   table; the touch-presentation hook; the writing-direction read; whether
+ *   the click guard is armed
  * @output `@astryxdesign/core/internal/touch`: the gesture core's primitives
  *   for Lab components, re-exported by name
  * @position An internal entry reserved for Astryx's own packages:
@@ -42,6 +43,7 @@ export {
 export {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
 export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
+export {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
 export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 export {isRtlElement} from '../hooks/isRtlElement';
 // The animator's internal factory, under a name no public factory has
@@ -54,7 +56,11 @@ export type {
   MotionCurve,
   MotionHandle,
 } from '../motion/animator';
+// An element's one shared animator, as Core's components reach it (no public
+// API has the name), and the Reduce Motion cross-fade's timing.
+export {animatorFor} from '../motion/animator';
 export {cubicBezier} from '../motion/bezier';
+export {reducedMotionFade} from '../motion/reducedMotion';
 export {timing} from '../motion/uikit/timing';
 export {isClickGuardArmed} from '../utils/clickGuard';
 export {useTouchPresentation} from '../utils/touchPresentation';
