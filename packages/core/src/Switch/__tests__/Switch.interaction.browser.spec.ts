@@ -955,10 +955,10 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     ] as const) {
       const durations = await releaseMsUnder(reducedMotion);
       for (const durationMs of durations) {
-        expect(durationMs, `${reducedMotion}: ${durations}`).toBeCloseTo(
-          releaseMs,
-          6,
-        );
+        expect(
+          durationMs,
+          `${reducedMotion}: ${durations.join(', ')}`,
+        ).toBeCloseTo(releaseMs, 6);
       }
     }
   });

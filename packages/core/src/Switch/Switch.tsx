@@ -66,9 +66,9 @@ registerEnglishFallback(english);
 import {
   interactionOverlayStyles,
   pressConsts,
+  pressVars,
 } from '../utils/interactionOverlay.stylex';
-import {PRESS_HOLDS_DRAG_ATTRIBUTE} from '../utils/pressFeedback';
-import {switchPressLayerStyles} from './switchPressLayer';
+import {pressHoldsDragProps} from '../privateAttributes/pressHoldsDrag.stylex';
 import {useSwitchTouch, type SwitchTouchParts} from './useSwitchTouch';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {watchHitArea, writeHitInsets} from '../utils/hitArea';
@@ -82,11 +82,15 @@ const TRACK_SIZE = {sm: [32, 20], md: [40, 24]} as const;
 
 /**
  * A finger: utils/touchPresentation.ts's TOUCH_QUERY. The touch presentation
- * is one model on every touch device (`spec:AST-094`): the lift, tracking,
- * flip rule and springs sit under it alone.
+ * is one model on every touch device: the lift, tracking, flip rule and
+ * springs sit under it alone.
  * SYNC: utils/touchPresentation.ts TOUCH_QUERY.
  */
 const TOUCH = '@media (pointer: coarse)';
+
+/** The press controller's two states on the row it writes to. */
+const PRESS_ON = '[data-astryx-press="on"]';
+const PRESS_FADING = '[data-astryx-press="fading"]';
 
 /**
  * The shared press release, for the press layers the switch fades on the
@@ -132,8 +136,8 @@ const trackSizeStyles = stylex.create({
   },
 });
 
-// The thumb is one circle under any pointer, at each state's size (Switch
-// FR13). Under a finger it rests by insets instead of a transform, centered in
+// The thumb is one circle under any pointer, at each state's size. Under a
+// finger it rests by insets instead of a transform, centered in
 // the track's height at each end, so the compositor moves and lifts it with
 // translate and scale alone (useSwitchTouch measures the box it renders).
 const thumbOffSizeStyles = stylex.create({
@@ -208,6 +212,38 @@ const pressLayerRelease = stylex.keyframes({
   to: {opacity: 0},
 });
 
+const PRESS_ALPHA = pressVars['--astryx-press-alpha'];
+
+/**
+ * The shared strength's release, restated so a fine pointer keeps it: the
+ * same keyframes, so the same animation.
+ */
+const pressStrengthRelease = stylex.keyframes({
+  from: {[PRESS_ALPHA]: 1},
+  to: {[PRESS_ALPHA]: 0},
+});
+
+const pressOwnerStyles = stylex.create({
+  /**
+   * Composed after `interactionOverlayStyles.pressedAlpha` on the row. Under
+   * a coarse primary pointer the track's and thumb's layers fade the press,
+   * so the strength holds through the release instead of animating on the
+   * main thread. With any other pointer the row keeps `pressedAlpha`'s own
+   * release.
+   */
+  pressedAlphaLayered: {
+    animationName: {
+      default: null,
+      [PRESS_FADING]: {
+        default: pressStrengthRelease,
+        '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+          'none',
+        '@media (pointer: coarse)': 'none',
+      },
+    },
+  },
+});
+
 const labelWrapperSizeStyles = stylex.create({
   sm: {
     minHeight: 20,
@@ -244,7 +280,7 @@ const styles = stylex.create({
     isolation: 'isolate',
     // Horizontal touch moves are the switch's drag and vertical ones the
     // page's scroll, under any primary pointer (a touchscreen laptop's finger
-    // too, spec:AST-094 FR18, FR43); set in CSS so it holds before hydration
+    // too); set in CSS so it holds before hydration
     // (useSwitchTouch.ts).
     touchAction: 'pan-y pinch-zoom',
   },
@@ -261,7 +297,7 @@ const styles = stylex.create({
     zIndex: 1,
   },
   // The invisible input covers the track. Under a coarse pointer it is the
-  // hit area a finger needs (Switch FR10): it grows toward 44 × 44 px by the
+  // hit area a finger needs: it grows toward 44 × 44 px by the
   // insets utils/hitArea measures, each side stopping at half the gap to a
   // neighbouring target, and its center moves with any uneven side; nothing
   // visible grows. The insets are 0 until measured. Physical left and
@@ -296,8 +332,8 @@ const styles = stylex.create({
     borderRadius: radiusVars['--radius-full'],
     transitionProperty: 'background-color',
     // Under a finger the track's fill changes at once and the fade layer
-    // crossfades it on the compositor. Reduced motion (design:reduced-motion)
-    // comes last so it holds everywhere: under a finger the fade layer
+    // crossfades it on the compositor. Reduced motion comes last so it holds
+    // everywhere: under a finger the fade layer
     // carries the colour, and with a mouse the change is immediate.
     transitionDuration: {
       default: durationVars['--duration-fast'],
@@ -347,11 +383,11 @@ const styles = stylex.create({
     '::before': {
       content: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="on"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_ON, switchScope)]: {
           default: null,
           [TOUCH]: '""',
         },
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: '""',
         },
@@ -367,25 +403,25 @@ const styles = stylex.create({
       },
       opacity: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="on"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_ON, switchScope)]: {
           default: null,
           [TOUCH]: 1,
         },
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: 0,
         },
       },
       animationName: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: pressLayerRelease,
         },
       },
       animationDuration: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: {
             default: PRESS_RELEASE_DURATION,
@@ -396,14 +432,14 @@ const styles = stylex.create({
       },
       animationTimingFunction: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: PRESS_RELEASE_EASE,
         },
       },
       animationFillMode: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: 'both',
         },
@@ -520,17 +556,17 @@ const styles = stylex.create({
     // The lifted shadow, under a finger: the theme's elevation on a layer the
     // thumb's size, faded in with the lift on the compositor (useSwitchTouch
     // owns its opacity). At rest it is clear.
-    // The press on the thumb too, under a finger (design:user-states DR1:
-    // track and thumb both paint the pressed overlay): the same layer as the
-    // track's, over the thumb's fill.
+    // The press on the thumb too, under a finger (track and thumb both paint
+    // the pressed overlay): the same layer as the track's, over the thumb's
+    // fill.
     '::before': {
       content: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="on"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_ON, switchScope)]: {
           default: null,
           [TOUCH]: '""',
         },
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: '""',
         },
@@ -545,25 +581,25 @@ const styles = stylex.create({
       },
       opacity: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="on"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_ON, switchScope)]: {
           default: null,
           [TOUCH]: 1,
         },
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: 0,
         },
       },
       animationName: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: pressLayerRelease,
         },
       },
       animationDuration: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: {
             default: PRESS_RELEASE_DURATION,
@@ -574,14 +610,14 @@ const styles = stylex.create({
       },
       animationTimingFunction: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: PRESS_RELEASE_EASE,
         },
       },
       animationFillMode: {
         default: null,
-        [stylex.when.ancestor('[data-astryx-press="fading"]', switchScope)]: {
+        [stylex.when.ancestor(PRESS_FADING, switchScope)]: {
           default: null,
           [TOUCH]: 'both',
         },
@@ -947,8 +983,8 @@ export function Switch({
       ),
     );
   // Under a coarse pointer, the hit area's insets toward 44 px, stopping at
-  // half the gap to each neighbouring target (Switch FR10). A disabled switch
-  // watches nothing (spec:AST-094 FR24); the watch itself starts its
+  // half the gap to each neighbouring target. A disabled switch watches
+  // nothing; the watch itself starts its
   // observers only while the primary pointer is coarse.
   useIsomorphicLayoutEffect(() => {
     const surface = surfaceRef.current;
@@ -1087,8 +1123,8 @@ export function Switch({
           disabledMessageTooltip.interactionRef(el);
         }}
         {...(isDisabled ? undefined : pressable)}
-        // The thumb's drag keeps the row's press painted (user-states DR1).
-        {...(isDisabled ? undefined : {[PRESS_HOLDS_DRAG_ATTRIBUTE]: ''})}
+        // The thumb's drag keeps the row's press painted.
+        {...pressHoldsDragProps(!isDisabled)}
         {...stylex.props(
           styles.container,
           isLabelHidden && styles.containerLabelHidden,
@@ -1097,12 +1133,12 @@ export function Switch({
           // The touch press's strength and release live on the row the
           // controller writes to; the track and thumb inherit and paint it.
           !isDisabled && interactionOverlayStyles.pressedAlpha,
-          !isDisabled && switchPressLayerStyles.pressedAlphaLayered,
+          !isDisabled && pressOwnerStyles.pressedAlphaLayered,
         )}>
         {' '}
         {/* Keyed, so a labelPosition change moves the nodes instead of
             rebuilding them: the touch controller stays on the input, track
-            and thumb it attached to (react-component-runtime INV6). */}
+            and thumb it attached to. */}
         {labelPosition === 'start'
           ? [
               <Fragment key="label">{labelElement}</Fragment>,

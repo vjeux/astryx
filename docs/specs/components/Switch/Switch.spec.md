@@ -46,10 +46,30 @@ architecture:
     architecture:public-component-api,
   ]
 contributing: []
-system_specs: [spec:AST-021, spec:AST-085, spec:AST-086, spec:AST-094]
+system_specs:
+  [
+    spec:AST-020/DEC-5,
+    spec:AST-020/FR9,
+    spec:AST-021,
+    spec:AST-085,
+    spec:AST-086,
+    spec:AST-094,
+    spec:AST-094/FR4,
+    spec:AST-094/FR6,
+    spec:AST-094/FR18,
+    spec:AST-094/FR24,
+  ]
 ---
 
 # Switch component contract
+
+<!-- path-applicability:v1 -->
+
+```json
+{
+  "paths": ["packages/core/src/motion/uikit/switch.ts"]
+}
+```
 
 ## Contract at a glance
 

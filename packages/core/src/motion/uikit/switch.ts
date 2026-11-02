@@ -26,11 +26,10 @@
  * `@measure` task that will confirm or replace them. uikit.test.ts enforces
  * both.
  *
- * The springs and the minimum lift time are the motion roles
- * `component:Switch` names (`switchControl.lift` and so on: `spec:AST-094`
- * FR4, DEC-5), registered by registerSwitchTable(); they stay internal, so no
- * theme overrides them yet (DEC-11). The geometry, rubber band, flip
- * distance, shadow and haptic are not motion: internal constants.
+ * The springs and the minimum lift time are motion roles
+ * (`switchControl.lift` and so on), registered by registerSwitchTable(); they
+ * stay internal, so no theme overrides them yet. The geometry, rubber band,
+ * flip distance, shadow and haptic are not motion: internal constants.
  *
  * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md.
  */
@@ -68,7 +67,7 @@ export const switchControl = {
    * fades out and the clear glass fades in (one spring drives all three).
    * Starts with the touch outside a scroll view, after its content delay
    * inside one. UISwitch keeps it under Reduce Motion; core's Switch does not
-   * lift then (design:reduced-motion).
+   * lift then.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, per-frame lens bounds during a 1 s hold fitted with one
    *   spring for width and height (rms 0.29 pt; the fill's and the glass's
@@ -173,8 +172,7 @@ export const switchControl = {
 } as const;
 
 /**
- * Registers the switch table's motion roles, the ones `component:Switch`
- * names (spec:AST-094 FR4, DEC-5), as internal roles (DEC-11). Nothing
+ * Registers the switch table's motion roles as internal roles. Nothing
  * registers on import: Switch's touch presentation calls it once before its
  * first animation, and a second call does nothing.
  */

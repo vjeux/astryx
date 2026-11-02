@@ -30,7 +30,6 @@ import {
 } from './interactionOverlay.stylex';
 import {
   installPressFeedback,
-  PRESS_HOLDS_DRAG_ATTRIBUTE,
   PRESSABLE_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
 } from './pressFeedback';
@@ -219,7 +218,7 @@ describe('the press reaches the surface the finger landed on', () => {
 
   it('keeps the press painted through a drag on a surface that holds its drag, and still ends it on a cancel', () => {
     const row = rows[0];
-    row.setAttribute(PRESS_HOLDS_DRAG_ATTRIBUTE, '');
+    row.setAttribute('data-astryx-press-holds-drag', '');
     press(row, 'pointerdown', 10, 10);
     press(row, 'pointermove', 40, 10);
     vi.advanceTimersByTime(PRESS_ONSET_MS);
@@ -228,7 +227,7 @@ describe('the press reaches the surface the finger landed on', () => {
     expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
     press(row, 'pointercancel', 80, 10);
     expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
-    row.removeAttribute(PRESS_HOLDS_DRAG_ATTRIBUTE);
+    row.removeAttribute('data-astryx-press-holds-drag');
   });
 
   it('paints the innermost surface when they nest', () => {

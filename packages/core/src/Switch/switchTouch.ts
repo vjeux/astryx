@@ -183,8 +183,8 @@ export function stepFlip(
 /**
  * What a release commits: the side a drag flipped to; when nothing flipped,
  * the other side of the value, wherever the finger lifts. A press slid off
- * and lifted outside toggles too, as UISwitch's does (iOS 26.2), under
- * `spec:AST-020` FR9/DEC-5, the reversible-toggle exception.
+ * and lifted outside toggles too, as UISwitch's does (iOS 26.2): a toggle is
+ * reversible, so a stray release costs one more tap.
  */
 export function commitOnRelease(
   flip: SwitchFlip | null,

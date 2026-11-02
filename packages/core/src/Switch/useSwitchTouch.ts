@@ -4,93 +4,13 @@
 
 /**
  * @file useSwitchTouch.ts
- * @input Switch's parts (gesture surface, input, thumb and track; the colour
- *   fade is the track's ::after and the lifted shadow the thumb's ::after,
- *   so the touch presentation adds no element), its value, whether it is
- *   interactive, the track's
- *   other state (switchFill.ts) and the thumb geometry (switchTouch.ts)
- * @output Exports useSwitchTouch: Switch's gestures for every pointer and its
- *   touch presentation. A drag flips the switch and a release commits; under
- *   a finger the drag moves the thumb with a rubber band and every motion
- *   runs on the compositor
+ * @input Switch's parts (gesture surface, input, thumb and track), its value,
+ *   whether it is interactive, the track's other state (switchFill.ts) and
+ *   the thumb geometry (switchTouch.ts)
+ * @output Exports useSwitchTouch: Switch's gestures for a mouse, a pen and a
+ *   finger, and its touch presentation under a coarse primary pointer
  * @position DOM half of Switch's touch presentation, on the gesture system
- *   (../gestures) and the compositor animator (../motion/animator). Its
- *   gestures work for a mouse, a pen and a finger (`spec:AST-094` FR43); its
- *   presentation is the touch presentation's, under a coarse primary pointer
- *   (FR13), and under a fine one the switch keeps its own look, which the
- *   value moves
- *
- * UISwitch on iOS 26.2 is the reference; every number is in
- * motion/uikit/switch.ts. How it maps onto the web:
- *
- * - The thumb's resting place is CSS (its inline-start inset), so the steady
- *   state needs no script and mirrors under RTL by itself. The animator only
- *   ever moves the thumb by a delta from that place (`translate`), and when
- *   the value changes and the CSS place jumps, the delta is rebased in the
- *   same layout effect, so nothing moves on screen and the velocity is kept.
- * - Touches go to the gesture system's PressTracker, UIControl's tracking,
- *   which never blocks a scroll (`spec:AST-094` FR11, FR20, FR21): no
- *   recognizer claims the touch. The press begins with the touch or once a
- *   horizontal move would begin a pan; `touch-action: pan-y` (Switch.tsx)
- *   keeps horizontal moves for the switch, so a drag follows and flips it,
- *   and the release commits. A vertical drag, even after a hold, is the
- *   page's scroll: the browser takes the touch and the switch yields.
- *   A tap, a hold or a short drag activates through the browser's own click
- *   (FR11); where the browser sends no click for a finger's lift (a hold),
- *   the switch clicks its input itself once the click window passes. A mouse
- *   or a pen gets a click whenever it is released on the input, so one that
- *   sends none was released off it and the switch is left alone. A drag
- *   that flipped the switch gets no click from the browser, so its
- *   `touchend` is cancelled and the switch clicks its input. A press slid off and lifted outside
- *   toggles too, as UISwitch's does (`spec:AST-020` FR9/DEC-5, the
- *   reversible-toggle exception), and the switch clicks its input for it. Forms, `onChange` and keyboard activation
- *   stay the native checkbox's.
- * - The drag never renders: each move retargets the thumb's tracking spring
- *   (one style write) and steps the flip rule on the finger's travel; the
- *   thumb's position comes from its curve, never from layout.
- * - The thumb lifts while a finger presses: it grows about its center on
- *   UISwitch's lift spring, into half of the gap around it (switchTouch.ts),
- *   and its lifted shadow, the theme's `--shadow-low` on the thumb's
- *   `::after`, fades in; at the release it settles back on the settle
- *   spring, no sooner than the minimum lift time after it began. The lift
- *   and the settle are one curve built at the release, so the settle starts
- *   on time on the compositor. The press also shows the shared pressed
- *   overlay (design:user-states), as the track's ::before under the thumb,
- *   released on the compositor (Switch.tsx, switchPressLayer.ts).
- * - The track keeps its own fill, the theme's, in both states; the colour
- *   change is a fade layer over it, painted with the track's other fill
- *   (switchFill.ts) and faded on the compositor: clear while the visuals
- *   show the value, opaque while they show the other side. When the value
- *   changes, the layer swaps to the other fill and to the complement of its
- *   opacity, so nothing changes on screen. A change the fade is already
- *   heading to (a release, a drag that flipped) swaps nothing then: the
- *   track holds its previous fill inline until the fade lands, and the swap
- *   happens under the opaque layer. WebKit plays a curve built in a frame a
- *   long task holds from its start once the task ends, so a swap in the
- *   change's frame stepped the track back toward the fill it left (iOS
- *   26.2, a 700 ms task in that frame). The layer is composited from the
- *   start (`will-change` under a coarse pointer, Switch.tsx): iOS Safari
- *   otherwise ran its fade on the main thread, and a busy main thread froze
- *   the track colour while the thumb moved.
- * - Under reduced motion (design:reduced-motion) nothing travels or
- *   springs: a tap, a release or a value change plays the animator's Reduce
- *   Motion cross-fade (the thumb fades out where it is and in at its rest)
- *   and the colour layer fades on the same fade. The thumb under a dragging
- *   finger still follows it (direct manipulation). UISwitch itself keeps its
- *   springs; the record decides here.
- * - Under a fine primary pointer the switch keeps its own presentation
- *   (FR13): the same tracking, flip rule and release decide the value, with
- *   no animator, no lift and no colour fade, and the thumb moves when the
- *   value does. Only its press listens at rest (one passive `pointerdown`
- *   the gesture host arms, FR24); the click guard and the context-menu
- *   block come with a press and go with its click window.
- * - A mouse or a pen slid off and released outside without a flip leaves
- *   the switch alone, as the native checkbox does: the reversible-toggle
- *   exception (Switch FR15) is a finger's.
- * - The springs and the minimum lift time play as the motion roles
- *   `component:Switch` names (`switchControl.lift` and so on: `spec:AST-094`
- *   FR4, DEC-5), registered by registerSwitchTable() before the first
- *   animation; they stay internal (DEC-11).
+ *   (../gestures) and the compositor animator (../motion/animator)
  *
  * SYNC: When modified, update switchTouch.ts, Switch.tsx
  * and __tests__/Switch.interaction.browser.spec.ts.
@@ -146,7 +66,7 @@ export interface SwitchTouchOptions {
   /** False while disabled or busy: no touch is tracked. */
   readonly isInteractive: boolean;
   /**
-   * Disabled: the touch presentation is off and attaches nothing (FR24). A
+   * Disabled: the touch presentation is off and attaches nothing. A
    * busy switch stays attached, so a change that starts a busy state still
    * plays its release motion.
    */
@@ -229,7 +149,7 @@ function liftThenSettle({
 
 /**
  * The switch's presentation: the touch presentation under a coarse primary
- * pointer, or its own under a fine one (`spec:AST-094` FR13).
+ * pointer, or its own under a fine one.
  */
 type SwitchPresentation = 'touch' | 'pointer';
 
@@ -248,7 +168,49 @@ interface Drag {
 
 /**
  * The touch presentation of one switch: animators, recognizers and the
- * gesture state. No React state: a gesture never renders.
+ * gesture state. No React state: a gesture never renders. UISwitch on iOS
+ * 26.2 is the reference; every number is in motion/uikit/switch.ts.
+ *
+ * - The thumb's resting place is CSS (its inline-start inset), so the steady
+ *   state needs no script and mirrors under RTL by itself. The animator only
+ *   moves the thumb by a delta from that place (`translate`). When the value
+ *   changes and the CSS place jumps, the delta is rebased in the same layout
+ *   effect, so nothing moves on screen and the velocity is kept.
+ * - Touches go to a press tracker, which never blocks a scroll: no
+ *   recognizer claims the touch. `touch-action: pan-y` (Switch.tsx) keeps
+ *   horizontal moves for the switch, so a drag follows and flips it, and the
+ *   release commits. A vertical drag is the page's scroll: the switch yields.
+ * - A tap, a hold or a short drag activates through the browser's own click.
+ *   Where the browser sends no click for a finger's lift (a hold), the switch
+ *   clicks its input once the click window passes. A mouse or a pen gets a
+ *   click whenever it is released on the input. A drag that flipped the
+ *   switch gets no click, so its `touchend` is cancelled and the switch
+ *   clicks its input. A finger's press slid off and lifted outside toggles
+ *   too, as UISwitch's does. Forms, `onChange` and the keyboard stay the
+ *   native checkbox's.
+ * - The drag never renders: each move retargets the thumb's tracking spring
+ *   and steps the flip rule on the finger's travel.
+ * - The thumb lifts while a finger presses, into half of the gap around it,
+ *   and its lifted shadow fades in. At the release it settles back, no
+ *   sooner than the minimum lift time. The lift and the settle are one curve
+ *   built at the release, so the settle starts on time on the compositor.
+ * - The track keeps its own fill in both states. The colour change is a
+ *   fade layer over it, painted with the track's other fill and faded on
+ *   the compositor. When the value changes, the layer swaps to the other
+ *   fill and to the complement of its opacity, so nothing changes on screen.
+ *   A change the fade already heads to swaps nothing then: the track holds
+ *   its previous fill inline until the fade lands. WebKit plays a curve
+ *   built in a frame a long task holds from its start once the task ends,
+ *   so a swap in that frame stepped the colour back. The layer is composited
+ *   from the start (`will-change`, Switch.tsx), or iOS Safari runs its fade
+ *   on the main thread.
+ * - Under reduced motion nothing travels or springs: a change plays the
+ *   animator's Reduce Motion cross-fade. A dragging finger still moves the
+ *   thumb: that is direct manipulation.
+ * - Under a fine primary pointer the switch keeps its own look: the same
+ *   tracking, flip rule and release decide the value, with no animator, and
+ *   the thumb moves when the value does. Only its press listens at rest; the
+ *   click guard and the context-menu block come with a press.
  */
 export class SwitchTouchController {
   private elements: Elements | null = null;
@@ -301,7 +263,7 @@ export class SwitchTouchController {
   private isTracking = false;
   /** Passive: until when the browser's next trusted click is swallowed. */
   private clickGuardUntil = 0;
-  /** Which presentation the switch has: the touch one, or its own (FR13). */
+  /** Which presentation the switch has: the touch one, or its own. */
   private presentation: SwitchPresentation = 'touch';
   /** The press-time listeners under a fine pointer, while armed. */
   private pressListeners: (() => void) | null = null;
@@ -332,11 +294,11 @@ export class SwitchTouchController {
     const host = getGestureHost(elements.surface.ownerDocument);
     if (presentation === 'pointer') {
       // The switch's own look: the gestures decide the value and the CSS
-      // shows it (FR13, FR43).
+      // shows it.
       this.detachers = this.attachPassive(host, elements);
       return;
     }
-    // The switch's springs play as its motion roles (spec:AST-094 FR4).
+    // The switch's springs play as its motion roles.
     registerSwitchTable();
     this.thumb = createAnimator(elements.thumb);
     // The layer rests clear (its class's opacity 0) while the visuals show
@@ -426,9 +388,9 @@ export class SwitchTouchController {
       };
     };
     if (this.presentation === 'pointer') {
-      // Under a fine pointer only the press the host arms listens at rest
-      // (FR24): the switch's own listeners come with a press (touchDown)
-      // and go once its click window is over.
+      // Under a fine pointer only the press the host arms listens at rest:
+      // the switch's own listeners come with a press (touchDown) and go once
+      // its click window is over.
       this.listenForPress = listen;
       return [
         host.attachConsumer(surface, tracker),
@@ -456,7 +418,7 @@ export class SwitchTouchController {
     }
   }
 
-  /** The press's click window is over: its listeners go (FR24). */
+  /** The press's click window is over: its listeners go. */
   private endPressListeners(afterMs: number): void {
     if (this.pressListeners == null) {
       return;
@@ -591,9 +553,9 @@ export class SwitchTouchController {
     thumb.rebase({
       x: this.direction * (this.rest(previous) - this.rest(isOn)),
     });
-    // Each state has its own thumb size (the circle a mouse sees, Switch
-    // FR13): the box the CSS now renders is the new value's, so its scale
-    // takes the old size over and grows or shrinks it from there.
+    // Each state has its own thumb size (the circle a mouse sees): the box
+    // the CSS now renders is the new value's, so its scale takes the old
+    // size over and grows or shrinks it from there.
     const before = this.geometry;
     this.measureGeometry();
     if (springs) {
@@ -649,16 +611,16 @@ export class SwitchTouchController {
     this.downOffset = this.offsetAt(time);
   }
 
-  /** Passive: a mouse, a pen or a finger on the switch, UIControl's events (FR43). */
+  /** Passive: a mouse, a pen or a finger on the switch, UIControl's events. */
   private onControlEvent(event: ControlEvent, touch: GestureTouch): void {
     const travel = touch.x - touch.startX;
     // The switch reads the thumb when it handles the event, and its motion
     // carries no start of its own: a call that continues motion starts then,
-    // from the curve on screen (spec:AST-094 FR6), and a call from rest at
-    // the frame that shows it, as Core Animation starts an animation at its
+    // from the curve on screen, and a call from rest at the frame that shows
+    // it, as Core Animation starts an animation at its
     // commit. A busy main thread hands the switch an event late and commits
     // its frame late: the motion is delayed, never stepped back or skipped
-    // into. The event's own time is the recognizers' (FR16).
+    // into. The event's own time is the recognizers'.
     const time = now();
     switch (event) {
       case 'touchDown':
@@ -705,16 +667,15 @@ export class SwitchTouchController {
         }
         if (this.drag?.flip.didFlip !== true && touch.pointerType !== 'touch') {
           // A mouse or a pen slid off and released outside, with no flip:
-          // the switch is left alone, as the native checkbox is (the
-          // reversible-toggle exception, Switch FR15, is a finger's).
+          // the switch is left alone, as the native checkbox is. Only a
+          // finger's press slid off toggles.
           this.released = true;
           this.abandon(time);
           this.endPressListeners(0);
           return;
         }
         // A drag that flipped, or a press slid off and lifted outside (it
-        // toggles, as UISwitch's does: `spec:AST-020` FR9/DEC-5, the
-        // reversible-toggle exception): no click comes from the browser, so
+        // toggles, as UISwitch's does): no click comes from the browser, so
         // the switch clicks its input and cancels the lift. Only a finger's
         // lift has a `touchend` to cancel: a mouse or a pen sends none, and a
         // cancel left armed would take the next finger tap's click.
@@ -759,10 +720,10 @@ export class SwitchTouchController {
       flip: startFlip(this.isOn),
     });
     // The thumb under the finger is direct manipulation, which reduced
-    // motion leaves alone (design:reduced-motion): under it the thumb is
-    // placed at once, since the animator would cross-fade a move.
-    // Under a fine pointer nothing follows the pointer: the switch keeps its
-    // own look, and the value moves the thumb (FR13).
+    // motion leaves alone: under it the thumb is placed at once, since the
+    // animator would cross-fade a move. Under a fine pointer nothing follows
+    // the pointer: the switch keeps its own look, and the value moves the
+    // thumb.
     if (thumb != null) {
       const target = this.toX(dragTarget(drag.start, x, this.geometry));
       if (thumb.reducedMotion() === 'off') {
@@ -998,8 +959,8 @@ export class SwitchTouchController {
 
   /**
    * The thumb grows about its center into half the gap around it, and its
-   * lifted shadow fades in. Under reduced motion nothing lifts
-   * (design:reduced-motion DR1): the lift is feedback with no fade of its own.
+   * lifted shadow fades in. Under reduced motion nothing lifts: the lift is
+   * feedback with no fade of its own.
    */
   private lift(time: number): void {
     if (this.thumb == null || this.thumb.reducedMotion() !== 'off') {
@@ -1031,8 +992,8 @@ export class SwitchTouchController {
       return;
     }
     this.liftTime = null;
-    // The record's motion roles (spec:AST-094 FR4, DEC-5): the animator
-    // resolves each one it is handed.
+    // The switch's motion roles: the animator resolves each one it is
+    // handed.
     const lift = switchControl.lift;
     const settle = switchControl.settle;
     this.settleAt = settleTime(time, liftTime);
@@ -1125,8 +1086,8 @@ export class SwitchTouchController {
 }
 
 /**
- * Switch's gestures, attached for every pointer (`spec:AST-094` FR43), with
- * the touch presentation under a coarse primary pointer (FR13). Its parts
+ * Switch's gestures, attached for every pointer, with the touch
+ * presentation under a coarse primary pointer. Its parts
  * must be rendered (and styled for it) whether or not it is active; it only
  * animates and listens.
  */
@@ -1171,8 +1132,8 @@ export function useSwitchTouch(
     const input = parts.input.current;
     const thumb = parts.thumb.current;
     const track = parts.track.current;
-    // A disabled switch takes no press: no listener is active (spec:AST-094
-    // FR24). A busy one stays attached (setInteractive ignores its presses),
+    // A disabled switch takes no press: no listener is active. A busy one
+    // stays attached (setInteractive ignores its presses),
     // so the change that made it busy keeps its motion.
     if (
       isDisabled ||

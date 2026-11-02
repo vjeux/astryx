@@ -44,7 +44,6 @@ import {__resetLiveRegionsForTest} from '../hooks/useAnnounce';
 import {InternationalizationProvider} from '../i18n';
 import {installPressFeedback} from '../utils/pressFeedback';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
-import {docs as switchDocs} from './Switch.doc.mjs';
 
 afterEach(() => {
   __resetLiveRegionsForTest();
@@ -1193,6 +1192,90 @@ describe('Switch', () => {
       }
       // Reduce Motion's arm nests one `@media` rule in another, which the
       // test DOM drops: the browser proofs check it.
+    });
+  });
+
+  describe('the row that holds the touch press', () => {
+    const FADING = '[data-astryx-press="fading"]';
+    /** Rules under a coarse primary pointer, Reduce Motion's arms left out. */
+    const UNDER_COARSE = {
+      insideMedia: /\(pointer: coarse\)/,
+      outsideMedia: /prefers-reduced-motion/,
+    };
+    /** Rules for any other pointer, Reduce Motion's arms left out. */
+    const UNDER_FINE = {
+      outsideMedia: /prefers-reduced-motion|\(pointer: coarse\)/,
+    };
+    const selectorOf = (rule: string) => rule.slice(0, rule.indexOf('{'));
+    const fadingOnHost = (rules: string[]) =>
+      rules.filter(
+        rule =>
+          selectorOf(rule).includes(FADING) && !selectorOf(rule).includes('::'),
+      );
+    const valuesOf = (rules: string[], property: string) =>
+      rules
+        .flatMap(rule => {
+          const match = rule.match(new RegExp(`${property}:\\s*([^;}]+)`));
+          return match == null ? [] : [match[1].trim()];
+        })
+        .sort();
+    /** The switch's row, and an element with the shared press styles alone. */
+    function renderOwners(): {alpha: HTMLElement; row: Element} {
+      render(
+        <>
+          <Switch label="Notifications" value={false} onChange={() => {}} />
+          <div
+            data-testid="alpha"
+            {...stylex.props(interactionOverlayStyles.pressedAlpha)}
+          />
+        </>,
+      );
+      const row = document
+        .querySelector('.astryx-switch')
+        ?.closest('[data-astryx-pressable]');
+      if (row == null) {
+        throw new Error('the switch has no pressable row');
+      }
+      return {alpha: screen.getByTestId('alpha'), row};
+    }
+
+    it('declares the shared strength and paint for the track’s and thumb’s layers', () => {
+      const {alpha, row} = renderOwners();
+      const strengthAndPaint = (el: Element) =>
+        rulesDeclaredFor(el)
+          .filter(rule => /--astryx-press-alpha|--_press-paint/.test(rule))
+          .sort();
+      expect(strengthAndPaint(alpha).length).toBeGreaterThan(0);
+      expect(strengthAndPaint(row)).toEqual(strengthAndPaint(alpha));
+    });
+
+    it('with any pointer but a coarse primary one, keeps the shared release on the row', () => {
+      const {alpha, row} = renderOwners();
+      const release = (el: Element) =>
+        fadingOnHost(rulesDeclaredFor(el, UNDER_FINE));
+      expect(valuesOf(release(alpha), 'animation-name')).not.toEqual([]);
+      for (const property of [
+        'animation-name',
+        'animation-duration',
+        'animation-timing-function',
+      ]) {
+        expect(valuesOf(release(row), property)).toEqual(
+          valuesOf(release(alpha), property),
+        );
+      }
+    });
+
+    it('under a coarse primary pointer, drops the strength’s own release on the row', () => {
+      const {alpha, row} = renderOwners();
+      const names = (el: Element) =>
+        valuesOf(
+          fadingOnHost(rulesDeclaredFor(el, UNDER_COARSE)),
+          'animation-name',
+        );
+      // The shared styles keep the strength's release there; the row holds
+      // the strength, so the layers' fade is the one fade.
+      expect(names(alpha)).not.toContain('none');
+      expect(names(row)).toEqual(['none']);
     });
   });
 

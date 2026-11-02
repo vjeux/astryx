@@ -390,7 +390,7 @@ export const MENU_REDUCED_MOTION_SPRING = {
 
 /**
  * UISwitch thumb travelling between off and on, measured: the switch table's
- * `travel` reads this row, one value for one use (`spec:AST-094` FR1).
+ * `travel` reads this row, so the value has one home.
  * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
  *   iPhone 17 Pro, the lens's position behavior read on a tap (damping 1,
  *   response 0.3); the lens center after a 50 ms tap and after a 1 s hold
@@ -405,8 +405,8 @@ export const SWITCH_THUMB_MOVE_SPRING = {
  * UISegmentedControl selection thumb sliding to a new segment.
  * @source GUESS — WebKit's UIKit-matched switch thumb spring
  *   (RenderThemeCocoa.mm `thumbMoveSpring`: response 0.30 s, ratio 0.75),
- *   kept only until UISegmentedControl's measured spring replaces it
- *   (#8094); UISwitch's measured travel (`SWITCH_THUMB_MOVE_SPRING`)
+ *   kept only until UISegmentedControl's measured spring replaces it;
+ *   UISwitch's measured travel (`SWITCH_THUMB_MOVE_SPRING`)
  *   belongs to another control
  * @measure M-SG02
  * @measure M-SG03

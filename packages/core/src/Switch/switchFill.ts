@@ -51,7 +51,8 @@ export function trackStateOf(props: object): TrackState {
   for (const [name, value] of Object.entries(props)) {
     if (name === 'className' && typeof value === 'string') {
       className = value;
-    } else if (name.startsWith('data-') && value != null && value !== false) {
+    } else if (name.startsWith('data-') && value != null) {
+      // As React writes a data attribute: every value but null or undefined.
       attributes[name] = String(value);
     }
   }
