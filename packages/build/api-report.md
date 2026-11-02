@@ -27,8 +27,10 @@ module.exports
 ### Functions
 
 ```text
-function withAstryx: (nextConfig?: {}) => { transpilePackages: any[]; webpack: (config: any, context: any) => any }
+function withAstryx: (nextConfig?: {}) => { transpilePackages: any[]; turbopack: {} } | { transpilePackages: any[]; webpack: (config: any, context: any) => any }
 ```
+
+## `./next/postcss`
 
 ## `./postcss`
 

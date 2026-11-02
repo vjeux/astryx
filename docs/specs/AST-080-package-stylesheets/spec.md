@@ -20,6 +20,19 @@ affects_consumer_docs: [styling-overview, getting-started, migration-setup]
 
 <!-- Describe the system, not the project: present tense, what it does. No proposals, history, pull requests, or research in the record; see docs/contributing/spec-writing.md and report its rubric results in the pull request. -->
 
+<!-- path-applicability:v1 -->
+
+```json
+{
+  "paths": [
+    "packages/build/src/next.js",
+    "packages/build/src/next-postcss.js",
+    "packages/build/src/source-stylesheet.js",
+    "packages/build/src/turbopack-loader.js"
+  ]
+}
+```
+
 ## Intent
 
 A product that uses Astryx loads prebuilt stylesheets: `@astryxdesign/core/astryx.css`,
@@ -231,12 +244,15 @@ first.
   page; and nothing makes a Core source build carry the Core definitions that
   prebuilt `lab.css` relies on. Conforming changes the class names and layers it
   emits for its current users.
-- `withAstryx()` does not yet meet FR9 (implementation gaps): it refuses
-  Turbopack builds; under webpack it source-builds Core and Lab, while Rich Text
-  and Charts stay on their prebuilt stylesheets; and a source build emits no
-  order registration in its own output (FR7), relying on `reset.css`, the theme,
-  or the product's line. No fixture checks FR9 and no speed figures are
-  reported. Rich Text and Charts already publish `source` export conditions.
+- Under Turbopack, `withAstryx()` source-builds Core, Lab, Rich Text, and
+  Charts; each compiled block begins with the FR3 order registration (FR7), and
+  the build fails when the product imports the prebuilt stylesheet of a package
+  it compiles. A Next.js fixture checks FR9 under Turbopack, and a script in
+  `@astryxdesign/build` measures the speed figures. Under webpack it
+  source-builds Core and Lab with the `@astryxdesign/build` setup above, while
+  Rich Text and Charts stay on their prebuilt stylesheets. Implementation gap:
+  webpack source builds conform at the next minor, because conforming changes
+  existing webpack output.
 - Under Turbopack no maintained StyleX compiler runs in the native pipeline, so
   the FR9 fast path is a goal with a known gap: the Turbopack route compiles
   Astryx modules through a JavaScript loader running Babel and the StyleX Babel
