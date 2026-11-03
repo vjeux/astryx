@@ -17,7 +17,6 @@ verified_by:
     packages/core/src/BottomSheet/BottomSheetKeyboard.test.tsx,
     packages/core/src/BottomSheet/BottomSheetStacking.test.tsx,
     packages/core/src/BottomSheet/BottomSheetReplace.test.tsx,
-    packages/core/src/BottomSheet/releaseSpring.test.ts,
     packages/core/src/Toast/ToastViewport.modalHost.test.tsx,
     packages/core/src/BottomSheet/__tests__/BottomSheetNativeModal.a11y.browser.spec.ts,
     packages/core/src/BottomSheet/__tests__/BottomSheetKeyboard.a11y.browser.spec.ts,

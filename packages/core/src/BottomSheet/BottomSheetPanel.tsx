@@ -94,10 +94,6 @@ const TRANSITION_BACKSTOP_BUFFER_MS = 50;
 // padding already provides.
 const HANDLE_BAR_HEIGHT = spacingVars['--spacing-6'];
 
-// Measure the viewport that the height budgets use. They are `dvh`, which
-// the virtual keyboard does not shrink, so `visualViewport` would differ by
-// the keyboard's height. `useMobileKeyboard` handles the keyboard and does
-// not change the detents.
 function supportsWebAnimations(): boolean {
   return (
     typeof Element !== 'undefined' &&
@@ -105,6 +101,10 @@ function supportsWebAnimations(): boolean {
   );
 }
 
+// Measure the viewport that the height budgets use. They are `dvh`, which
+// the virtual keyboard does not shrink, so `visualViewport` would differ by
+// the keyboard's height. `useMobileKeyboard` handles the keyboard and does
+// not change the detents.
 function layoutViewportHeight(): number {
   return typeof window === 'undefined' ? 0 : window.innerHeight;
 }
