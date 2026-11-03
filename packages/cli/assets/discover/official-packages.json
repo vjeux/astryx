@@ -186,6 +186,14 @@
         },
         {
           "kind": "component",
+          "name": "TabBarMoreList"
+        },
+        {
+          "kind": "component",
+          "name": "TabBarSearchTab"
+        },
+        {
+          "kind": "component",
           "name": "ThreeDBar"
         },
         {
