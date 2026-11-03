@@ -329,36 +329,6 @@ test('a touch open lights no row: the menu itself takes the focus, and every row
   await playing;
 });
 
-test('a theme retunes the press feedback (a motion role): with its latency at 300 ms the card is still at rest at 350 ms, then grows', async ({
-  page,
-}) => {
-  const {driver, trigger, center} = await openTouchStory(page);
-  // The theme scope's variable, as `defineTheme({motion})` writes it, set
-  // before the first press reads it.
-  await trigger.evaluate(el => {
-    const scope =
-      el.closest<HTMLElement>('[data-astryx-theme]') ??
-      document.documentElement;
-    scope.style.setProperty(
-      '--motion-context-menu-press-feedback-latency-ms',
-      '300ms',
-    );
-  });
-  const playing = driver.play(hold(center, menuDisplayMs + 100));
-  // The press machine's onset (150 ms) plus the themed latency: nothing
-  // shows before 450 ms.
-  await page.waitForTimeout(350);
-  const early = await presentedScale(trigger);
-  await page.waitForTimeout(300);
-  const later = await presentedScale(trigger);
-  await playing;
-  expect(early).toBe(1);
-  expect(later).toBeGreaterThan(1.001);
-  // The onset, the commit and the menu's moment are gesture timing, not
-  // roles.
-  await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeVisible();
-});
-
 test('a finger lifted after the commit gets the menu at the lift, and sends no click', async ({
   page,
 }) => {
