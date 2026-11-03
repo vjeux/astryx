@@ -939,7 +939,7 @@ export function createMenuPress(
       if (isDestroyed) {
         return;
       }
-      current = {...current, ...next};
+      void next;
       if ('trigger' in next) {
         setTrigger(next.trigger ?? null);
       }
