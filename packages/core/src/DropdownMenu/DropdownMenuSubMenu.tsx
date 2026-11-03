@@ -1043,11 +1043,13 @@ export function DropdownMenuSubMenu(
 
   // The press model for this flyout: the row under a release acts, the
   // highlight follows a held pointer. A mouse released outside every level
-  // dismisses the whole menu; a finger leaves it open.
+  // dismisses the whole menu; a finger leaves it open. It takes the root's
+  // touch model, so a finger here follows the root's rules.
   const menuPress = useMenuSurfacePress({
     menuRef,
     itemSelector: MENU_ITEM_SELECTOR,
     onDismiss: nestedMenuContext.closeMenu,
+    touchModel: rootSurface?.touchModel,
   });
 
   const endAffordance = hasSpinner ? (
