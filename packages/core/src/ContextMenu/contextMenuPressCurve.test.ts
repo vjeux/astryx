@@ -17,7 +17,6 @@ import {solveSpring, toSpring} from '../motion/spring';
 import {contextMenu} from '../motion/uikit/contextMenu';
 import {registerSpringsTable, springs} from '../motion/uikit/springs';
 import {
-  PRESS_FEEDBACK_START_MS,
   pressFeedbackCurve,
   pressFeedbackMotion,
   pressFeedbackTarget,
@@ -31,12 +30,20 @@ import {
 
 const press = contextMenu.press;
 
+/** UIKit's own motion, as the table measures it: the frames below are UIKit's. */
+const UIKIT_MOTION = {
+  spring: press.feedbackSpring,
+  onsetMs: press.feedbackOnsetMs,
+  latencyMs: press.feedbackLatencyMs,
+};
+
+/** When UIKit's visible curve starts, ms after the finger landed. */
+const UIKIT_START_MS = press.feedbackOnsetMs + press.feedbackLatencyMs;
+
 /** The visible scale of a held press `t` ms after the touch. */
 function held(t: number): number {
-  const curve = pressFeedbackCurve();
-  return t <= PRESS_FEEDBACK_START_MS
-    ? 1
-    : curve.at((t - PRESS_FEEDBACK_START_MS) / 1000);
+  const curve = pressFeedbackCurve({motion: UIKIT_MOTION});
+  return t <= UIKIT_START_MS ? 1 : curve.at((t - UIKIT_START_MS) / 1000);
 }
 
 /**
@@ -45,9 +52,9 @@ function held(t: number): number {
  * from where the curve was, as the animator plays on `fail`.
  */
 function liftedAt(lift: number): (t: number) => number {
-  const curve = pressFeedbackCurve();
+  const curve = pressFeedbackCurve({motion: UIKIT_MOTION});
   const turn = lift + press.returnLatencyMs;
-  const s = (turn - PRESS_FEEDBACK_START_MS) / 1000;
+  const s = (turn - UIKIT_START_MS) / 1000;
   const back = solveSpring(toSpring(press.feedbackSpring), {
     from: curve.at(s),
     to: 1,
@@ -91,7 +98,7 @@ describe('pressFeedbackTarget', () => {
 describe('pressFeedbackCurve', () => {
   it('matches a numerical integration of the feedback spring chasing the ramp', () => {
     const {stiffness, damping, mass} = toSpring(press.feedbackSpring);
-    const curve = pressFeedbackCurve();
+    const curve = pressFeedbackCurve({motion: UIKIT_MOTION});
     const target = (s: number) =>
       pressFeedbackTarget(press.feedbackOnsetMs + s * 1000);
     let x = 1;
@@ -118,7 +125,7 @@ describe('pressFeedbackCurve', () => {
   });
 
   it('is continuous in value and velocity where the ramp changes', () => {
-    const curve = pressFeedbackCurve();
+    const curve = pressFeedbackCurve({motion: UIKIT_MOTION});
     for (const ms of [press.commitMs, press.menuDisplayMs]) {
       const s = (ms - press.feedbackOnsetMs) / 1000;
       expect(curve.at(s + 1e-7)).toBeCloseTo(curve.at(s - 1e-7), 6);
@@ -127,7 +134,7 @@ describe('pressFeedbackCurve', () => {
   });
 
   it('starts from rest at 1 and rests on the last size', () => {
-    const curve = pressFeedbackCurve();
+    const curve = pressFeedbackCurve({motion: UIKIT_MOTION});
     expect(curve.at(0)).toBe(1);
     expect(curve.velocity(0)).toBe(0);
     expect(curve.at(curve.duration)).toBeCloseTo(
@@ -138,7 +145,11 @@ describe('pressFeedbackCurve', () => {
   });
 
   it('continues from a press still moving', () => {
-    const curve = pressFeedbackCurve({from: 1.02, velocity: -0.05});
+    const curve = pressFeedbackCurve({
+      from: 1.02,
+      velocity: -0.05,
+      motion: UIKIT_MOTION,
+    });
     expect(curve.at(0)).toBeCloseTo(1.02, 10);
     expect(curve.velocity(0)).toBeCloseTo(-0.05, 10);
   });

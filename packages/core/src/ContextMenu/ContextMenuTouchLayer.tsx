@@ -23,6 +23,7 @@ import {
 import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
+import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {contextMenu} from '../motion/uikit/contextMenu';
 import {
   ContextMenuPressRecognizer,
@@ -124,8 +125,12 @@ export function ContextMenuTouchLayer({
     },
   );
 
-  isFollowedRef.current = () =>
-    recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
+  // The recognizer the press feedback asks whether it follows a finger or a
+  // pen now.
+  useIsomorphicLayoutEffect(() => {
+    isFollowedRef.current = () =>
+      recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
+  }, [recognizer]);
 
   // The recognizer's transitions. Its target-action listeners never hear
   // `failed`, so a press that ends with no menu springs back from here.

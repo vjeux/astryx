@@ -3,8 +3,7 @@
 /**
  * @file contextMenuPressCurve.ts
  * @input The context-menu constants and the spring toward a moving target
- * @output pressFeedbackTarget, PRESS_FEEDBACK_START_MS, pressFeedbackMotion
- *   and pressFeedbackCurve
+ * @output pressFeedbackTarget, pressFeedbackMotion and pressFeedbackCurve
  * @position The press feedback's curve, for ContextMenu's touch invocation
  *
  * SYNC: When modified, update
@@ -39,8 +38,6 @@ const {
   menuDisplayMs,
   feedbackRate,
   feedbackRateAfterCommit,
-  feedbackSpring,
-  feedbackLatencyMs,
 } = contextMenu.press;
 
 /** The press feedback's motion: its spring, onset and display latency. */
@@ -49,13 +46,6 @@ export interface PressFeedbackMotion {
   readonly onsetMs: number;
   readonly latencyMs: number;
 }
-
-/** UIKit's own motion, as the table measures it. */
-const TABLE_MOTION: PressFeedbackMotion = {
-  spring: feedbackSpring,
-  onsetMs: feedbackOnsetMs,
-  latencyMs: feedbackLatencyMs,
-};
 
 /**
  * The press feedback's motion for `element`: the theme's state-change spring,
@@ -106,26 +96,23 @@ export interface PressFeedbackCurve {
   velocity(t: number): number;
 }
 
-/** When the visible curve starts, ms after the finger landed. */
-export const PRESS_FEEDBACK_START_MS = feedbackOnsetMs + feedbackLatencyMs;
-
 /**
- * The scale the press copy shows from `PRESS_FEEDBACK_START_MS` on, for a
- * finger that stays, with t in seconds from there. The feedback spring chases
- * `pressFeedbackTarget` as the screen shows it, `feedbackLatencyMs` late. The
- * pieces chain where the ramp changes, and the last one settles on the final
- * size. It starts from rest at 1, unless an earlier press still moves the view.
+ * The scale the press copy shows for a finger that stays, with t in seconds
+ * from the motion's onset plus its latency. The motion's spring chases
+ * `pressFeedbackTarget` as the screen shows it. The pieces chain where the
+ * ramp changes, and the last one settles on the final size. It starts from
+ * rest at 1, unless an earlier press still moves the view.
  */
 export function pressFeedbackCurve({
   from = 1,
   velocity = 0,
-  motion = TABLE_MOTION,
+  motion,
 }: {
   from?: number;
   velocity?: number;
-  /** The motion to play (`pressFeedbackMotion`); UIKit's by default. */
-  motion?: PressFeedbackMotion;
-} = {}): PressFeedbackCurve {
+  /** The motion to play: `pressFeedbackMotion` for ContextMenu. */
+  motion: PressFeedbackMotion;
+}): PressFeedbackCurve {
   const {onsetMs} = motion;
   const spring = toSpring(motion.spring);
   const commit = Math.max(commitMs - onsetMs, 0) / 1000;
