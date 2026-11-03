@@ -38,6 +38,8 @@ export {
   unwrapAngle,
 } from '../gestures/geometry';
 export {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
+export {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
+export {ScreenEdgePanGestureRecognizer} from '../gestures/ScreenEdgePanGestureRecognizer';
 export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
 export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
@@ -53,6 +55,14 @@ export type {
   MotionHandle,
 } from '../motion/animator';
 export {cubicBezier} from '../motion/bezier';
+export {resolveMotion} from '../motion/resolveMotion';
+export {rubberBand, rubberBandInverse} from '../motion/rubberBand';
+export {solveSpring, toSpring} from '../motion/spring';
+export type {SpringDescription} from '../motion/spring';
+export {UIKIT_GESTURES} from '../motion/uikit/gestures';
+export {navigation, registerNavigationTable} from '../motion/uikit/navigation';
+export {registerSpringsTable, springs} from '../motion/uikit/springs';
 export {timing} from '../motion/uikit/timing';
 export {claimFocusMoves} from '../utils/claimFocusMoves';
 export {useTouchPresentation} from '../utils/touchPresentation';
+export {TOUCH_QUERY} from '../utils/touchQueries';
