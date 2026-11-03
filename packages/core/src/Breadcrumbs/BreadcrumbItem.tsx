@@ -561,7 +561,7 @@ function BreadcrumbMenuTrigger({
   useMenuPress(listRef, {
     itemSelector: MENU_ITEM_SELECTOR,
     onDismiss: closeMenu,
-    startBehavior: 'items',
+
   });
 
   const typeahead = useTypeahead({
