@@ -5,9 +5,10 @@
  * @input The built Lightbox "with zoom" story, a desktop browser (a fine
  *   primary pointer) and real mouse input; in Chromium, pen input
  * @output Evidence that the gestures take every pointer where the primary
- *   pointer is fine too. It covers touches as on a phone, the double-click's
- *   2× zoom and the keyboard's 200 ms ease-out. It also covers pen and mouse
- *   drags, and a gallery's Next, arrow keys and dark-area click
+ *   pointer is fine too. It covers touches as on a phone, with or without
+ *   zoom, the double-click's 2× zoom and the keyboard's 200 ms ease-out. It
+ *   also covers pen and mouse drags, and a gallery's Next, arrow keys and
+ *   dark-area click
  * @position Cross-browser proof for Lightbox under a fine primary pointer
  */
 
@@ -223,6 +224,43 @@ async function touchActionsAbove(photo: Locator): Promise<string[]> {
   });
 }
 
+test('a caption comes back under the photo once a drag to close springs back', async ({
+  page,
+}) => {
+  // A 3:1 panorama leaves the stage free space below the fitted photo.
+  await page.route('https://picsum.photos/**', async route =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: photoSvg(3000, 1000),
+    }),
+  );
+  await page.goto(
+    `${storybook.origin}/iframe.html?id=core-lightbox--zoom-with-caption&viewMode=story`,
+  );
+  await page.getByRole('button', {name: 'Open zoom with caption'}).click();
+  const dialog = page.getByRole('dialog');
+  const img = dialog.getByRole('img', {name: 'Forest path'});
+  await expect
+    .poll(async () => img.evaluate(el => (el as HTMLImageElement).naturalWidth))
+    .toBe(3000);
+  const caption = dialog.getByText('A winding path through the forest');
+  const gap = async () => {
+    const photo = await boxOf(img);
+    const below = await boxOf(caption);
+    return Math.round(below.y - (photo.y + photo.height));
+  };
+  await expect.poll(gap).toBe(0);
+  // Down 60 px and back to the start, then released: the drag is cancelled.
+  const start = centre(await boxOf(img));
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x, start.y + 60, {steps: 12});
+  await page.mouse.move(start.x, start.y, {steps: 12});
+  await page.mouse.up();
+  await expect(dialog).toBeVisible();
+  await expect.poll(gap).toBe(0);
+});
+
 test('the zoom target takes its touches as on a phone where the primary pointer is fine too', async ({
   page,
 }) => {
@@ -236,6 +274,32 @@ test('the zoom target takes its touches as on a phone where the primary pointer 
   expect(await touchActionsAbove(img)).toEqual([
     'auto',
     'none',
+    'auto',
+    'auto',
+  ]);
+});
+
+test('a photo without zoom takes one-finger drags as on a phone where the primary pointer is fine too', async ({
+  page,
+}) => {
+  // The drag to dismiss attaches for every pointer. A touchscreen laptop's
+  // finger drags the photo down as on a phone, and the page keeps its pinch.
+  await page.route('https://picsum.photos/**', async route =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: photoSvg(PHOTO.width, PHOTO.height),
+    }),
+  );
+  await page.goto(
+    `${storybook.origin}/iframe.html?id=core-lightbox--default&viewMode=story`,
+  );
+  await page.getByRole('button', {name: 'Open lightbox'}).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  const photo = dialog.getByRole('img').first();
+  expect(await touchActionsAbove(photo)).toEqual([
+    'auto',
+    'pinch-zoom',
     'auto',
     'auto',
   ]);
