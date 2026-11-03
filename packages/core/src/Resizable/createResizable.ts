@@ -47,7 +47,8 @@ import {
 } from './resizeGesture';
 import {
   createPaneReveal,
-  resizablePaneBeside,
+  handOverPane,
+  resizablePaneFor,
   watchResizablePanes,
   type LayoutEdge,
   type PaneListener,
@@ -862,12 +863,7 @@ export function createResizableAs(
     paneReveal.land();
     pendingFlip = null;
     expectedFlip = null;
-    // A pane this region no longer sizes is not held collapsed by it.
-    pane?.listen(null);
-    pane?.setCollapsed(false, null);
-    pane = next;
-    pane?.listen(paneListener);
-    pane?.setCollapsed(derived.isCollapsed, handle);
+    pane = handOverPane(pane, next, paneListener, derived.isCollapsed, handle);
   }
 
   /** Follows the lent LayoutPanel beside the handle, on the pane's side. */
@@ -875,7 +871,7 @@ export function createResizableAs(
     if (regionSlot != null || handle == null) {
       return;
     }
-    setPane(resizablePaneBeside(handle, isReversed() ? 'after' : 'before'));
+    setPane(resizablePaneFor(handle, isReversed()));
   }
 
   /** Nothing is written while the basis stands in, nor while a gesture runs. */
@@ -1274,9 +1270,7 @@ export function createResizableAs(
       stopFollowingRegion?.();
       stopFollowingRegion = null;
       paneReveal.land();
-      pane?.listen(null);
-      pane?.setCollapsed(false, null);
-      pane = null;
+      pane = handOverPane(pane, null, paneListener, false, null);
       unbind?.();
       viewListeners.clear();
       if (!isSuspended) {

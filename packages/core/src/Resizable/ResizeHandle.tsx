@@ -51,7 +51,8 @@ import {
 } from './resizeGesture';
 import {
   regionOfProps,
-  resizablePaneBeside,
+  handOverPane,
+  resizablePaneFor,
   watchResizablePanes,
   type ResizablePane,
 } from './resizablePane';
@@ -652,24 +653,33 @@ export function ResizeHandle({
   // at once.
   const heldPaneRef = useRef<ResizablePane | null>(null);
   const isRegionCollapsed = resizable?._isCollapsed ?? false;
-  useEffect(() => watchResizablePanes(rerender), []);
+  useEffect(
+    () => (hasRegion ? watchResizablePanes(rerender) : undefined),
+    [hasRegion],
+  );
   useIsomorphicLayoutEffect(() => {
     const element = handleRef.current;
     const pane =
       hasRegion && element != null
-        ? resizablePaneBeside(element, isReversed ? 'after' : 'before')
+        ? resizablePaneFor(element, isReversed)
         : null;
-    const held = heldPaneRef.current;
-    if (held != null && held !== pane) {
-      held.setCollapsed(false, null);
-    }
-    heldPaneRef.current = pane;
-    pane?.setCollapsed(isRegionCollapsed, element);
+    heldPaneRef.current = handOverPane(
+      heldPaneRef.current,
+      pane,
+      null,
+      isRegionCollapsed,
+      element,
+    );
   });
   useEffect(() => {
     return () => {
-      heldPaneRef.current?.setCollapsed(false, null);
-      heldPaneRef.current = null;
+      heldPaneRef.current = handOverPane(
+        heldPaneRef.current,
+        null,
+        null,
+        false,
+        null,
+      );
     };
   }, []);
 

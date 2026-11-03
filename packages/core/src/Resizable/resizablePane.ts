@@ -87,6 +87,40 @@ export function resizablePaneBeside(
   return sibling == null ? null : (lent.get(sibling) ?? null);
 }
 
+/** The lent panel a handle sizes: before it, or after it when reversed. */
+export function resizablePaneFor(
+  handle: Element,
+  isReversed: boolean,
+): ResizablePane | null {
+  return resizablePaneBeside(handle, isReversed ? 'after' : 'before');
+}
+
+/**
+ * Moves a region's hold from `held` to `next`, and returns `next`. A pane the
+ * region no longer sizes stops listening and opens. The held pane takes the
+ * region's collapse state, and focus inside it moves to `handle` as it
+ * collapses. A controller that sizes the pane passes its `listener`.
+ */
+export function handOverPane(
+  held: ResizablePane | null,
+  next: ResizablePane | null,
+  listener: PaneListener | null,
+  isCollapsed: boolean,
+  handle: HTMLElement | null,
+): ResizablePane | null {
+  if (next !== held) {
+    if (listener != null) {
+      held?.listen(null);
+    }
+    held?.setCollapsed(false, null);
+    if (listener != null) {
+      next?.listen(listener);
+    }
+  }
+  next?.setCollapsed(isCollapsed, handle);
+  return next;
+}
+
 /**
  * The ResizeHandle beside a panel, on the side that faces the content. It is
  * after a start panel, before an end panel, and on either side elsewhere.
@@ -196,8 +230,6 @@ export interface ResizablePaneLink {
   beforeChange(toCollapsed: boolean): void;
   /** After every commit of the panel, with the width it rendered and its content-facing edge. */
   committed(width: RenderedPaneWidth, edge: LayoutEdge): void;
-  /** The width and edge the panel renders now, set during its render. */
-  render(width: RenderedPaneWidth, edge: LayoutEdge): void;
 }
 
 export function createResizablePaneLink(): ResizablePaneLink {
@@ -278,10 +310,6 @@ export function createResizablePaneLink(): ResizablePaneLink {
       width = nextWidth;
       edge = nextEdge;
       listener?.committed();
-    },
-    render(nextWidth, nextEdge) {
-      width = nextWidth;
-      edge = nextEdge;
     },
   };
 }
