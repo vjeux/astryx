@@ -41,7 +41,11 @@ export {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer
 export {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
 export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
+export {useFingerScroll} from '../gestures/useFingerScroll';
 export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
+export {usePressTracker} from '../gestures/usePressTracker';
+export {createActionGroupTracker} from '../hooks/actionGroupTracker';
+export type {ActionGroupTarget} from '../hooks/actionGroupTracker';
 export {isRtlElement} from '../hooks/isRtlElement';
 export {createMotionEngine} from '../motion/animator';
 export type {
@@ -55,5 +59,6 @@ export {cubicBezier} from '../motion/bezier';
 export {rubberBand} from '../motion/rubberBand';
 export {UIKIT_GESTURES} from '../motion/uikit/gestures';
 export {timing} from '../motion/uikit/timing';
+export {lockSelection} from '../utils/selectionLock';
 export {useTouchPresentation} from '../utils/touchPresentation';
 export {TOUCH_QUERY} from '../utils/touchQueries';
