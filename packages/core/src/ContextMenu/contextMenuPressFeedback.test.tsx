@@ -23,7 +23,11 @@ import {
 
 const animator = vi.hoisted(() => ({
   element: null as HTMLElement | null,
-  play: vi.fn(() => ({finished: new Promise<boolean>(() => {})})),
+  /** The element each play ran on, in order. */
+  played: [] as HTMLElement[],
+  play: vi.fn((..._args: unknown[]) => ({
+    finished: new Promise<boolean>(() => {}),
+  })),
   animate: vi.fn(() => ({finished: new Promise<boolean>(() => {})})),
   stop: vi.fn(),
   dispose: vi.fn(),
@@ -35,7 +39,13 @@ const animator = vi.hoisted(() => ({
 vi.mock('../motion/animator', () => ({
   createMotionAnimator: (element: HTMLElement) => {
     animator.element = element;
-    return animator;
+    return {
+      ...animator,
+      play: (...args: unknown[]) => {
+        animator.played.push(element);
+        return animator.play(...args);
+      },
+    };
   },
 }));
 
@@ -47,6 +57,35 @@ function Trigger() {
   return <div ref={ref} data-testid="trigger" />;
 }
 
+/** A trigger whose content is a pressable control, as a Button is. */
+function TriggerWithControl() {
+  const ref = useRef<HTMLDivElement>(null);
+  feedback = useContextMenuPressFeedback(ref, true);
+  return (
+    <div ref={ref} data-testid="trigger">
+      <button type="button" data-testid="control">
+        Open
+      </button>
+    </div>
+  );
+}
+
+/** A trigger inside another trigger, beside a plain control of the outer one. */
+function NestedTriggers({isInnerShown = true}: {isInnerShown?: boolean}) {
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  useContextMenuPressFeedback(outerRef, true);
+  useContextMenuPressFeedback(innerRef, isInnerShown);
+  return (
+    <div ref={outerRef} data-testid="outer">
+      <button type="button" data-testid="outer-control">
+        Outer
+      </button>
+      <div ref={innerRef} data-testid="inner" />
+    </div>
+  );
+}
+
 /** Lets the shared mutation observer deliver its records. */
 const flush = async () =>
   new Promise(resolve => {
@@ -56,6 +95,7 @@ const flush = async () =>
 describe('useContextMenuPressFeedback', () => {
   afterEach(() => {
     vi.clearAllMocks();
+    animator.played.length = 0;
     feedback = null;
   });
 
@@ -71,6 +111,38 @@ describe('useContextMenuPressFeedback', () => {
     expect(animator.play).toHaveBeenCalledOnce();
     feedback?.end(performance.now());
     expect(animator.play).toHaveBeenCalledTimes(2);
+  });
+
+  it('grows when the press machine marks a pressable control inside the trigger, the innermost surface it marks', async () => {
+    const {getByTestId} = render(<TriggerWithControl />);
+    getByTestId('control').setAttribute(PRESSED_ATTRIBUTE, 'on');
+    await flush();
+    expect(animator.play).toHaveBeenCalledOnce();
+    getByTestId('control').removeAttribute(PRESSED_ATTRIBUTE);
+    await flush();
+    expect(animator.play).toHaveBeenCalledOnce();
+  });
+
+  it('grows only the innermost trigger when one trigger sits inside another', async () => {
+    const {getByTestId} = render(<NestedTriggers />);
+    getByTestId('inner').setAttribute(PRESSED_ATTRIBUTE, 'on');
+    await flush();
+    expect(animator.played).toEqual([getByTestId('inner')]);
+    getByTestId('inner').removeAttribute(PRESSED_ATTRIBUTE);
+    await flush();
+    getByTestId('outer-control').setAttribute(PRESSED_ATTRIBUTE, 'on');
+    await flush();
+    expect(animator.played).toEqual([
+      getByTestId('inner'),
+      getByTestId('outer'),
+    ]);
+  });
+
+  it('grows no outer trigger for a press on a nested trigger that shows no growth', async () => {
+    const {getByTestId} = render(<NestedTriggers isInnerShown={false} />);
+    getByTestId('inner').setAttribute(PRESSED_ATTRIBUTE, 'on');
+    await flush();
+    expect(animator.played).toEqual([]);
   });
 
   it('grows toward the held scale over the theme’s medium duration and move easing', async () => {
