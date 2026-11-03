@@ -2,10 +2,12 @@
 
 /**
  * @file touch.ts
- * @input The gesture core: the arena, the recognizers, their geometry and
- *   their React hook; the animator, the cubic-bézier solver and UIKit's
- *   timing table; the touch-presentation hook; the writing-direction read;
- *   whether the click guard is armed
+ * @input The gesture core: the arena, the recognizers, their geometry, their
+ *   React hook, the press tracker, the finger-scroll reader and the
+ *   text-selection lock; the animator, the cubic-bézier solver, the rubber
+ *   band and UIKit's gesture and timing tables; the touch-presentation hook
+ *   and its query; the writing-direction read; whether the click guard is
+ *   armed
  * @output `@astryxdesign/core/internal/touch`: the gesture core's primitives
  *   for Lab components, re-exported by name
  * @position An internal entry reserved for Astryx's own packages:
@@ -40,9 +42,12 @@ export {
   unwrapAngle,
 } from '../gestures/geometry';
 export {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
+export {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
 export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
+export {useFingerScroll} from '../gestures/useFingerScroll';
 export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
+export {usePressTracker} from '../gestures/usePressTracker';
 export {isRtlElement} from '../hooks/isRtlElement';
 // The animator's internal factory, under a name no public factory has: the
 // public animator factory is `createAnimator`.
@@ -55,6 +60,10 @@ export type {
   MotionHandle,
 } from '../motion/animator';
 export {cubicBezier} from '../motion/bezier';
+export {rubberBand} from '../motion/rubberBand';
+export {UIKIT_GESTURES} from '../motion/uikit/gestures';
 export {timing} from '../motion/uikit/timing';
 export {isClickGuardArmed} from '../utils/clickGuard';
+export {lockSelection} from '../utils/selectionLock';
 export {useTouchPresentation} from '../utils/touchPresentation';
+export {TOUCH_QUERY} from '../utils/touchQueries';
