@@ -4,26 +4,21 @@
  * @file Codemod: move useMenuPress to its ref form
  *
  * `useMenuPress({menuRef, ...options})` becomes
- * `useMenuPress(menuRef, {...options})`. The ref form takes the press-downs of
- * the menu and the trigger itself. So the spreads of the old return's
- * `menuProps` and `triggerProps` go. A trigger that got the press only
- * through its spread gets `triggerRef` from its `ref`. In a DropdownMenu
- * trigger render function, a forward of the deprecated `onPointerDown` or
- * `onContextMenu` goes. It goes only where the same element spreads the
- * trigger props, which still pass it.
+ * `useMenuPress(menuRef, {...options})` (`module:DropdownMenu/useMenuPress`
+ * DEP-0019). The ref form listens on the menu and the trigger itself. So the
+ * spreads of the old return's `menuProps` and `triggerProps` go, and a trigger
+ * that got the press only through its spread gets `triggerRef` from its `ref`.
+ * In a DropdownMenu trigger render function, plain forwards of the deprecated
+ * `onPointerDown` and `onContextMenu` go too, where the same element takes the
+ * trigger's ref.
  *
- * Where it cannot prove the result, it leaves the code unchanged with a TODO.
- * That covers options that are not an object literal or that spread, and a
- * return used other than through those spreads, `isTriggerClickFromPress`
- * and `cancel`. It also covers a call that spreads no `menuProps` on the menu
- * element, since the old call then ran no press. So does a spread on an
- * element whose `ref` is not the menu's or the trigger's. So does a handler
- * forward on an element that does not spread the trigger props. With a
- * trigger, the menu element must sit in the component's one returned JSX,
- * with no function, prop value or early return in between. The ref form has
- * no press while the menu is unmounted. The deprecated forms keep working
- * there. Comments are the codemod's only report channel. Each is added once, so
- * a second run changes nothing.
+ * Where it cannot prove the result, it leaves the code unchanged with a TODO:
+ * options that are not an object literal or that spread, a return used other
+ * than through those spreads, `isTriggerClickFromPress` and `cancel`, a spread
+ * on an element whose `ref` is not the menu's or the trigger's, and a trigger
+ * handler used other than as a plain forward. The deprecated forms keep
+ * working there. Comments are the codemod's only report channel. Each is added
+ * once, so a second run changes nothing.
  */
 
 export const meta = {
@@ -32,7 +27,7 @@ export const meta = {
     'Rewrites `useMenuPress({menuRef, ...options})` to ' +
     '`useMenuPress(menuRef, {...options})` and removes the spreads of its ' +
     '`menuProps` and `triggerProps`, which the ref form does not return. ' +
-    "Removes redundant forwards of a DropdownMenu trigger's deprecated " +
+    "Removes plain forwards of a DropdownMenu trigger's deprecated " +
     '`onPointerDown` and `onContextMenu`. Leaves a TODO where it cannot ' +
     'prove the result; the deprecated forms still work there.',
 };
@@ -48,15 +43,13 @@ const SPREAD_KEYS = new Set(['menuProps', 'triggerProps']);
 const CALL_COMMENT =
   ' TODO(astryx upgrade): useMenuPress({menuRef, ...}) is deprecated. Call ' +
   'useMenuPress(menuRef, options) instead, pass triggerRef, and remove the ' +
-  'menuProps and triggerProps spreads. With a trigger, keep the menu ' +
-  'element mounted while closed. This call could not be rewritten safely, ' +
-  'so it was left unchanged. ';
+  'menuProps and triggerProps spreads; this call could not be rewritten ' +
+  'safely, so it was left unchanged. ';
 const TRIGGER_COMMENT =
   " TODO(astryx upgrade): the trigger props' onPointerDown and onContextMenu " +
-  "are deprecated. Give the element the trigger props' ref: the press " +
-  'listens for its press-down on the document. Keep a forward while an ' +
-  'ancestor stops the press-down. This use could not be rewritten safely, ' +
-  'so it was left unchanged. ';
+  'are deprecated, because the menu listens on its trigger itself. Remove ' +
+  "these forwards and give the element the trigger props' ref; this use " +
+  'could not be rewritten safely, so it was left unchanged. ';
 
 const TYPE_WRAPPERS = new Set([
   'TSAsExpression',
@@ -311,8 +304,7 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
   /** @type {{removals: Array<() => void>, triggerRef: any}} */
   const plan = {removals: [], triggerRef: null};
   if (parent.type === 'ExpressionStatement') {
-    // An unused result spreads no menuProps, so the old call ran no press.
-    return null;
+    return plan;
   }
   if (parent.type !== 'VariableDeclarator' || parent.init !== callPath.node) {
     return null;
@@ -418,19 +410,6 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
     return null;
   }
 
-  // The old call ran a press only through a menuProps spread.
-  if (spreads.menuProps.length === 0) {
-    return null;
-  }
-  // A trigger opens a menu that must stay mounted: the ref form has no press
-  // while the menu is unmounted.
-  const hasTrigger = triggerRef != null || spreads.triggerProps.length > 0;
-  if (
-    hasTrigger &&
-    !spreads.menuProps.every(spread => isAlwaysRendered(j, spread, scope))
-  ) {
-    return null;
-  }
   const menuSource = sourceOf(j, menuRef);
   for (const spread of spreads.menuProps) {
     const ref = attributeExpression(findAttribute(spread.parent.node, 'ref'));
@@ -458,51 +437,6 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
     plan.removals.push(() => j(spread).remove());
   }
   return plan;
-}
-
-/**
- * Whether a JSX attribute's element always renders with its component: it
- * sits in the component's one top-level return, reached only through JSX
- * children. A function, a prop value, a condition or another return stops it.
- * @param {any} j @param {any} path @param {any} fnPath
- */
-function isAlwaysRendered(j, path, fnPath) {
-  const isJsx = (/** @type {any} */ node) =>
-    node?.type === 'JSXElement' || node?.type === 'JSXFragment';
-  let current = path.parent?.parent;
-  if (current?.node.type !== 'JSXElement') {
-    return false;
-  }
-  for (;;) {
-    const parent = current.parent;
-    const node = parent?.node;
-    if (isJsx(node) && (node.children ?? []).includes(current.node)) {
-      current = parent;
-      continue;
-    }
-    if (
-      node?.type === 'JSXExpressionContainer' &&
-      isJsx(parent.parent?.node) &&
-      (parent.parent.node.children ?? []).includes(node)
-    ) {
-      current = parent;
-      continue;
-    }
-    if (node?.type !== 'ReturnStatement') {
-      return false;
-    }
-    const fn = fnPath.node;
-    if (fn.type === 'Program' || parent.parent?.node !== fn.body) {
-      return false;
-    }
-    const returns = j(fnPath)
-      .find(j.ReturnStatement)
-      .filter((/** @type {any} */ each) => {
-        const owner = j(each).closest(j.Function);
-        return owner.size() > 0 && owner.paths()[0].node === fn;
-      });
-    return returns.size() === 1;
-  }
 }
 
 /**
@@ -571,11 +505,14 @@ function migrateTriggerFunction(j, fnPath) {
           return;
         }
         const attribute = forwardingAttribute(path, member.property.name);
-        // Only a forward beside a spread of the props is redundant: the spread
-        // still passes the handler, under any ancestor.
         if (
           attribute == null ||
-          !takesTriggerRef(j, attribute.parent.node, [param.name], [])
+          !takesTriggerRef(
+            j,
+            attribute.parent.node,
+            [param.name],
+            [`${param.name}.ref`],
+          )
         ) {
           isProven = false;
           return;
@@ -591,20 +528,66 @@ function migrateTriggerFunction(j, fnPath) {
   if (param?.type !== 'ObjectPattern') {
     return 'none';
   }
-  // A destructured handler is not in the rest the element spreads. Its
-  // forward is then the control's only path to the press under an ancestor
-  // that stops the press-down.
-  const hasHandler = param.properties.some(
+  /** @type {string[]} */
+  const spreadNames = [];
+  /** @type {string[]} */
+  const refSources = [];
+  /** @type {Array<{property: any, key: string, name: string}>} */
+  const handlers = [];
+  for (const property of param.properties) {
+    if (property.type === 'RestElement') {
+      if (property.argument.type === 'Identifier') {
+        spreadNames.push(property.argument.name);
+      }
+      continue;
+    }
+    const key = isPlainProperty(property) ? keyName(property) : null;
+    if (key === 'ref' && property.value.type === 'Identifier') {
+      refSources.push(property.value.name);
+    }
+    if (key != null && TRIGGER_HANDLERS.has(key)) {
+      if (property.value.type !== 'Identifier') {
+        return 'unproven';
+      }
+      handlers.push({property, key, name: property.value.name});
+    }
+  }
+  if (handlers.length === 0) {
+    return 'none';
+  }
+  for (const handler of handlers) {
+    let isProven = true;
+    body
+      .find(j.Identifier, {name: handler.name})
+      .forEach((/** @type {any} */ path) => {
+        if (!isProven || !isReference(path)) {
+          return;
+        }
+        const attribute = forwardingAttribute(path, handler.key);
+        if (
+          attribute == null ||
+          !takesTriggerRef(j, attribute.parent.node, spreadNames, refSources)
+        ) {
+          isProven = false;
+          return;
+        }
+        forwards.push(attribute);
+      });
+    if (!isProven) {
+      return 'unproven';
+    }
+  }
+  forwards.forEach(attribute => j(attribute).remove());
+  param.properties = param.properties.filter(
     (/** @type {any} */ property) =>
-      property.type !== 'RestElement' &&
-      isPlainProperty(property) &&
-      TRIGGER_HANDLERS.has(keyName(property) ?? ''),
+      !handlers.some(handler => handler.property === property),
   );
-  return hasHandler ? 'unproven' : 'none';
+  return 'changed';
 }
 
 /** @param {any} file @param {any} api */
 export default function transform(file, api) {
+  return null;
   const j = api.jscodeshift;
   const root = j(file.source);
   /** @type {Set<string>} */
