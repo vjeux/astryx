@@ -119,8 +119,9 @@ import {chainEventHandlers} from '../utils/chainEventHandlers';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {normalizeDayOfWeek} from '../utils/dateTypes';
-import {useTouchPresentation} from '../utils/touchPresentation';
+import {MonthPager} from './datePickerTouch';
 import {MonthScroller, type MonthScrollerHandle} from './MonthScroller';
+import {useTouchPresentation} from '../utils/touchPresentation';
 import {MonthYearWheels} from './MonthYearWheels';
 import {
   DEFAULT_MONTH_REACH,
@@ -677,6 +678,8 @@ export function TouchDateField({
     isSheetOpen ? sheetBodyRef : inputRef,
   );
   const [isWheelOpen, setIsWheelOpen] = useState(false);
+  const {isTouch} = useTouchPresentation();
+  const MonthGrid = isTouch ? MonthPager : MonthScroller;
   const scrollerHandleRef = useRef<MonthScrollerHandle | null>(null);
   // Pending focus handoff from the clear button; see handleClear.
   const clearFocusTimerRef = useRef<number | null>(null);
@@ -909,7 +912,6 @@ export function TouchDateField({
   // also moves a chosen date with it, keeping its day (UIDatePicker's inline
   // calendar: datePicker.calendar.monthYearWheels.changesDate), clamped to
   // the month and the bounds. A date a custom constraint refuses stays.
-  const {isTouch} = useTouchPresentation();
   const handleWheelChange = useCallback(
     (next: number) => {
       setMonthIndex(next);
@@ -1152,7 +1154,7 @@ export function TouchDateField({
             styles.panelBeneath,
             isWheelOpen && styles.panelBeneathHidden,
           )}>
-          <MonthScroller
+          <MonthGrid
             key={`${minMonthIndex}:${maxMonthIndex}`}
             handleRef={scrollerHandleRef}
             minMonthIndex={minMonthIndex}
