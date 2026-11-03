@@ -462,7 +462,7 @@ export function TopNavMenu({
   useMenuPress(listRef, {
     itemSelector: '[role="menuitem"]',
     onDismiss: close,
-    startBehavior: 'items',
+
   });
   const hasOverflow = useMenuOverflow(listRef, items.length, popover.isOpen);
 

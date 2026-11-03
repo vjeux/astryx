@@ -125,7 +125,7 @@ export function NavHeadingMenu({
   useMenuPress(listRef, {
     itemSelector: ENABLED_ITEM_SELECTOR,
     onDismiss: closeMenu ?? dismissMenu,
-    startBehavior: 'items',
+
   });
   const hasOverflow = useMenuOverflow(listRef, children, true);
 

@@ -443,7 +443,7 @@ export function SideNavHeading({
     itemSelector: HEADING_MENU_ITEM_SELECTOR,
     onDismiss: closeMenu,
     isEnabled: !!menu,
-    startBehavior: 'items',
+
   });
   const dismissCtx = useMemo(() => ({dismiss: closeMenu}), [closeMenu]);
   const headingMenuTouch = stylex.props(

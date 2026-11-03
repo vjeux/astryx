@@ -379,7 +379,7 @@ export function TopNavHeading({
     itemSelector: '[role="menuitem"]:not([aria-disabled="true"])',
     onDismiss: closeMenu,
     isEnabled: !!menu,
-    startBehavior: 'items',
+
   });
   const productMenuTouch = stylex.props(
     useMenuOverflow(productMenuRef, menu, popover.isOpen)
