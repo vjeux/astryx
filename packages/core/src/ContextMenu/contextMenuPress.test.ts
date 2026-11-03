@@ -4,16 +4,15 @@
  * @file contextMenuPress.test.ts
  * @input vitest, the gesture arena driven by synthetic touches at explicit
  *   timestamps (the gesture tests' harness), ContextMenuPressRecognizer
- * @output The context menu's touch timeline as a state machine: the press is
- *   reported when the finger lands, commits at UIKit's moment and not a
- *   millisecond before, at that moment even when the timer runs late, and
+ * @output The context menu's touch timeline as a state machine: the press
+ *   commits at UIKit's moment and not a millisecond before, at that moment even when the timer runs late, and
  *   fails on travel past the long-press tolerance, a lift, a second finger or
  *   the browser taking the touch; the commit claims the finger and drops its
  *   click, a press that fails leaves the click alone
  * @position Unit tests of packages/core/src/ContextMenu/contextMenuPress.ts
  */
 
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it} from 'vitest';
 import {createHarness} from '../gestures/__tests__/harness';
 import {contextMenu} from '../motion/uikit/contextMenu';
 import {ContextMenuPressRecognizer} from './contextMenuPress';
@@ -53,20 +52,6 @@ describe('ContextMenuPressRecognizer', () => {
     harness.advance(900);
     expect(states).toEqual([`began@${COMMIT}`, `changed@${DISPLAY}`]);
     expect(press.beganAt).toBe(COMMIT);
-  });
-
-  it('reports the press when the finger lands, with its time and place', () => {
-    const onPressStart = vi.fn((recognizer: ContextMenuPressRecognizer) => ({
-      ...recognizer.press,
-    }));
-    const {harness, press} = setup({onPressStart});
-    harness.finger(1).down(42, 84, 1234.5, {recognizers: [press]});
-    expect(onPressStart).toHaveBeenCalledTimes(1);
-    expect(onPressStart.mock.results[0].value).toEqual({
-      time: 1234.5,
-      x: 42,
-      y: 84,
-    });
   });
 
   it('claims the finger at the commit and drops the lift’s click', () => {

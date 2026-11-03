@@ -119,7 +119,7 @@ describe('useContextMenuPressFeedback', () => {
     feedback = null;
   });
 
-  it('keeps growing when the press machine lets the press go, and springs back when the recognizer ends it', async () => {
+  it('keeps growing when the press machine lets the press go, and eases back when the recognizer ends it', async () => {
     const {getByTestId} = render(<Trigger />);
     const trigger = getByTestId('trigger');
     trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
