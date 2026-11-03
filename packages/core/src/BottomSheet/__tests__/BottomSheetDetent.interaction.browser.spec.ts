@@ -174,6 +174,25 @@ function slowDragTo(from: {x: number; y: number}, dy: number) {
 const slowDragSpeed = (dy: number) => (dy * 1000) / SLOW_DRAG_MS;
 
 /**
+ * A rest before the lift, well past the release filter's 40 ms stillness.
+ * The release then reads still and settles on the nearest detent. WebKit
+ * times a touch by when it arrives, since its touch command takes no
+ * timestamp. Under load, a stalled dispatch sends the queued moves 1 or 2 ms
+ * apart, and a moving release reads them as a flick. A still release has no
+ * speed to misread. Proofs that measure no release velocity lift this way.
+ */
+const STILL_LIFT_REST_MS = 150;
+
+/** A slow drag that lifts still (`STILL_LIFT_REST_MS`): no release speed. */
+function slowDragStillTo(from: {x: number; y: number}, dy: number) {
+  return drag(
+    from,
+    {x: from.x, y: from.y + dy},
+    {durationMs: SLOW_DRAG_MS, hz: 60, restMs: STILL_LIFT_REST_MS},
+  );
+}
+
+/**
  * A finger that holds 100 ms, drags 80 px down and most of the way back, and
  * lifts still, 16 px below where it started: the sheet settles back on the
  * tallest detent and keeps its size, so nothing about its layout changes.
@@ -356,9 +375,10 @@ test('a slow drag follows the finger and settles on the nearest detent', async (
   browserName,
 }) => {
   const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
-  // Two thirds of the way to the half detent: nearer to it than to tall.
+  // Two thirds of the way to the half detent, nearer to it than to tall, and
+  // a still lift.
   const dy = Math.round((halfTop - tallTop) * 0.66);
-  const script = slowDragTo(handle, dy);
+  const script = slowDragStillTo(handle, dy);
   const lastMove =
     toTouchEvents(script).filter(e => e.type === 'touchMove').length - 1;
   const tracked: {top: number; finger: number}[] = [];
@@ -415,7 +435,11 @@ test('pulled up past the tallest detent, the sheet stretches by the rubber band 
     Math.min(48, (1 - 1 / ((past * 0.55) / height + 1)) * height);
   const pulled: {top: number; past: number}[] = [];
   await driver.play(
-    drag(handle, {x: handle.x, y: handle.y - 120}, {durationMs: 400, hz: 60}),
+    drag(
+      handle,
+      {x: handle.x, y: handle.y - 120},
+      {durationMs: 400, hz: 60, restMs: STILL_LIFT_REST_MS},
+    ),
     {
       onEvent: async step => {
         if (step.type === 'touchMove') {
@@ -448,7 +472,7 @@ test('on Android too, the drag tracks the finger 1:1 and stretches past the tall
   });
   const tracked: {top: number; finger: number}[] = [];
   await driver.play(
-    slowDragTo(handle, Math.round((halfTop - tallTop) * 0.66)),
+    slowDragStillTo(handle, Math.round((halfTop - tallTop) * 0.66)),
     {
       onEvent: async step => {
         if (step.type === 'touchMove') {
@@ -477,7 +501,7 @@ test('on Android too, the drag tracks the finger 1:1 and stretches past the tall
     drag(
       upHandle,
       {x: upHandle.x, y: tallTop - 108},
-      {durationMs: 500, hz: 60},
+      {durationMs: 500, hz: 60, restMs: STILL_LIFT_REST_MS},
     ),
     {
       onEvent: async step => {
@@ -507,7 +531,9 @@ test('the dim follows the sheet: at once under the finger, in lockstep with the 
   const backdropOpacity = async () =>
     dialog.evaluate(el => Number(getComputedStyle(el, '::backdrop').opacity));
   // Down to the half detent first.
-  await driver.play(slowDragTo(handle, Math.round((halfTop - tallTop) * 0.8)));
+  await driver.play(
+    slowDragStillTo(handle, Math.round((halfTop - tallTop) * 0.8)),
+  );
   await waitForRest(sheet);
   expect(await sheetTop(sheet)).toBeCloseTo(halfTop, 0);
   expect(await backdropOpacity()).toBeCloseTo(1, 2);
@@ -618,11 +644,9 @@ test('the dim keeps its lockstep with the release while the main thread is block
   if (viewport == null) {
     throw new Error('no viewport');
   }
-  // Below the half detent the dim depends on where the sheet is: let go
-  // there slowly and the sheet settles back to half, the dim deepening with
-  // it. The drag is slow enough (~340 px/s at the lift, a frame after its
-  // last move) that the release projects back to half rather than to
-  // dismissal. The block starts once the release (sheet and dim) is running.
+  // Below the half detent the dim depends on where the sheet is. Let go there
+  // still, short of halfway to gone, and the sheet settles back to half, the
+  // dim deepening with it. The block starts once that release runs.
   const dy = Math.round(halfTop - tallTop + (viewport.height - halfTop) * 0.3);
   await markElement(sheet);
   const cast = await startScreencast(page);
@@ -634,7 +658,7 @@ test('the dim keeps its lockstep with the release while the main thread is block
     drag(
       handle,
       {x: handle.x, y: handle.y + dy},
-      {durationMs: 1200, hz: 60, restMs: 16},
+      {durationMs: 1200, hz: 60, restMs: STILL_LIFT_REST_MS},
     ),
   );
   const [settle] = await waitForAnimation(sheet, {minProgressMs: 16});
@@ -723,7 +747,9 @@ test('on Android the dim follows the sheet too, pinned (one touch model)', async
       opacity: Number(el.style.getPropertyValue('--_sheet-scrim-opacity')),
       duration: el.style.getPropertyValue('--_sheet-scrim-duration'),
     }));
-  await driver.play(slowDragTo(handle, Math.round((halfTop - tallTop) * 0.8)));
+  await driver.play(
+    slowDragStillTo(handle, Math.round((halfTop - tallTop) * 0.8)),
+  );
   await waitForRest(sheet);
   const fromHalf = {x: handle.x, y: halfTop + 12};
   const tracked: {top: number; opacity: number; duration: string}[] = [];
@@ -901,10 +927,15 @@ for (const {name, speed, travel} of [
 test('a finger catches the settling sheet where it is', async ({page}) => {
   const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
   const target = halfTop - tallTop;
-  // A moderate throw toward the half detent; catch it ~100 ms into the settle.
+  // Past the midpoint toward the half detent, lifted still: it settles on
+  // half. Catch it about 100 ms into the settle.
   const pull = Math.round(target * 0.4);
   await driver.play(
-    drag(handle, {x: handle.x, y: handle.y + pull + 60}, {durationMs: 200}),
+    drag(
+      handle,
+      {x: handle.x, y: handle.y + pull + 60},
+      {durationMs: 200, restMs: STILL_LIFT_REST_MS},
+    ),
   );
   await waitForAnimation(sheet, {minProgressMs: 90});
   // How far the settle moves in a frame right now, then where it is.
@@ -996,7 +1027,9 @@ test('a finger on the drawn sheet catches it even when the hit test lands on the
       },
       {kind: type, clientY: y},
     );
-  await driver.play(slowDragTo(handle, Math.round((halfTop - tallTop) * 0.66)));
+  await driver.play(
+    slowDragStillTo(handle, Math.round((halfTop - tallTop) * 0.66)),
+  );
   await waitForAnimation(sheet, {minProgressMs: 40});
   // How far the settle moves in a frame right now, then where it is.
   const before = await sheetTop(sheet);
@@ -1038,7 +1071,12 @@ test('the settle keeps advancing every frame while the main thread is blocked', 
     during: sheet,
     minProgressMs: 16,
   });
-  await driver.play(slowDragTo(handle, Math.round((halfTop - tallTop) * 0.66)));
+  // Lifted still 60 % of the way to the half detent. The release settles on
+  // half from rest, and the spring carries the sheet the last 130 px through
+  // the block.
+  await driver.play(
+    slowDragStillTo(handle, Math.round((halfTop - tallTop) * 0.6)),
+  );
   const block = await blocking;
   // Where the settle ends, from the page: a frame after the block can still
   // show a stale position (see `settledAt`). The frames track the marker
@@ -1387,7 +1425,9 @@ test("a finger on Android takes UIKit's release too, not the theme's timing (one
   const theme = await themeDurationMs(sheet);
   // Two thirds of the way to half, resting before the lift: UIKit's rule
   // lands on half, on the critically damped spring, not the theme's curve.
-  await driver.play(slowDragTo(handle, Math.round((halfTop - tallTop) * 0.66)));
+  await driver.play(
+    slowDragStillTo(handle, Math.round((halfTop - tallTop) * 0.66)),
+  );
   const settle = await runningDurations(sheet);
   expect(settle).toHaveLength(1);
   expect(Math.abs(settle[0] - END_HOLD_MS - theme)).toBeGreaterThan(5);
@@ -1450,7 +1490,7 @@ for (const idiom of ['ios', 'android'] as const) {
       idiom,
     });
     await driver.play(
-      slowDragTo(handle, Math.round((halfTop - tallTop) * 0.66)),
+      slowDragStillTo(handle, Math.round((halfTop - tallTop) * 0.66)),
     );
     // A fade, and nothing that outlasts the record's 200 ms: no spring.
     const motion = await runningMotion(sheet);
