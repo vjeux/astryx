@@ -2,6 +2,6 @@
 '@astryxdesign/core': patch
 ---
 
-[fix] A touch on a toast is now decided by its first move. A first move toward the toast's edge belongs to the swipe and never scrolls the page; any other first move leaves the page its scroll. The shared gesture host makes that claim, so importing Toast or LayerProvider now brings in the host: about 24 KB gzip on its own (Toast 66.7 KB to 90.4 KB; Layer 101.0 KB to 124.6 KB), and nothing more on a page whose other touch components already load it.
+[fix] A touch on a toast is now decided by its first move. A first move toward the toast's edge belongs to the swipe and never scrolls the page; any other first move leaves the page its scroll. The shared gesture host makes that claim. Its code, about 24 KB gzip, loads when the first toast shows, so importing Toast or LayerProvider costs nothing more until then; a touch that starts before it loads stays the page's.
 
 @vjeux
