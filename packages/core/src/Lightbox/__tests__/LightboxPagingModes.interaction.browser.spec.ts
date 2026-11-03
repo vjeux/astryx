@@ -66,7 +66,12 @@ interface Gallery {
 
 async function openGallery(
   page: Page,
-  {rtl = false, mouse = false} = {},
+  {
+    rtl = false,
+    mouse = false,
+    story = 'core-lightbox--gallery-with-zoom',
+    trigger: triggerName = 'Open gallery with zoom',
+  } = {},
 ): Promise<Gallery> {
   await page.route('https://picsum.photos/**', async route => {
     const id = /\/id\/(\d+)\//.exec(route.request().url())?.[1] ?? '10';
@@ -84,9 +89,9 @@ async function openGallery(
     await page.locator('#storybook-root > *').first().waitFor();
     await frames(page, 2);
   } else {
-    await openStory(page, storybook(), 'core-lightbox--gallery-with-zoom');
+    await openStory(page, storybook(), story);
   }
-  const trigger = page.getByRole('button', {name: 'Open gallery with zoom'});
+  const trigger = page.getByRole('button', {name: triggerName});
   // A desktop has no touch input: its cases use the mouse alone.
   const driver = mouse
     ? (new Proxy(
@@ -296,6 +301,79 @@ test('under Reduce Motion the Next button pages at once with a mouse', async ({
         el => el.getAnimations().filter(a => a.playState === 'running').length,
       ),
     ).toBe(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test('with a mouse the Next button shows the next photo at once', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: {width: 1280, height: 800},
+    hasTouch: false,
+    isMobile: false,
+  });
+  try {
+    const page = await context.newPage();
+    expect(
+      await page.evaluate(() => matchMedia('(pointer: coarse)').matches),
+    ).toBe(false);
+    const g = await openGallery(page, {mouse: true});
+    await g.dialog.getByRole('button', {name: 'Next'}).click();
+    await frames(page, 1);
+    expect(await g.counter()).toBe('2 / 4');
+    expect(
+      await g.track.evaluate(
+        el => el.getAnimations().filter(a => a.playState === 'running').length,
+      ),
+    ).toBe(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test('with a mouse a Next the owner refuses never moves the photo', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: {width: 1280, height: 800},
+    hasTouch: false,
+    isMobile: false,
+  });
+  try {
+    const page = await context.newPage();
+    const g = await openGallery(page, {
+      mouse: true,
+      story: 'core-lightbox--gallery-keeps-index',
+      trigger: 'Open gallery that keeps its photo',
+    });
+    // Reads the track's offset on every frame from the press on.
+    await g.track.evaluate(track => {
+      const offsets: number[] = [];
+      (window as unknown as {__offsets: number[]}).__offsets = offsets;
+      const tick = () => {
+        const value = getComputedStyle(track).translate;
+        offsets.push(value === 'none' ? 0 : parseFloat(value));
+        if (offsets.length < 40) {
+          requestAnimationFrame(tick);
+        }
+      };
+      requestAnimationFrame(tick);
+    });
+    await g.dialog.getByRole('button', {name: 'Next'}).click();
+    await expect
+      .poll(async () =>
+        page.evaluate(
+          () => (window as unknown as {__offsets: number[]}).__offsets.length,
+        ),
+      )
+      .toBe(40);
+    const offsets = await page.evaluate(
+      () => (window as unknown as {__offsets: number[]}).__offsets,
+    );
+    expect(offsets.every(x => Math.abs(x) < 0.5)).toBe(true);
+    expect(await g.counter()).toBe('1 / 4');
   } finally {
     await context.close();
   }

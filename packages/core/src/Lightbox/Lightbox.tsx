@@ -27,7 +27,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useReducer,
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
@@ -842,8 +841,6 @@ export function Lightbox({
       press.y >= box.bottom - VIDEO_CONTROLS_BAND
     );
   };
-  const swipeReportRef = useRef<number | null>(null);
-  const [, renderAfterSwipe] = useReducer((n: number) => n + 1, 0);
   const pager = usePager({
     viewportRef: imageWrapperRef,
     trackRef,
@@ -851,6 +848,10 @@ export function Lightbox({
     gap: zoomMedia.viewer.pageGap,
     index,
     isPanEnabled: isOpen && isGallery,
+    // Under the touch presentation a change of `index` slides the pager. Under
+    // a fine pointer it moves the pager at once, so a refused change shows
+    // nothing.
+    isControlledChangeAnimated: isTouch,
     // Every pointer pages, a mouse's drag and a trackpad's scroll included.
     panOptions: {
       allowedPointerTypes: ['touch', 'pen', 'mouse'],
@@ -862,10 +863,6 @@ export function Lightbox({
     onIndexChange: (next, reason) => {
       if (reason === 'drag') {
         setIndex(next);
-        if (isControlled) {
-          swipeReportRef.current = next;
-          renderAfterSwipe();
-        }
       }
     },
     onSettle: () => {
@@ -878,41 +875,22 @@ export function Lightbox({
     },
   });
 
-  useEffect(() => {
-    const reported = swipeReportRef.current;
-    swipeReportRef.current = null;
-    if (reported != null && index !== reported && pager.index !== index) {
-      pager.goTo(index, {reason: 'controlled'});
-    }
-  });
-
-  // Gallery navigation. Under the touch presentation, the buttons and the
-  // arrow keys slide the pager to the new page, as a paging scroll view's
-  // `setContentOffset` does. Where the primary pointer is fine, they show the
-  // new item at once, as they always have. The pager moves there first, so
-  // the controlled sync finds nothing to animate. It returns to `index` if
-  // the owner refuses the change.
-  const showIndex = useCallback(
-    (next: number) => {
-      if (!isTouch) {
-        pager.goTo(next, {animated: false});
-      }
-      setIndex(next);
-    },
-    [isTouch, pager, setIndex],
-  );
+  // Gallery navigation. The buttons and the arrow keys ask for the new item.
+  // Under the touch presentation the pager then slides there, as a paging
+  // scroll view's `setContentOffset` does. Under a fine pointer it moves at
+  // once.
 
   const goToPrev = useCallback(() => {
     if (canPrev) {
-      showIndex(index - 1);
+      setIndex(index - 1);
     }
-  }, [canPrev, index, showIndex]);
+  }, [canPrev, index, setIndex]);
 
   const goToNext = useCallback(() => {
     if (canNext) {
-      showIndex(index + 1);
+      setIndex(index + 1);
     }
-  }, [canNext, index, showIndex]);
+  }, [canNext, index, setIndex]);
 
   // Keyboard navigation. While zoomed, arrows pan the image (matching common
   // lightbox conventions); when not zoomed they navigate the gallery.
