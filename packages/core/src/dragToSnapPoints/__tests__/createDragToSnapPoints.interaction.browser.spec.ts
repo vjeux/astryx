@@ -75,10 +75,20 @@ function dragScript(
   return steps;
 }
 
+/** The settle indices, once a settle has fired and two more frames have run. */
 async function settled(page: Page): Promise<number[]> {
-  await page.waitForTimeout(1200);
+  await page.waitForFunction(
+    () => (window as unknown as {__settled: number[]}).__settled.length > 0,
+  );
   return page.evaluate(
-    () => (window as unknown as {__settled: number[]}).__settled,
+    () =>
+      new Promise<number[]>(resolve => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            resolve((window as unknown as {__settled: number[]}).__settled);
+          });
+        });
+      }),
   );
 }
 

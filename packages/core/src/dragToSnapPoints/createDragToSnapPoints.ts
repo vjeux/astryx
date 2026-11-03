@@ -79,7 +79,7 @@ function drawnAt(element: HTMLElement): {x: number; y: number} {
   return {x, y};
 }
 
-/** The usable snap points, ascending: `snapPoints` is sorted before use. */
+/** Drops a point that is not a finite number, with a dev warning. */
 function sortedSnapPoints(snapPoints: ReadonlyArray<number>): number[] {
   const usable = snapPoints.filter(point => Number.isFinite(point));
   if (usable.length < snapPoints.length) {
