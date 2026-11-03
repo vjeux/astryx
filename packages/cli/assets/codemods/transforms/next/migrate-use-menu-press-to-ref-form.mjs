@@ -15,15 +15,12 @@
  * Where it cannot prove the result, it leaves the code unchanged with a TODO.
  * That covers options that are not an object literal or that spread, and a
  * return used other than through those spreads, `isTriggerClickFromPress`
- * and `cancel`. It also covers a call that spreads no `menuProps` on the menu
- * element, since the old call then ran no press. So does a spread on an
- * element whose `ref` is not the menu's or the trigger's. So does a handler
- * forward on an element that does not spread the trigger props. With a
- * trigger, the menu element must sit in the component's one returned JSX,
- * with no function, prop value or early return in between. The ref form has
- * no press while the menu is unmounted. The deprecated forms keep working
- * there. Comments are the codemod's only report channel. Each is added once, so
- * a second run changes nothing.
+ * and `cancel`. It also covers a spread on an element whose `ref` is not the
+ * menu's or the trigger's. So does a trigger with a menu rendered
+ * conditionally, since the ref form has no press while the menu is unmounted.
+ * So does a handler forward on an element that does not spread the trigger
+ * props. The deprecated forms keep working there. Comments are the codemod's
+ * only report channel. Each is added once, so a second run changes nothing.
  */
 
 export const meta = {
@@ -48,15 +45,13 @@ const SPREAD_KEYS = new Set(['menuProps', 'triggerProps']);
 const CALL_COMMENT =
   ' TODO(astryx upgrade): useMenuPress({menuRef, ...}) is deprecated. Call ' +
   'useMenuPress(menuRef, options) instead, pass triggerRef, and remove the ' +
-  'menuProps and triggerProps spreads. With a trigger, keep the menu ' +
-  'element mounted while closed. This call could not be rewritten safely, ' +
-  'so it was left unchanged. ';
+  'menuProps and triggerProps spreads; this call could not be rewritten ' +
+  'safely, so it was left unchanged. ';
 const TRIGGER_COMMENT =
   " TODO(astryx upgrade): the trigger props' onPointerDown and onContextMenu " +
-  "are deprecated. Give the element the trigger props' ref: the press " +
-  'listens for its press-down on the document. Keep a forward while an ' +
-  'ancestor stops the press-down. This use could not be rewritten safely, ' +
-  'so it was left unchanged. ';
+  'are deprecated, because the menu listens on its trigger itself. Remove ' +
+  "these forwards and give the element the trigger props' ref; this use " +
+  'could not be rewritten safely, so it was left unchanged. ';
 
 const TYPE_WRAPPERS = new Set([
   'TSAsExpression',
@@ -311,8 +306,9 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
   /** @type {{removals: Array<() => void>, triggerRef: any}} */
   const plan = {removals: [], triggerRef: null};
   if (parent.type === 'ExpressionStatement') {
-    // An unused result spreads no menuProps, so the old call ran no press.
-    return null;
+    // With a trigger, the menu it opens must stay mounted, and the codemod
+    // sees no menu element to prove it.
+    return triggerRef == null ? plan : null;
   }
   if (parent.type !== 'VariableDeclarator' || parent.init !== callPath.node) {
     return null;
@@ -418,16 +414,13 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
     return null;
   }
 
-  // The old call ran a press only through a menuProps spread.
-  if (spreads.menuProps.length === 0) {
-    return null;
-  }
   // A trigger opens a menu that must stay mounted: the ref form has no press
   // while the menu is unmounted.
   const hasTrigger = triggerRef != null || spreads.triggerProps.length > 0;
   if (
     hasTrigger &&
-    !spreads.menuProps.every(spread => isAlwaysRendered(j, spread, scope))
+    (spreads.menuProps.length === 0 ||
+      spreads.menuProps.some(spread => isConditional(spread)))
   ) {
     return null;
   }
@@ -461,48 +454,26 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
 }
 
 /**
- * Whether a JSX attribute's element always renders with its component: it
- * sits in the component's one top-level return, reached only through JSX
- * children. A function, a prop value, a condition or another return stops it.
- * @param {any} j @param {any} path @param {any} fnPath
+ * Whether a JSX attribute's element renders only on a condition, inside its
+ * function: under a `&&`, a `||`, a `??` or a `?:`.
+ * @param {any} path
  */
-function isAlwaysRendered(j, path, fnPath) {
-  const isJsx = (/** @type {any} */ node) =>
-    node?.type === 'JSXElement' || node?.type === 'JSXFragment';
-  let current = path.parent?.parent;
-  if (current?.node.type !== 'JSXElement') {
-    return false;
-  }
-  for (;;) {
-    const parent = current.parent;
-    const node = parent?.node;
-    if (isJsx(node) && (node.children ?? []).includes(current.node)) {
-      current = parent;
-      continue;
+function isConditional(path) {
+  for (let current = path.parent; current != null; current = current.parent) {
+    const type = current.node.type;
+    if (type === 'LogicalExpression' || type === 'ConditionalExpression') {
+      return true;
     }
     if (
-      node?.type === 'JSXExpressionContainer' &&
-      isJsx(parent.parent?.node) &&
-      (parent.parent.node.children ?? []).includes(node)
+      type === 'FunctionDeclaration' ||
+      type === 'FunctionExpression' ||
+      type === 'ArrowFunctionExpression' ||
+      type === 'Program'
     ) {
-      current = parent;
-      continue;
-    }
-    if (node?.type !== 'ReturnStatement') {
       return false;
     }
-    const fn = fnPath.node;
-    if (fn.type === 'Program' || parent.parent?.node !== fn.body) {
-      return false;
-    }
-    const returns = j(fnPath)
-      .find(j.ReturnStatement)
-      .filter((/** @type {any} */ each) => {
-        const owner = j(each).closest(j.Function);
-        return owner.size() > 0 && owner.paths()[0].node === fn;
-      });
-    return returns.size() === 1;
   }
+  return false;
 }
 
 /**
