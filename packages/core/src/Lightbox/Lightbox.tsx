@@ -304,11 +304,11 @@ const styles = stylex.create({
   // them readable over any photo: 3:1 for the buttons, 4.5:1 for the
   // counter's text.
   controlBacking: {
-    backgroundColor: `color-mix(in srgb, ${colorVars['--color-on-light']} 60%, transparent)`,
+    backgroundColor: `color-mix(in srgb, ${colorVars['--color-on-light']} 75%, transparent)`,
     borderRadius: radiusVars['--radius-full'],
   },
   counterBacking: {
-    backgroundColor: `color-mix(in srgb, ${colorVars['--color-on-light']} 60%, transparent)`,
+    backgroundColor: `color-mix(in srgb, ${colorVars['--color-on-light']} 75%, transparent)`,
     borderRadius: radiusVars['--radius-full'],
     paddingInline: spacingVars['--spacing-2'],
   },
@@ -584,11 +584,6 @@ export function Lightbox({
     }
   }, [canNext, index, setIndex]);
 
-  // Zoom: pinch, double tap or double-click, Enter/Space on the image, or
-  // +/- keys. Zoom changes are silent to assistive tech, since only the
-  // transform changes. So the polite live region mirrors them, with a hint
-  // that arrow keys pan while zoomed. A tap on the dark area around the photo
-  // closes, as a click on the backdrop does.
   const isZoomTarget = hasZoom && !isVideo;
   const onDragStart = () => {
     didDragRef.current = true;
@@ -635,6 +630,8 @@ export function Lightbox({
     stageRef: imageWrapperRef,
     isEnabled: isOpen && isZoomTarget,
     itemKey: viewedItem,
+    // Zoom changes are silent to assistive tech, since only the transform
+    // changes. Announce them in the polite live region.
     onZoomedChange: next => {
       setIsZoomed(next);
       announce(
