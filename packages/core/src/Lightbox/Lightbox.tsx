@@ -825,8 +825,7 @@ export function Lightbox({
   // one. As in Photos, the photo left behind returns to the fitted size once
   // the pager rests.
   // A controlled parent can refuse a swipe by keeping its index. The pager
-  // then goes back to the photo the parent shows. A swipe's report renders
-  // once more, so that check runs after the parent has answered.
+  // then goes back to the photo the parent shows.
   // A video's native controls are taken as a band at its bottom edge, since
   // browsers expose no control geometry. A drag that starts there stays the
   // video's, as a scrubber's or a volume slider's drag.
@@ -846,7 +845,7 @@ export function Lightbox({
       press.y >= box.bottom - VIDEO_CONTROLS_BAND
     );
   };
-  const pager = usePager({
+  usePager({
     viewportRef: imageWrapperRef,
     trackRef,
     count: mediaArray.length,
