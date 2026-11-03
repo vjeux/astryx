@@ -54,7 +54,7 @@ import {useTooltip} from '../Tooltip';
 import {getInputARIA} from '../utils';
 import {joinAriaIDs} from '../utils/inputAria';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
-import {usePressFeedback} from '../hooks/usePressFeedback';
+import {useStepperTouch, type StepperClick} from './NumberInputTouch';
 import {inputDisabledFocusStyles} from '../Field/inputDisabledFocus';
 import {useSize} from '../SizeContext/SizeContext';
 import {useInputContainer} from '../hooks/useInputContainer';
@@ -604,7 +604,6 @@ export function NumberInput({
     containerClassName,
     containerStyle,
   });
-  const pressable = usePressFeedback();
   const t = useComponentTranslator();
   const locale = useLocale();
   const isEffectivelyRequired = useResolvedRequired({isRequired, isOptional});
@@ -625,6 +624,9 @@ export function NumberInput({
   // Pending input while user is typing (null = show formatted value)
   const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  // The value a stepper press has stepped to, shown while the press lasts;
+  // the press commits it once, at its release (NumberInputTouch.tsx).
+  const [pressValue, setPressValue] = useState<number | null>(null);
 
   // Disabled-reason tooltip. The tooltip listeners attach to the input container (which already exists) and
   // the input stays perceivable via aria-disabled instead of the native
@@ -694,6 +696,11 @@ export function NumberInput({
   // Preserve pending text while editing. Otherwise show the formatted value
   // at rest and the raw numeric value while focused so it remains editable.
   const displayValue = useMemo(() => {
+    if (pressValue !== null) {
+      return isFocused
+        ? formatEditableNumber(pressValue, locale)
+        : (formatValue?.(pressValue) ?? String(pressValue));
+    }
     if (pendingInput !== null) {
       return pendingInput;
     }
@@ -701,7 +708,15 @@ export function NumberInput({
       return '';
     }
     return isFocused ? formatEditableNumber(value, locale) : formattedValue;
-  }, [formattedValue, isFocused, locale, pendingInput, value]);
+  }, [
+    formatValue,
+    formattedValue,
+    isFocused,
+    locale,
+    pendingInput,
+    pressValue,
+    value,
+  ]);
 
   // Check if current pending input is valid (for styling purposes)
   const isInputValid = useMemo(() => {
@@ -932,8 +947,118 @@ export function NumberInput({
     [ref, wheelListenerRef],
   );
 
-  const canIncrement = getNextValue(1) !== valueForStepping;
-  const canDecrement = getNextValue(-1) !== valueForStepping;
+  // One step from any value, for a press that steps from its own value.
+  const stepFrom = useCallback(
+    (current: number | null, direction: StepDirection) =>
+      getSteppedValue({
+        currentValue: current,
+        direction,
+        min,
+        max,
+        step,
+        isIntegerOnly,
+      }),
+    [isIntegerOnly, max, min, step],
+  );
+  // The bounds follow the value on show, a press's while it lasts.
+  const shownValue = pressValue ?? valueForStepping;
+  const canIncrement = stepFrom(shownValue, 1) !== shownValue;
+  const canDecrement = stepFrom(shownValue, -1) !== shownValue;
+
+  // Commits a held press's final value, once, at its release. Focus moves to
+  // the input, as after a stepper click.
+  const commitValue = useCallback(
+    (next: number) => {
+      if (isDisabled || isReadOnly) {
+        return;
+      }
+      inputRef.current?.focus();
+      setPendingInput(null);
+      if (next !== value) {
+        onChange(next);
+      }
+    },
+    [isDisabled, isReadOnly, onChange, value],
+  );
+
+  // The steppers never take focus, so an editing field stays focused. The
+  // column cancels the pointerdown, which also covers its border.
+  const handleStepperPointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    event.preventDefault();
+  };
+
+  // Whether a stepper click can step toward `direction`. An aria-disabled
+  // stepper does nothing, as a natively disabled one did.
+  const canStep = (direction: StepDirection) =>
+    !isDisabled &&
+    !isReadOnly &&
+    (direction === 1 ? canIncrement : canDecrement);
+
+  // The step a stepper click makes, as the press layer answers it. A tap's
+  // click steps the half it lifted on, and a held press's click steps nothing.
+  const stepOf = (
+    click: StepperClick,
+    own: StepDirection | null,
+  ): StepDirection | null => {
+    if (click === 'own') {
+      return own;
+    }
+    if (click === 'none') {
+      return null;
+    }
+    return click === 'increment' ? 1 : -1;
+  };
+
+  // Steps the half the click names, after the same guard, and keeps focus on
+  // the input.
+  const answerClick = (click: StepperClick, own: StepDirection | null) => {
+    const direction = stepOf(click, own);
+    if (direction == null || !canStep(direction)) {
+      return;
+    }
+    inputRef.current?.focus();
+    stepValue(direction);
+  };
+
+  const pressStepper = (
+    direction: StepDirection,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    answerClick(stepperTouch.takeClick(event.nativeEvent), direction);
+  };
+
+  // A click on the column itself, its border, steps only the half a tap
+  // lifted on. It never reaches the field's click-to-focus.
+  const handleColumnClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    event.stopPropagation();
+    const click = stepperTouch.takeClick(event.nativeEvent);
+    if (click !== 'own') {
+      answerClick(click, null);
+    }
+  };
+
+  // The press layer tracks a press on the steppers by any pointer; a key or
+  // assistive technology steps through the click.
+  const incrementRef = useRef<HTMLButtonElement | null>(null);
+  const decrementRef = useRef<HTMLButtonElement | null>(null);
+  const stepperColumnRef = useRef<HTMLDivElement | null>(null);
+  const stepperTouch = useStepperTouch(
+    {
+      valueForStepping,
+      stepFrom,
+      showPressValue: setPressValue,
+      commitValue,
+      isDisabled,
+      isReadOnly,
+      hasSteppers: hasNumberSteppers,
+    },
+    incrementRef,
+    decrementRef,
+    stepperColumnRef,
+  );
 
   // Handle clear button click
   const handleClear = useCallback(
@@ -1074,25 +1199,20 @@ export function NumberInput({
       )}
       {statusIcon}
       {hasNumberSteppers && (
-        <div {...stylex.props(styles.numberSteppers)}>
+        <div
+          ref={stepperColumnRef}
+          onPointerDown={handleStepperPointerDown}
+          onClick={handleColumnClick}
+          {...stylex.props(styles.numberSteppers)}>
           <button
+            ref={incrementRef}
             type="button"
             tabIndex={-1}
-            {...pressable}
             aria-disabled={
               isDisabled || isReadOnly || !canIncrement || undefined
             }
             aria-label={t('@astryx.numberInput.incrementLabel', {label})}
-            onPointerDown={event => event.preventDefault()}
-            onClick={() => {
-              // An aria-disabled stepper does nothing, as a natively disabled
-              // one did (spec:AST-085 FR2).
-              if (isDisabled || isReadOnly || !canIncrement) {
-                return;
-              }
-              inputRef.current?.focus();
-              stepValue(1);
-            }}
+            onClick={event => pressStepper(1, event)}
             {...stylex.props(
               styles.numberStepperButton,
               interactionOverlayStyles.backgroundImage,
@@ -1107,23 +1227,14 @@ export function NumberInput({
             />
           </button>
           <button
+            ref={decrementRef}
             type="button"
             tabIndex={-1}
-            {...pressable}
             aria-disabled={
               isDisabled || isReadOnly || !canDecrement || undefined
             }
             aria-label={t('@astryx.numberInput.decrementLabel', {label})}
-            onPointerDown={event => event.preventDefault()}
-            onClick={() => {
-              // An aria-disabled stepper does nothing, as a natively disabled
-              // one did (spec:AST-085 FR2).
-              if (isDisabled || isReadOnly || !canDecrement) {
-                return;
-              }
-              inputRef.current?.focus();
-              stepValue(-1);
-            }}
+            onClick={event => pressStepper(-1, event)}
             {...stylex.props(
               styles.numberStepperButton,
               interactionOverlayStyles.backgroundImage,

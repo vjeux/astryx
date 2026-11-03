@@ -226,6 +226,32 @@ spring and the drag clamp; the tracking spring is the shared
 since a pressed thumb's lift is a theme's) and M-SG03 (the tap's frames,
 fitted per frame).
 
+## Stepper (UIStepper)
+
+Subject: a `UIStepper` (value 5, range 0 to 10, step 1) on a plain view of
+the lab's host app, and inside a vertical `UIScrollView` where a scroll view
+is needed. iOS 26 draws the stepper with SwiftUI (`DesignLibraryStepper`), so
+its pressed state is read from rendered frames, not view properties.
+
+Done (iOS 26.2 simulator, Oct 23–24 2026; in the stepper's own table,
+`uikit/stepper.ts`): the tap at the lift, the autorepeat delay and its
+count-based phases, the cadence across a slide between the halves, leaving
+and re-entering the frame after a repeat, bounds and wraps, the delayed
+delivery inside a scroll view, the tracking area (the frame, no margin), the
+pressed fill (one frame on, one frame off, no animation) and the haptics
+(none). NumberInput departs from three of them. Leaving the frame pauses the
+cadence, and coming back resumes it, never with a step at once. The press
+keeps tracking within every control's area (`UIKIT_CONTROL.trackingExpansion`,
+70 px) and keeps its half outside the steppers. One steady ramp replaces the
+count-based phases. The area and the ramp's values are proposed, pending
+owner review (M-STP20). Still open:
+
+| ID      | Scene                     | Gesture                                                                                                              | Extract                                                                                                                 | Method |
+| ------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------ |
+| M-STP05 | stepper on a plain view   | hold + with one finger, then press and hold − with a second (a device or an XCUITest: the HID path drives one touch) | which half steps, and whether the second touch is ignored                                                               | C      |
+| M-STP16 | stepper on a plain view   | hold +, leave the frame at 200 ms, come back at 300 ms; again coming back at 700 ms                                  | step times: a return before the first repeat keeps the press's clock, restarts it, or steps at once                     | C      |
+| M-STP20 | NumberInput, fine pointer | hold + from 0 to 50 with a mouse; tap + ten times; tremble on the edge while holding                                 | owner review of the proposed ramp (500 ms, then 250 ms, each interval 0.9 of the last, down to 50 ms) and tracking area | review |
+
 ## Sheets (UISheetPresentationController)
 
 Probe app "SheetProbe" on an iPhone 16 Pro (iPad Pro 11" for M-SH11 / M-SH20 /

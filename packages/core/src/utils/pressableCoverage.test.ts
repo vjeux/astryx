@@ -16,7 +16,9 @@
  *
  *  - A file paints a press when its StyleX carries an `':active` key, a
  *    `[data-astryx-press` arm, or composes `interactionOverlayStyles`.
- *  - A file is marked when it calls `usePressFeedback(`.
+ *  - A file is marked when it calls `usePressFeedback(`. A file is marked
+ *    too when it paints its own press through a `usePressTracker(` and
+ *    writes the press attribute itself, as NumberInput's steppers do.
  *  - A file whose press arms are read off an ancestor scope marker
  *    (`stylex.when.ancestor(':active', someScope)`, the way an indicator
  *    reads its owner row) is covered when every file that applies that scope
@@ -67,8 +69,30 @@ const PRESS_ARM = /':active|'\[data-astryx-press=|interactionOverlayStyles\./;
 const ANCESTOR_ARM =
   /stylex\.when\.ancestor\(\s*'(?::active|\[data-astryx-press=[^)]*)',\s*(\w+)\s*\)/g;
 
+function tracksAndPaints(text: string): boolean {
+  return (
+    text.includes('usePressTracker(') &&
+    text.includes('setAttribute(PRESSED_ATTRIBUTE')
+  );
+}
+
 function isMarked(file: string): boolean {
-  return (source.get(file) ?? '').includes('usePressFeedback(');
+  const text = source.get(file) ?? '';
+  if (text.includes('usePressFeedback(') || tracksAndPaints(text)) {
+    return true;
+  }
+  // A component's touch layer can be its own module, `<Name>Touch.ts(x)`,
+  // that only the component imports. The component is marked when that
+  // module tracks the press and paints it.
+  const stem = file.replace(/\.tsx?$/, '');
+  const touchModule = [`${stem}Touch.ts`, `${stem}Touch.tsx`].find(name =>
+    source.has(name),
+  );
+  return (
+    touchModule != null &&
+    tracksAndPaints(source.get(touchModule) ?? '') &&
+    importers(touchModule).includes(file)
+  );
 }
 
 /** Files (other than `except`) that apply the scope marker `name` to an element. */

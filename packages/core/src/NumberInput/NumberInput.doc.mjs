@@ -338,7 +338,7 @@ export const docs = {
         name: 'Number steppers',
         required: false,
         description:
-          'Optional buttons that increment or decrement by the configured step.',
+          'Optional buttons that increment or decrement by the configured step. A tap steps once when the pointer lifts. Held down by a mouse, a pen or a finger, a button keeps stepping after half a second, faster and faster until the pointer lifts. Sliding away pauses it, and coming back resumes it. The field shows each step, and calls onChange once, with the final value, when the press ends.',
       },
     ],
   },
@@ -644,7 +644,7 @@ export const docsZh = {
         name: 'Number steppers',
         required: false,
         description:
-          'Optional buttons that increment or decrement by the configured step.',
+          'Optional buttons that increment or decrement by the configured step. A tap steps once when the pointer lifts. Held down by a mouse, a pen or a finger, a button keeps stepping after half a second, faster and faster until the pointer lifts. Sliding away pauses it, and coming back resumes it. The field shows each step, and calls onChange once, with the final value, when the press ends.',
       },
     ],
   },
@@ -718,7 +718,7 @@ export const docsDense = {
         name: 'Number steppers',
         required: false,
         description:
-          'Optional buttons that increment or decrement by the configured step.',
+          'Optional buttons that increment or decrement by the configured step. A tap steps once when the pointer lifts. Held down by a mouse, a pen or a finger, a button keeps stepping after half a second, faster and faster until the pointer lifts. Sliding away pauses it, and coming back resumes it. The field shows each step, and calls onChange once, with the final value, when the press ends.',
       },
     ],
   },
