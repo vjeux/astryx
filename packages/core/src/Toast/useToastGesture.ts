@@ -15,7 +15,9 @@ import type {PointerEvent as ReactPointerEvent, RefObject} from 'react';
 
 const DRAG_PROMOTION_SLOP = 8;
 const SWIPE_DISMISS_RATIO = 0.4;
-const FLICK_MIN_DISTANCE = 48;
+/** The dismiss distance of a card too short for its height ratio to reach it. */
+const SWIPE_DISMISS_MIN_DISTANCE = 48;
+/** Average speed, px/ms, at which a release dismisses whatever its travel. */
 const FLICK_VELOCITY = 1.2;
 const VERTICAL_INTENT_RATIO = 1.2;
 const SWIPE_EXIT_DISTANCE = '120%';
@@ -29,6 +31,11 @@ interface GesturePoint {
   pointerId: number;
   clientX: number;
   clientY: number;
+  /**
+   * The input event's `timeStamp`, which is when the finger was there.
+   * Browsers can run a move's handler a frame or two later.
+   */
+  time: number;
 }
 
 interface GestureState {
@@ -132,14 +139,14 @@ export function useToastGesture({
         pointerId: point.pointerId,
         startX: point.clientX,
         startY: point.clientY,
-        startTime: Date.now(),
+        startTime: point.time,
         direction,
         intent: 'pending',
         pausedTimer,
         surfaceSize,
         dismissThreshold: Math.max(
           surfaceSize * SWIPE_DISMISS_RATIO,
-          FLICK_MIN_DISTANCE,
+          SWIPE_DISMISS_MIN_DISTANCE,
         ),
       };
       return true;
@@ -229,11 +236,12 @@ export function useToastGesture({
         0,
         (point.clientY - state.startY) * state.direction,
       );
-      const elapsed = Math.max(1, Date.now() - state.startTime);
+      const elapsed = Math.max(1, point.time - state.startTime);
+      // A flick needs no travel floor. The swipe passed the slop toward the
+      // edge before the hook claimed it.
       const isDismissed =
         state.intent === 'vertical' &&
-        (travel >= state.dismissThreshold ||
-          (travel >= FLICK_MIN_DISTANCE && travel / elapsed > FLICK_VELOCITY));
+        (travel >= state.dismissThreshold || travel / elapsed > FLICK_VELOCITY);
 
       gestureRef.current = null;
       root.style.removeProperty('transition-duration');
@@ -270,6 +278,7 @@ export function useToastGesture({
             pointerId: event.pointerId,
             clientX: event.clientX,
             clientY: event.clientY,
+            time: event.timeStamp,
           },
           event.target,
         )
@@ -291,6 +300,7 @@ export function useToastGesture({
           pointerId: event.pointerId,
           clientX: event.clientX,
           clientY: event.clientY,
+          time: event.timeStamp,
         },
         () => event.preventDefault(),
         () => rootRef.current?.releasePointerCapture?.(event.pointerId),
@@ -310,6 +320,7 @@ export function useToastGesture({
         pointerId: event.pointerId,
         clientX: event.clientX,
         clientY: event.clientY,
+        time: event.timeStamp,
       });
     },
     [endGesture],
@@ -328,16 +339,19 @@ export function useToastGesture({
     [resetGesture],
   );
 
+  // Native touch listeners on the card root. `touchmove` is not passive,
+  // so a claimed swipe can stop page scrolling.
   useEffect(() => {
     const root = rootRef.current;
     if (!root || !enabled) {
       return;
     }
-    const point = (touch: Touch): GesturePoint => ({
+    const point = (touch: Touch, event: TouchEvent): GesturePoint => ({
       source: 'touch',
       pointerId: touch.identifier,
       clientX: touch.clientX,
       clientY: touch.clientY,
+      time: event.timeStamp,
     });
     const changedTouch = (event: TouchEvent) => {
       const state = gestureRef.current;
@@ -358,7 +372,7 @@ export function useToastGesture({
       }
       const touch = event.changedTouches[0];
       if (touch != null) {
-        beginGesture(point(touch), event.target);
+        beginGesture(point(touch, event), event.target);
       }
     };
     const handleTouchMove = (event: TouchEvent) => {
@@ -368,7 +382,7 @@ export function useToastGesture({
       }
       const touch = changedTouch(event);
       if (touch) {
-        moveGesture(point(touch), () => {
+        moveGesture(point(touch, event), () => {
           if (event.cancelable) {
             event.preventDefault();
           }
@@ -382,7 +396,7 @@ export function useToastGesture({
       }
       const touch = changedTouch(event);
       if (touch) {
-        endGesture(point(touch));
+        endGesture(point(touch, event));
       } else if (event.touches.length === 0) {
         resetGesture(true);
       }
