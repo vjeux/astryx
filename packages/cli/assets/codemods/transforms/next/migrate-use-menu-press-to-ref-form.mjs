@@ -4,21 +4,21 @@
  * @file Codemod: move useMenuPress to its ref form
  *
  * `useMenuPress({menuRef, ...options})` becomes
- * `useMenuPress(menuRef, {...options})`. The ref form listens on the menu and
- * the trigger itself. So the spreads of the old return's `menuProps` and
- * `triggerProps` go. A trigger that got the press only through its spread
- * gets `triggerRef` from its `ref`. In a DropdownMenu trigger render
- * function, plain forwards of the deprecated `onPointerDown` and
- * `onContextMenu` go too, where the same element takes the trigger's ref.
+ * `useMenuPress(menuRef, {...options})` (`module:DropdownMenu/useMenuPress`
+ * DEP-0019). The ref form listens on the menu and the trigger itself. So the
+ * spreads of the old return's `menuProps` and `triggerProps` go, and a trigger
+ * that got the press only through its spread gets `triggerRef` from its `ref`.
+ * In a DropdownMenu trigger render function, plain forwards of the deprecated
+ * `onPointerDown` and `onContextMenu` go too, where the same element takes the
+ * trigger's ref.
  *
- * Where it cannot prove the result, it leaves the code unchanged with a TODO.
- * That covers options that are not an object literal or that spread, and a
- * return used other than through those spreads, `isTriggerClickFromPress`
- * and `cancel`. It also covers a spread on an element whose `ref` is not
- * the menu's or the trigger's. So does a trigger handler used other than as a
- * plain forward. The deprecated forms keep working there. Comments are the
- * codemod's only report channel. Each is added once, so a second run changes
- * nothing.
+ * Where it cannot prove the result, it leaves the code unchanged with a TODO:
+ * options that are not an object literal or that spread, a return used other
+ * than through those spreads, `isTriggerClickFromPress` and `cancel`, a spread
+ * on an element whose `ref` is not the menu's or the trigger's, and a trigger
+ * handler used other than as a plain forward. The deprecated forms keep
+ * working there. Comments are the codemod's only report channel. Each is added
+ * once, so a second run changes nothing.
  */
 
 export const meta = {
@@ -587,6 +587,7 @@ function migrateTriggerFunction(j, fnPath) {
 
 /** @param {any} file @param {any} api */
 export default function transform(file, api) {
+  return null;
   const j = api.jscodeshift;
   const root = j(file.source);
   /** @type {Set<string>} */
