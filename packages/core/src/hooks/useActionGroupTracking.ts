@@ -9,7 +9,8 @@
  * @output Exports useActionGroupTracking and ActionGroupTrackingOptions
  * @position Internal hook, not exported from the hooks entry. A long press
  *   drives the shared action-group tracker (hooks/actionGroupTracker.ts) for
- *   a group that a held pointer slides across. AlertDialog consumes it.
+ *   a group that a held pointer slides across. AlertDialog consumes it, and
+ *   Lab components through the internal touch entry.
  *
  * SYNC: When modified, update useActionGroupTracking.test.tsx
  */
@@ -49,6 +50,23 @@ export interface ActionGroupTrackingOptions {
   manageStyle?: boolean;
   /** Runs the action under the finger at the lift. @default its own click */
   onActivate?: (item: HTMLElement) => void;
+  /**
+   * Paint the tracked action with the press attribute. Off, the group draws
+   * its own highlight. Read as a press begins and kept for that press.
+   * @default true
+   */
+  paintsHighlight?: boolean;
+  /** A press began at viewport (x, y) on `action` (null: none). */
+  onPressBegin?: (x: number, y: number, action: HTMLElement | null) => void;
+  /** The press moved to viewport (x, y), now on `action` (null: none). */
+  onPressMove?: (x: number, y: number, action: HTMLElement | null) => void;
+  /** The lift, before its action runs, with the tracked action (null: none). */
+  onPressEnd?: (action: HTMLElement | null) => void;
+  /**
+   * The press ended with nothing acting: a cancel, a second finger, or
+   * tracking turned off.
+   */
+  onPressCancel?: () => void;
 }
 
 const PRESS = UIKIT_PRESS;
@@ -89,6 +107,9 @@ export function useActionGroupTracking(
   // The pointer that started the current press. Only a finger gets the hit
   // expansion; a mouse or a pen hit-tests the actions' exact rects.
   const pointerRef = useRef<PointerKind>('touch');
+  // Whether the current press paints, read as it begins. A change mid-press
+  // then leaves no paint behind.
+  const paintsRef = useRef(options.paintsHighlight);
   const landedRef = useRef<Node | null>(null);
   const [tracker] = useState(() =>
     createActionGroupTracker(() => ({
@@ -98,6 +119,7 @@ export function useActionGroupTracking(
         pointerRef.current === 'touch'
           ? optionsRef.current.highlightExpansion
           : 0,
+      paintsHighlight: paintsRef.current,
       onActivate: optionsRef.current.onActivate,
       // The browser's own click for a press the group ran is taken, so the
       // action runs once. The gesture host swallows it for a press it claims.
@@ -109,11 +131,16 @@ export function useActionGroupTracking(
   // Synchronizes the tracker with tracking on and mounted. Turning tracking
   // off, or unmounting, drops a tracked press and ends its release fades.
   // The host reports no cancellation to a disabled recognizer, and the lift
-  // that runs an action often closes the owner before its fade ends.
+  // that runs an action often closes the owner before its fade ends. The
+  // group hears the dropped press as a cancel, so its own highlight goes out.
   useEffect(
     () => () => {
+      const wasTracking = tracker.isTracking;
       tracker.cancel();
       tracker.dispose();
+      if (wasTracking) {
+        optionsRef.current.onPressCancel?.();
+      }
     },
     [tracker, isEnabled],
   );
@@ -134,6 +161,7 @@ export function useActionGroupTracking(
         shouldReceiveTouch: (recognizer, touch) => {
           if (recognizer.numberOfTouches === 0) {
             pointerRef.current = touch.pointerType;
+            paintsRef.current = optionsRef.current.paintsHighlight;
             const target = touch.target as Node | null;
             landedRef.current =
               typeof target?.nodeType === 'number' ? target : null;
@@ -146,14 +174,17 @@ export function useActionGroupTracking(
         case 'began': {
           const {x, y} = recognizer.location();
           tracker.begin(x, y, {landed: landedRef.current});
+          optionsRef.current.onPressBegin?.(x, y, tracker.highlighted);
           break;
         }
         case 'changed': {
           const {x, y} = recognizer.location();
           tracker.move(x, y);
+          optionsRef.current.onPressMove?.(x, y, tracker.highlighted);
           break;
         }
         case 'ended': {
+          optionsRef.current.onPressEnd?.(tracker.highlighted);
           const doc = ref.current?.ownerDocument;
           const focusedBefore = doc?.activeElement ?? null;
           const beganOn = tracker.beganOn;
@@ -182,6 +213,7 @@ export function useActionGroupTracking(
         }
         case 'cancelled':
           tracker.cancel();
+          optionsRef.current.onPressCancel?.();
           break;
         case 'possible':
         case 'failed':
