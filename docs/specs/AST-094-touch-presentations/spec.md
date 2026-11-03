@@ -501,8 +501,11 @@ under a finger, and a mouse follows `module:DropdownMenu/useMenuPress` FR3 and
   springs back. The decision MUST NOT change while the surface settles. The
   same rule backs dismissing a BottomSheet, a Toast or a Lightbox, popping a
   NavigationStack, and dismissing the keyboard; each use's commit point and
-  projection are measured values (FR1, FR2). A row swipe keeps
-  `spec:AST-057`'s own release rule.
+  projection are measured values (FR1, FR2). A BottomSheet also takes a
+  release past its measured flick speed at least to its next position, as
+  UIKit's sheet does, so a short fast flick at its lowest detent closes it
+  (`component:BottomSheet` FR19). A row swipe keeps `spec:AST-057`'s own
+  release rule.
 - **FR37 — Moving back cancels.** A release whose velocity points back
   toward the start MUST cancel, whatever the travel so far.
 - **FR38 — The settle continues the finger.** The commit or the spring-back
