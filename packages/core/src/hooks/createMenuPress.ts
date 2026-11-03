@@ -820,67 +820,6 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
   };
 }
 
-/** A press's press-down handlers, which its document's shared pair calls. */
-interface PressDownWatch {
-  readonly onPointerDown: (
-    event: PointerEvent,
-    path: ReadonlyArray<EventTarget>,
-  ) => void;
-  readonly onContextMenu: (
-    event: MouseEvent,
-    path: ReadonlyArray<EventTarget>,
-  ) => void;
-}
-
-// One press-down listener pair per document, shared by every press in it, so
-// a closed menu adds none of its own. Each event's path is read once.
-const pressDownWatches = new WeakMap<
-  Document,
-  {
-    readonly watches: Set<PressDownWatch>;
-    readonly onPointerDown: (event: PointerEvent) => void;
-    readonly onContextMenu: (event: MouseEvent) => void;
-  }
->();
-
-function watchPressDown(doc: Document, watch: PressDownWatch): () => void {
-  let shared = pressDownWatches.get(doc);
-  if (shared == null) {
-    const watches = new Set<PressDownWatch>();
-    const created = {
-      watches,
-      onPointerDown: (event: PointerEvent) => {
-        const path = event.composedPath();
-        for (const each of [...watches]) {
-          each.onPointerDown(event, path);
-        }
-      },
-      onContextMenu: (event: MouseEvent) => {
-        const path = event.composedPath();
-        for (const each of [...watches]) {
-          each.onContextMenu(event, path);
-        }
-      },
-    };
-    doc.addEventListener('pointerdown', created.onPointerDown);
-    doc.addEventListener('contextmenu', created.onContextMenu);
-    pressDownWatches.set(doc, created);
-    shared = created;
-  }
-  shared.watches.add(watch);
-  return () => {
-    const current = pressDownWatches.get(doc);
-    if (current == null || !current.watches.delete(watch)) {
-      return;
-    }
-    if (current.watches.size === 0) {
-      doc.removeEventListener('pointerdown', current.onPointerDown);
-      doc.removeEventListener('contextmenu', current.onContextMenu);
-      pressDownWatches.delete(doc);
-    }
-  };
-}
-
 /**
  * Run the menu press model on `menu`, with no React. The row under a release
  * acts, and the highlight follows a held pointer. A mouse press on `trigger`
@@ -953,8 +892,7 @@ export function createMenuPress(
   const hadMarker = menu.hasAttribute(MENU_PRESS_MARKER);
   menu.setAttribute(MENU_PRESS_MARKER, '');
 
-  // The press-down listeners sit on the menu's document, in the bubble phase,
-  // shared with every other press there.
+  // The press-down listeners sit on the menu's document, in the bubble phase.
   // The page's own handlers on the menu and the trigger run first, React's
   // delegated ones included, as a handler composed before the press did. A
   // press-down that one of them stops, or cancels inside the menu, starts no
@@ -969,10 +907,8 @@ export function createMenuPress(
     taken.add(event);
     return true;
   };
-  const onPointerDown = (
-    event: PointerEvent,
-    path: ReadonlyArray<EventTarget>,
-  ) => {
+  const onPointerDown = (event: PointerEvent) => {
+    const path = event.composedPath();
     if (trigger != null && path.includes(trigger)) {
       if (take(event)) {
         core.handleTriggerPointerDown(event);
@@ -983,18 +919,17 @@ export function createMenuPress(
       core.handleMenuPointerDown(event);
     }
   };
-  const onContextMenu = (
-    event: MouseEvent,
-    path: ReadonlyArray<EventTarget>,
-  ) => {
-    if (trigger != null && path.includes(trigger) && take(event)) {
+  const onContextMenu = (event: MouseEvent) => {
+    if (
+      trigger != null &&
+      event.composedPath().includes(trigger) &&
+      take(event)
+    ) {
       core.handleTriggerContextMenu(event);
     }
   };
-  const unwatchPressDown = watchPressDown(pressDocument, {
-    onPointerDown,
-    onContextMenu,
-  });
+  pressDocument.addEventListener('pointerdown', onPointerDown);
+  pressDocument.addEventListener('contextmenu', onContextMenu);
   trigger = current.trigger ?? null;
 
   return {
@@ -1027,7 +962,8 @@ export function createMenuPress(
       disconnect();
       releaseOwn();
       releasePage();
-      unwatchPressDown();
+      pressDocument.removeEventListener('pointerdown', onPointerDown);
+      pressDocument.removeEventListener('contextmenu', onContextMenu);
       trigger = null;
       if (!hadMarker) {
         menu.removeAttribute(MENU_PRESS_MARKER);
