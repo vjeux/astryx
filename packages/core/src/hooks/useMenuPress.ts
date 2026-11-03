@@ -20,8 +20,10 @@
  */
 
 import {useEffect, useMemo, useRef, useState, type RefObject} from 'react';
+import {useAttachment} from './useAttachment';
 import {useIsomorphicLayoutEffect} from './useIsomorphicLayoutEffect';
 import {
+  createForwardedMenuPress,
   createMenuPress,
   createMenuPressCore,
   MENU_PRESS_MARKER,
@@ -59,11 +61,15 @@ export interface UseMenuPressRefOptions extends Omit<
   triggerRef?: RefObject<HTMLElement | null>;
 }
 
-/** What the ref form returns: the press's reads; the hook owns its life. */
+/**
+ * What the ref form returns: the press's reads and forwards. The hook owns
+ * its life.
+ */
 export type UseMenuPressRefReturn = Pick<
   CreateMenuPressReturn,
   | 'isTriggerClickFromPress'
   | 'cancel'
+  | 'handleMenuPointerDown'
   | 'handleTriggerPointerDown'
   | 'handleTriggerContextMenu'
 >;
@@ -212,6 +218,33 @@ export function useMenuPress(
   first: RefObject<HTMLElement | null> | UseMenuPressOptions,
   second?: UseMenuPressRefOptions,
 ): UseMenuPressRefReturn | UseMenuPressReturn {
+  return useMenuPressWith(first, second, createMenuPress);
+}
+
+/**
+ * @internal The ref form for Core's menus. Each forwards a mouse's or pen's
+ * press-down from its React handlers, so the press acts in the options
+ * form's order.
+ */
+export function useCoreMenuPress(
+  menuRef: RefObject<HTMLElement | null>,
+  options: UseMenuPressRefOptions,
+): UseMenuPressRefReturn {
+  return useMenuPressWith(
+    menuRef,
+    options,
+    createForwardedMenuPress,
+  ) as UseMenuPressRefReturn;
+}
+
+/** A ref that never holds a menu, for the options form's attachment. */
+const NO_MENU: RefObject<HTMLElement | null> = {current: null};
+
+function useMenuPressWith(
+  first: RefObject<HTMLElement | null> | UseMenuPressOptions,
+  second: UseMenuPressRefOptions | undefined,
+  create: typeof createMenuPress,
+): UseMenuPressRefReturn | UseMenuPressReturn {
   // A call site keeps one form for its life, so both take the same hooks.
   const isRefForm = second !== undefined;
   const menuRef = isRefForm
@@ -228,45 +261,24 @@ export function useMenuPress(
   // The ref form: createMenuPress on the element behind the ref. A new menu or
   // document creates a new factory. Every other change reaches it through
   // update() at commit, so a render that React discards never reaches it.
-  const attachedRef = useRef<{
-    menu: HTMLElement;
-    ownerDocument: Document;
-    press: CreateMenuPressReturn;
-  } | null>(null);
-  // Syncs the factory's listeners with the menu element behind the ref.
-  useIsomorphicLayoutEffect(() => {
-    if (!isRefForm) {
-      return;
-    }
-    const {menuRef: ref, options: latest} = latestRef.current;
-    const menu = ref.current;
-    const attached = attachedRef.current;
-    if (
-      attached != null &&
-      attached.menu === menu &&
-      attached.ownerDocument === menu.ownerDocument
-    ) {
-      attached.press.update(factoryOptionsOf(latest));
-      return;
-    }
-    attached?.press.destroy();
-    attachedRef.current =
-      menu == null
-        ? null
-        : {
-            menu,
-            ownerDocument: menu.ownerDocument,
-            press: createMenuPress(menu, factoryOptionsOf(latest)),
-          };
-  });
-  // Removes the factory's listeners at unmount.
-  useIsomorphicLayoutEffect(
-    () => () => {
-      attachedRef.current?.press.destroy();
-      attachedRef.current = null;
+  const attachedRef = useRef<CreateMenuPressReturn | null>(null);
+  useAttachment(
+    isRefForm ? menuRef : NO_MENU,
+    menu => {
+      const press = create(menu, factoryOptionsOf(latestRef.current.options));
+      attachedRef.current = press;
+      return () => {
+        press.destroy();
+        attachedRef.current = null;
+      };
     },
-    [],
+    null,
+    {followsDocument: true},
   );
+  // Syncs the attached factory's options with this commit's.
+  useIsomorphicLayoutEffect(() => {
+    attachedRef.current?.update(factoryOptionsOf(latestRef.current.options));
+  });
 
   // The options form: the same core, driven by the props it returns.
   const [core] = useState<MenuPressCore | null>(() =>
@@ -292,12 +304,14 @@ export function useMenuPress(
     if (core == null) {
       return {
         isTriggerClickFromPress: () =>
-          attachedRef.current?.press.isTriggerClickFromPress() ?? false,
-        cancel: () => attachedRef.current?.press.cancel(),
+          attachedRef.current?.isTriggerClickFromPress() ?? false,
+        cancel: () => attachedRef.current?.cancel(),
+        handleMenuPointerDown: event =>
+          attachedRef.current?.handleMenuPointerDown(event),
         handleTriggerPointerDown: event =>
-          attachedRef.current?.press.handleTriggerPointerDown(event),
+          attachedRef.current?.handleTriggerPointerDown(event),
         handleTriggerContextMenu: event =>
-          attachedRef.current?.press.handleTriggerContextMenu(event),
+          attachedRef.current?.handleTriggerContextMenu(event),
       };
     }
     return {
