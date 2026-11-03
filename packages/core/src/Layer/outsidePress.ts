@@ -89,8 +89,10 @@ export function watchOutsidePress(
   const handleMove = (event: PointerEvent) => {
     if (
       pointer?.id === event.pointerId &&
-      Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) >
-        UIKIT_PAN.hysteresis.value
+      Math.max(
+        Math.abs(event.clientX - pointer.x),
+        Math.abs(event.clientY - pointer.y),
+      ) > UIKIT_PAN.hysteresis.value
     ) {
       close();
     }

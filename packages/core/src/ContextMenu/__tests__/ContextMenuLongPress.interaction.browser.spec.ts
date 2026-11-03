@@ -619,8 +619,8 @@ test('the press feedback keeps advancing every frame while the main thread is bl
   browserName,
 }, testInfo) => {
   test.skip(
-    browserName !== 'chromium',
-    'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
+    browserName === 'webkit',
+    "WebKit's Linux build runs the trigger's scale, as a transform too, on the main thread: beside a compositor control, its frames hold the trigger's width through the block (README: engine limits). The iOS simulator recording is the WebKit proof.",
   );
   const {driver, trigger, center} = await openTouchStory(page);
   // A wider card grows by about a CSS pixel a frame, which the screencast
@@ -659,7 +659,8 @@ test('the press feedback keeps advancing every frame while the main thread is bl
   const expectedGrowth =
     restWidth * (scaleAt(lastFrame.t) - scaleAt(firstFrame.t));
   const shownGrowth = lastFrame.box.width - firstFrame.box.width;
-  // The screencast resolves widths in steps: the smallest change it shows.
+  // Widths arrive from the screencast in steps (2 px in Chromium here). One
+  // step is the instrument's resolution, and the only allowance below.
   const widthStep = Math.min(
     ...judged.slice(1).flatMap((f, i) => {
       const change = Math.abs(
@@ -698,7 +699,7 @@ test('the press feedback keeps advancing every frame while the main thread is bl
   });
   await film.write(testInfo, {block, feedback, expectedGrowth});
   // Frames kept coming at display rate and the card kept growing, as much
-  // as the curve says, within one step of the screencast's widths.
+  // as the curve says, within the screencast's resolution.
   expect(proof.medianFrameMs).toBeLessThan(20);
   expect(proof.frames).toBeGreaterThanOrEqual(proof.expectedFrames - 2);
   expect(proof.monotonic).toBe(true);
@@ -799,7 +800,10 @@ test('a new finger that pans outside the open menu closes it, and the page scrol
     drag(outside, {x: outside.x, y: outside.y - 120}, {durationMs: 300}),
   );
   await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeHidden();
-  expect(await top()).toBeLessThan(before);
+  // WebKit scrolls nothing from an injected touch (README: engine limits).
+  if (driver.drivesNativeGestures) {
+    expect(await top()).toBeLessThan(before);
+  }
 });
 
 test('a drag that cancels the press after the commit does not scroll the page either', async ({

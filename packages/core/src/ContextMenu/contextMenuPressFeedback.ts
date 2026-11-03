@@ -17,9 +17,9 @@
 // the growth while the recognizer follows a finger, and only the recognizer's
 // failure or cancel returns it. The theme's duration and move easing tokens
 // time both, and the compositor plays them, so a busy main thread does not
-// stall them. After the commit the trigger stays grown while the menu is up,
-// and it returns on `springs.contextMenuDismiss` when the menu closes. An
-// inline trigger and Reduce Motion show no growth.
+// stall them. Once the menu opens, the trigger holds its size until the menu
+// closes, and then it returns on `springs.contextMenuDismiss`. An inline
+// trigger and Reduce Motion show no growth.
 
 import {useCallback, useEffect, useRef, type RefObject} from 'react';
 import {usePressFeedback} from '../hooks/usePressFeedback';
