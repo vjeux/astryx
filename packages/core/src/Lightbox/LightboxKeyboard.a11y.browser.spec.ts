@@ -137,3 +137,30 @@ test('Tab and Shift+Tab wrap inside an open single image, zoomed or not', async 
   await page.keyboard.press('+');
   await expectTabWrapsInside(page);
 });
+
+test('an arrow key pressed on "more" pages, and focus stays in the viewer for the next arrow', async ({
+  page,
+}) => {
+  await page.route(/picsum\.photos/, async route => route.abort());
+  await page.goto(
+    `${storybook.origin}/iframe.html?id=core-lightbox--gallery-with-captions&viewMode=story`,
+  );
+  await page.getByRole('button', {name: 'Open gallery with captions'}).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('1 / 4');
+  // The first caption runs past two lines, so its band shows "more".
+  const more = dialog.getByRole('button', {name: 'more'});
+  await more.focus();
+  await expect(more).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(dialog).toContainText('2 / 4');
+  // Paging took the toggle away; focus moved to a part of the viewer.
+  const isFocusInViewer = await dialog.evaluate(
+    element =>
+      element.ownerDocument.activeElement !== element.ownerDocument.body &&
+      element.contains(element.ownerDocument.activeElement),
+  );
+  expect(isFocusInViewer).toBe(true);
+  await page.keyboard.press('ArrowRight');
+  await expect(dialog).toContainText('3 / 4');
+});
