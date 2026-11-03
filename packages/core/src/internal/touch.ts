@@ -3,9 +3,10 @@
 /**
  * @file touch.ts
  * @input The gesture core: the arena, the recognizers, their geometry and
- *   their React hook; the animator, the cubic-bézier solver and UIKit's
- *   timing table; the touch-presentation hook; the writing-direction read;
- *   whether the click guard is armed
+ *   their React hook. The motion core: the animator, the cubic-bézier and
+ *   spring solvers, the rubber band, the motion resolver and UIKit's timing,
+ *   navigation, springs and gesture tables. The touch-presentation hook, the
+ *   coarse-pointer query, the writing-direction read and the click-guard read.
  * @output `@astryxdesign/core/internal/touch`: the gesture core's primitives
  *   for Lab components, re-exported by name
  * @position An internal entry reserved for Astryx's own packages:
@@ -40,6 +41,8 @@ export {
   unwrapAngle,
 } from '../gestures/geometry';
 export {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
+export {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
+export {ScreenEdgePanGestureRecognizer} from '../gestures/ScreenEdgePanGestureRecognizer';
 export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
 export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
@@ -55,6 +58,15 @@ export type {
   MotionHandle,
 } from '../motion/animator';
 export {cubicBezier} from '../motion/bezier';
+export type {BezierPoints} from '../motion/bezier';
+export {resolveMotion} from '../motion/resolveMotion';
+export {rubberBand, rubberBandInverse} from '../motion/rubberBand';
+export {solveSpring, toSpring} from '../motion/spring';
+export type {SpringDescription} from '../motion/spring';
+export {UIKIT_GESTURES} from '../motion/uikit/gestures';
+export {navigation, registerNavigationTable} from '../motion/uikit/navigation';
+export {registerSpringsTable, springs} from '../motion/uikit/springs';
 export {timing} from '../motion/uikit/timing';
 export {isClickGuardArmed} from '../utils/clickGuard';
 export {useTouchPresentation} from '../utils/touchPresentation';
+export {TOUCH_QUERY} from '../utils/touchQueries';
