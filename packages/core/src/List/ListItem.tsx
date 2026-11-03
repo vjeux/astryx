@@ -5,7 +5,8 @@
 /**
  * @file ListItem.tsx
  * @input Uses React, ReactNode, StyleXStyles, theme tokens, the List row edge
- *   treatment, the touch hit area (utils/touchHitArea.ts and its layer),
+ *   treatment, the touch hit area (utils/touchHitArea.ts and its layer), the
+ *   travelling marker of an update's slide (List/listLayoutUpdates.ts),
  *   CheckboxInput, and the marker or task checkbox a
  *   ListMarkerScope sets (Markdown's nested lists and the task items of mixed
  *   lists), and Item's private exact-marker formatting scope for numbered
@@ -46,7 +47,11 @@ import {Item, servesSwipeActions} from '../Item/Item';
 import {ItemMarkerColumnsContext} from '../Item/ItemMarkerColumnsContext';
 import type {ItemAlign, ItemSwipeActions, ItemSwipeBehavior} from '../Item';
 import {themeProps} from '../utils/themeProps';
+import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useMergedRefs} from '../hooks/useMergedRefs';
+import {isInAnimatedList, keepPresentation} from './listLayoutUpdates';
+import {itemKeyProps} from '../privateAttributes/itemKey.stylex';
+import {travellingStyles} from '../privateAttributes/travelling.stylex';
 import {useTouchHitArea} from '../utils/touchHitArea';
 import {touchHitAreaStyles} from '../utils/touchHitArea.stylex';
 
@@ -140,6 +145,14 @@ export interface ListItemProps extends BaseProps<HTMLLIElement> {
   isSelected?: boolean;
 
   /**
+   * The row's item key, a string or a number from the data, in the shape
+   * Table's `idKey` returns. It is the row's identity for the list's
+   * `animatedLayout`. A row without one changes at once. It is separate from
+   * React's `key`, which stays React's own.
+   */
+  itemKey?: string | number;
+
+  /**
    * Swipe actions for touch, passed through to `Item` unchanged: the verbs a
    * sideways drag uncovers on each side. See `Item.swipeActions`; `List`
    * clips the rows in the inline axis for them.
@@ -209,14 +222,6 @@ const styles = stylex.create({
     '::after': {
       zIndex: {default: null, '@media (pointer: coarse)': 1},
     },
-  },
-  // A swipeable row is a stacking context at rest, since Item isolates and
-  // translates its swipe root. So its band's own z-index orders only inside
-  // it. Under a finger the row itself rises above the rows after it, whose
-  // boxes its band reaches into. The list isolates, so the row stays below a
-  // sticky header.
-  swipeRaised: {
-    zIndex: {default: null, '@media (pointer: coarse)': 1},
   },
   withDivider: {
     borderBlockEndWidth: borderVars['--border-width'],
@@ -396,6 +401,7 @@ export function ListItem({
   rel,
   isDisabled = false,
   isSelected = false,
+  itemKey,
   align,
   xstyle,
   className,
@@ -404,6 +410,26 @@ export function ListItem({
   ...restProps
 }: ListItemProps) {
   const ctx = use(ListContext);
+  const rowRef = useRef<HTMLLIElement | null>(null);
+  const mergedRef = useMergedRefs(ref, rowRef);
+  // Syncs with an external system: the Web Animations on the row's parts,
+  // such as a swipe's travel on the compositor. A detached row loses them. So
+  // when the row leaves a list that animates its changes, it writes what they
+  // present inline while it is still in the document. A parent's layout
+  // cleanup runs before React removes the row, so the removal's collapse
+  // shows the row as it was on screen.
+  useIsomorphicLayoutEffect(() => {
+    const row = rowRef.current;
+    return () => {
+      if (row != null) {
+        // Only in a list under an animated layout handle, as the list was
+        // at its last commit.
+        if (isInAnimatedList(row)) {
+          keepPresentation(row);
+        }
+      }
+    };
+  }, []);
   // A List isolates its rows, so what a row raises stays below a page-level
   // sticky header. Outside a List nothing bounds a raise, so a row raises
   // nothing there.
@@ -414,8 +440,6 @@ export function ListItem({
   // them.
   const isTouchTarget =
     (onClick != null || href != null || interactiveRef != null) && !isDisabled;
-  const rowRef = useRef<HTMLLIElement | null>(null);
-  const mergedRef = useMergedRefs(ref, rowRef);
   useTouchHitArea(rowRef, isTouchTarget);
   // A row that Item serves swipe actions on is a stacking context at rest. So
   // its band's own z-index orders only inside it, and under a finger the row
@@ -503,11 +527,12 @@ export function ListItem({
         [
           listStyle === 'decimal' && styles.numberColumns,
           hasMarkers && styles.withCounter,
+          travellingStyles.row,
           hasDividers && styles.withDivider,
           hasDividers && embeddedStyles.noRadius,
           isTouchTarget && touchHitAreaStyles.layer,
           isTouchTarget && isInList && styles.bandRaised,
-          isRaisedSwipeRow && styles.swipeRaised,
+          isRaisedSwipeRow && travellingStyles.raisedSwipeRow,
           edge === 'flush' && styles.edgeFlush,
           edge === 'outset' && styles.edgeOutset,
           edge === 'bleed' && styles.edgeBleed,
@@ -515,6 +540,9 @@ export function ListItem({
         ] as StyleXStyles
       }
       {...mergeProps(themeProps('list-item'), {className, style})}
+      // The row's identity for the list's animated layout
+      // (List/listLayoutUpdates.ts).
+      {...itemKeyProps(itemKey)}
       {...restProps}
     />
   );
