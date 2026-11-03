@@ -39,6 +39,10 @@ const STORIES = {
 /** The default exit curve, `--ease-exit`. */
 const EASE_EXIT = 'cubic-bezier(0.3, 0, 0.6, 0.6)';
 
+/** A `cubic-bezier()` curve's four numbers, however it is spelled. */
+const curveOf = (easing: string) =>
+  (easing.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+
 interface Viewer {
   driver: TouchDriver;
   dialog: Locator;
@@ -155,41 +159,74 @@ async function backdropAnimations(page: Page): Promise<PlayingAnimation[]> {
 const isOpen = async (page: Page) =>
   page.evaluate(() => document.querySelector('dialog')?.open === true);
 
+/**
+ * The theme's `--duration-fast`, ms. With no `--duration-exit`, the touch
+ * exit falls back to it.
+ */
+const themeFastMs = async (page: Page) =>
+  page.evaluate(() =>
+    parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        '--duration-fast',
+      ),
+    ),
+  );
+
 test('a tap on Close fades the viewer out on the theme exit tokens, then reports the close', async ({
   page,
+  browserName,
 }) => {
   const v = await openViewer(page);
+  const fast = await themeFastMs(page);
+  expect(fast).toBeGreaterThan(0);
   await v.tapOn(v.dialog.getByRole('button', {name: 'Close'}));
   // The viewer stays up while it leaves.
   expect(await isOpen(page)).toBe(true);
   const [fade] = await animationsOn(v.container);
   expect(fade).toMatchObject({
-    duration: 175,
+    duration: fast,
     easing: EASE_EXIT,
     properties: ['opacity'],
   });
   expect(fade.to.opacity).toBe('0');
   // The photo shrinks a little, on the same clock.
   const [shrink] = await animationsOn(v.stage);
-  expect(shrink).toMatchObject({duration: 175, easing: EASE_EXIT});
+  expect(shrink).toMatchObject({duration: fast, easing: EASE_EXIT});
   expect(parseFloat(shrink.to.scale)).toBeGreaterThan(0.8);
   expect(parseFloat(shrink.to.scale)).toBeLessThan(1);
-  const [backdrop] = await backdropAnimations(page);
-  expect(backdrop).toMatchObject({
-    duration: 175,
-    easing: EASE_EXIT,
-    properties: ['opacity'],
-  });
+  if (browserName === 'webkit') {
+    // WebKit lists no animation on `::backdrop`. Its computed style names the
+    // fade and its timing.
+    const backdrop = await v.dialog.evaluate(el => {
+      const style = getComputedStyle(el, '::backdrop');
+      return {
+        name: style.animationName,
+        seconds: parseFloat(style.animationDuration),
+        easing: style.animationTimingFunction,
+      };
+    });
+    expect(backdrop.name).not.toBe('none');
+    expect(backdrop.seconds * 1000).toBeCloseTo(fast, 0);
+    expect(curveOf(backdrop.easing)).toEqual(curveOf(EASE_EXIT));
+  } else {
+    const [backdrop] = await backdropAnimations(page);
+    expect(backdrop).toMatchObject({
+      duration: fast,
+      easing: EASE_EXIT,
+      properties: ['opacity'],
+    });
+  }
   // The close is reported when the exit ends.
   await expect.poll(async () => isOpen(page)).toBe(false);
 });
 
 test('Escape plays the touch exit too', async ({page}) => {
   const v = await openViewer(page);
+  const fast = await themeFastMs(page);
   await page.keyboard.press('Escape');
   expect(await isOpen(page)).toBe(true);
   const [fade] = await animationsOn(v.container);
-  expect(fade).toMatchObject({duration: 175, easing: EASE_EXIT});
+  expect(fade).toMatchObject({duration: fast, easing: EASE_EXIT});
   await expect.poll(async () => isOpen(page)).toBe(false);
 });
 
@@ -197,6 +234,7 @@ test('a tap beside a photo without zoom plays the touch exit', async ({
   page,
 }) => {
   const v = await openViewer(page, 'plain');
+  const fast = await themeFastMs(page);
   const box = await v.container.boundingBox();
   if (box == null) {
     throw new Error('no viewer');
@@ -205,7 +243,7 @@ test('a tap beside a photo without zoom plays the touch exit', async ({
   await v.driver.tap({x: box.x + box.width / 2, y: box.y + box.height - 8});
   expect(await isOpen(page)).toBe(true);
   const [fade] = await animationsOn(v.container);
-  expect(fade).toMatchObject({duration: 175, easing: EASE_EXIT});
+  expect(fade).toMatchObject({duration: fast, easing: EASE_EXIT});
   await expect.poll(async () => isOpen(page)).toBe(false);
 });
 
