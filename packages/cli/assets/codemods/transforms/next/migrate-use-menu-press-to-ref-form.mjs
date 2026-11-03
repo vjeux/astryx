@@ -8,16 +8,15 @@
  * the trigger itself. So the spreads of the old return's `menuProps` and
  * `triggerProps` go. A trigger that got the press only through its spread
  * gets `triggerRef` from its `ref`. In a DropdownMenu trigger render
- * function, a forward of the deprecated `onPointerDown` or `onContextMenu`
- * goes where the same element spreads the trigger props, which still pass it.
+ * function, plain forwards of the deprecated `onPointerDown` and
+ * `onContextMenu` go too, where the same element takes the trigger's ref.
  *
  * Where it cannot prove the result, it leaves the code unchanged with a TODO.
  * That covers options that are not an object literal or that spread, and a
  * return used other than through those spreads, `isTriggerClickFromPress`
  * and `cancel`. It also covers a spread on an element whose `ref` is not
- * the menu's or the trigger's, and a trigger with a menu rendered
- * conditionally: the ref form has no press while the menu is unmounted. So
- * does a handler forward on an element that does not spread the trigger props. The deprecated forms keep working there. Comments are the
+ * the menu's or the trigger's. So does a trigger handler used other than as a
+ * plain forward. The deprecated forms keep working there. Comments are the
  * codemod's only report channel. Each is added once, so a second run changes
  * nothing.
  */
@@ -28,7 +27,7 @@ export const meta = {
     'Rewrites `useMenuPress({menuRef, ...options})` to ' +
     '`useMenuPress(menuRef, {...options})` and removes the spreads of its ' +
     '`menuProps` and `triggerProps`, which the ref form does not return. ' +
-    "Removes redundant forwards of a DropdownMenu trigger's deprecated " +
+    "Removes plain forwards of a DropdownMenu trigger's deprecated " +
     '`onPointerDown` and `onContextMenu`. Leaves a TODO where it cannot ' +
     'prove the result; the deprecated forms still work there.',
 };
@@ -305,9 +304,7 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
   /** @type {{removals: Array<() => void>, triggerRef: any}} */
   const plan = {removals: [], triggerRef: null};
   if (parent.type === 'ExpressionStatement') {
-    // With a trigger, the menu it opens must stay mounted, and the codemod
-    // sees no menu element to prove it.
-    return triggerRef == null ? plan : null;
+    return plan;
   }
   if (parent.type !== 'VariableDeclarator' || parent.init !== callPath.node) {
     return null;
@@ -413,16 +410,6 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
     return null;
   }
 
-  // A trigger opens a menu that must stay mounted: the ref form has no press
-  // while the menu is unmounted.
-  const hasTrigger = triggerRef != null || spreads.triggerProps.length > 0;
-  if (
-    hasTrigger &&
-    (spreads.menuProps.length === 0 ||
-      spreads.menuProps.some(spread => isConditional(spread)))
-  ) {
-    return null;
-  }
   const menuSource = sourceOf(j, menuRef);
   for (const spread of spreads.menuProps) {
     const ref = attributeExpression(findAttribute(spread.parent.node, 'ref'));
@@ -450,29 +437,6 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
     plan.removals.push(() => j(spread).remove());
   }
   return plan;
-}
-
-/**
- * Whether a JSX attribute's element renders only on a condition, inside its
- * function: under a `&&`, a `||`, a `??` or a `?:`.
- * @param {any} path
- */
-function isConditional(path) {
-  for (let current = path.parent; current != null; current = current.parent) {
-    const type = current.node.type;
-    if (type === 'LogicalExpression' || type === 'ConditionalExpression') {
-      return true;
-    }
-    if (
-      type === 'FunctionDeclaration' ||
-      type === 'FunctionExpression' ||
-      type === 'ArrowFunctionExpression' ||
-      type === 'Program'
-    ) {
-      return false;
-    }
-  }
-  return false;
 }
 
 /**
@@ -541,11 +505,14 @@ function migrateTriggerFunction(j, fnPath) {
           return;
         }
         const attribute = forwardingAttribute(path, member.property.name);
-        // Only a forward beside a spread of the props is redundant: the spread
-        // still passes the handler, under any ancestor.
         if (
           attribute == null ||
-          !takesTriggerRef(j, attribute.parent.node, [param.name], [])
+          !takesTriggerRef(
+            j,
+            attribute.parent.node,
+            [param.name],
+            [`${param.name}.ref`],
+          )
         ) {
           isProven = false;
           return;
@@ -561,16 +528,61 @@ function migrateTriggerFunction(j, fnPath) {
   if (param?.type !== 'ObjectPattern') {
     return 'none';
   }
-  // A destructured handler is not in the rest the element spreads, so its
-  // forward is the control's only path to the press under an ancestor that
-  // stops the press-down.
-  const hasHandler = param.properties.some(
+  /** @type {string[]} */
+  const spreadNames = [];
+  /** @type {string[]} */
+  const refSources = [];
+  /** @type {Array<{property: any, key: string, name: string}>} */
+  const handlers = [];
+  for (const property of param.properties) {
+    if (property.type === 'RestElement') {
+      if (property.argument.type === 'Identifier') {
+        spreadNames.push(property.argument.name);
+      }
+      continue;
+    }
+    const key = isPlainProperty(property) ? keyName(property) : null;
+    if (key === 'ref' && property.value.type === 'Identifier') {
+      refSources.push(property.value.name);
+    }
+    if (key != null && TRIGGER_HANDLERS.has(key)) {
+      if (property.value.type !== 'Identifier') {
+        return 'unproven';
+      }
+      handlers.push({property, key, name: property.value.name});
+    }
+  }
+  if (handlers.length === 0) {
+    return 'none';
+  }
+  for (const handler of handlers) {
+    let isProven = true;
+    body
+      .find(j.Identifier, {name: handler.name})
+      .forEach((/** @type {any} */ path) => {
+        if (!isProven || !isReference(path)) {
+          return;
+        }
+        const attribute = forwardingAttribute(path, handler.key);
+        if (
+          attribute == null ||
+          !takesTriggerRef(j, attribute.parent.node, spreadNames, refSources)
+        ) {
+          isProven = false;
+          return;
+        }
+        forwards.push(attribute);
+      });
+    if (!isProven) {
+      return 'unproven';
+    }
+  }
+  forwards.forEach(attribute => j(attribute).remove());
+  param.properties = param.properties.filter(
     (/** @type {any} */ property) =>
-      property.type !== 'RestElement' &&
-      isPlainProperty(property) &&
-      TRIGGER_HANDLERS.has(keyName(property) ?? ''),
+      !handlers.some(handler => handler.property === property),
   );
-  return hasHandler ? 'unproven' : 'none';
+  return 'changed';
 }
 
 /** @param {any} file @param {any} api */
