@@ -1447,17 +1447,21 @@ describe('touch listeners (spec:AST-094 FR24)', () => {
     };
   };
 
-  it('a switch under a coarse pointer attaches no touch or click listener, and a disabled one arms no press listener', () => {
+  it('a switch under a coarse pointer adds only the blocking touchmove that keeps a slow finger, and no click listener; a disabled or busy one adds no touch listener and arms no press listener', () => {
     const baseline = listenersWhileRendering('none');
     const enabled = listenersWhileRendering(false);
     const disabled = listenersWhileRendering(true);
     const busy = listenersWhileRendering('busy');
-    // No state adds a touch listener, so a scroll never waits on the switch.
-    // Nor a context-menu one: the gesture host keeps a held switch's menu
-    // closed. Nor a click one on its own elements: a lift's click wait
-    // listens only while it waits (utils/browserClickWait.ts).
+    // An enabled switch keeps a finger that sets off slowly (Switch FR15). So
+    // its element gets one blocking touchmove, which FR24 counts outside its
+    // budget (spec:AST-094 FR19). A switch that takes no touch gets none.
+    expect(enabled.touch).toBe(baseline.touch + 1);
+    expect(disabled.touch).toBe(baseline.touch);
+    expect(busy.touch).toBe(baseline.touch);
+    // No context-menu listener: the gesture host keeps a held switch's menu
+    // closed. No click one on its own elements: a lift's click wait listens
+    // only while it waits (utils/browserClickWait.ts).
     for (const counts of [enabled, disabled, busy]) {
-      expect(counts.touch).toBe(baseline.touch);
       expect(counts.contextMenu).toBe(baseline.contextMenu);
       expect(counts.click).toBe(0);
     }

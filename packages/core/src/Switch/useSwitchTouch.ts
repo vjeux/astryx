@@ -18,7 +18,11 @@
 
 import {useMemo, useState, type RefObject} from 'react';
 import {getGestureHost} from '../gestures/GestureHost';
-import {createPressTracker, type ControlEvent} from '../gestures/PressTracker';
+import {
+  createPressTracker,
+  type ControlEvent,
+  type PressContact,
+} from '../gestures/PressTracker';
 import type {GestureTouch} from '../gestures/types';
 import {isRtlElement} from '../hooks/isRtlElement';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
@@ -33,15 +37,17 @@ import {registerSwitchTable, switchControl} from '../motion/uikit/switch';
 import {useTouchPresentation} from '../utils/touchPresentation';
 import {awaitBrowserClick, clickForLift} from '../utils/browserClickWait';
 import {armClickGuard} from '../utils/clickGuard';
+import {isIosWebKit} from '../utils/touchQueries';
 import {
   commitOnRelease,
   dragTarget,
+  keepsOnSetOff,
   settleTime,
   startFlip,
   stepFlip,
-  switchTouchGeometry,
   type SwitchFlip,
   type SwitchTouchGeometry,
+  switchTouchGeometry,
 } from './switchTouch';
 import {
   readFillOf,
@@ -166,11 +172,11 @@ interface Drag {
  *   moves the thumb by a delta from that place (`translate`). When the value
  *   moves the CSS place, the delta is rebased in the same layout effect.
  *   Nothing moves on screen, and the velocity is kept.
- * - Touches go to a press tracker, which never blocks a scroll. No
- *   recognizer claims the touch. `touch-action: pan-y` (Switch.tsx) keeps
- *   horizontal moves for the switch: a drag follows and flips it, and the
- *   release commits. A vertical drag is the page's scroll, and the switch
- *   yields.
+ * - Touches go to a press tracker. No recognizer claims the touch. A finger
+ *   that sets off slower than UISwitch's measured race (`keepSpeed`) keeps
+ *   the switch: the host cancels the page's pan for it, at any angle. A
+ *   faster start goes to the page's scroll, and the switch yields.
+ *   `touch-action: pan-y` (Switch.tsx) leaves that scroll to the browser.
  * - A tap, a hold or a short drag activates through the browser's own click.
  *   The browser sends no click for a finger's hold, so the switch clicks its
  *   input once the click window passes. A mouse or a pen gets a click when
@@ -207,6 +213,8 @@ export class SwitchTouchController {
   private geometry: SwitchTouchGeometry;
   private isOn: boolean;
   private isInteractive = true;
+  /** Whether this finger keeps the switch; null until its first move. */
+  private keeps: boolean | null = null;
   /** The side the visuals show or head to. */
   private isVisuallyOn: boolean;
   /** +1 left-to-right, −1 right-to-left. */
@@ -318,6 +326,7 @@ export class SwitchTouchController {
       isBraking: () => host.isScrollBraking(surface),
       // A held switch opens no menu (UISwitch shows none).
       holdsContextMenu: () => this.pressTime != null,
+      keepsTouch: touch => this.keepsTouch(touch),
       onControlEvent: (event, touch) => this.onControlEvent(event, touch),
       onHighlightChange: isHighlighted => {
         if (isHighlighted && this.isTracking && this.pressTime == null) {
@@ -492,6 +501,25 @@ export class SwitchTouchController {
     this.downOffset = this.offsetAt(time);
   }
 
+  /**
+   * UISwitch's race with a scroll view's pan (iOS 26.2), decided once per
+   * touch. iOS WebKit asks about each move until its pan begins at the slop,
+   * so the switch decides by half the slop. Chromium asks only about the
+   * first move, so it decides there. On a phone that move already lies past
+   * Chromium's touch slop; an injected touch can send a one-sample move. A
+   * mouse and a pen keep the browser's rule.
+   */
+  private keepsTouch(contact: PressContact): boolean {
+    if (contact.pointerType !== 'touch' || !this.isInteractive) {
+      return false;
+    }
+    const view = this.elements?.surface.ownerDocument.defaultView;
+    this.keeps ??= keepsOnSetOff(contact, {
+      waitTravel: isIosWebKit(view) ? UIKIT_GESTURES.press.slop.value / 2 : 0,
+    });
+    return this.keeps === true;
+  }
+
   /** Passive: a mouse, a pen or a finger on the switch, UIControl's events. */
   private onControlEvent(event: ControlEvent, touch: GestureTouch): void {
     const travel = touch.x - touch.startX;
@@ -506,6 +534,7 @@ export class SwitchTouchController {
     switch (event) {
       case 'touchDown':
         this.isTracking = true;
+        this.keeps = null;
         this.touchDown(time);
         return;
       case 'touchDragInside':

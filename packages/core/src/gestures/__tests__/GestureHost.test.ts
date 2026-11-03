@@ -3542,6 +3542,36 @@ describe('a delivered press keeps its touch', () => {
   });
 });
 
+describe('a consumer that decides per move whether it keeps its touch', () => {
+  it('is asked about each move with that move, before the arena records it, so it can keep the very first move', () => {
+    const {row} = mount('<div id="row"></div>');
+    const asked: ({x: number; y: number; time: number} | undefined)[] = [];
+    class Racer extends RecordingConsumer {
+      keepsTouch(
+        _id: number,
+        at?: {readonly x: number; readonly y: number; readonly time: number},
+      ): boolean {
+        asked.push(at == null ? undefined : {...at});
+        return at != null && at.y < 10;
+      }
+    }
+    detachers.push(host.attachConsumer(row, new Racer()));
+    const finger = {id: 1, x: 10, y: 10};
+    touch('touchstart', row, [finger], [finger], 0);
+    // Chromium asks only about the first move: it must be answerable there.
+    const first = touch(
+      'touchmove',
+      row,
+      [{...finger, y: 7}],
+      [{...finger, y: 7}],
+      16,
+    );
+    expect(asked).toEqual([{x: 10, y: 7, time: 16}]);
+    expect(first.defaultPrevented).toBe(true);
+    touch('touchend', row, [{...finger, y: 7}], [], 40);
+  });
+});
+
 describe('detaching a keepsTouch press tracker', () => {
   it('removes its blocking touchmove listener while the element keeps its recognizers', () => {
     const {row} = mount('<div id="row"></div>');

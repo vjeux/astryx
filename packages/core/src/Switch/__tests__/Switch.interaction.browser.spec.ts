@@ -35,6 +35,7 @@ import {
   installTimerGate,
   markElement,
   openStory,
+  path as touchPath,
   releaseAnimations,
   seekAnimations,
   springStep,
@@ -1317,7 +1318,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     expect(root.computed).not.toBe('none');
   });
 
-  test('P8 · a held switch in a scrolling list yields a vertical drag to the page: it scrolls and the switch changes nothing (spec:AST-094 FR20)', async ({
+  test('P8 · a held switch in a scrolling list keeps a vertical drag, as UISwitch does: the page never scrolls and the lift toggles it (Switch FR15)', async ({
     page,
   }) => {
     const {driver, input, thumb, center} = await openSwitch(
@@ -1328,8 +1329,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       !driver.drivesNativeGestures,
       'injected touches do not scroll natively in this engine (checked on the iOS simulator instead)',
     );
-    // Held 300 ms, then dragged up 200 px: the page scrolls and the switch
-    // yields. UISwitch in a table cell would keep the touch.
+    // Held 300 ms, then dragged up 200 px. UISwitch in a table keeps the
+    // touch (iOS 26.2): the list stays and the lift toggles. The first row
+    // starts on.
     await driver.play(
       drag(
         center,
@@ -1338,12 +1340,60 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       ),
     );
     await waitForSwitchRest(page, thumb);
-    const scrollY = await page.evaluate(() => window.scrollY);
-    expect(scrollY).toBeGreaterThan(100);
-    await expect(input).toBeChecked();
-    const rest = await presented(page);
-    expect(rest.scaleX).toBeCloseTo(1, 2);
-    expect(rest.on).toBeCloseTo(1, 2);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(input).not.toBeChecked();
+  });
+
+  test('P8 · a finger that sets off slowly keeps the switch at any angle: a slow swipe straight up never scrolls the page and the lift toggles it (Switch FR15)', async ({
+    page,
+  }) => {
+    const {driver, input, thumb, center} = await openSwitch(
+      page,
+      'core-switch--in-scrolling-list',
+    );
+    test.skip(
+      !driver.drivesNativeGestures,
+      'injected touches do not scroll natively in this engine (checked on the iOS simulator instead)',
+    );
+    // 120 px up in 600 ms, 200 px/s, with no hold: UISwitch keeps it (iOS
+    // 26.2, Settings, 3 of 3). P7's fast pan still scrolls.
+    await driver.play(
+      drag(center, {x: center.x, y: center.y - 120}, {durationMs: 600}),
+    );
+    await waitForSwitchRest(page, thumb);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(input).not.toBeChecked();
+  });
+
+  test('P8 · a slow drag that flips the switch and then leaves it downward commits the flip, and the page never scrolls (Switch FR15)', async ({
+    page,
+  }) => {
+    const {driver, input, thumb, center} = await openSwitch(
+      page,
+      'core-switch--in-scrolling-list',
+    );
+    test.skip(
+      !driver.drivesNativeGestures,
+      'injected touches do not scroll natively in this engine (checked on the iOS simulator instead)',
+    );
+    // Left past the flip distance (the first row starts on), then 60 px
+    // down onto the next row, as in UISwitch (iOS 26.2, Settings).
+    const flipped = {x: center.x - FLIP_FROM_ON - 6, y: center.y};
+    await driver.play(
+      touchPath(
+        progress =>
+          progress < 0.5
+            ? {
+                x: center.x + (flipped.x - center.x) * (progress / 0.5),
+                y: center.y,
+              }
+            : {x: flipped.x, y: center.y + 60 * ((progress - 0.5) / 0.5)},
+        {durationMs: 800, restMs: 150},
+      ),
+    );
+    await waitForSwitchRest(page, thumb);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(input).not.toBeChecked();
   });
 
   test('P9 · a horizontal drag in a scrolling list flips the switch and never scrolls the page', async ({

@@ -122,6 +122,15 @@ export const switchControl = {
    */
   flipDistance: 26,
   /**
+   * How fast a finger may set off from the switch and keep it, in pt/s. A
+   * faster start goes to the scroll view's pan, decided once at the start.
+   * @source measured: Settings > Accessibility > Display & Text Size, iOS
+   *   26.2 simulator, iPhone 17 Pro, HID swipes of 120 pt straight up from
+   *   the thumb: 200 pt/s kept 3 of 3, 400 pt/s 2 of 3, 600 and 900 pt/s 0
+   *   of 3 (the list scrolled). Set inside the 400 to 600 step, Nov 2 2026
+   */
+  keepSpeed: 450,
+  /**
    * The track color turning on: the well image sliding in on a critically
    * damped spring, starting when the switch flips (the lift of a tap).
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,

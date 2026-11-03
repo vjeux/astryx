@@ -65,6 +65,36 @@ describe('PressTracker', () => {
     expect(tracker.keepsTouch?.(2)).toBe(false);
   });
 
+  it('a keepsTouch function decides for the tracked touch only, and a kept touch that travels before the delay still paints its press', () => {
+    const highlights: boolean[] = [];
+    const tracker = createPressTracker({
+      getBounds: () => BOUNDS,
+      keepsTouch: touch => touch.y < touch.startY,
+      highlightDelay: 'always',
+      onHighlightChange: value => highlights.push(value),
+    });
+    const h = createHarness();
+    h.finger(1).down(150, 120, 0, {recognizers: [], consumer: tracker});
+    expect(tracker.keepsTouch?.(1)).toBe(false);
+    // The host asks about a move before the arena records it.
+    expect(tracker.keepsTouch?.(1, {x: 150, y: 105, time: 16})).toBe(true);
+    expect(tracker.keepsTouch?.(1, {x: 150, y: 125, time: 16})).toBe(false);
+    // Up past the slop before the delay: kept, so the press is not a scroll.
+    h.finger(1).move(150, 105, 16);
+    expect(tracker.keepsTouch?.(1)).toBe(true);
+    expect(tracker.keepsTouch?.(2)).toBe(false);
+    vi.advanceTimersByTime(DELAY);
+    expect(highlights).toEqual([true]);
+    h.finger(1).up(DELAY * 2);
+    expect(tracker.keepsTouch?.(1)).toBe(false);
+    // Down past the slop: not kept, so the press never paints.
+    h.finger(2).down(150, 120, DELAY * 3, {recognizers: [], consumer: tracker});
+    h.finger(2).move(150, 135, DELAY * 3 + 16);
+    vi.advanceTimersByTime(DELAY);
+    expect(tracker.keepsTouch?.(2)).toBe(false);
+    expect(highlights).toEqual([true, false]);
+  });
+
   it('highlights in the same frame outside a scroller and acts on touch up inside', () => {
     const {events, highlights, tracker, h} = setup();
     h.finger(1).down(150, 120, 0, {recognizers: [], consumer: tracker});

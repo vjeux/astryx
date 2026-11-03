@@ -171,6 +171,42 @@ export function commitOnRelease(
   return flip?.didFlip === true ? flip.isVisuallyOn : !isOn;
 }
 
+/** Where a finger landed and where it is now, client px and ms. */
+export interface SwitchContact {
+  readonly x: number;
+  readonly y: number;
+  readonly time: number;
+  readonly startX: number;
+  readonly startY: number;
+  readonly startTime: number;
+}
+
+/**
+ * UISwitch's race with a scroll view's pan: whether a finger set off slowly
+ * enough to keep the switch, at any angle. Its average speed since it landed
+ * counts, so a hold keeps it. With a `waitTravel`, it is null until the
+ * finger has travelled further. With none, the first ask decides, even for a
+ * move that did not move. An engine that asks only about the first move
+ * gives no second chance.
+ */
+export function keepsOnSetOff(
+  contact: SwitchContact,
+  {
+    waitTravel = 0,
+    keepSpeed = switchControl.keepSpeed,
+  }: {waitTravel?: number; keepSpeed?: number} = {},
+): boolean | null {
+  const travel = Math.hypot(
+    contact.x - contact.startX,
+    contact.y - contact.startY,
+  );
+  if (waitTravel > 0 && travel <= waitTravel) {
+    return null;
+  }
+  const seconds = Math.max(contact.time - contact.startTime, 1) / 1000;
+  return travel / seconds <= keepSpeed;
+}
+
 /**
  * When the lifted thumb may settle, on the document timeline (ms). It is the
  * release, but never sooner than the minimum lift time after the lift.

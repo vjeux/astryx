@@ -20,6 +20,7 @@ import {registerSwitchTable, switchControl} from '../motion/uikit/switch';
 import {
   commitOnRelease,
   dragTarget,
+  keepsOnSetOff,
   settleTime,
   startFlip,
   stepFlip,
@@ -341,5 +342,48 @@ describe('switch values', () => {
     // The geometry and the rubber band are not motion.
     expect(motionRoleOf(switchControl.rubberBand)).toBeUndefined();
     expect(settleTime(0, 0)).toBe(switchControl.minimumLiftMs);
+  });
+});
+
+describe("the race with the page's pan (UISwitch, iOS 26.2)", () => {
+  const contact = (dx: number, dy: number, ms: number) => ({
+    x: 100 + dx,
+    y: 100 + dy,
+    time: 1000 + ms,
+    startX: 100,
+    startY: 100,
+    startTime: 1000,
+  });
+
+  it('keeps a finger that sets off at up to keepSpeed, at any angle, and lets a faster one go to the page', () => {
+    // 16 ms into a 200 pt/s swipe straight up: kept, as in Settings (3 of 3).
+    expect(keepsOnSetOff(contact(0, -3.2, 16))).toBe(true);
+    // At 600 pt/s the list scrolled every time.
+    expect(keepsOnSetOff(contact(0, -9.6, 16))).toBe(false);
+    // The angle does not matter, only the speed.
+    expect(keepsOnSetOff(contact(2.3, -2.3, 16))).toBe(true);
+    expect(keepsOnSetOff(contact(6.8, -6.8, 16))).toBe(false);
+    expect(switchControl.keepSpeed).toBe(450);
+  });
+
+  it('keeps a finger held still before it moves, and decides at the first ask where only the first move is asked about', () => {
+    // A 300 ms hold, then a fast move: the average from the landing counts.
+    expect(keepsOnSetOff(contact(0, -11, 316))).toBe(true);
+    // A first move that did not move (a pressure change) is slow: kept.
+    expect(keepsOnSetOff(contact(0, 0, 16))).toBe(true);
+    // Where the engine keeps asking, it waits for travel instead.
+    expect(keepsOnSetOff(contact(0, 0, 16), {waitTravel: 5})).toBeNull();
+  });
+
+  it('waits for waitTravel where the engine keeps asking (iOS WebKit, half the slop), so a swipe that speeds up is averaged, not judged by its first sample', () => {
+    const iosWait = {waitTravel: 5};
+    // A gentle first sample (1 px in 16 ms) decides nothing yet.
+    expect(keepsOnSetOff(contact(0, -1, 16), iosWait)).toBeNull();
+    // By 32 ms the flick has covered 16 px: 500 pt/s, so the page takes it.
+    expect(keepsOnSetOff(contact(0, -16, 32), iosWait)).toBe(false);
+    // A swipe that stays slow keeps the switch.
+    expect(keepsOnSetOff(contact(0, -6, 32), iosWait)).toBe(true);
+    // Where only the first move is asked about (Chromium), it decides there.
+    expect(keepsOnSetOff(contact(0, -1, 16))).toBe(true);
   });
 });

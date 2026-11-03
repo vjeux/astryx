@@ -553,8 +553,9 @@ under a finger, and a mouse follows `module:DropdownMenu/useMenuPress` FR3 and
   the shared press controller and the menu press model's stray-click
   swallower (`module:DropdownMenu/useMenuPress` PR2), each installed once per
   page, count once and not per component, an action group's release-armed click
-  swallower (FR19) counts as press work, and a claiming recognizer's `touchmove` listener for a finger
-  (FR19) counts outside this budget. The number of `document`- or `window`-level
+  swallower (FR19) counts as press work, and a claiming recognizer's or a
+  touch-keeping control's `touchmove` listener for a finger (FR19) counts
+  outside this budget. The number of `document`- or `window`-level
   touch listeners MUST NOT grow with the number of component instances, a
   repeated row or cell adds no touch observer of its own, and nothing
   touch-related remains after the last instance unmounts

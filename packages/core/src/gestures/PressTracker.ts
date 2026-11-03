@@ -70,6 +70,12 @@ export interface PressBounds {
   readonly bottom: number;
 }
 
+/** Where a tracked touch landed and where the move being asked about is. */
+export type PressContact = Pick<
+  GestureTouch,
+  'pointerType' | 'x' | 'y' | 'time' | 'startX' | 'startY' | 'startTime'
+>;
+
 export interface PressTrackerOptions {
   /** The control's bounds in client px, read when a finger lands. */
   getBounds: () => PressBounds | null;
@@ -79,14 +85,16 @@ export interface PressTrackerOptions {
   onHighlightChange?: (isHighlighted: boolean) => void;
   /**
    * A continuous-tracking control (a held stepper) keeps its touch once its
-   * press is delivered: the host cancels the browser's pan for that finger,
-   * as UIKit's `touchesShouldCancel(in:)` is false for a tracking control.
-   * Its element then gets a blocking `touchmove` listener, so a scroll that
-   * starts on it waits on the main thread: never set it on plain buttons,
-   * links, cards or list cells.
+   * press is delivered. The host then cancels the browser's pan for that
+   * finger, as UIKit's `touchesShouldCancel(in:)` is false for a tracking
+   * control. Its element gets a blocking `touchmove` listener, so a scroll
+   * that starts on it waits on the main thread. Never set it on plain
+   * buttons, links, cards or list cells. A function decides for the tracked
+   * touch instead, each time the host asks (a switch's race with the page's
+   * pan).
    * @default false
    */
-  keepsTouch?: boolean;
+  keepsTouch?: boolean | ((touch: PressContact) => boolean);
   /**
    * For a control whose own record defines a hold action (a stepper's
    * hold-repeat): pass `lockSelection` (utils/selectionLock.ts) to turn
@@ -211,21 +219,34 @@ export interface PressTracker extends TouchConsumer {
   /** Drop any highlight and timers (the control unmounted or was disabled). */
   dispose(): void;
   /**
-   * Present only for a continuous-tracking control created with
-   * `keepsTouch: true` (a held stepper): once its press is delivered, the
-   * browser's pan must not take the touch. A plain pressable leaves it
-   * undefined and keeps passive listeners, so a scroll starting on it never
-   * waits on the main thread.
+   * Present only for a control created with `keepsTouch`. A held stepper
+   * keeps a touch once its press is delivered; a switch, while its own rule
+   * says so. The browser's pan must not take a kept touch. A plain pressable
+   * leaves it undefined and keeps passive listeners, so a scroll starting on
+   * it never waits on the main thread.
    */
-  readonly keepsTouch?: (touchId: number) => boolean;
+  readonly keepsTouch?: (
+    touchId: number,
+    at?: {readonly x: number; readonly y: number; readonly time: number},
+  ) => boolean;
   /** The selection lock of a control whose hold acts (FR41); see the option. */
   readonly selectionLock: SelectionLock | undefined;
+}
+
+/** Where a touch landed, and its pointer kind. */
+function startOf(
+  touch: GestureTouch,
+): Pick<GestureTouch, 'pointerType' | 'startX' | 'startY' | 'startTime'> {
+  const {pointerType, startX, startY, startTime} = touch;
+  return {pointerType, startX, startY, startTime};
 }
 
 /** Track a control's touches (see {@link PressTracker}). */
 export function createPressTracker(options: PressTrackerOptions): PressTracker {
   let isKept = false;
   let touchId: number | null = null;
+  /** The arena's record of the tracked touch, updated in place. */
+  let current: GestureTouch | null = null;
   let bounds: PressBounds | null = null;
   let highlightTimer: ReturnType<typeof setTimeout> | null = null;
   let flashTimer: ReturnType<typeof setTimeout> | null = null;
@@ -285,6 +306,7 @@ export function createPressTracker(options: PressTrackerOptions): PressTracker {
     // A highlight shown at the lift (a quick tap's flash) keeps nothing.
     isKept = false;
     touchId = null;
+    current = null;
     state.isTracking = false;
     state.isTouchInside = false;
     bounds = null;
@@ -333,6 +355,7 @@ export function createPressTracker(options: PressTrackerOptions): PressTracker {
       }
       clearFlash();
       touchId = touch.id;
+      current = touch;
       bounds = options.getBounds();
       state.isTracking = true;
       state.isTouchInside = true;
@@ -365,9 +388,14 @@ export function createPressTracker(options: PressTrackerOptions): PressTracker {
         touchCancelled(touch);
         return;
       }
-      if (highlightTimer != null && travel(touch) > PRESS.slop.value) {
+      if (
+        highlightTimer != null &&
+        travel(touch) > PRESS.slop.value &&
+        !(typeof options.keepsTouch === 'function' && options.keepsTouch(touch))
+      ) {
         // A finger travelling before the delay ran out is scrolling: the
         // press it began never paints, as a flick on a list paints nothing.
+        // A kept touch is not scrolling, so its press still paints.
         clearTimeout(highlightTimer);
         highlightTimer = null;
         isPendingDead = true;
@@ -433,10 +461,22 @@ export function createPressTracker(options: PressTrackerOptions): PressTracker {
       return options.selectionLock;
     },
   };
-  if (options.keepsTouch === true) {
+  const keeps = options.keepsTouch;
+  if (keeps === true) {
     // Only the tracked touch whose press was delivered is kept.
     return Object.assign(tracker, {
       keepsTouch: (id: number) => isKept && touchId === id,
+    });
+  }
+  if (typeof keeps === 'function') {
+    return Object.assign(tracker, {
+      keepsTouch: (
+        id: number,
+        at?: {readonly x: number; readonly y: number; readonly time: number},
+      ) =>
+        touchId === id &&
+        current != null &&
+        keeps(at == null ? current : {...startOf(current), ...at}),
     });
   }
   return tracker;
