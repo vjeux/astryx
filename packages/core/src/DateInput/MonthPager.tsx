@@ -54,7 +54,7 @@ import {
 } from '../utils/plainDate';
 import {dateInputTouchSizes, dateInputTouchGeometry} from './tokens.stylex';
 import type {MonthScrollerProps} from './MonthScroller';
-import {useSheetAxisSplit} from './useSheetAxisSplit';
+import {useOwnScrollGesture} from './useOwnScrollGesture';
 import {
   clampIndex,
   fromMonthIndex,
@@ -315,7 +315,7 @@ function MonthPagerComponent({
     // The settle has come to rest: whatever the frames showed, the title
     // names the month the grid rests on.
     onSettle: index => report(index),
-    // UIKit's split in a sheet (useSheetAxisSplit, MEASUREMENTS.md M-DP01).
+    // UIKit's split in a sheet (useOwnScrollGesture's 'pager', MEASUREMENTS.md M-DP01).
     // The pan begins on the first move where either axis travels its
     // hysteresis, and only if the sideways travel has reached it. Like every
     // pan, it claims its touch only when it begins, on the move the sheet's
@@ -521,7 +521,7 @@ function MonthPagerComponent({
   // Inside a bottom sheet, the sheet's touch listener skips the drags UIKit
   // gives the grid and every move before the decision. The pager's pan uses
   // the same rule (above).
-  useSheetAxisSplit(viewportRef);
+  useOwnScrollGesture(viewportRef, 'pager');
 
   // Move the keyboard focus by whole days (or months) and let the pager
   // follow. The vocabulary is the APG grid's, plus PageUp/PageDown for a
