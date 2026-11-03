@@ -140,6 +140,15 @@ export interface CreateMenuPressOptions {
   longPressDelayMs?: number;
   /** Whether the model is live. @default true */
   isEnabled?: boolean;
+  /**
+   * Where a press in the menu may start. `'menu'` takes a press anywhere in
+   * the menu. `'items'` takes only a press that lands on an item, with the
+   * main button. A press on other content in the menu stays the browser's. So
+   * does a Ctrl, Cmd or Shift mouse press on a link item, which opens the link
+   * in a new tab or window.
+   * @default 'menu'
+   */
+  startBehavior?: 'menu' | 'items';
 }
 
 export interface CreateMenuPressReturn {
@@ -151,6 +160,22 @@ export interface CreateMenuPressReturn {
   isTriggerClickFromPress: () => boolean;
   /** End the gesture in flight with nothing acting (the menu closed). */
   cancel: () => void;
+  /**
+   * Merge new options. They apply from the next event, and a gesture in
+   * progress goes on. A new `trigger` moves the trigger's listeners to it.
+   */
+  update: (options: Partial<CreateMenuPressOptions>) => void;
+  /**
+   * Hand the press a `pointerdown` the trigger received through a handler of
+   * the caller's. A press that the trigger's own listener already took is
+   * not taken twice.
+   */
+  handleTriggerPointerDown: (event: MenuPressDownEvent) => void;
+  /** Hand the press the trigger's `contextmenu`, as above. */
+  handleTriggerContextMenu: (event: {
+    preventDefault: () => void;
+    nativeEvent?: Event;
+  }) => void;
   /**
    * Remove every listener the press added, end a press in flight with nothing
    * acting, and take the marker off the menu root. A second call does nothing.
@@ -170,14 +195,16 @@ export interface MenuPressSource {
 }
 
 /**
- * @internal A pointer press the core takes: a DOM `PointerEvent`, or a React
- * one, which carries the DOM event as `nativeEvent`.
+ * A pointer press the press takes: a DOM `PointerEvent`, or a React one,
+ * which carries the DOM event as `nativeEvent`.
  */
 export interface MenuPressDownEvent {
   readonly pointerId: number;
   readonly pointerType: string;
   readonly button: number;
   readonly ctrlKey: boolean;
+  readonly metaKey?: boolean;
+  readonly shiftKey?: boolean;
   readonly target: EventTarget | null;
   preventDefault: () => void;
   readonly nativeEvent?: PointerEvent;
@@ -681,6 +708,22 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
       if (target?.closest(MENU_PRESS_ROOT_SELECTOR) !== menu) {
         return;
       }
+      // Only a press on an item counts here. Other content keeps its own
+      // click, and a modified mouse press on a link opens it as the browser
+      // does.
+      const {startBehavior = 'menu', itemSelector} = source.getOptions();
+      if (
+        startBehavior === 'items' &&
+        (event.button !== 0 ||
+          target.closest(itemSelector) == null ||
+          (pointerType === 'mouse' &&
+            (event.ctrlKey ||
+              event.metaKey === true ||
+              event.shiftKey === true) &&
+            target.closest('a[href]') != null))
+      ) {
+        return;
+      }
       if (pointerType !== 'mouse') {
         // Cancelling pointerdown stops the compatibility mouse events that a
         // finger fires at its landing row when it lifts. That mousedown would
@@ -825,12 +868,13 @@ export function createMenuPress(
   menu: HTMLElement,
   options: CreateMenuPressOptions,
 ): CreateMenuPressReturn {
+  let current = options;
   let trigger: HTMLElement | null = null;
   let isDestroyed = false;
   const core = createMenuPressCore({
     getMenu: () => menu,
     getTrigger: () => trigger,
-    getOptions: () => options,
+    getOptions: () => current,
   });
   const disconnect = core.connect();
   // The highlight follows the last input in the menu's document. The press
@@ -849,10 +893,27 @@ export function createMenuPress(
 
   const onMenuPointerDown = (event: PointerEvent) =>
     core.handleMenuPointerDown(event);
-  const onTriggerPointerDown = (event: PointerEvent) =>
-    core.handleTriggerPointerDown(event);
-  const onTriggerContextMenu = (event: MouseEvent) =>
-    core.handleTriggerContextMenu(event);
+  // A trigger event the press took, from its own listener or a caller's
+  // handler. The listener on the trigger runs before React's delegated one,
+  // so the press takes an event that a caller also forwards only once.
+  const taken = new WeakSet<Event>();
+  const take = (event: Event): boolean => {
+    if (isDestroyed || taken.has(event)) {
+      return false;
+    }
+    taken.add(event);
+    return true;
+  };
+  const onTriggerPointerDown = (event: PointerEvent) => {
+    if (take(event)) {
+      core.handleTriggerPointerDown(event);
+    }
+  };
+  const onTriggerContextMenu = (event: MouseEvent) => {
+    if (take(event)) {
+      core.handleTriggerContextMenu(event);
+    }
+  };
   menu.addEventListener('pointerdown', onMenuPointerDown);
 
   const setTrigger = (next: HTMLElement | null) => {
@@ -869,11 +930,30 @@ export function createMenuPress(
       trigger.addEventListener('contextmenu', onTriggerContextMenu);
     }
   };
-  setTrigger(options.trigger ?? null);
+  setTrigger(current.trigger ?? null);
 
   return {
     isTriggerClickFromPress: () => core.isTriggerClickFromPress(),
     cancel: () => core.cancel(),
+    update(next) {
+      if (isDestroyed) {
+        return;
+      }
+      current = {...current, ...next};
+      if ('trigger' in next) {
+        setTrigger(next.trigger ?? null);
+      }
+    },
+    handleTriggerPointerDown(event) {
+      if (take(event.nativeEvent ?? (event as unknown as Event))) {
+        core.handleTriggerPointerDown(event);
+      }
+    },
+    handleTriggerContextMenu(event) {
+      if (take(event.nativeEvent ?? (event as unknown as Event))) {
+        core.handleTriggerContextMenu(event);
+      }
+    },
     destroy() {
       if (isDestroyed) {
         return;
