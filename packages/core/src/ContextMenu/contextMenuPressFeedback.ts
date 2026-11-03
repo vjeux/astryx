@@ -15,19 +15,22 @@
 
 // On iOS 26.2, a finger that rests on a view with a context menu makes a copy
 // of the view grow from its center. A finger that lifts or wanders before the
-// commit sends the size back to 1 on the same spring. After the commit, the
-// view stays grown while the menu is up. It returns on the dismissal spring,
-// `springs.contextMenuDismiss`, when the menu closes.
+// commit sends the size back to 1. After the commit, the view stays grown
+// while the menu is up. It returns on the dismissal spring,
+// `springs.contextMenuDismiss`, when the menu closes. The growth and the early
+// return start from a hold with no velocity. So they are not a gesture's
+// motion, and they play the theme's state-change spring.
 //
 // Here the trigger itself takes the scale, from its center, and the compositor
 // animator plays it. The trigger is a pressable surface of core's press
 // machine. The machine writes `data-astryx-press="on"` once it believes the
 // press, and it takes the attribute away when the press ends. The growth
-// starts at "on" and springs back when it goes, unless the menu opened. The
-// whole held curve is known when it starts and sits on the document timeline.
-// So it keeps advancing every frame while the main thread is busy. Nothing
-// renders and nothing reads layout during the press. The machine's onset, 150
-// ms on a timer, stands for UIKit's measured `feedbackOnsetMs`.
+// starts at "on". It springs back when ContextMenu's recognizer ends the press
+// with no menu. The whole held curve is known when it starts and sits on the
+// document timeline. So it keeps advancing every frame while the main thread
+// is busy. Nothing renders and nothing reads layout during the press. The
+// machine's onset, 150 ms on a timer, stands for UIKit's measured
+// `feedbackOnsetMs`.
 //
 // An inline trigger (`triggerAs="span"`) shows no feedback, because a
 // transform does not apply to it. Reduce Motion shows none either.
@@ -39,13 +42,8 @@ import {observeMutations} from '../utils/sharedMutationObserver';
 import {createAnimator, type Animator} from '../motion/animator';
 import {resolveMotion} from '../motion/resolveMotion';
 import {registerSpringsTable, springs} from '../motion/uikit/springs';
-import {
-  contextMenu,
-  registerContextMenuTable,
-} from '../motion/uikit/contextMenu';
+import {contextMenu} from '../motion/uikit/contextMenu';
 import {pressFeedbackCurve, pressFeedbackMotion} from './contextMenuPressCurve';
-
-const {feedbackSpring} = contextMenu.press;
 
 export interface ContextMenuPressFeedback {
   /**
@@ -100,9 +98,8 @@ export function useContextMenuPressFeedback(
     if (element == null) {
       return null;
     }
-    // The feedback's springs are motion roles: register their tables before
+    // The feedback's springs are motion roles: register their table before
     // the first motion. A second call does nothing.
-    registerContextMenuTable();
     registerSpringsTable();
     if (animatorRef.current?.element !== element) {
       animatorRef.current?.dispose();
@@ -139,8 +136,7 @@ export function useContextMenuPressFeedback(
         return;
       }
       isGrownRef.current = true;
-      // The spring and the latency are motion roles, read through the
-      // registry. `time` is the onset, the press machine's "on".
+      // `time` is the onset, the press machine's "on".
       const motion = pressFeedbackMotion(animator.element);
       const at = time + motion.latencyMs;
       animator.play(
@@ -166,16 +162,8 @@ export function useContextMenuPressFeedback(
       settleBack(
         animator.animate(
           {scale: 1},
-          {spring: feedbackSpring},
-          {
-            at:
-              time +
-              resolveMotion(
-                animator.element,
-                contextMenu.press,
-                'returnLatencyMs',
-              ),
-          },
+          {spring: resolveMotion(animator.element, springs.stateChange)},
+          {at: time},
         ).finished,
       );
     },

@@ -16,9 +16,11 @@
 // The ramp is `contextMenu.press.feedbackRate` from the onset, then the slower
 // `feedbackRateAfterCommit` after the commit, until the menu displays. The
 // copy's visible size chases that ramp through `feedbackSpring`. The screen
-// shows it `feedbackLatencyMs` after UIKit starts it. The curve is
-// closed-form, so the whole held press is known when the finger lands, and
-// the compositor plays it. Its spring and latency are internal motion roles.
+// shows it `feedbackLatencyMs` after UIKit starts it. ContextMenu chases the
+// same ramp through the theme's state-change spring, with no latency of its
+// own. The growth starts from a hold with no velocity, so it is not a
+// gesture's motion. The curve is closed-form, so the whole held press is known
+// when the finger lands, and the compositor plays it.
 
 import {
   settlingDuration,
@@ -29,6 +31,7 @@ import {
 } from '../motion/spring';
 import {resolveMotion} from '../motion/resolveMotion';
 import {contextMenu} from '../motion/uikit/contextMenu';
+import {springs} from '../motion/uikit/springs';
 
 const {
   feedbackOnsetMs,
@@ -47,7 +50,7 @@ export interface PressFeedbackMotion {
   readonly latencyMs: number;
 }
 
-/** The table's motion (UIKit's). */
+/** UIKit's own motion, as the table measures it. */
 const TABLE_MOTION: PressFeedbackMotion = {
   spring: feedbackSpring,
   onsetMs: feedbackOnsetMs,
@@ -55,18 +58,17 @@ const TABLE_MOTION: PressFeedbackMotion = {
 };
 
 /**
- * The press feedback's motion for `element`: the table's spring and latency,
- * as its registry resolves them. The roles are internal, so a theme sets no
- * value of its own. The onset is the measured one: core's press machine
- * decides when a press is believed.
+ * The press feedback's motion for `element`: the theme's state-change spring,
+ * with no latency of its own. The onset is the measured one: core's press
+ * machine decides when a press is believed.
  */
 export function pressFeedbackMotion(
   element: Element | null | undefined,
 ): PressFeedbackMotion {
   return {
-    spring: resolveMotion(element, contextMenu.press.feedbackSpring),
+    spring: resolveMotion(element, springs.stateChange),
     onsetMs: feedbackOnsetMs,
-    latencyMs: resolveMotion(element, contextMenu.press, 'feedbackLatencyMs'),
+    latencyMs: 0,
   };
 }
 
@@ -121,7 +123,7 @@ export function pressFeedbackCurve({
 }: {
   from?: number;
   velocity?: number;
-  /** The motion to play (`pressFeedbackMotion`); the table's by default. */
+  /** The motion to play (`pressFeedbackMotion`); UIKit's by default. */
   motion?: PressFeedbackMotion;
 } = {}): PressFeedbackCurve {
   const {onsetMs} = motion;
