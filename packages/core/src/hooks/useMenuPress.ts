@@ -203,7 +203,13 @@ export interface UseMenuPressReturn {
  *
  * @internal
  */
-export type DropdownMenuPressReturn = UseMenuPressReturn;
+export interface DropdownMenuPressReturn extends UseMenuPressReturn {
+  /**
+   * The pointer type of the trigger's last press, for a click that opens the
+   * menu and carries none.
+   */
+  readonly triggerPressPointerType: () => MenuPressPointerType | null;
+}
 
 /**
  * Where a pointer is, for a finger's handoff distance. Positions reach the
@@ -325,8 +331,12 @@ export function useDropdownMenuPress(
   const {surface, triggerContext} = useMenuPressModel(options);
   const trigger = useMenuTriggerPress(triggerContext, options);
   return useMemo(
-    () => ({...surface, triggerProps: trigger}),
-    [surface, trigger],
+    () => ({
+      ...surface,
+      triggerProps: trigger,
+      triggerPressPointerType: triggerContext.getTriggerPointerType,
+    }),
+    [surface, trigger, triggerContext],
   );
 }
 
@@ -339,7 +349,7 @@ export function useDropdownMenuPress(
  */
 export type MenuSurfacePressReturn = Omit<
   DropdownMenuPressReturn,
-  'triggerProps'
+  'triggerProps' | 'triggerPressPointerType'
 >;
 
 /**
@@ -413,6 +423,7 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
   );
   const lastPointerEventRef = useRef<PointerEvent | null>(null);
   const triggerGestureRef = useRef<number | null>(null);
+  const triggerPointerTypeRef = useRef<MenuPressPointerType | null>(null);
   // The second pointer that ended a gesture must not start the next one.
   const ignoredPointerIdRef = useRef<number | null>(null);
 
@@ -824,6 +835,10 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
     setLastPointerEvent: event => {
       lastPointerEventRef.current = event;
     },
+    setTriggerPointerType: pointerType => {
+      triggerPointerTypeRef.current = pointerType;
+    },
+    getTriggerPointerType: () => triggerPointerTypeRef.current,
     takeIgnoredPointer: pointerId => {
       if (pointerId !== ignoredPointerIdRef.current) {
         return false;

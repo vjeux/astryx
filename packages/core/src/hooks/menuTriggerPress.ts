@@ -89,6 +89,9 @@ export interface MenuTriggerContext {
     tolerance?: LongPressTolerance,
   ) => void;
   readonly setLastPointerEvent: (event: PointerEvent) => void;
+  /** Records the pointer type of a press that landed on the trigger. */
+  readonly setTriggerPointerType: (pointerType: MenuPressPointerType) => void;
+  readonly getTriggerPointerType: () => MenuPressPointerType | null;
   /** Whether the model ignores this pointer; a match is cleared. */
   readonly takeIgnoredPointer: (pointerId: number) => boolean;
   readonly installTouchMovePreventer: () => void;
@@ -164,6 +167,7 @@ export function useMenuTriggerPress(
         // Control-click is the context menu's on macOS.
         return;
       }
+      ctx.setTriggerPointerType(pointerType);
       const native = event.nativeEvent;
       const down = {
         type: 'down',
