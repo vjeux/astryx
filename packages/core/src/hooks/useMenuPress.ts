@@ -453,20 +453,14 @@ export function useDropdownMenuPress(
 
   const highlight = useCallback(
     (row: HTMLElement | null) => {
-      // A held finger or pen marks the row it lights, for the row's pressed
-      // paint. A held mouse keeps the hover tint, as on a desktop.
-      const gesture = gestureRef.current;
-      const lit =
-        gesture.phase !== 'idle' && gesture.pointerType !== 'mouse'
-          ? row
-          : null;
-      if (litRowRef.current !== lit) {
+      // The held press marks the row it lights, for the row's pressed paint.
+      if (litRowRef.current !== row) {
         if (litRowRef.current != null) {
           clearMenuPressLit(litRowRef.current);
         }
-        litRowRef.current = lit;
-        if (lit != null) {
-          markMenuPressLit(lit);
+        litRowRef.current = row;
+        if (row != null) {
+          markMenuPressLit(row);
         }
       }
       const {onHighlight, menuRef} = optionsRef.current;
