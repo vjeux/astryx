@@ -23,6 +23,7 @@
 
 import {useCallback, useEffect, useMemo, useRef} from 'react';
 import {UIKIT_PAN} from '../motion/uikit/gestures';
+import {subscribeInput} from '../utils/inputStream';
 
 export interface OutsidePressOptions {
   /** The pointer types the watch follows; every type when omitted. */
@@ -118,9 +119,11 @@ export function watchOutsidePress(
   for (const target of judges) {
     target.addEventListener('pointerdown', handleDown as EventListener, true);
   }
-  if (closesOnPan) {
-    doc.addEventListener('pointermove', handleMove, true);
-  }
+  const view = doc.defaultView;
+  const stopMoves =
+    closesOnPan && view != null
+      ? subscribeInput(view, 'pointermove', handleMove)
+      : null;
   doc.addEventListener('pointerup', handleUp, true);
   doc.addEventListener('pointercancel', handleCancel, true);
   return () => {
@@ -131,7 +134,7 @@ export function watchOutsidePress(
         true,
       );
     }
-    doc.removeEventListener('pointermove', handleMove, true);
+    stopMoves?.();
     doc.removeEventListener('pointerup', handleUp, true);
     doc.removeEventListener('pointercancel', handleCancel, true);
   };
