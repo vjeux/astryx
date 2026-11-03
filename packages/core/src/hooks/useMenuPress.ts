@@ -106,8 +106,9 @@ export interface UseMenuPressOptions {
    */
   itemSelector: string;
   /**
-   * A mouse pressed the trigger, or a finger has rested on it for the
-   * long-press delay: open the menu under the held pointer. Return whether it opened; a `false` (the
+   * A mouse pressed the trigger, or a finger opened it: as it pressed, on a
+   * touch screen with no `longPressDelayMs` given, or else once it had rested
+   * for that delay. Open the menu under the held pointer. Return whether it opened; a `false` (the
    * press closed an open menu instead) ends the gesture. The click the
    * trigger receives for this same gesture is reported by
    * {@link UseMenuPressReturn.isTriggerClickFromPress} so the caller can
@@ -142,7 +143,9 @@ export interface UseMenuPressOptions {
   hitTest?: (x: number, y: number) => Element | null;
   /**
    * How long a finger rests on the trigger before the menu opens under it.
-   * @default 500
+   * Unset, a finger on every device waits as on UIMenu: not at all in a fixed
+   * bar, and 150 ms in a scroll view. The opening finger then picks after
+   * UIMenu's handoff. Set, it is that wait everywhere, as released.
    */
   longPressDelayMs?: number;
   /** Whether the model is live. @default true */
@@ -175,7 +178,10 @@ export interface UseMenuPressReturn {
     onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
     [MENU_PRESS_MARKER]: '';
   };
-  /** Spread onto the trigger: a mouse press opens; a held finger opens. */
+  /**
+   * Spread onto the trigger: a mouse press opens; a finger opens as it
+   * presses on a touch screen with no delay given, or else once held for it.
+   */
   triggerProps: {
     onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
     onContextMenu: (event: React.MouseEvent<HTMLElement>) => void;
@@ -306,7 +312,13 @@ export function useMenuPress(options: UseMenuPressOptions): UseMenuPressReturn {
   // `touchModel` does not reach the model.
   const {touchModel: _touchModel, ...publicOptions} =
     options as DropdownMenuPressOptions;
-  return useDropdownMenuPress({...publicOptions, touchModel: 'pointer'});
+  // An unset delay follows UIMenu for a finger on every device. A set one
+  // keeps the released wait.
+  return useDropdownMenuPress({
+    ...publicOptions,
+    touchModel:
+      publicOptions.longPressDelayMs === undefined ? 'uikit' : 'pointer',
+  });
 }
 
 /**
