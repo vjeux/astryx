@@ -43,7 +43,11 @@ affects_consumer_docs:
     "packages/core/src/CommandPalette/**",
     "packages/core/src/Chat/ChatComposer.tsx",
     "packages/core/src/Chat/ChatComposerInput.tsx",
-    "packages/core/src/Chat/ChatLayout.tsx"
+    "packages/core/src/Chat/ChatLayout.tsx",
+    "packages/core/src/keyboard/**",
+    "packages/core/src/motion/android/**",
+    "packages/core/src/utils/layoutViewport.ts",
+    "packages/core/src/utils/layoutViewport.test.ts"
   ]
 }
 ```
@@ -142,7 +146,12 @@ app to turn on.
   keyboard-aware surfaces ride the keyboard on show and on hide: they move with
   the keyboard's slide, within one frame of it on the measured keyboards, with
   no one-step jump and no surface left under the keyboard, no JavaScript per
-  frame, and one layout commit at rest (FR3). Under reduced motion nothing
+  frame, and one layout commit at rest (FR3). One exception applies (DEC-6). In
+  Chrome on Android, at the keyboard's first report the content is placed in
+  one frame so the focused field's bottom sits just above the keyboard's top,
+  then rides the rest of the keyboard's slide. Chrome pans the page itself if
+  the field is still below the keyboard about 100–170 ms after the report, so
+  a slide cannot be relied on. Under reduced motion nothing
   travels with the keyboard, and the change follows `design:reduced-motion`
   DR2, a cross-fade on a touch screen. A Lab surface commits the resting value without riding
   (`architecture:react-component-runtime` INV11). Astryx never overrides
@@ -498,6 +507,26 @@ than its own overlap, so the field stays in view even if the container's top
 leaves the screen.
 
 Rejected: an opt-in prop or per-component keyboard handling; leaving an app's docked bar to the browser's reveal.
+
+### DEC-6 — In Chrome on Android, the focused field is placed above the keyboard at its first report
+
+**Reference:** `spec:AST-099/DEC-6`
+**Decider:** `cixzhang`, `2026-11-03`
+
+In Chrome on Android, at the keyboard's first report the content is placed
+in one frame so the focused field's bottom sits just above the keyboard's
+top, and the content then rides the rest of the keyboard's slide. Chrome
+pans the page itself, by the keyboard's whole height, if the focused field is
+still drawn below the keyboard about 100–170 ms after the report. The page
+gets no frame until that pan ends, so a pan can only be put back as a snap.
+Chrome blanks the area below the keyboard's top while the placement happens.
+On the Android emulator with Gboard, the one-frame placement showed no pan in
+12 shows, including at 4× CPU and with the ride slowed 5×. A slide that
+reached the keyboard's top within 50 ms showed a pan in 1 of 8 shows, and in
+1 of 4 at 4× CPU. The owner team's side-by-side recording showed a pan in 0
+of 5 shows for the placement and in 7 of 8 for the slide.
+
+Rejected: a fast slide, which Chrome's pan still overtakes when the page stalls; the VirtualKeyboard overlay setting, which changes DEC-4's measurement source and the page's layout.
 
 ## Open questions
 
