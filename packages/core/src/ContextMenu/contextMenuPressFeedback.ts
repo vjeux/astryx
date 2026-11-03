@@ -86,6 +86,24 @@ export interface ContextMenuPressFeedback {
 /** A press feedback with no recognizer to ask grows at every "on". */
 const ALWAYS_FOLLOWED: RefObject<() => boolean> = {current: () => true};
 
+// The triggers a press mark belongs to: every mounted trigger, whether it
+// shows growth or not. A mark inside a trigger belongs to the nearest of them
+// at or above it. So a press on a nested trigger grows no outer trigger.
+const pressMarkOwners = new WeakSet<Element>();
+
+function pressMarkOwnerOf(marked: Element): Element | null {
+  for (
+    let node: Element | null = marked;
+    node != null;
+    node = node.parentElement
+  ) {
+    if (pressMarkOwners.has(node)) {
+      return node;
+    }
+  }
+  return null;
+}
+
 /**
  * The press feedback of a ContextMenu trigger. `isShown` is read at each
  * press: false for an inline trigger. `triggerKey` changes when the trigger
@@ -217,21 +235,33 @@ export function useContextMenuPressFeedback(
     }
   }, []);
 
-  // Grow from the press machine's "on". The press machine lets a press go at
-  // a shorter travel than the recognizer's tolerance, so only the recognizer
-  // ends the growth (`end`).
+  // Grow from the press machine's "on". The machine marks the innermost
+  // pressable surface, so a control inside the trigger can carry the mark.
+  // The machine lets a press go at a shorter travel than the recognizer's
+  // tolerance, so only the recognizer ends the growth (`end`).
   useEffect(() => {
     void triggerKey;
     const element = triggerRef.current;
-    if (element == null || !isShown) {
+    if (element == null) {
       return;
     }
-    let isPressed = element.getAttribute(PRESSED_ATTRIBUTE) === 'on';
-    return observeMutations(
+    pressMarkOwners.add(element);
+    if (!isShown) {
+      return () => {
+        pressMarkOwners.delete(element);
+      };
+    }
+    const isMarkedOn = () =>
+      element.getAttribute(PRESSED_ATTRIBUTE) === 'on' ||
+      [...element.querySelectorAll(`[${PRESSED_ATTRIBUTE}="on"]`)].some(
+        marked => pressMarkOwnerOf(marked) === element,
+      );
+    let isPressed = isMarkedOn();
+    const stopObserving = observeMutations(
       element,
-      {attributes: true, attributeFilter: [PRESSED_ATTRIBUTE]},
+      {attributes: true, attributeFilter: [PRESSED_ATTRIBUTE], subtree: true},
       () => {
-        const next = element.getAttribute(PRESSED_ATTRIBUTE) === 'on';
+        const next = isMarkedOn();
         if (next !== isPressed) {
           isPressed = next;
           if (next) {
@@ -240,6 +270,10 @@ export function useContextMenuPressFeedback(
         }
       },
     );
+    return () => {
+      stopObserving();
+      pressMarkOwners.delete(element);
+    };
   }, [triggerRef, triggerKey, isShown, start]);
 
   return {pressable, release, end, hold};

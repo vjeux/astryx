@@ -82,7 +82,6 @@ export function ContextMenuTouchLayer({
   feedbackRef.current = feedback;
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
-  // Whether the press in flight has opened its menu.
   const hasPressOpenedRef = useRef(false);
 
   // The gesture hook follows the element behind the ref, so a `triggerAs`
