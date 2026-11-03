@@ -33,6 +33,42 @@ describe('internal/touch', () => {
     expect(entry).not.toHaveProperty('touchModule');
   });
 
+  it("re-exports by name what Lab's RefreshControl reads", async () => {
+    const entry: Record<string, unknown> = await import('./touch');
+    const pan = await import('../gestures/PanGestureRecognizer');
+    const hook = await import('../gestures/useGestureRecognizer');
+    const styles = await import('../hooks/rootScrollStyles');
+    const animator = await import('../motion/animator');
+    const bezier = await import('../motion/bezier');
+    const resolve = await import('../motion/resolveMotion');
+    const band = await import('../motion/rubberBand');
+    const spring = await import('../motion/spring');
+    const refresh = await import('../motion/uikit/refresh');
+    const scroll = await import('../motion/uikit/scroll');
+    const timing = await import('../motion/uikit/timing');
+    const presentation = await import('../utils/touchPresentation');
+    expect(entry.PanGestureRecognizer).toBe(pan.PanGestureRecognizer);
+    expect(entry.useGestureRecognizer).toBe(hook.useGestureRecognizer);
+    expect(entry.claimRootScrollStyle).toBe(styles.claimRootScrollStyle);
+    expect(entry.isScrollLockActive).toBe(styles.isScrollLockActive);
+    expect(entry.subscribeScrollLock).toBe(styles.subscribeScrollLock);
+    expect(entry.createMotionAnimator).toBe(animator.createAnimator);
+    expect(entry.SETTLE_THRESHOLD).toBe(animator.SETTLE_THRESHOLD);
+    expect(entry.cubicBezier).toBe(bezier.cubicBezier);
+    expect(entry.resolveMotion).toBe(resolve.resolveMotion);
+    expect(entry.rubberBand).toBe(band.rubberBand);
+    expect(entry.rubberBandInverse).toBe(band.rubberBandInverse);
+    expect(entry.solveSpring).toBe(spring.solveSpring);
+    expect(entry.toSpring).toBe(spring.toSpring);
+    expect(entry.refreshControl).toBe(refresh.refreshControl);
+    expect(entry.scroll).toBe(scroll.scroll);
+    expect(entry.registerTimingTable).toBe(timing.registerTimingTable);
+    expect(entry.timing).toBe(timing.timing);
+    expect(entry.useTouchPresentation).toBe(presentation.useTouchPresentation);
+    // No internal factory shares a public factory's name.
+    expect(entry).not.toHaveProperty('createAnimator');
+  });
+
   it('attaches no window or document listeners when it loads', async () => {
     vi.resetModules();
     const onWindow = vi.spyOn(window, 'addEventListener');

@@ -627,6 +627,10 @@
     "defaultMessage": "Copy link to {heading}",
     "description": "Accessible name on the Markdown heading copy button in its default state. `{heading}` is the heading's plain text, or its generated id when the text is empty; pairs with `markdownHeadingLinks.copied`."
   },
+  "@astryx.refreshControl.refreshing": {
+    "defaultMessage": "Refreshing",
+    "description": "Announced to screen readers when a pull to refresh (or a programmatic refresh) starts."
+  },
   "@astryx.richTextEditor.tabEscapeHint": {
     "defaultMessage": "Press Escape then Tab to move focus out of the editor.",
     "description": "Screen-reader-only hint attached to the RichTextEditor text area. Tab indents text inside the editor, so this tells keyboard users the two-key sequence that moves focus out of it."

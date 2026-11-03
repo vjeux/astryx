@@ -53,6 +53,14 @@ function isTable(path: string): boolean {
   );
 }
 
+/**
+ * An internal entry, Lab's way into Core. No Core source imports one, so its
+ * named re-exports reach no Core component's page.
+ */
+function isInternalEntry(path: string): boolean {
+  return /^internal\/[^/]+\.ts$/.test(path);
+}
+
 /** The component a file belongs to (a PascalCase top-level directory), or null. */
 function componentOf(path: string): string | null {
   const top = path.split('/')[0] ?? '';
@@ -150,7 +158,8 @@ function findTableLeaks(files: ReadonlyMap<string, string>): string[] {
         isTable(edge.to) &&
         !SHARED_TABLES.has(edge.to) &&
         componentOf(path) == null &&
-        path !== BARREL
+        path !== BARREL &&
+        !isInternalEntry(path)
       ) {
         leaks.push(
           `${path} (shared code) imports ${edge.to}, a component's table; import it in that component's touch module`,
@@ -223,6 +232,21 @@ describe('motion table imports', () => {
   it('core imports each motion table by name, from the component that animates with it', () => {
     expect(existsSync(join(src, BARREL))).toBe(true);
     expect(findTableLeaks(readPackage(src))).toEqual([]);
+  });
+
+  it("lets an internal entry re-export a component's table by name, for Lab", () => {
+    const files = new Map([
+      ['motion/uikit/refresh.ts', 'export const refresh = {};\n'],
+      [
+        'internal/touch.ts',
+        "export {refresh} from '../motion/uikit/refresh';\n",
+      ],
+      [
+        'Refresh/index.ts',
+        "import {refresh} from '../motion/uikit/refresh';\nexport {refresh};\n",
+      ],
+    ]);
+    expect(findTableLeaks(files)).toEqual([]);
   });
 
   it('catches a table reached through the barrel, a namespace object or shared code', () => {

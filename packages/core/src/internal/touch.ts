@@ -2,7 +2,9 @@
 
 /**
  * @file touch.ts
- * @input The gesture core: the arena, the recognizers, and their geometry
+ * @input The gesture core: the arena, the recognizers, and their geometry;
+ *   the motion math and UIKit tables that Lab's RefreshControl reads; the
+ *   page's scroll-style claims
  * @output `@astryxdesign/core/internal/touch`: the gesture core's primitives
  *   for Lab components, re-exported by name
  * @position An internal entry reserved for Astryx's own packages:
@@ -39,3 +41,37 @@ export {
 export {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
 export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
+
+// Lab's RefreshControl reads these: the pan recognizer and its hook, the
+// motion math and tables of its pull, and the page's scroll-style claims. The
+// claims let a pull at the page's top compose with a scroll lock.
+export {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
+export type {PanGestureRecognizerOptions} from '../gestures/PanGestureRecognizer';
+export type {
+  GestureEventContext,
+  GestureTouch,
+  PointerKind,
+} from '../gestures/types';
+export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
+export {
+  claimRootScrollStyle,
+  isScrollLockActive,
+  subscribeScrollLock,
+} from '../hooks/rootScrollStyles';
+// The animator's internal factory. The name `createAnimator` stays free for
+// the public animator factory.
+export {createAnimator as createMotionAnimator} from '../motion/animator';
+export {SETTLE_THRESHOLD} from '../motion/animator';
+export type {
+  Animator as MotionAnimator,
+  AnimatorOptions as MotionAnimatorOptions,
+  MotionCurve,
+} from '../motion/animator';
+export {cubicBezier} from '../motion/bezier';
+export {resolveMotion} from '../motion/resolveMotion';
+export {rubberBand, rubberBandInverse} from '../motion/rubberBand';
+export {solveSpring, toSpring} from '../motion/spring';
+export {refreshControl} from '../motion/uikit/refresh';
+export {scroll} from '../motion/uikit/scroll';
+export {registerTimingTable, timing} from '../motion/uikit/timing';
+export {useTouchPresentation} from '../utils/touchPresentation';
