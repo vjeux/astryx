@@ -109,9 +109,6 @@ export function useLongPressDetector(
   const [detector] = useState(() => createLongPressDetector(options));
   // The detector reads only committed options. A render that React discards
   // never reaches it.
-  useIsomorphicLayoutEffect(() => {
-    detector.setOptions(options);
-  });
   // The detector's pending timer ends with the component.
   useEffect(() => detector.cancel, [detector]);
 
