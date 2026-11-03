@@ -42,6 +42,8 @@ import {
   blockMainThread,
   busyWindowProof,
   compareCurve,
+  CONTROL_SIDE,
+  controlClock,
   countBetween,
   cubicBezier,
   drag,
@@ -56,10 +58,12 @@ import {
   releaseAnimations,
   rubberBand,
   springStep,
+  startBusyControl,
   startCompositorTrace,
   startScreencast,
   thawTimers,
   timeline,
+  trackControl,
   touchDriver,
   touchStoryboard,
   toTouchEvents,
@@ -536,6 +540,10 @@ test('the settle keeps moving every frame while the main thread is blocked', asy
     refreshMs: '6000',
   });
   await markElement(content);
+  // The harness's busy-window control: a box the compositor moves along the
+  // top edge, in the same screencast. The settle is judged against what the
+  // compositor presented, not against a frame rate.
+  const control = await startBusyControl(page);
   const cast = await startScreencast(page);
   // The compositor's own frames: a loaded machine's screencast skips frames
   // the compositor still presents, and the verdict measures those gaps
@@ -549,11 +557,16 @@ test('the settle keeps moving every frame while the main thread is blocked', asy
   await page.waitForTimeout(150);
   const castFrames = await cast.stop();
   const presented = await compositor.stop();
+  await control.remove();
   const tracked = await trackMarker(page, castFrames);
+  const controlFrames = await trackControl(
+    page,
+    castFrames.filter(f => f.t >= block.from - 300 && f.t <= block.to + 100),
+  );
   const proof = busyWindowProof(
     tracked,
     {from: block.from, to: Math.min(block.to, settle.to)},
-    {settledWithin: 3, presented},
+    {settledWithin: 3, presented, control: controlFrames},
   );
   await writeEvidence(
     'busy-main-thread/refresh-settle',
@@ -575,9 +588,8 @@ test('the settle keeps moving every frame while the main thread is blocked', asy
     testInfo,
   );
   // The screencast resolves whole CSS pixels, so the proof judges until 3 px
-  // from rest. The recorder sets how many frames it delivers, not the settle.
-  // So the harness's verdict alone judges them: every judged frame moved, and
-  // the compositor never stalled.
+  // from rest. The settle moves on every frame the control moves on, and it
+  // stalls no longer than the control.
   expect(proof.verdict.failures, proof.summary).toEqual([]);
 });
 
@@ -2069,12 +2081,22 @@ test('the spin steps clockwise every eighth of a second while the main thread is
       spokes: turns.length,
     };
   });
+  // The harness's busy-window control, in the same screencast.
+  const control = await startBusyControl(page);
   const cast = await startScreencast(page);
   await page.waitForTimeout(150);
   const block = await blockMainThread(page, 700);
   await page.waitForTimeout(150);
-  const castFrames = await cast.stop();
+  // The frames around the block: the only ones judged.
+  const castFrames = (await cast.stop()).filter(
+    f => f.t >= block.from - 100 && f.t <= block.to + 100,
+  );
+  await control.remove();
   const heads = await spinHeads(page, castFrames, glyph);
+  // The compositor's clock in each frame, read off the control. A loaded
+  // machine can stamp a frame late, but the spin keeps the frame's own time.
+  const controlFrames = await trackControl(page, castFrames);
+  const clock = controlClock(controlFrames);
   // A frame may catch the 0.1 ms ramp between two steps (the head then
   // barely stands out): judge the frames where it clearly does.
   const inside = heads.filter(
@@ -2094,7 +2116,12 @@ test('the spin steps clockwise every eighth of a second while the main thread is
     'busy-main-thread/refresh-spin',
     {
       [`${testInfo.project.name}.json`]: JSON.stringify(
-        {block, glyph, steps, heads: inside},
+        {
+          block,
+          glyph,
+          steps,
+          heads: inside.map(f => ({...f, clock: clock.get(f.t) ?? null})),
+        },
         null,
         1,
       ),
@@ -2106,45 +2133,73 @@ test('the spin steps clockwise every eighth of a second while the main thread is
     f => f.t >= block.from + 20 && f.t <= block.to - 20,
   );
   expect(inside.length).toBeGreaterThanOrEqual(judged.length - 2);
-  const first = inside[0];
-  const last = inside[inside.length - 1];
-  if (first == null || last == null) {
-    throw new Error('no frame to judge');
-  }
-  // Judged against the clock, not the frame rate. Between any two judged
-  // frames, the head moves clockwise by as many spokes as step boundaries fit
-  // between them. A frame's time is known only to within the screencast's
-  // interval, so the count can miss by one step either way. A freeze, a
-  // catch-up jump or a backward step fails at any cadence.
+  // Judged against the compositor's clock, read off the control in the same
+  // frames, not against the screencast's stamps or its frame rate. Between
+  // any two judged frames, the head moves clockwise by as many spokes as step
+  // boundaries fit between them. The count may miss by one step either way,
+  // within the screencast's interval, as before. A freeze, a catch-up jump or
+  // a backward step fails at any cadence.
+  const timed = inside.filter(f => clock.has(f.t));
+  expect(timed.length).toBeGreaterThanOrEqual(4);
+  const at = timed.map(f => clock.get(f.t) ?? 0);
+  const first = timed[0];
+  const last = timed[timed.length - 1];
   const intervals = inside
     .slice(1)
     .map((f, i) => f.t - inside[i].t)
     .sort((a, b) => a - b);
   const slackMs = intervals[Math.floor(intervals.length / 2)] ?? 0;
   const moved = [0];
-  for (let i = 1; i < inside.length; i += 1) {
+  for (let i = 1; i < timed.length; i += 1) {
     moved.push(
-      moved[i - 1] + ((inside[i].head - inside[i - 1].head + spokes) % spokes),
+      moved[i - 1] + ((timed[i].head - timed[i - 1].head + spokes) % spokes),
     );
   }
   const offClock: {from: number; to: number; moved: number}[] = [];
-  for (let i = 0; i < inside.length; i += 1) {
-    for (let j = i + 1; j < inside.length; j += 1) {
-      const elapsedMs = inside[j].t - inside[i].t;
+  for (let i = 0; i < timed.length; i += 1) {
+    for (let j = i + 1; j < timed.length; j += 1) {
+      const elapsedMs = at[j] - at[i];
       const count = moved[j] - moved[i];
       if (
         count < Math.floor((elapsedMs - slackMs) / stepMs) ||
         count > Math.ceil((elapsedMs + slackMs) / stepMs)
       ) {
-        offClock.push({from: inside[i].t, to: inside[j].t, moved: count});
+        offClock.push({from: timed[i].t, to: timed[j].t, moved: count});
       }
     }
   }
   expect(offClock.slice(0, 5), JSON.stringify({stepMs, slackMs})).toEqual([]);
-  // The judged frames reach across the block, within the screencast's own
-  // interval at each end.
-  expect(first.t - (block.from + 20)).toBeLessThanOrEqual(2 * slackMs);
-  expect(block.to - 20 - last.t).toBeLessThanOrEqual(2 * slackMs);
+  // The judged frames reach as close to each edge as the control's frames
+  // do, within the screencast's own interval. A gap the screencast left in
+  // both is no evidence about the spin. A frame near an edge whose head did
+  // not stand out still fails.
+  const edgeFirst = inside[0];
+  const edgeLast = inside[inside.length - 1];
+  const seen = controlFrames.filter(
+    f => f.box != null && f.t >= block.from + 20 && f.t <= block.to - 20,
+  );
+  const seenFirst = seen[0];
+  const seenLast = seen[seen.length - 1];
+  if (
+    edgeFirst == null ||
+    edgeLast == null ||
+    seenFirst == null ||
+    seenLast == null
+  ) {
+    throw new Error('no frame to judge');
+  }
+  expect(edgeFirst.t - seenFirst.t).toBeLessThanOrEqual(2 * slackMs);
+  expect(seenLast.t - edgeLast.t).toBeLessThanOrEqual(2 * slackMs);
+  // They span four steps at least, enough to show a freeze, a catch-up jump
+  // or a backward step. Loaded runs spanned 554 ms or more.
+  expect(edgeLast.t - edgeFirst.t).toBeGreaterThanOrEqual(4 * stepMs);
+  // So do the frames the control timed, across the part of the block it was
+  // read in.
+  const read = [...clock.keys()].filter(
+    t => t >= block.from + 20 && t <= block.to - 20,
+  );
+  expect(first.t - read[0]).toBeLessThanOrEqual(2 * slackMs);
+  expect(read[read.length - 1] - last.t).toBeLessThanOrEqual(2 * slackMs);
 });
 
 test('the trigger\u2019s copy of the spokes leaves when its fade ends, mid-refresh', async ({
@@ -2214,28 +2269,49 @@ test('the cross-fade and the spin do no Layout or Paint per frame', async ({
   const {driver, content, start} = await openRefresh(page, undefined, {
     refreshMs: '8000',
   });
-  await driver.play(slowPull(start, 300, 200));
-  await expect.poll(() => isBusy(content)).toBe(true);
   const glyph = content.locator(':scope > div:last-child > div > span').first();
-  // While the transient copy fades out over the stepping spokes, once the
-  // content holds still (the pull itself repaints: the content's translate).
-  await waitForSettle(content);
   const copyCount = () => glyph.evaluate(element => element.children.length);
-  expect(await copyCount()).toBe(9);
+  // While the transient copy fades out over the stepping spokes: the settle's
+  // steady part, as in the settle's own proof. The window is set on the
+  // settle's clock. So a loaded machine that runs this script late is judged
+  // the same, and the settle's last commit never falls inside the window.
+  let settle = {from: 0, to: 0};
+  let steadyFrom = 0;
   const during = await traceRendering(page, async () => {
-    await page.waitForTimeout(600);
+    await driver.play(slowPull(start, 300, 200));
+    settle = await waitForSettle(content);
+    // The release commits over the settle's first frames. The steady part
+    // starts three rendered frames later.
+    await frames(page, 3);
+    steadyFrom = await page.evaluate(
+      () => performance.timeOrigin + performance.now(),
+    );
+    // A fixed wait: polling the content's style every frame would itself
+    // recalculate style.
+    await page.waitForTimeout(900);
   });
+  expect(await isBusy(content)).toBe(true);
   // The copy was still fading the whole time.
   expect(await copyCount()).toBe(9);
-  expect(during.layout, JSON.stringify(during.counts)).toBe(0);
-  expect(during.paint, JSON.stringify(during.counts)).toBe(0);
+  const from = Math.max(settle.from + 50, steadyFrom);
+  const to = settle.from + 600;
+  const judged = `judged ${(from - settle.from).toFixed(0)}–600 ms into the settle`;
+  // Too little left to judge fails rather than passes. The window holds 200 ms
+  // or more: a whole spin step (125 ms), so a step that painted cannot fall
+  // outside it.
+  expect(to - from, judged).toBeGreaterThan(200);
+  const counts = countBetween(during, from, to);
+  expect(counts.Layout ?? 0, `${judged}: ${JSON.stringify(counts)}`).toBe(0);
+  expect(counts.Paint ?? 0, `${judged}: ${JSON.stringify(counts)}`).toBe(0);
   // Then the spin alone, once the copy is gone: eight steps.
   await expect
     .poll(() => glyph.evaluate(element => element.children.length), {
       timeout: 8000,
     })
     .toBe(8);
+  // The copy's removal lays out and paints once, in the next rendered frame.
   await page.waitForTimeout(200);
+  await frames(page, 3);
   const after = await traceRendering(page, async () => {
     await page.waitForTimeout(1000);
   });
@@ -2366,8 +2442,9 @@ test('the cross-fade keeps moving while the main thread is blocked right after t
   const {driver, content, start} = await openRefresh(page, undefined, {
     refreshMs: '8000',
   });
-  // The compositor's own frames, for gaps the screencast skips under load.
-  const compositor = await startCompositorTrace(page);
+  // The harness's busy-window control, in the same screencast: the fade is
+  // judged on the frames the compositor presented, not against a frame rate.
+  const control = await startBusyControl(page);
   const cast = await startScreencast(page);
   await driver.play(slowPull(start, 300, 200));
   // Blocked from the page itself as soon as the trigger has mounted the
@@ -2399,15 +2476,18 @@ test('the cross-fade keeps moving while the main thread is blocked right after t
     };
   });
   await page.waitForTimeout(150);
-  const castFrames = await cast.stop();
-  const presented = await compositor.stop();
+  // The frames around the block: the only ones judged.
+  const castFrames = (await cast.stop()).filter(
+    f => f.t >= block.from - 50 && f.t <= block.to + 50,
+  );
+  await control.remove();
   // The glyph's whole ink, frame by frame: the turn moves the spokes but not
   // how much they cover, so only the fade changes it.
   const scratch = await page.context().newPage();
   const viewport = page.viewportSize() ?? {width: 402, height: 874};
   const inks = await scratch
     .evaluate(
-      async ({items, box, width}) => {
+      async ({items, box, width, strip}) => {
         const out: {t: number; ink: number}[] = [];
         for (const item of items) {
           const bitmap = await createImageBitmap(
@@ -2420,11 +2500,14 @@ test('the cross-fade keeps moving while the main thread is blocked right after t
             throw new Error('no 2d context');
           }
           context.drawImage(bitmap, 0, 0);
+          // The glyph's box and a margin, below the control's strip at the
+          // top of the page.
           const pad = 2;
           const x = Math.floor((box.x - pad) * scale);
-          const y = Math.floor((box.y - pad) * scale);
+          const y = Math.floor(Math.max(box.y - pad, strip) * scale);
           const side = Math.ceil((box.width + 2 * pad) * scale);
-          const {data} = context.getImageData(x, y, side, side);
+          const bottom = Math.ceil((box.y + box.height + pad) * scale);
+          const {data} = context.getImageData(x, y, side, bottom - y);
           let ink = 0;
           for (let i = 0; i < data.length; i += 4) {
             ink += 765 - (data[i] + data[i + 1] + data[i + 2]);
@@ -2437,79 +2520,68 @@ test('the cross-fade keeps moving while the main thread is blocked right after t
         items: castFrames.map(f => ({t: f.t, data: f.data})),
         box: glyph,
         width: viewport.width,
+        strip: CONTROL_SIDE,
       },
     )
     .finally(() => scratch.close());
+  // The control's position in each delivered frame. A frame where it moved is
+  // one the compositor presented. The fade is judged on those frames, so a
+  // machine that presents fewer frames, or a screencast that delivers fewer,
+  // thins both alike.
+  const controlX = new Map(
+    (await trackControl(page, castFrames)).flatMap(f =>
+      f.box == null ? [] : [[f.t, f.box.x] as const],
+    ),
+  );
   const judged = {from: block.from + 20, to: block.to - 20};
   const inside = inks.filter(f => f.t >= judged.from && f.t <= judged.to);
-  // The screencast's own cadence, from the frames around the block.
-  const around = inks.filter(
-    f => f.t >= block.from - 300 && f.t <= block.to + 150,
-  );
-  const intervals = around
-    .slice(1)
-    .map((f, i) => f.t - around[i].t)
-    .sort((a, b) => a - b);
-  const cadenceMs = intervals[Math.floor(intervals.length / 2)] ?? 16.7;
-  // A loaded machine's screencast skips frames the compositor still
-  // presents, so the frames it delivered are judged, never counted against
-  // its cadence (`busyWindowProof`'s rule). The copy fades every frame, so
-  // each delivered frame shows less ink than the one before it.
-  const moved: number[] = [];
-  const unchanged: number[] = [];
+  // Each presented frame after the first, and whether the glyph's ink fell
+  // since the frame before it. The copy fades every frame. A step of the spin
+  // can hide one frame's fall: the spokes cover a little more or less of the
+  // pixels at each angle.
+  const presentedFrames: {t: number; ink: number; fell: boolean}[] = [];
   for (let i = 1; i < inside.length; i += 1) {
-    (inside[i].ink < inside[i - 1].ink - 0.05 ? moved : unchanged).push(
-      inside[i].t,
-    );
-  }
-  // The longest time with no presented change. A gap between two changed
-  // frames with no delivered frame in it is measured between the compositor's
-  // own frames. A gap at either end of the judged part, or one that holds an
-  // unchanged frame, is the screencast's.
-  const between = (times: readonly number[], a: number, b: number) =>
-    times.filter(t => t > a && t < b);
-  const edges = [judged.from, ...moved, judged.to];
-  let longestStill = 0;
-  for (let i = 1; i < edges.length; i += 1) {
-    const a = edges[i - 1];
-    const b = edges[i];
-    const interior =
-      i > 1 && i < edges.length - 1 && between(unchanged, a, b).length === 0;
-    const marks = interior ? [a, ...between(presented, a, b), b] : [a, b];
-    for (let k = 1; k < marks.length; k += 1) {
-      longestStill = Math.max(longestStill, marks[k] - marks[k - 1]);
+    const x = controlX.get(inside[i].t);
+    const before = controlX.get(inside[i - 1].t);
+    if (x == null || before == null || Math.abs(x - before) <= 0.25) {
+      continue;
     }
+    presentedFrames.push({
+      t: inside[i].t,
+      ink: inside[i].ink,
+      fell: inside[i].ink < inside[i - 1].ink - 0.05,
+    });
   }
-  // At least 90% of the delivered frames change, one miss always allowed.
-  const minChanged = Math.max(
-    inside.length - 3,
-    Math.ceil(0.9 * (inside.length - 1)) - 1,
+  // The longest run of presented frames with no fall, either edge included.
+  let run = 0;
+  let longestRun = 0;
+  for (const frame of presentedFrames) {
+    run = frame.fell ? 0 : run + 1;
+    longestRun = Math.max(longestRun, run);
+  }
+  const fell = presentedFrames.filter(frame => frame.fell).length;
+  // At least 90% of the presented frames fall, one miss always allowed.
+  const minFell = Math.max(
+    presentedFrames.length - 2,
+    Math.ceil(0.9 * presentedFrames.length) - 1,
   );
   await writeEvidence(
     'busy-main-thread/refresh-trigger',
     {
       [`${testInfo.project.name}.json`]: JSON.stringify(
-        {
-          block,
-          glyph,
-          cadenceMs,
-          presentedInside: between(presented, judged.from, judged.to).length,
-          changed: moved.length,
-          longestStill,
-          frames: inside,
-        },
+        {block, glyph, fell, longestRun, presentedFrames},
         null,
         1,
       ),
     },
     testInfo,
   );
-  // Enough delivered frames to judge (`busyWindowProof`'s `minJudgedFrames`).
-  expect(inside.length).toBeGreaterThanOrEqual(4);
-  expect(moved.length, JSON.stringify(inside)).toBeGreaterThanOrEqual(
-    minChanged,
-  );
-  expect(longestStill).toBeLessThanOrEqual(3 * cadenceMs);
+  // Enough presented frames to judge (`busyWindowProof`'s `minJudgedFrames`).
+  expect(presentedFrames.length).toBeGreaterThanOrEqual(4);
+  expect(fell, JSON.stringify(presentedFrames)).toBeGreaterThanOrEqual(minFell);
+  // No more than two presented frames in a row without a fall: three frame
+  // intervals, as the screencast's were judged before.
+  expect(longestRun, JSON.stringify(presentedFrames)).toBeLessThanOrEqual(2);
 });
 
 test('under Reduce Motion the gradient applies at once at the trigger on a touch screen, with no copy of the spokes', async ({
