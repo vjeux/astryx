@@ -26,7 +26,13 @@ affects_consumer_docs:
 
 ```json
 {
-  "paths": ["packages/core/src/BottomSheet/**"]
+  "paths": [
+    "packages/core/src/BottomSheet/**",
+    "packages/core/src/keyboard/**",
+    "packages/core/src/motion/android/**",
+    "packages/core/src/utils/layoutViewport.ts",
+    "packages/core/src/utils/layoutViewport.test.ts"
+  ]
 }
 ```
 
