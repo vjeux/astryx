@@ -39,20 +39,24 @@ export interface ContextMenuPress {
   readonly y: number;
 }
 
-export type ContextMenuPressRecognizerOptions = Omit<
+export interface ContextMenuPressRecognizerOptions extends Omit<
   LongPressGestureRecognizerOptions,
   | 'allowableMovement'
   | 'minimumPressDuration'
   | 'numberOfTapsRequired'
   | 'numberOfTouchesRequired'
->;
+> {
+  /** A finger landed and may become a context menu. */
+  onPressStart?: (recognizer: ContextMenuPressRecognizer) => void;
+}
 
 /**
  * A context menu is not UIKit's plain long press (500 ms, 10 pt of travel).
  * Its timeline is `contextMenu.press`, and these are the recognizer's states:
- * - `possible`: the finger landed. A lift, a second finger, or a browser
- *   scroll fails it. A drift past `allowableMovement` on either
- *   axis fails it too.
+ * - `possible`: the finger landed (`onPressStart`). The press feedback shows
+ *   from the press machine's onset. A lift, a second finger, or a browser
+ *   scroll fails it. A drift past `allowableMovement` on either axis fails it
+ *   too.
  * - `began` at `commitMs`: the click haptic. The recognizer claims the touch.
  *   The page stops scrolling under it, and the lift sends no click and no
  *   compatibility mouse events. The menu does not show yet. A drift past
@@ -76,6 +80,8 @@ export class ContextMenuPressRecognizer extends LongPressGestureRecognizer {
    * moves freely from here.
    */
   isMenuDue = false;
+  private readonly onPressStart:
+    ((recognizer: ContextMenuPressRecognizer) => void) | undefined;
   /** The finger the hold follows. */
   private pressTouchId: number | null = null;
   /** Where the finger landed, while its hold runs. The drift counts from here. */
@@ -84,14 +90,16 @@ export class ContextMenuPressRecognizer extends LongPressGestureRecognizer {
   private holdStart = 0;
 
   constructor(options: ContextMenuPressRecognizerOptions = {}) {
+    const {onPressStart, ...rest} = options;
     super({
-      ...options,
+      ...rest,
       // A finger or a pen; a mouse opens the menu with its secondary button.
       allowedPointerTypes: options.allowedPointerTypes ?? ['touch', 'pen'],
       minimumPressDuration: NEVER_MS,
       // The hold's own tolerance is the drift rule (touchesMoved below).
       allowableMovement: Infinity,
     });
+    this.onPressStart = onPressStart;
   }
 
   /**
@@ -121,6 +129,7 @@ export class ContextMenuPressRecognizer extends LongPressGestureRecognizer {
       this.holdFrom = {x: touch.x, y: touch.y};
       this.holdStart = event.time;
       this.setTimer(event.time + commitMs, () => this.commit());
+      this.onPressStart?.(this);
     }
   }
 
