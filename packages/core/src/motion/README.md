@@ -23,6 +23,7 @@ roles through `resolveMotion`.
 | `uikit/progressBar.ts`                           | UIProgressView's fill: the whole-track duration and curve, its minimum length and empty alpha; the reduced-motion pulse (three roles).                               |
 | `uikit/gestures.ts`                              | Gesture recognizer thresholds, the velocity filter and haptic stand-ins, as `{value, unit}` entries (sources in JSDoc).                                              |
 | `uikit/switch.ts`                                | UISwitch on iOS 26.2: geometry, the lift, settle, travel and tracking springs, the flip distance, the track colour.                                                  |
+| `uikit/swipeActions.ts`                          | Swipe actions on a list row: the claim and swipe thresholds, the tracking and settle spring, the release rule.                                                       |
 | `roles.ts`                                       | The internal motion roles: the springs, durations and curves `spec:AST-094` FR4 names, registered by the shared tables, and a role's CSS form read back.             |
 | `roleValue.ts`                                   | A role's CSS form, written: a spring's duration and bounce, a duration in ms, a curve's `cubic-bezier()`.                                                            |
 | `resolveMotion.ts`                               | A role's value: its table value, as the per-role tables stay internal (`spec:AST-094` DEC-15).                                                                       |
