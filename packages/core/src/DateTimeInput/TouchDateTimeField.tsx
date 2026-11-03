@@ -98,7 +98,7 @@ import {
 } from '../DateInput/MonthScroller';
 import {MonthYearWheels} from '../DateInput/MonthYearWheels';
 import {Wheel, type WheelOption} from '../DateInput/Wheel';
-import {TimeWheels} from '../DateInput/datePickerTouch';
+import {MonthPager, TimeWheels} from '../DateInput/datePickerTouch';
 import {
   hour12From24,
   hour24From12,
@@ -559,6 +559,7 @@ export function TouchDateTimeField({
   const [activePanel, setActivePanel] = useState<TouchDateTimePanel>('date');
   const [isWheelOpen, setIsWheelOpen] = useState(false);
   const {isTouch} = useTouchPresentation();
+  const MonthGrid = isTouch ? MonthPager : MonthScroller;
   const [draftTime, setDraftTime] = useState<ISOTimeString | undefined>(() =>
     normalizeISOTime(splitDateTime(value).time, hasSeconds),
   );
@@ -1070,7 +1071,7 @@ export function TouchDateTimeField({
                   </div>
                 ))}
               </div>
-              <MonthScroller
+              <MonthGrid
                 key={`${minMonthIndex}:${maxMonthIndex}`}
                 handleRef={scrollerHandleRef}
                 minMonthIndex={minMonthIndex}
