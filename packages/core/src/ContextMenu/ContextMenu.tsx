@@ -63,6 +63,7 @@ import {useLayerInternal} from '../Layer/useLayer';
 import {LayerDepthProvider} from '../Layer/LayerDepthContext';
 import {useLayerDismissal} from '../Layer/useLayerDismissal';
 import {currentGesture} from '../Layer/gestureCounter';
+import {useOutsidePress} from '../Layer/outsidePress';
 import {MenuBottomSheetActionList} from '../DropdownMenu/MenuBottomSheetActionList';
 import {menuBottomSheetStyles} from '../DropdownMenu/menuBottomSheet.stylex';
 import {renderDropdownItems} from '../DropdownMenu/renderDropdownItems';
@@ -84,7 +85,6 @@ import {useLongPress} from '../hooks/useLongPress';
 import {pressableProps} from '../utils/pressFeedback';
 import {useMenuPress} from '../hooks/useMenuPress';
 import {useTypeahead} from '../hooks/useTypeahead';
-import {UIKIT_PAN} from '../motion/uikit/gestures';
 import {usePresentation} from '../utils/presentation';
 import {ContextMenuTouchLayer} from './lazyContextMenuTouchLayer';
 import type {ContextMenuTouchHandle} from './ContextMenuTouchLayer';
@@ -449,12 +449,17 @@ export function ContextMenu({
     [endTouchOpen, onOpenChange],
   );
 
+  const outsidePress = useOutsidePress();
+  // Starts the touch outside watch as the menu shows. It is set below, where
+  // the menu's list and its close exist.
+  const watchTouchOutsideRef = useRef<() => void>(() => {});
   const layer = useLayerInternal({
     mode: 'context',
     // Mounted at the first open and kept (see the file header).
     lazyMount: true,
     keepsMountAfterShow: true,
     onHide: useCallback(() => {
+      outsidePress.stop();
       endTouchOpen();
       setIsOpen(false);
       onOpenChange?.(false);
@@ -464,10 +469,11 @@ export function ContextMenu({
       if (toRestore && document.contains(toRestore)) {
         toRestore.focus();
       }
-    }, [endTouchOpen, onOpenChange]),
+    }, [endTouchOpen, onOpenChange, outsidePress]),
     onShow: useCallback(() => {
       setIsOpen(true);
       onOpenChange?.(true);
+      watchTouchOutsideRef.current();
       const focusTarget = focusOnShowRef.current;
       if (focusTarget != null) {
         focusOnShowRef.current = null;
@@ -590,77 +596,31 @@ export function ContextMenu({
     };
   }, [isOpen, closeMenu, listRef, usesBottomSheet]);
 
-  // Under a finger, a touch outside the open menu closes it as the touch
-  // begins to pan. The lift of a tap or a hold outside closes it too. The page
-  // stays free to scroll. A press that opens the menu, or moves it, keeps it
-  // open at its lift. A second finger waits for the first one.
-  useEffect(() => {
-    if (!isOpen || usesBottomSheet) {
+  // Under the touch model, a touch outside the open menu closes it as it
+  // begins to pan, or at its lift. The page stays free to scroll. A press
+  // that opens the menu, or moves it, keeps it open at its lift.
+  watchTouchOutsideRef.current = () => {
+    const trigger = triggerRef.current;
+    const menu = listRef.current;
+    if (!touchModes || trigger == null || menu == null) {
       return;
     }
-    const doc = triggerRef.current?.ownerDocument ?? document;
-    const tree = listRef.current?.getRootNode();
-    const shadow = tree instanceof ShadowRoot ? tree : null;
-    const judged = new WeakSet<Event>();
-    let outside: {id: number; x: number; y: number} | null = null;
-    const close = () => {
-      outside = null;
-      if (currentGesture() !== openingGestureRef.current) {
-        closeMenu();
-      }
-    };
-    const handleDown = (e: Event) => {
-      const event = e as PointerEvent;
-      if (judged.has(event)) {
-        return;
-      }
-      judged.add(event);
-      const menu = listRef.current;
-      if (
-        event.pointerType === 'touch' &&
-        outside == null &&
-        menu != null &&
-        !menu.contains(event.target as Node)
-      ) {
-        outside = {id: event.pointerId, x: event.clientX, y: event.clientY};
-      }
-    };
-    const handleMove = (e: Event) => {
-      const event = e as PointerEvent;
-      if (
-        outside?.id === event.pointerId &&
-        Math.hypot(event.clientX - outside.x, event.clientY - outside.y) >
-          UIKIT_PAN.hysteresis.value
-      ) {
-        close();
-      }
-    };
-    // A lift ends a tap or a hold. A cancel means the browser took the touch
-    // for a pan.
-    const handleEnd = (e: Event) => {
-      if (outside?.id === (e as PointerEvent).pointerId) {
-        close();
-      }
-    };
-    // A press is judged as it bubbles, so the menu's own tree judges it
-    // first, as with the mousedown above. The rest of the touch only needs its
-    // pointer id, so the document sees it in the capture phase.
-    const judges: EventTarget[] = shadow != null ? [shadow, doc] : [doc];
-    for (const target of judges) {
-      target.addEventListener('pointerdown', handleDown);
-    }
-    doc.addEventListener('pointermove', handleMove, true);
-    doc.addEventListener('pointerup', handleEnd, true);
-    doc.addEventListener('pointercancel', handleEnd, true);
-    return () => {
-      for (const target of judges) {
-        target.removeEventListener('pointerdown', handleDown);
-      }
-      doc.removeEventListener('pointermove', handleMove, true);
-      doc.removeEventListener('pointerup', handleEnd, true);
-      doc.removeEventListener('pointercancel', handleEnd, true);
-    };
-  }, [isOpen, closeMenu, listRef, usesBottomSheet]);
+    const root = menu.getRootNode();
+    outsidePress.start(
+      trigger,
+      path => path.includes(menu),
+      () => {
+        if (currentGesture() !== openingGestureRef.current) {
+          closeMenu();
+        }
+      },
+      {
+        pointerTypes: ['touch'],
+        closesOnPan: true,
+        root: root instanceof ShadowRoot ? root : null,
+      },
+    );
+  };
 
   const listKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
