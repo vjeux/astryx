@@ -429,7 +429,7 @@ interface ScreenLayers {
   largeTitle: MotionAnimator;
   /** The content under the search field, which rides up with it. */
   content: MotionAnimator;
-  /** The search field's wrapper, for its lift. */
+  /** The search field's wrapper, for its offset. */
   searchElement: HTMLElement | null;
 }
 
@@ -449,7 +449,7 @@ function CardLayer({
   isCovered,
   isHidden,
   onLargeTitleCollapse,
-  lift,
+  searchOffset,
   isSearching,
   onSearchActiveChange,
 }: {
@@ -460,7 +460,7 @@ function CardLayer({
   isHidden: boolean;
   onLargeTitleCollapse: (key: string, isCollapsed: boolean) => void;
   /** How far the screen's search field rises into the bar, px. */
-  lift: number;
+  searchOffset: number;
   /** Whether the screen's search field is active (`isSearchFieldActive`). */
   isSearching: boolean;
   /** The field reported its own state (an uncontrolled field's is the stack's to follow). */
@@ -540,14 +540,16 @@ function CardLayer({
       unobserveContent?.();
     };
   }, []);
-  // The field rises by the stack's measured lift, unless it sets its own, and
+  // The field rises by the stack's measured offset, unless it sets its own, and
   // tells the stack its state as it changes: an uncontrolled field keeps its
   // own, and the bar steps aside by it.
   const field =
     isValidElement<SearchFieldProps>(searchField) &&
     typeof searchField.type !== 'string'
       ? cloneElement(searchField, {
-          ...(searchField.props.lift === undefined ? {lift} : null),
+          ...(searchField.props.lift === undefined
+            ? {lift: searchOffset}
+            : null),
           onActiveChange: (isActive: boolean) => {
             onSearchActiveChange(model.key, isActive);
             searchField.props.onActiveChange?.(isActive);
@@ -1723,35 +1725,35 @@ export function NavigationStack<T>({
   const barBackground = useMotionAnimator();
   // How far each screen's search field rises into the bar's row, px, as
   // measured when it activates. The field reads it when `isActive` flips.
-  const [lifts, setLifts] = useState<ReadonlyMap<string, number>>(
-    () => new Map(),
-  );
-  // A screen gone from the stack forgets its lift, and once it has left its
+  const [searchOffsets, setSearchOffsets] = useState<
+    ReadonlyMap<string, number>
+  >(() => new Map());
+  // A screen gone from the stack forgets its offset, and once it has left its
   // reported search too, during render: a screen pushed again starts from
   // rest.
   const presentKeys = new Set(view.models.map(model => model.key));
   const isGone = (key: string) => !presentKeys.has(key);
-  if ([...lifts.keys()].some(isGone)) {
-    setLifts(withoutKeys(lifts, isGone));
+  if ([...searchOffsets.keys()].some(isGone)) {
+    setSearchOffsets(withoutKeys(searchOffsets, isGone));
   }
   const hasLeft = (key: string) => isGone(key) && key !== view.leaving?.key;
   if ([...reportedSearch.keys()].some(hasLeft)) {
     setReportedSearch(withoutKeys(reportedSearch, hasLeft));
   }
-  const liftsRef = useRef(lifts);
+  const searchOffsetsRef = useRef(searchOffsets);
   // Synced at each commit, before the effects below read it.
   useLayoutEffect(() => {
-    liftsRef.current = lifts;
+    searchOffsetsRef.current = searchOffsets;
   });
-  // Screens whose lift was measured for the activation under way.
-  const freshLiftsRef = useRef(new Set<string>());
-  // The lift each active search moved its screen by, and the bar title's
+  // Screens whose offset was measured for the activation under way.
+  const freshSearchOffsetsRef = useRef(new Set<string>());
+  // The offset each active search moved its screen by, and the bar title's
   // opacity before it: what a cancel returns to.
   const searchRestRef = useRef(
-    new Map<string, {lift: number; titleOpacity: number}>(),
+    new Map<string, {offset: number; titleOpacity: number}>(),
   );
 
-  const measureLift = useCallback(
+  const measureSearchOffset = useCallback(
     (key: string): number | null => {
       const field = layersOf(key)?.searchElement;
       const container = containerRef.current;
@@ -1770,14 +1772,14 @@ export function NavigationStack<T>({
     [layersOf],
   );
 
-  const storeLift = useCallback((key: string, lift: number) => {
-    freshLiftsRef.current.add(key);
-    setLifts(current =>
-      current.get(key) === lift ? current : new Map(current).set(key, lift),
+  const storeSearchOffset = useCallback((key: string, offset: number) => {
+    freshSearchOffsetsRef.current.add(key);
+    setSearchOffsets(current =>
+      current.get(key) === offset ? current : new Map(current).set(key, offset),
     );
   }, []);
 
-  // A field takes focus as it activates: measure its lift in that event, so
+  // A field takes focus as it activates: measure its offset in that event, so
   // the commit that activates it hands the field the right distance.
   const onFocusCapture = useCallback(
     (event: SyntheticEvent) => {
@@ -1789,12 +1791,12 @@ export function NavigationStack<T>({
       if (key == null || searchingRef.current.has(key)) {
         return;
       }
-      const lift = measureLift(key);
-      if (lift != null) {
-        storeLift(key, lift);
+      const offset = measureSearchOffset(key);
+      if (offset != null) {
+        storeSearchOffset(key, offset);
       }
     },
-    [measureLift, storeLift],
+    [measureSearchOffset, storeSearchOffset],
   );
 
   const holdCollapses = useCallback((key: string) => {
@@ -1847,17 +1849,17 @@ export function NavigationStack<T>({
       // gate), and so does the bar. Reduced Motion is the animator's.
       const isMoving = !isImmediate && isTouchNow(containerRef.current);
       if (isActive) {
-        let lift = freshLiftsRef.current.has(key)
-          ? (liftsRef.current.get(key) ?? null)
+        let offset = freshSearchOffsetsRef.current.has(key)
+          ? (searchOffsetsRef.current.get(key) ?? null)
           : null;
-        if (lift == null) {
-          lift = measureLift(key) ?? 0;
-          storeLift(key, lift);
+        if (offset == null) {
+          offset = measureSearchOffset(key) ?? 0;
+          storeSearchOffset(key, offset);
         }
         const rest = searchRestRef.current.get(key);
         const titleOpacity =
           rest?.titleOpacity ?? layers.titleText?.get('opacity') ?? 1;
-        searchRestRef.current.set(key, {lift, titleOpacity});
+        searchRestRef.current.set(key, {offset, titleOpacity});
         searchingRef.current.add(key);
         holdCollapses(key);
         hideCoveredBar();
@@ -1873,8 +1875,8 @@ export function NavigationStack<T>({
           layers.trailing?.set({opacity: 0});
           layers.titleText?.set({opacity: 0});
           layers.barBackground?.set({opacity: 0});
-          layers.largeTitle?.set({y: -lift, opacity: 0});
-          layers.content?.set({y: -lift});
+          layers.largeTitle?.set({y: -offset, opacity: 0});
+          layers.content?.set({y: -offset});
           barBackground.animator.set({opacity: 0});
           searchMoveRef.current = null;
           return;
@@ -1900,8 +1902,8 @@ export function NavigationStack<T>({
               );
         const rise = (start: number) =>
           isTurn
-            ? eased(start, -lift)
-            : easedCurve(0, -lift, duration, clock.ease);
+            ? eased(start, -offset)
+            : easedCurve(0, -offset, duration, clock.ease);
         backControl.animator.play({opacity: fade(from.back)}, options);
         layers.trailing?.play({opacity: fade(from.trailing)}, options);
         layers.titleText?.play({opacity: fade(from.title)}, options);
@@ -1926,10 +1928,10 @@ export function NavigationStack<T>({
         return;
       }
       const rest = searchRestRef.current.get(key);
-      const lift = rest?.lift ?? 0;
+      const offset = rest?.offset ?? 0;
       const finish = () => {
         searchingRef.current.delete(key);
-        freshLiftsRef.current.delete(key);
+        freshSearchOffsetsRef.current.delete(key);
         searchRestRef.current.delete(key);
         releaseCollapses(key);
         showCoveredBar();
@@ -1941,7 +1943,7 @@ export function NavigationStack<T>({
       const clock = activationTiming();
       const duration = clock.seconds;
       const contentY = layers.content?.get('y') ?? 0;
-      if (!isMoving || lift <= 0 || Math.abs(contentY) < 0.5) {
+      if (!isMoving || offset <= 0 || Math.abs(contentY) < 0.5) {
         layers.largeTitle?.set({y: 0, opacity: 1});
         layers.content?.set({y: 0});
         barBackground.animator.set({opacity: 1});
@@ -1991,8 +1993,8 @@ export function NavigationStack<T>({
     },
     [
       layersOf,
-      measureLift,
-      storeLift,
+      measureSearchOffset,
+      storeSearchOffset,
       holdCollapses,
       releaseCollapses,
       barBackground,
@@ -2017,13 +2019,13 @@ export function NavigationStack<T>({
     forget(searchingRef.current);
     forget(heldCollapsesRef.current);
     forget(searchRestRef.current);
-    forget(freshLiftsRef.current);
+    forget(freshSearchOffsetsRef.current);
   }, [view.models]);
 
   // The top screen's search: hand the bar over or back as it flips, and
   // follow it when the top screen changes. This drives the bar's and the
   // screen's compositor animators; an activation that comes without a focus
-  // (a programmatic one) measures the field's lift from the DOM here (the
+  // (a programmatic one) measures the field's offset from the DOM here (the
   // field's top against the stack's) before the field reads it.
   const topModel = view.models.at(-1) ?? null;
   const topKeyNow = topModel?.key ?? null;
@@ -2137,7 +2139,7 @@ export function NavigationStack<T>({
               isCovered={model.key !== topKey || view.leaving != null}
               isHidden={model.key !== topKey && model.key !== underKey}
               onLargeTitleCollapse={onLargeTitleCollapse}
-              lift={lifts.get(model.key) ?? 0}
+              searchOffset={searchOffsets.get(model.key) ?? 0}
               isSearching={isSearchFieldActive(model, reportedSearch)}
               onSearchActiveChange={onSearchActiveChange}
             />
