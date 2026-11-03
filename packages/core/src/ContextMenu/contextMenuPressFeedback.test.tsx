@@ -45,7 +45,10 @@ function Trigger() {
 }
 
 /** Lets the shared mutation observer deliver its records. */
-const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+const flush = async () =>
+  new Promise(resolve => {
+    setTimeout(resolve, 0);
+  });
 
 describe('useContextMenuPressFeedback', () => {
   afterEach(() => {

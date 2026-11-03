@@ -29,7 +29,7 @@ export interface OutsidePressOptions {
   readonly pointerTypes?: ReadonlyArray<string>;
   /**
    * A press outside also closes the layer as it begins to pan, or when the
-   * browser takes it, as an anchored menu does under a finger. Only the
+   * browser takes it. An anchored menu closes so under a finger. Only the
    * first pointer counts, and a second one waits for it.
    */
   readonly closesOnPan?: boolean;
