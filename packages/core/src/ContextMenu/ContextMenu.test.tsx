@@ -867,6 +867,11 @@ describe.each([
       press.up();
     });
 
+    it('leaves a disabled trigger out of the press machine (spec:AST-094 FR24)', () => {
+      const trigger = renderMenu({isDisabled: true});
+      expect(trigger).not.toHaveAttribute('data-astryx-pressable');
+    });
+
     it('lights no row when a touch opens it: focus goes to the menu itself, not its first item', () => {
       const trigger = renderMenu();
       const press = finger(trigger);
