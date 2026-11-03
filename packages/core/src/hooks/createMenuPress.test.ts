@@ -17,6 +17,7 @@ import {
   MENU_PRESS_LONG_PRESS_MS,
   MENU_PRESS_MARKER,
   __resetMenuPressForTest,
+  createForwardedMenuPress,
   createMenuPress,
   type CreateMenuPressOptions,
   type CreateMenuPressReturn,
@@ -410,10 +411,256 @@ describe('createMenuPress — update, where a press starts, and a forwarded trig
     expect(f.clicked).toEqual(['B']);
   });
 
-  it("runs the trigger's own press-down handler before the press opens the menu", () => {
+  it('starts no press for a press-down that a page handler outside the menu cancels', () => {
+    const f = fixture();
+    press(f.menu, {itemSelector: ITEM_SELECTOR});
+    // A capture listener on the document runs before anything in the menu.
+    const cancel = (event: Event) => event.preventDefault();
+    document.addEventListener('pointerdown', cancel, true);
+    try {
+      fireEvent.pointerDown(f.row('A'), touch());
+      fireEvent.pointerMove(f.row('B'), touch());
+      fireEvent.pointerUp(f.row('B'), touch());
+    } finally {
+      document.removeEventListener('pointerdown', cancel, true);
+    }
+    expect(f.clicked).toEqual([]);
+    fireEvent.pointerDown(f.row('A'), touch(2));
+    fireEvent.pointerMove(f.row('B'), touch(2));
+    fireEvent.pointerUp(f.row('B'), touch(2));
+    expect(f.clicked).toEqual(['B']);
+  });
+
+  it('opens nothing for a finger held on the trigger whose press-down a page handler cancels', () => {
+    vi.useFakeTimers();
+    const f = fixture();
+    const onTriggerPress = vi.fn(() => true);
+    press(f.menu, {
+      trigger: f.trigger,
+      itemSelector: ITEM_SELECTOR,
+      onTriggerPress,
+    });
+    const cancel = (event: Event) => event.preventDefault();
+    document.addEventListener('pointerdown', cancel, true);
+    try {
+      fireEvent.pointerDown(f.trigger, touch());
+    } finally {
+      document.removeEventListener('pointerdown', cancel, true);
+    }
+    vi.advanceTimersByTime(MENU_PRESS_LONG_PRESS_MS);
+    expect(onTriggerPress).not.toHaveBeenCalled();
+    fireEvent.pointerUp(f.trigger, touch());
+    fireEvent.pointerDown(f.trigger, touch(2));
+    vi.advanceTimersByTime(MENU_PRESS_LONG_PRESS_MS);
+    expect(onTriggerPress).toHaveBeenCalledWith('touch');
+  });
+
+  it.each([
+    ['an ancestor', () => document.body],
+    ['the document', () => document],
+    ['the window', () => window],
+  ] as const)(
+    'starts no press and opens nothing for a finger press-down that %s cancels as it bubbles',
+    (_, end) => {
+      vi.useFakeTimers();
+      const f = fixture();
+      const onTriggerPress = vi.fn(() => true);
+      press(f.menu, {
+        trigger: f.trigger,
+        itemSelector: ITEM_SELECTOR,
+        onTriggerPress,
+      });
+      const cancel = (event: Event) => event.preventDefault();
+      end().addEventListener('pointerdown', cancel);
+      try {
+        fireEvent.pointerDown(f.row('A'), touch());
+        fireEvent.pointerMove(f.row('B'), touch());
+        fireEvent.pointerUp(f.row('B'), touch());
+        fireEvent.pointerDown(f.trigger, touch(2));
+      } finally {
+        end().removeEventListener('pointerdown', cancel);
+      }
+      vi.advanceTimersByTime(MENU_PRESS_LONG_PRESS_MS);
+      expect(f.clicked).toEqual([]);
+      expect(onTriggerPress).not.toHaveBeenCalled();
+    },
+  );
+
+  it('starts no press and opens nothing for a finger press-down the document stops', () => {
+    vi.useFakeTimers();
+    const f = fixture();
+    const onTriggerPress = vi.fn(() => true);
+    press(f.menu, {
+      trigger: f.trigger,
+      itemSelector: ITEM_SELECTOR,
+      onTriggerPress,
+    });
+    const stop = (event: Event) => event.stopPropagation();
+    document.addEventListener('pointerdown', stop);
+    try {
+      fireEvent.pointerDown(f.row('A'), touch());
+      fireEvent.pointerMove(f.row('B'), touch());
+      fireEvent.pointerUp(f.row('B'), touch());
+      fireEvent.pointerDown(f.trigger, touch(2));
+    } finally {
+      document.removeEventListener('pointerdown', stop);
+    }
+    vi.advanceTimersByTime(MENU_PRESS_LONG_PRESS_MS);
+    expect(f.clicked).toEqual([]);
+    expect(onTriggerPress).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['cancels', (event: Event) => event.preventDefault()],
+    ['stops', (event: Event) => event.stopPropagation()],
+  ] as const)(
+    'acts at once on a mouse or pen press-down that the document %s later, as the options form did',
+    (_, block) => {
+      const f = fixture();
+      const onTriggerPress = vi.fn(() => true);
+      press(f.menu, {
+        trigger: f.trigger,
+        itemSelector: ITEM_SELECTOR,
+        onTriggerPress,
+      });
+      const g = fixture();
+      press(g.menu, {itemSelector: ITEM_SELECTOR});
+      const pen = {pointerType: 'pen', pointerId: 3, button: 0};
+      document.addEventListener('pointerdown', block);
+      try {
+        fireEvent.pointerDown(f.trigger, mouse());
+        fireEvent.pointerDown(g.row('A'), pen);
+        fireEvent.pointerMove(g.row('B'), pen);
+        fireEvent.pointerUp(g.row('B'), pen);
+      } finally {
+        document.removeEventListener('pointerdown', block);
+      }
+      expect(onTriggerPress).toHaveBeenCalledWith('mouse');
+      expect(g.clicked).toEqual(['B']);
+    },
+  );
+
+  it.each([
+    ['an ancestor cancels', () => document.body, 'cancel'],
+    ['the document cancels', () => document, 'cancel'],
+    ['the window cancels', () => window, 'cancel'],
+    ['the document stops', () => document, 'stop'],
+  ] as const)(
+    'opens nothing for a forwarded finger press-down on the trigger that %s after the caller',
+    (_, end, how) => {
+      vi.useFakeTimers();
+      const f = fixture();
+      const onTriggerPress = vi.fn(() => true);
+      const handle = press(f.menu, {
+        trigger: f.trigger,
+        itemSelector: ITEM_SELECTOR,
+        onTriggerPress,
+      });
+      // A caller's own handler forwards the press-down, as DropdownMenu's
+      // trigger does, before the handlers above it run.
+      f.trigger.addEventListener('pointerdown', event =>
+        handle.handleTriggerPointerDown(event),
+      );
+      const block = (event: Event) =>
+        how === 'cancel' ? event.preventDefault() : event.stopPropagation();
+      end().addEventListener('pointerdown', block);
+      try {
+        fireEvent.pointerDown(f.trigger, touch());
+      } finally {
+        end().removeEventListener('pointerdown', block);
+      }
+      vi.advanceTimersByTime(MENU_PRESS_LONG_PRESS_MS);
+      expect(onTriggerPress).not.toHaveBeenCalled();
+    },
+  );
+
+  it('acts at once on a trigger press-down forwarded after its dispatch', () => {
+    const f = fixture();
+    const onTriggerPress = vi.fn(() => true);
+    const handle = press(f.menu, {itemSelector: ITEM_SELECTOR, onTriggerPress});
+    handle.handleTriggerPointerDown({
+      pointerId: 1,
+      pointerType: 'mouse',
+      button: 0,
+      ctrlKey: false,
+      target: f.trigger,
+      preventDefault: () => {},
+    });
+    expect(onTriggerPress).toHaveBeenCalledWith('mouse');
+  });
+
+  it('opens nothing when a caller forwards a finger press-down on the trigger that it cancelled', () => {
+    vi.useFakeTimers();
+    const f = fixture();
+    const onTriggerPress = vi.fn(() => true);
+    const handle = press(f.menu, {
+      trigger: f.trigger,
+      itemSelector: ITEM_SELECTOR,
+      onTriggerPress,
+    });
+    f.trigger.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      handle.handleTriggerPointerDown(event);
+    });
+    fireEvent.pointerDown(f.trigger, touch());
+    vi.advanceTimersByTime(MENU_PRESS_LONG_PRESS_MS);
+    expect(onTriggerPress).not.toHaveBeenCalled();
+  });
+
+  it("leaves a mouse's or pen's press-down to the forwards when Core's menus forward it", () => {
+    const f = fixture();
+    const handle = createForwardedMenuPress(f.menu, {
+      itemSelector: ITEM_SELECTOR,
+    });
+    handles.push(handle);
+    fireEvent.pointerDown(f.row('A'), mouse());
+    fireEvent.pointerUp(f.row('B'), mouse());
+    expect(f.clicked).toEqual([]);
+    f.menu.addEventListener('pointerdown', event =>
+      handle.handleMenuPointerDown(event),
+    );
+    fireEvent.pointerDown(f.row('A'), mouse(2));
+    fireEvent.pointerUp(f.row('B'), mouse(2));
+    expect(f.clicked).toEqual(['B']);
+  });
+
+  it("still hears a finger's press-down on its own listener when Core's menus forward", () => {
+    const f = fixture();
+    handles.push(
+      createForwardedMenuPress(f.menu, {itemSelector: ITEM_SELECTOR}),
+    );
+    fireEvent.pointerDown(f.row('A'), touch());
+    fireEvent.pointerMove(f.row('B'), touch());
+    fireEvent.pointerUp(f.row('B'), touch());
+    expect(f.clicked).toEqual(['B']);
+  });
+
+  it('starts a press when a page handler dispatches another press-down during it', () => {
+    const f = fixture();
+    press(f.menu, {itemSelector: ITEM_SELECTOR});
+    // A handler between the menu and the document dispatches a press-down of
+    // its own elsewhere, which reaches the document first.
+    const holder = f.menu.parentElement!;
+    const relay = (event: Event) => {
+      if (event.target !== f.outside) {
+        fireEvent.pointerDown(f.outside, touch(9));
+      }
+    };
+    holder.addEventListener('pointerdown', relay);
+    try {
+      fireEvent.pointerDown(f.row('A'), touch());
+      fireEvent.pointerMove(f.row('B'), touch());
+      fireEvent.pointerUp(f.row('B'), touch());
+      expect(f.clicked).toEqual(['B']);
+    } finally {
+      holder.removeEventListener('pointerdown', relay);
+    }
+  });
+
+  it("acts on a forwarded mouse press in the caller's handler order, after the handlers before it", () => {
     const f = fixture();
     const order: string[] = [];
-    press(f.menu, {
+    const handle = createForwardedMenuPress(f.menu, {
       trigger: f.trigger,
       itemSelector: ITEM_SELECTOR,
       onTriggerPress: () => {
@@ -421,7 +668,11 @@ describe('createMenuPress — update, where a press starts, and a forwarded trig
         return true;
       },
     });
-    f.trigger.addEventListener('pointerdown', () => order.push('page'));
+    handles.push(handle);
+    f.trigger.addEventListener('pointerdown', event => {
+      order.push('page');
+      handle.handleTriggerPointerDown(event);
+    });
     fireEvent.pointerDown(f.trigger, mouse());
     expect(order).toEqual(['page', 'press']);
   });
@@ -445,23 +696,27 @@ describe('createMenuPress — update, where a press starts, and a forwarded trig
   });
 });
 
-describe('createMenuPress — one shared press-down pair per document (PR1)', () => {
-  it('twenty closed menus share one press-down pair, and the last destroy removes it', () => {
+describe('createMenuPress — no document listener while idle (PR1)', () => {
+  it('twenty closed menus add no press-down listener to the document, and a press adds only what it removes', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
     try {
-      const count = (spy: typeof add) =>
-        spy.mock.calls.filter(([type]) => type === 'contextmenu').length;
-      const presses = Array.from({length: 20}, () =>
-        createMenuPress(fixture().menu, {itemSelector: ITEM_SELECTOR}),
-      );
-      expect(count(add)).toBe(1);
-      for (const each of presses.slice(0, 19)) {
-        each.destroy();
+      const fixtures = Array.from({length: 20}, () => fixture());
+      for (const each of fixtures) {
+        press(each.menu, {itemSelector: ITEM_SELECTOR, trigger: each.trigger});
       }
-      expect(count(remove)).toBe(0);
-      presses[19].destroy();
-      expect(count(remove)).toBe(1);
+      const ofType = (spy: typeof add, type: string, from = 0) =>
+        spy.mock.calls.slice(from).filter(([kind]) => kind === type);
+      expect(ofType(add, 'contextmenu')).toHaveLength(0);
+      // At most the one shared modality listener, never one per menu.
+      expect(ofType(add, 'pointerdown').length).toBeLessThanOrEqual(1);
+      const from = add.mock.calls.length;
+      fireEvent.pointerDown(fixtures[0].row('A'), touch());
+      fireEvent.pointerUp(fixtures[0].row('A'), touch());
+      const removed = remove.mock.calls.map(([, listener]) => listener);
+      for (const [, listener] of add.mock.calls.slice(from)) {
+        expect(removed).toContain(listener);
+      }
     } finally {
       add.mockRestore();
       remove.mockRestore();
@@ -585,10 +840,8 @@ describe('createMenuPress — input modality in the menu\u2019s own document (ar
         .filter(type => type === 'keydown' || type === 'pointerdown')
         .sort();
     const press = createMenuPress(menu, {itemSelector: ITEM_SELECTOR});
-    // The modality pair, and the press-down listener.
     expect(typesOf(addEventListener.mock.calls)).toEqual([
       'keydown',
-      'pointerdown',
       'pointerdown',
     ]);
     own.dispatchEvent(new Event('pointerdown'));
@@ -596,7 +849,6 @@ describe('createMenuPress — input modality in the menu\u2019s own document (ar
     press.destroy();
     expect(typesOf(removeEventListener.mock.calls)).toEqual([
       'keydown',
-      'pointerdown',
       'pointerdown',
     ]);
   });
