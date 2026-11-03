@@ -175,16 +175,19 @@ export const contextMenu = {
 } as const;
 
 /**
- * Registers each visual spring and duration above with the motion registry
- * (motion/roles.ts), where ContextMenu's motion reads them. None is a motion
- * role: touch motion stays internal, so no theme retunes them. The commit, the
- * menu's moment and the onset decide who gets the touch: gesture timing, not
- * motion, so they are not registered. Nothing registers on import:
- * ContextMenu's touch code calls it before its first motion (it is
- * idempotent).
+ * Registers the press feedback's spring and latencies as internal motion
+ * roles, which the ContextMenu record names. The commit, the menu's moment and
+ * the onset decide who gets the touch: gesture timing, not motion, so they are
+ * not registered. Nothing registers on import: ContextMenu's touch code calls
+ * it before its first motion, and a second call does nothing.
  */
 export function registerContextMenuTable(): void {
   registerMotionTable('contextMenu', contextMenu, {
+    roles: [
+      'press.feedbackSpring',
+      'press.feedbackLatencyMs',
+      'press.returnLatencyMs',
+    ],
     exclude: ['press.commitMs', 'press.menuDisplayMs', 'press.feedbackOnsetMs'],
   });
 }

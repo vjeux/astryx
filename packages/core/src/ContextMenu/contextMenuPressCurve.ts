@@ -18,7 +18,7 @@
 // copy's visible size chases that ramp through `feedbackSpring`. The screen
 // shows it `feedbackLatencyMs` after UIKit starts it. The curve is
 // closed-form, so the whole held press is known when the finger lands, and
-// the compositor plays it. No value is a motion role, so no theme retunes it.
+// the compositor plays it. Its spring and latency are internal motion roles.
 
 import {
   settlingDuration,
@@ -56,8 +56,8 @@ const TABLE_MOTION: PressFeedbackMotion = {
 
 /**
  * The press feedback's motion for `element`: the table's spring and latency,
- * as its registry resolves them. No ContextMenu value is a motion role, so a
- * theme sets none. The onset is the measured one: core's press machine
+ * as its registry resolves them. The roles are internal, so a theme sets no
+ * value of its own. The onset is the measured one: core's press machine
  * decides when a press is believed.
  */
 export function pressFeedbackMotion(
