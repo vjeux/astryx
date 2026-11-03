@@ -624,6 +624,126 @@ describe('Lightbox', () => {
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
+    it('closes on a mouse click in the band between a photo and its caption row', () => {
+      const onOpenChange = vi.fn();
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={onOpenChange}
+          media={media}
+          index={0}
+        />,
+      );
+      const current = document.querySelector('[data-current]')!;
+      const box = current.querySelector('[data-lightbox-page-media]')!;
+      layOutPage(current, {
+        photo: rectAt(100, 100, 400, 200),
+        natural: 400,
+        caption: rectAt(250, 600, 100, 30),
+        viewer: 1000,
+      });
+      // Below the photo and above its caption, the click is the backdrop's.
+      mousePress(box, {x: 300, y: 450});
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it("shows a 0 caption and none for true, and lays out no other page's caption", () => {
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          index={3}
+          media={[
+            {src: '/a.jpg', alt: 'A', caption: 'First'},
+            {src: '/b.jpg', alt: 'B'},
+            {src: '/c.jpg', alt: 'C', caption: true},
+            {src: '/d.jpg', alt: 'D', caption: 0},
+          ]}
+        />,
+      );
+      // The first page is not rendered, so nothing lays out its caption.
+      expect(screen.queryByText('First')).toBeNull();
+      expect(
+        document.querySelector('[data-current] [data-lightbox-caption]'),
+      ).toHaveTextContent('0');
+    });
+
+    it("describes the viewer with the current item's full caption, however long", () => {
+      const long =
+        'A winding path through the forest, past the old mill and down to the river, where the trail turns back toward the village';
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          index={0}
+          media={[
+            {src: '/a.jpg', alt: 'A', caption: long},
+            {src: '/b.jpg', alt: 'B', caption: 'Short'},
+          ]}
+        />,
+      );
+      expect(screen.getByRole('dialog')).toHaveAccessibleDescription(long);
+    });
+
+    it('renders as a media surface: the content under MediaTheme dark, the caption and counter as body Text', () => {
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          index={0}
+          hasZoom
+          media={[
+            {src: '/a.jpg', alt: 'A', caption: 'Golden hour'},
+            {src: '/b.jpg', alt: 'B'},
+          ]}
+        />,
+      );
+      const dialog = screen.getByRole('dialog');
+      const surface = dialog.querySelector('[data-astryx-media="dark"]');
+      // Inside the dialog, so the backdrop keeps the page's overlay.
+      expect(surface).not.toBeNull();
+      expect(dialog).not.toHaveAttribute('data-astryx-media');
+      const close = screen.getByRole('button', {name: /close/i});
+      expect(surface).toContainElement(close);
+      const caption = dialog.querySelector(
+        '[data-current] [data-lightbox-caption] .astryx-text',
+      );
+      expect(caption).toHaveAttribute('data-type', 'body');
+      expect(caption).toHaveTextContent('Golden hour');
+      const counter = screen.getByText('1 / 2');
+      expect(counter.closest('.astryx-text')).toHaveAttribute(
+        'data-type',
+        'body',
+      );
+      expect(surface).toContainElement(counter);
+    });
+
+    it("renders a single photo's caption as body Text", () => {
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          media={{src: '/a.jpg', alt: 'A', caption: 'Golden hour'}}
+        />,
+      );
+      expect(
+        screen.getByText('Golden hour').closest('.astryx-text'),
+      ).toHaveAttribute('data-type', 'body');
+    });
+
+    it('describes a single photo with its caption', () => {
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          media={{src: '/a.jpg', alt: 'A', caption: 'Golden hour'}}
+        />,
+      );
+      expect(screen.getByRole('dialog')).toHaveAccessibleDescription(
+        'Golden hour',
+      );
+    });
+
     it("stays open on a mouse click beside a narrow photo, within its caption's width", () => {
       const onOpenChange = vi.fn();
       render(
@@ -1287,9 +1407,12 @@ describe('Lightbox', () => {
       );
       // The container fills the whole dialog, so a click on the visual
       // backdrop (the dark area around the media) lands on it — not on the
-      // dialog element itself.
+      // dialog element itself. It sits in the media surface, which has no
+      // box of its own.
       const dialog = document.querySelector('dialog')!;
-      const container = dialog.firstElementChild!;
+      const container = dialog.querySelector(
+        '[data-astryx-media="dark"]',
+      )!.firstElementChild!;
       fireEvent.click(container);
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
