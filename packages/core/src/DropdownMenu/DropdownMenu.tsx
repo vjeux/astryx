@@ -25,8 +25,7 @@
  * Under a finger, the popover opens and closes the way UIMenu does. It grows
  * out of its trigger on UIKit's open spring and collapses back into it on
  * the close spring (menuSurfaceMotion.ts). A pan that begins outside closes
- * it. On every screen it opens beside its trigger at the layer's placement.
- * Under a mouse it keeps the layer's own entrance and the theme's motion
+ * it. Under a mouse it keeps the layer's own entrance and the theme's motion
  * tokens.
  *
  * Initial focus on open follows the input modality: a keyboard open
@@ -1138,8 +1137,9 @@ function DropdownMenuPopover({
     isUikitMotionRef.current = isUikitMotion;
     const trigger = buttonRef.current;
     if (surface != null && trigger != null) {
+      const motion = getSurfaceMotion(surface);
       if (isUikitMotion) {
-        getSurfaceMotion(surface).enter(() => {
+        motion.enter(() => {
           const triggerBox = trigger.getBoundingClientRect();
           const surfaceBox = surface.getBoundingClientRect();
           return {
@@ -1155,10 +1155,8 @@ function DropdownMenuPopover({
             },
           };
         });
-      } else if (surfaceMotionRef.current?.element === surface) {
-        // A mouse runs nothing touch-related: it creates no motion, and stops
-        // one a finger's open left.
-        surfaceMotionRef.current.motion.reset();
+      } else {
+        motion.reset();
       }
     }
     if (renderTrigger != null) {
