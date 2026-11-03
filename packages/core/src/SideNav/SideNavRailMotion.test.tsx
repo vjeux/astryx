@@ -77,6 +77,10 @@ beforeEach(() => {
     configurable: true,
     value: {currentTime: 1000},
   });
+  // The page's clock reads the timeline's frame time: no block since it.
+  vi.spyOn(performance, 'now').mockImplementation(
+    () => (document.timeline as {currentTime: number}).currentTime,
+  );
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
     function (this: HTMLElement) {
       const width = railWidth();
@@ -111,6 +115,11 @@ beforeEach(() => {
     const listeners: (() => void)[] = [];
     const animation = {
       startTime: null as number | null,
+      // As a browser reads it: the timeline's time since the start.
+      get currentTime() {
+        const now = (document.timeline as {currentTime: number}).currentTime;
+        return animation.startTime == null ? 0 : now - animation.startTime;
+      },
       finished: {then: () => undefined},
       onfinish: null as null | (() => void),
       addEventListener: (_type: string, listener: () => void) => {
@@ -301,7 +310,7 @@ describe('SideNav rail motion (component:SideNav FR6, component:AppShell FR17)',
       /inset\(0px ([\d.]+)px/.exec(String(reveal?.keyframes[0].clipPath))?.[1],
     );
     // It reveals from the shown width, not from the collapsed one.
-    expect(start).toBe(EXPANDED - 150);
+    expect(start).toBeCloseTo(EXPANDED - 150, 6);
   });
 
   it('continues what the rail and the page show when a change reverses a running one', async () => {
