@@ -133,8 +133,8 @@ export interface LayoutPanelProps extends BaseProps<HTMLDivElement> {
    * - End panel: border on start edge (left in LTR)
    * When false, spacing collapse is applied automatically for seamless visual flow.
    *
-   * Note: When using `resizable` with an adjacent `ResizeHandle hasDivider`,
-   * set this to `false` to avoid a double-line artifact.
+   * Note: When a `ResizeHandle` with `hasDivider` sits beside this panel,
+   * set this to `false` to avoid a double line.
    * @default false
    */
   hasDivider?: boolean;
