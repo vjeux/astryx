@@ -3039,6 +3039,21 @@ describe('DropdownMenu press model', () => {
     expect(HTMLElement.prototype.hidePopover).toHaveBeenCalled();
   });
 
+  it('a mouse press on the trigger opens nothing while a page handler cancels the press-down, and the click still opens', () => {
+    const trigger = renderMenu(vi.fn());
+    const cancel = (event: Event) => event.preventDefault();
+    document.addEventListener('pointerdown', cancel);
+    try {
+      fireEvent.pointerDown(trigger, mouse);
+    } finally {
+      document.removeEventListener('pointerdown', cancel);
+    }
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.pointerUp(trigger, mouse);
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('a press-opened menu returns focus to its trigger, not to the control focused before the press', async () => {
     // A browser's popover remembers the focused element when it is shown
     // and, when it hides with focus inside it, hands focus back to that
