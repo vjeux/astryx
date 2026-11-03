@@ -81,29 +81,18 @@ const styles = stylex.create({
   },
   // Under a touch presentation the alert takes UIKit's look on the theme's
   // dialog entrance. It plays Dialog's duration and curve from a 1.2 start,
-  // not Dialog's rise, and the dimming fades in on the same tokens. Under
-  // reduced motion the alert and the dimming fade in over Dialog's reduced
-  // 200 ms. The dimming reads its timing from the dialog: a backdrop
-  // inherits from its dialog, and Dialog takes no media query inside it.
-  // SYNC: the backdrop's tokens are Dialog's entrance tokens.
+  // not Dialog's rise. Under reduced motion the alert and the dimming fade in
+  // over Dialog's reduced 200 ms. The dimming inherits the alert's own
+  // timing: a backdrop inherits from its dialog.
   touchEntrance: {
     animationName: {
       default: touchEnter,
       '@media (prefers-reduced-motion: reduce)': fadeIn,
     },
-    '--_alert-dim-duration': {
-      default: durationVars['--duration-medium-max'],
-      '@media (prefers-reduced-motion: reduce)':
-        reducedMotionFadeConsts.duration,
-    },
-    '--_alert-dim-easing': {
-      default: easeVars['--ease-standard'],
-      '@media (prefers-reduced-motion: reduce)': reducedMotionFadeConsts.easing,
-    },
     '::backdrop': {
       animationName: fadeIn,
-      animationDuration: 'var(--_alert-dim-duration)',
-      animationTimingFunction: 'var(--_alert-dim-easing)',
+      animationDuration: 'inherit',
+      animationTimingFunction: 'inherit',
       animationFillMode: 'backwards',
     },
   },
@@ -115,22 +104,20 @@ const styles = stylex.create({
   // tokens, even while a theme leaves its dialog exit off. Under reduced
   // motion the fade stays within the reduced cross-fade.
   touchExit: {
-    '--_alert-exit-duration': {
+    animationName: fadeOut,
+    animationDuration: {
       default: EXIT_DURATION,
       '@media (prefers-reduced-motion: reduce)': REDUCED_EXIT_DURATION,
     },
-    '--_alert-exit-easing': {
+    animationTimingFunction: {
       default: easeVars['--ease-exit'],
       '@media (prefers-reduced-motion: reduce)': reducedMotionFadeConsts.easing,
     },
-    animationName: fadeOut,
-    animationDuration: 'var(--_alert-exit-duration)',
-    animationTimingFunction: 'var(--_alert-exit-easing)',
     animationFillMode: 'forwards',
     '::backdrop': {
       animationName: fadeOut,
-      animationDuration: 'var(--_alert-exit-duration)',
-      animationTimingFunction: 'var(--_alert-exit-easing)',
+      animationDuration: 'inherit',
+      animationTimingFunction: 'inherit',
       animationFillMode: 'forwards',
     },
   },
