@@ -129,8 +129,8 @@ const styles = stylex.create({
   // Trigger wrapper. `position: relative` makes the containing block for the
   // absolutely positioned cursor anchor below. So the anchor point follows
   // the trigger, and scrolls with it, instead of the page. The iOS callout and
-  // text selection stay off, as they always have. So a long press or a
-  // right-click opens this menu instead of selecting the trigger's text. The
+  // text selection stay off. A long press or a right-click then opens this
+  // menu instead of selecting the trigger's text. The
   // gesture host adds its own lock for a held press.
   trigger: {
     position: 'relative',

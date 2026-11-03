@@ -13,7 +13,14 @@
  * SYNC: When modified, update /packages/core/src/ContextMenu/ContextMenu.tsx
  */
 
-import {useImperativeHandle, useRef, type Ref, type RefObject} from 'react';
+import {
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type Ref,
+  type RefObject,
+} from 'react';
+import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {contextMenu} from '../motion/uikit/contextMenu';
@@ -51,8 +58,9 @@ export interface ContextMenuTouchLayerProps {
  * the finger landed: at `menuDisplayMs` if it is still down, or at the lift.
  * A lift before the commit, a second finger or a scroll gets no menu. So does
  * a drift past the tolerance before the menu shows. The press feedback grows
- * the trigger from core's press machine's onset. It springs back when the
- * recognizer ends the press with no menu, and it holds while that menu is up.
+ * the trigger from core's press machine's onset, while the recognizer follows
+ * the finger. It springs back when the recognizer ends the press with no
+ * menu, and it holds while that menu is up.
  */
 export function ContextMenuTouchLayer({
   triggerRef,
@@ -61,7 +69,15 @@ export function ContextMenuTouchLayer({
   ref,
   onOpen,
 }: ContextMenuTouchLayerProps): null {
-  const feedback = useContextMenuPressFeedback(triggerRef, isShown, triggerKey);
+  // Whether the recognizer follows a finger or a pen now. It is set below,
+  // where the recognizer exists.
+  const isFollowedRef = useRef<() => boolean>(() => false);
+  const feedback = useContextMenuPressFeedback(
+    triggerRef,
+    isShown,
+    triggerKey,
+    isFollowedRef,
+  );
   const feedbackRef = useRef(feedback);
   feedbackRef.current = feedback;
   const onOpenRef = useRef(onOpen);
@@ -100,15 +116,27 @@ export function ContextMenuTouchLayer({
             open();
           }
           break;
+        case 'possible':
         case 'failed':
         case 'cancelled':
-          // A press that ends with no menu: the press feedback springs back.
-          feedbackRef.current.end(press.clockTime);
-          break;
-        case 'possible':
           break;
       }
     },
+  );
+
+  isFollowedRef.current = () =>
+    recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
+
+  // The recognizer's transitions. Its target-action listeners never hear
+  // `failed`, so a press that ends with no menu springs back from here.
+  useEffect(
+    () =>
+      recognizer.addTransitionListener((press, _from, to) => {
+        if (to === 'failed' || to === 'cancelled') {
+          feedbackRef.current.end(press.clockTime);
+        }
+      }),
+    [recognizer],
   );
 
   useImperativeHandle(

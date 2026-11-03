@@ -66,15 +66,21 @@ export interface ContextMenuPressFeedback {
   hold(): void;
 }
 
+/** A press feedback with no recognizer to ask grows at every "on". */
+const ALWAYS_FOLLOWED: RefObject<() => boolean> = {current: () => true};
+
 /**
  * The press feedback of a ContextMenu trigger. `isShown` is read at each
  * press: false for an inline trigger. `triggerKey` changes when the trigger
- * element is replaced (`triggerAs`), so the new one is followed.
+ * element is replaced (`triggerAs`), so the new one is followed. `isFollowed`
+ * says whether ContextMenu's recognizer follows a finger or a pen now: the
+ * growth starts only then.
  */
 export function useContextMenuPressFeedback(
   triggerRef: RefObject<HTMLElement | null>,
   isShown: boolean,
   triggerKey?: unknown,
+  isFollowed: RefObject<() => boolean> = ALWAYS_FOLLOWED,
 ): ContextMenuPressFeedback {
   const pressable = usePressFeedback();
   const animatorRef = useRef<Animator | null>(null);
@@ -85,6 +91,8 @@ export function useContextMenuPressFeedback(
   // The menu the press opened is up: the growth holds until it closes.
   const isHeldRef = useRef(false);
 
+  // The compositor animator: dispose it at unmount, so no animation outlives
+  // the trigger.
   useEffect(
     () => () => {
       animatorRef.current?.dispose();
@@ -122,7 +130,7 @@ export function useContextMenuPressFeedback(
 
   const start = useCallback(
     (time: number) => {
-      if (!isShownRef.current || isHeldRef.current) {
+      if (!isShownRef.current || isHeldRef.current || !isFollowed.current()) {
         return;
       }
       const animator = animatorFor();
@@ -150,7 +158,7 @@ export function useContextMenuPressFeedback(
         {at},
       );
     },
-    [animatorFor],
+    [animatorFor, isFollowed],
   );
 
   const end = useCallback(
