@@ -6,10 +6,12 @@
 
 /**
  * @file Shared hover and pressed overlay states
- * @input StyleX and the semantic interaction-overlay color tokens
+ * @input StyleX, the semantic interaction-overlay color tokens and the exit
+ *   motion tokens
  * @output Reusable background-color and background-image state styles, the
  *   touch press's registered strength variable (`pressVars`) and its clocks
- *   (`pressConsts`)
+ *   (`pressConsts`). `pressedAlphaTouchExit` releases on the exit tokens
+ *   under a coarse primary pointer.
  * @position Internal styling utility for interactive core surfaces
  *
  * SYNC: When modified, update pressFeedback.ts, pressGesture.ts (the fade
@@ -54,7 +56,7 @@
 // `animation-*` on the element that composes them. The touch arms own both.
 
 import * as stylex from '@stylexjs/stylex';
-import {colorVars} from '../theme/tokens.stylex';
+import {colorVars, durationVars, easeVars} from '../theme/tokens.stylex';
 
 /**
  * The touch press's strength on the surface the controller painted, 0 to 1.
@@ -208,6 +210,53 @@ const pressReleaseAnimation: Readonly<{
   animationFillMode: {default: null, '[data-astryx-press="fading"]': 'both'},
 };
 
+/**
+ * The release on the theme's exit tokens under a coarse primary pointer, for
+ * `pressedAlphaTouchExit`. The controller ends the press on the shared clock,
+ * so the clock caps the fade. A fine primary pointer keeps the shared release.
+ */
+const pressReleaseOnExitTokens: Readonly<{
+  animationName: ByAttribute<string>;
+  animationDuration: ByAttribute<
+    Readonly<{
+      default: string;
+      '@media (prefers-reduced-motion: reduce)': string;
+      '@media (pointer: coarse)': Readonly<{
+        default: string;
+        '@media (prefers-reduced-motion: reduce)': string;
+      }>;
+    }>
+  >;
+  animationTimingFunction: ByAttribute<
+    Readonly<{default: string; '@media (pointer: coarse)': string}>
+  >;
+  animationFillMode: ByAttribute<'both'>;
+}> = {
+  animationName: {
+    default: null,
+    '[data-astryx-press="fading"]': pressRelease,
+  },
+  animationDuration: {
+    default: null,
+    '[data-astryx-press="fading"]': {
+      default: PRESS_RELEASE_DURATION,
+      '@media (prefers-reduced-motion: reduce)': PRESS_RELEASE_DURATION_REDUCED,
+      '@media (pointer: coarse)': {
+        default: `min(${durationVars['--duration-exit']}, ${PRESS_RELEASE_DURATION})`,
+        '@media (prefers-reduced-motion: reduce)': `min(${durationVars['--duration-exit']}, ${PRESS_RELEASE_DURATION_REDUCED})`,
+      },
+    },
+  },
+  animationTimingFunction: {
+    default: null,
+    '[data-astryx-press="fading"]': {
+      default: RELEASE_EASE,
+      '@media (pointer: coarse)': easeVars['--ease-exit'],
+    },
+  },
+  animationFillMode: {default: null, '[data-astryx-press="fading"]': 'both'},
+};
+
 export const interactionOverlayStyles = stylex.create({
   backgroundColor: {
     [PRESS_ALPHA]: pressStrength,
@@ -332,6 +381,15 @@ export const interactionOverlayStyles = stylex.create({
   pressedAlpha: {
     [PRESS_ALPHA]: pressStrength,
     ...pressReleaseAnimation,
+    ...pressPaint,
+  },
+  /**
+   * `pressedAlpha` whose release fades on the theme's exit tokens under a
+   * coarse primary pointer, for the cards.
+   */
+  pressedAlphaTouchExit: {
+    [PRESS_ALPHA]: pressStrength,
+    ...pressReleaseOnExitTokens,
     ...pressPaint,
   },
 });
