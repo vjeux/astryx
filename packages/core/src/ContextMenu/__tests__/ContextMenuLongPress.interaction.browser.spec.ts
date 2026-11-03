@@ -44,12 +44,14 @@ import {
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
 import {contextMenu} from '../../motion/uikit/contextMenu';
-import {PRESS_ONSET_MS} from '../../utils/pressGesture';
 import {pressTiming, timedCurve} from '../contextMenuPressTiming';
 
 const storybook = withStorybook(test);
 const {commitMs, menuDisplayMs, heldScale} = contextMenu.press;
-const feedbackOnsetMs = PRESS_ONSET_MS;
+// Core's press machine believes a press 150 ms after it lands
+// (`utils/pressGesture.ts`). That module loads a StyleX stylesheet, which
+// this Node-side spec cannot, so the onset is restated here.
+const feedbackOnsetMs = 150;
 
 /**
  * What ContextMenu plays from the press machine's onset: the growth toward the
@@ -626,11 +628,7 @@ test('the press feedback keeps advancing every frame while the main thread is bl
   const tracked = await trackMarker(page, castFrames);
   const proof = busyWindowProof(tracked, block, {axis: 'width'});
   // What the curve grows by over the judged window, in the marker's pixels.
-  const touch =
-    (await page.evaluate(() => performance.timeOrigin)) +
-    (await touchStartedAt(page));
-  const scaleAt = (epoch: number) =>
-    played.at((epoch - touch - feedbackOnsetMs) / 1000);
+  const scaleAt = (epoch: number) => played.at((epoch - feedback.from) / 1000);
   const restWidth = (proof.first ?? 0) / scaleAt(block.from + 20);
   const expectedGrowth =
     restWidth * (scaleAt(block.to - 20) - scaleAt(block.from + 20));
@@ -804,7 +802,7 @@ test(
     await storyboard.write(testInfo);
     const scales = storyboard.frames.map(f => Number(f.data.scale));
     expect(scales.every((s, i) => i === 0 || s >= scales[i - 1])).toBe(true);
-    // UIKit's platter at 732.6 ms: 1.0618.
-    expect(scales.at(-1)).toBeCloseTo(1.0618, 2);
+    // The growth reaches the held scale before the menu displays.
+    expect(scales.at(-1)).toBeCloseTo(heldScale, 2);
   },
 );
