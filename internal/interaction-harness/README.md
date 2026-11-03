@@ -243,7 +243,8 @@ first and last frames may commit). A transform/opacity animation does no
 Layout or Paint there; a layout-property animation does one per frame. Its
 `presented` lists when the compositor presented each frame (null unless the
 page is the browser's only one), so a proof can start that middle at a
-presented frame rather than after a fixed delay. Its
+presented frame rather than after a fixed delay. Its `dispatches` list the
+page's event dispatches, so a proof can count the work one handler forced. Its
 `longTasks` are the page's own: only a task the harness marked as its own read
 (`waitForAnimation` describing keyframes, `blockMainThread` without `during`)
 is in `devtoolsTasks` instead, and only when no page script ran inside it. A

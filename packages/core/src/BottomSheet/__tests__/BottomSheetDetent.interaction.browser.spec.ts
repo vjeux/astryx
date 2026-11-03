@@ -1185,6 +1185,30 @@ test('the settle does no Layout or Paint per frame', async ({
   expect(trace.longTasks).toEqual([]);
 });
 
+test("a finger's release forces no style or layout flush in its touchend", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
+  const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
+  const trace = await traceRendering(page, async () => {
+    await driver.play(
+      slowDragTo(handle, Math.round((halfTop - tallTop) * 0.66)),
+    );
+    await waitForAnimation(sheet);
+    await waitForRest(sheet);
+  });
+  const lift = trace.dispatches.filter(d => d.type === 'touchend');
+  expect(lift).toHaveLength(1);
+  // A style recalculation or a layout inside the handler is one it forced.
+  // Without it, the frame does that work once, after the handler.
+  const forced = countBetween(trace, lift[0].from, lift[0].to);
+  expect(
+    (forced.UpdateLayoutTree ?? 0) + (forced.Layout ?? 0),
+    JSON.stringify(forced),
+  ).toBe(0);
+});
+
 /**
  * Tiles Chromium's compositor schedules for raster in the page's renderer
  * (cc's `TileManager::ScheduleTasks`), per window between the marks `body`

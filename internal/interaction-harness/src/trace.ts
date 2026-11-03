@@ -89,6 +89,12 @@ export interface RenderingTrace {
    * unless the page was the browser's only one for the whole window.
    */
   readonly presented: readonly number[] | null;
+  /** The page's event dispatches inside the window, epoch ms, by event type. */
+  readonly dispatches: readonly {
+    readonly type: string;
+    readonly from: number;
+    readonly to: number;
+  }[];
   /** The window, epoch ms on the page's clock. */
   readonly window: {readonly from: number; readonly to: number};
 }
@@ -224,6 +230,13 @@ export async function traceRendering(
       durationMs: (task.dur ?? 0) / 1000,
     });
   }
+  const dispatches = main
+    .filter(e => e.name === 'EventDispatch' && e.dur != null)
+    .map(e => ({
+      type: String((e.args?.data as {type?: unknown} | undefined)?.type ?? ''),
+      from: toEpochMs(e.ts),
+      to: toEpochMs(e.ts + (e.dur ?? 0)),
+    }));
   return {
     counts,
     layout: counts.Layout ?? 0,
@@ -246,6 +259,7 @@ export async function traceRendering(
           .map(e => toEpochMs(e.ts))
           .sort((a, b) => a - b)
       : null,
+    dispatches,
   };
 }
 
