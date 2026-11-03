@@ -43,6 +43,13 @@ that times motion with it. Everything here is internal to
   again. Every caller in a document shares one listener, which lives only
   while a caller does; BottomSheet's hook installs it only under a coarse
   primary pointer.
+- **The tap route (FR4):** a first tap moves focus from nothing, so no
+  `blur` claims it. `claimTapFocus(region, {claim, deliver})` takes a
+  one-finger tap the browser would turn into focus, cancels the tap's
+  default, swallows the mouse events Safari may still send, and lets
+  `deliver` focus the field. `focusAtPoint(field, x, y)` focuses it with
+  `preventScroll` and puts the caret under the finger. A touch past 10 px is
+  the browser's to scroll.
 - **The browser's own reveal pan (FR4):** `watchRevealPan(window, {owns})`
   is the one building block every keyboard-aware surface uses for a browser
   that pans the visual viewport to a focused field after the keyboard's
@@ -57,6 +64,37 @@ that times motion with it. Everything here is internal to
   while a surface watches. BottomSheet's hook watches while its sheet is presented
   under a coarse primary pointer; under a fine one it registers no touch
   listener.
+- **Keyboard targets (`keyboardTarget.ts`):** a target keeps the focused field
+  inside it above the keyboard, and registers so a field inside moves nothing
+  itself (`registerKeyboardTarget`, `isInsideKeyboardTarget`).
+  `followKeyboard(target, {move, offset})` is a target that moves no inset:
+  `'ride'` moves the target with the keyboard, on the guide's slide where one is
+  published and at each report elsewhere; `'reveal'` scrolls the field into
+  place in the target, a scroller. `keepFieldAboveKeyboard(field)` is a field's
+  own path. When the field gains focus it decides where it is from its nearest
+  fixed-position ancestor (`fixedContainerOf`). Docked at the viewport's bottom
+  edge by its layout, without any transform, that container moves up by the part
+  of it the keyboard still covers. In page content, the field's scrollers bring
+  it into view on both edges (`distanceIntoBand`, shared with the Tall sheet's
+  reveal), the nearest first and the document last, `FIELD_OFFSET` (10 px) above
+  the keyboard while one shows. Inside a keyboard target, or a fixed container
+  that fills the viewport or floats above the bottom edge, the path does nothing
+  and the browser's own reveal stays. A ride places its target on the frame
+  after each report, slide or focus move, once every listener of that event has
+  run, and measures what the keyboard still covers after any move the app makes
+  itself: a bar the app already moves with the keyboard is not moved, and one
+  the app lifts part of the way moves the rest. The ride writes the CSS
+  `translate`, which adds to an app's `transform`, writes nothing on an element
+  it never moved, and on an app's element only while that element stays docked.
+  A Core host's ride moves its own element and keeps its focused field `offset`
+  above the keyboard. A target lifts only while a field inside it has focus, and
+  rides back down once focus leaves; one ride moves a target at a time. Where
+  the path places the field, focus moves and first taps arrive without the
+  browser's reveal; a claimed tap raises the tap's click on the field
+  afterwards, a synthetic touch `PointerEvent` (a `MouseEvent` where none
+  exists), so a caller's `onClick` still runs once. A pan the browser makes on
+  its own after a report, as after a script's `focus()` that no claim saw, is
+  put back (`watchRevealPan`).
 - **The surface hook (FR4, FR5):** `useMobileKeyboard(targetRef, options)`
   (`useMobileKeyboard.ts`) keeps a focused field in a target above the
   keyboard. BottomSheet passes its panel with `{move: 'ride', inset: true}`
@@ -186,6 +224,8 @@ keyboard module measures them from the visual viewport, as in every browser
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | `keyboardHeight.ts`      | The keyboard module: the height, its listeners, the focus routes.                                                     |
 | `useMobileKeyboard.ts`   | Keeps a focused field in a target above the keyboard: the inset, the reveal, the ride and the dismiss.                |
+| `keyboardTarget.ts`      | The targets: their registry, a docked or scrolling target, and a field's own path.                                    |
+| `revealBand.ts`          | `distanceIntoBand`: the scroll that brings a box inside a band, shared by the field's and the sheet's reveals.        |
 | `keyboardModel.ts`       | The clock-free core of the guide: transitions from keyboard reports and focus changes.                                |
 | `keyboardLayoutGuide.ts` | One guide per window, fed by the keyboard module: the verification timer, the focus handoff.                          |
 | `rideKeyboard.ts`        | Moves an element with the keyboard on the curve its transition publishes, or at once (tests: `rideKeyboard.test.ts`). |
