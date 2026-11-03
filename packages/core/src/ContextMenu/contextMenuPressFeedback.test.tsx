@@ -57,6 +57,26 @@ function Trigger() {
   return <div ref={ref} data-testid="trigger" />;
 }
 
+/** A trigger whose feedback can go while the trigger stays, as when it is disabled. */
+function FeedbackLayer({
+  triggerRef,
+}: {
+  triggerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  feedback = useContextMenuPressFeedback(triggerRef, true);
+  return null;
+}
+
+function TriggerWithLayer({hasLayer}: {hasLayer: boolean}) {
+  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <>
+      <div ref={ref} data-testid="trigger" />
+      {hasLayer ? <FeedbackLayer triggerRef={ref} /> : null}
+    </>
+  );
+}
+
 /** A trigger whose content is a pressable control, as a Button is. */
 function TriggerWithControl() {
   const ref = useRef<HTMLDivElement>(null);
@@ -143,6 +163,20 @@ describe('useContextMenuPressFeedback', () => {
     getByTestId('inner').setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
     expect(animator.played).toEqual([]);
+  });
+
+  it('gives the trigger back its size when its feedback goes while the menu it opened is up', async () => {
+    const {getByTestId, rerender} = render(<TriggerWithLayer hasLayer />);
+    const trigger = getByTestId('trigger');
+    trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
+    await flush();
+    expect(animator.play).toHaveBeenCalledOnce();
+    // The menu opened: the animator froze the growth on the element.
+    feedback?.hold();
+    trigger.style.scale = '1.0735';
+    rerender(<TriggerWithLayer hasLayer={false} />);
+    expect(trigger.style.scale).toBe('');
+    expect(animator.dispose).toHaveBeenCalledOnce();
   });
 
   it('grows toward the held scale over the theme’s medium duration and move easing', async () => {
