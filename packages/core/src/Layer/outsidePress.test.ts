@@ -145,6 +145,16 @@ describe('watchOutsidePress, closing on a pan', () => {
     stop();
   });
 
+  it('measures the pan threshold on each axis, as a pan does: a diagonal drift under it on both axes does not close', () => {
+    const {outside, onOutside, stop} = setup();
+    fireEvent.pointerDown(outside, touch(1));
+    fireEvent.pointerMove(outside, touch(1, 8, 8));
+    expect(onOutside).not.toHaveBeenCalled();
+    fireEvent.pointerMove(outside, touch(1, 8, 30));
+    expect(onOutside).toHaveBeenCalledOnce();
+    stop();
+  });
+
   it('closes when the browser takes the press, and at the lift of a tap', () => {
     const {outside, onOutside, stop} = setup();
     fireEvent.pointerDown(outside, touch(1));
