@@ -33,7 +33,8 @@ import {
 import {LayoutChangeSnapshot} from '../motion/LayoutChangeSnapshot';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useMergedRefs} from '../hooks/useMergedRefs';
-import {focusForLastInput} from '../utils/focusReturn';
+import {moveFocusLeftBehind, noteFocusWithin} from '../utils/focusReturn';
+import {useFocusLeavingChange} from '../utils/useFocusLeavingChange';
 import {useInteractionModalityTracking} from '../utils/interactionModality';
 import {themeProps} from '../utils/themeProps';
 import {
@@ -272,37 +273,42 @@ export function LayoutPanel({
     paneLink.committed(effectiveWidth, contentFacingEdge);
   });
 
-  // A collapsing panel moves focus inside it to its ResizeHandle. It goes
-  // inert and hidden from assistive technology a commit later, so inert never
-  // drops that focus to the page. Opening drops both at once. Its ref-form
-  // controller holds the region's collapse state, or else the `resizable`
-  // props hold it.
+  // A collapsing panel moves focus inside it to its ResizeHandle, through the
+  // focus-leaving sequence that disclosures share. It goes inert and hidden
+  // from assistive technology a commit later, so inert never drops that focus
+  // to the page. Opening drops both at once. Its ref-form controller holds the
+  // region's collapse state, or else the `resizable` props hold it.
   const elementRef = useRef<HTMLDivElement>(null);
   // The ring on the handle follows the last input.
   const {ref: modalityRef} = useInteractionModalityTracking();
   const isRegionCollapsed =
     resizable == null ? isHeldCollapsed : resizable._isCollapsed;
+  const noteFocusBeforeCollapse = useFocusLeavingChange(
+    isRegionCollapsed,
+    (wasCollapsed: boolean) =>
+      wasCollapsed ? null : noteFocusWithin(elementRef.current),
+    (noted, isCollapsed) => {
+      const panel = elementRef.current;
+      if (isCollapsed && panel != null) {
+        moveFocusLeftBehind(
+          noted,
+          paneLink.focusTarget() ?? resizeHandleBeside(panel, area),
+          panel,
+        );
+      }
+    },
+  );
   const [isSettledCollapsed, setIsSettledCollapsed] =
     useState(isRegionCollapsed);
   if (!isRegionCollapsed && isSettledCollapsed) {
     setIsSettledCollapsed(false);
   }
   useIsomorphicLayoutEffect(() => {
-    if (!isRegionCollapsed || isSettledCollapsed) {
-      return;
+    if (isRegionCollapsed && !isSettledCollapsed) {
+      // eslint-disable-next-line @eslint-react/set-state-in-effect -- the panel goes inert only after the focus-leaving move above ran in this commit; inert in the collapsing commit would drop that focus to the page first
+      setIsSettledCollapsed(true);
     }
-    const element = elementRef.current;
-    const active = element?.ownerDocument.activeElement;
-    if (element != null && active != null && element.contains(active)) {
-      const target =
-        paneLink.focusTarget() ?? resizeHandleBeside(element, area);
-      if (target != null) {
-        focusForLastInput(target);
-      }
-    }
-    // eslint-disable-next-line @eslint-react/set-state-in-effect -- the panel goes inert only after focus inside it has moved to its ResizeHandle (read from the DOM in this commit); inert in the collapsing commit would drop that focus to the page first
-    setIsSettledCollapsed(true);
-  }, [isRegionCollapsed, isSettledCollapsed, area, paneLink]);
+  }, [isRegionCollapsed, isSettledCollapsed]);
   const isConcealed = isRegionCollapsed && isSettledCollapsed;
 
   // Determine panel position
@@ -365,6 +371,10 @@ export function LayoutPanel({
       <LayoutChangeSnapshot
         value={isAtZero}
         onBeforeChange={tellBeforeChange}
+      />
+      <LayoutChangeSnapshot
+        value={isRegionCollapsed}
+        onBeforeChange={noteFocusBeforeCollapse}
       />
       {children}
     </div>
