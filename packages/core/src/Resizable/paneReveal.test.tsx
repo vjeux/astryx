@@ -444,6 +444,43 @@ describe("a LayoutPanel's pane slides on collapse and open (component:Resizable 
     }
   });
 
+  it("slides the pane of a region whose collapse() ran before the hook's first layout effect", () => {
+    /** A child's layout effect runs before its parent's. */
+    function EarlyCollapse({target}: {target: ResizableRegion}) {
+      const [initial] = useState(target);
+      useLayoutEffect(() => {
+        initial.collapse();
+      }, [initial]);
+      return null;
+    }
+    function EarlySplit() {
+      const value = useResizable({defaultSize: 200, collapsible: true});
+      propsRegion = value;
+      return (
+        <Layout
+          start={
+            <>
+              <LayoutPanel resizable={value.props} data-testid="pane">
+                <button type="button">Inside</button>
+              </LayoutPanel>
+              <ResizeHandle resizable={value.props} label="Resize pane" />
+              <EarlyCollapse target={value} />
+            </>
+          }
+          content={<LayoutContent>Main</LayoutContent>}
+        />
+      );
+    }
+    render(<EarlySplit />);
+    expect(separator()).toHaveAttribute('aria-valuetext', 'Collapsed');
+    reveals.length = 0;
+    act(() => {
+      propsRegion?.expand();
+    });
+    expect(reveals).toHaveLength(1);
+    expect(reveals[0].target()).toBe(pane());
+  });
+
   it("plays every collapse and open for the hook's props, and nothing for a drag that reopens", () => {
     render(<PropsSplit />);
     act(() => {
