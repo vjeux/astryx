@@ -13,13 +13,7 @@
  * SYNC: When modified, update /packages/core/src/ContextMenu/ContextMenu.tsx
  */
 
-import {
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  type Ref,
-  type RefObject,
-} from 'react';
+import {useImperativeHandle, useRef, type Ref, type RefObject} from 'react';
 import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
@@ -57,7 +51,7 @@ export interface ContextMenuTouchLayerProps {
  * A lift before the commit, a second finger or a scroll gets no menu. So does
  * a drift past the tolerance before the menu shows. The press feedback grows
  * the trigger from core's press machine's onset, while the recognizer follows
- * the finger. It springs back when the recognizer ends the press with no
+ * the finger. It eases back when the recognizer ends the press with no
  * menu, and it holds while that menu is up.
  */
 export function ContextMenuTouchLayer({
@@ -84,7 +78,17 @@ export function ContextMenuTouchLayer({
   // swap moves the recognizer to the new node.
   const recognizer = useGestureRecognizer(
     triggerRef,
-    () => new ContextMenuPressRecognizer(),
+    () => {
+      const recognizer = new ContextMenuPressRecognizer();
+      // Its target-action listeners never hear `failed`, so a press that ends
+      // with no menu eases back from here.
+      recognizer.addTransitionListener((press, _from, to) => {
+        if (to === 'failed' || to === 'cancelled') {
+          feedbackRef.current.end(press.clockTime);
+        }
+      });
+      return recognizer;
+    },
     press => {
       const open = () => {
         // The press feedback grew the trigger from its center, and the cursor
@@ -121,18 +125,6 @@ export function ContextMenuTouchLayer({
 
   isFollowedRef.current = () =>
     recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
-
-  // The recognizer's transitions. Its target-action listeners never hear
-  // `failed`, so a press that ends with no menu springs back from here.
-  useEffect(
-    () =>
-      recognizer.addTransitionListener((press, _from, to) => {
-        if (to === 'failed' || to === 'cancelled') {
-          feedbackRef.current.end(press.clockTime);
-        }
-      }),
-    [recognizer],
-  );
 
   useImperativeHandle(
     ref,
