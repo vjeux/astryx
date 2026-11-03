@@ -358,16 +358,16 @@ No covered field meets FR9 on `main`. Each gap below is open.
   app's own fixed or sticky bottom bar, in a fixed Toolbar, or in a BottomSheet
   that is not a fully expanded Tall sheet, has no handling that keeps it above
   the keyboard.
-- **Gap 11 — The docked ride and the page-content reveal.** No covered field
-  rides the keyboard on `main`. The keyboard module that would carry the ride
-  does not exist (Gap 1), nothing moves an app's docked fixed container to the
-  keyboard's top, no field scrolls its nearest scroller to put itself 10 CSS px
-  above the keyboard in the frame the keyboard is reported, no field adds the
-  missing scroll range at its scroller's end, and ChatLayout's dock does not
-  apply the keyboard height. BottomSheet's inset stays local to its own sheet.
-  The missing scroll range is not added yet; until it is, an element that has
-  nothing to scroll does not count as a scroller (the field keeps the browser's
-  own reveal).
+- **Gap 11 — The missing scroll range and ChatLayout's dock.** Partly met:
+  the keyboard module moves an app's docked fixed container to the keyboard's
+  top, and scrolls a field's nearest scroller to put it 10 CSS px above the
+  keyboard in the frame the keyboard is reported
+  (`packages/core/src/keyboard/keyboardTarget.ts`), but no covered field uses
+  it yet (Gap 2). No field adds the missing scroll range at its scroller's end;
+  until one does, an element that has nothing to scroll does not count as a
+  scroller (the field keeps the browser's own reveal). ChatLayout's dock does
+  not apply the keyboard height. BottomSheet's inset stays local to its own
+  sheet.
 
 ### Follow-up
 
