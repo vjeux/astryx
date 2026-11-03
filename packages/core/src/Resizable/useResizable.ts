@@ -562,6 +562,28 @@ function useResizableController(
   // A factory with no handle keeps the region answering collapse, expand and
   // resize. A new element gets a new factory, which starts where the region
   // stood. The same element takes the page back (`resume`).
+  // Every start of the factory, the commit's and an early call's, names its
+  // messages and follows the region a LayoutPanel lends.
+  const start = useCallback(
+    (
+      element: HTMLElement | null,
+      passed: CreateResizableOptions,
+      selection?: number,
+    ): ResizableController => {
+      const resizable = createResizableAs('useResizable', element, passed);
+      const channel = readResizableInternals(resizable);
+      if (selection !== undefined) {
+        channel?.select(selection);
+      }
+      channel?.setCollapsedText(collapsedTextRef.current);
+      if (regionSlot != null) {
+        // destroy() stops following the region.
+        channel?.followRegion(regionSlot);
+      }
+      return resizable;
+    },
+    [regionSlot],
+  );
   const follow = useCallback(() => {
     const element = ref.current;
     const entry = slot.get();
@@ -576,23 +598,13 @@ function useResizableController(
       previous == null
         ? optionsRef.current
         : {...optionsRef.current, defaultIsCollapsed: previous.isCollapsed};
-    const resizable = createResizableAs('useResizable', element, passed);
     // The old region's size is the new factory's selection, so an options
     // update cannot replace it with the caller's default. A size shown
     // against the temporary basis is not carried: the new factory resolves
     // the default against the container once it measures.
-    if (previous?.size !== undefined) {
-      readResizableInternals(resizable)?.select(previous.size);
-    }
-    readResizableInternals(resizable)?.setCollapsedText(
-      collapsedTextRef.current,
-    );
-    if (regionSlot != null) {
-      // destroy() stops following the region.
-      readResizableInternals(resizable)?.followRegion(regionSlot);
-    }
+    const resizable = start(element, passed, previous?.size);
     slot.set({element, resizable, passed});
-  }, [ref, slot, regionSlot]);
+  }, [ref, slot, start]);
   useIsomorphicLayoutEffect(() => {
     follow();
   });
@@ -678,13 +690,11 @@ function useResizableController(
     }
     const element = ref.current;
     const passed = optionsRef.current;
-    const resizable = createResizableAs('useResizable', element, passed);
-    const channel = readResizableInternals(resizable);
-    channel?.setCollapsedText(collapsedTextRef.current);
-    channel?.suspend();
+    const resizable = start(element, passed);
+    readResizableInternals(resizable)?.suspend();
     slot.set({element, resizable, passed});
     return resizable;
-  }, [ref, slot]);
+  }, [ref, slot, start]);
   const collapse = useCallback(() => {
     ensureResizable().collapse();
   }, [ensureResizable]);
