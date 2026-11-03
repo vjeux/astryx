@@ -624,6 +624,49 @@ describe('Lightbox', () => {
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
+    it('closes on a mouse click in the band between a photo and its caption row', () => {
+      const onOpenChange = vi.fn();
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={onOpenChange}
+          media={media}
+          index={0}
+        />,
+      );
+      const current = document.querySelector('[data-current]')!;
+      const box = current.querySelector('[data-lightbox-page-media]')!;
+      layOutPage(current, {
+        photo: rectAt(100, 100, 400, 200),
+        natural: 400,
+        caption: rectAt(250, 600, 100, 30),
+        viewer: 1000,
+      });
+      // Below the photo and above its caption, the click is the backdrop's.
+      mousePress(box, {x: 300, y: 450});
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it('reserves the caption row for a 0 caption beyond the neighbours, and none for true', () => {
+      render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          index={0}
+          media={[
+            {src: '/a.jpg', alt: 'A', caption: 'First'},
+            {src: '/b.jpg', alt: 'B'},
+            {src: '/c.jpg', alt: 'C', caption: true},
+            {src: '/d.jpg', alt: 'D', caption: 0},
+          ]}
+        />,
+      );
+      // The row's unseen copies: only the 0 caption renders anything.
+      const sizer = document.querySelector('[data-current] [inert]')!;
+      expect(sizer.children).toHaveLength(1);
+      expect(sizer).toHaveTextContent('0');
+    });
+
     it("stays open on a mouse click beside a narrow photo, within its caption's width", () => {
       const onOpenChange = vi.fn();
       render(
