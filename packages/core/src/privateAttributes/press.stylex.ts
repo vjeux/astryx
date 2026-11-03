@@ -82,7 +82,7 @@ export const rowPressLayerStyles = stylex.create({
    * fade would paint. Here the press is an element-sized `::before` under the
    * row's content whose OPACITY is the strength: `on` shows it at once and
    * `fading` runs a keyframe animation of its opacity, 1 → 0, on the cell's
-   * release clock (`list.highlight`), which engines run on the compositor:
+   * release clock (`timing.press`), which engines run on the compositor:
    * it keeps advancing while the main thread is blocked and lays out and
    * paints nothing. Same pixels as the variant's paint at that strength. The
    * variant keeps the hover and a mouse's `:active`. The row must be
@@ -194,11 +194,15 @@ export const rowPressLayerStyles = stylex.create({
     },
   },
   /**
-   * A row that keeps no press layer of its own, composed after `cell`: a
-   * radio row, whose circle paints the press. Under a finger the row then
-   * has no `::before` box and is no stacking context during a press.
+   * A row that keeps no press paint of its own, composed after `cell`: a
+   * radio row, whose circle paints the press. The row paints no overlay
+   * image, keeps the strength's own release (the circle's layer reads the
+   * strength), and under a finger has no `::before` box and is no stacking
+   * context during a press.
    */
   cellWithoutLayer: {
+    backgroundImage: 'none',
+    animationName: {default: null, [PRESSED_FADING]: pressRelease},
     isolation: {
       default: null,
       [COARSE]: {default: null, [PRESSED_ANY]: 'auto'},

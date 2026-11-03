@@ -2,7 +2,7 @@
 
 /**
  * @file interactionOverlay.cell.test.ts
- * @input vitest, the UIKit constants table (motion/uikit/list.ts), the press
+ * @input vitest, the UIKit constants table (motion/uikit/timing.ts), the press
  *   layer style (`rowPressLayerStyles.cell`, privateAttributes/press.stylex.ts) and the rows that compose
  *   it (Item, TreeList)
  * @output Holds the layer's build-time clock to the constants table, and
@@ -27,7 +27,6 @@ import * as stylex from '@stylexjs/stylex';
 import {createElement} from 'react';
 import {render, screen} from '@testing-library/react';
 import {describe, expect, it} from 'vitest';
-import {list} from '../motion/uikit/list';
 import {timing} from '../motion/uikit/timing';
 import {Item} from '../Item';
 import {TreeList} from '../TreeList';
@@ -107,20 +106,15 @@ describe('press layer clock', () => {
     );
   });
 
-  it('is the constants table’s cell release, mirrored for the stylesheet', () => {
-    expect(cellPressConsts.cellReleaseMs).toBe(list.highlight.releaseMs);
+  it('is the constants table’s press release, mirrored for the stylesheet', () => {
+    expect(cellPressConsts.cellReleaseMs).toBe(timing.press.highlightOutMs);
     expect(cellPressConsts.cellReleaseEase).toBe(
-      `cubic-bezier(${list.highlight.releaseCurve.join(', ')})`,
+      `cubic-bezier(${timing.press.highlightOutCurve.join(', ')})`,
     );
   });
 
   it('runs on the clock the controller checks the release at', () => {
     expect(cellPressConsts.cellReleaseMs).toBe(PRESS_FADE_MS);
-  });
-
-  it("plays the table's release clock and curve", () => {
-    expect(list.highlight.releaseMs).toBe(timing.press.highlightOutMs);
-    expect(list.highlight.releaseCurve).toBe(timing.press.highlightOutCurve);
   });
 
   it("the shared overlay's release plays the same curve, the table's, from its own copy", () => {
@@ -222,13 +216,13 @@ describe.each([
     // The clock, and its reduced-motion cap (DR2), both the table's value.
     expect([
       ...new Set(values(fading, 'animation-duration').map(durationToMs)),
-    ]).toEqual([list.highlight.releaseMs]);
+    ]).toEqual([timing.press.highlightOutMs]);
     // StyleX writes the curve minified (`cubic-bezier(0,0,.2,1)`): compare
     // the control points.
     const points = (css: string) =>
       (css.match(/-?\d*\.?\d+/g) ?? []).map(Number);
     expect(values(fading, 'animation-timing-function').map(points)).toEqual([
-      [...list.highlight.releaseCurve],
+      [...timing.press.highlightOutCurve],
     ]);
     expect(values(fading, 'animation-fill-mode')).toEqual(['both']);
   });
