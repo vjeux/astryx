@@ -476,7 +476,7 @@ test('a drag past the tolerance after the commit opens nothing', async ({
   expect(await menuShownAt(page)).toBeNull();
 });
 
-test('an early lift opens nothing, and the card springs back to its size', async ({
+test('an early lift opens nothing, and the card eases back to its size', async ({
   page,
 }) => {
   const {driver, trigger, center} = await openTouchStory(page);
@@ -492,7 +492,7 @@ test('an early lift opens nothing, and the card springs back to its size', async
   expect(await presentedScale(trigger)).toBe(1);
 });
 
-test('a second finger landing before the commit cancels: no menu, and the card springs back', async ({
+test('a second finger landing before the commit cancels: no menu, and the card eases back', async ({
   page,
   browserName,
 }) => {
