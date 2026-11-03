@@ -53,9 +53,10 @@ export interface ContextMenuPressRecognizerOptions extends Omit<
 /**
  * A context menu is not UIKit's plain long press (500 ms, 10 pt of travel).
  * Its timeline is `contextMenu.press`, and these are the recognizer's states:
- * - `possible`: the finger landed (`onPressStart`). A lift, a second finger,
- *   or a browser scroll fails it. A drift past `allowableMovement` on either
- *   axis fails it too.
+ * - `possible`: the finger landed (`onPressStart`). The press feedback shows
+ *   from the press machine's onset. A lift, a second finger, or a browser
+ *   scroll fails it. A drift past `allowableMovement` on either axis fails it
+ *   too.
  * - `began` at `commitMs`: the click haptic. The recognizer claims the touch.
  *   The page stops scrolling under it, and the lift sends no click and no
  *   compatibility mouse events. The menu does not show yet. A drift past

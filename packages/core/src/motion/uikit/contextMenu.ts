@@ -9,7 +9,8 @@
  *   ContextMenu's own modules import it, and the table's barrel does not
  *   re-export it, so only a page that animates a context menu loads it
  *
- * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md and
+ * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md,
+ * /packages/core/src/ContextMenu/contextMenuPressFeedback.ts and
  * /packages/core/src/ContextMenu/contextMenuPress.ts
  */
 
