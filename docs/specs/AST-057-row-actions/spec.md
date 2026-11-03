@@ -315,8 +315,8 @@ constants.
 - `ListItem` inherits the released `swipeActions` and `swipeBehavior`
   through its existing `Item` passthrough, deprecated by DEP-0017; the
   `swipe` prop is not built, on `Item` or on `ListItem`.
-- A long main-thread task during a drag or settle freezes the row, then it
-  jumps; the released swipe behaves the same.
+- The drag uses FR2's single travel property, and the release settles on the
+  compositor, as the released swipe does.
 - `architecture:react-component-runtime` INV13 gains the constructor route
   for an opt-in touch behavior with a large resource cost: `Item` and
   `ListItem` import none of the swipe modules, and its failure signal names
