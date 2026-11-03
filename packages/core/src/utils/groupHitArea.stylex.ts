@@ -6,7 +6,7 @@
  * @output groupHitAreaStyles: the invisible hit layer of a group whose
  *   members' touch targets grow toward 44 px
  * @position Shared style of the group press tracking
- *   (hooks/useGroupPressTracking). ButtonGroup applies it.
+ *   (hooks/useGroupPressTracking). ButtonGroup and ToggleButtonGroup apply it.
  *   SYNC: /packages/core/src/utils/hitArea.ts (HIT_INSET_PROPERTIES)
  */
 
