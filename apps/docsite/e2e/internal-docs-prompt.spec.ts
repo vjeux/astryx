@@ -68,18 +68,31 @@ async function servePublicOrigin(
 
 async function serveReachability(page: Page, origin: string) {
   let requests = 0;
-  const sandboxes: (string | null)[] = [];
+  // The page reads each probe frame's sandbox as the frame is inserted. The
+  // probe sets it before it inserts the frame.
+  await page.addInitScript(() => {
+    const sandboxes: (string | null)[] = [];
+    Object.assign(window, {probeSandboxes: sandboxes});
+    new MutationObserver(records => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (
+            node instanceof HTMLIFrameElement &&
+            node.title === 'Astryx documentation reachability check'
+          ) {
+            sandboxes.push(node.getAttribute('sandbox'));
+          }
+        }
+      }
+    }).observe(document, {childList: true, subtree: true});
+  });
   await page.route(`${probeOrigin}/embed/access-check?**`, async route => {
     requests++;
     expect(
       new URL(route.request().url()).searchParams.get('parent_origin'),
     ).toBe(origin);
-    // The probe's frame exists while its request waits here: the probe removes
-    // it once it has an answer, or when its four-second timeout fires. Reading
-    // it now cannot race that timeout.
-    const frame = await route.request().frame().frameElement();
-    sandboxes.push(await frame.getAttribute('sandbox'));
-    await frame.dispose();
+    // The probe gives up four seconds after it inserts its frame. Answer at
+    // once: a call back into a busy page before the answer spends that time.
     await route.fulfill({
       contentType: 'text/html; charset=utf-8',
       headers: {
@@ -92,7 +105,14 @@ async function serveReachability(page: Page, origin: string) {
       body: `<!doctype html><html><body><script>window.parent.postMessage({type:'codebunny:access-check:v1',reachable:true},${JSON.stringify(origin)});</script></body></html>`,
     });
   });
-  return {requests: () => requests, sandboxes: () => [...sandboxes]};
+  return {
+    requests: () => requests,
+    sandboxes: () =>
+      page.evaluate(() => [
+        ...(window as unknown as {probeSandboxes: (string | null)[]})
+          .probeSandboxes,
+      ]),
+  };
 }
 
 for (const {name, origin} of deployments) {
@@ -138,7 +158,9 @@ for (const {name, origin} of deployments) {
         // failed probe leaves, checked by the failed-reachability case.
         await expect(notice).toHaveCount(1);
         await expect(notice).toContainText('Working on Meta internal tools?');
-        expect(probe.sandboxes()).toEqual(['allow-scripts allow-same-origin']);
+        expect(await probe.sandboxes()).toEqual([
+          'allow-scripts allow-same-origin',
+        ]);
         await expect(notice).not.toContainText("You're viewing Canary docs");
         if (isCanary) {
           await expect(notice).toContainText(
