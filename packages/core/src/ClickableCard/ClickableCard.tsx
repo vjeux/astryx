@@ -120,14 +120,33 @@ const styles = stylex.create({
       // A press the controller paints shows on its first frame and fades on
       // its strength's own animation, so the colour it replaces drops out at
       // once rather than crossfading: no transition while it paints. The
-      // mouse states keep the fast fade.
+      // mouse states keep their fade.
       transitionProperty: {
         default: 'background-color',
         [PRESSED_ON]: 'none',
         [PRESSED_FADING]: 'none',
+        // Under reduced motion a colour changes at once. Only opacity may
+        // still fade on a touch screen.
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          'opacity',
       },
-      transitionDuration: durationVars['--duration-fast'],
-      transitionTimingFunction: easeVars['--ease-standard'],
+      // A press shows at once, and its release fades on the exit tokens.
+      transitionDuration: {
+        default: durationVars['--duration-exit'],
+        ':active': '0s',
+        // Under reduced motion a fine pointer gets no transition. A touch
+        // screen's fade keeps the exit tokens, within 200 ms.
+        '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+          '0s',
+        // The 200 ms bound copies reducedMotionFadeConsts.duration. That
+        // module is internal, and a swizzled component imports only exported
+        // paths. reducedMotionValues.test.ts keeps the copies equal.
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)': {
+          default: `min(${durationVars['--duration-exit']}, 200ms)`,
+          ':active': '0s',
+        },
+      },
+      transitionTimingFunction: easeVars['--ease-exit'],
       // While the controller paints, the colour yields to the image: a
       // touchscreen beside a fine pointer still matches `:active` under a
       // finger, and the press would otherwise paint twice.
@@ -167,8 +186,18 @@ const styles = stylex.create({
     paddingInlineEnd: `calc(var(--container-padding-inline-end) - ${borderVars['--border-width']})`,
     paddingBlockStart: `calc(var(--container-padding-block-start) - ${borderVars['--border-width']})`,
     paddingBlockEnd: `calc(var(--container-padding-block-end) - ${borderVars['--border-width']})`,
-    transitionProperty: 'border-color',
-    transitionDuration: durationVars['--duration-fast'],
+    transitionProperty: {
+      default: 'border-color',
+      // Under reduced motion the border's colour changes at once.
+      '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+        'opacity',
+    },
+    transitionDuration: {
+      default: durationVars['--duration-fast'],
+      // Under reduced motion a fine pointer gets no transition.
+      '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+        '0s',
+    },
     transitionTimingFunction: easeVars['--ease-standard'],
   },
   // Emphasize the bordered variant's border on hover. Guarded by

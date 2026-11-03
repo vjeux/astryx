@@ -81,8 +81,18 @@ const styles = stylex.create({
       default: 'pointer',
       ':is(:disabled,[aria-disabled="true"])': 'default',
     },
-    transitionProperty: 'box-shadow, border-color',
-    transitionDuration: durationVars['--duration-fast'],
+    transitionProperty: {
+      default: 'box-shadow, border-color',
+      // Under reduced motion a selection's ring and border change at once.
+      '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+        'opacity',
+    },
+    transitionDuration: {
+      default: durationVars['--duration-fast'],
+      // Under reduced motion a fine pointer gets no transition.
+      '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+        '0s',
+    },
     transitionTimingFunction: easeVars['--ease-standard'],
   },
   // Hover and pressed overlay. Hover is guarded by @media (hover: hover) so
@@ -124,14 +134,33 @@ const styles = stylex.create({
       // A press the controller paints shows on its first frame and fades on
       // its strength's own animation, so the colour it replaces drops out at
       // once rather than crossfading: no transition while it paints. The
-      // mouse states keep the fast fade.
+      // mouse states keep their fade.
       transitionProperty: {
         default: 'background-color',
         [PRESSED_ON]: 'none',
         [PRESSED_FADING]: 'none',
+        // Under reduced motion a colour changes at once. Only opacity may
+        // still fade on a touch screen.
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          'opacity',
       },
-      transitionDuration: durationVars['--duration-fast'],
-      transitionTimingFunction: easeVars['--ease-standard'],
+      // A press shows at once, and its release fades on the exit tokens.
+      transitionDuration: {
+        default: durationVars['--duration-exit'],
+        ':active': '0s',
+        // Under reduced motion a fine pointer gets no transition. A touch
+        // screen's fade keeps the exit tokens, within 200 ms.
+        '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+          '0s',
+        // The 200 ms bound copies reducedMotionFadeConsts.duration. That
+        // module is internal, and a swizzled component imports only exported
+        // paths. reducedMotionValues.test.ts keeps the copies equal.
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)': {
+          default: `min(${durationVars['--duration-exit']}, 200ms)`,
+          ':active': '0s',
+        },
+      },
+      transitionTimingFunction: easeVars['--ease-exit'],
       // While the controller paints, the colour yields to the image: a
       // touchscreen beside a fine pointer still matches `:active` under a
       // finger, and the press would otherwise paint twice.
