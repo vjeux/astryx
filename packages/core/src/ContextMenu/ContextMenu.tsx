@@ -592,14 +592,15 @@ export function ContextMenu({
   // that opens the menu, or moves it, keeps it open at its lift.
   watchTouchOutsideRef.current = () => {
     const trigger = triggerRef.current;
-    const menu = listRef.current;
-    if (!touchModes || trigger == null || menu == null) {
+    if (!touchModes || trigger == null) {
       return;
     }
-    const root = menu.getRootNode();
+    // The menu mounts after its first show, so each press reads it then. It
+    // renders in the trigger's own root.
+    const root = trigger.getRootNode();
     outsidePress.start(
       trigger,
-      path => path.includes(menu),
+      path => listRef.current != null && path.includes(listRef.current),
       () => {
         if (currentGesture() !== openingGestureRef.current) {
           closeMenu();
