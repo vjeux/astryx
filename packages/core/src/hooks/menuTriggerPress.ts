@@ -4,23 +4,23 @@
 
 /**
  * @file menuTriggerPress.ts
- * @input The menu press model's shared state (useMenuPress.ts), useLongPress
- *   and the menu press values (the long press's duration comes from
- *   motion/uikit/longPress.ts); the scroll probe comes in its options
+ * @input The menu press model's shared state (useMenuPress.ts), useLongPress,
+ *   the native scroll probe and the menu press values
+ *   (the long press's duration comes from motion/uikit/longPress.ts)
  * @output Exports `useMenuTriggerPress`: the trigger half of the menu press
  *   model (a mouse press-down open, a held or pressed finger open, the
  *   scroll-view wait)
  * @position Only a menu with a trigger reaches this module: DropdownMenu,
  *   MoreMenu and the public useMenuPress. A sub-menu, a context menu, a
  *   Selector's list and a sheet's action list never press a trigger. They do
- *   not bundle the long-press detectors. Only DropdownMenu passes the scroll
- *   probe, which only the touch model reads.
+ *   not bundle the long-press detectors and the scroll probe.
  *
  * SYNC: When modified, update useMenuPress.ts and useMenuPress.test.tsx.
  */
 
 import {useCallback, useMemo, type RefObject} from 'react';
 import {currentGesture} from '../Layer/gestureCounter';
+import {createNativeScrollProbe} from '../gestures/nativeScroll';
 import {normalizePointerType} from './menuPressGesture';
 import type {
   MenuPressInput,
@@ -64,7 +64,6 @@ export interface MenuTriggerContext {
     isEnabled?: boolean;
     onTriggerPress?: (pointerType: MenuPressPointerType) => boolean;
     touchModel?: 'pointer' | 'uikit';
-    isInScrollView?: (control: Element) => boolean;
   }>;
   readonly gestureRef: RefObject<MenuPressState<HTMLElement>>;
   // The model's own state changes through these calls, never through a
@@ -103,6 +102,15 @@ export interface MenuTriggerContext {
 export interface MenuTriggerHandlers {
   onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
   onContextMenu: (event: React.MouseEvent<HTMLElement>) => void;
+}
+
+/**
+ * Whether a control is inside a scroll view, by the shared native-scroll
+ * probe: a scroller with room that is not beyond a fixed ancestor. A control
+ * in a fixed bar (a top bar, a tab bar, a toolbar) is not.
+ */
+function isInScrollView(control: Element): boolean {
+  return createNativeScrollProbe(control).isInsideScroller;
 }
 
 /**
@@ -181,9 +189,7 @@ export function useMenuTriggerPress(
         ctx.optionsRef.current.touchModel === 'uikit';
       // Only the touch model waits differently inside a scroll view, so only
       // it asks the probe.
-      const inScrollView =
-        isUikitFinger &&
-        (ctx.optionsRef.current.isInScrollView?.(event.currentTarget) ?? false);
+      const inScrollView = isUikitFinger && isInScrollView(event.currentTarget);
       if (isUikitFinger && !inScrollView) {
         // Stop the finger's compatibility mouse events. Their mousedown would
         // take focus back from the menu.
