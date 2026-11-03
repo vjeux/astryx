@@ -340,6 +340,17 @@ export {
   type SearchFieldProps,
 } from './SearchField';
 
+// NavigationStack: push/pop drill-down navigation with UIKit's transitions
+// and back swipes.
+export {
+  NavigationScreen,
+  NavigationStack,
+  useNavigationStack,
+  type NavigationScreenProps,
+  type NavigationStackApi,
+  type NavigationStackProps,
+} from './NavigationStack';
+
 // RichTextEditor (RFC meta/astryx#3899) moved out of @astryxdesign/lab into
 // its own package, @astryxdesign/richtext. Import it from there:
 //   import {RichTextEditor, RichTextView} from '@astryxdesign/richtext';
