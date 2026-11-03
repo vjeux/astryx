@@ -342,7 +342,7 @@ describe('focusChosenTab, in another document', () => {
     doc.body.append(capsule);
     tabs[0].focus();
     expect(doc.activeElement).toBe(tabs[0]);
-    focusChosenTab(capsule, capsule, 2);
+    focusChosenTab(capsule, tabs[2]);
     expect(doc.activeElement).toBe(tabs[2]);
     iframe.remove();
   });

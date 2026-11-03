@@ -25,6 +25,7 @@ import {
 } from 'react';
 import {flushSync} from 'react-dom';
 import {
+  createActionGroupTracker,
   createMotionAnimator,
   isRtlElement,
   lockSelection,
@@ -70,8 +71,6 @@ interface Press {
   readonly isFine: boolean;
   /** The capsule's box in client px, before the flex. */
   readonly box: {left: number; right: number; top: number; bottom: number};
-  /** The press is off the bar: its release cancels (a fine pointer's). */
-  isOff: boolean;
   /** The number of tabs the press measured. */
   readonly count: number;
 }
@@ -84,21 +83,11 @@ interface Press {
  */
 export function focusChosenTab(
   capsule: HTMLElement,
-  tabs: ParentNode,
-  index: number,
+  chosen: HTMLElement,
 ): void {
   const active = capsule.ownerDocument.activeElement;
-  const chosen = [...tabs.children].filter(
-    child => child.getAttribute('role') === 'tab',
-  )[index];
-  if (
-    chosen != null &&
-    active != null &&
-    active !== chosen &&
-    capsule.contains(active) &&
-    'focus' in chosen
-  ) {
-    (chosen as HTMLElement).focus({preventScroll: true});
+  if (active != null && active !== chosen && capsule.contains(active)) {
+    chosen.focus({preventScroll: true});
   }
 }
 
@@ -118,7 +107,7 @@ export interface UseTabBarLensOptions {
 export interface TabBarLensRefs {
   /** The lens's resting place: a fine pointer's drag moves it (CSS). */
   readonly lens: (element: HTMLElement | null) => void;
-  /** The capsule: the flex. */
+  /** The capsule. Its scale is the press flex. */
   readonly capsule: (element: HTMLElement | null) => void;
   /**
    * The lens body: its offset and lift, and its `::before`, the lifted lens's
@@ -178,6 +167,8 @@ function useAnimatorList(count: number) {
  * - lifting: the item nearest the finger is chosen, the lens settles onto it
  *   (`lensSettle`), the lift and the flex relax (`lift`, `flexRelease`). A
  *   cancelled touch settles back onto the selected item.
+ * - off the bar: the lens shows the selected item again, and a lift there
+ *   chooses nothing. Sliding off cancels, under every pointer.
  * The choice reaches the app (`onLift`) from the lift itself, right after the
  * settle has started in the same task. The settle's first frame waits for the
  * browser's commit, so the app rendering the new tab delays its start rather
@@ -197,12 +188,13 @@ function useAnimatorList(count: number) {
  * Under a fine pointer the same press drags the lens in the mouse presentation.
  * A fine pointer is a mouse, a pen, or a finger on a screen whose primary
  * pointer is fine. A click stays a plain click. Once the press drags past the
- * allowable movement, the lens's resting place follows it on TabBar's CSS
- * transition. There is no lift, no copy of the items and no spring. The release
- * chooses the item nearest the press, as a lift does, and the lens transitions
- * onto it. This holds for a click too: the gesture host swallows the browser's
- * click for a press a recognizer took. Released off the bar, the press chooses
- * nothing, as a control that selects does.
+ * allowable movement, the lens follows it on the finger's tracking spring
+ * (`lensTrack`), with no lift and no copy of the items. The release chooses
+ * the item nearest the press, as a lift does, and the lens settles onto it on
+ * `lensSettle`, from the drag's own speed. A click chooses the same way: the
+ * gesture host swallows the browser's click for a press a recognizer took.
+ * TabBar's CSS then slides the lens. Released off the bar, the press chooses
+ * nothing.
  */
 export function useTabBarLens({
   capsuleRef,
@@ -234,18 +226,28 @@ export function useTabBarLens({
   const copyItems = useAnimatorList(count);
 
   const pressRef = useRef<Press | null>(null);
-  // The lens's resting place, which a fine pointer's drag moves. TabBar's
-  // transition on `translate` carries it (none under Reduce Motion), and
-  // clearing the inline value hands it back to the selected item's place.
+  // The lens's resting place. Under a mouse TabBar's CSS transition on
+  // `translate` slides it to a new selection. After a fine pointer's drag the
+  // settle carries the lens instead, so the resting place jumps.
   const lensRef = useRef<HTMLElement | null>(null);
   const lensElementRef = useCallback((element: HTMLElement | null) => {
     lensRef.current = element;
   }, []);
-  /** Puts the lens's resting place `x` px from the first item's, or back (null). */
-  const placeLens = (x: number | null) => {
+  /** The resting place's next move is a jump: its transition is off. */
+  const holdRest = () => {
+    if (lensRef.current != null) {
+      lensRef.current.style.transition = 'none';
+    }
+  };
+  /**
+   * Its transition back on. Style is read first with the transition off, so
+   * the jump it already took never transitions.
+   */
+  const releaseRest = () => {
     const element = lensRef.current;
-    if (element != null) {
-      element.style.translate = x == null ? '' : `${x}px 0`;
+    if (element != null && element.style.transition !== '') {
+      void getComputedStyle(element).translate;
+      element.style.transition = '';
     }
   };
   // The settle a lift started toward a newly chosen item, until the new
@@ -255,6 +257,61 @@ export function useTabBarLens({
   selectedRef.current = selectedIndex;
   const onLiftRef = useRef(onLift);
   onLiftRef.current = onLift;
+  /** The bar's tabs in order. */
+  const tabsOf = (capsule: HTMLElement) =>
+    [...capsule.children].filter(
+      (child): child is HTMLElement => child.getAttribute('role') === 'tab',
+    );
+  // The tab a press at viewport (x, y) would choose: the tab nearest it. Off
+  // the bar nothing is chosen, under every pointer, so sliding off cancels.
+  const pickRef = useRef<(x: number, y: number) => HTMLElement | null>(
+    () => null,
+  );
+  pickRef.current = (x, y) => {
+    const press = pressRef.current;
+    const element = capsuleRef.current;
+    if (press == null || element == null) {
+      return null;
+    }
+    const {box} = press;
+    if (x < box.left || x > box.right || y < box.top || y > box.bottom) {
+      return null;
+    }
+    const index = nearestIndex(x - press.left, press.centers);
+    return tabsOf(element)[index] ?? null;
+  };
+  // What the lift does with the tab it chose: set by the lift's own handler.
+  const runRef = useRef<((tab: HTMLElement) => void) | null>(null);
+  // Core's action-group tracker owns the press: the tab under it, and running
+  // that tab at the lift. TabBar picks the tab and draws the lens.
+  const [tracker] = useState(() =>
+    createActionGroupTracker(() => ({
+      roots: () => [capsuleRef.current],
+      itemSelector: '[role="tab"]',
+      highlightExpansion: 0,
+      paintsHighlight: false,
+      resolveTarget: (x, y) => pickRef.current(x, y),
+      onActivate: tab => runRef.current?.(tab),
+    })),
+  );
+  /**
+   * Where the lens heads for a press at `x`: after it, rubber-banded past
+   * the end items. Off the bar, where the lift would choose nothing, the lens
+   * shows the selected tab again.
+   */
+  const chaseTarget = (x: number, centers: number[]) =>
+    tracker.highlighted == null
+      ? centers[Math.max(selectedRef.current, 0)]
+      : lensTarget(x, centers);
+  /** Runs the tab the tracker resolved, through `run`; null if none. */
+  const runLift = (run: (tab: HTMLElement) => void) => {
+    runRef.current = run;
+    try {
+      return tracker.end();
+    } finally {
+      runRef.current = null;
+    }
+  };
 
   // The copy is drawn from a finger landing, or a slide starting, until
   // everything the lens moves rests. A new selection under a finger is
@@ -384,9 +441,10 @@ export function useTabBarLens({
         top: rootBox.top + element.offsetTop,
         bottom: rootBox.top + element.offsetTop + element.offsetHeight,
       },
-      isOff: false,
       count,
     };
+    const location = recognizer.location();
+    tracker.begin(location.x, location.y);
     // A fine pointer: nothing moves until the press drags.
     if (!isTouch) {
       return;
@@ -405,7 +463,7 @@ export function useTabBarLens({
     }
     const at = performance.now();
     body.animator.animate(
-      {x: lensTarget(x, centers) - centers[selected]},
+      {x: chaseTarget(x, centers) - centers[selected]},
       {spring: tabBar.lensTravel},
       {at},
     );
@@ -419,28 +477,30 @@ export function useTabBarLens({
     if (press == null) {
       return;
     }
-    const x = recognizer.location().x - press.left;
+    const location = recognizer.location();
+    tracker.move(location.x, location.y);
+    const x = location.x - press.left;
     press.lastX = x;
     press.isDragging ||= Math.abs(x - press.startX) > DRAG_SLOP;
     if (press.isFine) {
-      // Off the bar, the release cancels: a control that selects keeps
-      // slide-off cancelling.
-      const location = recognizer.location();
-      press.isOff =
-        location.x < press.box.left ||
-        location.x > press.box.right ||
-        location.y < press.box.top ||
-        location.y > press.box.bottom;
-      // A fine pointer's drag carries the lens's resting place, as a finger's
-      // chase carries the lens. Off the bar the release chooses nothing, so
-      // the lens shows the selected tab again.
+      // A fine pointer's drag carries the lens on the finger's tracking
+      // spring, with no lift and no copy of the items. Where the release would
+      // choose nothing, the lens shows the selected tab again.
       if (!press.isDragging) {
         return;
       }
       if (press.hasLens && selected >= 0) {
-        placeLens(
-          press.isOff ? null : lensTarget(x, press.centers) - press.centers[0],
-        );
+        const target = chaseTarget(x, press.centers) - press.centers[selected];
+        if (body.animator.reducedMotion({}) === 'off') {
+          body.animator.animate(
+            {x: target},
+            {spring: tabBar.lensTrack},
+            {at: performance.now()},
+          );
+        } else {
+          // Under Reduce Motion it follows the pointer at once.
+          body.animator.set({x: target});
+        }
       }
       return;
     }
@@ -449,7 +509,7 @@ export function useTabBarLens({
     }
     const at = performance.now();
     body.animator.animate(
-      {x: lensTarget(x, press.centers) - press.centers[selected]},
+      {x: chaseTarget(x, press.centers) - press.centers[selected]},
       {spring: press.isDragging ? tabBar.lensTrack : tabBar.lensTravel},
       {at},
     );
@@ -460,52 +520,86 @@ export function useTabBarLens({
     const press = pressRef.current;
     pressRef.current = null;
     const selected = selectedRef.current;
-    if (press == null) {
+    const element = capsuleRef.current;
+    if (press == null || element == null) {
+      tracker.cancel();
       return;
     }
     // The tab list changed under the press. Its centres name the old list, so
     // it ends as a cancel and the lens settles to its resting place.
     const isStale = press.count !== count;
-    const isCancelled = wasCancelled || isStale;
+    // The tab the tracker resolved for the lift, if any.
+    const lifted = wasCancelled || isStale ? null : tracker.highlighted;
+    const chosen = lifted == null ? -1 : tabsOf(element).indexOf(lifted);
+    if (chosen < 0) {
+      tracker.cancel();
+    }
     if (press.isFine) {
-      // The release chooses the item nearest the press, a click's too: the
-      // host swallows the browser's click for a press a recognizer took. The
-      // lens's resting place transitions onto the selection rendered.
-      const nearest = nearestIndex(press.lastX, press.centers);
-      if (!isCancelled && !press.isOff) {
-        flushSync(() => onLiftRef.current(nearest));
-        const capsule = capsuleRef.current;
-        if (capsule != null) {
-          focusChosenTab(capsule, capsule, nearest);
+      // The release runs the tab under the press, a click's too: the host
+      // swallows the browser's click for a press a recognizer took. After a
+      // drag the lens settles on the finger's settle spring, from the drag's
+      // own speed (the animator keeps the tracking spring's velocity). It
+      // settles onto the chosen tab, or back onto the selected one. After a
+      // click TabBar's CSS slides it.
+      const isSlide = press.isDragging && press.hasLens && selected >= 0;
+      if (isSlide && body.animator.reducedMotion({}) !== 'off') {
+        // Under Reduce Motion the resting place takes it there at once.
+        body.animator.set({x: 0});
+      } else if (isSlide) {
+        const target = chosen >= 0 ? chosen : selected;
+        body.animator.animate(
+          {x: press.centers[target] - press.centers[selected]},
+          {spring: tabBar.lensSettle},
+          {at: performance.now()},
+        );
+        if (chosen >= 0 && chosen !== selected) {
+          settleRef.current = chosen;
+          holdRest();
         }
       }
-      placeLens(null);
+      if (chosen >= 0) {
+        runLift(tab => {
+          flushSync(() => onLiftRef.current(chosen));
+          focusChosenTab(element, tab);
+        });
+      }
+      if (
+        chosen !== selected &&
+        settleRef.current === chosen &&
+        selectedRef.current === selected
+      ) {
+        // The app kept the old selection: the lens settles back.
+        settleRef.current = null;
+        releaseRest();
+        body.animator.animate(
+          {x: 0},
+          {spring: tabBar.lensSettle},
+          {at: performance.now()},
+        );
+      }
       return;
     }
     // The app's answer to this lift, as rendered now: the tab the finger
     // chose is the one under it at the lift, whatever renders after.
     const deliver = onLiftRef.current;
     if (!press.hasLens || selected < 0) {
-      // No lens moved: the nearest tab is chosen at once.
-      if (!isCancelled) {
-        const nearest = nearestIndex(press.lastX, press.centers);
-        flushSync(() => deliver(nearest));
+      // No lens moved: the tab the tracker resolved runs at once.
+      if (chosen >= 0) {
+        runLift(() => flushSync(() => deliver(chosen)));
       }
       return;
     }
-    const chosen = isCancelled
-      ? selected
-      : nearestIndex(press.lastX, press.centers);
+    const target = chosen >= 0 ? chosen : selected;
     const at = performance.now();
     body.animator.animate(
-      {x: isStale ? 0 : press.centers[chosen] - press.centers[selected]},
+      {x: isStale ? 0 : press.centers[target] - press.centers[selected]},
       {spring: tabBar.lensSettle},
       {at, touchRelease: true},
     );
     lift(false, at, press.size, true);
     playCopy(at);
     dropCopyAtRest();
-    if (isCancelled) {
+    if (chosen < 0) {
       return;
     }
     if (chosen !== selected) {
@@ -515,7 +609,7 @@ export function useTabBarLens({
     // started. Its first frame waits for the browser's commit, so the app
     // rendering the chosen tab delays it rather than freezing it midway.
     // Rendered at once, so the selection reads the app's answer right after.
-    flushSync(() => deliver(chosen));
+    runLift(() => flushSync(() => deliver(chosen)));
     if (
       chosen !== selected &&
       settleRef.current === chosen &&
@@ -585,6 +679,8 @@ export function useTabBarLens({
   // cancel chooses nothing, so the app hears nothing.
   const endRef = useRef(end);
   endRef.current = end;
+  // Releases the tracker's press at unmount.
+  useEffect(() => () => tracker.dispose(), [tracker]);
   useEffect(() => {
     const press = pressRef.current;
     if (press != null && press.isFine === isTouch) {
@@ -606,7 +702,8 @@ export function useTabBarLens({
   // A new selection: the resting place jumped to the new item (CSS, this
   // frame); the body starts where the lens was on screen. After a lift it
   // continues the settle the lift started; otherwise it slides from rest.
-  // Under a finger only: under a mouse TabBar's CSS slides the lens.
+  // Under a mouse TabBar's CSS slides the lens, except after a drag, whose
+  // settle the body continues here.
   const previousIndexRef = useRef(selectedIndex);
   useLayoutEffect(() => {
     const from = previousIndexRef.current;
@@ -615,7 +712,7 @@ export function useTabBarLens({
     const fromLift = settleRef.current === selectedIndex;
     settleRef.current = null;
     if (
-      !isTouch ||
+      (!isTouch && !fromLift) ||
       element == null ||
       from === selectedIndex ||
       from < 0 ||
@@ -631,6 +728,7 @@ export function useTabBarLens({
     const offset = body.animator.get('x', now) + shift;
     const velocity = body.animator.getVelocity('x', now);
     body.animator.set({x: offset});
+    releaseRest();
     const press = pressRef.current;
     if (press != null) {
       // A finger is down (the selection changed under it): the lens keeps
@@ -638,7 +736,7 @@ export function useTabBarLens({
       body.animator.animate(
         {
           x:
-            lensTarget(press.lastX, press.centers) -
+            chaseTarget(press.lastX, press.centers) -
             press.centers[selectedIndex],
         },
         {
@@ -658,7 +756,7 @@ export function useTabBarLens({
           spring: fromLift ? tabBar.lensSettle : tabBar.lensTravel,
           velocity: {x: velocity},
         },
-        {at: now, touchRelease: fromLift},
+        {at: now, touchRelease: fromLift && isTouch},
       );
       playCopy(now);
       dropCopyAtRest();

@@ -882,7 +882,7 @@ test('a lift between two items commits the nearer one (an exact tie goes to the 
   await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
 });
 
-test('a drag that leaves the bar upward still commits where it lifts', async ({
+test('a finger dragged off the bar chooses nothing at the lift, and the lens shows the selected tab again: sliding off cancels (family:action-groups FR3)', async ({
   page,
 }) => {
   const {driver} = await openBar(page);
@@ -896,25 +896,31 @@ test('a drag that leaves the bar upward still commits where it lifts', async ({
     fingers: [{id: 0, x: library.x, y: library.y - (i + 1) * 8}],
   }));
   const end = up[up.length - 1].t + 16.7;
-  await driver.play([...across, ...up, {t: end, fingers: lift?.fingers ?? []}]);
-  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
+  await driver.play([
+    ...across,
+    ...up,
+    // Held off the bar, then lifted there.
+    {t: end + 300, fingers: up[up.length - 1].fingers},
+    {t: end + 316.7, fingers: []},
+  ]);
+  await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
+  await waitForRest(lensBody(page));
+  expect(Math.abs((await lensCenterX(page)) - home.x)).toBeLessThan(0.5);
 });
 
-test('past the last item the lens rubber-bands about 8 px beyond it, and the lift commits the last item', async ({
+test('past the last item, still on the bar, the lens rubber-bands beyond it and the lift commits the last item; past the bar’s end the lift chooses nothing', async ({
   page,
 }) => {
   const {driver} = await openBar(page);
   const home = await itemCenter(page, 'Home');
   const profile = await itemCenter(page, 'Profile');
   const left = await capsuleLeft(page);
-  const script = drag(
-    home,
-    {x: profile.x + 60, y: profile.y},
-    {
-      durationMs: 500,
-      restMs: 900,
-    },
-  );
+  const right = await page
+    .getByRole('tablist')
+    .evaluate(element => (element as HTMLElement).offsetWidth);
+  // Two px inside the bar's trailing end.
+  const inside = {x: left + right - 2, y: profile.y};
+  const script = drag(home, inside, {durationMs: 500, restMs: 900});
   let past = NaN;
   await driver.play(script, {
     onEvent: async (_step, index) => {
@@ -925,10 +931,20 @@ test('past the last item the lens rubber-bands about 8 px beyond it, and the lif
       }
     },
   });
-  // UIKit: a finger 60 pt past the last item leaves the lens 7.98 pt past it.
-  expect(past).toBeGreaterThan(7.4);
-  expect(past).toBeLessThan(8.5);
+  // Rubber-banded: past the last item, but by less than the finger is.
+  expect(past).toBeGreaterThan(0.5);
+  expect(past).toBeLessThan(inside.x - profile.x);
   await expect(tab(page, 'Profile')).toHaveAttribute('aria-selected', 'true');
+  // Past the bar's end the finger is off the bar: the lift chooses nothing.
+  await driver.play(
+    drag(
+      profile,
+      {x: left + right + 20, y: profile.y},
+      {durationMs: 400, restMs: 300},
+    ),
+  );
+  await expect(tab(page, 'Profile')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByTestId('reselects')).toHaveText('Reselected 0 times');
 });
 
 test('a vertical drag that starts on the bar never scrolls the page', async ({
@@ -1482,8 +1498,8 @@ test.describe('a mouse or a pen drags the lens too (spec:AST-094 FR43)', () => {
   }) => {
     await openFine(page);
     const browse = await mouseDragTo(page, 'Home', 'Browse');
-    // The lens follows the pointer on the theme's motion, with no lift and no
-    // copy of the items, which stay a finger's. The selected look stays on Home
+    // The lens follows the pointer on the finger's tracking spring, with no
+    // lift and no copy of the items, which stay a finger's. The selected look stays on Home
     // until the release.
     await expect
       .poll(async () => Math.abs((await lensCenterX(page)) - browse.x))
@@ -1496,6 +1512,37 @@ test.describe('a mouse or a pen drags the lens too (spec:AST-094 FR43)', () => {
     await expect(tab(page, 'Browse')).toHaveAttribute('aria-selected', 'true');
     expect(await labelWeight(page, 'Browse')).toBe('600');
     await expect(lensCopy(page)).toHaveCount(0);
+    await expect
+      .poll(async () => Math.abs((await lensCenterX(page)) - browse.x))
+      .toBeLessThan(0.5);
+  });
+
+  test('a mouse drag’s release settles the lens on a spring that carries on with the drag’s own speed', async ({
+    page,
+  }) => {
+    await openFine(page);
+    const home = await itemCenter(page, 'Home');
+    const browse = await itemCenter(page, 'Browse');
+    // A quick drag that ends past Browse, still nearest it.
+    await page.mouse.move(home.x, home.y);
+    await page.mouse.down();
+    const stop = browse.x + 40;
+    for (let step = 1; step <= 12; step++) {
+      await page.mouse.move(home.x + ((stop - home.x) * step) / 12, home.y);
+    }
+    const atRelease = await lensCenterX(page);
+    await page.mouse.up();
+    // The settle carries on rightward, past Browse, before it comes back, as
+    // the drag's speed carries it. A transition onto Browse would never pass
+    // it, and would turn back at once from past it.
+    let furthest = atRelease;
+    for (let frame = 0; frame < 8; frame++) {
+      await page.waitForTimeout(16);
+      furthest = Math.max(furthest, await lensCenterX(page));
+    }
+    expect(furthest - atRelease).toBeGreaterThan(0.5);
+    expect(furthest).toBeGreaterThan(browse.x + 0.5);
+    await expect(tab(page, 'Browse')).toHaveAttribute('aria-selected', 'true');
     await expect
       .poll(async () => Math.abs((await lensCenterX(page)) - browse.x))
       .toBeLessThan(0.5);
@@ -1593,6 +1640,24 @@ test.describe('a mouse or a pen drags the lens too (spec:AST-094 FR43)', () => {
     );
     await expect(tab(page, 'Profile')).toHaveAttribute('aria-selected', 'true');
     await expect(lensCopy(page)).toHaveCount(0);
+  });
+
+  test('a pen released off the bar chooses nothing: slide-off cancels', async ({
+    page,
+  }) => {
+    await openFine(page);
+    const input = await webInputDriver(page);
+    test.skip(!input.pens, PEN_SKIP);
+    const start = await itemCenter(page, 'Library');
+    await input.pen(
+      Array.from({length: 9}, (_, step) => ({
+        x: start.x,
+        y: start.y - 15 * step,
+        t: step * 16,
+      })),
+    );
+    await page.waitForTimeout(300);
+    await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
   });
 
   test('under a mouse the bar listens on its own element, and on the page only while a press is down', async ({
