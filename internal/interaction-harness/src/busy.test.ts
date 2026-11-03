@@ -13,7 +13,7 @@
  */
 
 import {describe, expect, it} from 'vitest';
-import {busyWindowProof} from './busy';
+import {busyWindowProof, BusyWindowTooLateError} from './busy';
 import * as skip from './busy.skip.fixture';
 import * as slowTail from './busy.slowtail.fixture';
 import {inPresentationOrder, type TrackedFrame} from './frames';
@@ -167,18 +167,32 @@ describe('busyWindowProof verdict', () => {
     expect(proof.verdict.failures.join('\n')).toMatch(/expected frames moved/);
   });
 
-  it('fails a window in which the animation under test was not moving', () => {
-    // Settled before the block: the judgment ends where it starts.
+  it('names a block that began after the motion had settled, with its numbers', () => {
+    // Settled 50 ms before the block: nothing in it is left to judge.
     const settled = moving().map(f =>
       f.t < 950
         ? f
         : ({...f, box: {...f.box!, y: 3 * at(950)}} as TrackedFrame),
     );
-    const before = busyWindowProof(settled, BLOCK, {settledWithin: 2});
-    expect(before.verdict.pass).toBe(false);
-    expect(before.verdict.failures.join('\n')).toMatch(
-      /judged = -?\d+ frames < 4: the animation under test was not moving/,
+    let thrown: unknown;
+    try {
+      busyWindowProof(settled, BLOCK, {settledWithin: 2});
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(BusyWindowTooLateError);
+    const late = thrown as BusyWindowTooLateError;
+    expect(late.message).toMatch(
+      /within 2 px of where it ends from 0 ms after the block began, before the judged part began at 20 ms/,
     );
+    expect(late.numbers).toEqual({
+      settledAtMs: 0,
+      judgedFromMs: 20,
+      presented: expect.any(Number),
+    });
+  });
+
+  it('fails a window in which the animation under test was not moving', () => {
     // Settled 40 ms into the block: two frames, too few to judge.
     const early = moving().map(f =>
       f.t < 1040
