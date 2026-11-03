@@ -72,7 +72,7 @@ import {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 import type {GestureTouch} from '../gestures/types';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {zoomMedia} from '../motion/uikit/zoomMedia';
-import {useZoomStage} from './useZoomStage';
+import {useZoomStage, type ZoomStageWithTouch} from './useZoomStage';
 import {
   registerEnglishFallback,
   useComponentTranslator,
@@ -178,11 +178,10 @@ const styles = stylex.create({
     backgroundColor: 'transparent',
     overflow: 'hidden',
     outline: 'none',
-    // The backdrop dims and blurs the page as on main: the theme's overlay
-    // colour over a 2 px blur. While a drag to dismiss and its release fade
-    // it, the blur comes off through the dialog's
-    // --_lightbox-backdrop-filter. On a 2-core limit, a full-viewport blur
-    // repainted every frame of the fade drops frames.
+    // The backdrop is the theme's overlay colour over a 2 px blur. A drag to
+    // dismiss and its release remove the blur through
+    // `--_lightbox-backdrop-filter`. A full-viewport blur repainted every
+    // frame of the fade drops frames.
     '::backdrop': {
       backgroundColor: colorVars['--color-overlay'],
       backdropFilter: 'var(--_lightbox-backdrop-filter, blur(2px))',
@@ -233,8 +232,16 @@ const styles = stylex.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    // ZOOM_DISMISSING_ATTRIBUTE: a photo dragged to dismiss draws outside it.
-    overflow: {default: 'hidden', ':is([data-zoom-dismissing])': 'visible'},
+    // ZOOM_DISMISSING_ATTRIBUTE, on this stage or a gallery page's: a photo
+    // dragged to dismiss draws outside it, above its caption and below the
+    // controls. The drag fades the caption, which makes it a stacking context
+    // painted after the stage.
+    overflow: {
+      default: 'hidden',
+      ':is([data-zoom-dismissing])': 'visible',
+      ':has([data-zoom-dismissing])': 'visible',
+    },
+    zIndex: {default: null, ':is([data-zoom-dismissing])': 1},
     cursor: 'default',
     userSelect: 'none',
     minHeight: 0,
@@ -313,7 +320,9 @@ const styles = stylex.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+    // As the single item's stage, while a photo is dragged to dismiss.
+    overflow: {default: 'hidden', ':is([data-zoom-dismissing])': 'visible'},
+    zIndex: {default: null, ':is([data-zoom-dismissing])': 1},
     minHeight: 0,
     minWidth: 0,
     maxWidth: '100%',
@@ -397,13 +406,14 @@ const styles = stylex.create({
   // The controls sit in layers over the viewer that pass clicks through. A
   // drag to dismiss fades the layers, which carry no transition of their own,
   // since a Button's opacity transition would trail the finger.
-  // They sit above the stage. While a fade writes their opacity, each is a
-  // stacking context. A gallery's positioned pages, later in tree order,
-  // would otherwise cover them and take the taps meant for the controls.
+  // They sit above the stage, even a photo dragged to dismiss. While a fade
+  // writes their opacity, each is a stacking context. A gallery's positioned
+  // pages, later in tree order, would otherwise cover them and take the taps
+  // meant for the controls.
   chromeLayer: {
     position: 'absolute',
     inset: 0,
-    zIndex: 1,
+    zIndex: 2,
     pointerEvents: 'none',
   },
   // With zoom a photo can lie under the controls. Lightbox's own translucent
@@ -618,6 +628,46 @@ export function Lightbox({
     }
   }, [index, hasAutoPlay]);
 
+  // The backdrop, the controls and the pages a dismissal faded, to restore
+  // exactly those. A page faded as a neighbour may be the current one when
+  // the viewer opens again.
+  const fadedRef = useRef<Animator[]>([]);
+  // Set when a dismissal has asked the caller to close; the next render
+  // (one more is asked for) reads the caller's answer.
+  const dismissalAnsweredRef = useRef(false);
+  const [, renderAfterDismissal] = useReducer((n: number) => n + 1, 0);
+
+  // Drag to dismiss, as in Photos. The backdrop fades with the drag's travel,
+  // and the controls and the neighbouring photos fade faster. A dismissal
+  // fades them out on its spring and closes once the photo has left.
+  // The backdrop's blur comes off while the backdrop moves and comes back
+  // once it rests, through the dialog's '::backdrop' style. Each move counts:
+  // a release's end restores it only if nothing has moved the backdrop since.
+  const backdropMovesRef = useRef(0);
+  const setBackdropMoving = useCallback((moving: boolean) => {
+    const dialog = dialogRef.current;
+    if (moving) {
+      dialog?.style.setProperty('--_lightbox-backdrop-filter', 'none');
+    } else {
+      dialog?.style.removeProperty('--_lightbox-backdrop-filter');
+    }
+  }, []);
+
+  // Opening again after a dismissal: the photo, the backdrop and the
+  // controls are back. Only then: a write promotes the layers, and their
+  // release later would repaint mid-gesture.
+  const stageForOpenRef = useRef<ZoomStageWithTouch | null>(null);
+  const restoreAfterDismissal = useCallback(() => {
+    stageForOpenRef.current?.reset();
+    backdropMovesRef.current += 1;
+    setBackdropMoving(false);
+    const faded = fadedRef.current;
+    fadedRef.current = [];
+    for (const animator of faded) {
+      animator.set({opacity: 1});
+    }
+  }, [setBackdropMoving]);
+
   // Open/close dialog. The dialog renders only with an item, so a viewer
   // opened before its first item arrives opens when that item does.
   const hasItem = currentItem != null;
@@ -628,17 +678,17 @@ export function Lightbox({
     }
 
     if (isOpen && !dialog.open) {
-      // Opened at rest: the backdrop's blur is back (setBackdropMoving).
-      dialog.style.removeProperty('--_lightbox-backdrop-filter');
       triggerElementRef.current = document.activeElement;
       dialog.showModal();
+      // Opened at rest, with the backdrop's blur back.
+      restoreAfterDismissal();
     } else if (!isOpen && dialog.open) {
       dialog.close();
       if (triggerElementRef.current instanceof HTMLElement) {
         triggerElementRef.current.focus();
       }
     }
-  }, [isOpen, hasItem]);
+  }, [isOpen, hasItem, restoreAfterDismissal]);
 
   // A viewer that unmounts while open (rendered only while open, or removed
   // with the rest of a view) never runs the close branch above. Focus the
@@ -723,30 +773,6 @@ export function Lightbox({
   );
 
   const isZoomTarget = hasZoom && !isVideo;
-  // The backdrop, the controls and the pages a dismissal faded, to restore
-  // exactly those. A page faded as a neighbour may be the current one when
-  // the viewer opens again.
-  const fadedRef = useRef<Animator[]>([]);
-  // Set when a dismissal has asked the caller to close; the next render
-  // (one more is asked for) reads the caller's answer.
-  const dismissalAnsweredRef = useRef(false);
-  const [, renderAfterDismissal] = useReducer((n: number) => n + 1, 0);
-
-  // Drag to dismiss, as in Photos. The backdrop fades with the drag's travel,
-  // and the controls and the neighbouring photos fade faster. A dismissal
-  // fades them out on its spring and closes once the photo has left.
-  // The backdrop's blur comes off while the backdrop moves and comes back
-  // once it rests, through the dialog's '::backdrop' style. Each move counts:
-  // a release's end restores it only if nothing has moved the backdrop since.
-  const backdropMovesRef = useRef(0);
-  const setBackdropMoving = useCallback((moving: boolean) => {
-    const dialog = dialogRef.current;
-    if (moving) {
-      dialog?.style.setProperty('--_lightbox-backdrop-filter', 'none');
-    } else {
-      dialog?.style.removeProperty('--_lightbox-backdrop-filter');
-    }
-  }, []);
 
   const dismissFades = useCallback((): {
     backdrop: Animator | null;
@@ -917,30 +943,10 @@ export function Lightbox({
     },
   });
 
-  // Opening again after a dismissal: the photo, the backdrop and the
-  // controls are back. Only then: a write promotes the layers, and their
-  // release later would repaint mid-gesture.
-  const stageForOpenRef = useRef(stage);
-  // Syncs the stage that the restore reads with this render, before the two
-  // Effects below run it.
+  // Syncs the stage that the restore reads with this render.
   useIsomorphicLayoutEffect(() => {
     stageForOpenRef.current = stage;
   });
-  const restoreAfterDismissal = useCallback(() => {
-    stageForOpenRef.current.reset();
-    backdropMovesRef.current += 1;
-    setBackdropMoving(false);
-    const faded = fadedRef.current;
-    fadedRef.current = [];
-    for (const animator of faded) {
-      animator.set({opacity: 1});
-    }
-  }, [setBackdropMoving]);
-  useIsomorphicLayoutEffect(() => {
-    if (isOpen) {
-      restoreAfterDismissal();
-    }
-  }, [isOpen, restoreAfterDismissal]);
   useIsomorphicLayoutEffect(() => {
     if (!dismissalAnsweredRef.current) {
       return;

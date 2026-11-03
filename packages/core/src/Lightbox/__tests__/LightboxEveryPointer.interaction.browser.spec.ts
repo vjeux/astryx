@@ -147,7 +147,7 @@ async function timedPointer(page: Page, pointerType: 'mouse' | 'pen') {
   };
 }
 
-test('a mouse drag down from the fitted size follows the pointer and closes the viewer at the release', async ({
+test('a mouse drag down from the fitted size follows the pointer and closes the viewer at once at the release', async ({
   browser,
 }) => {
   const {context, page, dialog, img, centre} = await openDesktop(
@@ -160,7 +160,9 @@ test('a mouse drag down from the fitted size follows the pointer and closes the 
     // The photo follows past the pan's 10 px threshold, as under a finger.
     expect((await boxOf(img)).y - before.y).toBeGreaterThan(100);
     await page.mouse.up();
-    await expect(dialog).toBeHidden();
+    // At once, with no exit spring: where the primary pointer is fine, only
+    // a finger's release plays it.
+    await expect(dialog).toBeHidden({timeout: 150});
   } finally {
     await context.close();
   }

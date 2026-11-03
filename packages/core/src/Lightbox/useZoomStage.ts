@@ -28,6 +28,7 @@ import {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 import type {Point} from '../gestures/types';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
+import {defaultIsCoarsePointer} from '../motion/animator';
 import {coast as coastCurves} from '../motion/coast';
 import {decayRestDistance} from '../motion/decay';
 import {zoomMedia} from '../motion/uikit/zoomMedia';
@@ -101,7 +102,8 @@ export interface ZoomStageDismiss {
    * The release: whether it dismisses, so the photo leaves, or springs back,
    * and whether a finger released it. Under reduced motion a finger's
    * release cross-fades. A mouse's, a trackpad's or a pen's cross-fades on a
-   * coarse primary pointer and completes at once otherwise.
+   * coarse primary pointer. Where the primary pointer is fine, its dismissal
+   * closes at once, with no exit spring.
    */
   onRelease: (dismisses: boolean, touch: boolean) => void;
   /** The dismissed photo has left the stage. */
@@ -624,19 +626,25 @@ export function useZoomStage(
       dismiss?.onRelease(dismisses, fingerRef.current.dismiss);
       const shown = current();
       if (dismisses) {
+        leavingRef.current = true;
+        // Where the primary pointer is fine, the viewer closes at once.
+        if (!fingerRef.current.dismiss && !defaultIsCoarsePointer()) {
+          optionsRef.current.dismiss?.onDismissed();
+          return;
+        }
         // No thumbnail to return to, so straight on down on the dismissal's
         // position spring, from the release velocity, until it leaves the
-        // screen. A stage that only hugs the photo sits above its bottom.
-        const stageElement = optionsRef.current.stageRef.current;
-        const view = stageElement?.ownerDocument.defaultView;
+        // screen. A stage that only hugs the photo sits above its bottom. The
+        // screen's bottom is in stage px, from the pan's first measure.
+        const view =
+          optionsRef.current.stageRef.current?.ownerDocument.defaultView;
         const y = dismissExitY(
           geometry,
           shown,
-          stageElement != null && view != null
-            ? view.innerHeight - stageElement.getBoundingClientRect().top
+          view != null
+            ? toStage({x: 0, y: view.innerHeight}).y
             : geometry.height,
         );
-        leavingRef.current = true;
         setTarget({...shown, y});
         const handle = animator.animate(
           {x: shown.x, y},

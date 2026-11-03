@@ -566,6 +566,69 @@ test('a caller that keeps the viewer open gets the photo, the backdrop and the c
   expect(followed).toBeGreaterThan(20);
 });
 
+test('a photo dragged to dismiss draws above its caption', async ({page}) => {
+  // Without zoom the caption sits right under the photo. So the drag carries
+  // the photo over it while the caption still shows, faded.
+  const v = await openViewer(page);
+  const caption = v.dialog.locator('[data-lightbox-caption]');
+  await expect(caption).toBeVisible();
+  let compared = false;
+  await v.driver.play(pullDown(v.centre, 100), {
+    onEvent: async step => {
+      if (
+        compared ||
+        step.type !== 'touchMove' ||
+        step.changed[0].y - v.centre.y < 90
+      ) {
+        return;
+      }
+      compared = true;
+      await frames(page, 1);
+      const [photoBox, captionBox] = await Promise.all([
+        v.photo.boundingBox(),
+        caption.boundingBox(),
+      ]);
+      if (photoBox == null || captionBox == null) {
+        throw new Error('no photo or caption');
+      }
+      // Where the photo covers the caption, 2 px inside both edges.
+      const top = Math.ceil(Math.max(photoBox.y, captionBox.y)) + 2;
+      const bottom =
+        Math.floor(
+          Math.min(
+            photoBox.y + photoBox.height,
+            captionBox.y + captionBox.height,
+          ),
+        ) - 2;
+      const left = Math.ceil(Math.max(photoBox.x, captionBox.x)) + 2;
+      const right =
+        Math.floor(
+          Math.min(
+            photoBox.x + photoBox.width,
+            captionBox.x + captionBox.width,
+          ),
+        ) - 2;
+      // The cover spans the caption's text, and the caption still shows.
+      expect(bottom - top).toBeGreaterThan(24);
+      expect(
+        await caption.evaluate(el => Number(getComputedStyle(el).opacity)),
+      ).toBeGreaterThan(0.3);
+      const clip = {x: left, y: top, width: right - left, height: bottom - top};
+      const shown = await page.screenshot({clip});
+      await caption.evaluate(el => {
+        (el as HTMLElement).style.visibility = 'hidden';
+      });
+      const hidden = await page.screenshot({clip});
+      await caption.evaluate(el => {
+        (el as HTMLElement).style.visibility = '';
+      });
+      // Hiding the caption changes no pixel under the photo.
+      expect(shown.equals(hidden)).toBe(true);
+    },
+  });
+  expect(compared).toBe(true);
+});
+
 test("while the controls fade with a drag, a tap on Close still reaches it, above a gallery's pages", async ({
   page,
 }) => {
@@ -600,7 +663,7 @@ test("while the controls fade with a drag, a tap on Close still reaches it, abov
   expect(hit).toBe('Close');
 });
 
-test('the backdrop dims and blurs the page as on main, under a finger and with a mouse', async ({
+test('the backdrop dims and blurs the page, under a finger and with a mouse', async ({
   page,
   browser,
 }) => {
