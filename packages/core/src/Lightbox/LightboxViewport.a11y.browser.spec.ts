@@ -10,7 +10,12 @@
  * @position Cross-browser proof for Lightbox's full-screen sizing
  */
 
-import {expect, test} from '@astryxdesign/a11y-spec/playwright';
+import {
+  expect,
+  test,
+  type Locator,
+  type Page,
+} from '@astryxdesign/a11y-spec/playwright';
 import {
   DEFAULT_STORYBOOK_DIR,
   serveStorybook,
@@ -72,3 +77,165 @@ test('the viewer is as tall as the dynamic viewport, so a toolbar never covers i
   expect(declared.supported).toBe(true);
   expect(declared.heights).toContain('100dvh');
 });
+
+/** A 3:2 photo for every item, so no size waits on the network. */
+const PHOTO_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#7a8a99"/></svg>';
+
+/** Opens "Gallery with captions": long, medium, no and short captions. */
+async function openCaptionGallery(
+  page: Page,
+  viewport: {width: number; height: number},
+): Promise<Locator> {
+  await page.setViewportSize(viewport);
+  await page.route(/picsum\.photos/, async route =>
+    route.fulfill({contentType: 'image/svg+xml', body: PHOTO_SVG}),
+  );
+  await page.goto(
+    `${storybook.origin}/iframe.html?id=core-lightbox--gallery-with-captions&viewMode=story`,
+  );
+  await page.getByRole('button', {name: 'Open gallery with captions'}).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  return dialog;
+}
+
+interface PageFacts {
+  mediaTop: number;
+  mediaHeight: number;
+  bandHeight: number;
+  bandBackground: string;
+  hasCaption: boolean;
+}
+
+/** The current page's photo box and caption band. */
+async function readPage(dialog: Locator): Promise<PageFacts> {
+  return dialog.evaluate(element => {
+    const current = element.querySelector('[data-current]') as HTMLElement;
+    const media = current.querySelector(
+      '[data-lightbox-page-media]',
+    ) as HTMLElement;
+    const band = media.nextElementSibling as HTMLElement;
+    const mediaBox = media.getBoundingClientRect();
+    return {
+      mediaTop: mediaBox.top,
+      mediaHeight: mediaBox.height,
+      bandHeight: band.getBoundingClientRect().height,
+      bandBackground: getComputedStyle(band).backgroundColor,
+      hasCaption: band.querySelector('[data-lightbox-caption]') != null,
+    };
+  });
+}
+
+for (const viewport of [
+  {width: 402, height: 874},
+  {width: 1440, height: 900},
+]) {
+  const size = `${viewport.width}×${viewport.height}`;
+
+  test(`a gallery page without a caption shows no caption backing, and every page's photo keeps its top (${size})`, async ({
+    page,
+  }) => {
+    const dialog = await openCaptionGallery(page, viewport);
+    const pages: PageFacts[] = [];
+    for (let shown = 1; shown <= 4; shown++) {
+      if (shown > 1) {
+        await dialog.getByRole('button', {name: 'Next'}).click();
+      }
+      await expect(dialog.getByText(`${shown} / 4`)).toBeVisible();
+      pages.push(await readPage(dialog));
+    }
+    const detail = JSON.stringify(pages);
+    // Every page has its photo box and its band.
+    for (const facts of pages) {
+      expect(facts.mediaHeight, detail).toBeGreaterThan(100);
+      expect(facts.bandHeight, detail).toBeGreaterThan(20);
+    }
+    expect(
+      pages.map(facts => facts.hasCaption),
+      detail,
+    ).toEqual([true, true, false, true]);
+    for (const facts of pages) {
+      expect(
+        Math.abs(facts.mediaTop - pages[0].mediaTop),
+        detail,
+      ).toBeLessThanOrEqual(0.5);
+    }
+    expect(pages[2].bandBackground, detail).toBe('rgba(0, 0, 0, 0)');
+    expect(pages[0].bandBackground, detail).not.toBe('rgba(0, 0, 0, 0)');
+  });
+
+  test(`a clamped caption's "more" ends its second line, with no column of its own (${size})`, async ({
+    page,
+  }) => {
+    const dialog = await openCaptionGallery(page, viewport);
+    await expect(dialog.getByRole('button', {name: 'more'})).toBeVisible();
+    const facts = await dialog.evaluate(element => {
+      const caption = element.querySelector(
+        '[data-current] [data-lightbox-caption]',
+      ) as HTMLElement;
+      const text = caption.querySelector('.astryx-text') as HTMLElement;
+      const toggle = caption.querySelector('button') as HTMLElement;
+      const textBox = text.getBoundingClientRect();
+      const toggleBox = toggle.getBoundingClientRect();
+      const style = getComputedStyle(text);
+      const lineHeight = parseFloat(style.lineHeight);
+      // The rendered words of the text's last shown line, from its text
+      // nodes only.
+      const words: DOMRect[] = [];
+      const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
+      for (
+        let node = walker.nextNode();
+        node != null;
+        node = walker.nextNode()
+      ) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        words.push(...range.getClientRects());
+      }
+      const lastLine = words.filter(
+        rect =>
+          rect.width > 0 &&
+          rect.bottom <= textBox.bottom + 0.5 &&
+          rect.top >= textBox.bottom - lineHeight - 0.5,
+      );
+      return {
+        textLeft: textBox.left,
+        textRight: textBox.right,
+        textWidth: textBox.width,
+        textBottom: textBox.bottom,
+        paddingEnd: parseFloat(style.paddingRight),
+        captionWidth: caption.getBoundingClientRect().width,
+        toggleLeft: toggleBox.left,
+        toggleRight: toggleBox.right,
+        toggleMiddle: (toggleBox.top + toggleBox.bottom) / 2,
+        toggleWidth: toggleBox.width,
+        lineHeight,
+        lastLineWords: lastLine.length,
+        lastLineEnd: Math.max(...lastLine.map(rect => rect.right)),
+        isClamped: text.scrollHeight > text.clientHeight + 1,
+      };
+    });
+    const detail = JSON.stringify(facts);
+    // The caption, its last line and its toggle are there.
+    expect(facts.textWidth, detail).toBeGreaterThan(100);
+    expect(facts.toggleWidth, detail).toBeGreaterThan(0);
+    expect(facts.lastLineWords, detail).toBeGreaterThan(0);
+    expect(facts.isClamped, detail).toBe(true);
+    // The text runs the caption's whole width: no column beside it.
+    expect(facts.textWidth, detail).toBeGreaterThanOrEqual(
+      facts.captionWidth - 0.5,
+    );
+    // The toggle ends the last line, inside the text's padding.
+    expect(facts.toggleRight, detail).toBeLessThanOrEqual(
+      facts.textRight - facts.paddingEnd + 0.5,
+    );
+    expect(facts.lastLineEnd, detail).toBeLessThanOrEqual(
+      facts.toggleLeft + 0.5,
+    );
+    expect(
+      Math.abs(facts.toggleMiddle - (facts.textBottom - facts.lineHeight / 2)),
+      detail,
+    ).toBeLessThanOrEqual(1);
+  });
+}
