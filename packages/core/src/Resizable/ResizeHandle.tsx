@@ -65,7 +65,12 @@ import {
   type ResizeGesture,
   type ResizeGestureModel,
 } from './resizeGesture';
-import {regionOfProps} from './resizablePane';
+import {
+  regionOfProps,
+  resizablePaneBeside,
+  watchResizablePanes,
+  type ResizablePane,
+} from './resizablePane';
 import {separatorAttributes} from './separatorAttributes';
 import {themeProps} from '../utils/themeProps';
 
@@ -606,6 +611,35 @@ export function ResizeHandle({
   useEffect(() => {
     return () => {
       gestureRef.current?.interrupt();
+    };
+  }, []);
+
+  // --- The LayoutPanel beside a handle given `resizable` props ---
+
+  // A LayoutPanel at the region's size, with no `resizable` prop, has no
+  // controller to find it. This handle holds it collapsed with the region, so
+  // focus inside it moves here and it goes inert. A panel lent later is found
+  // at once.
+  const heldPaneRef = useRef<ResizablePane | null>(null);
+  const isRegionCollapsed = resizable?._isCollapsed ?? false;
+  useEffect(() => watchResizablePanes(rerender), []);
+  useIsomorphicLayoutEffect(() => {
+    const element = handleRef.current;
+    const pane =
+      hasRegion && element != null
+        ? resizablePaneBeside(element, isReversed ? 'after' : 'before')
+        : null;
+    const held = heldPaneRef.current;
+    if (held != null && held !== pane) {
+      held.setCollapsed(false, null);
+    }
+    heldPaneRef.current = pane;
+    pane?.setCollapsed(isRegionCollapsed, element);
+  });
+  useEffect(() => {
+    return () => {
+      heldPaneRef.current?.setCollapsed(false, null);
+      heldPaneRef.current = null;
     };
   }, []);
 
