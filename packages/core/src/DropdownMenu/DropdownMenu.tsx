@@ -1522,11 +1522,8 @@ function DropdownMenuPopover({
       host: surfaceHost,
       ownerId: menuId,
       menuMaxHeight: resolvedMaxHeight ?? undefined,
-      // A flyout runs the root's press model: a finger's on every device,
-      // unless the root pins presentation="popover".
-      touchModel: pressTouchModel,
     }),
-    [surfaceHost, menuId, resolvedMaxHeight, pressTouchModel],
+    [surfaceHost, menuId, resolvedMaxHeight],
   );
 
   // Resolve menu content: data-driven items become components
