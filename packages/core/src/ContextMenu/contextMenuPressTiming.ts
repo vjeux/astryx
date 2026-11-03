@@ -27,15 +27,23 @@ export interface PressTiming {
 }
 
 /**
- * The timing a duration token's value and an easing token's value give, or
- * null when either is not one.
+ * The timing a duration token's value and an easing token's value give. Each
+ * value that is not one takes its `fallback`, and the result is null when
+ * neither gives one.
  */
 export function pressTiming(
   duration: string,
   easing: string,
+  fallback?: {readonly duration: string; readonly easing: string},
 ): PressTiming | null {
-  const ms = parseMotionRoleValue('duration', duration);
-  const points = parseCssEasing(easing);
+  const ms =
+    parseMotionRoleValue('duration', duration) ??
+    (fallback == null
+      ? null
+      : parseMotionRoleValue('duration', fallback.duration));
+  const points =
+    parseCssEasing(easing) ??
+    (fallback == null ? null : parseCssEasing(fallback.easing));
   if (ms == null || points == null) {
     return null;
   }

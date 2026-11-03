@@ -189,7 +189,7 @@ export const docs = {
       {
         guidance: true,
         description:
-          'Leave a little room around a block trigger: a held finger grows it from its center, by about 6%, until the menu closes.',
+          'Leave a little room around a block trigger: a held finger grows it from its center, by about 7%, until the menu closes.',
       },
       {
         guidance: false,
@@ -249,7 +249,7 @@ export const docsZh = {
       {
         guidance: true,
         description:
-          '块级触发区域周围请留出少量空间：按住时它会从中心放大约 6%，直到菜单关闭。',
+          '块级触发区域周围请留出少量空间：按住时它会从中心放大约 7%，直到菜单关闭。',
       },
       {
         guidance: false,
@@ -293,7 +293,7 @@ export const docsDense = {
       {
         guidance: true,
         description:
-          'Leave room around a block trigger: a held finger grows it about 6%.',
+          'Leave room around a block trigger: a held finger grows it about 7%.',
       },
       {
         guidance: false,

@@ -55,10 +55,10 @@ function themeMoveTiming(
       : element.ownerDocument.defaultView?.getComputedStyle(element);
   const read = (name: string) => style?.getPropertyValue(name).trim() ?? '';
   return (
-    pressTiming(
-      read(durationToken) || durationDefaults[durationToken],
-      read('--ease-move') || easeDefaults['--ease-move'],
-    ) ?? {seconds: 0.001, ease: progress => progress}
+    pressTiming(read(durationToken), read('--ease-move'), {
+      duration: durationDefaults[durationToken],
+      easing: easeDefaults['--ease-move'],
+    }) ?? {seconds: 0.001, ease: progress => progress}
   );
 }
 
@@ -71,8 +71,8 @@ export interface ContextMenuPressFeedback {
   /** The menu the press opened closed: return on the dismissal spring. */
   release(): void;
   /**
-   * The recognizer ended the press with no menu, at `time`: return on the
-   * feedback spring.
+   * The recognizer ended the press with no menu, at `time`: return over the
+   * theme's fast duration.
    */
   end(time: number): void;
   /**
@@ -123,8 +123,8 @@ export function useContextMenuPressFeedback(
     if (element == null) {
       return null;
     }
-    // The feedback's springs are motion roles: register their table before
-    // the first motion. A second call does nothing.
+    // The dismissal spring is a motion role: register its table before the
+    // first motion. A second call does nothing.
     registerSpringsTable();
     if (animatorRef.current?.element !== element) {
       animatorRef.current?.dispose();

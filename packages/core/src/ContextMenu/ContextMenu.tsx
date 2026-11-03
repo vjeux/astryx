@@ -1018,10 +1018,10 @@ export function ContextMenu({
       <TriggerElement
         ref={useMergedRefs(ref, triggerRef)}
         {...triggerProps}
-        // Under the touch model, the trigger is a pressable surface of core's
-        // one press machine. The touch layer installs the machine, and its
-        // press feedback follows the pressed state.
-        {...(touchModes ? pressableProps : null)}
+        // Under the touch model, an enabled trigger is a pressable surface of
+        // core's one press machine. The touch layer installs the machine, and
+        // its press feedback follows the pressed state.
+        {...(touchModes && !isDisabled ? pressableProps : null)}
         onContextMenu={handleTriggerContextMenu}
         onTouchStart={handleTriggerTouchStart}
         onTouchMove={handleTriggerTouchMove}

@@ -23,11 +23,7 @@ import {
 import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
-import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
-import {
-  contextMenu,
-  registerContextMenuTable,
-} from '../motion/uikit/contextMenu';
+import {contextMenu} from '../motion/uikit/contextMenu';
 import {
   ContextMenuPressRecognizer,
   useContextMenuPressFeedback,
@@ -93,10 +89,7 @@ export function ContextMenuTouchLayer({
   // swap moves the recognizer to the new node.
   const recognizer = useGestureRecognizer(
     triggerRef,
-    () => {
-      registerContextMenuTable();
-      return new ContextMenuPressRecognizer();
-    },
+    () => new ContextMenuPressRecognizer(),
     press => {
       const open = () => {
         // The press feedback grew the trigger from its center, and the cursor
@@ -133,10 +126,8 @@ export function ContextMenuTouchLayer({
 
   // The recognizer the press feedback asks whether it follows a finger or a
   // pen now.
-  useIsomorphicLayoutEffect(() => {
-    isFollowedRef.current = () =>
-      recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
-  }, [recognizer]);
+  isFollowedRef.current = () =>
+    recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
 
   // The recognizer's transitions. Its target-action listeners never hear
   // `failed`, so a press that ends with no menu springs back from here.

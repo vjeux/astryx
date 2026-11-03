@@ -2,9 +2,9 @@
 
 /**
  * @file contextMenu.ts
- * @input The motion registry (registerContextMenuTable only)
+ * @input Measurements of UIContextMenuInteraction on iOS 26.2
  * @output `contextMenu`: UIContextMenuInteraction's touch timeline, drift
- *   tolerance, held scale and commit haptic; `registerContextMenuTable`
+ *   tolerance, held scale and commit haptic
  * @position The context-menu domain of the UIKit constants table. Only
  *   ContextMenu's own modules import it, and the table's barrel does not
  *   re-export it, so only a page that animates a context menu loads it
@@ -13,8 +13,6 @@
  * /packages/core/src/ContextMenu/contextMenuPressFeedback.ts and
  * /packages/core/src/ContextMenu/contextMenuPress.ts
  */
-
-import {registerMotionTable} from '../roles';
 
 /**
  * UIContextMenuInteraction's touch timeline on iOS 26.2. A context menu is not
@@ -117,16 +115,3 @@ export const contextMenu = {
    */
   reducedMotionFeedback: false,
 } as const;
-
-/**
- * Registers the hold's input timing as motion roles, which the ContextMenu
- * record names: when the press commits and when the menu displays. They stay
- * measured, and no theme moves them. Nothing registers on import: the touch
- * layer calls it as it creates its recognizer, and a second call does
- * nothing.
- */
-export function registerContextMenuTable(): void {
-  registerMotionTable('contextMenu', contextMenu, {
-    roles: ['press.commitMs', 'press.menuDisplayMs'],
-  });
-}
