@@ -39,7 +39,6 @@ import {
 } from './menuPressGesture';
 import {MENU_PRESS_MARKER} from './menuPressMarker';
 import {useMenuTriggerPress, type MenuTriggerContext} from './menuTriggerPress';
-import {isInScrollView} from './menuScrollView';
 import type {LongPressDetectorHandlers} from './useLongPress';
 import {edgeAutoscroll} from '../utils/edgeAutoscroll';
 import {focusForLastInput} from '../utils/focusReturn';
@@ -108,13 +107,11 @@ export interface UseMenuPressOptions {
    */
   itemSelector: string;
   /**
-   * A mouse pressed the trigger, or a finger opened it. With no
-   * `longPressDelayMs`, a finger opens it as it presses; with one, once it
-   * has rested for that delay. Open the menu under the held pointer. Return
-   * whether it opened; a `false` (the press closed an open menu instead) ends
-   * the gesture. The click the
-   * trigger receives for this same gesture is reported by
-   * {@link UseMenuPressReturn.isTriggerClickFromPress} so the caller can
+   * A mouse pressed the trigger, or a finger has rested on it for the
+   * long-press delay: open the menu under the held pointer. Return whether
+   * it opened; a `false` (the press closed an open menu instead) ends the
+   * gesture. The click the trigger receives for this same gesture is reported
+   * by {@link UseMenuPressReturn.isTriggerClickFromPress} so the caller can
    * leave it alone.
    */
   onTriggerPress?: (pointerType: MenuPressPointerType) => boolean;
@@ -146,9 +143,7 @@ export interface UseMenuPressOptions {
   hitTest?: (x: number, y: number) => Element | null;
   /**
    * How long a finger rests on the trigger before the menu opens under it.
-   * Unset, a finger on every device waits as on UIMenu: not at all in a fixed
-   * bar, and 150 ms in a scroll view. The opening finger then picks after
-   * UIMenu's handoff. Set, it is that wait everywhere, as released.
+   * @default 500
    */
   longPressDelayMs?: number;
   /** Whether the model is live. @default true */
@@ -187,10 +182,7 @@ export interface UseMenuPressReturn {
     onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
     [MENU_PRESS_MARKER]: '';
   };
-  /**
-   * Spread onto the trigger: a mouse press opens. A finger opens as it
-   * presses when no delay is given, or else once held for it.
-   */
+  /** Spread onto the trigger: a mouse press opens; a held finger opens. */
   triggerProps: {
     onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
     onContextMenu: (event: React.MouseEvent<HTMLElement>) => void;
@@ -288,10 +280,8 @@ interface ResolvedPoint {
  *   release's button and modifier keys.
  * - The browser's stray `click` after a tracked release is swallowed at the
  *   window, in the capture phase. A click with `detail === 0` always passes.
- * - With no `longPressDelayMs`, a finger opens the menu as it presses the
- *   trigger, after the content-touch delay inside a scroll view. It picks
- *   once it travels the 10 px handoff. With a delay set, a finger held that
- *   long opens it, and the settle rule decides its release.
+ * - A finger held on the trigger opens the menu after the long-press delay.
+ *   The settle rule in menuPressGesture.ts decides if that release can act.
  * - `pointercancel`, a second pointer, or a window blur ends the gesture, and
  *   nothing acts.
  * - A pointer that rests near the edge of an overflowing menu scrolls it.
@@ -319,14 +309,7 @@ export function useMenuPress(options: UseMenuPressOptions): UseMenuPressReturn {
   // `touchModel` does not reach the model.
   const {touchModel: _touchModel, ...publicOptions} =
     options as DropdownMenuPressOptions;
-  // An unset delay follows UIMenu for a finger on every device, with its
-  // scroll-view wait. A set one keeps the released wait.
-  return useDropdownMenuPress({
-    ...publicOptions,
-    touchModel:
-      publicOptions.longPressDelayMs === undefined ? 'uikit' : 'pointer',
-    isInScrollView,
-  });
+  return useDropdownMenuPress({...publicOptions, touchModel: 'pointer'});
 }
 
 /**
