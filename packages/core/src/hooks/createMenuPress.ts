@@ -833,8 +833,7 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
  * Destroy it to remove every listener it added. `update` changes its options
  * or trigger from the next event. The press starts after the page's own
  * press-down handlers. A press-down that one of them stops, or cancels inside
- * the menu, starts no press. It acts once the press-down bubbles to its
- * document, so a script's own press-down must set `bubbles: true`.
+ * the menu, starts no press.
  *
  * - The document tracks the pointer by `pointerId`. A finger's events stay
  *   with the element it landed on, so the menu never sees a finger that slid
@@ -900,12 +899,12 @@ export function createMenuPress(
   menu.setAttribute(MENU_PRESS_MARKER, '');
 
   // The press listens on the menu and the trigger themselves. It acts on a
-  // press-down once it reaches the document. The page's own handlers run
-  // first, React's delegated ones included, as a handler composed before the
-  // press did. A press-down that one of them stops, or cancels inside the
-  // menu, starts no press. That document listener lives only while the
-  // press-down dispatches. A handler that forwards an event to the handle
-  // methods takes it first, so the press sees each event once.
+  // press-down once it reaches the document, after the page's own handlers,
+  // React's delegated ones included, as a handler composed before the press
+  // did. A press-down that one of them stops, or cancels inside the menu,
+  // starts no press. That document listener lives only while the press-down
+  // dispatches. A handler that forwards an event to the handle methods takes
+  // it first, so the press sees each event once.
   const taken = new WeakSet<Event>();
   const take = (event: Event): boolean => {
     if (isDestroyed || taken.has(event)) {
@@ -920,14 +919,11 @@ export function createMenuPress(
       (event.currentTarget as Node | null)?.ownerDocument ?? menu.ownerDocument;
     const view = doc.defaultView;
     const settle = (reached: Event) => {
-      // A press-down that a page handler dispatches during this one reaches
-      // the document first. Keep waiting for this one.
-      if (reached !== event) {
-        return;
-      }
       doc.removeEventListener(event.type, settle);
       view?.clearTimeout(timer);
-      act();
+      if (reached === event) {
+        act();
+      }
     };
     doc.addEventListener(event.type, settle);
     // A press-down stopped on its way never reaches the document. Its
