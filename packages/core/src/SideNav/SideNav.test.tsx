@@ -10,6 +10,7 @@
  */
 
 import React from 'react';
+import {renderToString} from 'react-dom/server';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {
   render,
@@ -1435,6 +1436,13 @@ describe('SideNavSection', () => {
 // =============================================================================
 
 describe('SideNav resizable', () => {
+  it('server-renders its drag handle with the width and bounds it starts at', () => {
+    const html = renderToString(<SideNav resizable>Content</SideNav>);
+    expect(html).toContain('aria-valuenow="260"');
+    expect(html).toContain('aria-valuemin="180"');
+    expect(html).toContain('aria-valuemax="480"');
+  });
+
   it('renders drag handle when resizable', () => {
     render(<SideNav resizable>Content</SideNav>);
     expect(
