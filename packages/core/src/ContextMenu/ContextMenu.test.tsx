@@ -461,13 +461,27 @@ describe('ContextMenu', () => {
           </ContextMenu>,
           {container},
         );
-        fireEvent.contextMenu(container.querySelector('div div')!);
+        const trigger = container.querySelector('div div')!;
+        fireEvent.contextMenu(trigger);
         // At the document a press on the menu is retargeted to a shadow host.
         const item = container.querySelector('[role="menuitem"]')!;
         fireEvent.mouseDown(item, {composed: true});
         expect(HTMLElement.prototype.hidePopover).not.toHaveBeenCalled();
+        // A touch on the menu is inside too, through its lift.
+        const onItem = {pointerType: 'touch', pointerId: 1, composed: true};
+        fireEvent.pointerDown(item, onItem);
+        fireEvent.pointerUp(item, onItem);
+        expect(HTMLElement.prototype.hidePopover).not.toHaveBeenCalled();
         // A press on the host itself is outside the menu.
         fireEvent.mouseDown(host);
+        expect(HTMLElement.prototype.hidePopover).toHaveBeenCalled();
+        // A touch on the host closes the menu at its lift.
+        vi.mocked(HTMLElement.prototype.hidePopover).mockClear();
+        fireEvent.contextMenu(trigger);
+        const onHost = {pointerType: 'touch', pointerId: 2};
+        fireEvent.pointerDown(host, onHost);
+        expect(HTMLElement.prototype.hidePopover).not.toHaveBeenCalled();
+        fireEvent.pointerUp(host, onHost);
         expect(HTMLElement.prototype.hidePopover).toHaveBeenCalled();
       } finally {
         host.remove();
