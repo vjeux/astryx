@@ -445,23 +445,27 @@ describe('createMenuPress — update, where a press starts, and a forwarded trig
   });
 });
 
-describe('createMenuPress — one shared press-down pair per document (PR1)', () => {
-  it('twenty closed menus share one press-down pair, and the last destroy removes it', () => {
+describe('createMenuPress — no document listener while idle (PR1)', () => {
+  it('twenty closed menus add no press-down listener to the document, and a press adds only what it removes', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
     try {
-      const count = (spy: typeof add) =>
-        spy.mock.calls.filter(([type]) => type === 'contextmenu').length;
-      const presses = Array.from({length: 20}, () =>
-        createMenuPress(fixture().menu, {itemSelector: ITEM_SELECTOR}),
-      );
-      expect(count(add)).toBe(1);
-      for (const each of presses.slice(0, 19)) {
-        each.destroy();
+      const fixtures = Array.from({length: 20}, () => fixture());
+      for (const each of fixtures) {
+        press(each.menu, {itemSelector: ITEM_SELECTOR, trigger: each.trigger});
       }
-      expect(count(remove)).toBe(0);
-      presses[19].destroy();
-      expect(count(remove)).toBe(1);
+      const ofType = (spy: typeof add, type: string, from = 0) =>
+        spy.mock.calls.slice(from).filter(([kind]) => kind === type);
+      expect(ofType(add, 'contextmenu')).toHaveLength(0);
+      // At most the one shared modality listener, never one per menu.
+      expect(ofType(add, 'pointerdown').length).toBeLessThanOrEqual(1);
+      const from = add.mock.calls.length;
+      fireEvent.pointerDown(fixtures[0].row('A'), touch());
+      fireEvent.pointerUp(fixtures[0].row('A'), touch());
+      const removed = remove.mock.calls.map(([, listener]) => listener);
+      for (const [, listener] of add.mock.calls.slice(from)) {
+        expect(removed).toContain(listener);
+      }
     } finally {
       add.mockRestore();
       remove.mockRestore();
@@ -585,10 +589,8 @@ describe('createMenuPress — input modality in the menu\u2019s own document (ar
         .filter(type => type === 'keydown' || type === 'pointerdown')
         .sort();
     const press = createMenuPress(menu, {itemSelector: ITEM_SELECTOR});
-    // The modality pair, and the press-down listener.
     expect(typesOf(addEventListener.mock.calls)).toEqual([
       'keydown',
-      'pointerdown',
       'pointerdown',
     ]);
     own.dispatchEvent(new Event('pointerdown'));
@@ -596,7 +598,6 @@ describe('createMenuPress — input modality in the menu\u2019s own document (ar
     press.destroy();
     expect(typesOf(removeEventListener.mock.calls)).toEqual([
       'keydown',
-      'pointerdown',
       'pointerdown',
     ]);
   });
