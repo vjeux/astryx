@@ -2816,8 +2816,12 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       await new Promise<void>(resolve => {
         setTimeout(resolve, 0);
       });
-      // The toggle back reads what the panel shows, which holds the
-      // timeline's time for this task, then its work runs for 400 ms.
+      // The toggle back runs late in its task, after 50 ms of other work.
+      // It reads what the panel shows, then its own work runs for 400 ms.
+      const late = performance.now() + 50;
+      while (performance.now() < late) {
+        // the page's main thread is busy
+      }
       const shownBefore = motion.shown()?.extent ?? null;
       const end = performance.now() + 400;
       while (performance.now() < end) {
