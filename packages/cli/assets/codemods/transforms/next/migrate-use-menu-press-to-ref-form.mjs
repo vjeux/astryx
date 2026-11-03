@@ -587,6 +587,7 @@ function migrateTriggerFunction(j, fnPath) {
 
 /** @param {any} file @param {any} api */
 export default function transform(file, api) {
+  return null;
   const j = api.jscodeshift;
   const root = j(file.source);
   /** @type {Set<string>} */
