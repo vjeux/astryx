@@ -5,7 +5,8 @@
  * @input The tracked elements, the action selector and hit expansion, and the
  *   press paint and fade clocks
  * @output createActionGroupTracker, ActionGroupTracker,
- *   ActionGroupTrackerOptions, ActionGroupTarget
+ *   ActionGroupTrackerOptions, ActionGroupTarget, and DISABLED_SELECTOR: the
+ *   actions the tracker skips
  * @position Internal core tracker for a held finger that slides across a
  *   group of actions. Gesture recognizers drive it.
  *
@@ -18,7 +19,7 @@ import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {PRESS_FADE_MS} from '../utils/pressGesture';
 
 /** An action that is not enabled takes no highlight and does not run. */
-const DISABLED = ':disabled, [aria-disabled="true"]';
+export const DISABLED_SELECTOR = ':disabled, [aria-disabled="true"]';
 
 /** A target the tracker measured: its element and viewport rect, px. */
 export interface ActionGroupTarget {
@@ -34,6 +35,8 @@ export interface ActionGroupTrackerOptions {
   roots: () => Iterable<Element | null | undefined>;
   /** Selects the actions inside the roots. */
   itemSelector: string;
+  /** Keeps only the actions this accepts among those `itemSelector` selects. */
+  isItem?: (element: HTMLElement) => boolean;
   /** How far outside an action the finger keeps it highlighted, px. */
   highlightExpansion: number;
   /**
@@ -220,14 +223,14 @@ export function createActionGroupTracker(
   };
 
   const measure = (): TrackedAction[] => {
-    const {roots, itemSelector} = getOptions();
+    const {roots, itemSelector, isItem} = getOptions();
     const next: TrackedAction[] = [];
     for (const root of roots()) {
       if (root == null) {
         continue;
       }
       for (const element of root.querySelectorAll<HTMLElement>(itemSelector)) {
-        if (element.matches(DISABLED)) {
+        if (element.matches(DISABLED_SELECTOR) || isItem?.(element) === false) {
           continue;
         }
         const rect = element.getBoundingClientRect();
@@ -321,7 +324,7 @@ export function createActionGroupTracker(
         return null;
       }
       release(lifted);
-      if (lifted.matches(DISABLED)) {
+      if (lifted.matches(DISABLED_SELECTOR)) {
         return null;
       }
       const {onActivate, onActivated, swallowsNativeClick} = getOptions();

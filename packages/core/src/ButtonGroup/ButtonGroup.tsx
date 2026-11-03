@@ -4,7 +4,8 @@
 
 /**
  * @file ButtonGroup.tsx
- * @input Uses React, StyleX, Button/IconButton children
+ * @input Uses React, StyleX, Button/IconButton children, and the shared group
+ *   press tracking (hooks/useGroupPressTracking)
  * @output Exports ButtonGroup component, context, and types
  * @position Groups buttons with connected styling; consumed by index.ts
  *
@@ -21,13 +22,20 @@
  * - /packages/cli/assets/templates/blocks/components/ButtonGroup/ (showcase blocks)
  */
 
-import {useMemo, type ReactNode} from 'react';
+import {useMemo, useRef, type ReactNode} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import type {ButtonSize} from '../Button';
 import {radiusVars, shadowVars} from '../theme/tokens.stylex';
 import type {Elevation} from '../utils/types';
 import {SizeProvider, useSize} from '../SizeContext/SizeContext';
 import {useListFocus} from '../hooks/useListFocus';
+import {PressGroupContext} from '../hooks/pressGroupContext';
+import {
+  GROUP_PRESS_POINTERS,
+  useGroupPressTracking,
+} from '../hooks/useGroupPressTracking';
+import {useTouchPresentation} from '../utils/touchPresentation';
+import {groupHitAreaStyles} from '../utils/groupHitArea.stylex';
 import {mergeProps, composeEventHandlers} from '../utils';
 import type {BaseProps} from '../BaseProps';
 import {ButtonGroupContext} from './ButtonGroupContext';
@@ -197,16 +205,27 @@ export function ButtonGroup({
     [orientation, isDisabled],
   );
 
+  // Only under the touch presentation does a press slide across the buttons.
+  // A desktop press stays the native button's.
+  const {isTouch} = useTouchPresentation();
+  const tracksPress = !isDisabled && isTouch;
+  const groupRef = useRef<HTMLDivElement>(null);
+  const {hitAreaRef, hasHitLayer} = useGroupPressTracking(
+    groupRef,
+    tracksPress,
+  );
+
   return (
     <ButtonGroupContext value={contextValue}>
       <SizeProvider value={size}>
         <div
-          ref={useMergedRefs(ref, listRef)}
+          ref={useMergedRefs(ref, listRef, groupRef, hitAreaRef)}
           {...props}
           {...mergeProps(
             themeProps('button-group', {size, orientation, elevation}),
             stylex.props(
               styles.group,
+              hasHitLayer && groupHitAreaStyles.hitArea,
               orientation === 'vertical' && styles.vertical,
               elevationStyles[elevation],
               xstyle,
@@ -220,7 +239,9 @@ export function ButtonGroup({
           onFocus={composeEventHandlers(onFocus, handleFocus)}
           aria-disabled={isDisabled || undefined}
           data-testid={testId}>
-          {children}
+          <PressGroupContext value={tracksPress ? GROUP_PRESS_POINTERS : null}>
+            {children}
+          </PressGroupContext>
         </div>
       </SizeProvider>
     </ButtonGroupContext>
