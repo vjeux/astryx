@@ -9,7 +9,8 @@
  * @output Exports useActionGroupTracking and ActionGroupTrackingOptions
  * @position Internal hook, not exported from the hooks entry. A long press
  *   drives the shared action-group tracker (hooks/actionGroupTracker.ts) for
- *   a group that a held pointer slides across. AlertDialog consumes it.
+ *   a group that a held pointer slides across. AlertDialog consumes it, and
+ *   Lab's TabBar through the internal touch entry.
  *
  * SYNC: When modified, update useActionGroupTracking.test.tsx
  */
@@ -22,7 +23,10 @@ import type {GestureTouch, PointerKind} from '../gestures/types';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {UIKIT_PRESS} from '../motion/uikit/gestures';
 import {isIosWebKit} from '../utils/touchQueries';
-import {createActionGroupTracker} from './actionGroupTracker';
+import {
+  createActionGroupTracker,
+  type ActionGroupTrackerOptions,
+} from './actionGroupTracker';
 import {useIsomorphicLayoutEffect} from './useIsomorphicLayoutEffect';
 
 export interface ActionGroupTrackingOptions {
@@ -49,6 +53,24 @@ export interface ActionGroupTrackingOptions {
   manageStyle?: boolean;
   /** Runs the action under the finger at the lift. @default its own click */
   onActivate?: (item: HTMLElement) => void;
+  /**
+   * Picks the action for a pointer at viewport (x, y), in place of the
+   * actions' rects. @default the action under the pointer
+   */
+  resolveTarget?: ActionGroupTrackerOptions['resolveTarget'];
+  /**
+   * Paint the tracked action with the press attribute. Off, the group draws
+   * its own highlight. @default true
+   */
+  paintsHighlight?: boolean;
+  /** A press began at viewport (x, y), before the tracker reads its action. */
+  onPressBegin?: (x: number, y: number) => void;
+  /** The press moved to viewport (x, y), after the tracker read its action. */
+  onPressMove?: (x: number, y: number) => void;
+  /** The lift, before its action runs, with the tracked action (null: none). */
+  onPressEnd?: (action: HTMLElement | null) => void;
+  /** The press ended with nothing acting: a cancel, or a second finger. */
+  onPressCancel?: () => void;
 }
 
 const PRESS = UIKIT_PRESS;
@@ -98,6 +120,8 @@ export function useActionGroupTracking(
         pointerRef.current === 'touch'
           ? optionsRef.current.highlightExpansion
           : 0,
+      paintsHighlight: optionsRef.current.paintsHighlight,
+      resolveTarget: optionsRef.current.resolveTarget,
       onActivate: optionsRef.current.onActivate,
       // The browser's own click for a press the group ran is taken, so the
       // action runs once. The gesture host swallows it for a press it claims.
@@ -145,15 +169,18 @@ export function useActionGroupTracking(
       switch (recognizer.state) {
         case 'began': {
           const {x, y} = recognizer.location();
+          optionsRef.current.onPressBegin?.(x, y);
           tracker.begin(x, y, {landed: landedRef.current});
           break;
         }
         case 'changed': {
           const {x, y} = recognizer.location();
           tracker.move(x, y);
+          optionsRef.current.onPressMove?.(x, y);
           break;
         }
         case 'ended': {
+          optionsRef.current.onPressEnd?.(tracker.highlighted);
           const doc = ref.current?.ownerDocument;
           const focusedBefore = doc?.activeElement ?? null;
           const beganOn = tracker.beganOn;
@@ -182,6 +209,7 @@ export function useActionGroupTracking(
         }
         case 'cancelled':
           tracker.cancel();
+          optionsRef.current.onPressCancel?.();
           break;
         case 'possible':
         case 'failed':

@@ -43,6 +43,8 @@ export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
 export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 export {isRtlElement} from '../hooks/isRtlElement';
+export {useActionGroupTracking} from '../hooks/useActionGroupTracking';
+export type {ActionGroupTrackingOptions} from '../hooks/useActionGroupTracking';
 export {createMotionEngine} from '../motion/animator';
 export type {
   AnimateOptions,
