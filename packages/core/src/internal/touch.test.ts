@@ -78,6 +78,19 @@ describe('internal/touch', () => {
     expect(entry).not.toHaveProperty('touchModule');
   });
 
+  it('re-exports the press tracker, the action-group tracker, the finger-scroll reader and the selection lock by name', async () => {
+    const entry: Record<string, unknown> = await import('./touch');
+    const modules: Record<string, Record<string, unknown>> = {
+      useFingerScroll: await import('../gestures/useFingerScroll'),
+      usePressTracker: await import('../gestures/usePressTracker'),
+      createActionGroupTracker: await import('../hooks/actionGroupTracker'),
+      lockSelection: await import('../utils/selectionLock'),
+    };
+    for (const [name, module] of Object.entries(modules)) {
+      expect(entry[name], name).toBe(module[name]);
+    }
+  });
+
   it('attaches no window or document listeners when it loads', async () => {
     vi.resetModules();
     const onWindow = vi.spyOn(window, 'addEventListener');

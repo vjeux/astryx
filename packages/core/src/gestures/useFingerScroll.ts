@@ -4,17 +4,18 @@
 
 /**
  * @file useFingerScroll.ts
- * @input A scroller (a ref to an element, or the document for the page) and
- *   the document's gesture host
+ * @input A scroller (a ref to an element, the document for the page, or a
+ *   ref that holds the document) and the document's gesture host
  * @output useFingerScroll: whether the scroller's current scroll is a
  *   finger's, read at any moment
  * @position Gesture hook of packages/core/src/gestures, over the
  *   finger-scroll watch (fingerScroll.ts), kept on the scroller's node by
  *   the gesture hooks' shared attachment (hooks/useAttachment.ts). An internal
- *   piece of the touch
- *   module with no public API, not in the gestures barrel: a scroll-driven
- *   component (a tab bar that minimizes, a header that collapses, a picker
- *   that commits at rest) imports it from here, so it ships only where used
+ *   piece of the touch module with no public API, not in the gestures barrel.
+ *   A scroll-driven component imports it from here, or from Core's internal
+ *   touch entry in Lab, so it ships only where used. Such components include
+ *   a tab bar that minimizes, a header that collapses and a picker that
+ *   commits at rest.
  *
  * A scroll is a finger's from a scroll event while a finger that landed
  * inside the scroller is down, until the scroller's `scrollend` (the lift
@@ -45,12 +46,13 @@ function documentOf(node: Element | Document): Document {
 
 /**
  * Watch a scroller's finger scrolls. Pass a ref to a scrolling element, or
- * the document for the page's own scroll. Returns a reader, stable across
- * renders: `true` while the scroller's scroll is a finger's.
- * Internal: not exported from the package.
+ * the document (or a ref that holds it) for the page's own scroll. Returns a
+ * reader, stable across renders: `true` while the scroller's scroll is a
+ * finger's.
+ * Internal: outside Core, only `@astryxdesign/core/internal/touch` reaches it.
  */
 export function useFingerScroll(
-  scroller: RefObject<Element | null> | Document,
+  scroller: RefObject<Element | Document | null> | Document,
 ): () => boolean {
   /** The node the watch is on now, for the reader. */
   const watchedRef = useRef<Element | Document | null>(null);
