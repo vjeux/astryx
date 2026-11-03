@@ -13,12 +13,9 @@
  */
 
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {listMotionRoles} from '../motion/roles';
 import {solveSpring, toSpring} from '../motion/spring';
-import {
-  contextMenu,
-  registerContextMenuTable,
-} from '../motion/uikit/contextMenu';
+import {contextMenu} from '../motion/uikit/contextMenu';
+import {registerSpringsTable, springs} from '../motion/uikit/springs';
 import {
   PRESS_FEEDBACK_START_MS,
   pressFeedbackCurve,
@@ -165,7 +162,7 @@ describe('the press feedback against UIKit (iOS 26.2, measured frames)', () => {
 
 describe('pressFeedbackMotion: the feedback plays the table’s motion (touch motion stays internal)', () => {
   // The touch code registers the table before its first motion.
-  registerContextMenuTable();
+  registerSpringsTable();
 
   afterEach(() => {
     vi.restoreAllMocks();
@@ -190,43 +187,13 @@ describe('pressFeedbackMotion: the feedback plays the table’s motion (touch mo
     return child;
   }
 
-  it('reads the table’s spring, onset and latency where no theme sets them', () => {
+  it('plays the theme’s state-change spring from the measured onset, with no latency of its own', () => {
     const element = themed({});
     expect(pressFeedbackMotion(element)).toEqual({
-      spring: contextMenu.press.feedbackSpring,
+      spring: springs.stateChange,
       onsetMs: contextMenu.press.feedbackOnsetMs,
-      latencyMs: contextMenu.press.feedbackLatencyMs,
+      latencyMs: 0,
     });
-  });
-
-  it('names the press feedback’s spring and latencies as motion roles, and leaves the touch timing out', () => {
-    registerContextMenuTable();
-    const roles = listMotionRoles()
-      .map(role => role.id)
-      .filter(id => id.startsWith('contextMenu.'));
-    expect(roles).toEqual([
-      'contextMenu.press.feedbackLatencyMs',
-      'contextMenu.press.feedbackSpring',
-      'contextMenu.press.returnLatencyMs',
-    ]);
-  });
-
-  it('takes no per-role value from a theme: the roles are internal', () => {
-    const element = themed({
-      '--motion-context-menu-press-feedback-spring': '0.5s 0',
-      '--motion-context-menu-press-feedback-latency-ms': '80ms',
-      '--motion-context-menu-press-feedback-onset-ms': '300ms',
-      '--motion-context-menu-press-commit-ms': '100ms',
-    });
-    const motion = pressFeedbackMotion(element);
-    expect(motion).toEqual({
-      spring: contextMenu.press.feedbackSpring,
-      onsetMs: contextMenu.press.feedbackOnsetMs,
-      latencyMs: contextMenu.press.feedbackLatencyMs,
-    });
-    const curve = pressFeedbackCurve({motion});
-    expect(curve.at(0)).toBe(1);
-    expect(curve.at(0.3)).toBeGreaterThan(1);
   });
 
   it('starts its ramp at the onset it is given and reaches the commit continuously', () => {

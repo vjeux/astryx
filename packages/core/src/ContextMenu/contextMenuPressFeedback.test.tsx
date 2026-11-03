@@ -4,14 +4,16 @@
  * @file contextMenuPressFeedback.test.tsx
  * @input useContextMenuPressFeedback on a trigger, with the animator replaced
  * @output Checks that the growth starts at the press machine's "on", keeps
- *   going when the press machine lets the press go, and springs back when
- *   ContextMenu's recognizer ends the press with no menu
+ *   going when the press machine lets the press go, and springs back on the
+ *   theme's state-change spring when ContextMenu's recognizer ends the press
+ *   with no menu
  * @position Unit tests of packages/core/src/ContextMenu/contextMenuPressFeedback.ts
  */
 
 import {render} from '@testing-library/react';
 import {useRef} from 'react';
 import {afterEach, describe, expect, it, vi} from 'vitest';
+import {springs} from '../motion/uikit/springs';
 import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {
   useContextMenuPressFeedback,
@@ -68,5 +70,17 @@ describe('useContextMenuPressFeedback', () => {
     expect(animator.animate).not.toHaveBeenCalled();
     feedback?.end(performance.now());
     expect(animator.animate).toHaveBeenCalledOnce();
+  });
+
+  it('springs back on the theme’s state-change spring, at the time the recognizer ended the press', async () => {
+    const {getByTestId} = render(<Trigger />);
+    getByTestId('trigger').setAttribute(PRESSED_ATTRIBUTE, 'on');
+    await flush();
+    feedback?.end(1000);
+    expect(animator.animate).toHaveBeenCalledWith(
+      {scale: 1},
+      {spring: springs.stateChange},
+      {at: 1000},
+    );
   });
 });

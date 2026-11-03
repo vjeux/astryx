@@ -45,13 +45,15 @@ import {
 } from '@astryxdesign/interaction-harness';
 import {contextMenu} from '../../motion/uikit/contextMenu';
 import {
-  PRESS_FEEDBACK_START_MS,
   pressFeedbackCurve,
+  pressFeedbackMotion,
 } from '../contextMenuPressCurve';
-import {UIKIT_LONG_PRESS, UIKIT_PRESS_VIEW_WIDTH} from './uikitPressFrames';
 
 const storybook = withStorybook(test);
-const {commitMs, menuDisplayMs} = contextMenu.press;
+const {commitMs, menuDisplayMs, feedbackOnsetMs} = contextMenu.press;
+// What ContextMenu plays: the theme's state-change spring from the onset,
+// with no latency of its own.
+const PLAYED = pressFeedbackCurve({motion: pressFeedbackMotion(null)});
 
 interface TouchStory {
   driver: TouchDriver;
@@ -510,15 +512,15 @@ test('a drift within the tolerance still opens the menu; past it on one axis can
   expect(await menuShownAt(page)).toBeNull();
 });
 
-test('the press feedback follows UIKit’s measured press, frame by frame', async ({
+test('the press feedback plays its computed curve on the compositor, frame by frame', async ({
   page,
 }, testInfo) => {
   const {driver, trigger, center} = await openTouchStory(page);
   const playing = driver.play(hold(center, commitMs + 300));
   await waitForAnimation(trigger, {minProgressMs: 16});
   await holdAnimations(page, trigger);
-  // Seek the held curve (its time 0 is PRESS_FEEDBACK_START_MS after the
-  // touch) to every 60 Hz frame and read the presented scale.
+  // Seek the held curve (its time 0 is the onset after the touch) to every
+  // 60 Hz frame and read the presented scale.
   const samples = await trigger.evaluate((element, times) => {
     const held =
       (window as unknown as {__harnessHeld?: Animation[]}).__harnessHeld ?? [];
@@ -533,7 +535,7 @@ test('the press feedback follows UIKit’s measured press, frame by frame', asyn
   await releaseAnimations(page);
   await playing;
   const at = (ms: number) => {
-    const t = ms - PRESS_FEEDBACK_START_MS;
+    const t = ms - feedbackOnsetMs;
     if (t <= 0) {
       return 1;
     }
@@ -546,14 +548,20 @@ test('the press feedback follows UIKit’s measured press, frame by frame', asyn
     const b = samples[i];
     return a.value + ((b.value - a.value) * (t - a.t)) / (b.t - a.t);
   };
-  const errors = UIKIT_LONG_PRESS.map(([ms, uikit]) => ({
-    ms,
-    uikit,
-    web: at(ms),
-    errorPt: Math.abs(at(ms) - uikit) * UIKIT_PRESS_VIEW_WIDTH,
-  }));
+  // The card is 200 px wide, so a scale error times 200 is in pixels.
+  const errors = Array.from({length: 33}, (_, i) => feedbackOnsetMs + i * 17)
+    .filter(ms => ms <= commitMs + 300)
+    .map(ms => {
+      const expected = PLAYED.at((ms - feedbackOnsetMs) / 1000);
+      return {
+        ms,
+        expected,
+        web: at(ms),
+        errorPx: Math.abs(at(ms) - expected) * 200,
+      };
+    });
   const rms = Math.sqrt(
-    errors.reduce((sum, e) => sum + e.errorPt ** 2, 0) / errors.length,
+    errors.reduce((sum, e) => sum + e.errorPx ** 2, 0) / errors.length,
   );
   await writeEvidence(
     'curves/contextmenu-press-feedback',
@@ -567,11 +575,11 @@ test('the press feedback follows UIKit’s measured press, frame by frame', asyn
     testInfo,
   );
   testInfo.annotations.push({
-    type: 'uikit-parity',
-    description: `press feedback vs UIKit iOS 26.2 (200 pt card): rms ${rms.toFixed(3)} pt over ${errors.length} frames`,
+    type: 'curve-parity',
+    description: `press feedback vs its computed curve (200 px card): rms ${rms.toFixed(3)} px over ${errors.length} frames`,
   });
   expect(rms).toBeLessThan(0.1);
-  expect(Math.max(...errors.map(e => e.errorPt))).toBeLessThan(0.25);
+  expect(Math.max(...errors.map(e => e.errorPx))).toBeLessThan(0.25);
 });
 
 test('the press feedback keeps advancing every frame while the main thread is blocked', async ({
@@ -602,9 +610,8 @@ test('the press feedback keeps advancing every frame while the main thread is bl
   const touch =
     (await page.evaluate(() => performance.timeOrigin)) +
     (await touchStartedAt(page));
-  const curve = pressFeedbackCurve();
   const scaleAt = (epoch: number) =>
-    curve.at((epoch - touch - PRESS_FEEDBACK_START_MS) / 1000);
+    PLAYED.at((epoch - touch - feedbackOnsetMs) / 1000);
   const restWidth = (proof.first ?? 0) / scaleAt(block.from + 20);
   const expectedGrowth =
     restWidth * (scaleAt(block.to - 20) - scaleAt(block.from + 20));
@@ -663,7 +670,7 @@ test('the press feedback does no Layout or Paint per frame', async ({
   const start = timeOrigin + (await touchStartedAt(page));
   const during = countBetween(
     trace,
-    start + PRESS_FEEDBACK_START_MS + 50,
+    start + feedbackOnsetMs + 50,
     start + commitMs - 30,
   );
   expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
@@ -764,8 +771,8 @@ test(
         height: box.height + 48,
       },
       scope: trigger,
-      // t counts from the visible ramp's start, 188 ms after the touch.
-      times: timeline(menuDisplayMs - PRESS_FEEDBACK_START_MS, 1000 / 30),
+      // t counts from the visible ramp's start, the onset after the touch.
+      times: timeline(menuDisplayMs - feedbackOnsetMs, 1000 / 30),
       measure: async () => ({
         scale: (await presentedScale(trigger)).toFixed(4),
       }),
