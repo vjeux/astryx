@@ -22,6 +22,7 @@
 import {useEffect, useMemo, useRef, useState, type RefObject} from 'react';
 import {useIsomorphicLayoutEffect} from './useIsomorphicLayoutEffect';
 import {
+  createForwardedMenuPress,
   createMenuPress,
   createMenuPressCore,
   MENU_PRESS_MARKER,
@@ -59,11 +60,15 @@ export interface UseMenuPressRefOptions extends Omit<
   triggerRef?: RefObject<HTMLElement | null>;
 }
 
-/** What the ref form returns: the press's reads; the hook owns its life. */
+/**
+ * What the ref form returns: the press's reads and forwards. The hook owns
+ * its life.
+ */
 export type UseMenuPressRefReturn = Pick<
   CreateMenuPressReturn,
   | 'isTriggerClickFromPress'
   | 'cancel'
+  | 'handleMenuPointerDown'
   | 'handleTriggerPointerDown'
   | 'handleTriggerContextMenu'
 >;
@@ -212,6 +217,30 @@ export function useMenuPress(
   first: RefObject<HTMLElement | null> | UseMenuPressOptions,
   second?: UseMenuPressRefOptions,
 ): UseMenuPressRefReturn | UseMenuPressReturn {
+  return useMenuPressWith(first, second, createMenuPress);
+}
+
+/**
+ * @internal The ref form for Core's menus. Each forwards a mouse's or pen's
+ * press-down from its React handlers, so the press acts in the options
+ * form's order.
+ */
+export function useCoreMenuPress(
+  menuRef: RefObject<HTMLElement | null>,
+  options: UseMenuPressRefOptions,
+): UseMenuPressRefReturn {
+  return useMenuPressWith(
+    menuRef,
+    options,
+    createForwardedMenuPress,
+  ) as UseMenuPressRefReturn;
+}
+
+function useMenuPressWith(
+  first: RefObject<HTMLElement | null> | UseMenuPressOptions,
+  second: UseMenuPressRefOptions | undefined,
+  create: typeof createMenuPress,
+): UseMenuPressRefReturn | UseMenuPressReturn {
   // A call site keeps one form for its life, so both take the same hooks.
   const isRefForm = second !== undefined;
   const menuRef = isRefForm
@@ -256,7 +285,7 @@ export function useMenuPress(
         : {
             menu,
             ownerDocument: menu.ownerDocument,
-            press: createMenuPress(menu, factoryOptionsOf(latest)),
+            press: create(menu, factoryOptionsOf(latest)),
           };
   });
   // Removes the factory's listeners at unmount.
@@ -294,6 +323,8 @@ export function useMenuPress(
         isTriggerClickFromPress: () =>
           attachedRef.current?.press.isTriggerClickFromPress() ?? false,
         cancel: () => attachedRef.current?.press.cancel(),
+        handleMenuPointerDown: event =>
+          attachedRef.current?.press.handleMenuPointerDown(event),
         handleTriggerPointerDown: event =>
           attachedRef.current?.press.handleTriggerPointerDown(event),
         handleTriggerContextMenu: event =>
