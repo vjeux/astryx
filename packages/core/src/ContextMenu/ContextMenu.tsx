@@ -642,20 +642,23 @@ export function ContextMenu({
         close();
       }
     };
-    const targets: EventTarget[] = shadow != null ? [shadow, doc] : [doc];
-    for (const target of targets) {
-      target.addEventListener('pointerdown', handleDown, true);
-      target.addEventListener('pointermove', handleMove, true);
-      target.addEventListener('pointerup', handleEnd, true);
-      target.addEventListener('pointercancel', handleEnd, true);
+    // A press is judged as it bubbles, so the menu's own tree judges it
+    // first, as with the mousedown above. The rest of the touch only needs its
+    // pointer id, so the document sees it in the capture phase.
+    const judges: EventTarget[] = shadow != null ? [shadow, doc] : [doc];
+    for (const target of judges) {
+      target.addEventListener('pointerdown', handleDown);
     }
+    doc.addEventListener('pointermove', handleMove, true);
+    doc.addEventListener('pointerup', handleEnd, true);
+    doc.addEventListener('pointercancel', handleEnd, true);
     return () => {
-      for (const target of targets) {
-        target.removeEventListener('pointerdown', handleDown, true);
-        target.removeEventListener('pointermove', handleMove, true);
-        target.removeEventListener('pointerup', handleEnd, true);
-        target.removeEventListener('pointercancel', handleEnd, true);
+      for (const target of judges) {
+        target.removeEventListener('pointerdown', handleDown);
       }
+      doc.removeEventListener('pointermove', handleMove, true);
+      doc.removeEventListener('pointerup', handleEnd, true);
+      doc.removeEventListener('pointercancel', handleEnd, true);
     };
   }, [isOpen, closeMenu, listRef, usesBottomSheet]);
 
