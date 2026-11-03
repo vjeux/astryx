@@ -444,6 +444,8 @@ describe('ContextMenu', () => {
   it.each(['open', 'closed', 'nested'] as const)(
     'judges presses once inside a %s shadow root',
     mode => {
+      // Under the touch model, so a touch on the host closes the menu.
+      stubPointer(true);
       const host = document.createElement('div');
       document.body.append(host);
       let root = host.attachShadow({mode: mode === 'open' ? 'open' : 'closed'});
@@ -485,6 +487,7 @@ describe('ContextMenu', () => {
         expect(HTMLElement.prototype.hidePopover).toHaveBeenCalled();
       } finally {
         host.remove();
+        vi.unstubAllGlobals();
       }
     },
   );
@@ -2162,6 +2165,16 @@ describe('ContextMenu inline trigger (triggerAs)', () => {
 describe('ContextMenu outside dismissal', () => {
   const finger = (pointerId: number) => ({pointerType: 'touch', pointerId});
 
+  // Under the touch model, a coarse primary pointer. Undone at the end.
+  function underTouchModel(run: () => void) {
+    stubPointer(true);
+    try {
+      run();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  }
+
   // Holds a finger on the trigger until the long-press opens the menu. Only
   // the long-press delay is faked.
   function longPress(trigger: HTMLElement, pointerId: number) {
@@ -2254,20 +2267,66 @@ describe('ContextMenu outside dismissal', () => {
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
-  it('a tap outside closes the menu at its lift; a scroll that starts outside closes it as the browser takes the finger', () => {
+  it('under the touch model, a tap outside closes the menu at its lift, and a scroll that starts outside closes it as the browser takes the finger', () => {
+    underTouchModel(() => {
+      const onOpenChange = vi.fn<(isOpen: boolean) => void>();
+      const {trigger, outside} = renderMenu(onOpenChange);
+      fireEvent.contextMenu(trigger, {clientX: 50, clientY: 15, detail: 1});
+      // The browser takes this finger for a scroll: no compatibility events.
+      fireEvent.pointerDown(outside, finger(3));
+      expect(onOpenChange).toHaveBeenLastCalledWith(true);
+      fireEvent.pointerCancel(outside, finger(3));
+      expect(onOpenChange).toHaveBeenLastCalledWith(false);
+      fireEvent.contextMenu(trigger, {clientX: 50, clientY: 15, detail: 1});
+      fireEvent.pointerDown(outside, finger(4));
+      expect(onOpenChange).toHaveBeenLastCalledWith(true);
+      lift(outside, 4);
+      expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    });
+  });
+
+  it('outside the touch model, a tap outside closes the menu through its compatibility mousedown, and a scroll that starts outside leaves it open', () => {
     const onOpenChange = vi.fn<(isOpen: boolean) => void>();
     const {trigger, outside} = renderMenu(onOpenChange);
     fireEvent.contextMenu(trigger, {clientX: 50, clientY: 15, detail: 1});
     // The browser takes this finger for a scroll: no compatibility events.
     fireEvent.pointerDown(outside, finger(3));
-    expect(onOpenChange).toHaveBeenLastCalledWith(true);
     fireEvent.pointerCancel(outside, finger(3));
-    expect(onOpenChange).toHaveBeenLastCalledWith(false);
-    fireEvent.contextMenu(trigger, {clientX: 50, clientY: 15, detail: 1});
-    fireEvent.pointerDown(outside, finger(4));
     expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    fireEvent.pointerDown(outside, finger(4));
     lift(outside, 4);
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('with presentation="popover", a finger keeps the released outside dismissal: a scroll or a drag outside leaves the menu open', () => {
+    underTouchModel(() => {
+      const onOpenChange = vi.fn<(isOpen: boolean) => void>();
+      render(
+        <>
+          <ContextMenu
+            items={[{label: 'Cut'}]}
+            presentation="popover"
+            data-testid="ctx"
+            onOpenChange={onOpenChange}>
+            <div>Long-press me</div>
+          </ContextMenu>
+          <button type="button">Outside</button>
+        </>,
+      );
+      const outside = screen.getByRole('button', {name: 'Outside'});
+      fireEvent.contextMenu(screen.getByTestId('ctx'), {
+        clientX: 50,
+        clientY: 15,
+        detail: 1,
+      });
+      fireEvent.pointerDown(outside, {...finger(3), clientX: 0, clientY: 0});
+      fireEvent.pointerCancel(outside, finger(3));
+      fireEvent.pointerDown(outside, {...finger(4), clientX: 0, clientY: 0});
+      fireEvent.pointerMove(outside, {...finger(4), clientX: 0, clientY: 40});
+      fireEvent.pointerUp(outside, finger(4));
+      expect(onOpenChange).toHaveBeenLastCalledWith(true);
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    });
   });
 
   it('a mouse press or a pen press outside closes the menu at the press', () => {
@@ -2294,38 +2353,42 @@ describe('ContextMenu outside dismissal', () => {
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
-  it('a finger outside closes the menu as it pans past the pan threshold, or at its lift; a second finger waits for the first one', () => {
-    const onOpenChange = vi.fn<(isOpen: boolean) => void>();
-    const {trigger, outside} = renderMenu(onOpenChange);
-    const open = () =>
-      fireEvent.contextMenu(trigger, {clientX: 50, clientY: 15, detail: 1});
-    // A drag on a surface that does not pan (a Slider): it closes the menu
-    // as it travels past the pan threshold, before the lift.
-    open();
-    fireEvent.pointerDown(outside, {...finger(5), clientX: 0, clientY: 0});
-    fireEvent.pointerMove(outside, {...finger(5), clientX: 8, clientY: 0});
-    expect(onOpenChange).toHaveBeenLastCalledWith(true);
-    fireEvent.pointerMove(outside, {...finger(5), clientX: 30, clientY: 0});
-    expect(onOpenChange).toHaveBeenLastCalledWith(false);
-    fireEvent.pointerUp(outside, finger(5));
-    // A second finger's tap does not end the first finger's touch.
-    open();
-    fireEvent.pointerDown(outside, finger(6));
-    fireEvent.pointerDown(outside, finger(7));
-    fireEvent.pointerUp(outside, finger(7));
-    expect(onOpenChange).toHaveBeenLastCalledWith(true);
-    fireEvent.pointerUp(outside, finger(6));
-    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  it('under the touch model, a finger outside closes the menu as it pans past the pan threshold, or at its lift; a second finger waits for the first one', () => {
+    underTouchModel(() => {
+      const onOpenChange = vi.fn<(isOpen: boolean) => void>();
+      const {trigger, outside} = renderMenu(onOpenChange);
+      const open = () =>
+        fireEvent.contextMenu(trigger, {clientX: 50, clientY: 15, detail: 1});
+      // A drag on a surface that does not pan (a Slider): it closes the menu
+      // as it travels past the pan threshold, before the lift.
+      open();
+      fireEvent.pointerDown(outside, {...finger(5), clientX: 0, clientY: 0});
+      fireEvent.pointerMove(outside, {...finger(5), clientX: 8, clientY: 0});
+      expect(onOpenChange).toHaveBeenLastCalledWith(true);
+      fireEvent.pointerMove(outside, {...finger(5), clientX: 30, clientY: 0});
+      expect(onOpenChange).toHaveBeenLastCalledWith(false);
+      fireEvent.pointerUp(outside, finger(5));
+      // A second finger's tap does not end the first finger's touch.
+      open();
+      fireEvent.pointerDown(outside, finger(6));
+      fireEvent.pointerDown(outside, finger(7));
+      fireEvent.pointerUp(outside, finger(7));
+      expect(onOpenChange).toHaveBeenLastCalledWith(true);
+      fireEvent.pointerUp(outside, finger(6));
+      expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    });
   });
 
-  it('a touch on the menu itself leaves it open', () => {
-    const onOpenChange = vi.fn<(isOpen: boolean) => void>();
-    const {trigger} = renderMenu(onOpenChange);
-    fireEvent.contextMenu(trigger, {clientX: 50, clientY: 15, detail: 1});
-    const menu = screen.getByRole('menu', {hidden: true});
-    fireEvent.pointerDown(menu, {...finger(8), clientX: 0, clientY: 0});
-    fireEvent.pointerMove(menu, {...finger(8), clientX: 0, clientY: 40});
-    fireEvent.pointerUp(menu, finger(8));
-    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  it('under the touch model, a touch on the menu itself leaves it open', () => {
+    underTouchModel(() => {
+      const onOpenChange = vi.fn<(isOpen: boolean) => void>();
+      const {trigger} = renderMenu(onOpenChange);
+      fireEvent.contextMenu(trigger, {clientX: 50, clientY: 15, detail: 1});
+      const menu = screen.getByRole('menu', {hidden: true});
+      fireEvent.pointerDown(menu, {...finger(8), clientX: 0, clientY: 0});
+      fireEvent.pointerMove(menu, {...finger(8), clientX: 0, clientY: 40});
+      fireEvent.pointerUp(menu, finger(8));
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    });
   });
 });
