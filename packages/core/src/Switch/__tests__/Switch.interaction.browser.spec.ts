@@ -1086,6 +1086,56 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     ).toBe('');
   });
 
+  test('P2 · a held finger on the switch refuses text selection on the whole page until its lift, so a drift onto the label or the status selects nothing (spec:AST-094 FR41)', async ({
+    page,
+  }) => {
+    const {driver, center} = await openSwitch(
+      page,
+      'core-switch--status-variations',
+    );
+    const root = page.locator('#storybook-root');
+    const label = root.getByText('Accept terms and conditions').first();
+    const status = root.getByText('You must accept the terms to continue', {
+      exact: true,
+    });
+    // Where iOS WebKit's touch-callout query holds, the lock writes
+    // `user-select: none` inline on the page's root. Elsewhere it cancels the
+    // `selectstart` a long press fires on any text, with no style write.
+    const refuses = async (text: Locator) =>
+      text.evaluate(node => {
+        if (CSS.supports('(-webkit-touch-callout: none)')) {
+          const {style} = node.ownerDocument.documentElement;
+          return (
+            (style.getPropertyValue('user-select') ||
+              style.getPropertyValue('-webkit-user-select')) === 'none'
+          );
+        }
+        const event = new Event('selectstart', {
+          bubbles: true,
+          cancelable: true,
+        });
+        node.dispatchEvent(event);
+        return event.defaultPrevented;
+      });
+    let during: boolean[] = [];
+    await driver.play(tap(center, {holdMs: 600}), {
+      onEvent: async step => {
+        if (step.type === 'touchStart') {
+          await page.waitForTimeout(300);
+          during = [await refuses(label), await refuses(status)];
+        }
+      },
+    });
+    expect(during).toEqual([true, true]);
+    // The lock lets go when the contact ends; read it after the release's
+    // click wait, on the page's own timers.
+    await afterPageTimer(page, BROWSER_CLICK_WAIT_MS);
+    expect([await refuses(label), await refuses(status)]).toEqual([
+      false,
+      false,
+    ]);
+  });
+
   test('P3 · a drag flips once the finger is the track minus the thumb past where it landed, and the release commits it', async ({
     page,
   }) => {

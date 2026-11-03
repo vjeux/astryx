@@ -33,6 +33,7 @@ import {registerSwitchTable, switchControl} from '../motion/uikit/switch';
 import {useTouchPresentation} from '../utils/touchPresentation';
 import {awaitBrowserClick, clickForLift} from '../utils/browserClickWait';
 import {armClickGuard} from '../utils/clickGuard';
+import {lockSelection} from '../utils/selectionLock';
 import {
   commitOnRelease,
   dragTarget,
@@ -318,6 +319,11 @@ export class SwitchTouchController {
       isBraking: () => host.isScrollBraking(surface),
       // A held switch opens no menu (UISwitch shows none).
       holdsContextMenu: () => this.pressTime != null,
+      // A thumb drag carries the finger over the text beside the switch.
+      // iOS WebKit then selects the word nearest the finger, even beside a
+      // locked element. So the press locks the whole page, until its lift.
+      selectionLock: (_elements, target) =>
+        lockSelection([surface.ownerDocument.documentElement], target),
       onControlEvent: (event, touch) => this.onControlEvent(event, touch),
       onHighlightChange: isHighlighted => {
         if (isHighlighted && this.isTracking && this.pressTime == null) {

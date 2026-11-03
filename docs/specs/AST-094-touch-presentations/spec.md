@@ -517,7 +517,9 @@ under a finger, and a mouse follows `module:DropdownMenu/useMenuPress` FR3 and
   hold action, such as a slider's thumb or a stepper's hold-repeat, the hold
   does that and the browser's text-selection start and callout are suppressed
   for that press only, lifted at the lift or a cancel; that element's text is
-  not selectable by a long press, and Astryx adds no Copy item to a menu. An
+  not selectable by a long press, and Astryx adds no Copy item to a menu. A
+  Switch's press suppresses them on the whole page, because its drag carries
+  the finger over the text beside it (`component:Switch` FR15). An
   element's existing always-on suppression stays as it is. On a label or plain
   text whose hold does nothing, such as a checkbox row's label, a long press
   selects natively, with the browser's handles; any other element follows its
