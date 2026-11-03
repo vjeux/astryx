@@ -163,9 +163,7 @@ export interface DropdownMenuPressOptions extends UseMenuPressOptions {
    * settle rule. `'uikit'`: as the finger presses on a trigger in a fixed bar,
    * or in a scroll view once the content-touch delay passes with no scroll.
    * The opening finger then picks only after UIMenu's handoff distance. A
-   * mouse is unaffected. A menu with no trigger (a sub-menu) takes its root's
-   * touch model. A finger in it then follows the root's rules: a cancelled
-   * touch clears its lit row.
+   * mouse is unaffected.
    * @default 'pointer'
    */
   touchModel?: 'pointer' | 'uikit';
@@ -345,13 +343,13 @@ export type MenuSurfacePressReturn = Omit<
  * The press model for a menu that never presses a trigger: a sub-menu, a
  * context menu, a Selector's list or a sheet's action list. It is the menu
  * half alone, so the trigger half's long-press detectors and scroll probe
- * (menuTriggerPress.ts) stay out of its bundle. A sub-menu passes its root
- * menu's touch model. Not exported from the hooks entry point.
+ * (menuTriggerPress.ts) stay out of its bundle. Not exported from the hooks
+ * entry point.
  *
  * @internal
  */
 export function useMenuSurfacePress(
-  options: DropdownMenuPressOptions,
+  options: UseMenuPressOptions,
 ): MenuSurfacePressReturn {
   return useMenuPressModel(options).surface;
 }
@@ -584,34 +582,7 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
           }
           return;
         }
-        case 'withdraw': {
-          // The window's blur withdrew a finger's gesture. It stays tracked to
-          // its release, but nothing drives the menu any more (the hold, the
-          // autoscroll, the page lock). A row it lit clears under the touch
-          // model, on every device.
-          longPressApiRef.current?.cancel();
-          stopAutoscroll();
-          touchMovePreventerRef.current?.();
-          touchMovePreventerRef.current = null;
-          if (
-            effect.clear === true &&
-            optionsRef.current.touchModel === 'uikit'
-          ) {
-            highlight(null);
-          }
-          return;
-        }
         case 'settle': {
-          // A finger's lit row clears on a cancel under the 'uikit' touch
-          // model, on every device unless the menu pins
-          // presentation="popover". The pointer model keeps the highlight as
-          // before.
-          if (
-            effect.clear === true &&
-            optionsRef.current.touchModel === 'uikit'
-          ) {
-            highlight(null);
-          }
           endGesture();
           if (effect.stray) {
             armClickGuard(doc, {staysInstalled: true});
@@ -623,7 +594,7 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
         }
       }
     },
-    [activate, endGesture, getDocument, highlight, stopAutoscroll],
+    [activate, endGesture, getDocument, highlight],
   );
 
   const step = useCallback(
@@ -771,12 +742,6 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
         stepRef.current({type: 'cancel'});
       };
       const onOtherPointerDown = (event: PointerEvent) => {
-        // Any press ends a withdrawn gesture: its finger lifted where the
-        // page could not see it, and the new press's click must act.
-        if (gestureRef.current.phase === 'withdrawn') {
-          stepRef.current({type: 'cancel'});
-          return;
-        }
         // A second pointer ends the gesture: two fingers are a pinch or a
         // scroll, never a pick.
         if (event.pointerId !== pointerIdRef.current) {
@@ -785,12 +750,7 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
         }
       };
       const onBlur = () => {
-        // A finger's or pen's gesture is withdrawn, not ended. The browser can
-        // keep the touch alive past the blur, so the gesture stays tracked on
-        // these listeners until its release. That release acts on nothing, and
-        // its click is swallowed. A mouse press ends as a cancel and keeps its
-        // click.
-        stepRef.current({type: 'withdraw'});
+        stepRef.current({type: 'cancel'});
       };
 
       doc.addEventListener('pointermove', onMove, true);
