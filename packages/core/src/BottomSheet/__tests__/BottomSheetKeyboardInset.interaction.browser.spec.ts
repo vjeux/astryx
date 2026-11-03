@@ -279,7 +279,7 @@ test.describe('Chrome on Android, on Gboard\u2019s slides (spec:AST-099 FR8)', (
     return {field, content, keyboardTop};
   }
 
-  test('the last field rides up on Gboard\u2019s show from the report, dated back to Gboard\u2019s start', async ({
+  test('the last field rides up on Gboard\u2019s show from the report, dated back to Gboard\u2019s start, and reaches the keyboard\u2019s top within 50 ms', async ({
     page,
   }) => {
     const {field, content, keyboardTop} = await openAtLastField(page);
@@ -306,23 +306,6 @@ test.describe('Chrome on Android, on Gboard\u2019s slides (spec:AST-099 FR8)', (
       'translateY',
     );
     await releaseAnimations(page);
-    const ease = cubicBezier(ANDROID_KEYBOARD.showCurve);
-    const result = compareCurve(
-      samples,
-      t =>
-        distance *
-        (1 -
-          ease(
-            Math.min(
-              1,
-              Math.max(0, (t - ride.offsetMs) / ANDROID_KEYBOARD.showMs),
-            ),
-          )),
-      0.5,
-    );
-    expect(result.maxError, JSON.stringify(result.worst)).toBeLessThanOrEqual(
-      0.5,
-    );
     // At rest: no translate is left, the body did not scroll again, and the
     // field rests above the keyboard.
     await waitForRest(content);
@@ -330,6 +313,41 @@ test.describe('Chrome on Android, on Gboard\u2019s slides (spec:AST-099 FR8)', (
     expect(translateYOf(rest.contentTranslate)).toBeCloseTo(0, 1);
     expect(rest.scrollTop).toBe(landed.scrollTop);
     expect(rest.fieldBottom).toBeLessThanOrEqual(keyboardTop);
+    // Wherever Gboard's slide keeps the field above the keyboard's top, the
+    // ride is that slide.
+    const within = keyboardTop - rest.fieldBottom;
+    const ease = cubicBezier(ANDROID_KEYBOARD.showCurve);
+    const slide = (t: number) =>
+      distance *
+      (1 -
+        ease(
+          Math.min(
+            1,
+            Math.max(0, (t - ride.offsetMs) / ANDROID_KEYBOARD.showMs),
+          ),
+        ));
+    const result = compareCurve(
+      samples.filter(sample => slide(sample.t) <= within),
+      slide,
+      0.5,
+    );
+    expect(result.maxError, JSON.stringify(result.worst)).toBeLessThanOrEqual(
+      0.5,
+    );
+    // Chrome pans the page itself if the field is still below the keyboard's
+    // top 100 to 170 ms after the report. The ride gets it there within 50 ms
+    // and never moves it back down.
+    const entered = ride.offsetMs + (reported - start) + 50;
+    const late = samples.filter(sample => sample.t >= entered);
+    expect(late.length).toBeGreaterThan(0);
+    for (const sample of late) {
+      expect(sample.value, JSON.stringify(late)).toBeLessThanOrEqual(
+        within + 0.5,
+      );
+    }
+    for (let i = 1; i < samples.length; i += 1) {
+      expect(samples[i].value).toBeLessThanOrEqual(samples[i - 1].value + 0.01);
+    }
   });
 
   test('through Gboard\u2019s hide the room stays while the content rides down by the scroll its drop takes back, and both clear in one commit at rest', async ({
@@ -515,6 +533,14 @@ test.describe('Chrome on Android, on Gboard\u2019s slides (spec:AST-099 FR8)', (
     await field.focus();
     const show = await sampleAfterReport(field, COVER, 900);
     const shown = show.at(-1) as (typeof show)[number];
+    // The field rests from the report's first frame, so Chrome has nothing to
+    // pan to, and only the fade changes.
+    expect(
+      show
+        .slice(1)
+        .filter(frame => Math.abs(frame.bottom - shown.bottom) >= 0.5),
+      JSON.stringify(show.map(f => Math.round(f.bottom))),
+    ).toEqual([]);
     // Every frame draws the field where it was or where it rests, and the
     // change is a fade.
     for (const frame of show) {

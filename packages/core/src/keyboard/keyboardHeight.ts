@@ -28,6 +28,12 @@ import {layoutViewportHeight} from '../utils/layoutViewport';
 
 // A shortfall smaller than this is rounding, not a keyboard.
 const KEYBOARD_EPSILON = 1;
+// Chrome on Android pans the page itself if the keyboard still covers the
+// focused field about 100 to 170 ms after the report. A sheet's ride brings
+// the field to the keyboard's top within its first 50 ms. Chrome counts a
+// field that touches that top as covered, so the field stops 4 px above it.
+const FIELD_ENTRY_MS = 50;
+const FIELD_ENTRY_MARGIN = 4;
 const NON_TEXT_INPUT_TYPES = new Set([
   'button',
   'checkbox',
@@ -748,10 +754,13 @@ export function useSheetKeyboard({
       retainKeyboardLayoutRef.current = false;
     };
 
+    // `within` is how far below its resting place the control can sit and
+    // still clear the keyboard.
     const scrollBodyBy = (
       distance: number,
       smoothly: boolean,
       ride: KeyboardTransition | null = null,
+      within: number | null = null,
     ) => {
       smoothTarget = null;
       const animator = ride == null ? null : contentAnimator();
@@ -768,7 +777,12 @@ export function useSheetKeyboard({
         // stays on its curve.
         if (moved !== 0) {
           animator.set({y: animator.get('y', ride.start) + moved});
-          rideKeyboard(animator, {y: 0}, ride);
+          rideKeyboard(
+            animator,
+            {y: 0},
+            ride,
+            within == null ? undefined : {within, durationMs: FIELD_ENTRY_MS},
+          );
         }
         return;
       }
@@ -840,7 +854,12 @@ export function useSheetKeyboard({
       const controlBottom = measuredControlRect.bottom - pending;
       const controlTop = measuredControlRect.top - pending;
       if (controlBottom > safeBottom) {
-        scrollBodyBy(controlBottom - safeBottom, smoothly, ride);
+        scrollBodyBy(
+          controlBottom - safeBottom,
+          smoothly,
+          ride,
+          Math.max(0, obstructionTop - safeBottom - FIELD_ENTRY_MARGIN),
+        );
       } else if (controlTop < safeTop) {
         scrollBodyBy(controlTop - safeTop, smoothly, ride);
       }
