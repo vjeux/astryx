@@ -2,6 +2,7 @@
 
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
+import type {ReactElement} from 'react';
 import {act, fireEvent, render, screen} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -77,6 +78,10 @@ beforeEach(() => {
     configurable: true,
     value: {currentTime: 1000},
   });
+  // The page's clock reads the timeline's frame time: no block since it.
+  vi.spyOn(performance, 'now').mockImplementation(
+    () => (document.timeline as {currentTime: number}).currentTime,
+  );
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
     function (this: HTMLElement) {
       const width = railWidth();
@@ -111,6 +116,11 @@ beforeEach(() => {
     const listeners: (() => void)[] = [];
     const animation = {
       startTime: null as number | null,
+      // As a browser reads it: the timeline's time since the start.
+      get currentTime() {
+        const now = (document.timeline as {currentTime: number}).currentTime;
+        return animation.startTime == null ? 0 : now - animation.startTime;
+      },
       finished: {then: () => undefined},
       onfinish: null as null | (() => void),
       addEventListener: (_type: string, listener: () => void) => {
@@ -139,15 +149,24 @@ function Shell({
   isResizable = false,
   height = 'fill',
   hasCanvas = false,
+  isCollapsed,
 }: {
   inShell?: boolean;
   hasNav?: boolean;
   isResizable?: boolean;
   height?: 'fill' | 'auto';
   hasCanvas?: boolean;
+  /** Set: the app owns the collapse state. */
+  isCollapsed?: boolean;
 }) {
   const nav = (
-    <SideNav collapsible resizable={isResizable}>
+    <SideNav
+      collapsible={
+        isCollapsed === undefined
+          ? true
+          : {isCollapsed, onCollapsedChange: () => {}}
+      }
+      resizable={isResizable}>
       <SideNavItem label="Home" icon={<svg aria-hidden="true" />} />
       <SideNavItem label="Projects" icon={<svg aria-hidden="true" />} />
       {hasCanvas && (
@@ -301,7 +320,7 @@ describe('SideNav rail motion (component:SideNav FR6, component:AppShell FR17)',
       /inset\(0px ([\d.]+)px/.exec(String(reveal?.keyframes[0].clipPath))?.[1],
     );
     // It reveals from the shown width, not from the collapsed one.
-    expect(start).toBe(EXPANDED - 150);
+    expect(start).toBeCloseTo(EXPANDED - 150, 6);
   });
 
   it('continues what the rail and the page show when a change reverses a running one', async () => {
@@ -633,6 +652,47 @@ describe('SideNav rail motion (component:SideNav FR6, component:AppShell FR17)',
     ]) {
       expect(source, own).not.toContain(own);
     }
+  });
+
+  /** The app sets the collapse state, then the glide's microtask runs. */
+  async function setCollapsed(
+    rerender: (ui: ReactElement) => void,
+    isCollapsed: boolean,
+  ) {
+    await act(async () => {
+      rerender(<Shell isCollapsed={isCollapsed} />);
+    });
+  }
+
+  it('lands a change the app makes before the rail first paints at once, so the initial state never animates', async () => {
+    const {rerender} = render(<Shell isCollapsed={false} />);
+    // The app restores a saved state before any frame.
+    await setCollapsed(rerender, true);
+
+    expect(railWidth()).toBe(COLLAPSED);
+    expect(recorded).toEqual([]);
+    expect(copies()).toEqual([]);
+  });
+
+  it('plays a change the app makes once the rail has painted', async () => {
+    const {rerender} = render(<Shell isCollapsed={false} />);
+    // A frame later.
+    Object.defineProperty(document, 'timeline', {
+      configurable: true,
+      value: {currentTime: 1016},
+    });
+    await setCollapsed(rerender, true);
+
+    expect(railWidth()).toBe(COLLAPSED);
+    expect(animated('clipPath')).toHaveLength(1);
+  });
+
+  it('plays a press on its own toggle before the first paint too', async () => {
+    render(<Shell />);
+    await toggle();
+
+    expect(railWidth()).toBe(COLLAPSED);
+    expect(animated('clipPath')).toHaveLength(1);
   });
 
   it('changes at once without Web Animations', async () => {

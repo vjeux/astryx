@@ -456,6 +456,13 @@ interface PendingRailFocus {
  * </SideNav>
  * ```
  */
+
+/** The frame time a document's timeline reads, or null without one. */
+function frameTimeOf(doc: Document | undefined): number | null {
+  const time = doc?.timeline?.currentTime;
+  return time == null ? null : Number(time);
+}
+
 export function SideNav({
   header,
   topContent,
@@ -540,6 +547,14 @@ export function SideNav({
   const motionRef = useRef<{rail: RailMotion; endContent: () => void} | null>(
     null,
   );
+  // The initial state never animates. A change before the rail's first paint
+  // lands at once, unless the rail's own toggle made it. Until a frame runs
+  // after the mount, the document timeline reads the frame it read then.
+  const mountFrameRef = useRef<number | null>(null);
+  const isOwnToggleRef = useRef(false);
+  useLayoutEffect(() => {
+    mountFrameRef.current = frameTimeOf(navRef.current?.ownerDocument);
+  }, []);
   const measureRail = useCallback(
     (wasCollapsed: boolean) => {
       // A change during a running motion starts from what the rail shows.
@@ -548,6 +563,14 @@ export function SideNav({
       running?.rail.end();
       running?.endContent();
       motionRef.current = null;
+      const isOwnToggle = isOwnToggleRef.current;
+      isOwnToggleRef.current = false;
+      const frame = frameTimeOf(navRef.current?.ownerDocument);
+      if (!isOwnToggle && (frame == null || frame === mountFrameRef.current)) {
+        railSnapshotRef.current = null;
+        shell?.landContent();
+        return;
+      }
       railSnapshotRef.current = snapshotRail(
         shell?.rail() ?? ownRail(),
         shell?.animatedLayout ?? ownLayout,
@@ -707,6 +730,7 @@ export function SideNav({
 
   const toggle = useCallback(() => {
     const next = !collapsed;
+    isOwnToggleRef.current = true;
 
     // Deprecated `handleRef` path only: an out-of-tree button reads this
     // snapshot while rendering, which can happen before SideNav re-renders.
