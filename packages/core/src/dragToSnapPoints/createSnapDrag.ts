@@ -18,6 +18,7 @@ import type {PanGestureRecognizerOptions} from '../gestures/PanGestureRecognizer
 import {createPan, type PanInput} from '../gestures/createPan';
 import {
   createMotionAnimator,
+  END_HOLD_MS,
   type Animator,
   type AnimatorOptions,
   type MotionHandle,
@@ -29,6 +30,9 @@ import {devWarn} from '../utils/devWarning';
 
 /** The document timeline's clock, which the animator runs on. */
 const now = (): number => performance.now();
+
+/** The step between a part's keyframes, ms: two to a 60 Hz frame. */
+const PART_STEP_MS = 1000 / 120;
 
 /**
  * The release speed, in px/s, above which a drag carries to the next snap
@@ -104,6 +108,18 @@ export interface SnapDragModel {
   cancel?(drag: SnapDragMove): SnapDragLanding | null;
 }
 
+/**
+ * An element that draws a drag's custom property, and what its style draws
+ * for a value of the property.
+ */
+export interface SnapDragPart {
+  element: Element;
+  /** The pseudo-element of `element` that draws it instead. */
+  pseudoElement?: string;
+  /** The part's transform and opacity for a value, as its style computes them. */
+  draw: (value: number) => {transform?: string; opacity?: string};
+}
+
 /** Options of `createSnapDrag`. */
 export interface SnapDragOptions {
   /** The axis the element moves along. */
@@ -124,6 +140,14 @@ export interface SnapDragOptions {
    * an optional companion drawn from it in the same animation.
    */
   customProperty?: AnimatorOptions['customProperty'];
+  /**
+   * With `customProperty`, the parts that draw it, read at each settle. The
+   * property animates on the main thread. So a settle also plays each part's
+   * own transform and opacity on the compositor, along the settle's curve and
+   * from its start. The parts keep moving through a main-thread block, and
+   * their styles take over again when the settle ends.
+   */
+  parts?: () => ReadonlyArray<SnapDragPart>;
   /** The drag's model; the public one without it. */
   model?: SnapDragModel;
 }
@@ -244,6 +268,129 @@ export function createSnapDrag(
     caught: boolean;
   } | null = null;
   let destroyed = false;
+  // The parts' compositor animations of the settle in flight.
+  let partMotions: Animation[] = [];
+  const stopParts = () => {
+    for (const motion of partMotions) {
+      motion.cancel();
+    }
+    partMotions = [];
+  };
+  /**
+   * The animation that draws the property, as the animator made it: the
+   * parts copy its keyframes and its timing, so each part shows what its
+   * style would draw from the property at every frame.
+   */
+  const propertyMotion = (name: string): Animation | undefined =>
+    typeof element.getAnimations !== 'function'
+      ? undefined
+      : element
+          .getAnimations()
+          .filter(motion => {
+            const effect = motion.effect;
+            return (
+              effect instanceof KeyframeEffect &&
+              effect.target === element &&
+              effect.pseudoElement == null &&
+              effect.getKeyframes().some(keyframe => name in keyframe)
+            );
+          })
+          .at(-1);
+  /**
+   * Plays the parts along a settle, on the compositor, until that settle ends
+   * or another motion replaces it. Without the property's own animation they
+   * sample the settle's curve, and the last keyframe holds the end for as
+   * long as the animator's keyframes do (END_HOLD_MS).
+   */
+  const playParts = (handle: MotionHandle) => {
+    stopParts();
+    const name = options.customProperty?.name;
+    const curve = handle.curve(axis);
+    const parts = options.parts?.() ?? [];
+    if (name == null || curve == null || parts.length === 0) {
+      return;
+    }
+    const source = propertyMotion(name);
+    const effect = source?.effect;
+    let values: {offset: number; easing?: string; value: number}[];
+    let timing: OptionalEffectTiming;
+    if (source != null && effect instanceof KeyframeEffect) {
+      values = effect.getKeyframes().map(keyframe => ({
+        offset: keyframe.computedOffset,
+        easing: keyframe.easing,
+        value: Number.parseFloat(String(keyframe[name])),
+      }));
+      const {delay, duration, easing, fill} = effect.getTiming();
+      timing = {
+        delay,
+        duration: typeof duration === 'number' ? duration : undefined,
+        easing,
+        fill,
+      };
+    } else {
+      const curveMs = curve.duration * 1000;
+      const steps = Math.max(1, Math.ceil(curveMs / PART_STEP_MS));
+      const span = curveMs + END_HOLD_MS;
+      values = Array.from({length: steps + 1}, (_, step) => ({
+        offset: (curveMs * step) / steps / span,
+        value: curve.at((curve.duration * step) / steps),
+      }));
+      values.push({offset: 1, value: values[steps].value});
+      timing = {duration: span, easing: 'linear', fill: 'forwards'};
+    }
+    const motions: Animation[] = [];
+    for (const part of parts) {
+      if (typeof part.element.animate !== 'function') {
+        continue;
+      }
+      const motion = part.element.animate(
+        values.map(({offset, easing, value}) => ({
+          ...part.draw(value),
+          offset,
+          ...(easing != null ? {easing} : {}),
+        })),
+        {
+          ...timing,
+          ...(part.pseudoElement != null
+            ? {pseudoElement: part.pseudoElement}
+            : {}),
+        },
+      );
+      if (source?.startTime != null) {
+        motion.startTime = source.startTime;
+      }
+      motions.push(motion);
+    }
+    partMotions = motions;
+    // The parts start where the property's animation starts: at once when the
+    // animator dated it, else at the commit both wait for. A start the
+    // animator moves later (startAfterBlock) moves them too.
+    const align = () => {
+      if (partMotions !== motions) {
+        return;
+      }
+      const startTime = source?.startTime ?? null;
+      for (const motion of motions) {
+        if (startTime != null) {
+          motion.startTime = startTime;
+        }
+      }
+    };
+    void source?.ready.then(align, () => {});
+    void handle.started.then(start => {
+      if (source == null && partMotions === motions) {
+        for (const motion of motions) {
+          motion.startTime = start;
+        }
+      }
+      align();
+    });
+    void handle.finished.then(() => {
+      if (partMotions === motions) {
+        stopParts();
+      }
+    });
+  };
 
   const settle = (
     target: number,
@@ -266,6 +413,7 @@ export function createSnapDrag(
         ...(settleOptions.start != null ? {start: settleOptions.start} : {}),
       },
     );
+    playParts(handle);
     let finished = false;
     void handle.finished.then(arrived => {
       finished = true;
@@ -345,9 +493,10 @@ export function createSnapDrag(
         }
         if (!drag.caught) {
           // Catch a settle in flight where it is on screen: it reports
-          // nothing now.
+          // nothing now, and the parts' styles draw the drag.
           drag.caught = true;
           turn += 1;
+          stopParts();
         }
         if (target.spring == null) {
           animator.set({[axis]: target.offset});
@@ -423,6 +572,7 @@ export function createSnapDrag(
         return;
       }
       destroyed = true;
+      stopParts();
       pan.destroy();
       // Held where it is: disposing cancels a running settle, which would
       // otherwise leave the element where that settle began.

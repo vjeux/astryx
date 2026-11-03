@@ -24,6 +24,7 @@ import {
   type SnapDrag,
   type SnapDragLanding,
   type SnapDragMove,
+  type SnapDragPart,
   type SnapDragRelease,
   type SnapDragTarget,
 } from '../dragToSnapPoints/createSnapDrag';
@@ -270,6 +271,73 @@ function createSidePanel(): SidePanel {
     outer: null,
     window: null,
   };
+}
+
+/** A part's transform for a travel along x, in physical px. */
+function alongX(x: number): string {
+  return `translate3d(${Math.round(x * 1000) / 1000}px, 0, 0)`;
+}
+
+/** An opacity as a style writes it. */
+function opacityText(value: number): string {
+  return String(Math.round(value * 100000) / 100000);
+}
+
+/**
+ * The parts that draw the travel and the full swipe's confirm, each with what
+ * its style draws for a travel (ItemSwipeLayer.tsx's rules). A settle plays
+ * them on the compositor (createSnapDrag.ts).
+ */
+function swipePartsOf(
+  root: HTMLElement,
+  panels: Record<SwipeSide, SidePanel>,
+  confirmOf: (x: number) => number,
+): SnapDragPart[] {
+  const parts: SnapDragPart[] = [
+    {element: root, draw: x => ({transform: alongX(x)})},
+  ];
+  for (const side of ['leading', 'trailing'] as const) {
+    const {entries, outer, window: panel} = panels[side];
+    const track = panel?.firstElementChild;
+    if (panel == null || track == null) {
+      continue;
+    }
+    // The side's geometry as its style reads it, with the style's fallbacks.
+    const read = (name: string, fallback: number): number => {
+      const value = Number.parseFloat(panel.style.getPropertyValue(name));
+      return Number.isFinite(value) ? value : fallback;
+    };
+    const pin = read(SWIPE_PIN_PROPERTY, 0);
+    const sign = read(SWIPE_SIGN_PROPERTY, 1);
+    const open = read(SWIPE_OPEN_PROPERTY, 0);
+    const slide = read(SWIPE_SLIDE_PROPERTY, 0);
+    const entriesAt = (x: number) => pin - sign * Math.min(sign * x, open);
+    parts.push(
+      {element: panel, draw: x => ({transform: alongX(-x)})},
+      {element: track, draw: x => ({transform: alongX(x)})},
+      {
+        element: track,
+        pseudoElement: '::before',
+        draw: x => ({opacity: opacityText(confirmOf(x))}),
+      },
+    );
+    for (const entry of entries.values()) {
+      parts.push({
+        element: entry,
+        draw: x => ({
+          transform: alongX(entriesAt(x)),
+          opacity: opacityText(1 - confirmOf(x)),
+        }),
+      });
+    }
+    if (outer != null) {
+      parts.push({
+        element: outer,
+        draw: x => ({transform: alongX(entriesAt(x) + slide * confirmOf(x))}),
+      });
+    }
+  }
+  return parts;
 }
 
 /**
@@ -851,6 +919,9 @@ export function useSwipeAction({
           map: confirmOf,
         },
       },
+      // The property animates on the main thread. A settle also plays the
+      // parts that read it on the compositor.
+      parts: () => swipePartsOf(root, panels, confirmOf),
       onSettle: landed,
       pan: {
         // A finger, a pen and a trackpad's two-finger scroll swipe a row. A

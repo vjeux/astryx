@@ -16,7 +16,10 @@
 
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {
+  blockMainThread,
+  busyWindowProof,
   compareCurve,
+  CONTROL_RGB,
   countBetween,
   drag,
   flick,
@@ -25,6 +28,7 @@ import {
   openStory,
   readLongTasks,
   springStep,
+  startBusyControl,
   startScreencast,
   tap,
   toTouchEvents,
@@ -786,6 +790,47 @@ test('a flick hands the row’s velocity to the settle', async ({page}) => {
       .map(frame => Math.abs(frame.x - expected(frame.t))),
   );
   expect(worst).toBeLessThan(0.5);
+});
+
+test('a release settles on the compositor: the row keeps moving through a 1 s main-thread block (spec:AST-094 FR5)', async ({
+  page,
+}) => {
+  const {driver, row, entries, start} = await openRow(page);
+  const openWidth = await openWidthOf(entries);
+  expect(openWidth).toBeGreaterThan(0);
+  // The marker rides the row's content, clear of the control's top strip.
+  await markElement(row, {inset: 4});
+  await startBusyControl(page);
+  const cast = await startScreencast(page);
+  // The page blocks itself once an animation in the row has run 40 ms. The
+  // flick's tracking curves are replaced on every move, so only the settle
+  // after the lift runs that long.
+  const blocked = blockMainThread(page, 1000, {
+    during: row,
+    minProgressMs: 40,
+  });
+  await driver.play(
+    flick(start, {velocity: {x: -1000, y: 0}, durationMs: 80, hz: 120}),
+  );
+  const busy = await blocked;
+  await waitForRest(row);
+  const frames = await cast.stop();
+  const tracked = await trackMarker(page, frames);
+  const control = await trackMarker(page, frames, {rgb: CONTROL_RGB});
+  // Judged against what the compositor presented in the same window: the row
+  // moved on every frame the control moved, until it was within 2 px of its
+  // end. A settle drawn only from the main thread freezes there.
+  const proof = busyWindowProof(tracked, busy, {
+    axis: 'x',
+    settledWithin: 2,
+    control,
+  });
+  test
+    .info()
+    .annotations.push({type: 'busy window', description: proof.summary});
+  expect(busy.spanMs).toBeGreaterThanOrEqual(1000);
+  expect(proof.verdict.failures, proof.summary).toEqual([]);
+  expect(await xOf(row)).toBeCloseTo(-openWidth, 0);
 });
 
 test('under Reduce Motion a held release lands open with no travel: the row steps there at the bottom of an opacity dip', async ({
