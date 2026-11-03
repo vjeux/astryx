@@ -336,3 +336,13 @@ export {
 // RichTextEditor (RFC meta/astryx#3899) moved out of @astryxdesign/lab into
 // its own package, @astryxdesign/richtext. Import it from there:
 //   import {RichTextEditor, RichTextView} from '@astryxdesign/richtext';
+
+// RefreshControl: pull to refresh as UIRefreshControl, on Core's touch
+// foundation.
+export {
+  RefreshControl,
+  useRefreshControl,
+  type RefreshControlProps,
+  type UseRefreshControlOptions,
+  type UseRefreshControlResult,
+} from './RefreshControl';
