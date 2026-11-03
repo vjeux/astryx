@@ -2918,7 +2918,7 @@ hook useLongPress: (options: UseLongPressOptions) => UseLongPressHandlers
 hook useMediaQuery: (query: string, serverDefault?: boolean) => boolean
 hook useMenuPress
   overload (menuRef: RefObject<HTMLElement | null>, options: UseMenuPressRefOptions) => UseMenuPressRefReturn
-  overload (options: UseMenuPressOptions) => UseMenuPressReturn @deprecated
+  overload (options: UseMenuPressOptions) => UseMenuPressReturn
 hook useMergedRefs: <T>(refA?: Ref<T>, refB?: Ref<T>, refC?: Ref<T>, refD?: Ref<T>, refE?: Ref<T>, refF?: Ref<T>) => RefCallback<T>
 hook useMultiCombobox: ({…}: UseMultiComboboxOptions) => UseMultiComboboxResult
 hook useNavHeadingCloseContext: () => NavHeadingCloseContextValue | null
