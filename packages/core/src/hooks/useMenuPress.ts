@@ -65,10 +65,17 @@ export interface UseMenuPressRefOptions extends Omit<
 /** What the ref form returns: the press's reads; the hook owns its life. */
 export type UseMenuPressRefReturn = Pick<
   CreateMenuPressReturn,
-  'isTriggerClickFromPress' | 'cancel'
+  | 'isTriggerClickFromPress'
+  | 'cancel'
+  | 'handleTriggerPointerDown'
+  | 'handleTriggerContextMenu'
 >;
 
-/** The options form's options: the menu and the trigger as refs. */
+/**
+ * The options form's options: the menu and the trigger as refs.
+ * @deprecated Use the ref form, `useMenuPress(menuRef, options)`. The options
+ *   form goes at the next minor.
+ */
 export interface UseMenuPressOptions {
   /** The menu (or listbox) root: the surface whose rows the press picks from. */
   menuRef: RefObject<HTMLElement | null>;
@@ -120,7 +127,11 @@ export interface UseMenuPressOptions {
   isEnabled?: boolean;
 }
 
-/** What the options form returns: props to spread on the menu and the trigger. */
+/**
+ * What the options form returns: props to spread on the menu and the trigger.
+ * @deprecated Use the ref form, `useMenuPress(menuRef, options)`. The options
+ *   form goes at the next minor.
+ */
 export interface UseMenuPressReturn {
   /** Spread onto the menu root: claims presses that begin inside it. */
   menuProps: {
@@ -142,96 +153,12 @@ export interface UseMenuPressReturn {
   cancel: () => void;
 }
 
-const FACTORY_CALLBACKS = [
-  'onTriggerPress',
-  'onHighlight',
-  'onActivate',
-  'onDismiss',
-  'getScroller',
-  'hitTest',
-] as const;
-
-/** What the ref form's factory is created from. */
-interface FactoryKey {
-  menu: HTMLElement | null;
-  ownerDocument: Document | null;
-  trigger: HTMLElement | null;
-  itemSelector: string;
-  longPressDelayMs: number | undefined;
-  isEnabled: boolean | undefined;
-  callbacks: string;
-}
-
-function factoryKeyOf(
-  menu: HTMLElement | null,
-  options: UseMenuPressRefOptions,
-): FactoryKey {
-  return {
-    menu,
-    ownerDocument: menu?.ownerDocument ?? null,
-    trigger: options.triggerRef?.current ?? null,
-    itemSelector: options.itemSelector,
-    longPressDelayMs: options.longPressDelayMs,
-    isEnabled: options.isEnabled,
-    // The press falls back to its own behavior for an absent callback. So a
-    // change in which callbacks are given needs a new factory.
-    callbacks: FACTORY_CALLBACKS.filter(name => options[name] != null).join(
-      ',',
-    ),
-  };
-}
-
-function isSameFactoryKey(a: FactoryKey, b: FactoryKey): boolean {
-  return (
-    a.menu === b.menu &&
-    a.ownerDocument === b.ownerDocument &&
-    a.trigger === b.trigger &&
-    a.itemSelector === b.itemSelector &&
-    a.longPressDelayMs === b.longPressDelayMs &&
-    a.isEnabled === b.isEnabled &&
-    a.callbacks === b.callbacks
-  );
-}
-
-/**
- * The factory's options: the key's values, and callbacks that call the latest
- * ones.
- */
+/** The factory's options, from the hook's: the trigger read from its ref. */
 function factoryOptionsOf(
-  key: FactoryKey,
-  latest: () => UseMenuPressRefOptions,
+  options: UseMenuPressRefOptions,
 ): CreateMenuPressOptions {
-  const given = new Set(key.callbacks.split(','));
-  const options: CreateMenuPressOptions = {
-    trigger: key.trigger,
-    itemSelector: key.itemSelector,
-  };
-  if (key.longPressDelayMs !== undefined) {
-    options.longPressDelayMs = key.longPressDelayMs;
-  }
-  if (key.isEnabled !== undefined) {
-    options.isEnabled = key.isEnabled;
-  }
-  if (given.has('onTriggerPress')) {
-    options.onTriggerPress = pointerType =>
-      latest().onTriggerPress?.(pointerType) ?? false;
-  }
-  if (given.has('onHighlight')) {
-    options.onHighlight = row => latest().onHighlight?.(row);
-  }
-  if (given.has('onActivate')) {
-    options.onActivate = (row, release) => latest().onActivate?.(row, release);
-  }
-  if (given.has('onDismiss')) {
-    options.onDismiss = () => latest().onDismiss?.();
-  }
-  if (given.has('getScroller')) {
-    options.getScroller = () => latest().getScroller?.() ?? null;
-  }
-  if (given.has('hitTest')) {
-    options.hitTest = (x, y) => latest().hitTest?.(x, y) ?? null;
-  }
-  return options;
+  const {triggerRef, ...rest} = options;
+  return {...rest, trigger: triggerRef?.current ?? null};
 }
 
 /**
@@ -240,8 +167,8 @@ function factoryOptionsOf(
  * element behind `menuRef`; see createMenuPress.ts. The press attaches when the
  * calling component commits, so a menu that a child mounts in a later commit
  * attaches at the caller's next commit. While the menu element is unmounted,
- * there is no press, not even on the trigger. For press-to-open on a menu
- * rendered only while open, use the options form.
+ * there is no press, not even on the trigger. So a menu that opens on a press
+ * of its trigger keeps its element mounted while it is closed.
  *
  * @example
  * ```
@@ -265,6 +192,8 @@ export function useMenuPress(
 /**
  * The options form: props to spread on the menu root and the trigger. The ref
  * form above listens on both itself, so nothing is spread.
+ * @deprecated Use the ref form, `useMenuPress(menuRef, options)`. The options
+ *   form goes at the next minor.
  */
 export function useMenuPress(options: UseMenuPressOptions): UseMenuPressReturn;
 export function useMenuPress(
@@ -286,11 +215,12 @@ export function useMenuPress(
     latestRef.current = {menuRef, options};
   });
 
-  // The ref form: createMenuPress on the element behind the ref. The factory
-  // keeps its creation options. Its callbacks call the latest ones. A new menu,
-  // document, trigger, value option or callback set creates a new factory.
+  // The ref form: createMenuPress on the element behind the ref. A new menu or
+  // document creates a new factory. Every other change reaches it through
+  // update() at commit, so a render that React discards never reaches it.
   const attachedRef = useRef<{
-    key: FactoryKey;
+    menu: HTMLElement;
+    ownerDocument: Document;
     press: CreateMenuPressReturn;
   } | null>(null);
   useIsomorphicLayoutEffect(() => {
@@ -299,9 +229,13 @@ export function useMenuPress(
     }
     const {menuRef: ref, options: latest} = latestRef.current;
     const menu = ref.current;
-    const key = factoryKeyOf(menu, latest);
     const attached = attachedRef.current;
-    if (attached != null && isSameFactoryKey(attached.key, key)) {
+    if (
+      attached != null &&
+      attached.menu === menu &&
+      attached.ownerDocument === menu.ownerDocument
+    ) {
+      attached.press.update(factoryOptionsOf(latest));
       return;
     }
     attached?.press.destroy();
@@ -309,11 +243,9 @@ export function useMenuPress(
       menu == null
         ? null
         : {
-            key,
-            press: createMenuPress(
-              menu,
-              factoryOptionsOf(key, () => latestRef.current.options),
-            ),
+            menu,
+            ownerDocument: menu.ownerDocument,
+            press: createMenuPress(menu, factoryOptionsOf(latest)),
           };
   });
   useIsomorphicLayoutEffect(
@@ -348,6 +280,10 @@ export function useMenuPress(
         isTriggerClickFromPress: () =>
           attachedRef.current?.press.isTriggerClickFromPress() ?? false,
         cancel: () => attachedRef.current?.press.cancel(),
+        handleTriggerPointerDown: event =>
+          attachedRef.current?.press.handleTriggerPointerDown(event),
+        handleTriggerContextMenu: event =>
+          attachedRef.current?.press.handleTriggerContextMenu(event),
       };
     }
     return {
