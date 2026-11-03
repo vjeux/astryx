@@ -4,7 +4,7 @@
  * @file rideKeyboard.test.ts
  * @input vitest, rideKeyboard, a stand-in animator
  * @output Tests that a ride plays the curve the transition publishes, from
- *   the transition's start, and lands a jump at once
+ *   the transition's start, asks for an entrance, and lands a jump at once
  * @position Unit tests for keyboard/rideKeyboard.ts
  */
 
@@ -83,6 +83,28 @@ describe('rideKeyboard', () => {
       Record<string, {duration: number; at: (t: number) => number}>,
     ];
     expect(curves.y.duration).toBeCloseTo(androidKeyboard.hideMs / 1000, 9);
+  });
+
+  it('asks the animator for its entrance under Reduce Motion where the ride is an entrance', () => {
+    const animator = standInAnimator();
+    const slide = transition({
+      curve: {
+        durationMs: androidKeyboard.showMs,
+        points: androidKeyboard.showCurve,
+      },
+    });
+
+    rideKeyboard(animator as unknown as Animator, {y: 0}, slide, {
+      entrance: true,
+    });
+    rideKeyboard(animator as unknown as Animator, {y: 0}, slide);
+
+    const calls = animator.play.mock.calls as unknown as [
+      unknown,
+      Record<string, unknown>,
+    ][];
+    expect(calls[0][1]).toEqual({at: 1000, crossfadeAs: 'entrance'});
+    expect(calls[1][1]).toEqual({at: 1000});
   });
 
   it('lands at once when the keyboard jumps', () => {

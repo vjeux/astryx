@@ -3,7 +3,7 @@
 /**
  * @file rideKeyboard.ts
  * @input An animator, target values and a keyboard transition, with its
- *   start and the curve the guide publishes with it
+ *   start and the curve the guide publishes with it, and ride options
  * @output rideKeyboard, which moves an element with the keyboard on the
  *   keyboard's own motion
  * @position Keyboard module, internal to core. A guide subscriber calls it
@@ -21,6 +21,15 @@ import type {
 } from '../motion/animator';
 import {cubicBezier} from '../motion/bezier';
 import type {KeyboardTransition} from './keyboardModel';
+
+/** How a ride treats Reduce Motion. */
+export interface RideOptions {
+  /**
+   * Under Reduce Motion, lands the element at once and fades it in. Without
+   * it, the animator's own Reduce Motion plan applies.
+   */
+  readonly entrance?: boolean;
+}
 
 /**
  * Moves `animator`'s element to `to` with the keyboard: on its curve from
@@ -44,6 +53,7 @@ export function rideKeyboard(
   animator: Animator,
   to: MotionValues,
   transition: KeyboardTransition,
+  {entrance = false}: RideOptions = {},
 ): MotionHandle | null {
   if (!transition.animated || transition.curve == null) {
     animator.set(to);
@@ -52,7 +62,9 @@ export function rideKeyboard(
   // Under Reduce Motion the animator's default applies, so nothing travels.
   // On a touch screen it cross-fades the element to its new place, and
   // elsewhere it moves the element at once.
-  const options = {at: transition.start};
+  const options = entrance
+    ? {at: transition.start, crossfadeAs: 'entrance' as const}
+    : {at: transition.start};
   const span = transition.curve.durationMs / 1000;
   const ease = cubicBezier(transition.curve.points);
   const curves: Partial<Record<MotionProperty, MotionCurve>> = {};

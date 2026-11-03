@@ -183,6 +183,9 @@ a chat composer, or a search field.
   documents and moves with the keyboard, so no consumer loses behavior and no
   breaking change applies; `BottomSheet.doc.mjs` states each platform's
   behavior. Firefox for Android gets FR2–FR5.
+- Chrome on Android pans the page itself if the focused field is still drawn
+  below the keyboard about 100–170 ms after the keyboard report, so the field
+  reaches the keyboard's top within the first frames.
 - No public API exposes the keyboard height, and FR3 keeps it that way.
 - The consumer documentation gains the Android viewport setting (FR8).
 

@@ -28,6 +28,11 @@ import {layoutViewportHeight} from '../utils/layoutViewport';
 
 // A shortfall smaller than this is rounding, not a keyboard.
 const KEYBOARD_EPSILON = 1;
+// Chrome on Android pans the page itself if the keyboard still covers the
+// focused field about 100 to 170 ms after the report. It counts a field that
+// touches the keyboard's top as covered. So a reveal sets the field this far
+// above that top in the report's own commit, and only the rest rides.
+const FIELD_CLEARANCE_AT_REPORT = 4;
 const NON_TEXT_INPUT_TYPES = new Set([
   'button',
   'checkbox',
@@ -692,14 +697,17 @@ export function useSheetKeyboard({
       const translate = getComputedStyle(content).translate;
       return parseFloat(translate.split(' ')[1] ?? '') || 0;
     };
-    // The keyboard's show the guide plays on its slide right now, if any.
-    const showOnSlide = (): KeyboardTransition | null => {
+    // The keyboard's show the guide plays on its slide right now, if any. At
+    // a report, a show whose slide has ended counts too. A busy page can read
+    // the report that late, and the ride then lands at once.
+    const showOnSlide = (atReport: boolean): KeyboardTransition | null => {
       const transition = guide?.transition;
       return transition != null &&
         transition.kind === 'show' &&
         transition.animated &&
         transition.curve != null &&
-        performance.now() < transition.start + transition.curve.durationMs
+        (atReport ||
+          performance.now() < transition.start + transition.curve.durationMs)
         ? transition
         : null;
     };
@@ -748,10 +756,13 @@ export function useSheetKeyboard({
       retainKeyboardLayoutRef.current = false;
     };
 
+    // `within` is how far below its resting place the control can sit and
+    // still clear the keyboard.
     const scrollBodyBy = (
       distance: number,
       smoothly: boolean,
       ride: KeyboardTransition | null = null,
+      within: number | null = null,
     ) => {
       smoothTarget = null;
       const animator = ride == null ? null : contentAnimator();
@@ -767,8 +778,9 @@ export function useSheetKeyboard({
         // scroll position's precision moves nothing, so the ride under way
         // stays on its curve.
         if (moved !== 0) {
-          animator.set({y: animator.get('y', ride.start) + moved});
-          rideKeyboard(animator, {y: 0}, ride);
+          const from = animator.get('y', ride.start) + moved;
+          animator.set({y: within == null ? from : Math.min(from, within)});
+          rideKeyboard(animator, {y: 0}, ride, {entrance: within != null});
         }
         return;
       }
@@ -840,7 +852,12 @@ export function useSheetKeyboard({
       const controlBottom = measuredControlRect.bottom - pending;
       const controlTop = measuredControlRect.top - pending;
       if (controlBottom > safeBottom) {
-        scrollBodyBy(controlBottom - safeBottom, smoothly, ride);
+        scrollBodyBy(
+          controlBottom - safeBottom,
+          smoothly,
+          ride,
+          Math.max(0, obstructionTop - safeBottom - FIELD_CLEARANCE_AT_REPORT),
+        );
       } else if (controlTop < safeTop) {
         scrollBodyBy(controlTop - safeTop, smoothly, ride);
       }
@@ -893,7 +910,7 @@ export function useSheetKeyboard({
         },
       });
 
-    const revealFocusedControl = () => {
+    const revealFocusedControl = (atReport = false) => {
       // Through a hide the sheet rides, its layout holds until the end.
       if (heldHide != null) {
         return;
@@ -980,7 +997,7 @@ export function useSheetKeyboard({
       scrollControlIntoSafeArea(
         focusedControl,
         overlap > 0 && !revealsAtReport.has(window),
-        overlap > 0 ? showOnSlide() : null,
+        overlap > 0 ? showOnSlide(atReport) : null,
       );
     };
 
@@ -1079,7 +1096,7 @@ export function useSheetKeyboard({
     let animationFrame = 0;
     const scheduleReveal = () => {
       cancelAnimationFrame(animationFrame);
-      animationFrame = requestAnimationFrame(revealFocusedControl);
+      animationFrame = requestAnimationFrame(() => revealFocusedControl());
     };
 
     // Resuming the app re-reveals the focused field with no focus event to
@@ -1217,7 +1234,7 @@ export function useSheetKeyboard({
         lastHeight = event.height;
         revealPan?.report();
         cancelAnimationFrame(animationFrame);
-        revealFocusedControl();
+        revealFocusedControl(true);
         return;
       }
       if (revealPan?.isRevealPan(event.height) === true) {
