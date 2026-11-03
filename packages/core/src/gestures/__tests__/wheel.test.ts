@@ -1274,6 +1274,29 @@ describe("a trackpad scroll through the splitter's undecided stretch (spec:AST-0
     ).toEqual(['possible']);
   });
 
+  it("ends a slow trackpad drag on the fingers' travel when a stalled page receives a merged step 1 ms after the one before: a bunched pair sets no speed", () => {
+    const {box, seen} = followed();
+    // The fingers move 2 px every 16 ms. The page stalls 50 ms and gets the
+    // next two steps as one 4 px wheel, 1 ms after the one before. Then 2 px
+    // every 16 ms again, and the fingers stop.
+    const times: number[] = [0, 16, 32, 48, 64, 114, 115];
+    const deltas: number[] = [2, 2, 2, 2, 2, 2, 4];
+    for (let i = 0; i < 12; i++) {
+      times.push(131 + 16 * i);
+      deltas.push(2);
+    }
+    times.forEach((time, index) => {
+      wheel(box, {trackpad: true, dx: deltas[index], time});
+    });
+    clock.runDue(times[times.length - 1] + 500);
+    const ended = seen.filter(entry => entry.state === 'ended');
+    expect(ended).toHaveLength(1);
+    // 40 px of fingers' travel, 10 of it the pan's hysteresis: -30. The
+    // fingers stopped, so the release is still.
+    expect(ended[0].x).toBeCloseTo(-30, 0);
+    expect(ended[0].velocity).toBe(0);
+  });
+
   it.each([
     ['a blur', 'blur', false],
     ['a hidden page', 'hidden', false],

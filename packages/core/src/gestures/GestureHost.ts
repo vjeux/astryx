@@ -415,6 +415,12 @@ const WHEEL_FOLLOW_END_V_MS = 180;
  * swipes pause longer still.
  */
 const WHEEL_FOLLOW_END_MS = 220;
+/**
+ * The shortest interval between two of the fingers' wheels that sets their
+ * speed, ms. A stalled page receives wheels bunched, stamped in whole
+ * milliseconds, so a closer pair would read a speed the fingers never had.
+ */
+const WHEEL_SPEED_INTERVAL_MS = 4;
 /** A line-mode wheel's line, px, as the platforms scroll it. */
 const WHEEL_LINE_PX = 40;
 /** The span a ctrl-wheel pinch's two contacts start at, px. */
@@ -2240,7 +2246,7 @@ export class GestureHost {
       const trueX = beforeX - dx;
       const trueY = beforeY - dy;
       const elapsed = time - f.lastMove;
-      if (elapsed > 0) {
+      if (elapsed >= WHEEL_SPEED_INTERVAL_MS) {
         f.speedX = (trueX - f.trueX) / elapsed;
         f.speedY = (trueY - f.trueY) / elapsed;
       }
