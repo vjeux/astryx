@@ -44,16 +44,20 @@ import {
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
 import {contextMenu} from '../../motion/uikit/contextMenu';
-import {
-  pressFeedbackCurve,
-  pressFeedbackMotion,
-} from '../contextMenuPressCurve';
+import {PRESS_ONSET_MS} from '../../utils/pressGesture';
+import {themeMoveTiming, timedCurve} from '../contextMenuPressTiming';
 
 const storybook = withStorybook(test);
-const {commitMs, menuDisplayMs, feedbackOnsetMs} = contextMenu.press;
-// What ContextMenu plays: the theme's state-change spring from the onset,
-// with no latency of its own.
-const PLAYED = pressFeedbackCurve({motion: pressFeedbackMotion(null)});
+const {commitMs, menuDisplayMs, heldScale} = contextMenu.press;
+// What ContextMenu plays from the press machine's onset: the growth toward the
+// held scale, on the story theme's medium duration and move easing, which are
+// the core defaults.
+const feedbackOnsetMs = PRESS_ONSET_MS;
+const PLAYED = timedCurve(
+  1,
+  heldScale,
+  themeMoveTiming(null, '--duration-medium'),
+);
 
 interface TouchStory {
   driver: TouchDriver;

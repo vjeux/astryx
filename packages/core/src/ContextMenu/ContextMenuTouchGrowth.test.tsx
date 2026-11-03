@@ -12,6 +12,7 @@
 
 import {act, render, screen} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import type {MotionCurve} from '../motion/animator';
 import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {ContextMenu} from './ContextMenu';
 
@@ -133,10 +134,10 @@ describe('ContextMenu’s growth under a finger', () => {
   }
 
   const scaleBack = (trigger: HTMLElement) =>
-    animator.animate.mock.calls.filter(
-      ([element, to]) =>
-        element === trigger && (to as {scale?: number}).scale === 1,
-    );
+    animator.play.mock.calls.filter(([element, curves]) => {
+      const scale = (curves as {scale?: MotionCurve}).scale;
+      return element === trigger && scale?.at(scale.duration) === 1;
+    });
 
   it('springs a grown trigger back when the finger lifts before the commit', async () => {
     const trigger = renderMenu();
