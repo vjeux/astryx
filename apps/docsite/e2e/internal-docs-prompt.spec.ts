@@ -104,6 +104,13 @@ for (const {name, origin} of deployments) {
       }, testInfo) => {
         await page.setViewportSize({width, height: 900});
         await page.emulateMedia({colorScheme});
+        // NOT FOR LANDING: red-first evidence. Chromium's CPU throttling slows
+        // the page's main thread while its clock runs at real speed, as on a
+        // loaded runner. PROBE_CPU_RATE sets the factor (default 8).
+        const throttle = await page.context().newCDPSession(page);
+        await throttle.send('Emulation.setCPUThrottlingRate', {
+          rate: Number(process.env.PROBE_CPU_RATE ?? 8),
+        });
         await servePublicOrigin(page, baseURL, origin);
         const probe = await serveReachability(page, origin);
         const documentResponse = await page.goto(
