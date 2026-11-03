@@ -120,6 +120,14 @@ export const zoomMedia = {
      *   pager's contentOffset per page, Oct 23 2026
      */
     pageGap: 40,
+    /**
+     * The touch exit with no source on screen: the photo shrinks to this
+     * scale while it fades out with the backdrop and the controls.
+     * @source GUESS — Photos' close with no thumbnail to return into, a slight
+     *   shrink under the fade
+     * @measure M-ZM6
+     */
+    touchExitScale: 0.9,
   },
   dismiss: {
     /**
