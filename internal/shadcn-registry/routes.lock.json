@@ -656,6 +656,11 @@
       "aliases": []
     },
     {
+      "name": "component-lab-tab-bar",
+      "path": "components/lab/tab-bar",
+      "aliases": []
+    },
+    {
       "name": "component-lab-three-d-bar",
       "path": "components/lab/three-d-bar",
       "aliases": []
