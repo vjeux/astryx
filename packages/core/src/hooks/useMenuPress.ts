@@ -235,9 +235,8 @@ export interface DropdownMenuPressReturn extends UseMenuPressReturn {
 }
 
 /**
- * Where a pointer is, for a finger's handoff distance. Positions reach the
- * machine under the `'uikit'` touch model, and for a continued finger or pen
- * under either. Without them, the settle rule decides.
+ * Where a pointer is, for a finger's handoff distance. Only the `'uikit'`
+ * touch model reports positions. Without them, the settle rule decides.
  */
 function handoffPosition(
   event: PointerEvent,
@@ -444,9 +443,6 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
   );
   const lastPointerEventRef = useRef<PointerEvent | null>(null);
   const triggerGestureRef = useRef<number | null>(null);
-  // A finger or pen handed to the menu as it opened: it takes the handoff
-  // under either touch model.
-  const isContinuedFingerRef = useRef(false);
   // The second pointer that ended a gesture must not start the next one.
   const ignoredPointerIdRef = useRef<number | null>(null);
 
@@ -504,7 +500,6 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
   }, [autoscroll]);
 
   const endGesture = useCallback(() => {
-    isContinuedFingerRef.current = false;
     longPressApiRef.current?.cancel();
     touchMovePreventerRef.current?.();
     touchMovePreventerRef.current = null;
@@ -745,8 +740,7 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
             time: Date.now(),
             ...handoffPosition(
               event,
-              optionsRef.current.touchModel === 'uikit' ||
-                isContinuedFingerRef.current,
+              optionsRef.current.touchModel === 'uikit',
             ),
           },
           event,
@@ -767,8 +761,7 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
             time: Date.now(),
             ...handoffPosition(
               event,
-              optionsRef.current.touchModel === 'uikit' ||
-                isContinuedFingerRef.current,
+              optionsRef.current.touchModel === 'uikit',
             ),
           },
           event,
@@ -942,10 +935,10 @@ function useMenuPressModel(options: DropdownMenuPressOptions): {
       }
       attach(pointer.pointerId);
       // The menu opened under this pointer: the gesture is the opening press.
-      // A finger or pen picks only after the handoff distance, under either
-      // touch model, counted from the first position the menu sees. A mouse
-      // follows the settle rule.
-      isContinuedFingerRef.current = pointer.pointerType !== 'mouse';
+      // With the 'uikit' touch model, a finger's handoff counts from the first
+      // position the menu sees after it opened, as the trigger's opening
+      // finger's does. With the 'pointer' model, and for a mouse, the settle
+      // rule decides its release.
       gestureRef.current = {
         phase: 'open',
         pointerType: pointer.pointerType,
