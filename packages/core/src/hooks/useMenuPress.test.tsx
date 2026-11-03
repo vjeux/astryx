@@ -48,6 +48,20 @@ function emulateTouch({ios}: {ios: boolean}): void {
   }));
 }
 
+/** A touchscreen laptop: the primary pointer is fine, and a finger may still press. */
+function emulateFinePointer(): void {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  }));
+}
+
 const ITEM_SELECTOR = '[role="menuitem"]:not([aria-disabled="true"])';
 
 /** A scrollable container whose content overflows it: a scroll view. */
@@ -981,9 +995,11 @@ describe('useMenuPress — the public hook takes no touch model option', () => {
   function PublicHarness({
     onSelect,
     onOpenChange,
+    longPressDelayMs,
   }: {
     onSelect?: (label: string) => void;
     onOpenChange?: (open: boolean) => void;
+    longPressDelayMs?: number;
   }) {
     const menuRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -997,6 +1013,7 @@ describe('useMenuPress — the public hook takes no touch model option', () => {
         onOpenChange?.(true);
         return true;
       },
+      longPressDelayMs,
       // An untyped caller passing DropdownMenu's own option gets nothing
       // from it: the touch model is not part of the public hook.
       ...({touchModel: 'uikit'} as object),
@@ -1017,10 +1034,17 @@ describe('useMenuPress — the public hook takes no touch model option', () => {
     );
   }
 
-  it('the opening finger keeps the settle rule, though an untyped caller passes the touch model', () => {
+  // A set delay keeps the released model (spec:AST-094 FR25); the passed
+  // touch model must not change that.
+  it('with a delay set, the opening finger keeps the settle rule, though an untyped caller passes the touch model', () => {
     vi.useFakeTimers();
     const onSelect = vi.fn();
-    render(<PublicHarness onSelect={onSelect} />);
+    render(
+      <PublicHarness
+        onSelect={onSelect}
+        longPressDelayMs={MENU_PRESS_LONG_PRESS_MS}
+      />,
+    );
     fireEvent.pointerDown(screen.getByRole('button', {name: 'Open'}), {
       ...touch(),
       clientX: 0,
@@ -1035,15 +1059,69 @@ describe('useMenuPress — the public hook takes no touch model option', () => {
     expect(onSelect).toHaveBeenCalledWith('A');
   });
 
-  it('a finger press on the trigger does not open the menu by itself, though an untyped caller passes the touch model', () => {
+  it('with a delay set, a finger press on the trigger does not open the menu by itself, though an untyped caller passes the touch model', () => {
     const onOpenChange = vi.fn();
-    render(<PublicHarness onOpenChange={onOpenChange} />);
+    render(
+      <PublicHarness
+        onOpenChange={onOpenChange}
+        longPressDelayMs={MENU_PRESS_LONG_PRESS_MS}
+      />,
+    );
     fireEvent.pointerDown(screen.getByRole('button', {name: 'Open'}), {
       pointerType: 'touch',
       pointerId: 1,
       button: 0,
     });
     expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('with no delay set, a finger opens the menu as it presses where the primary pointer is coarse (spec:AST-094 FR25, FR29)', () => {
+    emulateTouch({ios: false});
+    const onOpenChange = vi.fn();
+    render(<PublicHarness onOpenChange={onOpenChange} />);
+    fireEvent.pointerDown(screen.getByRole('button', {name: 'Open'}), {
+      pointerType: 'touch',
+      pointerId: 1,
+      button: 0,
+      clientX: 0,
+      clientY: 0,
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it('with no delay set, a finger opens the menu as it presses where the primary pointer is fine too, a touchscreen laptop as a phone (spec:AST-094 FR29, FR43)', () => {
+    emulateFinePointer();
+    const onOpenChange = vi.fn();
+    render(<PublicHarness onOpenChange={onOpenChange} />);
+    fireEvent.pointerDown(screen.getByRole('button', {name: 'Open'}), {
+      pointerType: 'touch',
+      pointerId: 1,
+      button: 0,
+      clientX: 0,
+      clientY: 0,
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it('with a delay set, a finger waits for it on a touch screen too, as released', () => {
+    vi.useFakeTimers();
+    emulateTouch({ios: false});
+    const onOpenChange = vi.fn();
+    render(
+      <PublicHarness onOpenChange={onOpenChange} longPressDelayMs={500} />,
+    );
+    fireEvent.pointerDown(screen.getByRole('button', {name: 'Open'}), {
+      pointerType: 'touch',
+      pointerId: 1,
+      button: 0,
+      clientX: 0,
+      clientY: 0,
+    });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(true);
   });
 });
 
