@@ -4,10 +4,9 @@
  * @file Item.source-build.test.mjs
  * @input Uses Babel, the core build config, and the Item and Swipe
  *   sources
- * @output Verifies the shipped Item module imports no swipe code but
- *   DEP-0017's deprecated-path exception (the released row style, and the
- *   loader for the deprecated props), while createSwipe brings the
- *   layer statically (`spec:AST-057` FR10)
+ * @output Verifies the shipped Item module imports no swipe code but the
+ *   deprecated path's exception: the released row style, and the loader for the
+ *   deprecated props. The layer comes with createSwipe, statically
  * @position Regression test for the import graph of the shipped Item module
  */
 

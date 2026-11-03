@@ -3,13 +3,13 @@
 /**
  * @file createSwipe.test.ts
  * @input createSwipe and the reader of its values
- * @output Checks `spec:AST-057` FR1 and FR3 for the constructor: an opaque,
- *   frozen value made only by createSwipe, carrying the declared
- *   entries and `swipeBehavior` (default `reveal`), with a development warning
- *   for a committing side with more than one entry; and DEC-3, FR10 and FR11
- *   for the runtime it carries: it decides which rows it serves from the
- *   facts a row hands it, and serves every row and every value with the same
- *   layer type and root handlers
+ * @output Checks the constructor: an opaque, frozen value made only by
+ *   createSwipe, carrying the declared entries and
+ *   `swipeBehavior` (default `reveal`). It warns in development for a
+ *   committing side with more than one entry. It also checks the runtime the
+ *   value carries: it decides which rows it serves from the facts a row hands
+ *   it. It serves every row and every value with the same layer type and root
+ *   handlers
  * @position Unit tests of packages/core/src/Swipe/createSwipe.ts
  */
 

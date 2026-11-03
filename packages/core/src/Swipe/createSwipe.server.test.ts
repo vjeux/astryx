@@ -17,9 +17,10 @@ import {describe, expect, it} from 'vitest';
 const BABEL_CONFIG = path.resolve(__dirname, '../../babel.config.json');
 
 /**
- * Bundles `entry` as Core ships it (each Core module through Core's Babel
- * config, so StyleX is compiled), imports it in a fresh Node process, and runs
- * `script` there with the module as `mod`; returns what `script` prints.
+ * Bundles `entry` as Core ships it, with each Core module through Core's Babel
+ * config so StyleX is compiled. It imports the bundle in a fresh Node process
+ * and runs `script` there with the module as `mod`, and returns what `script`
+ * prints.
  */
 function runOnServer(entry: string, script: string): string {
   return execFileSync(

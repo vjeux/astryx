@@ -4,11 +4,11 @@
  * @file swipeRoots.ts
  * @input A row root and its swipe's key handler
  * @output Exports registerSwipeRoot, which the swipe layer calls for the row
- *   root it attaches to, and swipeRootProps, the handlers a row given `swipe`
- *   carries on that root
- * @position Internal to the Swipe module: the runtime's own routing from a
- *   row root to the swipe that serves it, so a row holds no bridge of its own
- *   (`spec:AST-057` FR10). Tested through Item.test.tsx.
+ *   root it attaches to. Also exports swipeRootProps, the handlers a row given
+ *   `swipe` carries on that root
+ * @position Internal to the Swipe module: the runtime's own routing from a row
+ *   root to the swipe that serves it. A row holds no bridge of its own. Tested
+ *   through Item.test.tsx.
  */
 
 import type {KeyboardEvent} from 'react';
@@ -37,10 +37,10 @@ export function registerSwipeRoot(
 
 /**
  * The handlers a served row carries on its root: the same functions for every
- * row and every Swipe value, so a new value from an inline `createSwipe` call
- * changes nothing on the root (`spec:AST-057` FR11). Each finds the swipe the
- * event's root registered. Escape closes a resting row with focus inside it
- * (FR7), stopping the event there as React handlers do.
+ * row and every Swipe value. So a new value from an inline `createSwipe` call
+ * changes nothing on the root. Each finds the swipe the event's root
+ * registered. Escape closes a resting row with focus inside it, and stops the
+ * event there as React handlers do.
  */
 export const swipeRootProps = {
   onKeyDown(event: KeyboardEvent) {

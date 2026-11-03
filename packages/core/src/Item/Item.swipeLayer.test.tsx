@@ -3,11 +3,11 @@
 /**
  * @file Item.swipeLayer.test.tsx
  * @input Item with and without swipe actions; the swipe layer module, spied
- * @output Verifies a row without swipe actions never renders the swipe layer,
- *   a row given `swipe` renders it into the root at its first render, under a
- *   fine primary pointer as under a phone's, and a row given the deprecated
- *   `swipeActions` takes the released row style at once and renders the
- *   layer once DEP-0017's loader has brought it
+ * @output Verifies a row without swipe actions never renders the swipe layer. A
+ *   row given `swipe` renders it into the root at its first render, under a
+ *   fine primary pointer as under a phone's. A row given the deprecated
+ *   `swipeActions` takes the released row style at once, and renders the layer
+ *   once the deprecated loader has brought it
  * @position Companion to Item.test.tsx for where the swipe layer comes from
  */
 
@@ -22,9 +22,9 @@ import {swipeLayerLoaded} from './__tests__/swipeLayerLoaded';
 
 const {layerRenders} = vi.hoisted(() => ({layerRenders: vi.fn()}));
 
-// DEP-0017's loaded layer arrives 1.5 s late, as on a loaded machine: longer
-// than `waitFor`'s second, so only a test that waits for the load itself sees
-// the panel.
+// The deprecated layer arrives 1.5 s late, as on a loaded machine. That is
+// longer than `waitFor`'s second, so only a test that waits for the load itself
+// sees the panel.
 vi.mock('../Swipe/DeprecatedSwipeLayer', async importOriginal => {
   await new Promise(resolve => setTimeout(resolve, 1500));
   return importOriginal();

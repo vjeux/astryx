@@ -9,11 +9,10 @@
  *   root routing (swipeRoots.ts)
  * @output Exports createSwipe, which makes the Swipe value a row takes as
  *   `swipe`, carrying the runtime a row hands its root to
- * @position The public entry of swipe actions (`spec:AST-057` DEC-8, FR10):
- *   the module that brings the gesture core, the animator pieces, the panels
- *   and the rules for which rows the swipe serves, so a row ships them only
- *   when its caller uses swipe actions. Tested by createSwipe.test.ts and
- *   through Item.test.tsx.
+ * @position The public entry of swipe actions. It brings the gesture core, the
+ *   animator pieces, the panels and the rules for which rows the swipe serves.
+ *   So an app ships them only when it uses swipe actions. Tested by
+ *   createSwipe.test.ts and through Item.test.tsx.
  */
 
 import {createElement} from 'react';
@@ -36,10 +35,9 @@ import {swipeRootProps} from './swipeRoots';
 const SWIPE_ROLES = new Set(['listitem']);
 
 /**
- * Whether swipe actions serve a row (`spec:AST-057` DEC-3): where its role
- * permits interactive descendants (a panel's buttons are such descendants),
- * and not on a disabled row, a row that is the enlarged target of a control
- * inside it, or a root that is itself a link.
+ * Whether swipe actions serve a row: where its role permits interactive
+ * descendants, such as a panel's buttons. They never serve a disabled row, the
+ * enlarged target of a control inside it, or a root that is itself a link.
  */
 function serves({role, isDisabled, isDelegate, isLinkRoot}: SwipeRowFacts) {
   return (
@@ -51,12 +49,12 @@ function serves({role, isDisabled, isDelegate, isLinkRoot}: SwipeRowFacts) {
 }
 
 /**
- * Makes a row's swipe actions: the verbs a sideways drag uncovers on each
- * side, declared as data, and what a swipe does. Pass the result as `swipe`
- * on `Item` or `ListItem`. A plain function, not a hook: callable at module
- * scope, outside a render, and on the server, and doing no DOM work when
- * imported or called. The swipe carries no built-in text: every name it
- * exposes is a caller's `label`.
+ * Makes a row's swipe actions: the verbs a sideways drag uncovers on each side,
+ * declared as data, and what a swipe does. Pass the result as `swipe` on `Item`
+ * or `ListItem`. A plain function, not a hook: callable at module scope,
+ * outside a render, and on the server. It does no DOM work when imported or
+ * called. The swipe carries no built-in text: every name it exposes is a
+ * caller's `label`.
  *
  * @example
  * ```
@@ -76,7 +74,6 @@ export function createSwipe(options: CreateSwipeOptions): Swipe {
   const trailing = Object.freeze([...(options.trailing ?? [])]);
   const behavior = options.swipeBehavior ?? 'reveal';
   if (behavior === 'commit' && (leading.length > 1 || trailing.length > 1)) {
-    // The other entries have no touch path (`spec:AST-057` FR3).
     devWarn(
       'createSwipe',
       "`swipeBehavior: 'commit'` fires only the outermost entry of a side; " +
@@ -90,9 +87,9 @@ export function createSwipe(options: CreateSwipeOptions): Swipe {
     trailing,
     behavior,
     // A row hands its facts and its root: the swipe serves it or not, and
-    // brings everything it serves it with. The same layer type and root
-    // handlers for every value, so a new value from an inline call keeps the
-    // gesture and an open row as they are (`spec:AST-057` FR11).
+    // brings everything it serves it with. Every value gives the same layer
+    // type and root handlers. So a new value from an inline call keeps the
+    // gesture and an open row as they are.
     attach: facts =>
       hasEntries && serves(facts)
         ? {

@@ -139,11 +139,11 @@ export interface ListItemProps extends BaseProps<HTMLLIElement> {
   /** Swipe actions from `createSwipe`, passed to `Item` unchanged. */
   swipe?: Swipe;
 
-  /** @deprecated Pass `swipe` instead (`spec:AST-057` DEP-0017). */
+  /** @deprecated Pass `swipe` instead. */
   swipeActions?: ItemSwipeActions;
 
   /**
-   * @deprecated Set it in `swipe` instead (`spec:AST-057` DEP-0017).
+   * @deprecated Set it in `swipe` instead.
    * @default 'reveal'
    */
   swipeBehavior?: ItemSwipeBehavior;

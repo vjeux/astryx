@@ -5,19 +5,14 @@
  * @input A pressable surface, and whether its owner holds its press
  * @output setPressHeld, which holds or frees a surface's press, and
  *   isPressHeld, which the press controller reads
- * @position Owner module of the private press-held attribute
- *   (`architecture:public-component-api` INV23): the only file that writes
- *   its name. The swipe runtime holds an open row's press with it
- *   (Swipe/useSwipeAction.ts), and the press controller reads it
+ * @position Owner module of the private press-held attribute: the only file
+ *   that writes its name. The swipe runtime holds an open row's press with
+ *   it (Swipe/useSwipeAction.ts), and the press controller reads it
  *   (utils/pressFeedback.ts). No package entry exports it.
  *
- * A surface whose owner holds its press (an open swipe row) takes a press and
- * paints nothing, as a disabled one does: the surface around it does not
- * light either, a pressable inside it keeps its own press, and a touch on it
- * still counts for the brake. It is written on the pressable surface itself,
- * by the code that holds it, which frees it again; the surface stays
- * pressable. An open swipe row's root carries it, so a tap on its content
- * only closes the row (`spec:AST-057` FR7).
+ * A held surface takes a press and paints nothing, as a disabled one does. A
+ * pressable inside it keeps its own press, and a touch on it still counts for
+ * the brake.
  */
 
 const PRESS_HELD = 'data-astryx-press-held';

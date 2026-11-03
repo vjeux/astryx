@@ -2026,8 +2026,8 @@ describe('swipe', () => {
         const {row} = twoEntries();
         // Where the entries' transform puts them against the track, from the
         // travel and the side's geometry the swipe writes. It is
-        // SwipeActionsLayer's rule, which a browser computes and jsdom does not,
-        // since jsdom computes no calc().
+        // SwipeActionsLayer's rule, which a browser computes and jsdom does
+        // not, since jsdom computes no calc().
         const entriesX = () => {
           const style = (panelOf(row, 'leading') as HTMLElement).style;
           const read = (name: string) =>
@@ -2581,8 +2581,8 @@ describe('swipe', () => {
   });
 
   describe('the deprecated swipeActions and swipeBehavior (spec:AST-057 DEP-0017)', () => {
-    // DEP-0017's loader brings their layer with `import()`: load it once, so
-    // each row below renders its layer at once, as it does in an app once the
+    // The deprecated loader brings their layer with `import()`. This loads it
+    // once, so each row below renders its layer at once, as in an app once the
     // chunk has arrived.
     beforeAll(async () => {
       render(

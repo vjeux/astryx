@@ -75,8 +75,8 @@ export interface SwipeState {
 /**
  * The row is open: resting, or settling to rest open. UIKit counts a row open
  * from the release that opens it, not from when it comes to rest. An open row
- * closes on a tap on its content, a pointer outside it, a scroll or Escape, and
- * its root takes no press.
+ * closes on a press on its content, a pointer outside it, a scroll or Escape,
+ * and its root takes no press.
  */
 export function isSwipeOpen(state: SwipeState): boolean {
   return (
@@ -430,11 +430,11 @@ export function useSwipeAction({
   useIsomorphicLayoutEffect(() => {
     stateRef.current = state;
   });
-  // Every transition goes through here, so the one that opens or closes the
-  // row holds or frees its root's press at once, from the handler that caused
-  // it: an open row's root takes no press, so a tap on its content only
-  // closes it, as in UIKit, where the cell never sees that touch
-  // (`spec:AST-057` FR7). The root stays a pressable surface.
+  // Every transition goes through here, so the transition that opens or
+  // closes the row holds or frees the root's press in the same handler. An
+  // open row's root paints no press: a tap on its content only closes it, as
+  // in UIKit, where the cell never sees that touch. The root stays a
+  // pressable surface.
   const setSwipeState = useCallback((next: SwipeState) => {
     const wasOpen = isSwipeOpen(stateRef.current);
     const isOpen = isSwipeOpen(next);

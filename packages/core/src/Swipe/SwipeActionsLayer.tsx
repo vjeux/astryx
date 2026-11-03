@@ -13,27 +13,12 @@
  *   (DeprecatedSwipeLayer.tsx). Tested through Item.test.tsx and
  *   Item.source-build.test.mjs.
  *
- * The row's root stays the row's: it takes the root style the swipe brings,
- * and its key events reach this layer through the runtime's root registry
- * (swipeRoots.ts), or, on the deprecated path, through the bridge Item
- * forwards into; the gesture attaches to the root itself, and the layer holds
- * the root's press while the row is open. This layer renders the two panels
- * as out-of-flow children of that root, so no element is added to the row
- * for the swipe (`spec:AST-057` FR2).
- *
- * A panel is two boxes and the entries themselves, all moved by transforms
- * that read the travel the gesture writes on the root (`spec:AST-057` FR2,
- * see useSwipeAction): a window over the row's resting box that reads its
- * negation and clips to that box, a track inside it that moves with the row
- * and clips the entries to the space the row vacates, and the entries, each
- * translated back from the side's pin so they stay at the outer edge until
- * the row has uncovered them all, then riding the row. Past the open width
- * the outermost entry's colour, painted beside it, fills the rest out to
- * that edge; on a confirmed full swipe (the confirm the gesture writes on the
- * root) it slides to the row's edge while the others fade over the track's
- * fill of its colour. No wrapper holds the entries (minimal DOM,
- * `architecture:component-style-authoring` INV7): the colours are
- * pseudo-elements.
+ * The panels are out-of-flow children of the row's root, so the swipe adds
+ * no element to the row. Each part moves by a transform that reads the one
+ * travel the gesture writes on the root. The window reads its negation and
+ * clips to the row's resting box. The track moves with the row. Each entry
+ * stays at the outer edge until the row uncovers it, then rides the row.
+ * The colours are pseudo-elements, so no wrapper holds the entries.
  *
  * SYNC: the property names are useSwipeAction.ts's.
  */
@@ -223,9 +208,9 @@ const swipeVariantStyles = stylex.create({
   destructive: {
     backgroundColor: colorVars['--color-error'],
     color: colorVars['--color-on-error'],
-    // Forced colors replace the fill with Canvas; a border keeps the
-    // destructive fill's shape visible (architecture:theme-tokens INV11). A
-    // border, not an outline, leaves the shared focus ring intact.
+    // Forced colors replace the fill with Canvas, so a border keeps the
+    // destructive fill's shape visible. A border, not an outline, leaves the
+    // shared focus ring intact.
     borderWidth: {default: 0, '@media (forced-colors: active)': '1px'},
     borderStyle: {default: 'none', '@media (forced-colors: active)': 'solid'},
     borderColor: {

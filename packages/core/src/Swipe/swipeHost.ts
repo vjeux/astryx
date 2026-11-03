@@ -3,22 +3,21 @@
 /**
  * @file swipeHost.ts
  * @input Nothing at runtime
- * @output Exports the public swipe-action types (SwipeAction,
- *   SwipeActionVariant, SwipeBehavior, CreateSwipeOptions and the
- *   opaque Swipe), the contract between a row and the runtime a Swipe value
- *   carries (SwipeHost, SwipeRowFacts, SwipeAttachment), the deprecated
- *   path's layer contract (SwipeBridge, SwipeLayerProps), makeSwipe, which
- *   makes a Swipe value for a host, and swipeHostOf, which finds it again
- * @position The one swipe module a row imports at runtime: it holds no
- *   gesture, animation or rendering code, and no swipe rule. createSwipe.ts
- *   brings those, so they ship only with a caller that uses swipe actions.
+ * @output Exports the public swipe-action types: SwipeAction,
+ *   SwipeActionVariant, SwipeBehavior, CreateSwipeOptions and the opaque Swipe.
+ *   Also the contract between a row and the runtime a Swipe value carries
+ *   (SwipeHost, SwipeRowFacts, SwipeAttachment), and the deprecated path's
+ *   layer contract (SwipeBridge, SwipeLayerProps). Also makeSwipe, which makes
+ *   a Swipe value for a host, and swipeHostOf, which finds it again
+ * @position The one swipe module a row imports at runtime. It holds no gesture,
+ *   animation or rendering code, and no swipe rule. Those come with
+ *   createSwipe.ts, so they ship only with a caller that uses swipe actions.
  */
 
 import type {KeyboardEvent, ReactNode} from 'react';
 import type {StyleXStyles} from '@stylexjs/stylex';
 
-// Not a registered symbol: only createSwipe makes a Swipe value
-// (`spec:AST-057` FR1).
+// Not a registered symbol: only createSwipe makes a Swipe value.
 const SWIPE = Symbol('astryx.swipe');
 
 /**
@@ -43,12 +42,11 @@ export interface SwipeAction {
   /** Drawn above the label. */
   icon?: ReactNode;
   /**
-   * Fires on a tap on a resting entry, on the full-swipe accelerator, or on
-   * a `commit` release. When the row slides out (a full swipe, a commit, a
-   * tapped entry with `hasRemoval`) it fires once the row's content has left
-   * its box; a tapped entry without `hasRemoval` fires at the tap. May return
-   * a Promise; the row waits for nothing. Not `onClick`: a commit fires with
-   * no click.
+   * Fires on a tap on a resting entry, on the full-swipe accelerator, or on a
+   * `commit` release. A slide-out fires it once the row's content has left its
+   * box: after a full swipe, a commit or a tapped entry with `hasRemoval`. A
+   * tapped entry without `hasRemoval` fires at the tap. May return a Promise;
+   * the row waits for nothing. Not `onClick`: a commit fires with no click.
    */
   onActivate: () => void | Promise<void>;
   isDisabled?: boolean;
@@ -65,13 +63,13 @@ export interface SwipeAction {
 }
 
 /**
- * `reveal`: every entry of a resting row is a real button. As in a UIKit
- * list, a fast release goes the way it moves (a flick opens the row, a flick
- * back closes it) and a slow one rests the row open past half the panel, and
- * a full swipe fires the outermost: dragged on past the confirm point, the
- * row runs ahead and the outermost entry covers its place, and letting go
- * there fires it; backing out closes the row. `commit`: only a full swipe
- * does anything, sliding the row out; nothing rests, and the panel is
+ * `reveal`: every entry of a resting row is a real button. As in a UIKit list,
+ * a fast release goes the way it moves: a flick opens the row, and a flick back
+ * closes it. A slow release rests the row open past half the panel. A full
+ * swipe fires the outermost entry: dragged on past the confirm point, the row
+ * runs ahead and the outermost entry covers its place. Letting go there fires
+ * it, and backing out closes the row. `commit`: only a full swipe does
+ * anything, sliding the row out; nothing rests, and the panel is
  * presentational.
  */
 export type SwipeBehavior = 'reveal' | 'commit';
@@ -82,19 +80,24 @@ export type SwipeBehavior = 'reveal' | 'commit';
  * end, `trailing` by one toward the inline start.
  */
 export interface CreateSwipeOptions {
-  /** Uncovered by a drag toward the inline end (rightward in LTR); outermost last. */
+  /**
+   * Uncovered by a drag toward the inline end (rightward in LTR); outermost
+   * last.
+   */
   leading?: ReadonlyArray<SwipeAction>;
-  /** Uncovered by a drag toward the inline start (leftward in LTR); outermost last. */
+  /**
+   * Uncovered by a drag toward the inline start (leftward in LTR); outermost
+   * last.
+   */
   trailing?: ReadonlyArray<SwipeAction>;
   /**
    * What a swipe does; applies to both sides. `reveal`: a release opens or
-   * closes the row by its speed, then by half the panel's width, and the open
-   * row rests with every entry a real button; a full swipe fires the
-   * outermost. `commit`: a lift past the confirm point slides the row out and
-   * fires the outermost entry; nothing rests; the panel is presentational;
-   * valid for one entry per side, and warns in development with more. A
-   * commit is not a removal: the row springs back unless the entry has
-   * `hasRemoval`.
+   * closes the row by its speed, then by half the panel's width. The open row
+   * rests with every entry a real button, and a full swipe fires the outermost.
+   * `commit`: a lift past the confirm point slides the row out and fires the
+   * outermost entry. Nothing rests, and the panel is presentational. It is
+   * valid for one entry per side, and warns in development with more. A commit
+   * is not a removal: the row springs back unless the entry has `hasRemoval`.
    * @default 'reveal'
    */
   swipeBehavior?: SwipeBehavior;
@@ -121,10 +124,10 @@ export interface SwipeRowFacts {
 }
 
 /**
- * What the runtime gives a row it serves: the style its root takes (the
- * travel it moves by, and the touch it leaves the browser), the handlers its
- * root carries, and the layer it renders inside its root (the panels and the
- * gesture, which attaches to the root itself).
+ * What the runtime gives a row it serves. The root takes a style: the travel it
+ * moves by, and the touch it leaves the browser. The root carries the runtime's
+ * handlers. The row renders the layer inside its root: the panels and the
+ * gesture, which attaches to the root itself.
  */
 export interface SwipeAttachment {
   readonly rootStyle: StyleXStyles;
@@ -134,7 +137,7 @@ export interface SwipeAttachment {
 
 /**
  * A Swipe value as a row reads it: the declared actions, and the runtime the
- * value carries, which a row hands its facts and its root.
+ * value carries. A row hands that runtime its facts and its root.
  */
 export interface SwipeHost {
   readonly leading: ReadonlyArray<SwipeAction>;
@@ -145,10 +148,9 @@ export interface SwipeHost {
 }
 
 /**
- * The deprecated path's bridge (`spec:AST-057` DEP-0017): the key handler
- * Item's root forwards its key events into (Escape closes a resting row).
- * The layer writes it after every render; the root reads it on every event.
- * Leaves with the deprecated props (CLN-0025).
+ * The deprecated path's bridge: the key handler Item's root forwards its key
+ * events into (Escape closes a resting row). The layer writes it after every
+ * render, and the root reads it on every event.
  */
 export interface SwipeBridge {
   onKeyDown: (event: KeyboardEvent) => void;
@@ -157,10 +159,10 @@ export interface SwipeBridge {
 /** What the swipe layer takes. */
 export interface SwipeLayerProps {
   /**
-   * The deprecated path only: called with the gesture for Item's root to
-   * forward into, after every render of the layer, and with `null` when the
-   * layer leaves. A row given `swipe` routes its root's keys through the
-   * runtime instead (swipeRoots.ts).
+   * The deprecated path only. The layer calls it with the gesture for Item's
+   * root to forward into, after every render, and with
+   * `null` when the layer leaves. A row given `swipe` routes its root's keys
+   * through the runtime instead (swipeRoots.ts).
    */
   onBridge?: (bridge: SwipeBridge | null) => void;
   leading: ReadonlyArray<SwipeAction>;
