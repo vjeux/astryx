@@ -64,6 +64,7 @@ import {
   type UIEvent as ReactUIEvent,
 } from 'react';
 
+import {sheet} from '../motion/uikit/sheet';
 import {
   computeDetentOffsets,
   peekOffsetFor,
@@ -372,6 +373,14 @@ export interface UseSheetGesturesOptions {
   hasFixedHeight?: boolean;
 }
 
+/** A drag's close: the distance left to the closed position and the speed. */
+export interface SheetDragExit {
+  /** px from the release position to the closed position. */
+  readonly distance: number;
+  /** The release speed toward closed, px/s. */
+  readonly velocity: number;
+}
+
 export interface SheetContentProps {
   style: CSSProperties;
 }
@@ -445,6 +454,11 @@ export interface UseSheetGesturesResult {
    * cross-fades on every pointer, so the exit's motion needs to know.
    */
   isDismissedByTouchDrag: boolean;
+  /**
+   * The exit a touch drag's release started: the distance left to travel and
+   * the release speed. Null for a close that no touch drag started.
+   */
+  dragExit: SheetDragExit | null;
   /**
    * The sheet's offset right now, in px: the settled detent at rest, the live
    * position during a drag. Written per input sample without a render; read
@@ -526,23 +540,24 @@ export function useSheetGestures({
   const [touchDragDismissal, setTouchDragDismissal] = useState<{
     isTouch: boolean;
     pending: boolean;
+    exit: SheetDragExit | null;
   } | null>(null);
   if (touchDragDismissal != null) {
     if (touchDragDismissal.pending) {
       setTouchDragDismissal(
-        isOpenRequested
-          ? null
-          : {isTouch: touchDragDismissal.isTouch, pending: false},
+        isOpenRequested ? null : {...touchDragDismissal, pending: false},
       );
     } else if (isOpenRequested) {
       setTouchDragDismissal(null);
     }
   }
-  const isDismissedByTouchDrag =
+  const isDismissedByDrag =
     touchDragDismissal != null &&
     !touchDragDismissal.pending &&
-    touchDragDismissal.isTouch &&
     !isOpenRequested;
+  const isDismissedByTouchDrag =
+    isDismissedByDrag && touchDragDismissal.isTouch;
+  const dragExit = isDismissedByDrag ? touchDragDismissal.exit : null;
   // Whether the drag in flight has moved the sheet off its base detent. One
   // state change per drag, for hosts that react to travel beginning.
   const [isTraveling, setIsTraveling] = useState(false);
@@ -1110,9 +1125,40 @@ export function useSheetGestures({
         }
       };
 
-      // A release that would coast past the dismiss line closes the sheet: a
-      // throw from anywhere, or a slow drag that already crossed it.
-      if (dir > 0 && projected > dismissOffset) {
+      // A touch release goes where UIKit's sheet sends it: to the position
+      // nearest its landing, with closed counted as one. A mouse or pen
+      // release keeps the scroll projection and the dismiss line.
+      const {
+        fastSpeed,
+        minProjectionSpeed,
+        projectionSeconds,
+        detentTolerance,
+      } = sheet.release;
+      const speed = Math.abs(velocity) * 1000;
+      const landing = !isTouch
+        ? projected
+        : speed >= minProjectionSpeed
+          ? offset + velocity * 1000 * projectionSeconds
+          : offset;
+      // A flick, as UIKit's sheet counts one, goes at least to the next
+      // position in its direction. Below the lowest detent, that is closed.
+      const isFlick =
+        isTouch &&
+        speed >= fastSpeed &&
+        Math.sign(velocity) === dir &&
+        travel > DRAG_PROMOTION_SLOP;
+      const nextDown = offsets.find(o => o > offset + detentTolerance);
+      const nextUp = [...offsets]
+        .reverse()
+        .find(o => o < offset - detentTolerance);
+      const closedOffset = maxOffset + shortestDetentHeight;
+      const closes =
+        dir > 0 &&
+        (isTouch
+          ? landing > (maxOffset + closedOffset) / 2 ||
+            (isFlick && nextDown == null)
+          : projected > dismissOffset);
+      if (closes) {
         if (canDismissRef.current) {
           prepareScrollAreaSettle(
             baseLayoutOffset,
@@ -1123,24 +1169,36 @@ export function useSheetGestures({
             naturalEndGap,
             false,
           );
-          setTouchDragDismissal({isTouch, pending: true});
+          setTouchDragDismissal({
+            isTouch,
+            pending: true,
+            exit: isTouch
+              ? {distance: Math.max(0, height - offset), velocity: speed}
+              : null,
+          });
           onDismissRef.current();
         } else {
           settleAt(maxOffset);
         }
         return;
       }
-      // Settle to the detent nearest where the release would coast to, in the
-      // drag direction (never back past the starting detent), de-duped and
-      // direction-clamped by the util. A throw upward projects past the
-      // tallest detent and lands on it.
+      // Settle to the detent nearest where the release lands, in the drag
+      // direction (never back past the starting detent), de-duped and
+      // direction-clamped by the util. A throw upward lands past the tallest
+      // detent and settles on it.
       const target = resolveSettleOffset(
-        Math.min(Math.max(projected, 0), maxOffset),
+        Math.min(Math.max(landing, 0), maxOffset),
         offsets,
         dir,
         baseOffset,
       );
-      settleAt(target);
+      settleAt(
+        !isFlick
+          ? target
+          : dir > 0
+            ? Math.max(nextDown ?? maxOffset, target)
+            : Math.min(nextUp ?? 0, target),
+      );
     },
     [prepareScrollAreaSettle, recordSettledLayoutOffset, resolveDetents],
   );
@@ -1868,6 +1926,7 @@ export function useSheetGestures({
     isDragging,
     isTraveling,
     isDismissedByTouchDrag,
+    dragExit,
     activeOffsetRef,
     sheetHeight,
     scrollPreservationInset,
