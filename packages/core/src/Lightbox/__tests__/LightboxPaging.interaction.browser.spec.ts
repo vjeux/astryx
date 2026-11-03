@@ -23,6 +23,7 @@ import {
   frames,
   markElement,
   openStory,
+  pinch,
   startBusyControl,
   startScreencast,
   touchDriver,
@@ -442,6 +443,56 @@ test("a drag that starts on a video's controls stays the video's; a drag on its 
   );
   await waitForRest(track);
   expect(await counter()).toBe('3 / 3');
+});
+
+/** The centre of the current page's caption row, in client px. */
+async function captionCentre(g: Gallery): Promise<{x: number; y: number}> {
+  return g.dialog.locator('[data-current]').evaluate(page => {
+    const media = page.querySelector('[data-lightbox-page-media]');
+    const row = [...page.children].find(child => child !== media);
+    if (row == null) {
+      throw new Error('no caption row');
+    }
+    const r = row.getBoundingClientRect();
+    return {x: r.left + r.width / 2, y: r.top + r.height / 2};
+  });
+}
+
+test("a pinch on a zoomable gallery's caption still zooms the page", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== 'chromium',
+    'native pinch-zoom from scripted touches is Chromium-only',
+  );
+  const g = await openGallery(page, {
+    story: 'core-lightbox--gallery-with-captions',
+    trigger: 'Open gallery with captions',
+  });
+  await g.driver.play(
+    pinch({
+      center: await captionCentre(g),
+      fromDistance: 30,
+      toDistance: 200,
+      durationMs: 400,
+    }),
+  );
+  await expect
+    .poll(async () => page.evaluate(() => window.visualViewport?.scale ?? 1))
+    .toBeGreaterThan(1.5);
+  expect((await g.photo()).scale).toBe(1);
+});
+
+test('a swipe that starts on a caption pages', async ({page}) => {
+  const g = await openGallery(page, {
+    story: 'core-lightbox--gallery-with-captions',
+    trigger: 'Open gallery with captions',
+  });
+  const from = await captionCentre(g);
+  await g.driver.play(slowDrag(from, -g.box.width * 0.6));
+  await waitForRest(g.track);
+  expect(await g.counter()).toMatch(/^2 \/ \d+$/);
 });
 
 test('a pinch zooms the photo and never pages', async ({page}) => {

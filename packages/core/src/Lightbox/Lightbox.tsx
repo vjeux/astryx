@@ -230,10 +230,15 @@ const styles = stylex.create({
   imageWrapperZoomTarget: {
     touchAction: 'none',
   },
-  // In a gallery the stage's touches go to the track instead, for every
-  // pointer (as imageWrapperZoomTarget): the pager's pan manages the stage's
-  // own `touch-action`.
+  // In a gallery the photo rows take the stage's touches, for every pointer
+  // (as imageWrapperZoomTarget). A descendant cannot allow what an ancestor's
+  // `touch-action` rules out. So the track allows only the page's pinch-zoom,
+  // and a pinch on a caption still zooms the page. The pager's pan manages the
+  // stage's own `touch-action`.
   trackZoomTarget: {
+    touchAction: 'pinch-zoom',
+  },
+  pageMediaZoomTarget: {
     touchAction: 'none',
   },
   // A gallery's stage is the pager's viewport: it fills the viewer on every
@@ -1129,7 +1134,10 @@ export function Lightbox({
                           <div
                             ref={i === index ? pageMediaRef : undefined}
                             data-lightbox-page-media=""
-                            {...stylex.props(styles.pageMedia)}>
+                            {...stylex.props(
+                              styles.pageMedia,
+                              isZoomTarget && styles.pageMediaZoomTarget,
+                            )}>
                             {renderMedia(mediaArray[i], i === index)}
                           </div>
                           {i === index && unrenderedCaptions.length > 0 ? (
