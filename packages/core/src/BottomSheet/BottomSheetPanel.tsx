@@ -574,11 +574,31 @@ export function BottomSheetPanel({
   const alignmentOffset =
     isRetained && !isReducedMotion ? state.alignmentOffset : 0;
 
+  // The layout viewport's height, read when the sheet presents and on each
+  // resize while it does. The detents resolve in a drag's moves and in its
+  // release, right after the gesture's own style writes. Reading
+  // `innerHeight` there forces a style recalculation that the frame then
+  // waits for. A closed sheet holds no resize listener.
+  const viewportHeightRef = useRef(0);
+  useLayoutEffect(() => {
+    if (!isPresented) {
+      return;
+    }
+    const read = () => {
+      viewportHeightRef.current = layoutViewportHeight();
+    };
+    read();
+    window.addEventListener('resize', read);
+    return () => {
+      window.removeEventListener('resize', read);
+    };
+  }, [isPresented]);
+
   // Everything derived from the snap points keys off their identity, not the
   // array's: the resolver's identity is the hook's signal that the stops
   // changed, so it must not churn on a re-render the drag caused. The memo
   // reads the points through a ref, so the resolver resolves them at call time
-  // — against whatever the viewport is then, not what it was at memo time.
+  // — against the viewport as of its last resize, not what it was at memo time.
   const snapPointsKey = snapPointsKeyFor(snapPoints);
   const snapPointsRef = useRef(snapPoints);
   snapPointsRef.current = snapPoints;
@@ -591,7 +611,10 @@ export function BottomSheetPanel({
     );
     return {
       snapHeights: () =>
-        resolveSnapPoints(snapPointsRef.current ?? [], layoutViewportHeight()),
+        resolveSnapPoints(
+          snapPointsRef.current ?? [],
+          viewportHeightRef.current || layoutViewportHeight(),
+        ),
       ignoredSnapPointsMessage:
         ignored.length === 0
           ? ''
