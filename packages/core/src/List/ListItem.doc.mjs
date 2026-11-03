@@ -118,13 +118,13 @@ export const docs = {
       name: 'swipeActions',
       type: '{leading?: ItemSwipeAction[]; trailing?: ItemSwipeAction[]}',
       description:
-        "Deprecated (DEP-0017): pass swipe={createSwipe({leading, trailing})} instead. Each entry is `{id?, label, icon?, onActivate, isDisabled?, variant?: 'neutral' | 'accent' | 'destructive', hasRemoval?}`. Passed through to Item unchanged.",
+        "Deprecated (DEP-0017): pass swipe={createSwipe({leading, trailing})} instead. Each entry is `{id?, label, icon?, onActivate, isDisabled?, variant?: 'neutral' | 'accent' | 'destructive', hasRemoval?}`. Passed through to Item unchanged; astryx upgrade rewrites static uses.",
     },
     {
       name: 'swipeBehavior',
       type: "'reveal' | 'commit'",
       description:
-        "Deprecated (DEP-0017): pass swipeBehavior in createSwipe's options instead. Passed through to Item unchanged.",
+        "Deprecated (DEP-0017): pass swipeBehavior in createSwipe's options instead. Passed through to Item unchanged; astryx upgrade rewrites static uses.",
       default: "'reveal'",
     },
   ],
@@ -217,13 +217,13 @@ export const docsZh = {
       name: 'swipeActions',
       type: '{leading?: ItemSwipeAction[]; trailing?: ItemSwipeAction[]}',
       description:
-        "已弃用（DEP-0017）：请改用 swipe={createSwipe({leading, trailing})}。每项为 `{id?, label, icon?, onActivate, isDisabled?, variant?: 'neutral' | 'accent' | 'destructive', hasRemoval?}`。原样传递给 Item。",
+        "已弃用（DEP-0017）：请改用 swipe={createSwipe({leading, trailing})}。每项为 `{id?, label, icon?, onActivate, isDisabled?, variant?: 'neutral' | 'accent' | 'destructive', hasRemoval?}`。原样传递给 Item；astryx upgrade 会改写静态用法。",
     },
     {
       name: 'swipeBehavior',
       type: "'reveal' | 'commit'",
       description:
-        '已弃用（DEP-0017）：请改为在 createSwipe 的选项中传入 swipeBehavior。原样传递给 Item。',
+        '已弃用（DEP-0017）：请改为在 createSwipe 的选项中传入 swipeBehavior。原样传递给 Item；astryx upgrade 会改写静态用法。',
       default: "'reveal'",
     },
   ],
