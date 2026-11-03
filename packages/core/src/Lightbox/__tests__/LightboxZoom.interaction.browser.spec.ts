@@ -417,6 +417,117 @@ for (const theme of SHIPPED_THEMES) {
   });
 }
 
+test("with zoom, a theme's button and Text colours reach neither the controls' icons nor the counter's text", async ({
+  page,
+}) => {
+  await page.goto(
+    `${storybook()}/iframe.html?id=core-lightbox--gallery-with-zoom&viewMode=story`,
+  );
+  await page.locator('#storybook-root > *').first().waitFor();
+  // Rules shaped as a theme writes them: the component's class and its
+  // reflected prop, more specific than a component's own styles.
+  await page.addStyleTag({
+    content:
+      '.astryx-button[data-variant="ghost"] { color: rgb(17, 17, 17); } .astryx-text[data-color="primary"] { color: rgb(17, 17, 17); }',
+  });
+  const driver = await touchDriver(page);
+  const trigger = await page
+    .getByRole('button', {name: 'Open gallery with zoom'})
+    .boundingBox();
+  if (trigger == null) {
+    throw new Error('no trigger');
+  }
+  await driver.tap({
+    x: trigger.x + trigger.width / 2,
+    y: trigger.y + trigger.height / 2,
+  });
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  // The on-dark colour as this theme resolves it, inside the viewer.
+  const onDark = await dialog.evaluate(element => {
+    const probe = element.ownerDocument.createElement('span');
+    probe.style.color = 'var(--color-on-dark)';
+    element.append(probe);
+    const color = getComputedStyle(probe).color;
+    probe.remove();
+    return color;
+  });
+  for (const name of ['Close', 'Previous', 'Next']) {
+    const icon = await dialog
+      .getByRole('button', {name})
+      .evaluate(
+        element =>
+          getComputedStyle(element.querySelector('svg') ?? element).color,
+      );
+    expect(icon, name).toBe(onDark);
+  }
+  const counter = await dialog
+    .getByText('1 / 4')
+    .evaluate(element => getComputedStyle(element).color);
+  expect(counter).toBe(onDark);
+});
+
+for (const [photo, fill] of [
+  ['mid-grey', '#7f7f7f'],
+  ['white', '#ffffff'],
+] as const) {
+  test(`the caption keeps 4.5:1 on its backing, in its band and open, over a ${photo} photo`, async ({
+    page,
+  }) => {
+    await page.route('https://picsum.photos/**', async route =>
+      route.fulfill({
+        contentType: 'image/svg+xml',
+        body: `<svg xmlns="http://www.w3.org/2000/svg" width="3000" height="2000"><rect width="3000" height="2000" fill="${fill}"/></svg>`,
+      }),
+    );
+    await page.goto(
+      `${storybook()}/iframe.html?id=core-lightbox--gallery-with-captions&viewMode=story`,
+    );
+    await page.locator('#storybook-root > *').first().waitFor();
+    await frames(page, 2);
+    const driver = await touchDriver(page);
+    const tapOn = async (locator: Locator) => {
+      const b = await locator.boundingBox();
+      if (b == null) {
+        throw new Error('nothing to tap');
+      }
+      await driver.tap({x: b.x + b.width / 2, y: b.y + b.height / 2});
+    };
+    await tapOn(page.getByRole('button', {name: 'Open gallery with captions'}));
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    const caption = dialog
+      .locator('[data-current] [data-lightbox-caption] > div')
+      .first();
+    // The caption's colour against the lightest pixel in its start padding,
+    // beside each of its first two lines: what the text sits on.
+    const ratio = async () => {
+      await frames(page, 2);
+      const {color, points} = await caption.evaluate(element => {
+        const style = getComputedStyle(element);
+        const box = element.getBoundingClientRect();
+        const top = box.top + parseFloat(style.paddingTop);
+        const line = parseFloat(style.lineHeight);
+        return {
+          color: style.color,
+          points: [0.5, 1.5].map(n => ({x: box.left + 4, y: top + line * n})),
+        };
+      });
+      const shot = PNG.sync.read(await page.screenshot());
+      const scale = shot.width / (page.viewportSize()?.width ?? shot.width);
+      return contrast(parseRgb(color), lightestAt(shot, scale, points));
+    };
+    expect(await ratio(), 'in the band').toBeGreaterThanOrEqual(4.5);
+    await tapOn(dialog.getByRole('button', {name: 'more'}));
+    await expect(dialog.getByRole('button', {name: 'less'})).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    // Open, its first lines lie over the photo's bottom.
+    expect(await ratio(), 'open').toBeGreaterThanOrEqual(4.5);
+  });
+}
+
 test('the stage fills the phone screen and fits the photo', async ({page}) => {
   const {state} = await openViewer(page);
   const s = await state();
