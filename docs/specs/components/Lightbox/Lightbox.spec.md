@@ -79,9 +79,11 @@ Consumer migration instructions belong in consumer docs and release notes.
 The shipped Lightbox does not yet meet every requirement below. Each gap names
 the requirement it misses and the person it affects.
 
-- **Touch presentation (FR7–FR10, FR12).** On a touch screen there is no swipe
-  paging, drag or pinch to close, tap to hide the controls, or thumbnail
-  transition.
+- **Touch presentation (FR8–FR10, FR12).** On a touch screen there is no drag
+  or pinch to close, tap to hide the controls, or thumbnail transition.
+- **Video controls (FR7).** A video's native controls are taken as a 48 px
+  band at its bottom edge, since browsers expose no control geometry; a
+  browser that places controls elsewhere pages from them.
 - **Tab containment (FR4).** Tab from the viewer's last control can move focus
   to the browser's own interface.
 - **Zoom reset key (AR3).** `0` does not return a zoomed photo to its fitted
@@ -92,8 +94,8 @@ the requirement it misses and the person it affects.
   are sent from above the modal Lightbox renders, so they reach the page body
   and a screen-reader user does not hear them while the viewer is open
   (`spec:AST-086` FR14).
-- **Fine-pointer gestures (FR11).** A mouse drag on a fitted photo does
-  nothing: it neither pages a gallery nor closes the viewer.
+- **Fine-pointer gestures (FR11).** A mouse drag on a fitted photo does not
+  close the viewer.
 - **Double-click listener (FR14).** A mouse's or a pen's double-click reaches
   the zoom through the stage's own `dblclick` listener, since only the browser
   knows the system's double-click speed.
