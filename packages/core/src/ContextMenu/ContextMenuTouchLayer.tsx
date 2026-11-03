@@ -41,8 +41,6 @@ export interface ContextMenuTouchLayerProps {
   triggerRef: RefObject<HTMLElement | null>;
   /** False for an inline trigger, which does not grow. */
   isShown: boolean;
-  /** Changes when the trigger element is replaced (`triggerAs`). */
-  triggerKey: unknown;
   /** Receives the layer's handle as it mounts, and null as it unmounts. */
   ref?: Ref<ContextMenuTouchHandle>;
   /** Open the menu at a client point (where the finger landed). */
@@ -65,7 +63,6 @@ export interface ContextMenuTouchLayerProps {
 export function ContextMenuTouchLayer({
   triggerRef,
   isShown,
-  triggerKey,
   ref,
   onOpen,
 }: ContextMenuTouchLayerProps): null {
@@ -75,7 +72,6 @@ export function ContextMenuTouchLayer({
   const feedback = useContextMenuPressFeedback(
     triggerRef,
     isShown,
-    triggerKey,
     isFollowedRef,
   );
   const feedbackRef = useRef(feedback);

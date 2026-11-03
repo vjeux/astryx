@@ -656,11 +656,6 @@ export function ContextMenu({
     [listNavKeyDown, closeMenu, typeahead, ownsEvent],
   );
 
-  // Place the 1px cursor anchor at a point in the trigger's local
-  // coordinate space and open the menu. Positioning the anchor inside the
-  // trigger (rather than storing viewport coordinates on the menu itself) is
-  // what makes the menu context-relative: it scrolls with the content and the
-  // browser auto-flips it against the viewport edges via CSS anchor positioning.
   // How much the press feedback has scaled a block trigger from its center.
   // Its bounding rect is the scaled box, and its offset size the unscaled one.
   const triggerScale = useCallback(
@@ -677,6 +672,11 @@ export function ContextMenu({
     [triggerAs],
   );
 
+  // Place the 1px cursor anchor at a point in the trigger's local
+  // coordinate space and open the menu. Positioning the anchor inside the
+  // trigger (rather than storing viewport coordinates on the menu itself) is
+  // what makes the menu context-relative: it scrolls with the content and the
+  // browser auto-flips it against the viewport edges via CSS anchor positioning.
   const openAtLocalPoint = useCallback(
     (
       localX: number,
@@ -1053,7 +1053,6 @@ export function ContextMenu({
           ref={touchHandleRef}
           triggerRef={triggerRef}
           isShown={triggerAs !== 'span' && !usesBottomSheet}
-          triggerKey={triggerAs}
           onOpen={openFromFinger}
         />
       ) : null}
