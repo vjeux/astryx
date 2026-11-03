@@ -194,6 +194,26 @@ export const rowPressLayerStyles = stylex.create({
     },
   },
   /**
+   * A row that keeps no press layer of its own, composed after `cell`: a
+   * radio row, whose circle paints the press. Under a finger the row then
+   * has no `::before` box and is no stacking context during a press.
+   */
+  cellWithoutLayer: {
+    isolation: {
+      default: null,
+      [COARSE]: {default: null, [PRESSED_ANY]: 'auto'},
+    },
+    '::before': {
+      content: {
+        default: null,
+        [COARSE]: {
+          default: null,
+          [ENABLED]: {default: null, [PRESSED_ANY]: 'none'},
+        },
+      },
+    },
+  },
+  /**
    * `cell`'s own-image arms for a row on the `backgroundImage` variant
    * (TreeList's row box), composed after `cell`: the variant's arms, its
    * touch press paint yielding to the layer under a coarse primary pointer.

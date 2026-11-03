@@ -384,6 +384,7 @@ test('a radio row under a finger paints its circle’s press, and keeps its bare
           ? null
           : getComputedStyle(wrapper, '::after').backgroundImage,
       layer: getComputedStyle(el, '::before').content,
+      isolation: getComputedStyle(el).isolation,
     };
   });
   await cdp.send('Input.dispatchTouchEvent', {
@@ -396,8 +397,10 @@ test('a radio row under a finger paints its circle’s press, and keeps its bare
   expect(look.circle).not.toMatch(
     /^linear-gradient\(rgba\(0, 0, 0, 0\), rgba\(0, 0, 0, 0\)\)$/,
   );
-  // Only the circle paints, as with a mouse: the row has no layer.
+  // Only the circle paints, as with a mouse: the row has no layer and is no
+  // stacking context.
   expect(look.layer).toBe('none');
+  expect(look.isolation).toBe('auto');
 });
 
 test('under a finger, a row at rest is as it was: its own ::before keeps its look and it is no stacking context; the press layer takes the ::before only while pressed', async ({
