@@ -3,7 +3,7 @@
 /**
  * @file pressFeedback.ts
  * @input The press state machine (pressGesture.ts), the menu-press and
- *   press-group markers and the document's pointer, keyboard, scroll and
+ *   press-group markers, the flat-tree parent (flatTree.ts) and the document's pointer, keyboard, scroll and
  *   visibility events
  * @output PRESSABLE_ATTRIBUTE, PRESSED_ATTRIBUTE, pressableProps and
  *   installPressFeedback
@@ -23,9 +23,13 @@
 // Where the primary pointer is fine, the controller ignores the mouse and the
 // keyboard, and CSS `:active` keeps their press. Under a coarse primary
 // pointer the CSS drops `:active`, so the controller paints every press. A
-// finger's press paints after the delay. A mouse, trackpad or Space press
-// paints at once. The controller reads the same query as the stylesheet, so
-// they agree.
+// mouse, trackpad or Space press paints at once. The controller reads the
+// same query as the stylesheet, so they agree.
+//
+// A finger waits only inside a scroller. Outside one, a surface highlights in
+// the frame the finger lands, as a UIControl does. Inside one, it waits the
+// content-touch delay, because the touch can become a scroll. Rows follow the
+// same rule.
 //
 // A surface's hold does nothing, so it keeps the browser's long-press text
 // selection (AST-094). Only an element whose hold does something suppresses
@@ -44,6 +48,7 @@ import {
 } from './pressGesture';
 import {isCoarsePointer, watchCoarsePointer} from './coarsePointer';
 import {subscribeInput} from './inputStream';
+import {parentAcrossShadow} from './flatTree';
 import {TOUCH_QUERY} from './touchPresentation';
 import {holdsPressThroughDrag} from '../privateAttributes/pressHoldsDrag.stylex';
 import {isTrackedByGroup} from '../privateAttributes/pressGroupItem.stylex';
@@ -76,6 +81,101 @@ export const pressableProps: {readonly [PRESSABLE_ATTRIBUTE]: ''} = {
  * scroll is the program moving something, not a list still gliding.
  */
 export const PRESS_GESTURE_MEMORY_MS = 3000;
+
+/** Overflow values that let a box scroll, and how far it must overflow to. */
+const SCROLLABLE: ReadonlySet<string> = new Set(['auto', 'scroll', 'overlay']);
+const OVERFLOW_TOLERANCE_PX = 1;
+
+/** The root scrolls unless it or the body clips it (as a scroll lock does). */
+function rootScrolls(doc: Document, axis: 'x' | 'y'): boolean {
+  const view = doc.defaultView;
+  if (view == null) {
+    return false;
+  }
+  for (const element of [doc.documentElement, doc.body]) {
+    if (element == null) {
+      continue;
+    }
+    const style = view.getComputedStyle(element);
+    const value = axis === 'x' ? style.overflowX : style.overflowY;
+    if (value === 'hidden' || value === 'clip') {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Which pans `touch-action` leaves the browser on this element. */
+function allowedPans(value: string): {x: boolean; y: boolean} {
+  const tokens = value.trim().split(/\s+/);
+  if (tokens.includes('auto') || tokens.includes('manipulation')) {
+    return {x: true, y: true};
+  }
+  if (tokens.includes('none')) {
+    return {x: false, y: false};
+  }
+  return {
+    x: tokens.some(token => /^pan-(x|left|right)$/.test(token)),
+    y: tokens.some(token => /^pan-(y|up|down)$/.test(token)),
+  };
+}
+
+/**
+ * Whether the browser could scroll something under this element: a box above
+ * it (the page included) that overflows on an axis it scrolls and that
+ * `touch-action` leaves to the browser. That is UIKit's question for a
+ * touch: is it inside a scroll view? It lives here, not in the gesture core's
+ * scroll probe, because every pressable carries this controller and the
+ * gesture core stays out of Core's public entries until a component
+ * imports it.
+ */
+function isInsideScroller(element: Element): boolean {
+  const doc = element.ownerDocument;
+  const view = doc.defaultView;
+  if (view == null) {
+    return false;
+  }
+  const root = doc.scrollingElement ?? doc.documentElement;
+  let panX = true;
+  let panY = true;
+  for (let node: Node | null = element; node != null;) {
+    if (node instanceof Element) {
+      const style = view.getComputedStyle(node);
+      const pans = allowedPans(style.touchAction || 'auto');
+      panX &&= pans.x;
+      panY &&= pans.y;
+      if (node === root || node === doc.documentElement) {
+        break;
+      }
+      if (
+        (panY &&
+          SCROLLABLE.has(style.overflowY) &&
+          node.scrollHeight - node.clientHeight > OVERFLOW_TOLERANCE_PX) ||
+        (panX &&
+          SCROLLABLE.has(style.overflowX) &&
+          node.scrollWidth - node.clientWidth > OVERFLOW_TOLERANCE_PX)
+      ) {
+        return true;
+      }
+      // A fixed box does not move with any scroller above it: a control in a
+      // fixed bar is outside them, however the page scrolls.
+      if (style.position === 'fixed') {
+        return false;
+      }
+    }
+    // The flat tree the browser scrolls: a slotted node goes to its slot, a
+    // shadow root to its host.
+    node = parentAcrossShadow(node);
+  }
+  return (
+    (panY &&
+      rootScrolls(doc, 'y') &&
+      root.scrollHeight - root.clientHeight > OVERFLOW_TOLERANCE_PX) ||
+    (panX &&
+      rootScrolls(doc, 'x') &&
+      root.scrollWidth - root.clientWidth > OVERFLOW_TOLERANCE_PX)
+  );
+}
 
 /** A surface that is not enabled does not press, however it is touched. */
 const DISABLED = ':disabled, [aria-disabled="true"]';
@@ -247,7 +347,11 @@ function paintElement(element: HTMLElement, paint: PressPaint): void {
     element.removeAttribute(PRESSED_ATTRIBUTE);
     return;
   }
-  element.setAttribute(PRESSED_ATTRIBUTE, paint);
+  // A step that keeps the paint writes nothing, so the element sees one
+  // change per paint.
+  if (element.getAttribute(PRESSED_ATTRIBUTE) !== paint) {
+    element.setAttribute(PRESSED_ATTRIBUTE, paint);
+  }
 }
 
 function clearTimer(slot: Slot): void {
@@ -512,6 +616,7 @@ function onPointerDown(event: PointerEvent): void {
       kind: 'down',
       x: event.clientX,
       y: event.clientY,
+      delayed: isInsideScroller(element),
     }),
   );
 }
