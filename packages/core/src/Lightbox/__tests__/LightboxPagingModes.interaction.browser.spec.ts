@@ -488,11 +488,11 @@ test('with a mouse (a fine pointer) a click beside the photo closes the gallery,
   }
 });
 
-test('with a mouse a click in the slot a moved-up caption leaves closes the gallery', async ({
+test('with a mouse a click on the caption row under a photo with none closes the gallery', async ({
   browser,
 }) => {
-  // With zoom a caption moves up under its fitted photo. The strip it leaves
-  // at the page's bottom edge is the backdrop, as without zoom.
+  // The pages share a caption row as tall as the tallest caption. Under the
+  // second photo, which has none, that row is the backdrop.
   const context = await browser.newContext({
     viewport: {width: 1280, height: 1100},
     hasTouch: false,
@@ -508,28 +508,36 @@ test('with a mouse a click in the slot a moved-up caption leaves closes the gall
       story: 'core-lightbox--gallery-with-captions',
       trigger: 'Open gallery with captions',
     });
-    const slot = await g.dialog.locator('[data-current]').evaluate(current => {
+    await g.dialog.getByRole('button', {name: 'Next'}).click();
+    await expect(g.dialog.locator('[data-current]')).toHaveCount(1);
+    await expect
+      .poll(async () =>
+        g.dialog.locator('[data-current] [data-lightbox-caption]').count(),
+      )
+      .toBe(0);
+    const band = await g.dialog.locator('[data-current]').evaluate(current => {
       const r = current.getBoundingClientRect();
-      const caption = current
-        .querySelector('[data-lightbox-caption]')
+      const media = current
+        .querySelector('[data-lightbox-page-media]')
         ?.getBoundingClientRect();
       return {
         x: r.left + r.width / 2,
-        y: r.bottom - 4,
-        captionBottom: caption?.bottom ?? Number.NaN,
+        y: ((media?.bottom ?? Number.NaN) + r.bottom) / 2,
+        rowHeight: r.bottom - (media?.bottom ?? Number.NaN),
       };
     });
-    // The caption sits above the strip, so the point is the page's own.
-    expect(slot.captionBottom).toBeLessThan(slot.y);
+    // The row has the tallest caption's height, and the point is in it.
+    expect(band.rowHeight).toBeGreaterThan(20);
     expect(
-      await page.evaluate(
-        ({x, y}) =>
-          document.elementFromPoint(x, y)?.hasAttribute('data-lightbox-page') ??
-          false,
-        slot,
-      ),
+      await page.evaluate(({x, y}) => {
+        const el = document.elementFromPoint(x, y);
+        return (
+          el?.closest('[data-lightbox-page][data-current]') != null &&
+          el.closest('[data-lightbox-page-media]') == null
+        );
+      }, band),
     ).toBe(true);
-    await page.mouse.click(slot.x, slot.y);
+    await page.mouse.click(band.x, band.y);
     await expect(g.dialog).toBeHidden();
   } finally {
     await context.close();
