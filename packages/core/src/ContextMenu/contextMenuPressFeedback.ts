@@ -21,7 +21,8 @@
 // closes, and then it returns on `springs.contextMenuDismiss`. An inline
 // trigger and Reduce Motion show no growth.
 
-import {useCallback, useEffect, useRef, type RefObject} from 'react';
+import {useCallback, useRef, type RefObject} from 'react';
+import {useAttachment} from '../hooks/useAttachment';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {PRESSED_ATTRIBUTE, type pressableProps} from '../utils/pressFeedback';
 import {observeMutations} from '../utils/sharedMutationObserver';
@@ -106,15 +107,14 @@ function pressMarkOwnerOf(marked: Element): Element | null {
 
 /**
  * The press feedback of a ContextMenu trigger. `isShown` is read at each
- * press: false for an inline trigger. `triggerKey` changes when the trigger
- * element is replaced (`triggerAs`), so the new one is followed. `isFollowed`
- * says whether ContextMenu's recognizer follows a finger or a pen now: the
- * growth starts only then.
+ * press: false for an inline trigger. It follows the element behind
+ * `triggerRef`, so a replaced trigger (`triggerAs`) is followed too. The
+ * `isFollowed` ref says whether ContextMenu's recognizer follows a finger or
+ * a pen now: the growth starts only then.
  */
 export function useContextMenuPressFeedback(
   triggerRef: RefObject<HTMLElement | null>,
   isShown: boolean,
-  triggerKey?: unknown,
   isFollowed: RefObject<() => boolean> = ALWAYS_FOLLOWED,
 ): ContextMenuPressFeedback {
   const pressable = usePressFeedback();
@@ -126,14 +126,20 @@ export function useContextMenuPressFeedback(
   // The menu the press opened is up: the growth holds until it closes.
   const isHeldRef = useRef(false);
 
-  // The compositor animator: dispose it at unmount, so no animation outlives
-  // the trigger.
-  useEffect(
-    () => () => {
+  // The compositor animator lives with the trigger it follows. A replaced
+  // trigger, or a feedback that goes while the trigger stays, takes the
+  // animation and the scale of ours with it.
+  useAttachment(
+    triggerRef,
+    element => () => {
       animatorRef.current?.dispose();
       animatorRef.current = null;
+      if (isGrownRef.current) {
+        isGrownRef.current = false;
+        element.style.removeProperty('scale');
+      }
     },
-    [],
+    null,
   );
 
   const animatorFor = useCallback((): Animator | null => {
@@ -144,10 +150,7 @@ export function useContextMenuPressFeedback(
     // The dismissal spring is a motion role: register its table before the
     // first motion. A second call does nothing.
     registerSpringsTable();
-    if (animatorRef.current?.element !== element) {
-      animatorRef.current?.dispose();
-      animatorRef.current = createMotionEngine(element);
-    }
+    animatorRef.current ??= createMotionEngine(element);
     return animatorRef.current;
   }, [triggerRef]);
 
@@ -239,42 +242,41 @@ export function useContextMenuPressFeedback(
   // pressable surface, so a control inside the trigger can carry the mark.
   // The machine lets a press go at a shorter travel than the recognizer's
   // tolerance, so only the recognizer ends the growth (`end`).
-  useEffect(() => {
-    void triggerKey;
-    const element = triggerRef.current;
-    if (element == null) {
-      return;
-    }
-    pressMarkOwners.add(element);
-    if (!isShown) {
+  useAttachment(
+    triggerRef,
+    element => {
+      pressMarkOwners.add(element);
+      if (!isShown) {
+        return () => {
+          pressMarkOwners.delete(element);
+        };
+      }
+      const isMarkedOn = () =>
+        element.getAttribute(PRESSED_ATTRIBUTE) === 'on' ||
+        [...element.querySelectorAll(`[${PRESSED_ATTRIBUTE}="on"]`)].some(
+          marked => pressMarkOwnerOf(marked) === element,
+        );
+      let isPressed = isMarkedOn();
+      const stopObserving = observeMutations(
+        element,
+        {attributes: true, attributeFilter: [PRESSED_ATTRIBUTE], subtree: true},
+        () => {
+          const next = isMarkedOn();
+          if (next !== isPressed) {
+            isPressed = next;
+            if (next) {
+              start(performance.now());
+            }
+          }
+        },
+      );
       return () => {
+        stopObserving();
         pressMarkOwners.delete(element);
       };
-    }
-    const isMarkedOn = () =>
-      element.getAttribute(PRESSED_ATTRIBUTE) === 'on' ||
-      [...element.querySelectorAll(`[${PRESSED_ATTRIBUTE}="on"]`)].some(
-        marked => pressMarkOwnerOf(marked) === element,
-      );
-    let isPressed = isMarkedOn();
-    const stopObserving = observeMutations(
-      element,
-      {attributes: true, attributeFilter: [PRESSED_ATTRIBUTE], subtree: true},
-      () => {
-        const next = isMarkedOn();
-        if (next !== isPressed) {
-          isPressed = next;
-          if (next) {
-            start(performance.now());
-          }
-        }
-      },
-    );
-    return () => {
-      stopObserving();
-      pressMarkOwners.delete(element);
-    };
-  }, [triggerRef, triggerKey, isShown, start]);
+    },
+    isShown,
+  );
 
   return {pressable, release, end, hold};
 }
