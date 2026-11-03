@@ -1537,9 +1537,6 @@ function DropdownMenuPopover({
 
   const handleButtonClick = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
-      // The pointer type of the press this click ends, when it began on the
-      // trigger. Every click spends it.
-      const pressPointerType = menuPress.takeTriggerPressPointerType();
       // The press already opened or closed the menu; its click is spent.
       if (menuPress.isTriggerClickFromPress()) {
         return;
@@ -1554,7 +1551,7 @@ function DropdownMenuPopover({
         modality === 'pointer'
           ? (normalizePointerType(
               (e.nativeEvent as Partial<PointerEvent>).pointerType ?? '',
-            ) ?? pressPointerType)
+            ) ?? menuPress.triggerPressPointerType())
           : null;
       if (isControlled) {
         if (controlledIsOpen) {
