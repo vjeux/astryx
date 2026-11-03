@@ -20,7 +20,8 @@
  * element whose `ref` is not the menu's or the trigger's. So does a handler
  * forward on an element that does not spread the trigger props. With a
  * trigger, the menu element must sit in the component's one returned JSX,
- * with no function, prop value or early return in between. The ref form has
+ * through DOM elements and fragments only, with no function, prop value or
+ * early return in between. The ref form has
  * no press while the menu is unmounted. The deprecated forms keep working
  * there. Comments are the codemod's only report channel. Each is added once, so
  * a second run changes nothing.
@@ -53,8 +54,8 @@ const CALL_COMMENT =
   'so it was left unchanged. ';
 const TRIGGER_COMMENT =
   " TODO(astryx upgrade): the trigger props' onPointerDown and onContextMenu " +
-  "are deprecated. Give the element the trigger props' ref: the press " +
-  'listens for its press-down on the document. Keep a forward while an ' +
+  "are deprecated. Give the element the trigger props' ref: the menu " +
+  'listens on it. Keep a forward while an ' +
   'ancestor stops the press-down. This use could not be rewritten safely, ' +
   'so it was left unchanged. ';
 
@@ -462,13 +463,26 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
 
 /**
  * Whether a JSX attribute's element always renders with its component: it
- * sits in the component's one top-level return, reached only through JSX
- * children. A function, a prop value, a condition or another return stops it.
+ * sits in the component's one top-level return, reached only through the
+ * children of DOM elements and fragments. A function, a prop value, a
+ * component element (which may hold its children back), a condition or
+ * another return stops it.
  * @param {any} j @param {any} path @param {any} fnPath
  */
 function isAlwaysRendered(j, path, fnPath) {
-  const isJsx = (/** @type {any} */ node) =>
-    node?.type === 'JSXElement' || node?.type === 'JSXFragment';
+  const passesChildren = (/** @type {any} */ node) => {
+    if (node?.type === 'JSXFragment') {
+      return true;
+    }
+    const name = node?.type === 'JSXElement' ? node.openingElement.name : null;
+    return (
+      (name?.type === 'JSXIdentifier' &&
+        (/^[a-z]/.test(name.name) || name.name === 'Fragment')) ||
+      (name?.type === 'JSXMemberExpression' &&
+        name.object.name === 'React' &&
+        name.property.name === 'Fragment')
+    );
+  };
   let current = path.parent?.parent;
   if (current?.node.type !== 'JSXElement') {
     return false;
@@ -476,13 +490,13 @@ function isAlwaysRendered(j, path, fnPath) {
   for (;;) {
     const parent = current.parent;
     const node = parent?.node;
-    if (isJsx(node) && (node.children ?? []).includes(current.node)) {
+    if (passesChildren(node) && (node.children ?? []).includes(current.node)) {
       current = parent;
       continue;
     }
     if (
       node?.type === 'JSXExpressionContainer' &&
-      isJsx(parent.parent?.node) &&
+      passesChildren(parent.parent?.node) &&
       (parent.parent.node.children ?? []).includes(node)
     ) {
       current = parent;

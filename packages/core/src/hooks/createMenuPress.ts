@@ -831,67 +831,6 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
   };
 }
 
-/** A press's press-down handlers, which its document's shared pair calls. */
-interface PressDownWatch {
-  readonly onPointerDown: (
-    event: PointerEvent,
-    path: ReadonlyArray<EventTarget>,
-  ) => void;
-  readonly onContextMenu: (
-    event: MouseEvent,
-    path: ReadonlyArray<EventTarget>,
-  ) => void;
-}
-
-// One press-down listener pair per document, shared by every press in it, so
-// a closed menu adds none of its own. Each event's path is read once.
-const pressDownWatches = new WeakMap<
-  Document,
-  {
-    readonly watches: Set<PressDownWatch>;
-    readonly onPointerDown: (event: PointerEvent) => void;
-    readonly onContextMenu: (event: MouseEvent) => void;
-  }
->();
-
-function watchPressDown(doc: Document, watch: PressDownWatch): () => void {
-  let shared = pressDownWatches.get(doc);
-  if (shared == null) {
-    const watches = new Set<PressDownWatch>();
-    const created = {
-      watches,
-      onPointerDown: (event: PointerEvent) => {
-        const path = event.composedPath();
-        for (const each of [...watches]) {
-          each.onPointerDown(event, path);
-        }
-      },
-      onContextMenu: (event: MouseEvent) => {
-        const path = event.composedPath();
-        for (const each of [...watches]) {
-          each.onContextMenu(event, path);
-        }
-      },
-    };
-    doc.addEventListener('pointerdown', created.onPointerDown);
-    doc.addEventListener('contextmenu', created.onContextMenu);
-    pressDownWatches.set(doc, created);
-    shared = created;
-  }
-  shared.watches.add(watch);
-  return () => {
-    const current = pressDownWatches.get(doc);
-    if (current == null || !current.watches.delete(watch)) {
-      return;
-    }
-    if (current.watches.size === 0) {
-      doc.removeEventListener('pointerdown', current.onPointerDown);
-      doc.removeEventListener('contextmenu', current.onContextMenu);
-      pressDownWatches.delete(doc);
-    }
-  };
-}
-
 /**
  * Run the menu press model on `menu`, with no React. The row under a release
  * acts, and the highlight follows a held pointer. A mouse press on `trigger`
@@ -899,7 +838,8 @@ function watchPressDown(doc: Document, watch: PressDownWatch): () => void {
  * Destroy it to remove every listener it added. `update` changes its options
  * or trigger from the next event. The press starts after the page's own
  * press-down handlers. A press-down that one of them stops, or cancels inside
- * the menu, starts no press. The trigger must be in the menu's document.
+ * the menu, starts no press. It acts once the press-down bubbles to its
+ * document, so a script's own press-down must set `bubbles: true`.
  *
  * - The document tracks the pointer by `pointerId`. A finger's events stay
  *   with the element it landed on, so the menu never sees a finger that slid
@@ -964,14 +904,13 @@ export function createMenuPress(
   const hadMarker = menu.hasAttribute(MENU_PRESS_MARKER);
   menu.setAttribute(MENU_PRESS_MARKER, '');
 
-  // The press-down listeners sit on the menu's document, in the bubble phase,
-  // shared with every other press there.
-  // The page's own handlers on the menu and the trigger run first, React's
-  // delegated ones included, as a handler composed before the press did. A
-  // press-down that one of them stops, or cancels inside the menu, starts no
-  // press. A handler that forwards an event to the handle methods takes it
-  // first, so the press sees each event once.
-  const pressDocument = menu.ownerDocument;
+  // The press listens on the menu and the trigger themselves. It acts on a
+  // press-down once it reaches the document. The page's own handlers run
+  // first, React's delegated ones included, as a handler composed before the
+  // press did. A press-down that one of them stops, or cancels inside the
+  // menu, starts no press. That document listener lives only while the
+  // press-down dispatches. A handler that forwards an event to the handle
+  // methods takes it first, so the press sees each event once.
   const taken = new WeakSet<Event>();
   const take = (event: Event): boolean => {
     if (isDestroyed || taken.has(event)) {
@@ -980,33 +919,65 @@ export function createMenuPress(
     taken.add(event);
     return true;
   };
-  const onPointerDown = (
-    event: PointerEvent,
-    path: ReadonlyArray<EventTarget>,
-  ) => {
-    if (trigger != null && path.includes(trigger)) {
+  /** Runs `act` once `event` reaches its document; never if it is stopped. */
+  const afterPageHandlers = (event: Event, act: () => void) => {
+    const doc =
+      (event.currentTarget as Node | null)?.ownerDocument ?? menu.ownerDocument;
+    const view = doc.defaultView;
+    const settle = (reached: Event) => {
+      // A press-down that a page handler dispatches during this one reaches
+      // the document first. Keep waiting for this one.
+      if (reached !== event) {
+        return;
+      }
+      doc.removeEventListener(event.type, settle);
+      view?.clearTimeout(timer);
+      act();
+    };
+    doc.addEventListener(event.type, settle);
+    // A press-down stopped on its way never reaches the document. Its
+    // listener goes at the next task.
+    const timer = view?.setTimeout(() => {
+      doc.removeEventListener(event.type, settle);
+    }, 0);
+  };
+  const onMenuPointerDown = (event: PointerEvent) => {
+    // A press-down on a trigger inside the menu is the trigger's.
+    if (trigger != null && event.composedPath().includes(trigger)) {
+      return;
+    }
+    afterPageHandlers(event, () => {
+      if (!event.defaultPrevented && take(event)) {
+        core.handleMenuPointerDown(event);
+      }
+    });
+  };
+  const onTriggerPointerDown = (event: PointerEvent) => {
+    afterPageHandlers(event, () => {
       if (take(event)) {
         core.handleTriggerPointerDown(event);
       }
+    });
+  };
+  const onTriggerContextMenu = (event: MouseEvent) => {
+    afterPageHandlers(event, () => {
+      if (take(event)) {
+        core.handleTriggerContextMenu(event);
+      }
+    });
+  };
+  menu.addEventListener('pointerdown', onMenuPointerDown);
+  const setTrigger = (next: HTMLElement | null) => {
+    if (next === trigger) {
       return;
     }
-    if (path.includes(menu) && !event.defaultPrevented && take(event)) {
-      core.handleMenuPointerDown(event);
-    }
+    trigger?.removeEventListener('pointerdown', onTriggerPointerDown);
+    trigger?.removeEventListener('contextmenu', onTriggerContextMenu);
+    trigger = next;
+    trigger?.addEventListener('pointerdown', onTriggerPointerDown);
+    trigger?.addEventListener('contextmenu', onTriggerContextMenu);
   };
-  const onContextMenu = (
-    event: MouseEvent,
-    path: ReadonlyArray<EventTarget>,
-  ) => {
-    if (trigger != null && path.includes(trigger) && take(event)) {
-      core.handleTriggerContextMenu(event);
-    }
-  };
-  const unwatchPressDown = watchPressDown(pressDocument, {
-    onPointerDown,
-    onContextMenu,
-  });
-  trigger = current.trigger ?? null;
+  setTrigger(current.trigger ?? null);
 
   return {
     isTriggerClickFromPress: () => core.isTriggerClickFromPress(),
@@ -1017,7 +988,7 @@ export function createMenuPress(
       }
       current = {...current, ...next};
       if ('trigger' in next) {
-        trigger = next.trigger ?? null;
+        setTrigger(next.trigger ?? null);
       }
     },
     handleTriggerPointerDown(event) {
@@ -1038,8 +1009,8 @@ export function createMenuPress(
       disconnect();
       releaseOwn();
       releasePage();
-      unwatchPressDown();
-      trigger = null;
+      menu.removeEventListener('pointerdown', onMenuPointerDown);
+      setTrigger(null);
       if (!hadMarker) {
         menu.removeAttribute(MENU_PRESS_MARKER);
       }
