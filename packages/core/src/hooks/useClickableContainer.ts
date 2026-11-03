@@ -6,7 +6,8 @@
  * @file useClickableContainer.ts
  * @input Container ref, interactive element ref, click/href handlers
  * @output onClick and onMouseUp handlers for the container; INTERACTIVE_SELECTORS list;
- *   hasInteractiveAncestor and the shared innermostInteractive walk
+ *   hasInteractiveAncestor and the shared innermostInteractive walk; the
+ *   internal useClickableContainerProxy, whose container's marker is optional
  * @position Core hook for clickable containers with nested interactive
  *   elements. A click on a nested button or link does not run the card's
  *   action. Each navigation passes the rule in utils/safeUrl.ts first.
@@ -156,6 +157,15 @@ export interface UseClickableContainerOptions {
   disabled?: boolean;
 }
 
+/** The options of {@link useClickableContainerProxy}. */
+export interface ClickableContainerProxyOptions extends UseClickableContainerOptions {
+  /**
+   * Whether the container is marked as a pressable container, which an
+   * enclosing clickable container treats as a control. @default true
+   */
+  readonly marksContainer?: boolean;
+}
+
 export interface ClickableContainerResult {
   onClick: (event: MouseEvent<HTMLElement>) => void;
   onMouseUp: (event: MouseEvent<HTMLElement>) => void;
@@ -188,21 +198,33 @@ export interface ClickableContainerResult {
  * );
  * ```
  */
-export function useClickableContainer({
+export function useClickableContainer(
+  options: UseClickableContainerOptions,
+): ClickableContainerResult {
+  return useClickableContainerProxy(options);
+}
+
+/**
+ * `useClickableContainer`, with the container's marker optional. Internal:
+ * Item serves its delegate and List link rows from one call and marks only the
+ * delegate row.
+ */
+export function useClickableContainerProxy({
   containerRef,
   interactiveRef,
   onClick: onClickProp,
   href,
   target,
   disabled = false,
-}: UseClickableContainerOptions): ClickableContainerResult {
+  marksContainer = true,
+}: ClickableContainerProxyOptions): ClickableContainerResult {
   // Mark container as pressable for the interactive selector check
   useEffect(() => {
     const el = containerRef.current;
-    if (el) {
+    if (el && marksContainer) {
       el.setAttribute(PRESSABLE_CONTAINER_ATTRIBUTE, 'true');
     }
-  }, [containerRef]);
+  }, [containerRef, marksContainer]);
 
   const onClick = useCallback(
     (event: MouseEvent<HTMLElement>) => {
