@@ -7,7 +7,7 @@
  * @output rideKeyboard, which moves an element with the keyboard on the
  *   keyboard's own motion
  * @position Keyboard module, internal to core. A guide subscriber calls it
- *   for each transition, as BottomSheet's hook does.
+ *   for each transition, as ChatLayout's and BottomSheet's hooks do.
  *
  * SYNC: When modified, update /packages/core/src/keyboard/README.md
  */
@@ -23,12 +23,13 @@ import {cubicBezier} from '../motion/bezier';
 import type {KeyboardTransition} from './keyboardModel';
 
 /**
- * Moves `animator`'s element to `to` with the keyboard: on its curve from
- * `transition.start`, or at once when the keyboard jumps.
+ * Moves `animator`'s element to `to` with the keyboard: on its spring or its
+ * curve from `transition.start`, or at once when the keyboard jumps.
  *
- * Android's keyboard moves on Gboard's slides up and down
- * (motion/android/keyboard.ts). The transition publishes the slide
- * (`curve`), and the ride plays it. Every ride starts at the transition's
+ * iOS's keyboard moves on UIKit's keyboard spring, and Android's on Gboard's
+ * slides up and down (motion/android/keyboard.ts). The transition publishes
+ * which one (`curve`, or else `spring`), and the ride plays it. Every ride
+ * starts at the transition's
  * start, so content that joins a slide late lands where the keyboard is. A
  * transition that is not animated lands at once, such as a keyboard changing
  * while up. So does a slide that has ended by the call. These values are the
@@ -51,8 +52,8 @@ export function rideKeyboard(
   // element short of its target.
   if (
     !transition.animated ||
-    transition.curve == null ||
-    performance.now() >= transition.start + transition.curve.durationMs
+    (transition.curve != null &&
+      performance.now() >= transition.start + transition.curve.durationMs)
   ) {
     animator.set(to);
     return null;
@@ -61,6 +62,9 @@ export function rideKeyboard(
   // On a touch screen it cross-fades the element to its new place, and
   // elsewhere it moves the element at once.
   const options = {at: transition.start};
+  if (transition.curve == null) {
+    return animator.animate(to, {spring: transition.spring}, options);
+  }
   const span = transition.curve.durationMs / 1000;
   const ease = cubicBezier(transition.curve.points);
   const curves: Partial<Record<MotionProperty, MotionCurve>> = {};

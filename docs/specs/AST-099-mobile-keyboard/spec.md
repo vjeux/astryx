@@ -28,8 +28,14 @@ affects_consumer_docs:
 {
   "paths": [
     "packages/core/src/BottomSheet/**",
+    "packages/core/src/Chat/useChatKeyboard.ts",
+    "packages/core/src/Chat/useChatKeyboard.test.tsx",
+    "packages/core/src/Chat/keyboardSurface.ts",
+    "packages/core/src/Chat/__tests__/ChatLayoutKeyboard.interaction.browser.spec.ts",
     "packages/core/src/keyboard/**",
     "packages/core/src/motion/android/**",
+    "packages/core/src/motion/uikit/keyboard.ts",
+    "packages/core/src/motion/uikit/keyboardNotification.test.ts",
     "packages/core/src/utils/layoutViewport.ts",
     "packages/core/src/utils/layoutViewport.test.ts"
   ]

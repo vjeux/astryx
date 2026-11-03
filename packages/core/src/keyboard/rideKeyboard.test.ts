@@ -4,13 +4,15 @@
  * @file rideKeyboard.test.ts
  * @input vitest, rideKeyboard, a stand-in animator
  * @output Tests that a ride plays the curve the transition publishes, from
- *   the transition's start, and lands a jump or an ended slide at once
+ *   the transition's start. That is its spring without an eased slide, or
+ *   Gboard's slide with one. A jump or an ended slide lands at once.
  * @position Unit tests for keyboard/rideKeyboard.ts
  */
 
 import {describe, expect, it, vi} from 'vitest';
 import type {Animator} from '../motion/animator';
 import {keyboard as androidKeyboard} from '../motion/android';
+import {keyboard} from '../motion/uikit';
 import type {KeyboardTransition} from './keyboardModel';
 import {rideKeyboard} from './rideKeyboard';
 
@@ -35,10 +37,28 @@ const transition = (
   animated: true,
   predicted: false,
   curve: null,
+  spring: keyboard.spring,
   ...overrides,
 });
 
 describe('rideKeyboard', () => {
+  it('plays the spring the transition publishes, from its start', () => {
+    const animator = standInAnimator();
+    const spring = {mass: 1, stiffness: 300, damping: 30};
+
+    rideKeyboard(
+      animator as unknown as Animator,
+      {y: -300},
+      transition({spring}),
+    );
+
+    expect(animator.animate).toHaveBeenCalledWith(
+      {y: -300},
+      {spring},
+      {at: 1000},
+    );
+  });
+
   it('plays the eased slide the transition publishes where it has one', () => {
     const animator = standInAnimator();
 

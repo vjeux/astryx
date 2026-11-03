@@ -4,30 +4,23 @@
 
 /**
  * @file keyboardHeight.ts
- * @input The visual viewport, focus events, React refs and effects, the
- *   Reduce Motion and touch queries, and the layout viewport's height
- * @output The on-screen keyboard module: measureKeyboardHeight,
- *   isKeyboardMeasurable, subscribeKeyboardHeight, getKeyboardHeight,
- *   isTextEntryControl, findTextEntryControl, refuseFocusReveal,
- *   watchRevealPan, and BottomSheet's useSheetKeyboard hook
+ * @input The visual viewport, focus events, React's external store and the
+ *   layout viewport's height
+ * @output The on-screen keyboard module: its height, its reports, the
+ *   text-entry checks, the focus and tap routes, the dismissal blur and the
+ *   reveal-pan watch
  * @position Core's one source for the on-screen keyboard. It is internal to
- *   core and never exported from the package.
+ *   core. BottomSheet (sheetKeyboard.ts), ChatLayout and the keyboard layout
+ *   guide read the keyboard here and nowhere else.
  *
  * SYNC: When modified, update /packages/core/src/keyboard/README.md
  */
 
-import {useMediaQuery} from '../hooks/useMediaQuery';
-import {TOUCH_QUERY} from '../utils/touchPresentation';
-import {animatorFor, type Animator} from '../motion/animator';
-import {getKeyboardLayoutGuide, keyboardProfileOf} from './keyboardLayoutGuide';
-import {rideKeyboard} from './rideKeyboard';
-import type {KeyboardTransition} from './keyboardModel';
-import {useEffect, useRef, useState, type RefObject} from 'react';
-import {flushSync} from 'react-dom';
+import {useCallback, useSyncExternalStore} from 'react';
 import {layoutViewportHeight} from '../utils/layoutViewport';
 
-// A shortfall smaller than this is rounding, not a keyboard.
-const KEYBOARD_EPSILON = 1;
+/** A shortfall smaller than this is rounding, not a keyboard, CSS px. */
+export const KEYBOARD_EPSILON = 1;
 const NON_TEXT_INPUT_TYPES = new Set([
   'button',
   'checkbox',
@@ -226,6 +219,49 @@ export function getKeyboardHeight(win: Window): number {
 }
 
 /**
+ * The keyboard height for a component, CSS px, re-rendering when it changes.
+ * 0 during server render and before hydration reads a viewport.
+ *
+ * @example
+ * ```
+ * const keyboardHeight = useKeyboardHeight();
+ * <div {...stylex.props(styles.bottom(keyboardHeight))} />
+ * ```
+ */
+export function useKeyboardHeight(win?: Window | null): number {
+  const target = win ?? (typeof window === 'undefined' ? null : window);
+  // One subscription for the component's life, per window. A subscribe
+  // function made anew each render would make React unsubscribe and
+  // resubscribe on every render. A lone reader would then detach the module's
+  // listeners and measure again.
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      if (target == null) {
+        return () => {};
+      }
+      let last = getKeyboardHeight(target);
+      return subscribeKeyboardHeight(target, event => {
+        if (event.type === 'viewport' && event.height !== last) {
+          last = event.height;
+          onChange();
+        }
+      });
+    },
+    [target],
+  );
+  const getSnapshot = useCallback(
+    () => (target == null ? 0 : getKeyboardHeight(target)),
+    [target],
+  );
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+/** The keyboard height during server render and hydration. */
+function getServerSnapshot(): number {
+  return 0;
+}
+
+/**
  * Whether focusing `element` brings up a keyboard for typing text. A control
  * with `inputmode="none"` brings up none.
  */
@@ -279,13 +315,36 @@ export function findTextEntryControl(
     : null;
 }
 
+// Documents whose keyboard the keyboard module dismisses just now, as a drag
+// does in keyboardDismiss.ts. The blur that dismissal makes is not the
+// keyboard's Done. Nothing parks the focus it leaves for nothing, so a
+// dismissal moves focus nowhere.
+const dismissing = new WeakSet<Document>();
+
+/**
+ * Blurs `element` as the keyboard module's dismissal: the keyboard goes down,
+ * and no surface's focus takeover parks the focus it leaves.
+ */
+export function blurAsDismissal(element: HTMLElement): void {
+  const doc = element.ownerDocument;
+  dismissing.add(doc);
+  try {
+    element.blur();
+  } finally {
+    dismissing.delete(doc);
+  }
+}
+
 /** The caller's rules for refuseFocusReveal. */
 export interface RefuseFocusRevealOptions {
   /** Whether to claim at all just now, checked on every blur. */
   isActive?: () => boolean;
   /** The control a focus move is heading to, when this caller claims it. */
   claim: (destination: EventTarget | null) => HTMLElement | null;
-  /** Focus left `origin` for nothing (the keyboard's Done): park it, if at all. */
+  /**
+   * Focus left `origin` for nothing (the keyboard's Done): park it, if at
+   * all. Never called for the module's own dismissal (blurAsDismissal).
+   */
   park?: (origin: EventTarget | null) => void;
 }
 
@@ -334,7 +393,7 @@ export function refuseFocusReveal(
       }
       return;
     }
-    if (event.relatedTarget == null) {
+    if (event.relatedTarget == null && !dismissing.has(doc)) {
       park?.(event.target);
     }
   };
@@ -412,8 +471,8 @@ export interface RevealPanWatch {
  * layout viewport. Since the report there is no touch, document scroll or
  * zoom, and a text field the caller owns has focus. The watch reads the
  * behavior, never the user agent. The caller lands its field itself and
- * puts the pan back. Every keyboard-aware surface can use it, as BottomSheet's
- * hook below does.
+ * puts the pan back. Chrome's pan can start while a composer still rides up.
+ * BottomSheet and ChatLayout both use it.
  *
  * @example
  * ```
@@ -530,774 +589,142 @@ export function watchRevealPan(
   };
 }
 
-interface UseSheetKeyboardOptions {
-  bodyRef: RefObject<HTMLElement | null>;
-  bottomClearance: number;
-  isEnabled: boolean;
-  isFullyExpanded: boolean;
-  isPageScrollLocked: boolean;
-  isSheetTraveling: boolean;
-  isOpen: boolean;
-  isPresented: boolean;
-  sheetRef: RefObject<HTMLDivElement | null>;
-}
+// A touch that moves this far is the browser's to scroll, not a tap on a
+// field. Safari claims a touch for scrolling past 10 px.
+const TAP_SLOP_PX = 10;
 
-interface KeyboardGeometry {
-  bodyBottom: number;
-}
-
-function getObstructionTop(): number {
-  return layoutViewportHeight(window) - getKeyboardHeight(window);
-}
-
-// Windows whose browser revealed a focused field itself right after the
-// keyboard's report, by panning the visual viewport to it. Firefox for
-// Android does so 54 to 143 ms after the report while the field is under the
-// keyboard. The module learns this from the behavior, never from the user
-// agent.
-// From then on, a sheet there reveals its field at once, in the report's own
-// frame.
-let revealsAtReport = new WeakSet<Window>();
-
-/** Forgets every window's recorded reveal, for tests. */
-export function __resetRevealsAtReportForTest(): void {
-  revealsAtReport = new WeakSet<Window>();
-}
-
-// How far the body runs under the keyboard's top, CSS px. The keyboard's top
-// comes from `innerHeight`, a whole number of CSS px, but the visual viewport
-// and element rects are fractional. On the Android emulator, Chrome's visual
-// viewport is 754.3 px over a 754 px layout viewport. A sheet sized to it
-// then ends 0.3 px below `innerHeight` with no keyboard up. So an overlap
-// under one CSS px is `innerHeight`'s precision, not an obstruction.
-function overlapOf(bodyBottom: number, obstructionTop: number): number {
-  const overlap = bodyBottom - obstructionTop;
-  return overlap > KEYBOARD_EPSILON ? overlap : 0;
-}
-
-// Under half a pixel is rounding, not a keyboard.
-function isVisualViewportRecovered(): boolean {
-  return getKeyboardHeight(window) <= 0.5;
+/** The caller's rules for claimTapFocus. */
+export interface ClaimTapFocusOptions {
+  /** The control a touch on `target` would focus, when this caller claims it. */
+  claim: (target: EventTarget | null) => HTMLElement | null;
+  /** Focuses the claimed control for a tap that ended at (x, y). */
+  deliver: (control: HTMLElement, x: number, y: number) => void;
 }
 
 /**
- * BottomSheet's use of the keyboard: a Tall sheet's scroll range, its focus
- * moves and its dismissal (see README.md). Returns the room the keyboard
- * takes at the end of the body, CSS px, or 0 without a keyboard.
+ * The tap route. `deliver` focuses a one-finger tap on `region` that `claim`
+ * accepts, such as a field without focus, instead of the browser. The
+ * browser's own focus would reveal the field by scrolling the document. The
+ * route prevents the tap's default at its end. For a moment it also swallows
+ * the mouse events Safari may still send for the tap. The browser keeps a
+ * touch that moves past the scroll slop, and a second finger. Returns a
+ * cleanup.
+ *
+ * @example
+ * ```
+ * const stop = claimTapFocus(composer, {
+ *   claim: target => editableWithoutFocus(target),
+ *   deliver: (field, x, y) => focusAtPoint(field, x, y),
+ * });
+ * ```
  */
-export function useSheetKeyboard({
-  bodyRef,
-  bottomClearance,
-  isEnabled,
-  isFullyExpanded,
-  isPageScrollLocked,
-  isSheetTraveling,
-  isOpen,
-  isPresented,
-  sheetRef,
-}: UseSheetKeyboardOptions): number {
-  // The room the keyboard takes at the end of the body, CSS px. The sheet
-  // lays it out through a functional style on its own body.
-  const [keyboardInset, setKeyboardInset] = useState(0);
-  const hasKeyboardLayoutRef = useRef(false);
-  const retainKeyboardLayoutRef = useRef(false);
-  const isFullyExpandedRef = useRef(isFullyExpanded);
-  const isOpenRef = useRef(isOpen);
-  isFullyExpandedRef.current = isFullyExpanded;
-  isOpenRef.current = isOpen;
-  // Touch-only work, the ride and the reveal-pan watch, attaches only under a
-  // coarse primary pointer (the touch query). Under a fine one, the hook
-  // registers no touch listener.
-  const isTouch = useMediaQuery(TOUCH_QUERY, false);
-
-  useEffect(() => {
-    if (!isEnabled || !isSheetTraveling) {
-      return;
-    }
-    const sheet = sheetRef.current;
-    const activeElement = document.activeElement;
+export function claimTapFocus(
+  region: HTMLElement,
+  {claim, deliver}: ClaimTapFocusOptions,
+): () => void {
+  // The touch the route follows, and the listeners that follow it: on the
+  // region only, and only while that touch is down.
+  let start: {x: number; y: number; control: HTMLElement} | null = null;
+  // After a delivered tap, the route swallows the mouse events Safari may
+  // still send for it. On the iOS simulator, a tap held about 250 ms still
+  // gets its mousedown and click a few ms after its touchend. That happens
+  // even though the touchend was cancelable and the route cancelled it. A
+  // quick tap gets none, and a non-passive listener from the touch's start
+  // changes nothing. The events go to whatever is under the finger by then.
+  // Once the composer starts down with the keyboard, that is the transcript,
+  // where the mousedown takes the focus the tap delivered. So the document
+  // listens from the tap's end until its click. The next touch, pointer press
+  // or key also ends the watch. A click a key makes (detail 0) is never the
+  // tap's.
+  let disarmGhost: (() => void) | null = null;
+  const swallowGhost = () => {
+    disarmGhost?.();
+    const doc = region.ownerDocument;
+    const swallow = (event: MouseEvent) => {
+      if (event.detail === 0) {
+        return;
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    const onClick = (event: MouseEvent) => {
+      swallow(event);
+      disarm();
+    };
+    const disarm = () => {
+      doc.removeEventListener('mousedown', swallow, true);
+      doc.removeEventListener('mouseup', swallow, true);
+      doc.removeEventListener('click', onClick, true);
+      doc.removeEventListener('touchstart', disarm, true);
+      doc.removeEventListener('pointerdown', disarm, true);
+      doc.removeEventListener('keydown', disarm, true);
+      disarmGhost = null;
+    };
+    doc.addEventListener('mousedown', swallow, true);
+    doc.addEventListener('mouseup', swallow, true);
+    doc.addEventListener('click', onClick, true);
+    doc.addEventListener('touchstart', disarm, {capture: true, passive: true});
+    doc.addEventListener('pointerdown', disarm, {capture: true, passive: true});
+    doc.addEventListener('keydown', disarm, {capture: true, passive: true});
+    disarmGhost = disarm;
+  };
+  const stopFollowing = () => {
+    start = null;
+    region.removeEventListener('touchmove', onMove);
+    region.removeEventListener('touchend', onEnd);
+    region.removeEventListener('touchcancel', stopFollowing);
+  };
+  function onMove(event: TouchEvent) {
+    const touch = event.touches[0];
     if (
-      sheet &&
-      activeElement instanceof HTMLElement &&
-      activeElement !== sheet &&
-      sheet.contains(activeElement)
+      start == null ||
+      event.touches.length !== 1 ||
+      touch == null ||
+      Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > TAP_SLOP_PX
     ) {
-      // Keep the current keyboard scroll range while focusing the sheet
-      // dismisses the keyboard. Viewport resize events unwind that layout as
-      // the visual viewport recovers, avoiding a content jump on the first
-      // drag frame.
-      retainKeyboardLayoutRef.current = hasKeyboardLayoutRef.current;
-      sheet.focus({preventScroll: true});
+      stopFollowing();
     }
-  }, [isEnabled, isSheetTraveling, sheetRef]);
-
-  useEffect(() => {
-    if (!isEnabled || !isPresented || isOpen) {
-      return;
-    }
-    const sheet = sheetRef.current;
-    const activeElement = document.activeElement;
+  }
+  function onEnd(event: TouchEvent) {
+    const touch = event.changedTouches[0];
+    const tap = start;
+    stopFollowing();
+    // Still the same field, still without focus.
     if (
-      sheet &&
-      activeElement instanceof HTMLElement &&
-      activeElement !== sheet &&
-      sheet.contains(activeElement)
+      tap == null ||
+      touch == null ||
+      !event.cancelable ||
+      claim(tap.control) !== tap.control
     ) {
-      retainKeyboardLayoutRef.current = hasKeyboardLayoutRef.current;
-      activeElement.blur();
-    }
-  }, [isEnabled, isOpen, isPresented, sheetRef]);
-
-  useEffect(() => {
-    const body = bodyRef.current;
-    const sheet = sheetRef.current;
-    if (!isEnabled || !isPresented || !body) {
       return;
     }
-
-    let keyboardGeometry: KeyboardGeometry | null = null;
-    // Where a smooth reveal under way is taking the body's scrollTop.
-    let smoothTarget: number | null = null;
-    // The room laid out at the end of the body, CSS px, and the scroll range
-    // it adds there. The room's drop takes that range back. The two can
-    // differ: Chrome 124 added 344 px of range for a 360 px room.
-    let room = 0;
-    let roomRange = 0;
-    // Where the keyboard layout guide publishes the keyboard's own slide, as
-    // Gboard's in Chrome on Android, the sheet's content rides it. This needs
-    // a coarse primary pointer and Chrome's schedule. Under a fine pointer
-    // nothing of the ride attaches. In a browser without the VirtualKeyboard
-    // API, such as iOS Safari or Firefox for Android, the guide never starts.
-    // There the room follows the reports. The hook subscribes to the guide
-    // before the keyboard module below, so the guide publishes a report's
-    // transition before the reveal reads it.
-    const guide =
-      isTouch && keyboardProfileOf(window) === 'chromium'
-        ? getKeyboardLayoutGuide(window)
-        : null;
-    const contentAnimator = (): Animator | null => {
-      const content = body.firstElementChild;
-      return guide != null && content instanceof HTMLElement
-        ? animatorFor(content)
-        : null;
-    };
-    // How far a ride has moved the content from where its layout puts it, as
-    // the page draws it now. The reveal reads a control's rect in the same
-    // frame.
-    const rideOffset = () => {
-      const content = body.firstElementChild;
-      if (!(content instanceof HTMLElement)) {
-        return 0;
-      }
-      const translate = getComputedStyle(content).translate;
-      return parseFloat(translate.split(' ')[1] ?? '') || 0;
-    };
-    // The keyboard's show the guide plays on its slide right now, if any. At
-    // a report, a show whose slide has ended counts too. A busy page can read
-    // the report that late, and the ride then lands at once.
-    const showOnSlide = (atReport: boolean): KeyboardTransition | null => {
-      const transition = guide?.transition;
-      return transition != null &&
-        transition.kind === 'show' &&
-        transition.animated &&
-        transition.curve != null &&
-        (atReport ||
-          performance.now() < transition.start + transition.curve.durationMs)
-        ? transition
-        : null;
-    };
-    // A hide the hook holds the room through (see holdRoomThrough).
-    let heldHide: {readonly release: () => void} | null = null;
-    let documentScrollAtKeyboard: {x: number; y: number} | null = null;
-    // The keyboard's top and the body's scroll when the keyboard came up. A
-    // keyboard that closes puts the body back at that scroll.
-    let keyboardObstructionTop: number | null = null;
-    let bodyScrollTopAtKeyboard: number | null = null;
-    // The hook takes focus moves over where this window measures the
-    // keyboard, never by user agent, and only under a coarse primary pointer.
-    // Under a fine one, it registers no touch-only listener.
-    // Desktop Safari and Firefox measure too, but show no on-screen keyboard
-    // and keep the browser's own focus. The effect runs again when the
-    // pointer changes, so a tablet that docks a mouse drops the claim.
-    const ownsFocusTransitions = isTouch && isKeyboardMeasurable(window);
-
-    // Lays the inset out before anything measures or scrolls the body: the
-    // reveal scrolls into the room it adds in the same frame.
-    const writeInset = (inset: number) => {
-      const changes = inset !== room;
-      const rangeBefore = changes ? body.scrollHeight : 0;
-      room = inset;
-      // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the reveal scrolls into this room in the same frame, so it must be laid out before the reveal measures
-      flushSync(() => setKeyboardInset(inset));
-      if (changes) {
-        roomRange =
-          inset === 0
-            ? 0
-            : Math.max(0, roomRange + body.scrollHeight - rangeBefore);
-      }
-    };
-
-    const clearKeyboardLayout = () => {
-      writeInset(0);
-      if (bodyScrollTopAtKeyboard != null) {
-        smoothTarget = null;
-        body.scrollTop = bodyScrollTopAtKeyboard;
-      }
-      keyboardGeometry = null;
-      keyboardObstructionTop = null;
-      bodyScrollTopAtKeyboard = null;
-      documentScrollAtKeyboard = null;
-      hasKeyboardLayoutRef.current = false;
-      retainKeyboardLayoutRef.current = false;
-    };
-
-    const scrollBodyBy = (
-      distance: number,
-      smoothly: boolean,
-      ride: KeyboardTransition | null = null,
-    ) => {
-      smoothTarget = null;
-      const animator = ride == null ? null : contentAnimator();
-      if (ride != null && animator != null) {
-        // The body lands at once, and its content rides the keyboard's slide
-        // up from where it was, from the slide's start. Content that joins
-        // the slide late is where the keyboard is (rideKeyboard). A further
-        // scroll during the slide adds to the same ride.
-        const before = body.scrollTop;
-        body.scrollTop = before + distance;
-        const moved = body.scrollTop - before;
-        // Only what the body actually scrolled rides. A remainder under the
-        // scroll position's precision moves nothing, so the ride under way
-        // stays on its curve.
-        if (moved !== 0) {
-          animator.set({y: animator.get('y', ride.start) + moved});
-          rideKeyboard(animator, {y: 0}, ride);
-        }
-        return;
-      }
-      if (typeof body.scrollBy !== 'function') {
-        body.scrollTop += distance;
-        return;
-      }
-      // Reduce Motion applies on any pointer.
-      const reduceMotion =
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const behavior = smoothly && !reduceMotion ? 'smooth' : 'instant';
-      if (behavior === 'smooth') {
-        smoothTarget = body.scrollTop + distance;
-      }
-      body.scrollBy({
-        top: distance,
-        // Not 'auto', which defers to the element's computed
-        // `scroll-behavior`. A consumer's `scroll-behavior: smooth` would then
-        // animate a scroll this hook needs to land in the same frame.
-        behavior,
-      });
-    };
-
-    // The distance a smooth reveal under way has still to scroll, as far as
-    // the body can scroll. It is 0 once it has landed, or with none under way.
-    const smoothDistanceLeft = () => {
-      if (smoothTarget == null) {
-        return 0;
-      }
-      const maxScroll = Math.max(
-        body.scrollTop,
-        body.scrollHeight - body.clientHeight,
-      );
-      const target = Math.min(smoothTarget, maxScroll);
-      const left = target - body.scrollTop;
-      return Math.abs(left) < 1 ? 0 : left;
-    };
-
-    // Scroll `control` into the part of the body the keyboard leaves visible,
-    // reading live geometry each time.
-    const scrollControlIntoSafeArea = (
-      control: HTMLElement,
-      smoothly: boolean,
-      ride: KeyboardTransition | null = null,
-    ) => {
-      const measuredBodyRect = body.getBoundingClientRect();
-      const measuredControlRect = control.getBoundingClientRect();
-      const obstructionTop = getObstructionTop();
-      // Under a pixel of overhang is `innerHeight`'s precision, not a
-      // keyboard: no suggestion clearance then (overlapOf).
-      const overlap = overlapOf(measuredBodyRect.bottom, obstructionTop);
-      const clearance = overlap > 0 ? bottomClearance : 0;
-      const safeTop = measuredBodyRect.top;
-      const safeBottom = Math.min(
-        measuredBodyRect.bottom,
-        obstructionTop - clearance,
-      );
-      if (safeBottom <= safeTop) {
-        return;
-      }
-
-      // Where the control will be once a smooth reveal under way lands. If
-      // that lands the control, a second scroll would overshoot in Firefox.
-      // Firefox keeps adding a smooth scrollBy's distance after another
-      // scroll. A ride's translate is not where the layout puts the control
-      // either.
-      const pending = smoothDistanceLeft() + rideOffset();
-      const controlBottom = measuredControlRect.bottom - pending;
-      const controlTop = measuredControlRect.top - pending;
-      if (controlBottom > safeBottom) {
-        scrollBodyBy(controlBottom - safeBottom, smoothly, ride);
-      } else if (controlTop < safeTop) {
-        scrollBodyBy(controlTop - safeTop, smoothly, ride);
-      }
-    };
-
-    const applyKeyboardGeometry = (geometry: KeyboardGeometry) => {
-      const obstructionTop = getObstructionTop();
-      // A collapsed detent can extend the body below the layout viewport even
-      // after the keyboard closes, so body overlap alone cannot identify
-      // recovery. Once the visual viewport is full height again, release the
-      // retained keyboard layout unconditionally.
-      if (isVisualViewportRecovered()) {
-        clearKeyboardLayout();
-        return;
-      }
-      const overlap = overlapOf(geometry.bodyBottom, obstructionTop);
-      if (overlap === 0) {
-        clearKeyboardLayout();
-        return;
-      }
-
-      const inset = Math.max(
-        0,
-        geometry.bodyBottom - (obstructionTop - bottomClearance),
-      );
-      writeInset(inset);
-    };
-
-    // Take every focus move into a field over before the browser performs it
-    // (refuseFocusReveal). That handler does not reveal the field. Focusing
-    // it raises focusin, and the viewport report that follows the keyboard
-    // raises another. Both schedule the reveal below, which knows the safe
-    // area and scrolls only the sheet's own body.
-    //
-    // The keyboard's Done button parks focus on the body. The handler parks
-    // focus that leaves for nothing on the sheet instead. Then a second tap on
-    // the same field is still a move the handler sees. Left on the body, the field
-    // is already `document.activeElement` on the next tap. Then no blur fires,
-    // and the browser reveals the field its own way. This applies only while
-    // the sheet is open. Closing blurs the field too, and no next tap needs a
-    // claim. The host restores focus to whatever opened the sheet.
-    const claimFocusTransitions = () =>
-      refuseFocusReveal(document, {
-        isActive: () => isFullyExpandedRef.current,
-        claim: destination => findTextEntryControl(destination, body),
-        park: origin => {
-          if (isOpenRef.current && findTextEntryControl(origin, body)) {
-            sheet?.focus({preventScroll: true});
-          }
-        },
-      });
-
-    const revealFocusedControl = (atReport = false) => {
-      // Through a hide the sheet rides, its layout holds until the end.
-      if (heldHide != null) {
-        return;
-      }
-      const obstructionTop = getObstructionTop();
-      const activeElement = document.activeElement;
-      const focusedControl =
-        activeElement instanceof HTMLElement &&
-        body.contains(activeElement) &&
-        isTextEntryControl(activeElement)
-          ? activeElement
-          : null;
-      // The keyboard can close while its field keeps focus, as a downward
-      // dismissal does on iOS. The full clear puts back the room and the
-      // body's scroll. The hook then reveals the field still focused in the
-      // restored body, because it may not be the field that opened the
-      // keyboard.
-      if (hasKeyboardLayoutRef.current && isVisualViewportRecovered()) {
-        clearKeyboardLayout();
-        if (isFullyExpandedRef.current && focusedControl != null) {
-          scrollControlIntoSafeArea(focusedControl, false);
-        }
-        return;
-      }
-      if (!isFullyExpandedRef.current || focusedControl == null) {
-        if (retainKeyboardLayoutRef.current && keyboardGeometry) {
-          applyKeyboardGeometry(keyboardGeometry);
-          return;
-        }
-        clearKeyboardLayout();
-        return;
-      }
-
-      // An iOS keyboard dismissed by a drag can leave its accessory bar, so
-      // the visual viewport grows short of full height. The body goes back
-      // to its scroll from before the keyboard as soon as that starts. The
-      // reveal below still clears what covers a low field. The new top is
-      // kept, so a later content change does not repeat this.
-      if (
-        hasKeyboardLayoutRef.current &&
-        keyboardObstructionTop != null &&
-        obstructionTop > keyboardObstructionTop + 0.5 &&
-        bodyScrollTopAtKeyboard != null
-      ) {
-        smoothTarget = null;
-        body.scrollTop = bodyScrollTopAtKeyboard;
-        keyboardObstructionTop = obstructionTop;
-      }
-
-      retainKeyboardLayoutRef.current = false;
-
-      const measuredBodyRect = body.getBoundingClientRect();
-      const overlap = overlapOf(measuredBodyRect.bottom, obstructionTop);
-      // The extra clearance leaves room for mobile suggestion UI, but only
-      // while the visual viewport actually overlaps the sheet. With no
-      // obstruction, ordinary desktop and hardware-keyboard focus must not
-      // shift an already visible control.
-      const clearance = overlap > 0 ? bottomClearance : 0;
-      keyboardGeometry =
-        overlap > 0
-          ? {
-              bodyBottom: measuredBodyRect.bottom,
-            }
-          : null;
-      // Where the document sits with the keyboard up and nothing yet shifted:
-      // the position handleDocumentScroll returns to. Captured on the
-      // transition only — a reveal that runs after the browser has already
-      // scrolled would otherwise record the shifted position as correct.
-      if (overlap > 0 && !hasKeyboardLayoutRef.current) {
-        keyboardObstructionTop = obstructionTop;
-        bodyScrollTopAtKeyboard = body.scrollTop;
-        if (isPageScrollLocked) {
-          documentScrollAtKeyboard = {x: window.scrollX, y: window.scrollY};
-        }
-      }
-      hasKeyboardLayoutRef.current = overlap > 0;
-
-      const inset =
-        overlap > 0
-          ? Math.max(0, measuredBodyRect.bottom - (obstructionTop - clearance))
-          : 0;
-      writeInset(inset);
-
-      scrollControlIntoSafeArea(
-        focusedControl,
-        overlap > 0 && !revealsAtReport.has(window),
-        overlap > 0 ? showOnSlide(atReport) : null,
-      );
-    };
-
-    // Where the body's scroll rests once the keyboard is gone, as
-    // revealFocusedControl leaves it. The clear puts back the scroll from
-    // before the keyboard, within the range left once the room drops. The
-    // reveal then brings a field that keeps focus into the body's view.
-    const restingScrollTop = (): number => {
-      const scrollTop = body.scrollTop;
-      const maxAtRest = Math.max(
-        0,
-        body.scrollHeight - roomRange - body.clientHeight,
-      );
-      let resting = Math.min(maxAtRest, bodyScrollTopAtKeyboard ?? scrollTop);
-      const active = document.activeElement;
-      if (
-        isFullyExpandedRef.current &&
-        active instanceof HTMLElement &&
-        body.contains(active) &&
-        isTextEntryControl(active)
-      ) {
-        const bodyRect = body.getBoundingClientRect();
-        const rect = active.getBoundingClientRect();
-        // Where the layout puts the control at the resting scroll.
-        const shift = scrollTop - resting - rideOffset();
-        if (rect.bottom + shift > bodyRect.bottom) {
-          resting += rect.bottom + shift - bodyRect.bottom;
-        } else if (rect.top + shift < bodyRect.top) {
-          resting += rect.top + shift - bodyRect.top;
-        }
-        resting = Math.min(maxAtRest, Math.max(0, resting));
-      }
-      return resting;
-    };
-
-    // Through a hide on the keyboard's slide, the room stays, so nothing
-    // drops while the keyboard still covers the sheet's bottom. The content
-    // rides down on the hide's curve by the scroll the body drops at rest. At
-    // rest, the room drops, the scroll goes back, and the translate clears in
-    // one commit.
-    const holdRoomThrough = (transition: KeyboardTransition) => {
-      heldHide?.release();
-      const animator = contentAnimator();
-      const drop = body.scrollTop - restingScrollTop();
-      const handle =
-        animator != null && drop !== 0
-          ? rideKeyboard(animator, {y: drop}, transition)
-          : null;
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const hold = {
-        release: () => {
-          clearTimeout(timer);
-          if (heldHide === hold) {
-            heldHide = null;
-          }
-        },
-      };
-      heldHide = hold;
-      const commit = () => {
-        if (heldHide !== hold) {
-          return;
-        }
-        heldHide = null;
-        revealFocusedControl();
-        animator?.set({y: 0});
-      };
-      if (handle == null) {
-        const end = transition.start + (transition.curve?.durationMs ?? 0);
-        timer = setTimeout(commit, Math.max(0, end - performance.now()));
-      } else {
-        void handle.finished.then(commit);
-      }
-    };
-    const unsubscribeGuide = guide?.subscribe(transition => {
-      // A jump lands with the reports: only a slide rides.
-      if (transition.curve == null) {
-        return;
-      }
-      if (transition.kind === 'hide') {
-        if (hasKeyboardLayoutRef.current && transition.animated) {
-          holdRoomThrough(transition);
-        }
-        return;
-      }
-      if (heldHide != null) {
-        // The keyboard comes back before it is down (focus returns): the
-        // room never left, so the content rides back to its place with it.
-        heldHide.release();
-        const animator = contentAnimator();
-        if (animator != null) {
-          rideKeyboard(animator, {y: 0}, transition);
-        }
-      }
-    });
-
-    let animationFrame = 0;
-    const scheduleReveal = () => {
-      cancelAnimationFrame(animationFrame);
-      animationFrame = requestAnimationFrame(() => revealFocusedControl());
-    };
-
-    // Resuming the app re-reveals the focused field with no focus event to
-    // claim. The reveal above never runs, and the document scrolls with the
-    // fixed sheet. Put that scroll back on the event that reports it, and
-    // reveal again inside the sheet.
-    //
-    // This applies only while the page is locked. Only then can a document
-    // scroll not be the user's own. Behind a non-modal sheet the page stays
-    // scrollable, and a revert there would fight the user.
-    const handleDocumentScroll = () => {
-      const expected = documentScrollAtKeyboard;
-      if (
-        expected == null ||
-        (window.scrollX === expected.x && window.scrollY === expected.y)
-      ) {
-        return;
-      }
-      window.scrollTo(expected.x, expected.y);
-      const activeElement = document.activeElement;
-      if (
-        activeElement instanceof HTMLElement &&
-        body.contains(activeElement) &&
-        isTextEntryControl(activeElement)
-      ) {
-        scrollControlIntoSafeArea(activeElement, false);
-      }
-    };
-
-    const resizeObserver =
-      typeof ResizeObserver === 'undefined'
-        ? null
-        : new ResizeObserver(scheduleReveal);
-    const refreshObservedLayout = () => {
-      if (!resizeObserver) {
-        return;
-      }
-      resizeObserver.disconnect();
-
-      // Body and sheet box changes include public height and xstyle updates.
-      // The inset pseudo-element is the content box's last box. Where the
-      // content grows with it, the observation runs the reveal again. The
-      // reveal computes the same inset from the body's unchanged box, so
-      // nothing feeds back into the sheet's geometry.
-      const targets = new Set<Element>([body]);
-      if (sheet) {
-        targets.add(sheet);
-      }
-      for (const child of body.children) {
-        targets.add(child);
-      }
-      const activeElement = document.activeElement;
-      if (
-        activeElement instanceof HTMLElement &&
-        body.contains(activeElement)
-      ) {
-        for (
-          let element: HTMLElement | null = activeElement;
-          element && element !== body;
-          element = element.parentElement
-        ) {
-          targets.add(element);
-        }
-      }
-      for (const target of targets) {
-        resizeObserver.observe(target);
-      }
-    };
-    const mutationObserver =
-      typeof MutationObserver === 'undefined'
-        ? null
-        : new MutationObserver(records => {
-            // Skip the sheet's own attribute writes on the body. Consumer
-            // DOM, text, class, style, or visibility changes can all move the
-            // focused control without a viewport event. The room's write on
-            // the content box schedules one more reveal, which finds the same
-            // room and settles.
-            if (
-              records.every(
-                record =>
-                  record.type === 'attributes' && record.target === body,
-              )
-            ) {
-              return;
-            }
-            refreshObservedLayout();
-            scheduleReveal();
-          });
-    const handleFocusIn = () => {
-      refreshObservedLayout();
-      scheduleReveal();
-    };
-    const handleFocusOut = () => {
-      // Keep the added scroll range while the keyboard animates away. A focus
-      // transition to another text-entry control cancels this in focusin.
-      retainKeyboardLayoutRef.current = hasKeyboardLayoutRef.current;
-      scheduleReveal();
-    };
-    const handleSheetTransitionEnd = (event: TransitionEvent) => {
-      if (event.target === sheet && event.propertyName === 'transform') {
-        scheduleReveal();
-      }
-    };
-
-    const stopClaiming = ownsFocusTransitions ? claimFocusTransitions() : null;
-    // The hook reveals a keyboard report in its own frame, not the next. A browser
-    // that reveals a focused field itself pans the visual viewport to it a few
-    // frames after the report. It does so if the keyboard still covers the
-    // field. Such a pan moves the visual viewport down within the layout
-    // viewport, with no touch, document scroll or zoom since the report. Once
-    // the sheet lands the field itself, the hook puts the pan back: it scrolls
-    // the full-viewport dialog's top into view. On every later report, the field
-    // lands at once.
-    let lastHeight = getKeyboardHeight(window);
-    // Under a coarse primary pointer only: the watch reads touches, and an
-    // on-screen keyboard's pan comes with a touch screen.
-    const revealPan = isTouch
-      ? watchRevealPan(window, {
-          owns: focused =>
-            hasKeyboardLayoutRef.current && body.contains(focused),
-          // The reader's own scroll may stop a smooth reveal short: forget
-          // where it was going.
-          onTouch: () => {
-            smoothTarget = null;
-          },
-        })
-      : null;
-    // Every keyboard report reaches the reveal through the keyboard module's
-    // one set of listeners.
-    const unsubscribe = subscribeKeyboardHeight(window, event => {
-      if (event.type !== 'viewport') {
-        return;
-      }
-      if (event.height !== lastHeight) {
-        lastHeight = event.height;
-        revealPan?.report();
-        cancelAnimationFrame(animationFrame);
-        revealFocusedControl(true);
-        return;
-      }
-      if (revealPan?.isRevealPan(event.height) === true) {
-        revealsAtReport.add(window);
-        cancelAnimationFrame(animationFrame);
-        // A smooth reveal still under way lands the field where it is going.
-        // Another scroll on top of it would overshoot in Firefox, which keeps
-        // adding a smooth scrollBy's distance after an instant scroll. The
-        // field ended 244 px too high there. With none under way, the field
-        // lands at once.
-        const distanceLeft = smoothDistanceLeft();
-        if (distanceLeft === 0) {
-          revealFocusedControl();
-        }
-        // The hook puts the pan back only if the sheet holds the field above
-        // the keyboard with its own scroller. Rects are in layout-viewport
-        // coordinates, which the pan does not move. A ride still draws the
-        // field lower than its layout, so its offset does not count. A field
-        // the sheet cannot bring up keeps the browser's reveal.
-        const activeElement = document.activeElement;
-        const dialog = sheet?.closest('dialog');
-        if (
-          dialog != null &&
-          activeElement instanceof HTMLElement &&
-          activeElement.getBoundingClientRect().bottom -
-            rideOffset() -
-            distanceLeft <=
-            getObstructionTop()
-        ) {
-          // The full-viewport dialog is fixed at the layout viewport's top.
-          revealPan?.putBack(dialog);
-        }
-        return;
-      }
-      scheduleReveal();
-    });
-    body.addEventListener('focusin', handleFocusIn);
-    body.addEventListener('focusout', handleFocusOut);
-    sheet?.addEventListener('transitionend', handleSheetTransitionEnd);
-    window.addEventListener('scroll', handleDocumentScroll);
-    mutationObserver?.observe(body, {
-      attributes: true,
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
-    refreshObservedLayout();
-    // The dialog enters the top layer in a later effect. Wait until the next
-    // frame so flex geometry is final before measuring the body.
-    scheduleReveal();
-
-    return () => {
-      cancelAnimationFrame(animationFrame);
-      stopClaiming?.();
-      unsubscribe();
-      unsubscribeGuide?.();
-      heldHide?.release();
-      contentAnimator()?.set({y: 0});
-      revealPan?.stop();
-      body.removeEventListener('focusin', handleFocusIn);
-      body.removeEventListener('focusout', handleFocusOut);
-      sheet?.removeEventListener('transitionend', handleSheetTransitionEnd);
-      window.removeEventListener('scroll', handleDocumentScroll);
-      resizeObserver?.disconnect();
-      mutationObserver?.disconnect();
-      setKeyboardInset(0);
-      hasKeyboardLayoutRef.current = false;
-      retainKeyboardLayoutRef.current = false;
-    };
-  }, [
-    bodyRef,
-    bottomClearance,
-    isEnabled,
-    isPageScrollLocked,
-    isPresented,
-    isTouch,
-    sheetRef,
-  ]);
-  return keyboardInset;
+    event.preventDefault();
+    deliver(tap.control, touch.clientX, touch.clientY);
+    swallowGhost();
+  }
+  const onStart = (event: TouchEvent) => {
+    if (start != null) {
+      // Another finger joined the one the route follows: not a tap.
+      stopFollowing();
+      return;
+    }
+    const touch = event.touches[0];
+    const control =
+      event.touches.length === 1 && touch != null ? claim(event.target) : null;
+    if (control == null || touch == null) {
+      return;
+    }
+    start = {x: touch.clientX, y: touch.clientY, control};
+    region.addEventListener('touchmove', onMove, {passive: true});
+    // Not passive: only the end of the touch can still cancel the browser's
+    // focus and its reveal.
+    region.addEventListener('touchend', onEnd);
+    region.addEventListener('touchcancel', stopFollowing);
+  };
+  region.addEventListener('touchstart', onStart, {passive: true});
+  return () => {
+    stopFollowing();
+    disarmGhost?.();
+    region.removeEventListener('touchstart', onStart);
+  };
 }

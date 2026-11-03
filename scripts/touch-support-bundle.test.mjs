@@ -127,6 +127,9 @@ const GESTURE_USERS = new Set([
   'SegmentedControl',
   // DateTimeInput: through the SegmentedControl its touch field renders.
   'DateTimeInput',
+  // Chat: ChatLayout's keyboard dismissal on a transcript drag reads the
+  // release velocity.
+  'Chat',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */

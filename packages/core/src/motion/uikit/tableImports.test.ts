@@ -17,11 +17,14 @@ import {dirname, join, relative, resolve} from 'node:path';
 import {describe, expect, it} from 'vitest';
 
 /**
- * The tables shared code may read. The animator and gestures read these. The
- * paging math and the pager, one hook for every paging component, read paging.
+ * The tables shared code may read. The animator, gestures and the on-screen
+ * keyboard module read these. The keyboard module times the keyboard for
+ * every keyboard-aware component. The paging math and the pager, one hook for
+ * every paging component, read paging.
  */
 const SHARED_TABLES = new Set([
   'motion/uikit/gestures.ts',
+  'motion/uikit/keyboard.ts',
   // The long-press values: useLongPress and the menus' press model read them.
   'motion/uikit/longPress.ts',
   'motion/uikit/navigation.ts',

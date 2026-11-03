@@ -7,8 +7,9 @@
  * @output layoutViewportHeight, the layout viewport's height in layout px
  *   less a classic horizontal scrollbar, and __resetLayoutViewportForTest
  * @position Internal shared measurement, not re-exported from the utils
- *   entry. The keyboard module, BottomSheet's keyboard obstruction and any
- *   layout that sizes against the layout viewport read it.
+ *   entry. The keyboard module, BottomSheet's keyboard obstruction,
+ *   ChatLayout's lift and any layout that sizes against the layout viewport
+ *   read it.
  */
 
 /**
