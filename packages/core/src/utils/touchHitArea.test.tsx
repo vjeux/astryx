@@ -5,8 +5,8 @@
  * @input Vitest, Testing Library, StyleX's injected rules, and a stubbed
  *   watchHitArea (utils/hitArea.ts)
  * @output Tests for the shared touch hit area hook and layer. They cover what
- *   the hook watches, a measurement while the parent moves, the stop, and the
- *   layer's CSS.
+ *   the hook watches, an owner's growth and press check, a measurement while
+ *   the parent moves, the stop, and the layer's CSS.
  * @position Unit test for utils/touchHitArea.ts and
  *   utils/touchHitArea.stylex.ts. List/ListItem.hitArea.test.tsx covers the
  *   row wiring.
@@ -17,7 +17,7 @@ import * as stylex from '@stylexjs/stylex';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import type * as HitAreaModule from './hitArea';
-import {HIT_INSET_PROPERTIES, type HitInsets} from './hitArea';
+import {HIT_INSET_PROPERTIES, type HitInsets, type HitRect} from './hitArea';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 
 const watches = vi.hoisted(
@@ -26,6 +26,7 @@ const watches = vi.hoisted(
       element: Element;
       onInsets: (insets: HitInsets) => void;
       minSize: number | undefined;
+      options: HitAreaModule.WatchHitAreaOptions | undefined;
       stop: ReturnType<typeof vi.fn>;
     }[],
 );
@@ -37,10 +38,16 @@ vi.mock('./hitArea', async importOriginal => {
     watchHitArea: (
       element: Element,
       onInsets: (insets: HitInsets) => void,
-      options?: {readonly minSize?: number},
+      options?: HitAreaModule.WatchHitAreaOptions,
     ) => {
       const stop = vi.fn();
-      watches.push({element, onInsets, minSize: options?.minSize, stop});
+      watches.push({
+        element,
+        onInsets,
+        minSize: options?.minSize,
+        options,
+        stop,
+      });
       return stop;
     },
   };
@@ -152,6 +159,34 @@ describe('useTouchHitArea', () => {
     host.unmount();
     await Promise.resolve();
     expect(watches[1].stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes an owner's growth, with the element, and its press check to the watch; a plain watch keeps the defaults", () => {
+    const grown = {top: 1, right: 2, bottom: 3, left: 4};
+    const growth = vi.fn(() => grown);
+    const options = {growth, checkAtPress: false};
+    function Owner() {
+      const hitAreaRef = useTouchHitArea(true, options);
+      return <span data-testid="owner" ref={hitAreaRef} />;
+    }
+    render(
+      <>
+        <Owner />
+        <Host enabled />
+      </>,
+    );
+    const owner = screen.getByTestId('owner');
+    const ownerWatch = watches.find(watch => watch.element === owner);
+    const plainWatch = watches.find(
+      watch => watch.element === screen.getByTestId('host'),
+    );
+    expect(ownerWatch?.options?.checkAtPress).toBe(false);
+    const box = {left: 0, top: 0, right: 32, bottom: 32};
+    const toLayout = (rect: HitRect) => rect;
+    expect(ownerWatch?.options?.growth?.(box, toLayout)).toBe(grown);
+    expect(growth).toHaveBeenCalledWith(box, toLayout, owner);
+    expect(plainWatch?.options?.growth).toBeUndefined();
+    expect(plainWatch?.options?.checkAtPress).toBeUndefined();
   });
 
   it('follows a replaced element: the new element is watched and the old one’s watch stops', async () => {
