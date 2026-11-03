@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./chromium": "./src/harness/chromium.ts",
+    "./evidence": "./src/evidence.ts",
     "./storybook": "./src/storybook.ts"
   },
   "scripts": {
