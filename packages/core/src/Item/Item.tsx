@@ -534,7 +534,6 @@ const styles = stylex.create({
   // zoomable (WCAG 1.4.4). The hover transition keeps its own clock beside
   // the transform's.
   swipeRoot: {
-    isolation: 'isolate',
     touchAction: 'pan-y pinch-zoom',
     transform: `translate3d(${SWIPE_TRAVEL}, 0, 0)`,
     transitionProperty: 'background-color, transform',

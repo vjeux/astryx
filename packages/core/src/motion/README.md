@@ -21,7 +21,6 @@ roles through `resolveMotion`.
 | `uikit/paging.ts`                                | A paging UIScrollView: the integrator that settles a release on its page, the page rule, the catch, `setContentOffset(animated:)`.                                   |
 | `uikit/alert.ts`                                 | UIAlertController: how a finger is tracked across the actions (highlight onset and bounds).                                                                          |
 | `uikit/navigation.ts`                            | UINavigationController: push velocity, parallax, dimming, transition clock, interactive pop finish rule.                                                             |
-| `uikit/list.ts`                                  | UITableView / UICollectionView list cells: the cell highlight's release clock and curve.                                                                             |
 | `uikit/progressBar.ts`                           | UIProgressView's fill: the whole-track duration and curve, its minimum length and empty alpha; the reduced-motion pulse (three roles).                               |
 | `uikit/gestures.ts`                              | Gesture recognizer thresholds, the velocity filter and haptic stand-ins, as `{value, unit}` entries (sources in JSDoc).                                              |
 | `uikit/segmented.ts`                             | UISegmentedControl: the selection indicator's spring; under Reduce Motion the animator's cross-fade replaces it.                                                     |

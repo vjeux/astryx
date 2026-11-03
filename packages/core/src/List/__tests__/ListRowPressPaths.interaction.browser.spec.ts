@@ -3,7 +3,7 @@
 /**
  * @file ListRowPressPaths.interaction.browser.spec.ts
  * @input The built List "Interactive" and Press Feedback "Rows" stories, the
- *   interaction harness, and the cell release clock (motion/uikit/list.ts)
+ *   interaction harness, and the cell release clock (motion/uikit/timing.ts)
  * @output The row press paths beside the main release proofs: a press the
  *   browser takes for a scroll drops the highlight at once (the press
  *   controller's cancel, unchanged by the compositor layer); Reduce
@@ -29,11 +29,11 @@ import {
 } from '@astryxdesign/interaction-harness';
 // @ts-expect-error -- pngjs ships no declarations; runtime support is pinned.
 import {PNG} from 'pngjs';
-import {list} from '../../motion/uikit/list';
+import {timing} from '../../motion/uikit/timing';
 
 const storybook = withStorybook(test);
 
-const RELEASE_MS: number = list.highlight.releaseMs;
+const RELEASE_MS: number = timing.press.highlightOutMs;
 
 /** The press layer's strength: 0 while the row has no layer box (at rest). */
 const layerOpacity = async (row: Locator) =>

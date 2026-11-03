@@ -15,13 +15,13 @@ import * as stylex from '@stylexjs/stylex';
 /**
  * A list row's release (`rowPressLayerStyles.cell`), mirrored for the
  * stylesheet. StyleX evaluates a style at build time and cannot read the
- * constants table, so these are the table's `list.highlight` values
- * (motion/uikit/list.ts). interactionOverlay.cell.test.ts fails if they
- * drift.
+ * constants table, so these are the table's press release values
+ * (`timing.press`, motion/uikit/timing.ts). interactionOverlay.cell.test.ts
+ * fails if they drift.
  */
 export const cellPressConsts = stylex.defineConsts({
-  /** `list.highlight.releaseMs`, in ms. */
+  /** `timing.press.highlightOutMs`, in ms. */
   cellReleaseMs: 200,
-  /** `list.highlight.releaseCurve`, as CSS. */
+  /** `timing.press.highlightOutCurve`, as CSS. */
   cellReleaseEase: 'cubic-bezier(0, 0, 0.2, 1)',
 });
