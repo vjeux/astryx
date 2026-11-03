@@ -16,6 +16,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {inflateSync} from 'node:zlib';
 import {expect, test, type Locator, type Page} from '@playwright/test';
+import {resetAuditEvidence} from '@astryxdesign/a11y-spec/evidence';
 import {holdMotionStill} from '@astryxdesign/a11y-spec/chromium';
 import {
   DEFAULT_STORYBOOK_DIR,
@@ -23,7 +24,9 @@ import {
   type StaticServer,
 } from '@astryxdesign/a11y-spec/storybook';
 
-const OUTPUT = path.resolve('test-results/complex-selector-audit-evidence');
+const EVIDENCE = path.resolve('test-results/complex-selector-audit-evidence');
+// This copy's evidence folder, set in beforeAll (one per --repeat-each copy).
+let OUTPUT = EVIDENCE;
 const WIDE = {width: 1024, height: 900};
 const NARROW = {width: 320, height: 720};
 const SHORT = {width: 1024, height: 360};
@@ -487,8 +490,7 @@ async function readPopupScroll(page: Page, contentId: string | null) {
 }
 
 test.beforeAll(async () => {
-  fs.rmSync(OUTPUT, {recursive: true, force: true});
-  fs.mkdirSync(OUTPUT, {recursive: true});
+  OUTPUT = resetAuditEvidence(EVIDENCE, test.info());
   checkoutSha = execFileSync('git', ['rev-parse', 'HEAD'], {
     encoding: 'utf8',
   }).trim();
