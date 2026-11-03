@@ -982,11 +982,9 @@ function DropdownMenuPopover({
     motion: MenuSurfaceMotion;
     detach: () => void;
   } | null>(null);
-  // The pointer that opened the menu, until the layer shows (null: no
-  // pointer, as a keyboard or a controlled open).
-  const openPointerTypeRef = useRef<MenuPressPointerType | null>(null);
-  // Whether the open in progress runs UIMenu's motion: a finger's open in the
-  // touch modes.
+  // Whether the open in progress is under a finger: it then runs UIMenu's
+  // motion and the pan-outside dismissal.
+  const isTouchPresentationRef = useRef(false);
   const isUikitMotionRef = useRef(false);
   const getSurfaceMotion = useCallback(
     (element: HTMLElement): MenuSurfaceMotion => {
@@ -1130,21 +1128,18 @@ function DropdownMenuPopover({
   const handleLayerShow = useCallback(() => {
     acceptedOpenRef.current = true;
     resetFocusReturn();
-    // UIKit's motion is a finger's, in the touch modes of the resolved
-    // presentation, decided as the menu opens. A mouse, a keyboard and a
-    // pinned 'popover' keep the layer's own entrance.
+    // UIKit's motion under a finger, decided as the menu opens: the touch
+    // modes of the resolved presentation (a pinned 'popover' keeps the
+    // layer's own entrance).
     const surface = contentRef.current;
-    const openPointerType = openPointerTypeRef.current;
-    openPointerTypeRef.current = null;
-    const isUikitMotion =
-      touchModes === true &&
-      openPointerType != null &&
-      openPointerType !== 'mouse';
+    isTouchPresentationRef.current = touchModes === true;
+    const isUikitMotion = touchModes === true;
     isUikitMotionRef.current = isUikitMotion;
     const trigger = buttonRef.current;
     if (surface != null && trigger != null) {
+      const motion = getSurfaceMotion(surface);
       if (isUikitMotion) {
-        getSurfaceMotion(surface).enter(() => {
+        motion.enter(() => {
           const triggerBox = trigger.getBoundingClientRect();
           const surfaceBox = surface.getBoundingClientRect();
           return {
@@ -1160,9 +1155,8 @@ function DropdownMenuPopover({
             },
           };
         });
-      } else if (surfaceMotionRef.current?.element === surface) {
-        // Any other open creates no motion. It stops one a finger's open left.
-        surfaceMotionRef.current.motion.reset();
+      } else {
+        motion.reset();
       }
     }
     if (renderTrigger != null) {
@@ -1225,9 +1219,7 @@ function DropdownMenuPopover({
   // between an outside pointerdown and its pointercancel then keeps the
   // pointer.
   const closeMenuRef = useRef(closeMenu);
-  useIsomorphicLayoutEffect(() => {
-    closeMenuRef.current = closeMenu;
-  });
+  closeMenuRef.current = closeMenu;
 
   // In the touch presentation, a pan that starts outside the open menu
   // dismisses it as the pan begins. The same touch goes on to scroll the
@@ -1237,7 +1229,7 @@ function DropdownMenuPopover({
   // pointercancel, which its light dismiss ignores.
   const isPopoverOpen = popover.isOpen;
   useEffect(() => {
-    if (!isPopoverOpen || touchModes !== true) {
+    if (!isPopoverOpen || !isTouchPresentationRef.current) {
       return;
     }
     const doc = contentRef.current?.ownerDocument ?? document;
@@ -1284,7 +1276,7 @@ function DropdownMenuPopover({
       doc.removeEventListener('pointerup', handleEnd, true);
       doc.removeEventListener('pointercancel', handleCancel, true);
     };
-  }, [isPopoverOpen, touchModes]);
+  }, [isPopoverOpen]);
 
   // Single keyboard navigation path for both modes.
   // The selector matches plain items plus selectable items
@@ -1473,7 +1465,6 @@ function DropdownMenuPopover({
     (
       modality: 'keyboard' | 'pointer' = 'keyboard',
       notifyClick = false,
-      pointerType: MenuPressPointerType | null = null,
     ): boolean => {
       // An unavailable trigger never opens the menu. Button keeps an
       // aria-disabled trigger focusable for its tooltip and swallows only
@@ -1488,14 +1479,12 @@ function DropdownMenuPopover({
       notifyClickOnShowRef.current = notifyClick;
       pendingControlledOpenRef.current = isControlled;
       openModalityRef.current = modality;
-      openPointerTypeRef.current = pointerType;
       shouldFocusOnOpenRef.current = true;
       popover.show();
       if (!acceptedOpenRef.current) {
         notifyClickOnShowRef.current = false;
         pendingControlledOpenRef.current = false;
         openModalityRef.current = 'keyboard';
-        openPointerTypeRef.current = null;
         shouldFocusOnOpenRef.current = false;
         return false;
       }
@@ -1534,7 +1523,7 @@ function DropdownMenuPopover({
       // popover the state a click-open already has: the trigger is where
       // Escape or a pick returns focus (the APG menu-button pattern).
       buttonRef.current?.focus({preventScroll: true});
-      const didOpen = openAndFocus('pointer', true, pointerType);
+      const didOpen = openAndFocus('pointer', true);
       if (didOpen) {
         // The menu is `popover="auto"`: the browser's light dismiss would
         // read the release of this very press, on the trigger outside the
