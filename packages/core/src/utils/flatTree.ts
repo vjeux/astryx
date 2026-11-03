@@ -3,7 +3,8 @@
 /**
  * @file flatTree.ts
  * @input A DOM node
- * @output Exports parentAcrossShadow, and containsAlongFlatTree, which walks it
+ * @output Exports parentAcrossShadow, containsAlongFlatTree, which walks it,
+ *   and shadowHostOf, a shadow root's host
  * @position The flat-tree parent the browser scrolls and dispatches
  *   through, shared by the gesture host's native-scroll probe and the
  *   selection lock (which the press feedback controller uses without the
@@ -37,4 +38,9 @@ export function containsAlongFlatTree(ancestor: Node, node: Node): boolean {
     }
   }
   return false;
+}
+
+/** The host of a shadow root, open or closed, and null for any other node. */
+export function shadowHostOf(node: Node): Element | null {
+  return node instanceof ShadowRoot ? node.host : null;
 }
