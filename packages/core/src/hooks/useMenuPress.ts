@@ -326,7 +326,6 @@ export function useMenuPress(options: UseMenuPressOptions): UseMenuPressReturn {
     ...publicOptions,
     touchModel:
       publicOptions.longPressDelayMs === undefined ? 'uikit' : 'pointer',
-    isInScrollView,
   });
 }
 
