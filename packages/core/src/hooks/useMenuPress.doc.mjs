@@ -155,7 +155,7 @@ export const docs = {
       {
         guidance: true,
         description:
-          "Use the ref form, useMenuPress(menuRef, {triggerRef, …}): it listens on the menu and the trigger itself, so nothing is spread. Its press, the trigger's included, exists only while the menu element is mounted, so a menu that opens on a press of its trigger keeps its element mounted while closed. The options form, useMenuPress({menuRef, …}), is deprecated.",
+          "Use the ref form, useMenuPress(menuRef, {triggerRef, …}): it listens on the menu and the trigger itself, so nothing is spread. Its press, the trigger's included, exists only while the menu element is mounted, so a menu that opens on a press of its trigger keeps its element mounted while closed. The options form, useMenuPress({menuRef, …}), is deprecated (DEP-0019) and is removed in 0.8.0; run astryx upgrade to move calls to the ref form.",
       },
     ],
   },
@@ -231,7 +231,7 @@ export const docsDense = {
       {
         guidance: true,
         description:
-          'Use useMenuPress(menuRef, {triggerRef, …}) (nothing to spread); useMenuPress({menuRef, …}) is deprecated. The press exists only while the menu is mounted, trigger included: keep a press-to-open menu mounted while closed.',
+          'Use useMenuPress(menuRef, {triggerRef, …}) (nothing to spread); useMenuPress({menuRef, …}) is deprecated (DEP-0019, removed in 0.8.0; astryx upgrade rewrites it). The press exists only while the menu is mounted, trigger included: keep a press-to-open menu mounted while closed.',
       },
     ],
   },

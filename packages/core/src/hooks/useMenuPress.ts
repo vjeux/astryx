@@ -74,6 +74,7 @@ export type UseMenuPressRefReturn = Pick<
 /**
  * The options form's options: the menu and the trigger as refs.
  * @deprecated Use the ref form, `useMenuPress(menuRef, options)`.
+ *   `astryx upgrade` rewrites calls. It is removed in 0.8.0.
  */
 export interface UseMenuPressOptions {
   /** The menu (or listbox) root: the surface whose rows the press picks from. */
@@ -129,6 +130,7 @@ export interface UseMenuPressOptions {
 /**
  * What the options form returns: props to spread on the menu and the trigger.
  * @deprecated Use the ref form, `useMenuPress(menuRef, options)`.
+ *   `astryx upgrade` rewrites calls. It is removed in 0.8.0.
  */
 export interface UseMenuPressReturn {
   /** Spread onto the menu root: claims presses that begin inside it. */
@@ -206,6 +208,7 @@ export function useMenuPress(
  * The options form: props to spread on the menu root and the trigger. The ref
  * form above listens on both itself, so nothing is spread.
  * @deprecated Use the ref form, `useMenuPress(menuRef, options)`.
+ *   `astryx upgrade` rewrites calls. It is removed in 0.8.0.
  */
 export function useMenuPress(options: UseMenuPressOptions): UseMenuPressReturn;
 export function useMenuPress(

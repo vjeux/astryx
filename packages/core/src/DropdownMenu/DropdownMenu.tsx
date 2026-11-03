@@ -373,12 +373,14 @@ export interface DropdownMenuTriggerProps {
   onClickCapture: (event: React.MouseEvent<HTMLElement>) => void;
   /**
    * @deprecated The menu listens on the trigger itself, so spreading this
-   *   adds nothing.
+   *   adds nothing. `astryx upgrade` removes plain forwards of it. It is
+   *   removed in 0.8.0.
    */
   onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
   /**
    * @deprecated The menu listens on the trigger itself, so spreading this
-   *   adds nothing.
+   *   adds nothing. `astryx upgrade` removes plain forwards of it. It is
+   *   removed in 0.8.0.
    */
   onContextMenu: (event: React.MouseEvent<HTMLElement>) => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
