@@ -77,11 +77,7 @@ import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 import {useListFocus} from '../hooks/useListFocus';
 import {useDropdownMenuPress} from '../hooks/useMenuPress';
-import {
-  normalizePointerType,
-  type MenuPressPointerType,
-} from '../hooks/menuPressGesture';
-import {useOutsidePress} from '../Layer/outsidePress';
+import type {MenuPressPointerType} from '../hooks/menuPressGesture';
 import {useTypeahead} from '../hooks/useTypeahead';
 import {useFocusReturnVisibility} from '../hooks/useFocusReturnVisibility';
 import {focusForLastInput} from '../utils/focusReturn';
@@ -992,12 +988,6 @@ function DropdownMenuPopover({
   // Whether the open in progress runs UIMenu's motion: a finger's open in the
   // touch modes.
   const isUikitMotionRef = useRef(false);
-  // The pan-outside watch. The touch presentation's open starts it, and any
-  // close stops it.
-  const panOutside = useOutsidePress();
-  // The pointer type of the trigger's last press, for a click that opens the
-  // menu and carries none.
-  const lastTriggerPointerTypeRef = useRef('');
   const getSurfaceMotion = useCallback(
     (element: HTMLElement): MenuSurfaceMotion => {
       const current = surfaceMotionRef.current;
@@ -1079,7 +1069,6 @@ function DropdownMenuPopover({
   // keyboard (the modality tracker decides; the suppressed style hides the
   // pointer case, which Safari would otherwise paint after a touch pick).
   const handleLayerHide = useCallback(() => {
-    panOutside.stop();
     // Whatever closed the menu — light dismiss, the dismissal stack, Escape
     // or a controlled close — its flyouts close with it.
     hideOpenFlyouts();
@@ -1113,13 +1102,7 @@ function DropdownMenuPopover({
     // also reaches a control the caller renders, which the browser would
     // otherwise ring (Chromium after a mouse pick, WebKit after a touch).
     focusForLastInput(trigger, {preventScroll: true});
-  }, [
-    hideOpenFlyouts,
-    isControlled,
-    onOpenChange,
-    panOutside,
-    prepareFocusReturn,
-  ]);
+  }, [hideOpenFlyouts, isControlled, onOpenChange, prepareFocusReturn]);
 
   // Defer item focus until the layer has committed open, so focus restore
   // captures the trigger instead of the first menu item.
@@ -1178,27 +1161,9 @@ function DropdownMenuPopover({
           };
         });
       } else if (surfaceMotionRef.current?.element === surface) {
-        // Another open plays no motion. Reset the motion a finger's open left.
+        // Any other open creates no motion. It stops one a finger's open left.
         surfaceMotionRef.current.motion.reset();
       }
-    }
-    if (touchModes === true && surface != null) {
-      // In the touch presentation, a pan that starts outside the open menu
-      // dismisses it as the pan begins, and the same touch goes on to scroll
-      // the page. A tap or a hold outside dismisses at the lift, where the
-      // browser's light dismiss already acts. UIKit's popovers on iOS 26.2
-      // behave this way. The browser announces the pan with a pointercancel.
-      panOutside.start(
-        surface,
-        path =>
-          path.includes(surface) || (trigger != null && path.includes(trigger)),
-        () => {},
-        event => {
-          if (event.pointerType !== 'mouse') {
-            surface.hidePopover();
-          }
-        },
-      );
     }
     if (renderTrigger != null) {
       setTriggerName(readAccessibleName(buttonRef.current));
@@ -1216,7 +1181,6 @@ function DropdownMenuPopover({
     isControlled,
     onClick,
     onOpenChange,
-    panOutside,
     renderTrigger,
     resetFocusReturn,
     touchModes,
@@ -1256,6 +1220,71 @@ function DropdownMenuPopover({
   const closeMenu = useCallback(() => {
     popover.hide();
   }, [popover]);
+  // usePopover returns a new object each render, so closeMenu changes too.
+  // The pan-outside tracking below reads it through a ref: a re-render
+  // between an outside pointerdown and its pointercancel then keeps the
+  // pointer.
+  const closeMenuRef = useRef(closeMenu);
+  useIsomorphicLayoutEffect(() => {
+    closeMenuRef.current = closeMenu;
+  });
+
+  // In the touch presentation, a pan that starts outside the open menu
+  // dismisses it as the pan begins. The same touch goes on to scroll the
+  // page. A tap or a hold outside dismisses at the lift, where the browser's
+  // light dismiss already acts. UIKit's popovers on iOS 26.2 behave this way.
+  // The browser announces that it took the touch for a pan with a
+  // pointercancel, which its light dismiss ignores.
+  const isPopoverOpen = popover.isOpen;
+  useEffect(() => {
+    if (!isPopoverOpen || touchModes !== true) {
+      return;
+    }
+    const doc = contentRef.current?.ownerDocument ?? document;
+    const outside = new Set<number>();
+    const isInsideMenu = (target: EventTarget | null) => {
+      const node = target instanceof Node ? target : null;
+      return (
+        node != null &&
+        (contentRef.current?.contains(node) === true ||
+          buttonRef.current?.contains(node) === true)
+      );
+    };
+    // The press's end listeners are held only while an outside press is live:
+    // an idle menu keeps no document listener.
+    const release = () => {
+      doc.removeEventListener('pointerup', handleEnd, true);
+      doc.removeEventListener('pointercancel', handleCancel, true);
+    };
+    const handleEnd = (event: PointerEvent) => {
+      if (outside.delete(event.pointerId) && outside.size === 0) {
+        release();
+      }
+    };
+    const handleCancel = (event: PointerEvent) => {
+      if (outside.delete(event.pointerId)) {
+        if (outside.size === 0) {
+          release();
+        }
+        closeMenuRef.current();
+      }
+    };
+    const handleDown = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse' && !isInsideMenu(event.target)) {
+        if (outside.size === 0) {
+          doc.addEventListener('pointerup', handleEnd, true);
+          doc.addEventListener('pointercancel', handleCancel, true);
+        }
+        outside.add(event.pointerId);
+      }
+    };
+    doc.addEventListener('pointerdown', handleDown, true);
+    return () => {
+      doc.removeEventListener('pointerdown', handleDown, true);
+      doc.removeEventListener('pointerup', handleEnd, true);
+      doc.removeEventListener('pointercancel', handleCancel, true);
+    };
+  }, [isPopoverOpen, touchModes]);
 
   // Single keyboard navigation path for both modes.
   // The selector matches plain items plus selectable items
@@ -1546,27 +1575,18 @@ function DropdownMenuPopover({
       // activation): treat it as keyboard so those users still land on the
       // first item. Real pointer clicks report detail >= 1.
       const modality = e.detail === 0 ? 'keyboard' : 'pointer';
-      // A tap that opens at its click (inside a scroll view) is a finger's,
-      // and the touch presentation's motion follows the opening pointer.
-      const clickPointerType =
-        modality === 'pointer'
-          ? (normalizePointerType(
-              (e.nativeEvent as Partial<PointerEvent>).pointerType ?? '',
-            ) ?? normalizePointerType(lastTriggerPointerTypeRef.current))
-          : null;
-      lastTriggerPointerTypeRef.current = '';
       if (isControlled) {
         if (controlledIsOpen) {
           onClick?.();
           onOpenChange?.(false);
         } else {
-          openAndFocus(modality, true, clickPointerType);
+          openAndFocus(modality, true);
         }
       } else if (popover.isOpen) {
         onClick?.();
         popover.hide();
       } else {
-        openAndFocus(modality, true, clickPointerType);
+        openAndFocus(modality, true);
       }
     },
     [
@@ -1775,10 +1795,7 @@ function DropdownMenuPopover({
     id: triggerId,
     onClick: handleButtonClick,
     onClickCapture: handleTriggerClickCapture,
-    onPointerDown: event => {
-      lastTriggerPointerTypeRef.current = event.pointerType;
-      menuPress.triggerProps.onPointerDown(event);
-    },
+    onPointerDown: menuPress.triggerProps.onPointerDown,
     onContextMenu: menuPress.triggerProps.onContextMenu,
     onKeyDown: handleButtonKeyDown,
     // The caller's control paints its own ring, and the menu's focus return
@@ -1814,7 +1831,6 @@ function DropdownMenuPopover({
           onKeyDown={handleButtonKeyDown}
           onPointerDown={event => {
             button.onPointerDown?.(event);
-            lastTriggerPointerTypeRef.current = event.pointerType;
             menuPress.triggerProps.onPointerDown(event);
           }}
           onContextMenu={event => {
