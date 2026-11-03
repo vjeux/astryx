@@ -384,11 +384,12 @@ test('the Next button pages on setContentOffset(animated:)', async ({page}) => {
 const SHORT_WEBM =
   'GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAJtEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEkTbuMU6uEHFO7a1OsggJX7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjIuMy4xMDNXQYxMYXZmNjIuMy4xMDNEiYhAaQAAAAAAABZUrmvJrgEAAAAAAABA14EBc8WIWwKS0fV89mOcgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4QF9eEA4JGwggFAuoG0moECVbCEVbmBARJUw2f7c3OfY8CAZ8iZRaOHRU5DT0RFUkSHjExhdmY2Mi4zLjEwM3Nz1mPAi2PFiFsCktH1fPZjZ8ihRaOHRU5DT0RFUkSHlExhdmM2Mi4xMS4xMDMgbGlidnB4Z8ihRaOIRFVSQVRJT05Eh5MwMDowMDowMC4yMDAwMDAwMDAAH0O2dUCt54EAo0CIgQAAgPAOAJ0BKkABtAAARwiFhYiFhIgCAgAGFgYde3Nk5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9k5w9egP5oAKOdgQBkALECAAEQEAAYABhYL/QACIAEM1+tck+VgAAcU7trkbuPs4EAt4r3gQHxggGk8IED';
 
-test("a drag that starts on a video's controls stays the video's; a drag on its frame pages", async ({
-  page,
-}) => {
-  // A video that failed to load gives Chromium's controls every touch on it.
-  // So the story's video is served SHORT_WEBM, which loads.
+/**
+ * Opens the story's video gallery and pages to the video (2 / 3). A video
+ * that failed to load gives Chromium's controls every touch on it, so the
+ * story's video is served SHORT_WEBM, which loads.
+ */
+async function openVideoGallery(page: Page) {
   await page.route(
     'https://interactive-examples.mdn.mozilla.net/**',
     async route =>
@@ -426,11 +427,19 @@ test("a drag that starts on a video's controls stays the video's; a drag on its 
   await driver.tap({x: next.x + next.width / 2, y: next.y + next.height / 2});
   await waitForRest(track);
   expect(await counter()).toBe('2 / 3');
-  const width = page.viewportSize()?.width ?? 0;
-  const v = await dialog.locator('[data-current] video').boundingBox();
-  if (v == null) {
+  const video = dialog.locator('[data-current] video');
+  const box = await video.boundingBox();
+  if (box == null) {
     throw new Error('no video');
   }
+  return {driver, track, counter, video, box};
+}
+
+test("a drag that starts on a video's controls stays the video's; a drag on its frame pages", async ({
+  page,
+}) => {
+  const {driver, track, counter, box: v} = await openVideoGallery(page);
+  const width = page.viewportSize()?.width ?? 0;
   // In the 48 px band at its bottom edge, where its controls are taken to be.
   await driver.play(
     slowDrag({x: v.x + v.width * 0.8, y: v.y + v.height - 20}, -width * 0.6),
@@ -442,6 +451,51 @@ test("a drag that starts on a video's controls stays the video's; a drag on its 
     slowDrag({x: v.x + v.width * 0.8, y: v.y + v.height / 2}, -width * 0.6),
   );
   await waitForRest(track);
+  expect(await counter()).toBe('3 / 3');
+});
+
+test('a video that ends during a drag on its frame leaves the drag to page', async ({
+  page,
+}) => {
+  const {driver, track, counter, video, box: v} = await openVideoGallery(page);
+  const width = page.viewportSize()?.width ?? 0;
+  // The 0.2 s video starts at the press, so it ends early in the 600 ms drag.
+  await video.evaluate((el: HTMLVideoElement) => {
+    const at: Record<string, number> = {};
+    (window as unknown as {__at: Record<string, number>}).__at = at;
+    el.muted = true;
+    el.loop = false;
+    el.addEventListener('ended', () => {
+      at.ended = performance.now();
+    });
+    window.addEventListener(
+      'pointerdown',
+      () => {
+        at.down = performance.now();
+        void el.play();
+      },
+      {capture: true, once: true},
+    );
+    for (const type of ['pointerup', 'pointercancel']) {
+      window.addEventListener(
+        type,
+        () => {
+          at[type] = performance.now();
+        },
+        {capture: true, once: true},
+      );
+    }
+  });
+  await driver.play(
+    slowDrag({x: v.x + v.width * 0.8, y: v.y + v.height / 2}, -width * 0.6),
+  );
+  await waitForRest(track);
+  const at = await page.evaluate(
+    () => (window as unknown as {__at: Record<string, number>}).__at,
+  );
+  expect(at.ended).toBeGreaterThan(at.down);
+  expect(at.ended).toBeLessThan(at.pointerup);
+  expect(at.pointercancel).toBeUndefined();
   expect(await counter()).toBe('3 / 3');
 });
 
