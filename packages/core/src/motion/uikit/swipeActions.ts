@@ -18,12 +18,9 @@
  * `@measure` task that will confirm or replace them. uikit.test.ts enforces
  * both.
  *
- * Reduce Motion is not a value here. UIKit keeps both springs under it (lab,
- * iOS 26.2 simulator, iPhone 17 Pro, Reduce Motion on: the same
- * `UISpringTimingParameters(mass: 2, stiffness: 200, damping: 100)` animators
- * on tracking and release, and the full swipe still performs, Oct 23 2026),
- * but `design:reduced-motion` governs Astryx: what a release starts
- * cross-fades (DR2), and a core component keeps no motion under it (DR4).
+ * Reduce Motion is not a value here. UIKit keeps both springs under it, and
+ * the full swipe still performs (iOS 26.2 simulator). Astryx cross-fades what
+ * a release starts instead, and a core component keeps no motion under it.
  *
  * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md
  */
@@ -90,7 +87,7 @@ export const swipeActions = {
    * A release this fast goes the way it moves: it opens the row when it
    * opens and closes it when it closes, from anywhere short of the commit
    * point. A flick therefore never fires an action. The speed is the release
-   * velocity of a dragged surface (`spec:AST-100` FR2): the pan's velocity as
+   * velocity of a dragged surface: the pan's velocity as
    * the finger lifts, and 0 once the finger has stayed still before lifting,
    * where UIKit's pan, which never decays, still reports its last moving
    * speed. The measurements below are UIKit's pan velocities.

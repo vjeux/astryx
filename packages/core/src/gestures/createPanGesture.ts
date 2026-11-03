@@ -69,7 +69,7 @@ export function createPanGesture(
   options: PanGestureOptions,
 ): PanGesture {
   const {axis, onPan} = options;
-  // The public event is the record's values only (spec:AST-107 FR1).
+  // The public event carries only these three values.
   return createPan(element, {
     axis,
     onPan: ({state, translation, velocity}) => {

@@ -17,8 +17,7 @@
 import type {KeyboardEvent, ReactNode} from 'react';
 import type {StyleXStyles} from '@stylexjs/stylex';
 
-// Not a registered symbol: only createSwipe makes a Swipe value
-// (`spec:AST-057` FR1).
+// Not a registered symbol: only createSwipe makes a Swipe value.
 const SWIPE = Symbol('astryx.swipe');
 
 /**
@@ -145,10 +144,9 @@ export interface SwipeHost {
 }
 
 /**
- * The deprecated path's bridge (`spec:AST-057` DEP-0017): the key handler
- * Item's root forwards its key events into (Escape closes a resting row).
- * The layer writes it after every render; the root reads it on every event.
- * Leaves with the deprecated props (CLN-0025).
+ * The deprecated path's bridge: the key handler Item's root forwards its key
+ * events into (Escape closes a resting row). The layer writes it after every
+ * render, and the root reads it on every event.
  */
 export interface SwipeBridge {
   onKeyDown: (event: KeyboardEvent) => void;

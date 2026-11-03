@@ -9,8 +9,8 @@
  * @output Exports DeprecatedSwipeLayer (default): the swipe layer behind the
  *   deprecated props, with their released development warning
  * @position The target of Item.tsx's released loader, the one `import()` of
- *   swipe code, on DEP-0017's deprecated path (`spec:AST-057` DEP-0017,
- *   FR10); leaves with the props (CLN-0025). Tested through Item.test.tsx.
+ *   swipe code, on the deprecated path; removed with the deprecated props.
+ *   Tested through Item.test.tsx.
  */
 
 import {useDevWarning} from '../hooks/useDevWarning';
@@ -18,7 +18,7 @@ import SwipeActionsLayer from './SwipeActionsLayer';
 import type {SwipeLayerProps} from './swipeHost';
 
 export default function DeprecatedSwipeLayer(props: SwipeLayerProps) {
-  // The released warning for the released props (`spec:AST-057` FR3).
+  // The released props keep their released warning.
   useDevWarning(
     'Item',
     '`swipeBehavior="commit"` fires only the outermost entry of a side; the ' +

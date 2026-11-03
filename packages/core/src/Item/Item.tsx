@@ -12,18 +12,11 @@
  *   those slots' own layout.
  * @position Core layout primitive; consumed by index.ts, tested by Item.test.tsx
  *
- * Swipe actions come in through `swipe`, a value made by `createSwipe`
- * that carries the swipe's runtime: this module reads the configuration and
- * hands the runtime its root (with the facts the runtime decides on), then
- * renders what it gets back; the runtime gates the row, routes its keys and
- * attaches the gesture to the root itself (`spec:AST-057` FR10). It imports
- * nothing of the gesture. The only swipe code here is DEP-0017's deprecated
- * path, for the deprecated `swipeActions` and `swipeBehavior` only: the
- * released loader (the one `import()` of swipe code, whose layer brings the
- * released `commit` warning), row style and role gate, the bridge with its
- * key forwarder, and the coexistence diagnostic; it leaves with the props
- * (CLN-0025).
- * Item.source-build.test.mjs pins the import graph.
+ * `swipe` carries the swipe's runtime: Item hands it the root and the facts
+ * it decides on, and renders what it returns. Item imports no gesture code.
+ * The deprecated `swipeActions` and `swipeBehavior` keep their released path
+ * here until they are removed. Item.source-build.test.mjs pins the import
+ * graph.
  *
  * SYNC: When modified, update these files to stay in sync:
  * - /packages/core/src/Item/Item.doc.mjs
@@ -79,10 +72,8 @@ import {
   type SwipeBehavior,
   type SwipeBridge,
 } from '../Swipe/swipeHost';
-// DEP-0017's deprecated-path exception, the only swipe code in this module and
-// removed with the props (`spec:AST-057` CLN-0025): the released row style,
-// which a row given the deprecated `swipeActions` takes from its first render
-// as released, and the released loader below.
+// The deprecated path's released row style: a row given the deprecated
+// `swipeActions` takes it from its first render, as released.
 import {swipeHostStyles} from '../Swipe/swipeHost.stylex';
 
 // The loader, as released: the deprecated `swipeActions` load the gesture and
@@ -101,19 +92,19 @@ const DeprecatedSwipeLayer = lazy(
 export type ItemAlign = 'center' | 'start' | 'first-line';
 export type ItemDensity = 'compact' | 'balanced' | 'spacious';
 
-/** @deprecated Use `SwipeActionVariant` (`spec:AST-057` DEP-0017). */
+/** @deprecated Use `SwipeActionVariant`. */
 export type ItemSwipeActionVariant = SwipeActionVariant;
 
-/** @deprecated Use `SwipeAction` (`spec:AST-057` DEP-0017). */
+/** @deprecated Use `SwipeAction`. */
 export type ItemSwipeAction = SwipeAction;
 
-/** @deprecated Use `CreateSwipeOptions` (`spec:AST-057` DEP-0017). */
+/** @deprecated Use `CreateSwipeOptions`. */
 export interface ItemSwipeActions {
   leading?: ItemSwipeAction[];
   trailing?: ItemSwipeAction[];
 }
 
-/** @deprecated Use `SwipeBehavior` (`spec:AST-057` DEP-0017). */
+/** @deprecated Use `SwipeBehavior`. */
 export type ItemSwipeBehavior = SwipeBehavior;
 
 export interface ItemProps extends BaseProps<HTMLElement> {
@@ -287,16 +278,15 @@ export interface ItemProps extends BaseProps<HTMLElement> {
   swipe?: Swipe;
 
   /**
-   * @deprecated Pass `swipe={createSwipe({leading, trailing})}`
-   * (`spec:AST-057` DEP-0017); `astryx upgrade` rewrites it. Still works as
-   * released; ignored when `swipe` is set.
+   * @deprecated Pass `swipe={createSwipe({leading, trailing})}`;
+   * `astryx upgrade` rewrites it. Still works as released; ignored when
+   * `swipe` is set.
    */
   swipeActions?: ItemSwipeActions;
 
   /**
-   * @deprecated Pass `swipeBehavior` in `createSwipe`' options
-   * (`spec:AST-057` DEP-0017); `astryx upgrade` rewrites it. Ignored when
-   * `swipe` is set.
+   * @deprecated Pass `swipeBehavior` in `createSwipe`'s options;
+   * `astryx upgrade` rewrites it. Ignored when `swipe` is set.
    * @default 'reveal'
    */
   swipeBehavior?: ItemSwipeBehavior;
@@ -326,11 +316,10 @@ const ARIA_SELECTED_ROLES = new Set([
 ]);
 
 /**
- * DEP-0017's released role gate (`spec:AST-057`), for the deprecated path
- * only: roles whose content model permits interactive descendants, so a swipe
- * panel's buttons may live inside the row. A row with no role at all
- * qualifies too; `option`, the `menuitem*` roles and the rest do not. A row
- * given `swipe` is gated by its runtime (Swipe/createSwipe.ts).
+ * The deprecated path's released role gate: roles whose content model
+ * permits interactive descendants, so a swipe panel's buttons may live inside
+ * the row. A row with no role also qualifies. A row given `swipe` is gated by
+ * its runtime (Swipe/createSwipe.ts).
  */
 const SWIPE_ROLES = new Set(['listitem']);
 
@@ -635,9 +624,8 @@ export function Item({
   const isLinkRoot = typeof Component !== 'string' && href != null;
 
   // Swipe actions given as `swipe`: the row hands the runtime the value
-  // carries its facts and its root, and renders what it gets back. Whether
-  // the row is served, and everything it is served with, is the runtime's
-  // (`spec:AST-057` FR10).
+  // carries its facts and its root, and renders what it gets back. The
+  // runtime decides whether it serves the row, and with what.
   const swipeAttachment =
     swipe != null
       ? (swipeHostOf(swipe)?.attach({
@@ -648,13 +636,10 @@ export function Item({
         }) ?? null)
       : null;
 
-  // DEP-0017's deprecated path, as released, for the deprecated
-  // `swipeActions` and `swipeBehavior`; `swipe` wins over them. It leaves with
-  // the props (`spec:AST-057` CLN-0025). The released role gate: swipe
-  // actions exist where the row's role permits interactive descendants (a
-  // swipe panel's buttons are such descendants): a `listitem`, or no role at
-  // all. A root that is itself a link, a row whose role forbids them, and a
-  // row that is the enlarged target of a nested control are not served.
+  // The deprecated `swipeActions` and `swipeBehavior` keep their released
+  // path, and `swipe` wins over them. A root that is itself a link, a row
+  // whose role forbids interactive descendants, and a row that is the
+  // enlarged target of a nested control are not served.
   const deprecatedSwipe = swipe == null ? swipeActions : undefined;
   const deprecatedLeading = deprecatedSwipe?.leading ?? [];
   const deprecatedTrailing = deprecatedSwipe?.trailing ?? [];

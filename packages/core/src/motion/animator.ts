@@ -339,8 +339,8 @@ export interface AnimatorOptions {
   requestFrame?: (callback: () => void) => void;
   /**
    * Renders `x` into this custom property instead of `translate`, for an
-   * element whose parts all read one value (a row's swipe travel,
-   * `spec:AST-057` FR2): a `<length>` in px, or a plain `<number>`. The
+   * element whose parts all read one value (a row's swipe travel): a
+   * `<length>` in px, or a plain `<number>`. The
    * property is registered as inherited so it interpolates, and it animates
    * on the main thread, not the compositor; every other channel renders as
    * usual. A `companion` is a second custom property drawn from x by its

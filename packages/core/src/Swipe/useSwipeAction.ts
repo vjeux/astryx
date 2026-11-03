@@ -5,67 +5,16 @@
 /**
  * @file useSwipeAction.ts
  * @input Per side, the panel window and its entries (callback refs; the row
- *   root is the window's parent); the shared drag path (createSnapDrag.ts:
- *   the trackpad splitter, the pan, the snap-point drag and the animator),
+ *   root is the window's parent); the shared drag path (createSnapDrag.ts),
  *   the UIKit constants table and swipeRelease.ts
- * @output Exports useSwipeAction — the stops, the actions and the finger's
- *   model behind a row's swipe actions (where each part sits for the travel
- *   is SwipeActionsLayer's styles)
- * @position Internal to swipe actions, through SwipeActionsLayer (the only
- *   module that imports it); tested through Item.test.tsx and the
- *   interaction proofs
+ * @output useSwipeAction: the stops, the actions and the finger's model
+ *   behind a row's swipe actions
+ * @position Internal to swipe actions, through SwipeActionsLayer only;
+ *   tested through Item.test.tsx and the interaction proofs
  *
- * A row's swipe runs the shared drag path every followed pan runs
- * (`spec:AST-094` FR43, DEC-24): the splitter, the pan, the snap-point drag
- * and the animator. The row declares its stops, per side (rest, the open
- * width, and out past the row's edge for a full swipe), and its actions;
- * the drag draws the row's travel into one custom property on the root
- * (`spec:AST-057` FR2) that every part of the panel reads (SwipeActionsLayer).
- *
- * What a drag does depends on what drives it:
- *
- * - A trackpad's horizontal swipe (FR43) follows the fingers one for one
- *   from its first event past the pan's 8 px start, and its release settles
- *   to the nearest stop by position and velocity (Core's one release policy)
- *   from the fingers' speed, which the release keeps from their last move.
- * - A finger's or a pen's drag stays on `spec:AST-057`'s UIKit model: the
- *   swipe begins after UIKit's 25 px dead zone and counts from 0 there, the
- *   row trails the finger on UIKit's tracking spring and catches up when it
- *   stops, and the release goes by UIKit's rule (swipeRelease.ts) on UIKit's
- *   settle spring from the row's own velocity.
- *
- * Either way a drag stays on its side: within one gesture an open row only
- * closes, never passing rest to its other side. Dragged past the confirm
- * point (when the side's outermost entry can fire), a full swipe confirms:
- * the row runs ahead to UIKit's confirmation offset and the outermost entry
- * covers the space (a second custom property, the confirm, which the panel
- * reads too); backing out undoes it. A lift still confirmed slides the row
- * out and fires the outermost entry, at any speed; speed alone never fires
- * one (`spec:AST-057` FR5), so a full swipe is the one stop a flick never
- * reaches. Whenever the row slides out (a full swipe, or a tapped entry with
- * `hasRemoval`) the entry fires once the row's content has left its box; then
- * the row springs back, or holds out when the entry has `hasRemoval`.
- *
- * A mouse drag and a mouse wheel's notches never swipe a row
- * (`spec:AST-057` AR2, DEC-7): the pan takes touches, pens and a trackpad's
- * scroll. A finger that lands while another is down, on the row or anywhere
- * else, never starts the pan: the page pinches (`spec:AST-094` FR10).
- *
- * An open row (resting, or settling to rest open: UIKit counts a row open
- * from the release that opens it) closes on a pointer landing outside it, on
- * a scroll of anything that holds it while focus is outside its open panel,
- * on Escape with focus inside it, and on a tap on its own content, which
- * activates nothing on the row (`spec:AST-057` FR7).
- *
- * Under Reduce Motion (`design:reduced-motion`) the drag itself is direct
- * manipulation and follows one for one, but what a release, a confirm or a
- * close starts never travels or springs: the row lands at the bottom of an
- * opacity dip after a finger (DR2), and a pen's or a trackpad's lands at once
- * on a fine primary pointer (DR3).
- *
- * Directions are logical: `leading` is uncovered by a drag toward the inline
- * end and sits at the inline start, `trailing` the reverse, read against the
- * root's computed `direction` when the drag begins (`spec:AST-057` FR8).
+ * The shared drag path has no dead zone, tracking spring or UIKit release
+ * rule. This hook gives them to a finger or a pen through the drag's model
+ * hooks. A trackpad's swipe uses the shared path as it is.
  */
 
 import {useCallback, useEffect, useRef, useState} from 'react';
@@ -326,7 +275,7 @@ interface Drag {
   confirmAt: number;
   /** The side's outermost entry can fire (not disabled). */
   canConfirm: boolean;
-  /** A trackpad's scroll drives it (FR43), not a finger or a pen. */
+  /** A trackpad's scroll drives it, not a finger or a pen. */
   isScroll: boolean;
   /** Past the dead zone: the row follows. */
   started: boolean;
@@ -398,11 +347,11 @@ export function useSwipeAction({
   useIsomorphicLayoutEffect(() => {
     stateRef.current = state;
   });
-  // Every transition goes through here, so the one that opens or closes the
-  // row holds or frees its root's press at once, from the handler that caused
-  // it: an open row's root takes no press, so a tap on its content only
-  // closes it, as in UIKit, where the cell never sees that touch
-  // (`spec:AST-057` FR7). The root stays a pressable surface.
+  // Every transition goes through here, so the transition that opens or
+  // closes the row holds or frees the root's press in the same handler. An
+  // open row's root paints no press: a tap on its content only closes it, as
+  // in UIKit, where the cell never sees that touch. The root stays a
+  // pressable surface.
   const setSwipeState = useCallback((next: SwipeState) => {
     const wasOpen = isSwipeOpen(stateRef.current);
     const isOpen = isSwipeOpen(next);
@@ -560,14 +509,10 @@ export function useSwipeAction({
   );
 
   /**
-   * Slide the row out toward the edge it travelled toward, and fire once its
-   * content has left its box (`spec:AST-057` FR5): UIKit calls the handler at
-   * the lift or the tap, and firing when the content is gone means a row its
-   * app removes at once never vanishes mid-slide. The shared drag calls back
-   * on the first frame the settle's curve has carried the row past its edge
-   * (under Reduce Motion, the frame it lands out of its box at the bottom of
-   * the cross-fade); a settle or a drag that replaces the slide-out first
-   * fires nothing.
+   * Slides the row out toward the edge it moved toward. The entry fires when
+   * the row's content has left its box, not at the lift as in UIKit, so a row
+   * that the app removes at once never disappears mid-slide. A settle or a
+   * drag that replaces the slide-out first fires nothing.
    */
   const slideOutThenFire = useCallback(
     (
@@ -724,9 +669,9 @@ export function useSwipeAction({
     const {layout} = drag;
     const sign = physicalSign(layout.side, layout.inlineSign);
     if (!drag.started) {
-      // A trackpad's swipe follows from its first event past the pan's start
-      // (FR43); a finger's begins after UIKit's dead zone, counted from where
-      // the touch landed, and in between the row stays where it was caught.
+      // A trackpad's swipe follows from its first event past the pan's start.
+      // A finger's swipe begins after UIKit's dead zone, counted from where
+      // the touch landed. Until then the row stays where it was caught.
       if (!drag.isScroll && Math.abs(move.total) < SWIPE.hysteresis) {
         return null;
       }
@@ -768,17 +713,17 @@ export function useSwipeAction({
     const offset = sign * travel;
     const fade = reducedMotionFade(rootRef.current);
     if (fade == null) {
-      // A finger's row trails it on UIKit's tracking spring; a trackpad's
-      // follows its fingers one for one (FR43). A confirm or a back-out
-      // springs the row to its new place either way.
+      // A finger's row trails it on UIKit's tracking spring. A trackpad's row
+      // follows its fingers one for one. A confirm or a back-out springs the
+      // row to its new place either way.
       return drag.isScroll && !flipped
         ? {offset}
         : {offset, spring: SWIPE.tracking};
     }
     if (flipped) {
-      // Confirming and backing out are changes of state, not the drag:
-      // under Reduce Motion they cross-fade (design:reduced-motion DR2), and
-      // the moves leave that fade alone until it ends.
+      // Confirming and backing out are changes of state, not the drag. Under
+      // Reduce Motion they cross-fade, and the moves leave that fade alone
+      // until it ends.
       drag.dipUntil = performance.now() + fade.duration;
       return {offset, spring: SWIPE.tracking};
     }
@@ -786,7 +731,7 @@ export function useSwipeAction({
       return null;
     }
     // Otherwise the row follows one for one: the drag itself is direct
-    // manipulation (design:reduced-motion).
+    // manipulation.
     drag.dipUntil = undefined;
     return {offset};
   };
@@ -807,9 +752,8 @@ export function useSwipeAction({
     let landing: 'closed' | 'open' | 'perform';
     if (drag.isScroll) {
       // A trackpad's release settles to the nearest stop by position and
-      // velocity (FR43): Core's one release policy, from where the swipe
-      // began. The full swipe is reached by position only: speed alone never
-      // fires an entry (`spec:AST-057` FR5).
+      // velocity, from where the swipe began. The full swipe is reached by
+      // position only: speed alone never fires an entry.
       if (drag.isArmed) {
         landing = 'perform';
       } else {
@@ -832,9 +776,9 @@ export function useSwipeAction({
         wasConfirmed: drag.wasConfirmed,
       });
     }
-    // A finger's settle starts from the row's own velocity on UIKit's
-    // spring; a trackpad's from the fingers' speed, which the release keeps
-    // from their last move (FR43), on the shared settle spring.
+    // A finger's settle starts from the row's own velocity on UIKit's spring.
+    // A trackpad's settle starts from the fingers' speed at their last move,
+    // on the shared settle spring.
     const motion = drag.isScroll
       ? {velocity: end.velocity, spring: settleSpringFor(true)}
       : {spring: settleSpringFor(false)};
@@ -863,7 +807,7 @@ export function useSwipeAction({
   };
 
   // The shared drag on the root, created once the root is known: the
-  // splitter, the pan, the snap-point drag and the animator (FR43, DEC-24).
+  // splitter, the pan, the snap-point drag and the animator.
   useIsomorphicLayoutEffect(() => {
     const root = rootRef.current;
     if (root == null) {
@@ -885,21 +829,19 @@ export function useSwipeAction({
       },
       onSettle: landed,
       pan: {
-        // A finger, a pen and a trackpad's two-finger scroll swipe a row; a
-        // mouse drag and a mouse wheel's notches never do (`spec:AST-057`
-        // AR2, DEC-7; `spec:AST-094` FR43).
+        // A finger, a pen and a trackpad's two-finger scroll swipe a row. A
+        // mouse drag and a mouse wheel's notches never do.
         allowedPointerTypes: ['touch', 'pen'],
         allowedScrollTypes: ['continuous'],
         hysteresis: SWIPE.claim,
         maximumNumberOfTouches: 1,
         name: 'Item.swipe',
         // The drag moves the row: text selection and the touch callout stay
-        // off for the press it holds (`spec:AST-094` FR41).
+        // off for the press it holds.
         selectionLock: lockSelection,
         shouldBegin: (pan: PanGestureRecognizer) => {
           // A finger that is not the only one down is part of a pinch, even
-          // when the first finger is off the row: the page zooms
-          // (spec:AST-094 FR10).
+          // when the first finger is off the row: the page zooms.
           if (getGestureHost(root.ownerDocument).fingersDown() > 1) {
             return false;
           }
@@ -962,8 +904,7 @@ export function useSwipeAction({
       }
       // Focus inside the open panel means the scroll may be the browser
       // bringing the focused entry into view (keyboard or VoiceOver): the row
-      // stays. Focus anywhere else, the row's own content included, closes it
-      // (spec:AST-057 FR7).
+      // stays. Focus anywhere else, the row's own content included, closes it.
       const side = layoutRef.current?.side;
       const panel =
         side == null
@@ -985,12 +926,10 @@ export function useSwipeAction({
   }, [close, isOpen, state.phase]);
 
   // A tap on an open row's own content closes it and activates nothing, as
-  // UIKit's dismissal does: the tap recognizes at the lift, and the host
-  // keeps the click it would have made from the row (it cancels the touch,
-  // or where the primary pointer is fine its click guard swallows the
-  // click). Any pointer's press dismisses, since a trackpad opens a row too
-  // (`spec:AST-057` DEC-7). The panel's entries keep their own taps, and a
-  // closed row never offers this recognizer a touch.
+  // in UIKit. The tap recognizes at the lift, and the host keeps the click
+  // from the row. Any pointer's press dismisses, because a trackpad opens a
+  // row too. The panel's entries keep their own taps. A closed row never
+  // offers this recognizer a touch.
   useGestureRecognizer(
     rootRef,
     () =>

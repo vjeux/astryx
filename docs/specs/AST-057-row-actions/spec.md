@@ -49,6 +49,18 @@ review_triggers: [public-api, accessibility, behavior]
 }
 ```
 
+<!-- path-applicability:v1 -->
+
+```json
+{
+  "paths": [
+    "packages/core/src/Swipe/**",
+    "packages/core/src/motion/uikit/swipeActions.ts",
+    "packages/core/src/privateAttributes/pressHeld.stylex.ts"
+  ]
+}
+```
+
 ## Contract at a glance
 
 | Area                    | Contract                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |

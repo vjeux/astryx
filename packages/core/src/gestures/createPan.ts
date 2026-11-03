@@ -5,20 +5,16 @@
  * @input An element, a pan listener, and the recognizer's own options
  * @output Exports createPan and its types: the pan under the public
  *   `createPanGesture`, with the options only Core passes
- * @position Internal to core (`spec:AST-107` FR4): `createPanGesture` is its
- *   public face, and a Core component whose drag needs more than the public
- *   options (which pointers start it, the claim distance, a begin gate, what
- *   drove it) uses it directly, a known public-API gap
- *   (`architecture:react-component-runtime` INV13).
+ * @position Internal to core. `createPanGesture` is its public face. A Core
+ *   component whose drag needs more than the public options (which pointers
+ *   start it, the claim distance, a begin gate, what drove it) uses it
+ *   directly.
  *
- * Under it is a `PanGestureRecognizer` on the document's gesture host, so the
- * drag claims its touch at the recognizer's claim distance and the host
- * writes the element's `touch-action` for the axis. `translation` is the
- * recognizer's own: the travel the drag needed to begin is not part of it;
- * `totalTranslation` counts from where the touch began, the claim included.
- * A trackpad's scroll drives it as a finger does where the recognizer allows
- * continuous scrolls (`spec:AST-094` FR43); `input` says which drove it.
- * Importing this module does no DOM work.
+ * `translation` is the recognizer's own and leaves out the travel the drag
+ * needed to begin. `totalTranslation` counts from where the touch began.
+ * A trackpad's scroll drives it where the recognizer allows continuous
+ * scrolls, and `input` says which drove it. Importing this module does no DOM
+ * work.
  * SYNC: When modified, update createPanGesture.ts.
  */
 

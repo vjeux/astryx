@@ -7,29 +7,15 @@
  *   drag (where it draws the element, where a release lands)
  * @output Exports createSnapDrag and its types: the snap-point drag under the
  *   public `createDragToSnapPoints`
- * @position Internal to core (`spec:AST-107` FR4): `createDragToSnapPoints`
- *   is its public face (the default model), and a Core component whose drag
- *   needs more than the public options (which pointers start it, a model of
- *   its own) uses it directly, a known public-API gap
- *   (`architecture:react-component-runtime` INV13). Every followed pan runs
- *   this one path: the splitter, the pan, the snap-point drag and the
- *   animator (`spec:AST-094` FR43, DEC-24).
+ * @position Internal to core. `createDragToSnapPoints` is its public face
+ *   (the default model). A Core component whose drag needs more than the
+ *   public options (which pointers start it, a model of its own) uses it
+ *   directly. Every followed pan runs this one path: the splitter, the pan,
+ *   the snap-point drag and the animator.
  *
- * A drag moves the element along its axis; the release settles it on a snap
- * point and calls `onSettle(index)`. The default model is the public one:
- * the element follows the drag one for one from where it was caught, and a
- * release goes where Core's one release policy says (the nearest point; the
- * next one past the flick speed; back to where the drag started when the
- * release moves back toward it), on the settle spring from the release
- * velocity. A model replaces either half: `move` says where a drag draws the
- * element and whether it follows on a spring, `release` which point a
- * release lands on, from which velocity and on which spring.
- *
- * The animator draws the element: its `translate` by default, or one custom
- * property its parts all read (`customProperty`). Under Reduce Motion a touch
- * drag's release cross-fades to its point; any other lands at once on a
- * fine primary pointer and cross-fades on a coarse one (`design:reduced-motion`
- * DR2, DR3), as the animator plans.
+ * A model replaces either half of the default: `move` says where a drag
+ * draws the element and whether it follows on a spring, and `release` says
+ * which point a release lands on, from which velocity and on which spring.
  */
 
 import type {PanGestureRecognizerOptions} from '../gestures/PanGestureRecognizer';
@@ -385,9 +371,8 @@ export function createSnapDrag(
       }
       const {startIndex, start} = drag;
       drag = null;
-      // Only a touch drag's release cross-fades under Reduce Motion; any
-      // other lands at once on a fine primary pointer (design:reduced-motion
-      // DR2, DR3).
+      // Only a touch drag's release cross-fades under Reduce Motion. Any other
+      // release lands at once on a fine primary pointer.
       const touchRelease = reading.input === 'touch';
       if (state === 'cancelled') {
         if (model?.cancel != null) {
@@ -404,7 +389,7 @@ export function createSnapDrag(
       }
       // Core's one release policy: the nearest snap point, the next one in
       // its direction past the flick speed, and back to where the drag
-      // started when the release moves back toward it (spec:AST-094 FR37).
+      // started when the release moves back toward it.
       const {index: target} = resolveSnapPoint({
         points,
         position: animator.get(axis),
