@@ -18,12 +18,7 @@
  * - /docs/architecture/layer-runtime.md
  */
 
-import {
-  inertCopy,
-  isCopyable,
-  restoreScrollOffsets,
-} from '../motion/transientCopy';
-import {settledBox} from './settledBox';
+import {inertCopy, restoreScrollOffsets} from '../motion/transientCopy';
 
 /** A box in viewport px. */
 export interface LayerExitBox {
@@ -54,6 +49,8 @@ const LIVE_ONLY_PROPERTIES = [
   'inset',
   'right',
   'bottom',
+  'scale',
+  'opacity',
   'transition',
 ] as const;
 
@@ -92,6 +89,14 @@ function commitPresented(element: HTMLElement, copy: HTMLElement): void {
   });
 }
 
+/** The properties that move a box without moving its layout. */
+const TRANSFORM_PROPERTIES = [
+  'transform',
+  'translate',
+  'scale',
+  'rotate',
+] as const;
+
 /** The elements a `<form>` can own; `form=""` matches no form's id. */
 const FORM_CONTROLS =
   'button, fieldset, input, object, output, select, textarea';
@@ -99,26 +104,66 @@ const FORM_CONTROLS =
 /** Each layer's copy: placing another for the same layer replaces it. */
 const copies = new WeakMap<HTMLElement, HTMLElement>();
 
-/** A duration list with any part above zero. */
-const hasDuration = (value: string): boolean =>
-  value.split(',').some(part => parseFloat(part) > 0);
+/** A length in px, or 0. */
+const px = (value: string): number => parseFloat(value) || 0;
 
 /**
- * Where `element` is laid out, in viewport px, fractions kept. It is the box
- * without the transform a presentation in progress draws it with; the copy
- * carries that transform itself.
+ * Where `element` is laid out, in viewport px. It is the box without the
+ * transform a presentation in progress draws it with; the copy carries that
+ * transform itself. A popover's layer is fixed in the top layer, so its
+ * offset box is in viewport px.
  */
-function layoutBox(element: HTMLElement): LayerExitBox {
-  const {left, top, width, height} = settledBox(element);
-  return {left, top, width, height};
+function layoutBox(element: HTMLElement, view: Window): LayerExitBox {
+  const style = view.getComputedStyle(element);
+  const isTransformed = TRANSFORM_PROPERTIES.some(property => {
+    const value = style.getPropertyValue(property);
+    return value !== '' && value !== 'none';
+  });
+  if (!isTransformed) {
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+  }
+  // The used width and height keep their fractions, where the offset size
+  // rounds (a copy narrower by a fraction could wrap its text differently).
+  const isBorderBox = style.getPropertyValue('box-sizing') === 'border-box';
+  const width = px(style.getPropertyValue('width'));
+  const height = px(style.getPropertyValue('height'));
+  return {
+    left: element.offsetLeft,
+    top: element.offsetTop,
+    width:
+      width === 0
+        ? element.offsetWidth
+        : isBorderBox
+          ? width
+          : width +
+            px(style.getPropertyValue('padding-left')) +
+            px(style.getPropertyValue('padding-right')) +
+            px(style.getPropertyValue('border-left-width')) +
+            px(style.getPropertyValue('border-right-width')),
+    height:
+      height === 0
+        ? element.offsetHeight
+        : isBorderBox
+          ? height
+          : height +
+            px(style.getPropertyValue('padding-top')) +
+            px(style.getPropertyValue('padding-bottom')) +
+            px(style.getPropertyValue('border-top-width')) +
+            px(style.getPropertyValue('border-bottom-width')),
+  };
 }
 
 /**
  * Copies `element` into a static box where it is drawn, marked with
  * `attribute`. It inserts the copy right after the element and shows it in
  * the top layer. Returns null where there is no top layer to show it in (no
- * popover API), or for content past the copy cap or holding a canvas that
- * reads back empty: the close is then immediate.
+ * popover API): the close is then immediate.
  *
  * The browser hides a popover the moment it closes (a pick, Escape, its own
  * light dismiss). A close that has to stay on screen plays on this copy,
@@ -143,7 +188,7 @@ function layoutBox(element: HTMLElement): LayerExitBox {
  * It is shown only in the top layer, as a manual popover, so a clipping,
  * transformed or sticky ancestor neither cuts nor moves it. A fixed box or a
  * larger `z-index` is no substitute. Where the browser refuses the show
- * during the closing popover's own toggle (Chromium 150 and later), the copy
+ * during the closing popover's own toggle (Android Chromium 158), the copy
  * waits, hidden. It shows once the toggle is over: after the script that
  * closed the layer or, failing that, in the next frame before it paints. Its
  * owner animates it and removes it when its spring settles; nothing on the
@@ -159,14 +204,10 @@ export function placeLayerExitCopy(
   }
   // One copy per layer: a close during a close replaces it.
   copies.get(element)?.remove();
-  // Past the copy cap, or with a canvas that reads back empty, there is no
-  // copy, so the close is immediate.
-  if (!isCopyable(element)) {
-    return null;
-  }
-  const box = layoutBox(element);
+  const box = layoutBox(element, view);
   const copy = inertCopy(element);
   if (copy == null) {
+    // A canvas reads back empty: no copy, so the close is immediate.
     return null;
   }
   // The copy stands right after the layer, which renders inline by default.
@@ -212,13 +253,9 @@ export function placeLayerExitCopy(
   style.setProperty('justify-self', 'normal');
   style.setProperty('align-self', 'normal');
   style.setProperty('animation-name', 'none');
-  const layerStyle = view.getComputedStyle(element);
-  if (hasDuration(layerStyle.getPropertyValue('transition-duration'))) {
-    style.setProperty('transition', 'none');
-  }
-  // A cloned descendant restarts its keyframes from the first frame, and a
-  // transition with a starting style replays its entry. Stop both;
-  // `commitPresented` already wrote what running ones held.
+  // A descendant with keyframes would play them again in the copy, from the
+  // start: it keeps the values they presented instead. Nothing is written
+  // where no keyframes are set.
   const liveNodes = element.querySelectorAll('*');
   copy.querySelectorAll('*').forEach((node, index) => {
     const live = liveNodes[index];
@@ -228,17 +265,14 @@ export function placeLayerExitCopy(
     ) {
       return;
     }
-    const liveStyle = view.getComputedStyle(live);
-    const name = liveStyle.getPropertyValue('animation-name');
+    const name = view.getComputedStyle(live).getPropertyValue('animation-name');
     if (name !== '' && name !== 'none') {
       node.style.setProperty('animation-name', 'none');
-    }
-    if (hasDuration(liveStyle.getPropertyValue('transition-duration'))) {
-      node.style.setProperty('transition', 'none');
     }
   });
   // The layer's own overflow, so a layer that scrolls its content keeps its
   // clip. A popover's user-agent style scrolls as well.
+  const layerStyle = view.getComputedStyle(element);
   style.setProperty('overflow-x', layerStyle.getPropertyValue('overflow-x'));
   style.setProperty('overflow-y', layerStyle.getPropertyValue('overflow-y'));
   element.after(copy);
