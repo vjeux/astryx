@@ -24,7 +24,10 @@ import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
-import {contextMenu} from '../motion/uikit/contextMenu';
+import {
+  contextMenu,
+  registerContextMenuTable,
+} from '../motion/uikit/contextMenu';
 import {
   ContextMenuPressRecognizer,
   useContextMenuPressFeedback,
@@ -90,7 +93,10 @@ export function ContextMenuTouchLayer({
   // swap moves the recognizer to the new node.
   const recognizer = useGestureRecognizer(
     triggerRef,
-    () => new ContextMenuPressRecognizer(),
+    () => {
+      registerContextMenuTable();
+      return new ContextMenuPressRecognizer();
+    },
     press => {
       const open = () => {
         // The press feedback grew the trigger from its center, and the cursor

@@ -3,10 +3,10 @@
 /**
  * @file contextMenuPressFeedback.test.tsx
  * @input useContextMenuPressFeedback on a trigger, with the animator replaced
- * @output Checks that the growth starts at the press machine's "on", keeps
- *   going when the press machine lets the press go, and returns when
- *   ContextMenu's recognizer ends the press with no menu, both on the theme's
- *   duration and move easing tokens
+ * @output Checks that the growth starts at the press machine's "on" and
+ *   keeps going when the machine lets the press go. It returns when
+ *   ContextMenu's recognizer ends the press with no menu. Both play the
+ *   theme's duration and move easing tokens
  * @position Unit tests of packages/core/src/ContextMenu/contextMenuPressFeedback.ts
  */
 

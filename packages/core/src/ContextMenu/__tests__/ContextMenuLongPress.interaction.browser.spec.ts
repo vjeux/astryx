@@ -45,19 +45,32 @@ import {
 } from '@astryxdesign/interaction-harness';
 import {contextMenu} from '../../motion/uikit/contextMenu';
 import {PRESS_ONSET_MS} from '../../utils/pressGesture';
-import {themeMoveTiming, timedCurve} from '../contextMenuPressTiming';
+import {pressTiming, timedCurve} from '../contextMenuPressTiming';
 
 const storybook = withStorybook(test);
 const {commitMs, menuDisplayMs, heldScale} = contextMenu.press;
-// What ContextMenu plays from the press machine's onset: the growth toward the
-// held scale, on the story theme's medium duration and move easing, which are
-// the core defaults.
 const feedbackOnsetMs = PRESS_ONSET_MS;
-const PLAYED = timedCurve(
-  1,
-  heldScale,
-  themeMoveTiming(null, '--duration-medium'),
-);
+
+/**
+ * What ContextMenu plays from the press machine's onset: the growth toward the
+ * held scale. The trigger's own medium duration and move easing tokens time it.
+ */
+async function playedCurve(trigger: Locator) {
+  const [duration, easing] = await trigger.evaluate(element => {
+    const style = getComputedStyle(element);
+    return [
+      style.getPropertyValue('--duration-medium').trim(),
+      style.getPropertyValue('--ease-move').trim(),
+    ];
+  });
+  const timing = pressTiming(duration, easing);
+  if (timing == null) {
+    throw new Error(
+      `the story theme gives no move timing: ${duration}, ${easing}`,
+    );
+  }
+  return timedCurve(1, heldScale, timing);
+}
 
 interface TouchStory {
   driver: TouchDriver;
@@ -520,6 +533,7 @@ test('the press feedback plays its computed curve on the compositor, frame by fr
   page,
 }, testInfo) => {
   const {driver, trigger, center} = await openTouchStory(page);
+  const played = await playedCurve(trigger);
   const playing = driver.play(hold(center, commitMs + 300));
   await waitForAnimation(trigger, {minProgressMs: 16});
   await holdAnimations(page, trigger);
@@ -556,7 +570,7 @@ test('the press feedback plays its computed curve on the compositor, frame by fr
   const errors = Array.from({length: 33}, (_, i) => feedbackOnsetMs + i * 17)
     .filter(ms => ms <= commitMs + 300)
     .map(ms => {
-      const expected = PLAYED.at((ms - feedbackOnsetMs) / 1000);
+      const expected = played.at((ms - feedbackOnsetMs) / 1000);
       return {
         ms,
         expected,
@@ -595,6 +609,7 @@ test('the press feedback keeps advancing every frame while the main thread is bl
     'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
   );
   const {driver, trigger, center} = await openTouchStory(page);
+  const played = await playedCurve(trigger);
   // A wider card grows by about a CSS pixel a frame, which the screencast
   // resolves; it stays inside the viewport at its largest.
   await trigger.evaluate(el => {
@@ -615,7 +630,7 @@ test('the press feedback keeps advancing every frame while the main thread is bl
     (await page.evaluate(() => performance.timeOrigin)) +
     (await touchStartedAt(page));
   const scaleAt = (epoch: number) =>
-    PLAYED.at((epoch - touch - feedbackOnsetMs) / 1000);
+    played.at((epoch - touch - feedbackOnsetMs) / 1000);
   const restWidth = (proof.first ?? 0) / scaleAt(block.from + 20);
   const expectedGrowth =
     restWidth * (scaleAt(block.to - 20) - scaleAt(block.from + 20));
