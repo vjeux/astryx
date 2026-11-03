@@ -3080,7 +3080,7 @@ describe('useSheetGestures: the release on the compositor', () => {
     expect(liveOffset(hook)).toBeCloseTo(onScreen - (20 - PAN_THRESHOLD), 0);
   });
 
-  it('on iOS, turns text selection and the callout off on the whole sheet while a finger holds or drags it, and back on at the lift', () => {
+  it('on iOS, turns text selection and the callout off on the whole sheet while a finger holds or drags it, and back on once its release rests', async () => {
     // iOS WebKit fires no selectstart for a long-press selection (iOS 26.2
     // simulator), so only user-select refuses one there, and only on the whole
     // sheet: on the element under the finger alone, the long press selected a
@@ -3092,22 +3092,28 @@ describe('useSheetGestures: the release on the compositor', () => {
     down(hook, 0, 0, t);
     stream(hook, t, {from: 0, to: 60, t0: 0, t1: 100});
     expect(t.style.getPropertyValue('user-select')).toBe('none');
+    // Still off while the release runs. Turning it back on repaints the whole
+    // sheet, and WebKit holds the release's first frames for that.
     lift(hook, 60, 102, t);
-    expect(t.style.getPropertyValue('user-select')).toBe('text');
+    expect(t.style.getPropertyValue('user-select')).toBe('none');
     act(() => {
       vi.advanceTimersByTime(80);
     });
-    // A finger catches it mid-settle and holds still: off at the touch-down,
-    // before a long press would select, ...
+    // A finger catches it mid-settle and holds still: still off, before a
+    // long press would select, ...
     press(hook, 500, 1000, t);
     expect(hook.result.current.isDragging).toBe(true);
     expect(t.style.getPropertyValue('user-select')).toBe('none');
-    // ... and the sheet's own value is back when it lets go.
+    // ... through the release that follows. The sheet's own value is back
+    // once that release rests.
     lift(hook, 500, 1600, t);
+    expect(t.style.getPropertyValue('user-select')).toBe('none');
+    land();
+    await act(async () => {});
     expect(t.style.getPropertyValue('user-select')).toBe('text');
   });
 
-  it('on iOS, also locks a checkbox, radio or switch input under the finger that drags or catches the sheet (spec:AST-094 FR41)', () => {
+  it('on iOS, also locks a checkbox, radio or switch input under the finger that drags or catches the sheet, until its release rests (spec:AST-094 FR41)', async () => {
     // WebKit's own stylesheet makes every input selectable, out of reach of
     // the sheet's lock, so the input under the finger is locked itself.
     stubIosIdiom();
@@ -3131,7 +3137,8 @@ describe('useSheetGestures: the release on the compositor', () => {
     act(() => {
       touchEvent('touchend', toggle, [{id: 901, x: 50, y: 60}], 100);
     });
-    expect(toggle.style.getPropertyValue('user-select')).toBe('');
+    // Still locked while the release runs.
+    expect(toggle.style.getPropertyValue('user-select')).toBe('none');
     act(() => {
       vi.advanceTimersByTime(80);
     });
@@ -3156,10 +3163,13 @@ describe('useSheetGestures: the release on the compositor', () => {
     act(() => {
       touchEvent('touchend', toggle, [{id: 902, x: 50, y: 560}], 1600);
     });
+    expect(toggle.style.getPropertyValue('user-select')).toBe('none');
+    land();
+    await act(async () => {});
     expect(toggle.style.getPropertyValue('user-select')).toBe('');
   });
 
-  it("on iOS, also locks a checkbox in the sheet's content under the finger that pulls or catches the sheet (spec:AST-094 FR41)", () => {
+  it("on iOS, also locks a checkbox in the sheet's content under the finger that pulls or catches the sheet, until its release rests (spec:AST-094 FR41)", async () => {
     // The content's pans bring no lock of their own to the gesture host, so
     // the sheet's drag lock takes the touch's target itself.
     stubIosIdiom();
@@ -3192,7 +3202,8 @@ describe('useSheetGestures: the release on the compositor', () => {
     act(() => {
       touchEvent('touchend', toggle, [{id: 911, x: 50, y: 360}], 100);
     });
-    expect(toggle.style.getPropertyValue('user-select')).toBe('');
+    // Still locked while the release runs.
+    expect(toggle.style.getPropertyValue('user-select')).toBe('none');
     act(() => {
       vi.advanceTimersByTime(80);
     });
@@ -3205,10 +3216,13 @@ describe('useSheetGestures: the release on the compositor', () => {
     act(() => {
       touchEvent('touchend', toggle, [{id: 912, x: 50, y: 400}], 1600);
     });
+    expect(toggle.style.getPropertyValue('user-select')).toBe('none');
+    land();
+    await act(async () => {});
     expect(toggle.style.getPropertyValue('user-select')).toBe('');
   });
 
-  it('elsewhere, cancels the selection a finger holding or dragging the sheet would start, and changes no style', () => {
+  it('elsewhere, cancels the selection a finger holding or dragging the sheet would start until its release rests, and changes no style', async () => {
     stubCoarsePointer();
     vi.stubGlobal('CSS', {supports: () => false, escape: (v: string) => v});
     const {hook} = setup({snapHeights: () => [200]});
@@ -3231,18 +3245,23 @@ describe('useSheetGestures: the release on the compositor', () => {
     expect(t.style.getPropertyValue('user-select')).toBe('text');
     expect(t.style.getPropertyValue('-webkit-user-select')).toBe('');
     expect(row.getAttribute('style')).toBeNull();
+    // Still refused while the release runs.
     lift(hook, 60, 102, t);
-    expect(longPressSelects()).toBe(true);
+    expect(longPressSelects()).toBe(false);
     act(() => {
       vi.advanceTimersByTime(80);
     });
     // A finger catches it mid-settle and holds still: refused from the
-    // touch-down, before a long press would select, until it lets go.
+    // touch-down, before a long press would select, until the release that
+    // follows rests.
     press(hook, 500, 1000, t);
     expect(hook.result.current.isDragging).toBe(true);
     expect(longPressSelects()).toBe(false);
     expect(t.style.getPropertyValue('user-select')).toBe('text');
     lift(hook, 500, 1600, t);
+    expect(longPressSelects()).toBe(false);
+    land();
+    await act(async () => {});
     expect(longPressSelects()).toBe(true);
   });
 

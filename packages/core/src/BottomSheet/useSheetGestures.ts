@@ -923,10 +923,11 @@ export function useSheetGestures({
   // after catching it mid-settle, no text selection starts under it and the
   // touch callout is off: a finger held still on a caught sheet would
   // otherwise start a text selection (on iOS, with its loupe) under the drag.
-  // Taken at the catch (the touch-down), before the long press would select,
-  // and released at the lift (sheetSelectionLock.ts: how each engine refuses
-  // one). The gesture host takes the same lock for the sheet's recognizers;
-  // the two release in whichever order they let go.
+  // The lock is taken at the catch, before a long press would select. It
+  // lifts once the release rests, or at a cancel (see `endDrag`).
+  // sheetSelectionLock.ts says how each engine refuses one. The gesture host
+  // takes the same refcounted lock and lets go at the lift. The style comes
+  // back with the last holder.
   const selectionLockRef = useRef<(() => void) | null>(null);
   const lockSelection = useCallback((target: EventTarget | null) => {
     const element = sheetElRef.current;
@@ -1783,7 +1784,6 @@ export function useSheetGestures({
       // Today's inputs, for a release under a mouse: the drag's direction and
       // travel, and the release velocity, the same filter as every pointer's.
       dragStateRef.current = null;
-      unlockSelection();
       setIsDragging(false);
       setIsTraveling(false);
       settleFromDrag(
@@ -1797,6 +1797,20 @@ export function useSheetGestures({
         state.naturalEndGap,
         state.pointerType === 'touch',
       );
+      // The selection lock lifts once the release rests. On iOS WebKit,
+      // lifting it restyles the whole sheet, and WebKit holds frames for
+      // that repaint.
+      const release = travelHandleRef.current;
+      if (release == null) {
+        unlockSelection();
+      } else {
+        void release.finished.then(() => {
+          // A press that caught the release keeps the lock.
+          if (dragStateRef.current == null) {
+            unlockSelection();
+          }
+        });
+      }
     },
     [settleFromDrag, unlockSelection],
   );
