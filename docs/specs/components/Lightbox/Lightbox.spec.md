@@ -81,6 +81,9 @@ the requirement it misses and the person it affects.
 
 - **Touch presentation (FR8–FR10, FR12).** On a touch screen there is no drag
   or pinch to close, tap to hide the controls, or thumbnail transition.
+- **Paging motion roles (FR5).** The page settle and the buttons' slide play
+  the pager's own UIKit values, which the motion role table does not list as
+  roles.
 - **Video controls (FR7).** A video's native controls are taken as a 48 px
   band at its bottom edge, since browsers expose no control geometry; a
   browser that places controls elsewhere pages from them.
@@ -99,6 +102,9 @@ the requirement it misses and the person it affects.
 - **Double-click listener (FR14).** A mouse's or a pen's double-click reaches
   the zoom through the stage's own `dblclick` listener, since only the browser
   knows the system's double-click speed.
+- **Press tracker (FR14).** The stage's own `pointerdown` listener records
+  where each press lands, for the video controls band and the tap movement
+  limit.
 - **Touch exit (FR16).** On a touch screen the viewer disappears at once when
   it closes.
 
