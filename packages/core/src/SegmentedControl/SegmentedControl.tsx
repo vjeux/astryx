@@ -328,7 +328,7 @@ export function SegmentedControl({
   const trackRef = useRef<HTMLDivElement | null>(null);
   // Every pointer's press is tracked. A drag from the selected segment
   // carries the lens, and the lift commits the segment nearest the pointer.
-  // A lift outside the control commits nothing.
+  // A lift outside the control's tracking bounds commits nothing.
   const {selection, attachTrack} = useSegmentedSelectionMotion(
     trackRef,
     value,

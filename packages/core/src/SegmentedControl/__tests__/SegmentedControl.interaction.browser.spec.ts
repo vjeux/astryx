@@ -2843,3 +2843,46 @@ test(
     }
   },
 );
+
+test('on the small icon-only control a drag lifted just off it still commits, inside UIControl’s 70 px tracking margin; past the margin it commits nothing (FR3)', async ({
+  page,
+}) => {
+  const control = await openControl(
+    page,
+    'core-segmentedcontrol--icon-only',
+    'View mode',
+  );
+  const grid = await control.segment('grid').boundingBox();
+  const list = await control.segment('list').boundingBox();
+  if (grid == null || list == null) {
+    throw new Error('no icon-only segments');
+  }
+  const from = {x: grid.x + grid.width / 2, y: grid.y + grid.height / 2};
+  const listCenter = {x: list.x + list.width / 2, y: list.y + list.height / 2};
+  const checked = async () =>
+    control.group.evaluate(
+      group =>
+        group.querySelector<HTMLElement>('[aria-checked="true"]')?.dataset
+          .value ?? null,
+    );
+  const dragTo = async (to: {x: number; y: number}) => {
+    if ((await checked()) !== 'grid') {
+      await control.tapSegment('grid');
+      await expect.poll(checked).toBe('grid');
+      await expectLensHidden(control);
+    }
+    await control.driver.play(
+      touchDrag(from, to, {durationMs: 120, restMs: 50}),
+    );
+  };
+  // 5 px past the control's end: List.
+  await dragTo({x: list.x + list.width + 5, y: listCenter.y});
+  await expect.poll(checked).toBe('list');
+  // A drift 10 px below the control: List.
+  await dragTo({x: listCenter.x, y: list.y + list.height + 10});
+  await expect.poll(checked).toBe('list');
+  // 90 px below, past the margin: nothing commits.
+  await dragTo({x: listCenter.x, y: list.y + list.height + 90});
+  await expectLensHidden(control);
+  expect(await checked()).toBe('grid');
+});

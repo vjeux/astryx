@@ -459,8 +459,8 @@ function defaultNow(): number {
  *   neighbor only once the center is a quarter of that segment past the
  *   boundary. Every title keeps its weight until the lift.
  * - The lift commits the segment nearest the finger, through that segment's
- *   click. A lift outside the control commits nothing, and the lens settles
- *   back.
+ *   click. A lift outside the control's tracking bounds commits nothing, and
+ *   the lens settles back.
  * - A press on another segment leaves the lens in place until the lift.
  *   Meanwhile that segment shows the shared pressed overlay.
  * - A click that the item cancels sends the lens back at once. Otherwise the

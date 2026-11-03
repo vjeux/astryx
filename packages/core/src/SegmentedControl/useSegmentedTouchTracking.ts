@@ -26,6 +26,7 @@ import {
   type ActionGroupTracker,
 } from '../hooks/actionGroupTracker';
 import {lockSelection} from '../gestures/selectionLock';
+import {UIKIT_CONTROL} from '../motion/uikit/gestures';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {awaitBrowserClick, clickForLift} from '../utils/browserClickWait';
 import {
@@ -102,9 +103,11 @@ export function segmentTargetAt(
 
 /**
  * The segment a lift at viewport (`x`, `y`) commits: inside the control's
- * `bounds`, the one `segmentTargetAt` counts it for; outside them, none. A
- * press that slides off cancels, because the control selects rather than
- * toggles: a second press would not undo it.
+ * tracking bounds, the one `segmentTargetAt` counts it for; outside them,
+ * none. The tracking bounds are `bounds` grown by UIControl's tracking
+ * expansion, as for any control. So a lift just off a small control still
+ * commits. A press that slides further off cancels, because the control
+ * selects rather than toggles: a second press would not undo it.
  */
 export function liftTargetAt(
   x: number,
@@ -112,11 +115,12 @@ export function liftTargetAt(
   bounds: ControlBounds,
   segments: ReadonlyArray<SegmentSpan>,
 ): HTMLElement | null {
+  const margin = UIKIT_CONTROL.trackingExpansion.value;
   if (
-    x < bounds.left ||
-    x > bounds.right ||
-    y < bounds.top ||
-    y > bounds.bottom
+    x < bounds.left - margin ||
+    x > bounds.right + margin ||
+    y < bounds.top - margin ||
+    y > bounds.bottom + margin
   ) {
     return null;
   }
@@ -132,9 +136,9 @@ const NO_BOUNDS: ControlBounds = {left: 0, top: 0, right: -1, bottom: -1};
  * carries the lens. It claims the pointer only past its slop, and the lift
  * still ends the press.
  *
- * The lift decides the segment, wherever the press began. Inside the control,
- * the segment under the pointer counts, else the nearest one. Outside the
- * control, nothing counts.
+ * The lift decides the segment, wherever the press began. Inside the control's
+ * tracking bounds, the segment under the pointer counts, else the nearest
+ * one. Outside them, nothing counts.
  *
  * A tap gets the browser's own click. A drag gets no click from the browser,
  * so the tracker clicks the segment at the lift. Either way the item's
@@ -229,7 +233,7 @@ export function useSegmentedTouchTracking(
         case 'touchUpInside':
         case 'touchUpOutside': {
           // The lift decides, wherever the press began. A lift outside the
-          // control commits nothing.
+          // control's tracking bounds commits nothing.
           tracker.move(touch.x, touch.y);
           const lifted = tracker.highlighted;
           const isTap =

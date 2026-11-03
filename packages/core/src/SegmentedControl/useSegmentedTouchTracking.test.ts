@@ -88,13 +88,26 @@ describe('liftTargetAt', () => {
     expect(liftAt(315, 50, segments)).toBe('table');
   });
 
-  it('commits nothing for a lift outside the control: a press that slides off cancels (spec:AST-020 FR9, DEC-5)', () => {
+  it('a lift just off the control, inside UIControl’s 70 px tracking margin, commits the segment nearest it (FR3)', () => {
     const segments = spans(layout);
     // Past either end, above, below.
-    expect(liftAt(5, 35, segments)).toBeNull();
-    expect(liftAt(330, 35, segments)).toBeNull();
-    expect(liftAt(250, 10, segments)).toBeNull();
-    expect(liftAt(250, 90, segments)).toBeNull();
+    expect(liftAt(5, 35, segments)).toBe('grid');
+    expect(liftAt(330, 35, segments)).toBe('table');
+    expect(liftAt(250, 10, segments)).toBe('table');
+    expect(liftAt(250, 90, segments)).toBe('table');
+    // At the margin itself.
+    expect(liftAt(10 - 70, 35, segments)).toBe('grid');
+    expect(liftAt(316 + 70, 35, segments)).toBe('table');
+    expect(liftAt(150, 20 - 70, segments)).toBe('list');
+    expect(liftAt(150, 51 + 70, segments)).toBe('list');
+  });
+
+  it('commits nothing for a lift past the tracking margin: a press that slides off cancels (spec:AST-020 FR9, DEC-5)', () => {
+    const segments = spans(layout);
+    expect(liftAt(10 - 71, 35, segments)).toBeNull();
+    expect(liftAt(316 + 71, 35, segments)).toBeNull();
+    expect(liftAt(150, 20 - 71, segments)).toBeNull();
+    expect(liftAt(150, 51 + 71, segments)).toBeNull();
   });
 
   it('commits nothing over a disabled segment', () => {
