@@ -1967,6 +1967,11 @@
       "aliases": []
     },
     {
+      "name": "example-create-drag-to-snap-points-playing-card-in-plain-java-script",
+      "path": "examples/create-drag-to-snap-points/playing-card-in-plain-java-script",
+      "aliases": []
+    },
+    {
       "name": "example-create-pan-gesture-a-playing-card-without-react",
       "path": "examples/create-pan-gesture/a-playing-card-without-react",
       "aliases": []
@@ -3677,6 +3682,11 @@
       "aliases": []
     },
     {
+      "name": "example-use-drag-to-snap-points-playing-card-on-three-places",
+      "path": "examples/use-drag-to-snap-points/playing-card-on-three-places",
+      "aliases": []
+    },
+    {
       "name": "example-use-grid-focus-color-swatch-grid",
       "path": "examples/use-grid-focus/color-swatch-grid",
       "aliases": []
@@ -3817,6 +3827,11 @@
       "aliases": []
     },
     {
+      "name": "hook-create-drag-to-snap-points",
+      "path": "hooks/create-drag-to-snap-points",
+      "aliases": []
+    },
+    {
       "name": "hook-create-pan-gesture",
       "path": "hooks/create-pan-gesture",
       "aliases": []
@@ -3874,6 +3889,11 @@
     {
       "name": "hook-use-dev-warning",
       "path": "hooks/use-dev-warning",
+      "aliases": []
+    },
+    {
+      "name": "hook-use-drag-to-snap-points",
+      "path": "hooks/use-drag-to-snap-points",
       "aliases": []
     },
     {

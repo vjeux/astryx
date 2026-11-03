@@ -155,6 +155,8 @@ const GESTURE_USERS = new Set([
   'DateTimeInput',
   // The public pan, which the root's createPanGesture shares.
   'hooks: usePanGesture',
+  // The snap-point drag, which moves an element on that pan.
+  'hooks: useDragToSnapPoints',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
