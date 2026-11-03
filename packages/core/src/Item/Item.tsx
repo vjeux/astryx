@@ -61,6 +61,7 @@ import {useDevWarning} from '../hooks/useDevWarning';
 import {themeProps} from '../utils/themeProps';
 import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
+import {TOUCH_QUERY} from '../utils/touchQueries';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import type {ItemSwipeBridge} from './ItemSwipeLayer';
 
@@ -334,6 +335,41 @@ const ARIA_SELECTED_ROLES = new Set([
  */
 const SWIPE_ROLES = new Set(['listitem']);
 
+/**
+ * Whether a row serves swipe actions, and so is a stacking context at rest:
+ * its root isolates and translates (`styles.swipeRoot`). Swipe actions need a
+ * role that permits interactive descendants, since a swipe panel holds
+ * buttons. That is a `listitem`, or no role at all. A root that is itself a
+ * link is not served, nor is a role that forbids interactive descendants. A
+ * disabled row, a row with no entry on either side, and the enlarged target of
+ * a nested control are not served either. Internal: under a finger,
+ * List/ListItem.tsx raises such a row, so its touch band stays above the rows
+ * after it.
+ */
+export function servesSwipeActions({
+  swipeActions,
+  isDisabled,
+  isDelegate,
+  isLinkRoot,
+  role,
+}: {
+  readonly swipeActions: ItemSwipeActions | undefined;
+  readonly isDisabled: boolean;
+  readonly isDelegate: boolean;
+  readonly isLinkRoot: boolean;
+  readonly role: string | null | undefined;
+}): boolean {
+  return (
+    swipeActions != null &&
+    ((swipeActions.leading?.length ?? 0) > 0 ||
+      (swipeActions.trailing?.length ?? 0) > 0) &&
+    !isDisabled &&
+    !isDelegate &&
+    !isLinkRoot &&
+    (role == null || SWIPE_ROLES.has(role))
+  );
+}
+
 /** The travel a drag writes on the row root, in physical px (see useSwipeAction). */
 const SWIPE_TRAVEL = 'var(--_item-swipe-travel, 0px)';
 /** The settle clock, `0s` while the finger drives the row. */
@@ -564,6 +600,15 @@ const densityStyles = stylex.create({
 // Component
 // =============================================================================
 
+/** Whether the primary pointer is coarse (TOUCH_QUERY, one touch model). */
+function isCoarsePrimaryPointer(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia(TOUCH_QUERY).matches
+  );
+}
+
 /**
  * A universal item primitive that unifies the "start content + label +
  * description + end content" layout pattern. Use as a building block for list items,
@@ -618,7 +663,8 @@ export function Item({
   // the router link component, which may require a live href. The element type
   // then changes with `isDisabled`, so focus follows the swap (FR4).
   const RowAnchor = isDisabled ? 'a' : LinkComponent;
-  const anchorRef = useFocusAcrossSwap<HTMLAnchorElement>();
+  const rowLinkRef = useRef<HTMLAnchorElement | null>(null);
+  const anchorRef = useFocusAcrossSwap<HTMLAnchorElement>(rowLinkRef);
 
   // Delegation mode: the row is an enlarged click/tap target for a nested
   // control (e.g. a checkbox) that owns the keyboard access and action. The
@@ -652,19 +698,16 @@ export function Item({
   // and the invisible anchor below is not rendered.
   const isLinkRoot = typeof Component !== 'string' && href != null;
 
-  // Swipe actions exist where the row's role permits interactive descendants
-  // (a swipe panel's buttons are such descendants): a `listitem`, or no role
-  // at all. A root that is itself a link, a row whose role forbids them, and
-  // a row that is the enlarged target of a nested control are not served.
+  // Which rows serve swipe actions: servesSwipeActions, above.
   const leadingSwipe = swipeActions?.leading ?? [];
   const trailingSwipe = swipeActions?.trailing ?? [];
-  const hasSwipe =
-    swipeActions != null &&
-    (leadingSwipe.length > 0 || trailingSwipe.length > 0) &&
-    !isDisabled &&
-    !isDelegate &&
-    !isLinkRoot &&
-    (role == null || SWIPE_ROLES.has(role));
+  const hasSwipe = servesSwipeActions({
+    swipeActions,
+    isDisabled,
+    isDelegate,
+    isLinkRoot,
+    role,
+  });
   useDevWarning(
     'Item',
     '`swipeBehavior="commit"` fires only the outermost entry of a side; the ' +
@@ -759,12 +802,45 @@ export function Item({
     </>
   );
 
+  const isLinkRow = onClick == null && href != null && !isLinkRoot;
+
   const handleContainerClick = (e: React.MouseEvent) => {
     if (isDisabled) {
       return;
     }
     const target = e.target as HTMLElement;
     if (target.closest('button, a, input, select, textarea')) {
+      return;
+    }
+    if (isLinkRow) {
+      // Under a coarse primary pointer, a link row's whole touch target
+      // follows its link. That covers a tap in the row's padding, outside the
+      // anchor, and a tap in the band past its box. The click goes to the
+      // row's anchor with its modifier keys, so the link component and the
+      // browser pick the destination. The primary pointer decides, as it
+      // decides the band, not the pointer that made the click. So with a fine
+      // primary pointer, a click in the padding does nothing, as before. A
+      // click with no pointer behind it does nothing too.
+      const row = e.currentTarget as HTMLElement;
+      const box = row.getBoundingClientRect();
+      const isInBand =
+        e.clientX < box.left ||
+        e.clientX > box.right ||
+        e.clientY < box.top ||
+        e.clientY > box.bottom;
+      if (e.detail > 0 && (isInBand || isCoarsePrimaryPointer())) {
+        rowLinkRef.current?.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            ctrlKey: e.ctrlKey,
+            metaKey: e.metaKey,
+            shiftKey: e.shiftKey,
+            altKey: e.altKey,
+            button: e.button,
+          }),
+        );
+      }
       return;
     }
     onClick?.(e);

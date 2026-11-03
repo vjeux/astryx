@@ -340,6 +340,12 @@ const VARS_WITHOUT_DERIVED_MAPPING = new Set([
   // properties a theme author sets on the component.
   '--_thumbnail-hit-inset',
   '--_input-clear-hit-inset',
+  // The border width a host draws where its touch hit layer reaches past,
+  // such as a divided ListItem's divider (0 on the last row).
+  // The ::after layer adds it to its offset, so the band starts past the
+  // border. It is the layer's geometry, not a property a theme author sets. A
+  // theme changes the divider through `--border-width`, which this follows.
+  '--_hit-border-bottom',
   // The interaction overlay's colour on the ::after layer of the cards:
   // written by the component's own hover and mouse `:active` arms, never a
   // value a theme author sets; the overlay colours themselves are the shared

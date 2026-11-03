@@ -5,7 +5,8 @@
 /**
  * @file ListItem.tsx
  * @input Uses React, ReactNode, StyleXStyles, theme tokens, the List row edge
- *   treatment, CheckboxInput, and the marker or task checkbox a
+ *   treatment, the touch hit area (utils/touchHitArea.ts and its layer),
+ *   CheckboxInput, and the marker or task checkbox a
  *   ListMarkerScope sets (Markdown's nested lists and the task items of mixed
  *   lists), and Item's private exact-marker formatting scope for numbered
  *   rows. Number markers stay on one line in the List's shared column,
@@ -28,7 +29,7 @@
  * - /packages/cli/assets/templates/blocks/components/List/ (showcase blocks)
  */
 
-import {use, useMemo, type ReactNode} from 'react';
+import {use, useMemo, useRef, type ReactNode} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import type {StyleXStyles} from '@stylexjs/stylex';
 import {
@@ -41,10 +42,13 @@ import type {BaseProps} from '../BaseProps';
 import {ListContext, type ListMarker} from './ListContext';
 import {CheckboxInput} from '../CheckboxInput/CheckboxInput';
 import {mergeProps} from '../utils/mergeProps';
-import {Item} from '../Item/Item';
+import {Item, servesSwipeActions} from '../Item/Item';
 import {ItemMarkerColumnsContext} from '../Item/ItemMarkerColumnsContext';
 import type {ItemAlign, ItemSwipeActions, ItemSwipeBehavior} from '../Item';
 import {themeProps} from '../utils/themeProps';
+import {useMergedRefs} from '../hooks/useMergedRefs';
+import {useTouchHitArea} from '../utils/touchHitArea';
+import {touchHitAreaStyles} from '../utils/touchHitArea.stylex';
 
 // =============================================================================
 // Types
@@ -198,6 +202,22 @@ const styles = stylex.create({
       'max(var(--container-padding-inline-end, 0px), var(--_item-inset-inline))',
     borderRadius: 0,
   },
+  // Under a finger, the row's touch band rises above the rows after it. A
+  // later row is positioned with no z-index, so it would paint and hit-test
+  // over the band. Only inside a List (isInList).
+  bandRaised: {
+    '::after': {
+      zIndex: {default: null, '@media (pointer: coarse)': 1},
+    },
+  },
+  // A swipeable row is a stacking context at rest, since Item isolates and
+  // translates its swipe root. So its band's own z-index orders only inside
+  // it. Under a finger the row itself rises above the rows after it, whose
+  // boxes its band reaches into. The list isolates, so the row stays below a
+  // sticky header.
+  swipeRaised: {
+    zIndex: {default: null, '@media (pointer: coarse)': 1},
+  },
   withDivider: {
     borderBlockEndWidth: borderVars['--border-width'],
     borderBlockEndStyle: 'solid',
@@ -208,6 +228,12 @@ const styles = stylex.create({
     // divider.
     ':last-child': {
       borderBlockEndWidth: 0,
+    },
+    // The touch hit layer's band starts past the divider, the edge of the box
+    // its insets are measured from (utils/touchHitArea.stylex.ts).
+    '--_hit-border-bottom': {
+      default: borderVars['--border-width'],
+      ':last-child': '0px',
     },
   },
 });
@@ -378,6 +404,32 @@ export function ListItem({
   ...restProps
 }: ListItemProps) {
   const ctx = use(ListContext);
+  // A List isolates its rows, so what a row raises stays below a page-level
+  // sticky header. Outside a List nothing bounds a raise, so a row raises
+  // nothing there.
+  const isInList = ctx != null;
+  // Under a finger, an interactive row's hit target grows toward the touch
+  // target where its neighbors leave room. Nothing moves or repaints.
+  // useTouchHitArea keeps the row's insets live, and its invisible layer reads
+  // them.
+  const isTouchTarget =
+    (onClick != null || href != null || interactiveRef != null) && !isDisabled;
+  const rowRef = useRef<HTMLLIElement | null>(null);
+  const mergedRef = useMergedRefs(ref, rowRef);
+  useTouchHitArea(rowRef, isTouchTarget);
+  // A row that Item serves swipe actions on is a stacking context at rest. So
+  // its band's own z-index orders only inside it, and under a finger the row
+  // raises itself. Its root is its `<li>`, never a link.
+  const isRaisedSwipeRow =
+    isInList &&
+    isTouchTarget &&
+    servesSwipeActions({
+      swipeActions: restProps.swipeActions,
+      isDisabled,
+      isDelegate: interactiveRef != null,
+      isLinkRoot: false,
+      role: restProps.role,
+    });
   const density = ctx?.density ?? 'balanced';
   const hasDividers = ctx?.hasDividers ?? false;
   const edge = ctx?.edge ?? 'padded';
@@ -432,7 +484,7 @@ export function ListItem({
   const item = (
     <Item
       as="li"
-      ref={ref}
+      ref={mergedRef}
       marker={marker}
       startContent={startContent}
       label={label}
@@ -453,6 +505,9 @@ export function ListItem({
           hasMarkers && styles.withCounter,
           hasDividers && styles.withDivider,
           hasDividers && embeddedStyles.noRadius,
+          isTouchTarget && touchHitAreaStyles.layer,
+          isTouchTarget && isInList && styles.bandRaised,
+          isRaisedSwipeRow && styles.swipeRaised,
           edge === 'flush' && styles.edgeFlush,
           edge === 'outset' && styles.edgeOutset,
           edge === 'bleed' && styles.edgeBleed,
