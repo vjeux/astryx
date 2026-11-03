@@ -69,6 +69,8 @@ export interface UseZoomStageOptions {
   surfaceRef?: RefObject<HTMLElement | null>;
   /** The gestures are on (zoom is on), for every pointer. */
   isEnabled: boolean;
+  /** Changes when another item shows: a drag to dismiss in progress ends. */
+  itemKey: unknown;
   /** A single tap landed outside the photo. */
   onTapOutside?: () => void;
   /** A pan began (a release over the backdrop must not close). */

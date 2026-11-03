@@ -899,6 +899,7 @@ export function Lightbox({
     stageRef: isGallery ? pageMediaRef : imageWrapperRef,
     surfaceRef: isGallery ? trackRef : imageWrapperRef,
     isEnabled: isOpen && isZoomTarget,
+    itemKey: viewedItem,
     onTapOutside: handleClose,
     onDragStart,
     dismiss: {
@@ -955,9 +956,12 @@ export function Lightbox({
   // controls are back. Only then: a write promotes the layers, and their
   // release later would repaint mid-gesture.
   const stageForOpenRef = useRef(stage);
-  stageForOpenRef.current = stage;
-  const restoreAfterDismissalRef = useRef(() => {});
-  restoreAfterDismissalRef.current = () => {
+  // Syncs the stage that the restore reads with this render, before the two
+  // Effects below run it.
+  useIsomorphicLayoutEffect(() => {
+    stageForOpenRef.current = stage;
+  });
+  const restoreAfterDismissal = useCallback(() => {
     stageForOpenRef.current.reset();
     backdropMovesRef.current += 1;
     setBackdropMoving(false);
@@ -966,19 +970,19 @@ export function Lightbox({
     for (const animator of faded) {
       animator.set({opacity: 1});
     }
-  };
+  }, [setBackdropMoving]);
   useIsomorphicLayoutEffect(() => {
     if (isOpen) {
-      restoreAfterDismissalRef.current();
+      restoreAfterDismissal();
     }
-  }, [isOpen]);
+  }, [isOpen, restoreAfterDismissal]);
   useIsomorphicLayoutEffect(() => {
     if (!dismissalAnsweredRef.current) {
       return;
     }
     dismissalAnsweredRef.current = false;
     if (isOpen) {
-      restoreAfterDismissalRef.current();
+      restoreAfterDismissal();
     }
   });
   // A gallery pages like Photos. A drag or a flick moves between items on a
