@@ -73,7 +73,8 @@ export type UseMenuPressRefReturn = Pick<
 
 /**
  * The options form's options: the menu and the trigger as refs.
- * @deprecated Use the ref form, `useMenuPress(menuRef, options)`.
+ * @deprecated Use the ref form, `useMenuPress(menuRef, options)`. The options
+ *   form goes at the next minor.
  */
 export interface UseMenuPressOptions {
   /** The menu (or listbox) root: the surface whose rows the press picks from. */
@@ -128,7 +129,8 @@ export interface UseMenuPressOptions {
 
 /**
  * What the options form returns: props to spread on the menu and the trigger.
- * @deprecated Use the ref form, `useMenuPress(menuRef, options)`.
+ * @deprecated Use the ref form, `useMenuPress(menuRef, options)`. The options
+ *   form goes at the next minor.
  */
 export interface UseMenuPressReturn {
   /** Spread onto the menu root: claims presses that begin inside it. */
@@ -151,27 +153,12 @@ export interface UseMenuPressReturn {
   cancel: () => void;
 }
 
-/**
- * The factory's options, from the hook's: the trigger read from its ref. Every
- * key is named, so an option the caller drops reaches update() as undefined
- * and the factory falls back to its own behavior.
- */
+/** The factory's options, from the hook's: the trigger read from its ref. */
 function factoryOptionsOf(
   options: UseMenuPressRefOptions,
 ): CreateMenuPressOptions {
-  return {
-    trigger: options.triggerRef?.current ?? null,
-    itemSelector: options.itemSelector,
-    onTriggerPress: options.onTriggerPress,
-    onHighlight: options.onHighlight,
-    onActivate: options.onActivate,
-    onDismiss: options.onDismiss,
-    getScroller: options.getScroller,
-    hitTest: options.hitTest,
-    longPressDelayMs: options.longPressDelayMs,
-    isEnabled: options.isEnabled,
-    startBehavior: options.startBehavior,
-  };
+  const {triggerRef, ...rest} = options;
+  return {...rest, trigger: triggerRef?.current ?? null};
 }
 
 /**
@@ -205,7 +192,8 @@ export function useMenuPress(
 /**
  * The options form: props to spread on the menu root and the trigger. The ref
  * form above listens on both itself, so nothing is spread.
- * @deprecated Use the ref form, `useMenuPress(menuRef, options)`.
+ * @deprecated Use the ref form, `useMenuPress(menuRef, options)`. The options
+ *   form goes at the next minor.
  */
 export function useMenuPress(options: UseMenuPressOptions): UseMenuPressReturn;
 export function useMenuPress(
