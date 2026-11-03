@@ -898,7 +898,7 @@ export function createMenuPress(
   // so the press takes an event that a caller also forwards only once.
   const taken = new WeakSet<Event>();
   const take = (event: Event): boolean => {
-    if (isDestroyed || taken.has(event)) {
+    if (isDestroyed) {
       return false;
     }
     taken.add(event);
