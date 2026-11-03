@@ -14,6 +14,15 @@ export type ToastCollisionBehavior = 'overwrite' | 'ignore';
 /** Reason why a toast was dismissed. */
 export type ToastDismissReason = 'auto' | 'manual';
 
+/**
+ * How a toast follows a swipe and leaves. `adaptive`, the default, follows
+ * iOS notification banners under a finger: a coarse primary pointer, after
+ * hydration. With a fine pointer it uses Toast's own swipe and fade. `toast`
+ * keeps Toast's own swipe and fade on every device. `notification` uses the
+ * banner's swipe and exit on every device.
+ */
+export type ToastPresentation = 'adaptive' | 'toast' | 'notification';
+
 /** Options for showing a toast. */
 export interface ToastOptions {
   /** Primary message content. */
