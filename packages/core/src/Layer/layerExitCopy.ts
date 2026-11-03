@@ -5,11 +5,40 @@
 /**
  * @file layerExitCopy.ts
  * @input A layer's popover element as it closes
- * @output Exports `placeLayerExitCopy`, a static, inert copy of the layer in
- *   the top layer for a touch presentation's close to play on, and
- *   `LayerExitBox`
+ * @output Exports `placeLayerExitCopy`: a static, inert copy of the layer put
+ *   where the layer is drawn, in the top layer, for a touch presentation's
+ *   close to play on, and `LayerExitBox`
  * @position Layer runtime helper for a touch presentation that animates a
  *   popover out: the one exit copy a layer may have
+ *   (architecture:layer-runtime INV13, architecture:component-style-authoring
+ *   INV7)
+ *
+ * The browser hides a popover the moment it closes (a pick, Escape, its own
+ * light dismiss), so a close that has to stay on screen plays on a copy taken
+ * as the popover closes: same place, same size, same inherited theme, and the
+ * same look, values its running animations hold included (a clone keeps only
+ * inline styles, and a compositor curve holds its value outside them). It is
+ * laid out on the layer's own box and carries the transform the layer was
+ * drawn with, so a copy taken mid-entrance holds where it was drawn. The copy
+ * has no ids, no form names and no form owner (a cloned checked radio would
+ * otherwise take the live group's selection, and a named field would
+ * submit), is `inert` and hidden from assistive technology, and takes no
+ * pointer events. Embedded content (an iframe, an object or embed, media, a
+ * canvas) stands in the copy as an empty box of its size: a deep copy would
+ * load or play it again (an iframe navigates, autoplay restarts, a canvas
+ * comes back blank). A layer has one copy: placing another for the same layer
+ * takes the previous one away; other layers' copies stay.
+ *
+ * It is shown only in the top layer, as a manual popover, so a clipping,
+ * transformed or sticky ancestor neither cuts nor moves it; a fixed box or a
+ * larger `z-index` is no substitute (spec:AST-027 FR8). Where the browser
+ * refuses the show during the closing popover's own toggle (Android Chromium
+ * 158: "Invalid to show a popover during another show operation"), the copy
+ * waits, hidden, and shows once the toggle is over: after the script that
+ * closed the layer or, failing that, in the next frame before it paints. A
+ * browser without the popover API, or one that still refuses, gets no copy,
+ * and the close is immediate. Its owner animates it and removes it when its
+ * spring settles; nothing on the main thread runs per frame while it moves.
  *
  * SYNC: When modified, update:
  * - /packages/core/src/Layer/layerExitCopy.test.ts
@@ -94,11 +123,11 @@ const TRANSFORM_PROPERTIES = [
   'rotate',
 ] as const;
 
+/** Each layer's copy: placing another for the same layer replaces it. */
 /** The elements a `<form>` can own; `form=""` matches no form's id. */
 const FORM_CONTROLS =
   'button, fieldset, input, object, output, select, textarea';
 
-/** Each layer's copy: placing another for the same layer replaces it. */
 const copies = new WeakMap<HTMLElement, HTMLElement>();
 
 /** A length in px, or 0. */
@@ -188,36 +217,9 @@ function emptyBox(
 /**
  * Copies `element` into a static box where it is drawn, marked with
  * `attribute`, inserts it right after the element and shows it in the top
- * layer. Returns null where there is no top layer to show it in (no popover
- * API): the close is then immediate.
- *
- * The browser hides a popover the moment it closes (a pick, Escape, its own
- * light dismiss). A close that has to stay on screen plays on this copy,
- * taken as the popover closes. It has the same place, size, inherited theme
- * and look, values its running animations hold included. A clone keeps only
- * inline styles, and a compositor curve holds its value outside them. It is
- * laid out on the layer's own box and carries the transform the layer was
- * drawn with. So a copy taken mid-entrance holds where it was drawn. It
- * keeps the layer's overflow and every scroll position, the layer's own
- * included.
- *
- * The copy has no ids, no form names and no form owner. A cloned checked
- * radio then cannot take the live group's selection, and a named field
- * cannot submit. It is `inert`, hidden from assistive technology, and takes
- * no pointer events. Embedded content (an iframe, an object or embed, media,
- * a canvas) stands as an empty box of its size. A deep copy would load or
- * play it again. Its descendants' keyframe animations do not start again. A
- * layer has one copy: placing another for the same layer takes the previous
- * one away.
- *
- * It is shown only in the top layer, as a manual popover, so a clipping,
- * transformed or sticky ancestor neither cuts nor moves it. A fixed box or a
- * larger `z-index` is no substitute. Where the browser refuses the show
- * during the closing popover's own toggle (Android Chromium 158), the copy
- * waits, hidden. It shows once the toggle is over: after the script that
- * closed the layer or, failing that, in the next frame before it paints. Its
- * owner animates it and removes it when its spring settles; nothing on the
- * main thread runs per frame while it moves.
+ * layer. The copy keeps the element's scroll positions and presented look.
+ * Returns null where there is no top layer to show it in (no popover API):
+ * the close is then immediate.
  */
 export function placeLayerExitCopy(
   element: HTMLElement,
@@ -249,18 +251,6 @@ export function placeLayerExitCopy(
   for (const node of copy.querySelectorAll(FORM_CONTROLS)) {
     node.setAttribute('form', '');
   }
-  // A form-associated custom element joins a form as a native control does,
-  // and `form=""` takes it out the same way.
-  const registry = view.customElements;
-  for (const node of copy.querySelectorAll('*')) {
-    const definition = node.localName.includes('-')
-      ? (registry?.get(node.localName) as
-          {formAssociated?: boolean} | undefined)
-      : undefined;
-    if (definition?.formAssociated === true) {
-      node.setAttribute('form', '');
-    }
-  }
   copy.setAttribute(attribute, '');
   copy.setAttribute('aria-hidden', 'true');
   copy.setAttribute('inert', '');
@@ -287,34 +277,10 @@ export function placeLayerExitCopy(
   style.setProperty('align-self', 'normal');
   style.setProperty('pointer-events', 'none');
   style.setProperty('animation-name', 'none');
-  // A descendant with keyframes would play them again in the copy, from the
-  // start: it keeps the values they presented instead. Nothing is written
-  // where no keyframes are set.
-  const liveNodes = element.querySelectorAll('*');
-  copy.querySelectorAll('*').forEach((node, index) => {
-    const live = liveNodes[index];
-    if (
-      live == null ||
-      !(node instanceof view.HTMLElement || node instanceof view.SVGElement)
-    ) {
-      return;
-    }
-    const name = view.getComputedStyle(live).getPropertyValue('animation-name');
-    if (name !== '' && name !== 'none') {
-      node.style.setProperty('animation-name', 'none');
-    }
-  });
-  // The layer's own overflow, so a layer that scrolls its content keeps its
-  // clip. A popover's user-agent style scrolls as well.
-  const layerStyle = view.getComputedStyle(element);
-  style.setProperty('overflow-x', layerStyle.getPropertyValue('overflow-x'));
-  style.setProperty('overflow-y', layerStyle.getPropertyValue('overflow-y'));
+  style.setProperty('overflow', 'visible');
   // Scrolled content stays where it was scrolled to, once the copy is shown
-  // (a hidden box keeps no scroll position). The layer's own scroll counts.
+  // (a hidden box keeps no scroll position).
   const scrolled: [Element, number, number][] = [];
-  if (element.scrollTop !== 0 || element.scrollLeft !== 0) {
-    scrolled.push([copy, element.scrollTop, element.scrollLeft]);
-  }
   const sources = element.querySelectorAll('*');
   const targets = copy.querySelectorAll('*');
   sources.forEach((source, index) => {
