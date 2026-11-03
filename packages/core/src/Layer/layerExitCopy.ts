@@ -4,8 +4,7 @@
 
 /**
  * @file layerExitCopy.ts
- * @input A layer's popover element as it closes, and Core's shared inert copy
- *   (motion/transientCopy.ts)
+ * @input A layer's popover element as it closes
  * @output Exports `placeLayerExitCopy`, a static, inert copy of the layer in
  *   the top layer for a touch presentation's close to play on, and
  *   `LayerExitBox`
@@ -17,8 +16,6 @@
  * - /packages/core/src/Layer/__tests__/layerExitCopy.interaction.browser.spec.ts
  * - /docs/architecture/layer-runtime.md
  */
-
-import {inertCopy, restoreScrollOffsets} from '../motion/transientCopy';
 
 /** A box in viewport px. */
 export interface LayerExitBox {
@@ -159,6 +156,35 @@ function layoutBox(element: HTMLElement, view: Window): LayerExitBox {
   };
 }
 
+/** Content a deep copy would load or play again. */
+const EMBEDDED_CONTENT = 'iframe, object, embed, video, audio, canvas';
+
+/**
+ * An empty box standing where embedded content was drawn. It has the copied
+ * node's classes and inline style, the live node's size, and nothing in it.
+ */
+function emptyBox(
+  copied: HTMLElement,
+  live: HTMLElement | undefined,
+  view: Window,
+): HTMLElement {
+  const box = copied.ownerDocument.createElement('span');
+  box.className = copied.className;
+  const inline = copied.getAttribute('style');
+  if (inline != null) {
+    box.setAttribute('style', inline);
+  }
+  const display = live == null ? 'inline' : view.getComputedStyle(live).display;
+  box.style.setProperty(
+    'display',
+    display === 'inline' || display === '' ? 'inline-block' : display,
+  );
+  box.style.setProperty('box-sizing', 'border-box');
+  box.style.setProperty('width', `${live?.offsetWidth ?? 0}px`);
+  box.style.setProperty('height', `${live?.offsetHeight ?? 0}px`);
+  return box;
+}
+
 /**
  * Copies `element` into a static box where it is drawn, marked with
  * `attribute`. It inserts the copy right after the element and shows it in
@@ -175,13 +201,12 @@ function layoutBox(element: HTMLElement, view: Window): LayerExitBox {
  * keeps the layer's overflow and every scroll position, the layer's own
  * included.
  *
- * It is Core's shared inert copy (`inertCopy`). It has no ids, test ids, form
- * names or label targets, and no form owner. A cloned checked radio then
- * cannot take the live group's selection, and a named field cannot submit.
- * It is `inert`, hidden from assistive technology, and out of pointer reach.
- * Its frames and media load nothing, and a canvas shows its pixels. Content
- * holding a canvas that reads back empty gets no copy: the close is then
- * immediate. Its descendants' keyframe animations do not start again. A
+ * The copy has no ids, no form names and no form owner. A cloned checked
+ * radio then cannot take the live group's selection, and a named field
+ * cannot submit. It is `inert`, hidden from assistive technology, and takes
+ * no pointer events. Embedded content (an iframe, an object or embed, media,
+ * a canvas) stands as an empty box of its size. A deep copy would load or
+ * play it again. Its descendants' keyframe animations do not start again. A
  * layer has one copy: placing another for the same layer takes the previous
  * one away.
  *
@@ -205,10 +230,16 @@ export function placeLayerExitCopy(
   // One copy per layer: a close during a close replaces it.
   copies.get(element)?.remove();
   const box = layoutBox(element, view);
-  const copy = inertCopy(element);
-  if (copy == null) {
-    // A canvas reads back empty: no copy, so the close is immediate.
-    return null;
+  const copy = element.cloneNode(true) as HTMLElement;
+  copy.removeAttribute('id');
+  for (const node of copy.querySelectorAll('[id]')) {
+    node.removeAttribute('id');
+  }
+  // Out of every form and radio group. A cloned checked radio with the live
+  // group's name would take its selection, and a named field would submit.
+  for (const node of copy.querySelectorAll('[name], [form]')) {
+    node.removeAttribute('name');
+    node.removeAttribute('form');
   }
   // The copy stands right after the layer, which renders inline by default.
   // Inside a `<form>`, the form would own the copy's controls while it
@@ -231,6 +262,8 @@ export function placeLayerExitCopy(
     }
   }
   copy.setAttribute(attribute, '');
+  copy.setAttribute('aria-hidden', 'true');
+  copy.setAttribute('inert', '');
   copy.setAttribute('popover', 'manual');
   const {style} = copy;
   for (const property of LIVE_ONLY_PROPERTIES) {
@@ -252,6 +285,7 @@ export function placeLayerExitCopy(
   style.setProperty('box-sizing', 'border-box');
   style.setProperty('justify-self', 'normal');
   style.setProperty('align-self', 'normal');
+  style.setProperty('pointer-events', 'none');
   style.setProperty('animation-name', 'none');
   // A descendant with keyframes would play them again in the copy, from the
   // start: it keeps the values they presented instead. Nothing is written
@@ -275,6 +309,29 @@ export function placeLayerExitCopy(
   const layerStyle = view.getComputedStyle(element);
   style.setProperty('overflow-x', layerStyle.getPropertyValue('overflow-x'));
   style.setProperty('overflow-y', layerStyle.getPropertyValue('overflow-y'));
+  // Scrolled content stays where it was scrolled to, once the copy is shown
+  // (a hidden box keeps no scroll position). The layer's own scroll counts.
+  const scrolled: [Element, number, number][] = [];
+  if (element.scrollTop !== 0 || element.scrollLeft !== 0) {
+    scrolled.push([copy, element.scrollTop, element.scrollLeft]);
+  }
+  const sources = element.querySelectorAll('*');
+  const targets = copy.querySelectorAll('*');
+  sources.forEach((source, index) => {
+    const target = targets[index];
+    if (target != null && (source.scrollTop !== 0 || source.scrollLeft !== 0)) {
+      scrolled.push([target, source.scrollTop, source.scrollLeft]);
+    }
+  });
+  // Embedded content would load or play again in a deep copy: an iframe
+  // navigates, autoplay media restarts, and a canvas comes back blank. Each
+  // one stands as an empty box of the same size where it was drawn.
+  const liveEmbeds = element.querySelectorAll<HTMLElement>(EMBEDDED_CONTENT);
+  copy
+    .querySelectorAll<HTMLElement>(EMBEDDED_CONTENT)
+    .forEach((node, index) => {
+      node.replaceWith(emptyBox(node, liveEmbeds[index], view));
+    });
   element.after(copy);
   copies.set(element, copy);
   const show = (): boolean => {
@@ -283,9 +340,10 @@ export function placeLayerExitCopy(
     } catch {
       return false;
     }
-    // A hidden box keeps no scroll position, so scrolled content, the layer's
-    // own included, goes back where it was once the copy is shown.
-    restoreScrollOffsets(copy);
+    for (const [target, top, left] of scrolled) {
+      target.scrollTop = top;
+      target.scrollLeft = left;
+    }
     return true;
   };
   const giveUp = () => {
