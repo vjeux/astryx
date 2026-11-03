@@ -640,6 +640,7 @@ component CodeBlock(props: CodeBlockProps)
   prop onCopy?: () => void
   prop ref?: React.Ref<HTMLPreElement>
   prop size?: 'sm' | 'md'
+  prop startLineNumber?: number = 1
   prop syntaxTheme?: SyntaxThemeDefinition
   prop title?: string
   prop tokenizer?: (code: string, language: string) => { type: string; start: number; end: number }[] @deprecated
