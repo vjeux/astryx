@@ -145,12 +145,6 @@ export interface UsePopoverOptions {
   onHide?: () => void;
 
   /**
-   * Callback fired as the popover starts to hide, before the browser hides
-   * it: from `hide()`, a light dismiss or the Escape key.
-   */
-  onBeforeHide?: () => void;
-
-  /**
    * StyleX styles applied to the popover's content wrapper.
    * Merges after the surface styles (when hasSurface is true), so these
    * can override background, radius, etc.
@@ -404,7 +398,6 @@ function usePopoverImplementation(
   const {
     onShow,
     onHide,
-    onBeforeHide,
     xstyle,
     className,
     style,
@@ -447,7 +440,6 @@ function usePopoverImplementation(
     lightDismiss: hasLightDismiss,
     onShow: handleLayerShow,
     onHide,
-    onBeforeHide,
   });
 
   // Focus trap for the popover content. Escape stays registered while light

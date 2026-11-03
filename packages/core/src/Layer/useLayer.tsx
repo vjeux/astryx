@@ -318,12 +318,6 @@ interface BaseLayerOptions {
   onHide?: () => void;
 
   /**
-   * Callback fired as the layer starts to hide, before the browser hides it:
-   * from `hide()`, a light dismiss or the Escape key.
-   */
-  onBeforeHide?: () => void;
-
-  /**
    * Whether clicking outside should dismiss the layer.
    * When true, uses popover="auto" for native light-dismiss behavior.
    * @default false
@@ -1164,12 +1158,7 @@ export function useKeepLayerOpenProps(
 function useLayerImplementation(
   options: InternalContextLayerOptions | FixedLayerOptions,
 ): InternalContextLayerReturn | InternalFixedLayerReturn {
-  const {mode, onShow, onHide, onBeforeHide, lightDismiss = false} = options;
-  // The latest close-start callback, read as a close starts.
-  const onBeforeHideRef = useRef(onBeforeHide);
-  useIsomorphicLayoutEffect(() => {
-    onBeforeHideRef.current = onBeforeHide;
-  });
+  const {mode, onShow, onHide, lightDismiss = false} = options;
   const lazyMount = mode === 'context' ? (options.lazyMount ?? false) : false;
   const keepsMountAfterShow =
     lazyMount && mode === 'context'
@@ -1457,7 +1446,6 @@ function useLayerImplementation(
   const hide = useCallback(() => {
     pendingShowRef.current = false;
     if (isOpenRef.current) {
-      onBeforeHideRef.current?.();
       const el = popoverRef.current;
       // Clear the open state BEFORE hiding: hidePopover fires `toggle`, and
       // the reconciler below reads this ref to tell the browser's own
@@ -1600,9 +1588,6 @@ function useLayerImplementation(
     const toggleEvent = e as ToggleEvent;
     const el = e.currentTarget as HTMLElement | null;
     if (toggleEvent.newState === 'closed' && isOpenRef.current && el != null) {
-      // The browser started this close (a light dismiss or Escape); hide()
-      // calls the callback for its own closes.
-      onBeforeHideRef.current?.();
       observeBrowserHide(el);
     }
   }, []);

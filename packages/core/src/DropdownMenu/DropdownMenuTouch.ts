@@ -5,9 +5,8 @@
 /**
  * @file DropdownMenuTouch.ts
  * @input menuSurfaceMotion.ts (UIMenu's grow and collapse on the animator),
- *   the menu springs' register function, the press's scroll probe
- * @output DropdownMenu's touch layer: createMenuSurfaceMotion and its type,
- *   and isInScrollView
+ *   the menu springs' register function
+ * @output DropdownMenu's touch layer: createMenuSurfaceMotion and its type
  * @position The one module DropdownMenu imports touch-only code through, and
  *   its only import site is DropdownMenu.tsx. The mouse paths stay outside
  *   it, so a desktop build can swap it for a no-op.
@@ -25,7 +24,6 @@ import {
 } from './menuSurfaceMotion';
 
 export type {MenuSurfaceMotion};
-export {isInScrollView} from '../hooks/menuScrollView';
 
 /**
  * UIMenu's grow and collapse for a menu surface. Registers UIKit's two menu

@@ -77,6 +77,7 @@ import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 import {useListFocus} from '../hooks/useListFocus';
 import {useDropdownMenuPress} from '../hooks/useMenuPress';
+import {isInScrollView} from '../hooks/menuScrollView';
 import {
   normalizePointerType,
   type MenuPressPointerType,
@@ -101,7 +102,6 @@ import {usePresentation} from '../utils/presentation';
 import {
   createMenuSurfaceMotion,
   type MenuSurfaceMotion,
-  isInScrollView,
 } from './DropdownMenuTouch';
 // Loaded on demand: only the bottom-sheet presentation renders the sheet.
 import {
@@ -980,8 +980,8 @@ function DropdownMenuPopover({
   const cancelMenuPressRef = useRef<() => void>(() => {});
 
   // The touch presentation's open and close (menuSurfaceMotion.ts). They are
-  // created for the popover element the first time the menu opens. The
-  // layer's close start plays the close.
+  // created for the popover element the first time the menu opens, with the
+  // `beforetoggle` listener that plays the close.
   const surfaceMotionRef = useRef<{
     element: HTMLElement;
     motion: MenuSurfaceMotion;
@@ -1004,21 +1004,36 @@ function DropdownMenuPopover({
       }
       current?.detach();
       const motion = createMenuSurfaceMotion(element);
+      const handleBeforeToggle = (event: Event) => {
+        if (
+          (event as ToggleEvent).newState === 'closed' &&
+          isUikitMotionRef.current
+        ) {
+          motion.exit();
+        }
+      };
+      element.addEventListener('beforetoggle', handleBeforeToggle);
       surfaceMotionRef.current = {
         element,
         motion,
-        detach: () => motion.dispose(),
+        detach: () => {
+          element.removeEventListener('beforetoggle', handleBeforeToggle);
+          motion.dispose();
+        },
       };
       return motion;
     },
     [],
   );
-  // The layer calls this as any close starts: a finger's open collapses back.
-  const handleLayerBeforeHide = useCallback(() => {
-    if (isUikitMotionRef.current) {
-      surfaceMotionRef.current?.motion.exit();
-    }
-  }, []);
+  // At unmount, detach the popover's beforetoggle listener and dispose its
+  // motion, an exit copy still collapsing included.
+  useEffect(
+    () => () => {
+      surfaceMotionRef.current?.detach();
+      surfaceMotionRef.current = null;
+    },
+    [],
+  );
 
   // Submenu flyouts are `popover="manual"` elements nested inside the menu's
   // `popover="auto"` element, so the browser's light dismiss of the menu never
@@ -1222,7 +1237,6 @@ function DropdownMenuPopover({
   const popover = usePopover({
     onHide: handleLayerHide,
     onShow: handleLayerShow,
-    onBeforeHide: handleLayerBeforeHide,
     hasLightDismiss: true,
     hasCloseButton: false,
     hasAutoFocus: false,
@@ -1264,21 +1278,6 @@ function DropdownMenuPopover({
     hasPaging: true,
     onEscape: closeMenu,
   });
-  // The popover's motion lives with the menu element. Its cleanup disposes
-  // the motion, an exit copy still collapsing included.
-  const attachMenu = useCallback(
-    (el: HTMLDivElement | null) => {
-      listRef.current = el;
-      contentRef.current = el?.closest<HTMLDivElement>('[popover]') ?? null;
-      return () => {
-        listRef.current = null;
-        contentRef.current = null;
-        surfaceMotionRef.current?.detach();
-        surfaceMotionRef.current = null;
-      };
-    },
-    [listRef],
-  );
 
   // Typeahead over the (enabled) menu items — jump to the next item whose
   // LABEL starts with the typed text, never its description, shortcut or
@@ -1833,7 +1832,11 @@ function DropdownMenuPopover({
         renderWithRegions(
           <div
             {...rest}
-            ref={attachMenu}
+            ref={el => {
+              listRef.current = el;
+              contentRef.current =
+                el?.closest<HTMLDivElement>('[popover]') ?? null;
+            }}
             id={menuId}
             role="menu"
             // Pointer opens focus the container so arrows, typeahead, Escape and
