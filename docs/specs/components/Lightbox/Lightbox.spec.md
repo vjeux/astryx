@@ -109,8 +109,9 @@ the requirement it misses and the person it affects.
 - **Press tracker (FR14).** The stage's own `pointerdown` listener records
   each press's pointer type, which the browser's `dblclick` does not carry,
   and clears the flag a drag leaves for its click.
-- **Touch exit (FR16).** On a touch screen the viewer disappears at once when
-  it closes.
+- **Touch exit (FR16).** Implementation gap: the close is reported when the
+  touch exit ends, one exit duration after the request, until the shared exit
+  hold lets the viewer stay up after a reported close.
 
 ## Ownership boundary
 
