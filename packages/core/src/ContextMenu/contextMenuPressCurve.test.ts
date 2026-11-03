@@ -13,6 +13,7 @@
  */
 
 import {afterEach, describe, expect, it, vi} from 'vitest';
+import {listMotionRoles} from '../motion/roles';
 import {solveSpring, toSpring} from '../motion/spring';
 import {
   contextMenu,
@@ -198,7 +199,19 @@ describe('pressFeedbackMotion: the feedback plays the table’s motion (touch mo
     });
   });
 
-  it('takes nothing from a theme: no ContextMenu value is a motion role', () => {
+  it('names the press feedback’s spring and latencies as motion roles, and leaves the touch timing out', () => {
+    registerContextMenuTable();
+    const roles = listMotionRoles()
+      .map(role => role.id)
+      .filter(id => id.startsWith('contextMenu.'));
+    expect(roles).toEqual([
+      'contextMenu.press.feedbackLatencyMs',
+      'contextMenu.press.feedbackSpring',
+      'contextMenu.press.returnLatencyMs',
+    ]);
+  });
+
+  it('takes no per-role value from a theme: the roles are internal', () => {
     const element = themed({
       '--motion-context-menu-press-feedback-spring': '0.5s 0',
       '--motion-context-menu-press-feedback-latency-ms': '80ms',
