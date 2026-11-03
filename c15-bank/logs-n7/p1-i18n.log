@@ -1,0 +1,58 @@
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+✓ check:i18n-catalog — 557 key(s) over 818 reference(s) resolve; 601 en and 10585 translated message(s) parsed and contract-checked; plural categories evaluated with runtime CLDR 48.0; 29 locale(s) consistent
+  · af-ZA.json: 236/601 key(s) untranslated (falls back to en)
+  · ar-SA.json: 236/601 key(s) untranslated (falls back to en)
+  · ca-ES.json: 236/601 key(s) untranslated (falls back to en)
+  · cs-CZ.json: 236/601 key(s) untranslated (falls back to en)
+  · da-DK.json: 236/601 key(s) untranslated (falls back to en)
+  · de-DE.json: 236/601 key(s) untranslated (falls back to en)
+  · el-GR.json: 236/601 key(s) untranslated (falls back to en)
+  · es-ES.json: 236/601 key(s) untranslated (falls back to en)
+  · fi-FI.json: 236/601 key(s) untranslated (falls back to en)
+  · fr-FR.json: 236/601 key(s) untranslated (falls back to en)
+  · he-IL.json: 236/601 key(s) untranslated (falls back to en)
+  · hu-HU.json: 236/601 key(s) untranslated (falls back to en)
+  · it-IT.json: 236/601 key(s) untranslated (falls back to en)
+  · ja-JP.json: 236/601 key(s) untranslated (falls back to en)
+  · ko-KR.json: 236/601 key(s) untranslated (falls back to en)
+  · nl-NL.json: 236/601 key(s) untranslated (falls back to en)
+  · no-NO.json: 236/601 key(s) untranslated (falls back to en)
+  · pl-PL.json: 236/601 key(s) untranslated (falls back to en)
+  · pt-BR.json: 236/601 key(s) untranslated (falls back to en)
+  · pt-PT.json: 236/601 key(s) untranslated (falls back to en)
+  · ro-RO.json: 236/601 key(s) untranslated (falls back to en)
+  · ru-RU.json: 236/601 key(s) untranslated (falls back to en)
+  · sr-SP.json: 236/601 key(s) untranslated (falls back to en)
+  · sv-SE.json: 236/601 key(s) untranslated (falls back to en)
+  · tr-TR.json: 236/601 key(s) untranslated (falls back to en)
+  · uk-UA.json: 236/601 key(s) untranslated (falls back to en)
+  · vi-VN.json: 236/601 key(s) untranslated (falls back to en)
+  · zh-CN.json: 236/601 key(s) untranslated (falls back to en)
+  · zh-CN.json: @astryx.chatTypingIndicator.others: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.multiSelector.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.selector.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceAdded: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceBulkAdded: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceBulkRemoved: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceRemoved: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceSearchResults: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.typeahead.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: 236/601 key(s) untranslated (falls back to en)
+  · zh-TW.json: @astryx.chatTypingIndicator.others: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.multiSelector.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.selector.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceAdded: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceBulkAdded: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceBulkRemoved: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceRemoved: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceSearchResults: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.typeahead.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · 8 key reference(s) unverifiable (key not statically knowable):
+      packages/core/src/Chat/ChatMessageMetadata.tsx:132  statusConfig.i18nKey
+      packages/core/src/Kbd/Kbd.tsx:131  labelKey
+      packages/core/src/Layer/useLayer.tsx:516  parseFloat(x)
+      packages/core/src/PowerSearch/PowerSearchValueEditor.tsx:584  ago
+      packages/core/src/PowerSearch/PowerSearchValueEditor.tsx:591  fromNow
+      packages/core/src/PowerSearch/resolveOperatorLabel.ts:39  operator.i18nKey
+      packages/lab/src/Comments/i18n.ts:39  key
+      packages/lab/src/EmojiPicker/EmojiPicker.tsx:377  labelKey

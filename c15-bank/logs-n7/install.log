@@ -1,0 +1,4 @@
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+Scope: all 26 workspace projects
+Already up to date
+Done in 542ms using pnpm v11.10.0

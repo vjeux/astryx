@@ -1,0 +1,82 @@
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+Pre-review: 4e363d85cfbcc6ff3951210cccc6d9531e4056d2...HEAD (merge base 4e363d85cfbc)
+Scope: changes include another surface
+
+Changed files (6):
+  .changeset/core-internal-entries-lab-tabbar.md  [repository]
+  packages/core/locales/en.json  [published package code]
+  packages/core/src/hooks/useActionGroupTracking.test.tsx  [package file]
+  packages/core/src/hooks/useActionGroupTracking.ts  [published package code]
+  packages/core/src/internal/touch.test.ts  [package file]
+  packages/core/src/internal/touch.ts  [published package code]
+
+Governing records (read each one):
+  architecture:internationalization  docs/architecture/internationalization.md
+  architecture:knowledge-contracts  docs/architecture/knowledge-contracts.md
+  architecture:component-style-authoring  docs/architecture/component-style-authoring.md
+  architecture:component-test-sufficiency  docs/architecture/component-test-sufficiency.md
+  architecture:component-theming-surface  docs/architecture/component-theming-surface.md
+  architecture:interaction-modality  docs/architecture/interaction-modality.md
+  architecture:layer-runtime  docs/architecture/layer-runtime.md
+  architecture:public-component-api  docs/architecture/public-component-api.md
+  architecture:react-component-runtime  docs/architecture/react-component-runtime.md
+  design:reduced-motion  docs/design/reduced-motion.md
+  family:overlay-dismissal  docs/families/overlay-dismissal.md
+  spec:AST-071  docs/specs/AST-071-styling-library-compat/spec.md
+  spec:AST-094  docs/specs/AST-094-touch-presentations/spec.md
+  spec:AST-102  docs/specs/AST-102-typography-theme-owned/spec.md
+  spec:AST-103  docs/specs/AST-103-reorderable/spec.md
+  spec:AST-105  docs/specs/AST-105-animated-layout/spec.md
+  spec:AST-107  docs/specs/AST-107-public-gesture-hooks/spec.md
+  component:AlertDialog  docs/specs/components/AlertDialog/AlertDialog.spec.md
+
+Cited and concern-routed claims:
+  spec:AST-002/DEC-1
+  spec:AST-005/DEC-1
+  spec:AST-012/DEC-1
+  spec:AST-012/DEC-2
+  spec:AST-012/DEC-3
+  spec:AST-012/DEC-5
+  spec:AST-012/DEC-6
+  spec:AST-017/DEC-1
+  spec:AST-017/DEC-23
+  spec:AST-017/DEC-26
+  spec:AST-017/DEC-29
+  spec:AST-017/FR21
+  spec:AST-020/FR15
+  spec:AST-080/DEC-4
+  spec:AST-080/DEC-5
+  spec:AST-086/DEC-2
+  spec:AST-087/DEC-9
+  spec:AST-094/DEC-15
+  spec:AST-094/DEC-17
+  spec:AST-094/FR13
+  spec:AST-094/FR18
+  spec:AST-094/FR35
+  spec:AST-094/FR4
+  spec:AST-094/FR41
+  spec:AST-099/DEC-1
+  spec:AST-100/DEC-1
+  spec:AST-107/DEC-2
+  spec:AST-107/DEC-3
+  spec:AST-107/FR6
+
+Global baseline claims at the merge base:
+  node scripts/review-global-baselines.mjs --authority-commit 4e363d85cfbcc6ff3951210cccc6d9531e4056d2 --review-head a88504b9e42158ea2063ccb88ba59267f9ea6777 --triggers accessibility,behavior,public-api,theming
+  not run: authority commit must equal the review head's origin/main merge base 58c5b8ab4c8cde6b464b79cd929f4b973e222ce9.
+
+Authored lines: 115 (limit 2000; lockfiles, snapshots, and generated files excluded)
+Merge into 4e363d85cfbcc6ff3951210cccc6d9531e4056d2: clean
+
+Findings in this change (0):
+  none
+
+Checklist items that apply:
+  [b] Behavior: each observable behavior change cites a current record and clause, or the description says "No behavior change"
+      because packages/core/locales/en.json is published package code
+  [d] Public boundary: no internal or private context in source, tests, fixtures, commits, or pull request text
+      because every pull request is public
+  [f] Comments: new or changed source comments explain only non-obvious work, in Simplified Technical English
+      because packages/core/src/hooks/useActionGroupTracking.ts adds comments
+
+Checklist: docs/contributing/pull-requests.md#pre-review-checklist

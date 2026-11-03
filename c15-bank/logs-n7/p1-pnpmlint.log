@@ -1,0 +1,381 @@
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+$ pnpm check:visual-owner && pnpm check:sync && pnpm check:neutral-palette-refs && pnpm check:stone-palette-refs && pnpm check:gothic-palette-refs && pnpm check:matcha-palette-refs && pnpm check:butter-palette-refs && pnpm check:y2k-palette-refs && pnpm check:data-tokens && pnpm check:token-docs && pnpm check:motion-roles && pnpm check:knowledge && pnpm check:package-boundaries && pnpm check:changesets && pnpm check:demo-media && pnpm check:executable-bits && pnpm check:cli-structure && pnpm check:use-client && pnpm check:portable-scripts && pnpm check:i18n-runtime && pnpm check:i18n-catalog && pnpm check:cldr-weekdays && pnpm check:cldr-month-capitals && pnpm check:fixtures && pnpm check:setup-contract
+$ node scripts/check-visual-workflow-owner.mjs
+Visual regression has one workflow owner: ci.yml → pr-visual.
+$ node scripts/check-sync.js
+✅ All SYNC comments are clean.
+$ node scripts/generate-neutral-palette-refs.mjs --check
+Neutral selected palette refs are in sync (95 stops).
+$ node scripts/generate-stone-palette-refs.mjs --check
+Stone selected palette refs are in sync (94 stops).
+$ node scripts/generate-gothic-palette-refs.mjs --check
+Gothic selected palette refs are in sync (57 stops).
+$ node scripts/generate-matcha-palette-refs.mjs --check
+Matcha selected palette refs are in sync (67 stops).
+$ node scripts/generate-butter-palette-refs.mjs --check
+Butter selected palette refs are in sync (105 stops).
+$ node scripts/generate-y2k-palette-refs.mjs --check
+Y2K selected palette refs are in sync (85 stops).
+$ node scripts/generate-data-tokens.mjs --check
+Data token compatibility view is in sync.
+$ node scripts/generate-token-docs.mjs --check
+✓ All token docs are up to date (285 tokens, 17 files)
+$ node scripts/generate-motion-roles.mjs --check
+docs/specs/AST-094-touch-presentations/motion-roles.md lists the 34 registered motion roles, each named by FR4 or a component's own record.
+$ node scripts/check-knowledge.mjs
+Knowledge templates and records are aligned.
+$ node scripts/check-package-boundaries.js
+Package boundaries are clean.
+$ node scripts/check-changesets.mjs
+✓ check:changesets — 96 changeset(s) valid (0.x: [breaking] -> minor, [experimental] and other categories -> patch); main declares 0.7.7 (patch plan)
+$ node scripts/check-demo-media.mjs
+✅ 5 image-backed Thumbnail example(s) checked — all use CORS-safe demo media.
+$ node scripts/check-executable-bits.mjs
+✅ 6 tracked shell script(s) checked — all executable.
+$ node scripts/check-cli-structure.mjs
+✅ CLI structure is intact:
+   12 doc-type(s), 18 api folder(s),
+   21 handler(s) checked for INV22, 1 client helper boundary, 122 api module(s) for INV21,
+   21 handler(s) checked for INV23,
+   37 CommandDoc fn(s) checked for FR1, 46 api export(s) for FR2,
+   44 command(s) checked for INV6.
+$ node scripts/check-use-client.mjs
+✅ 357 client-API files checked — all have "use client" as their first statement.
+$ node scripts/check-portable-scripts.mjs
+✅ 280 package.json script(s) checked — all portable.
+$ node scripts/generate-i18n-runtime.mjs --check
+✓ 31 authored locale catalogs produce metadata-free runtime maps
+✓ All 115 Core modules that name catalog keys reach their English
+$ node scripts/check-i18n-catalog.mjs
+✓ check:i18n-catalog — 557 key(s) over 818 reference(s) resolve; 601 en and 10585 translated message(s) parsed and contract-checked; plural categories evaluated with runtime CLDR 48.0; 29 locale(s) consistent
+  · af-ZA.json: 236/601 key(s) untranslated (falls back to en)
+  · ar-SA.json: 236/601 key(s) untranslated (falls back to en)
+  · ca-ES.json: 236/601 key(s) untranslated (falls back to en)
+  · cs-CZ.json: 236/601 key(s) untranslated (falls back to en)
+  · da-DK.json: 236/601 key(s) untranslated (falls back to en)
+  · de-DE.json: 236/601 key(s) untranslated (falls back to en)
+  · el-GR.json: 236/601 key(s) untranslated (falls back to en)
+  · es-ES.json: 236/601 key(s) untranslated (falls back to en)
+  · fi-FI.json: 236/601 key(s) untranslated (falls back to en)
+  · fr-FR.json: 236/601 key(s) untranslated (falls back to en)
+  · he-IL.json: 236/601 key(s) untranslated (falls back to en)
+  · hu-HU.json: 236/601 key(s) untranslated (falls back to en)
+  · it-IT.json: 236/601 key(s) untranslated (falls back to en)
+  · ja-JP.json: 236/601 key(s) untranslated (falls back to en)
+  · ko-KR.json: 236/601 key(s) untranslated (falls back to en)
+  · nl-NL.json: 236/601 key(s) untranslated (falls back to en)
+  · no-NO.json: 236/601 key(s) untranslated (falls back to en)
+  · pl-PL.json: 236/601 key(s) untranslated (falls back to en)
+  · pt-BR.json: 236/601 key(s) untranslated (falls back to en)
+  · pt-PT.json: 236/601 key(s) untranslated (falls back to en)
+  · ro-RO.json: 236/601 key(s) untranslated (falls back to en)
+  · ru-RU.json: 236/601 key(s) untranslated (falls back to en)
+  · sr-SP.json: 236/601 key(s) untranslated (falls back to en)
+  · sv-SE.json: 236/601 key(s) untranslated (falls back to en)
+  · tr-TR.json: 236/601 key(s) untranslated (falls back to en)
+  · uk-UA.json: 236/601 key(s) untranslated (falls back to en)
+  · vi-VN.json: 236/601 key(s) untranslated (falls back to en)
+  · zh-CN.json: 236/601 key(s) untranslated (falls back to en)
+  · zh-CN.json: @astryx.chatTypingIndicator.others: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.multiSelector.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.selector.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceAdded: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceBulkAdded: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceBulkRemoved: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceRemoved: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.transferList.announceSearchResults: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-CN.json: @astryx.typeahead.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: 236/601 key(s) untranslated (falls back to en)
+  · zh-TW.json: @astryx.chatTypingIndicator.others: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.multiSelector.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.selector.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceAdded: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceBulkAdded: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceBulkRemoved: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceRemoved: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.transferList.announceSearchResults: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · zh-TW.json: @astryx.typeahead.resultCount: plural argument "count" uses unreachable cardinal category "one" (valid: other)
+  · 8 key reference(s) unverifiable (key not statically knowable):
+      packages/core/src/Chat/ChatMessageMetadata.tsx:132  statusConfig.i18nKey
+      packages/core/src/Kbd/Kbd.tsx:131  labelKey
+      packages/core/src/Layer/useLayer.tsx:516  parseFloat(x)
+      packages/core/src/PowerSearch/PowerSearchValueEditor.tsx:584  ago
+      packages/core/src/PowerSearch/PowerSearchValueEditor.tsx:591  fromNow
+      packages/core/src/PowerSearch/resolveOperatorLabel.ts:39  operator.i18nKey
+      packages/lab/src/Comments/i18n.ts:39  key
+      packages/lab/src/EmojiPicker/EmojiPicker.tsx:377  labelKey
+$ node scripts/generate-cldr-weekdays.mjs --check
+✓ Calendar CLDR weekday data matches 31 generated locale entries
+$ node scripts/generate-cldr-month-capitals.mjs --check
+✓ Calendar CLDR month capitalization data is current
+$ node internal/vibe-tests/scripts/fixture-suite.mjs verify
+verified 3 canonical fixtures
+$ node scripts/generate-setup-contract.mjs --check
+Setup contract in sync.
+(node:3942790) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/vjeux/ios-astryx/wt/c15-main/eslint.config.js?mtime=1793706857967 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/vjeux/ios-astryx/wt/c15-main/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+/home/vjeux/ios-astryx/wt/c15-main/apps/docsite/src/components/SharedTopNav.tsx
+  29:35  warning  `import()` type annotations are forbidden  @typescript-eslint/consistent-type-imports
+
+/home/vjeux/ios-astryx/wt/c15-main/apps/docsite/src/components/blog/ThemedImage.tsx
+  62:30  warning  Expected { after 'if' condition  curly
+
+/home/vjeux/ios-astryx/wt/c15-main/apps/sandbox/src/app/(raw)/pages/mobile-prototypes/page.tsx
+  15:44  warning  'ReactNode' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/apps/sandbox/src/app/(raw)/pages/mobile-prototypes/primitives.tsx
+  532:17  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  567:32  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  567:44  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  578:36  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/apps/sandbox/src/app/(raw)/pages/mobile-prototypes/prototypes.tsx
+  1267:16  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/apps/storybook/stories/Stepper.stories.tsx
+  760:16  warning  Always prefer const x: T = { ... }  @typescript-eslint/consistent-type-assertions
+
+/home/vjeux/ios-astryx/wt/c15-main/apps/storybook/stories/TableStickyColumns.stories.tsx
+  157:11  warning  Always prefer const x: T = { ... }  @typescript-eslint/consistent-type-assertions
+
+/home/vjeux/ios-astryx/wt/c15-main/internal/a11y-spec/src/patterns/table.jsdom.test.ts
+  23:3  warning  'TABLE_FIXTURES' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/internal/vibe-tests/setup-test/setup-aggregate.ts
+  197:24  warning  Always prefer const x: T = { ... }  @typescript-eslint/consistent-type-assertions
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/charts/src/marks/dotGLInteractive.tsx
+  565:20  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/cli/assets/templates/pages/ai-chat/page.tsx
+  87:3  warning  Always prefer const x: T = { ... }  @typescript-eslint/consistent-type-assertions
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/BottomSheet/__tests__/BottomSheetPinchZoom.a11y.chromium.spec.ts
+  99:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Chat/ChatComposerInput.test.tsx
+  19:35  warning  `import()` type annotations are forbidden  @typescript-eslint/consistent-type-imports
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Chat/useChatDictation.ts
+  360:24  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/CheckboxInput/CheckboxInput.test.tsx
+  36:10  warning  'injectedRules' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/FileInput/FileInput.tsx
+  55:14  warning  'BaseProps' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/MobileNav/MobileNavPinchZoom.a11y.chromium.spec.ts
+  118:20  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/MultiSelector/OptionActions.a11y.chromium.spec.ts
+  189:10  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  190:10  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  191:10  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  191:28  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  192:10  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  192:28  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  193:10  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  193:28  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  194:10  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  194:29  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/NumberInput/NumberInput.tsx
+  227:14  warning  'BaseProps' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/PowerSearch/PowerSearch.tsx
+  86:14  warning  'Locale' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  96:3   warning  'FilterValue' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  97:3   warning  'OperatorValue' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/PowerSearch/PowerSearchEditPopover.tsx
+  343:7   warning  <div> exists only to style <Selector>. Astryx components extend BaseProps, so pass the styles to <Selector> via xstyle and drop the wrapper — an extra DOM node changes the parent's flex/grid child relationship and can break alignment                              @astryx/no-style-only-wrapper
+  355:9   warning  <div> exists only to style <Selector>. Astryx components extend BaseProps, so pass the styles to <Selector> via xstyle and drop the wrapper — an extra DOM node changes the parent's flex/grid child relationship and can break alignment                              @astryx/no-style-only-wrapper
+  368:9   warning  <div> exists only to style <PowerSearchValueEditor>. Astryx components extend BaseProps, so pass the styles to <PowerSearchValueEditor> via xstyle and drop the wrapper — an extra DOM node changes the parent's flex/grid child relationship and can break alignment  @astryx/no-style-only-wrapper
+  610:9   warning  <div> exists only to style <Selector>. Astryx components extend BaseProps, so pass the styles to <Selector> via xstyle and drop the wrapper — an extra DOM node changes the parent's flex/grid child relationship and can break alignment                              @astryx/no-style-only-wrapper
+  854:15  warning  <div> exists only to style <Selector>. Astryx components extend BaseProps, so pass the styles to <Selector> via xstyle and drop the wrapper — an extra DOM node changes the parent's flex/grid child relationship and can break alignment                              @astryx/no-style-only-wrapper
+  914:11  warning  <div> exists only to style <Selector>. Astryx components extend BaseProps, so pass the styles to <Selector> via xstyle and drop the wrapper — an extra DOM node changes the parent's flex/grid child relationship and can break alignment                              @astryx/no-style-only-wrapper
+  926:13  warning  <div> exists only to style <Selector>. Astryx components extend BaseProps, so pass the styles to <Selector> via xstyle and drop the wrapper — an extra DOM node changes the parent's flex/grid child relationship and can break alignment                              @astryx/no-style-only-wrapper
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/SegmentedControl/__tests__/SegmentedControl.interaction.browser.spec.ts
+  1109:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Selector/__tests__/Listbox.a11y.chromium.spec.ts
+  124:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Switch/Switch.tsx
+  49:21  warning  'mergeRefs' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Switch/__tests__/Switch.interaction.browser.spec.ts
+   118:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   121:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   124:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   170:17  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   226:16  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   252:38  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   373:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   401:5   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   411:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   416:18  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   419:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   444:17  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   448:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   462:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   533:13  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   552:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   623:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   624:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   625:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   654:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   709:7   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   727:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   758:17  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   761:17  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   808:17  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   811:23  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   812:20  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   864:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   961:9   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1121:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1405:20  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1505:9   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1630:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1678:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1706:23  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1716:16  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1742:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  1989:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2018:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2085:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2086:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2201:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2201:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2201:34  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2249:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2264:30  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2393:16  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2399:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2427:9   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2462:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2642:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2648:20  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2651:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Switch/__tests__/SwitchPointer.interaction.browser.spec.ts
+   72:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  327:13  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  327:13  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  346:15  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  346:15  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  438:19  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/TextArea/TextArea.tsx
+  52:14  warning  'BaseProps' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/TextInput/TextInput.tsx
+  120:14  warning  'BaseProps' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Toast/ToastViewport.tsx
+   25:14  warning  'ReactNode' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  284:7   warning  <div> exists only to style <ToastSurface>. Astryx components extend BaseProps, so pass the styles to <ToastSurface> via xstyle and drop the wrapper — an extra DOM node changes the parent's flex/grid child relationship and can break alignment  @astryx/no-style-only-wrapper
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Tokenizer/Tokenizer.test.tsx
+  2646:12  warning  'container' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/Typeahead/Typeahead.tsx
+  60:3  warning  'composeEventHandlers' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/VisuallyHidden/VisuallyHidden.tsx
+  108:32  warning  This component accepts `xstyle` via BaseProps but never forwards it, so the consumer override is silently dropped. Destructure `xstyle` and thread it into the root `mergeProps(...)` / `stylex.props(...)` call  @astryx/require-baseprops-passthrough
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/motion/__tests__/animatedLayout.interaction.browser.spec.ts
+  2237:42  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  2267:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/theme/syntax/defineSyntaxTheme.ts
+  232:30  warning  Expected { after 'if' condition  curly
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/core/src/theme/syntax/useSyntaxTheme.diff.test.tsx
+  18:15  warning  Expected { after 'if' condition  curly
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/lab/src/Chat/ChatTypingIndicator.test.tsx
+  11:35  warning  `import()` type annotations are forbidden  @typescript-eslint/consistent-type-imports
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/lab/src/Comments/CommentComposer.test.tsx
+  17:35  warning  `import()` type annotations are forbidden  @typescript-eslint/consistent-type-imports
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/lab/src/Comments/Comments.test.tsx
+  32:33  warning  `import()` type annotations are forbidden  @typescript-eslint/consistent-type-imports
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/lab/src/LogStream/LogStream.tsx
+  114:12  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  115:18  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  116:11  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  117:12  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  118:9   warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  119:15  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  120:9   warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  121:10  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  278:22  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  313:18  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/lab/src/Sankey/SankeyGrid.tsx
+  44:30  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  56:23  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/lab/src/Sankey/SankeyLabel.tsx
+   54:9   warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+   55:9   warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+   58:7   warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+   59:7   warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  156:19  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  203:14  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  213:17  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+  225:19  warning  Raw colour in component source. A theme can retint any token this component reads, but it cannot reach inside a literal — so this is the colour every theme gets, including a consumer's own. Read a token instead (`colorVars['--color-…']`, `shadowVars['--shadow-…']`), or derive one with `color-mix()` on token vars. If no token fits, the value belongs in the theme layer, not here  @astryx/no-raw-color
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/richtext/src/RichTextEditorAutoLinkPlugin.tsx
+  75:18  warning  "RichTextEditorAutoLinkPluginProps" should extend BaseProps to inherit xstyle, data-*, aria-*, and standard HTML attribute support  @astryx/require-base-props
+  75:18  warning  "RichTextEditorAutoLinkPluginProps" should declare a `ref` property so consumers can access the underlying DOM element              @astryx/require-ref-prop
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/richtext/src/RichTextEditorToolbar.tsx
+  543:19  warning  A/an 'array expression' as default prop. This could lead to potential infinite render loop in React. Use a variable instead of 'array expression'  @eslint-react/no-unstable-default-props
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/richtext/src/RichTextView.tsx
+  103:18  warning  "RichTextViewProps" should declare a `ref` property so consumers can access the underlying DOM element  @astryx/require-ref-prop
+  183:9   warning  A ref identifier must be named 'ref' or ending in 'Ref'                                                 @eslint-react/naming-convention-ref-name
+
+/home/vjeux/ios-astryx/wt/c15-main/packages/richtext/src/__tests__/Playground.a11y.chromium.spec.ts
+  369:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  369:34  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  369:50  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  369:59  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  371:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  371:34  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  371:55  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  448:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  448:34  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  448:50  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  448:59  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  450:25  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  450:34  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  450:55  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  583:22  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  583:31  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  583:50  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  583:59  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  610:14  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  615:10  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  615:22  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  652:9   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  652:18  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  652:37  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  652:46  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  662:5   warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  662:17  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+✖ 169 problems (0 errors, 169 warnings)
+  0 errors and 3 warnings potentially fixable with the `--fix` option.
+

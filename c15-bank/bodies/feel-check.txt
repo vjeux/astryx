@@ -1,0 +1,27 @@
+FEEL-CHECK PACKAGES (send to the coordinator only when otherwise ready: CodeBunny APPROVE + gates at that head)
+
+#9700 (head ba1aaafbeb) — preview https://astryx-dotatxms3-fbopensource.vercel.app
+Pages (phone, full-screen story):
+- https://astryx-dotatxms3-fbopensource.vercel.app/storybook/iframe.html?id=lab-tabbar--default&viewMode=story
+- https://astryx-dotatxms3-fbopensource.vercel.app/storybook/iframe.html?id=lab-tabbar--five-tabs&viewMode=story
+- https://astryx-dotatxms3-fbopensource.vercel.app/storybook/iframe.html?id=lab-tabbar--right-to-left&viewMode=story
+Checklist:
+1. Tap each tab: the lens lifts into glass, slides to the tab and settles; the bar flexes a little under the finger.
+2. Press and drag across the tabs: the lens follows the finger, the tab under it magnified; lift on a tab: it settles there.
+3. Drag past the last tab, staying on the bar: the lens rubber-bands a little past it; lift: the last tab is chosen.
+4. Drag off the bar (up, or past its end) and lift there: nothing is chosen and the lens goes back to the selected tab.
+5. With a mouse or trackpad: drag the lens across and let go mid-drag: it follows the pointer and settles with the drag's momentum.
+
+#9701 (head 3fe213b31e) — preview https://astryx-x2cxpjw5j-fbopensource.vercel.app
+Pages:
+- .../storybook/iframe.html?id=lab-tabbar--minimize-on-scroll&viewMode=story
+- .../storybook/iframe.html?id=lab-tabbar--bottom-accessory&viewMode=story
+- .../storybook/iframe.html?id=lab-tabbar--search-tab&viewMode=story
+- .../storybook/iframe.html?id=lab-tabbar--more-tab&viewMode=story
+- .../storybook/iframe.html?id=lab-tabbar--disabled-tab&viewMode=story
+Checklist:
+1. Minimize On Scroll: scroll the page down with a finger: the bar collapses into a circle; scroll back to the top, or tap the circle: it expands.
+2. Bottom Accessory: scroll down: the accessory slides inline beside the circle; scroll up: it returns above the bar.
+3. Search Tab: tap the search tab: the bar collapses and the field opens with the keyboard; tap Cancel: the circle shrinks back with a wobble and the bar returns.
+4. More Tab: tap More: the list opens; choose a section: it opens inside More, which stays selected.
+5. Disabled Tab: tap the disabled tab: nothing moves; drag over it and lift: nothing is chosen and the lens returns to the selected tab.

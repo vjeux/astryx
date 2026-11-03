@@ -1,0 +1,13 @@
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+$ node ../../scripts/clean-dist.mjs && pnpm build:i18n && pnpm build:esm && tsc --project tsconfig.build.json && node ../../scripts/add-declaration-extensions.mjs && pnpm build:css && node ../../scripts/check-no-dev-jsx.mjs && node ../../scripts/check-fully-specified.mjs
+$ node ../../scripts/generate-i18n-runtime.mjs && node scripts/build-pseudo-locale.mjs
+Generated 31 runtime locale modules (0 changed, 0 stale removed) and 115 English fallback maps (0 changed, 0 stale removed)
+Built pseudo.json — 601 keys
+$ babel src --out-dir dist --extensions .ts,.tsx --out-file-extension .js --ignore "**/*.test.ts,**/*.test.tsx,**/__tests__/**,**/*.perf.test.*,**/*.doc.mjs,**/*.d.ts,**/*.css,**/*.css.d.ts" --config-file ./babel.config.json
+Successfully compiled 1016 files with Babel (12232ms).
+✅ 545 declaration file(s) now use fully specified relative specifiers.
+$ node ../../scripts/build-css.mjs
+Collected 8308 StyleX rules from 1299 reachable files
+astryx.css: 235.3 KB
+✅ 1016 dist file(s) checked — no development JSX in build output.
+✅ 2031 dist file(s) checked — every relative specifier is fully specified.

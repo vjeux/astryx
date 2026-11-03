@@ -1,0 +1,22 @@
+
+ RUN  v4.1.11 /home/vjeux/ios-astryx/wt/c15-main
+
+Generated 31 runtime locale modules (0 changed, 0 stale removed) and 115 English fallback maps (0 changed, 0 stale removed)
+Built pseudo.json — 601 keys
+Generated 31 runtime locale modules (0 changed, 0 stale removed) and 115 English fallback maps (0 changed, 0 stale removed)
+Built pseudo.json — 601 keys
+9:36:50 AM [vite] (ssr) warning: Invalid file URL: must not contain hostname file://${first}/
+  Plugin: builtin:vite-resolve
+ ✓ |ui| packages/lab/src/TabBar/uikitTabBar.test.ts (29 tests) 9ms
+ ✓ |ui| packages/lab/src/TabBar/tabBarModel.test.ts (19 tests) 9ms
+ ✓ |node| scripts/check-cli-official-packages.test.mjs (15 tests) 988ms
+     ✓ matches what the generator builds (run `pnpm bundle:cli-official-packages`)  775ms
+ ✓ |ui| packages/lab/src/internal/useMotionEngine.test.tsx (3 tests) 146ms
+ ✓ |ui| packages/lab/src/TabBar/TabBar.test.tsx (17 tests) 1953ms
+     ✓ under a finger a slide mounts the copy only until the lens rests  604ms
+
+ Test Files  5 passed (5)
+      Tests  83 passed (83)
+   Start at  09:36:45
+   Duration  10.81s (transform 9.48s, setup 807ms, import 10.66s, tests 3.11s, environment 1.71s)
+
