@@ -7,26 +7,42 @@
  * @input ContextMenu's touch layer (ContextMenuTouch.ts), the gesture
  *   foundation and the UIKit context-menu constants
  * @output ContextMenuTouchLayer: renders nothing; runs the trigger's press
- *   recognizer while ContextMenu is under the touch model
+ *   recognizer and press feedback while ContextMenu is under the touch model
  * @position Rendered by ContextMenu while the touch model applies
  *
  * SYNC: When modified, update /packages/core/src/ContextMenu/ContextMenu.tsx
  */
 
-import {useImperativeHandle, useRef, type Ref, type RefObject} from 'react';
+import {
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type Ref,
+  type RefObject,
+} from 'react';
+import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {contextMenu} from '../motion/uikit/contextMenu';
-import {ContextMenuPressRecognizer} from './ContextMenuTouch';
+import {
+  ContextMenuPressRecognizer,
+  useContextMenuPressFeedback,
+} from './ContextMenuTouch';
 
 /** What ContextMenu reaches of a mounted touch layer. */
 export interface ContextMenuTouchHandle {
+  /** The menu the press opened closed: the trigger springs back. */
+  release(): void;
   /** Whether the recognizer is timing a finger on the trigger. */
   isTracking(): boolean;
 }
 
 export interface ContextMenuTouchLayerProps {
   triggerRef: RefObject<HTMLElement | null>;
+  /** False for an inline trigger, which does not grow. */
+  isShown: boolean;
+  /** Changes when the trigger element is replaced (`triggerAs`). */
+  triggerKey: unknown;
   /** Receives the layer's handle as it mounts, and null as it unmounts. */
   ref?: Ref<ContextMenuTouchHandle>;
   /** Open the menu at a client point (where the finger landed). */
@@ -41,13 +57,29 @@ export interface ContextMenuTouchLayerProps {
  * lift sends no click and no compatibility mouse events. The menu opens where
  * the finger landed: at `menuDisplayMs` if it is still down, or at the lift.
  * A lift before the commit, a second finger or a scroll gets no menu. So does
- * a drift past the tolerance before the menu shows.
+ * a drift past the tolerance before the menu shows. The press feedback grows
+ * the trigger from core's press machine's onset, while the recognizer follows
+ * the finger. It springs back when the recognizer ends the press with no
+ * menu, and it holds while that menu is up.
  */
 export function ContextMenuTouchLayer({
   triggerRef,
+  isShown,
+  triggerKey,
   ref,
   onOpen,
 }: ContextMenuTouchLayerProps): null {
+  // Whether the recognizer follows a finger or a pen now. It is set below,
+  // where the recognizer exists.
+  const isFollowedRef = useRef<() => boolean>(() => false);
+  const feedback = useContextMenuPressFeedback(
+    triggerRef,
+    isShown,
+    triggerKey,
+    isFollowedRef,
+  );
+  const feedbackRef = useRef(feedback);
+  feedbackRef.current = feedback;
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
   const hasPressOpenedRef = useRef(false);
@@ -59,6 +91,10 @@ export function ContextMenuTouchLayer({
     () => new ContextMenuPressRecognizer(),
     press => {
       const open = () => {
+        // The press feedback grew the trigger from its center, and the cursor
+        // anchor inside it moves with that scale. So stop the growth where it
+        // is. ContextMenu places the anchor under the finger.
+        feedbackRef.current.hold();
         hasPressOpenedRef.current = true;
         onOpenRef.current(press.press ?? press.location());
       };
@@ -87,9 +123,25 @@ export function ContextMenuTouchLayer({
     },
   );
 
+  isFollowedRef.current = () =>
+    recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
+
+  // The recognizer's transitions. Its target-action listeners never hear
+  // `failed`, so a press that ends with no menu springs back from here.
+  useEffect(
+    () =>
+      recognizer.addTransitionListener((press, _from, to) => {
+        if (to === 'failed' || to === 'cancelled') {
+          feedbackRef.current.end(press.clockTime);
+        }
+      }),
+    [recognizer],
+  );
+
   useImperativeHandle(
     ref,
     () => ({
+      release: () => feedbackRef.current.release(),
       isTracking: () => recognizer.numberOfTouches > 0,
     }),
     [recognizer],
