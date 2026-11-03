@@ -25,7 +25,7 @@ import {useCallback, useEffect, useRef, type RefObject} from 'react';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {PRESSED_ATTRIBUTE, type pressableProps} from '../utils/pressFeedback';
 import {observeMutations} from '../utils/sharedMutationObserver';
-import {createAnimator, type Animator} from '../motion/animator';
+import {createMotionAnimator, type Animator} from '../motion/animator';
 import {registerSpringsTable, springs} from '../motion/uikit/springs';
 import {contextMenu} from '../motion/uikit/contextMenu';
 import {
@@ -128,7 +128,7 @@ export function useContextMenuPressFeedback(
     registerSpringsTable();
     if (animatorRef.current?.element !== element) {
       animatorRef.current?.dispose();
-      animatorRef.current = createAnimator(element);
+      animatorRef.current = createMotionAnimator(element);
     }
     return animatorRef.current;
   }, [triggerRef]);

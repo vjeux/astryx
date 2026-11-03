@@ -26,7 +26,7 @@ vi.mock('../motion/animator', async importOriginal => {
   const original = await importOriginal<object>();
   return {
     ...original,
-    createAnimator: (element: HTMLElement) => {
+    createMotionAnimator: (element: HTMLElement) => {
       animator.elements.push(element);
       const pending = () => ({finished: new Promise<boolean>(() => {})});
       return {

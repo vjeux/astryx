@@ -33,7 +33,7 @@ const animator = vi.hoisted(() => ({
 }));
 
 vi.mock('../motion/animator', () => ({
-  createAnimator: (element: HTMLElement) => {
+  createMotionAnimator: (element: HTMLElement) => {
     animator.element = element;
     return animator;
   },
