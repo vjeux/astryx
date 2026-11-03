@@ -228,9 +228,28 @@ const styles = stylex.create({
         default: 'background-color',
         [PRESSED_ON]: 'none',
         [PRESSED_FADING]: 'none',
+        // Under reduced motion a colour changes at once. Only opacity may
+        // still fade on a touch screen.
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          'opacity',
       },
-      transitionDuration: durationVars['--duration-fast'],
-      transitionTimingFunction: easeVars['--ease-standard'],
+      transitionDuration: {
+        default: durationVars['--duration-fast'],
+        // Under reduced motion a fine pointer gets no transition. A touch
+        // screen's fade takes 200 ms or less, whatever the theme sets.
+        '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+          '0s',
+        // These values copy reducedMotionFadeConsts. That module is
+        // internal, and a swizzled component imports only exported paths.
+        // reducedMotionValues.test.ts keeps the copies equal.
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          '200ms',
+      },
+      transitionTimingFunction: {
+        default: easeVars['--ease-standard'],
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          'cubic-bezier(0.42, 0, 0.58, 1)',
+      },
       // While the controller paints, the colour yields to the image: a
       // touchscreen beside a fine pointer still matches `:active` under a
       // finger, and the press would otherwise paint twice.

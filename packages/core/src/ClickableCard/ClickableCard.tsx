@@ -125,9 +125,28 @@ const styles = stylex.create({
         default: 'background-color',
         [PRESSED_ON]: 'none',
         [PRESSED_FADING]: 'none',
+        // Under reduced motion a colour changes at once. Only opacity may
+        // still fade on a touch screen.
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          'opacity',
       },
-      transitionDuration: durationVars['--duration-fast'],
-      transitionTimingFunction: easeVars['--ease-standard'],
+      transitionDuration: {
+        default: durationVars['--duration-fast'],
+        // Under reduced motion a fine pointer gets no transition. A touch
+        // screen's fade takes 200 ms or less, whatever the theme sets.
+        '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+          '0s',
+        // These values copy reducedMotionFadeConsts. That module is
+        // internal, and a swizzled component imports only exported paths.
+        // reducedMotionValues.test.ts keeps the copies equal.
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          '200ms',
+      },
+      transitionTimingFunction: {
+        default: easeVars['--ease-standard'],
+        '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+          'cubic-bezier(0.42, 0, 0.58, 1)',
+      },
       // While the controller paints, the colour yields to the image: a
       // touchscreen beside a fine pointer still matches `:active` under a
       // finger, and the press would otherwise paint twice.
@@ -167,9 +186,25 @@ const styles = stylex.create({
     paddingInlineEnd: `calc(var(--container-padding-inline-end) - ${borderVars['--border-width']})`,
     paddingBlockStart: `calc(var(--container-padding-block-start) - ${borderVars['--border-width']})`,
     paddingBlockEnd: `calc(var(--container-padding-block-end) - ${borderVars['--border-width']})`,
-    transitionProperty: 'border-color',
-    transitionDuration: durationVars['--duration-fast'],
-    transitionTimingFunction: easeVars['--ease-standard'],
+    transitionProperty: {
+      default: 'border-color',
+      // Under reduced motion the border's colour changes at once.
+      '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+        'opacity',
+    },
+    transitionDuration: {
+      default: durationVars['--duration-fast'],
+      // Under reduced motion a fine pointer gets no transition. A touch
+      // screen's fade takes 200 ms or less, whatever the theme sets.
+      '@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))':
+        '0s',
+      '@media (prefers-reduced-motion: reduce) and (pointer: coarse)': '200ms',
+    },
+    transitionTimingFunction: {
+      default: easeVars['--ease-standard'],
+      '@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+        'cubic-bezier(0.42, 0, 0.58, 1)',
+    },
   },
   // Emphasize the bordered variant's border on hover. Guarded by
   // @media (hover: hover) so touch devices don't get a stuck hover state.
