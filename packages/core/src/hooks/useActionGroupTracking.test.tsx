@@ -9,7 +9,8 @@
  *   painted in the touch-down event; the paint follows the finger and is cut,
  *   not faded, when it leaves; the lift runs only the action under the
  *   finger, once; a touch on the message or a cancel runs nothing; a disabled
- *   action is skipped; a second finger or the window losing focus cancels;
+ *   action is skipped; an inert press is taken and dropped; a second finger
+ *   or the window losing focus cancels;
  *   inside a scroller a flick is left to the scroller; a mouse under a fine
  *   pointer is tracked like a finger; the shared tracker does the tracking;
  *   no render per move
@@ -645,6 +646,29 @@ describe('useActionGroupTracking', () => {
     expect(paintOf(cancel)).toBeNull();
     f.up(message, centerOf(CANCEL));
     expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it('takes an inert press and drops it: no paint, nothing runs, the browser makes no click of it', () => {
+    let isInert = true;
+    const {cancel, del, onCancel, onDelete} = mount({
+      options: {isInert: () => isInert},
+    });
+    const f = finger();
+    f.down(cancel, centerOf(CANCEL));
+    expect(paintOf(cancel)).toBeNull();
+    f.move(cancel, centerOf(DELETE));
+    expect(paintOf(del)).toBeNull();
+    const lift = f.up(cancel, centerOf(DELETE));
+    expect(lift.defaultPrevented).toBe(true);
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(onDelete).not.toHaveBeenCalled();
+    // Read when each press begins: the next one tracks again.
+    isInert = false;
+    const g = finger();
+    g.down(cancel, centerOf(CANCEL));
+    expect(paintOf(cancel)).toBe('on');
+    g.up(cancel, centerOf(CANCEL));
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   describe('inside a scroller', () => {
