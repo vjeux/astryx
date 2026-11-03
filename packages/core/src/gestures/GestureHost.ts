@@ -100,10 +100,11 @@
  *   and press consumers get no blocking listener, and the listener a
  *   finger's target gets at touch-down is passive for them too, so a scroll
  *   starting on them never waits.
- * - The browser took a finger on `pointercancel`, on its first uncancelable
- *   `touchmove` where it could pan, or on a scroll above it once the finger
- *   has travelled the slop; a scroll under a finger that has not moved is
- *   the page's own and leaves the touch alone.
+ * - The browser took a finger on `pointercancel`, or on a scroll above it
+ *   once the finger has travelled the slop. Outside iOS WebKit, its first
+ *   uncancelable `touchmove` where it could pan also counts. iOS WebKit
+ *   marks every move over passive listeners uncancelable. A scroll under a
+ *   finger that has not moved is the page's own and leaves the touch alone.
  * - A lift whose click must not happen cancels its `touchend` (no click, no
  *   compatibility mouse events) and arms the shared click guard
  *   (utils/clickGuard.ts, the menu press model's too) for the browser's next
@@ -3005,15 +3006,15 @@ export class GestureHost {
     if (inputs.length === 0) {
       return;
     }
-    if (!event.cancelable) {
-      // The browser no longer asks the page about these fingers. WebKit
-      // stops asking when it takes the touch to pan (its pointercancel comes
-      // with it); Chromium also stops after one unconsumed touchmove, even
-      // when `touch-action` keeps it from panning the way the finger went (a
-      // horizontal drag under pan-y). So a finger's FIRST uncancelable move
-      // counts as the browser's claim only if the browser could pan along
-      // the finger's main axis since touch-down; later ones add nothing, and
-      // pointercancel or a scroll still report any real pan.
+    if (!event.cancelable && !isIosWebKit(this.doc.defaultView)) {
+      // The browser no longer asks the page about these fingers. Chromium
+      // stops after one unconsumed touchmove, even when `touch-action` keeps
+      // it from panning the way the finger went (a horizontal drag under
+      // pan-y). So a finger's FIRST uncancelable move counts as the browser's
+      // claim only if the browser could pan along the finger's main axis
+      // since touch-down. Later ones add nothing. iOS WebKit marks every move
+      // over passive listeners uncancelable from the first one, panned or
+      // not. There only pointercancel or a scroll reports its pan.
       const placed = new Map(inputs.map(input => [input.id, input]));
       const taken = ids.filter(id => {
         const touch = this.arena.getTouch(id);

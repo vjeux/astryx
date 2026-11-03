@@ -1633,6 +1633,81 @@ describe('GestureHost', () => {
     }
   });
 
+  it("counts iOS WebKit's uncancelable moves as nothing: 8 px up, then across, keeps the press until pointercancel (spec:AST-094 FR20)", () => {
+    // iOS WebKit marks every move over passive listeners uncancelable from
+    // the first one. Measured on the iOS 26.2 simulator: 8 px up then across
+    // never pans, and a pan comes with pointercancel.
+    const restoreIos = asIosWebKit();
+    const restore = touchActionFromData();
+    try {
+      const {list, row} = mount(
+        '<div id="list" style="overflow-y: auto"><div id="row" data-touch-action="pan-y pinch-zoom"></div></div>',
+      );
+      scrollable(list, {scrollTop: 0, scrollHeight: 1000, clientHeight: 400});
+      const consumer = new RecordingConsumer();
+      detachers.push(host.attachConsumer(row, consumer));
+      const finger = {id: 1, x: 100, y: 100};
+      touch('touchstart', row, [finger], [finger], 0);
+      const moves = [
+        {x: 100, y: 97},
+        {x: 100, y: 92},
+        {x: 112, y: 92},
+        {x: 160, y: 92},
+      ];
+      moves.forEach((at, index) => {
+        touch(
+          'touchmove',
+          row,
+          [{...finger, ...at}],
+          [{...finger, ...at}],
+          16 * (index + 1),
+          false,
+        );
+      });
+      expect(
+        consumer.events.filter(event => event.startsWith('cancelled')),
+      ).toEqual([]);
+      expect(consumer.events.at(-1)).toBe('moved:1');
+      // The pan WebKit does start comes with pointercancel.
+      pointer('pointercancel', row, {
+        id: 99,
+        pointerType: 'touch',
+        x: 160,
+        y: 80,
+        time: 96,
+      });
+      expect(consumer.events.at(-1)?.split(':')[0]).toBe('cancelled');
+    } finally {
+      restore();
+      restoreIos();
+    }
+  });
+
+  it("still counts Chromium's first uncancelable vertical move under pan-y as its pan (spec:AST-094 FR20)", () => {
+    const restore = touchActionFromData();
+    try {
+      const {list, row} = mount(
+        '<div id="list" style="overflow-y: auto"><div id="row" data-touch-action="pan-y pinch-zoom"></div></div>',
+      );
+      scrollable(list, {scrollTop: 0, scrollHeight: 1000, clientHeight: 400});
+      const consumer = new RecordingConsumer();
+      detachers.push(host.attachConsumer(row, consumer));
+      const finger = {id: 1, x: 100, y: 100};
+      touch('touchstart', row, [finger], [finger], 0);
+      touch(
+        'touchmove',
+        row,
+        [{...finger, y: 97}],
+        [{...finger, y: 97}],
+        16,
+        false,
+      );
+      expect(consumer.events.at(-1)?.split(':')[0]).toBe('cancelled');
+    } finally {
+      restore();
+    }
+  });
+
   it('reads a scroll above an unclaimed touch that travelled its slop as the browser taking it', () => {
     const {list, row} = mount('<div id="list"><div id="row"></div></div>');
     const consumer = new RecordingConsumer();

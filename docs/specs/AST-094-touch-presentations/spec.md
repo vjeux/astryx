@@ -360,8 +360,10 @@ a measured, sourced difference exists.
 - **FR20 — The browser can take a touch.** `pointercancel`, a finger's first
   uncancelable `touchmove`, or a native scroll under the touch MUST count as
   the browser taking the touch, the `touchmove` only when the browser could
-  scroll along the finger's main axis, and a native scroll only once that
-  finger has moved the scroll take distance (FR2), so sub-pixel movement under
+  scroll along the finger's main axis and not in iOS WebKit, which marks
+  every move over passive listeners uncancelable whether or not it pans, and
+  a native scroll only once that finger has moved the scroll take distance
+  (FR2), so sub-pixel movement under
   a still finger does not cancel a tap (DEC-8): possible recognizers that share
   it fail, active ones are cancelled, and the view's press is cancelled without
   a release. The main axis is the one the finger has moved farther along since
