@@ -2,7 +2,7 @@
 
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import type {ReactElement} from 'react';
+import type {ReactElement, Ref} from 'react';
 import {act, fireEvent, render, screen} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -150,6 +150,7 @@ function Shell({
   height = 'fill',
   hasCanvas = false,
   isCollapsed,
+  navRef,
 }: {
   inShell?: boolean;
   hasNav?: boolean;
@@ -158,9 +159,11 @@ function Shell({
   hasCanvas?: boolean;
   /** Set: the app owns the collapse state. */
   isCollapsed?: boolean;
+  navRef?: Ref<HTMLElement>;
 }) {
   const nav = (
     <SideNav
+      ref={navRef}
       collapsible={
         isCollapsed === undefined
           ? true
@@ -344,7 +347,7 @@ describe('SideNav rail motion (component:SideNav FR6, component:AppShell FR17)',
               get: (target, key) =>
                 key === 'translate'
                   ? `${columnShift}px 0px`
-                  : Reflect.get(target, key),
+                  : target[key as keyof CSSStyleDeclaration],
             });
       },
     );
@@ -720,6 +723,25 @@ describe('SideNav rail motion (component:SideNav FR6, component:AppShell FR17)',
       value: {currentTime: 1016},
     });
     await setCollapsed(rerender, true);
+
+    expect(railWidth()).toBe(COLLAPSED);
+    expect(animated('clipPath')).toHaveLength(1);
+  });
+
+  it('plays a change the app makes once the rail has painted, through an inline ref too', async () => {
+    const {rerender} = render(<Shell isCollapsed={false} navRef={() => {}} />);
+    // A frame later, a render re-attaches the nav through a new inline ref.
+    // The app then collapses the rail in a later commit of that frame.
+    Object.defineProperty(document, 'timeline', {
+      configurable: true,
+      value: {currentTime: 1016},
+    });
+    await act(async () => {
+      rerender(<Shell isCollapsed={false} navRef={() => {}} />);
+    });
+    await act(async () => {
+      rerender(<Shell isCollapsed navRef={() => {}} />);
+    });
 
     expect(railWidth()).toBe(COLLAPSED);
     expect(animated('clipPath')).toHaveLength(1);
