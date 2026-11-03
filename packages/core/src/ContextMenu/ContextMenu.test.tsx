@@ -1113,7 +1113,7 @@ describe.each([
       expect(onTouchEnd).toHaveBeenCalledTimes(1);
     });
 
-    it('makes the trigger a pressable surface of core’s one press machine, which starts and ends its growth', () => {
+    it('makes the trigger a pressable surface of core’s one press machine', () => {
       const trigger = renderMenu();
       expect(trigger).toHaveAttribute('data-astryx-pressable');
     });
