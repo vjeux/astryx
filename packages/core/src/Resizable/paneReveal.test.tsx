@@ -142,23 +142,31 @@ const NO_CONFIG: UseResizableSingleConfig = {};
 /**
  * A Layout whose start panel, or end panel when reversed, takes the
  * configuration-object hook's own `props`. Or it takes a hand-built copy: the
- * same fields in an object `useResizable` did not return.
+ * same fields in an object `useResizable` did not return. Or, with
+ * `isWidthPanel`, it renders at the hook's size beside a handle given the
+ * props.
  */
 function PropsSplit({
   config = NO_CONFIG,
   isReversed = false,
   isHandBuilt = false,
+  isWidthPanel = false,
   panelKey = 'panel',
 }: {
   config?: UseResizableSingleConfig;
   isReversed?: boolean;
   isHandBuilt?: boolean;
+  isWidthPanel?: boolean;
   panelKey?: string;
 }) {
   const value = useResizable({defaultSize: 200, collapsible: true, ...config});
   propsRegion = value;
   const panelProps = isHandBuilt ? {...value.props} : value.props;
-  const panel = (
+  const panel = isWidthPanel ? (
+    <LayoutPanel key={panelKey} width={value.size} data-testid="pane">
+      <button type="button">Inside</button>
+    </LayoutPanel>
+  ) : (
     <LayoutPanel key={panelKey} resizable={panelProps} data-testid="pane">
       <button type="button">Inside</button>
     </LayoutPanel>
@@ -624,6 +632,34 @@ describe('focus leaves a collapsing pane, and the collapsed pane is inert (compo
       view.unmount();
     }
     expect(reveals).toHaveLength(0);
+  });
+
+  it("moves focus to the handle and makes the pane inert for a pane at the hook's size beside a handle given its props", () => {
+    for (const isReversed of [false, true]) {
+      reveals.length = 0;
+      const view = render(<PropsSplit isReversed={isReversed} isWidthPanel />);
+      screen.getByRole('button', {name: 'Inside'}).focus();
+      act(() => {
+        propsRegion?.collapse();
+      });
+      expect(document.activeElement).toBe(separator());
+      expect(pane()).toHaveAttribute('inert');
+      expect(pane()).toHaveAttribute('aria-hidden', 'true');
+      act(() => {
+        propsRegion?.expand();
+      });
+      expect(pane()).not.toHaveAttribute('inert');
+      expect(pane()).not.toHaveAttribute('aria-hidden');
+      // Such a pane does not slide.
+      expect(reveals).toHaveLength(0);
+      view.unmount();
+    }
+  });
+
+  it("keeps a pane at the hook's size, beside a handle given its props, inert from its first commit when the region starts collapsed", () => {
+    render(<PropsSplit config={{defaultIsCollapsed: true}} isWidthPanel />);
+    expect(pane()).toHaveAttribute('inert');
+    expect(pane()).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('keeps an end pane, reversed by its ResizeHandle, inert from its first commit when the region starts collapsed', () => {
