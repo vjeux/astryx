@@ -35,6 +35,7 @@
 import {useCallback, useEffect, useRef, type RefObject} from 'react';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {PRESSED_ATTRIBUTE, type pressableProps} from '../utils/pressFeedback';
+import {observeMutations} from '../utils/sharedMutationObserver';
 import {createAnimator, type Animator} from '../motion/animator';
 import {resolveMotion} from '../motion/resolveMotion';
 import {registerSpringsTable, springs} from '../motion/uikit/springs';
@@ -54,6 +55,11 @@ export interface ContextMenuPressFeedback {
   pressable: typeof pressableProps;
   /** The menu the press opened closed: return on the dismissal spring. */
   release(): void;
+  /**
+   * The recognizer ended the press with no menu, at `time`: return on the
+   * feedback spring.
+   */
+  end(time: number): void;
   /**
    * The menu showed: the feedback stops where it is. The menu's cursor anchor
    * sits inside the trigger, and anchor positioning follows its transformed
@@ -151,7 +157,7 @@ export function useContextMenuPressFeedback(
     [animatorFor],
   );
 
-  const fail = useCallback(
+  const end = useCallback(
     (time: number) => {
       const animator = animatorRef.current;
       if (animator == null || !isGrownRef.current || isHeldRef.current) {
@@ -195,33 +201,30 @@ export function useContextMenuPressFeedback(
     }
   }, []);
 
-  // Follow the press machine's state on the trigger: grow from its "on",
-  // spring back when the press ends with no menu.
+  // Grow from the press machine's "on". The press machine lets a press go at
+  // a shorter travel than the recognizer's tolerance, so only the recognizer
+  // ends the growth (`end`).
   useEffect(() => {
     void triggerKey;
     const element = triggerRef.current;
-    if (element == null || typeof MutationObserver === 'undefined') {
+    if (element == null || !isShown) {
       return;
     }
     let isPressed = element.getAttribute(PRESSED_ATTRIBUTE) === 'on';
-    const observer = new MutationObserver(() => {
-      const next = element.getAttribute(PRESSED_ATTRIBUTE) === 'on';
-      if (next === isPressed) {
-        return;
-      }
-      isPressed = next;
-      if (next) {
-        start(performance.now());
-      } else {
-        fail(performance.now());
-      }
-    });
-    observer.observe(element, {
-      attributes: true,
-      attributeFilter: [PRESSED_ATTRIBUTE],
-    });
-    return () => observer.disconnect();
-  }, [triggerRef, triggerKey, start, fail]);
+    return observeMutations(
+      element,
+      {attributes: true, attributeFilter: [PRESSED_ATTRIBUTE]},
+      () => {
+        const next = element.getAttribute(PRESSED_ATTRIBUTE) === 'on';
+        if (next !== isPressed) {
+          isPressed = next;
+          if (next) {
+            start(performance.now());
+          }
+        }
+      },
+    );
+  }, [triggerRef, triggerKey, isShown, start]);
 
-  return {pressable, release, hold};
+  return {pressable, release, end, hold};
 }

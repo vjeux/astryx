@@ -5,7 +5,7 @@
  * @file ContextMenu.tsx
  * @input Uses React, StyleX, useLayer, shared layer dismissal, BottomSheet,
  *   useListFocus, the presentation resolver (usePresentation), useLongPress,
- *   and the touch layer (ContextMenuTouchLayer, loaded on demand)
+ *   and the touch layer (ContextMenuTouchLayer)
  * @output Exports ContextMenu with cursor-popover and touch-sheet presentations
  * @position Core implementation; consumed by index.ts
  *
@@ -86,8 +86,10 @@ import {pressableProps} from '../utils/pressFeedback';
 import {useMenuPress} from '../hooks/useMenuPress';
 import {useTypeahead} from '../hooks/useTypeahead';
 import {usePresentation} from '../utils/presentation';
-import {ContextMenuTouchLayer} from './lazyContextMenuTouchLayer';
-import type {ContextMenuTouchHandle} from './ContextMenuTouchLayer';
+import {
+  ContextMenuTouchLayer,
+  type ContextMenuTouchHandle,
+} from './ContextMenuTouchLayer';
 import {layerAnimations} from '../Layer/layerAnimations.stylex';
 import {
   colorVars,
@@ -417,20 +419,9 @@ export function ContextMenu({
   const currentTitle = currentSubmenu?.label ?? label;
   const sheetLabel = typeof currentTitle === 'string' ? currentTitle : label;
 
-  // The mounted touch layer, loaded on demand, for its press feedback and
-  // whether it times a finger.
+  // The mounted touch layer, for its press feedback and whether it times a
+  // finger.
   const touchHandleRef = useRef<ContextMenuTouchHandle | null>(null);
-  // Whether the touch layer has attached. Until then, while its module loads,
-  // a finger keeps today's 500 ms long press. So a hold that lands first still
-  // opens the menu.
-  const [isTouchLayerReady, setIsTouchLayerReady] = useState(false);
-  const setTouchHandle = useCallback(
-    (handle: ContextMenuTouchHandle | null) => {
-      touchHandleRef.current = handle;
-      setIsTouchLayerReady(handle != null);
-    },
-    [],
-  );
   // The menu closed: a finger's menu is over, and the trigger springs back
   // with the close itself (run by every close handler below).
   const endTouchOpen = useCallback(() => {
@@ -801,8 +792,7 @@ export function ContextMenu({
 
   // Touch invocation. Under the touch model, the touch layer runs UIKit's long
   // press and asks for the menu here, at the client point where the finger
-  // landed. The layer loads on demand, so a fine-pointer page never downloads
-  // it.
+  // landed.
   const openFromFinger = useCallback(
     (point: {x: number; y: number}) => {
       const local = toTriggerLocal(point);
@@ -826,7 +816,7 @@ export function ContextMenu({
     onTouchEnd: handleLongPressTouchEnd,
     onTouchCancel: handleLongPressTouchCancel,
   } = useLongPress({
-    disabled: isDisabled || (touchModes && isTouchLayerReady),
+    disabled: isDisabled || touchModes,
     onLongPress: useCallback(
       (point: {x: number; y: number}) => {
         const rect = getAnchorBaseRect();
@@ -1058,15 +1048,13 @@ export function ContextMenu({
         />
       </TriggerElement>
       {touchModes && !isDisabled ? (
-        <Suspense fallback={null}>
-          <ContextMenuTouchLayer
-            triggerRef={triggerRef}
-            isShown={triggerAs !== 'span'}
-            triggerKey={triggerAs}
-            onHandleChange={setTouchHandle}
-            onOpen={openFromFinger}
-          />
-        </Suspense>
+        <ContextMenuTouchLayer
+          ref={touchHandleRef}
+          triggerRef={triggerRef}
+          isShown={triggerAs !== 'span' && !usesBottomSheet}
+          triggerKey={triggerAs}
+          onOpen={openFromFinger}
+        />
       ) : null}
 
       {usesBottomSheet ? (

@@ -8,14 +8,12 @@
  *   foundation and the UIKit context-menu constants
  * @output ContextMenuTouchLayer: renders nothing; runs the trigger's press
  *   recognizer and press feedback while ContextMenu is under the touch model
- * @position Loaded on demand by ContextMenu (lazyContextMenuTouchLayer.ts),
- *   only while the touch model applies, so a fine-pointer page never loads the
- *   touch code
+ * @position Rendered by ContextMenu while the touch model applies
  *
  * SYNC: When modified, update /packages/core/src/ContextMenu/ContextMenu.tsx
  */
 
-import {useEffect, useRef, type RefObject} from 'react';
+import {useImperativeHandle, useRef, type Ref, type RefObject} from 'react';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {contextMenu} from '../motion/uikit/contextMenu';
@@ -39,7 +37,7 @@ export interface ContextMenuTouchLayerProps {
   /** Changes when the trigger element is replaced (`triggerAs`). */
   triggerKey: unknown;
   /** Receives the layer's handle as it mounts, and null as it unmounts. */
-  onHandleChange: (handle: ContextMenuTouchHandle | null) => void;
+  ref?: Ref<ContextMenuTouchHandle>;
   /** Open the menu at a client point (where the finger landed). */
   onOpen: (point: {x: number; y: number}) => void;
 }
@@ -53,14 +51,14 @@ export interface ContextMenuTouchLayerProps {
  * the finger landed: at `menuDisplayMs` if it is still down, or at the lift.
  * A lift before the commit, a second finger or a scroll gets no menu. So does
  * a drift past the tolerance before the menu shows. The press feedback grows
- * the trigger while core's press machine believes the press. It springs back
- * when the press ends with no menu, and it holds while that menu is up.
+ * the trigger from core's press machine's onset. It springs back when the
+ * recognizer ends the press with no menu, and it holds while that menu is up.
  */
 export function ContextMenuTouchLayer({
   triggerRef,
   isShown,
   triggerKey,
-  onHandleChange,
+  ref,
   onOpen,
 }: ContextMenuTouchLayerProps): null {
   const feedback = useContextMenuPressFeedback(triggerRef, isShown, triggerKey);
@@ -102,22 +100,25 @@ export function ContextMenuTouchLayer({
             open();
           }
           break;
-        case 'possible':
         case 'failed':
         case 'cancelled':
           // A press that ends with no menu: the press feedback springs back.
+          feedbackRef.current.end(press.clockTime);
+          break;
+        case 'possible':
           break;
       }
     },
   );
 
-  useEffect(() => {
-    onHandleChange({
+  useImperativeHandle(
+    ref,
+    () => ({
       release: () => feedbackRef.current.release(),
       isTracking: () => recognizer.numberOfTouches > 0,
-    });
-    return () => onHandleChange(null);
-  }, [onHandleChange, recognizer]);
+    }),
+    [recognizer],
+  );
 
   return null;
 }
