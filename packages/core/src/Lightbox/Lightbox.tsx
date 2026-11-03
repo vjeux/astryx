@@ -243,14 +243,8 @@ const styles = stylex.create({
   trackZoomTarget: {
     touchAction: 'pinch-zoom',
   },
-  // A zoomable page's photo box fills the page above its caption, as a
-  // single item's stage does.
   pageMediaZoomTarget: {
     touchAction: 'none',
-    alignSelf: 'stretch',
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
   },
   // A gallery's stage is the pager's viewport: it fills the viewer on every
   // presentation, so its pages have a size of their own.
@@ -266,41 +260,67 @@ const styles = stylex.create({
     flexBasis: 0,
     position: 'relative',
   },
-  // The pages stack in the track's one cell, each offset by its relative
-  // inset.
+  // Two rows that every page shares through subgrid: the photo's and the
+  // caption's. The caption row is as tall as the gallery's tallest caption,
+  // since the current page lays out, unseen, those no rendered page shows. So
+  // every photo centres on the same box, with or without a caption. The next
+  // photo slides in level with the current one, and paging never resizes it.
   track: {
     position: 'absolute',
     inset: 0,
     display: 'grid',
     gridTemplateColumns: '100%',
-    gridTemplateRows: '100%',
+    gridTemplateRows: 'minmax(0, 1fr) auto',
   },
-  // One page per item, the stage's size, at index × (width + gap). A page
-  // lays out its photo and caption as a single item does: the caption right
-  // under the photo, and the pair centred. Each page has its own layer.
-  // Through a busy main thread, Mobile Safari moves the track but cannot
-  // paint what it had not painted. So a page that slides in must be painted
-  // whole before it moves.
+  // One page per item, the stage's size, at index × (width + gap). The pages
+  // stack in the track's one column, offset by their relative inset. Each has
+  // its own layer. Through a busy main thread, Mobile Safari moves the track
+  // but cannot paint what it had not painted. So a page that slides in must be
+  // painted whole before it moves.
   page: {
     position: 'relative',
-    gridArea: '1 / 1',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    gridColumn: '1',
+    gridRow: '1 / span 2',
+    display: 'grid',
+    gridTemplateColumns: '100%',
+    gridTemplateRows: 'subgrid',
     minHeight: 0,
-    minWidth: 0,
     willChange: 'transform',
   },
-  // A page's photo box: the zoom stage of the current page.
+  // A page's photo box: the zoom stage of the current page, in the photo
+  // row. Its caption sits in the caption row below it, so the viewer's size
+  // never changes with the item.
   pageMedia: {
+    gridRow: '1',
+    minHeight: 0,
+    minWidth: 0,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    minHeight: 0,
+  },
+  pageCaption: {
+    gridRow: '2',
+    justifySelf: 'center',
+  },
+  // The current page's caption row when it also lays out, unseen, the
+  // captions no rendered page shows (`unrenderedCaptions`). One grid cell
+  // holds its own caption and those, so the row is the tallest of them.
+  pageCaptionRow: {
+    gridRow: '2',
+    display: 'grid',
+    justifyItems: 'center',
     minWidth: 0,
-    maxWidth: '100%',
+  },
+  captionStacked: {
+    gridArea: '1 / 1',
+  },
+  captionSizer: {
+    display: 'grid',
+    justifyItems: 'center',
+    justifySelf: 'stretch',
+    visibility: 'hidden',
+    pointerEvents: 'none',
   },
   imageWrapperZoomable: {
     cursor: {
@@ -709,35 +729,21 @@ export function Lightbox({
   const captionRef = useRef<HTMLDivElement | null>(null);
   const isShownAtFitRef = useRef(true);
   const placeCaption = useCallback(() => {
-    // The stage's space below its fitted photo: the photo's laid-out height,
-    // not its zoomed box.
-    const place = (
-      caption: HTMLElement | null,
-      stageElement: HTMLElement | null,
-      isAtFit: boolean,
-    ) => {
-      const photo = stageElement?.querySelector('img');
-      if (caption == null) {
-        return;
-      }
-      const below =
-        isZoomTarget && isAtFit && stageElement != null && photo != null
-          ? (stageElement.clientHeight - photo.offsetHeight) / 2
-          : 0;
-      caption.style.translate = below > 0 ? `0 ${-below}px` : '';
-    };
-    place(captionRef.current, imageWrapperRef.current, isShownAtFitRef.current);
-    // A gallery's pages, each with its own caption under its own photo. Only
-    // the current one can be zoomed.
-    for (const page of trackRef.current?.querySelectorAll<HTMLElement>(
-      ':scope > [data-lightbox-page]',
-    ) ?? []) {
-      place(
-        page.querySelector<HTMLElement>(':scope > [data-lightbox-caption]'),
-        page.querySelector<HTMLElement>(':scope > [data-lightbox-page-media]'),
-        !page.hasAttribute('data-current') || isShownAtFitRef.current,
-      );
+    const caption = captionRef.current;
+    if (caption == null) {
+      return;
     }
+    const stageElement = imageWrapperRef.current;
+    const photo = stageElement?.querySelector('img');
+    // The photo's laid-out height, not its zoomed box.
+    const below =
+      isZoomTarget &&
+      isShownAtFitRef.current &&
+      stageElement != null &&
+      photo != null
+        ? (stageElement.clientHeight - photo.offsetHeight) / 2
+        : 0;
+    caption.style.translate = below > 0 ? `0 ${-below}px` : '';
   }, [isZoomTarget]);
   useAttachment(
     imageWrapperRef,
@@ -1047,7 +1053,7 @@ export function Lightbox({
     ) : (
       <img
         ref={isCurrent ? stage.contentRef : undefined}
-        onLoad={placeCaption}
+        onLoad={isCurrent ? placeCaption : undefined}
         src={src}
         alt={isCurrent ? alt : ''}
         aria-hidden={isCurrent ? undefined : true}
@@ -1058,6 +1064,15 @@ export function Lightbox({
   // The current item and its neighbours; the pager shows one at rest.
   const pageIndexes = isGallery
     ? [index - 1, index, index + 1].filter(i => i >= 0 && i < mediaArray.length)
+    : [];
+  // The captions no rendered page shows. The current page lays them out,
+  // unseen, in the caption row. So the row stays as tall as the gallery's
+  // tallest caption whichever pages are rendered, and paging never resizes
+  // the photo row.
+  const unrenderedCaptions = isGallery
+    ? mediaArray.flatMap((item, i) =>
+        item.caption && !pageIndexes.includes(i) ? [i] : [],
+      )
     : [];
 
   return (
@@ -1205,12 +1220,48 @@ export function Lightbox({
                             )}>
                             {renderMedia(mediaArray[i], i === index)}
                           </div>
-                          {isRenderable(mediaArray[i].caption) && (
-                            <div
-                              data-lightbox-caption=""
-                              {...stylex.props(styles.caption)}>
-                              {mediaArray[i].caption}
+                          {i === index && unrenderedCaptions.length > 0 ? (
+                            <div {...stylex.props(styles.pageCaptionRow)}>
+                              {isRenderable(mediaArray[i].caption) && (
+                                <div
+                                  data-lightbox-caption=""
+                                  {...stylex.props(
+                                    styles.caption,
+                                    styles.captionStacked,
+                                  )}>
+                                  {mediaArray[i].caption}
+                                </div>
+                              )}
+                              <div
+                                aria-hidden
+                                inert
+                                {...stylex.props(
+                                  styles.captionStacked,
+                                  styles.captionSizer,
+                                )}>
+                                {unrenderedCaptions.map(j => (
+                                  <div
+                                    key={j}
+                                    {...stylex.props(
+                                      styles.caption,
+                                      styles.captionStacked,
+                                    )}>
+                                    {mediaArray[j].caption}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
+                          ) : (
+                            isRenderable(mediaArray[i].caption) && (
+                              <div
+                                data-lightbox-caption=""
+                                {...stylex.props(
+                                  styles.caption,
+                                  styles.pageCaption,
+                                )}>
+                                {mediaArray[i].caption}
+                              </div>
+                            )
                           )}
                         </div>
                       ))}
