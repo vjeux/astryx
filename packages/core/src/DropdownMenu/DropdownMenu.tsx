@@ -372,13 +372,13 @@ export interface DropdownMenuTriggerProps {
   onClick: (event: React.MouseEvent<HTMLElement>) => void;
   onClickCapture: (event: React.MouseEvent<HTMLElement>) => void;
   /**
-   * @deprecated The menu listens on the trigger itself, so spreading this
-   *   adds nothing.
+   * @deprecated Forward `ref` to the control instead; the menu listens on it.
+   *   `astryx upgrade` removes plain forwards. It is removed in 0.8.0.
    */
   onPointerDown: (event: React.PointerEvent<HTMLElement>) => void;
   /**
-   * @deprecated The menu listens on the trigger itself, so spreading this
-   *   adds nothing.
+   * @deprecated Forward `ref` to the control instead; the menu listens on it.
+   *   `astryx upgrade` removes plain forwards. It is removed in 0.8.0.
    */
   onContextMenu: (event: React.MouseEvent<HTMLElement>) => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
@@ -1619,8 +1619,14 @@ function DropdownMenuPopover({
             handleTriggerClickCapture(event);
           }}
           onKeyDown={handleButtonKeyDown}
-          onPointerDown={button.onPointerDown}
-          onContextMenu={button.onContextMenu}
+          onPointerDown={event => {
+            button.onPointerDown?.(event);
+            menuPress.handleTriggerPointerDown(event);
+          }}
+          onContextMenu={event => {
+            button.onContextMenu?.(event);
+            menuPress.handleTriggerContextMenu(event);
+          }}
           onFocus={event => {
             button.onFocus?.(event);
             onFocusReturnTargetFocus();

@@ -545,18 +545,18 @@ pattern requires; Escape and a press outside close it. Without either prop
 the component is unchanged: a Menu Button whose Tab closes the menu. Rejected:
 closing on Tab past either end, which leaves a modal dialog by Tab.
 
-### DEC-11 (proposed) — The trigger's press handlers are deprecated
+### DEC-11 — The trigger's press handlers are deprecated
 
 **Reference:** `component:DropdownMenu/DEC-11`
 
-**Decider:** proposed by `vjeux`, `2026-11-03`, as the owner decided on
-`2026-11-03`; pending owner review
+**Decider:** `cixzhang`, `2026-11-03`
 
 The menu listens on its trigger itself, so `DropdownMenuTriggerProps.onPointerDown`
 and `onContextMenu` add nothing for a `renderTrigger` control. A caller that
 still spreads them hands the same event to the press, which takes it once. They
 are deprecated in the patch that moves the menu to the ref form (`spec:AST-017`
-FR29c).
+FR29c). They go at the next minor release, with the options form of
+`module:DropdownMenu/useMenuPress` (DEP-0019, CLN-0027).
 
 ## Open questions
 

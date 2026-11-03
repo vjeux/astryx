@@ -394,6 +394,38 @@ describe('createMenuPress — update, where a press starts, and a forwarded trig
     expect(clicks).toEqual(['press']);
   });
 
+  it("starts after the page's own press-down handlers: one that cancels a press-down inside the menu starts no press", () => {
+    const f = fixture();
+    press(f.menu, {itemSelector: ITEM_SELECTOR});
+    const cancel = (event: Event) => event.preventDefault();
+    f.row('A').addEventListener('pointerdown', cancel);
+    fireEvent.pointerDown(f.row('A'), touch());
+    fireEvent.pointerMove(f.row('B'), touch());
+    fireEvent.pointerUp(f.row('B'), touch());
+    expect(f.clicked).toEqual([]);
+    f.row('A').removeEventListener('pointerdown', cancel);
+    fireEvent.pointerDown(f.row('A'), touch(2));
+    fireEvent.pointerMove(f.row('B'), touch(2));
+    fireEvent.pointerUp(f.row('B'), touch(2));
+    expect(f.clicked).toEqual(['B']);
+  });
+
+  it("runs the trigger's own press-down handler before the press opens the menu", () => {
+    const f = fixture();
+    const order: string[] = [];
+    press(f.menu, {
+      trigger: f.trigger,
+      itemSelector: ITEM_SELECTOR,
+      onTriggerPress: () => {
+        order.push('press');
+        return true;
+      },
+    });
+    f.trigger.addEventListener('pointerdown', () => order.push('page'));
+    fireEvent.pointerDown(f.trigger, mouse());
+    expect(order).toEqual(['page', 'press']);
+  });
+
   it('takes a trigger press once when the caller also forwards it: a press that closes the menu does not open it again', () => {
     const f = fixture();
     // The menu is open, so the press closes it and its gesture ends at once.
@@ -529,8 +561,10 @@ describe('createMenuPress — input modality in the menu\u2019s own document (ar
         .filter(type => type === 'keydown' || type === 'pointerdown')
         .sort();
     const press = createMenuPress(menu, {itemSelector: ITEM_SELECTOR});
+    // The modality pair, and the press-down listener.
     expect(typesOf(addEventListener.mock.calls)).toEqual([
       'keydown',
+      'pointerdown',
       'pointerdown',
     ]);
     own.dispatchEvent(new Event('pointerdown'));
@@ -538,6 +572,7 @@ describe('createMenuPress — input modality in the menu\u2019s own document (ar
     press.destroy();
     expect(typesOf(removeEventListener.mock.calls)).toEqual([
       'keydown',
+      'pointerdown',
       'pointerdown',
     ]);
   });
