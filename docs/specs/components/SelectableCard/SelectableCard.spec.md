@@ -38,15 +38,15 @@ system_specs: [spec:AST-009, spec:AST-020, spec:AST-085]
 
 ## Contract at a glance
 
-| Area                    | Contract                                                                                                                                                                                                                        |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public contract         | A Card that toggles a controlled `isSelected` through `onChange`, named by a required `label`, with `isDisabled` and Card's `variant`, `elevation`, `padding`, and sizing.                                                      |
-| Behavior                | A visually hidden native checkbox carries the role, name, and checked state; the whole surface toggles; selection draws an inset ring without moving layout.                                                                    |
-| End-user impact         | Screen-reader users hear a named checkbox and its state; pointer users click anywhere on the card; disabled cards stay discoverable by keyboard.                                                                                |
-| Builder impact          | At the next minor, a click inside an open layer inside the card (e.g. a Tooltip or HoverCard surface) no longer reaches the caller's `onClick`; a handler that needs those presses moves to the layer content.                  |
-| Compatibility/readiness | No API or default changes. One `[breaking]` behavior change is staged for the next minor and not built: `onClick` stops receiving clicks inside an open layer. Three implementation gaps are listed under Current-state impact. |
-| Review checks           | Reject a toggle that fires twice for one press, a disabled card that toggles or leaves the tab order, a ring that shifts layout, or a nested control that toggles the card.                                                     |
-| Governing rules         | `spec:AST-085/FR1,FR2,FR5,FR6`; `spec:AST-020/FR9`; `architecture:interaction-modality/INV3`; `architecture:component-theming-surface/INV6,INV14`; `architecture:public-component-api/INV5,INV6,INV7,INV8`.                     |
+| Area                    | Contract                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public contract         | A Card that toggles a controlled `isSelected` through `onChange`, named by a required `label`, with `isDisabled` and Card's `variant`, `elevation`, `padding`, and sizing.                                                                                                                                                                                             |
+| Behavior                | A visually hidden native checkbox carries the role, name, and checked state; the whole surface toggles; selection draws an inset ring without moving layout.                                                                                                                                                                                                           |
+| End-user impact         | Screen-reader users hear a named checkbox and its state; pointer users click anywhere on the card; disabled cards stay discoverable by keyboard.                                                                                                                                                                                                                       |
+| Builder impact          | At the next minor, a click inside an open layer inside the card (e.g. a Tooltip or HoverCard surface) no longer reaches the caller's `onClick`; a handler that needs those presses moves to the layer content.                                                                                                                                                         |
+| Compatibility/readiness | No API or default changes. One `[breaking]` behavior change is staged for the next minor and not built: `onClick` stops receiving clicks inside an open layer. Three implementation gaps are listed under Current-state impact. Under a coarse primary pointer the press release fades on the theme's exit tokens, by the spec owner's press-fade ruling (2026-11-04). |
+| Review checks           | Reject a toggle that fires twice for one press, a disabled card that toggles or leaves the tab order, a ring that shifts layout, or a nested control that toggles the card.                                                                                                                                                                                            |
+| Governing rules         | `spec:AST-085/FR1,FR2,FR5,FR6`; `spec:AST-020/FR9`; `architecture:interaction-modality/INV3`; `architecture:component-theming-surface/INV6,INV14`; `architecture:public-component-api/INV5,INV6,INV7,INV8`; the spec owner's press-fade ruling (2026-11-04).                                                                                                           |
 
 This table is a review projection; the body below is authoritative.
 
@@ -58,10 +58,14 @@ toggling, and the selection ring; the caller owns the selection state.
 
 ## Compatibility and migration
 
-- Released default preserved: `yes` until the next minor; then `no` for the
-  caller `onClick` (FR2)
-- Compatibility class: no public prop, default, DOM, or styling output
-  changes; one behavior change staged as `[breaking]` for the next minor
+- Released default preserved: `no` for the touch press release: under a
+  coarse primary pointer it fades on the theme's exit duration and easing,
+  capped at the press controller's clock, by the spec owner's press-fade
+  ruling on 2026-11-04. A fine primary pointer keeps the released timing.
+  Otherwise `yes` until the next minor; then `no` for the caller `onClick`
+  (FR2).
+- Compatibility class: no public prop, default or DOM changes; the touch
+  press release is a nonbreaking behavior change; one behavior change staged as `[breaking]` for the next minor
   (`CLN-0026`): a click inside an open layer inside the card (e.g. a Tooltip
   or HoverCard surface) stops at the layer root and no longer reaches the
   caller's `onClick` (`architecture:layer-runtime` INV17). Until then the
