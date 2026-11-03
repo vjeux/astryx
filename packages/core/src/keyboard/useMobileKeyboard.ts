@@ -35,6 +35,15 @@ import {
 } from './keyboardHeight';
 import {getKeyboardLayoutGuide, keyboardProfileOf} from './keyboardLayoutGuide';
 import type {KeyboardTransition} from './keyboardModel';
+import {
+  FIELD_OFFSET,
+  drawnOffsetOf,
+  followKeyboard,
+  keepFieldAboveKeyboard,
+  registerKeyboardTarget,
+  type KeyboardMove,
+} from './keyboardTarget';
+import {distanceIntoBand} from './revealBand';
 import {rideKeyboard} from './rideKeyboard';
 
 // Chrome on Android pans the page itself if the keyboard still covers the
@@ -47,10 +56,13 @@ const FIELD_CLEARANCE_AT_REPORT = 4;
 /** How a target keeps a focused field above the on-screen keyboard. */
 export interface MobileKeyboardOptions {
   /**
-   * How the target moves the field: `'ride'` reveals it with the scroller
-   * and rides the scroller's content on the keyboard's slide.
+   * How the target moves the field. `'ride'` moves the target with the
+   * keyboard; with `inset`, it reveals the field with the scroller and rides
+   * the scroller's content instead. `'reveal'` scrolls the field into place
+   * in the target, a scroller. Without `move`, the target is a field itself,
+   * which decides where it is when it gains focus.
    */
-  move: 'ride';
+  move?: KeyboardMove;
   /**
    * Reserves the keyboard's inset at the end of the target's scroll area,
    * the first element inside it that `useScrollableArea` marks with
@@ -58,15 +70,15 @@ export interface MobileKeyboardOptions {
    */
   inset?: boolean;
   /** The gap kept between the focused field and the keyboard, CSS px. */
-  offset: number;
+  offset?: number;
   /** Whether the target follows the keyboard at all. */
-  isEnabled: boolean;
+  isEnabled?: boolean;
   /** Whether the target is at its full height, where it reveals fields. */
-  isExpanded: boolean;
+  isExpanded?: boolean;
   /** Whether the target is open. Focus that leaves for nothing parks on it. */
-  isOpen: boolean;
+  isOpen?: boolean;
   /** Whether the page's own scroll is locked under the target. */
-  isPageScrollLocked: boolean;
+  isPageScrollLocked?: boolean;
 }
 
 /** What useMobileKeyboard returns. */
@@ -133,13 +145,14 @@ function isVisualViewportRecovered(): boolean {
 export function useMobileKeyboard(
   targetRef: RefObject<HTMLElement | null>,
   {
+    move,
     inset: reservesInset = false,
-    offset,
-    isEnabled,
-    isExpanded,
-    isOpen,
-    isPageScrollLocked,
-  }: MobileKeyboardOptions,
+    offset = FIELD_OFFSET,
+    isEnabled = true,
+    isExpanded = true,
+    isOpen = true,
+    isPageScrollLocked = false,
+  }: MobileKeyboardOptions = {},
 ): MobileKeyboard {
   // The inset the keyboard takes at the end of the body's content, CSS px.
   // The target lays it out after its content box's children, through a
@@ -192,6 +205,20 @@ export function useMobileKeyboard(
     }
   }, [dismiss, isEnabled, isOpen]);
 
+  // A docked target, a scroller or a field, which moves no inset.
+  useAttachment(
+    targetRef,
+    target => {
+      if (!isEnabled || reservesInset || !isTouch) {
+        return () => {};
+      }
+      return move == null
+        ? keepFieldAboveKeyboard(target, {offset})
+        : followKeyboard(target, {move, offset});
+    },
+    `${isEnabled}|${move}|${reservesInset}|${offset}|${isTouch}`,
+  );
+
   useAttachment(
     targetRef,
     sheet => {
@@ -199,6 +226,8 @@ export function useMobileKeyboard(
       if (!isEnabled || !reservesInset || body == null) {
         return () => {};
       }
+      // A field inside the sheet moves nothing itself.
+      const unregister = registerKeyboardTarget(sheet);
 
       let keyboardGeometry: KeyboardGeometry | null = null;
       // Where a smooth reveal under way is taking the body's scrollTop.
@@ -231,11 +260,7 @@ export function useMobileKeyboard(
       // frame.
       const rideOffset = () => {
         const content = body.firstElementChild;
-        if (!(content instanceof HTMLElement)) {
-          return 0;
-        }
-        const translate = getComputedStyle(content).translate;
-        return parseFloat(translate.split(' ')[1] ?? '') || 0;
+        return content instanceof HTMLElement ? drawnOffsetOf(content) : 0;
       };
       // The keyboard's show the guide plays on its slide right now, if any. At
       // a report, a show whose slide has ended counts too. A busy page can read
@@ -380,9 +405,6 @@ export function useMobileKeyboard(
           measuredBodyRect.bottom,
           obstructionTop - clearance,
         );
-        if (safeBottom <= safeTop) {
-          return;
-        }
 
         // Where the control will be once a smooth reveal under way lands. If
         // that lands the control, a second scroll would overshoot in Firefox.
@@ -392,9 +414,15 @@ export function useMobileKeyboard(
         const pending = smoothDistanceLeft() + rideOffset();
         const controlBottom = measuredControlRect.bottom - pending;
         const controlTop = measuredControlRect.top - pending;
-        if (controlBottom > safeBottom) {
+        const distance = distanceIntoBand(
+          controlTop,
+          controlBottom,
+          safeTop,
+          safeBottom,
+        );
+        if (distance > 0) {
           scrollBodyBy(
-            controlBottom - safeBottom,
+            distance,
             smoothly,
             ride,
             Math.max(
@@ -402,8 +430,8 @@ export function useMobileKeyboard(
               obstructionTop - safeBottom - FIELD_CLEARANCE_AT_REPORT,
             ),
           );
-        } else if (controlTop < safeTop) {
-          scrollBodyBy(controlTop - safeTop, smoothly, ride);
+        } else if (distance < 0) {
+          scrollBodyBy(distance, smoothly, ride);
         }
       };
 
@@ -840,6 +868,7 @@ export function useMobileKeyboard(
       scheduleReveal();
 
       return () => {
+        unregister();
         cancelAnimationFrame(animationFrame);
         stopClaiming?.();
         unsubscribe();
