@@ -39,6 +39,12 @@ export interface ActionGroupTrackingOptions {
   pointerTypes?: ReadonlyArray<PointerKind>;
   /** A press whose target this rejects is not tracked. */
   shouldTrack?: (target: unknown) => boolean;
+  /**
+   * Read when a press begins. While true, the press is still taken, so the
+   * browser makes no click of it, but it paints and runs nothing. UIKit drops
+   * touches during a presentation transition this way.
+   */
+  isInert?: () => boolean;
   /** Off, nothing is attached and nothing is tracked. @default true */
   isEnabled?: boolean;
   /**
@@ -145,7 +151,10 @@ export function useActionGroupTracking(
       switch (recognizer.state) {
         case 'began': {
           const {x, y} = recognizer.location();
-          tracker.begin(x, y, {landed: landedRef.current});
+          tracker.begin(x, y, {
+            inert: optionsRef.current.isInert?.() === true,
+            landed: landedRef.current,
+          });
           break;
         }
         case 'changed': {
