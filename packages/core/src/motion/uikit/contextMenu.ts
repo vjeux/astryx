@@ -2,18 +2,16 @@
 
 /**
  * @file contextMenu.ts
- * @input The motion registry (registerContextMenuTable only)
+ * @input Measurements of UIContextMenuInteraction on iOS 26.2
  * @output `contextMenu`: UIContextMenuInteraction's touch timeline, drift
- *   tolerance, press feedback and commit haptic; `registerContextMenuTable`
+ *   tolerance, held scale and commit haptic
  * @position The context-menu domain of the UIKit constants table. Only
  *   ContextMenu's own modules import it, and the table's barrel does not
  *   re-export it, so only a page that animates a context menu loads it
  *
  * SYNC: When modified, update /packages/core/src/motion/MEASUREMENTS.md and
- * /packages/core/src/ContextMenu/contextMenuPressCurve.ts
+ * /packages/core/src/ContextMenu/contextMenuPress.ts
  */
-
-import {registerMotionTable} from '../roles';
 
 /**
  * UIContextMenuInteraction's touch timeline on iOS 26.2. A context menu is not
@@ -31,27 +29,14 @@ import {registerMotionTable} from '../roles';
  * UIKit counts from the main thread's receipt of the touch, about a frame
  * after the hardware timestamp that a browser stamps. A browser's compositor
  * shows a value about a frame after its time, so the two offsets cancel.
- * Scales are fractions of the view's own size, and rates are per second. The
- * lift and dismissal springs are `springs.contextMenuLift` and
- * `springs.contextMenuDismiss`.
+ * Scales are fractions of the view's own size. The lift and dismissal springs
+ * are `springs.contextMenuLift` and `springs.contextMenuDismiss`.
  *
  * Every leaf has one or more `@source`. A GUESS value also has the `@measure`
  * task that confirms or replaces it. uikit.test.ts enforces both.
  */
 export const contextMenu = {
   press: {
-    /**
-     * When the press feedback starts: UIKit's press observer
-     * (`_UITouchDurationObservingGestureRecognizer`, the context menu's
-     * long-press driver) begins, and the size ramp below starts from 1.
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, recognizer state log and per-frame platter frames,
-     *   Oct 23 2026: the observer began on the first 60 Hz tick after 150 ms
-     *   (at 151.0 ms; the tick before, at 134.3 ms, had not), and a linear fit
-     *   of the platter's model size over 15 frames crosses 1 at 147.9 ms
-     * @measure M-CM6
-     */
-    feedbackOnsetMs: 150,
     /**
      * When the long press commits. The click haptic plays, and from then on
      * the touch belongs to the menu, not to a tap. The menu itself waits for
@@ -92,60 +77,17 @@ export const contextMenu = {
      */
     menuDisplayMs: 735,
     /**
-     * The press feedback's size ramp before the commit: the copy's model
-     * scale grows by this much per second from `feedbackOnsetMs` (to 1.04 at
-     * the commit).
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, per-frame model frames of the press platter over a
-     *   200 × 120 pt view, Oct 23 2026: 0.1594 per second, linear over 15
-     *   frames (rms 4e-5), width and height alike
-     * @measure M-CM2
-     */
-    feedbackRate: 0.16,
-    /**
-     * The ramp after the commit, until the menu takes over the copy. The model
-     * scale is 1 + this × the time since the touch landed. It continues the
-     * first ramp at the commit (0.16 × 0.25 s = 0.10 × 0.4 s).
+     * The size the press copy reaches when the menu displays, as a fraction
+     * of the view. It is the second ramp at `menuDisplayMs`: 1 + 0.1 per
+     * second since the touch. The trigger grows toward it on the theme's
+     * motion tokens, not on UIKit's ramp or spring.
      * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
      *   iPhone 17 Pro, per-frame model frames of the press platter over a
      *   200 × 120 pt view, Oct 23 2026: 0.1001 per second, linear over 19
-     *   frames, zero at the touch (−1.4 ms)
+     *   frames, zero at the touch (−1.4 ms), at 735 ms
      * @measure M-CM2
      */
-    feedbackRateAfterCommit: 0.1,
-    /**
-     * The spring the copy's visible size chases the ramp with; it starts
-     * from rest. The same spring returns the copy to its size when the
-     * finger lifts before the commit.
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, UIViewSpringAnimationBehavior read at
-     *   _animateUsingSpringBehavior:tracking:animations:completion:, Oct 23
-     *   2026: damping ratio 0.6, response 0.4, issued every frame from the
-     *   begin through the commit and once more for an early lift's return
-     */
-    feedbackSpring: {response: 0.4, dampingRatio: 0.6},
-    /**
-     * How much later the screen shows the copy chasing its ramp: the visible
-     * size is `feedbackSpring` chasing the ramp started this long after
-     * `feedbackOnsetMs`. UIKit writes the ramp on a tick, the spring takes it
-     * up on the next, and the screen shows it a tick after that.
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, per-frame presentation frames of the press platter at
-     *   their display times, a long press and a press lifted at 0.25 s,
-     *   Oct 23 2026: `feedbackSpring` from rest chasing the continuous ramp
-     *   fits with the ramp shown from 188 ms (rms 0.027 pt over 48 frames)
-     * @measure M-CM6
-     */
-    feedbackLatencyMs: 38,
-    /**
-     * How much later the screen shows the copy springing back from a lift
-     * before the commit.
-     * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
-     *   iPhone 17 Pro, the same fit, Oct 23 2026: the press lifted at
-     *   266.5 ms (main-thread receipt) springs back from 280.5 ms on screen
-     * @measure M-CM6
-     */
-    returnLatencyMs: 14,
+    heldScale: 1.0735,
   },
   /**
    * The click haptic at the commit, as a vibration where that is the only
@@ -172,18 +114,3 @@ export const contextMenu = {
    */
   reducedMotionFeedback: false,
 } as const;
-
-/**
- * Registers each visual spring and duration above with the motion registry
- * (motion/roles.ts), where ContextMenu's motion reads them. None is a motion
- * role: touch motion stays internal, so no theme retunes them. The commit, the
- * menu's moment and the onset decide who gets the touch: gesture timing, not
- * motion, so they are not registered. Nothing registers on import:
- * ContextMenu's touch code calls it before its first motion (it is
- * idempotent).
- */
-export function registerContextMenuTable(): void {
-  registerMotionTable('contextMenu', contextMenu, {
-    exclude: ['press.commitMs', 'press.menuDisplayMs', 'press.feedbackOnsetMs'],
-  });
-}
