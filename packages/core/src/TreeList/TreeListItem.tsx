@@ -30,6 +30,7 @@ import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
 import {rowPressLayerStyles} from '../privateAttributes/press.stylex';
 import {usePressFeedback} from '../hooks/usePressFeedback';
+import {useTreeExpansionMotion} from './useTreeExpansionMotion';
 import {
   cancelNestedTouchPress,
   hasInteractiveAncestor,
@@ -82,6 +83,12 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
     listStyleType: 'none',
+    // The touch expand's timing, which useTreeExpansionMotion reads: the
+    // chevron's tokens, so the group and the chevron move together. Nothing
+    // on the group transitions.
+    transitionProperty: 'none',
+    transitionDuration: durationVars['--duration-fast'],
+    transitionTimingFunction: easeVars['--ease-standard'],
   },
   treeBranches: {
     paddingInlineStart: spacingVars['--spacing-2'],
@@ -263,7 +270,12 @@ const styles = stylex.create({
     width: spacingVars['--spacing-4'],
     height: spacingVars['--spacing-4'],
     fontSize: spacingVars['--spacing-4'],
-    transitionProperty: 'transform',
+    // Under Reduce Motion the chevron lands at its new angle at once, since a
+    // change of state may not move it.
+    transitionProperty: {
+      default: 'transform',
+      '@media (prefers-reduced-motion: reduce)': 'none',
+    },
     transitionDuration: durationVars['--duration-fast'],
     transitionTimingFunction: easeVars['--ease-standard'],
   },
@@ -364,6 +376,14 @@ export interface TreeListItemInternalProps {
    * leave the tree's keyboard order at once.
    */
   isExiting?: boolean;
+  /**
+   * The tree holds an animated-layout handle, which plays the group's
+   * motion. Without one, the row plays its own touch expand, and a collapse
+   * removes the group at once.
+   */
+  hasAnimatedLayout?: boolean;
+  /** The tree's touch presentation, which the tree reads once for every row. */
+  isTouch?: boolean;
   onToggle?: (id: string) => void;
   density: TreeListDensity;
   /**
@@ -414,6 +434,8 @@ export function TreeListItem({
   ancestorsIsLast,
   isExpanded,
   isExiting = false,
+  hasAnimatedLayout = false,
+  isTouch = false,
   onToggle,
   density,
   variant,
@@ -423,6 +445,10 @@ export function TreeListItem({
   isTabbable,
 }: TreeListItemInternalProps) {
   const pressable = usePressFeedback();
+  const {groupRef} = useTreeExpansionMotion(isExpanded, {
+    isEnabled: !hasAnimatedLayout,
+    isTouch,
+  });
   const t = useComponentTranslator();
   const labelId = useId();
   const descriptionId = useId();
@@ -772,6 +798,7 @@ export function TreeListItem({
       </div>
       {(isExpanded || isExiting) && isRenderable(renderedChildren) && (
         <ul
+          ref={groupRef}
           role="group"
           data-tree-exiting={isExiting ? '' : undefined}
           {...stylex.props(styles.childGroup)}>
