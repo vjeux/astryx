@@ -1,5 +1,4 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
-
 /**
  * @file next transform manifest
  *
@@ -7,4 +6,14 @@
  * this file into the resolved version folder.
  */
 
-export default [];
+import migrateUseMenuPressToRefForm, {
+  meta as migrateUseMenuPressToRefFormMeta,
+} from './migrate-use-menu-press-to-ref-form.mjs';
+
+export default [
+  {
+    name: 'migrate-use-menu-press-to-ref-form',
+    transform: migrateUseMenuPressToRefForm,
+    meta: migrateUseMenuPressToRefFormMeta,
+  },
+];
