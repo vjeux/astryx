@@ -14,7 +14,7 @@
  * - /packages/core/src/BottomSheet/BottomSheet.tsx
  * - /packages/core/src/BottomSheet/BottomSheetPanel.test.tsx
  * - /packages/core/src/BottomSheet/snapOffsets.ts
- * - /packages/core/src/BottomSheet/useMobileKeyboard.ts
+ * - /packages/core/src/keyboard/keyboardHeight.ts
  * - /packages/core/src/BottomSheet/useSheetGestures.ts
  * - /packages/core/src/Layout/container.stylex.ts (bottom-sheet padding chain)
  */
@@ -66,7 +66,7 @@ import {
   resolveSnapPoints,
   type BottomSheetSnapPoint,
 } from './snapOffsets';
-import {useMobileKeyboard} from './useMobileKeyboard';
+import {useMobileKeyboard} from '../keyboard/useMobileKeyboard';
 import {
   scrollPreservationPadding,
   sheetLayoutHeight,
@@ -307,13 +307,29 @@ const styles = stylex.create({
   },
   tallKeyboardBody: {
     scrollPaddingBlockEnd: MOBILE_KEYBOARD_BOTTOM_CLEARANCE,
+  },
+  // The inset the keyboard takes at the end of a Tall sheet's content
+  // (useMobileKeyboard), so its last control can scroll above the keyboard.
+  // It is the content box's last in-flow box, after the content's own
+  // children, not a box after the content. Firefox resolves the content's
+  // `min-height: min-content` as `auto` in the block axis. The content box
+  // then keeps the body's height while its children overflow it. An inset
+  // after that box sat inside the overflow and added no scroll range. In
+  // Firefox for Android, the body's scrollHeight was 1491 with and without a
+  // 357 px inset.
+  tallKeyboardContent: {
     '::after': {
       content: '""',
       display: 'block',
-      blockSize: 'var(--_sheet-keyboard-inset, 0px)',
+      blockSize: 0,
       pointerEvents: 'none',
     },
   },
+  keyboardInset: (inset: number) => ({
+    '::after': {
+      blockSize: inset,
+    },
+  }),
   budget: {
     height: `calc(var(--_sheet-budget) + ${OVERSCROLL_PADDING}px)`,
   },
@@ -525,6 +541,9 @@ export function BottomSheetPanel({
   ...props
 }: BottomSheetPanelProps) {
   const elementRef = useRef<HTMLDivElement | null>(null);
+  const dismissKeyboardRef = useRef<
+    ((focusTarget?: HTMLElement) => void) | null
+  >(null);
   const previousStateRef = useRef(state);
   const reactivatedEntranceRef = useRef(false);
   const onMotionStartRef = useRef(onMotionStart);
@@ -600,7 +619,6 @@ export function BottomSheetPanel({
     dragOffset,
     settledOffset,
     isDragging,
-    isTraveling,
     isDismissedByTouchDrag,
     sheetHeight,
     scrollPreservationInset,
@@ -614,6 +632,10 @@ export function BottomSheetPanel({
     offscreenBlockEndInset: OVERSCROLL_PADDING,
     onDismiss,
     snapHeights,
+    onTravelStart: () => {
+      // Focusing the sheet dismisses the keyboard as the sheet starts to move.
+      dismissKeyboardRef.current?.(elementRef.current ?? undefined);
+    },
     onScrimOpacity,
     hasFixedHeight: consumerHeight != null,
   });
@@ -647,17 +669,27 @@ export function BottomSheetPanel({
     isPresentedRef.current = isPresented;
     sheetRef(isPresented ? elementRef.current : null);
   }, [isPresented, sheetRef]);
-  useMobileKeyboard({
-    bodyRef: bodyElementRef,
-    bottomClearance: MOBILE_KEYBOARD_BOTTOM_CLEARANCE,
-    isEnabled: height === 'tall',
-    isFullyExpanded: settledOffset === 0,
-    isPageScrollLocked,
-    isSheetTraveling: isTraveling,
+  const keyboard = useMobileKeyboard(elementRef, {
+    move: 'ride',
+    inset: true,
+    offset: MOBILE_KEYBOARD_BOTTOM_CLEARANCE,
+    isEnabled: height === 'tall' && isPresented,
+    isExpanded: settledOffset === 0,
     isOpen: isInteractive,
-    isPresented,
-    sheetRef: elementRef,
+    isPageScrollLocked,
   });
+  const keyboardInset = keyboard.inset;
+  const dismissKeyboard = keyboard.dismiss;
+  // The drag's own callback dismisses the keyboard as the sheet starts to
+  // move. It runs in the gesture, so it reads the newest dismiss.
+  dismissKeyboardRef.current = dismissKeyboard;
+  // Syncs the on-screen keyboard with closing: a closing sheet blurs its
+  // focused field, which dismisses the keyboard.
+  useEffect(() => {
+    if (isPresented && !isInteractive) {
+      dismissKeyboard();
+    }
+  }, [dismissKeyboard, isInteractive, isPresented]);
   // Keep controller registration attached to one stable host ref. React
   // detaches an old callback ref when a consumer supplies a new identity; if
   // that public ref were merged with setElement, an ordinary parent rerender
@@ -902,6 +934,10 @@ export function BottomSheetPanel({
             getContentProps<HTMLDivElement>(
               stylex.props(
                 styles.content,
+                height === 'tall' && styles.tallKeyboardContent,
+                height === 'tall' &&
+                  keyboardInset > 0 &&
+                  styles.keyboardInset(keyboardInset),
                 ...container(
                   usesThemePadding
                     ? {useThemeDefault: 'bottom-sheet'}
