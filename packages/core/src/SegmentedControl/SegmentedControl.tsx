@@ -151,9 +151,8 @@ const styles = stylex.create({
   // miss what a moving layer covers.
   lens: {
     // The lifted lens's edge: the theme's low elevation, as on Switch's
-    // lifted thumb. The lens copies the selected surface, which can be the
-    // page's own colour, so without an edge a lifted lens would hide the
-    // track around it.
+    // lifted thumb. The lens copies the selected surface, which can match the
+    // page. Without an edge, a lifted lens hides the track around it.
     '--_segmented-lifted-shadow': shadowVars['--shadow-low'],
     '::before': {
       content: '""',
