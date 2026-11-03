@@ -520,7 +520,7 @@ function useResizableController(
       return;
     }
     const createdWith = optionsRef.current;
-    const resizable = createResizableAs('useResizable', createdWith);
+    const resizable = createResizableAs('useResizable', null, createdWith);
     slot.set({resizable, createdWith});
   }, [slot]);
   useIsomorphicLayoutEffect(() => {
@@ -594,7 +594,7 @@ function useResizableController(
       return entry.resizable;
     }
     const createdWith = optionsRef.current;
-    const resizable = createResizableAs('useResizable', createdWith);
+    const resizable = createResizableAs('useResizable', null, createdWith);
     readResizableInternals(resizable)?.suspend();
     slot.set({resizable, createdWith});
     return resizable;
