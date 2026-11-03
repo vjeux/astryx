@@ -18,6 +18,7 @@ import {
   isInputShield,
   type InputHoldScope,
 } from './inputHold';
+import {markModalOutletHost, subscribeModalOutlets} from './modalOutlet';
 
 function deferred() {
   let resolve: () => void = () => {};
@@ -167,6 +168,35 @@ describe('holdInput', () => {
     expect(already.hasAttribute('inert')).toBe(true);
     expect(shield.isConnected).toBe(false);
     expect(isInHeldLayer(child)).toBe(false);
+  });
+
+  it('leaves a global host in a dismissing layer live, and puts it back above the shield (spec:AST-003 FR16)', async () => {
+    const {layer, child} = mountLayer();
+    const host = document.createElement('div');
+    layer.append(host);
+    const unmark = markModalOutletHost(host);
+    // The last child of the layer when the hosts are told to re-enter.
+    let lastAtEntry: Element | null = null;
+    const unsubscribe = subscribeModalOutlets(change => {
+      if (change === 'entry') {
+        lastAtEntry = layer.lastElementChild;
+      }
+    });
+    const end = deferred();
+    holdInput(layer, {until: end.promise, scope: 'layer'});
+    const shield = layer.lastElementChild as HTMLElement;
+    expect(isInputShield(shield)).toBe(true);
+    expect(child.hasAttribute('inert')).toBe(true);
+    expect(host.hasAttribute('inert')).toBe(false);
+    // The hosts re-enter the top layer after the shield went up, so they
+    // paint above it.
+    expect(lastAtEntry).toBe(shield);
+    end.resolve();
+    await flush();
+    expect(child.hasAttribute('inert')).toBe(false);
+    expect(host.hasAttribute('inert')).toBe(false);
+    unsubscribe();
+    unmark();
   });
 
   it('names a live hold’s shield, and only it, so a hit test can skip it', () => {
