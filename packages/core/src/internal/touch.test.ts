@@ -47,6 +47,24 @@ describe('internal/touch', () => {
     expect(entry.PanGestureRecognizer).toBe(pan.PanGestureRecognizer);
     expect(entry.rubberBand).toBe(band.rubberBand);
     expect(entry.UIKIT_GESTURES).toBe(uikitGestures.UIKIT_GESTURES);
+    const edgePan = await import('../gestures/ScreenEdgePanGestureRecognizer');
+    const resolver = await import('../motion/resolveMotion');
+    const spring = await import('../motion/spring');
+    const uikitNavigation = await import('../motion/uikit/navigation');
+    const uikitSprings = await import('../motion/uikit/springs');
+    expect(entry.ScreenEdgePanGestureRecognizer).toBe(
+      edgePan.ScreenEdgePanGestureRecognizer,
+    );
+    expect(entry.resolveMotion).toBe(resolver.resolveMotion);
+    expect(entry.rubberBandInverse).toBe(band.rubberBandInverse);
+    expect(entry.solveSpring).toBe(spring.solveSpring);
+    expect(entry.toSpring).toBe(spring.toSpring);
+    expect(entry.navigation).toBe(uikitNavigation.navigation);
+    expect(entry.registerNavigationTable).toBe(
+      uikitNavigation.registerNavigationTable,
+    );
+    expect(entry.springs).toBe(uikitSprings.springs);
+    expect(entry.registerSpringsTable).toBe(uikitSprings.registerSpringsTable);
     expect(entry.TOUCH_QUERY).toBe(touchQueries.TOUCH_QUERY);
     // An identity check passes when both sides are undefined, so each name
     // must also be defined.
@@ -58,10 +76,23 @@ describe('internal/touch', () => {
       'cubicBezier',
       'PanGestureRecognizer',
       'rubberBand',
+      'ScreenEdgePanGestureRecognizer',
+      'resolveMotion',
+      'rubberBandInverse',
+      'solveSpring',
+      'toSpring',
+      'registerNavigationTable',
+      'registerSpringsTable',
     ]) {
       expect(typeof entry[name], name).toBe('function');
     }
-    for (const name of ['timing', 'UIKIT_GESTURES', 'TOUCH_QUERY']) {
+    for (const name of [
+      'timing',
+      'UIKIT_GESTURES',
+      'TOUCH_QUERY',
+      'navigation',
+      'springs',
+    ]) {
       expect(entry[name], name).toBeDefined();
     }
     // No internal factory shares a public factory's name
