@@ -96,6 +96,23 @@ function opensPickerOverPage(target: EventTarget | null): boolean {
   );
 }
 
+// Whether focus on `target` can keep a keyboard up: a field, or a frame or a
+// shadow host, whose own field the guide cannot see.
+function mayKeepKeyboard(target: Element | null): boolean {
+  if (target == null) {
+    return false;
+  }
+  return (
+    bringsUpKeyboard(target) ||
+    target.tagName === 'IFRAME' ||
+    target.tagName === 'FRAME' ||
+    target.tagName === 'OBJECT' ||
+    target.tagName === 'EMBED' ||
+    target.shadowRoot != null ||
+    target.tagName.includes('-')
+  );
+}
+
 const guides = new WeakMap<Window, KeyboardLayoutGuide>();
 
 /**
@@ -116,6 +133,13 @@ const guides = new WeakMap<Window, KeyboardLayoutGuide>();
  * then reports the keyboard gone for a moment and then back. So a hide
  * reported while a field that just got focus still has it waits until the
  * move settles.
+ *
+ * A busy page reads Chrome's reports late, after Gboard's slide. So once a
+ * hide predicted from a blur is under way, a report of the keyboard part of
+ * the way down, or still up, starts nothing. Only the report of the keyboard
+ * gone confirms the hide. Focus that comes back still turns it around. Focus
+ * in a frame or a shadow host can keep a keyboard up that the guide cannot
+ * see, so there the viewport decides, as before.
  *
  * @example
  * ```
@@ -140,6 +164,13 @@ function createGuide(win: Window): KeyboardLayoutGuide {
   let model: KeyboardModel = createKeyboardModel(getKeyboardHeight(win));
   let verifyTimer: ReturnType<typeof setTimeout> | null = null;
   let detach: (() => void) | null = null;
+  // Whether a hide predicted from a blur is under way with nothing focused
+  // that can keep a keyboard up. Then only Chrome's report of the keyboard
+  // gone counts.
+  const awaitsHide = (): boolean =>
+    model.transition.kind === 'hide' &&
+    model.transition.predicted &&
+    !mayKeepKeyboard(win.document.activeElement);
 
   const publish = (transition: KeyboardTransition | null) => {
     if (transition == null) {
@@ -161,7 +192,11 @@ function createGuide(win: Window): KeyboardLayoutGuide {
     verifyTimer = setTimeout(
       () => {
         verifyTimer = null;
-        publish(model.verify(getKeyboardHeight(win), win.performance.now()));
+        const inset = getKeyboardHeight(win);
+        if (inset != null && inset >= 0.5 && awaitsHide()) {
+          return;
+        }
+        publish(model.verify(inset, win.performance.now()));
       },
       Math.max(0, due - win.performance.now()),
     );
@@ -203,6 +238,9 @@ function createGuide(win: Window): KeyboardLayoutGuide {
           handoffTimer = null;
           publish(model.report(getKeyboardHeight(win), settled));
         }, settled - time);
+        return null;
+      }
+      if (height >= 0.5 && awaitsHide()) {
         return null;
       }
       return model.report(height, time);
