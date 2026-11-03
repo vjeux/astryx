@@ -824,10 +824,9 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
  * Run the menu press model on `menu`, with no React. The row under a release
  * acts, and the highlight follows a held pointer. A mouse press on `trigger`
  * opens the menu; a finger held on it opens it after the long-press delay.
- * Destroy it to remove every listener it added. `update` changes its options
- * or trigger from the next event. The press starts after the page's own
- * press-down handlers. A press-down that one of them stops, or cancels inside
- * the menu, starts no press. The trigger must be in the menu's document.
+ * Destroy it to remove every listener it added. It keeps the options
+ * it is created with: to change them or the trigger, destroy it and create
+ * another.
  *
  * - The document tracks the pointer by `pointerId`. A finger's events stay
  *   with the element it landed on, so the menu never sees a finger that slid
@@ -892,13 +891,11 @@ export function createMenuPress(
   const hadMarker = menu.hasAttribute(MENU_PRESS_MARKER);
   menu.setAttribute(MENU_PRESS_MARKER, '');
 
-  // The press-down listeners sit on the menu's document, in the bubble phase.
-  // The page's own handlers on the menu and the trigger run first, React's
-  // delegated ones included, as a handler composed before the press did. A
-  // press-down that one of them stops, or cancels inside the menu, starts no
-  // press. A handler that forwards an event to the handle methods takes it
-  // first, so the press sees each event once.
-  const pressDocument = menu.ownerDocument;
+  const onMenuPointerDown = (event: PointerEvent) =>
+    core.handleMenuPointerDown(event);
+  // A trigger event the press took, from its own listener or a caller's
+  // handler. The listener on the trigger runs before React's delegated one,
+  // so the press takes an event that a caller also forwards only once.
   const taken = new WeakSet<Event>();
   const take = (event: Event): boolean => {
     if (isDestroyed || taken.has(event)) {
@@ -907,30 +904,33 @@ export function createMenuPress(
     taken.add(event);
     return true;
   };
-  const onPointerDown = (event: PointerEvent) => {
-    const path = event.composedPath();
-    if (trigger != null && path.includes(trigger)) {
-      if (take(event)) {
-        core.handleTriggerPointerDown(event);
-      }
-      return;
-    }
-    if (path.includes(menu) && !event.defaultPrevented && take(event)) {
-      core.handleMenuPointerDown(event);
+  const onTriggerPointerDown = (event: PointerEvent) => {
+    if (take(event)) {
+      core.handleTriggerPointerDown(event);
     }
   };
-  const onContextMenu = (event: MouseEvent) => {
-    if (
-      trigger != null &&
-      event.composedPath().includes(trigger) &&
-      take(event)
-    ) {
+  const onTriggerContextMenu = (event: MouseEvent) => {
+    if (take(event)) {
       core.handleTriggerContextMenu(event);
     }
   };
-  pressDocument.addEventListener('pointerdown', onPointerDown);
-  pressDocument.addEventListener('contextmenu', onContextMenu);
-  trigger = current.trigger ?? null;
+  menu.addEventListener('pointerdown', onMenuPointerDown);
+
+  const setTrigger = (next: HTMLElement | null) => {
+    if (next === trigger) {
+      return;
+    }
+    if (trigger != null) {
+      trigger.removeEventListener('pointerdown', onTriggerPointerDown);
+      trigger.removeEventListener('contextmenu', onTriggerContextMenu);
+    }
+    trigger = next;
+    if (trigger != null) {
+      trigger.addEventListener('pointerdown', onTriggerPointerDown);
+      trigger.addEventListener('contextmenu', onTriggerContextMenu);
+    }
+  };
+  setTrigger(current.trigger ?? null);
 
   return {
     isTriggerClickFromPress: () => core.isTriggerClickFromPress(),
@@ -941,7 +941,7 @@ export function createMenuPress(
       }
       current = {...current, ...next};
       if ('trigger' in next) {
-        trigger = next.trigger ?? null;
+        setTrigger(next.trigger ?? null);
       }
     },
     handleTriggerPointerDown(event) {
@@ -962,9 +962,8 @@ export function createMenuPress(
       disconnect();
       releaseOwn();
       releasePage();
-      pressDocument.removeEventListener('pointerdown', onPointerDown);
-      pressDocument.removeEventListener('contextmenu', onContextMenu);
-      trigger = null;
+      menu.removeEventListener('pointerdown', onMenuPointerDown);
+      setTrigger(null);
       if (!hadMarker) {
         menu.removeAttribute(MENU_PRESS_MARKER);
       }
