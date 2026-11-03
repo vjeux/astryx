@@ -235,6 +235,7 @@ import {useLocale} from '../i18n';
 import {formatEditableNumber} from './numberParser';
 import {parseNumberInput, resolveNumberInputCommit} from './numberInputCommit';
 import type {FieldStatusPlacement} from '../Field/fieldStatusPlacement';
+import {useMobileKeyboard} from '../keyboard/useMobileKeyboard';
 import {
   registerEnglishFallback,
   useComponentTranslator,
@@ -617,6 +618,8 @@ export function NumberInput({
   const statusMessageID = useId();
   const unitsID = useId();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // The on-screen keyboard never covers the focused field.
+  useMobileKeyboard(inputRef);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputGroup = useInputGroup();
   const inputGroupState = use(InputGroupInternalContext);
