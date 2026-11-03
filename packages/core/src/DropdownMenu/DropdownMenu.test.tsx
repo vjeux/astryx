@@ -36,6 +36,7 @@ import {__resetInteractionModalityForTest} from '../utils/interactionModality';
 import {focusOutlineStyles} from '../utils/focusOutline.stylex';
 import {spacingVars} from '../theme/tokens.stylex';
 import {COMPACT_TOUCH_PRESENTATION_QUERY} from '../hooks/useAdaptivePresentation';
+import {MENU_PRESS_LONG_PRESS_MS} from '../hooks/createMenuPress';
 
 // Mock showPopover and hidePopover methods since they're not implemented in jsdom
 beforeEach(() => {
@@ -3037,6 +3038,33 @@ describe('DropdownMenu press model', () => {
     expect(onPick).toHaveBeenCalledTimes(1);
     expect(onPick).toHaveBeenCalledWith('Duplicate');
     expect(HTMLElement.prototype.hidePopover).toHaveBeenCalled();
+  });
+
+  it('a finger held on the trigger opens nothing while a page handler cancels its press-down', () => {
+    vi.useFakeTimers();
+    try {
+      const trigger = renderMenu(vi.fn());
+      const cancel = (event: Event) => event.preventDefault();
+      document.addEventListener('pointerdown', cancel);
+      try {
+        fireEvent.pointerDown(trigger, {pointerType: 'touch', pointerId: 7});
+      } finally {
+        document.removeEventListener('pointerdown', cancel);
+      }
+      act(() => {
+        vi.advanceTimersByTime(MENU_PRESS_LONG_PRESS_MS);
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      fireEvent.pointerUp(trigger, {pointerType: 'touch', pointerId: 7});
+      // The same hold with no handler opens the menu.
+      fireEvent.pointerDown(trigger, {pointerType: 'touch', pointerId: 8});
+      act(() => {
+        vi.advanceTimersByTime(MENU_PRESS_LONG_PRESS_MS);
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('a press-opened menu returns focus to its trigger, not to the control focused before the press', async () => {
