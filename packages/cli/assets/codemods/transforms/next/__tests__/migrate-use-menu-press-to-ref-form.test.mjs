@@ -124,6 +124,10 @@ return <><b ref={triggerRef} {...press.triggerProps} /><ul ref={menuRef} {...pre
       // A trigger whose menu renders in a render callback.
       `const press = useMenuPress({menuRef, triggerRef, itemSelector: ITEM});
 return <Popover render={() => <ul ref={menuRef} {...press.menuProps} />} />;`,
+      // A trigger whose menu is a child of a component element, which may hold
+      // it back while closed.
+      `const press = useMenuPress({menuRef, triggerRef, itemSelector: ITEM});
+return <><b ref={triggerRef} {...press.triggerProps} /><Popover isOpen={open}><ul ref={menuRef} {...press.menuProps} /></Popover></>;`,
       // A trigger whose menu is a JSX element passed as a prop.
       `const press = useMenuPress({menuRef, triggerRef, itemSelector: ITEM});
 return <Popover content={<ul ref={menuRef} {...press.menuProps} />} />;`,
