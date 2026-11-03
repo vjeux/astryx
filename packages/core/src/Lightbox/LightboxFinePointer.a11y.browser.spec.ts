@@ -244,14 +244,15 @@ test('the zoom target takes its touches as on a phone where the primary pointer 
 test('a gallery takes its touches as on a phone where the primary pointer is fine too', async ({
   page,
 }) => {
-  // The track, the zoom stage's surface, claims its touches, and the pager's
-  // viewport its horizontal pan, as under a coarse pointer.
+  // The current photo's row claims its touches, and the track, the zoom
+  // stage's surface, leaves only the page's pinch-zoom, as under a coarse
+  // pointer. The pager's viewport claims its horizontal pan.
   const {current} = await openGallery(page);
   expect(await touchActionsAbove(current)).toEqual([
     'auto',
-    'auto',
-    'auto',
     'none',
+    'auto',
+    'pinch-zoom',
     'pan-y pinch-zoom',
     'auto',
     'auto',

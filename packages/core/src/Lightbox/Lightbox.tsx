@@ -688,6 +688,8 @@ export function Lightbox({
   // the photo still fires a click there. Past UIKit's tap movement limit, that
   // click is no click.
   const pressRef = useRef<{x: number; y: number} | null>(null);
+  // Whether the last first finger landed on a gallery's caption.
+  const pressOnCaptionRef = useRef(false);
   const handleBackdropClick = useCallback(
     (e: ReactMouseEvent<HTMLDialogElement>) => {
       if (didDragRef.current) {
@@ -817,6 +819,8 @@ export function Lightbox({
     isEnabled: isOpen && isZoomTarget,
     onTapOutside: handleClose,
     onDragStart,
+    // A pinch whose first finger lands on a gallery's caption is the page's.
+    shouldBeginPinch: () => !pressOnCaptionRef.current,
   });
   // A gallery pages like Photos. A drag or a flick moves between items on a
   // UIKit paging scroll view's release: one page at most, with Photos' 40 pt
@@ -1098,6 +1102,12 @@ export function Lightbox({
                     didDragRef.current = false;
                     pointerTypeRef.current = e.pointerType;
                     pressRef.current = {x: e.clientX, y: e.clientY};
+                    if (e.isPrimary) {
+                      const target = e.target as Element;
+                      pressOnCaptionRef.current =
+                        target.closest('[data-lightbox-page]') != null &&
+                        target.closest('[data-lightbox-page-media]') == null;
+                    }
                   }}
                   onDoubleClick={
                     isZoomTarget

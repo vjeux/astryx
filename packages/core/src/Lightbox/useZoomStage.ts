@@ -62,6 +62,8 @@ export interface UseZoomStageOptions {
   onTapOutside?: () => void;
   /** A pan began (a release over the backdrop must not close). */
   onDragStart?: () => void;
+  /** Whether a pinch may begin. False leaves the fingers to the page's zoom. */
+  shouldBeginPinch?: () => boolean;
 }
 
 interface PinchSession {
@@ -187,10 +189,13 @@ export function useZoomStage(
     () => true,
   );
   const isMovingRef = useRef(isMoving);
+  const pinchShouldBeginRef = useRef<() => boolean>(() => true);
+  const {shouldBeginPinch} = options;
   useIsomorphicLayoutEffect(() => {
+    pinchShouldBeginRef.current = shouldBeginPinch ?? (() => true);
     panShouldBeginRef.current = pan => {
       if (pan.numberOfTouches > 1) {
-        return true;
+        return pinchShouldBeginRef.current();
       }
       const geometry = measure();
       if (geometry == null || !isZoomed(geometry, current())) {
@@ -214,6 +219,7 @@ export function useZoomStage(
     const pinch = new PinchGestureRecognizer({
       name: 'Lightbox.zoomPinch',
       allowedPointerTypes: PINCH_POINTERS,
+      shouldBegin: () => pinchShouldBeginRef.current(),
     });
     // A zoomed photo is a scroll view: its coast reads the pan's scroll-view
     // release (`scrollVelocity()`), so it coasts as far as UIKit's.
