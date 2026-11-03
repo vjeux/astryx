@@ -628,6 +628,7 @@ export function MonthScroller({
               onDayFocus={handleDayFocus}
               hasTabStop
               paneStyle={styles.paneSnap}
+              hasSelectionFade
             />
           ))}
       </div>
