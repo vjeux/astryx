@@ -35,15 +35,15 @@ system_specs: [spec:AST-009, spec:AST-085, spec:AST-086]
 
 ## Contract at a glance
 
-| Area                    | Contract                                                                                                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Public contract         | A 64px square image preview with `src`, `alt`, `label`, `isLoading`, `isDisabled`, an optional `onClick` open action, and an optional `onRemove` action revealed per `showRemoveOn`. |
-| Behavior                | The preview shows a skeleton, the image, an upload overlay, or a placeholder; it is a named group whose open and remove actions are separate buttons.                                |
-| End-user impact         | Screen-reader users hear the file and image in one group name and reach "Open …" and "Remove …" buttons; keyboard and touch users can always reach a hover-revealed remove button.   |
-| Builder impact          | None; the record describes shipped behavior.                                                                                                                                         |
-| Compatibility/readiness | Released behavior recorded as current; no API, default, or output changes. Six implementation gaps are listed under Current-state impact.                                            |
-| Review checks           | Reject a hover-only remove button that leaves the tab order, a name on a roleless element, an image exposed without `alt`, or a busy spinner that announces itself.                  |
-| Governing rules         | `spec:AST-085/FR1`; `spec:AST-086/FR8`; WCAG 2.2 2.5.8; `architecture:public-component-api/INV5,INV6,INV8`; `architecture:internationalization/INV1a`.                               |
+| Area                    | Contract                                                                                                                                                                                                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public contract         | A 64px square image preview with `src`, `alt`, `label`, `isLoading`, `isDisabled`, an optional `onClick` open action, and an optional `onRemove` action revealed per `showRemoveOn`.                                                                                             |
+| Behavior                | The preview shows a skeleton, the image, an upload overlay, or a placeholder; it is a named group whose open and remove actions are separate buttons.                                                                                                                            |
+| End-user impact         | Screen-reader users hear the file and image in one group name and reach "Open …" and "Remove …" buttons; keyboard and touch users can always reach a hover-revealed remove button.                                                                                               |
+| Builder impact          | None; the record describes shipped behavior.                                                                                                                                                                                                                                     |
+| Compatibility/readiness | Released behavior recorded as current; no API, default, or output changes. Six implementation gaps are listed under Current-state impact. Under a coarse primary pointer the press release fades on the theme's exit tokens, by the spec owner's press-fade ruling (2026-11-04). |
+| Review checks           | Reject a hover-only remove button that leaves the tab order, a name on a roleless element, an image exposed without `alt`, or a busy spinner that announces itself.                                                                                                              |
+| Governing rules         | `spec:AST-085/FR1`; `spec:AST-086/FR8`; WCAG 2.2 2.5.8; `architecture:public-component-api/INV5,INV6,INV8`; `architecture:internationalization/INV1a`; the spec owner's press-fade ruling (2026-11-04).                                                                          |
 
 This table is a review projection; the body below is authoritative.
 
@@ -56,9 +56,12 @@ action.
 
 ## Compatibility and migration
 
-- Released default preserved: `yes`
-- Compatibility class: records shipped behavior; no public prop, default, DOM,
-  or styling output changes
+- Released default preserved: `no` for the touch press release: under a
+  coarse primary pointer it fades on the theme's exit duration and easing,
+  capped at the press controller's clock, by the spec owner's press-fade
+  ruling on 2026-11-04. A fine primary pointer keeps the released timing.
+- Compatibility class: nonbreaking behavior change; no public prop, default
+  or DOM changes
 - Controlled/uncontrolled behavior: not applicable; image-failure tracking is
   internal state
 - Migration decision: none

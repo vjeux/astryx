@@ -50,15 +50,15 @@ system_specs: [spec:AST-005, spec:AST-009, spec:AST-085]
 
 ## Contract at a glance
 
-| Area                    | Contract                                                                                                                                                                              |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public contract         | A Card with a required `label` and either `onClick` (action) or `href` (navigation), plus `isDisabled` and Card's padding, variant, elevation, and size inputs.                       |
-| Behavior                | A visually hidden native button or link owns the card's action; the whole card surface activates it, while nested controls and selected text keep their own outcomes.                 |
-| End-user impact         | People can activate a card from anywhere on it, by pointer or keyboard, and a disabled card stays reachable and announced while doing nothing.                                        |
-| Builder impact          | None; the record describes shipped behavior.                                                                                                                                          |
-| Compatibility/readiness | Released behavior recorded as current; no API, default, or output changes. Two implementation gaps are listed under Current-state impact.                                             |
-| Review checks           | Reject a live destination while disabled, duplicate activation, activation from a nested control or selected text, a destination that skips the shared decision, or lost focus paint. |
-| Governing rules         | `family:navigation-destinations/FR1,FR3–FR5`; `architecture:interaction-modality/INV2–INV5`; `architecture:public-component-api/INV5–INV8`; `spec:AST-085` FR1, FR2, FR5, FR6.        |
+| Area                    | Contract                                                                                                                                                                                                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public contract         | A Card with a required `label` and either `onClick` (action) or `href` (navigation), plus `isDisabled` and Card's padding, variant, elevation, and size inputs.                                                                                                                  |
+| Behavior                | A visually hidden native button or link owns the card's action; the whole card surface activates it, while nested controls and selected text keep their own outcomes.                                                                                                            |
+| End-user impact         | People can activate a card from anywhere on it, by pointer or keyboard, and a disabled card stays reachable and announced while doing nothing.                                                                                                                                   |
+| Builder impact          | None; the record describes shipped behavior.                                                                                                                                                                                                                                     |
+| Compatibility/readiness | Released behavior recorded as current; no API, default, or output changes. Two implementation gaps are listed under Current-state impact. Under a coarse primary pointer the press release fades on the theme's exit tokens, by the spec owner's press-fade ruling (2026-11-04). |
+| Review checks           | Reject a live destination while disabled, duplicate activation, activation from a nested control or selected text, a destination that skips the shared decision, or lost focus paint.                                                                                            |
+| Governing rules         | `family:navigation-destinations/FR1,FR3–FR5`; `architecture:interaction-modality/INV2–INV5`; `architecture:public-component-api/INV5–INV8`; `spec:AST-085` FR1, FR2, FR5, FR6; the spec owner's press-fade ruling (2026-11-04).                                                  |
 
 This table is a review projection; the body below is authoritative.
 
@@ -69,9 +69,12 @@ without taking activation away from the interactive content inside it.
 
 ## Compatibility and migration
 
-- Released default preserved: `yes`
-- Compatibility class: records shipped behavior; no public prop, default,
-  DOM, target, or styling output changes
+- Released default preserved: `no` for the touch press release: under a
+  coarse primary pointer it fades on the theme's exit duration and easing,
+  capped at the press controller's clock, by the spec owner's press-fade
+  ruling on 2026-11-04. A fine primary pointer keeps the released timing.
+- Compatibility class: nonbreaking behavior change; no public prop, default,
+  DOM, or target changes
 - Controlled/uncontrolled behavior: not applicable
 - Migration decision: none
 
