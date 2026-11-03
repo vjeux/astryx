@@ -17,7 +17,9 @@
  */
 
 import {useCallback, useRef, useState} from 'react';
+import {useIsHydrating} from '../hooks/useIsHydrating';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
+import {useSettledOpen} from '../hooks/useSettledOpen';
 import {alertController} from '../motion/uikit/alert';
 
 /** A dialog that misses its exit's end still closes this long after it. */
@@ -108,11 +110,15 @@ export function useAlertMotion({
     setIsLeaving(!isOpen && isEnabled);
   }
   const isPresented = isOpen || isLeaving;
+  // An alert open in the server markup was there on page load: after
+  // hydration it opens at rest, as Dialog does, and later opens enter.
+  const isHydrating = useIsHydrating();
+  const [settledOpen] = useSettledOpen(isOpen, isOpen && !isHydrating, false);
   const look: AlertLook = !isEnabled
     ? 'none'
     : isLeaving
       ? 'exit'
-      : isReopened
+      : isReopened || (settledOpen && isOpen)
         ? 'settled'
         : 'entrance';
 

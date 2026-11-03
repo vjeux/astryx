@@ -667,7 +667,7 @@ describe('AlertDialog action tracking', () => {
     expect(widthOf()).toContain('--x-width: 400px');
   });
 
-  it('under a finger, while the alert fades out, runs nothing: a click or Enter on an action, Cancel, or Escape', async () => {
+  it('under a finger, while the alert fades out, runs nothing: a click on an action or Cancel, or Escape', async () => {
     const {onOpenChange, onAction, cancel, action, close} = renderOpen();
     await completePresentation();
     const dialog = screen.getByRole('alertdialog');

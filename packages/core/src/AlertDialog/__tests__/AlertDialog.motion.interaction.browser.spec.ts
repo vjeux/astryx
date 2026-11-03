@@ -21,16 +21,21 @@ import {
 } from '@playwright/test';
 import {
   blockMainThread,
+  CONTROL_RGB,
   frames,
   openStory,
+  startBusyControl,
   startScreencast,
+  trackMarker,
   touchDriver,
   waitForAnimation,
   waitForRest,
   withStorybook,
   writeEvidence,
+  type CastFrame,
   type Point,
   type TouchDriver,
+  type TrackedFrame,
 } from '@astryxdesign/interaction-harness';
 import {alertController} from '../../motion/uikit/alert';
 
@@ -306,47 +311,106 @@ function progressAt(look: Look, from: Look, to: Look) {
 }
 
 /**
- * Frames the screencast delivered inside a window, judged at its own cadence,
- * as the harness's busy-window verdict judges them: the median interval
- * between the frames around the window (a loaded machine's screencast can
- * deliver one frame in several), the frames that cadence makes room for, and
- * the longest gap in those intervals. A main-thread animation delivers no
- * frame for the whole block.
+ * The mean luminance of `region` (CSS px) in each screencast frame. Decoding
+ * runs in a scratch page of the same browser, as `trackMarker`'s does.
  */
-function cadence(
-  frameTimes: ReadonlyArray<number>,
-  window: {from: number; to: number},
-): {
-  frames: number;
-  expected: number;
-  cadenceMs: number;
-  longestGapMs: number;
-  longestGapFrames: number;
-} {
-  const inside = frameTimes.filter(t => t >= window.from && t <= window.to);
-  const edges = [window.from, ...inside, window.to];
-  let longestGapMs = 0;
-  for (let i = 1; i < edges.length; i += 1) {
-    longestGapMs = Math.max(longestGapMs, edges[i] - edges[i - 1]);
+async function trackLuma(
+  page: Page,
+  castFrames: ReadonlyArray<CastFrame>,
+  region: {x: number; y: number; width: number; height: number},
+): Promise<{t: number; luma: number}[]> {
+  const scratch = await page.context().newPage();
+  try {
+    const out: {t: number; luma: number}[] = [];
+    for (let i = 0; i < castFrames.length; i += 12) {
+      const batch = castFrames.slice(i, i + 12);
+      const values = await scratch.evaluate(
+        async ({items, box}) => {
+          const results: number[] = [];
+          for (const item of items) {
+            const blob = await (
+              await fetch(`data:image/${item.format};base64,${item.data}`)
+            ).blob();
+            const bitmap = await createImageBitmap(blob);
+            const scale = bitmap.width / item.viewportWidth;
+            const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+            const context = canvas.getContext('2d');
+            if (context == null) {
+              throw new Error('no 2d context');
+            }
+            context.drawImage(bitmap, 0, 0);
+            const {data} = context.getImageData(
+              Math.round(box.x * scale),
+              Math.round(box.y * scale),
+              Math.max(1, Math.round(box.width * scale)),
+              Math.max(1, Math.round(box.height * scale)),
+            );
+            let sum = 0;
+            for (let o = 0; o < data.length; o += 4) {
+              sum +=
+                0.2126 * data[o] + 0.7152 * data[o + 1] + 0.0722 * data[o + 2];
+            }
+            results.push(sum / (data.length / 4));
+          }
+          return results;
+        },
+        {
+          items: batch.map(f => ({
+            data: f.data,
+            format: f.format,
+            viewportWidth: f.viewportWidth,
+          })),
+          box: region,
+        },
+      );
+      values.forEach((luma, k) => out.push({t: batch[k].t, luma}));
+    }
+    return out;
+  } finally {
+    await scratch.close();
   }
-  const around = frameTimes.filter(
-    t => t >= window.from - 250 && t <= window.to + 250,
-  );
-  const intervals = around
-    .slice(1)
-    .map((t, i) => t - around[i])
-    .sort((a, b) => a - b);
-  const cadenceMs =
-    intervals.length >= 4
-      ? intervals[Math.floor(intervals.length / 2)]
-      : 1000 / 60;
-  return {
-    frames: inside.length,
-    expected: Math.floor((window.to - window.from) / cadenceMs),
-    cadenceMs,
-    longestGapMs,
-    longestGapFrames: Math.round(longestGapMs / cadenceMs),
-  };
+}
+
+/**
+ * Judges the alert against the compositor control in one busy window, as
+ * `busyWindowProof` judges a moving element against it: read from the same
+ * screencast frames, the alert changes on every frame the control moved, and
+ * stalls no longer than the control does. On a two-core runner the block's
+ * spin starves the compositor and the screencast alike, so a frame rate is no
+ * reference there.
+ */
+function judgeAgainstControl(
+  alert: ReadonlyArray<{t: number; luma: number}>,
+  control: ReadonlyArray<TrackedFrame>,
+  window: {from: number; to: number},
+) {
+  let controlMoved = 0;
+  let missed = 0;
+  let alertStall = 0;
+  let controlStall = 0;
+  let longestAlertStall = 0;
+  let longestControlStall = 0;
+  for (let i = 1; i < alert.length; i += 1) {
+    if (alert[i].t < window.from || alert[i].t > window.to) {
+      continue;
+    }
+    const before = control[i - 1].box;
+    const now = control[i].box;
+    const controlMoves =
+      before != null && now != null && Math.abs(now.x - before.x) > 0.5;
+    const alertMoves = Math.abs(alert[i].luma - alert[i - 1].luma) > 0.05;
+    controlStall = controlMoves ? 0 : controlStall + 1;
+    alertStall = alertMoves ? 0 : alertStall + 1;
+    longestControlStall = Math.max(longestControlStall, controlStall);
+    longestAlertStall = Math.max(longestAlertStall, alertStall);
+    if (controlMoves) {
+      controlMoved += 1;
+      if (!alertMoves) {
+        missed += 1;
+      }
+    }
+  }
+  return {controlMoved, missed, longestAlertStall, longestControlStall};
 }
 
 test.describe('under a finger', () => {
@@ -537,7 +601,7 @@ test.describe('under a finger', () => {
     expect(after.clicks).toEqual(['Cancel']);
   });
 
-  test('present and dismiss keep presenting frames while the main thread is blocked', async ({
+  test('present and dismiss keep moving through a 1 s main-thread block, against a compositor control', async ({
     page,
     browserName,
   }, testInfo) => {
@@ -546,14 +610,17 @@ test.describe('under a finger', () => {
       'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
     );
     const {driver, trigger, dialog} = await openPage(page);
-    // Both motions run 2 s here, so the 1 s block always lands inside them,
-    // however late it starts on a loaded runner.
+    // Both motions run 2 s on straight curves here, so the 1 s block always
+    // lands inside them. An opaque dim makes every frame of them change the
+    // alert's pixels by over one level, which a lossless cast shows.
     await page.addStyleTag({
-      content: `dialog { --duration-medium-max: ${BUSY_MS}ms !important; --duration-exit: ${BUSY_MS}ms !important; }`,
+      content: `dialog { --duration-medium-max: ${BUSY_MS}ms !important; --duration-exit: ${BUSY_MS}ms !important; --ease-standard: linear !important; --ease-exit: linear !important; --color-overlay: rgb(0 0 0) !important; }`,
     });
-    const proofs: Record<string, ReturnType<typeof cadence>> = {};
+    // The control shows what the compositor presented in each block.
+    const control = await startBusyControl(page);
+    const proofs: Record<string, ReturnType<typeof judgeAgainstControl>> = {};
     for (const phase of ['present', 'dismiss'] as const) {
-      const cast = await startScreencast(page, {format: 'jpeg', quality: 40});
+      const cast = await startScreencast(page, {format: 'png'});
       await driver.tap(
         await centerOf(
           phase === 'present'
@@ -562,11 +629,29 @@ test.describe('under a finger', () => {
         ),
       );
       const [running] = await waitForAnimation(dialog, {minProgressMs: 16});
+      if (phase === 'present') {
+        // Above the alert, which opened after the control, and presented
+        // there before the block holds the main thread.
+        await control.raise();
+        await frames(page, 3);
+      }
+      const rest = await dialog.evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
+      });
       const block = await blockMainThread(page, 1000);
       const castFrames = await cast.stop();
       expect(msOf((await timingOf(dialog)).duration)).toBe(BUSY_MS);
-      proofs[phase] = cadence(
-        castFrames.map(f => f.t),
+      // The middle of the alert, inside its smallest box.
+      const region = {
+        x: rest.x + rest.width * 0.3,
+        y: rest.y + rest.height * 0.3,
+        width: rest.width * 0.4,
+        height: rest.height * 0.4,
+      };
+      proofs[phase] = judgeAgainstControl(
+        await trackLuma(page, castFrames, region),
+        await trackMarker(page, castFrames, {rgb: CONTROL_RGB}),
         {
           from: block.from + 20,
           to: Math.min(block.to, running.from + BUSY_MS) - 20,
@@ -579,23 +664,23 @@ test.describe('under a finger', () => {
         await expect(dialog).toBeHidden();
       }
     }
+    await control.remove();
     await writeEvidence(
       'busy-main-thread/alertdialog',
       {[`${testInfo.project.name}.json`]: JSON.stringify(proofs, null, 1)},
       testInfo,
     );
-    // Judged at the screencast's own cadence: something to judge, nearly every
-    // frame that cadence makes room for, and no gap over three of its
-    // intervals.
+    // Enough control frames to judge, the alert changing on every one of
+    // them, and no alert stall longer than the control's.
     for (const proof of Object.values(proofs)) {
-      expect(proof.expected, JSON.stringify(proofs)).toBeGreaterThanOrEqual(4);
-      expect(proof.frames, JSON.stringify(proofs)).toBeGreaterThanOrEqual(
-        proof.expected - 2,
+      expect(proof.controlMoved, JSON.stringify(proofs)).toBeGreaterThanOrEqual(
+        4,
       );
+      expect(proof.missed, JSON.stringify(proofs)).toBe(0);
       expect(
-        proof.longestGapFrames,
+        proof.longestAlertStall,
         JSON.stringify(proofs),
-      ).toBeLessThanOrEqual(3);
+      ).toBeLessThanOrEqual(proof.longestControlStall);
     }
   });
 

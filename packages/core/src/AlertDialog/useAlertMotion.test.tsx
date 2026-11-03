@@ -12,6 +12,8 @@
  */
 
 import {act, render} from '@testing-library/react';
+import {hydrateRoot} from 'react-dom/client';
+import {renderToString} from 'react-dom/server';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {
   SCALE_FROM_PROPERTY,
@@ -172,6 +174,25 @@ describe('useAlertMotion', () => {
     expect(motion().acceptsTouches()).toBe(true);
     view.rerender(<Alert isOpen={false} isEnabled={false} />);
     expect(motion().isPresented).toBe(false);
+  });
+
+  it('opens at rest after hydration when the server markup had it open, and enters on a later open', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = renderToString(<Alert isOpen isEnabled />);
+    document.body.appendChild(container);
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, <Alert isOpen isEnabled />);
+    });
+    expect(motion().look).toBe('settled');
+    expect(motion().acceptsTouches()).toBe(true);
+    running = [standIn(0)];
+    await act(async () => root.render(<Alert isOpen={false} isEnabled />));
+    running = [];
+    await act(async () => root.render(<Alert isOpen isEnabled />));
+    expect(motion().look).toBe('entrance');
+    await act(async () => root.unmount());
+    container.remove();
   });
 
   it('leaves no timer behind when unmounted mid-exit', async () => {
