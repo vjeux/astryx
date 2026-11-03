@@ -69,6 +69,25 @@ export const search = {
      */
     closeTravel: 44,
   },
+  bar: {
+    /**
+     * The fraction of the activation by which the navigation bar's back
+     * button and large title are gone. With p the activation's progress, the
+     * back button's opacity is 1 − p / 0.35, and it does not move. The large
+     * title's opacity is (1 − p / 0.35)², and the inline title stays hidden.
+     * The bar itself shrinks to its compact height on the activation's clock.
+     * @source measured: a pushed screen with a large title: the bar's height
+     *   and the back button's and titles' alphas per frame over an activation
+     */
+    fadeOutProgress: 0.35,
+    /**
+     * On cancel the large title fades back in over the activation's last
+     * stretch, from this fraction: opacity (p − 0.65) / 0.35. The back button
+     * is back at full opacity from the cancel's first frame.
+     * @source measured: the same screen over a cancel with the close button
+     */
+    largeTitleFadeInProgress: 0.65,
+  },
   bottom: {
     /**
      * The bottom (toolbar) field's height at rest, pt. It is 336 wide at the
