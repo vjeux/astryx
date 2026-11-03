@@ -8,19 +8,19 @@
  * the menu and the trigger itself. So the spreads of the old return's
  * `menuProps` and `triggerProps` go. A trigger that got the press only
  * through its spread gets `triggerRef` from its `ref`. In a DropdownMenu
- * trigger render function, a forward of the deprecated `onPointerDown` or
+ * trigger render function, a redundant forward of `onPointerDown` or
  * `onContextMenu` goes. It goes only where the same element spreads the
- * trigger props, which still pass it.
+ * trigger props, which still pass it. Any other forward stays as it is.
  *
  * Where it cannot prove the result, it leaves the code unchanged with a TODO.
  * That covers options that are not an object literal or that spread, and a
  * return used other than through those spreads, `isTriggerClickFromPress`
  * and `cancel`. It also covers a call that spreads no `menuProps` on the menu
  * element, since the old call then ran no press. So does a spread on an
- * element whose `ref` is not the menu's or the trigger's. So does a handler
- * forward on an element that does not spread the trigger props. With a
+ * element whose `ref` is not the menu's or the trigger's. With a
  * trigger, the menu element must sit in the component's one returned JSX,
- * with no function, prop value or early return in between. The ref form has
+ * through DOM elements and fragments only, with no function, prop value or
+ * early return in between. The ref form has
  * no press while the menu is unmounted. The deprecated forms keep working
  * there. Comments are the codemod's only report channel. Each is added once, so
  * a second run changes nothing.
@@ -32,7 +32,7 @@ export const meta = {
     'Rewrites `useMenuPress({menuRef, ...options})` to ' +
     '`useMenuPress(menuRef, {...options})` and removes the spreads of its ' +
     '`menuProps` and `triggerProps`, which the ref form does not return. ' +
-    "Removes redundant forwards of a DropdownMenu trigger's deprecated " +
+    "Removes redundant forwards of a DropdownMenu trigger's " +
     '`onPointerDown` and `onContextMenu`. Leaves a TODO where it cannot ' +
     'prove the result; the deprecated forms still work there.',
 };
@@ -50,12 +50,6 @@ const CALL_COMMENT =
   'useMenuPress(menuRef, options) instead, pass triggerRef, and remove the ' +
   'menuProps and triggerProps spreads. With a trigger, keep the menu ' +
   'element mounted while closed. This call could not be rewritten safely, ' +
-  'so it was left unchanged. ';
-const TRIGGER_COMMENT =
-  " TODO(astryx upgrade): the trigger props' onPointerDown and onContextMenu " +
-  "are deprecated. Give the element the trigger props' ref: the press " +
-  'listens for its press-down on the document. Keep a forward while an ' +
-  'ancestor stops the press-down. This use could not be rewritten safely, ' +
   'so it was left unchanged. ';
 
 const TYPE_WRAPPERS = new Set([
@@ -131,34 +125,6 @@ function findAttribute(opening, name) {
 /** Source text with whitespace removed, to compare two refs. */
 function sourceOf(/** @type {any} */ j, /** @type {any} */ node) {
   return j(node).toSource().replace(/\s+/g, '');
-}
-
-/**
- * A name, or a property chain on one with no call and no computed key other
- * than a literal: safe to read twice.
- * @param {any} node
- * @returns {boolean}
- */
-function isCallFreeChain(node) {
-  const value = unwrap(node);
-  if (value == null) {
-    return false;
-  }
-  if (value.type === 'Identifier' || value.type === 'ThisExpression') {
-    return true;
-  }
-  if (value.type === 'MemberExpression') {
-    const key = value.property;
-    const literalKey =
-      !value.computed ||
-      key.type === 'StringLiteral' ||
-      key.type === 'NumericLiteral' ||
-      key.type === 'Literal';
-    return (
-      literalKey && value.optional !== true && isCallFreeChain(value.object)
-    );
-  }
-  return false;
 }
 
 /** A fresh copy of a call-free chain. @param {any} j @param {any} node */
@@ -424,6 +390,11 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
   }
   // A trigger opens a menu that must stay mounted: the ref form has no press
   // while the menu is unmounted.
+  // A trigger the old call never reached keeps no press: the ref form would
+  // add one on its ref.
+  if (triggerRef != null && spreads.triggerProps.length === 0) {
+    return null;
+  }
   const hasTrigger = triggerRef != null || spreads.triggerProps.length > 0;
   if (
     hasTrigger &&
@@ -431,21 +402,38 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
   ) {
     return null;
   }
+  // The ref form attaches only on the calling component's commits. A menu
+  // that another component mounts in a commit of its own gets no press.
+  if (
+    !spreads.menuProps.every(spread => rendersWithComponent(j, spread, scope))
+  ) {
+    return null;
+  }
   const menuSource = sourceOf(j, menuRef);
   for (const spread of spreads.menuProps) {
     const ref = attributeExpression(findAttribute(spread.parent.node, 'ref'));
-    if (ref == null || sourceOf(j, ref) !== menuSource) {
+    if (
+      ref == null ||
+      sourceOf(j, ref) !== menuSource ||
+      !isAloneWithPress(spread, ['onPointerDown'])
+    ) {
       return null;
     }
   }
   let triggerSource = triggerRef == null ? null : sourceOf(j, triggerRef);
   for (const spread of spreads.triggerProps) {
     const ref = attributeExpression(findAttribute(spread.parent.node, 'ref'));
-    if (ref == null) {
+    if (
+      ref == null ||
+      // A component may drop the two handlers, or give its ref to an
+      // imperative handle that takes no listeners.
+      !isDomElement(spread.parent.parent.node) ||
+      !isAloneWithPress(spread, ['onPointerDown', 'onContextMenu'])
+    ) {
       return null;
     }
     if (triggerSource == null) {
-      if (!isCallFreeChain(ref)) {
+      if (!isLocalRefObject(ref, spread)) {
         return null;
       }
       plan.triggerRef = cloneChain(j, ref);
@@ -461,28 +449,135 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
 }
 
 /**
- * Whether a JSX attribute's element always renders with its component: it
- * sits in the component's one top-level return, reached only through JSX
- * children. A function, a prop value, a condition or another return stops it.
+ * Whether `ref` names a ref object that the component makes with `useRef` or
+ * `createRef`. A callback ref or a merged ref has no `current` to read.
+ * @param {any} ref @param {any} path
+ */
+function isLocalRefObject(ref, path) {
+  if (ref.type !== 'Identifier') {
+    return false;
+  }
+  const binding = path.scope?.lookup(ref.name)?.getBindings()[ref.name]?.[0];
+  const declarator = binding?.parent?.node;
+  if (
+    declarator?.type !== 'VariableDeclarator' ||
+    declarator.id !== binding.node ||
+    declarator.init?.type !== 'CallExpression'
+  ) {
+    return false;
+  }
+  const callee = declarator.init.callee;
+  const name =
+    callee.type === 'Identifier'
+      ? callee.name
+      : callee.type === 'MemberExpression' && !callee.computed
+        ? callee.property.name
+        : null;
+  return name === 'useRef' || name === 'createRef';
+}
+
+/**
+ * Whether a press spread is the only thing on its element that meets the
+ * press: no `handlers` attribute and no other spread. The old spread and such a
+ * handler override each other by order, and the ref form runs both.
+ * @param {any} spread @param {string[]} handlers
+ */
+function isAloneWithPress(spread, handlers) {
+  return (spread.parent.node.attributes ?? []).every(
+    (/** @type {any} */ attribute) =>
+      attribute === spread.node ||
+      (attribute.type === 'JSXAttribute' &&
+        !handlers.includes(attribute.name?.name)),
+  );
+}
+
+/**
+ * Whether a JSX element is a DOM element. A component element carrying the
+ * spread may mount its own DOM later, or only while open.
+ * @param {any} node
+ */
+function isDomElement(node) {
+  const name = node.openingElement.name;
+  return name.type === 'JSXIdentifier' && /^[a-z]/.test(name.name);
+}
+
+/**
+ * Whether a JSX node renders its children in the same commit: a DOM element or
+ * a fragment. A component element may mount them later.
+ * @param {any} node
+ */
+function passesChildren(node) {
+  if (node?.type === 'JSXFragment') {
+    return true;
+  }
+  const name = node?.type === 'JSXElement' ? node.openingElement.name : null;
+  return (
+    (name?.type === 'JSXIdentifier' &&
+      (/^[a-z]/.test(name.name) || name.name === 'Fragment')) ||
+    (name?.type === 'JSXMemberExpression' &&
+      name.object.name === 'React' &&
+      name.property.name === 'Fragment')
+  );
+}
+
+/**
+ * Whether a JSX attribute's element mounts in its component's own commits. It
+ * must sit in one of the component's returns, reached only through conditions
+ * and the children of DOM elements and fragments. A function, a prop value or
+ * a component element stops it.
  * @param {any} j @param {any} path @param {any} fnPath
  */
-function isAlwaysRendered(j, path, fnPath) {
-  const isJsx = (/** @type {any} */ node) =>
-    node?.type === 'JSXElement' || node?.type === 'JSXFragment';
+function rendersWithComponent(j, path, fnPath) {
   let current = path.parent?.parent;
-  if (current?.node.type !== 'JSXElement') {
+  if (current?.node.type !== 'JSXElement' || !isDomElement(current.node)) {
     return false;
   }
   for (;;) {
     const parent = current.parent;
     const node = parent?.node;
-    if (isJsx(node) && (node.children ?? []).includes(current.node)) {
+    const isChild =
+      (passesChildren(node) && (node.children ?? []).includes(current.node)) ||
+      (node?.type === 'JSXExpressionContainer' &&
+        passesChildren(parent.parent?.node) &&
+        (parent.parent.node.children ?? []).includes(node));
+    const isBranch =
+      (node?.type === 'LogicalExpression' && node.right === current.node) ||
+      (node?.type === 'ConditionalExpression' && node.test !== current.node);
+    if (isChild || isBranch) {
+      current = parent;
+      continue;
+    }
+    if (node?.type !== 'ReturnStatement') {
+      return false;
+    }
+    const owner = j(parent).closest(j.Function);
+    return owner.size() > 0 && owner.paths()[0].node === fnPath.node;
+  }
+}
+
+/**
+ * Whether a JSX attribute's element always renders with its component: it
+ * sits in the component's one top-level return, reached only through the
+ * children of DOM elements and fragments. A function, a prop value, a
+ * component element (which may hold its children back), a condition or
+ * another return stops it.
+ * @param {any} j @param {any} path @param {any} fnPath
+ */
+function isAlwaysRendered(j, path, fnPath) {
+  let current = path.parent?.parent;
+  if (current?.node.type !== 'JSXElement' || !isDomElement(current.node)) {
+    return false;
+  }
+  for (;;) {
+    const parent = current.parent;
+    const node = parent?.node;
+    if (passesChildren(node) && (node.children ?? []).includes(current.node)) {
       current = parent;
       continue;
     }
     if (
       node?.type === 'JSXExpressionContainer' &&
-      isJsx(parent.parent?.node) &&
+      passesChildren(parent.parent?.node) &&
       (parent.parent.node.children ?? []).includes(node)
     ) {
       current = parent;
@@ -546,8 +641,9 @@ function forwardingAttribute(path, name) {
 }
 
 /**
- * Drops plain forwards of the deprecated trigger handlers in one trigger
- * render function. Returns 'changed', 'unproven' or 'none'.
+ * Drops redundant forwards of the trigger handlers beside a spread of the
+ * trigger props in one trigger render function. Returns 'changed',
+ * 'unproven' or 'none'.
  * @param {any} j @param {any} fnPath
  */
 function migrateTriggerFunction(j, fnPath) {
@@ -740,11 +836,8 @@ export default function transform(file, api) {
     .find(j.Function)
     .filter((/** @type {any} */ path) => triggerFunctions.has(path.node))
     .forEach((/** @type {any} */ path) => {
-      const outcome = migrateTriggerFunction(j, path);
-      if (outcome === 'changed') {
+      if (migrateTriggerFunction(j, path) === 'changed') {
         changed = true;
-      } else if (outcome === 'unproven') {
-        report(path, TRIGGER_COMMENT);
       }
     });
 
