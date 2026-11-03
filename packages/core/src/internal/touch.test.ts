@@ -78,6 +78,16 @@ describe('internal/touch', () => {
     expect(entry).not.toHaveProperty('touchModule');
   });
 
+  it('re-exports the action-group tracking hook by name', async () => {
+    const entry: Record<string, unknown> = await import('./touch');
+    const modules: Record<string, Record<string, unknown>> = {
+      useActionGroupTracking: await import('../hooks/useActionGroupTracking'),
+    };
+    for (const [name, module] of Object.entries(modules)) {
+      expect(entry[name], name).toBe(module[name]);
+    }
+  });
+
   it('attaches no window or document listeners when it loads', async () => {
     vi.resetModules();
     const onWindow = vi.spyOn(window, 'addEventListener');
