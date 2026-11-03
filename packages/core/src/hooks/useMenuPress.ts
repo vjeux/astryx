@@ -220,12 +220,9 @@ export function useMenuPress(
   const options: UseMenuPressRefOptions = isRefForm
     ? second
     : (first as UseMenuPressOptions);
+  // The press reads the latest render's options when an event arrives.
   const latestRef = useRef({menuRef, options});
-  // The press reads the committed render's options at event time: a render
-  // that React discards never reaches it.
-  useIsomorphicLayoutEffect(() => {
-    latestRef.current = {menuRef, options};
-  });
+  latestRef.current = {menuRef, options};
 
   // The ref form: createMenuPress on the element behind the ref. A new menu or
   // document creates a new factory. Every other change reaches it through
