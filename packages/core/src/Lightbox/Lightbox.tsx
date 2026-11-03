@@ -39,11 +39,14 @@ import * as stylex from '@stylexjs/stylex';
 import type {StyleXStyles} from '@stylexjs/stylex';
 import {
   colorVars,
+  durationVars,
+  easeVars,
   focusVars,
   radiusVars,
   spacingVars,
   typeScaleVars,
 } from '../theme/tokens.stylex';
+import {reducedMotionFadeConsts} from '../motion/reducedMotion.stylex';
 import {Icon} from '../Icon';
 import {IconButton} from '../IconButton';
 import {useAnnounce} from '../hooks/useAnnounce';
@@ -157,6 +160,21 @@ export interface LightboxProps extends BaseProps<HTMLDialogElement> {
 // =============================================================================
 // Styles
 // =============================================================================
+
+const exitFadeKeyframes = stylex.keyframes({
+  from: {opacity: 1},
+  to: {opacity: 0},
+});
+// The end scale comes from zoomMedia, through the touchExitScale style.
+const exitShrinkKeyframes = stylex.keyframes({
+  from: {scale: '1'},
+  to: {scale: 'var(--_lightbox-exit-scale)'},
+});
+
+/** The theme's exit duration, by default the standard dismissal duration. */
+const TOUCH_EXIT_DURATION = `var(--duration-exit, ${durationVars['--duration-fast']})`;
+/** Under reduced motion the exit is at most the reduced cross-fade. */
+const REDUCED_TOUCH_EXIT_DURATION = `min(${TOUCH_EXIT_DURATION}, ${reducedMotionFadeConsts.duration})`;
 
 const styles = stylex.create({
   dialog: {
@@ -440,6 +458,41 @@ const styles = stylex.create({
     borderRadius: radiusVars['--radius-full'],
     paddingInline: spacingVars['--spacing-2'],
   },
+  // The touch exit: the viewer, its backdrop and its controls fade on the
+  // theme's exit duration and curve, and the viewer takes no input meanwhile.
+  // Under reduced motion it stays within the reduced cross-fade.
+  touchExit: {
+    pointerEvents: 'none',
+    '--_lightbox-exit-duration': {
+      default: TOUCH_EXIT_DURATION,
+      '@media (prefers-reduced-motion: reduce)': REDUCED_TOUCH_EXIT_DURATION,
+    },
+    '::backdrop': {
+      animationName: exitFadeKeyframes,
+      animationDuration: 'var(--_lightbox-exit-duration)',
+      animationTimingFunction: easeVars['--ease-exit'],
+      animationFillMode: 'forwards',
+    },
+  },
+  touchExitFade: {
+    animationName: exitFadeKeyframes,
+    animationDuration: 'var(--_lightbox-exit-duration)',
+    animationTimingFunction: easeVars['--ease-exit'],
+    animationFillMode: 'forwards',
+  },
+  touchExitScale: (scale: number) => ({
+    '--_lightbox-exit-scale': scale,
+  }),
+  // The photo also shrinks a little. Under reduced motion it only fades.
+  touchExitShrink: {
+    animationName: {
+      default: exitShrinkKeyframes,
+      '@media (prefers-reduced-motion: reduce)': 'none',
+    },
+    animationDuration: 'var(--_lightbox-exit-duration)',
+    animationTimingFunction: easeVars['--ease-exit'],
+    animationFillMode: 'forwards',
+  },
 });
 
 const pageStyles = stylex.create({
@@ -675,13 +728,37 @@ export function Lightbox({
     };
   }, [hasItem]);
 
+  const {isTouch} = useTouchPresentation();
   const handleClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
 
+  // The touch exit. Under the touch presentation, a close that no gesture
+  // drives fades the viewer out, and the photo shrinks a little. The caller
+  // hears of the close when the exit ends. A fine pointer closes at once.
+  const [exitPhase, setExitPhase] = useState<'idle' | 'playing' | 'ended'>(
+    'idle',
+  );
+  // An ended exit the caller answered by keeping the viewer open, or a viewer
+  // opened again: back to rest in this render.
+  if (exitPhase === 'ended' && isOpen) {
+    setExitPhase('idle');
+  }
+  const isExiting = exitPhase !== 'idle';
+  const requestClose = useCallback(() => {
+    if (exitPhase !== 'idle') {
+      return;
+    }
+    if (!isTouch) {
+      handleClose();
+      return;
+    }
+    setExitPhase('playing');
+  }, [exitPhase, handleClose, isTouch]);
+
   const {shouldDismissOnCloseRequest} = useLayerDismissal({
     isActive: isOpen,
-    onDismiss: handleClose,
+    onDismiss: requestClose,
     // The dialog's document is this layer's: rendered into an iframe or a
     // Picture-in-Picture window, it ranks with the layers opened inside it.
     getContainer: () => dialogRef.current,
@@ -706,9 +783,9 @@ export function Lightbox({
       if (!shouldDismissOnCloseRequest()) {
         return;
       }
-      handleClose();
+      requestClose();
     },
-    [handleClose, shouldDismissOnCloseRequest],
+    [requestClose, shouldDismissOnCloseRequest],
   );
 
   // The last press's pointer type. A finger's double tap is the stage's own.
@@ -738,7 +815,7 @@ export function Lightbox({
         e.target === containerRef.current ||
         (hasZoom && !isVideo && e.target === mediaGroupRef.current)
       ) {
-        handleClose();
+        requestClose();
         return;
       }
       // A gallery's stage fills the viewer, so a click on it beside the media
@@ -780,10 +857,10 @@ export function Lightbox({
           target.hasAttribute('data-lightbox-page') ||
           target.hasAttribute('data-lightbox-page-media'))
       ) {
-        handleClose();
+        requestClose();
       }
     },
-    [handleClose, hasZoom, isGallery, isVideo],
+    [requestClose, hasZoom, isGallery, isVideo],
   );
 
   const isZoomTarget = hasZoom && !isVideo;
@@ -839,7 +916,6 @@ export function Lightbox({
     };
   }, []);
 
-  const {isTouch} = useTouchPresentation();
   const onDragStart = () => {
     didDragRef.current = true;
   };
@@ -904,7 +980,7 @@ export function Lightbox({
     surfaceRef: isGallery ? trackRef : imageWrapperRef,
     isEnabled: isOpen && isZoomTarget,
     itemKey: viewedItem,
-    onTapOutside: handleClose,
+    onTapOutside: requestClose,
     onDragStart,
     // A pinch whose first finger lands on a gallery's caption is the page's.
     shouldBeginPinch: () => !pressOnCaptionRef.current,
@@ -977,6 +1053,18 @@ export function Lightbox({
       animator.set({opacity: 1});
     }
   }, [setBackdropMoving]);
+  // The touch exit's fade ends on the container itself: the caller hears of
+  // the close now. If it keeps the viewer open, the next render restores it.
+  const handleExitEnd = useCallback(
+    (e: React.AnimationEvent<HTMLDivElement>) => {
+      if (exitPhase !== 'playing' || e.target !== e.currentTarget) {
+        return;
+      }
+      handleClose();
+      setExitPhase('ended');
+    },
+    [exitPhase, handleClose],
+  );
   useIsomorphicLayoutEffect(() => {
     if (isOpen) {
       restoreAfterDismissal();
@@ -1215,6 +1303,11 @@ export function Lightbox({
       ref={mergedDialogRef}
       onCancel={handleCancel}
       onKeyDown={e => {
+        // The viewer takes no input while it leaves.
+        if (isExiting) {
+          e.preventDefault();
+          return;
+        }
         handleKeyDown(e);
         onKeyDownProp?.(e);
       }}
@@ -1227,6 +1320,8 @@ export function Lightbox({
           styles.dialog,
           overlayPaddingReset.reset,
           xstyle,
+          isExiting && styles.touchExit,
+          isExiting && styles.touchExitScale(zoomMedia.viewer.touchExitScale),
         ),
         className,
         style,
@@ -1244,14 +1339,21 @@ export function Lightbox({
       <LayerDepthProvider>
         <ModalAnnounceProvider dialogRef={dialogRef} isOpen={isOpen}>
           <LayerContentBoundary>
-            <div ref={containerRef} {...stylex.props(styles.container)}>
+            <div
+              ref={containerRef}
+              inert={isExiting ? true : undefined}
+              onAnimationEnd={handleExitEnd}
+              {...stylex.props(
+                styles.container,
+                isExiting && styles.touchExitFade,
+              )}>
               <div
                 data-lightbox-chrome=""
                 {...stylex.props(styles.chromeLayer)}>
                 {control(styles.closeButton, {
                   icon: 'close',
                   label: t('@astryx.lightbox.close'),
-                  onClick: handleClose,
+                  onClick: requestClose,
                 })}
 
                 {/* Gallery nav: prev — stays mounted and is disabled at the start of
@@ -1299,6 +1401,7 @@ export function Lightbox({
                     isZoomTarget && styles.imageWrapperFocusInset,
                     isZoomTarget && !isZoomed && styles.imageWrapperZoomable,
                     isZoomTarget && isZoomed && styles.imageWrapperZoomed,
+                    isExiting && !isGallery && styles.touchExitShrink,
                   )}
                   onKeyDown={isZoomTarget ? handleImageKeyDown : undefined}
                   onPointerDown={e => {
@@ -1352,6 +1455,9 @@ export function Lightbox({
                             {...stylex.props(
                               styles.pageMedia,
                               isZoomTarget && styles.pageMediaZoomTarget,
+                              isExiting &&
+                                i === index &&
+                                styles.touchExitShrink,
                             )}>
                             {renderMedia(mediaArray[i], i === index)}
                           </div>
