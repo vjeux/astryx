@@ -281,7 +281,7 @@ test('under Reduce Motion the card does not grow, and the menu still opens at 73
   await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeVisible();
 });
 
-test('the trigger’s selection and callout lock: its own style keeps it off at rest, and the gesture host locks it for a held press', async ({
+test('the trigger’s selection and callout lock: its own style keeps it off at rest, and the gesture host refuses a selection for a held press', async ({
   page,
 }) => {
   const {driver, trigger, center} = await openTouchStory(page);
@@ -299,19 +299,31 @@ test('the trigger’s selection and callout lock: its own style keeps it off at 
           computed.getPropertyValue('-webkit-user-select'),
       };
     });
+  // Off iOS, the host's lock refuses a selection that starts on the element.
+  const refusesSelection = async () =>
+    trigger.evaluate(el => {
+      const event = new Event('selectstart', {bubbles: true, cancelable: true});
+      el.dispatchEvent(event);
+      return event.defaultPrevented;
+    });
   // At rest the trigger's own style keeps selection off (spec:AST-017
-  // FR59), whatever the host writes inline then.
+  // FR59), and nothing refuses a selection.
   const rest = await readLock();
   expect(rest.computed).toBe('none');
-  // A held finger, short of the commit: the host's lock is on the element.
+  expect(await refusesSelection()).toBe(false);
+  // A held finger, short of the commit: the host's lock refuses a selection.
   const playing = driver.play(hold(center, commitMs - 100));
   await page.waitForTimeout(commitMs / 2);
+  const heldRefuses = await refusesSelection();
   const held = await readLock();
   await playing;
   await page.waitForTimeout(100);
-  // Lifted with no menu: back to the rest value.
+  // Lifted with no menu: back to the rest state.
+  const liftedRefuses = await refusesSelection();
   const lifted = await readLock();
-  expect(held).toEqual({inline: 'none', computed: 'none'});
+  expect(heldRefuses).toBe(true);
+  expect(held.computed).toBe('none');
+  expect(liftedRefuses).toBe(false);
   expect(lifted).toEqual(rest);
   expect(
     await page.getByRole('menu', {name: 'Photo actions'}).isVisible(),
@@ -611,12 +623,17 @@ test('the press feedback keeps advancing every frame while the main thread is bl
     'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
   );
   const {driver, trigger, center} = await openTouchStory(page);
-  const played = await playedCurve(trigger);
   // A wider card grows by about a CSS pixel a frame, which the screencast
-  // resolves; it stays inside the viewport at its largest.
+  // resolves; it stays inside the viewport at its largest. A linear growth
+  // over 700 ms spreads across the whole block, so a frame of drift moves the
+  // expected width by less than a pixel.
   await trigger.evaluate(el => {
-    (el.firstElementChild as HTMLElement).style.width = '340px';
+    const host = el as HTMLElement;
+    (host.firstElementChild as HTMLElement).style.width = '340px';
+    host.style.setProperty('--ease-move', 'linear');
+    host.style.setProperty('--duration-medium', '700ms');
   });
+  const played = await playedCurve(trigger);
   await markElement(trigger, {mode: 'outline'});
   const cast = await startScreencast(page);
   const playing = driver.play(hold(center, 1100));
@@ -627,11 +644,30 @@ test('the press feedback keeps advancing every frame while the main thread is bl
   const castFrames = await cast.stop();
   const tracked = await trackMarker(page, castFrames);
   const proof = busyWindowProof(tracked, block, {axis: 'width'});
-  // What the curve grows by over the judged window, in the marker's pixels.
+  // What the curve grows by between the first and the last frame of the
+  // judged window, in the marker's pixels, against what those frames show.
   const scaleAt = (epoch: number) => played.at((epoch - feedback.from) / 1000);
-  const restWidth = (proof.first ?? 0) / scaleAt(block.from + 20);
+  const judged = tracked.filter(
+    f => f.box != null && f.t >= block.from + 20 && f.t <= block.to - 20,
+  );
+  const firstFrame = judged[0];
+  const lastFrame = judged.at(-1);
+  if (firstFrame?.box == null || lastFrame?.box == null) {
+    throw new Error('the screencast shows no marker during the block');
+  }
+  const restWidth = firstFrame.box.width / scaleAt(firstFrame.t);
   const expectedGrowth =
-    restWidth * (scaleAt(block.to - 20) - scaleAt(block.from + 20));
+    restWidth * (scaleAt(lastFrame.t) - scaleAt(firstFrame.t));
+  const shownGrowth = lastFrame.box.width - firstFrame.box.width;
+  // The screencast resolves widths in steps: the smallest change it shows.
+  const widthStep = Math.min(
+    ...judged.slice(1).flatMap((f, i) => {
+      const change = Math.abs(
+        (f.box?.width ?? 0) - (judged[i].box?.width ?? 0),
+      );
+      return change > 0 ? [change] : [];
+    }),
+  );
   await writeEvidence(
     'busy-main-thread/contextmenu-press-feedback',
     {
@@ -662,15 +698,13 @@ test('the press feedback keeps advancing every frame while the main thread is bl
   });
   await film.write(testInfo, {block, feedback, expectedGrowth});
   // Frames kept coming at display rate and the card kept growing, as much
-  // as the curve says. The screencast resolves whole pixels and the card
-  // grows by about one every other frame, so a pixel may take 3 frames.
+  // as the curve says, within one step of the screencast's widths.
   expect(proof.medianFrameMs).toBeLessThan(20);
   expect(proof.frames).toBeGreaterThanOrEqual(proof.expectedFrames - 2);
   expect(proof.monotonic).toBe(true);
   expect(proof.longestStallMs).toBeLessThan(4 * (1000 / 60) + 4);
-  expect((proof.last ?? 0) - (proof.first ?? 0)).toBeGreaterThanOrEqual(
-    Math.floor(expectedGrowth) - 1,
-  );
+  expect(Number.isFinite(widthStep)).toBe(true);
+  expect(shownGrowth).toBeGreaterThanOrEqual(expectedGrowth - widthStep);
 });
 
 test('the press feedback does no Layout or Paint per frame', async ({
@@ -738,9 +772,29 @@ test('a new finger that pans outside the open menu closes it, and the page scrol
 }) => {
   const {driver, center, top} = await openScrollableStory(page);
   await driver.play(hold(center, menuDisplayMs + 50));
-  await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeVisible();
+  const menu = page.getByRole('menu', {name: 'Photo actions'});
+  await expect(menu).toBeVisible();
   const before = await top();
-  const outside = {x: center.x, y: center.y + 160};
+  // The menu opens at the finger. So the new finger lands beside the menu's
+  // box, at the first point below or above it with room for the pan.
+  const box = await menu.boundingBox();
+  const viewport = page.viewportSize();
+  if (box == null || viewport == null) {
+    throw new Error('the menu or the viewport has no box');
+  }
+  const outside = [
+    {x: center.x, y: Math.round(box.y + box.height + 40)},
+    {x: center.x, y: Math.round(box.y - 40)},
+  ].find(point => point.y - 130 > 0 && point.y + 10 < viewport.height);
+  if (outside == null) {
+    throw new Error('no point beside the menu has room for the pan');
+  }
+  expect(
+    await page.evaluate(
+      ({x, y}) => document.elementFromPoint(x, y)?.closest('[role="menu"]'),
+      outside,
+    ),
+  ).toBeNull();
   await driver.play(
     drag(outside, {x: outside.x, y: outside.y - 120}, {durationMs: 300}),
   );
