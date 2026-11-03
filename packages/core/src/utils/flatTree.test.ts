@@ -1,7 +1,11 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
 import {afterEach, describe, expect, it} from 'vitest';
-import {containsAlongFlatTree, shadowHostOf} from './flatTree';
+import {
+  containsAlongFlatTree,
+  outermostShadowHostOf,
+  shadowHostOf,
+} from './flatTree';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -59,5 +63,19 @@ describe('shadowHostOf', () => {
     const host = frame.contentDocument!.createElement('div');
     frame.contentDocument!.body.append(host);
     expect(shadowHostOf(host.attachShadow({mode: 'closed'}))).toBe(host);
+  });
+});
+
+describe('outermostShadowHostOf', () => {
+  it('is the host the document sees for a root inside other roots, and null for any other node', () => {
+    const outerHost = document.createElement('div');
+    document.body.append(outerHost);
+    const outer = outerHost.attachShadow({mode: 'closed'});
+    const innerHost = document.createElement('div');
+    outer.append(innerHost);
+    const inner = innerHost.attachShadow({mode: 'open'});
+    expect(outermostShadowHostOf(inner)).toBe(outerHost);
+    expect(outermostShadowHostOf(outer)).toBe(outerHost);
+    expect(outermostShadowHostOf(document)).toBeNull();
   });
 });
