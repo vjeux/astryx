@@ -69,7 +69,9 @@ export interface ItemSwipeLayerProps {
 // Styles
 // =============================================================================
 
-/** The travel the gesture writes on the root, physical px (useSwipeAction.ts). */
+/**
+ * The travel the gesture writes on the root, physical px (useSwipeAction.ts).
+ */
 const SWIPE_TRAVEL = 'var(--_item-swipe-travel, 0px)';
 /** How far a full swipe has confirmed, 0 to 1 (useSwipeAction.ts). */
 const SWIPE_CONFIRM = 'var(--_item-swipe-confirm, 0)';

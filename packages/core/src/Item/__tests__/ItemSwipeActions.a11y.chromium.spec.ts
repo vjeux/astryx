@@ -79,7 +79,10 @@ function stampedTouches(page: Page, cdp: CDPSession, y: number) {
   };
 }
 
-/** Opens the story under a finger: the context's touchscreen makes the primary pointer coarse. */
+/**
+ * Opens the story under a finger: the context's touchscreen makes the primary
+ * pointer coarse.
+ */
 async function openUnderFinger(page: Page, url: string) {
   await page.goto(url, {waitUntil: 'load'});
   expect(

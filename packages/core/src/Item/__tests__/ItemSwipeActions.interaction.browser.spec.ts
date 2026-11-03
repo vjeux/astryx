@@ -92,7 +92,10 @@ async function openRow(page: Page): Promise<OpenRow> {
   };
 }
 
-/** How far the row opens: the entries' widths together, read as the row reads them (`offsetWidth`). */
+/**
+ * How far the row opens: the entries' widths together, read as the row reads
+ * them (`offsetWidth`).
+ */
 const openWidthOf = async (track: Locator) =>
   track.evaluate(node =>
     Array.from(node.children).reduce(
@@ -174,7 +177,9 @@ async function recordFrames(row: Locator): Promise<void> {
   });
 }
 
-/** When the page drew each frame since `recordFrames` (`performance.now()` ms). */
+/**
+ * When the page drew each frame since `recordFrames` (`performance.now()` ms).
+ */
 const framesDrawnOf = async (page: Page): Promise<number[]> =>
   page.evaluate(
     () => (window as unknown as {__swipeDrawn: number[]}).__swipeDrawn,
@@ -314,7 +319,9 @@ const travelCurvesOf = async (page: Page) =>
       ),
   );
 
-/** A baked curve's value at `t` ms after its start (linear between keyframes). */
+/**
+ * A baked curve's value at `t` ms after its start (linear between keyframes).
+ */
 function curveAt(frames: {t: number; x: number}[], t: number): number {
   if (t <= frames[0].t) {
     return frames[0].x;
@@ -429,9 +436,10 @@ async function watchCrossFade(page: Page, row: Locator): Promise<void> {
 
 /**
  * Checks the `nth` dip of the row (from 0) since `since`, on the page's clock,
- * from
- * `watchCrossFade`'s log. The dip is an opacity-only cross-fade of the row, out to transparent and back within 200 ms, with no travel. The gesture writes the travel once, in one step, between the two halves, while the row is transparent. Then the row is at `to`,
- * fully opaque.
+ * from `watchCrossFade`'s log. The dip is an opacity-only cross-fade of the
+ * row, out to transparent and back within 200 ms, with no travel. The gesture
+ * writes the travel once, in one step, between the two halves, while the row is
+ * transparent. Then the row is at `to`, fully opaque.
  */
 async function expectCrossFadeSince(
   page: Page,
@@ -907,7 +915,10 @@ test('a finger that lands on a settling row catches it where it is', async ({
   expect(Math.max(...speeds), JSON.stringify(frames)).toBeLessThan(2.1);
 });
 
-/** A held drag on `open`'s row past half its panel: it rests open. Resolves with the open width. */
+/**
+ * A held drag on `open`'s row past half its panel: it rests open. Resolves with
+ * the open width.
+ */
 async function restOpen({driver, row, entries, start}: OpenRow) {
   const openWidth = await openWidthOf(entries);
   // The panel is there, with entries that have widths.
@@ -967,7 +978,9 @@ async function recordPresses(row: Locator) {
       );
 }
 
-/** Counts the clicks that reach `row` (capture, before the row's own handlers). */
+/**
+ * Counts the clicks that reach `row` (capture, before the row's own handlers).
+ */
 async function countClicks(row: Locator) {
   await row.evaluate(node => {
     const counter = {clicks: 0};
@@ -1583,7 +1596,9 @@ const TRACKPAD_SKIP =
 const NOTCH_SKIP =
   "WebKit's synthetic wheel carries a trackpad's wheelDelta, read as a trackpad's scroll: mouse-wheel cases run in Chromium";
 
-/** A desktop row: its story, the input driver, and where a wheel lands on it. */
+/**
+ * A desktop row: its story, the input driver, and where a wheel lands on it.
+ */
 async function openDesktopRow(page: Page) {
   await openStory(page, storybook(), 'core-item--swipe-actions');
   const driver = await webInputDriver(page);

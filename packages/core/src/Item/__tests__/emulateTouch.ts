@@ -13,7 +13,10 @@
 import {vi} from 'vitest';
 import {TOUCH_QUERY} from '../../utils/touchPresentation';
 
-/** Answer as a touch device (a coarse primary pointer), until the globals are unstubbed. */
+/**
+ * Answer as a touch device (a coarse primary pointer), until the globals are
+ * unstubbed.
+ */
 export function emulateTouch(): void {
   const matchMedia = window.matchMedia.bind(window);
   vi.stubGlobal('matchMedia', (query: string) => {

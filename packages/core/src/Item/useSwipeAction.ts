@@ -38,6 +38,7 @@ import {reducedMotionFade} from '../motion/reducedMotion';
 import {resolveSnapPoint} from '../motion/resolveSnapPoint';
 import type {SpringDescription} from '../motion/spring';
 import {swipeActions as SWIPE} from '../motion/uikit/swipeActions';
+import {subscribeInput} from '../utils/inputStream';
 import {lockSelection} from '../utils/selectionLock';
 import {confirmedOffset, confirmPoint, resolveRelease} from './swipeRelease';
 
@@ -115,16 +116,24 @@ export interface SwipePanelRefs {
 
 export interface UseSwipeActionOptions {
   behavior: SwipeBehavior;
-  /** Which sides have entries. A drag toward a side without any never begins. */
+  /**
+   * Which sides have entries. A drag toward a side without any never begins.
+   */
   sides: {leading: boolean; trailing: boolean};
   /**
    * Fire the side's outermost entry. Returns whether the row holds out
    * afterwards (the entry's `hasRemoval`).
    */
   fireOutermost: (side: SwipeSide) => boolean;
-  /** Whether the side's outermost entry can fire: a disabled one never confirms a full swipe. */
+  /**
+   * Whether the side's outermost entry can fire: a disabled one never confirms
+   * a full swipe.
+   */
   canConfirm: (side: SwipeSide) => boolean;
-  /** Told from the transition that opens or closes the row (open is `isSwipeOpen`). */
+  /**
+   * Told from the transition that opens or closes the row (open is
+   * `isSwipeOpen`).
+   */
   onOpenChange?: (isOpen: boolean) => void;
 }
 
@@ -152,7 +161,9 @@ export interface SwipeLayout {
   side: SwipeSide;
   /** +1 when the inline end is to the right (LTR), −1 under RTL. */
   inlineSign: 1 | -1;
-  /** The side's entries at their natural widths together: how far the row opens. */
+  /**
+   * The side's entries at their natural widths together: how far the row opens.
+   */
   openWidth: number;
   /** The outermost entry's width. */
   outerWidth: number;
@@ -165,7 +176,9 @@ export function physicalSign(side: SwipeSide, inlineSign: 1 | -1): 1 | -1 {
   return side === 'leading' ? inlineSign : inlineSign === 1 ? -1 : 1;
 }
 
-/** How far out a row goes when an entry fires and the row leaves (logical px). */
+/**
+ * How far out a row goes when an entry fires and the row leaves (logical px).
+ */
 function outTravel(layout: SwipeLayout): number {
   return layout.rowWidth + SWIPE.slideOutOvershoot;
 }
@@ -259,7 +272,10 @@ function createSidePanel(): SidePanel {
   };
 }
 
-/** The entries' natural widths together, the outermost's included: how far the row opens. */
+/**
+ * The entries' natural widths together, the outermost's included: how far the
+ * row opens.
+ */
 function openWidthOf(side: SidePanel): number {
   let width = side.outer?.offsetWidth ?? 0;
   for (const entry of side.entries.values()) {
@@ -278,7 +294,9 @@ interface Drag {
   isScroll: boolean;
   /** Past the dead zone: the row follows. */
   started: boolean;
-  /** Which way the finger crossed the dead zone: +1 toward the side, -1 away. */
+  /**
+   * Which way the finger crossed the dead zone: +1 toward the side, -1 away.
+   */
   startSign: number;
   /** The travel the row had when the swipe began (logical, ≥ 0). */
   baseTravel: number;
@@ -321,9 +339,9 @@ export function useSwipeAction({
   canConfirm,
   onOpenChange,
 }: UseSwipeActionOptions): UseSwipeActionResult {
-  // The latest options, read by listeners and completions that outlive a render.
-  // Synchronizes the gesture system (pan callbacks, settle completions, the
-  // slide-out's fire timer) with the committed options.
+  // The latest options, read by listeners and completions that outlive a
+  // render. Synchronizes the gesture system (pan callbacks, settle completions,
+  // the slide-out's fire timer) with the committed options.
   const latestRef = useRef({
     behavior,
     canConfirm,
@@ -366,7 +384,10 @@ export function useSwipeAction({
     leading: createSidePanel(),
     trailing: createSidePanel(),
   }));
-  /** The layout of the side that moved last: where the row is, and how to move it. */
+  /**
+   * The layout of the side that moved last: where the row is, and how to move
+   * it.
+   */
   const layoutRef = useRef<SwipeLayout | null>(null);
   const dragRef = useRef<Drag | null>(null);
   /** The shared drag on the root. */
@@ -604,7 +625,10 @@ export function useSwipeAction({
   // ---------------------------------------------------------------------------
   // The drag's model: where a drag draws the row, and where a release lands.
 
-  /** The side a drag from a closed row uncovers: toward the inline end is leading. */
+  /**
+   * The side a drag from a closed row uncovers: toward the inline end is
+   * leading.
+   */
   const sideFor = (dx: number, inlineSign: 1 | -1): SwipeSide =>
     dx * inlineSign > 0 ? 'leading' : 'trailing';
 
@@ -914,14 +938,12 @@ export function useSwipeAction({
         close();
       }
     };
-    document.addEventListener('pointerdown', onOutside, true);
-    document.addEventListener('scroll', onScroll, {
-      capture: true,
-      passive: true,
-    });
+    const view = rootRef.current?.ownerDocument.defaultView ?? window;
+    const stopOutside = subscribeInput(view, 'pointerdown', onOutside);
+    const stopScroll = subscribeInput(view, 'scroll', onScroll);
     return () => {
-      document.removeEventListener('pointerdown', onOutside, true);
-      document.removeEventListener('scroll', onScroll, true);
+      stopOutside();
+      stopScroll();
     };
   }, [close, isOpen, state.phase]);
 

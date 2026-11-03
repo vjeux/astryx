@@ -18,9 +18,9 @@ export const swipeActions = {
   /**
    * Sideways travel at which the row claims the touch from the browser. It is
    * not a UIKit value. On the web, a scrolling ancestor takes the touch at
-   * about 10 px unless the page cancels
-   * `touchmove` first. So the row claims at 8 px, and its swipe still begins at `hysteresis`.
-   * In between the touch moves neither the row nor the page.
+   * about 10 px unless the page cancels `touchmove` first. So the row claims at
+   * 8 px, and its swipe still begins at `hysteresis`. In between the touch
+   * moves neither the row nor the page.
    * @source measured: Mobile Safari, iOS 26.2 simulator, iPhone 17 Pro, the
    *   touch stream against WebKit's scroll commit on a scrollable element
    *   (the last cancelable `touchmove` at 10 px; cancelling every `touchmove`

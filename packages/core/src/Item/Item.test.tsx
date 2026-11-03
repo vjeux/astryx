@@ -919,7 +919,10 @@ describe('swipeActions', () => {
         down.set(id, contact);
         return send('touchstart');
       },
-      /** `cancelable: false`: the browser is already panning or zooming with this finger. */
+      /**
+       * `cancelable: false`: the browser is already panning or zooming with
+       * this finger.
+       */
       move(x: number, y = contact.y, {cancelable = true} = {}) {
         void act(() => vi.advanceTimersByTime(16));
         contact = {...contact, x, y};
@@ -968,7 +971,9 @@ describe('swipeActions', () => {
     });
   };
 
-  /** Answer `prefers-reduced-motion: reduce` on top of the page's other answers. */
+  /**
+   * Answer `prefers-reduced-motion: reduce` on top of the page's other answers.
+   */
   const reduceMotion = () => {
     const matchMedia = window.matchMedia.bind(window);
     vi.stubGlobal('matchMedia', (query: string) => {
@@ -1948,6 +1953,39 @@ describe('swipeActions', () => {
       await settled();
       expect(xOf(row)).toBe(0);
       elsewhere.remove();
+    });
+
+    it("closes on a pointer outside it and on a scroll that an app's later window listener stops", async () => {
+      const {row} = renderRow();
+      const stop = (event: Event) => {
+        event.stopPropagation();
+      };
+      dragLeading(row, 45);
+      await settled();
+      // The open row hears document-wide input through the shared input
+      // stream. Its window listener runs before one an app adds later.
+      window.addEventListener('pointerdown', stop, true);
+      try {
+        fireEvent.pointerDown(document.body, {
+          pointerId: 9,
+          pointerType: 'touch',
+        });
+        await settled();
+      } finally {
+        window.removeEventListener('pointerdown', stop, true);
+      }
+      expect(xOf(row)).toBe(0);
+      dragLeading(row, 45);
+      await settled();
+      expect(xOf(row)).toBe(72);
+      window.addEventListener('scroll', stop, true);
+      try {
+        fireEvent.scroll(row.parentElement as HTMLElement);
+        await settled();
+      } finally {
+        window.removeEventListener('scroll', stop, true);
+      }
+      expect(xOf(row)).toBe(0);
     });
 
     it('fires the outermost entry and no other on a confirmed full swipe, then springs back', async () => {

@@ -98,8 +98,9 @@ export interface ItemSwipeAction {
   icon?: ReactNode;
   /**
    * Fires on a tap on a resting entry, on the full-swipe accelerator, or on a
-   * `commit` release. A slide-out fires it once the row's content has left its box: after a full swipe, a commit or a tapped entry with `hasRemoval`.
-   * A tapped entry without `hasRemoval` fires at the tap. May return a Promise;
+   * `commit` release. A slide-out fires it once the row's content has left its
+   * box: after a full swipe, a commit or a tapped entry with `hasRemoval`. A
+   * tapped entry without `hasRemoval` fires at the tap. May return a Promise;
    * the row waits for nothing.
    */
   onActivate: () => void | Promise<void>;
@@ -123,9 +124,14 @@ export interface ItemSwipeActions {
 }
 
 /**
- * `reveal`: every entry of a resting row is a real button. As in a UIKit list, a fast release goes the way it moves: a flick opens the row, and a flick back closes it. A slow release rests the row open past half the panel. A full swipe fires the outermost entry: dragged on past the confirm point, the row runs ahead and the outermost entry covers its place. Letting go there fires it, and backing out closes the row. `commit`:
- * only a full swipe does anything, sliding the row out; nothing rests, and the
- * panel is presentational.
+ * `reveal`: every entry of a resting row is a real button. As in a UIKit list,
+ * a fast release goes the way it moves: a flick opens the row, and a flick back
+ * closes it. A slow release rests the row open past half the panel. A full
+ * swipe fires the outermost entry: dragged on past the confirm point, the row
+ * runs ahead and the outermost entry covers its place. Letting go there fires
+ * it, and backing out closes the row. `commit`: only a full swipe does
+ * anything, sliding the row out; nothing rests, and the panel is
+ * presentational.
  */
 export type ItemSwipeBehavior = 'reveal' | 'commit';
 
@@ -283,14 +289,16 @@ export interface ItemProps extends BaseProps<HTMLElement> {
    * never a row's only path to a verb. A verb reachable only by swipe is
    * unreachable by keyboard and by mouse. Make every entry reachable through
    * the row's own content too, such as a menu or a button in `endContent`. An
-   * open row closes on a tap on its own content, which activates nothing and
-   * paints no press. It also closes on a touch elsewhere, when the list or page
-   * scrolls with focus outside it, and on Escape.
+   * open row closes on a press by any pointer on its own content, which
+   * activates nothing and paints no press. It also closes on a press
+   * elsewhere, when the list or page scrolls with focus outside it, and on
+   * Escape.
    *
    * Available on a row whose role permits interactive descendants, such as a
-   * `listitem` or a row with no role. Not served on one whose role forbids them: `option`,
-   * `menuitem*`, or a row that is the enlarged target of a native radio. The element containing the rows clips in the inline axis (`overflow-inline:
-   * clip`): `List` does; any other host does it once.
+   * `listitem` or a row with no role. Not served on one whose role forbids
+   * them: `option`, `menuitem*`, or a row that is the enlarged target of a
+   * native radio. The element containing the rows clips in the inline axis
+   * (`overflow-inline: clip`): `List` does; any other host does it once.
    *
    * The swipe is the same on every device. A finger or a pen swipes the row
    * whatever the primary pointer, a touchscreen laptop's included. So does a
@@ -303,10 +311,10 @@ export interface ItemProps extends BaseProps<HTMLElement> {
   swipeActions?: ItemSwipeActions;
 
   /**
-   * What a swipe does:
-   * `reveal` rests the row open with every entry tappable, as in a UIKit list. A flick opens it, a flick back closes it, and a full swipe fires the outermost. `commit`
-   * only fires the outermost on a full swipe, sliding the row out. `commit`
-   * fits one entry per side.
+   * What a swipe does: `reveal` rests the row open with every entry tappable,
+   * as in a UIKit list. A flick opens it, a flick back closes it, and a full
+   * swipe fires the outermost. `commit` only fires the outermost on a full
+   * swipe, sliding the row out. `commit` fits one entry per side.
    * @default 'reveal'
    */
   swipeBehavior?: ItemSwipeBehavior;
@@ -342,7 +350,9 @@ const ARIA_SELECTED_ROLES = new Set([
  */
 const SWIPE_ROLES = new Set(['listitem']);
 
-/** The travel the swipe writes on the row root, physical px (swipeMotion.ts). */
+/**
+ * The travel the swipe writes on the row root, physical px (swipeMotion.ts).
+ */
 const SWIPE_TRAVEL = 'var(--_item-swipe-travel, 0px)';
 
 // =============================================================================
@@ -532,10 +542,9 @@ const styles = stylex.create({
     marginInlineStart: 'auto',
   },
   // Swipe actions. The root translates by the travel the gesture writes on it
-  // every frame.
-  // `pan-y` lets the browser keep scrolling the list while the row owns horizontal movement. `pinch-zoom`
-  // leaves a two-finger pinch that starts on the row to the browser, so the
-  // page stays zoomable (WCAG 1.4.4).
+  // every frame. `pan-y` lets the browser keep scrolling the list while the row
+  // owns horizontal movement. `pinch-zoom` leaves a two-finger pinch that
+  // starts on the row to the browser, so the page stays zoomable (WCAG 1.4.4).
   swipeRoot: {
     isolation: 'isolate',
     touchAction: 'pan-y pinch-zoom',

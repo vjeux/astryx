@@ -23,14 +23,14 @@ export type SwipeRelease = 'closed' | 'open' | 'perform';
 
 /**
  * Where a release lands. `travel` (px, ≥ 0) and `velocity` (px/s) are logical:
- * positive toward the side being uncovered.
- * `isConfirmed`: the finger is past the confirm point as it lifts; `wasConfirmed`:
- * it was at some point during this swipe. A confirmed release fires the
- * outermost entry, whatever its velocity. Under
- * `commit`, nothing else fires and nothing rests. A swipe that confirmed and backed out closes either way. Otherwise, under `reveal`,
- * a release at
- * `releaseVelocity` or faster opens the row if it is opening and closes it if it is closing. A slower one opens it past `openFraction`
- * of its open width and closes it short of that.
+ * positive toward the side being uncovered. `isConfirmed`: the finger is past
+ * the confirm point as it lifts; `wasConfirmed`: it was at some point during
+ * this swipe. A confirmed release fires the outermost entry, whatever its
+ * velocity. Under `commit`, nothing else fires and nothing rests. A swipe that
+ * confirmed and backed out closes either way. Otherwise, under `reveal`, a
+ * release at `releaseVelocity` or faster opens the row if it is opening and
+ * closes it if it is closing. A slower one opens it past `openFraction` of its
+ * open width and closes it short of that.
  */
 export function resolveRelease({
   travel,
@@ -63,9 +63,9 @@ export function resolveRelease({
 }
 
 /**
- * The swipe at which a full swipe confirms:
- * `confirmFraction` of the way from the open width to the confirmation offset. The confirmation offset is the row width less `confirmInset`,
- * and the point is never short of the open width.
+ * The swipe at which a full swipe confirms: `confirmFraction` of the way from
+ * the open width to the confirmation offset. The confirmation offset is the row
+ * width less `confirmInset`, and the point is never short of the open width.
  */
 export function confirmPoint(openWidth: number, rowWidth: number): number {
   const confirmAt = rowWidth - swipeActions.confirmInset;
@@ -75,7 +75,10 @@ export function confirmPoint(openWidth: number, rowWidth: number): number {
   );
 }
 
-/** The row's offset once a full swipe has confirmed (UIKit's `confirmationThreshold`). */
+/**
+ * The row's offset once a full swipe has confirmed (UIKit's
+ * `confirmationThreshold`).
+ */
 export function confirmedOffset(rowWidth: number): number {
   return rowWidth - swipeActions.confirmInset;
 }
