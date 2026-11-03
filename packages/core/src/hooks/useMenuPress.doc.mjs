@@ -120,7 +120,7 @@ export const docs = {
       name: 'cancel',
       type: '() => void',
       description:
-        'End the gesture in flight with nothing acting, for when the menu closes under it. Nothing is spread: the press listens for press-downs on the menu and the trigger at their document and marks the menu root with data-astryx-menu-press. Without React, createMenuPress(menu, options) takes the same options with the trigger as an element (trigger) and returns {isTriggerClickFromPress, cancel, update, handleTriggerPointerDown, handleTriggerContextMenu, destroy}; destroy removes every listener it added.',
+        'End the gesture in flight with nothing acting, for when the menu closes under it. Nothing is spread: the press listens on the menu and its trigger itself and marks the menu root with data-astryx-menu-press. Without React, createMenuPress(menu, options) takes the same options with the trigger as an element (trigger) and returns {isTriggerClickFromPress, cancel, update, handleTriggerPointerDown, handleTriggerContextMenu, destroy}; destroy removes every listener it added.',
     },
     {
       name: 'handleTriggerPointerDown',
@@ -167,7 +167,7 @@ export const docs = {
       {
         guidance: true,
         description:
-          "Use the ref form, useMenuPress(menuRef, {triggerRef, …}): it listens for their press-downs on the menu's document, so nothing is spread; an ancestor that stops a press-down hides it. Its press, the trigger's included, exists only while the menu element is mounted, so a menu that opens on a press of its trigger keeps its element mounted while closed. The options form, useMenuPress({menuRef, …}), is deprecated (DEP-0019) and is removed in 0.8.0; run astryx upgrade to move calls to the ref form.",
+          "Use the ref form, useMenuPress(menuRef, {triggerRef, …}): it listens on the menu and the trigger itself, so nothing is spread; an ancestor that stops a press-down hides it from the press. Its press, the trigger's included, exists only while the menu element is mounted, so a menu that opens on a press of its trigger keeps its element mounted while closed. The options form, useMenuPress({menuRef, …}), is deprecated (DEP-0019) and is removed in 0.8.0; run astryx upgrade to move calls to the ref form.",
       },
     ],
   },
