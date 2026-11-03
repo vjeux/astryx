@@ -1141,6 +1141,17 @@ test('the settle does no Layout or Paint per frame', async ({
 }) => {
   test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
   const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
+  // When the page handles the lift, on its clock.
+  await page.evaluate(() => {
+    addEventListener(
+      'touchend',
+      () => {
+        (window as unknown as {liftAt?: number}).liftAt =
+          performance.timeOrigin + performance.now();
+      },
+      {capture: true, once: true},
+    );
+  });
   let settle = {from: 0, to: 0};
   const trace = await traceRendering(page, async () => {
     await driver.play(
@@ -1149,8 +1160,26 @@ test('the settle does no Layout or Paint per frame', async ({
     [settle] = await waitForAnimation(sheet);
     await waitForRest(sheet);
   });
-  // The steady part of the settle: its first and last frames may commit.
-  const during = countBetween(trace, settle.from + 50, settle.to - 50);
+  const liftAt = await page.evaluate(
+    () => (window as unknown as {liftAt?: number}).liftAt ?? Number.NaN,
+  );
+  expect(
+    trace.presented,
+    'the compositor record needs this page alone',
+  ).not.toBeNull();
+  const presented = trace.presented ?? [];
+  // The touch's own end repaints the page and the sheet in the first frame
+  // presented after the lift. The steady part starts at the second, and its
+  // last frame may commit.
+  const first = presented.findIndex(t => t > liftAt);
+  expect(first, 'a frame presented after the lift').toBeGreaterThanOrEqual(0);
+  const steadyFrom = presented[first + 1] ?? Number.NaN;
+  const steadyTo = settle.to - 50;
+  // The sheet travels, and the compositor presents it, through that part.
+  expect(
+    presented.filter(t => t >= steadyFrom && t <= steadyTo).length,
+  ).toBeGreaterThanOrEqual(5);
+  const during = countBetween(trace, steadyFrom, steadyTo);
   expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
   expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
   expect(trace.longTasks).toEqual([]);

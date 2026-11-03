@@ -83,6 +83,12 @@ export interface RenderingTrace {
   }[];
   /** Every counted rendering event with its epoch-ms time, for sub-window counts. */
   readonly events: readonly {readonly name: string; readonly t: number}[];
+  /**
+   * When the compositor presented each frame inside the window, epoch ms
+   * (`Display::FrameDisplayed`). The record is browser-wide, so this is null
+   * unless the page was the browser's only one for the whole window.
+   */
+  readonly presented: readonly number[] | null;
   /** The window, epoch ms on the page's clock. */
   readonly window: {readonly from: number; readonly to: number};
 }
@@ -123,6 +129,8 @@ export async function traceRendering(
   body: () => Promise<unknown>,
 ): Promise<RenderingTrace> {
   const cdp: CDPSession = await page.context().newCDPSession(page);
+  const aloneAtStart = !hasOtherPage(page);
+  const others = await watchForOtherPages(page);
   const events: TraceEvent[] = [];
   cdp.on('Tracing.dataCollected', ({value}) => {
     events.push(...(value as unknown as TraceEvent[]));
@@ -138,6 +146,7 @@ export async function traceRendering(
         'disabled-by-default-devtools.timeline',
         'blink.user_timing',
         'toplevel',
+        'disabled-by-default-display.framedisplayed',
       ],
       excludedCategories: ['*'],
     },
@@ -154,6 +163,7 @@ export async function traceRendering(
   await cdp.send('Tracing.end');
   await complete;
   await cdp.detach().catch(() => {});
+  const alone = aloneAtStart && !(await others.stop()) && !hasOtherPage(page);
 
   const start = events.find(e => e.name === `${tag}:start`);
   const end = events.find(e => e.name === `${tag}:end`);
@@ -225,7 +235,23 @@ export async function traceRendering(
     devtoolsTasks,
     events: counted,
     window: {from: fromEpoch, to: toEpoch},
+    presented: alone
+      ? events
+          .filter(
+            e =>
+              e.name === 'Display::FrameDisplayed' &&
+              e.ts >= start.ts &&
+              e.ts <= end.ts,
+          )
+          .map(e => toEpochMs(e.ts))
+          .sort((a, b) => a - b)
+      : null,
   };
+}
+
+/** Whether another page is open in the browser. */
+function hasOtherPage(page: Page): boolean {
+  return openPages(page).some(other => other !== page && !other.isClosed());
 }
 
 /**
@@ -284,7 +310,7 @@ async function watchForOtherPages(
 }
 
 function assertOnlyPage(page: Page, when: string): void {
-  if (openPages(page).some(other => other !== page && !other.isClosed())) {
+  if (hasOtherPage(page)) {
     throw new Error(
       `startCompositorTrace: another page is open ${when}; the compositor record is browser-wide (its frames carry no page identity), so another page's frames would be credited to this one`,
     );
