@@ -1182,7 +1182,13 @@ test('the settle does no Layout or Paint per frame', async ({
   const during = countBetween(trace, steadyFrom, steadyTo);
   expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
   expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
-  expect(trace.longTasks).toEqual([]);
+  // A long task that starts in the steady part fails it, by the same rule as
+  // the rendering work. The lift's own task starts before it.
+  expect(
+    trace.longTasks.filter(
+      task => task.start >= steadyFrom && task.start <= steadyTo,
+    ),
+  ).toEqual([]);
 });
 
 /**
