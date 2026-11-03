@@ -21,12 +21,14 @@ import {
   parentAcrossShadow,
 } from '../utils/flatTree';
 import {getLastPointerType, subscribeInput} from '../utils/inputStream';
+import {isModalOutletHost, notifyTopLayerEntry} from './modalOutlet';
 
 /**
  * What a hold does. `'viewport'` and `'layer'` add one shield over the whole
  * viewport. `'layer'` also makes the layer's content inert and moves focus
- * out of it. `'surface'` shields only the layer's own box, and the page
- * around it stays live.
+ * out of it. A global host in the layer, such as the toast viewport, stays
+ * live and goes back above the shield. `'surface'` shields only the layer's
+ * own box, and the page around it stays live.
  */
 export type InputHoldScope = 'viewport' | 'layer' | 'surface';
 
@@ -309,6 +311,8 @@ export function holdInput(
     state.shield.style.pointerEvents = 'auto';
     if (state.layer === 1) {
       state.inertContent = makeContentInert(layer, state.shield);
+      // Global hosts re-enter the top layer above the shield.
+      notifyTopLayerEntry();
     }
   }
   let isReleased = false;
@@ -697,12 +701,13 @@ function createPressHold(doc: Document): PressHold | null {
 }
 
 /**
- * Makes the layer's content inert, except the shield, and moves focus out of
- * it. An element that turns inert while focused keeps its focus and its key
- * activation. Enter and Space still click such a button until the engine's
- * focus fixup runs, if it runs. Blurring it leaves focus on the document, as
- * that fixup does. The layer element itself stays live. An inert subtree is
- * no hit target, so the shield inside the layer still catches every hit.
+ * Makes the layer's content inert, except the shield and the global hosts,
+ * and moves focus out of it. An element that turns inert while focused keeps
+ * its focus and its key activation. Enter and Space still click such a button
+ * until the engine's focus fixup runs, if it runs. Blurring it leaves focus on
+ * the document, as that fixup does. The layer element itself stays live. An
+ * inert subtree is no hit target, so the shield inside the layer still catches
+ * every hit.
  */
 function makeContentInert(
   layer: Element,
@@ -710,7 +715,7 @@ function makeContentInert(
 ): Map<Element, boolean> {
   const content = new Map<Element, boolean>();
   for (const child of layer.children) {
-    if (child !== shield) {
+    if (child !== shield && !isModalOutletHost(child)) {
       content.set(child, child.hasAttribute('inert'));
       child.setAttribute('inert', '');
     }
