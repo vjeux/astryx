@@ -133,6 +133,8 @@ export function useZoomStage(
     setZoomed,
     settleTo,
   } = core;
+  // NOT FOR LANDING: the options of the first render, read by the tap.
+  const [staleOptions] = useState(options);
   const pinchRef = useRef<PinchSession | null>(null);
   const panRef = useRef<PanSession | null>(null);
   /** A touch stopped a moving photo; a pan or pinch has since taken over. */
@@ -435,7 +437,7 @@ export function useZoomStage(
         point.y >= top &&
         point.y <= top + geometry.fit.height * scale;
       if (!inside) {
-        options.onTapOutside?.();
+        staleOptions.onTapOutside?.();
       }
     },
     recognizerOptions,

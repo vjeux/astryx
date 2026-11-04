@@ -1004,6 +1004,36 @@ describe('Lightbox gestures for a mouse and a pen (spec:AST-094 FR43)', () => {
     };
   }
 
+  it('reports a click beside the photo to the newest onOpenChange', () => {
+    // The stage's gestures read the props of the latest render, so a parent's
+    // new callback is the one a click beside the photo reaches.
+    vi.useFakeTimers();
+    try {
+      const first = vi.fn();
+      const second = vi.fn();
+      const photo = {src: '/photo.jpg', alt: 'Photo'};
+      const view = render(
+        <Lightbox isOpen={true} onOpenChange={first} media={photo} hasZoom />,
+      );
+      view.rerender(
+        <Lightbox isOpen={true} onOpenChange={second} media={photo} hasZoom />,
+      );
+      const stage = screen.getByRole('button', {name: 'Zoom'});
+      // Above the photo, which the stage centres at its fitted size.
+      const t0 = performance.now();
+      pointer('pointerdown', stage, 'mouse', 200, 50, t0);
+      pointer('pointerup', stage, 'mouse', 200, 50, t0 + 40);
+      // A single click waits out a double-click's interval.
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(second).toHaveBeenCalledWith(false);
+      expect(first).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('zooms a mouse double-click 2× about the clicked point, and back', async () => {
     const {stage, img} = renderPhoto();
     // Filling the viewer would take 3×. The clicked photo point stays under
