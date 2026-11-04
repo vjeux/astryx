@@ -28,7 +28,12 @@
 //
 // A mouse never takes the lock, so its released behavior stays (AST-017).
 
-import {containsAlongFlatTree, parentAcrossShadow} from './flatTree';
+import {
+  containsAlongFlatTree,
+  parentAcrossShadow,
+  shadowHostOf,
+  shadowRootsOutward,
+} from './flatTree';
 import {subscribeInput} from './inputStream';
 import {isIosWebKit} from './touchQueries';
 
@@ -311,9 +316,7 @@ export function startsOnSelectableText(
   // Text directly under a shadow root takes its host's style.
   const element =
     node.parentElement ??
-    (node.parentNode?.nodeType === 11
-      ? (node.parentNode as ShadowRoot).host
-      : null);
+    (node.parentNode == null ? null : shadowHostOf(node.parentNode));
   if (element == null || !allowsSelection(element) || isInButton(node)) {
     return false;
   }
@@ -598,22 +601,12 @@ function ownShadowRoot(target: EventTarget | null): ShadowRoot[] {
 
 /** The open shadow roots on `target`'s root chain, innermost first. */
 function openShadowRootsOf(target: EventTarget | null): ShadowRoot[] {
-  const roots: ShadowRoot[] = [];
-  let root =
-    target != null && typeof (target as Node).nodeType === 'number'
-      ? (target as Node).getRootNode()
-      : null;
-  while (root != null && root.nodeType === 11) {
-    const host = (root as ShadowRoot).host as Element | undefined;
-    if (host == null) {
-      break;
-    }
-    if ((root as ShadowRoot).mode === 'open') {
-      roots.push(root as ShadowRoot);
-    }
-    root = host.getRootNode();
+  if (target == null || typeof (target as Node).nodeType !== 'number') {
+    return [];
   }
-  return roots;
+  return shadowRootsOutward((target as Node).getRootNode())
+    .map(({root}) => root)
+    .filter(root => root.mode === 'open');
 }
 
 /** The focused element, inside open shadow roots too. */
