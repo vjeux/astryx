@@ -24,6 +24,8 @@ import {useIsomorphicLayoutEffect} from './useIsomorphicLayoutEffect';
  * or the document. A replaced node is released and the new one attached, a
  * changed `key` re-attaches, and the last attachment is released on unmount;
  * a commit that changes neither does nothing (react-component-runtime INV3).
+ * A node that moves to another document is released and attached again,
+ * since its attachment may listen on its old document.
  */
 export function useAttachment<T extends Node = Element>(
   ref: RefObject<T | null>,
@@ -55,8 +57,8 @@ export function useAttachmentPair<A extends Element, B extends Element>(
 
 /**
  * The lifecycle both share: one attachment of the nodes the refs hold. It is
- * made once every node is there, and released when a node or `key` changes
- * and at unmount.
+ * made once every node is there, and released when a node, a node's document
+ * or `key` changes and at unmount.
  */
 function useAttachedNodes(
   refs: ReadonlyArray<RefObject<Node | null>>,
@@ -65,6 +67,7 @@ function useAttachedNodes(
 ): void {
   const attachmentRef = useRef<{
     nodes: ReadonlyArray<Node>;
+    documents: ReadonlyArray<Document | null>;
     key: unknown;
     release: () => void;
   } | null>(null);
@@ -76,7 +79,11 @@ function useAttachedNodes(
     if (
       current != null &&
       current.key === key &&
-      nodes.every((node, index) => node === current.nodes[index])
+      nodes.every(
+        (node, index) =>
+          node === current.nodes[index] &&
+          node.ownerDocument === current.documents[index],
+      )
     ) {
       return;
     }
@@ -84,6 +91,7 @@ function useAttachedNodes(
     attachmentRef.current = nodes.every(node => node != null)
       ? {
           nodes: nodes,
+          documents: nodes.map(node => node.ownerDocument),
           key,
           release: attach(nodes),
         }
