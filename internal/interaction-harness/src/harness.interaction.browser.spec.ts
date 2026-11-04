@@ -4799,6 +4799,17 @@ test.describe('page freeze', () => {
         [{transform: 'translateX(0px)'}, {transform: 'translateX(100px)'}],
         {duration: 200},
       );
+      // NOT FOR LANDING: the page draws no frame for 500 ms after the run
+      // starts, as on a loaded machine (the harness's real clock).
+      setTimeout(() => {
+        const read =
+          (window as unknown as {__harnessTimerGate?: {now?: () => number}})
+            .__harnessTimerGate?.now ?? (() => performance.now());
+        const start = read();
+        while (read() - start < 500) {
+          /* busy */
+        }
+      }, 0);
     });
     // Over before the freeze, and read only after the thaw.
     await page.waitForTimeout(400);
@@ -4824,6 +4835,17 @@ test.describe('page freeze', () => {
         [{transform: 'translateX(0px)'}, {transform: 'translateX(400px)'}],
         {duration: 60_000, easing: 'linear'},
       );
+      // NOT FOR LANDING: the page draws no frame for 300 ms after the run
+      // starts, as on a loaded machine (the harness's real clock).
+      setTimeout(() => {
+        const read =
+          (window as unknown as {__harnessTimerGate?: {now?: () => number}})
+            .__harnessTimerGate?.now ?? (() => performance.now());
+        const start = read();
+        while (read() - start < 300) {
+          /* busy */
+        }
+      }, 0);
     });
     await page.waitForTimeout(100);
     // Where the run started, on the page's clock, before any freeze.
