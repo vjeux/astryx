@@ -4,15 +4,17 @@
  * @file transcriptDismiss.ts
  * @input The gesture system's pan recognizer, the keyboard module's height,
  *   bringsUpKeyboard and the line where a release dismisses
- * @output createKeyboardDismissPan and dismissKeyboardAtRelease: a touch or
- *   pen drag down a transcript to its composer dismisses the software
- *   keyboard, as UIScrollView's interactive `keyboardDismissMode` does
- * @position Internal to Chat. ChatLayout attaches the pan to its root, with
- *   its composer's top as the line.
+ * @output createKeyboardDismissPan, dismissKeyboardAtRelease and
+ *   attachKeyboardDismiss: a touch or pen drag down a transcript to its
+ *   composer dismisses the software keyboard, as UIScrollView's interactive
+ *   `keyboardDismissMode` does
+ * @position Internal to Chat. transcriptDismissLoader.ts loads it and
+ *   attaches the pan to ChatLayout's root, with its composer's top as the line.
  *
  * SYNC: When modified, update /packages/core/src/Chat/ChatLayout.tsx
  */
 
+import {getGestureHost} from '../gestures/GestureHost';
 import {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
 import type {GestureTouch} from '../gestures/types';
 import {bringsUpKeyboard} from '../keyboard/keyboardLayoutGuide';
@@ -105,10 +107,9 @@ function startsDismissDrag(
  *
  * @example
  * ```
- * useGestureRecognizer(
- *   transcriptRef,
- *   () => createKeyboardDismissPan(() => composer.getBoundingClientRect().top),
- *   dismissKeyboardAtRelease,
+ * const detach = attachKeyboardDismiss(
+ *   transcript,
+ *   () => composer.getBoundingClientRect().top,
  * );
  * ```
  */
@@ -150,4 +151,22 @@ export function dismissKeyboardAtRelease(pan: PanGestureRecognizer): void {
   if (pan.location().y >= drag.line) {
     focusedEditable(drag.doc)?.blur();
   }
+}
+
+/**
+ * Attaches a pan from `createKeyboardDismissPan` to `root` through the
+ * gesture host, with `dismissKeyboardAtRelease` as its action. Returns the
+ * detach.
+ */
+export function attachKeyboardDismiss(
+  root: Element,
+  dismissLine: () => number,
+): () => void {
+  const pan = createKeyboardDismissPan(dismissLine);
+  const stopListening = pan.addListener(() => dismissKeyboardAtRelease(pan));
+  const detach = getGestureHost(root.ownerDocument).attach(root, pan);
+  return () => {
+    detach();
+    stopListening();
+  };
 }

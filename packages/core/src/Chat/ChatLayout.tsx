@@ -5,7 +5,7 @@
 /**
  * @file ChatLayout.tsx
  * @input Uses React, StyleX, theme tokens, useChatStreamScroll, useChatNewMessages,
- *   useGestureRecognizer and the keyboard dismissal pan
+ *   useAttachment and the keyboard dismissal's loader
  * @output Exports ChatLayout component and ChatLayoutProps
  * @position Layout shell for full chat interfaces — messages in page flow, composer fixed to bottom
  *
@@ -28,7 +28,7 @@
  * - /packages/core/src/Chat/index.ts (exports)
  * - /apps/storybook/stories/ChatLayout.stories.tsx
  * - /packages/cli/assets/templates/blocks/components/ChatLayout/ (block examples)
- * - /packages/core/src/Chat/transcriptDismiss.ts (the dismiss line)
+ * - /packages/core/src/Chat/transcriptDismissLoader.ts (the dismiss line)
  */
 
 import {type ReactNode, useMemo, useRef} from 'react';
@@ -40,11 +40,8 @@ import {useChatStreamScroll} from './useChatStreamScroll';
 import {useChatNewMessages} from './useChatNewMessages';
 import {ChatLayoutScrollButton} from './ChatLayoutScrollButton';
 import {ChatLayoutContext} from './ChatContext';
-import {
-  createKeyboardDismissPan,
-  dismissKeyboardAtRelease,
-} from './transcriptDismiss';
-import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
+import {attachKeyboardDismissOnFirstKeyboard} from './transcriptDismissLoader';
+import {useAttachment} from '../hooks/useAttachment';
 import {themeProps} from '../utils/themeProps';
 
 import {useMergedRefs} from '../hooks/useMergedRefs';
@@ -337,18 +334,20 @@ export function ChatLayout({
   );
 
   // A touch or pen drag down the transcript that lifts at or past the
-  // composer's top dismisses the software keyboard, as in Messages.
-  useGestureRecognizer(
+  // composer's top dismisses the software keyboard, as in Messages. Its
+  // gesture code loads when a software keyboard first shows.
+  useAttachment(
     rootRef,
-    () =>
-      createKeyboardDismissPan(
+    root =>
+      attachKeyboardDismissOnFirstKeyboard(
+        root,
         // Where the page draws the composer. A browser's own pan to the
         // focused field moves it with the page.
         () =>
           composerRef.current?.getBoundingClientRect().top ??
           Number.POSITIVE_INFINITY,
       ),
-    dismissKeyboardAtRelease,
+    null,
   );
 
   // --- Layout context ---
