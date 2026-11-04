@@ -199,7 +199,10 @@ work.
   the previous interval's, updated on each moved sample, and a scrolling
   surface's release is 0.25 times the newest pan value plus 0.75 times the
   previous one; a contact
-  still for longer than the stillness interval before lifting reads 0. It is not exported. No Core component keeps its own sample
+  still for longer than the stillness interval before lifting reads 0. Moved
+  samples less than 1.5 ms apart count as one sample, the newer: no pointer
+  delivers samples that close, so they are events that an engine stamped as
+  it dispatched them after a stall. It is not exported. No Core component keeps its own sample
   buffer, velocity math, or alternative release filter; a component's flick
   threshold compares the tracker's release velocity. Lab keeps no copy of
   it: no Lab component has its own sample buffer, velocity math, or release

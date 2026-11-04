@@ -29,7 +29,9 @@
  * flings after a rest; and 0 with fewer than two moved samples.
  *
  * Feed it one sample per input event: coalesced samples would change its
- * timing.
+ * timing. Moved samples less than 1.5 ms apart count as one sample, the
+ * newer: no pointer delivers samples that close, so they are events that an
+ * engine stamped as it dispatched them after a stall.
  *
  * SYNC: When modified, update VelocityTracker.test.ts.
  */
@@ -46,6 +48,12 @@ export interface VelocityTrackerOptions {
 }
 
 const ZERO: Point = {x: 0, y: 0};
+/**
+ * A moved sample this close to the one before, ms, arrived in the same bunch.
+ * Pointers deliver samples further apart at every rate up to 500 Hz, which is
+ * 2 ms.
+ */
+const BUNCHED_MS = 1.5;
 const PAN_CURRENT_WEIGHT = UIKIT_VELOCITY.currentWeight.value;
 const SCROLL_CURRENT_WEIGHT = UIKIT_VELOCITY.scrollReleaseWeight.value;
 
@@ -86,8 +94,8 @@ export class VelocityTracker {
 
   /**
    * Record a position. Timestamps must not go backwards (an older sample is
-   * ignored), and a moved sample at the newest moved sample's timestamp
-   * replaces it. A sample at the newest position is not motion: it changes
+   * ignored), and a moved sample less than `BUNCHED_MS` after the newest
+   * moved sample replaces it. A sample at the newest position is not motion: it changes
    * no velocity, unless `isMotion` says the contact moved anyway (a pinch's
    * value holding while both fingers move, which reads as zero velocity for
    * that interval).
@@ -106,7 +114,7 @@ export class VelocityTracker {
     if (last != null && x === last.x && y === last.y && !isMotion) {
       return;
     }
-    if (last != null && time === last.time) {
+    if (last != null && time - last.time < BUNCHED_MS) {
       this.moved[this.moved.length - 1] = {x, y, time};
     } else {
       this.moved.push({x, y, time});

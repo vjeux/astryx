@@ -5,8 +5,9 @@
  * @input Synthetic finger traces with known velocities
  * @output UIKit's filter against the velocities UIKit reported on recorded
  *   touch streams; steady motion, a hard acceleration, the release rules
- *   (stillness, two moved samples), moved-only updates and the scroll-view
- *   release blend (architecture:interaction-modality INV10, spec:AST-100 FR2)
+ *   (stillness, two moved samples), moved-only updates, bunched samples and
+ *   the scroll-view release blend (architecture:interaction-modality INV10,
+ *   spec:AST-100 FR2)
  * @position Unit tests of packages/core/src/gestures/VelocityTracker.ts
  */
 
@@ -248,6 +249,32 @@ describe('VelocityTracker', () => {
     // An older timestamp is ignored.
     tracker.add(500, 500, 5);
     expect(tracker.lastSample).toEqual({x: 20, y: 20, time: 10});
+  });
+
+  it('counts moved samples less than 1.5 ms apart as one sample, the newer', () => {
+    // 1250 px/s at 16 ms frames, a 48 ms stall, and one more event 1 ms after
+    // the stall's: the times an engine gives a queue it stamps as it
+    // dispatches. The interval runs from 32 ms to 81 ms.
+    const tracker = new VelocityTracker();
+    tracker.add(0, 0, 0);
+    tracker.add(20, 0, 16);
+    tracker.add(40, 0, 32);
+    tracker.add(60, 0, 80);
+    tracker.add(80, 0, 81);
+    const pan = 0.2 * ((40 / 49) * 1000) + 0.8 * 1250;
+    expect(tracker.velocity(81).x).toBeCloseTo(pan, 6);
+    expect(tracker.scrollVelocity(81).x).toBeCloseTo(
+      0.25 * pan + 0.75 * 1250,
+      6,
+    );
+  });
+
+  it('keeps samples 2 ms apart, a 500 Hz pointer, as separate samples', () => {
+    // x = 0.02 t^2 (px, ms) every 2 ms: 0.8 on the interval that ends at
+    // 38 ms (1480 px/s) and 0.2 on the newest (1560 px/s).
+    const tracker = new VelocityTracker();
+    trace(tracker, t => 0.02 * t * t, 40, 2);
+    expect(tracker.velocity(40).x).toBeCloseTo(0.8 * 1480 + 0.2 * 1560, 3);
   });
 
   it('forgets everything on reset', () => {
