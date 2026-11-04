@@ -160,7 +160,11 @@ FR4's first-move rule has three accepted tradeoffs, which are not gaps:
 - **A touch before the swipe's code loads stays the page's.** The swipe's code
   loads when the page is idle after its load event, or when the first toast
   shows if that comes first. A touch that begins on a toast before the code
-  loads does not swipe, and it scrolls the page instead.
+  loads does not swipe, and it scrolls the page instead. On a slow phone
+  profile (4× CPU, Slow 4G), the code arrives about 0.15 s after the first
+  toast shows, or about 5.5 s after the load event when no toast shows
+  first. Until then, a custom-content toast with no control and no auto-hide
+  cannot be dismissed by touch.
 
 ## Ownership boundary
 

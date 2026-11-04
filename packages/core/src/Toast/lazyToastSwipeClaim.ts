@@ -10,12 +10,8 @@
  * @position Internal to Toast: the claim of its swipe
  *
  * The claim brings in the gesture host, so no import of Toast or Layer holds
- * it (Popover/lazyPopoverBottomSheet.ts does the same for the sheet). It loads
- * when the page is idle after its load event, or when the first toast shows,
- * whichever comes first. It renders nothing until the module loads, and
- * nothing on the server or in the render that hydrates server HTML.
- * A module that fails to load (offline, or removed by a deploy) gives a claim
- * that renders nothing. The toast stays, and the page keeps the touch.
+ * it. It renders nothing on the server, in the hydrating render, and when its
+ * module fails to load. The toast then stays, and the page keeps the touch.
  */
 
 import {
