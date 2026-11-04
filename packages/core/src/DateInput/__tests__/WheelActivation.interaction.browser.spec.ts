@@ -95,6 +95,35 @@ async function openMonthYearWheels(
     x: fieldBox.x + fieldBox.width / 2,
     y: fieldBox.y + fieldBox.height / 2,
   });
+  // NOT FOR LANDING: the page presents no frame for 6 s from here, as a
+  // starved runner showed (one frame in 6 s). Scripts and input still run;
+  // a frame callback asked for meanwhile runs once the 6 s are over.
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      requestAnimationFrame: typeof requestAnimationFrame;
+      __harnessTimerGate?: {
+        frame: typeof requestAnimationFrame;
+        timeout?: typeof setTimeout;
+      };
+    };
+    const until = performance.now() + 6000;
+    const later =
+      w.__harnessTimerGate?.timeout ?? window.setTimeout.bind(window);
+    const hold =
+      (real: typeof requestAnimationFrame): typeof requestAnimationFrame =>
+      callback => {
+        const wait = until - performance.now();
+        if (wait <= 0) {
+          return real(callback);
+        }
+        later(() => real(callback), wait);
+        return 0;
+      };
+    w.requestAnimationFrame = hold(window.requestAnimationFrame.bind(window));
+    if (w.__harnessTimerGate != null) {
+      w.__harnessTimerGate.frame = hold(w.__harnessTimerGate.frame);
+    }
+  });
   const title = page.locator('[data-title="month-year"]');
   await expect(title).toBeVisible();
   // The sheet rises to its open position, where its transform is the identity.
