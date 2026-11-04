@@ -71,7 +71,8 @@ export default function PanPlayingCard() {
   }
 
   // The drag writes the card's style in onPan: no render per move.
-  usePanGesture(card, {
+  usePanGesture({
+    ref: card,
     onPan: ({state, translation, velocity}) => {
       // A drag that meets a throw is ignored to its end. Its moves would
       // cancel the throw's transitions, and the next card would jump to it.

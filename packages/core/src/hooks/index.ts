@@ -152,6 +152,7 @@ export type {
 } from './useContainerReveal';
 
 export {usePanGesture} from './usePanGesture';
+export type {UsePanGestureOptions} from './usePanGesture';
 export type {
   PanGesture,
   PanGestureEvent,

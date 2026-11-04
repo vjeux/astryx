@@ -18,16 +18,17 @@ export const docs = {
   ],
   params: [
     {
-      name: 'ref',
-      type: 'RefObject<Element | null>',
+      name: 'options',
+      type: 'UsePanGestureOptions',
       description:
-        'The element to drag. The hook creates one pan for the element behind the ref, creates a new one when the ref moves to another node or `axis` changes, and destroys it at unmount; a drag in progress then ends without a `cancelled` event, since an effect never calls `onPan`.',
+        'Configuration object: the element to drag and the pan’s options.',
       required: true,
     },
     {
-      name: 'options',
-      type: 'PanGestureOptions',
-      description: 'Configuration object.',
+      name: 'options.ref',
+      type: 'RefObject<Element | null>',
+      description:
+        'The element to drag. The hook creates one pan for the element behind the ref, creates a new one when the ref moves to another node or `axis` changes, and destroys it at unmount; a drag in progress then ends without a `cancelled` event, since an effect never calls `onPan`.',
       required: true,
     },
     {
@@ -50,7 +51,7 @@ export const docs = {
       name: 'void',
       type: 'void',
       description:
-        'Nothing: the hook hands out no recognizer. Without React, `createPanGesture(element, options)` takes the same options and returns `{destroy}`, which removes every listener it added and cancels a drag in progress.',
+        'Nothing: the hook hands out no recognizer. Without React, `createPanGesture(element, options)` takes the element first, then the same options, and returns `{destroy}`, which removes every listener it added and cancels a drag in progress.',
     },
   ],
   usage: {
@@ -116,8 +117,9 @@ export const docsDense = {
   description:
     'Reports a drag as values ({state, translation, velocity}) for a surface you move yourself; a finger, a mouse and a pen all drive it. Claims at UIKit’s 10 pt; taps, presses and long presses are never a pan, and with axis a scroll across it stays the page’s. Thin layer over createPanGesture(element, options) → {destroy}. No keyboard path of its own: give the drag another way (WCAG 2.5.7). Reduce Motion: honor it in the animation you drive. Prefer BottomSheet snapPoints / Carousel hasSnap when they fit.',
   paramDescriptions: {
-    ref: 'element to drag; one pan per node, re-created when the ref moves, destroyed at unmount.',
-    options: 'config object.',
+    options: 'config object: the element to drag and the pan options.',
+    'options.ref':
+      'element to drag; one pan per node, re-created when the ref moves, destroyed at unmount.',
     'options.axis':
       "'x' | 'y': limit to one axis; the other is never reported and reads 0.",
     'options.onPan':

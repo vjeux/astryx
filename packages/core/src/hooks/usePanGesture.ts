@@ -23,12 +23,19 @@ import {
 } from '../gestures/createPanGesture';
 import {useAttachment} from './useAttachment';
 
+/** The element to drag, with the pan's options. */
+export interface UsePanGestureOptions extends PanGestureOptions {
+  /** The element to drag. */
+  ref: RefObject<Element | null>;
+}
+
 /**
  * Report drags on the element behind `ref` as values.
  * @example
  * ```
  * const ref = useRef<HTMLDivElement>(null);
- * usePanGesture(ref, {
+ * usePanGesture({
+ *   ref,
  *   axis: 'x',
  *   onPan: ({state, translation}) => {
  *     ref.current!.style.translate =
@@ -37,11 +44,7 @@ import {useAttachment} from './useAttachment';
  * });
  * ```
  */
-export function usePanGesture(
-  ref: RefObject<Element | null>,
-  options: PanGestureOptions,
-): void {
-  const {axis, onPan} = options;
+export function usePanGesture({ref, axis, onPan}: UsePanGestureOptions): void {
   // Keep the latest listener without re-creating the pan on every render.
   const onPanRef = useRef(onPan);
   onPanRef.current = onPan;

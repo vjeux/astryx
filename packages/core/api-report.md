@@ -570,6 +570,7 @@ component CheckboxList(props: CheckboxListProps)
   prop hasDividers?: boolean = false
   prop isDisabled?: boolean = false
   prop isLabelHidden?: boolean = false
+  prop isOptional?: boolean = false
   prop isReadOnly?: boolean = false
   prop label: string
   prop onChange?: (values: string[]) => void
@@ -640,6 +641,7 @@ component CodeBlock(props: CodeBlockProps)
   prop onCopy?: () => void
   prop ref?: React.Ref<HTMLPreElement>
   prop size?: 'sm' | 'md'
+  prop startLineNumber?: number = 1
   prop syntaxTheme?: SyntaxThemeDefinition
   prop title?: string
   prop tokenizer?: (code: string, language: string) => { type: string; start: number; end: number }[] @deprecated
@@ -2923,7 +2925,7 @@ hook useOutlineFromDOM: (containerRef: React.RefObject<HTMLElement | null>) => O
 hook useOutlineFromMarkdown: <Node extends MarkdownExtensionNode = never>(markdown: string, options?: ParseOutlineFromMarkdownOptions<Node>) => OutlineItem[]
 hook useOverflow: (itemCount: number, options?: UseOverflowOptions) => UseOverflowReturn
 hook useOverlay: ({…}?: UseOverlayOptions) => UseOverlayResult
-hook usePanGesture: (ref: RefObject<Element | null>, options: PanGestureOptions) => void
+hook usePanGesture: ({…}: UsePanGestureOptions) => void
 hook usePopover: (options?: UsePopoverOptions) => UsePopoverReturn
 hook usePowerSearchConfig: <const D extends ReadonlyArray<FieldDefinition>>(definitions: D, configName?: string) => { config: PowerSearchConfig; applyFilters: <T extends InferData<D>>(filters: ReadonlyArray<PowerSearchFilter>, data: ReadonlyArray<T>) => T[] }
 hook usePressFeedback: () => typeof pressableProps
@@ -3346,7 +3348,8 @@ const durationDefaults: object
   --duration-slow-min: '730ms'
   --duration-slow: '975ms'
   --duration-slow-max: '1300ms'
-const durationVars: stylex.VarGroup<Readonly<{ readonly '--duration-fast-min': "130ms"; readonly '--duration-fast': "175ms"; readonly '--duration-fast-max': "230ms"; readonly '--du … #4dd3e52f
+  --duration-exit: 'var(--duration-fast)'
+const durationVars: stylex.VarGroup<Readonly<{ readonly '--duration-fast-min': "130ms"; readonly '--duration-fast': "175ms"; readonly '--duration-fast-max': "230ms"; readonly '--du … #f2df5593
 const easeDefaults: object
   --ease-standard: 'cubic-bezier(0.24, 1, 0.4, 1)'
   --ease-entrance: 'cubic-bezier(0.24, 1, 0.4, 1)'
@@ -6045,6 +6048,10 @@ interface UseOverlayResult
   containerRef: React.RefObject<HTMLElement | null>
   element: ReactElement | null
   renderOverlay: (children: ReactNode) => ReactElement
+interface UsePanGestureOptions extends PanGestureOptions
+  axis?: 'x' | 'y'
+  onPan: (event: PanGestureEvent) => void
+  ref: RefObject<Element | null>
 interface UsePopoverOptions
   className?: string
   closeButtonLabel?: string = "Close popover"
@@ -9132,6 +9139,7 @@ UseMenuPressOptions (.)
 UseMenuPressReturn (.)
 UseOverflowOptions (.)
 UseOverflowReturn (.)
+UsePanGestureOptions (.)
 UseScrollableAreaOptions (.)
 UseScrollableAreaResult (.)
 UseStreamingTextOptions (.)
@@ -9919,6 +9927,7 @@ var --container-padding-block-end (./astryx.css)
 var --container-padding-block-start (./astryx.css)
 var --container-padding-inline-end (./astryx.css)
 var --container-padding-inline-start (./astryx.css)
+var --duration-exit (./astryx.css)
 var --duration-fast (./astryx.css)
 var --duration-fast-max (./astryx.css)
 var --duration-fast-min (./astryx.css)
