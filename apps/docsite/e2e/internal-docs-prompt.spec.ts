@@ -310,6 +310,13 @@ test(`${target}: a probe with no answer by its deadline exposes no internal word
   baseURL,
 }) => {
   await page.setViewportSize({width: 1440, height: 900});
+  // NOT FOR LANDING: red-first evidence. Chromium's CPU throttling slows
+  // the page's main thread while its clock runs at real speed, as on a
+  // loaded runner. PROBE_CPU_RATE sets the factor (default 8).
+  const throttle = await page.context().newCDPSession(page);
+  await throttle.send('Emulation.setCPUThrottlingRate', {
+    rate: Number(process.env.PROBE_CPU_RATE ?? 8),
+  });
   const origin = deployments[0].origin;
   await servePublicOrigin(page, baseURL, origin);
   // The probe's request is held and never answered.
