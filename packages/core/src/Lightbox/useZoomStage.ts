@@ -150,9 +150,8 @@ export function useZoomStage(
    * A pan gives past the edges and coasts in the touch presentation, or as a
    * trackpad's scroll.
    */
-  const hasGive = (pan: PanGestureRecognizer) =>
-    options.isTouchPresentation === true ||
-    pan.trackedTouches[0]?.scrollType != null;
+  // NOT FOR LANDING: no pan gives, the touch presentation's included.
+  const hasGive = (pan: PanGestureRecognizer) => pan == null;
 
   /**
    * A zoomed pan's release: UIScrollView's coast, bouncing at the edges.
