@@ -14,12 +14,70 @@
 
 import {useState, type ReactNode} from 'react';
 import {act, render, screen, waitFor} from '@testing-library/react';
-import {GestureRecognizer} from '@astryxdesign/core/internal/touch';
+import {
+  GestureRecognizer,
+  type MotionAnimator,
+  type MotionCurve,
+} from '@astryxdesign/core/internal/touch';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {revealProgress} from './refreshPull';
 import {
   useRefreshControl,
   type UseRefreshControlOptions,
 } from './useRefreshControl';
+
+// Records the animators that the touch layer creates, the content's first,
+// so a test can watch the settle and the indicator's fade.
+const animators = vi.hoisted(() => ({list: [] as unknown[]}));
+vi.mock('./useMotionAnimator', async importOriginal => {
+  const real = await importOriginal<typeof import('./useMotionAnimator')>();
+  return {
+    ...real,
+    useMotionAnimator: (
+      ...args: Parameters<typeof real.useMotionAnimator>
+    ): ReturnType<typeof real.useMotionAnimator> => {
+      const result = real.useMotionAnimator(...args);
+      if (!animators.list.includes(result.animator)) {
+        animators.list.push(result.animator);
+      }
+      return result;
+    },
+  };
+});
+
+/**
+ * Gives the content's settle back to the top the curve from `settleCurve`
+ * and an end that the test controls. Records the curves that the indicator
+ * plays on its opacity.
+ */
+function watchFade(settleCurve: () => MotionCurve | null) {
+  const [contentAnimator, indicatorAnimator] = animators.list.slice(
+    -2,
+  ) as MotionAnimator[];
+  let finishSettle: (done: boolean) => void = () => {};
+  const animate = contentAnimator.animate.bind(contentAnimator);
+  vi.spyOn(contentAnimator, 'animate').mockImplementation(
+    (to, transition, options) => {
+      const handle = animate(to, transition, options);
+      if (to.y !== 0) {
+        return handle;
+      }
+      const curve = settleCurve();
+      const finished = new Promise<boolean>(resolve => {
+        finishSettle = resolve;
+      });
+      return {...handle, finished, curve: () => curve};
+    },
+  );
+  const play = vi.spyOn(indicatorAnimator, 'play');
+  return {
+    fades: () =>
+      play.mock.calls
+        .map(([curves]) => curves.opacity)
+        .filter((curve): curve is MotionCurve => curve != null),
+    finishSettle: (done: boolean) => finishSettle(done),
+  };
+}
 
 /**
  * Gives a scroll container the height of the scroll view that UIKit's frames
@@ -388,6 +446,54 @@ describe('useRefreshControl', () => {
     expect(onRefresh).not.toHaveBeenCalled();
     await waitFor(() => expect(translateY(content())).toBe(0));
     expect(content()).not.toHaveAttribute('aria-busy');
+  });
+
+  it('fades the indicator along the content settle curve when a pull ends below the trigger', () => {
+    animators.list.length = 0;
+    render(
+      <Refreshable data-testid="refresh" onRefresh={() => {}}>
+        <p>Inbox</p>
+      </Refreshable>,
+    );
+    // A curve that no spring makes: the fade follows the settle's own curve.
+    let from = 0;
+    const settle: MotionCurve = {
+      duration: 0.8,
+      at: t => from * Math.max(0, 1 - t / 0.8),
+      velocity: t => (t < 0.8 ? -from / 0.8 : 0),
+    };
+    const fade = watchFade(() => settle);
+    pull(content(), [20, 20, 20, 10], false);
+    from = translateY(content());
+    expect(from).toBeGreaterThan(0);
+    touch('touchend', content(), 170, true);
+    const fades = fade.fades();
+    expect(fades).toHaveLength(1);
+    expect(fades[0].duration).toBe(0.8);
+    const start = revealProgress(from, 334);
+    for (const time of [0, 0.2, 0.4, 0.6, 0.8]) {
+      expect(fades[0].at(time)).toBeCloseTo(
+        revealProgress(settle.at(time), 334) / start,
+        6,
+      );
+    }
+  });
+
+  it('holds the indicator under Reduce Motion, where the settle has no curve, and resets it once the content settles', async () => {
+    animators.list.length = 0;
+    render(
+      <Refreshable data-testid="refresh" onRefresh={() => {}}>
+        <p>Inbox</p>
+      </Refreshable>,
+    );
+    const fade = watchFade(() => null);
+    pull(content(), [20, 20, 20, 10]);
+    expect(Number(reveal())).toBeGreaterThan(0);
+    expect(fade.fades()).toEqual([]);
+    await act(async () => {
+      fade.finishSettle(true);
+    });
+    await waitFor(() => expect(reveal()).toBe('0'));
   });
 
   it('ends when the promise from onRefresh settles, and removes the inset', async () => {
