@@ -212,7 +212,7 @@ export function useOwnScrollGesture(
           if (Math.max(dx, dy) < PAGER_DECISION_TRAVEL) {
             return true;
           }
-          claimed = dx >= PAGER_DECISION_TRAVEL;
+          claimed = dx >= dy;
         } else {
           if (Math.max(dx, dy) < AXIS_LOCK_SLOP) {
             return false;
