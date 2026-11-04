@@ -6,30 +6,30 @@
  * `useMenuPress({menuRef, ...options})` becomes
  * `useMenuPress(menuRef, {...options})`. The ref form takes the press-downs of
  * the menu and the trigger itself. So the spreads of the old return's
- * `menuProps` and `triggerProps` go. In a DropdownMenu trigger render
- * function, a redundant forward of `onPointerDown` or `onContextMenu` goes. It
- * goes only where a spread of the trigger props on the same element still
- * passes it. That spread comes after the forward, or before it with no other
- * spread between. Any other forward stays as it is.
+ * `menuProps` and `triggerProps` go. A trigger that got the press only
+ * through its spread gets `triggerRef` from its `ref`. In a DropdownMenu
+ * trigger render function, a redundant forward of `onPointerDown` or
+ * `onContextMenu` goes. It goes only where a spread of the trigger props on
+ * the same element still passes it. That spread comes after the forward, or
+ * before it with no other spread between. Any other forward stays as it is.
  *
  * Where it cannot prove the result, it leaves the code unchanged with a TODO.
  * That covers options that are not an object literal or that spread, and a
- * return used other than through those spreads, `isTriggerClickFromPress` and
- * `cancel`. It also covers a call that spreads no `menuProps` on the menu
- * element, since the old call then ran no press. So does a trigger that the old
- * call reached only through its spread, since a release on it closed the menu.
- * So does a spread on an element whose `ref` is not the menu's or the
- * trigger's. So does an element inside the menu or the trigger that sets
- * `onPointerDown` or spreads props. So does a component, or a child other than
- * JSX or a literal, inside them. The menu and trigger elements must sit in one
- * of the component's returns, through DOM elements, fragments and conditions
- * only. A component element or a function may mount them in a later commit,
- * when the ref form does not read their refs. With a trigger, the menu element
- * must sit in the component's one returned JSX, through DOM elements and
- * fragments only. No function, prop value or early return may stand in between.
- * The ref form has no press while the menu is unmounted. The deprecated forms
- * keep working there. Comments are the codemod's only report channel. Each is
- * added once, so a second run changes nothing.
+ * return used other than through those spreads, `isTriggerClickFromPress`
+ * and `cancel`. It also covers a call that spreads no `menuProps` on the menu
+ * element, since the old call then ran no press. So does a spread on an
+ * element whose `ref` is not the menu's or the trigger's. So does an element
+ * inside the menu or the trigger that sets `onPointerDown` or spreads props.
+ * So does a component, or a child other than JSX or a literal, inside them.
+ * The menu and trigger elements must sit in one of the component's returns,
+ * through DOM elements, fragments and conditions only. A component element or
+ * a function may mount them in a later commit, when the ref form does not
+ * read their refs. With a trigger, the menu element must sit in the
+ * component's one returned JSX, through DOM elements and fragments only. No
+ * function, prop value or early return may stand in between. The ref form has
+ * no press while the menu is unmounted. The deprecated forms keep working
+ * there. Comments are the codemod's only report channel. Each is added once,
+ * so a second run changes nothing.
  */
 
 export const meta = {
@@ -131,6 +131,25 @@ function findAttribute(opening, name) {
 /** Source text with whitespace removed, to compare two refs. */
 function sourceOf(/** @type {any} */ j, /** @type {any} */ node) {
   return j(node).toSource().replace(/\s+/g, '');
+}
+
+/** A fresh copy of a call-free chain. @param {any} j @param {any} node */
+function cloneChain(j, node) {
+  const value = unwrap(node);
+  if (value.type === 'Identifier') {
+    return j.identifier(value.name);
+  }
+  if (value.type === 'ThisExpression') {
+    return j.thisExpression();
+  }
+  const property = value.computed
+    ? j.literal(value.property.value)
+    : j.identifier(value.property.name);
+  return j.memberExpression(
+    cloneChain(j, value.object),
+    property,
+    value.computed,
+  );
 }
 
 /** @param {any} j @param {any} node @param {string} text */
@@ -261,8 +280,8 @@ function isRedeclared(
  */
 function planReturnUses(j, root, callPath, menuRef, triggerRef) {
   const parent = callPath.parent.node;
-  /** @type {{removals: Array<() => void>}} */
-  const plan = {removals: []};
+  /** @type {{removals: Array<() => void>, triggerRef: any}} */
+  const plan = {removals: [], triggerRef: null};
   if (parent.type === 'ExpressionStatement') {
     // An unused result spreads no menuProps, so the old call ran no press.
     return null;
@@ -382,13 +401,9 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
   if (triggerRef != null && spreads.triggerProps.length === 0) {
     return null;
   }
-  // A trigger that the old call reached only through its spread was not its
-  // trigger, so a release there closed the menu. As `triggerRef`, it would not.
-  if (triggerRef == null && spreads.triggerProps.length > 0) {
-    return null;
-  }
+  const hasTrigger = triggerRef != null || spreads.triggerProps.length > 0;
   if (
-    triggerRef != null &&
+    hasTrigger &&
     !spreads.menuProps.every(spread => isAlwaysRendered(j, spread, scope))
   ) {
     return null;
@@ -414,17 +429,25 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
       return null;
     }
   }
-  const triggerSource = triggerRef == null ? null : sourceOf(j, triggerRef);
+  let triggerSource = triggerRef == null ? null : sourceOf(j, triggerRef);
   for (const spread of spreads.triggerProps) {
     const ref = attributeExpression(findAttribute(spread.parent.node, 'ref'));
     if (
       ref == null ||
-      sourceOf(j, ref) !== triggerSource ||
       // A component may drop the two handlers, or give its ref to an
       // imperative handle that takes no listeners.
       !isDomElement(spread.parent.parent.node) ||
       !isAloneWithPress(spread, ['onPointerDown', 'onContextMenu'])
     ) {
+      return null;
+    }
+    if (triggerSource == null) {
+      if (!isLocalRefObject(ref, spread)) {
+        return null;
+      }
+      plan.triggerRef = cloneChain(j, ref);
+      triggerSource = sourceOf(j, ref);
+    } else if (sourceOf(j, ref) !== triggerSource) {
       return null;
     }
   }
@@ -484,6 +507,34 @@ function isReadableChild(expression) {
     'NumericLiteral',
     'Literal',
   ].includes(expression.type);
+}
+
+/**
+ * Whether `ref` names a ref object that the component makes with `useRef` or
+ * `createRef`. A callback ref or a merged ref has no `current` to read.
+ * @param {any} ref @param {any} path
+ */
+function isLocalRefObject(ref, path) {
+  if (ref.type !== 'Identifier') {
+    return false;
+  }
+  const binding = path.scope?.lookup(ref.name)?.getBindings()[ref.name]?.[0];
+  const declarator = binding?.parent?.node;
+  if (
+    declarator?.type !== 'VariableDeclarator' ||
+    declarator.id !== binding.node ||
+    declarator.init?.type !== 'CallExpression'
+  ) {
+    return false;
+  }
+  const callee = declarator.init.callee;
+  const name =
+    callee.type === 'Identifier'
+      ? callee.name
+      : callee.type === 'MemberExpression' && !callee.computed
+        ? callee.property.name
+        : null;
+  return name === 'useRef' || name === 'createRef';
 }
 
 /**
@@ -811,6 +862,11 @@ export default function transform(file, api) {
       if (plan == null) {
         report(path, CALL_COMMENT);
         return;
+      }
+      if (plan.triggerRef != null) {
+        rest.push(
+          j.objectProperty(j.identifier('triggerRef'), plan.triggerRef),
+        );
       }
       path.node.arguments = [menuRef, j.objectExpression(rest)];
       plan.removals.forEach(remove => remove());
