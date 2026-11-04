@@ -537,6 +537,11 @@ export function useRefreshTouchController({
           }
         });
     };
+    // MUTANT (red-first, not for landing): play the end at once, without the
+    // two-frame wait, so it is made before the block.
+    const playNow = pendingEnd.current;
+    pendingEnd.current = null;
+    playNow?.();
     setEndTick(tick => tick + 1);
   }, [
     content.animator,
