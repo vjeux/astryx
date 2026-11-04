@@ -4939,6 +4939,15 @@ test.describe('page freeze', () => {
       ).finished;
     });
     const frozenAt = await pageNow(page);
+    // NOT FOR LANDING: the page's clock runs 50 ms ahead of the test
+    // process's clock.
+    await page.evaluate(() => {
+      const origin = performance.timeOrigin;
+      Object.defineProperty(Performance.prototype, 'timeOrigin', {
+        configurable: true,
+        get: () => origin + 50,
+      });
+    });
     await freezePage(page);
     await page.waitForTimeout(600);
     await thawPage(page);
