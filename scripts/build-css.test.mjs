@@ -140,6 +140,18 @@ describe('build-css astryx.css', () => {
     // rest of the suite, starving other tests into nondeterministic timeouts.
     ensureCoreBuilt();
     astryxCss = await fs.readFile(path.join(CORE_DIST, 'astryx.css'), 'utf8');
+    // NOT-FOR-LANDING control: put the shared pressed rule before the shared
+    // hover rule, as the regression this guard exists for did.
+    const lines = astryxCss.split('\n');
+    const isShared = (line, token, state) =>
+      line.includes('@media (hover: hover)') &&
+      line.includes(`:${state}:where(`) &&
+      line.includes(`background-color:var(--color-overlay-${token})}`);
+    const hover = lines.findIndex(line => isShared(line, 'hover', 'hover'));
+    const pressed = lines.findIndex(line => isShared(line, 'pressed', 'active'));
+    const [moved] = lines.splice(pressed, 1);
+    lines.splice(hover, 0, moved);
+    astryxCss = lines.join('\n');
   }, 180_000);
 
   it('contains @media rules', () => {
