@@ -755,6 +755,7 @@ type SearchResponse
   type: "search"
 type SearchResultEntry
   command: string
+  deprecated?: ComponentDeprecation | undefined
   description: string
   displayName?: string | undefined
   domain: SearchDomain
@@ -1213,6 +1214,9 @@ interface ComponentAnatomyElement
 interface ComponentBestPractice
   description: string
   guidance: boolean
+interface ComponentDeprecation
+  description: string
+  replacement: string
 type ComponentDoc = SingleComponentDoc | MultiComponentDoc | SubComponentDoc
 interface ComponentEntry
   description: string
@@ -1554,6 +1558,7 @@ interface MultiComponentDoc extends ComponentBaseDoc
   audience?: DocAudience
   category?: | 'Action' | 'Chat' | 'Container' | 'Content' | 'Form Controls' | 'Data Input' | 'Data Visualization' | 'Feedback & Status' | 'Layout' | 'Navigation' | 'Overlay' | 'Table & List' | 'Utility'
   components: (ComponentEntry | ComponentRef)[]
+  deprecated?: ComponentDeprecation
   displayName: string
   examples?: ComponentExampleDoc[]
   group?: string
@@ -1671,6 +1676,7 @@ interface SingleComponentDoc extends ComponentBaseDoc
   aliases?: string[]
   audience?: DocAudience
   category?: | 'Action' | 'Chat' | 'Container' | 'Content' | 'Form Controls' | 'Data Input' | 'Data Visualization' | 'Feedback & Status' | 'Layout' | 'Navigation' | 'Overlay' | 'Table & List' | 'Utility'
+  deprecated?: ComponentDeprecation
   displayName: string
   examples?: ComponentExampleDoc[]
   group?: string
@@ -1849,6 +1855,7 @@ interface ComponentBaseDoc extends AuthoredDocGraphFields
   aliases?: string[]
   audience?: DocAudience
   category?: | 'Action' | 'Chat' | 'Container' | 'Content' | 'Form Controls' | 'Data Input' | 'Data Visualization' | 'Feedback & Status' | 'Layout' | 'Navigation' | 'Overlay' | 'Table & List' | 'Utility'
+  deprecated?: ComponentDeprecation
   displayName: string
   examples?: ComponentExampleDoc[]
   group?: string
@@ -1933,6 +1940,7 @@ interface SubComponentDoc extends Omit<ComponentBaseDoc, 'usage'>
   aliases?: string[]
   audience?: DocAudience
   category?: | 'Action' | 'Chat' | 'Container' | 'Content' | 'Form Controls' | 'Data Input' | 'Data Visualization' | 'Feedback & Status' | 'Layout' | 'Navigation' | 'Overlay' | 'Table & List' | 'Utility'
+  deprecated?: ComponentDeprecation
   description: string
   displayName: string
   examples?: ComponentExampleDoc[]
@@ -1976,6 +1984,7 @@ ComponentAccessibilityThemeStatus (./authoring)
 ComponentAccessibilityThemeTable (./authoring)
 ComponentAnatomyElement (./authoring)
 ComponentBestPractice (./authoring)
+ComponentDeprecation (./authoring)
 ComponentDoc (./authoring)
 ComponentEntry (./authoring)
 ComponentExampleDoc (./authoring)
@@ -2368,6 +2377,7 @@ ComponentAccessibilityThemeTable (./authoring)
 ComponentAnatomyElement (./authoring)
 ComponentBaseDoc (./doc)
 ComponentBestPractice (./authoring)
+ComponentDeprecation (./authoring)
 ComponentDoc (./authoring)
 ComponentEntry (./authoring)
 ComponentExampleDoc (./authoring)
