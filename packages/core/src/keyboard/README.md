@@ -244,6 +244,11 @@ keyboard module measures them from the visual viewport, as in every browser
   focused field in the keyboard report's own event, and in Chrome rides the
   content box on Gboard's slides (`rideKeyboard`, from the guide's
   transitions).
+- ChatLayout (`Chat/useChatKeyboard.ts`): lays its dock's lift and the room
+  after its messages out from the keyboard height, and rides the dock and the
+  transcript on the keyboard's slides (`rideKeyboard`). It claims focus moves
+  and taps into the composer's text (`refuseFocusReveal`, `claimTapFocus`) and
+  puts a reveal pan back (`watchRevealPan`).
 
 ## Files
 

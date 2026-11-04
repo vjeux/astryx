@@ -17,6 +17,8 @@ verified_by:
     packages/core/src/Chat/ChatLayoutScrollButton.test.tsx,
     packages/core/src/Chat/useChatStreamScroll.test.tsx,
     packages/core/src/Chat/useChatNewMessages.test.tsx,
+    packages/core/src/Chat/useChatKeyboard.test.tsx,
+    packages/core/src/Chat/__tests__/ChatLayoutKeyboard.interaction.browser.spec.ts,
     apps/storybook/stories/ChatLayout.stories.tsx,
   ]
 modules: []
@@ -33,7 +35,7 @@ architecture:
     architecture:knowledge-contracts,
   ]
 contributing: []
-system_specs: [spec:AST-025, spec:AST-029]
+system_specs: [spec:AST-025, spec:AST-029, spec:AST-099]
 ---
 
 # ChatLayout component contract

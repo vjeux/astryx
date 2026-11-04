@@ -44,6 +44,8 @@ affects_consumer_docs:
     "packages/core/src/Chat/ChatComposer.tsx",
     "packages/core/src/Chat/ChatComposerInput.tsx",
     "packages/core/src/Chat/ChatLayout.tsx",
+    "packages/core/src/Chat/useChatKeyboard.ts",
+    "packages/core/src/Chat/keyboardSurface.ts",
     "packages/core/src/keyboard/**",
     "packages/core/src/motion/android/**",
     "packages/core/src/utils/layoutViewport.ts",
@@ -332,8 +334,8 @@ No covered field meets FR9 on `main`. Each gap below is open.
   (`packages/core/src/keyboard/`) measures the keyboard, keeps focus from
   panning the page, and keeps a focused field above the keyboard: it rides a
   docked container, scrolls a field's nearest scroller, and claims the first
-  tap. BottomSheet's Tall sheet reads it. No covered field reads it yet (Gaps
-  2–9), and ChatLayout's dock does not (Gap 11).
+  tap. BottomSheet's Tall sheet and ChatLayout's dock read it. No other
+  covered field reads it yet (Gaps 2–8).
 - **Gap 2 — TextInput, TextArea, and NumberInput.** None has keyboard focus
   handling. In the page, only the browser's own reveal scroll brings the field
   into view, and nothing proves it stays above the keyboard.
@@ -359,25 +361,24 @@ No covered field meets FR9 on `main`. Each gap below is open.
   keyboard is `spec:AST-059`'s.
 - **Gap 8 — CommandPalette's search input.** It sits in a Dialog and has no
   keyboard handling.
-- **Gap 9 — ChatComposer's input.** ChatLayout docks the composer with a fixed
-  or sticky position at the bottom of the page, and neither the dock nor the
-  input applies the keyboard height, so on iOS the composer stays under the
-  keyboard. FR9 requires the dock to apply the height on its own element and
-  ride (Gap 11).
+- **Gap 9 — ChatComposer's input.** Met in ChatLayout's dock: the dock applies
+  the keyboard height on its own element and rides the keyboard, and the
+  transcript rides with it. The composer's text takes the keyboard module's
+  focus routes (`packages/core/src/Chat/useChatKeyboard.ts`).
 - **Gap 10 — Fields in a fixed host the app builds.** A covered field in the
   app's own fixed or sticky bottom bar, in a fixed Toolbar, or in a BottomSheet
   that is not a fully expanded Tall sheet, has no handling that keeps it above
   the keyboard.
-- **Gap 11 — The missing scroll range and ChatLayout's dock.** Partly met:
+- **Gap 11 — The missing scroll range.** Partly met:
   the keyboard module moves an app's docked fixed container to the keyboard's
   top, and scrolls a field's nearest scroller to put it 10 CSS px above the
   keyboard in the frame the keyboard is reported
   (`packages/core/src/keyboard/keyboardTarget.ts`), but no covered field uses
   it yet (Gap 2). No field adds the missing scroll range at its scroller's end;
   until one does, an element that has nothing to scroll does not count as a
-  scroller (the field keeps the browser's own reveal). ChatLayout's dock does
-  not apply the keyboard height. BottomSheet's inset stays local to its own
-  sheet.
+  scroller (the field keeps the browser's own reveal). BottomSheet's inset
+  stays local to its own sheet, and ChatLayout's end room stays local to its
+  own transcript (Gap 9).
 
 ### Follow-up
 
