@@ -780,7 +780,9 @@ test('in RTL the chevron points left, and turns to point down', async ({
   expect(await pointing()).toEqual({x: 0, y: 1});
 });
 
-test('a tapped day takes its selection at once', async ({page}) => {
+test('under the touch presentation, a tapped day selects at once', async ({
+  page,
+}) => {
   const {driver} = await openCalendar(page);
   const day = page.getByRole('button', {name: /October 20, 2026/});
   const box = await day.boundingBox();
@@ -789,13 +791,50 @@ test('a tapped day takes its selection at once', async ({page}) => {
   }
   await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
   // No transition on the day: nothing is animating once the tap is handled.
-  const running = await day.evaluate(
-    element => element.getAnimations({subtree: true}).length,
-  );
-  expect(running).toBe(0);
+  const puck = await day.evaluate(element => ({
+    duration: Number.parseFloat(
+      getComputedStyle(element.firstElementChild ?? element).transitionDuration,
+    ),
+    running: element.getAnimations({subtree: true}).length,
+  }));
+  expect(puck).toEqual({duration: 0, running: 0});
   await expect(page.getByRole('gridcell', {selected: true})).toContainText(
     '20',
   );
+});
+
+test.describe('with a mouse', () => {
+  test.use({hasTouch: false, isMobile: false});
+
+  test('a picked day’s selection keeps the fade, on the theme’s fast duration', async ({
+    page,
+  }) => {
+    await openStory(page, storybook(), STORY);
+    await page
+      .getByRole('button', {name: /calendar/i})
+      .first()
+      .click();
+    const day = page.getByRole('button', {name: /October 20, 2026/});
+    await day.click();
+    await expect(page.getByRole('gridcell', {selected: true})).toContainText(
+      '20',
+    );
+    const fade = await day.evaluate(element => {
+      const style = getComputedStyle(element.firstElementChild ?? element);
+      const ms = (value: string) =>
+        value.trim().endsWith('ms')
+          ? Number.parseFloat(value)
+          : Number.parseFloat(value) * 1000;
+      return {
+        property: style.transitionProperty,
+        duration: ms(style.transitionDuration),
+        fast: ms(style.getPropertyValue('--duration-fast')),
+      };
+    });
+    expect(fade.property).toBe('background-color, color, border-color');
+    expect(fade.duration).toBeGreaterThan(0);
+    expect(fade.duration).toBe(fade.fast);
+  });
 });
 
 /** The computed state of the hidden wheels panel and its fade. */

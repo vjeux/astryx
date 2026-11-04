@@ -9,7 +9,7 @@
 - The title's chevron points along the reading direction and turns a quarter turn to point down while the wheels show, on the theme's move curve. In DateInput it was a down chevron that flipped up; in DateTimeInput it was a down chevron that stayed still.
 - A tapped day takes its selection at once, with no colour transition.
 
-With a mouse, the toggle and the day's transition stay as they are.
+With a mouse or a pen, the toggle and the day's fade stay as they are.
 
 In DateTimeInput, when Done closes the wheels with focus in them, the keyboard focus moves to the shown month's day, with any pointer.
 

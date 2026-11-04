@@ -3811,14 +3811,18 @@ describe('DateInput — scroll CSS (definition-level)', () => {
     );
   });
 
-  it('under a finger: selects a tapped day at once, as UIDatePicker does', () => {
-    // datePicker.calendar.selection.tapAnimates: no animation on a tap. The
-    // shared pane fades a selection only for MonthScroller, the mouse calendar.
+  it('under the touch presentation, a tapped day selects at once; a mouse or pen selection keeps the fade', () => {
+    // UIDatePicker takes a tap's selection at once
+    // (datePicker.calendar.selection.tapAnimates). The shared pane fades a
+    // selection only for MonthScroller, the calendar of a mouse or a pen.
     const pane = read('MonthPane.tsx');
     const puck = declarations(pane, 'puck');
     expect(puck.some(line => line.startsWith('transition'))).toBe(false);
     expect(declarations(pane, 'puckFade')).toContain(
       "transitionProperty: 'background-color, color, border-color'",
+    );
+    expect(declarations(pane, 'puckFade')).toContain(
+      "transitionDuration: durationVars['--duration-fast']",
     );
     expect(read('MonthScroller.tsx')).toContain('hasSelectionFade');
     expect(read('MonthPager.tsx')).not.toContain('hasSelectionFade');
