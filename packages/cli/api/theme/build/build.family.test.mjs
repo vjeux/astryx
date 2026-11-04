@@ -88,6 +88,8 @@ export const resolvedOceanCalmTheme=defineTheme({
   write(hidden, 'ocean-calm-deep.mjs', `import {defineTheme} from '@astryxdesign/core/theme';\nimport {oceanCalmTheme} from './ocean-calm.mjs';\nexport const oceanCalmDeepTheme=defineTheme({name:'ocean-calm-deep',extends:oceanCalmTheme});\n`);
   // prettier-ignore
   write(themes, 'ocean-midnight.mjs', `import {oceanTheme} from './ocean.mjs';\nexport const oceanMidnightTheme={name:'ocean-midnight',extends:oceanTheme,tokens:{'--color-background-body':'rgb(4 20 32)'},components:{button:{base:{color:'rgb(235 250 255)'}}}};export default oceanMidnightTheme;\n`);
+  // Evidence arm, not for landing: announce each finished fixture.
+  if (process.env.ASTRYX_FIXTURE_SIGNAL) fs.appendFileSync(process.env.ASTRYX_FIXTURE_SIGNAL, `${dir}\n`);
   // prettier-ignore
   return ['themes/ocean.mjs', 'themes/.hidden/ocean-calm.mjs', 'themes/.hidden/ocean-calm-deep.mjs', 'themes/ocean-midnight.mjs'];
 }
