@@ -46,6 +46,18 @@ const testColumns: TableColumn<TestRow>[] = [
 
 const ciBudgetMultiplier = process.env.CI === 'true' ? 1.5 : 1;
 
+/**
+ * Milliseconds of CPU that this thread spends in `work`. The render budgets
+ * below are this thread's CPU time, not elapsed time. Other work on a busy
+ * machine stretches elapsed time, but not the CPU that the render itself uses.
+ */
+async function cpuTimeOf(work: () => unknown): Promise<number> {
+  const started = process.threadCpuUsage();
+  await work();
+  const used = process.threadCpuUsage(started);
+  return (used.user + used.system) / 1000;
+}
+
 // =============================================================================
 // Test: Table doesn't re-render when unrelated state changes
 // =============================================================================
@@ -440,29 +452,25 @@ describe('Table render performance', () => {
   // ===========================================================================
 
   describe('render benchmarks', () => {
-    it('should render 100 rows within performance budget', () => {
+    it('should render 100 rows within performance budget', async () => {
       const data = createTestData(100);
 
-      const startTime = performance.now();
-      render(<Table data={data} columns={testColumns} idKey="id" />);
-      const endTime = performance.now();
-
-      const renderTime = endTime - startTime;
-      console.log(`100 rows initial render: ${renderTime.toFixed(2)}ms`);
+      const renderTime = await cpuTimeOf(() => {
+        render(<Table data={data} columns={testColumns} idKey="id" />);
+      });
+      console.log(`100 rows initial render: ${renderTime.toFixed(2)}ms CPU`);
 
       // Should render within 200ms (generous budget for CI variance)
       expect(renderTime).toBeLessThan(200);
     });
 
-    it('should render 500 rows within performance budget', () => {
+    it('should render 500 rows within performance budget', async () => {
       const data = createTestData(500);
 
-      const startTime = performance.now();
-      render(<Table data={data} columns={testColumns} idKey="id" />);
-      const endTime = performance.now();
-
-      const renderTime = endTime - startTime;
-      console.log(`500 rows initial render: ${renderTime.toFixed(2)}ms`);
+      const renderTime = await cpuTimeOf(() => {
+        render(<Table data={data} columns={testColumns} idKey="id" />);
+      });
+      console.log(`500 rows initial render: ${renderTime.toFixed(2)}ms CPU`);
 
       // CI runners vary more than local machines, so keep the local budget
       // strict while allowing headroom for shared-runner noise.
@@ -500,18 +508,18 @@ describe('Table render performance', () => {
         );
       }
 
-      const renderStart = performance.now();
-      render(<TestComponent />);
-      const renderTime = performance.now() - renderStart;
+      const renderTime = await cpuTimeOf(() => {
+        render(<TestComponent />);
+      });
 
       expect(getStatus).toHaveBeenCalledTimes(6);
       expect(renderTime).toBeLessThan(1500 * ciBudgetMultiplier);
 
-      const updateStart = performance.now();
-      await act(async () => {
-        screen.getByRole('button', {name: 'No-op update'}).click();
-      });
-      const updateTime = performance.now() - updateStart;
+      const updateTime = await cpuTimeOf(async () =>
+        act(async () => {
+          screen.getByRole('button', {name: 'No-op update'}).click();
+        }),
+      );
 
       expect(getStatus).toHaveBeenCalledTimes(6);
       expect(updateTime).toBeLessThan(1000 * ciBudgetMultiplier);
