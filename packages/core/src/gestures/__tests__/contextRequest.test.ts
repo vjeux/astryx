@@ -177,6 +177,59 @@ describe('attachContextRequest (spec:AST-094 FR43)', () => {
     ]);
   });
 
+  it("makes one request from a held Shift+F10: its repeats make none, and the key's late menu event is still its echo", () => {
+    const {card, row} = mount(
+      '<div id="card">Card <div id="row" tabindex="0">Row</div></div>',
+    );
+    const outer = requests(card);
+    const seen = requests(row);
+    row.focus();
+    key(row, {key: 'F10', shiftKey: true});
+    // The key auto-repeats past the echo window.
+    for (let time = 100; time <= 1200; time += 100) {
+      clock.time = time;
+      const repeat = key(row, {key: 'F10', shiftKey: true, repeat: true});
+      expect(repeat.defaultPrevented).toBe(true);
+    }
+    const follower = contextmenu(row, {x: 0, y: 0, button: 0});
+    expect(follower.defaultPrevented).toBe(true);
+    expect({inner: seen.map(request => request.kind), outer}).toEqual({
+      inner: ['keyboard'],
+      outer: [],
+    });
+  });
+
+  it('reports a hold that requests: committed as it requests, then ended at its lift', () => {
+    const {row} = mount('<div id="row">Row</div>');
+    const log: string[] = [];
+    requests(row, {
+      onRequest: () => log.push('request'),
+      onHold: (phase: string) => log.push(phase),
+    });
+    touch('touchstart', row, {id: 1, x: 20, y: 10}, 0);
+    host.arena.advanceTime(600);
+    expect(log).toEqual(['committed', 'request']);
+    touch('touchend', row, {id: 1, x: 20, y: 10}, 700, true);
+    expect(log).toEqual(['committed', 'request', 'ended']);
+  });
+
+  it('reports nothing of a hold whose request is disabled before it begins', () => {
+    const {row} = mount('<div id="row">Row</div>');
+    let isEnabled = true;
+    const log: string[] = [];
+    requests(row, {
+      isEnabled: () => isEnabled,
+      onRequest: () => log.push('request'),
+      onHold: (phase: string) => log.push(phase),
+    });
+    touch('touchstart', row, {id: 1, x: 20, y: 10}, 0);
+    // A menu turns disabled during the hold.
+    isEnabled = false;
+    host.arena.advanceTime(600);
+    touch('touchend', row, {id: 1, x: 20, y: 10}, 700, true);
+    expect(log).toEqual([]);
+  });
+
   it('makes one request from a finger held still, at the hold, and none from the browser menu that hold also fires', () => {
     const {row} = mount('<div id="row">Row</div>');
     const seen = requests(row);
