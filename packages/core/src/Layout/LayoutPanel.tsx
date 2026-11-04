@@ -7,8 +7,8 @@
  * @input Uses React StyleX, LayoutAreaContext, LayoutSlotsContext,
  *   useScrollRegionProps, resizablePane.ts
  * @output Exports LayoutPanel component and LayoutPanelProps
- * @position Sidebar panel for Layout start/end slots. Use for navigation panels,
- *   settings sidebars, detail panels, or any fixed-width side content.
+ * @position Sidebar panel for Layout start/end slots; its resize controller slides it.
+ *   Use for navigation panels, settings sidebars, detail panels, or any fixed-width side content.
  *
  * SYNC: When modified, update these files to stay in sync:
  * - /packages/core/src/Layout/Layout.doc.mjs
@@ -34,6 +34,7 @@ import {
 } from '../Resizable/useResizable';
 import {
   createResizablePaneLink,
+  regionOfProps,
   resizeHandleBeside,
 } from '../Resizable/resizablePane';
 import {LayoutChangeSnapshot} from '../motion/LayoutChangeSnapshot';
@@ -247,22 +248,41 @@ export function LayoutPanel({
   // When resizable props are provided, use the hook-driven size
   const effectiveWidth = resizable ? resizable._size : width;
 
-  // With no `resizable`, a ResizeHandle beside the panel that has a region's
-  // props finds the panel and holds it collapsed with the region. The panel
-  // lends its element in its callback ref for that.
+  // A panel sized by a resize controller lends it its element in its callback
+  // ref. The controller slides it on collapse and open. Given the hook's own
+  // `props`, the panel hands itself to that region. With no `resizable`, a
+  // ResizeHandle beside it that has the region's props finds it and holds it
+  // collapsed. A hand-built `resizable` object has no region: it lends
+  // nothing and never slides.
   const [paneLink] = useState(createResizablePaneLink);
   const isHeldCollapsed = useSyncExternalStore(
     paneLink.subscribe,
     paneLink.isCollapsed,
     returnFalse,
   );
-  const isLentBeside = resizable == null;
+  const isFoundBeside = resizable == null;
+  const paneRegion = resizable == null ? undefined : regionOfProps(resizable);
   const lendRef = useCallback(
     (element: HTMLDivElement | null) => {
-      paneLink.attach(isLentBeside ? element : null);
+      const isLent = isFoundBeside || paneRegion != null;
+      const pane = paneLink.attach(isLent ? element : null, isFoundBeside);
+      paneRegion?.attach(pane);
     },
-    [paneLink, isLentBeside],
+    [paneLink, isFoundBeside, paneRegion],
   );
+  const contentFacingEdge = area === 'end' ? 'inline-start' : 'inline-end';
+  // A collapse or open reaches the controller before the DOM changes, in the
+  // commit that renders it. That holds for the controller's own change and
+  // for a controlled `isCollapsed` it hears of after this commit.
+  const isAtZero = effectiveWidth === 0;
+  const tellBeforeChange = useCallback(() => {
+    paneLink.beforeChange(isAtZero);
+  }, [paneLink, isAtZero]);
+  // Syncs the resize controller's pane link with the width and edge this
+  // commit rendered.
+  useIsomorphicLayoutEffect(() => {
+    paneLink.committed(effectiveWidth, contentFacingEdge);
+  });
 
   // A collapsing panel moves focus inside it to its ResizeHandle, through the
   // focus-leaving sequence that disclosures share. It goes inert and hidden
@@ -361,6 +381,10 @@ export function LayoutPanel({
       )}
       {...props}
       {...(isConcealed ? {inert: true, 'aria-hidden': true} : {})}>
+      <LayoutChangeSnapshot
+        value={isAtZero}
+        onBeforeChange={tellBeforeChange}
+      />
       <LayoutChangeSnapshot
         value={isRegionCollapsed}
         onBeforeChange={noteFocusBeforeCollapse}
