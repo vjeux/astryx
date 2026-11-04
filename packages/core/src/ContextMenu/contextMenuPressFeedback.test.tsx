@@ -6,7 +6,8 @@
  * @output Checks that the growth starts at the press machine's "on" and
  *   keeps going when the machine lets the press go. It returns when
  *   ContextMenu's recognizer ends the press with no menu. Both play the
- *   theme's duration and move easing tokens
+ *   theme's duration and move easing tokens. When the menu closes, the
+ *   trigger returns on the theme's exit duration and easing
  * @position Unit tests of packages/core/src/ContextMenu/contextMenuPressFeedback.ts
  */
 
@@ -210,5 +211,41 @@ describe('useContextMenuPressFeedback', () => {
     expect(options).toEqual({at: 1000});
     expect(curves.scale.duration).toBeCloseTo(0.2);
     expect(curves.scale.at(0.2)).toBeCloseTo(1);
+  });
+
+  it('returns over the theme’s exit duration and easing when the menu the press opened closes', async () => {
+    const {getByTestId} = render(<Trigger />);
+    const trigger = getByTestId('trigger');
+    trigger.style.setProperty('--duration-exit', '250ms');
+    trigger.style.setProperty('--ease-exit', 'linear');
+    trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
+    await flush();
+    feedback?.hold();
+    const held = contextMenu.press.heldScale;
+    animator.get.mockReturnValueOnce(held);
+    feedback?.release();
+    expect(animator.animate).not.toHaveBeenCalled();
+    const [curves] = animator.play.mock.lastCall as unknown as [
+      {scale: MotionCurve},
+    ];
+    expect(curves.scale.duration).toBeCloseTo(0.25);
+    expect(curves.scale.at(0)).toBeCloseTo(held);
+    expect(curves.scale.at(0.125)).toBeCloseTo(held + (1 - held) / 2);
+    expect(curves.scale.at(0.25)).toBeCloseTo(1);
+  });
+
+  it('returns over the theme’s fast duration when the theme sets no exit duration', async () => {
+    const {getByTestId} = render(<Trigger />);
+    const trigger = getByTestId('trigger');
+    trigger.style.setProperty('--duration-fast', '200ms');
+    trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
+    await flush();
+    feedback?.hold();
+    feedback?.release();
+    expect(animator.animate).not.toHaveBeenCalled();
+    const [curves] = animator.play.mock.lastCall as unknown as [
+      {scale: MotionCurve},
+    ];
+    expect(curves.scale.duration).toBeCloseTo(0.2);
   });
 });
