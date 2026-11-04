@@ -52,7 +52,7 @@ import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {Icon} from '../Icon';
 import {usePopover} from '../Popover/usePopover';
 import {useListFocus} from '../hooks/useListFocus';
-import {useCoreMenuPress} from '../hooks/useMenuPress';
+import {useMenuPress} from '../hooks/useMenuPress';
 import {menuTouchActionStyles} from '../DropdownMenu/menuTouchAction.stylex';
 import {useMenuOverflow} from '../DropdownMenu/useMenuOverflow';
 import {useTypeahead} from '../hooks/useTypeahead';
@@ -571,7 +571,7 @@ function BreadcrumbMenuTrigger({
   // A press that slides across the menu's items acts on the item it lifts on,
   // the highlight following the pointer, as DropdownMenu's does
   // (`family:action-groups` FR1-FR3, FR5); a mouse released outside closes it.
-  const menuPress = useCoreMenuPress(listRef, {
+  useMenuPress(listRef, {
     itemSelector: MENU_ITEM_SELECTOR,
     onDismiss: closeMenu,
     startBehavior: 'items',
@@ -700,7 +700,6 @@ function BreadcrumbMenuTrigger({
           id={menuId}
           role="menu"
           aria-labelledby={triggerId}
-          onPointerDown={menuPress.handleMenuPointerDown}
           onKeyDown={listKeyDown}
           {...mergeProps(
             themeProps('breadcrumb-menu'),

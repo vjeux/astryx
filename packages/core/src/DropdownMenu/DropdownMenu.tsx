@@ -70,7 +70,7 @@ import {
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 import {useListFocus} from '../hooks/useListFocus';
-import {useCoreMenuPress} from '../hooks/useMenuPress';
+import {useMenuPress} from '../hooks/useMenuPress';
 import type {MenuPressPointerType} from '../hooks/menuPressGesture';
 import {useTypeahead} from '../hooks/useTypeahead';
 import {useFocusReturnVisibility} from '../hooks/useFocusReturnVisibility';
@@ -1369,7 +1369,7 @@ function DropdownMenuPopover({
   // The press model: the row under a release acts, the highlight follows a
   // held pointer. A mouse released outside the menu dismisses it; a finger
   // released outside leaves it open, so the hook never calls onDismiss then.
-  const menuPress = useCoreMenuPress(listRef, {
+  const menuPress = useMenuPress(listRef, {
     triggerRef: buttonRef,
     itemSelector: MENU_ITEM_SELECTOR,
     onTriggerPress: handleTriggerPress,
@@ -1703,7 +1703,6 @@ function DropdownMenuPopover({
                 );
               }
             }}
-            onPointerDown={menuPress.handleMenuPointerDown}
             {...mergeProps(
               themeProps('dropdown-menu', {presentation: 'popover'}),
               stylex.props(
