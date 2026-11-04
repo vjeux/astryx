@@ -43,6 +43,13 @@ async function openSheet(page: Page) {
   await page.goto(
     `${storybook.origin}/iframe.html?id=core-bottomsheet--snap-points&viewMode=story`,
   );
+  // Evidence arm, not for landing: slows the page's main thread by the
+  // factor in ASTRYX_CPU_THROTTLE (Chrome DevTools CPU throttling).
+  const throttle = Number(process.env.ASTRYX_CPU_THROTTLE ?? '1');
+  if (throttle > 1) {
+    const throttling = await page.context().newCDPSession(page);
+    await throttling.send('Emulation.setCPUThrottlingRate', {rate: throttle});
+  }
   await page.getByRole('button', {name: 'Open nearby places'}).click();
   const dialog = page.getByRole('dialog', {name: 'Nearby places'});
   await expect(dialog).toBeVisible();
