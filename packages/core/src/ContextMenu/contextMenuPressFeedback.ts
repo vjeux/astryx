@@ -18,7 +18,7 @@
 // failure or cancel returns it. The theme's duration and move easing tokens
 // time both, and the compositor plays them, so a busy main thread does not
 // stall them. Once the menu opens, the trigger holds its size until the menu
-// closes, and then it returns on `springs.contextMenuDismiss`. An inline
+// closes. Then it returns on the theme's exit duration and easing. An inline
 // trigger and Reduce Motion show no growth.
 
 import {useCallback, useRef, type RefObject} from 'react';
@@ -27,12 +27,12 @@ import {usePressFeedback} from '../hooks/usePressFeedback';
 import {PRESSED_ATTRIBUTE, type pressableProps} from '../utils/pressFeedback';
 import {observeMutations} from '../utils/sharedMutationObserver';
 import {createMotionAnimator, type Animator} from '../motion/animator';
-import {registerSpringsTable, springs} from '../motion/uikit/springs';
 import {contextMenu} from '../motion/uikit/contextMenu';
 import {
   durationDefaults,
   easeDefaults,
   type DurationVarName,
+  type EaseVarName,
 } from '../theme/tokens.stylex';
 import {
   pressTiming,
@@ -43,12 +43,15 @@ import {
 const {heldScale} = contextMenu.press;
 
 /**
- * The theme's `durationToken` and `--ease-move` on `element`. A token the
- * theme does not set keeps its core default.
+ * The theme's `duration` and `easing` on `element`. Where the theme sets no
+ * `duration`, `unsetDuration` stands in, as `--duration-exit`'s own default
+ * does. A token the theme does not set keeps its core default.
  */
-function themeMoveTiming(
+function themeTiming(
   element: Element | null,
-  durationToken: DurationVarName,
+  duration: DurationVarName,
+  easing: EaseVarName,
+  unsetDuration: DurationVarName = duration,
 ): PressTiming {
   const style =
     element == null
@@ -56,9 +59,9 @@ function themeMoveTiming(
       : element.ownerDocument.defaultView?.getComputedStyle(element);
   const read = (name: string) => style?.getPropertyValue(name).trim() ?? '';
   return (
-    pressTiming(read(durationToken), read('--ease-move'), {
-      duration: durationDefaults[durationToken],
-      easing: easeDefaults['--ease-move'],
+    pressTiming(read(duration) || read(unsetDuration), read(easing), {
+      duration: durationDefaults[unsetDuration],
+      easing: easeDefaults[easing],
     }) ?? {seconds: 0.001, ease: progress => progress}
   );
 }
@@ -69,7 +72,7 @@ export interface ContextMenuPressFeedback {
    * spread on the trigger; the growth follows the pressed state it writes.
    */
   pressable: typeof pressableProps;
-  /** The menu the press opened closed: return on the dismissal spring. */
+  /** The menu the press opened closed: return on the theme's exit timing. */
   release(): void;
   /**
    * The recognizer ended the press with no menu, at `time`: return over the
@@ -147,9 +150,6 @@ export function useContextMenuPressFeedback(
     if (element == null) {
       return null;
     }
-    // The dismissal spring is a motion role: register its table before the
-    // first motion. A second call does nothing.
-    registerSpringsTable();
     animatorRef.current ??= createMotionAnimator(element);
     return animatorRef.current;
   }, [triggerRef]);
@@ -188,7 +188,7 @@ export function useContextMenuPressFeedback(
           scale: timedCurve(
             animator.get('scaleX', time),
             heldScale,
-            themeMoveTiming(animator.element, '--duration-medium'),
+            themeTiming(animator.element, '--duration-medium', '--ease-move'),
           ),
         },
         {at: time},
@@ -209,7 +209,7 @@ export function useContextMenuPressFeedback(
             scale: timedCurve(
               animator.get('scaleX', time),
               1,
-              themeMoveTiming(animator.element, '--duration-fast'),
+              themeTiming(animator.element, '--duration-fast', '--ease-move'),
             ),
           },
           {at: time},
@@ -226,8 +226,18 @@ export function useContextMenuPressFeedback(
       return;
     }
     settleBack(
-      animator.animate({scale: 1}, {spring: springs.contextMenuDismiss})
-        .finished,
+      animator.play({
+        scale: timedCurve(
+          animator.get('scaleX'),
+          1,
+          themeTiming(
+            animator.element,
+            '--duration-exit',
+            '--ease-exit',
+            '--duration-fast',
+          ),
+        ),
+      }).finished,
     );
   }, [settleBack]);
 
