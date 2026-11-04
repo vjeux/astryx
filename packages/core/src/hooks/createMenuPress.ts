@@ -221,14 +221,8 @@ export interface MenuPressDownEvent {
 
 /** @internal The press model's entry points (see createMenuPressCore). */
 export interface MenuPressCore {
-  /**
-   * A press that begins inside the menu, at `target`: the event's own target
-   * unless the caller read it earlier.
-   */
-  handleMenuPointerDown: (
-    event: MenuPressDownEvent,
-    target?: EventTarget | null,
-  ) => void;
+  /** A press that begins inside the menu. */
+  handleMenuPointerDown: (event: MenuPressDownEvent) => void;
   /** A press on the trigger: a mouse opens; a held finger opens. */
   handleTriggerPointerDown: (event: MenuPressDownEvent) => void;
   /** The trigger's `contextmenu`: a held finger is opening the menu. */
@@ -357,10 +351,7 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
     );
   }
 
-  function resolvePoint(
-    event: PointerEvent,
-    target: EventTarget | null = event.target,
-  ): ResolvedPoint {
+  function resolvePoint(event: PointerEvent): ResolvedPoint {
     const {itemSelector, hitTest} = source.getOptions();
     const menu = source.getMenu();
     const doc = getDocument();
@@ -379,7 +370,7 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
           : doc;
       element = scope.elementFromPoint(event.clientX, event.clientY);
     } else {
-      element = target instanceof Element ? target : null;
+      element = event.target instanceof Element ? event.target : null;
     }
     const root = menu == null ? null : getOutermostRoot(menu);
     const isInMenu =
@@ -706,7 +697,7 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
   }
 
   return {
-    handleMenuPointerDown(event, origin = event.target) {
+    handleMenuPointerDown(event) {
       const {isEnabled = true} = source.getOptions();
       const menu = source.getMenu();
       if (!isEnabled || menu == null) {
@@ -730,7 +721,7 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
       }
       // The innermost model owns the press: a flyout is a DOM descendant of
       // its parent menu, and both would otherwise track the same pointer.
-      const target = origin as Element | null;
+      const target = event.target as Element | null;
       if (target?.closest(MENU_PRESS_ROOT_SELECTOR) !== menu) {
         return;
       }
@@ -760,7 +751,7 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
       const native = event.nativeEvent ?? (event as unknown as PointerEvent);
       attach(native.pointerId);
       lastPointerEvent = native;
-      const point = resolvePoint(native, origin);
+      const point = resolvePoint(native);
       step(
         {
           type: 'down',
@@ -1005,12 +996,9 @@ function startMenuPress(
       return;
     }
     if (isFinger(event)) {
-      // At the window, the target of a press-down from a shadow root is its
-      // host. So the press reads the target here, at the menu's own listener.
-      const {target} = event;
       afterPageHandlers(event, () => {
         if (!event.defaultPrevented && take(event)) {
-          core.handleMenuPointerDown(event, target);
+          core.handleMenuPointerDown(event);
         }
       });
     } else if (finePointers === 'listeners' && take(event)) {
@@ -1076,11 +1064,9 @@ function startMenuPress(
       ) {
         return;
       }
-      // The window sees a shadow host as the target, so read it now.
-      const {target} = event;
       afterPageHandlers(native, () => {
         if (!native.defaultPrevented && take(native)) {
-          core.handleMenuPointerDown(event, target);
+          core.handleMenuPointerDown(event);
         }
       });
     },
