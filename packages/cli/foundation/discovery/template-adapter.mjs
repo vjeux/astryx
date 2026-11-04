@@ -1976,6 +1976,26 @@ export async function findShowcase(componentName, cwd, options) {
 /** The npm scope of every Astryx package. */
 const ASTRYX_PACKAGE_SCOPE = '@astryxdesign/';
 
+/** A JSX opening tag; componentsInSource says why the pattern looks so. */
+const JSX_TAG = /(?<![\w$.])<(XDS)?([A-Z]\w+)/g;
+
+/** Comments and line breaks that may sit between two words of an import. */
+// A block comment ends at its first `*/`, so a match cannot run on past it.
+const BETWEEN = String.raw`(?:\s|\/\*(?:[^*]|\*(?!\/))*\*\/|\/\/[^\n\r\u2028\u2029]*)*`;
+
+/**
+ * One `imported as local` pair. The imported name is an identifier (group 1)
+ * or a string (group 3); the local name is group 4.
+ */
+const ALIAS = new RegExp(
+  String.raw`(?:(?<![\p{ID_Continue}$])([\p{ID_Start}$_][\p{ID_Continue}$\u200C\u200D]*)|(['"])((?:\\[\s\S]|(?!\2)[^\\\n])*)\2)` +
+    BETWEEN +
+    String.raw`\bas\b` +
+    BETWEEN +
+    String.raw`([\p{ID_Start}$_][\p{ID_Continue}$\u200C\u200D]*)`,
+  'gu',
+);
+
 const UBIQUITOUS = new Set([
   'Text',
   'Heading',
@@ -2079,7 +2099,7 @@ export function componentsInSource(src) {
   // and `Record<string, Phase>` no longer do. Those were being indexed as
   // rendered components, putting type names like `Record`, `SVGProps` and
   // `ReadonlySet` into template keyword and "components used" output.
-  const tagRegex = /(?<![\w$.])<(XDS)?([A-Z]\w+)/g;
+  const tagRegex = new RegExp(JSX_TAG);
   /** @type {string[]} */
   const matches = [];
   let m;
@@ -2093,11 +2113,23 @@ export function componentsInSource(src) {
   // strings and type annotations cannot add or hide a name.
   const {declared: localDeclNames, astryxImports} = topLevelBindings(src);
 
+  return catalogNames(
+    matches
+      .filter(n => !localDeclNames.has(n))
+      .map(n => astryxImports.get(n) ?? n),
+  );
+}
+
+/**
+ * Rendered component names as the catalog lists them: without theme wrappers
+ * and ubiquitous parts, each part suffix stripped, each name once, sorted.
+ * @param {string[]} names
+ * @returns {string[]}
+ */
+function catalogNames(names) {
   return [
     ...new Set(
-      matches
-        .filter(n => !localDeclNames.has(n))
-        .map(n => astryxImports.get(n) ?? n)
+      names
         .filter(n => !['Theme', 'ThemeProvider'].includes(n))
         .filter(n => !UBIQUITOUS.has(n))
         .map(n =>
@@ -2111,4 +2143,31 @@ export function componentsInSource(src) {
         .filter(Boolean),
     ),
   ].sort();
+}
+
+/**
+ * Every name componentsInSource can return for `src`, read without parsing
+ * it, or null when it cannot be bounded so. It keeps the tag names a parse
+ * would drop as page-local. It adds each name an `imported as local` pair
+ * makes a tag stand for, wherever that text appears. An escaped name in an
+ * identifier or a string defeats the reading, so then it is null.
+ * @param {string} src
+ * @returns {string[] | null}
+ */
+export function componentNameBound(src) {
+  if (src.includes('\\u')) return null;
+  const tags = Array.from(src.matchAll(JSX_TAG), m => m[2]);
+  const local = new Set(tags);
+  /** @type {string[]} */
+  const imported = [];
+  // Each match restarts one character on, so no pair hides inside another.
+  const alias = new RegExp(ALIAS);
+  for (let m = alias.exec(src); m; m = alias.exec(src)) {
+    alias.lastIndex = m.index + 1;
+    if (!local.has(m[4])) continue;
+    const name = m[1] ?? m[3];
+    if (name.includes('\\')) return null;
+    imported.push(name);
+  }
+  return catalogNames([...tags, ...imported]);
 }
