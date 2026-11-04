@@ -2,8 +2,8 @@
 
 /**
  * @file MonthPager.interaction.browser.spec.ts
- * @input The built "Bottom Sheet Calendar" DateInput story, real touch input
- *   and the interaction harness
+ * @input The built "Bottom Sheet Calendar" DateInput story and the MonthPager
+ *   proof story, real touch and trackpad input, and the interaction harness
  * @output Interaction proofs that the sheet's calendar pages like UIDatePicker
  *   under a finger, in Chromium and WebKit: releases, flicks, the title, the
  *   arrows, the sheet split, the rubber band, RTL and Reduced Motion
@@ -33,8 +33,10 @@ import {
   trackMarker,
   waitForAnimation,
   waitForRest,
+  webInputDriver,
   withStorybook,
   writeEvidence,
+  WHEEL_SKIP,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
 import {paging} from '../../motion/uikit/paging';
@@ -737,3 +739,65 @@ test(
     await thawTimers(page);
   },
 );
+
+test.describe('a trackpad (spec:AST-094 FR43)', () => {
+  // WebKit's driver sends a trackpad's precise deltas from a desktop context;
+  // the pager is opened alone there.
+  test.use({hasTouch: false, isMobile: false});
+  const TRACKPAD_IN_WEBKIT =
+    "Chromium's driver sends each wheel as a mouse wheel's notch; only WebKit's sends a trackpad's precise deltas";
+
+  async function openPager(page: Page) {
+    await openStory(page, storybook(), 'core-monthpager--pager');
+    const field = page.getByRole('textbox', {name: 'Shown month'});
+    await expect(field).toHaveValue('2026-03');
+    const viewport = page.locator('[data-scroller="months"]');
+    await expect(viewport).toBeVisible();
+    const box = await viewport.boundingBox();
+    if (box == null) {
+      throw new Error('no pager');
+    }
+    return {
+      field,
+      track: page.locator('[data-month-track]'),
+      at: {x: box.x + box.width / 2, y: box.y + box.height / 2},
+    };
+  }
+
+  test('a slow 30 px trackpad swipe leaves the pager on its month, and the month never changes on the way', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'webkit', TRACKPAD_IN_WEBKIT);
+    const {field, track, at} = await openPager(page);
+    const input = await webInputDriver(page);
+    test.skip(!input.wheels, WHEEL_SKIP);
+    // Five steps of 6 px, 40 ms apart.
+    for (let i = 0; i < 5; i++) {
+      await input.wheel({...at, dx: 6});
+      expect(await field.inputValue()).toBe('2026-03');
+      await page.waitForTimeout(40);
+    }
+    // A trackpad scroll ends 220 ms after its last wheel.
+    await page.waitForTimeout(300);
+    await waitForRest(track);
+    await expect(field).toHaveValue('2026-03');
+  });
+
+  test('a trackpad swipe past half a page pages one month', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'webkit', TRACKPAD_IN_WEBKIT);
+    const {field, track, at} = await openPager(page);
+    const input = await webInputDriver(page);
+    test.skip(!input.wheels, WHEEL_SKIP);
+    // 40 steps of 6.5 px: 260 px, past half of the 360 px page.
+    for (let i = 0; i < 40; i++) {
+      await input.wheel({...at, dx: 6.5});
+    }
+    await page.waitForTimeout(300);
+    await waitForRest(track);
+    await expect(field).toHaveValue('2026-04');
+  });
+});
