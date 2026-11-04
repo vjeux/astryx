@@ -917,17 +917,23 @@ describe('useSheetGestures', () => {
       document.body.appendChild(sheet);
       return el;
     }
-    function touch(el: HTMLElement, type: string, y: number, id = 1) {
+    function touch(
+      el: HTMLElement,
+      type: string,
+      y: number,
+      id = 1,
+      touchType = 'direct',
+    ) {
       const ev = new Event(type, {bubbles: true, cancelable: true});
       // jsdom lacks TouchEvent; attach the fields the handler reads.
       Object.defineProperty(ev, 'changedTouches', {
-        value: [{identifier: id, clientY: y}],
+        value: [{identifier: id, clientY: y, touchType}],
       });
       Object.defineProperty(ev, 'touches', {
         value:
           type === 'touchend' || type === 'touchcancel'
             ? []
-            : [{identifier: id, clientY: y}],
+            : [{identifier: id, clientY: y, touchType}],
       });
       Object.defineProperty(ev, 'currentTarget', {value: el});
       el.dispatchEvent(ev);
@@ -1067,6 +1073,36 @@ describe('useSheetGestures', () => {
         expect(hook.result.current.isDragging).toBe(false);
         expect(hook.result.current.settledOffset).toBe(0);
       }
+    });
+
+    it("keeps a stylus pulling up on the body at the tallest detent on a pen's stretch, capped at 48 px", () => {
+      const {hook} = setup({
+        snapHeights: () => [200],
+        offscreenBlockEndInset: TOUCH_RESERVE,
+      });
+      const el = makeScroller({
+        scrollTop: 0,
+        clientHeight: 200,
+        scrollHeight: 200,
+      });
+      act(() => hook.result.current.sheetRef(el));
+      act(() => hook.result.current.bodyProps.ref(el));
+      // An Apple Pencil raises touch events marked `stylus`.
+      act(() => {
+        touch(el, 'touchstart', 300, 1, 'stylus');
+        touch(el, 'touchmove', 260, 1, 'stylus');
+        touch(el, 'touchmove', 220, 1, 'stylus');
+      });
+      expect(-liveOffset(hook)).toBeCloseTo(28, 6);
+      act(() => {
+        touch(el, 'touchmove', 0, 1, 'stylus');
+      });
+      expect(-liveOffset(hook)).toBe(48);
+      act(() => {
+        touch(el, 'touchend', 0, 1, 'stylus');
+      });
+      expect(hook.result.current.isDragging).toBe(false);
+      expect(hook.result.current.settledOffset).toBe(0);
     });
 
     it('finishes the active drag when another ended touch is listed first', () => {
