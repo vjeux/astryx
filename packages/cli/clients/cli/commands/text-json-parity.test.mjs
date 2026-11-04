@@ -474,13 +474,14 @@ const CASES = [
   },
   {
     name: 'search',
-    args: ['search', 'button'],
+    // A typed search reads one domain, not every one. search.test.mjs runs
+    // the open search, as text and as --json.
+    args: ['search', '--type', 'hook', 'focus'],
     jsonFieldAllowlist: [
       'matchCount — stated in section heading "Results for ... (N)"',
       'query — stated in section heading',
       'score — only shown with --verbose',
       'reason — only shown with --verbose',
-      'kind — internal domain subtype, not shown in default text',
     ],
   },
   {
