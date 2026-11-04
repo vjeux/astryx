@@ -16,6 +16,7 @@ import {useState, type ReactNode} from 'react';
 import {act, render, screen, waitFor} from '@testing-library/react';
 import {
   GestureRecognizer,
+  PanGestureRecognizer,
   type MotionAnimator,
   type MotionCurve,
 } from '@astryxdesign/core/internal/touch';
@@ -1245,6 +1246,10 @@ describe('useRefreshControl', () => {
     const browserNow = vi
       .spyOn(performance, 'now')
       .mockImplementation(() => clock);
+    const scrollVelocity = vi.spyOn(
+      PanGestureRecognizer.prototype,
+      'scrollVelocity',
+    );
     try {
       const release = (
         steps: number[],
@@ -1261,12 +1266,15 @@ describe('useRefreshControl', () => {
         ) as MotionAnimator[];
         const contentAnimate = vi.spyOn(contentAnimator, 'animate');
         const indicatorAnimate = vi.spyOn(indicatorAnimator, 'animate');
+        scrollVelocity.mockClear();
         pull(content(), steps);
         const [to, transition] = contentAnimate.mock.calls.at(-1) ?? [];
         const result = {
           to: to?.y,
           content: transition?.velocity?.y,
           indicator: indicatorAnimate.mock.calls.at(-1)?.[1].velocity?.y,
+          scroll: scrollVelocity.mock.results.at(-1)?.value?.y as
+            number | undefined,
           isBusy: content().getAttribute('aria-busy') === 'true',
         };
         unmount();
@@ -1282,6 +1290,12 @@ describe('useRefreshControl', () => {
       expect(banded.content).toBeGreaterThan(0);
       expect(banded.content).toBeLessThan(625);
       expect(banded.indicator).toBeCloseTo(-(banded.content ?? 0), 6);
+      // An accelerating flick hands the scroll view's release velocity, the
+      // blend of the pan's last two values, below its last frame's speed.
+      const flick = release([5, 5, 5, 10, 15]);
+      expect(flick.scroll).toBeGreaterThan(0);
+      expect(flick.content).toBeCloseTo(flick.scroll ?? Number.NaN, 6);
+      expect(flick.content).toBeLessThan(15 / 0.016);
       // A finger that held still before it lifted hands no speed.
       expect(release([10, 10, 10, 10, 0, 0, 0, 0, 0, 0]).content).toBe(0);
       // A pull that triggers carries its speed onto the refreshing inset.
@@ -1293,6 +1307,7 @@ describe('useRefreshControl', () => {
       expect(inset.to).toBe(60);
       expect(inset.content).toBeGreaterThan(600);
     } finally {
+      scrollVelocity.mockRestore();
       browserNow.mockRestore();
       clock = eventClock;
     }
