@@ -186,11 +186,6 @@ export async function traceRendering(
   let fromEpoch: number;
   let toEpoch: number;
   try {
-    // The frame the recorder requested before its pause runs now, before the
-    // start mark.
-    if (isRecorderPaused) {
-      await frames(page, 1);
-    }
     fromEpoch = await mark(`${tag}:start`);
     await body();
     toEpoch = await mark(`${tag}:end`);
