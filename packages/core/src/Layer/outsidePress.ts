@@ -4,23 +4,12 @@
 
 /**
  * @file outsidePress.ts
- * @input Listens for pointer presses on a document, and on the shadow roots
- *   around a given root; with closesOnPan, for a pan's moves through core's
- *   input stream
- * @output Exports watchOutsidePress and useOutsidePress, which owns one watch
- *   for a component: start on show, stop on hide, stop on unmount; and the
- *   inside tests a text field's owner runs: isPressInsideOwnedLayer for a
- *   press, isFocusInsideOwnedLayer for a blur
- * @position Internal to Layer; the outside-press dismissal for a manual
- *   popover whose owner decides what counts as inside (a combobox's field
- *   and its list). Not exported from the package.
- *
- * A press closes the layer only when it starts and ends outside, as native
- * light dismiss does: a pointerdown outside is remembered, the pointerup that
- * follows closes the layer if it is outside too, and a pointercancel (the
- * browser took the gesture for a scroll or a pinch) forgets it. Inside is
- * judged on the event's composed path, so a field or list inside an open
- * shadow root, which the document sees as its shadow host, is still inside.
+ * @input Pointer presses on a document and on the shadow roots around a
+ *   given root; with closesOnPan, pan moves from core's input stream
+ * @output watchOutsidePress; useOutsidePress, one watch per component; and
+ *   the inside tests isPressInsideOwnedLayer and isFocusInsideOwnedLayer
+ * @position Internal to Layer: the outside-press dismissal for a manual
+ *   popover whose owner decides what counts as inside. Not exported.
  */
 
 import {useCallback, useEffect, useMemo, useRef} from 'react';
@@ -52,8 +41,9 @@ export interface OutsidePressOptions {
  * @param owner - The element that owns the layer (the field); its document is
  *   watched.
  * @param isInside - Whether a press with this composed path is inside.
- * @param onOutside - Called once for each press that starts and ends outside.
- *   With `closesOnPan`, also when that press pans or is cancelled.
+ * @param onOutside - Called once for each press that starts and ends outside,
+ *   as native light dismiss does. With `closesOnPan`, also when that press
+ *   pans or is cancelled.
  * @returns Stops watching.
  */
 export function watchOutsidePress(
