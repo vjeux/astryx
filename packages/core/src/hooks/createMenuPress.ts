@@ -957,7 +957,7 @@ export function createMenuPress(
   };
   const onTriggerPointerDown = (event: PointerEvent) => {
     afterPageHandlers(event, () => {
-      if (!event.defaultPrevented && take(event)) {
+      if (take(event)) {
         core.handleTriggerPointerDown(event);
       }
     });
@@ -995,8 +995,7 @@ export function createMenuPress(
       }
     },
     handleTriggerPointerDown(event) {
-      const native = event.nativeEvent ?? (event as unknown as Event);
-      if (!native.defaultPrevented && take(native)) {
+      if (take(event.nativeEvent ?? (event as unknown as Event))) {
         core.handleTriggerPointerDown(event);
       }
     },
