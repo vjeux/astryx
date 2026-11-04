@@ -1018,9 +1018,7 @@ function startMenuPress(
     getMenu: () => menu,
     getTrigger: () => trigger,
     getOptions: () => current,
-    getTouchModel: hasTouchModel
-      ? () => current.touchModel ?? 'pointer'
-      : undefined,
+    getTouchModel: undefined,
   });
   const disconnect = core.connect();
   // The highlight follows the last input in the menu's document. The press

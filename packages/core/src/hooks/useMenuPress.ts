@@ -362,7 +362,6 @@ function useMenuPressWith(
           getTrigger: () =>
             latestRef.current.options.triggerRef?.current ?? null,
           getOptions: () => latestRef.current.options,
-          getTouchModel: () => latestRef.current.touchModel,
         }),
   );
   // Installs the document's gesture counter at mount. At unmount, it ends a
