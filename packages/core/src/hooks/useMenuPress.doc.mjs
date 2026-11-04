@@ -17,7 +17,6 @@ export const docs = {
     'listbox',
     'macos',
     'ios',
-    'createMenuPress',
   ],
   params: [
     {
@@ -113,7 +112,7 @@ export const docs = {
       name: 'cancel',
       type: '() => void',
       description:
-        "End the gesture in flight with nothing acting, for when the menu closes under it. Without React, createMenuPress(menu, options) takes these options with the trigger as an element (trigger), plus startBehavior ('items' starts a press only on an item), and returns {isTriggerClickFromPress, cancel, update, handleMenuPointerDown, handleTriggerPointerDown, handleTriggerContextMenu, destroy}. Its destroy removes every listener it added.",
+        'End the gesture in flight with nothing acting, for when the menu closes under it.',
     },
   ],
   usage: {
@@ -148,7 +147,12 @@ export const docs = {
     ],
   },
   relatedComponents: ['DropdownMenu', 'ContextMenu', 'Selector'],
-  relatedHooks: ['useListFocus', 'useTypeahead', 'useLongPress'],
+  relatedHooks: [
+    'useListFocus',
+    'useTypeahead',
+    'useLongPress',
+    'createMenuPress',
+  ],
   importPath: '@astryxdesign/core/hooks',
   category: 'interaction',
 };
@@ -179,8 +183,7 @@ export const docsDense = {
     triggerProps: 'spread on trigger (press-open, held-finger open).',
     isTriggerClickFromPress:
       'true = the trigger click belongs to the press that already opened / closed; ignore it.',
-    cancel:
-      'end the gesture w/o acting. No React: createMenuPress(menu, {trigger, …}) → {isTriggerClickFromPress, cancel, update, handleMenuPointerDown, handleTriggerPointerDown, handleTriggerContextMenu, destroy}.',
+    cancel: 'end the gesture w/o acting.',
   },
   usage: {
     description:
