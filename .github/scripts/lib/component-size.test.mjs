@@ -16,6 +16,7 @@ import {afterEach, describe, expect, it} from 'vitest';
 const require = createRequire(import.meta.url);
 const {
   bundleImport,
+  bundleImportsByEntry,
   classNamesIn,
   measureComponentImport,
   packageStylesheetPath,
@@ -63,6 +64,28 @@ describe('component import size', () => {
       'xhelp22',
       'xsheet7',
     ]);
+  });
+
+  it('bundles several imports in one build, each with what it loads eagerly', () => {
+    const root = tree({
+      'dist/Card/index.js':
+        "import {helper} from '../shared/helper.js';\nexport const Card = () => 'xcard1 ' + helper();\n",
+      'dist/Menu/index.js':
+        "import {helper} from '../shared/helper.js';\nexport const Menu = () => 'xmenu1 ' + helper() + import('./Touch.js');\n",
+      'dist/Menu/Touch.js': "export const touch = 'LAZY_TOUCH_CODE';\n",
+      'dist/shared/helper.js': "export const helper = () => 'xhelp22';\n",
+    });
+    const card = path.join(root, 'dist/Card/index.js');
+    const menu = path.join(root, 'dist/Menu/index.js');
+    const texts = bundleImportsByEntry([card, menu]);
+    // Each entry keeps the same modules as its own build.
+    for (const entry of [card, menu]) {
+      expect([...classNamesIn(texts.get(entry))].sort()).toEqual(
+        [...classNamesIn(bundleImport(entry))].sort(),
+      );
+    }
+    expect(texts.get(card)).not.toContain('xmenu1');
+    expect(texts.get(menu)).not.toContain('LAZY_TOUCH_CODE');
   });
 
   it('keeps only the rules whose selectors name a referenced class, with their at-rules', () => {

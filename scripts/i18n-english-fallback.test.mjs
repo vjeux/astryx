@@ -223,7 +223,9 @@ describe('findWiringProblems', () => {
 
 describe('import cost', () => {
   // Same per-component import measurement as the pull-request size report.
-  const {bundleImport} = require('../.github/scripts/lib/component-size.js');
+  const {
+    bundleImportsByEntry,
+  } = require('../.github/scripts/lib/component-size.js');
   const enCatalogFile = path.join(
     CORE_DIST,
     'i18n',
@@ -245,17 +247,18 @@ describe('import cost', () => {
   it('bundles only the English a component names, not the whole catalog', () => {
     const keys = loadCatalogKeys();
     expect(keys.length).toBeGreaterThan(100);
-    for (const name of [
-      'Button',
-      'TreeList',
-      'SideNav',
-      'Selector',
-      'Table',
-      'DateInput',
-    ]) {
-      const text = bundleImport(path.join(CORE_DIST, name, `${name}.js`));
-      expect(text, name).not.toBeNull();
-      const bundled = catalogKeysIn(text, keys);
+    const entries = new Map(
+      ['Button', 'TreeList', 'SideNav', 'Selector', 'Table', 'DateInput'].map(
+        name => [name, path.join(CORE_DIST, name, `${name}.js`)],
+      ),
+    );
+    // One build bundles the six imports, each as the size report measures it.
+    const texts = bundleImportsByEntry([...entries.values()]);
+    expect(texts).not.toBeNull();
+    for (const [name, entry] of entries) {
+      const text = texts?.get(entry);
+      expect(text, name).toBeDefined();
+      const bundled = catalogKeysIn(text ?? '', keys);
       expect(bundled.length, name).toBeGreaterThan(0);
       expect(bundled.length, name).toBeLessThan(keys.length / 4);
     }

@@ -8,8 +8,9 @@
  *   (the minified entry chunk and the chunks it imports statically, package
  *   imports included) and the gzip size of the stylesheet rules referenced by
  *   the modules it can load, import() targets included
- * @position Shared by analyze-pr.js for the PR size report. Sizes are gzip at
- *   the default compression level (spec:AST-080 FR8,
+ * @position Shared by analyze-pr.js for the PR size report, and by the
+ *   English-fallback import-cost test, which bundles several imports in one
+ *   build. Sizes are gzip at the default compression level (spec:AST-080 FR8,
  *   architecture:component-style-authoring INV6).
  */
 
@@ -96,26 +97,8 @@ function bundleImportWithInputs(entry, exportName) {
     const entryOutput = Object.keys(outputs).find(
       key => outputs[key].entryPoint !== undefined,
     );
-    // Chunks the entry reaches, following only the given import kinds.
-    function reachable(kinds) {
-      const seen = new Set();
-      const pending = [entryOutput];
-      while (pending.length > 0) {
-        const key = pending.pop();
-        if (key === undefined || seen.has(key)) continue;
-        seen.add(key);
-        for (const imported of outputs[key].imports || []) {
-          if (kinds.includes(imported.kind) && !imported.external) {
-            pending.push(imported.path);
-          }
-        }
-      }
-      return seen;
-    }
-    let text = '';
-    for (const key of reachable(['import-statement'])) {
-      text += byPath.get(key) ?? '';
-    }
+    const reachable = kinds => reachableChunks(outputs, entryOutput, kinds);
+    const text = eagerText(outputs, byPath, entryOutput);
     // CSS ships in the package stylesheet whether its module loads eagerly or
     // through import(), so class names come from every chunk the entry can
     // load, dynamic imports included; chunks no kept code imports are ignored.
@@ -127,6 +110,97 @@ function bundleImportWithInputs(entry, exportName) {
     }
     inputs.delete(entryFile);
     return {text, inputs: [...inputs]};
+  } catch {
+    return null;
+  } finally {
+    fs.rmSync(scratch, {recursive: true, force: true});
+  }
+}
+
+// Chunks an entry chunk reaches in a build's metafile outputs, following only
+// the given import kinds.
+function reachableChunks(outputs, entryOutput, kinds) {
+  const seen = new Set();
+  const pending = [entryOutput];
+  while (pending.length > 0) {
+    const key = pending.pop();
+    if (key === undefined || seen.has(key)) continue;
+    seen.add(key);
+    for (const imported of outputs[key].imports || []) {
+      if (kinds.includes(imported.kind) && !imported.external) {
+        pending.push(imported.path);
+      }
+    }
+  }
+  return seen;
+}
+
+// What importing an entry loads eagerly: its chunk and every chunk it imports
+// statically, concatenated.
+function eagerText(outputs, byPath, entryOutput) {
+  let text = '';
+  for (const key of reachableChunks(outputs, entryOutput, [
+    'import-statement',
+  ])) {
+    text += byPath.get(key) ?? '';
+  }
+  return text;
+}
+
+// What importing each entry loads eagerly, as bundleImport measures it, from
+// one build over every entry: the build parses the modules that the entries
+// share once, not once per entry. Returns a Map of each bundled entry path to
+// its text, or null when the entries cannot be bundled together.
+function bundleImportsByEntry(entries) {
+  const existing = entries.filter(entry => fs.existsSync(entry));
+  const os = require('node:os');
+  const scratch = fs.realpathSync(
+    fs.mkdtempSync(path.join(os.tmpdir(), 'astryx-size-')),
+  );
+  try {
+    const esbuild = require('esbuild');
+    const workingDir = process.cwd();
+    const entryFiles = existing.map((entry, index) => {
+      const file = path.join(scratch, `entry-${index}.mjs`);
+      fs.writeFileSync(
+        file,
+        `export * from ${JSON.stringify(path.resolve(entry))};`,
+      );
+      return file;
+    });
+    const result = esbuild.buildSync({
+      absWorkingDir: workingDir,
+      entryPoints: entryFiles,
+      outdir: path.join(scratch, 'out'),
+      metafile: true,
+      bundle: true,
+      splitting: true,
+      minify: true,
+      format: 'esm',
+      platform: 'browser',
+      define: {'process.env.NODE_ENV': '"production"'},
+      loader: {'.css': 'empty'},
+      write: false,
+      logLevel: 'silent',
+    });
+    const outputs = result.metafile.outputs;
+    const byPath = new Map(
+      result.outputFiles.map(file => [
+        path.relative(workingDir, file.path),
+        file.text,
+      ]),
+    );
+    const texts = new Map();
+    for (const [key, output] of Object.entries(outputs)) {
+      if (output.entryPoint === undefined) continue;
+      const index = entryFiles.indexOf(
+        path.resolve(workingDir, output.entryPoint),
+      );
+      if (index !== -1) {
+        texts.set(existing[index], eagerText(outputs, byPath, key));
+      }
+    }
+    return texts;
   } catch {
     return null;
   } finally {
@@ -323,6 +397,7 @@ module.exports = {
   gzipBytes,
   packageStylesheetPath,
   bundleImport,
+  bundleImportsByEntry,
   classNamesIn,
   rulesForClasses,
   measureComponentImport,
