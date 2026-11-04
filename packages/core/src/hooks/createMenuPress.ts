@@ -13,6 +13,7 @@
  * - /packages/core/src/hooks/index.ts
  * - /packages/core/src/hooks/useMenuPress.ts
  * - /packages/core/src/hooks/useMenuPress.doc.mjs
+ * - /packages/core/src/hooks/createMenuPress.doc.mjs
  * - /packages/core/src/hooks/createMenuPress.test.ts
  * - /packages/core/src/hooks/menuPressGesture.ts
  */
