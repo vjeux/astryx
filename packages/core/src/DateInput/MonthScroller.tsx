@@ -41,26 +41,18 @@ import {
 import {flushSync} from 'react-dom';
 import * as stylex from '@stylexjs/stylex';
 import {useDirection} from '../i18n';
-import {
-  type DayOfWeek,
-  type ISODateString,
-  type PlainDate,
-  plainDateAddDays,
-  plainDateIsEqual,
-  plainDateToISO,
-} from '../utils';
-import {plainDateDiffDays} from '../utils/plainDate';
+import type {DayOfWeek, ISODateString, PlainDate} from '../utils';
 import {
   playReducedMotionDip,
   reducedMotionFade,
   type ReducedMotionDip,
 } from '../motion/reducedMotion';
 import {dateInputTouchGeometry} from './tokens.stylex';
-import {MonthPane, monthGridKeyTarget} from './MonthPane';
+import {MonthPane} from './MonthPane';
+import {useMonthGridFocus} from './useMonthGridFocus';
 import {useOwnScrollGesture} from './useOwnScrollGesture';
 import {useScrollSettle} from './useScrollSettle';
 import {
-  monthIndexOf,
   paneWindow,
   rowAtScrollOffset,
   rowsIn,
@@ -240,12 +232,6 @@ export function MonthScroller({
    * press, a key), or once the steered scroll has arrived.
    */
   const steeredRowRef = useRef<number | null>(null);
-
-  // Keyboard focus moves by date, not by cell index, so it crosses month
-  // boundaries the way a calendar should. Null until the user takes the grid
-  // with the keyboard.
-  const [focusedDate, setFocusedDate] = useState<PlainDate | null>(null);
-  const shouldRestoreFocusRef = useRef(false);
 
   const onVisibleMonthChangeRef = useRef(onVisibleMonthChange);
   onVisibleMonthChangeRef.current = onVisibleMonthChange;
@@ -605,71 +591,18 @@ export function MonthScroller({
     };
   }, [paneSize, rowCount, minMonthIndex, isRTL, recenter]);
 
-  // Move the keyboard focus by whole days and let the scroller follow. Paging
-  // by month is PageUp/PageDown (a year with Shift); everything else is the
-  // APG grid vocabulary.
-  const moveFocus = useCallback(
-    (from: PlainDate, deltaDays: number) => {
-      const next = plainDateAddDays(from, deltaDays);
-      const nextIndex = monthIndexOf(next);
-      if (nextIndex < minMonthIndex || nextIndex > maxMonthIndex) {
-        return;
-      }
-      shouldRestoreFocusRef.current = true;
-      setFocusedDate(next);
-      if (nextIndex !== monthIndexOf(from)) {
-        scrollToMonth(nextIndex, 'smooth');
-        // Report the month here, as MonthPager does. The scroll handler drops
-        // every report while a steered scroll runs, its arrival included.
-        onVisibleMonthChangeRef.current(nextIndex);
-      }
+  const {focusedDate, handleKeyDown, handleDayFocus} = useMonthGridFocus(
+    scrollerRef,
+    {
+      minMonthIndex,
+      maxMonthIndex,
+      weekStartsOn,
+      scrollToMonth,
+      onVisibleMonthChangeRef,
     },
-    [minMonthIndex, maxMonthIndex, scrollToMonth],
   );
-
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent, date: PlainDate) => {
-      const next = monthGridKeyTarget(event, date, {isRTL, weekStartsOn});
-      if (next != null) {
-        event.preventDefault();
-        moveFocus(date, plainDateDiffDays(date, next));
-      }
-    },
-    [isRTL, moveFocus, weekStartsOn],
-  );
-
-  // The focused day may have been in an unmounted pane a frame ago; focus it
-  // once it exists, and only in response to a key press so a scroll never
-  // steals focus.
-  const focusedISO = focusedDate == null ? null : plainDateToISO(focusedDate);
-  useEffect(() => {
-    if (!shouldRestoreFocusRef.current || focusedISO == null) {
-      return;
-    }
-    // A date can be mounted twice: as a real day in its own pane and as a
-    // dimmed, disabled spill copy at the edge of a neighbouring pane. Only
-    // the real day may take focus, or Enter and Space would select nothing.
-    const target = scrollerRef.current?.querySelector<HTMLElement>(
-      `[data-date="${focusedISO}"]:not([data-outside])`,
-    );
-    if (target != null) {
-      shouldRestoreFocusRef.current = false;
-      // preventScroll: the scroller is already snapping to this month; a
-      // browser scroll-into-view here would fight the snap and land between
-      // two panes.
-      target.focus({preventScroll: true});
-    }
-  }, [focusedISO]);
 
   const visibleRows = paneWindow(centerRow, rowCount, OVERSCAN);
-
-  // A focus event fires for the programmatic focus above too; only take the
-  // date when it is actually a different day.
-  const handleDayFocus = useCallback((date: PlainDate) => {
-    setFocusedDate(previous =>
-      previous != null && plainDateIsEqual(previous, date) ? previous : date,
-    );
-  }, []);
 
   return (
     <div
