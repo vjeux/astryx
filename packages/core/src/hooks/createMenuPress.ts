@@ -921,6 +921,8 @@ export function createMenuPress(
   };
   /** Runs `act` once `event` bubbles to its window; never if it is stopped. */
   const afterPageHandlers = (event: Event, act: () => void) => {
+    act();
+    if (act !== undefined) return;
     const doc =
       (event.currentTarget as Node | null)?.ownerDocument ?? menu.ownerDocument;
     const view = doc.defaultView;
