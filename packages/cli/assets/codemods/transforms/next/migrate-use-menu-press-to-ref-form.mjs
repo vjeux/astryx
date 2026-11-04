@@ -9,9 +9,8 @@
  * `menuProps` and `triggerProps` go. A trigger that got the press only
  * through its spread gets `triggerRef` from its `ref`. In a DropdownMenu
  * trigger render function, a redundant forward of `onPointerDown` or
- * `onContextMenu` goes. It goes only where a spread of the trigger props on
- * the same element still passes it. That spread comes after the forward, or
- * before it with no other spread between. Any other forward stays as it is.
+ * `onContextMenu` goes. It goes only where the same element spreads the
+ * trigger props, which still pass it. Any other forward stays as it is.
  *
  * Where it cannot prove the result, it leaves the code unchanged with a TODO.
  * That covers options that are not an object literal or that spread, and a
@@ -21,15 +20,12 @@
  * element whose `ref` is not the menu's or the trigger's. So does an element
  * inside the menu or the trigger that sets `onPointerDown` or spreads props.
  * So does a component, or a child other than JSX or a literal, inside them.
- * The menu and trigger elements must sit in one of the component's returns,
- * through DOM elements, fragments and conditions only. A component element or
- * a function may mount them in a later commit, when the ref form does not
- * read their refs. With a trigger, the menu element must sit in the
- * component's one returned JSX, through DOM elements and fragments only. No
- * function, prop value or early return may stand in between. The ref form has
- * no press while the menu is unmounted. The deprecated forms keep working
- * there. Comments are the codemod's only report channel. Each is added once,
- * so a second run changes nothing.
+ * With a trigger, the menu element must sit in the component's one returned
+ * JSX, through DOM elements and fragments only. No function, prop value or
+ * early return may stand in between. The ref form has no press while the
+ * menu is unmounted. The deprecated forms keep working there. Comments are
+ * the codemod's only report channel. Each is added once, so a second run
+ * changes nothing.
  */
 
 export const meta = {
@@ -408,13 +404,10 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
   ) {
     return null;
   }
-  // The ref form reads its refs only on the calling component's commits. A
-  // menu or trigger that another component mounts in a commit of its own gets
-  // no press.
+  // The ref form attaches only on the calling component's commits. A menu
+  // that another component mounts in a commit of its own gets no press.
   if (
-    ![...spreads.menuProps, ...spreads.triggerProps].every(spread =>
-      rendersWithComponent(j, spread, scope),
-    )
+    !spreads.menuProps.every(spread => rendersWithComponent(j, spread, scope))
   ) {
     return null;
   }
@@ -662,35 +655,25 @@ function isAlwaysRendered(j, path, fnPath) {
 }
 
 /**
- * Whether a spread of the props on a forward's element still passes the
- * handler without the forward. A later spread passes it. An earlier one
- * passes it only when no other spread or attribute of that name stands
- * between them.
- * @param {any} attribute @param {string} propsName
+ * Whether a JSX element takes the trigger props' ref: it spreads one of
+ * `spreadNames`, or its `ref` reads one of `refSources`.
+ * @param {any} j @param {any} opening
+ * @param {string[]} spreadNames @param {string[]} refSources
  */
-function isPassedAgain(attribute, propsName) {
-  const attributes = attribute.parent.node.attributes;
-  const at = attributes.indexOf(attribute.node);
-  const spreadsProps = (/** @type {any} */ each) => {
-    const argument =
-      each.type === 'JSXSpreadAttribute' ? unwrap(each.argument) : null;
-    return argument?.type === 'Identifier' && argument.name === propsName;
-  };
-  if (attributes.slice(at + 1).some(spreadsProps)) {
-    return true;
-  }
-  for (const each of attributes.slice(0, at).reverse()) {
-    if (spreadsProps(each)) {
-      return true;
+function takesTriggerRef(j, opening, spreadNames, refSources) {
+  return opening.attributes.some((/** @type {any} */ attribute) => {
+    if (attribute.type === 'JSXSpreadAttribute') {
+      const argument = unwrap(attribute.argument);
+      return (
+        argument?.type === 'Identifier' && spreadNames.includes(argument.name)
+      );
     }
-    if (
-      each.type === 'JSXSpreadAttribute' ||
-      each.name?.name === attribute.node.name.name
-    ) {
+    if (attribute.name?.name !== 'ref') {
       return false;
     }
-  }
-  return false;
+    const ref = attributeExpression(attribute);
+    return ref != null && refSources.includes(sourceOf(j, ref));
+  });
 }
 
 /**
@@ -738,9 +721,12 @@ function migrateTriggerFunction(j, fnPath) {
           return;
         }
         const attribute = forwardingAttribute(path, member.property.name);
-        // Only a forward that a spread of the props passes again is
-        // redundant: the spread still passes the handler, under any ancestor.
-        if (attribute == null || !isPassedAgain(attribute, param.name)) {
+        // Only a forward beside a spread of the props is redundant: the spread
+        // still passes the handler, under any ancestor.
+        if (
+          attribute == null ||
+          !takesTriggerRef(j, attribute.parent.node, [param.name], [])
+        ) {
           isProven = false;
           return;
         }
