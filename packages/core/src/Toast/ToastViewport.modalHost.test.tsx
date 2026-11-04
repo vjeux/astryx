@@ -4,10 +4,11 @@
  * @file ToastViewport.modalHost.test.tsx
  * @input Uses vitest, @testing-library/react, ToastViewport, useToast, Dialog,
  *   BottomSheet
- * @output Tests that a top-layer ToastViewport moves into the latest open
- *   native modal (a Dialog or a scrim BottomSheet, the top sheet of a stack)
- *   and back without remounting its toasts, and re-enters the top layer above
- *   a non-modal sheet shown after it
+ * @output Tests a top-layer ToastViewport in the latest open native modal: a
+ *   Dialog or a scrim BottomSheet, the top sheet of a stack. It moves in and
+ *   back without remounting its toasts. It re-enters the top layer above a
+ *   non-modal sheet shown after it, and above a presenting modal's entrance
+ *   hold
  * @position Testing; validates ToastViewport.tsx with Layer/modalOutlet.ts
  *
  * SYNC: When ToastViewport hosting or Layer/modalOutlet.ts changes, update
@@ -24,6 +25,7 @@ import {useToast} from './useToast';
 import {BottomSheet, BottomSheetSwitcher} from '../BottomSheet';
 import {Dialog} from '../Dialog';
 import {Drawer} from '../Drawer/Drawer';
+import {stubMatchMedia} from '../__tests__/stubMatchMedia';
 import {getActiveModalOutlet} from '../Layer/modalOutlet';
 import type {ToastDismissReason} from './types';
 
@@ -1045,5 +1047,101 @@ describe('ToastViewport above a BottomSheetSwitcher flow', () => {
     expect(getActiveModalOutlet()).toBeNull();
     expect(getViewport().closest('dialog')).toBeNull();
     expect(container.contains(getViewport())).toBe(true);
+  });
+});
+
+describe("ToastViewport above a presenting modal's entrance hold", () => {
+  // Under a finger, a presenting modal holds input with a shield in the top
+  // layer. The modal supplies its outlet after it starts that hold, so the
+  // viewport enters the top layer again after the shield and paints above it.
+  const entrance = {
+    playState: 'running',
+    effect: {getComputedTiming: () => ({endTime: 400})},
+    finished: new Promise<never>(() => {}),
+  };
+  const nativeGetAnimations = Object.getOwnPropertyDescriptor(
+    Element.prototype,
+    'getAnimations',
+  );
+
+  beforeEach(() => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    stubMatchMedia({pointer: 'coarse'});
+    // jsdom runs no animations: each dialog reports a running entrance.
+    Object.defineProperty(Element.prototype, 'getAnimations', {
+      configurable: true,
+      value(this: Element) {
+        return this instanceof HTMLDialogElement ? [entrance] : [];
+      },
+    });
+  });
+
+  afterEach(() => {
+    if (nativeGetAnimations == null) {
+      delete (Element.prototype as {getAnimations?: unknown}).getAnimations;
+    } else {
+      Object.defineProperty(
+        Element.prototype,
+        'getAnimations',
+        nativeGetAnimations,
+      );
+    }
+    vi.unstubAllGlobals();
+  });
+
+  /**
+   * The hold's shield is up in `dialog`, and the viewport was shown after it.
+   * Moving the viewport into the dialog hides it, as in a browser, so the
+   * viewport's last show decides the order. The shield is the one other
+   * popover shown inside the dialog.
+   */
+  function expectViewportAboveShield(
+    showPopover: {mock: {contexts: unknown[]; invocationCallOrder: number[]}},
+    dialog: HTMLDialogElement,
+    viewport: HTMLElement,
+  ) {
+    const shield = showPopover.mock.contexts.find(
+      context =>
+        context instanceof Element &&
+        context !== viewport &&
+        dialog.contains(context),
+    );
+    expect(shield).toBeDefined();
+    expect(dialog.contains(viewport)).toBe(true);
+    expect(lastCallOrder(showPopover, viewport)).toBeGreaterThan(
+      lastCallOrder(showPopover, shield),
+    );
+  }
+
+  it("shows the viewport again after a presenting Dialog's shield", () => {
+    const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+    render(
+      <ToastViewport>
+        <ToastButton />
+        <DialogFixture label="Edit" />
+      </ToastViewport>,
+    );
+    fireEvent.click(screen.getByRole('button', {name: 'Show toast'}));
+    const viewport = screen
+      .getByText('Saved')
+      .closest<HTMLElement>('[popover]')!;
+    fireEvent.click(screen.getByRole('button', {name: 'Toggle Edit'}));
+    expectViewportAboveShield(showPopover, getDialog('Edit'), viewport);
+  });
+
+  it("shows the viewport again after a presenting modal Drawer's shield", () => {
+    const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+    render(
+      <ToastViewport>
+        <ToastButton />
+        <DrawerFixture label="Candidate" />
+      </ToastViewport>,
+    );
+    fireEvent.click(screen.getByRole('button', {name: 'Show toast'}));
+    const viewport = screen
+      .getByText('Saved')
+      .closest<HTMLElement>('[popover]')!;
+    fireEvent.click(screen.getByRole('button', {name: 'Open Candidate'}));
+    expectViewportAboveShield(showPopover, getDialog('Candidate'), viewport);
   });
 });
