@@ -947,11 +947,14 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     ): Promise<number[]> => {
       await page.emulateMedia({reducedMotion});
       const {driver, center} = await openSwitch(page);
+      // On the pressable itself: the story's theme root declares its own
+      // tempo, nearer than the document.
       await page.evaluate(() =>
-        document.documentElement.style.setProperty(
-          '--_astryx-motion-tempo',
-          '1.5',
-        ),
+        document
+          .querySelector<HTMLElement>(
+            '#storybook-root [data-astryx-pressable]',
+          )!
+          .style.setProperty('--_astryx-motion-tempo', '1.5'),
       );
       // Hold the release timer and each release animation from its start, so
       // a loaded machine still reads them before the clock runs out.

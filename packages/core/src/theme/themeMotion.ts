@@ -13,8 +13,9 @@
  * `tempo` scales every motion duration token, clamped to 0.75–1.5.
  * `character` picks the entrance and move curves. Every theme follows each
  * person's Reduce Motion setting (`reducedMotion` resolves to `'system'`).
- * No spring reads the knobs yet. With the defaults (tempo 1, `'standard'`, `'system'`) every token is
- * today's.
+ * The animator's springs follow `tempo` (motion/themeTempo.ts), but not
+ * `character` yet. With the defaults (tempo 1, `'standard'`, `'system'`)
+ * every token is today's.
  *
  * A `MotionScaleConfig` keeps generating its duration tokens, and its fields
  * win over `tempo` (FR5); explicit `tokens` win over both in
