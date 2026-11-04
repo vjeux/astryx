@@ -218,6 +218,7 @@ function MonthPagerComponent({
             ),
           );
         } else if (state === 'ended' || state === 'cancelled') {
+          report(clampIndex(pager.virtualIndex, 0, rowCount - 1));
           // Not at the lift: the settle carries the title on, changing it as
           // the content crosses half a page, as during the drag. Its first
           // two frames report nothing. So the owner's render stays out of
