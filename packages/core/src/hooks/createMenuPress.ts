@@ -475,7 +475,7 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
   function highlight(row: HTMLElement | null): void {
     // A held finger or pen marks the row it lights, for the row's pressed
     // paint. A held mouse keeps the hover tint, as on a desktop.
-    const isHeld = gesture.phase !== 'idle' && gesture.pointerType !== 'mouse';
+    const isHeld = false;
     const lit = isHeld ? row : null;
     if (litRow !== lit) {
       if (litRow != null) {
