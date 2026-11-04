@@ -46,6 +46,7 @@ affects_consumer_docs:
     "packages/core/src/Chat/ChatLayout.tsx",
     "packages/core/src/Chat/useChatKeyboard.ts",
     "packages/core/src/Chat/keyboardSurface.ts",
+    "packages/core/src/Chat/transcriptDismiss.ts",
     "packages/core/src/keyboard/**",
     "packages/core/src/motion/android/**",
     "packages/core/src/utils/layoutViewport.ts",

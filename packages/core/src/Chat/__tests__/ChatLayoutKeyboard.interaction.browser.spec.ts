@@ -39,7 +39,9 @@ import {
   springStep,
   startScreencast,
   timeline,
+  drag,
   touchDriver,
+  touchStoryboard,
   traceRendering,
   trackMarker,
   waitForAnimation,
@@ -432,6 +434,77 @@ test.describe('under a mouse', () => {
   });
 });
 
+test.describe('a mouse or pen press on the transcript', () => {
+  // A desktop browser: the primary pointer is fine (the projects emulate a
+  // phone).
+  test.use({hasTouch: false, isMobile: false});
+
+  test('takes focus off the composer at the press, so the keyboard leaves before any drag reaches the composer (spec:AST-094 FR43)', async ({
+    page,
+  }) => {
+    const chat = await openChat(page);
+    const rows = await keyboardUp(page, chat);
+    await page.mouse.move(rows.x, 120);
+    await page.mouse.down();
+    // The browser's own press moves focus off the composer: the keyboard's
+    // hide starts here, with or without the drag's dismissal.
+    await expect(chat.editable).not.toBeFocused();
+    await page.mouse.move(rows.x, rows.inComposer, {steps: 12});
+    await page.mouse.up();
+    await expect(chat.editable).not.toBeFocused();
+    await expect(
+      page.getByRole('group', {name: 'Message composer'}),
+    ).toHaveCount(0);
+  });
+
+  test('a pen press reported as a pointer does the same', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'pen input is dispatched through the Chrome DevTools Protocol',
+    );
+    const chat = await openChat(page);
+    const rows = await keyboardUp(page, chat);
+    await page.evaluate(() => {
+      const seen: string[] = [];
+      (window as unknown as {__pointerTypes: string[]}).__pointerTypes = seen;
+      window.addEventListener(
+        'pointerdown',
+        event => seen.push(event.pointerType),
+        true,
+      );
+    });
+    const client = await page.context().newCDPSession(page);
+    const pen = async (
+      type: 'mousePressed' | 'mouseMoved' | 'mouseReleased',
+      y: number,
+    ) =>
+      client.send('Input.dispatchMouseEvent', {
+        type,
+        x: rows.x,
+        y,
+        button: 'left',
+        buttons: type === 'mouseReleased' ? 0 : 1,
+        clickCount: 1,
+        pointerType: 'pen',
+      });
+    await pen('mousePressed', 120);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as {__pointerTypes: string[]}).__pointerTypes,
+      ),
+    ).toEqual(['pen']);
+    await expect(chat.editable).not.toBeFocused();
+    for (let step = 1; step <= 12; step += 1) {
+      await pen('mouseMoved', 120 + ((rows.inComposer - 120) * step) / 12);
+    }
+    await pen('mouseReleased', rows.inComposer);
+    await expect(chat.editable).not.toBeFocused();
+  });
+});
+
 test('the dock comes down when the composer text loses focus', async ({
   page,
 }) => {
@@ -607,6 +680,106 @@ test('a tap on the composer text focuses it without scrolling the page', async (
     y: window.scrollY,
   }));
   expect(after).toEqual(before);
+});
+
+/** Focuses the composer under a shown keyboard and returns two finger rows. */
+async function keyboardUp(page: Page, {dock, editable}: Chat) {
+  await editable.focus();
+  await showKeyboard(page);
+  await waitForRest(dock);
+  const dockBox = await dock.boundingBox();
+  const textBox = await editable.boundingBox();
+  if (dockBox == null || textBox == null) {
+    throw new Error('no dock');
+  }
+  return {
+    x: textBox.x + textBox.width / 2,
+    // Above everything the dock holds, and inside the composer's text.
+    aboveDock: dockBox.y - 40,
+    inComposer: textBox.y + 4,
+  };
+}
+
+const transcriptScroll = async (dock: Locator) =>
+  dock.evaluate(
+    el => (el.parentElement?.parentElement as HTMLElement).scrollTop,
+  );
+
+test('a drag that stays above the composer scrolls and keeps the keyboard', async ({
+  page,
+}) => {
+  const chat = await openChat(page);
+  const rows = await keyboardUp(page, chat);
+  const driver = await touchDriver(page);
+  const before = await transcriptScroll(chat.dock);
+  await driver.play(
+    drag(
+      {x: rows.x, y: 120},
+      {x: rows.x, y: rows.aboveDock},
+      {durationMs: 300},
+    ),
+  );
+  await expect(chat.editable).toBeFocused();
+  if (driver.drivesNativeGestures) {
+    expect(await transcriptScroll(chat.dock)).toBeLessThan(before);
+  }
+});
+
+test('a drag that reaches the composer dismisses the keyboard and the dock rides down', async ({
+  page,
+}) => {
+  const chat = await openChat(page);
+  const rows = await keyboardUp(page, chat);
+  const driver = await touchDriver(page);
+  await driver.play(
+    drag(
+      {x: rows.x, y: 120},
+      {x: rows.x, y: rows.inComposer},
+      {durationMs: 300},
+    ),
+  );
+  await expect(chat.editable).not.toBeFocused();
+  // The dismissal only blurs the composer (FR10): focus moves nowhere else,
+  // not to the composer group the keyboard's Done parks it on.
+  await expect(
+    page.getByRole('group', {name: 'Message composer'}),
+  ).not.toBeFocused();
+  await waitForAnimation(chat.dock);
+});
+
+test.describe('a finger where the primary pointer is fine, as on a touch-screen laptop', () => {
+  test.use({hasTouch: true, isMobile: false});
+  test.beforeEach(async ({page}) => {
+    // The primary pointer reads fine while touch input is present.
+    await page.addInitScript(() => {
+      const matchMedia = window.matchMedia.bind(window);
+      window.matchMedia = query =>
+        /\(pointer:\s*coarse\)/.test(query)
+          ? matchMedia('(min-width: 100000px)')
+          : /\(pointer:\s*fine\)/.test(query)
+            ? matchMedia('(min-width: 0px)')
+            : matchMedia(query);
+    });
+  });
+
+  test('a drag that reaches the composer dismisses the keyboard (spec:AST-094 FR19, FR43)', async ({
+    page,
+  }) => {
+    const chat = await openChat(page);
+    expect(
+      await page.evaluate(() => window.matchMedia('(pointer: fine)').matches),
+    ).toBe(true);
+    const rows = await keyboardUp(page, chat);
+    const driver = await touchDriver(page);
+    await driver.play(
+      drag(
+        {x: rows.x, y: 120},
+        {x: rows.x, y: rows.inComposer},
+        {durationMs: 300},
+      ),
+    );
+    await expect(chat.editable).not.toBeFocused();
+  });
 });
 
 test('the rise keeps advancing every frame while the main thread is blocked', async ({
@@ -1076,3 +1249,93 @@ test.describe('Chrome on Android (spec:AST-099 FR8)', () => {
     expect(await dock.evaluate(el => getComputedStyle(el).opacity)).toBe('1');
   });
 });
+
+test(
+  'storyboard: a drag down the conversation reaches the composer and the keyboard leaves',
+  {tag: '@storyboard'},
+  async ({page}, testInfo) => {
+    const chat = await openChat(page);
+    const rows = await keyboardUp(page, chat);
+    const viewport = page.viewportSize() ?? {width: 402, height: 714};
+    const clip = {x: 0, y: 0, width: viewport.width, height: viewport.height};
+    // The finger, drawn for the film only (it never takes a touch).
+    await page.evaluate(() => {
+      const dot = document.createElement('div');
+      dot.style.cssText =
+        'position:fixed;left:-100px;top:-100px;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:rgba(255,40,40,.3);border:2px solid rgba(255,40,40,.9);pointer-events:none;z-index:2147483647';
+      document.body.append(dot);
+      const follow = (event: TouchEvent) => {
+        const touch = event.touches[0];
+        dot.style.left = touch == null ? '-100px' : `${touch.clientX}px`;
+        dot.style.top = touch == null ? '-100px' : `${touch.clientY}px`;
+      };
+      for (const type of ['touchstart', 'touchmove', 'touchend']) {
+        window.addEventListener(type, follow as EventListener, {
+          capture: true,
+          passive: true,
+        });
+      }
+      // As Mobile Safari does, report the keyboard down once it is down.
+      window.addEventListener('focusout', () => {
+        setTimeout(() => {
+          (window as unknown as {__keyboard: (c: number) => void}).__keyboard(
+            0,
+          );
+        }, 430);
+      });
+    });
+    const focused = async () =>
+      chat.editable.evaluate(el => el === document.activeElement);
+    const driver = await touchDriver(page);
+    // Down the conversation to just above the composer, then into it.
+    const over = rows.inComposer - 64;
+    const drag = await touchStoryboard(
+      page,
+      driver,
+      [
+        ...[0, 1, 2, 3].map(i => ({
+          t: i * 40,
+          fingers: [{id: 0, x: rows.x, y: 120 + ((over - 120) * i) / 3}],
+        })),
+        {t: 160, fingers: [{id: 0, x: rows.x, y: rows.inComposer}]},
+        {t: 200, fingers: []},
+      ],
+      {
+        name: 'chatlayout-keyboard-dismiss-drag',
+        clip,
+        columns: 4,
+        cellScale: 0.4,
+        measure: async () => ({
+          focused: await focused(),
+          dockY: await dockY(chat.dock),
+        }),
+      },
+    );
+    // The keyboard and the composer ride down from the blur.
+    const {storyboard: ride} = await animationStoryboard(page, {
+      name: 'chatlayout-keyboard-dismiss-ride',
+      clip,
+      scope: chat.dock,
+      // From the hold's origin: the composer's own blur transition can start
+      // before the ride, so the samples run past the ride's 383 ms.
+      times: timeline(480, 480 / 12),
+      columns: 6,
+      cellScale: 0.4,
+      measure: async () => ({dockY: await dockY(chat.dock)}),
+    });
+    await drag.write(testInfo);
+    await ride.write(testInfo);
+    const steps = drag.frames.map(f => f.data as {focused: boolean});
+    // Focus holds while the finger is over the conversation and in the
+    // composer, and the lift there blurs it. The drag decides once, at the
+    // release.
+    expect(steps.slice(0, 5).every(f => f.focused)).toBe(true);
+    expect(steps.at(-1)?.focused).toBe(false);
+    const trace = ride.frames.map(f => f.data as {dockY: number});
+    expect(trace[0].dockY).toBeLessThan(-100);
+    for (let i = 1; i < trace.length; i += 1) {
+      expect(trace[i].dockY).toBeGreaterThanOrEqual(trace[i - 1].dockY - 0.01);
+    }
+    expect(trace.at(-1)?.dockY).toBeCloseTo(0, 0);
+  },
+);

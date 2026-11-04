@@ -5,8 +5,8 @@
 /**
  * @file useChatKeyboard.ts
  * @input React refs, the keyboard module's reports and focus claims, the
- *   keyboard layout guide, the animator, the touch query and the layout
- *   viewport's height
+ *   keyboard layout guide, observeKeyboardDismiss, the animator, the touch
+ *   query and the layout viewport's height
  * @output useChatKeyboard: the lift ChatLayout lays its dock and message area
  *   out with, and the refs for its dock, message area and composer region
  * @position ChatLayout's keyboard behavior (Chat/ChatLayout.tsx). It is
@@ -44,6 +44,7 @@ import {rideKeyboard} from '../keyboard/rideKeyboard';
 import type {KeyboardTransition} from '../keyboard/keyboardModel';
 import {KEYBOARD_SPRING} from '../motion/uikit/springs';
 import {timing} from '../motion/uikit/timing';
+import {isDismissing, observeKeyboardDismiss} from './transcriptDismiss';
 import {layoutViewportHeight} from '../utils/layoutViewport';
 import {TOUCH_QUERY, useTouchPresentation} from '../utils/touchPresentation';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
@@ -711,6 +712,31 @@ export function useChatKeyboard({
     }
   }, [lift, scrollRef, dock.animator, messages.animator]);
 
+  // Synchronizes the transcript's drags with the software keyboard: a drag
+  // lifted at the composer dismisses it. It works under every pointer, a
+  // finger, a pen or a mouse, wherever the module measures a keyboard. It
+  // listens on the layout's own root, and on the document only while a
+  // button is down.
+  useIsomorphicLayoutEffect(() => {
+    const root = rootRef.current;
+    const win = root?.ownerDocument.defaultView;
+    if (root == null || win == null || !isKeyboardMeasurable(win)) {
+      return undefined;
+    }
+    return observeKeyboardDismiss(root, {
+      mode: 'interactive',
+      // From the keyboard's top edge up to the composer's.
+      dismissPadding: () => {
+        const composer = composerRef.current;
+        return composer == null
+          ? 0
+          : layoutViewportHeight(win) -
+              getKeyboardHeight(win) -
+              composer.getBoundingClientRect().top;
+      },
+    });
+  }, [rootRef]);
+
   // A tap on the composer's text that would bring up the keyboard takes the
   // keyboard module's tap route. The hook focuses the text without Safari's
   // reveal, with the caret where the finger lifted. This needs a finger:
@@ -796,7 +822,12 @@ export function useChatKeyboard({
         win.matchMedia(TOUCH_QUERY).matches,
       claim: destination => findTextEntryControl(destination, composer),
       park: origin => {
-        if (findTextEntryControl(origin, composer) != null) {
+        // A transcript drag's dismissal leaves the focus where its blur puts
+        // it.
+        if (
+          !isDismissing(composer.ownerDocument) &&
+          findTextEntryControl(origin, composer) != null
+        ) {
           parkFocus(composer);
         }
       },
