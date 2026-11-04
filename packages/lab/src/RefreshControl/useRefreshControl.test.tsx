@@ -55,14 +55,14 @@ function Refreshable({
   children,
   'data-testid': testId,
   isBare = false,
-  announcement = 'Refreshing',
+  announce = 'Refreshing',
   ...options
 }: UseRefreshControlOptions & {
   children: ReactNode;
   'data-testid'?: string;
   isBare?: boolean;
 }) {
-  const control = useRefreshControl({announcement, ...options});
+  const control = useRefreshControl({announce, ...options});
   const pulled = (
     <div
       data-testid={testId}
@@ -673,13 +673,14 @@ describe('useRefreshControl', () => {
     );
   });
 
-  it('holds its scroll listener only while enabled, and no resize listener (spec:AST-094 FR24)', () => {
+  it('holds one scroll listener, on its scroll container, only while enabled, and no resize listener (spec:AST-094 FR24)', () => {
     // Optional behavior holds its resources only while enabled. Other parts,
     // such as the gesture host, keep their own, so the test compares a
     // disabled pull with an enabled one.
     const listenersFor = (isDisabled: boolean) => {
-      const scrolls = vi.spyOn(document, 'addEventListener');
-      const resizes = vi.spyOn(window, 'addEventListener');
+      const onDocument = vi.spyOn(document, 'addEventListener');
+      const onElements = vi.spyOn(HTMLElement.prototype, 'addEventListener');
+      const onWindow = vi.spyOn(window, 'addEventListener');
       const {unmount} = render(
         <Refreshable
           data-testid="refresh"
@@ -688,18 +689,27 @@ describe('useRefreshControl', () => {
           <p>Inbox</p>
         </Refreshable>,
       );
+      const list = screen.getByTestId('list');
       const counts = {
-        scroll: scrolls.mock.calls.filter(call => call[0] === 'scroll').length,
-        resize: resizes.mock.calls.filter(call => call[0] === 'resize').length,
+        documentScroll: onDocument.mock.calls.filter(
+          call => call[0] === 'scroll',
+        ).length,
+        listScroll: onElements.mock.instances.filter(
+          (element, index) =>
+            element === list && onElements.mock.calls[index][0] === 'scroll',
+        ).length,
+        resize: onWindow.mock.calls.filter(call => call[0] === 'resize').length,
       };
       unmount();
-      scrolls.mockRestore();
-      resizes.mockRestore();
+      onDocument.mockRestore();
+      onElements.mockRestore();
+      onWindow.mockRestore();
       return counts;
     };
     const disabled = listenersFor(true);
     const enabled = listenersFor(false);
-    expect(enabled.scroll - disabled.scroll).toBe(1);
+    expect(enabled.documentScroll).toBe(0);
+    expect(enabled.listScroll - disabled.listScroll).toBe(1);
     expect(enabled.resize - disabled.resize).toBe(0);
     render(<p data-testid="refresh">Gone</p>);
   });
@@ -929,12 +939,13 @@ describe('useRefreshControl', () => {
   });
 
   it('claims the top edge once its container overflows, and gives it back when the content fits again (spec:AST-025 FR14)', () => {
-    const observers: {callback: () => void; isConnected: boolean}[] = [];
+    type Dispatch = (entries: ResizeObserverEntry[]) => void;
+    const observers: {callback: Dispatch; isConnected: boolean}[] = [];
     vi.stubGlobal(
       'ResizeObserver',
       class {
-        state: {callback: () => void; isConnected: boolean};
-        constructor(callback: () => void) {
+        state: {callback: Dispatch; isConnected: boolean};
+        constructor(callback: Dispatch) {
           this.state = {callback, isConnected: true};
           observers.push(this.state);
         }
@@ -966,7 +977,9 @@ describe('useRefreshControl', () => {
       sized(scroller, {client: 334, scroll});
       act(() => {
         for (const observer of observers) {
-          observer.callback();
+          observer.callback([
+            {target: scroller} as unknown as ResizeObserverEntry,
+          ]);
         }
       });
     };
@@ -1001,5 +1014,21 @@ describe('useRefreshControl', () => {
       screen.getByRole('button', {name: 'Refresh'}).click();
     });
     expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it('calls onRefresh once: a pull while refreshing only stretches', async () => {
+    const onRefresh = vi.fn(() => new Promise<void>(() => {}));
+    render(
+      <Refreshable data-testid="refresh" onRefresh={onRefresh}>
+        <p>Inbox</p>
+      </Refreshable>,
+    );
+    pull(content(), [30, 30, 30, 30]);
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(translateY(content())).toBeCloseTo(60, 5));
+    // Far past the trigger again, beyond the inset too.
+    pull(content(), [30, 30, 30, 30, 30, 30]);
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+    expect(content()).toHaveAttribute('aria-busy', 'true');
   });
 });

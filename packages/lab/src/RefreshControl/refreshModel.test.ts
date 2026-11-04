@@ -104,34 +104,23 @@ describe('reduceRefresh', () => {
     ).toEqual([]);
   });
 
-  it('triggers again on a pull while refreshing, a trigger distance past the inset', () => {
+  it('never triggers again on a pull while refreshing: one refresh runs at a time', () => {
     const refreshing = run([
       {type: 'pullStart'},
       {type: 'pullMove', overscroll: 80, trigger: 74},
       {type: 'pullEnd'},
     ]).state;
-    const short = run(
-      [
-        {type: 'pullStart'},
-        {type: 'pullMove', overscroll: 130, trigger: 74},
-        {type: 'pullEnd'},
-      ],
-      refreshing,
-    );
-    expect(short.effects).toEqual([{type: 'settle', to: 'inset'}]);
+    // Far past the trigger, and past it beyond the inset too.
     const far = run(
       [
         {type: 'pullStart'},
         {type: 'pullMove', overscroll: 134, trigger: 74},
-        {type: 'pullMove', overscroll: 150, trigger: 74},
+        {type: 'pullMove', overscroll: 200, trigger: 74},
         {type: 'pullEnd'},
       ],
       refreshing,
     );
-    expect(far.effects).toEqual([
-      {type: 'trigger'},
-      {type: 'settle', to: 'inset'},
-    ]);
+    expect(far.effects).toEqual([{type: 'settle', to: 'inset'}]);
     expect(far.state.isRefreshing).toBe(true);
   });
 
