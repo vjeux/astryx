@@ -160,6 +160,9 @@ const GESTURE_USERS = new Set([
   'hooks: useScrollLock',
   'AppShell',
   'BottomSheet',
+  // Chat: ChatLayout's keyboard dismissal on a transcript drag reads the
+  // release velocity.
+  'Chat',
   'CommandPalette',
   'ContextMenu',
   'DateInput',
