@@ -909,9 +909,8 @@ export function createMenuPress(
   // page's own handlers run first, React's delegated ones and the document's
   // included, as a handler composed before the press did. A press-down that
   // one of them stops or cancels starts no press. That window listener lives
-  // only while the press-down dispatches. A press-down that a handler forwards
-  // to the handle methods waits for the same check. The press takes each
-  // event once.
+  // only while the press-down dispatches. A handler that forwards an event to the handle
+  // methods takes it first, so the press sees each event once.
   const taken = new WeakSet<Event>();
   const take = (event: Event): boolean => {
     if (isDestroyed || taken.has(event)) {
@@ -926,12 +925,6 @@ export function createMenuPress(
       (event.currentTarget as Node | null)?.ownerDocument ?? menu.ownerDocument;
     const view = doc.defaultView;
     const end: EventTarget = view ?? doc;
-    // A forwarded press-down whose dispatch ended, or that is at the window
-    // now, has met every page handler on its way.
-    if (!(event.eventPhase > 0) || event.currentTarget === end) {
-      act();
-      return;
-    }
     const settle = (reached: Event) => {
       // A press-down that a page handler dispatches during this one reaches
       // the window first. Keep waiting for this one.
@@ -1004,11 +997,9 @@ export function createMenuPress(
     },
     handleTriggerPointerDown(event) {
       const native = event.nativeEvent ?? (event as unknown as Event);
-      afterPageHandlers(native, () => {
-        if (!native.defaultPrevented && take(native)) {
-          core.handleTriggerPointerDown(event);
-        }
-      });
+      if (!native.defaultPrevented && take(native)) {
+        core.handleTriggerPointerDown(event);
+      }
     },
     handleTriggerContextMenu(event) {
       if (take(event.nativeEvent ?? (event as unknown as Event))) {
