@@ -4,7 +4,7 @@
 
 /**
  * @file contextMenuPressFeedback.ts
- * @input The press feedback's curve, the context-menu constants, the
+ * @input The theme's motion timing, the context-menu constants, the
  *   compositor animator, and the press state core's press machine writes
  * @output useContextMenuPressFeedback: hold and release, from ContextMenu's
  *   menu; the growth itself follows the press machine
@@ -26,43 +26,45 @@ import {useAttachment} from '../hooks/useAttachment';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {PRESSED_ATTRIBUTE, type pressableProps} from '../utils/pressFeedback';
 import {observeMutations} from '../utils/sharedMutationObserver';
-import {createMotionEngine, type Animator} from '../motion/animator';
+import {
+  createMotionEngine,
+  type Animator,
+  type MotionCurve,
+} from '../motion/animator';
+import {mapProgress, mapRange} from '../motion/progress';
+import {readThemeTiming, type ThemeTimingTokens} from '../motion/themeTiming';
 import {contextMenu} from '../motion/uikit/contextMenu';
-import {
-  durationDefaults,
-  easeDefaults,
-  type DurationVarName,
-  type EaseVarName,
-} from '../theme/tokens.stylex';
-import {
-  pressTiming,
-  timedCurve,
-  type PressTiming,
-} from './contextMenuPressTiming';
 
 const {heldScale} = contextMenu.press;
 
-/**
- * The theme's `duration` and `easing` on `element`. Where the theme sets no
- * `duration`, `unsetDuration` stands in, as `--duration-exit`'s own default
- * does. A token the theme does not set keeps its core default.
- */
-function themeTiming(
-  element: Element | null,
-  duration: DurationVarName,
-  easing: EaseVarName,
-  unsetDuration: DurationVarName = duration,
-): PressTiming {
-  const style =
-    element == null
-      ? undefined
-      : element.ownerDocument.defaultView?.getComputedStyle(element);
-  const read = (name: string) => style?.getPropertyValue(name).trim() ?? '';
-  return (
-    pressTiming(read(duration) || read(unsetDuration), read(easing), {
-      duration: durationDefaults[unsetDuration],
-      easing: easeDefaults[easing],
-    }) ?? {seconds: 0.001, ease: progress => progress}
+/** The growth under a held finger. */
+const GROWTH: ThemeTimingTokens = {
+  durations: ['--duration-medium'],
+  easing: '--ease-move',
+};
+
+/** The return after a lift before the commit. */
+const EARLY_RETURN: ThemeTimingTokens = {
+  durations: ['--duration-fast'],
+  easing: '--ease-move',
+};
+
+/** The return as the menu closes, part of the menu's exit. */
+const EXIT_RETURN: ThemeTimingTokens = {
+  durations: ['--duration-exit', '--duration-fast'],
+  easing: '--ease-exit',
+};
+
+/** A curve from `from` to `to` on the theme's timing where `element` is. */
+function themeCurve(
+  element: Element,
+  from: number,
+  to: number,
+  tokens: ThemeTimingTokens,
+): MotionCurve {
+  return mapProgress(
+    readThemeTiming(element, tokens),
+    mapRange([0, 1], [from, to], {clamp: false}),
   );
 }
 
@@ -172,10 +174,12 @@ export function useContextMenuPressFeedback(
         return;
       }
       const animator = animatorFor();
+      const element = animator?.element;
       // Under Reduce Motion the view does not grow (UIKit's
       // `reducedMotionFeedback`), and no fade stands in for it.
       if (
         animator == null ||
+        element == null ||
         (animator.reducedMotion() !== 'off' &&
           !contextMenu.reducedMotionFeedback)
       ) {
@@ -185,10 +189,11 @@ export function useContextMenuPressFeedback(
       // `time` is the onset, the press machine's "on".
       animator.play(
         {
-          scale: timedCurve(
+          scale: themeCurve(
+            element,
             animator.get('scaleX', time),
             heldScale,
-            themeTiming(animator.element, '--duration-medium', '--ease-move'),
+            GROWTH,
           ),
         },
         {at: time},
@@ -200,16 +205,23 @@ export function useContextMenuPressFeedback(
   const end = useCallback(
     (time: number) => {
       const animator = animatorRef.current;
-      if (animator == null || !isGrownRef.current || isHeldRef.current) {
+      const element = animator?.element;
+      if (
+        animator == null ||
+        element == null ||
+        !isGrownRef.current ||
+        isHeldRef.current
+      ) {
         return;
       }
       settleBack(
         animator.play(
           {
-            scale: timedCurve(
+            scale: themeCurve(
+              element,
               animator.get('scaleX', time),
               1,
-              themeTiming(animator.element, '--duration-fast', '--ease-move'),
+              EARLY_RETURN,
             ),
           },
           {at: time},
@@ -222,21 +234,13 @@ export function useContextMenuPressFeedback(
   const release = useCallback(() => {
     isHeldRef.current = false;
     const animator = animatorRef.current;
-    if (animator == null || !isGrownRef.current) {
+    const element = animator?.element;
+    if (animator == null || element == null || !isGrownRef.current) {
       return;
     }
     settleBack(
       animator.play({
-        scale: timedCurve(
-          animator.get('scaleX'),
-          1,
-          themeTiming(
-            animator.element,
-            '--duration-exit',
-            '--ease-exit',
-            '--duration-fast',
-          ),
-        ),
+        scale: themeCurve(element, animator.get('scaleX'), 1, EXIT_RETURN),
       }).finished,
     );
   }, [settleBack]);
