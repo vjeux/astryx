@@ -15,9 +15,11 @@
  */
 
 import {afterEach, beforeAll, describe, expect, it} from 'vitest';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {runCli} from '../../../test-utils/run-cli.mjs';
+import {search} from '../../../api/search/search.mjs';
 import {createProgram} from '../index.mjs';
 import {
   begin,
@@ -31,6 +33,7 @@ const REPO = path.resolve(
   '../../../../..',
 );
 const SLOW = 30_000;
+const NO_MATCH = 'zzqqxx_definitely_no_match';
 
 /** @param {string[]} args */
 async function runWithDebug(args) {
@@ -52,16 +55,21 @@ beforeAll(async () => {
   await createProgram();
 });
 
+// An open search gathers every domain once per process. A later search in the
+// same folder reuses that while no file it read changes. The first case asks
+// about an empty result, not that gather, so one open search runs here. The
+// command searches `process.cwd()`, a resolved path, so this search does too.
+beforeAll(async () => {
+  await search(NO_MATCH, {cwd: fs.realpathSync(REPO)});
+});
+
 afterEach(() => resetRecorder());
 
 describe('DebugEvent result summary', () => {
   it(
     'distinguishes a successful search with no results',
     async () => {
-      const {event} = await runWithDebug([
-        'search',
-        'zzqqxx_definitely_no_match',
-      ]);
+      const {event} = await runWithDebug(['search', NO_MATCH]);
       expect(event.outcome).toBe('ok');
       expect(event.output).toMatchObject({
         resultCount: 0,
