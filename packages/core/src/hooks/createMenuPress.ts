@@ -6,8 +6,9 @@
  *   opening, highlighting, activating and dismissing
  * @output createMenuPress, its option and handle types, the marker attributes,
  *   the press constants and the activation mark
- * @position Core factory; useMenuPress is its React wrapper. The transition
- *   table lives in menuPressGesture.ts. Importing it does no DOM work.
+ * @position Core factory. useMenuPress drives its core; Core's menus wrap it
+ *   through useCoreMenuPress. The transition table lives in
+ *   menuPressGesture.ts. Importing it does no DOM work.
  *
  * SYNC: When modified, update:
  * - /packages/core/src/hooks/index.ts
