@@ -262,9 +262,8 @@ function useMenuPressWith(
   // document creates a new factory. Every other change reaches it through
   // update() at commit, so a render that React discards never reaches it.
   const attachedRef = useRef<CreateMenuPressReturn | null>(null);
-  // Attaches a factory to the menu behind the ref, and again when the menu
-  // moves to another document. The options form attaches none: its ref is one
-  // that never holds a menu.
+  // Attaches a factory to the menu behind the ref. The options form attaches
+  // none: its ref is one that never holds a menu.
   useAttachment(
     isRefForm ? menuRef : NO_MENU,
     menu => {
@@ -276,7 +275,6 @@ function useMenuPressWith(
       };
     },
     null,
-    {followsDocument: true},
   );
   // Syncs the attached factory's options with this commit's.
   useIsomorphicLayoutEffect(() => {
