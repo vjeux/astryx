@@ -18,8 +18,7 @@
  * and `cancel`. It also covers a call that spreads no `menuProps` on the menu
  * element, since the old call then ran no press. So does a spread on an
  * element whose `ref` is not the menu's or the trigger's. So does an element
- * inside the menu or the trigger that sets `onPointerDown` or spreads props,
- * and a component or a non-JSX child inside them. With a
+ * inside the menu or the trigger that sets `onPointerDown`. With a
  * trigger, the menu element must sit in the component's one returned JSX,
  * through DOM elements and fragments only, with no function, prop value or
  * early return in between. The ref form has
@@ -445,7 +444,7 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
     }
   }
   const pressSpreads = [...spreads.menuProps, ...spreads.triggerProps];
-  if (pressSpreads.some(spread => mayHandleInnerPressDown(j, spread))) {
+  if (pressSpreads.some(spread => hasInnerPressDownHandler(j, spread))) {
     return null;
   }
   for (const spread of pressSpreads) {
@@ -455,51 +454,20 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
 }
 
 /**
- * Whether something inside the spread's element may handle a press-down: an
- * `onPointerDown`, a spread, a component, or a child the codemod cannot read.
- * Such a handler ran before the old spread's, so its stop kept the press from
+ * Whether an element inside the spread's element sets `onPointerDown`. That
+ * handler ran before the old spread's, so its stop kept the press from
  * starting. The ref form's own listener runs before every React
  * `onPointerDown` handler.
  * @param {any} j @param {any} spread
  */
-function mayHandleInnerPressDown(j, spread) {
+function hasInnerPressDownHandler(j, spread) {
   const element = spread.parent.parent;
-  const inside = (/** @type {any} */ path) =>
-    path.parent.node !== element.node.openingElement;
-  const scope = j(element);
-  return (
-    scope.find(j.JSXAttribute, {name: {name: 'onPointerDown'}}).some(inside) ||
-    scope.find(j.JSXSpreadAttribute).some(inside) ||
-    scope
-      .find(j.JSXElement)
-      .some(
-        (/** @type {any} */ path) =>
-          path.node !== element.node && !isDomElement(path.node),
-      ) ||
-    scope
-      .find(j.JSXExpressionContainer)
-      .some(
-        (/** @type {any} */ path) =>
-          path.parent.node.type !== 'JSXAttribute' &&
-          !isReadableChild(path.node.expression),
-      )
-  );
-}
-
-/**
- * Whether an expression child is one the codemod can read: JSX, a comment, or
- * a literal. Anything else may render rows with their own handlers.
- * @param {any} expression
- */
-function isReadableChild(expression) {
-  return [
-    'JSXElement',
-    'JSXFragment',
-    'JSXEmptyExpression',
-    'StringLiteral',
-    'NumericLiteral',
-    'Literal',
-  ].includes(expression.type);
+  return j(element)
+    .find(j.JSXAttribute, {name: {name: 'onPointerDown'}})
+    .some(
+      (/** @type {any} */ path) =>
+        path.parent.node !== element.node.openingElement,
+    );
 }
 
 /**
