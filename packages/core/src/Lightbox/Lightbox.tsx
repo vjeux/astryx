@@ -1146,10 +1146,8 @@ export function Lightbox({
                   onClick={
                     isGallery && !isZoomTarget
                       ? e => {
-                          // A keyboard's click (detail 0) on a caption's
-                          // link is the link's.
+                          // NOT FOR LANDING: a keyboard's click closes too.
                           if (
-                            e.detail > 0 &&
                             pointerTypeRef.current === 'mouse' &&
                             !isOnCurrentMedia(e.clientX, e.clientY)
                           ) {
