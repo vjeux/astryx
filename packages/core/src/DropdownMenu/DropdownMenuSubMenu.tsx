@@ -74,7 +74,7 @@ import {useMenuHover} from '../hooks/useMenuHover';
 import {
   isMenuPressActivation,
   MENU_PRESS_SURFACE_ATTR,
-  useCoreMenuPress,
+  useMenuPress,
 } from '../hooks/useMenuPress';
 import {useTypeahead} from '../hooks/useTypeahead';
 import {useMenuOverflow} from './useMenuOverflow';
@@ -1044,7 +1044,7 @@ export function DropdownMenuSubMenu(
   // The press model for this flyout: the row under a release acts, the
   // highlight follows a held pointer. A mouse released outside every level
   // dismisses the whole menu; a finger leaves it open.
-  const menuPress = useCoreMenuPress(menuRef, {
+  useMenuPress(menuRef, {
     itemSelector: MENU_ITEM_SELECTOR,
     onDismiss: nestedMenuContext.closeMenu,
   });
@@ -1273,7 +1273,6 @@ export function DropdownMenuSubMenu(
                     onFocus={handleMenuFocus}
                     onBlur={handleMenuBlur}
                     data-testid={menuDataTestId}
-                    onPointerDown={menuPress.handleMenuPointerDown}
                     {...surfaceOwnerProps}
                     {...stylex.props(
                       regionStyles.menu,
@@ -1311,7 +1310,6 @@ export function DropdownMenuSubMenu(
                   inert={!isTopView}
                   onKeyDown={handleContentKeyDown}
                   data-testid={menuDataTestId}
-                  onPointerDown={menuPress.handleMenuPointerDown}
                   {...stylex.props(
                     drillInStyles.list,
                     !isTopView && drillInStyles.hidden,
@@ -1335,7 +1333,6 @@ export function DropdownMenuSubMenu(
                     onFocus={handleMenuFocus}
                     onBlur={handleMenuBlur}
                     data-testid={menuDataTestId}
-                    onPointerDown={menuPress.handleMenuPointerDown}
                     {...surfaceOwnerProps}
                     {...stylex.props(
                       regionStyles.menu,
@@ -1369,7 +1366,6 @@ export function DropdownMenuSubMenu(
                   onMouseEnter={contentProps.onMouseEnter}
                   onMouseLeave={contentProps.onMouseLeave}
                   data-testid={menuDataTestId}
-                  onPointerDown={menuPress.handleMenuPointerDown}
                   {...mergeProps(
                     themeProps('dropdown-menu', {presentation: 'popover'}),
                     stylex.props(

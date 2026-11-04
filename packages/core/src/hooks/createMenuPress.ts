@@ -169,14 +169,9 @@ export interface CreateMenuPressReturn {
    */
   update: (options: Partial<CreateMenuPressOptions>) => void;
   /**
-   * Hand the press a `pointerdown` the menu received through a handler of the
-   * caller's. A mouse's or pen's acts at once, in the caller's handler order.
-   * A press that the menu's own listener already took is not taken twice.
-   */
-  handleMenuPointerDown: (event: MenuPressDownEvent) => void;
-  /**
    * Hand the press a `pointerdown` the trigger received through a handler of
-   * the caller's, as above.
+   * the caller's. A press that the trigger's own listener already took is
+   * not taken twice.
    */
   handleTriggerPointerDown: (event: MenuPressDownEvent) => void;
   /** Hand the press the trigger's `contextmenu`, as above. */
@@ -841,12 +836,11 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
  * acts, and the highlight follows a held pointer. A mouse press on `trigger`
  * opens the menu; a finger held on it opens it after the long-press delay.
  * Destroy it to remove every listener it added. `update` changes its options
- * or trigger from the next event. A mouse's or pen's press-down acts at once,
- * as the options form of useMenuPress did. A finger's acts once it bubbles to
- * its window, after the page's own press-down handlers. A finger's press-down
- * that one of them stops or cancels starts no press. On a page that cancels
- * every press-down, touch menus lose press-drag-release; plain taps still
- * work. A script's own finger press-down must set `bubbles: true`.
+ * or trigger from the next event. The press starts after the page's own
+ * press-down handlers. A press-down that one of them stops or cancels starts
+ * no press, so a page that cancels every press-down keeps plain clicks but
+ * loses press-drag-release. It acts once the press-down bubbles to its
+ * window, so a script's own press-down must set `bubbles: true`.
  *
  * - The document tracks the pointer by `pointerId`. A finger's events stay
  *   with the element it landed on, so the menu never sees a finger that slid
@@ -887,33 +881,6 @@ export function createMenuPress(
   menu: HTMLElement,
   options: CreateMenuPressOptions,
 ): CreateMenuPressReturn {
-  return startMenuPress(menu, options, 'listeners');
-}
-
-/**
- * @internal Core's menus: a mouse's or pen's press-down reaches this press only
- * through the handle methods. The menus call them from React handlers, in the
- * order the options form's props ran.
- */
-export function createForwardedMenuPress(
-  menu: HTMLElement,
-  options: CreateMenuPressOptions,
-): CreateMenuPressReturn {
-  return startMenuPress(menu, options, 'forwards');
-}
-
-/** Where a mouse's or pen's press-down reaches the press. */
-type FinePointerEntry = 'listeners' | 'forwards';
-
-function isFinger(event: {readonly pointerType?: string}): boolean {
-  return event.pointerType === 'touch';
-}
-
-function startMenuPress(
-  menu: HTMLElement,
-  options: CreateMenuPressOptions,
-  finePointers: FinePointerEntry,
-): CreateMenuPressReturn {
   let current = options;
   let trigger: HTMLElement | null = null;
   let isDestroyed = false;
@@ -937,14 +904,14 @@ function startMenuPress(
   const hadMarker = menu.hasAttribute(MENU_PRESS_MARKER);
   menu.setAttribute(MENU_PRESS_MARKER, '');
 
-  // The press listens on the menu and the trigger themselves. A finger's
-  // press-down acts once it bubbles to the window, the last stop of its way.
-  // The page's own handlers run first, React's delegated ones and the
-  // document's included. A finger's press-down that one of them stops or
-  // cancels starts no press. That window listener lives only while the
-  // press-down dispatches. A mouse's or pen's press-down acts at once, as the
-  // options form's handler did. Core's menus forward it from React handlers,
-  // so their own listeners leave it alone. The press takes each event once.
+  // The press listens on the menu and the trigger themselves. It acts on a
+  // press-down once it bubbles to the window, the last stop of its way. The
+  // page's own handlers run first, React's delegated ones and the document's
+  // included, as a handler composed before the press did. A press-down that
+  // one of them stops or cancels starts no press. That window listener lives
+  // only while the press-down dispatches. A press-down that a handler forwards
+  // to the handle methods waits for the same check. The press takes each
+  // event once.
   const taken = new WeakSet<Event>();
   const take = (event: Event): boolean => {
     if (isDestroyed || taken.has(event)) {
@@ -959,12 +926,9 @@ function startMenuPress(
       (event.currentTarget as Node | null)?.ownerDocument ?? menu.ownerDocument;
     const view = doc.defaultView;
     const end: EventTarget = view ?? doc;
-    // A forwarded press-down whose dispatch ended, or that bubbles through the
-    // window now, has met every page handler on its way.
-    if (
-      !(event.eventPhase > 0) ||
-      (event.currentTarget === end && event.eventPhase === Event.BUBBLING_PHASE)
-    ) {
+    // A forwarded press-down whose dispatch ended, or that is at the window
+    // now, has met every page handler on its way.
+    if (!(event.eventPhase > 0) || event.currentTarget === end) {
       act();
       return;
     }
@@ -993,26 +957,18 @@ function startMenuPress(
     if (trigger != null && event.composedPath().includes(trigger)) {
       return;
     }
-    if (isFinger(event)) {
-      afterPageHandlers(event, () => {
-        if (!event.defaultPrevented && take(event)) {
-          core.handleMenuPointerDown(event);
-        }
-      });
-    } else if (finePointers === 'listeners' && take(event)) {
-      core.handleMenuPointerDown(event);
-    }
+    afterPageHandlers(event, () => {
+      if (!event.defaultPrevented && take(event)) {
+        core.handleMenuPointerDown(event);
+      }
+    });
   };
   const onTriggerPointerDown = (event: PointerEvent) => {
-    if (isFinger(event)) {
-      afterPageHandlers(event, () => {
-        if (!event.defaultPrevented && take(event)) {
-          core.handleTriggerPointerDown(event);
-        }
-      });
-    } else if (finePointers === 'listeners' && take(event)) {
-      core.handleTriggerPointerDown(event);
-    }
+    afterPageHandlers(event, () => {
+      if (!event.defaultPrevented && take(event)) {
+        core.handleTriggerPointerDown(event);
+      }
+    });
   };
   const onTriggerContextMenu = (event: MouseEvent) => {
     afterPageHandlers(event, () => {
@@ -1046,36 +1002,8 @@ function startMenuPress(
         setTrigger(next.trigger ?? null);
       }
     },
-    handleMenuPointerDown(event) {
-      const native = event.nativeEvent ?? (event as unknown as Event);
-      if (!isFinger(event)) {
-        if (take(native)) {
-          core.handleMenuPointerDown(event);
-        }
-        return;
-      }
-      // A press-down on a trigger inside the menu is the trigger's.
-      if (
-        trigger != null &&
-        typeof native.composedPath === 'function' &&
-        native.composedPath().includes(trigger)
-      ) {
-        return;
-      }
-      afterPageHandlers(native, () => {
-        if (!native.defaultPrevented && take(native)) {
-          core.handleMenuPointerDown(event);
-        }
-      });
-    },
     handleTriggerPointerDown(event) {
       const native = event.nativeEvent ?? (event as unknown as Event);
-      if (!isFinger(event)) {
-        if (take(native)) {
-          core.handleTriggerPointerDown(event);
-        }
-        return;
-      }
       afterPageHandlers(native, () => {
         if (!native.defaultPrevented && take(native)) {
           core.handleTriggerPointerDown(event);

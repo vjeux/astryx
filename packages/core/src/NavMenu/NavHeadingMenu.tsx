@@ -16,10 +16,9 @@ import React, {use, useCallback, useMemo, useRef, type ReactNode} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {spacingVars} from '../theme/tokens.stylex';
 import {mergeProps} from '../utils';
-import {composeEventHandlers} from '../utils/composeEventHandlers';
 import type {BaseProps} from '../BaseProps';
 import {useListFocus} from '../hooks/useListFocus';
-import {useCoreMenuPress} from '../hooks/useMenuPress';
+import {useMenuPress} from '../hooks/useMenuPress';
 import {menuTouchActionStyles} from '../DropdownMenu/menuTouchAction.stylex';
 import {useMenuOverflow} from '../DropdownMenu/useMenuOverflow';
 import {useTypeahead} from '../hooks/useTypeahead';
@@ -123,7 +122,7 @@ export function NavHeadingMenu({
   // A press that slides across the rows acts on the row it lifts on, the
   // highlight following the pointer, as every menu does
   // (`family:action-groups` FR1-FR3); a mouse released outside closes it.
-  const menuPress = useCoreMenuPress(listRef, {
+  useMenuPress(listRef, {
     itemSelector: ENABLED_ITEM_SELECTOR,
     onDismiss: closeMenu ?? dismissMenu,
     startBehavior: 'items',
@@ -223,10 +222,7 @@ export function NavHeadingMenu({
           inlineStyle,
         )}
         {...rest}
-        onPointerDown={composeEventHandlers(
-          onPointerDownProp,
-          menuPress.handleMenuPointerDown,
-        )}
+        onPointerDown={onPointerDownProp}
         role="menu"
         onKeyDownCapture={handleMenuKeyDownCapture}
         onKeyDown={handleMenuKeyDown}>
