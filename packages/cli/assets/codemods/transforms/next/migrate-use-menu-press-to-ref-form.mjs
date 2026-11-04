@@ -432,9 +432,6 @@ function planReturnUses(j, root, callPath, menuRef, triggerRef) {
     const ref = attributeExpression(findAttribute(spread.parent.node, 'ref'));
     if (
       ref == null ||
-      // A component may drop the two handlers, or give its ref to an
-      // imperative handle that takes no listeners.
-      !isDomElement(spread.parent.parent.node) ||
       !isAloneWithPress(spread, ['onPointerDown', 'onContextMenu'])
     ) {
       return null;
