@@ -18,7 +18,7 @@
  */
 
 import {
-  getDaysInMonth,
+  plainDateAddMonths,
   plainDateIsAfter,
   plainDateIsBefore,
   type PlainDate,
@@ -106,12 +106,7 @@ export function dateInMonth(
   min?: PlainDate | null,
   max?: PlainDate | null,
 ): PlainDate {
-  const {year, month} = fromMonthIndex(monthIndex);
-  const moved = {
-    year,
-    month,
-    day: Math.min(date.day, getDaysInMonth(year, month)),
-  };
+  const moved = plainDateAddMonths(date, monthIndex - monthIndexOf(date));
   if (min != null && plainDateIsBefore(moved, min)) {
     return min;
   }
