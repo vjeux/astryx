@@ -102,7 +102,6 @@ function MonthPagerComponent({
   // resize (rotation, a split-screen change). The pager measures the same
   // box for its page width.
   const [paneSize, setPaneSize] = useState(0);
-  const paneSizeRef = useRef(0);
   // The pager's target month: the mounted window follows it.
   const [centerRow, setCenterRow] = useState(initialRow);
   // The month last reported to the owner, so a drag reports each crossing
@@ -167,7 +166,6 @@ function MonthPagerComponent({
       // displayed (a closed BottomSheet).
       const measured = viewport.clientWidth;
       if (measured > 0) {
-        paneSizeRef.current = measured;
         setPaneSize(measured);
       }
     });
@@ -182,10 +180,9 @@ function MonthPagerComponent({
     let frames = 0;
     const step = () => {
       frames += 1;
-      const width = paneSizeRef.current;
-      if (frames > 2 && width > 0) {
+      if (frames > 2) {
         report(
-          clampIndex(Math.round(pager.presentation() / width), 0, rowCount - 1),
+          clampIndex(pager.nearestPage(pager.presentation()), 0, rowCount - 1),
         );
       }
       settleFrameRef.current =
@@ -213,16 +210,13 @@ function MonthPagerComponent({
       pager.pan.addListener(recognizer => {
         const state = recognizer.state;
         if (state === 'began' || state === 'changed') {
-          const width = paneSizeRef.current;
-          if (width > 0) {
-            report(
-              clampIndex(
-                Math.round(pager.presentation() / width),
-                0,
-                rowCount - 1,
-              ),
-            );
-          }
+          report(
+            clampIndex(
+              pager.nearestPage(pager.presentation()),
+              0,
+              rowCount - 1,
+            ),
+          );
         } else if (state === 'ended' || state === 'cancelled') {
           // Not at the lift: the settle carries the title on, changing it as
           // the content crosses half a page, as during the drag. Its first
