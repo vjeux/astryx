@@ -32,6 +32,10 @@ export interface WheelSegment {
    * this one grows into a new gesture; else 0.
    */
   readonly carried: number;
+  /** The frames this event carries: more than one for a merge. */
+  readonly steps: number;
+  /** The stream's frame interval: the median of its last on-pace ones, ms. */
+  readonly frameMs: number;
 }
 
 /** Momentum arrives at frame rate: a pause this long ends it. */
@@ -93,8 +97,12 @@ export function isBunched(intervalMs: number): boolean {
  * steps its stall spans. After such a wheel, a trackpad wheel that grows
  * starts a new gesture and takes the late wheel's travel. The decay also
  * reads a trackpad merge in momentum, by its last step. It reads one in a
- * shrinking run too, where it explains the merge better than steady steps
- * do. Other wheels keep the rules above.
+ * shrinking run too, by its nearest fit at its ratio or its decrement. That
+ * fit must explain the merge at least as well as steady steps do. A trackpad
+ * wheel within half a frame of the one before counts as a merge there. A
+ * shrinking trackpad wheel counts each frame it merged toward the lift. A
+ * merge read as steady steps at the run's onset is read again as the decay
+ * when the next wheel continues it. Other wheels keep the rules above.
  */
 export class WheelSegmenter {
   gesture = 0;
@@ -107,10 +115,14 @@ export class WheelSegmenter {
   private runStart = 0;
   /** The decay's step-to-step ratio, from the last two one-step wheels. */
   private ratio = 1;
+  /** And its step-to-step decrease, px. */
+  private decrement = 0;
   /** The gesture's last on-pace intervals, ms: their median is its frame. */
   private paces: number[] = [];
   /** The intervals in a row that came slower than the frame allows, ms. */
   private slower: number[] = [];
+  /** The last intervals before the frame is set, ms. */
+  private trial: number[] = [];
   /** When the gesture's last wheel within two frames of the one before came. */
   private onPace = -Infinity;
   /** The gesture's last wheel that was not bunched, px. */
@@ -122,6 +134,11 @@ export class WheelSegmenter {
    * wheel merged with it.
    */
   private joined = 0;
+  /**
+   * A trackpad merge that the run's onset read as steady steps: its size, and
+   * the steady step before it.
+   */
+  private onset: {size: number; steady: number} | null = null;
 
   /**
    * Reads one wheel. `continuous` is whether it carries a trackpad's
@@ -138,6 +155,9 @@ export class WheelSegmenter {
     const gap = time - this.last;
     const bunched = this.count > 0 && isBunched(gap);
     const frame = this.frameMs();
+    // A trackpad wheel within half a frame of the one before also merges
+    // frames a stall held.
+    const merged = bunched || (continuous && gap < frame / 2);
     let boundary: WheelBoundary | null = null;
     let carriedSteps: number | null = null;
     if (this.count === 0) {
@@ -149,7 +169,7 @@ export class WheelSegmenter {
       // last wheel that came on pace.
       const frames = Math.round((time - this.onPace) / frame);
       const late = gap >= MOMENTUM_GAP_MS;
-      const rises = !bunched && size >= 2 && size > this.previous * 1.3 + 0.5;
+      const rises = !merged && size >= 2 && size > this.previous * 1.3 + 0.5;
       if (sign !== 0 && this.sign !== 0 && sign !== this.sign) {
         boundary = 'reversal';
       } else if (late || rises) {
@@ -168,7 +188,7 @@ export class WheelSegmenter {
       } else if (
         continuous &&
         this.resumed &&
-        !bunched &&
+        !merged &&
         size > FIT_PX &&
         size > this.paced + RISE_PX
       ) {
@@ -177,54 +197,103 @@ export class WheelSegmenter {
         boundary = 'jump';
       }
     }
-    if (carriedSteps == null && boundary == null && bunched && continuous) {
+    // Read by the decay's decrement, not its ratio.
+    let byDecrement = false;
+    if (carriedSteps == null && boundary == null && merged && continuous) {
       if (this.phase === 'momentum') {
         carriedSteps = this.glideSteps(size, MAX_STEPS);
-      } else if (this.run > 0) {
-        // In a shrinking run, the decay reads a merge only where it explains
-        // the merge better than steady steps do.
-        const decay = this.glideSteps(size, MAX_STEPS);
-        if (
-          decay != null &&
-          decay > 1 &&
-          Math.abs(size - this.glideSum(decay)) < this.steadyOff(size)
-        ) {
-          carriedSteps = decay;
-        }
+      }
+    }
+    if (
+      carriedSteps == null &&
+      boundary == null &&
+      merged &&
+      continuous &&
+      this.phase === 'finger' &&
+      this.run > 0
+    ) {
+      // In a shrinking run, the decay reads a merge where it explains the
+      // merge at least as well as steady steps do. It takes its nearest fit,
+      // at its ratio or its decrement.
+      const byRatio = this.nearestSteps(size, count => this.glideSum(count));
+      const byLine = this.nearestSteps(size, count =>
+        this.decrement > 0 && this.previous - count * this.decrement > 0
+          ? this.lineSum(count)
+          : null,
+      );
+      const ratioOff =
+        byRatio == null ? Infinity : Math.abs(size - this.glideSum(byRatio));
+      const lineOff =
+        byLine == null ? Infinity : Math.abs(size - this.lineSum(byLine));
+      const best = lineOff < ratioOff ? byLine : byRatio;
+      if (best != null && Math.min(ratioOff, lineOff) <= this.steadyOff(size)) {
+        carriedSteps = best;
+        byDecrement = lineOff < ratioOff;
       }
     }
     // A bunched wheel carries the steps of the frames it merged. The decay
     // goes on from its last step, so the steps after it read as they are.
+    // The wheel after an onset merge can show that the merge was the decay's
+    // first steps, from the steady step on.
+    if (
+      continuous &&
+      this.phase === 'finger' &&
+      boundary == null &&
+      !merged &&
+      this.run === 0 &&
+      this.onset != null
+    ) {
+      const reread = this.onsetSteps(this.onset, size);
+      if (reread != null) {
+        const last = this.onset.steady - reread.count * reread.decrement;
+        this.runStart = this.onset.steady;
+        this.run = reread.count;
+        this.ratio = Math.min(
+          1,
+          Math.max(0.5, last / (last + reread.decrement)),
+        );
+        this.decrement = reread.decrement;
+        this.previous = last;
+      }
+    }
+    const steady = this.previous;
     const steps =
       carriedSteps ??
-      (boundary == null && bunched && this.previous > 0
+      (boundary == null && merged && this.previous > 0
         ? Math.max(1, Math.round(size / this.previous))
         : 1);
     // On the decay, a wheel of several steps ends at the decay's own step.
     const onDecay = carriedSteps != null && carriedSteps > 1;
     // A bunched wheel is read by its last step, as the decay goes on from it.
-    const step = onDecay ? this.previous * this.ratio ** steps : size / steps;
+    const step = !onDecay
+      ? size / steps
+      : byDecrement
+        ? this.previous - steps * this.decrement
+        : this.previous * this.ratio ** steps;
     if (boundary != null) {
       this.gesture += 1;
       this.phase = 'finger';
       this.count = 0;
       this.run = 0;
       this.ratio = 1;
+      this.decrement = 0;
       this.resumed = false;
       this.paces = [];
       this.slower = [];
+      this.trial = [];
+      this.onset = null;
     }
     // The late wheel was the fingers' when the next one grows: the new
     // gesture takes its travel.
     const carried = boundary === 'jump' ? this.joined : 0;
-    const joinedLate = boundary == null && carriedSteps != null && !bunched;
+    const joinedLate = boundary == null && carriedSteps != null && !merged;
     if (joinedLate) {
       this.resumed = true;
     }
     // A wheel merged with the late one is the same dispatch: it adds to it.
     this.joined = joinedLate
       ? delta
-      : bunched && boundary == null && this.joined !== 0
+      : merged && boundary == null && this.joined !== 0
         ? this.joined + delta
         : 0;
     if (!bunched) {
@@ -234,13 +303,15 @@ export class WheelSegmenter {
     let decaying = false;
     if (this.phase === 'finger' && this.count >= 3 && size > 0) {
       decaying = onDecay
-        ? this.ratio <= 0.995
+        ? byDecrement || this.ratio <= 0.995
         : step <= this.previous * 0.995 && step >= this.previous * 0.5;
       if (decaying) {
         if (this.run === 0) {
           this.runStart = this.previous;
         }
-        this.run += 1;
+        // A trackpad's coalesced wheel carries a delta for each frame it
+        // merged.
+        this.run += continuous ? steps : 1;
       } else {
         this.run = 0;
       }
@@ -251,6 +322,7 @@ export class WheelSegmenter {
     }
     if (steps === 1 && this.count > 0 && this.previous > 0 && step > 0) {
       this.ratio = Math.min(1, Math.max(0.5, step / this.previous));
+      this.decrement = this.previous - step;
     }
     if (!bunched && boundary == null && gap < MOMENTUM_GAP_MS) {
       this.notePace(gap, frame);
@@ -258,6 +330,16 @@ export class WheelSegmenter {
     if (boundary != null || (!bunched && gap < 2 * frame)) {
       this.onPace = time;
     }
+    this.onset =
+      continuous &&
+      merged &&
+      boundary == null &&
+      this.phase === 'finger' &&
+      this.run === 0 &&
+      carriedSteps == null &&
+      steps > 1
+        ? {size, steady}
+        : null;
     this.count += 1;
     this.previous = step;
     if (sign !== 0) {
@@ -272,19 +354,31 @@ export class WheelSegmenter {
       decaying: decaying && !liftNow,
       bunched: boundary == null && bunched,
       carried,
+      steps,
+      frameMs: this.frameMs(),
     };
   }
 
   /**
-   * Keep an interval for the frame. The gesture's first FIRST_PACES set it.
-   * After them, only an interval within half a frame and one and a half
-   * frames counts: a stall's squeezed wheels come faster. FIRST_PACES slower
-   * intervals in a row set the frame again, so a squeezed start cannot hold
-   * it down.
+   * Keep an interval for the frame. FIRST_PACES intervals in a row that agree
+   * propose it, and one more that agrees confirms it. A squeeze at a stall's
+   * start rarely runs that long, and a late interval breaks the run. After
+   * that, only an interval within half a frame and one and a half frames
+   * counts: a stall's squeezed wheels come faster. FIRST_PACES slower
+   * intervals in a row set the frame again.
    */
   private notePace(gap: number, frame: number): void {
+    if (this.paces.length === 0) {
+      this.trial = [...this.trial.slice(-FIRST_PACES), gap];
+      const agree = Math.max(...this.trial) <= 1.5 * Math.min(...this.trial);
+      if (this.trial.length > FIRST_PACES && agree) {
+        this.paces = this.trial;
+        this.trial = [];
+      }
+      return;
+    }
     const inWindow = gap >= 0.5 * frame && gap <= 1.5 * frame;
-    if (this.paces.length < FIRST_PACES || inWindow) {
+    if (inWindow) {
       this.paces = [...this.paces.slice(-7), gap];
       this.slower = [];
       return;
@@ -323,6 +417,68 @@ export class WheelSegmenter {
       next *= this.ratio;
     }
     return sum;
+  }
+
+  /**
+   * Whether an onset merge was the decay's first steps. It returns the step
+   * count and decrement whose steps from the steady step sum to the merge.
+   * Their next step must lie within FIT_PX or FIT_SHARE of `next`. Null when
+   * none does.
+   */
+  private onsetSteps(
+    onset: {size: number; steady: number},
+    next: number,
+  ): {count: number; decrement: number} | null {
+    let best: {count: number; decrement: number} | null = null;
+    let bestOff = Infinity;
+    for (let count = 2; count <= MAX_STEPS; count++) {
+      const decrement =
+        (count * onset.steady - onset.size) / ((count * (count + 1)) / 2);
+      const predicted = onset.steady - (count + 1) * decrement;
+      if (decrement <= 0 || predicted <= 0) {
+        continue;
+      }
+      const off = Math.abs(next - predicted);
+      if (off <= Math.max(FIT_PX, next * FIT_SHARE) && off < bestOff) {
+        best = {count, decrement};
+        bestOff = off;
+      }
+    }
+    return best;
+  }
+
+  /**
+   * The step count from two whose sum lies nearest a merge of `size`, within
+   * FIT_PX or FIT_SHARE of it. `sumOf` gives a count's sum, or null once a
+   * step reaches zero. Null when no sum lies that near.
+   */
+  private nearestSteps(
+    size: number,
+    sumOf: (count: number) => number | null,
+  ): number | null {
+    let nearest: number | null = null;
+    let nearestOff = Infinity;
+    for (let count = 2; count <= MAX_STEPS; count++) {
+      const sum = sumOf(count);
+      if (sum == null) {
+        break;
+      }
+      const off = Math.abs(size - sum);
+      const fits = off <= Math.max(FIT_PX, sum * FIT_SHARE);
+      if (fits && off < nearestOff) {
+        nearest = count;
+        nearestOff = off;
+      }
+      if (!fits && sum > size) {
+        break;
+      }
+    }
+    return nearest;
+  }
+
+  /** The sum of the next `count` steps, each `decrement` smaller. */
+  private lineSum(count: number): number {
+    return count * this.previous - (this.decrement * count * (count + 1)) / 2;
   }
 
   /**

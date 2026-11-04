@@ -475,17 +475,16 @@ interface WheelFollow {
   /** The fingers' speed at that move, content px per ms. */
   speedX: number;
   speedY: number;
-  /**
-   * The reading behind that speed: the fingers' travel where it began, and
-   * its interval in ms.
-   */
-  readFromX: number;
-  readFromY: number;
-  readSpan: number;
-  /** The fingers' speed before that reading, content px per ms. */
-  priorSpeedX: number;
-  priorSpeedY: number;
+  /** The frames the held deltas carry. */
+  heldSteps: number;
+  /** The fingers' largest one-frame step so far, px. */
+  maxStep: number;
+  /** When the pan last showed a move, ms. */
+  shownAt: number;
 }
+
+/** The most frames the pan moves on by itself up to a stalled lift. */
+const MAX_LIFT_FRAMES = 30;
 
 /**
  * How long after its last wheel a wheel gesture ends, ms. A trackpad's
@@ -511,39 +510,6 @@ function wheelEndMs(
  */
 function absorbedDebt(debt: number, moved: number): number {
   return Math.sign(debt) * Math.max(0, Math.abs(debt) - Math.abs(moved) / 2);
-}
-
-/**
- * A stall held a bunched wheel's frames back, and the move just before it took
- * their time. So the wheel joins that move's reading. It can restore what the
- * late move lowered, but never passes the speed before it.
- */
-function joinReading(f: WheelFollow, trueX: number, trueY: number): void {
-  if (f.readSpan <= 0) {
-    return;
-  }
-  f.speedX = joinedSpeed(
-    f.speedX,
-    (trueX - f.readFromX) / f.readSpan,
-    f.priorSpeedX,
-  );
-  f.speedY = joinedSpeed(
-    f.speedY,
-    (trueY - f.readFromY) / f.readSpan,
-    f.priorSpeedY,
-  );
-}
-
-/**
- * A joined reading, held to the speed before the late move. It only ever
- * raises the current speed, in the current direction.
- */
-function joinedSpeed(current: number, reading: number, prior: number): number {
-  const held =
-    Math.sign(reading) * Math.min(Math.abs(reading), Math.abs(prior));
-  return held * current >= 0 && Math.abs(held) > Math.abs(current)
-    ? held
-    : current;
 }
 
 /**
@@ -2352,7 +2318,20 @@ export class GestureHost {
         // Momentum began: the fingers lifted before the held deltas. The pan
         // keeps the travel it showed through the undecided stretch. It lets
         // go here, still moving at the fingers' speed, so its release carries
-        // on from it. The rest of the momentum never moves the pan.
+        // on from it. The rest of the momentum never moves the pan. A stall
+        // can hold the lift back past the next frame. The pan then still moves
+        // each frame up to it, so the release reads the fingers' speed.
+        const frame = this.wheelSegment.frameMs;
+        const shown = f.shownAt;
+        if (time - shown >= 2 * frame) {
+          for (
+            let at = shown + frame;
+            at < time && at <= shown + MAX_LIFT_FRAMES * frame;
+            at += frame
+          ) {
+            this.followProvisionally(gesture, f, at);
+          }
+        }
         this.followProvisionally(gesture, f, time);
         f.lifted = true;
         this.arena.ended([
@@ -2362,22 +2341,10 @@ export class GestureHost {
       }
       if (this.wheelSegment?.decaying === true) {
         // Undecided: the real deltas wait for the splitter while the
-        // fingers' last speed carries the pan on. A held wheel with its own
-        // frame ends the reading a stall's bunch joins.
+        // fingers' last speed carries the pan on.
         f.heldX += dx;
         f.heldY += dy;
-        if (this.wheelSegment.bunched) {
-          // A raised speed moves on from where the pan is shown, so the
-          // position never jumps inside the bunch.
-          const since = time - f.lastMove;
-          const speedX = f.speedX;
-          const speedY = f.speedY;
-          joinReading(f, f.trueX - f.heldX, f.trueY - f.heldY);
-          f.baseX += (speedX - f.speedX) * since;
-          f.baseY += (speedY - f.speedY) * since;
-        } else {
-          f.readSpan = 0;
-        }
+        f.heldSteps += this.wheelSegment.steps;
         this.followProvisionally(gesture, f, time);
         return;
       }
@@ -2390,26 +2357,39 @@ export class GestureHost {
       const debtY = absorbedDebt(gesture.y - beforeY, dy);
       const trueX = beforeX - dx;
       const trueY = beforeY - dy;
-      // A wheel the splitter reads as one stall's merge has no speed of its
-      // own. It joins the reading of the move before its bunch, whose
-      // interval holds its time.
+      // An on-pace wheel reads the fingers' speed over its own interval. A
+      // merge, or a wheel a stall delayed or squeezed, reads it in the
+      // fingers' frame rhythm instead. That is its own frames at the stream's
+      // frame interval, never faster than their largest on-pace step.
+      const seg = this.wheelSegment;
+      const steps = seg?.steps ?? 1;
+      const frame = seg?.frameMs ?? 16;
       const elapsed = time - f.lastMove;
-      if (this.wheelSegment?.bunched === true) {
-        joinReading(f, trueX, trueY);
+      const frames = f.heldSteps + steps;
+      const offPace =
+        seg?.bunched === true ||
+        elapsed > 1.5 * frames * frame ||
+        elapsed < 0.5 * frames * frame;
+      if (offPace) {
+        const own = Math.hypot(dx, dy);
+        const limit = f.maxStep * steps;
+        const scale = f.maxStep > 0 && own > limit ? limit / own : 1;
+        f.speedX = (-dx * scale) / (steps * frame);
+        f.speedY = (-dy * scale) / (steps * frame);
       } else if (elapsed > 0) {
-        f.priorSpeedX = f.speedX;
-        f.priorSpeedY = f.speedY;
-        f.readFromX = f.trueX;
-        f.readFromY = f.trueY;
-        f.readSpan = elapsed;
+        if (frames === 1) {
+          f.maxStep = Math.max(f.maxStep, Math.hypot(dx, dy));
+        }
         f.speedX = (trueX - f.trueX) / elapsed;
         f.speedY = (trueY - f.trueY) / elapsed;
       }
+      f.heldSteps = 0;
       f.trueX = trueX;
       f.trueY = trueY;
       f.heldX = 0;
       f.heldY = 0;
       f.lastMove = time;
+      f.shownAt = time;
       gesture.x = trueX + debtX;
       gesture.y = trueY + debtY;
       f.baseX = gesture.x;
@@ -2449,6 +2429,7 @@ export class GestureHost {
     }
     gesture.x = x;
     gesture.y = y;
+    f.shownAt = time;
     this.arena.moved([{id: gesture.ids[0], x, y, time}]);
   }
 
@@ -2552,11 +2533,9 @@ export class GestureHost {
         baseY: kept.y,
         speedX: 0,
         speedY: 0,
-        readFromX: kept.x,
-        readFromY: kept.y,
-        readSpan: 0,
-        priorSpeedX: 0,
-        priorSpeedY: 0,
+        heldSteps: 0,
+        maxStep: 0,
+        shownAt: time,
       };
     }
     this.arena.began(

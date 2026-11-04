@@ -622,7 +622,10 @@ under a finger, and a mouse follows `module:DropdownMenu/useMenuPress` FR3 and
   the lift never moves a surface or continues a gesture; and during momentum a
   reversal, a delta that rises against the decay, or a 50 ms gap starts a new
   gesture without a pointer move; a late, coalesced wheel event that continues
-  the glide's deceleration belongs to the same flick. While the splitter has
+  the glide's deceleration belongs to the same flick. For a trackpad wheel, a
+  delta is one frame's delta: a wheel the browser merged from several frames
+  counts as that many deltas, both toward the shrinking run's fourth delta and
+  at the run's onset once the next wheel continues it. While the splitter has
   not yet decided
   between a lift and fingers still moving, the surface keeps moving at the
   fingers' last speed, never farther than that speed carries it over the held

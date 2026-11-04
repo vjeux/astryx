@@ -565,17 +565,137 @@ describe("WheelSegmenter: a late, coalesced trackpad wheel that continues the gl
       name: 'three shrinking steps merged, then a late step',
       deltas: [12, 12, 12, 24, 12, 36, 12, 12, 12, 11, 27, 7, 6, 5, 4, 6],
       gaps: [25, 45, 0, 64, 0, 32, 0, 60, 31, 0, 14, 1, 65, 26, 0],
-      lift: 12,
+      lift: 10,
       before: 14,
     },
     {
       name: 'late steps with the next ones merged after them',
       deltas: [12, 12, 12, 12, 36, 12, 12, 12, 12, 50, 7, 11, 4, 5, 1],
       gaps: [32, 0, 85, 0, 12, 0, 17, 90, 0, 82, 0, 9, 0, 17],
-      lift: 13,
+      lift: 10,
       before: -1,
     },
   ] as const;
+
+  /**
+   * Two more flicks a stalled page received, each with a merge that steady
+   * steps explain as closely as the decay's ratio does. The decay's own
+   * decrement explains it exactly.
+   */
+  const DECREMENT_RUNS = [
+    {
+      name: 'four shrinking steps merged right after the first',
+      deltas: [12, 12, 60, 12, 36, 12, 11, 34, 6, 5, 4, 6],
+      gaps: [90, 0, 76, 1, 18, 79, 0, 18, 1, 94, 0],
+      before: 11,
+    },
+    {
+      name: 'five shrinking steps merged 3 ms after the wheel before',
+      deltas: [12, 12, 12, 60, 12, 47, 10, 9, 30, 3, 2, 1],
+      gaps: [82, 97, 0, 13, 0, 86, 15, 3, 81, 12, 0],
+      before: -1,
+    },
+    {
+      // Fewer steps fit 40 px within the share; five fit it exactly. The
+      // last 10 px is four more steps, or two of 5 px: a tie.
+      name: 'a merge that five steps fit exactly, then a tail merge as near to the decay as to steady steps',
+      deltas: [12, 12, 12, 12, 12, 12, 12, 48, 12, 11, 40, 5, 10],
+      gaps: [16, 27, 0, 11, 20, 86, 0, 89, 16, 1, 95, 0],
+      before: -1,
+    },
+    {
+      name: 'shrinking steps merged right after steady ones, then a tail merge as near to the decay as to steady steps',
+      deltas: [12, 12, 12, 12, 12, 12, 36, 12, 12, 12, 38, 7, 6, 14, 1],
+      gaps: [16, 30, 0, 14, 69, 0, 16, 83, 15, 0, 87, 12, 1, 88],
+      before: -1,
+    },
+  ] as const;
+
+  it('reads the lift at a trackpad merge that carries the fourth shrinking delta: its frames count toward the run', () => {
+    const segmenter = new WheelSegmenter();
+    // 11 px, then 10, 9 and 8 px merged into one 27 px wheel, 1 ms later.
+    const times = [0, 16, 32, 48, 64, 65];
+    const seen = [12, 12, 12, 12, 11, 27].map((delta, i) =>
+      segmenter.push(times[i], delta, 180, true),
+    );
+    expect(seen.findIndex(segment => segment.liftNow)).toBe(5);
+  });
+
+  it('reads a trackpad merge 2 ms after the wheel before as whole steps of the steady size', () => {
+    const segmenter = new WheelSegmenter();
+    const times = [0, 16, 32, 48, 50];
+    const seen = [12, 12, 12, 12, 36].map((delta, i) =>
+      segmenter.push(times[i], delta, 180, true),
+    );
+    expect(seen[4].steps).toBe(3);
+  });
+
+  it("reads the lift at the wheel that shows an onset merge was the decay's first steps", () => {
+    const segmenter = new WheelSegmenter();
+    // 11, 10, 9 and 8 px merged 1 ms after the steady steps, then 7 px.
+    const times = [0, 16, 32, 48, 49, 65];
+    const seen = [12, 12, 12, 12, 38, 7].map((delta, i) =>
+      segmenter.push(times[i], delta, 180, true),
+    );
+    expect(seen.findIndex(segment => segment.liftNow)).toBe(5);
+  });
+
+  it('keeps a steady merge steady when the next wheel holds the steady step', () => {
+    const segmenter = new WheelSegmenter();
+    const times = [0, 16, 32, 48, 49, 65, 81];
+    const seen = [12, 12, 12, 12, 36, 12, 12].map((delta, i) =>
+      segmenter.push(times[i], delta, 180, true),
+    );
+    expect(seen.some(segment => segment.liftNow || segment.decaying)).toBe(
+      false,
+    );
+  });
+
+  it("reads a stalled flick's lift when a merge of its first shrinking steps reads as steady steps until the next wheel", () => {
+    const seen = replay(
+      [12, 12, 12, 12, 12, 36, 12, 12, 12, 12, 38, 7, 6, 5, 7, 2, 1],
+      [0, 32, 0, 85, 2, 12, 0, 17, 69, 1, 29, 0, 59, 0, 19, 13],
+      true,
+    );
+    expect(seen.filter(segment => segment.liftNow)).toHaveLength(1);
+    expect(seen.slice(1).filter(segment => segment.boundary != null)).toEqual(
+      [],
+    );
+  });
+
+  it("reads a stalled flick's lift when its first shrinking steps arrive merged with no decay shown before them", () => {
+    // 11, 10, 9, 8 and 7 px arrive merged right after the steady steps. A
+    // late 6 follows, then 5, 4, 3, 2 and 1 px merged: three wheels carry
+    // eleven deltas.
+    const seen = replay(
+      [12, 12, 12, 12, 12, 12, 12, 36, 12, 12, 45, 6, 15],
+      [16, 33, 0, 17, 68, 13, 0, 87, 13, 1, 103, 0],
+      true,
+    );
+    expect(seen.filter(segment => segment.liftNow)).toHaveLength(1);
+    expect(seen.slice(1).filter(segment => segment.boundary != null)).toEqual(
+      [],
+    );
+  });
+
+  it.each(DECREMENT_RUNS)(
+    "reads a stalled flick's lift where a merge goes on shrinking by the run's decrement: $name",
+    ({deltas, gaps}) => {
+      const seen = replay(deltas, gaps, true);
+      expect(seen.filter(segment => segment.liftNow)).toHaveLength(1);
+      expect(seen.slice(1).filter(segment => segment.boundary != null)).toEqual(
+        [],
+      );
+    },
+  );
+
+  it.each(DECREMENT_RUNS)(
+    "reads the same stream's lift as before when it is a mouse wheel's: $name",
+    ({deltas, gaps, before}) => {
+      const seen = replay(deltas, gaps, false);
+      expect(seen.findIndex(segment => segment.liftNow)).toBe(before);
+    },
+  );
 
   it.each(MERGED_RUNS)(
     "reads a stalled flick's lift where its shrinking run shows it: $name",

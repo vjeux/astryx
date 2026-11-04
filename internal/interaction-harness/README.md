@@ -407,9 +407,8 @@ the burst throws `WheelPageStallError`, the page split the gesture, and the
 proof fails. A page can only widen a gap, so one no wider than the send
 spacing is the dispatch's even when a starved renderer also held the step.
 Otherwise the dispatch stalled before the page (a loaded runner) and it throws
-`WheelPacingError` with the gaps. Wrap such a
-proof in `retakeOnWheelPacing(testInfo, attempt)`: one re-take, only on
-`WheelPacingError`, listed as a `wheel-retake` annotation. The burst times the
+`WheelPacingError` with the gaps. A proof whose claim holds however the
+dispatch spaces the steps leaves `maxGapMs` out. The burst times the
 page's handling with a listener on the window that runs after the page's own,
 so a listener that stops the step's propagation, or other main-thread work
 between steps (timers, frames), still counts as the dispatch's stall. Chromium

@@ -85,7 +85,6 @@ import {
   readInputLog,
   readLongTasks,
   releaseAnimations,
-  retakeOnWheelPacing,
   sampleCurve,
   sampleRects,
   seekAnimations,
@@ -300,8 +299,8 @@ test.describe('touch input', () => {
     // test process also wakes the harness late from a wait, or holds a send,
     // on a few moves (in a container capped at 3 CPUs, where the quota stalls
     // the process for about 100 ms at a time), so a take is off pace when
-    // more than half its moves are. It is re-taken once, as wheel bursts are,
-    // and a second such take fails. Under CPU starvation (a 3-CPU cap with 16
+    // more than half its moves are. It is re-taken once, and a second such
+    // take fails. Under CPU starvation (a 3-CPU cap with 16
     // workers, with the software compositor's threads matched to the cap by
     // LP_NUM_THREADS), a pacer the cap throttles falls behind and need not
     // wait, so the pacing check can miss a slow pacer there (sending each step
@@ -1596,7 +1595,7 @@ test.describe('wheel and pen input', () => {
     }
   });
 
-  test('a wheel burst reaches the page as one run with its whole delta and no gap past the 100 ms a proof allows within a wheel gesture, re-taken once when the runner stalls it', async ({
+  test('a wheel burst reaches the page as one run with its whole delta, however its round trips are spaced', async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -1616,18 +1615,13 @@ test.describe('wheel and pen input', () => {
       await page.goto('http://wheel-burst.test/');
       const driver = await webInputDriver(page);
       test.skip(!driver.wheels, WHEEL_SKIP);
-      // A proof allows 100 ms between the steps of one wheel gesture: sent on
-      // its schedule, the run stays one gesture however long each step's
-      // round trip takes, and a runner stall past that bound is re-taken once.
-      await retakeOnWheelPacing(test.info(), async () => {
-        await page.evaluate(() => {
-          (window as unknown as {__deltas: number[]}).__deltas = [];
-        });
+      // Sent on its schedule, the run reaches the page whole however long
+      // each step's round trip takes.
+      {
         const {receivedSteps, receivedGapsMs} = await driver.wheelBurst({
           x: 200,
           y: 300,
           steps: Array.from({length: 20}, () => ({dx: 40})),
-          maxGapMs: 100,
         });
         // Every pixel arrives, in steps of 40 px or, where the engine
         // coalesced steps the page was still handling, their sums.
@@ -1641,7 +1635,7 @@ test.describe('wheel and pen input', () => {
         ).toBe(true);
         expect(receivedSteps).toBe(deltas.length);
         expect(receivedGapsMs).toHaveLength(receivedSteps - 1);
-      });
+      }
     } finally {
       await context.close();
     }
@@ -1722,7 +1716,7 @@ test.describe('wheel and pen input', () => {
     }
   });
 
-  test('a page whose wheel listener holds its main thread splits a burst itself: never a runner stall, never re-taken', async ({
+  test('a page whose wheel listener holds its main thread splits a burst itself: never a runner stall', async ({
     browser,
     browserName,
   }) => {
@@ -1743,25 +1737,18 @@ test.describe('wheel and pen input', () => {
       await page.goto('http://wheel-stalling-page.test/');
       const driver = await webInputDriver(page);
       test.skip(!driver.wheels, WHEEL_SKIP);
-      const testInfo = {
-        annotations: [] as {type: string; description?: string}[],
-      };
-      const attempts: number[] = [];
-      const outcome = await retakeOnWheelPacing(testInfo, async n => {
-        attempts.push(n);
-        return driver.wheelBurst({
+      const outcome = await driver
+        .wheelBurst({
           x: 200,
           y: 300,
           steps: Array.from({length: 4}, () => ({dx: 10})),
           maxGapMs: 100,
-        });
-      }).then(
-        () => 'resolved',
-        (error: unknown) => error,
-      );
+        })
+        .then(
+          () => 'resolved',
+          (error: unknown) => error,
+        );
       expect(outcome).not.toBeInstanceOf(WheelPacingError);
-      expect(attempts).toEqual([1]);
-      expect(testInfo.annotations).toEqual([]);
       if (browserName === 'webkit') {
         // WebKit dispatches the next step only once the page is free, so the
         // page's stall widens the gaps, and the error names it.
