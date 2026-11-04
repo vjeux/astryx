@@ -4,7 +4,8 @@
 
 /**
  * @file ChatLayout.tsx
- * @input Uses React, StyleX, theme tokens, useChatStreamScroll, useChatNewMessages
+ * @input Uses React, StyleX, theme tokens, useChatStreamScroll, useChatNewMessages,
+ *   useGestureRecognizer and the keyboard dismissal pan
  * @output Exports ChatLayout component and ChatLayoutProps
  * @position Layout shell for full chat interfaces — messages in page flow, composer fixed to bottom
  *
@@ -27,6 +28,7 @@
  * - /packages/core/src/Chat/index.ts (exports)
  * - /apps/storybook/stories/ChatLayout.stories.tsx
  * - /packages/cli/assets/templates/blocks/components/ChatLayout/ (block examples)
+ * - /packages/core/src/Chat/transcriptDismiss.ts (the dismiss line)
  */
 
 import {type ReactNode, useMemo, useRef} from 'react';
@@ -38,6 +40,11 @@ import {useChatStreamScroll} from './useChatStreamScroll';
 import {useChatNewMessages} from './useChatNewMessages';
 import {ChatLayoutScrollButton} from './ChatLayoutScrollButton';
 import {ChatLayoutContext} from './ChatContext';
+import {
+  createKeyboardDismissPan,
+  dismissKeyboardAtRelease,
+} from './transcriptDismiss';
+import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {themeProps} from '../utils/themeProps';
 
 import {useMergedRefs} from '../hooks/useMergedRefs';
@@ -304,6 +311,7 @@ export function ChatLayout({
 }: ChatLayoutProps) {
   const t = useComponentTranslator();
   const rootRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
 
   const scrollContainerRef = externalScrollRef ?? rootRef;
   const isSelfScrolling = !externalScrollRef;
@@ -326,6 +334,21 @@ export function ChatLayout({
         scroll.scrollToBottom();
       }}
     />
+  );
+
+  // A touch or pen drag down the transcript that lifts at or past the
+  // composer's top dismisses the software keyboard, as in Messages.
+  useGestureRecognizer(
+    rootRef,
+    () =>
+      createKeyboardDismissPan(
+        // Where the page draws the composer. A browser's own pan to the
+        // focused field moves it with the page.
+        () =>
+          composerRef.current?.getBoundingClientRect().top ??
+          Number.POSITIVE_INFINITY,
+      ),
+    dismissKeyboardAtRelease,
   );
 
   // --- Layout context ---
@@ -399,8 +422,11 @@ export function ChatLayout({
           {/* Frosted glass layer */}
           <div {...stylex.props(styles.blurLayer, currentDensity.blurLayer)} />
 
-          {/* Composer */}
-          <div {...stylex.props(styles.dock, currentDensity.dock)}>
+          {/* Composer: a transcript drag lifted at its top dismisses the
+              software keyboard. */}
+          <div
+            ref={composerRef}
+            {...stylex.props(styles.dock, currentDensity.dock)}>
             <div {...stylex.props(styles.dockInner, currentDensity.dockInner)}>
               {composer}
             </div>
