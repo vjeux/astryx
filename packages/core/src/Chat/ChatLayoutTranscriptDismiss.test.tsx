@@ -4,11 +4,11 @@
  * @file ChatLayoutTranscriptDismiss.test.tsx
  * @input vitest, jsdom, ChatLayout, the gesture host, a stand-in visual
  *   viewport and timestamped touch and pointer events
- * @output Tests that ChatLayout attaches the drag-to-dismiss to its root. A
- *   touch or pen drag lifted at or past the composer's top blurs the field,
- *   and a mouse drag changes nothing. It covers a replaced row and the
- *   listeners the dismissal adds.
- * @position Unit tests for ChatLayout's use of Chat/transcriptDismiss.ts
+ * @output Tests that ChatLayout loads the drag-to-dismiss when a software
+ *   keyboard first shows, and attaches it to its root. A touch or pen drag
+ *   lifted at or past the composer's top blurs the field, and a mouse drag
+ *   changes nothing. It covers a replaced row and the listeners it adds.
+ * @position Unit tests for ChatLayout's use of Chat/transcriptDismissLoader.ts
  */
 
 import fs from 'node:fs';
@@ -52,11 +52,16 @@ function renderLayout() {
   return {field, composer, line, transcript: screen.getByText('Hello')};
 }
 
-function showKeyboard(field: HTMLElement) {
+// Focuses the field and shows the keyboard, then waits for the dismissal's
+// gesture code to load.
+async function showKeyboard(field: HTMLElement) {
   act(() => field.focus());
   viewport.height = window.innerHeight - COVER;
   act(() => {
     viewport.dispatchEvent(new Event('resize'));
+  });
+  await act(async () => {
+    await vi.dynamicImportSettled();
   });
 }
 
@@ -150,19 +155,25 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
       configurable: true,
       value: viewport,
     });
+    // A touch screen: the dismissal loads only where touch or pen input is.
+    Object.defineProperty(window.navigator, 'maxTouchPoints', {
+      configurable: true,
+      value: 5,
+    });
   });
 
   afterEach(() => {
     restorePointer();
     restorePointer = () => {};
     Reflect.deleteProperty(window, 'visualViewport');
+    Reflect.deleteProperty(window.navigator, 'maxTouchPoints');
     vi.restoreAllMocks();
   });
 
-  it('blurs the composer when a finger’s drag lifts at the composer’s top, and moves focus nowhere else', () => {
+  it('blurs the composer when a finger’s drag lifts at the composer’s top, and moves focus nowhere else', async () => {
     primaryPointer('coarse');
     const {field, line, transcript} = renderLayout();
-    showKeyboard(field);
+    await showKeyboard(field);
     const last = fingerDrag(transcript, 100, line);
     // The drag decides at the lift (spec:AST-094 FR36).
     expect(document.activeElement).toBe(field);
@@ -170,16 +181,16 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     expect(document.activeElement).toBe(document.body);
   });
 
-  it('keeps the keyboard when the drag lifts above the composer', () => {
+  it('keeps the keyboard when the drag lifts above the composer', async () => {
     primaryPointer('coarse');
     const {field, line, transcript} = renderLayout();
-    showKeyboard(field);
+    await showKeyboard(field);
     const last = fingerDrag(transcript, 100, line - 1);
     finger(transcript, 'touchend', line - 1, last + 100);
     expect(document.activeElement).toBe(field);
   });
 
-  it('reads the line from where the page draws the composer, after the browser pans to the field', () => {
+  it('reads the line from where the page draws the composer, after the browser pans to the field', async () => {
     primaryPointer('coarse');
     const {field, composer, transcript} = renderLayout();
     // Mobile Safari's own pan: the composer keeps its place at the layout
@@ -187,7 +198,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     const top = window.innerHeight - 60;
     composer.getBoundingClientRect = () => new DOMRect(0, top, 400, 60);
     viewport.offsetTop = COVER;
-    showKeyboard(field);
+    await showKeyboard(field);
     let last = fingerDrag(transcript, 300, top - 1);
     finger(transcript, 'touchend', top - 1, last + 100);
     expect(document.activeElement).toBe(field);
@@ -197,11 +208,11 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     expect(document.activeElement).toBe(document.body);
   });
 
-  it('dismisses when the finger moves back up, then rests before lifting past the composer’s top', () => {
+  it('dismisses when the finger moves back up, then rests before lifting past the composer’s top', async () => {
     // After a still rest the release velocity is 0, as every pan reads it.
     primaryPointer('coarse');
     const {field, line, transcript} = renderLayout();
-    showKeyboard(field);
+    await showKeyboard(field);
     let last = fingerDrag(transcript, 100, line + 80);
     for (let y = line + 72; y >= line + 40; y -= 8) {
       last += 16;
@@ -211,10 +222,10 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     expect(document.activeElement).toBe(document.body);
   });
 
-  it('starts no drag from the lift alone: moves under the 10 px hysteresis keep the keyboard', () => {
+  it('starts no drag from the lift alone: moves under the 10 px hysteresis keep the keyboard', async () => {
     primaryPointer('coarse');
     const {field, line, transcript} = renderLayout();
-    showKeyboard(field);
+    await showKeyboard(field);
     finger(transcript, 'touchstart', line - 6, 0);
     finger(transcript, 'touchmove', line + 2, 16);
     // The lift reports 10 px of travel; the pan reads no travel from it.
@@ -222,12 +233,12 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     expect(document.activeElement).toBe(field);
   });
 
-  it('follows a drag whose row the transcript replaces before the lift', () => {
+  it('follows a drag whose row the transcript replaces before the lift', async () => {
     // The browser keeps sending a touch's events to the node it began on,
     // even once that node leaves the page.
     primaryPointer('coarse');
     const {field, line} = renderLayout();
-    showKeyboard(field);
+    await showKeyboard(field);
     const row = screen.getByText('Replaced');
     finger(row, 'touchstart', 100, 0);
     finger(row, 'touchmove', 140, 16);
@@ -241,10 +252,10 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     expect(document.activeElement).toBe(document.body);
   });
 
-  it('dismisses from a finger’s drag where the primary pointer is fine, as on a touch-screen laptop (spec:AST-094 FR43)', () => {
+  it('dismisses from a finger’s drag where the primary pointer is fine, as on a touch-screen laptop (spec:AST-094 FR43)', async () => {
     primaryPointer('fine');
     const {field, line, transcript} = renderLayout();
-    showKeyboard(field);
+    await showKeyboard(field);
     // Such a finger sends each pointer event before its touch event.
     const both = (
       type: 'start' | 'move' | 'end',
@@ -278,15 +289,15 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     expect(document.activeElement).toBe(document.body);
   });
 
-  it('dismisses from a pen’s drag reported as pointer events (spec:AST-094 FR43)', () => {
+  it('dismisses from a pen’s drag reported as pointer events (spec:AST-094 FR43)', async () => {
     primaryPointer('coarse');
     const {field, line, transcript} = renderLayout();
-    showKeyboard(field);
+    await showKeyboard(field);
     pointerDrag(transcript, 'pen', 100, line + 20);
     expect(document.activeElement).toBe(document.body);
   });
 
-  it('leaves a mouse drag to the browser: it keeps focus, prevents nothing and captures no pointer', () => {
+  it('leaves a mouse drag to the browser: it keeps focus, prevents nothing and captures no pointer', async () => {
     // A desktop browser: the press itself moves focus, so main's behavior is
     // the browser's, and the dismissal adds nothing to it.
     primaryPointer('fine');
@@ -298,7 +309,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     });
     try {
       const {field, line, transcript} = renderLayout();
-      showKeyboard(field);
+      await showKeyboard(field);
       const events = pointerDrag(transcript, 'mouse', 100, line + 20);
       expect(events.map(event => event.defaultPrevented)).not.toContain(true);
       expect(capture).not.toHaveBeenCalled();
@@ -308,7 +319,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     }
   });
 
-  it('adds one passive pointerdown on the layout’s root where the primary pointer is fine, and nothing on the composer (spec:AST-094 FR24)', () => {
+  it('adds nothing until a software keyboard shows, then one passive pointerdown on the layout’s root where the primary pointer is fine (spec:AST-094 FR24)', async () => {
     primaryPointer('fine');
     const added: {target: EventTarget; type: string; options: unknown}[] = [];
     const add = EventTarget.prototype.addEventListener;
@@ -318,7 +329,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
         return add.apply(this, args);
       },
     );
-    const {composer, transcript} = renderLayout();
+    const {composer, field, transcript} = renderLayout();
     const root = transcript.closest('[data-density]') as HTMLElement;
     const inputOn = (target: EventTarget) =>
       added.filter(
@@ -326,6 +337,8 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
           entry.target === target &&
           (entry.type.startsWith('touch') || entry.type.startsWith('pointer')),
       );
+    expect(inputOn(root)).toEqual([]);
+    await showKeyboard(field);
     expect(inputOn(root).map(entry => entry.type)).toEqual(['pointerdown']);
     expect(inputOn(root)[0]?.options).toMatchObject({passive: true});
     expect(inputOn(composer)).toEqual([]);
@@ -333,7 +346,22 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     expect(inputOn(document)).toEqual([]);
   });
 
-  it('shares one window listener per touch event between two layouts where the primary pointer is coarse (spec:AST-094 FR24)', () => {
+  it('never loads the dismissal in a window with no touch or pen input', async () => {
+    primaryPointer('fine');
+    Object.defineProperty(window.navigator, 'maxTouchPoints', {
+      configurable: true,
+      value: 0,
+    });
+    const subscribe = vi.spyOn(viewport, 'addEventListener');
+    const {field, transcript} = renderLayout();
+    const root = transcript.closest('[data-density]') as HTMLElement;
+    const rootAdd = vi.spyOn(root, 'addEventListener');
+    await showKeyboard(field);
+    expect(subscribe).not.toHaveBeenCalled();
+    expect(rootAdd).not.toHaveBeenCalled();
+  });
+
+  it('shares one window listener per touch event between two layouts where the primary pointer is coarse (spec:AST-094 FR24)', async () => {
     primaryPointer('coarse');
     const windowAdd = vi.spyOn(window, 'addEventListener');
     render(
@@ -346,6 +374,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
         </ChatLayout>
       </>,
     );
+    await showKeyboard(screen.getByRole('textbox', {name: 'First'}));
     const touchTypes = windowAdd.mock.calls
       .map(([type]) => type)
       .filter(type => type.startsWith('touch'));
@@ -354,16 +383,25 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
 });
 
 describe('what the drag-to-dismiss loads', () => {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const read = (file: string) => fs.readFileSync(path.join(here, file), 'utf8');
+
   it('goes through the gesture system’s pan, with no listener of its own', () => {
-    const here = path.dirname(fileURLToPath(import.meta.url));
-    const dismissal = fs.readFileSync(
-      path.join(here, 'transcriptDismiss.ts'),
-      'utf8',
-    );
+    const dismissal = read('transcriptDismiss.ts');
     expect(dismissal.match(/from '\.\.\/gestures\/[^']*'/g)).toEqual([
+      "from '../gestures/GestureHost'",
       "from '../gestures/PanGestureRecognizer'",
       "from '../gestures/types'",
     ]);
     expect(dismissal).not.toMatch(/addEventListener|subscribeInput/);
+  });
+
+  it('loads the gesture code only through the loader’s dynamic import', () => {
+    expect(read('ChatLayout.tsx')).not.toMatch(
+      /from '\.\/transcriptDismiss'|gestures\//,
+    );
+    const loader = read('transcriptDismissLoader.ts');
+    expect(loader).toMatch(/import\('\.\/transcriptDismiss'\)/);
+    expect(loader).not.toMatch(/from '\.\.\/gestures\//);
   });
 });
