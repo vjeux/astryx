@@ -26,7 +26,6 @@
 import {
   useCallback,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -40,7 +39,6 @@ import type {StyleXStyles} from '@stylexjs/stylex';
 import {
   colorVars,
   focusVars,
-  fontWeightVars,
   radiusVars,
   spacingVars,
   typeScaleVars,
@@ -266,7 +264,8 @@ const styles = stylex.create({
     position: 'relative',
   },
   // Two rows that every page shares through subgrid: the photo's and the
-  // caption band's. The band has one height on every page (`captionBand`). So
+  // caption's. The caption row is as tall as the gallery's tallest caption,
+  // since the current page lays out, unseen, those no rendered page shows. So
   // every photo centres on the same box, with or without a caption. The next
   // photo slides in level with the current one, and paging never resizes it.
   track: {
@@ -292,7 +291,7 @@ const styles = stylex.create({
     willChange: 'transform',
   },
   // A page's photo box: the zoom stage of the current page, in the photo
-  // row. Its caption sits in the caption band below it, so the viewer's size
+  // row. Its caption sits in the caption row below it, so the viewer's size
   // never changes with the item.
   pageMedia: {
     gridRow: '1',
@@ -303,71 +302,28 @@ const styles = stylex.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  // A gallery's caption band, under every page's photo. It is two caption
-  // lines tall whatever the caption, so the photo area stays the same.
-  captionBand: {
+  pageCaption: {
     gridRow: '2',
-    position: 'relative',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    minWidth: 0,
-    fontSize: typeScaleVars['--text-large-size'],
-    lineHeight: typeScaleVars['--text-large-leading'],
-    blockSize: `calc(${spacingVars['--spacing-2']} + 2lh)`,
+    justifySelf: 'center',
   },
-  // A caption in the band, and its "more" button after its last line.
-  captionInBand: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    minWidth: 0,
-    maxWidth: '100%',
-  },
-  captionClamped: {
-    display: '-webkit-box',
-    WebkitBoxOrient: 'vertical',
-    WebkitLineClamp: 2,
-    overflow: 'hidden',
-    flexShrink: 1,
+  // The current page's caption row when it also lays out, unseen, the
+  // captions no rendered page shows (`unrenderedCaptions`). One grid cell
+  // holds its own caption and those, so the row is the tallest of them.
+  pageCaptionRow: {
+    gridRow: '2',
+    display: 'grid',
+    justifyItems: 'center',
     minWidth: 0,
   },
-  // The clamped caption under its open full caption: still the viewer's
-  // description, but not shown or read twice.
-  captionCovered: {
+  captionStacked: {
+    gridArea: '1 / 1',
+  },
+  captionSizer: {
+    display: 'grid',
+    justifyItems: 'center',
+    justifySelf: 'stretch',
     visibility: 'hidden',
-  },
-  captionToggle: {
-    position: 'relative',
-    flexShrink: 0,
-    paddingBlock: 0,
-    paddingInlineStart: spacingVars['--spacing-1'],
-    paddingInlineEnd: spacingVars['--spacing-3'],
-    borderWidth: 0,
-    backgroundColor: 'transparent',
-    color: colorVars['--color-on-dark'],
-    fontSize: typeScaleVars['--text-large-size'],
-    lineHeight: typeScaleVars['--text-large-leading'],
-    fontWeight: fontWeightVars['--font-weight-semibold'],
-    cursor: {
-      default: 'pointer',
-      ':is(:disabled,[aria-disabled="true"])': 'default',
-    },
-  },
-  // The open full caption: over the photo's bottom, on the controls' scrim.
-  // Its text ends above the band, where the toggle stays.
-  captionFull: {
-    position: 'absolute',
-    insetInline: 0,
-    insetBlockEnd: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    maxBlockSize: '60dvh',
-    overflowY: 'auto',
-    fontSize: typeScaleVars['--text-large-size'],
-    lineHeight: typeScaleVars['--text-large-leading'],
-    paddingBlockEnd: `calc(${spacingVars['--spacing-2']} + 1lh)`,
-    backgroundColor: `color-mix(in srgb, ${colorVars['--color-on-light']} 75%, transparent)`,
+    pointerEvents: 'none',
   },
   // A fitted photo's zoom-in cursor shows only over the photo, where the
   // stage sets OVER_PHOTO_ATTRIBUTE. Beside it, a click closes the viewer.
@@ -749,32 +705,6 @@ export function Lightbox({
   const didDragRef = useRef(false);
   const mediaGroupRef = useRef<HTMLDivElement | null>(null);
   const captionRef = useRef<HTMLDivElement | null>(null);
-  // The current item's caption, which is the viewer's accessible description.
-  const captionId = useId();
-  const fullCaptionId = useId();
-  // The current page's caption in its band, and whether two lines clamp it.
-  const bandCaptionRef = useRef<HTMLDivElement | null>(null);
-  const [isCaptionClamped, setIsCaptionClamped] = useState(false);
-  const measureCaptionClamp = useCallback(() => {
-    const caption = bandCaptionRef.current;
-    setIsCaptionClamped(
-      caption != null && caption.scrollHeight > caption.clientHeight + 1,
-    );
-  }, []);
-  useAttachment(
-    bandCaptionRef,
-    element => {
-      measureCaptionClamp();
-      return observeResize(element, measureCaptionClamp);
-    },
-    measureCaptionClamp,
-  );
-  // The item whose full caption is open over its photo. Paging closes it.
-  const [openCaptionIndex, setOpenCaptionIndex] = useState<number | null>(null);
-  if (openCaptionIndex != null && openCaptionIndex !== index) {
-    setOpenCaptionIndex(null);
-  }
-  const isCaptionOpen = openCaptionIndex === index;
   // Whether a mouse's or a pen's click on the media closes the viewer. It
   // does when its press or its release lands outside the media: a single
   // item's, or a gallery's current page's. The media runs from the fitted
@@ -1251,9 +1181,15 @@ export function Lightbox({
   const pageIndexes = isGallery
     ? [index - 1, index, index + 1].filter(i => i >= 0 && i < mediaArray.length)
     : [];
-  // Every page keeps a caption band once any item has a caption.
-  const hasCaptionBand =
-    isGallery && mediaArray.some(item => isRenderable(item.caption));
+  // The captions no rendered page shows. The current page lays them out,
+  // unseen, in the caption row. So the row stays as tall as the gallery's
+  // tallest caption whichever pages are rendered, and paging never resizes
+  // the photo row.
+  const unrenderedCaptions = isGallery
+    ? mediaArray.flatMap((item, i) =>
+        isRenderable(item.caption) && !pageIndexes.includes(i) ? [i] : [],
+      )
+    : [];
 
   return (
     <dialog
@@ -1264,9 +1200,6 @@ export function Lightbox({
         onKeyDownProp?.(e);
       }}
       aria-label={currentItem.alt || t('@astryx.lightbox.mediaViewer')}
-      aria-describedby={
-        isRenderable(currentItem.caption) ? captionId : undefined
-      }
       {...mergeProps(
         themeProps('lightbox'),
         stylex.props(
@@ -1404,65 +1337,48 @@ export function Lightbox({
                             )}>
                             {renderMedia(mediaArray[i], i === index)}
                           </div>
-                          {hasCaptionBand && (
-                            <div {...stylex.props(styles.captionBand)}>
-                              {i === index &&
-                                isCaptionOpen &&
-                                isRenderable(mediaArray[i].caption) && (
-                                  <div
-                                    id={fullCaptionId}
-                                    data-lightbox-caption=""
-                                    {...stylex.props(styles.captionFull)}>
-                                    <div {...stylex.props(styles.caption)}>
-                                      {mediaArray[i].caption}
-                                    </div>
-                                  </div>
-                                )}
+                          {i === index && unrenderedCaptions.length > 0 ? (
+                            <div {...stylex.props(styles.pageCaptionRow)}>
                               {isRenderable(mediaArray[i].caption) && (
                                 <div
                                   data-lightbox-caption=""
-                                  {...stylex.props(styles.captionInBand)}>
-                                  <div
-                                    ref={
-                                      i === index ? bandCaptionRef : undefined
-                                    }
-                                    id={i === index ? captionId : undefined}
-                                    {...stylex.props(
-                                      styles.caption,
-                                      styles.captionClamped,
-                                      i === index &&
-                                        isCaptionOpen &&
-                                        styles.captionCovered,
-                                    )}>
-                                    {mediaArray[i].caption}
-                                  </div>
-                                  {i === index &&
-                                    (isCaptionClamped || isCaptionOpen) && (
-                                      <button
-                                        type="button"
-                                        aria-expanded={isCaptionOpen}
-                                        aria-controls={
-                                          isCaptionOpen
-                                            ? fullCaptionId
-                                            : undefined
-                                        }
-                                        onClick={() =>
-                                          setOpenCaptionIndex(
-                                            isCaptionOpen ? null : index,
-                                          )
-                                        }
-                                        {...stylex.props(
-                                          styles.captionToggle,
-                                          focusOutlineStyles.focusVisible,
-                                        )}>
-                                        {isCaptionOpen
-                                          ? t('@astryx.lightbox.captionLess')
-                                          : t('@astryx.lightbox.captionMore')}
-                                      </button>
-                                    )}
+                                  {...stylex.props(
+                                    styles.caption,
+                                    styles.captionStacked,
+                                  )}>
+                                  {mediaArray[i].caption}
                                 </div>
                               )}
+                              <div
+                                aria-hidden
+                                inert
+                                {...stylex.props(
+                                  styles.captionStacked,
+                                  styles.captionSizer,
+                                )}>
+                                {unrenderedCaptions.map(j => (
+                                  <div
+                                    key={j}
+                                    {...stylex.props(
+                                      styles.caption,
+                                      styles.captionStacked,
+                                    )}>
+                                    {mediaArray[j].caption}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
+                          ) : (
+                            isRenderable(mediaArray[i].caption) && (
+                              <div
+                                data-lightbox-caption=""
+                                {...stylex.props(
+                                  styles.caption,
+                                  styles.pageCaption,
+                                )}>
+                                {mediaArray[i].caption}
+                              </div>
+                            )
                           )}
                         </div>
                       ))}
@@ -1473,10 +1389,7 @@ export function Lightbox({
                 </div>
 
                 {!isGallery && isRenderable(currentItem.caption) && (
-                  <div
-                    ref={captionRef}
-                    id={captionId}
-                    {...stylex.props(styles.caption)}>
+                  <div ref={captionRef} {...stylex.props(styles.caption)}>
                     {currentItem.caption}
                   </div>
                 )}
