@@ -435,10 +435,10 @@ Known verification gaps:
   another keeps its name until a minor renames it under INV9. Outline's
   `offset` is the distance below the top of its scroll root
   (`component:Outline` FR4), not a gap from an anchor.
-- INV22: known gaps include `useLongPress`, `useMenuPress`,
-  `usePressFeedback`, `useClickableContainer`, `useInputContainer`,
-  `useOverlay`, `useCombobox`, `useMultiCombobox`, `useResizable`,
-  `useTooltip`, `useHoverCard`, and `useChatStreamScroll`: each attaches
+- INV22: known gaps include `useLongPress`, `usePressFeedback`,
+  `useClickableContainer`, `useInputContainer`, `useOverlay`, `useCombobox`,
+  `useMultiCombobox`, `useResizable`, `useTooltip`, `useHoverCard`, and
+  `useChatStreamScroll`: each attaches
   gesture, press, drag, or motion behavior and has no `create…` factory yet;
   no full inventory exists yet. Each conforms by adding its factory and, where
   its signature cannot delegate, a ref-taking signature beside the deprecated

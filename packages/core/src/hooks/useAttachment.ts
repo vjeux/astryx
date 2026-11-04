@@ -24,8 +24,8 @@ import {useIsomorphicLayoutEffect} from './useIsomorphicLayoutEffect';
  * or the document. A replaced node is released and the new one attached, a
  * changed `key` re-attaches, and the last attachment is released on unmount;
  * a commit that changes neither does nothing (react-component-runtime INV3).
- * With `followsDocument`, a node that moves to another document is released
- * and attached again.
+ * With `followsDocument`, it also releases a node that moved to another
+ * document and attaches it again at the next commit.
  */
 export function useAttachment<T extends Node = Element>(
   ref: RefObject<T | null>,
