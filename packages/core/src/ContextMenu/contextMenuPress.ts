@@ -25,8 +25,8 @@ const {commitMs, menuDisplayMs, allowableMovement} = contextMenu.press;
 
 /**
  * The foundation's own press timer, which this recognizer never lets fire:
- * the hold below commits instead. It is longer than any hold, and a window
- * timer still takes it.
+ * the hold below commits instead. It is longer than any hold, and under the
+ * window timer's 2^31 - 1 ms limit.
  */
 const NEVER_MS = 2 ** 30;
 

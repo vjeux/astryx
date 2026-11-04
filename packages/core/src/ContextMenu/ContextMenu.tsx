@@ -289,9 +289,9 @@ interface ContextMenuBaseProps extends BaseProps {
   onOpenChange?: (isOpen: boolean) => void;
   /**
    * Presentation policy for the menu.
-   * - omitted: the menu at the pointer; under a finger, a held finger opens it
+   * - omitted: the menu at the pointer. Under a finger, a held finger opens it
    *   on iOS's timeline (the touch model).
-   * - `popover`: the menu at the pointer on every device, as before; a held
+   * - `popover`: the menu at the pointer on every device, as before. A held
    *   finger opens it at 500 ms through today's long press.
    * - `bottom-sheet`: open as an action sheet.
    * - `adaptive`: use a BottomSheet on compact coarse-pointer viewports and
