@@ -267,10 +267,10 @@ export function useLayerKeyboardClearance(
         runDeferred();
         return;
       }
-      stopWaiting ??= awaitBrowserClick(layer, {
-        onClicked: runDeferred,
-        onNoClick: runDeferred,
-      });
+      if (stopWaiting == null) {
+        const timer = view.setTimeout(runDeferred, 350);
+        stopWaiting = () => view.clearTimeout(timer);
+      }
     }
     layer.addEventListener('pointerdown', handlePress, true);
     const unsubscribe = guide.subscribe(transition => {
