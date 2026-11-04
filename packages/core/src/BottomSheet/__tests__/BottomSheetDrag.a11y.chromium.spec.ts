@@ -43,6 +43,15 @@ async function openSheet(page: Page) {
   await page.goto(
     `${storybook.origin}/iframe.html?id=core-bottomsheet--snap-points&viewMode=story`,
   );
+  // Evidence arm, not for landing: plays the page's animations at the rate in
+  // ASTRYX_ANIMATION_RATE until the sheet counts as entered, so the entrance
+  // outlasts any fixed wait.
+  const rate = Number(process.env.ASTRYX_ANIMATION_RATE ?? '1');
+  const timeline = await page.context().newCDPSession(page);
+  if (rate !== 1) {
+    await timeline.send('Animation.enable');
+    await timeline.send('Animation.setPlaybackRate', {playbackRate: rate});
+  }
   await page.getByRole('button', {name: 'Open nearby places'}).click();
   const dialog = page.getByRole('dialog', {name: 'Nearby places'});
   await expect(dialog).toBeVisible();
@@ -50,6 +59,9 @@ async function openSheet(page: Page) {
   const sheet = dialog.locator('.astryx-bottom-sheet').first();
   await expect(sheet).toBeVisible();
   await page.waitForTimeout(600); // the entrance
+  if (rate !== 1) {
+    await timeline.send('Animation.setPlaybackRate', {playbackRate: 1});
+  }
   return {dialog, sheet};
 }
 
