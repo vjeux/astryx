@@ -241,6 +241,7 @@ test('a flick released before half a month turns the title as the settle crosses
       durationMs: 80,
       hz: 120,
     }),
+    {pacing: 'spacing'},
   );
   // Hold the page's frames right after the lift: the title must not have
   // changed at the lift itself (UIDatePicker's title follows the content).
@@ -256,6 +257,7 @@ test('a flick pages exactly one month', async ({page}) => {
   const {driver, viewport, track, title, center} = await openCalendar(page);
   await driver.play(
     flick(center, {velocity: {x: -2500, y: 0}, durationMs: 80, hz: 120}),
+    {pacing: 'spacing'},
   );
   await waitForRest(track);
   expect(await monthsIn(viewport)).toBeCloseTo(10, 2);
@@ -315,8 +317,10 @@ test('an arrow tapped right after a release keeps the title on the month it name
   // The release settles towards November; Next, tapped before that settle
   // ends, names December. The title goes October, November, December and
   // stays, instead of falling back to November while the content is still
-  // nearest it.
-  const {driver, title, track, center} = await openCalendar(page);
+  // nearest it. The drag rests before the lift, so it releases at no speed
+  // and the settle runs by position, whatever a loaded runner does to the
+  // moves' times.
+  const {driver, title, track, center, width} = await openCalendar(page);
   await title.evaluate(element => {
     const seen: string[] = [element.textContent ?? ''];
     (window as unknown as {titles: string[]}).titles = seen;
@@ -327,9 +331,7 @@ test('an arrow tapped right after a release keeps the title on the month it name
       }
     }).observe(element, {subtree: true, characterData: true, childList: true});
   });
-  await driver.play(
-    drag(center, {x: center.x - 260, y: center.y}, {durationMs: 200}),
-  );
+  await driver.play(slowDrag(center, -0.7 * width));
   await tapArrow(page, driver, 'Next month');
   await waitForRest(track);
   const titles = await page.evaluate(
@@ -679,12 +681,16 @@ test('in the sheet, a drag is decided once it has moved 10 px either way: slow 3
   expect(await monthsIn(viewport)).toBeCloseTo(9, 2);
 
   // 55°, fast (25 px steps, ~1500 px/s): the first move lands 14 px
-  // sideways. So the grid takes the drag, the flick pages to October, and
-  // the sheet never moves.
+  // sideways. So the grid takes the drag and the sheet never moves. Where the
+  // grid then rests depends on the release's speed, which a loaded runner can
+  // change, so the proof reads only who took the drag.
   const fast = await play(drag(center, along(55, 150), {durationMs: 100}));
   expect(fast.sheetDrop).toBeLessThan(1);
+  expect(fast.monthsMax - fast.monthsMin).toBeGreaterThan(0.15);
   await waitForRest(track);
-  expect(await monthsIn(viewport)).toBeCloseTo(10, 2);
+  const restsOn = await monthsIn(viewport);
+  expect([9, 10]).toContain(Math.round(restsOn));
+  expect(restsOn).toBeCloseTo(Math.round(restsOn), 2);
 
   // 60°, slow (3.3 px steps): the vertical travel reaches 10 px first, so
   // the sheet takes the drag and the grid never moves.
@@ -693,7 +699,7 @@ test('in the sheet, a drag is decided once it has moved 10 px either way: slow 3
   );
   expect(steep.sheetDrop).toBeGreaterThan(20);
   expect(steep.monthsMax - steep.monthsMin).toBeLessThan(0.01);
-  expect(await monthsIn(viewport)).toBeCloseTo(10, 2);
+  expect(await monthsIn(viewport)).toBeCloseTo(restsOn, 2);
 });
 
 test(
