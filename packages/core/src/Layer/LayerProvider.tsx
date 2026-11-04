@@ -10,7 +10,7 @@ import {
   type LayerInset,
   type LayerToastConfig,
 } from './LayerContext';
-import {ToastViewport} from '../Toast/ToastViewport';
+import {ToastHostOutlet} from './toastHost';
 
 export interface LayerProviderProps {
   children: ReactNode;
@@ -83,13 +83,13 @@ export function LayerProvider({
   // surface with no provider renders as one under the default provider.
   return (
     <LayerContext value={contextValue}>
-      <ToastViewport
+      <ToastHostOutlet
         position={toastConfig.position}
         maxVisible={toastConfig.maxVisible}
         inset={toastConfig.inset}
         layerInset={inset}>
         {children}
-      </ToastViewport>
+      </ToastHostOutlet>
     </LayerContext>
   );
 }

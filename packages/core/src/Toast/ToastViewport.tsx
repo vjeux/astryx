@@ -47,6 +47,7 @@ import {
 } from '../Layer/modalOutlet';
 import {ToastSurface} from './Toast';
 import {ToastContext, type ToastContextValue} from './ToastContext';
+import {registerToastHost} from '../Layer/toastHost';
 import type {ToastEntry, ToastPosition, ToastDismissReason} from './types';
 import {layerInsetProperties} from '../Layer/layerInset';
 import type {LayerInset} from '../Layer/LayerContext';
@@ -945,3 +946,6 @@ export function ToastViewport({
   );
 }
 ToastViewport.displayName = 'ToastViewport';
+
+// The Toast module hosts its viewport in LayerProvider's outlet once it loads.
+registerToastHost(ToastViewport);
