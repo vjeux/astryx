@@ -496,6 +496,48 @@ describe('useRefreshControl', () => {
     await waitFor(() => expect(reveal()).toBe('0'));
   });
 
+  it('keeps what the indicator shows when a finger catches its fade, and the fade no longer resets it under the finger', async () => {
+    animators.list.length = 0;
+    render(
+      <Refreshable data-testid="refresh" onRefresh={() => {}}>
+        <p>Inbox</p>
+      </Refreshable>,
+    );
+    const [, indicatorAnimator] = animators.list.slice(-2) as MotionAnimator[];
+    const play = vi.spyOn(indicatorAnimator, 'play');
+    // Released below the trigger: the settle back and the fade start.
+    pull(content(), [20, 20, 20, 10]);
+    const fadeAt = play.mock.calls.findIndex(([curves]) => 'opacity' in curves);
+    expect(fadeAt).toBeGreaterThanOrEqual(0);
+    const fade = play.mock.results[fadeAt].value as ReturnType<
+      MotionAnimator['play']
+    >;
+    const shown = Number(reveal());
+    expect(shown).toBeGreaterThan(0);
+    // A finger catches the settle halfway through the fade.
+    const presentedGet = indicatorAnimator.get.bind(indicatorAnimator);
+    const presented = vi
+      .spyOn(indicatorAnimator, 'get')
+      .mockImplementation(property =>
+        property === 'opacity' ? 0.5 : presentedGet(property),
+      );
+    const set = vi.spyOn(indicatorAnimator, 'set');
+    touch('touchstart', content(), 100);
+    presented.mockRestore();
+    expect(Number(reveal())).toBeCloseTo(shown * 0.5, 6);
+    expect(set).toHaveBeenCalledWith({opacity: 1});
+    // The finger pulls on. The fade ends stopped, so it never resets the
+    // indicator under the finger.
+    touch('touchmove', content(), 110);
+    touch('touchmove', content(), 120);
+    let isFadeDone: boolean | undefined;
+    await act(async () => {
+      isFadeDone = await fade.finished;
+    });
+    expect(isFadeDone).toBe(false);
+    expect(Number(reveal())).toBeGreaterThan(0);
+  });
+
   it('ends when the promise from onRefresh settles, and removes the inset', async () => {
     let resolve: () => void = () => {};
     const onRefresh = vi.fn(
