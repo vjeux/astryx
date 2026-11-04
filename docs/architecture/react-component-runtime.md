@@ -311,7 +311,10 @@ those contracts.
   the loaded layer fills, the click guard, and the event forwarders into that
   bridge; and the coexistence diagnostic. There is no
   install call, no public entry, and no public installed check; tests reset
-  the modules through an internal hook only. A component's own touch logic is
+  the modules through an internal hook only. Toast's swipe claim is the other
+  `import()` of touch code: it loads when the page is idle after its load
+  event, or with the first toast if that comes sooner, so no Toast or Layer
+  import carries the gesture host (owner decision, 2026-11). A component's own touch logic is
   small glue in its own build over these modules. The gesture host attaches for
   every pointer, with no touch-only query; under a fine pointer only a component that
   uses a gesture listens (`spec:AST-094` FR19, FR24, FR43). The gesture host, press feedback, page hold, finger-scroll watch and click guard hear document-wide input through one capture-phase listener per event type on the window, present while a subscriber needs it. They run in subscription order, before any document or element listener; it is passive unless a subscriber cancels the event. The modules are not public exports and are not
