@@ -2,7 +2,9 @@
 
 /**
  * @file touch.ts
- * @input The gesture core: the arena, the recognizers, and their geometry
+ * @input The gesture core: the arena, the recognizers, and their geometry;
+ *   the pan, the motion animator and the motion math that Lab's
+ *   useRefreshControl reads
  * @output `@astryxdesign/core/internal/touch`: the gesture core's primitives
  *   for Lab components, re-exported by name
  * @position An internal entry reserved for Astryx's own packages:
@@ -39,3 +41,29 @@ export {
 export {LongPressGestureRecognizer} from '../gestures/LongPressGestureRecognizer';
 export {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 export {DEFAULT_ENVIRONMENT} from '../gestures/types';
+
+// Lab's useRefreshControl reads these: its pull's pan and the hook that
+// starts it. It also reads the motion animator and math, and the scroll
+// view's bounce spring, for its pull, settle and end. The motion-role
+// parsers read the theme's tokens for its end.
+export {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
+export type {PanGestureRecognizerOptions} from '../gestures/PanGestureRecognizer';
+export type {
+  GestureEventContext,
+  GestureTouch,
+  PointerKind,
+} from '../gestures/types';
+export {useGestureRecognizer} from '../gestures/useGestureRecognizer';
+// The animator's internal factory. The public one, `createAnimator`, plays
+// only the theme's state-change motion.
+export {createMotionAnimator} from '../motion/animator';
+export type {
+  Animator as MotionAnimator,
+  AnimatorOptions as MotionAnimatorOptions,
+  MotionCurve,
+} from '../motion/animator';
+export {cubicBezier} from '../motion/bezier';
+export {parseCssEasing, parseMotionRoleValue} from '../motion/roles';
+export {rubberBand, rubberBandInverse} from '../motion/rubberBand';
+export {solveSpring, toSpring} from '../motion/spring';
+export {scroll} from '../motion/uikit/scroll';
