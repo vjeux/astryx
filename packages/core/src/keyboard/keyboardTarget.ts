@@ -15,6 +15,7 @@ import {animatorFor, type Animator} from '../motion/animator';
 import {isCoarsePointer} from '../utils/coarsePointer';
 import {subscribeInput} from '../utils/inputStream';
 import {layoutViewportHeight} from '../utils/layoutViewport';
+import {scrollingAncestor} from '../utils/scrollingAncestor';
 import {
   KEYBOARD_EPSILON,
   claimTapFocus,
@@ -70,29 +71,18 @@ export function isInsideKeyboardTarget(element: Element): boolean {
   return false;
 }
 
-const SCROLLING_OVERFLOW = new Set(['auto', 'scroll', 'overlay']);
-
 /**
  * The element that scrolls `element` into view: its nearest ancestor that
  * scrolls on the block axis, or else the document's scroller.
  */
 export function nearestScroller(element: Element): Element {
   const doc = element.ownerDocument;
-  const view = doc.defaultView;
-  for (
-    let node = element.parentElement;
-    node != null && node !== doc.body && node !== doc.documentElement;
-    node = node.parentElement
-  ) {
-    if (
-      view != null &&
-      SCROLLING_OVERFLOW.has(view.getComputedStyle(node).overflowY) &&
-      node.scrollHeight > node.clientHeight
-    ) {
-      return node;
-    }
-  }
-  return doc.scrollingElement ?? doc.documentElement;
+  const scroller = scrollingAncestor(element);
+  return scroller == null ||
+    scroller === doc.body ||
+    scroller === doc.documentElement
+    ? (doc.scrollingElement ?? doc.documentElement)
+    : scroller;
 }
 
 // The element's bottom edge where layout puts it, without the ride's move.
@@ -144,29 +134,6 @@ function nearestFixedAncestor(element: Element): HTMLElement | null {
   ) {
     if (view.getComputedStyle(node).position === 'fixed') {
       return node;
-    }
-  }
-  return null;
-}
-
-// The nearest ancestor of `element`, up to and including `container`, that
-// scrolls on the block axis, or null when none sits between them.
-function scrollerWithin(element: Element, container: Element): Element | null {
-  const view = element.ownerDocument.defaultView;
-  for (
-    let node = element.parentElement;
-    node != null;
-    node = node.parentElement
-  ) {
-    if (
-      view != null &&
-      SCROLLING_OVERFLOW.has(view.getComputedStyle(node).overflowY) &&
-      node.scrollHeight > node.clientHeight
-    ) {
-      return node;
-    }
-    if (node === container) {
-      return null;
     }
   }
   return null;
@@ -612,7 +579,7 @@ function focusedScrollerIn(
   container: HTMLElement,
 ): {field: Element; scroller: Element} | null {
   const field = focusedFieldIn(container);
-  const scroller = field == null ? null : scrollerWithin(field, container);
+  const scroller = field == null ? null : scrollingAncestor(field, container);
   return field == null || scroller == null ? null : {field, scroller};
 }
 
@@ -709,12 +676,12 @@ function rideWithKeyboard(
     // Rest is y 0, never -0, so the animator releases its translate there. A
     // target the ride never moved gets no write at all.
     const y = lift > 0 ? -lift : 0;
-    if (y === 0 && animator.get('y') === 0) {
-      // Nothing to move.
-    } else if (transition == null) {
-      animator.set({y});
-    } else {
-      rideKeyboard(animator, {y}, transition);
+    if (y !== 0 || animator.get('y') !== 0) {
+      if (transition == null) {
+        animator.set({y});
+      } else {
+        rideKeyboard(animator, {y}, transition);
+      }
     }
     if (inside != null) {
       reveal(inside.field, inside.scroller, height, offset, win);
@@ -782,12 +749,12 @@ export interface KeepFieldAboveKeyboardOptions {
 }
 
 // How the field path places `field` when it gains focus: a ride of its docked
-// container, or a reveal by its nearest scroller, which in a fixed container
-// that fills the viewport, such as a dialog, is its scroller there. Null where
-// the browser's own reveal stays: inside a keyboard target, which places the
-// field itself, in a container that fills the viewport with no scroller
-// around the field, in one that floats above the bottom edge, or in a docked
-// bar that sets its own `translate`.
+// container, or a reveal by its nearest scroller. In a fixed container the app
+// positions (one that fills the viewport, floats above the bottom edge, or
+// sets its own `translate`), that is a scroller between the field and the
+// container. Null where the browser's own reveal stays: inside a keyboard
+// target, which places the field itself, or in such a container with no
+// scroller around the field.
 function placementOf(
   field: HTMLElement,
 ): {ride: HTMLElement} | {reveal: Element} | null {
@@ -795,13 +762,8 @@ function placementOf(
     return null;
   }
   const container = fixedContainerOf(field);
-  if (container === 'floating') {
-    return null;
-  }
-  if (container === 'fills-viewport') {
-    const shell = nearestFixedAncestor(field);
-    const scroller = shell == null ? null : scrollerWithin(field, shell);
-    return scroller == null ? null : {reveal: scroller};
+  if (container === 'floating' || container === 'fills-viewport') {
+    return revealWithin(field, nearestFixedAncestor(field));
   }
   if (container == null) {
     // A page with nothing to scroll keeps the browser's own reveal: a claim
@@ -811,12 +773,23 @@ function placementOf(
       ? {reveal: scroller}
       : null;
   }
-  // A bar the app positions with its own `translate` is left as it is: the
-  // ride would replace that translate.
+  // A bar the app positions with its own `translate` does not ride: the ride
+  // would replace that translate.
   const view = field.ownerDocument.defaultView;
   return view != null && hasOwnTranslate(container.docked, view)
-    ? null
+    ? revealWithin(field, container.docked)
     : {ride: container.docked};
+}
+
+// A reveal by the scroller between `field` and the fixed `container` the app
+// positions, or null when no scroller sits between them.
+function revealWithin(
+  field: HTMLElement,
+  container: HTMLElement | null,
+): {reveal: Element} | null {
+  const scroller =
+    container == null ? null : scrollingAncestor(field, container);
+  return scroller == null ? null : {reveal: scroller};
 }
 
 /**
@@ -827,12 +800,12 @@ function placementOf(
  * keyboard while one shows; a docked container taller than the room above the
  * keyboard never rides its whole overlap: its scroller there brings the field
  * up instead, and with none it rides only as far as the field needs. In a
- * fixed container that fills the viewport, the field's scroller there brings
- * it up. A focus move or a tap into the field arrives without the browser's
- * reveal there, so the page never pans for it. Inside a keyboard target, a
- * container that fills the viewport with no scroller around the field, one
- * that floats above the bottom edge, or a docked bar that sets its own
- * `translate`, the path does nothing and the browser's own reveal stays.
+ * fixed container the app positions (one that fills the viewport, floats above
+ * the bottom edge, or sets its own `translate`), a scroller between the field
+ * and the container brings it up. A focus move or a tap into the field arrives
+ * without the browser's reveal there, so the page never pans for it. Inside a
+ * keyboard target, or in such a container with no scroller around the field,
+ * the path does nothing and the browser's own reveal stays.
  *
  * @example
  * ```

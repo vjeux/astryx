@@ -1047,6 +1047,68 @@ describe('followKeyboard', () => {
     expect(animatorFor(bar).get('y')).toBe(-300);
   });
 
+  it.each([
+    [
+      'a fixed bar floating above the bottom edge',
+      (bottom: number) =>
+        element('div', {top: bottom - 600, height: 500}, {position: 'fixed'}),
+      '',
+    ],
+    [
+      'a docked bar that sets its own translate',
+      (bottom: number) =>
+        element(
+          'div',
+          {top: bottom - 500, height: 500},
+          {position: 'fixed', translate: '-50% 0'},
+        ),
+      '-50% 0',
+    ],
+  ] as const)(
+    'reveals a field in %s through the scroller around it, and never moves the container',
+    (_, container, translate) => {
+      const bottom = window.innerHeight;
+      const scrollBy = vi.fn();
+      vi.stubGlobal('scrollBy', scrollBy);
+      const fixed = container(bottom);
+      const box = fixed.getBoundingClientRect();
+      const list = element(
+        'div',
+        {top: box.top, height: 500},
+        {overflowY: 'auto'},
+      );
+      Object.defineProperty(list, 'scrollHeight', {value: 1500});
+      Object.defineProperty(list, 'clientHeight', {value: 500});
+      let listTop = 0;
+      Object.defineProperty(list, 'scrollTop', {
+        configurable: true,
+        get: () => listTop,
+        set: (value: number) => {
+          listTop = Math.max(0, Math.min(1000, value));
+        },
+      });
+      const other = element('input', {top: 10, height: 40});
+      const input = element('input', {top: box.bottom - 60, height: 40});
+      list.append(input);
+      fixed.append(list);
+      document.body.append(other, fixed);
+      track(keepFieldAboveKeyboard(input));
+      focusOn(other);
+      const focus = vi.spyOn(input, 'focus');
+      focusOn(input);
+      // The focus move is claimed: the scroller in the container reveals the
+      // field, and the page is not panned.
+      expect(focus).toHaveBeenCalledWith({preventScroll: true});
+      keyboard(300);
+      const keyboardTop = bottom - 300;
+      expect(list.scrollTop).toBe(
+        box.bottom - 20 - (keyboardTop - FIELD_OFFSET),
+      );
+      expect(scrollBy).not.toHaveBeenCalled();
+      expect(fixed.style.translate).toBe(translate);
+    },
+  );
+
   it("leaves a field in a fixed bar floating above the bottom edge to the browser's own reveal", () => {
     const bottom = window.innerHeight;
     const scrollBy = vi.fn();
