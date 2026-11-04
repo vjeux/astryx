@@ -4,7 +4,8 @@
 
 /**
  * @file ChatLayout.tsx
- * @input Uses React, StyleX, theme tokens, useChatStreamScroll, useChatNewMessages
+ * @input Uses React, StyleX, theme tokens, useChatStreamScroll, useChatNewMessages,
+ *   the keyboard module's isKeyboardMeasurable and observeKeyboardDismiss
  * @output Exports ChatLayout component and ChatLayoutProps
  * @position Layout shell for full chat interfaces — messages in page flow, composer fixed to bottom
  *
@@ -27,9 +28,10 @@
  * - /packages/core/src/Chat/index.ts (exports)
  * - /apps/storybook/stories/ChatLayout.stories.tsx
  * - /packages/cli/assets/templates/blocks/components/ChatLayout/ (block examples)
+ * - /packages/core/src/Chat/transcriptDismiss.ts (the dismiss line)
  */
 
-import {type ReactNode, useMemo, useRef} from 'react';
+import {type ReactNode, useEffect, useMemo, useRef} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {spacingVars} from '../theme/tokens.stylex';
 import type {BaseProps} from '../BaseProps';
@@ -38,6 +40,8 @@ import {useChatStreamScroll} from './useChatStreamScroll';
 import {useChatNewMessages} from './useChatNewMessages';
 import {ChatLayoutScrollButton} from './ChatLayoutScrollButton';
 import {ChatLayoutContext} from './ChatContext';
+import {observeKeyboardDismiss} from './transcriptDismiss';
+import {isKeyboardMeasurable} from '../keyboard/keyboardHeight';
 import {themeProps} from '../utils/themeProps';
 
 import {useMergedRefs} from '../hooks/useMergedRefs';
@@ -304,6 +308,7 @@ export function ChatLayout({
 }: ChatLayoutProps) {
   const t = useComponentTranslator();
   const rootRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
 
   const scrollContainerRef = externalScrollRef ?? rootRef;
   const isSelfScrolling = !externalScrollRef;
@@ -327,6 +332,27 @@ export function ChatLayout({
       }}
     />
   );
+
+  // Syncs the transcript's drags with the software keyboard: a drag lifted at
+  // or past the composer's top dismisses it, as in Messages. It works under
+  // every pointer, wherever the keyboard module measures a keyboard. It
+  // listens on the layout's own root, and on the document only while a
+  // button is down.
+  useEffect(() => {
+    const root = rootRef.current;
+    const win = root?.ownerDocument.defaultView;
+    if (root == null || win == null || !isKeyboardMeasurable(win)) {
+      return undefined;
+    }
+    return observeKeyboardDismiss(root, {
+      mode: 'interactive',
+      // Where the page draws the composer. A browser's own pan to the focused
+      // field moves it with the page.
+      dismissLine: () =>
+        composerRef.current?.getBoundingClientRect().top ??
+        Number.POSITIVE_INFINITY,
+    });
+  }, []);
 
   // --- Layout context ---
   const layoutContext = useMemo(
@@ -399,8 +425,11 @@ export function ChatLayout({
           {/* Frosted glass layer */}
           <div {...stylex.props(styles.blurLayer, currentDensity.blurLayer)} />
 
-          {/* Composer */}
-          <div {...stylex.props(styles.dock, currentDensity.dock)}>
+          {/* Composer: a transcript drag lifted at its top dismisses the
+              software keyboard. */}
+          <div
+            ref={composerRef}
+            {...stylex.props(styles.dock, currentDensity.dock)}>
             <div {...stylex.props(styles.dockInner, currentDensity.dockInner)}>
               {composer}
             </div>

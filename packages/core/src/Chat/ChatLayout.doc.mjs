@@ -6,7 +6,7 @@ export const docs = {
   name: 'ChatLayout',
   subComponentOf: 'Chat',
   displayName: 'Chat Layout',
-  description: 'Layout shell for full chat interfaces. Messages flow in normal page flow, composer is fixed to the bottom with a frosted glass dock. Set density (compact/balanced/spacious) to control spacing, message max-width, and blur layer sizing. Includes built-in auto-scroll, a "New messages" scroll-to-bottom button, and a frosted glass blur layer behind the composer. By default the layout root is the scroll container; pass scrollRef to delegate scrolling to a parent element or the document body.',
+  description: 'Layout shell for full chat interfaces. Messages flow in normal page flow, composer is fixed to the bottom with a frosted glass dock. Set density (compact/balanced/spacious) to control spacing, message max-width, and blur layer sizing. Includes built-in auto-scroll, a "New messages" scroll-to-bottom button, and a frosted glass blur layer behind the composer. By default the layout root is the scroll container; pass scrollRef to delegate scrolling to a parent element or the document body. With a software keyboard up (Safari on iOS, Chrome on Android), dragging the conversation down to the composer with a finger and lifting there dismisses the keyboard; a release moving back up keeps it, and in a desktop browser a mouse press already takes focus off the composer (no caller control). Where your page sets interactive-widget=resizes-content, Chrome on Android resizes the page for the keyboard itself, and no drag dismisses it.',
   props: [
     {
       name: 'children',
@@ -131,7 +131,7 @@ export const docsZh = {
 export const docsDense = {
   name: 'ChatLayout',
   displayName: 'Chat Layout',
-  description: 'layout shell for full chat; msgs in page flow, composer fixed bottom w/ frosted glass dock; density prop (default balanced); scrollRef delegates to parent/body',
+  description: 'layout shell for full chat; msgs in page flow, composer fixed bottom w/ frosted glass dock; density prop (default balanced); scrollRef delegates to parent/body; with a software keyboard up, a finger drag down the transcript lifted at the composer dismisses it (no prop)',
   usage: {
     bestPractices: [
       {guidance: true, description: 'Pass ChatMessageList as children and ChatComposer as composer prop for complete chat.'},
