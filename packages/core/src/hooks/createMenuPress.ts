@@ -1007,7 +1007,7 @@ function startMenuPress(
     if (isFinger(event)) {
       // At the window, the target of a press-down from a shadow root is its
       // host. So the press reads the target here, at the menu's own listener.
-      const {target} = event;
+      const target = event.composedPath()[0] ?? null;
       afterPageHandlers(event, () => {
         if (!event.defaultPrevented && take(event)) {
           core.handleMenuPointerDown(event, target);
@@ -1077,7 +1077,7 @@ function startMenuPress(
         return;
       }
       // The window sees a shadow host as the target, so read it now.
-      const {target} = event;
+      const target = event.composedPath()[0] ?? null;
       afterPageHandlers(native, () => {
         if (!native.defaultPrevented && take(native)) {
           core.handleMenuPointerDown(event, target);
