@@ -7,13 +7,19 @@
  *   real mouse input, and CDP touch input.
  * @output Real-engine proof that a menu rendered inside a shadow root acts on
  *   the row under a released pointer (module:DropdownMenu/useMenuPress FR1),
- *   and that a ContextMenu there tells a press on its own rows from a press
- *   outside it, a mouse's at once and a finger's on its lift.
+ *   a mouse's and a finger's slide alike, and that a ContextMenu there tells
+ *   a press on its own rows from a press outside it, a mouse's at once and a
+ *   finger's on its lift.
  * @position Run with `pnpm test:a11y-contract`. Only a real engine resolves a
  *   point inside a shadow root to the shadow host at the document level.
  */
 
-import {expect, test, type Page} from '@astryxdesign/a11y-spec/playwright';
+import {
+  expect,
+  test,
+  type Locator,
+  type Page,
+} from '@astryxdesign/a11y-spec/playwright';
 import {
   DEFAULT_STORYBOOK_DIR,
   serveStorybook,
@@ -48,6 +54,56 @@ test('a mouse click on an option inside a shadow root selects it', async ({
   }
 
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+
+  await expect(page.getByTestId('selected-value')).toHaveText('Banana');
+});
+
+/** The center of a locator's layout box. */
+async function center(locator: Locator) {
+  const box = await locator.boundingBox();
+  if (box == null) {
+    throw new Error('the element has no layout box');
+  }
+  return {x: box.x + box.width / 2, y: box.y + box.height / 2};
+}
+
+test('a finger slide from Apple to Banana inside a shadow root selects Banana', async ({
+  page,
+}) => {
+  await page.goto(`${storybook.origin}/iframe.html?id=${STORY}&viewMode=story`);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setTouchEmulationEnabled', {
+    enabled: true,
+    maxTouchPoints: 1,
+  });
+  const open = await center(page.getByRole('combobox', {name: 'Fruit'}));
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{...open, id: 1}],
+  });
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  });
+  const banana = page.getByRole('option', {name: 'Banana'});
+  await expect(banana).toBeVisible();
+  const from = await center(page.getByRole('option', {name: 'Apple'}));
+  const to = await center(banana);
+
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{...from, id: 2}],
+  });
+  for (let step = 1; step <= 4; step += 1) {
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{x: to.x, y: from.y + ((to.y - from.y) * step) / 4, id: 2}],
+    });
+  }
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  });
 
   await expect(page.getByTestId('selected-value')).toHaveText('Banana');
 });
