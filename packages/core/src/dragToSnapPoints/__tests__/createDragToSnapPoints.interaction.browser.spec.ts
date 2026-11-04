@@ -57,6 +57,10 @@ async function open(page: Page): Promise<TouchDriver> {
     route.fulfill({contentType: 'text/html', body: html}),
   );
   await page.goto('http://snap.test/');
+  // Not for landing: every animation on the page plays at a quarter speed.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Animation.enable');
+  await cdp.send('Animation.setPlaybackRate', {playbackRate: 0.25});
   return touchDriver(page);
 }
 
