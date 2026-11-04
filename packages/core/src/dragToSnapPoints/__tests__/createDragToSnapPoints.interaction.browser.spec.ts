@@ -57,6 +57,10 @@ async function open(page: Page): Promise<TouchDriver> {
     route.fulfill({contentType: 'text/html', body: html}),
   );
   await page.goto('http://snap.test/');
+  // Not for landing: every animation on the page plays at a quarter speed.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Animation.enable');
+  await cdp.send('Animation.setPlaybackRate', {playbackRate: 0.25});
   return touchDriver(page);
 }
 
@@ -75,20 +79,11 @@ function dragScript(
   return steps;
 }
 
-/** The settle indices, once a settle has fired and two more frames have run. */
+/** The settle indices, read after the old fixed wait (not for landing). */
 async function settled(page: Page): Promise<number[]> {
-  await page.waitForFunction(
-    () => (window as unknown as {__settled: number[]}).__settled.length > 0,
-  );
+  await page.waitForTimeout(1200);
   return page.evaluate(
-    () =>
-      new Promise<number[]>(resolve => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            resolve((window as unknown as {__settled: number[]}).__settled);
-          });
-        });
-      }),
+    () => (window as unknown as {__settled: number[]}).__settled,
   );
 }
 
