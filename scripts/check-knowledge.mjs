@@ -15,6 +15,7 @@ import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {collectThemingTargets} from '../packages/cli/foundation/discovery/theming-targets.mjs';
+import {readObjects} from './lib/git-objects.mjs';
 
 const require = createRequire(import.meta.url);
 const {
@@ -792,21 +793,25 @@ export function readKnowledgeRecordsAtAuthority(
   authorityCommit,
   reviewHead,
 ) {
-  const resolvedCommit = execFileSync(
+  // One process resolves both commits, and fails when either does not.
+  const [resolvedCommit, resolvedHead] = execFileSync(
     'git',
-    ['-C', root, 'rev-parse', '--verify', `${authorityCommit}^{commit}`],
+    [
+      '-C',
+      root,
+      'rev-parse',
+      `${authorityCommit}^{commit}`,
+      `${reviewHead}^{commit}`,
+    ],
     {encoding: 'utf8'},
-  ).trim();
+  )
+    .trim()
+    .split('\n');
   if (resolvedCommit !== authorityCommit) {
     throw new Error(
       `authority commit must be the full resolved commit ${resolvedCommit}.`,
     );
   }
-  const resolvedHead = execFileSync(
-    'git',
-    ['-C', root, 'rev-parse', '--verify', `${reviewHead}^{commit}`],
-    {encoding: 'utf8'},
-  ).trim();
   if (resolvedHead !== reviewHead) {
     throw new Error(
       `review head must be the full resolved commit ${resolvedHead}.`,
@@ -845,14 +850,17 @@ export function readKnowledgeRecordsAtAuthority(
   )
     .split(/\r?\n/)
     .filter(isKnowledgeRecordPath);
-  const records = paths.map(filePath => ({
-    path: filePath,
-    content: execFileSync(
-      'git',
-      ['-C', root, 'show', `${resolvedCommit}:${filePath}`],
-      {encoding: 'utf8'},
-    ),
-  }));
+  const objects = readObjects(
+    root,
+    paths.map(filePath => `${resolvedCommit}:${filePath}`),
+  );
+  const records = paths.map(filePath => {
+    const content = objects.get(`${resolvedCommit}:${filePath}`);
+    if (!content) {
+      throw new Error(`cannot read ${filePath} at ${resolvedCommit}.`);
+    }
+    return {path: filePath, content: content.toString('utf8')};
+  });
   return {records, authority: resolvedCommit};
 }
 
