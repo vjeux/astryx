@@ -2,10 +2,12 @@
 
 /**
  * @file ContextMenuLongPress.a11y.chromium.spec.ts
- * @input The `Core/ContextMenu` Default story in a built Storybook and CDP
- *   touch input.
+ * @input The `Core/ContextMenu` Default and popover-presentation touch stories
+ *   in a built Storybook, and CDP touch input.
  * @output Real-engine proof that the long press that opens a context menu
- *   does not close it as the finger lifts, and that a tap outside still does.
+ *   does not close it as the finger lifts, under the touch model (the lift
+ *   sends no click) and under today's long press (its click acts on nothing),
+ *   and that a tap outside still closes it.
  * @position Run with `pnpm test:a11y-contract`; jsdom cannot produce the
  *   compatibility mouse events a real browser sends after a touch.
  */
@@ -35,6 +37,8 @@ test.afterAll(async () => {
 });
 
 const STORY = 'core-contextmenu--default';
+// A finger keeps today's long press under `presentation="popover"`.
+const POPOVER_STORY = 'core-contextmenu--touch-long-press-popover';
 
 async function touchCdp(page: Page): Promise<CDPSession> {
   const cdp = await page.context().newCDPSession(page);
@@ -45,8 +49,11 @@ async function touchCdp(page: Page): Promise<CDPSession> {
   return cdp;
 }
 
-async function triggerCenter(page: Page): Promise<{x: number; y: number}> {
-  const box = await page.getByText('Right-click this area').boundingBox();
+async function triggerCenter(
+  page: Page,
+  label = 'Right-click this area',
+): Promise<{x: number; y: number}> {
+  const box = await page.getByText(label).boundingBox();
   if (box == null) {
     throw new Error('the trigger area has no rendered bounds');
   }
@@ -79,12 +86,82 @@ async function compatClickDelivered(page: Page): Promise<void> {
   );
 }
 
-test('the long press that opens the menu leaves it open as the finger lifts', async ({
+/**
+ * Counts the `click` events the page gets until 300 ms after it handles the
+ * touch's lift. A browser sends a touch's compatibility mouse events and its
+ * click well within that time.
+ */
+async function armLift(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as {__liftClicks?: Promise<number>};
+    let clicks = 0;
+    document.addEventListener(
+      'click',
+      () => {
+        clicks += 1;
+      },
+      {capture: true},
+    );
+    w.__liftClicks = new Promise(resolve => {
+      document.addEventListener(
+        'touchend',
+        () => setTimeout(() => resolve(clicks), 300),
+        {once: true, capture: true},
+      );
+    });
+  });
+}
+
+/** The clicks that `armLift` counted after the lift. */
+async function clicksAfterLift(page: Page): Promise<number> {
+  return page.evaluate(
+    async () =>
+      (await (window as unknown as {__liftClicks?: Promise<number>})
+        .__liftClicks) ?? -1,
+  );
+}
+
+test('the long press that opens the menu leaves it open as the finger lifts, and the lift sends no click', async ({
   page,
 }) => {
   await page.goto(`${storybook.origin}/iframe.html?id=${STORY}&viewMode=story`);
+  // Touch emulation makes the primary pointer coarse: the touch model.
   const cdp = await touchCdp(page);
   const center = await triggerCenter(page);
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{x: center.x, y: center.y, id: 1}],
+  });
+  const menu = page.getByRole('menu');
+  await expect(menu).toBeVisible({timeout: 2000});
+  await armLift(page);
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  });
+  expect(await clicksAfterLift(page)).toBe(0);
+  await expect(menu).toBeVisible();
+
+  // A tap outside still closes it.
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{x: 5, y: 5, id: 2}],
+  });
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  });
+  await expect(menu).toBeHidden();
+});
+
+test('with presentation="popover", the click that follows the long press acts on nothing, and the menu stays open', async ({
+  page,
+}) => {
+  await page.goto(
+    `${storybook.origin}/iframe.html?id=${POPOVER_STORY}&viewMode=story`,
+  );
+  const cdp = await touchCdp(page);
+  const center = await triggerCenter(page, 'Hold for actions');
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchStart',
     touchPoints: [{x: center.x, y: center.y, id: 1}],
