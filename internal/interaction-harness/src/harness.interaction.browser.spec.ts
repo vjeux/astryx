@@ -4798,10 +4798,22 @@ test.describe('page freeze', () => {
     // for the run's own end. A run starts only at a frame, and a busy machine
     // can draw no frame for longer than any fixed wait.
     await box.evaluate(async el => {
-      await el.animate(
+      const run = el.animate(
         [{transform: 'translateX(0px)'}, {transform: 'translateX(100px)'}],
         {duration: 200},
-      ).finished;
+      );
+      // NOT FOR LANDING: the page draws no frame for 500 ms after the run
+      // starts, as on a loaded machine (the harness's real clock).
+      setTimeout(() => {
+        const read =
+          (window as unknown as {__harnessTimerGate?: {now?: () => number}})
+            .__harnessTimerGate?.now ?? (() => performance.now());
+        const start = read();
+        while (read() - start < 500) {
+          /* busy */
+        }
+      }, 0);
+      await run.finished;
     });
     const frozenAt = Date.now();
     await freezePage(page);
@@ -4825,6 +4837,17 @@ test.describe('page freeze', () => {
         [{transform: 'translateX(0px)'}, {transform: 'translateX(400px)'}],
         {duration: 60_000, easing: 'linear'},
       );
+      // NOT FOR LANDING: the page draws no frame for 300 ms after the run
+      // starts, as on a loaded machine (the harness's real clock).
+      setTimeout(() => {
+        const read =
+          (window as unknown as {__harnessTimerGate?: {now?: () => number}})
+            .__harnessTimerGate?.now ?? (() => performance.now());
+        const start = read();
+        while (read() - start < 300) {
+          /* busy */
+        }
+      }, 0);
     });
     // Where the run started, on the page's clock, before any freeze. It has
     // a start time only once a frame starts it, so the read waits for that.
