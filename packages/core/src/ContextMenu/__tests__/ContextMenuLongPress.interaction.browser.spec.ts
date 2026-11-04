@@ -48,8 +48,9 @@ import {
   animationStoryboard,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
+import {cubicBezier} from '../../motion/bezier';
+import {parseCssEasing, parseMotionRoleValue} from '../../motion/roles';
 import {contextMenu} from '../../motion/uikit/contextMenu';
-import {pressTiming, timedCurve} from '../contextMenuPressTiming';
 
 const storybook = withStorybook(test);
 const {commitMs, menuDisplayMs, heldScale} = contextMenu.press;
@@ -70,13 +71,21 @@ async function playedCurve(trigger: Locator) {
       style.getPropertyValue('--ease-move').trim(),
     ];
   });
-  const timing = pressTiming(duration, easing);
-  if (timing == null) {
+  const ms = parseMotionRoleValue('duration', duration);
+  const points = parseCssEasing(easing);
+  if (ms == null || points == null) {
     throw new Error(
       `the story theme gives no move timing: ${duration}, ${easing}`,
     );
   }
-  return timedCurve(1, heldScale, timing);
+  // The expected curve, computed here from the tokens: the scale eases from
+  // 1 to the held scale over the duration.
+  const seconds = Math.max(ms, 1) / 1000;
+  const ease = cubicBezier(points);
+  return {
+    at: (t: number) =>
+      1 + (heldScale - 1) * ease(Math.min(1, Math.max(0, t / seconds))),
+  };
 }
 
 interface TouchStory {
