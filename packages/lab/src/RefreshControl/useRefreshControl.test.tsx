@@ -1234,4 +1234,67 @@ describe('useRefreshControl', () => {
     expect(onRefresh).toHaveBeenCalledTimes(1);
     expect(content()).toHaveAttribute('aria-busy', 'true');
   });
+
+  it("starts each release's settle at the content's speed as the finger lifts: the finger's speed where it tracks one to one, less in the rubber band, and the same onto the refreshing inset", () => {
+    // The gesture arena keeps one clock for the page across tests. The
+    // events start past it, and the browser's clock follows them, so real
+    // time between two events never reads as a pause before a lift. Both
+    // clocks are put back afterwards.
+    const eventClock = clock;
+    clock = performance.now() + 100_000;
+    const browserNow = vi
+      .spyOn(performance, 'now')
+      .mockImplementation(() => clock);
+    try {
+      const release = (
+        steps: number[],
+        onRefresh: UseRefreshControlOptions['onRefresh'] = () => {},
+      ) => {
+        animators.list.length = 0;
+        const {unmount} = render(
+          <Refreshable data-testid="refresh" onRefresh={onRefresh}>
+            <p>Inbox</p>
+          </Refreshable>,
+        );
+        const [contentAnimator, indicatorAnimator] = animators.list.slice(
+          -2,
+        ) as MotionAnimator[];
+        const contentAnimate = vi.spyOn(contentAnimator, 'animate');
+        const indicatorAnimate = vi.spyOn(indicatorAnimator, 'animate');
+        pull(content(), steps);
+        const [to, transition] = contentAnimate.mock.calls.at(-1) ?? [];
+        const result = {
+          to: to?.y,
+          content: transition?.velocity?.y,
+          indicator: indicatorAnimate.mock.calls.at(-1)?.[1].velocity?.y,
+          isBusy: content().getAttribute('aria-busy') === 'true',
+        };
+        unmount();
+        return result;
+      };
+      // 10 px a frame of 16 ms is 625 px/s.
+      const tracked = release([10, 10, 10, 10, 10]);
+      expect(tracked.to).toBe(0);
+      expect(tracked.content).toBeCloseTo(625, 6);
+      expect(tracked.indicator).toBeCloseTo(-625, 6);
+      // Past the one-to-one stretch the content moves slower than the finger.
+      const banded = release([10, 10, 10, 10, 10, 10, 10, 10]);
+      expect(banded.content).toBeGreaterThan(0);
+      expect(banded.content).toBeLessThan(625);
+      expect(banded.indicator).toBeCloseTo(-(banded.content ?? 0), 6);
+      // A finger that held still before it lifted hands no speed.
+      expect(release([10, 10, 10, 10, 0, 0, 0, 0, 0, 0]).content).toBe(0);
+      // A pull that triggers carries its speed onto the refreshing inset.
+      const inset = release(
+        [20, 20, 20, 20, 20, 20, 20, 20],
+        () => new Promise<void>(() => {}),
+      );
+      expect(inset.isBusy).toBe(true);
+      expect(inset.to).toBe(60);
+      expect(inset.content).toBeGreaterThan(600);
+    } finally {
+      browserNow.mockRestore();
+      clock = eventClock;
+    }
+  });
 });

@@ -15,6 +15,7 @@ import {
   endTiming,
   modeAfterTrigger,
   pullOverscroll,
+  pullSlope,
   pullTravel,
   REFRESH_HEIGHT,
   releaseTarget,
@@ -243,5 +244,27 @@ describe('the end’s timing from the theme’s tokens', () => {
       ),
     ).toBeNull();
     expect(endTiming(style({}))).toBeNull();
+  });
+});
+
+describe('pullSlope', () => {
+  it('is 1 where the pull tracks the finger, and the rubber band slope past it', () => {
+    expect(pullSlope(0, 334, 'reveal')).toBe(0);
+    expect(pullSlope(30, 334, 'reveal')).toBeCloseTo(1, 6);
+    const past = 100;
+    const slope = pullSlope(past, 334, 'reveal');
+    expect(slope).toBeGreaterThan(0);
+    expect(slope).toBeLessThan(1);
+    // The slope of the mapping itself, and it falls as the band stretches.
+    const step = 0.5;
+    expect(slope).toBeCloseTo(
+      (pullOverscroll(past + step, 334, 'reveal') -
+        pullOverscroll(past - step, 334, 'reveal')) /
+        (2 * step),
+      3,
+    );
+    expect(pullSlope(past + 100, 334, 'reveal')).toBeLessThan(slope);
+    // The band after a trigger tracks one to one for twice as long.
+    expect(pullSlope(100, 334, 'band')).toBeCloseTo(1, 6);
   });
 });
