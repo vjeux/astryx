@@ -422,8 +422,8 @@ export function ContextMenu({
   // The mounted touch layer, for its press feedback and whether it times a
   // finger.
   const touchHandleRef = useRef<ContextMenuTouchHandle | null>(null);
-  // The menu closed: a finger's menu is over, and the trigger springs back
-  // with the close itself (run by every close handler below).
+  // The menu closed: a finger's menu is over, and the trigger returns with
+  // the close itself (run by every close handler below).
   const endTouchOpen = useCallback(() => {
     touchHandleRef.current?.release();
   }, []);
