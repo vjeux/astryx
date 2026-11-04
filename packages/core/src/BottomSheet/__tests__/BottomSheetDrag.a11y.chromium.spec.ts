@@ -43,6 +43,15 @@ async function openSheet(page: Page) {
   await page.goto(
     `${storybook.origin}/iframe.html?id=core-bottomsheet--snap-points&viewMode=story`,
   );
+  // Evidence arm, not for landing: plays the page's animations at the rate in
+  // ASTRYX_ANIMATION_RATE until the sheet counts as entered, so the entrance
+  // outlasts any fixed wait.
+  const rate = Number(process.env.ASTRYX_ANIMATION_RATE ?? '1');
+  const timeline = await page.context().newCDPSession(page);
+  if (rate !== 1) {
+    await timeline.send('Animation.enable');
+    await timeline.send('Animation.setPlaybackRate', {playbackRate: rate});
+  }
   // The entrance ends when the panel's transform transition ends, which is
   // the signal the panel itself waits on. Listen before the click, so that
   // no entrance ends unseen.
@@ -76,6 +85,9 @@ async function openSheet(page: Page) {
       ),
     )
     .toBe(true);
+  if (rate !== 1) {
+    await timeline.send('Animation.setPlaybackRate', {playbackRate: 1});
+  }
   return {dialog, sheet};
 }
 
