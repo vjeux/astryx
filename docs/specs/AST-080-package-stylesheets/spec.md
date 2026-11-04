@@ -377,6 +377,11 @@ supersedes DEC-4's lazy-load remedy; its reporting and budget stand.
 
 Rejected: lazy loading inside each component, and an app-installed module.
 
+Exception: Toast loads its swipe claim at idle or with the first toast,
+because LayerProvider renders a ToastViewport and every overlay app would
+otherwise carry the gesture host; a toast shown before the claim loads
+scrolls the page under a swipe (Current-state).
+
 ### DEC-6 — Source builds cover Turbopack and every styled package; the fast path is the goal
 
 **Reference:** `spec:AST-080/DEC-6`
