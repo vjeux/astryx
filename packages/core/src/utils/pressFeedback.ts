@@ -47,6 +47,7 @@ import {
   pressGestureStep,
 } from './pressGesture';
 import {isCoarsePointer, watchCoarsePointer} from './coarsePointer';
+import {reducedMotionFadeConsts} from '../motion/reducedMotion.stylex';
 import {subscribeInput} from './inputStream';
 import {isInsideScrollView} from './scrollView';
 import {TOUCH_QUERY} from './touchPresentation';
@@ -156,19 +157,31 @@ const TIMER_MS: Record<NonNullable<PressStep['timer']>, number> = {
 
 /**
  * The release fade's clock on `element`, read once, at the release, from the
- * property its stylesheet reads: the theme's `--_astryx-motion-tempo`. Under
- * Reduce Motion a tempo may shorten the fade, never lengthen it past 200 ms.
+ * token its stylesheet reads: the theme's `--duration-exit`. Without a
+ * readable value it is the token's default. Under Reduce Motion it is no
+ * longer than the Reduce Motion fade, as in the stylesheet.
  */
 export function pressFadeMs(element: Element): number {
-  const style = getComputedStyle(element);
-  const value = style.getPropertyValue('--_astryx-motion-tempo').trim();
-  const read = value === '' ? Number.NaN : Number(value);
-  const tempo = Number.isFinite(read) && read > 0 ? read : 1;
-  const scaled = PRESS_FADE_MS * tempo;
+  const read = durationMs(
+    getComputedStyle(element).getPropertyValue('--duration-exit'),
+  );
+  const exit = Number.isFinite(read) && read >= 0 ? read : PRESS_FADE_MS;
   const reduced =
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  return reduced ? Math.min(scaled, PRESS_FADE_MS) : scaled;
+  return reduced
+    ? Math.min(exit, durationMs(reducedMotionFadeConsts.duration))
+    : exit;
+}
+
+/** A CSS time in ms (`'175ms'` → 175, `'0.2s'` → 200); NaN for anything else. */
+function durationMs(value: string): number {
+  const match = /^(-?[\d.]+)(ms|s)$/u.exec(value.trim());
+  if (match == null) {
+    return Number.NaN;
+  }
+  const amount = Number(match[1]);
+  return match[2] === 's' ? amount * 1000 : amount;
 }
 
 /**
