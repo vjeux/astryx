@@ -282,9 +282,7 @@ export function useLayerKeyboardClearance(
         // keyboard takes UIKit's notification duration.
         const arrival =
           transition.start +
-          (guide.profile === 'chromium' && transition.curve != null
-            ? transition.curve.durationMs
-            : timing.keyboardNotificationMs);
+          timing.keyboardNotificationMs;
         pending = win.setTimeout(
           () => {
             pending = null;
