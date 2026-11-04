@@ -43,7 +43,7 @@ export const docs = {
           name: 'onReselect',
           type: '(value: string) => void',
           description:
-            "Called with the selected tab's value when it is chosen again. On iOS this returns the tab's navigation stack to its root (NavigationStack's popToRoot); a screen already at its root stays where it is.",
+            "Called with the selected tab's value when it is chosen again. On iOS this returns the tab's navigation stack to its root (NavigationStack's popToRoot). TabBar also scrolls the tab's panel (panelId) to its top, as iOS does for a screen already at its root.",
         },
         {
           name: 'label',
@@ -108,7 +108,7 @@ export const docs = {
           name: 'panelId',
           type: 'string',
           description:
-            "Id of the panel this tab controls, wired up as aria-controls. Put the same id on the section's panel element.",
+            "Id of the panel this tab controls, wired up as aria-controls. Put the same id on the section's panel element. Choosing the selected tab again scrolls that panel to its top: the panel itself when it scrolls, or else the first scroll area inside it.",
         },
       ],
     },
@@ -130,7 +130,7 @@ export const docs = {
       {
         guidance: true,
         description:
-          "Give each tab a panelId naming its section's panel, so assistive technology can associate the two.",
+          "Give each tab a panelId naming its section's panel, so assistive technology can associate the two. Put the section's content in a ScrollableArea inside that panel, so choosing the tab again scrolls it to the top.",
       },
       {
         guidance: false,
