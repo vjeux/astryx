@@ -35,7 +35,7 @@ const TURNS_PER_ITERATION = 100;
  */
 const rotation = stylex.keyframes({
   '0%': {transform: 'rotate(0deg)'},
-  '100%': {transform: `rotate(${360 * TURNS_PER_ITERATION}deg)`},
+  '100%': {transform: `rotate(360deg)`},
 });
 
 export const spinnerRotorStyles = stylex.create({
