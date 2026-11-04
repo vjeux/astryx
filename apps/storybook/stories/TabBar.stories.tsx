@@ -21,6 +21,7 @@ import {TabBar, TabBarItem} from '@astryxdesign/lab';
 import {Button} from '@astryxdesign/core/Button';
 import {LayerProvider} from '@astryxdesign/core/Layer';
 import {Icon, type IconType} from '@astryxdesign/core/Icon';
+import {ScrollableArea} from '@astryxdesign/core/ScrollableArea';
 
 // =============================================================================
 // Meta
@@ -154,6 +155,92 @@ function Bar({
 /** Four tabs, a badge on Library. Choosing Home again counts a reselect. */
 export const Default: Story = {
   render: () => <Bar />,
+};
+
+/** Rows enough to scroll a panel. */
+function Rows({title, count}: {title: string; count: number}) {
+  return (
+    <>
+      {Array.from({length: count}, (_, i) => (
+        <p key={i} style={{margin: 0, padding: '12px 16px'}}>
+          {title} row {i + 1}
+        </p>
+      ))}
+    </>
+  );
+}
+
+/**
+ * Each tab's panel holds its own scroll area, and a pinned scroller sits
+ * above them. Choosing the selected tab again scrolls only its panel to the
+ * top.
+ */
+function PanelsDemo() {
+  const [value, setValue] = useState('home');
+  const [reselects, setReselects] = useState(0);
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+      <ScrollableArea label="Pinned" height={120} data-testid="other-scroller">
+        <Rows title="Pinned" count={20} />
+      </ScrollableArea>
+      <p data-testid="reselects" style={{margin: 0, padding: '8px 16px'}}>
+        Reselected {reselects} times
+      </p>
+      <div style={{position: 'relative', flex: 1}}>
+        {SECTIONS.map(section => (
+          <div
+            key={section.value}
+            id={`panel-${section.value}`}
+            role="tabpanel"
+            aria-label={section.label}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              visibility: section.value === value ? 'visible' : 'hidden',
+            }}>
+            <ScrollableArea
+              label={section.label}
+              height="100%"
+              data-testid={`scroller-${section.value}`}>
+              <Rows title={section.label} count={60} />
+              <div style={{height: 104}} />
+            </ScrollableArea>
+          </div>
+        ))}
+      </div>
+      <TabBar
+        value={value}
+        onChange={setValue}
+        onReselect={() => setReselects(n => n + 1)}
+        label="Sections">
+        {SECTIONS.map(section => (
+          <TabBarItem
+            key={section.value}
+            value={section.value}
+            label={section.label}
+            icon={<Icon icon={section.icon} size="lg" />}
+            selectedIcon={<Icon icon={section.selectedIcon} size="lg" />}
+            panelId={`panel-${section.value}`}
+          />
+        ))}
+      </TabBar>
+    </div>
+  );
+}
+
+/**
+ * Each tab's panel scrolls on its own. Scroll Home down, then choose Home
+ * again: it scrolls back to the top, and the pinned scroller stays put.
+ */
+export const ScrollToTop: Story = {
+  render: () => <PanelsDemo />,
 };
 
 /** Badges appear, change and disappear at once, as UIKit's do. */
