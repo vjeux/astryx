@@ -1450,8 +1450,8 @@ export function usePager({
     if (index != null && index !== pager.index) {
       pager.goTo(index, {
         reason: 'controlled',
-        animated:
-          isControlledChangeAnimated || index === syncedIndexRef.current,
+        // NOT FOR LANDING: a refused page follows the option too.
+        animated: isControlledChangeAnimated,
       });
     }
     syncedIndexRef.current = index;
