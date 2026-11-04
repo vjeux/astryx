@@ -276,6 +276,47 @@ const PRESENTATION_SWITCH = () => {
   };
 };
 
+/**
+ * A tab's paint timing now, beside what `values` resolve to in its place
+ * (through a probe inside the item): each as a duration in ms and a curve.
+ */
+async function paintTimingAgainst(
+  page: Page,
+  name: string,
+  values: {duration: string; easing: string},
+) {
+  return tab(page, name)
+    .locator('span')
+    .first()
+    .evaluate((element, wanted) => {
+      const probe = document.createElement('span');
+      probe.style.transitionDuration = wanted.duration;
+      probe.style.transitionTimingFunction = wanted.easing;
+      element.append(probe);
+      const read = (style: CSSStyleDeclaration) => ({
+        ms: parseFloat(style.transitionDuration) * 1000,
+        easing: style.transitionTimingFunction,
+      });
+      const result = {
+        have: read(getComputedStyle(element)),
+        want: read(getComputedStyle(probe)),
+      };
+      probe.remove();
+      return result;
+    }, values);
+}
+
+/** Gives the bar a theme exit duration of its own. */
+async function setExitDuration(page: Page, value: string) {
+  await page
+    .getByRole('tablist', {name: 'Sections'})
+    .evaluate(
+      (element, duration) =>
+        element.style.setProperty('--duration-exit', duration),
+      value,
+    );
+}
+
 /** How long a tab's paint takes to change now, in ms. */
 async function paintFadeMs(page: Page, name: string) {
   return tab(page, name)
@@ -1091,11 +1132,12 @@ test('with no tab selected, a finger held on a tab paints it, and the paint foll
   await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
 });
 
-test('with Reduce Motion a finger paints its tab at once, and its release keeps a fade of 200 ms or less (design:reduced-motion DEC-4)', async ({
+test('with Reduce Motion a finger paints its tab at once, and its release keeps a fade of 200 ms or less, even on a slow theme (design:reduced-motion DEC-4)', async ({
   page,
 }) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
   const {driver} = await openBar(page, 'no-selection');
+  await setExitDuration(page, '300ms');
   const home = await itemCenter(page, 'Home');
   await driver.play(tapScript(home, {holdMs: 400}), {
     onEvent: async (_step, index) => {
@@ -1108,9 +1150,31 @@ test('with Reduce Motion a finger paints its tab at once, and its release keeps 
   });
   await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
   await expect(tab(page, 'Home')).not.toHaveAttribute('data-tab-bar-pressed');
-  const release = await paintFadeMs(page, 'Home');
-  expect(release).toBeGreaterThan(0);
-  expect(release).toBeLessThanOrEqual(200);
+  expect(await paintFadeMs(page, 'Home')).toBe(200);
+});
+
+test('a finger’s release fades the paint on the theme’s exit duration and curve, and its onset is at once', async ({
+  page,
+}) => {
+  const {driver} = await openBar(page, 'no-selection');
+  // An exit duration apart from the fast one, so the read tells them apart.
+  await setExitDuration(page, '90ms');
+  const home = await itemCenter(page, 'Home');
+  await driver.play(tapScript(home, {holdMs: 400}), {
+    onEvent: async (_step, index) => {
+      if (index === 0) {
+        await expect(tab(page, 'Home')).toHaveAttribute('data-tab-bar-pressed');
+        expect(await paintFadeMs(page, 'Home')).toBe(0);
+      }
+    },
+  });
+  await expect(tab(page, 'Home')).not.toHaveAttribute('data-tab-bar-pressed');
+  const {have, want} = await paintTimingAgainst(page, 'Home', {
+    duration: 'var(--duration-exit)',
+    easing: 'var(--ease-exit)',
+  });
+  expect(want.ms).toBe(90);
+  expect(have).toEqual(want);
 });
 
 test('past the last item, still on the bar, the lens rubber-bands beyond it and the lift commits the last item; past the bar’s end the lift chooses nothing', async ({

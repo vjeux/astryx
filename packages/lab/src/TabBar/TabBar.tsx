@@ -251,7 +251,8 @@ const styles = stylex.create({
     outlineOffset: focusVars['--focus-outline-offset'],
     // With no tab selected, a held finger paints its tab at once
     // (useTabBarLens.ts writes the attribute). The paint fades out after the
-    // lift, within 200 ms under Reduce Motion whatever the theme's tempo.
+    // lift on the theme's exit duration and curve. Under Reduce Motion the fade
+    // stays within 200 ms, whatever the theme's tempo.
     backgroundColor: {
       default: null,
       [stylex.when.ancestor('[data-tab-bar-pressed]', tabBarItemMarker)]:
@@ -259,8 +260,8 @@ const styles = stylex.create({
     },
     transitionProperty: 'background-color',
     transitionDuration: {
-      default: durationVars['--duration-fast'],
-      '@media (prefers-reduced-motion: reduce)': `min(${durationVars['--duration-fast']}, 200ms)`,
+      default: durationVars['--duration-exit'],
+      '@media (prefers-reduced-motion: reduce)': `min(${durationVars['--duration-exit']}, 200ms)`,
       // Repeated inside the Reduce Motion branch, where a media rule outranks
       // the plain one, so the onset stays at once there too.
       [stylex.when.ancestor('[data-tab-bar-pressed]', tabBarItemMarker)]: {
@@ -268,7 +269,7 @@ const styles = stylex.create({
         '@media (prefers-reduced-motion: reduce)': '0s',
       },
     },
-    transitionTimingFunction: easeVars['--ease-standard'],
+    transitionTimingFunction: easeVars['--ease-exit'],
   },
   box: (start: string, top: string, width: string, height: string) => ({
     insetInlineStart: start,
