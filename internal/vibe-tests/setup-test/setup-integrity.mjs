@@ -254,6 +254,43 @@ function baselineBytes(appDir, relativePath) {
 }
 
 /**
+ * Each path's bytes at HEAD, from one `git cat-file --batch`, or null when
+ * HEAD has no such path. The batch reads one name per line, so a path with a
+ * newline is left out. A path that does not name a blob is left out too.
+ */
+function baselineBlobs(appDir, relativePaths) {
+  const blobs = new Map();
+  const named = relativePaths.filter(
+    relativePath => !relativePath.includes('\n'),
+  );
+  if (named.length === 0) return blobs;
+  const output = execFileSync('git', ['-C', appDir, 'cat-file', '--batch'], {
+    input: named.map(relativePath => `HEAD:${relativePath}\n`).join(''),
+    maxBuffer: 64 * 1024 * 1024,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  let offset = 0;
+  for (const relativePath of named) {
+    const end = output.indexOf(10, offset);
+    if (end === -1) break;
+    const header = output.subarray(offset, end).toString('utf8');
+    offset = end + 1;
+    if (header === `HEAD:${relativePath} missing`) {
+      blobs.set(relativePath, null);
+      continue;
+    }
+    const match = header.match(/^[0-9a-f]+ (\w+) (\d+)$/);
+    if (!match) break;
+    const size = Number(match[2]);
+    if (match[1] === 'blob') {
+      blobs.set(relativePath, output.subarray(offset, offset + size));
+    }
+    offset += size + 1;
+  }
+  return blobs;
+}
+
+/**
  * Collapse a line to the content a reader would compare by eye: no leading or
  * trailing whitespace, and every interior run of whitespace as a single space.
  *
@@ -663,8 +700,43 @@ function zeroContextPatch(appDir, relativePath) {
     '--no-renames',
     'HEAD',
     '--',
-    relativePath,
+    ...(relativePath === undefined ? [] : [relativePath]),
   ]);
+}
+
+/**
+ * Each file's section of one zero-context diff of the whole tree, by path. A
+ * section is the text that a diff of that file alone prints. A path whose
+ * header git quotes is left out.
+ */
+function zeroContextSections(appDir) {
+  const sections = new Map();
+  const text = zeroContextPatch(appDir);
+  const header = 'diff --git ';
+  const starts = [];
+  if (text.startsWith(header)) starts.push(0);
+  for (
+    let at = text.indexOf(`\n${header}`);
+    at !== -1;
+    at = text.indexOf(`\n${header}`, at + 1)
+  ) {
+    starts.push(at + 1);
+  }
+  starts.forEach((start, index) => {
+    const end = index + 1 < starts.length ? starts[index + 1] : text.length;
+    const section = text.slice(start, end);
+    const names = section.slice(header.length, section.indexOf('\n'));
+    if (!names.startsWith('a/')) return;
+    const length = (names.length - 5) / 2;
+    const relativePath = names.slice(2, 2 + length);
+    if (
+      Number.isInteger(length) &&
+      names === `a/${relativePath} b/${relativePath}`
+    ) {
+      sections.set(relativePath, section);
+    }
+  });
+  return sections;
 }
 
 function removedLinesFromPatch(patch) {
@@ -779,9 +851,13 @@ export function analyzeSetupIntegrity(appDir, attestedDiffSha256) {
   const untracked = untrackedEntries(resolvedAppDir);
   const untrackedByPath = new Map(untracked.map(file => [file.path, file]));
   const tracked = trackedNumstat(resolvedAppDir);
-  // Each git command is a process launch, so a file's baseline and its
-  // zero-context diff are read once per run.
-  const baselines = new Map();
+  // Each git command is a process launch, which is slow on a loaded machine.
+  // One batch reads every baseline, and one zero-context diff of the whole
+  // tree gives each file's diff. A file either one leaves out is read alone.
+  const baselines = baselineBlobs(
+    resolvedAppDir,
+    tracked.map(file => file.path),
+  );
   const baselineOf = relativePath => {
     if (!baselines.has(relativePath)) {
       let bytes = null;
@@ -794,8 +870,9 @@ export function analyzeSetupIntegrity(appDir, attestedDiffSha256) {
     }
     return baselines.get(relativePath);
   };
-  const patches = new Map();
+  let patches = null;
   const zeroContextPatchOf = relativePath => {
+    patches ??= zeroContextSections(resolvedAppDir);
     if (!patches.has(relativePath)) {
       patches.set(relativePath, zeroContextPatch(resolvedAppDir, relativePath));
     }
