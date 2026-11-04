@@ -73,7 +73,8 @@ import {
   useContextMenu,
 } from '@astryxdesign/core/hooks';
 
-usePanGesture(ref, {
+usePanGesture({
+  ref,
   axis: 'x',
   onPan: ({state, translation, velocity}) => {},
 });
@@ -104,7 +105,7 @@ animator2.destroy();
 ## Requirements
 
 - **FR1 — `usePanGesture` reports a drag as values.**
-  `usePanGesture(ref, {axis?, onPan})` calls `onPan` with
+  `usePanGesture({ref, axis?, onPan})` calls `onPan` with
   `{state, translation, velocity}` as a drag on the element begins, changes,
   ends, or is cancelled. `axis` limits the drag to `'x'` or `'y'`. A finger,
   a mouse, and a pen all drive it (`spec:AST-094` FR43). It never

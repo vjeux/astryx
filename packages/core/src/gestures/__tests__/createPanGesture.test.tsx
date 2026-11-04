@@ -383,7 +383,7 @@ function Draggable({
   onPan: (event: PanGestureEvent) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  usePanGesture(ref, {axis, onPan});
+  usePanGesture({ref, axis, onPan});
   return <div data-testid="surface" ref={ref} />;
 }
 
@@ -463,7 +463,7 @@ describe('usePanGesture (spec:AST-107 FR1, FR6)', () => {
     function Swapping() {
       const ref = useRef<HTMLDivElement>(null);
       const [which, setWhich] = useState<'a' | 'b'>('a');
-      usePanGesture(ref, {axis: 'x', onPan: event => events.push(event)});
+      usePanGesture({ref, axis: 'x', onPan: event => events.push(event)});
       return (
         <>
           <button type="button" onClick={() => setWhich('b')}>
