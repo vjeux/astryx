@@ -291,10 +291,8 @@ function areRowPropsEqual<T extends Record<string, unknown>>(
   if (prevProps.rowKey !== nextProps.rowKey) {
     return false;
   }
-  if (
-    prevProps.rowIndex !== nextProps.rowIndex &&
-    nextProps.plugins.some(plugin => plugin.transformBodyRow != null)
-  ) {
+  // MUTANT (not for landing): no index change re-renders the row.
+  if (false) {
     return false;
   }
   if (prevProps.ariaRowIndex !== nextProps.ariaRowIndex) {
