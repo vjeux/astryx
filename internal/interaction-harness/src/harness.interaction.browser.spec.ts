@@ -4922,6 +4922,15 @@ test.describe('page freeze', () => {
   }) => {
     await installPageFreeze(page);
     await freezeFixture(page);
+    // NOT FOR LANDING: the page's clock runs 50 ms ahead of the test
+    // process's clock.
+    await page.evaluate(() => {
+      const origin = performance.timeOrigin;
+      Object.defineProperty(Performance.prototype, 'timeOrigin', {
+        configurable: true,
+        get: () => origin + 50,
+      });
+    });
     await installTimerGate(page);
     const box = page.locator('#box');
     const watch = await watchAnimations(box);
