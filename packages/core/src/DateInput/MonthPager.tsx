@@ -241,7 +241,6 @@ function MonthPagerComponent({
 
   const scrollToMonth = useCallback(
     (monthIndex: number, behavior: ScrollBehavior = 'smooth') => {
-      stopFollowingSettle();
       const row = clampIndex(monthIndex - minMonthIndex, 0, rowCount - 1);
       reportedRowRef.current = row;
       // Already the pager's target, as when the month and year wheels close
