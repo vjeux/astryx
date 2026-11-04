@@ -14,10 +14,34 @@ const DECK = [
 ];
 /** A release faster than this (px/s) throws the card away. */
 const THROW_SPEED = 1000;
-/** How far a thrown card travels before the next one is dealt, px. */
-const THROW_DISTANCE = 480;
+/** How far a thrown card travels while it fades, px. */
+const THROW_DISTANCE = 160;
 const SETTLE = 'translate 300ms cubic-bezier(0.2, 0.9, 0.3, 1.2)';
 const THROW = 'translate 250ms ease-in, opacity 250ms ease-in';
+
+/** Moves the card, with a transition unless the person reduces motion. */
+function moveCard(card: HTMLElement, x: number, y: number, transition: string) {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  card.style.transition = reduced ? 'none' : transition;
+  card.style.translate = `${x}px ${y}px`;
+}
+
+/** Throws the card off to one side as it fades, then calls `onGone`. */
+function throwCard(card: HTMLElement, direction: number, onGone: () => void) {
+  moveCard(card, direction * THROW_DISTANCE, 0, THROW);
+  card.style.opacity = '0';
+  if (card.style.transition === 'none') {
+    onGone();
+  } else {
+    card.addEventListener('transitionend', onGone, {once: true});
+  }
+}
+
+/** Shows the card again at the center, with no transition. */
+function resetCard(card: HTMLElement) {
+  moveCard(card, 0, 0, 'none');
+  card.style.opacity = '1';
+}
 
 export default function PanPlayingCard() {
   const card = useRef<HTMLDivElement>(null);
@@ -28,19 +52,6 @@ export default function PanPlayingCard() {
   /** The drag in progress met a throw: the rest of it moves nothing. */
   const ignoringDrag = useRef(false);
 
-  /** Move the card, with a transition unless the person reduces motion. */
-  function moveTo(x: number, y: number, transition: string) {
-    const element = card.current;
-    if (element == null) {
-      return;
-    }
-    const reduced = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
-    element.style.transition = reduced ? 'none' : transition;
-    element.style.translate = `${x}px ${y}px`;
-  }
-
   function discard(direction: number) {
     const element = card.current;
     // One throw at a time: a second Discard during it would deal twice.
@@ -50,52 +61,51 @@ export default function PanPlayingCard() {
     throwing.current = true;
     // The drag in progress, if any, moves nothing more.
     ignoringDrag.current = true;
-    moveTo(direction * THROW_DISTANCE, 0, THROW);
-    element.style.opacity = '0';
-    const deal = () => {
+    throwCard(element, direction, () => {
       throwing.current = false;
       // Commit the next card's face first. A reset before that paints the
-      // discarded card back at the centre for one frame.
+      // discarded card back at the center for one frame.
       flushSync(() => {
         setAnnouncement(`${DECK[top % DECK.length].name} discarded`);
         setTop(value => value + 1);
       });
-      moveTo(0, 0, 'none');
-      element.style.opacity = '1';
-    };
-    if (element.style.transition === 'none') {
-      deal();
-    } else {
-      element.addEventListener('transitionend', deal, {once: true});
-    }
+      resetCard(element);
+    });
   }
 
   // The drag writes the card's style in onPan: no render per move.
   usePanGesture(card, {
     onPan: ({state, translation, velocity}) => {
+      const element = card.current;
       // A drag that meets a throw is ignored to its end. Its moves would
       // cancel the throw's transitions, and the next card would jump to it.
       if (state === 'began') {
         ignoringDrag.current = throwing.current;
       }
-      if (ignoringDrag.current) {
+      if (element == null || ignoringDrag.current) {
         return;
       }
       if (state === 'began' || state === 'changed') {
-        moveTo(translation.x, translation.y, 'none');
+        moveCard(element, translation.x, translation.y, 'none');
       } else if (state === 'ended' && Math.abs(velocity.x) > THROW_SPEED) {
         discard(Math.sign(velocity.x));
       } else {
-        moveTo(0, 0, SETTLE);
+        moveCard(element, 0, 0, SETTLE);
       }
     },
   });
 
   return (
-    <div style={{display: 'grid', gap: 16, padding: 16, maxWidth: 360}}>
+    <div
+      style={{
+        display: 'grid',
+        gap: 16,
+        padding: 16,
+        width: 'min(360px, 80vw)',
+      }}>
       <div
         style={{
-          height: 200,
+          height: 280,
           display: 'grid',
           placeItems: 'center',
           overflow: 'hidden',
@@ -107,12 +117,12 @@ export default function PanPlayingCard() {
           role="img"
           aria-label={DECK[top % DECK.length].name}
           style={{
-            width: 120,
-            height: 170,
+            width: 80,
+            height: 112,
             display: 'grid',
             placeItems: 'center',
-            font: 'bold 40px system-ui, sans-serif',
-            borderRadius: 12,
+            font: 'bold 28px system-ui, sans-serif',
+            borderRadius: 10,
             backgroundColor: 'var(--color-background-surface)',
             color: 'var(--color-text-primary)',
             boxShadow: '0 2px 8px rgb(0 0 0 / 0.2)',
