@@ -649,6 +649,12 @@ export const BottomSheetSubmenu: Story = {
 };
 
 const touchStyles = stylex.create({
+  demo: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '12px',
+  },
   card: {
     width: '200px',
     height: '120px',
@@ -671,26 +677,42 @@ export const TouchLongPress: Story = {
       },
     },
   },
-  render: () => (
-    <ContextMenu
-      data-testid="touch-context-menu"
-      label="Photo actions"
-      items={[
-        {label: 'Copy', icon: ClipboardIcon, onClick: () => {}},
-        {label: 'Share', icon: ShareIcon, onClick: () => {}},
-        {label: 'Save to Files', icon: ArrowDownTrayIcon, onClick: () => {}},
-        {type: 'divider'},
-        {
-          label: 'Delete',
-          icon: TrashIcon,
-          variant: 'destructive',
-          onClick: () => {},
-        },
-      ]}>
-      <div {...stylex.props(touchStyles.card)}>Hold for actions</div>
-    </ContextMenu>
-  ),
+  render: () => <TouchLongPressDemo />,
 };
+
+/** The touch story's menu, and the last action it picked. */
+function TouchLongPressDemo() {
+  const [lastAction, setLastAction] = useState<string | null>(null);
+  const pick = (label: string) => () => setLastAction(label);
+  return (
+    <div {...stylex.props(touchStyles.demo)}>
+      <ContextMenu
+        data-testid="touch-context-menu"
+        label="Photo actions"
+        items={[
+          {label: 'Copy', icon: ClipboardIcon, onClick: pick('Copy')},
+          {label: 'Share', icon: ShareIcon, onClick: pick('Share')},
+          {
+            label: 'Save to Files',
+            icon: ArrowDownTrayIcon,
+            onClick: pick('Save to Files'),
+          },
+          {type: 'divider'},
+          {
+            label: 'Delete',
+            icon: TrashIcon,
+            variant: 'destructive',
+            onClick: pick('Delete'),
+          },
+        ]}>
+        <div {...stylex.props(touchStyles.card)}>Hold for actions</div>
+      </ContextMenu>
+      <p data-testid="touch-context-menu-last">
+        {lastAction == null ? 'No action yet' : `Last action: ${lastAction}`}
+      </p>
+    </div>
+  );
+}
 
 export const TouchLongPressPopover: Story = {
   name: 'Touch / long press, presentation="popover"',
