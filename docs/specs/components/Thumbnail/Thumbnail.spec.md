@@ -36,15 +36,15 @@ system_specs: [spec:AST-009, spec:AST-085, spec:AST-086]
 
 ## Contract at a glance
 
-| Area                    | Contract                                                                                                                                                                                                    |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public contract         | A 64px square image preview with `src`, `alt`, `label`, `isLoading`, `isDisabled`, an optional `onClick` open action, and an optional `onRemove` action revealed per `showRemoveOn`.                        |
-| Behavior                | The preview shows a skeleton, the image, an upload overlay, or a placeholder; it is a named group whose open and remove actions are separate buttons.                                                       |
-| End-user impact         | Screen-reader users hear the file and image in one group name and reach "Open …" and "Remove …" buttons; keyboard and touch users can always reach a hover-revealed remove button.                          |
-| Builder impact          | A theme's exit duration and easing set the touch press release (FR4); no API changes.                                                                                                                       |
-| Compatibility/readiness | No API changes; under a coarse primary pointer the touch press release changes (FR4). Six implementation gaps are listed under Current-state impact.                                                        |
-| Review checks           | Reject a hover-only remove button that leaves the tab order, a name on a roleless element, an image exposed without `alt`, or a busy spinner that announces itself.                                         |
-| Governing rules         | `spec:AST-085/FR1`; `spec:AST-086/FR8`; WCAG 2.2 2.5.8; `architecture:public-component-api/INV5,INV6,INV8`; `architecture:internationalization/INV1a`; `component:Thumbnail/FR4` (the touch press release). |
+| Area                    | Contract                                                                                                                                                                                                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Public contract         | A 64px square image preview with `src`, `alt`, `label`, `isLoading`, `isDisabled`, an optional `onClick` open action, and an optional `onRemove` action revealed per `showRemoveOn`.                                                                               |
+| Behavior                | The preview shows a skeleton, the image, an upload overlay, or a placeholder; it is a named group whose open and remove actions are separate buttons.                                                                                                              |
+| End-user impact         | Screen-reader users hear the file and image in one group name and reach "Open …" and "Remove …" buttons; keyboard and touch users can always reach a hover-revealed remove button.                                                                                 |
+| Builder impact          | A theme's exit duration and easing set the touch press release (FR4); no API changes.                                                                                                                                                                              |
+| Compatibility/readiness | No API changes; the touch press release changes on every pointer (FR4, `spec:AST-094` FR5). Six implementation gaps are listed under Current-state impact.                                                                                                         |
+| Review checks           | Reject a hover-only remove button that leaves the tab order, a name on a roleless element, an image exposed without `alt`, or a busy spinner that announces itself.                                                                                                |
+| Governing rules         | `spec:AST-085/FR1`; `spec:AST-086/FR8`; WCAG 2.2 2.5.8; `architecture:public-component-api/INV5,INV6,INV8`; `architecture:internationalization/INV1a`; `component:Thumbnail/FR4` (the touch press release); `spec:AST-094/FR5` (a press release on every pointer). |
 
 This table is a review projection; the body below is authoritative.
 
@@ -57,9 +57,9 @@ action.
 
 ## Compatibility and migration
 
-- Released default preserved: `no` for the touch press release: under a
-  coarse primary pointer it fades on the theme's exit duration and easing,
-  capped at the press controller's clock, as FR4. A fine primary pointer keeps the released timing.
+- Released default preserved: `no` for the touch press release: it fades on
+  the theme's exit duration and easing on every pointer, as FR4 and
+  `spec:AST-094` FR5.
 - Compatibility class: nonbreaking behavior change; no public prop, default
   or DOM changes
 - Controlled/uncontrolled behavior: not applicable; image-failure tracking is
