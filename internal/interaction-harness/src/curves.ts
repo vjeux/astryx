@@ -371,9 +371,6 @@ function animationRecorder(): void {
         return;
       }
       isTicking = true;
-      generation += 1;
-      record();
-      frame(loop(generation));
     },
     // Drops every animation the log holds, with the elements and ancestors
     // they keep alive; later waits record afresh.
