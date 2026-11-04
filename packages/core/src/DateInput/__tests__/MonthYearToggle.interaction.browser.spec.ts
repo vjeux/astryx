@@ -33,6 +33,7 @@ import {
   touchDriver,
   waitForRest,
   watchAnimations,
+  webInputDriver,
   withStorybook,
   writeEvidence,
   type ActiveAnimation,
@@ -801,6 +802,45 @@ test('under the touch presentation, a tapped day selects at once', async ({
   await expect(page.getByRole('gridcell', {selected: true})).toContainText(
     '20',
   );
+});
+
+test('under the touch presentation, a pen pick keeps the fade', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== 'chromium',
+    'Only Chromium’s driver sends a pen as a pen',
+  );
+  await openCalendar(page);
+  const day = page.getByRole('button', {name: /October 20, 2026/});
+  const box = await day.boundingBox();
+  if (box == null) {
+    throw new Error('no day');
+  }
+  const at = {x: box.x + box.width / 2, y: box.y + box.height / 2};
+  await (
+    await webInputDriver(page)
+  ).pen([
+    {...at, t: 0},
+    {...at, t: 40},
+  ]);
+  await expect(page.getByRole('gridcell', {selected: true})).toContainText(
+    '20',
+  );
+  const fade = await day.evaluate(element => {
+    const style = getComputedStyle(element.firstElementChild ?? element);
+    const ms = (value: string) =>
+      value.trim().endsWith('ms')
+        ? Number.parseFloat(value)
+        : Number.parseFloat(value) * 1000;
+    return {
+      duration: ms(style.transitionDuration),
+      fast: ms(style.getPropertyValue('--duration-fast')),
+    };
+  });
+  expect(fade.duration).toBeGreaterThan(0);
+  expect(fade.duration).toBe(fade.fast);
 });
 
 test.describe('with a mouse', () => {

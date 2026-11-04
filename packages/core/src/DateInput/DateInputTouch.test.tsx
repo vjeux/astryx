@@ -3828,6 +3828,32 @@ describe('DateInput — scroll CSS (definition-level)', () => {
     expect(read('MonthPager.tsx')).not.toContain('hasSelectionFade');
   });
 
+  it('under the touch presentation, a mouse or pen pick keeps the fade', () => {
+    renderAndOpen();
+    const day = pane('March 2026').querySelector<HTMLElement>(
+      '[data-date="2026-03-12"]',
+    );
+    const puck = day?.firstElementChild as HTMLElement | null;
+    if (day == null || puck == null) {
+      throw new Error('no day');
+    }
+    const resting = puck.className;
+    const press = (pointerType: string) => {
+      const event = new Event('pointerdown', {bubbles: true});
+      Object.assign(event, {pointerType});
+      act(() => {
+        day.dispatchEvent(event);
+      });
+      return puck.className;
+    };
+    // A finger's press leaves the puck as it rests; a mouse's or a pen's
+    // gives it the fade before the selection lands.
+    expect(press('touch')).toBe(resting);
+    expect(press('pen')).not.toBe(resting);
+    expect(press('mouse')).not.toBe(resting);
+    expect(press('touch')).toBe(resting);
+  });
+
   it('under a finger: cross-fades the DateTimeInput sheet\u2019s month/year toggle on the same clock', () => {
     const source = read('../DateTimeInput/TouchDateTimeField.tsx');
     // The calendar and the wheels cross-fade, and the header's actions fade,
