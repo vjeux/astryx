@@ -668,11 +668,8 @@ export function Lightbox({
   // carry. A finger's double tap is the stage's own. A mouse's or a pen's is
   // the browser's `dblclick`.
   const pointerTypeRef = useRef('');
-  // Where the last press on the stage started, which a click does not carry.
-  const pressPointRef = useRef<{x: number; y: number} | null>(null);
   // Without zoom, a click on the dark area lands on the container or the
-  // dialog, and both close. A gallery's stage closes on its own tap, or a
-  // mouse's click. With
+  // dialog, and both close. A gallery's stage closes on its own tap. With
   // zoom, the stage covers that area and closes on its own tap, and the media
   // group's strip below the stage closes too.
   // A drag that ends there sets `didDragRef`, so its click is ignored. The
@@ -865,33 +862,33 @@ export function Lightbox({
     },
   });
 
-  // Whether a point is on the current page's media group: its photo or video
-  // and its caption, as one box. The photo takes no pointer events, so a
-  // press on it lands on its box. An element with no size yet (a photo still
-  // loading) adds nothing to the box.
+  // Whether a point is on the current page's photo, video or caption. The
+  // photo takes no pointer events, so a press on it lands on its box. An
+  // element with no size yet (a photo still loading) is not under the point.
   const isOnCurrentMedia = (x: number, y: number) => {
     const page = imageWrapperRef.current?.querySelector('[data-current]');
-    const boxes = [
+    return [
       page?.querySelector('img'),
       page?.querySelector('video'),
       page?.querySelector('[data-lightbox-caption]'),
-    ]
-      .map(element => element?.getBoundingClientRect())
-      .filter((r): r is DOMRect => r != null && r.width > 0 && r.height > 0);
-    return (
-      boxes.length > 0 &&
-      x >= Math.min(...boxes.map(r => r.left)) &&
-      x <= Math.max(...boxes.map(r => r.right)) &&
-      y >= Math.min(...boxes.map(r => r.top)) &&
-      y <= Math.max(...boxes.map(r => r.bottom))
-    );
+    ].some(element => {
+      const r = element?.getBoundingClientRect();
+      return (
+        r != null &&
+        r.width > 0 &&
+        r.height > 0 &&
+        x >= r.left &&
+        x <= r.right &&
+        y >= r.top &&
+        y <= r.bottom
+      );
+    });
   };
   // Without zoom, a gallery's stage fills the viewer. So a finger's or a
   // pen's tap on it beside the media closes the viewer, as a click on the
   // backdrop does. A press that moves past the tap's movement limit is no
-  // tap. A mouse's click there closes it when its press or its release is off
-  // the media, however far the press moved. With zoom, the stage's own tap
-  // closes it.
+  // tap. A mouse's click there closes it on the click, however far the press
+  // moved. With zoom, the stage's own tap closes it.
   useGestureRecognizer(
     imageWrapperRef,
     () =>
@@ -1145,20 +1142,16 @@ export function Lightbox({
                   onPointerDown={e => {
                     didDragRef.current = false;
                     pointerTypeRef.current = e.pointerType;
-                    pressPointRef.current = {x: e.clientX, y: e.clientY};
                   }}
                   onClick={
                     isGallery && !isZoomTarget
                       ? e => {
-                          const press = pressPointRef.current;
                           // A keyboard's click (detail 0) on a caption's
                           // link is the link's.
                           if (
                             e.detail > 0 &&
                             pointerTypeRef.current === 'mouse' &&
-                            (!isOnCurrentMedia(e.clientX, e.clientY) ||
-                              (press != null &&
-                                !isOnCurrentMedia(press.x, press.y)))
+                            !isOnCurrentMedia(e.clientX, e.clientY)
                           ) {
                             handleClose();
                           }
