@@ -200,6 +200,25 @@ test('a layer that closes with the layer around it gets a copy that is drawn, ou
       },
       {once: true},
     );
+    // NOT FOR LANDING: refuse a show during another popover's toggle, as
+    // Chromium 150 and later do.
+    const show = HTMLElement.prototype.showPopover;
+    const hide = HTMLElement.prototype.hidePopover;
+    let toggling = false;
+    HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
+      toggling = true;
+      try {
+        hide.call(this);
+      } finally {
+        toggling = false;
+      }
+    };
+    HTMLElement.prototype.showPopover = function (this: HTMLElement) {
+      if (toggling) {
+        throw new DOMException('refused during a toggle', 'InvalidStateError');
+      }
+      show.call(this);
+    };
     // The outer layer's close takes the inner one with it, in one step.
     outer.hidePopover();
     // Where the browser refuses a show during the toggle, the copy opens
@@ -264,6 +283,25 @@ test('when the close of the layer around it closes it too, its copy stays above 
         {once: true},
       );
     }
+    // NOT FOR LANDING: refuse a show during another popover's toggle, as
+    // Chromium 150 and later do.
+    const show = HTMLElement.prototype.showPopover;
+    const hide = HTMLElement.prototype.hidePopover;
+    let toggling = false;
+    HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
+      toggling = true;
+      try {
+        hide.call(this);
+      } finally {
+        toggling = false;
+      }
+    };
+    HTMLElement.prototype.showPopover = function (this: HTMLElement) {
+      if (toggling) {
+        throw new DOMException('refused during a toggle', 'InvalidStateError');
+      }
+      show.call(this);
+    };
     // The browser closes the inner layer first, then the outer one.
     outer.hidePopover();
     // A refused show opens the copies before the next frame paints.
