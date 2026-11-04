@@ -33,6 +33,7 @@
 // the primary pointer is coarse.
 
 import {MENU_PRESS_MARKER} from '../hooks/menuPressMarker';
+import {themeTempo} from '../motion/themeTempo';
 import type {PressGesture, PressPaint, PressStep} from './pressGesture';
 import {
   idlePressGesture,
@@ -155,11 +156,7 @@ const TIMER_MS: Record<NonNullable<PressStep['timer']>, number> = {
  * Reduce Motion a tempo may shorten the fade, never lengthen it past 200 ms.
  */
 export function pressFadeMs(element: Element): number {
-  const style = getComputedStyle(element);
-  const value = style.getPropertyValue('--_astryx-motion-tempo').trim();
-  const read = value === '' ? Number.NaN : Number(value);
-  const tempo = Number.isFinite(read) && read > 0 ? read : 1;
-  const scaled = PRESS_FADE_MS * tempo;
+  const scaled = PRESS_FADE_MS * themeTempo(element);
   const reduced =
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
