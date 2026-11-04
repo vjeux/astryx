@@ -43,6 +43,13 @@ async function openSheet(page: Page) {
   await page.goto(
     `${storybook.origin}/iframe.html?id=core-bottomsheet--snap-points&viewMode=story`,
   );
+  // Evidence arm, not for landing: slows the page's main thread by the
+  // factor in ASTRYX_CPU_THROTTLE (Chrome DevTools CPU throttling).
+  const throttle = Number(process.env.ASTRYX_CPU_THROTTLE ?? '1');
+  if (throttle > 1) {
+    const throttling = await page.context().newCDPSession(page);
+    await throttling.send('Emulation.setCPUThrottlingRate', {rate: throttle});
+  }
   // The entrance ends when the panel's transform transition ends, which is
   // the signal the panel itself waits on. Listen before the click, so that
   // no entrance ends unseen.
