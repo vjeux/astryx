@@ -539,6 +539,34 @@ export function notifyHandleRef(ref: unknown): void {
   }
 }
 
+// The view the hook holding a handle's ref renders before its factory binds to
+// the handle: the server's render and the first client render. It comes from
+// the hook's own snapshot, so the server's markup and the hydrating render
+// agree.
+const publishedViews = new WeakMap<HandleRef, ResizeHandleView>();
+
+/** The hook holding `ref` publishes the view its region renders, or clears it. */
+export function publishHandleView(
+  ref: unknown,
+  view: ResizeHandleView | null,
+): void {
+  if (typeof ref !== 'object' || ref == null) {
+    return;
+  }
+  if (view == null) {
+    publishedViews.delete(ref as HandleRef);
+  } else {
+    publishedViews.set(ref as HandleRef, view);
+  }
+}
+
+/** The view the hook holding `ref` published, if any. */
+export function readPublishedHandleView(ref: unknown): ResizeHandleView | null {
+  return typeof ref === 'object' && ref != null
+    ? (publishedViews.get(ref as HandleRef) ?? null)
+    : null;
+}
+
 /** Whether ResizeHandle renders `element`. */
 export function isClaimedResizeHandle(element: Element): boolean {
   return claims.has(element);

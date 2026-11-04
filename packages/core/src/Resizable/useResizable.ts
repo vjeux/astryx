@@ -46,7 +46,7 @@ import {
   DEFAULT_COLLAPSED_SIZE,
   type ResizableDirection,
 } from './resizableModel';
-import {watchHandleRef} from './resizeGesture';
+import {publishHandleView, watchHandleRef} from './resizeGesture';
 import {
   createRegionPaneSlot,
   registerPropsRegion,
@@ -691,6 +691,24 @@ function useResizableController(
       ? 0
       : snapshot.expandedSize
     : snapshot.size;
+  // Until the factory binds to the handle, the handle renders this view. So
+  // the separator announces the region in the server's markup and in the
+  // first client render, which reads the same snapshot. The hook's component
+  // renders before the handle it names, as when it renders that handle.
+  if (ref !== NO_HANDLE) {
+    publishHandleView(ref, {
+      size,
+      isCollapsed,
+      minPx: snapshot.minPx,
+      effectiveMaxPx: snapshot.effectiveMaxPx,
+      isDragging: false,
+      direction: options.direction ?? 'horizontal',
+      isReversed: options.isReversed ?? false,
+      isDisabled: options.isDisabled ?? false,
+    });
+  }
+  // Syncs the handle-ref seam: the view this hook published goes with it.
+  useIsomorphicLayoutEffect(() => () => publishHandleView(ref, null), [ref]);
 
   const getResizable = useCallback(() => slot.get()?.resizable ?? null, [slot]);
   const collapse = useCallback(() => {

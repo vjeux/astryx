@@ -63,6 +63,7 @@ import {
   createResizeGesture,
   createResizeHandleClaim,
   notifyHandleRef,
+  readPublishedHandleView,
   releaseResizeHandle,
   type ResizeGesture,
   type ResizeGestureModel,
@@ -527,8 +528,22 @@ export function ResizeHandle({
   }, [claim]);
 
   // A `resizable` prop wins over a bound factory: it is the region the caller
-  // named on this element.
-  const view = resizable != null ? null : bound;
+  // named on this element. Before the factory binds, in the server's render
+  // and the first client render, the handle renders the view its hook
+  // published. It adds its own isReversed and isDisabled, as the factory does.
+  const published =
+    resizable != null || bound != null ? null : readPublishedHandleView(ref);
+  const view =
+    resizable != null
+      ? null
+      : (bound ??
+        (published == null
+          ? null
+          : {
+              ...published,
+              isReversed: published.isReversed || isReversed,
+              isDisabled: published.isDisabled || isDisabled,
+            }));
   // The handle's own isReversed and isDisabled apply to the region it renders
   // (with the region's own options: either one reverses or disables it).
   useIsomorphicLayoutEffect(() => {
