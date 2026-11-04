@@ -189,7 +189,7 @@ export const docs = {
       {
         guidance: true,
         description:
-          'Leave a little room around a block trigger: a held finger grows it from its center, by about 7%, until the menu closes.',
+          'Leave a little room around a block trigger: a held finger grows it from its center, by about 7%, while the menu is up.',
       },
       {
         guidance: false,
