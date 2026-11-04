@@ -76,7 +76,7 @@ const menuItemStyles = stylex.create({
       // sets the variable on the menu. Then only the lit row keeps the look.
       '@media (hover: hover)': {
         default: null,
-        ':active:where(:not(:disabled,[aria-disabled="true"]))': `var(--_menu-row-active-paint, ${colorVars['--color-overlay-pressed']})`,
+        ':active:where(:not(:disabled,[aria-disabled="true"]))': colorVars['--color-overlay-pressed'],
       },
     },
     borderWidth: 0,
