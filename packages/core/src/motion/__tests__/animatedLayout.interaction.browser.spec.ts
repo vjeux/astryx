@@ -2889,6 +2889,8 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       .arrived { display: inline-block; transition: opacity 1000ms linear; }
       @starting-style { .arrived { opacity: 0; } }`,
     );
+    // NOT FOR LANDING: 150 ms more between the page's load and the read.
+    await page.waitForTimeout(150);
     const result = await page.evaluate(async () => {
       const area = document.querySelector('#area');
       const row = document.querySelector('#row') as HTMLElement;
