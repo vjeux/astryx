@@ -46,8 +46,12 @@ import {
 import {SideNavCollapseButton} from './SideNavCollapseButton';
 import {useSideNavRenderMode} from './SideNavRenderContext';
 import {MobileNav} from '../MobileNav/MobileNav';
-import {useResizable} from '../Resizable/useResizable';
-import type {ResizableConfig} from '../Resizable/useResizable';
+import {
+  isResizableRegion,
+  useResizable,
+  type ResizableConfig,
+  type ResizableRegion,
+} from '../Resizable/useResizable';
 import {ResizeHandle} from '../Resizable/ResizeHandle';
 import {themeProps} from '../utils/themeProps';
 import {SizeProvider} from '../SizeContext/SizeContext';
@@ -168,6 +172,35 @@ function describeCollapseConflict(
     `same collapse state. resizable wins; the collapsible ` +
     `${collapsibleKeys.length === 1 ? 'value is' : 'values are'} ignored.`
   );
+}
+
+/**
+ * The collapse config when `resizable` is useResizable's output. The region
+ * owns the collapse state, so `collapsible`'s own state keys are ignored and
+ * named in a development warning.
+ */
+function resolveRegionCollapseConfig(
+  collapsible: boolean | SideNavCollapsibleConfig,
+  region: ResizableRegion,
+): ResolvedCollapseConfig {
+  const fromCollapsible = typeof collapsible === 'object' ? collapsible : {};
+  const ignoredKeys = [
+    fromCollapsible.defaultIsCollapsed !== undefined && 'defaultIsCollapsed',
+    fromCollapsible.isCollapsed !== undefined && 'isCollapsed',
+    fromCollapsible.onCollapsedChange !== undefined && 'onCollapsedChange',
+  ].filter((key): key is string => key !== false);
+  return {
+    isCollapsible: region.props._collapsible ?? false,
+    defaultIsCollapsed: region.isCollapsed,
+    isCollapsed: undefined,
+    onCollapsedChange: undefined,
+    conflict:
+      ignoredKeys.length === 0
+        ? null
+        : `\`collapsible\` sets ${ignoredKeys.map(key => `\`${key}\``).join(', ')}, ` +
+          "but `resizable` is useResizable's output, which owns the " +
+          'collapse state. The rail follows the region, and these keys are ignored.',
+  };
 }
 
 // =============================================================================
@@ -397,12 +430,16 @@ export interface SideNavProps extends BaseProps<HTMLElement> {
    *   - `defaultIsCollapsed` / `isCollapsed` / `onCollapseChange` — collapse
    *     state, when `resizable` should own it rather than `collapsible`
    *
+   * - `useResizable()`'s output — the caller's region owns the width and the
+   *   collapse state. The rail follows its `isCollapsed`, the toggle calls
+   *   its `collapse` and `expand`, and its `autoSaveId` saves the width
+   *
    * When both props carry collapse state, `resizable` wins and a dev warning
    * names the conflicting keys.
    *
    * @default false
    */
-  resizable?: boolean | ResizableConfig;
+  resizable?: boolean | ResizableConfig | ResizableRegion;
 
   /**
    * Enables collapse behavior. The sidebar can be collapsed to a narrow
@@ -484,11 +521,22 @@ export function SideNav({
   const collapsibleConfig = typeof collapsible === 'object' ? collapsible : {};
   const hasCollapseButton = collapsibleConfig.hasButton ?? true;
 
+  // useResizable's output: the caller's region owns the width and collapse.
+  const ownerRegion = isResizableRegion(resizable) ? resizable : null;
   // Resizable config
-  const resizableConfig = typeof resizable === 'object' ? resizable : {};
+  const resizableConfig: ResizableConfig =
+    typeof resizable === 'object' && !isResizableRegion(resizable)
+      ? resizable
+      : {};
   const isResizable = !!resizable;
 
-  const collapseConfig = resolveCollapseConfig(collapsible, resizable);
+  const collapseConfig =
+    ownerRegion == null
+      ? resolveCollapseConfig(
+          collapsible,
+          isResizableRegion(resizable) ? false : resizable,
+        )
+      : resolveRegionCollapseConfig(collapsible, ownerRegion);
   const {isCollapsible, onCollapsedChange} = collapseConfig;
 
   useDevWarning(
@@ -547,7 +595,9 @@ export function SideNav({
     onCollapseChange: onCollapsedChange,
   });
 
-  const collapsed = resizableHook.isCollapsed;
+  // The region that sizes the rail: the caller's, or SideNav's own.
+  const region = ownerRegion ?? resizableHook;
+  const collapsed = region.isCollapsed;
 
   // A collapse or expand plays the rail's motion, except an app's change
   // before the rail's first paint. It is measured in the commit before the
@@ -752,11 +802,11 @@ export function SideNav({
     };
 
     if (next) {
-      resizableHook.collapse();
+      region.collapse();
     } else {
-      resizableHook.expand();
+      region.expand();
     }
-  }, [collapsed, resizableHook]);
+  }, [collapsed, region]);
 
   const showResizeHandle = isResizable && !collapsed;
 
@@ -875,7 +925,7 @@ export function SideNav({
 
   // When resizable, override the nav width via inline style
   const resizableNavStyle: React.CSSProperties | undefined = isResizable
-    ? {...(style ?? {}), width: collapsed ? undefined : resizableHook.size}
+    ? {...(style ?? {}), width: collapsed ? undefined : region.size}
     : style;
 
   const navElement = (
@@ -957,7 +1007,7 @@ export function SideNav({
           pillPlacement="end"
           isAlwaysVisible={false}
           xstyle={styles.resizableHandle}
-          resizable={resizableHook.props}
+          resizable={region}
           label={t('@astryx.sideNav.resizeSidebar')}
           aria-controls={navId}
         />
