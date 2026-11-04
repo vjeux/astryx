@@ -840,7 +840,7 @@ export function createMenuPressCore(source: MenuPressSource): MenuPressCore {
  * press-down handlers. A press-down that one of them stops or cancels starts
  * no press, so a page that cancels every press-down keeps plain clicks but
  * loses press-drag-release. It acts once the press-down bubbles to its
- * window, so a script's own press-down must set `bubbles: true`.
+ * document, so a script's own press-down must set `bubbles: true`.
  *
  * - The document tracks the pointer by `pointerId`. A finger's events stay
  *   with the element it landed on, so the menu never sees a finger that slid
@@ -905,11 +905,11 @@ export function createMenuPress(
   menu.setAttribute(MENU_PRESS_MARKER, '');
 
   // The press listens on the menu and the trigger themselves. It acts on a
-  // press-down once it bubbles to the window, the last stop of its way. The
-  // page's own handlers run first, React's delegated ones and the document's
-  // included, as a handler composed before the press did. A press-down that
-  // one of them stops or cancels starts no press. That window listener lives
-  // only while the press-down dispatches. A handler that forwards an event to the handle
+  // press-down once it reaches the document. The page's own handlers run
+  // first, React's delegated ones included, as a handler composed before the
+  // press did. A press-down that one of them stops or cancels starts no
+  // press. That document listener lives only while the
+  // press-down dispatches. A handler that forwards an event to the handle
   // methods takes it first, so the press sees each event once.
   const taken = new WeakSet<Event>();
   const take = (event: Event): boolean => {
@@ -919,30 +919,29 @@ export function createMenuPress(
     taken.add(event);
     return true;
   };
-  /** Runs `act` once `event` bubbles to its window; never if it is stopped. */
+  /** Runs `act` once `event` reaches its document; never if it is stopped. */
   const afterPageHandlers = (event: Event, act: () => void) => {
     const doc =
       (event.currentTarget as Node | null)?.ownerDocument ?? menu.ownerDocument;
     const view = doc.defaultView;
-    const end: EventTarget = view ?? doc;
     const settle = (reached: Event) => {
       // A press-down that a page handler dispatches during this one reaches
-      // the window first. Keep waiting for this one.
+      // the document first. Keep waiting for this one.
       if (reached !== event) {
         return;
       }
-      end.removeEventListener(event.type, settle);
+      doc.removeEventListener(event.type, settle);
       view?.clearTimeout(timer);
       act();
     };
     // Core's input stream (inputStream.ts) listens on the window's capture
     // phase, before the page's handlers. This press acts after them, so it
     // adds its own bubble listener.
-    end.addEventListener(event.type, settle);
-    // A press-down stopped on its way never reaches the window. Its listener
-    // goes at the next task.
+    doc.addEventListener(event.type, settle);
+    // A press-down stopped on its way never reaches the document. Its
+    // listener goes at the next task.
     const timer = view?.setTimeout(() => {
-      end.removeEventListener(event.type, settle);
+      doc.removeEventListener(event.type, settle);
     }, 0);
   };
   const onMenuPointerDown = (event: PointerEvent) => {
