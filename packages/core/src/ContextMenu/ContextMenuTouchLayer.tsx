@@ -25,7 +25,7 @@ import {
 
 /** What ContextMenu reaches of a mounted touch layer. */
 export interface ContextMenuTouchHandle {
-  /** The menu the press opened closed: the trigger springs back. */
+  /** The menu the press opened closed: the trigger returns. */
   release(): void;
   /** Whether the recognizer is timing a finger on the trigger. */
   isTracking(): boolean;
