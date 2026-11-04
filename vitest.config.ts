@@ -191,6 +191,8 @@ export default defineConfig({
           // in-suite, which hogged every core and starved these — see that file.)
           testTimeout: 30_000,
           hookTimeout: 30_000,
+          // Evidence arm, not for landing: busy loops beside each test body.
+          setupFiles: ['./scripts/evidence/pressure-setup.mjs'],
           // Build @astryxdesign/core once before workers fork. The build-theme
           // suites need a compiled core; doing it here (not per-suite in
           // parallel workers) avoids concurrent clean-and-build collisions that
