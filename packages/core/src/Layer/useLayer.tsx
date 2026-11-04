@@ -646,14 +646,28 @@ function failsAnchor(layer: HTMLElement, anchor: HTMLElement): boolean {
  * does not take effect at once, or when a later read finds it failing again.
  */
 function keepAnchorClear(layer: HTMLElement, anchor: HTMLElement | null): void {
+  // PROBE (not for landing): `__astryxLayerProbe` = 'off' skips this read.
+  const probe = globalThis as {
+    __astryxLayerProbe?: string;
+    __astryxLayerLog?: {t: number; kind: string}[];
+  };
+  if (probe.__astryxLayerProbe === 'off') {
+    return;
+  }
+  probe.__astryxLayerLog?.push({t: performance.now(), kind: 'read'});
   if (anchor && failsAnchor(layer, anchor)) {
     const switching = !layer.hasAttribute(LAYER_CLEARS_ANCHOR_ATTRIBUTE);
     layer.setAttribute(LAYER_CLEARS_ANCHOR_ATTRIBUTE, '');
+    probe.__astryxLayerLog?.push({
+      t: performance.now(),
+      kind: switching ? 'switch' : 'fails-again',
+    });
     // A switch usually takes effect at once. The engine may instead keep the
     // option it last used, even one the new list does not contain or one a
     // scroll has since made fail: then, and on any later read that finds the
     // switched layer failing again, place it afresh.
     if (!switching || failsAnchor(layer, anchor)) {
+      probe.__astryxLayerLog?.push({t: performance.now(), kind: 'afresh'});
       placeAfresh(layer);
     }
   }
@@ -825,6 +839,15 @@ function observeAnchorClearance(
   }
   let moveFrame: number | null = null;
   const stopObservingMove = observeMove(anchor, () => {
+    const probe = globalThis as {
+      __astryxLayerProbe?: string;
+      __astryxLayerLog?: {t: number; kind: string}[];
+    };
+    probe.__astryxLayerLog?.push({t: performance.now(), kind: 'move-report'});
+    // PROBE (not for landing): 'nomove' drops the re-read a move report asks.
+    if (probe.__astryxLayerProbe === 'nomove') {
+      return;
+    }
     if (moveFrame !== null) {
       return;
     }
