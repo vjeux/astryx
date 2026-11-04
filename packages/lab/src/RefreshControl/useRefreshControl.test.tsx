@@ -714,6 +714,61 @@ describe('useRefreshControl', () => {
     render(<p data-testid="refresh">Gone</p>);
   });
 
+  it('sets up the edge for content that mounts after the hook: its container is claimed near the top, given back when scrolled away, and given back when the content leaves', async () => {
+    function Late({isShown}: {isShown: boolean}) {
+      const control = useRefreshControl({
+        onRefresh: () => {},
+        announce: 'Refreshing',
+      });
+      return (
+        <div data-testid="list" ref={measured} style={{overflowY: 'auto'}}>
+          {isShown ? (
+            <div data-testid="refresh" ref={control.contentRef}>
+              <div ref={control.indicatorRef} aria-hidden />
+              <p>Inbox</p>
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+    const {rerender} = render(<Late isShown={false} />);
+    // The hook's own setup, two frames after it mounts, finds no content.
+    await act(async () => {
+      for (let frame = 0; frame < 3; frame += 1) {
+        await new Promise<void>(resolve => {
+          requestAnimationFrame(() => resolve());
+        });
+      }
+    });
+    const list = screen.getByTestId('list');
+    const onList = vi.spyOn(list, 'addEventListener');
+    const offList = vi.spyOn(list, 'removeEventListener');
+    rerender(<Late isShown />);
+    expect(list.style.overscrollBehaviorY).toBe('none');
+    expect(onList.mock.calls.filter(call => call[0] === 'scroll')).toHaveLength(
+      1,
+    );
+    // Scrolled away from the top, the container's edge is the browser's
+    // again; back at the top, the pull claims it again.
+    const scrollTo = (top: number) => {
+      list.scrollTop = top;
+      act(() => {
+        list.dispatchEvent(new Event('scroll'));
+      });
+    };
+    scrollTo(500);
+    expect(list.style.overscrollBehaviorY).toBe('');
+    scrollTo(0);
+    expect(list.style.overscrollBehaviorY).toBe('none');
+    rerender(<Late isShown={false} />);
+    expect(list.style.overscrollBehaviorY).toBe('');
+    expect(
+      offList.mock.calls.filter(call => call[0] === 'scroll'),
+    ).toHaveLength(1);
+    onList.mockRestore();
+    offList.mockRestore();
+  });
+
   it('ends a refresh that begins and ends before React renders: refresh() from a timer, with an onRefresh that settles at once', async () => {
     let refresh: () => void = () => {};
     function Probe() {
