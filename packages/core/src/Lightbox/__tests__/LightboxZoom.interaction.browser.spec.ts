@@ -968,6 +968,56 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
   // A compositor-only control animation in the same window: what the
   // compositor presented while the main thread spun, on this machine.
   await startBusyControl(page);
+  // POSITIVE CONTROL (local only, never committed): the photo's zoom runs on
+  // the main thread. Each keyframe's transform values move to custom
+  // properties, which the compositor never draws, and a rAF loop copies them
+  // back. The WAAPI animation still runs, so the harness waits for it as usual.
+  await page.evaluate(() => {
+    const w = window as unknown as {__mtWrites: number};
+    w.__mtWrites = 0;
+    const real = Element.prototype.animate;
+    const props = ['scale', 'translate', 'transform'];
+    Element.prototype.animate = function (
+      this: Element,
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions,
+    ) {
+      if (
+        this.closest('[data-harness-control]') != null ||
+        !Array.isArray(keyframes) ||
+        !keyframes.some(k => props.some(p => p in k))
+      ) {
+        return real.call(this, keyframes, options);
+      }
+      const moved = keyframes.map(k => {
+        const out: Record<string, unknown> = {...k};
+        for (const p of props) {
+          if (p in out) {
+            out[`--mt-${p}`] = out[p];
+            delete out[p];
+          }
+        }
+        return out as Keyframe;
+      });
+      const animation = real.call(this, moved, options);
+      const element = this as HTMLElement;
+      const step = () => {
+        const style = getComputedStyle(element);
+        for (const p of props) {
+          const value = style.getPropertyValue(`--mt-${p}`).trim();
+          if (value !== '') {
+            element.style.setProperty(p, value);
+            w.__mtWrites += 1;
+          }
+        }
+        if (animation.playState === 'running') {
+          requestAnimationFrame(step);
+        }
+      };
+      requestAnimationFrame(step);
+      return animation;
+    } as typeof Element.prototype.animate;
+  });
   const cast = await startScreencast(page);
   // The page itself waits for the zoom and blocks one frame into it. The
   // spring covers most of its travel early, and a round trip from the test
@@ -1035,6 +1085,11 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
   // the screencast share the core the block spins on. So every compositor
   // animation presents fewer frames there, the control's too. The photo keeps
   // pace with the control, and a main-thread animation would not.
+  const writes = await page.evaluate(
+    () => (window as unknown as {__mtWrites: number}).__mtWrites,
+  );
+  console.log(`CONTROL writes=${writes} tail=${tailSteps} verdict=${JSON.stringify(proof.verdict)}`);
+  expect(writes, 'the main-thread copy drove the photo').toBeGreaterThan(0);
   expect(proof.verdict.failures).toEqual([]);
   expect(proof.monotonic).toBe(true);
 });
