@@ -24,30 +24,13 @@ import {useIsomorphicLayoutEffect} from './useIsomorphicLayoutEffect';
  * or the document. A replaced node is released and the new one attached, a
  * changed `key` re-attaches, and the last attachment is released on unmount;
  * a commit that changes neither does nothing (react-component-runtime INV3).
- * With `followsDocument`, a node that moves to another document is released
- * and attached again.
  */
 export function useAttachment<T extends Node = Element>(
   ref: RefObject<T | null>,
   attach: (element: T) => () => void,
   key: unknown,
-  options?: AttachmentOptions,
 ): void {
-  useAttachedNodes(
-    [ref],
-    ([node]) => attach(node as T),
-    key,
-    options?.followsDocument === true,
-  );
-}
-
-/** What else an attachment follows, besides its node and its key. */
-export interface AttachmentOptions {
-  /**
-   * Attach again when the node moves to another document, for an attachment
-   * that listens on the node's document.
-   */
-  readonly followsDocument?: boolean;
+  useAttachedNodes([ref], ([node]) => attach(node as T), key);
 }
 
 /**
@@ -67,24 +50,21 @@ export function useAttachmentPair<A extends Element, B extends Element>(
     [firstRef, secondRef],
     ([first, second]) => attach(first as A, second as B),
     key,
-    false,
   );
 }
 
 /**
- * The lifecycle both share: one attachment of the nodes the refs hold. It
- * attaches once every node is there. It releases the attachment at unmount
- * and when a node or `key` changes, or with `followsDocument`, a document.
+ * The lifecycle both share: one attachment of the nodes the refs hold. It is
+ * made once every node is there, and released when a node or `key` changes
+ * and at unmount.
  */
 function useAttachedNodes(
   refs: ReadonlyArray<RefObject<Node | null>>,
   attach: (nodes: ReadonlyArray<Node>) => () => void,
   key: unknown,
-  followsDocument: boolean,
 ): void {
   const attachmentRef = useRef<{
     nodes: ReadonlyArray<Node>;
-    documents: ReadonlyArray<Document | null>;
     key: unknown;
     release: () => void;
   } | null>(null);
@@ -96,11 +76,7 @@ function useAttachedNodes(
     if (
       current != null &&
       current.key === key &&
-      nodes.every(
-        (node, index) =>
-          node === current.nodes[index] &&
-          (!followsDocument || node.ownerDocument === current.documents[index]),
-      )
+      nodes.every((node, index) => node === current.nodes[index])
     ) {
       return;
     }
@@ -108,7 +84,6 @@ function useAttachedNodes(
     attachmentRef.current = nodes.every(node => node != null)
       ? {
           nodes: nodes,
-          documents: nodes.map(node => node.ownerDocument),
           key,
           release: attach(nodes),
         }
