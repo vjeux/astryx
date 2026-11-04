@@ -869,32 +869,25 @@ export function Lightbox({
     },
   });
 
-  // Whether a point is on the current page's media. That is inside its
-  // caption's own box, or in its photo's or video's rows across the width of
-  // both. So a click beside a narrow photo, within its caption's width, stays
-  // on the media. The band between the photo and the caption row does not.
-  // The photo takes no pointer events, so a press on it lands on its box. An
-  // element with no size yet (a photo still loading) counts for nothing.
+  // Whether a point is on the current page's media group: its photo or video
+  // and its caption, as one box. The photo takes no pointer events, so a
+  // press on it lands on its box. An element with no size yet (a photo still
+  // loading) adds nothing to the box.
   const isOnCurrentMedia = (x: number, y: number) => {
     const page = imageWrapperRef.current?.querySelector('[data-current]');
-    const sized = (element: Element | null | undefined) => {
-      const r = element?.getBoundingClientRect();
-      return r != null && r.width > 0 && r.height > 0 ? r : null;
-    };
-    const media =
-      sized(page?.querySelector('img')) ?? sized(page?.querySelector('video'));
-    const caption = sized(page?.querySelector('[data-lightbox-caption]'));
-    const boxes = [media, caption].filter((r): r is DOMRect => r != null);
-    const inRows = (r: DOMRect | null) =>
-      r != null && y >= r.top && y <= r.bottom;
+    const boxes = [
+      page?.querySelector('img'),
+      page?.querySelector('video'),
+      page?.querySelector('[data-lightbox-caption]'),
+    ]
+      .map(element => element?.getBoundingClientRect())
+      .filter((r): r is DOMRect => r != null && r.width > 0 && r.height > 0);
     return (
-      (inRows(caption) &&
-        caption != null &&
-        x >= caption.left &&
-        x <= caption.right) ||
-      (inRows(media) &&
-        x >= Math.min(...boxes.map(r => r.left)) &&
-        x <= Math.max(...boxes.map(r => r.right)))
+      boxes.length > 0 &&
+      x >= Math.min(...boxes.map(r => r.left)) &&
+      x <= Math.max(...boxes.map(r => r.right)) &&
+      y >= Math.min(...boxes.map(r => r.top)) &&
+      y <= Math.max(...boxes.map(r => r.bottom))
     );
   };
   // Without zoom, a gallery's stage fills the viewer. So a finger's or a
@@ -1076,7 +1069,7 @@ export function Lightbox({
   // the photo row.
   const unrenderedCaptions = isGallery
     ? mediaArray.flatMap((item, i) =>
-        isRenderable(item.caption) && !pageIndexes.includes(i) ? [i] : [],
+        item.caption && !pageIndexes.includes(i) ? [i] : [],
       )
     : [];
 
