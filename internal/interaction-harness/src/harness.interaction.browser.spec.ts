@@ -4801,7 +4801,7 @@ test.describe('page freeze', () => {
       );
     });
     // Over before the freeze, and read only after the thaw.
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(0);
     const frozenAt = Date.now();
     await freezePage(page);
     await page.waitForTimeout(600);
@@ -4825,7 +4825,7 @@ test.describe('page freeze', () => {
         {duration: 60_000, easing: 'linear'},
       );
     });
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(0);
     // Where the run started, on the page's clock, before any freeze.
     const startedAt = await page.evaluate(() =>
       Number((window as unknown as {run: Animation}).run.startTime),
