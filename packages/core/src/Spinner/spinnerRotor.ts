@@ -48,7 +48,7 @@ export const spinnerRotorStyles = stylex.create({
     // broken. The ring's role and name still say that work is busy.
     animationDuration: {
       // The loop reads the duration before a theme's tempo scales it.
-      default: `calc(var(--_astryx-pre-tempo-duration-slow-min, ${durationVars['--duration-slow-min']}) * ${TURNS_PER_ITERATION})`,
+      default: `var(--_astryx-pre-tempo-duration-slow-min, ${durationVars['--duration-slow-min']})`,
       '@media (prefers-reduced-motion: reduce)': `calc(3s * ${TURNS_PER_ITERATION})`,
     },
     animationIterationCount: 'infinite',
