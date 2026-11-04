@@ -283,7 +283,11 @@ after are the stall check's. WebKit has no such trace:
 **No Layout / Paint.** `traceRendering` records a Chromium trace around the
 interaction; `countBetween` counts the steady middle of an animation (its
 first and last frames may commit). A transform/opacity animation does no
-Layout or Paint there; a layout-property animation does one per frame. Its
+Layout or Paint there; a layout-property animation does one per frame. The
+animation recorder's frame loop stops while a trace runs: each frame it
+requests updates the page's rendering, and an anchored layer then lays out.
+The frame it requested before the trace runs before the start mark. A frame
+loop of the page's own has the same cost, which the trace counts. Its
 `longTasks` are the page's own: only a task the harness marked as its own read
 (`waitForAnimation` describing keyframes, `blockMainThread` without `during`)
 is in `devtoolsTasks` instead, and only when no page script ran inside it. A

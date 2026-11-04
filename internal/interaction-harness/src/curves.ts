@@ -203,15 +203,27 @@ function animationRecorder(): void {
       return entry.startedAt == null && entry.animation.playState !== 'idle';
     });
   };
-  const tick = () => {
-    record();
-    frame(tick);
+  // The frame loop. Each frame it requests updates the page's rendering, and
+  // an anchored layer then lays out again. So the loop stops while a
+  // rendering trace counts the page's own work (`pause`). Each start of the
+  // loop gets its own generation, so a loop that was stopped never runs again.
+  let generation = 0;
+  const loop = (own: number) => {
+    const tick = () => {
+      if (own !== generation) {
+        return;
+      }
+      record();
+      frame(tick);
+    };
+    return tick;
   };
+  let isTicking = true;
   // What already runs when the recorder starts (a spinner on a page the
   // harness touches for the first time) is seen now, before any watch arms;
   // first seen a frame later, it would read as started by the watched action.
   record();
-  frame(tick);
+  frame(loop(generation));
   // A start event with nothing left to read: a CSS animation shorter than the
   // gap between two of the page's frames can start and finish inside it, and
   // WebKit sends its start event only at the next frame, when
@@ -342,6 +354,27 @@ function animationRecorder(): void {
       return armedAt;
     },
     armedAt: () => armedAt,
+    // Stops the frame loop; returns whether it ran. Start events and
+    // `Element.animate` still record while it is stopped.
+    pause: () => {
+      const wasTicking = isTicking;
+      isTicking = false;
+      generation += 1;
+      return wasTicking;
+    },
+    // Starts the frame loop again, and records what started meanwhile. An
+    // animation made with `new Animation()` that started and ended meanwhile
+    // is missed. It sends no event, and `getAnimations()` no longer lists it
+    // unless it fills.
+    resume: () => {
+      if (isTicking) {
+        return;
+      }
+      isTicking = true;
+      generation += 1;
+      record();
+      frame(loop(generation));
+    },
     // Drops every animation the log holds, with the elements and ancestors
     // they keep alive; later waits record afresh.
     release: () => {

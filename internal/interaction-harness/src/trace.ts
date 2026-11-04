@@ -16,12 +16,15 @@
  *
  * Counting is scoped to the renderer main thread that ran the page's own
  * `performance.mark` calls, and to the time between the start and end marks,
- * so other pages, the browser process and setup work are excluded.
+ * so other pages, the browser process and setup work are excluded. The
+ * animation recorder's frame loop stops for the trace: each frame it requests
+ * updates the page's rendering, which the trace would count.
  *
  * SYNC: Keep RENDERING_EVENTS equal to the README's list.
  */
 
 import type {CDPSession, Page} from '@playwright/test';
+import {frames} from './story';
 
 /**
  * The mark a harness function puts on its own page-side work
@@ -123,10 +126,31 @@ export interface TraceEvent {
   args?: Record<string, unknown>;
 }
 
+/** Stops the animation recorder's frame loop, if it runs on the page. */
+function pauseAnimationRecorder(page: Page): Promise<boolean> {
+  return page.evaluate(
+    () =>
+      (
+        window as unknown as {
+          __harnessAnimations?: {pause?: () => boolean};
+        }
+      ).__harnessAnimations?.pause?.() ?? false,
+  );
+}
+
+/** Starts the animation recorder's frame loop again. */
+async function resumeAnimationRecorder(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    (
+      window as unknown as {__harnessAnimations?: {resume?: () => void}}
+    ).__harnessAnimations?.resume?.(),
+  );
+}
+
 /**
  * Traces the page while `body` runs and counts the rendering work its main
  * thread did between a start mark (placed just before `body`) and an end mark
- * (just after).
+ * (just after). The animation recorder's frame loop stops for that time.
  */
 export async function traceRendering(
   page: Page,
@@ -158,9 +182,23 @@ export async function traceRendering(
       n => performance.timeOrigin + performance.mark(n).startTime,
       name,
     );
-  const fromEpoch = await mark(`${tag}:start`);
-  await body();
-  const toEpoch = await mark(`${tag}:end`);
+  const isRecorderPaused = await pauseAnimationRecorder(page);
+  let fromEpoch: number;
+  let toEpoch: number;
+  try {
+    // The frame the recorder requested before its pause runs now, before the
+    // start mark.
+    if (isRecorderPaused) {
+      await frames(page, 1);
+    }
+    fromEpoch = await mark(`${tag}:start`);
+    await body();
+    toEpoch = await mark(`${tag}:end`);
+  } finally {
+    if (isRecorderPaused) {
+      await resumeAnimationRecorder(page);
+    }
+  }
   await cdp.send('Tracing.end');
   await complete;
   await cdp.detach().catch(() => {});

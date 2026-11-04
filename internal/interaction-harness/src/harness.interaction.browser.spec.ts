@@ -1383,6 +1383,69 @@ test.describe('frame evidence', () => {
     expect(top.counts.Layout ?? 0).toBeGreaterThanOrEqual(top.frames - 1);
   });
 
+  test('the trace stops the animation recorder: with it armed, an anchored layer that animates its transform counts no Layout', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'rendering traces are Chromium-only (README: engine limits)',
+    );
+    // An anchored layer lays out again in every frame the page updates its
+    // rendering, and the recorder's frame loop requests one each frame.
+    await page.setContent(
+      `<style>body { margin: 0; } #anchor { anchor-name: --a; position: absolute; left: 40px; top: 40px; width: 80px; height: 40px; } #layer { position: absolute; position-anchor: --a; top: anchor(bottom); left: anchor(left); width: 160px; height: 120px; background: #ddd; }</style><button id="anchor">Anchor</button><div id="layer"></div>`,
+    );
+    const layer = page.locator('#layer');
+    await layer.evaluate(el => {
+      el.animate([{transform: 'scale(1)'}, {transform: 'scale(1.2)'}], {
+        duration: 3000,
+        iterations: Infinity,
+        direction: 'alternate',
+      });
+    });
+    // Arms the recorder: from here its frame loop runs.
+    await waitForAnimation(layer);
+    await frames(page, 3);
+    const steady = (trace: Awaited<ReturnType<typeof traceRendering>>) =>
+      countBetween(trace, trace.window.from + 100, trace.window.to - 100)
+        .Layout ?? 0;
+    const quiet = await traceRendering(page, () => page.waitForTimeout(500));
+    // None over the whole window: the frame the recorder requested before the
+    // trace runs before the start mark.
+    expect(quiet.layout).toBe(0);
+    // Control: a frame loop of the page's own makes the layer lay out each
+    // frame, and the trace counts it.
+    const busy = await traceRendering(page, async () => {
+      await page.evaluate(() => {
+        const end = performance.now() + 500;
+        const frame = () => {
+          if (performance.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        };
+        requestAnimationFrame(frame);
+      });
+      await page.waitForTimeout(500);
+    });
+    expect(steady(busy)).toBeGreaterThan(10);
+    // The recorder's frame loop runs again after a trace. An animation made
+    // without `Element.animate` sends no event, so only that loop records it.
+    const isRecorded = await layer.evaluate(async el => {
+      const animation = new Animation(
+        new KeyframeEffect(el, [{opacity: 1}, {opacity: 0.5}], 2000),
+      );
+      animation.play();
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return (
+        window as unknown as {
+          __harnessAnimations: {log: {animation: Animation}[]};
+        }
+      ).__harnessAnimations.log.some(entry => entry.animation === animation);
+    });
+    expect(isRecorded).toBe(true);
+  });
+
   test('the compositor record refuses another open page, whose frames it could not tell apart', async ({
     page,
     browserName,
