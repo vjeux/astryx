@@ -208,7 +208,7 @@ export interface MonthPaneProps {
  * outside the scroller or the pager, so they never scroll away. Each day
  * carries its weekday in its accessible name instead.
  */
-export const MonthPane = memo(function MonthPane({
+export const MonthPane = (function MonthPane({
   monthModel,
   monthIndex,
   insetInlineStart,
