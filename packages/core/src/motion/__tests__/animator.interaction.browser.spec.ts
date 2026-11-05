@@ -188,7 +188,8 @@ async function blockedRun(
     return performance.timeOrigin + Number(animation?.startTime ?? NaN);
   });
   const secondStart = await startSecondControl(page);
-  const cast = await startScreencast(page);
+  // NOT FOR LANDING: one frame in six, a loaded runner's sparse cast.
+  const cast = await startScreencast(page, {everyNthFrame: 6});
   // The curve starts when the browser commits it (handle.started).
   const start = await page.evaluate(
     async ({spring: s, travel}) => {
