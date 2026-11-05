@@ -45,7 +45,6 @@
 
 import React, {
   useCallback,
-  useEffect,
   useId,
   lazy,
   useMemo,
@@ -62,7 +61,7 @@ import {useLayerInternal} from '../Layer/useLayer';
 import {LayerDepthProvider} from '../Layer/LayerDepthContext';
 import {useLayerDismissal} from '../Layer/useLayerDismissal';
 import {currentGesture} from '../Layer/gestureCounter';
-import {noteOutsideDismissal, useOutsidePress} from '../Layer/outsidePress';
+import {useOutsidePress} from '../Layer/outsidePress';
 import {MenuBottomSheetActionList} from '../DropdownMenu/MenuBottomSheetActionList';
 import {menuBottomSheetStyles} from '../DropdownMenu/menuBottomSheet.stylex';
 import {renderDropdownItems} from '../DropdownMenu/renderDropdownItems';
@@ -83,6 +82,7 @@ import {useInternalListFocus} from '../hooks/useListFocus';
 import {useLongPress} from '../hooks/useLongPress';
 import {useMenuPress} from '../hooks/useMenuPress';
 import {useTypeahead} from '../hooks/useTypeahead';
+import {shadowHostOf} from '../utils/flatTree';
 import {usePresentation} from '../utils/presentation';
 import {
   ContextMenuTouchLayer,
@@ -432,9 +432,9 @@ export function ContextMenu({
   );
 
   const outsidePress = useOutsidePress();
-  // Starts the touch outside watch as the menu shows. It is set below, where
+  // Starts the outside-press watch as the menu shows. It is set below, where
   // the menu's list and its close exist.
-  const watchTouchOutsideRef = useRef<() => void>(() => {});
+  const watchOutsideRef = useRef<() => void>(() => {});
   const layer = useLayerInternal({
     mode: 'context',
     // Mounted at the first open and kept (see the file header).
@@ -454,7 +454,7 @@ export function ContextMenu({
     onShow: useCallback(() => {
       setIsOpen(true);
       onOpenChange?.(true);
-      watchTouchOutsideRef.current();
+      watchOutsideRef.current();
       const focusTarget = focusOnShowRef.current;
       if (focusTarget != null) {
         focusOnShowRef.current = null;
@@ -539,55 +539,19 @@ export function ContextMenu({
       ),
   });
 
-  // Dismiss on any click outside the menu. We use popover="manual" (not
-  // "auto") because the native light-dismiss treats the mouseup from the
-  // opening right-click as a dismiss event. Handling it ourselves via
-  // mousedown avoids that race. A touch's compatibility mousedown for the
-  // press that opened the menu (sent mid-hold by iOS, or as a long press
-  // lifts by Chromium) belongs to that press's gesture, so it is not read as
-  // a press outside; any later press is a new gesture and closes as before.
-  useEffect(() => {
-    if (!isOpen || usesBottomSheet) {
-      return;
-    }
-    // Inside a shadow root, even a closed or nested one, the document sees a
-    // press on the menu as a press on an outer shadow host, so the menu's own
-    // tree judges its presses first and the document skips those.
-    const tree = listRef.current?.getRootNode();
-    const shadow = tree instanceof ShadowRoot ? tree : null;
-    const judged = new WeakSet<Event>();
-    const handleClickOutside = (e: Event) => {
-      const menu = listRef.current;
-      if (judged.has(e)) {
-        return;
-      }
-      judged.add(e);
-      if (currentGesture() === openingGestureRef.current) {
-        return;
-      }
-      if (menu && !menu.contains(e.target as Node)) {
-        noteOutsideDismissal(menu.ownerDocument);
-        closeMenu();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    shadow?.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      shadow?.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, closeMenu, listRef, usesBottomSheet]);
-
-  // Under the touch model, a touch outside the open menu closes it as it
-  // begins to pan, or at its lift. The page stays free to scroll. A press
-  // that opens the menu, or moves it, keeps it open at its lift.
-  watchTouchOutsideRef.current = () => {
+  // The menu is a manual popover: native light dismiss would read the mouseup
+  // of the opening right-click as a press outside. So one watch closes it. A
+  // mouse or a pen closes it at the press. Under the touch model, a touch
+  // closes it as it begins to pan, or at its lift, and the page stays free to
+  // scroll. Otherwise a touch closes it at its compatibility mousedown. The
+  // press that opened the menu keeps it open.
+  watchOutsideRef.current = () => {
     const trigger = triggerRef.current;
-    if (!touchModes || trigger == null) {
+    if (trigger == null) {
       return;
     }
     // The menu mounts after its first show, so each press reads it then. It
-    // renders in the trigger's own root.
+    // renders in the trigger's own root, which may be another window's.
     const root = trigger.getRootNode();
     outsidePress.start(
       trigger,
@@ -598,9 +562,10 @@ export function ContextMenu({
         }
       },
       {
-        pointerTypes: ['touch'],
-        closesOnPan: true,
-        root: root instanceof ShadowRoot ? root : null,
+        pointerTypes: touchModes ? ['touch'] : [],
+        closesOnPan: touchModes,
+        pressTypes: touchModes ? ['mouse', 'pen'] : ['mouse', 'pen', 'touch'],
+        root: shadowHostOf(root) != null ? root : null,
       },
     );
   };

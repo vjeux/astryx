@@ -470,7 +470,9 @@ describe('ContextMenu', () => {
         fireEvent.pointerDown(item, onItem);
         fireEvent.pointerUp(item, onItem);
         expect(HTMLElement.prototype.hidePopover).not.toHaveBeenCalled();
-        // A press on the host itself is outside the menu.
+        // A mouse press on the host itself is outside the menu. Its
+        // pointerdown comes first, as a browser sends it.
+        fireEvent.pointerDown(host, {pointerType: 'mouse', pointerId: 3});
         fireEvent.mouseDown(host);
         expect(HTMLElement.prototype.hidePopover).toHaveBeenCalled();
         // A touch on the host closes the menu at its lift.
