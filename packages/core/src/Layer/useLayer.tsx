@@ -5,7 +5,8 @@
 /**
  * @file useLayer.tsx
  * @input Uses React hooks, Popover API (its `beforetoggle`/`toggle` events through the popoverOperations ledger), CSS anchor positioning, shared text/provider boundaries
- * @output Exports the public useLayer hook plus internal trigger helpers.
+ * @output Exports the public useLayer hook plus internal trigger helpers, and
+ *   `observeLayerResettle`, the watcher a layer-bound measurement subscribes to.
  * @position Core layer utility; used by useHoverCard, useTooltip, etc.
  *
  * SYNC: When modified, update:
@@ -698,36 +699,54 @@ function observeMove(element: HTMLElement, onMove: () => void): () => void {
 }
 
 /**
- * Watch an open layer that keeps its anchor clear, and its anchor, for every
- * change that can re-settle the layer over the anchor or give it a scroll
- * range (spec:AST-059 FR4, FR8): the layer, its content or the anchor
- * resizing (ResizeObserver, before paint), the viewport resizing (before
- * paint), and the anchor moving on screen without resizing, in layout or by a
- * scroll (`observeMove`, reported after paint). Each calls `keepAnchorClear`
- * for this layer and anchor while `isCurrent` says they are still the live
- * pair. A move is read in the next animation frame, not in the task that
- * reports it: placing the layer afresh there, right after the frame that
- * scrolled its anchor, lets Chromium lay it out for one more frame against
- * the anchor's position before the scroll, over the anchor, so the second
- * painted frame would still cover it. Read in the next frame, before it
- * paints, the fresh placement uses the moved anchor. Reports in one frame
- * share one read. Returns the function that removes every observer and
- * listener it added.
+ * Keep an open layer clear of its anchor (spec:AST-059 FR4, FR8). On every
+ * change `observeLayerResettle` reports, call `keepAnchorClear` for this
+ * layer and anchor, while `isCurrent` says they are still the live pair.
+ * Returns the function that removes every observer and listener it added.
  */
 function observeAnchorClearance(
   layer: HTMLElement,
   anchor: HTMLElement,
   isCurrent: () => boolean,
 ): () => void {
+  return observeLayerResettle(layer, anchor, () => {
+    if (isCurrent()) {
+      keepAnchorClear(layer, anchor);
+    }
+  });
+}
+
+/**
+ * Calls `onResettle` on every change that can re-settle an open layer over
+ * its anchor. The layer, its children or the anchor resizing, and the
+ * viewport resizing, report before paint (ResizeObserver, the window's
+ * `resize`). The anchor moving on screen at the same size, in layout or by a
+ * scroll, is read in the next animation frame. `observeMove` reports that
+ * move after paint. A fresh placement in the report's own task would come
+ * right after the frame that scrolled the anchor. Chromium would then lay the
+ * layer out for one more frame against the anchor's old position, over the
+ * anchor. The second painted frame would still cover it. Read in the next
+ * frame, before it paints, the fresh placement uses the moved anchor. Reports
+ * in one frame share one read.
+ *
+ * One watcher for the question "what re-settles a layer": the runtime's own
+ * anchor clearance and a component's layer-bound measurement both subscribe
+ * here. A subscriber reads fresh layout in its callback, never state another
+ * subscriber writes, so the order of subscriptions does not matter. A layer
+ * that keeps its anchor clear has the runtime rewrite its placement, so a
+ * subscriber there must not read it. Returns the function that removes every
+ * observer and listener it added.
+ */
+export function observeLayerResettle(
+  layer: HTMLElement,
+  anchor: HTMLElement,
+  onResettle: () => void,
+): () => void {
   const view = layer.ownerDocument.defaultView;
   if (!view) {
     return () => {};
   }
-  const reread = () => {
-    if (isCurrent()) {
-      keepAnchorClear(layer, anchor);
-    }
-  };
+  const reread = onResettle;
   let observer: ResizeObserver | null = null;
   if (typeof ResizeObserver !== 'undefined') {
     observer = new ResizeObserver(reread);
