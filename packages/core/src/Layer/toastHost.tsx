@@ -150,7 +150,6 @@ export function createToastQueue(): ToastQueue {
         // A toast dismissed while it waits still reports its hide, as the
         // viewport reports one for a toast that has not rendered yet. A
         // replaced or ignored namesake is not waiting, so it reports none.
-        entry.options.onHide?.(reason);
       },
       findByUniqueID: uniqueID =>
         viewport == null
