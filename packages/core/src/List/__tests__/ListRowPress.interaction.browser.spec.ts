@@ -250,6 +250,7 @@ test('a held row paints the pressed token and its release follows the exit easin
   await driver.play(tap(center, {holdMs: HOLD_MS}));
   expect(await pressState(row)).toBe('fading');
   await freezeTimers(page);
+  await page.waitForTimeout(200);
   const held = await holdAnimations(page, row);
   const release = held.find(
     a => a.target?.startsWith('li') && a.kind === 'CSSAnimation',
