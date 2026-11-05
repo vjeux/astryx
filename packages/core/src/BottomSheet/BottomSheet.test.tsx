@@ -2851,6 +2851,117 @@ describe('BottomSheet', () => {
         expect(subscribe).not.toHaveBeenCalled();
         subscribe.mockRestore();
       });
+
+      describe('on a slow phone, whose reports of the hide come after Gboard\u2019s slide', () => {
+        // One clock for event times and the guide's own reads, as in a
+        // browser, so the guide's check after the slide runs on time.
+        let restoreNow: (() => void) | null = null;
+        beforeEach(() => {
+          const now = vi
+            .spyOn(window.performance, 'now')
+            .mockImplementation(() => Date.now());
+          restoreNow = () => now.mockRestore();
+        });
+        afterEach(() => {
+          restoreNow?.();
+          restoreNow = null;
+        });
+        const wait = async (ms: number) =>
+          act(async () => {
+            await new Promise(resolve => setTimeout(resolve, ms));
+          });
+        // Where the content is drawn at rest: its translate, less the body's
+        // scroll.
+        const drawnTopOf = (body: HTMLElement, content: HTMLElement) => {
+          const [, y = '0px'] = content.style.translate.split(' ');
+          return Number.parseFloat(y) - body.scrollTop;
+        };
+
+        it('keeps the content where the slide leaves it until the keyboard\u2019s report of its hide, then clears the room with nothing drawn moving', async () => {
+          const {body, content, input, report} = renderChromeSheet({
+            instantScrollBy: true,
+          });
+          act(() => input.focus());
+          report(500);
+          await afterTheSlide();
+          expect(drawnTopOf(body, content)).toBe(-248);
+
+          // Done: the field loses focus to nothing, and Gboard slides down. The
+          // page is busy, as on a phone at a quarter of the speed. Chrome's
+          // reports reach it 603 ms after the blur, with the keyboard partway down, and 1119 ms after it, with the keyboard gone.
+          act(() => input.blur());
+          // The slide has ended and Chrome has reported nothing yet. The
+          // content stays where the scroll from before the keyboard draws it,
+          // and the room and the scroll stay.
+          await wait(250);
+          expect(drawnTopOf(body, content)).toBe(0);
+          expect(keyboardInsetOf(body)).toBe(348);
+          expect(body.scrollTop).toBe(248);
+          // The keyboard partway down moves nothing.
+          await wait(353);
+          report(543);
+          expect(drawnTopOf(body, content)).toBe(0);
+          // The keyboard gone: in one commit the room drops, the scroll goes
+          // back and the translate clears, so nothing drawn moves.
+          await wait(516);
+          report(800);
+          expect(keyboardInsetOf(body)).toBe(0);
+          expect(body.scrollTop).toBe(0);
+          expect(content.style.translate).toBe('');
+          expect(drawnTopOf(body, content)).toBe(0);
+          await wait(400);
+          expect(drawnTopOf(body, content)).toBe(0);
+          expect(content.style.translate).toBe('');
+        });
+
+        it('rides the content back up with the keyboard when the field takes focus again before Chrome reports the hide', async () => {
+          const {body, content, input, report} = renderChromeSheet({
+            instantScrollBy: true,
+          });
+          act(() => input.focus());
+          report(500);
+          await afterTheSlide();
+
+          act(() => input.blur());
+          // After Gboard's slide, before any report, the field takes focus
+          // again. The keyboard comes back, so the content rides back up with
+          // it and stays there.
+          await wait(250);
+          act(() => input.focus());
+          await wait(500);
+          expect(drawnTopOf(body, content)).toBe(-248);
+          expect(keyboardInsetOf(body)).toBe(348);
+          expect(body.scrollTop).toBe(248);
+          expect(content.style.translate).toBe('');
+          // Chrome's report that the keyboard is up again moves nothing.
+          report(500);
+          expect(drawnTopOf(body, content)).toBe(-248);
+        });
+
+        it('rides the content back up once the check after the slide reads the keyboard still up, when focus moves into a frame whose field keeps it', async () => {
+          const {body, content, input, report} = renderChromeSheet({
+            instantScrollBy: true,
+            picker: <iframe key="f" title="Editor" sandbox="" />,
+          });
+          const frame = screen.getByTitle('Editor');
+          act(() => input.focus());
+          report(500);
+          await afterTheSlide();
+          expect(drawnTopOf(body, content)).toBe(-248);
+
+          // The field inside the frame keeps the keyboard up, and Chrome
+          // reports nothing. The guide cannot see that field, so the check
+          // 150 ms after the slide believes the viewport.
+          act(() => frame.focus());
+          expect(document.activeElement).toBe(frame);
+          await wait(250);
+          expect(drawnTopOf(body, content)).toBe(0);
+          await wait(550);
+          expect(drawnTopOf(body, content)).toBe(-248);
+          expect(keyboardInsetOf(body)).toBe(348);
+          expect(content.style.translate).toBe('');
+        });
+      });
     });
 
     it('subscribes no keyboard layout guide where the keyboard moves on Safari\u2019s schedule, whose transitions the sheet never rides (spec:AST-099 FR8)', () => {
