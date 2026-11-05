@@ -6,21 +6,30 @@
  * failures, in text and JSON alike.
  */
 
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {afterAll, afterEach, beforeEach, describe, expect, it} from 'vitest';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {runCli} from '../../../test-utils/run-cli.mjs';
+import {warmIntegrationChecks} from '../../../test-utils/warm-integration-checks.mjs';
 import {discoverCoreTemplates} from '../../../foundation/discovery/template-adapter.mjs';
+
+// The checks' one-time start in this file runs here, while the file is
+// collected, so no test carries it. That start is TypeScript and its lib
+// files, and the Core template docs.
+await warmIntegrationChecks();
+
+const REPO = fileURLToPath(new URL('../../../../../', import.meta.url));
 
 /** @type {string} */
 let tmpDir;
 
 beforeEach(() => {
-  // Under the repository, so the components check resolves Core.
-  tmpDir = fs.mkdtempSync(
-    path.join(process.cwd(), '.astryx-integration-check-cli-'),
-  );
+  // Under the repository, so the components check resolves Core. The root is
+  // fixed rather than the working folder. A timed-out case's run can still
+  // hold its deleted fixture as the working folder.
+  tmpDir = fs.mkdtempSync(path.join(REPO, '.astryx-integration-check-cli-'));
 });
 
 afterEach(() => {
@@ -518,5 +527,27 @@ describe('a command written with a runner', () => {
     expect(validate.notes.map((/** @type {any} */ note) => note.code)).toEqual([
       'runner_command',
     ]);
+  });
+});
+
+describe('after a case whose run outlives it', () => {
+  const origin = process.cwd();
+
+  afterAll(() => {
+    process.chdir(origin);
+  });
+
+  it('leaves the working folder in its fixture, which afterEach then deletes', () => {
+    // As a timed-out case's run does: it holds the fixture as the working
+    // folder, and has read it, while the case ends.
+    process.chdir(tmpDir);
+    expect(process.cwd()).toBe(fs.realpathSync(tmpDir));
+  });
+
+  it('still gives the next case its fixture under the repository', () => {
+    // The working folder from the case before is gone.
+    expect(fs.existsSync(process.cwd())).toBe(false);
+    expect(fs.existsSync(tmpDir)).toBe(true);
+    expect(path.dirname(tmpDir)).toBe(path.resolve(REPO));
   });
 });
