@@ -14,8 +14,8 @@
 import {render} from '@testing-library/react';
 import {useRef} from 'react';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import type {MotionCurve} from '../motion/animator';
 import {contextMenu} from '../motion/uikit/contextMenu';
+import {springs} from '../motion/uikit/springs';
 import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {
   useContextMenuPressFeedback,
@@ -24,12 +24,14 @@ import {
 
 const animator = vi.hoisted(() => ({
   element: null as HTMLElement | null,
-  /** The element each play ran on, in order. */
-  played: [] as HTMLElement[],
+  /** The element each spring ran on, in order. */
+  animated: [] as HTMLElement[],
   play: vi.fn((..._args: unknown[]) => ({
     finished: new Promise<boolean>(() => {}),
   })),
-  animate: vi.fn(() => ({finished: new Promise<boolean>(() => {})})),
+  animate: vi.fn((..._args: unknown[]) => ({
+    finished: new Promise<boolean>(() => {}),
+  })),
   stop: vi.fn(),
   dispose: vi.fn(),
   get: vi.fn(() => 1),
@@ -42,9 +44,9 @@ vi.mock('../motion/animator', () => ({
     animator.element = element;
     return {
       ...animator,
-      play: (...args: unknown[]) => {
-        animator.played.push(element);
-        return animator.play(...args);
+      animate: (...args: unknown[]) => {
+        animator.animated.push(element);
+        return animator.animate(...args);
       },
     };
   },
@@ -116,7 +118,7 @@ const flush = async () =>
 describe('useContextMenuPressFeedback', () => {
   afterEach(() => {
     vi.clearAllMocks();
-    animator.played.length = 0;
+    animator.animated.length = 0;
     feedback = null;
   });
 
@@ -125,35 +127,35 @@ describe('useContextMenuPressFeedback', () => {
     const trigger = getByTestId('trigger');
     trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
-    expect(animator.play).toHaveBeenCalledOnce();
+    expect(animator.animate).toHaveBeenCalledOnce();
     // The press machine's slop is shorter than the recognizer's tolerance.
     trigger.removeAttribute(PRESSED_ATTRIBUTE);
     await flush();
-    expect(animator.play).toHaveBeenCalledOnce();
+    expect(animator.animate).toHaveBeenCalledOnce();
     feedback?.end(performance.now());
-    expect(animator.play).toHaveBeenCalledTimes(2);
+    expect(animator.animate).toHaveBeenCalledTimes(2);
   });
 
   it('grows when the press machine marks a pressable control inside the trigger, the innermost surface it marks', async () => {
     const {getByTestId} = render(<TriggerWithControl />);
     getByTestId('control').setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
-    expect(animator.play).toHaveBeenCalledOnce();
+    expect(animator.animate).toHaveBeenCalledOnce();
     getByTestId('control').removeAttribute(PRESSED_ATTRIBUTE);
     await flush();
-    expect(animator.play).toHaveBeenCalledOnce();
+    expect(animator.animate).toHaveBeenCalledOnce();
   });
 
   it('grows only the innermost trigger when one trigger sits inside another', async () => {
     const {getByTestId} = render(<NestedTriggers />);
     getByTestId('inner').setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
-    expect(animator.played).toEqual([getByTestId('inner')]);
+    expect(animator.animated).toEqual([getByTestId('inner')]);
     getByTestId('inner').removeAttribute(PRESSED_ATTRIBUTE);
     await flush();
     getByTestId('outer-control').setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
-    expect(animator.played).toEqual([
+    expect(animator.animated).toEqual([
       getByTestId('inner'),
       getByTestId('outer'),
     ]);
@@ -163,7 +165,7 @@ describe('useContextMenuPressFeedback', () => {
     const {getByTestId} = render(<NestedTriggers isInnerShown={false} />);
     getByTestId('inner').setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
-    expect(animator.played).toEqual([]);
+    expect(animator.animated).toEqual([]);
   });
 
   it('gives the trigger back its size when its feedback goes while the menu it opened is up', async () => {
@@ -171,7 +173,7 @@ describe('useContextMenuPressFeedback', () => {
     const trigger = getByTestId('trigger');
     trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
-    expect(animator.play).toHaveBeenCalledOnce();
+    expect(animator.animate).toHaveBeenCalledOnce();
     // The menu opened: the animator froze the growth on the element.
     feedback?.hold();
     trigger.style.scale = '1.0735';
@@ -180,72 +182,48 @@ describe('useContextMenuPressFeedback', () => {
     expect(animator.dispose).toHaveBeenCalledOnce();
   });
 
-  it('grows toward the held scale over the theme’s medium duration and move easing', async () => {
+  it('grows toward the held scale on springs.contextMenuLift, from the onset', async () => {
     const {getByTestId} = render(<Trigger />);
     const trigger = getByTestId('trigger');
-    trigger.style.setProperty('--duration-medium', '600ms');
-    trigger.style.setProperty('--ease-move', 'linear');
     trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
-    const [curves] = animator.play.mock.lastCall as unknown as [
-      {scale: MotionCurve},
+    const [to, transition, options] = animator.animate.mock
+      .lastCall as unknown as [
+      {scale: number},
+      {spring: unknown},
+      {at: number},
     ];
-    const held = contextMenu.press.heldScale;
-    expect(curves.scale.duration).toBeCloseTo(0.6);
-    expect(curves.scale.at(0.3)).toBeCloseTo(1 + (held - 1) / 2);
-    expect(curves.scale.at(0.6)).toBeCloseTo(held);
+    expect(to).toEqual({scale: contextMenu.press.heldScale});
+    expect(transition).toEqual({spring: springs.contextMenuLift});
+    expect(typeof options.at).toBe('number');
+    expect(animator.play).not.toHaveBeenCalled();
   });
 
-  it('returns over the theme’s fast duration and move easing, at the time the recognizer ended the press', async () => {
+  it('returns on springs.contextMenuDismiss, at the time the recognizer ended the press', async () => {
     const {getByTestId} = render(<Trigger />);
     const trigger = getByTestId('trigger');
-    trigger.style.setProperty('--duration-fast', '200ms');
-    trigger.style.setProperty('--ease-move', 'linear');
     trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
     feedback?.end(1000);
-    const [curves, options] = animator.play.mock.lastCall as unknown as [
-      {scale: MotionCurve},
-      {at: number},
-    ];
-    expect(options).toEqual({at: 1000});
-    expect(curves.scale.duration).toBeCloseTo(0.2);
-    expect(curves.scale.at(0.2)).toBeCloseTo(1);
+    expect(animator.animate.mock.lastCall).toEqual([
+      {scale: 1},
+      {spring: springs.contextMenuDismiss},
+      {at: 1000},
+    ]);
+    expect(animator.play).not.toHaveBeenCalled();
   });
 
-  it('returns over the theme’s exit duration and easing when the menu the press opened closes', async () => {
+  it('returns on springs.contextMenuDismiss when the menu the press opened closes', async () => {
     const {getByTestId} = render(<Trigger />);
     const trigger = getByTestId('trigger');
-    trigger.style.setProperty('--duration-exit', '250ms');
-    trigger.style.setProperty('--ease-exit', 'linear');
-    trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
-    await flush();
-    feedback?.hold();
-    const held = contextMenu.press.heldScale;
-    animator.get.mockReturnValueOnce(held);
-    feedback?.release();
-    expect(animator.animate).not.toHaveBeenCalled();
-    const [curves] = animator.play.mock.lastCall as unknown as [
-      {scale: MotionCurve},
-    ];
-    expect(curves.scale.duration).toBeCloseTo(0.25);
-    expect(curves.scale.at(0)).toBeCloseTo(held);
-    expect(curves.scale.at(0.125)).toBeCloseTo(held + (1 - held) / 2);
-    expect(curves.scale.at(0.25)).toBeCloseTo(1);
-  });
-
-  it('returns over the theme’s fast duration when the theme sets no exit duration', async () => {
-    const {getByTestId} = render(<Trigger />);
-    const trigger = getByTestId('trigger');
-    trigger.style.setProperty('--duration-fast', '200ms');
     trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
     await flush();
     feedback?.hold();
     feedback?.release();
-    expect(animator.animate).not.toHaveBeenCalled();
-    const [curves] = animator.play.mock.lastCall as unknown as [
-      {scale: MotionCurve},
-    ];
-    expect(curves.scale.duration).toBeCloseTo(0.2);
+    expect(animator.animate.mock.lastCall).toEqual([
+      {scale: 1},
+      {spring: springs.contextMenuDismiss},
+    ]);
+    expect(animator.play).not.toHaveBeenCalled();
   });
 });
