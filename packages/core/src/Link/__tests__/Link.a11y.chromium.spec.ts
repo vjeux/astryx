@@ -106,6 +106,30 @@ async function runState(
     state: state.id,
     facts: state.facts,
     mount: async () => {
+      // NOT FOR LANDING: a new tab's first document is answered 600 ms late,
+      // as a loaded runner answers it, so its page reaches the test late.
+      const context =
+        page.context() as typeof page.context extends () => infer C
+          ? C & {delayed?: boolean}
+          : never;
+      if (context.delayed !== true) {
+        context.delayed = true;
+        await context.route('**/*', async route => {
+          const request = route.request();
+          if (request.isNavigationRequest()) {
+            let fromThisPage = false;
+            try {
+              fromThisPage = request.frame().page() === page;
+            } catch {
+              fromThisPage = false;
+            }
+            if (!fromThisPage) {
+              await new Promise(resolve => setTimeout(resolve, 600));
+            }
+          }
+          await route.fallback();
+        });
+      }
       await page.goto(storyUrl(state.storyId), {waitUntil: 'load'});
       await holdMotionStill(page);
       const subject = page.locator(SUBJECT_SELECTOR);
