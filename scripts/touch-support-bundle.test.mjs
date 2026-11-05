@@ -112,7 +112,7 @@ function exportsOf(entry) {
 /**
  * What the internal entry gives Lab components, none of it public API. Lab's
  * refresh pull reads the pan, its hook, the motion engine, its motion math and
- * companion curves, the scroll view's spring and the motion-role parsers.
+ * companion curves, the scroll view's spring and the theme-timing resolver.
  * Other Lab components read the UIKit gesture table, the touch presentation
  * and its query, and an element's direction.
  */
@@ -122,8 +122,7 @@ const LAB_ONLY_NAMES = [
   'createMotionEngine',
   'cubicBezier',
   'mapProgress',
-  'parseCssEasing',
-  'parseMotionRoleValue',
+  'resolveTiming',
   'rubberBand',
   'rubberBandInverse',
   'rubberBandSlope',
