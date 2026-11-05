@@ -14,8 +14,9 @@
  */
 
 // The trigger is a pressable surface of the press machine. Its "on" starts
-// the growth while the recognizer follows a finger, and only the recognizer's
-// failure or cancel returns it. The theme's duration and move easing tokens
+// the growth at the onset, 150 ms after the finger lands, while the
+// recognizer follows that finger. Only the recognizer's failure or cancel
+// returns it. The theme's duration and move easing tokens
 // time both, and the compositor plays them, so a busy main thread does not
 // stall them. Once the menu opens, the trigger holds its size until the menu
 // closes. Then it returns on the theme's exit duration and easing. An inline
@@ -25,6 +26,7 @@ import {useCallback, useRef, type RefObject} from 'react';
 import {useAttachment} from '../hooks/useAttachment';
 import {usePressFeedback} from '../hooks/usePressFeedback';
 import {PRESSED_ATTRIBUTE, type pressableProps} from '../utils/pressFeedback';
+import {PRESS_ONSET_MS} from '../utils/pressGesture';
 import {observeMutations} from '../utils/sharedMutationObserver';
 import {createMotionEngine, type Animator} from '../motion/animator';
 import {contextMenu} from '../motion/uikit/contextMenu';
@@ -90,6 +92,9 @@ export interface ContextMenuPressFeedback {
 /** A press feedback with no recognizer to ask grows at every "on". */
 const ALWAYS_FOLLOWED: RefObject<() => boolean> = {current: () => true};
 
+/** With no recognizer to ask, the onset is the "on" itself. */
+const NO_LANDING: RefObject<() => number | null> = {current: () => null};
+
 // The triggers a press mark belongs to: every mounted trigger, whether it
 // shows growth or not. A mark inside a trigger belongs to the nearest of them
 // at or above it. So a press on a nested trigger grows no outer trigger.
@@ -113,12 +118,14 @@ function pressMarkOwnerOf(marked: Element): Element | null {
  * press: false for an inline trigger. It follows the element behind
  * `triggerRef`, so a replaced trigger (`triggerAs`) is followed too. The
  * `isFollowed` ref says whether ContextMenu's recognizer follows a finger or
- * a pen now: the growth starts only then.
+ * a pen now: the growth starts only then. The `landedAt` ref gives the time
+ * that finger landed, so the growth starts at its onset.
  */
 export function useContextMenuPressFeedback(
   triggerRef: RefObject<HTMLElement | null>,
   isShown: boolean,
   isFollowed: RefObject<() => boolean> = ALWAYS_FOLLOWED,
+  landedAt: RefObject<() => number | null> = NO_LANDING,
 ): ContextMenuPressFeedback {
   const pressable = usePressFeedback();
   const animatorRef = useRef<Animator | null>(null);
@@ -182,7 +189,7 @@ export function useContextMenuPressFeedback(
         return;
       }
       isGrownRef.current = true;
-      // `time` is the onset, the press machine's "on".
+      // `time` is the onset: 150 ms after the finger lands, or a later mark.
       animator.play(
         {
           scale: timedCurve(
@@ -248,8 +255,11 @@ export function useContextMenuPressFeedback(
     }
   }, []);
 
-  // Grow from the press machine's "on". The machine marks the innermost
-  // pressable surface, so a control inside the trigger can carry the mark.
+  // Grow at the onset, 150 ms after the finger lands, once the press machine
+  // marks the press. The machine marks the innermost pressable surface, so a
+  // control inside the trigger can carry the mark. Outside a scroll view it
+  // marks a touch as it lands, before the recognizer has that finger. So a
+  // mark the recognizer does not follow yet is read again after that input.
   // The machine lets a press go at a shorter travel than the recognizer's
   // tolerance, so only the recognizer ends the growth (`end`).
   useAttachment(
@@ -267,6 +277,27 @@ export function useContextMenuPressFeedback(
           marked => pressMarkOwnerOf(marked) === element,
         );
       let isPressed = isMarkedOn();
+      let markedAt = 0;
+      let onsetTimer: ReturnType<typeof setTimeout> | undefined;
+      const growAtOnset = (isRetry: boolean) => {
+        if (!isFollowed.current()) {
+          if (!isRetry) {
+            onsetTimer = setTimeout(() => growAtOnset(true), 0);
+          }
+          return;
+        }
+        const landed = landedAt.current();
+        const onsetAt =
+          landed == null
+            ? markedAt
+            : Math.max(markedAt, landed + PRESS_ONSET_MS);
+        const wait = onsetAt - performance.now();
+        if (wait > 0) {
+          onsetTimer = setTimeout(() => start(onsetAt), wait);
+        } else {
+          start(onsetAt);
+        }
+      };
       const stopObserving = observeMutations(
         element,
         {attributes: true, attributeFilter: [PRESSED_ATTRIBUTE], subtree: true},
@@ -274,13 +305,16 @@ export function useContextMenuPressFeedback(
           const next = isMarkedOn();
           if (next !== isPressed) {
             isPressed = next;
+            clearTimeout(onsetTimer);
             if (next) {
-              start(performance.now());
+              markedAt = performance.now();
+              growAtOnset(false);
             }
           }
         },
       );
       return () => {
+        clearTimeout(onsetTimer);
         stopObserving();
         pressMarkOwners.delete(element);
       };
