@@ -53,9 +53,9 @@ import {pressTiming, timedCurve} from '../contextMenuPressTiming';
 
 const storybook = withStorybook(test);
 const {commitMs, menuDisplayMs, heldScale} = contextMenu.press;
-// Core's press machine believes a press 150 ms after it lands
-// (`utils/pressGesture.ts`). That module loads a StyleX stylesheet, which
-// this Node-side spec cannot, so the onset is restated here.
+// The growth starts at the onset, 150 ms after the finger lands
+// (`PRESS_ONSET_MS` in `utils/pressGesture.ts`). That module loads a StyleX
+// stylesheet, which this Node-side spec cannot, so the onset is restated here.
 const feedbackOnsetMs = 150;
 
 /**

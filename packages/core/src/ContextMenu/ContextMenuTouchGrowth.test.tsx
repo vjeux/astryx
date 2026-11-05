@@ -151,6 +151,38 @@ describe('ContextMenu’s growth under a finger', () => {
     expect(scaleBack(trigger)).toHaveLength(1);
   });
 
+  const growths = (trigger: HTMLElement) =>
+    animator.play.mock.calls.filter(([element, curves]) => {
+      const scale = (curves as {scale?: MotionCurve}).scale;
+      return element === trigger && (scale?.at(scale.duration) ?? 1) > 1;
+    });
+  const startOf = (call: unknown[]) => (call[2] as {at: number}).at;
+
+  it('starts the growth at the onset, 150 ms after the finger lands, when the press machine marks the press as the finger lands', async () => {
+    const trigger = renderMenu();
+    const contact = {id: 1, x: 20, y: 20};
+    const landedAt = performance.now();
+    dispatchTouch('touchstart', trigger, [contact], [contact]);
+    // Outside a scroll view the press machine marks a press as it lands.
+    await pressMachineOn(trigger);
+    advance(149);
+    expect(growths(trigger)).toHaveLength(0);
+    advance(1);
+    expect(growths(trigger).map(startOf)).toEqual([landedAt + 150]);
+  });
+
+  it('grows the trigger at the onset when the press machine marks the press before the recognizer has the finger', async () => {
+    const trigger = renderMenu();
+    const contact = {id: 1, x: 20, y: 20};
+    // In a browser the press machine's mark comes first: its listener runs
+    // before the recognizer's, and the mark is read between the two.
+    await pressMachineOn(trigger);
+    const landedAt = performance.now();
+    dispatchTouch('touchstart', trigger, [contact], [contact]);
+    advance(150);
+    expect(growths(trigger).map(startOf)).toEqual([landedAt + 150]);
+  });
+
   it('does not grow the trigger for a press its recognizer does not follow, such as a mouse', async () => {
     const trigger = renderMenu();
     await pressMachineOn(trigger);
