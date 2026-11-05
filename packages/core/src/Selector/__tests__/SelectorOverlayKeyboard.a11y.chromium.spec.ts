@@ -136,6 +136,24 @@ test('the overlay list ends above the software keyboard and keeps the selected r
     expect(centerY(row)).toBeLessThanOrEqual(limit);
     expect(Math.abs(centerY(row) - centerY(triggerNow))).toBeLessThanOrEqual(2);
   }).toPass({timeout: 5_000});
+  // The capped list stays usable: at least two rows in full view above the
+  // keyboard, inside the list's own box.
+  const rowsInView = await page.evaluate(limitPx => {
+    const list = document.querySelector<HTMLElement>('[role="listbox"]');
+    if (list == null) {
+      return 0;
+    }
+    const box = list.getBoundingClientRect();
+    return Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'))
+      .map(option => option.getBoundingClientRect())
+      .filter(
+        rect =>
+          rect.top >= box.top - 0.5 &&
+          rect.bottom <= box.bottom + 0.5 &&
+          rect.bottom <= limitPx + 0.5,
+      ).length;
+  }, limit);
+  expect(rowsInView).toBeGreaterThanOrEqual(2);
   expect(problems).toEqual([]);
 });
 

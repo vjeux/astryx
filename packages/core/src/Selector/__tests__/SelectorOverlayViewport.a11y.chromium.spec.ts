@@ -4,7 +4,9 @@
 /**
  * @file SelectorOverlayViewport.a11y.chromium.spec.ts
  * @input Uses the near-viewport-bottom overlay Storybook story and Chromium
- * @output Chromium geometry regression coverage for the selected-item overlay's viewport clamp
+ * @output Chromium geometry regression coverage for the selected-item
+ *   overlay's viewport clamp: the row on the trigger, a usable list, and no
+ *   late frame after a change
  * @position Browser-only geometry regression test for Selector
  */
 
@@ -50,14 +52,17 @@ test('the overlay list stays inside the viewport when the trigger sits at its en
   await expect(last).toBeVisible();
 
   // Give the entry animation and the overlay's layout pass time to finish.
-  // The clamp pins the list's end to the viewport's end. A shift that ignored
-  // the layer's own placement would land the list elsewhere inside the viewport.
+  // The clamp holds the list's end inside the viewport's end gutter, with
+  // the whole list in view.
   await expect(async () => {
     const box = await listbox.boundingBox();
     expect(box).not.toBeNull();
-    expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(720);
+    const end = Math.round((box?.y ?? 0) + (box?.height ?? 0));
+    expect(end).toBeLessThanOrEqual(720 - GUTTER_PX);
+    expect(end).toBeGreaterThan(720 - GUTTER_PX - 40);
     expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
   }).toPass({timeout: 5_000});
+  await expectUsableRows(page, 720);
 
   // The last option is pointable: a real click selects it.
   await last.click({timeout: 2_000});
@@ -108,6 +113,7 @@ test('the overlay follows the layer to the other side when the viewport shrinks 
     expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(330);
     expect(Math.abs(centerY(row) - centerY(triggerNow))).toBeLessThanOrEqual(2);
   }).toPass({timeout: 5_000});
+  await expectUsableRows(page, 330);
 });
 
 test('the overlay follows the layer when the trigger moves in layout with the list open', async ({
@@ -146,10 +152,9 @@ test('the overlay follows the layer when the trigger moves in layout with the li
   const spacer = Math.round((550 - (triggerBefore?.y ?? 0)) * 2);
   const problems = collectProblems(page);
   const painted = await paintedOffsets(page, {kind: 'move', px: spacer}, 6);
-  // Only an intersection observer reports a same-size move, after paint, so
-  // one painted frame may show the stale shift. The next frame paints the
-  // corrected one: the watcher's callback commits it synchronously.
-  expect(painted.filter(offset => offset > 2).length).toBeLessThanOrEqual(1);
+  // The clamp is in layout, so the move re-places the list in the frame it
+  // lands in: no painted frame shows a stale place.
+  expect(painted.filter(offset => offset > 2)).toEqual([]);
   await expect(async () => {
     const [box, row, triggerNow] = await Promise.all([
       listbox.boundingBox(),
@@ -163,6 +168,7 @@ test('the overlay follows the layer when the trigger moves in layout with the li
     expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(720);
     expect(Math.abs(centerY(row) - centerY(triggerNow))).toBeLessThanOrEqual(2);
   }).toPass({timeout: 5_000});
+  await expectUsableRows(page, 720);
   expect(problems()).toEqual([]);
 });
 
@@ -220,6 +226,7 @@ test('the overlay follows the layer when the trigger moves and the viewport shri
     expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(640);
     expect(Math.abs(centerY(row) - centerY(triggerNow))).toBeLessThanOrEqual(2);
   }).toPass({timeout: 5_000});
+  await expectUsableRows(page, 640);
 });
 
 test('the overlay follows the layer when the page scrolls with the list open', async ({
@@ -286,6 +293,7 @@ test('the overlay follows the layer when the page scrolls with the list open', a
     expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(720);
     expect(Math.abs(centerY(row) - centerY(triggerNow))).toBeLessThanOrEqual(2);
   }).toPass({timeout: 5_000});
+  await expectUsableRows(page, 720);
   expect(problems()).toEqual([]);
 });
 
@@ -355,8 +363,13 @@ async function settledFrames(
   );
 }
 
-/** The selected row over the trigger, and the list inside the viewport. */
+/**
+ * The selected row over the trigger, the list inside the viewport, and a
+ * usable list: at least two rows in full view, or every row when the list
+ * has fewer.
+ */
 async function expectAligned(
+  page: Page,
   parts: OverlayParts,
   viewportHeight: number,
 ): Promise<void> {
@@ -373,6 +386,41 @@ async function expectAligned(
       viewportHeight,
     );
     expect(Math.abs(centerY(row) - centerY(triggerNow))).toBeLessThanOrEqual(2);
+  }).toPass({timeout: 5_000});
+  await expectUsableRows(page, viewportHeight);
+}
+
+/** The viewport gutter an anchored layer keeps: the spacing-4 step. */
+const GUTTER_PX = 16;
+
+/**
+ * Rows in full view: inside the list's own box and inside the viewport above
+ * `limit`. A list the cap or the clamp left too short to use fails here.
+ */
+async function expectUsableRows(page: Page, limit: number): Promise<void> {
+  await expect(async () => {
+    const counts = await page.evaluate(limitPx => {
+      const listbox = document.querySelector<HTMLElement>('[role="listbox"]');
+      if (listbox == null) {
+        return {rows: 0, inView: 0};
+      }
+      const box = listbox.getBoundingClientRect();
+      const rows = Array.from(
+        listbox.querySelectorAll<HTMLElement>('[role="option"]'),
+      );
+      const inView = rows.filter(row => {
+        const rect = row.getBoundingClientRect();
+        return (
+          rect.top >= box.top - 0.5 &&
+          rect.bottom <= box.bottom + 0.5 &&
+          rect.top >= -0.5 &&
+          rect.bottom <= limitPx + 0.5
+        );
+      });
+      return {rows: rows.length, inView: inView.length};
+    }, limit);
+    expect(counts.rows).toBeGreaterThan(0);
+    expect(counts.inView).toBeGreaterThanOrEqual(Math.min(2, counts.rows));
   }).toPass({timeout: 5_000});
 }
 
@@ -404,7 +452,7 @@ test('the overlay follows the layer when an ancestor scroll container scrolls wi
   );
   const triggerNow = await parts.trigger.boundingBox();
   expect((triggerBefore?.y ?? 0) - (triggerNow?.y ?? 0)).toBeGreaterThan(100);
-  await expectAligned(parts, 720);
+  await expectAligned(page, parts, 720);
 });
 
 test('the overlay stays with the layer when the visual viewport shrinks by a pinch zoom', async ({
@@ -421,7 +469,7 @@ test('the overlay stays with the layer when the visual viewport shrinks by a pin
   );
   const scale = await page.evaluate(() => window.visualViewport?.scale ?? 1);
   expect(scale).toBeCloseTo(2, 1);
-  await expectAligned(parts, 720);
+  await expectAligned(page, parts, 720);
   await session.send('Emulation.setPageScaleFactor', {pageScaleFactor: 1});
 });
 
@@ -449,7 +497,7 @@ test('the overlay follows the layer across an orientation change', async ({
   );
   const size = await page.evaluate(() => [innerWidth, innerHeight]);
   expect(size).toEqual([844, 390]);
-  await expectAligned(parts, 390);
+  await expectAligned(page, parts, 390);
   await session.send('Emulation.clearDeviceMetricsOverride');
 });
 
@@ -468,7 +516,7 @@ test('the overlay follows the layer when an option grows with the list open', as
   expect((listNow?.height ?? 0) - (listBefore?.height ?? 0)).toBeGreaterThan(
     40,
   );
-  await expectAligned(parts, 720);
+  await expectAligned(page, parts, 720);
   expect(problems()).toEqual([]);
 });
 

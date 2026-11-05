@@ -73,7 +73,12 @@ import {
 import type {SelectorOptionType, SelectorOptionData} from './types';
 import {isOptionData, isDivider, isSection, normalizeOption} from './utils';
 import {getSelectableOptionEntries} from './selectableOptionEntries';
-import {useCombobox, useSelectedItemOverlayPosition} from './hooks';
+import {
+  SELECTOR_LIST_BLOCK_SIZE_PROPERTY,
+  SELECTOR_ROW_OFFSET_PROPERTY,
+  useCombobox,
+  useSelectedItemOverlayPosition,
+} from './hooks';
 import {useMenuPress} from '../hooks/useMenuPress';
 import {useMenuOverflow} from '../DropdownMenu/useMenuOverflow';
 import {useTypeahead} from '../hooks/useTypeahead';
@@ -1346,12 +1351,17 @@ export function Selector<T extends SelectorOptionType>(
     }
   }, [hasSearch]);
 
+  // Explicit placement opts out of the selector-specific overlay behavior and
+  // uses the standard layer positioning API instead; so does search.
+  const shouldOverlaySelectedItem = placement == null && !hasSearch;
   const surface = useSelectorPresentation({
     presentation,
     onHide: handleLayerHide,
     onShow: handleLayerShow,
     triggerRef,
     triggerModality,
+    // The overlay clamps the popup in layout; the runtime flips nothing.
+    popoverClampsOnPlacementAxis: shouldOverlaySelectedItem,
     popoverOptions: {
       hasLightDismiss: true,
       hasCloseButton: false,
@@ -1444,29 +1454,37 @@ export function Selector<T extends SelectorOptionType>(
     surface.isOpen && !isLoading && filteredItems.length === 0;
   useAnnounceRenderedText(emptyStateRef, isPanelEmpty, searchQuery);
 
-  // Calculate offset to position selected item over trigger. Explicit
-  // placement opts out of the selector-specific overlay behavior and uses the
-  // standard layer positioning API instead.
-  const shouldOverlaySelectedItem = placement == null && !hasSearch;
-  const {translateY: rawTranslateY, isPositioned: rawIsPositioned} =
-    useSelectedItemOverlayPosition({
-      isOpen: popover.isOpen && shouldOverlaySelectedItem,
-      selectedItemIndex,
-      listboxId,
-      listboxRef,
-      anchorRef,
-    });
+  // Measure the selected row's place in the list for the overlay clamp.
+  const {
+    rowOffset: rawRowOffset,
+    listBlockSize: rawListBlockSize,
+    isPositioned: rawIsPositioned,
+  } = useSelectedItemOverlayPosition({
+    isOpen: popover.isOpen && shouldOverlaySelectedItem,
+    selectedItemIndex,
+    listboxId,
+    listboxRef,
+    anchorRef,
+  });
 
-  const selectedItemTranslateY = shouldOverlaySelectedItem ? rawTranslateY : 0;
   const isPositioned = shouldOverlaySelectedItem ? rawIsPositioned : true;
   const popoverPlacement = placement ?? 'below';
-  // Anchor positioning fits the margin box beside the anchor. A negative margin
-  // shrinks that box, so the list stays on the overflowing side. A translate does
-  // not change the fit.
+  // The overlay places the popup in layout, so every reader of the layer's box
+  // sees it: the selected row's center sits on the anchor's center, and the
+  // list stays between the viewport's gutters. A move or a scroll re-places it
+  // in the same layout; the layer's inline start is the anchor's own
+  // (`self-start` reads the anchor's edge in either direction), kept inside
+  // the inline gutters. The UA popover insets are cleared on the far edges.
+  const overlayLayerStyle: React.CSSProperties & Record<string, string> = {
+    [SELECTOR_ROW_OFFSET_PROPERTY]: `${rawRowOffset}px`,
+    [SELECTOR_LIST_BLOCK_SIZE_PROPERTY]: `${rawListBlockSize}px`,
+    insetBlockStart: `clamp(${layerViewportInset.gutterBlockStart}, anchor(center) - var(${SELECTOR_ROW_OFFSET_PROPERTY}), calc(100dvb - ${layerViewportInset.gutterBlockEnd} - var(${SELECTOR_LIST_BLOCK_SIZE_PROPERTY})))`,
+    insetBlockEnd: 'auto',
+    insetInlineStart: `clamp(${layerViewportInset.gutterInline}, anchor(self-start), calc(100vi - ${layerViewportInset.gutterInline} - anchor-size(self-inline)))`,
+    insetInlineEnd: 'auto',
+  };
   const popoverOffsetStyle: React.CSSProperties | undefined =
-    selectedItemTranslateY !== 0
-      ? {translate: `0 ${selectedItemTranslateY}px`}
-      : undefined;
+    shouldOverlaySelectedItem ? overlayLayerStyle : undefined;
 
   // Clear the current value. Shared by the clear button and the keyboard
   // Delete/Backspace path so clearing is reachable without a mouse.

@@ -456,6 +456,15 @@ interface InternalLayerFields {
  */
 interface InternalContextLayerOptions extends ContextLayerOptions {
   /**
+   * The layer clamps itself on the placement axis instead of flipping. The
+   * runtime emits no `position-area` and `position-try-fallbacks: none`, and
+   * does not clamp: the consumer's render `style` supplies the placement-axis
+   * inset. The layer stays anchored, so the keyboard cap, the viewport fit
+   * and the gutters still apply. Ignored when the render's `positioning` is
+   * `'custom'`.
+   */
+  clampsOnPlacementAxis?: boolean;
+  /**
    * The layer must never settle over its anchor (spec:AST-059 FR4). When the
    * standard fallback list settles it over its anchor, it switches to its
    * anchor-clear list: beside the trigger, then whichever block side is
@@ -1099,6 +1108,8 @@ function useLayerImplementation(
       : false;
   const keepsAnchorClear =
     mode === 'context' ? (options.keepsAnchorClear ?? false) : false;
+  const clampsOnPlacementAxis =
+    mode === 'context' ? (options.clampsOnPlacementAxis ?? false) : false;
   const id = useId();
   const anchorId = `--astryx-layer-${id.replace(/:/g, '')}`;
 
@@ -1835,14 +1846,22 @@ function useLayerImplementation(
           ? // Consumer authors its own position styles via `style` — keep
             // only the anchor wiring, derive nothing from placement.
             {positionAnchor: anchorId}
-          : {
-              positionAnchor: anchorId,
-              positionArea: getPositionArea(placement, alignment),
-              positionTryFallbacks: clearFallbacks
-                ? `var(${LAYER_TRY_FALLBACKS_PROPERTY}, ${standardFallbacks})`
-                : standardFallbacks,
-              ...getSelfAlignment(placement, alignment, isAnchorInView),
-            };
+          : clampsOnPlacementAxis
+            ? // The consumer's inset clamps the layer on the placement axis,
+              // so no fallback flips it: a clamped layer has no other side.
+              {
+                positionAnchor: anchorId,
+                positionTryFallbacks: 'none',
+                ...getSelfAlignment(placement, alignment, isAnchorInView),
+              }
+            : {
+                positionAnchor: anchorId,
+                positionArea: getPositionArea(placement, alignment),
+                positionTryFallbacks: clearFallbacks
+                  ? `var(${LAYER_TRY_FALLBACKS_PROPERTY}, ${standardFallbacks})`
+                  : standardFallbacks,
+                ...getSelfAlignment(placement, alignment, isAnchorInView),
+              };
 
       const clearance = offset ? toCssLength(offset) : null;
       const clearanceProperty: Record<string, string> =
@@ -1936,6 +1955,7 @@ function useLayerImplementation(
     },
     [
       anchorId,
+      clampsOnPlacementAxis,
       declaredInset,
       id,
       isAnchorInView,

@@ -5,14 +5,13 @@
  * @input A layer element
  * @output Exports `settledBox`: the layer's box where its position option put
  *   it, without the transform an entrance (or anything else) applies to it
- * @position Layer runtime: the one box read the fallback order, the
- *   software keyboard's cap and Selector's overlay measure with
- *   (useLayer.tsx, useLayerKeyboardClearance.ts, Selector/hooks.ts)
+ * @position Layer runtime: the one box read the fallback order and the
+ *   software keyboard's cap both measure with (useLayer.tsx,
+ *   useLayerKeyboardClearance.ts)
  *
  * SYNC: When modified, update:
  * - /packages/core/src/Layer/useLayer.tsx
  * - /packages/core/src/Layer/useLayerKeyboardClearance.ts
- * - /packages/core/src/Selector/hooks.ts
  */
 
 const TRANSFORM_PROPERTIES = ['transform', 'translate', 'scale', 'rotate'];
