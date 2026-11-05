@@ -144,6 +144,10 @@ const styles = stylex.create({
       '@media (prefers-reduced-motion: reduce)': '0.01ms',
     },
     transitionTimingFunction: easeVars['--ease-standard'],
+  },
+  // A row opens from a closed track only when it first renders. A move to
+  // another modal outlet renders it again, and it must not open again.
+  toastWrapperEntering: {
     '@starting-style': {
       gridTemplateRows: '0fr',
       paddingBlockEnd: 0,
@@ -182,6 +186,12 @@ const styles = stylex.create({
   },
   toastWrapperInnerSettled: {
     overflow: 'visible',
+  },
+  // The card's starting style reads these. A card that has entered then
+  // starts where it is when a move renders it again.
+  toastWrapperInnerEntered: {
+    '--_toast-start-opacity': 1,
+    '--_toast-start-slide': '0px',
   },
 });
 
@@ -261,12 +271,33 @@ function ToastRow({
   const isAutoHide = o.isAutoHide ?? (type === 'error' ? false : true);
   const dur = o.autoHideDuration ?? 5000;
   const [isSettled, setIsSettled] = useState(false);
+  // The row's entry has started. The viewport moves between modal outlets, and
+  // each move renders the row again, so its starting style must not apply.
+  const [hasEntered, setHasEntered] = useState(false);
+  // React passes `transitionrun` without its property name, so the row
+  // listens for it on the element.
+  const watchEntry = useCallback((row: HTMLDivElement | null) => {
+    if (row == null) {
+      return;
+    }
+    const onRun = (event: TransitionEvent) => {
+      if (event.target === row && event.propertyName === 'grid-template-rows') {
+        setHasEntered(true);
+      }
+    };
+    row.addEventListener('transitionrun', onRun);
+    return () => {
+      row.removeEventListener('transitionrun', onRun);
+    };
+  }, []);
 
   return (
     <div
+      ref={watchEntry}
       data-toast-id={entry.id}
       {...stylex.props(
         styles.toastWrapper,
+        !hasEntered && styles.toastWrapperEntering,
         isReversed ? styles.toastWrapperFromTop : styles.toastWrapperFromBottom,
         isReversed ? styles.toastWrapperGapReversed : styles.toastWrapperGap,
         isExiting && styles.toastWrapperExiting,
@@ -289,11 +320,13 @@ function ToastRow({
         // still owns pointer events and restores the clip synchronously when
         // dismissal starts.
         setIsSettled(true);
+        setHasEntered(true);
       }}>
       <div
         {...stylex.props(
           styles.toastWrapperInner,
           isSettled && !isExiting && styles.toastWrapperInnerSettled,
+          hasEntered && styles.toastWrapperInnerEntered,
         )}>
         <ToastSurface
           type={type}
