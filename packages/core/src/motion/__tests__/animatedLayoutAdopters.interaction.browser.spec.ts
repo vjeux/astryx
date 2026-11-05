@@ -267,6 +267,12 @@ async function edgeRide(
         animation.play();
       }
     }
+    // NOT FOR LANDING: one slow frame before the first read after the close.
+    await frame();
+    const until = performance.now() + 80;
+    while (performance.now() < until) {
+      // the page's main thread is busy
+    }
     for (let i = 0; i < 60; i++) {
       await frame();
       read('closing');
