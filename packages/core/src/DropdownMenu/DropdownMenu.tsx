@@ -958,8 +958,8 @@ function DropdownMenuPopover({
   // The press model is mounted below (it needs the popover); the hide path
   // above it ends the gesture in flight through this ref.
   const cancelMenuPressRef = useRef<() => void>(() => {});
-  // The entrance hold starts as the layer shows. Its start is set below, once
-  // the list ref exists, and its release is kept for the close.
+  // The list ref comes from useListFocus below, so the hold's start is set
+  // there.
   const holdEntranceRef = useRef<() => void>(() => {});
   const releaseEntranceRef = useRef<(() => void) | null>(null);
 
