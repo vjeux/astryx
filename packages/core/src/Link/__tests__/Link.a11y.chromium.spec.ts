@@ -112,6 +112,19 @@ async function runState(
       await subject.waitFor({state: 'visible'});
       await expect(subject).toHaveCount(1);
       navigations = await countNavigations(page, cdp);
+      // NOT FOR LANDING: the link opens nothing. A click on it has its default
+      // prevented, so the contract must read no navigation and fail.
+      await page.evaluate(() => {
+        window.addEventListener(
+          'click',
+          event => {
+            if ((event.target as Element | null)?.closest('[data-a11y-link]')) {
+              event.preventDefault();
+            }
+          },
+          true,
+        );
+      });
       return createChromiumHarness({page, cdp, subject});
     },
     activations: async () => navigations(),
