@@ -962,6 +962,29 @@ test.describe('frame evidence', () => {
         axis: 'y',
         control: controlFrames,
       });
+      // NOT FOR LANDING: every frame and the verdict, for the frozen arm's
+      // credited frames.
+      {
+        const clock = controlClock(controlFrames);
+        const dir = path.join(process.cwd(), 'test-results', 'c07-914-dump');
+        fs.mkdirSync(dir, {recursive: true});
+        fs.writeFileSync(
+          path.join(
+            dir,
+            `${Date.now()}-${driver}-${everyNthFrame}-${testInfo.repeatEachIndex}.json`,
+          ),
+          JSON.stringify({
+            driver,
+            everyNthFrame,
+            blockMs,
+            window,
+            proof,
+            tracked: tracked.map(f => ({t: f.t, y: f.box?.y ?? null})),
+            control: controlFrames.map(f => ({t: f.t, x: f.box?.x ?? null})),
+            clock: [...clock.entries()],
+          }),
+        );
+      }
       // The judgment without the control, for the record only: on a
       // two-core runner it can fail where the control shows the compositor
       // itself presented no more.
