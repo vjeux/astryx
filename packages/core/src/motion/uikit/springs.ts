@@ -383,6 +383,38 @@ export const MENU_REDUCED_MOTION_SPRING = {
   dampingRatio: 1,
 } as const;
 
+/**
+ * Popover (UIPopoverPresentationController, kept a popover on iPhone with
+ * the `.none` adaptation) presenting: its scale, its length away from the
+ * source and its opacity run on this one spring as it grows out of the
+ * point where it meets its source (`popover`). Under Reduce Motion the same
+ * spring fades it in, with no size or scale change.
+ * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+ *   iPhone 17 Pro, CASpringAnimation dump on the popover view (mass 1,
+ *   stiffness 331.901, damping 29.149, duration 0.4937, bounce 0.2), with
+ *   Reduce Motion on (opacity only, same spring), Oct 23 2026
+ */
+export const POPOVER_PRESENT_SPRING = {
+  mass: 1,
+  stiffness: 331.901,
+  damping: 29.149,
+} as const;
+
+/**
+ * Popover dismissing (a tap outside, a tap on its source): it shrinks back
+ * into the point it grew out of; under Reduce Motion the same spring fades
+ * it out where it stands.
+ * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+ *   iPhone 17 Pro, CASpringAnimation dump on the popover view (mass 1,
+ *   stiffness 283.973, damping 28.648, duration 0.51566, bounce 0.15), with
+ *   Reduce Motion on (opacity only, same spring), Oct 23 2026
+ */
+export const POPOVER_DISMISS_SPRING = {
+  mass: 1,
+  stiffness: 283.973,
+  damping: 28.648,
+} as const;
+
 // ---------------------------------------------------------------------
 // Controls
 // ---------------------------------------------------------------------
@@ -488,6 +520,8 @@ export const springs = {
   contextMenuDismiss: CONTEXT_MENU_DISMISS_SPRING,
   contextMenuMorph: CONTEXT_MENU_MORPH_SPRING,
   menuReducedMotion: MENU_REDUCED_MOTION_SPRING,
+  popoverPresent: POPOVER_PRESENT_SPRING,
+  popoverDismiss: POPOVER_DISMISS_SPRING,
   switchThumbMove: SWITCH_THUMB_MOVE_SPRING,
   keyboard: KEYBOARD_SPRING,
   banner: BANNER_SPRING,
