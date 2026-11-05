@@ -133,6 +133,28 @@ test('the browser\u2019s own light dismiss gets the copy too, uncut by the clipp
   await open(page);
   await page.evaluate(attribute => {
     const layer = document.getElementById('layer') as HTMLElement;
+    // NOT FOR LANDING: refuse a show from a closing toggle until the next
+    // frame, as a browser that refuses a show during the toggle does.
+    let toggling = false;
+    document.addEventListener(
+      'beforetoggle',
+      event => {
+        if ((event as ToggleEvent).newState === 'closed') {
+          toggling = true;
+          requestAnimationFrame(() => {
+            toggling = false;
+          });
+        }
+      },
+      true,
+    );
+    const show = HTMLElement.prototype.showPopover;
+    HTMLElement.prototype.showPopover = function (this: HTMLElement) {
+      if (toggling) {
+        throw new DOMException('refused during a toggle', 'InvalidStateError');
+      }
+      show.call(this);
+    };
     layer.showPopover();
     layer.addEventListener(
       'beforetoggle',
@@ -146,10 +168,7 @@ test('the browser\u2019s own light dismiss gets the copy too, uncut by the clipp
   }, ATTRIBUTE);
   // A press outside: the browser closes the layer by itself.
   await page.mouse.click(360, 700);
-  const result = await page.evaluate(async attribute => {
-    // A refused show during the light dismiss opens the copy in the next
-    // frame.
-    await new Promise(resolve => requestAnimationFrame(resolve));
+  const result = await page.evaluate(attribute => {
     const copy = document.querySelector<HTMLElement>(`[${attribute}]`);
     if (copy == null) {
       return null;
