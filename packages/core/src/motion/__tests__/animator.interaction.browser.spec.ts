@@ -154,7 +154,7 @@ async function blockedRun(
   // loaded the machine is.
   const busy = await blockMainThread(page, 1000, {
     during: box,
-    minProgressMs: 40,
+    minProgressMs: 300,
   });
   await page.waitForTimeout(200);
   const frames = await cast.stop();
