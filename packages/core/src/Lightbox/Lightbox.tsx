@@ -115,6 +115,16 @@ export interface LightboxMedia {
 }
 
 export interface LightboxProps extends BaseProps<HTMLDialogElement> {
+  /**
+   * Not for merge: the caption's Text type, for the caption type comparison
+   * preview only. This prop exists only in that preview and never ships.
+   */
+  captionType?: 'body' | 'supporting';
+  /**
+   * Not for merge: the caption's Text color, for the same comparison preview
+   * only. This prop exists only in that preview and never ships.
+   */
+  captionColor?: 'primary';
   /** Ref forwarded to the root dialog element */
   ref?: React.Ref<HTMLDialogElement>;
   /**
@@ -330,6 +340,11 @@ const styles = stylex.create({
     blockSize: `calc(${spacingVars['--spacing-2']} + 2lh)`,
     paddingBlockEnd: `calc(${spacingVars['--spacing-3']} + env(safe-area-inset-bottom, 0px))`,
   },
+  // Not for merge: the band in the supporting type, for the comparison.
+  captionBandSupporting: {
+    fontSize: typeScaleVars['--text-supporting-size'],
+    lineHeight: typeScaleVars['--text-supporting-leading'],
+  },
   // A caption in the band, and its "more" button after its last line.
   captionInBand: {
     display: 'flex',
@@ -530,6 +545,8 @@ const VIDEO_CONTROLS_BAND = 48;
  * ```
  */
 export function Lightbox({
+  captionType,
+  captionColor,
   isOpen,
   onOpenChange,
   media,
@@ -1430,7 +1447,12 @@ export function Lightbox({
                               {renderMedia(mediaArray[i], i === index)}
                             </div>
                             {hasCaptionBand && (
-                              <div {...stylex.props(styles.captionBand)}>
+                              <div
+                                {...stylex.props(
+                                  styles.captionBand,
+                                  captionType === 'supporting' &&
+                                    styles.captionBandSupporting,
+                                )}>
                                 {i === index &&
                                   isCaptionOpen &&
                                   isRenderable(mediaArray[i].caption) && (
@@ -1440,7 +1462,8 @@ export function Lightbox({
                                       {...stylex.props(styles.captionFull)}>
                                       <Text
                                         as="div"
-                                        type="body"
+                                        type={captionType ?? 'body'}
+                                        color={captionColor}
                                         xstyle={styles.caption}>
                                         {mediaArray[i].caption}
                                       </Text>
@@ -1456,7 +1479,8 @@ export function Lightbox({
                                       }
                                       id={i === index ? captionId : undefined}
                                       as="div"
-                                      type="body"
+                                      type={captionType ?? 'body'}
+                                      color={captionColor}
                                       maxLines={2}
                                       hasTruncateTooltip={false}
                                       xstyle={[
@@ -1514,7 +1538,8 @@ export function Lightbox({
                       ref={captionRef}
                       id={captionId}
                       as="div"
-                      type="body"
+                      type={captionType ?? 'body'}
+                      color={captionColor}
                       xstyle={styles.caption}>
                       {currentItem.caption}
                     </Text>
