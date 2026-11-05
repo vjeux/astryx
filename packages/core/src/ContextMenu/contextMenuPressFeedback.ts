@@ -4,7 +4,7 @@
 
 /**
  * @file contextMenuPressFeedback.ts
- * @input The theme's motion timing, the context-menu constants, the
+ * @input UIKit's context-menu springs, the context-menu constants, the
  *   compositor animator, and the press state core's press machine writes
  * @output useContextMenuPressFeedback: hold and release, from ContextMenu's
  *   menu; the growth itself follows the press machine
@@ -16,11 +16,12 @@
 // The trigger is a pressable surface of the press machine. Its "on" starts
 // the growth at the onset, 150 ms after the finger lands, while the
 // recognizer follows that finger. Only the recognizer's failure or cancel
-// returns it. The theme's duration and move easing tokens
-// time both, and the compositor plays them, so a busy main thread does not
-// stall them. Once the menu opens, the trigger holds its size until the menu
-// closes. Then it returns on the theme's exit duration and easing. An inline
-// trigger and Reduce Motion show no growth.
+// returns it. ContextMenu's long-press presentation is a gesture component,
+// so the growth plays `springs.contextMenuLift` and each return
+// `springs.contextMenuDismiss` (`component:ContextMenu` FR5). The compositor
+// plays them, so a busy main thread does not stall them. Once the menu opens,
+// the trigger holds its size until the menu closes. Then it returns on the
+// dismissal spring. An inline trigger and Reduce Motion show no growth.
 
 import {useCallback, useRef, type RefObject} from 'react';
 import {useAttachment} from '../hooks/useAttachment';
@@ -28,47 +29,11 @@ import {usePressFeedback} from '../hooks/usePressFeedback';
 import {PRESSED_ATTRIBUTE, type pressableProps} from '../utils/pressFeedback';
 import {PRESS_ONSET_MS} from '../utils/pressGesture';
 import {observeMutations} from '../utils/sharedMutationObserver';
-import {
-  createMotionEngine,
-  type Animator,
-  type MotionCurve,
-} from '../motion/animator';
-import {mapProgress, mapRange} from '../motion/progress';
-import {readThemeTiming, type ThemeTimingTokens} from '../motion/themeTiming';
+import {createMotionEngine, type Animator} from '../motion/animator';
 import {contextMenu} from '../motion/uikit/contextMenu';
+import {registerSpringsTable, springs} from '../motion/uikit/springs';
 
 const {heldScale} = contextMenu.press;
-
-/** The growth under a held finger. */
-const GROWTH: ThemeTimingTokens = {
-  durations: ['--duration-medium'],
-  easing: '--ease-move',
-};
-
-/** The return after a lift before the commit. */
-const EARLY_RETURN: ThemeTimingTokens = {
-  durations: ['--duration-fast'],
-  easing: '--ease-move',
-};
-
-/** The return as the menu closes, part of the menu's exit. */
-const EXIT_RETURN: ThemeTimingTokens = {
-  durations: ['--duration-exit', '--duration-fast'],
-  easing: '--ease-exit',
-};
-
-/** A curve from `from` to `to` on the theme's timing where `element` is. */
-function themeCurve(
-  element: Element,
-  from: number,
-  to: number,
-  tokens: ThemeTimingTokens,
-): MotionCurve {
-  return mapProgress(
-    readThemeTiming(element, tokens),
-    mapRange([0, 1], [from, to], {clamp: false}),
-  );
-}
 
 export interface ContextMenuPressFeedback {
   /**
@@ -76,11 +41,11 @@ export interface ContextMenuPressFeedback {
    * spread on the trigger; the growth follows the pressed state it writes.
    */
   pressable: typeof pressableProps;
-  /** The menu the press opened closed: return on the theme's exit timing. */
+  /** The menu the press opened closed: return on the dismissal spring. */
   release(): void;
   /**
-   * The recognizer ended the press with no menu, at `time`: return over the
-   * theme's fast duration.
+   * The recognizer ended the press with no menu, at `time`: return on the
+   * dismissal spring.
    */
   end(time: number): void;
   /**
@@ -159,6 +124,8 @@ export function useContextMenuPressFeedback(
     if (element == null) {
       return null;
     }
+    // The springs are motion roles: their table registers once.
+    registerSpringsTable();
     animatorRef.current ??= createMotionEngine(element);
     return animatorRef.current;
   }, [triggerRef]);
@@ -194,15 +161,9 @@ export function useContextMenuPressFeedback(
       }
       isGrownRef.current = true;
       // `time` is the onset: 150 ms after the finger lands, or a later mark.
-      animator.play(
-        {
-          scale: themeCurve(
-            element,
-            animator.get('scaleX', time),
-            heldScale,
-            GROWTH,
-          ),
-        },
+      animator.animate(
+        {scale: heldScale},
+        {spring: springs.contextMenuLift},
         {at: time},
       );
     },
@@ -222,15 +183,9 @@ export function useContextMenuPressFeedback(
         return;
       }
       settleBack(
-        animator.play(
-          {
-            scale: themeCurve(
-              element,
-              animator.get('scaleX', time),
-              1,
-              EARLY_RETURN,
-            ),
-          },
+        animator.animate(
+          {scale: 1},
+          {spring: springs.contextMenuDismiss},
           {at: time},
         ).finished,
       );
@@ -246,9 +201,8 @@ export function useContextMenuPressFeedback(
       return;
     }
     settleBack(
-      animator.play({
-        scale: themeCurve(element, animator.get('scaleX'), 1, EXIT_RETURN),
-      }).finished,
+      animator.animate({scale: 1}, {spring: springs.contextMenuDismiss})
+        .finished,
     );
   }, [settleBack]);
 
