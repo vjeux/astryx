@@ -15,7 +15,6 @@ Recorded on the drafts this pull request supersedes (#8107, #8185, #8204). Since
 - [Grabbed mid-push](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8107-p14-grab-mid-push.gif)
 - [Pop to root](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8107-p15-pop-to-root.gif)
 - Large titles: [scroll hands over and back](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8185-scroll-collapse-expand.gif), [push and pop](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8185-push-pop.gif), [back swipe](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8185-back-swipe.gif), [a 600 ms block inside the handover](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8185-busy-scroll.gif)
-- Search: [activate, then Cancel](https://raw.githubusercontent.com/vjeux/astryx/f5c44c1f2b42c51c4a65c51e9b44d20d5feb9387/8204-activate-cancel.gif), [on a pushed screen](https://raw.githubusercontent.com/vjeux/astryx/f5c44c1f2b42c51c4a65c51e9b44d20d5feb9387/8204-pushed-screen.gif), [a field that scrolls away](https://raw.githubusercontent.com/vjeux/astryx/f5c44c1f2b42c51c4a65c51e9b44d20d5feb9387/8204-hides-when-scrolling.gif), [a 600 ms block inside the rise](https://raw.githubusercontent.com/vjeux/astryx/f5c44c1f2b42c51c4a65c51e9b44d20d5feb9387/8204-busy-activation.gif)
 
 ## Chromium
 
@@ -27,8 +26,6 @@ Recorded on the drafts this pull request supersedes (#8107, #8185, #8204). Since
 - [A pop, then a back swipe](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8107-p20-pop-then-back-swipe.chromium.gif)
 - [A push, frame by frame](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8108-push.png)
 - [Large titles under Reduce Motion](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8185-reduce-motion.chromium.gif)
-- [Search cancelled mid-activation](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8204-cancel-mid-activation.chromium.gif)
-- [Search under Reduce Motion](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8204-reduce-motion.chromium.gif)
 
 ## Android 15 emulator
 
@@ -37,4 +34,3 @@ Recorded on the drafts this pull request supersedes (#8107, #8185, #8204). Since
 - [A slow swipe springs back](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8107-a3-android-slow-swipe-cancels.gif)
 - [A flick finishes](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8107-a4-android-flick-finishes.gif)
 - [Large-title scroll](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8185-android-scroll.gif)
-- [Search: activate, then Cancel](https://raw.githubusercontent.com/vjeux/astryx/07490b361f58aabd35a1c9217025ba9d82f85d8c/8204-android-activate-cancel.gif)
