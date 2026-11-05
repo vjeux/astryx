@@ -230,6 +230,20 @@ const styles = stylex.create({
   },
 });
 
+/** An element's own computed `scale` on each axis; 1 where it has none. */
+function ownScale(element: HTMLElement): {x: number; y: number} {
+  const value =
+    element.ownerDocument.defaultView?.getComputedStyle(element).scale ?? '';
+  if (value === '' || value === 'none') {
+    return {x: 1, y: 1};
+  }
+  const [x, y = x] = value.trim().split(/\s+/).map(Number.parseFloat);
+  return {
+    x: Number.isFinite(x) && x > 0 ? x : 1,
+    y: Number.isFinite(y) && y > 0 ? y : 1,
+  };
+}
+
 /**
  * Keeps the 1px cursor anchor inside the trigger along one axis. A point in
  * the trigger's last pixel (Shift+F10 opens on its bottom edge) steps back by
@@ -622,23 +636,15 @@ export function ContextMenu({
     [listNavKeyDown, closeMenu, typeahead, ownsEvent],
   );
 
-  // How much a block trigger is scaled on screen: the press feedback's growth,
-  // and any ancestor's scale. Its bounding rect is the scaled box, and its
-  // offset size the unscaled one. So a client point divided by it lands in
-  // the trigger's own coordinates.
-  const triggerScale = useCallback(
-    (rect: DOMRect): {x: number; y: number} => {
-      const trigger = triggerRef.current;
-      if (trigger == null || triggerAs === 'span') {
-        return {x: 1, y: 1};
-      }
-      return {
-        x: trigger.offsetWidth > 0 ? rect.width / trigger.offsetWidth : 1,
-        y: trigger.offsetHeight > 0 ? rect.height / trigger.offsetHeight : 1,
-      };
-    },
-    [triggerAs],
-  );
+  // How much the press feedback has grown a block trigger from its center:
+  // the trigger's own `scale`, not an ancestor's transform.
+  const triggerScale = useCallback((): {x: number; y: number} => {
+    const trigger = triggerRef.current;
+    if (trigger == null || triggerAs === 'span') {
+      return {x: 1, y: 1};
+    }
+    return ownScale(trigger);
+  }, [triggerAs]);
 
   // Place the 1px cursor anchor at a point in the trigger's local
   // coordinate space and open the menu. Positioning the anchor inside the
@@ -656,7 +662,7 @@ export function ContextMenu({
       focusTarget: 'first' | 'menu' = 'first',
     ) => {
       const rect = triggerRef.current?.getBoundingClientRect();
-      const scale = rect ? triggerScale(rect) : {x: 1, y: 1};
+      const scale = rect ? triggerScale() : {x: 1, y: 1};
       const x = rect ? keepAnchorInside(localX, rect.width / scale.x) : localX;
       const y = rect ? keepAnchorInside(localY, rect.height / scale.y) : localY;
       positionRef.current = {x, y};
@@ -715,7 +721,7 @@ export function ContextMenu({
       if (rect == null) {
         return point;
       }
-      const scale = triggerScale(rect);
+      const scale = triggerScale();
       const width = rect.width / scale.x;
       const height = rect.height / scale.y;
       const left = rect.left + (rect.width - width) / 2;
