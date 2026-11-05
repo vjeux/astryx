@@ -184,9 +184,12 @@ the app reaches every layer instead of the components that happen to read it.
   capped to the viewport minus both gutters, and the box never exceeds it.
   A composing component may cap lower (DropdownMenu's 300px) and may become a
   scroll container when its content exceeds the cap; it may not cap higher.
-- **FR4 — The runtime's fallback orders.** An anchor-mode layer tries, in order:
-  its preferred position; the flip across the placement axis; the flip across
-  the alignment axis; both flips; then, while its anchor is in view, a slide
+- **FR4 — The runtime's fallback orders.** An anchored layer that opts into
+  anchor placement takes no position fallbacks; cap, fit and gutters still
+  apply (architecture:layer-runtime). Every other anchor-mode layer tries, in
+  order: its preferred position; the flip across the placement axis; the flip
+  across the alignment axis; both flips; then, while its anchor is in view, a
+  slide
   along the alignment axis that keeps the layer's size and moves it the least
   distance that brings it inside the gutters, on the preferred side of the
   trigger first and the opposite side second. The slide is a position option
