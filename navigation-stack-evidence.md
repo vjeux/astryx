@@ -1,6 +1,6 @@
 # NavigationStack: recordings
 
-Recorded on the drafts this pull request supersedes (#8107, #8185, #8204). Since then, a release takes the pan's own velocity, so a finger that rests before the lift springs back; the earlier recording of a paused fast swipe that finished is left out.
+Recorded on the drafts this pull request supersedes (#8107, #8108, #8185). Since then, a release takes the pan's own velocity, so a finger that rests before the lift springs back; the earlier recording of a paused fast swipe that finished is left out.
 
 ## iOS 26.2 simulator
 
