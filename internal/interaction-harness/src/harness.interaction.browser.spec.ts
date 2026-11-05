@@ -1006,6 +1006,60 @@ test.describe('frame evidence', () => {
         }
         shown = y;
       }
+      // NOT FOR LANDING: each new position in the judged part, the step it
+      // shows (its time from the block's start) and the frame's place on the
+      // control's clock.
+      if (driver === 'raf') {
+        const clock = controlClock(controlFrames);
+        const offsets = [...clock.entries()].map(([t, ms]) => t - ms);
+        offsets.sort((p, q) => p - q);
+        const median = offsets[Math.floor(offsets.length / 2)] ?? NaN;
+        let last = tracked
+          .filter(f => f.box != null && f.t < proof.judged.from)
+          .at(-1)?.box?.y;
+        const shownSteps = tracked.flatMap(f => {
+          const y = f.box?.y;
+          if (y == null || f.t < proof.judged.from || f.t > proof.judged.to) {
+            return [];
+          }
+          const changed = last != null && Math.abs(y - last) > 0.25;
+          last = y;
+          if (!changed) {
+            return [];
+          }
+          const match = steps
+            .filter(s => Math.abs(top + s.y - y) <= step)
+            .map(s => s.t - window.from)
+            .filter(ms => ms < 0)
+            .at(-1);
+          const ms = clock.get(f.t);
+          return [
+            {
+              stampMs: f.t - window.from,
+              clockMs: ms == null ? null : ms + median - window.from,
+              y: y - top,
+              stepSetMs: match ?? null,
+            },
+          ];
+        });
+        const dir = path.join(process.cwd(), 'test-results', 'c07-914-trace');
+        fs.mkdirSync(dir, {recursive: true});
+        fs.writeFileSync(
+          path.join(
+            dir,
+            `${Date.now()}-${everyNthFrame}-${testInfo.repeatEachIndex}.json`,
+          ),
+          JSON.stringify({
+            control: proof.control,
+            unset,
+            shownSteps,
+            lastStepMs: steps
+              .filter(s => s.t < window.from)
+              .map(s => s.t - window.from)
+              .at(-1),
+          }),
+        );
+      }
       return {proof, unset};
     };
 
