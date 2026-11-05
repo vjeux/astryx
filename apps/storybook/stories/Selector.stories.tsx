@@ -1233,6 +1233,39 @@ export const PlacementAbove: Story = {
   },
 };
 
+/**
+ * The default overlay with the trigger at the viewport's end. The selected
+ * row sits over the trigger. The rest of the list stays inside the viewport,
+ * so the last option can be pointed at.
+ */
+export const OverlayNearViewportBottom: Story = {
+  parameters: {layout: 'fullscreen'},
+  render: () => {
+    const [value, setValue] = useState<string | undefined>(undefined);
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+          alignItems: 'flex-start',
+          height: '100vh',
+          boxSizing: 'border-box',
+          padding: '0 0 6px 24px',
+        }}>
+        <Selector
+          label="Theme choice"
+          isLabelHidden
+          size="sm"
+          options={['(unset)', 'light', 'dark', 'system', 'custom', 'sepia']}
+          value={value}
+          onChange={v => setValue(v)}
+        />
+      </div>
+    );
+  },
+};
+
 export const Placements: Story = {
   render: () => {
     const [below, setBelow] = useState('Banana');

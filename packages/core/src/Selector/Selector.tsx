@@ -72,7 +72,7 @@ import {
 import type {SelectorOptionType, SelectorOptionData} from './types';
 import {isOptionData, isDivider, isSection, normalizeOption} from './utils';
 import {getSelectableOptionEntries} from './selectableOptionEntries';
-import {useCombobox, useSelectedItemOffset} from './hooks';
+import {useCombobox, useSelectedItemOverlayPosition} from './hooks';
 import {useMenuPress} from '../hooks/useMenuPress';
 import {useMenuOverflow} from '../DropdownMenu/useMenuOverflow';
 import {useTypeahead} from '../hooks/useTypeahead';
@@ -1426,8 +1426,8 @@ export function Selector<T extends SelectorOptionType>(
   // placement opts out of the selector-specific overlay behavior and uses the
   // standard layer positioning API instead.
   const shouldOverlaySelectedItem = placement == null && !hasSearch;
-  const {offset: rawOffset, isPositioned: rawIsPositioned} =
-    useSelectedItemOffset({
+  const {translateY: rawTranslateY, isPositioned: rawIsPositioned} =
+    useSelectedItemOverlayPosition({
       isOpen: popover.isOpen && shouldOverlaySelectedItem,
       selectedItemIndex,
       listboxId,
@@ -1435,12 +1435,15 @@ export function Selector<T extends SelectorOptionType>(
       anchorRef,
     });
 
-  const selectedItemOffset = shouldOverlaySelectedItem ? rawOffset : 0;
+  const selectedItemTranslateY = shouldOverlaySelectedItem ? rawTranslateY : 0;
   const isPositioned = shouldOverlaySelectedItem ? rawIsPositioned : true;
   const popoverPlacement = placement ?? 'below';
+  // Anchor positioning fits the margin box beside the anchor. A negative margin
+  // shrinks that box, so the list stays on the overflowing side. A translate does
+  // not change the fit.
   const popoverOffsetStyle: React.CSSProperties | undefined =
-    selectedItemOffset > 0
-      ? {marginBlockStart: `-${selectedItemOffset}px`}
+    selectedItemTranslateY !== 0
+      ? {translate: `0 ${selectedItemTranslateY}px`}
       : undefined;
 
   // Clear the current value. Shared by the clear button and the keyboard
@@ -2050,9 +2053,8 @@ export function Selector<T extends SelectorOptionType>(
     selectionSurface = popover.render(panelContent, {
       placement: popoverPlacement,
       alignment: 'start',
-      // The system's standard menu clearance, except in overlay mode:
-      // there the measured negative margin owns the block geometry and
-      // the menu is meant to sit on the trigger, not clear it.
+      // Standard menu clearance, except in overlay mode. There the measured
+      // translate owns the block geometry, and the menu sits on the trigger.
       offset: shouldOverlaySelectedItem
         ? undefined
         : spacingVars['--spacing-1'],
