@@ -146,6 +146,22 @@ async function blockedRun(
     },
     {spring, travel: TRAVEL},
   );
+  // NOT FOR LANDING: the spring's twin on `left`, which the main thread
+  // samples, so it freezes through the block. The compositor's spring goes.
+  await page.evaluate(() => {
+    const el = document.getElementById('box') as HTMLElement;
+    for (const animation of el.getAnimations()) {
+      const effect = animation.effect as KeyframeEffect;
+      const frames = effect.getKeyframes().map(k => ({
+        offset: k.offset,
+        easing: k.easing,
+        left: `${parseFloat(String(k.translate ?? '0'))}px`,
+      }));
+      const twin = el.animate(frames, effect.getTiming());
+      twin.startTime = animation.startTime;
+      animation.cancel();
+    }
+  });
   // The page blocks itself in the frame that sees the curve 40 ms in, however
   // loaded the machine is.
   const busy = await blockMainThread(page, 1000, {
@@ -180,12 +196,12 @@ test('a spring keeps advancing every frame through a 1 s main-thread block, on i
     type: 'busy window',
     description: `${proof.summary} | without the control: ${alone.verdict.failures.join('; ') || 'pass'}`,
   });
-  expect(busy.spanMs).toBeGreaterThanOrEqual(1000);
+  expect.soft(busy.spanMs).toBeGreaterThanOrEqual(1000);
   // The harness's verdict against the control: the spring moved on every
   // frame the control moved, and stalled no longer than it (what a
   // main-thread animation never does; see the next test).
-  expect(proof.verdict.failures, proof.summary).toEqual([]);
-  expect(proof.monotonic).toBe(true);
+  expect.soft(proof.verdict.failures, proof.summary).toEqual([]);
+  expect.soft(proof.monotonic).toBe(true);
   // And it is the spring. Each control moves 240 px out and back every 800
   // ms, linearly, on the compositor. Its start plus its own time places each
   // frame on the page clock (controlClock). The frame's stamp only picks the
@@ -279,19 +295,21 @@ test('a spring keeps advancing every frame through a 1 s main-thread block, on i
     type: 'the spring against the control (px, ms)',
     description: JSON.stringify(read),
   });
-  expect(
-    [0, 1, 2, 3].every(q => quarters.has(q)),
-    JSON.stringify(read),
-  ).toBe(true);
+  expect
+    .soft(
+      [0, 1, 2, 3].every(q => quarters.has(q)),
+      JSON.stringify(read),
+    )
+    .toBe(true);
   // Every frame is within 3 px of the curve, a px for each of three reads.
   // The box's marker and the control are read at whole px. The control's px
   // is 1.7 ms of its time, so at most 0.6 px of the spring. The fitted start
   // can be off by about as much.
-  expect(read.worst, JSON.stringify(read)).toBeLessThanOrEqual(3);
+  expect.soft(read.worst, JSON.stringify(read)).toBeLessThanOrEqual(3);
   // A spring 10% faster is off by more than twice that somewhere.
-  expect(read.faster, JSON.stringify(read)).toBeGreaterThan(6);
+  expect.soft(read.faster, JSON.stringify(read)).toBeGreaterThan(6);
   if (browserName === 'chromium') {
-    expect(Math.abs(read.median), JSON.stringify(read)).toBeLessThan(20);
+    expect.soft(Math.abs(read.median), JSON.stringify(read)).toBeLessThan(20);
   }
 });
 
