@@ -20,7 +20,9 @@
  * SYNC: Keep `phone` equal to the projects in playwright.interaction.config.ts.
  */
 
-import type {Page, TestType} from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+import type {Page, Request, TestType} from '@playwright/test';
 import {
   DEFAULT_STORYBOOK_DIR,
   serveStorybook,
@@ -118,7 +120,92 @@ export async function openStory(
         .join(';'),
     );
   }
-  await page.goto(`${origin}/iframe.html?${params.toString()}`);
+  // NOT FOR LANDING: a slow load dumps the browser's and the server's
+  // request timelines and the event loop's lag.
+  const timeline: {t: number; kind: string; url: string; extra?: string}[] = [];
+  const onRequest = (r: Request) =>
+    timeline.push({t: Date.now(), kind: 'request', url: r.url()});
+  const onFinished = (r: Request) =>
+    timeline.push({t: Date.now(), kind: 'finished', url: r.url()});
+  const onFailed = (r: Request) =>
+    timeline.push({
+      t: Date.now(),
+      kind: 'failed',
+      url: r.url(),
+      extra: r.failure()?.errorText,
+    });
+  page.on('request', onRequest);
+  page.on('requestfinished', onFinished);
+  page.on('requestfailed', onFailed);
+  const t0 = Date.now();
+  let failure: unknown = null;
+  try {
+    await page.goto(`${origin}/iframe.html?${params.toString()}`, {
+      timeout: 45_000,
+    });
+  } catch (error) {
+    failure = error;
+  } finally {
+    page.off('request', onRequest);
+    page.off('requestfinished', onFinished);
+    page.off('requestfailed', onFailed);
+    const elapsed = Date.now() - t0;
+    {
+      const dir = path.join(process.cwd(), 'test-results', 'c07-goto-dump');
+      fs.mkdirSync(dir, {recursive: true});
+      const settled = new Set(
+        timeline.filter(e => e.kind !== 'request').map(e => e.url),
+      );
+      fs.appendFileSync(
+        path.join(dir, 'gotos.jsonl'),
+        `${JSON.stringify({
+          t0,
+          storyId,
+          elapsed,
+          requested: timeline.filter(e => e.kind === 'request').length,
+          unsettled: timeline.filter(
+            e => e.kind === 'request' && !settled.has(e.url),
+          ).length,
+          failed: failure != null,
+        })}
+`,
+      );
+    }
+    if (failure != null || elapsed > 8000) {
+      const done = new Set(
+        timeline.filter(e => e.kind !== 'request').map(e => e.url),
+      );
+      const server = (
+        globalThis as unknown as {
+          __c07Server?: {
+            requests: {t0: number}[];
+            lag: {t: number}[];
+          };
+        }
+      ).__c07Server;
+      const dir = path.join(process.cwd(), 'test-results', 'c07-goto-dump');
+      fs.mkdirSync(dir, {recursive: true});
+      fs.writeFileSync(
+        path.join(dir, `${t0}-${storyId}.json`),
+        JSON.stringify({
+          storyId,
+          elapsed,
+          failure: failure == null ? null : String(failure),
+          t0,
+          requested: timeline.filter(e => e.kind === 'request').length,
+          pending: timeline
+            .filter(e => e.kind === 'request' && !done.has(e.url))
+            .map(e => e.url),
+          timeline,
+          server: server?.requests.filter(r => r.t0 >= t0 - 1000) ?? null,
+          lag: server?.lag.filter(l => l.t >= t0 - 1000) ?? null,
+        }),
+      );
+    }
+  }
+  if (failure != null) {
+    throw failure;
+  }
   await page
     .locator('#storybook-root > *')
     .first()
