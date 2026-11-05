@@ -431,6 +431,10 @@ clear-glyph target of its own.
   ticks with a short vibration where the browser has the Vibration API, as on
   Android. iOS Safari has none, so the tick is silent there (`spec:AST-094`
   FR23).
+- **Arrow step motion.** Under a finger, an arrow's month step plays the shared
+  pager's animated scroll, 300 ms on a sinusoidal curve, where `spec:AST-094`
+  FR45 asks motion a tap starts to play the theme's duration and easing tokens.
+  It is the pager's implementation gap under `spec:AST-094` FR4.
 
 ## Decision log
 
