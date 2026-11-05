@@ -174,19 +174,14 @@ export function createToastQueue(): ToastQueue {
 /** Connects a queue to the toast context of the viewport that renders it. */
 export function ToastQueueConnector({queue}: {queue: ToastQueue}) {
   const viewport = use(ToastContext);
-  // Points the queue at the viewport's toast context once the viewport
-  // commits, so its addToast can set its state. The context changes with the
-  // viewport's props, and the queue stays connected across that change.
+  // The viewport's addToast sets its state. Give it the waiting toasts after
+  // it commits.
   useEffect(() => {
     queue.connect(viewport);
-  }, [queue, viewport]);
-  // Disconnects the queue when the viewport unmounts.
-  useEffect(
-    () => () => {
+    return () => {
       queue.connect(null);
-    },
-    [queue],
-  );
+    };
+  }, [queue, viewport]);
   return null;
 }
 
