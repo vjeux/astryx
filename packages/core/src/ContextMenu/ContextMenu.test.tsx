@@ -1231,6 +1231,27 @@ describe('ContextMenu under a fine pointer: the touch model costs nothing', () =
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  it.each(['mouse', 'pen'])(
+    'opens nothing for a %s held on the trigger: only a contextmenu opens the menu',
+    pointerType => {
+      render(
+        <ContextMenu items={[{label: 'Item 1'}]} data-testid="ctx">
+          <div>Right-click me</div>
+        </ContextMenu>,
+      );
+      const trigger = screen.getByTestId('ctx');
+      const press = {pointerType, pointerId: 1, button: 0};
+      fireEvent.pointerDown(trigger, press);
+      fireEvent.mouseDown(trigger);
+      advance(contextMenu.press.menuDisplayMs + 200);
+      expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+      fireEvent.pointerUp(trigger, press);
+      fireEvent.mouseUp(trigger);
+      advance(50);
+      expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    },
+  );
+
   it('opens the cursor menu on a right-click, as before', () => {
     render(
       <ContextMenu items={[{label: 'Item 1'}]} data-testid="ctx">
@@ -2066,6 +2087,66 @@ describe('ContextMenu press model', () => {
     fireEvent.pointerUp(item('Paste'), touch);
     fireEvent.click(item('Cut'), {detail: 1});
     expect(onPaste).toHaveBeenCalledTimes(1);
+    expect(onCut).not.toHaveBeenCalled();
+  });
+
+  // Desktop parity: a mouse or a pen keeps DropdownMenu's press model in the
+  // pointer menu, whichever path owns the long press.
+  it.each(['mouse', 'pen'])(
+    'acts on the row under a %s release, once, and swallows the stray click',
+    pointerType => {
+      const onCut = vi.fn();
+      const onPaste = vi.fn();
+      render(
+        <ContextMenu
+          items={[
+            {label: 'Cut', onClick: onCut},
+            {label: 'Copy'},
+            {label: 'Paste', onClick: onPaste},
+          ]}>
+          <div>Right-click me</div>
+        </ContextMenu>,
+      );
+      fireEvent.contextMenu(screen.getByText('Right-click me'));
+      const press = {pointerType, pointerId: 1, button: 0};
+      fireEvent.pointerDown(item('Cut'), press);
+      fireEvent.pointerMove(item('Paste'), press);
+      expect(item('Paste')).toHaveFocus();
+      fireEvent.pointerUp(item('Paste'), press);
+      fireEvent.click(item('Cut'), {detail: 1});
+      expect(onPaste).toHaveBeenCalledTimes(1);
+      expect(onCut).not.toHaveBeenCalled();
+    },
+  );
+
+  function releaseOutside(pointerType: string) {
+    const onCut = vi.fn();
+    render(
+      <>
+        <ContextMenu items={[{label: 'Cut', onClick: onCut}, {label: 'Copy'}]}>
+          <div>Right-click me</div>
+        </ContextMenu>
+        <button type="button">Outside</button>
+      </>,
+    );
+    fireEvent.contextMenu(screen.getByText('Right-click me'));
+    const press = {pointerType, pointerId: 1, button: 0};
+    fireEvent.pointerDown(item('Cut'), press);
+    const outside = screen.getByRole('button', {name: 'Outside'});
+    fireEvent.pointerMove(outside, press);
+    fireEvent.pointerUp(outside, press);
+    return onCut;
+  }
+
+  it('closes the menu for a mouse press that starts on a row and is released outside it', () => {
+    const onCut = releaseOutside('mouse');
+    expect(HTMLElement.prototype.hidePopover).toHaveBeenCalled();
+    expect(onCut).not.toHaveBeenCalled();
+  });
+
+  it('keeps the menu open for a pen press released outside it, as for a finger', () => {
+    const onCut = releaseOutside('pen');
+    expect(HTMLElement.prototype.hidePopover).not.toHaveBeenCalled();
     expect(onCut).not.toHaveBeenCalled();
   });
 });
