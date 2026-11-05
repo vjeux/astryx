@@ -592,6 +592,37 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   // reads every animation each frame, so the windows come from when each
   // scale animation starts.
   await story.trigger.focus();
+  // NOT FOR LANDING: the growth starts at its frame's time, as on a machine
+  // whose compositor starts it in that frame. A 25 ms frame callback runs
+  // before the growth's own, so its animate() call comes 25 ms later.
+  await page.evaluate(() => {
+    window.addEventListener(
+      'keydown',
+      () => {
+        requestAnimationFrame(() => {
+          const until = performance.now() + 25;
+          while (performance.now() < until) {
+            // Busy.
+          }
+        });
+      },
+      {capture: true, once: true},
+    );
+    const animate = Element.prototype.animate;
+    let started = false;
+    Element.prototype.animate = function (keyframes, options) {
+      const animation = animate.call(this, keyframes, options);
+      if (
+        !started &&
+        Array.isArray(keyframes) &&
+        keyframes.some(frame => frame != null && 'scale' in frame)
+      ) {
+        started = true;
+        animation.startTime = document.timeline.currentTime;
+      }
+      return animation;
+    };
+  });
   let present = 0;
   let dismiss = 0;
   const trace = await traceRendering(page, async () => {
