@@ -17,7 +17,39 @@ import {fileURLToPath} from 'node:url';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {act, render, screen} from '@testing-library/react';
 import {pointerQuery} from '../gestures/__tests__/pointerQuery';
+import type * as AnimatorModule from '../motion/animator';
+import {rubberBandSlope} from '../motion/rubberBand';
+import {springs} from '../motion/uikit/springs';
 import {ChatLayout} from './ChatLayout';
+
+// Every spring the motion engine is asked for, with the element it moves.
+const springCalls = vi.hoisted(
+  () =>
+    [] as {
+      element: HTMLElement | null;
+      to: {y?: number};
+      transition: {spring?: unknown; velocity?: {y?: number}};
+      options: {touchRelease?: boolean} | undefined;
+    }[],
+);
+
+vi.mock('../motion/animator', async importOriginal => {
+  const actual = await importOriginal<typeof AnimatorModule>();
+  return {
+    ...actual,
+    createMotionEngine: (
+      ...args: Parameters<typeof actual.createMotionEngine>
+    ) => {
+      const engine = actual.createMotionEngine(...args);
+      const animate = engine.animate.bind(engine);
+      engine.animate = (to, transition, options) => {
+        springCalls.push({element: engine.element, to, transition, options});
+        return animate(to, transition, options);
+      };
+      return engine;
+    },
+  };
+});
 
 type FakeViewport = EventTarget & {
   height: number;
@@ -446,6 +478,34 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
       } finally {
         restoreMotion();
       }
+    });
+
+    it('springs back on the keyboard spring from the release speed, scaled by the band, and from rest after a still lift (spec:AST-094 FR38)', () => {
+      const {composer, field, line, transcript} = renderLayout();
+      const releaseAfter = (from: number) =>
+        springCalls.slice(from).find(call => call.element === composer);
+      showKeyboard(field);
+      // A flick: the finger still moves 8 px each 16 ms as it lifts.
+      let last = fingerDrag(transcript, 100, line + 40);
+      let from = springCalls.length;
+      finger(transcript, 'touchend', line + 40, last + 4);
+      const flick = releaseAfter(from);
+      expect(flick?.to).toEqual({y: 0});
+      expect(flick?.transition.spring).toEqual(springs.keyboard);
+      expect(flick?.options?.touchRelease).toBe(true);
+      // The finger's 500 px/s, at most, times the band's slope at 40 px.
+      const speed = flick?.transition.velocity?.y ?? 0;
+      expect(speed).toBeGreaterThan(0);
+      expect(speed).toBeLessThanOrEqual(500 * rubberBandSlope(40, COVER));
+
+      clock += 10_000;
+      showKeyboard(field);
+      last = fingerDrag(transcript, 100, line + 40);
+      from = springCalls.length;
+      finger(transcript, 'touchend', line + 40, last + 150);
+      const still = releaseAfter(from);
+      expect(still?.transition.spring).toEqual(springs.keyboard);
+      expect(Math.abs(still?.transition.velocity?.y ?? 1)).toBeLessThan(1e-6);
     });
 
     it('leaks nothing between drags: ten drags, alternating armed lifts and lifts above, each start from rest', () => {
