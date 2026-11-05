@@ -9,19 +9,18 @@
  * @output useGroupPressTracking: the press tracking of a group of buttons;
  *   GROUP_PRESS_POINTERS, the pointers it follows
  * @position Internal hook, not exported from the hooks entry. It drives
- *   useActionGroupTracking and the shared touch hit area (useTouchHitArea)
- *   for a group's members. ButtonGroup consumes it, and its root applies
- *   touchHitAreaStyles.layer. AlertDialog's tracking follows
+ *   useActionGroupTracking and the shared hit area for a group's members.
+ *   ButtonGroup consumes it and applies groupHitAreaStyles
+ *   (utils/groupHitArea.stylex.ts). AlertDialog's tracking follows
  *   GROUP_PRESS_POINTERS too.
  *
  * SYNC: When modified, update ButtonGroupTracking.test.tsx.
  */
 
-import type {RefCallback, RefObject} from 'react';
+import {useCallback, useState, type RefCallback, type RefObject} from 'react';
 import type {GestureTouch} from '../gestures/types';
 import {isPressGroupItem} from '../privateAttributes/pressGroupItem.stylex';
-import {groupGrowth} from '../utils/hitArea';
-import {useTouchHitArea, type TouchHitAreaOptions} from '../utils/touchHitArea';
+import {groupGrowth, watchHitArea, writeHitInsets} from '../utils/hitArea';
 import {
   DISABLED_SELECTOR,
   measureActions,
@@ -58,17 +57,6 @@ function trackedTargets(group: HTMLElement): ActionGroupTarget[] {
     hasArea,
   );
 }
-
-/**
- * The group's hit area. Each side grows as far as the members on that edge
- * would. The tracker reads the members when a press begins, so a press reads
- * nothing else on the page.
- */
-const GROUP_HIT_AREA: TouchHitAreaOptions = {
-  growth: (box, toLayout, group) =>
-    groupGrowth(box, trackedTargets(group).map(toLayout)),
-  checkAtPress: false,
-};
 
 /**
  * Whether the group takes `touch`'s press. It takes one on an enabled tracked
@@ -110,12 +98,14 @@ function takesPress(group: HTMLElement | null, touch: GestureTouch): boolean {
 }
 
 export interface GroupPressTracking {
-  /**
-   * Merge into the group's root: it keeps the hit layer's insets live. While
-   * the group tracks presses, the root applies `touchHitAreaStyles.layer` and
-   * is positioned, as the layer's containing block.
-   */
+  /** Merge into the group's root: it keeps the hit layer's insets live. */
   readonly hitAreaRef: RefCallback<HTMLElement>;
+  /**
+   * Apply `groupHitAreaStyles.hitArea` to the root. True only while the
+   * group's watch grows a member's target, under a coarse primary pointer, so
+   * a desktop root keeps its stacking.
+   */
+  readonly hasHitLayer: boolean;
 }
 
 /** The pointers a group's press slides for: a finger and a pen. */
@@ -144,9 +134,41 @@ export function useGroupPressTracking(
     isEnabled,
   });
   // A finger's target grows toward 44 px through the hit layer, not the
-  // members. A finger just past a small member lands on the layer, and the
-  // tracker picks that member. The shared watch grows a target only under a
-  // coarse primary pointer.
-  const hitAreaRef = useTouchHitArea(isEnabled, GROUP_HIT_AREA);
-  return {hitAreaRef};
+  // members. The watch shares the page's one `(pointer: coarse)` listener
+  // and grows a target only under a coarse primary pointer, so the layer
+  // exists only then.
+  const [isGrowing, setIsGrowing] = useState(false);
+  const hitAreaRef = useCallback(
+    (element: HTMLElement | null) => {
+      if (!isEnabled || element == null) {
+        return;
+      }
+      const stop = watchHitArea(
+        element,
+        insets => {
+          writeHitInsets(element, insets);
+          setIsGrowing(
+            insets.top > 0 ||
+              insets.right > 0 ||
+              insets.bottom > 0 ||
+              insets.left > 0,
+          );
+        },
+        {
+          // Each side grows as far as the members on that edge would.
+          growth: (box, toLayout) =>
+            groupGrowth(box, trackedTargets(element).map(toLayout)),
+          // The tracker reads the group's own members when a press begins.
+          // So a press reads nothing else on the page.
+          checkAtPress: false,
+        },
+      );
+      return () => {
+        stop();
+        setIsGrowing(false);
+      };
+    },
+    [isEnabled],
+  );
+  return {hitAreaRef, hasHitLayer: isEnabled && isGrowing};
 }

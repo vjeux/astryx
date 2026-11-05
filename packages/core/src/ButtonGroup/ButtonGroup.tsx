@@ -35,7 +35,7 @@ import {
   useGroupPressTracking,
 } from '../hooks/useGroupPressTracking';
 import {useTouchPresentation} from '../utils/touchPresentation';
-import {touchHitAreaStyles} from '../utils/touchHitArea.stylex';
+import {groupHitAreaStyles} from '../utils/groupHitArea.stylex';
 import {mergeProps, composeEventHandlers} from '../utils';
 import type {BaseProps} from '../BaseProps';
 import {ButtonGroupContext} from './ButtonGroupContext';
@@ -105,11 +105,6 @@ const styles = stylex.create({
   },
   vertical: {
     flexDirection: 'column',
-  },
-  // While the group tracks presses, its hit layer is the root's `::after`, so
-  // the root is the layer's containing block.
-  tracking: {
-    position: 'relative',
   },
 });
 
@@ -215,7 +210,10 @@ export function ButtonGroup({
   const {isTouch} = useTouchPresentation();
   const tracksPress = !isDisabled && isTouch;
   const groupRef = useRef<HTMLDivElement>(null);
-  const {hitAreaRef} = useGroupPressTracking(groupRef, tracksPress);
+  const {hitAreaRef, hasHitLayer} = useGroupPressTracking(
+    groupRef,
+    tracksPress,
+  );
 
   return (
     <ButtonGroupContext value={contextValue}>
@@ -227,8 +225,7 @@ export function ButtonGroup({
             themeProps('button-group', {size, orientation, elevation}),
             stylex.props(
               styles.group,
-              tracksPress && styles.tracking,
-              tracksPress && touchHitAreaStyles.layer,
+              hasHitLayer && groupHitAreaStyles.hitArea,
               orientation === 'vertical' && styles.vertical,
               elevationStyles[elevation],
               xstyle,

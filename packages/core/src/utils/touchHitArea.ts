@@ -4,13 +4,13 @@
 
 /**
  * @file touchHitArea.ts
- * @input Whether an element takes taps, how it grows, the shared touch hit
- *   area (utils/hitArea.ts) and the Web Animations around the element
+ * @input Whether an element takes taps, the shared touch hit area
+ *   (utils/hitArea.ts) and the Web Animations around the element
  * @output `useTouchHitArea`, a callback ref that keeps an element's hit insets
  *   live for its invisible layer (`touchHitAreaStyles.layer`)
  * @position Core-internal hook for the coarse-only 44 px target. List rows,
- *   InfoTip, CheckboxInput, RadioListItem and the press-tracking groups use
- *   it, and so can any control whose target outgrows its box under a finger.
+ *   InfoTip, CheckboxInput and RadioListItem use it, and so can any control
+ *   whose target grows under a finger without growing its box.
  *
  * SYNC: When modified, update utils/touchHitArea.stylex.ts and
  * touchHitArea.test.tsx.
@@ -22,33 +22,7 @@ import {
   NO_HIT_INSETS,
   watchHitArea,
   writeHitInsets,
-  type HitInsets,
-  type HitRect,
 } from './hitArea';
-
-/** How an owner's element grows, for an owner with its own rule. */
-export interface TouchHitAreaOptions {
-  /**
-   * How far the element grows on each side before any neighbour stops it,
-   * read as `watchHitArea`'s `growth`. It also gets the element. A group
-   * passes `groupGrowth` of its members.
-   * @default toward 44 px on each axis, centered
-   */
-  readonly growth?: (
-    target: HitRect,
-    toLayout: (rect: HitRect) => HitRect,
-    element: HTMLElement,
-  ) => HitInsets;
-  /**
-   * Whether a finger's press on the element re-measures it against every
-   * interactive element on the page. An owner that reads its own targets
-   * when a press begins turns it off.
-   * @default true
-   */
-  readonly checkAtPress?: boolean;
-}
-
-const NO_OPTIONS: TouchHitAreaOptions = {};
 
 /**
  * The finite animations running or held in the element's parent, the element
@@ -84,11 +58,7 @@ function settlingAnimations(element: HTMLElement): Animation[] {
  * element is watched again. The insets are then taken at rest, and no frame
  * of a compositor-only motion lays out or paints for them.
  */
-function watchAtRest(
-  element: HTMLElement,
-  minSize: number,
-  {growth, checkAtPress}: TouchHitAreaOptions,
-): () => void {
+function watchAtRest(element: HTMLElement, minSize: number): () => void {
   let stopWatch = (): void => {};
   let isStopped = false;
   let isWaiting = false;
@@ -129,15 +99,7 @@ function watchAtRest(
       },
       // The layer is the host's own `::after`, so a touch on the host's
       // content is the host's, even where that content paints past its box.
-      {
-        minSize,
-        ownsDescendantTouches: true,
-        growth:
-          growth == null
-            ? undefined
-            : (target, toLayout) => growth(target, toLayout, element),
-        checkAtPress,
-      },
+      {minSize, ownsDescendantTouches: true},
     );
   };
   watch();
@@ -161,16 +123,10 @@ const heldWatches = new WeakMap<HTMLElement, HeldWatch>();
  * detaches and attaches again in one commit. So the last release waits a
  * microtask, and an attach in between keeps the watch and its insets.
  */
-function holdWatch(
-  element: HTMLElement,
-  options: TouchHitAreaOptions,
-): () => void {
+function holdWatch(element: HTMLElement): () => void {
   let held = heldWatches.get(element);
   if (held == null) {
-    held = {
-      stop: watchAtRest(element, MIN_TOUCH_TARGET, options),
-      holders: 0,
-    };
+    held = {stop: watchAtRest(element, MIN_TOUCH_TARGET), holders: 0};
     heldWatches.set(element, held);
   }
   held.holders += 1;
@@ -197,8 +153,7 @@ function holdWatch(
  * Merge it into the element's ref, and pair it with `touchHitAreaStyles.layer`
  * on the same element. The watch lasts while the element is attached, so a
  * replaced element starts its own. A re-render that hands the same element a
- * new merged ref keeps its watch. `options` set how the element grows. Keep
- * them stable, as a module constant. An element's first holder sets them.
+ * new merged ref keeps its watch.
  *
  * @example
  * ```
@@ -206,10 +161,7 @@ function holdWatch(
  * <li ref={hitAreaRef} {...stylex.props(isInteractive && touchHitAreaStyles.layer)} />
  * ```
  */
-export function useTouchHitArea(
-  enabled: boolean,
-  options: TouchHitAreaOptions = NO_OPTIONS,
-): RefCallback<HTMLElement> {
+export function useTouchHitArea(enabled: boolean): RefCallback<HTMLElement> {
   // Syncs with an external system: the shared touch hit area
   // (utils/hitArea.ts) measures the element against its neighbors and writes
   // its insets on it. The ref's cleanup stops the watch.
@@ -218,8 +170,8 @@ export function useTouchHitArea(
       if (!enabled || element == null) {
         return undefined;
       }
-      return holdWatch(element, options);
+      return holdWatch(element);
     },
-    [enabled, options],
+    [enabled],
   );
 }
