@@ -1905,10 +1905,12 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
   });
   // The list's own pointer listeners, on its DOM element.
   useIsomorphicLayoutEffect(() => controller.attachMouse(), [controller]);
-  // Where the object's `start` finds this list.
+  // Where the object's `start` finds this list: the owner's options, for an
+  // object a Lab collection adapted from the owner's.
+  const startedBy = options.startedBy ?? options;
   useIsomorphicLayoutEffect(
-    () => mountSession(options, controller),
-    [options, controller],
+    () => mountSession(startedBy, controller),
+    [startedBy, controller],
   );
   // The List stopped reordering, or unmounted: a drag goes home.
   useIsomorphicLayoutEffect(() => () => controller.dispose(), [controller]);
