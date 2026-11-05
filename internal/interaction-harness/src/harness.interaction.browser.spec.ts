@@ -941,6 +941,19 @@ test.describe('frame evidence', () => {
           // can be traced to the step it shows.
           const steps: {t: number; y: number}[] = [];
           (window as unknown as {__rafSteps: typeof steps}).__rafSteps = steps;
+          // NOT FOR LANDING: 8 busy workers for 3 s, so the compositor
+          // thread is starved through the block, as on a loaded runner.
+          const hog = URL.createObjectURL(
+            new Blob(
+              [
+                'onmessage = () => { const end = Date.now() + 3000; while (Date.now() < end) {} };',
+              ],
+              {type: 'text/javascript'},
+            ),
+          );
+          const hogs = Array.from({length: 8}, () => new Worker(hog));
+          hogs.forEach(w => w.postMessage(0));
+          (window as unknown as {__hogs?: Worker[]}).__hogs = hogs;
           const start = performance.now();
           const step = (now: number) => {
             const p = ((now - start) / 1600) % 1;
@@ -961,6 +974,12 @@ test.describe('frame evidence', () => {
       );
       await page.waitForTimeout(200);
       const frames = await cast.stop();
+      // NOT FOR LANDING: the busy workers end with the rAF arm.
+      await page.evaluate(() =>
+        (window as unknown as {__hogs?: Worker[]}).__hogs?.forEach(w =>
+          w.terminate(),
+        ),
+      );
       const tracked = await trackMarker(page, frames);
       const controlFrames = await trackMarker(page, frames, {rgb: CONTROL_RGB});
       const proof = busyWindowProof(tracked, window, {
