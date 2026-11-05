@@ -59,10 +59,31 @@ function storyUrl(id: string): string {
 async function countNavigations(
   page: Page,
   opensNewTab: boolean,
+  cdp?: CDPSession,
 ): Promise<() => Promise<number>> {
+  // NOT FOR LANDING: records when each tab is requested (Page.windowOpen on
+  // the page's own session), when its page reaches the test, and each
+  // reading, as JSON lines under LINK_PROBE_DIR.
+  const fs = await import('node:fs');
+  const t0 = Date.now();
+  const probeFile = `${process.env.LINK_PROBE_DIR ?? '/tmp'}/probe-${process.pid}-${t0}.jsonl`;
+  let windowOpens = 0;
+  const note = (entry: object) =>
+    fs.appendFileSync(
+      probeFile,
+      `${JSON.stringify({t: Date.now() - t0, title: test.info().title, repeat: test.info().repeatEachIndex, ...entry})}\n`,
+    );
+  if (cdp != null) {
+    await cdp.send('Page.enable');
+    cdp.on('Page.windowOpen', () => {
+      windowOpens += 1;
+      note({event: 'windowOpen', windowOpens});
+    });
+  }
   let newTabs = 0;
   page.context().on('page', opened => {
     newTabs += 1;
+    note({event: 'page', newTabs});
     void opened.close();
   });
   await page.evaluate(() => {
@@ -79,12 +100,14 @@ async function countNavigations(
     // A new tab reaches the test through the browser's target events, after
     // the click or key that opened it has returned. Give it time to arrive so
     // a later reading cannot miss a navigation an earlier one started.
+    note({event: 'read-start', newTabs, windowOpens});
     if (opensNewTab) {
       await page.waitForTimeout(NEW_TAB_SETTLE_MS);
     }
     const inPage = await page.evaluate(
       () => (window as NavigationWindow).__a11yLinkNavigations ?? 0,
     );
+    note({event: 'read', inPage, newTabs, windowOpens});
     return inPage + newTabs;
   };
 }
@@ -111,6 +134,7 @@ async function runState(
       navigations = await countNavigations(
         page,
         state.id === 'external-new-tab',
+        cdp,
       );
       return createChromiumHarness({page, cdp, subject});
     },
