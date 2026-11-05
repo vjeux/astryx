@@ -157,7 +157,53 @@ async function blockedRun(
     minProgressMs: 40,
   });
   await page.waitForTimeout(200);
-  const frames = await cast.stop();
+  const captured = await cast.stop();
+  // NOT FOR LANDING: in the quarter of the block that a turn of the control
+  // overlaps most, the cast keeps only the frames the control cannot read
+  // there (within 36 px of the turn). Every other frame is kept.
+  const frames = await (async () => {
+    const all = await trackMarker(page, captured, {rgb: CONTROL_RGB});
+    const clock = controlClock(all);
+    const quarter = busy.spanMs / 4;
+    let best = {q: -1, overlap: 0, turn: NaN};
+    for (
+      let k = Math.floor((busy.from - controlStart) / 400);
+      controlStart + k * 400 < busy.to + 60;
+      k++
+    ) {
+      const turn = controlStart + k * 400;
+      for (let q = 0; q < 4; q++) {
+        const lo = busy.from + q * quarter + (q === 0 ? 20 : 0);
+        const hi = busy.from + (q + 1) * quarter - (q === 3 ? 20 : 0);
+        const overlap = Math.min(hi, turn + 60) - Math.max(lo, turn - 60);
+        if (overlap > best.overlap) {
+          best = {q, overlap, turn};
+        }
+      }
+    }
+    const drop = new Set(
+      all.flatMap(f => {
+        const ms = clock.get(f.t);
+        if (ms == null) {
+          return [];
+        }
+        const at =
+          controlStart + ms + Math.round((f.t - controlStart - ms) / 800) * 800;
+        return Math.floor((at - busy.from) / quarter) === best.q ? [f.t] : [];
+      }),
+    );
+    test.info().annotations.push({
+      type: 'c07 thinned',
+      description: JSON.stringify({
+        quarter: best.q,
+        turnMs: best.turn - busy.from,
+        overlap: best.overlap,
+        dropped: drop.size,
+        kept: captured.length - drop.size,
+      }),
+    });
+    return captured.filter(f => !drop.has(f.t));
+  })();
   const tracked = await trackMarker(page, frames);
   const control = await trackMarker(page, frames, {rgb: CONTROL_RGB});
   return {start, controlStart, busy, tracked, control};
