@@ -3,9 +3,8 @@
 /**
  * @file animatedLayout.ts
  * @input The DOM (layout rectangles, computed style) and Web Animations. The
- *   internal `springs.settle` motion role at the area's tempo
- *   (resolveMotion.ts), the Reduce Motion cross-fade clock (uikit/timing.ts)
- *   and the block measure (frameBlock.ts)
+ *   theme's move curve and duration (themeTiming.ts), the Reduce Motion
+ *   cross-fade clock (uikit/timing.ts) and the block measure (frameBlock.ts)
  * @output Exports `createAnimatedLayout`, the opaque `AnimatedLayout` handle,
  *   `reportLayoutChange`, `playLayoutChange` and `layoutStartFor`. It also
  *   exports the exit hold (`holdLayoutExit`, `releaseLayoutExit`), the
@@ -38,8 +37,8 @@
  *   zero-size elements are skipped (an absolute child rides with its moving
  *   parent); a stuck sticky element does not change rectangle, so it stays.
  * - The move is a compositor-only `translate` (replace composition) from the
- *   old place to the new one, sampled from `springs.settle` into linear
- *   keyframes and corrected for a scaled ancestor. An element already gliding
+ *   old place to the new one. Its linear keyframes sample the theme's move
+ *   curve, corrected for a scaled ancestor. An element already gliding
  *   keeps that motion and adds the new move: the rest of its curve and the
  *   new move are summed into one new glide, velocity included. Its place
  *   before the change is read on the clock of every glide that carries it,
@@ -50,8 +49,8 @@
  *   glide the change leaves running cancels out of the move. Nothing
  *   animates height, and nothing scrolls the area.
  * - A measurement no commit claims by the next frame is dropped.
- * - The changed element plays its own entrance on the same spring, started in
- *   the same frame (`playLayoutChange`), or its exit: kept where it is while
+ * - The changed element plays its own entrance on the same curve, started in
+ *   the same frame (`playLayoutChange`). Or it exits, kept where it is while
  *   it gives up its space and conceals (`holdLayoutExit`). Both are FR9's
  *   edge reveal: from its block-end edge by default, or from the block-start
  *   or an inline edge it is given. Once the content on that edge's side
@@ -82,8 +81,6 @@
  */
 
 import {LATE_START_MS} from './frameBlock';
-import {resolveMotion} from './resolveMotion';
-import {motionRole} from './roles';
 import {
   inertCopy,
   isCopyable,
@@ -92,20 +89,15 @@ import {
   visiblePartCopy,
   wrapText,
 } from './transientCopy';
-import {isSpring} from './roleValue';
-import {progressCurve} from './progress';
-import type {SpringDescription} from './spring';
-import {registerSpringsTable, SETTLE_SPRING} from './uikit/springs';
+import {readThemeTiming} from './themeTiming';
 import {themeReducesMotion} from '../privateAttributes/reducedMotion.stylex';
 import {reducedMotionCrossFade} from './uikit/timing';
 
-/** The shared motion role (`spec:AST-105` FR4). */
-const ROLE_ID = 'springs.settle';
 /** Below this many pixels a shift is not worth a move. */
 const MIN_SHIFT_PX = 0.5;
 /** The touch cross-fade's cap (`design:reduced-motion` DR2). */
 const CROSS_FADE_CAP_MS = 200;
-/** Keyframes per second the spring is sampled at. */
+/** Keyframes per second the motion is sampled at. */
 const SAMPLES_PER_SECOND = 60;
 
 // ---------------------------------------------------------------------------
@@ -114,7 +106,7 @@ const SAMPLES_PER_SECOND = 60;
 
 /** How a change plays under the reader's settings. */
 type LayoutMotion =
-  | {readonly kind: 'spring'; readonly progress: SpringProgress}
+  | {readonly kind: 'glide'; readonly progress: GlideProgress}
   | {
       readonly kind: 'fade';
       readonly durationMs: number;
@@ -122,8 +114,8 @@ type LayoutMotion =
     }
   | {readonly kind: 'instant'};
 
-/** The settle spring as remaining distance (1 → 0) over its duration. */
-interface SpringProgress {
+/** The move curve as remaining distance (1 → 0) over its duration. */
+interface GlideProgress {
   readonly durationMs: number;
   /** Remaining fraction of the move at `t` ms. */
   remaining(t: number): number;
@@ -137,20 +129,20 @@ function matches(element: Element, query: string): boolean {
 }
 
 /**
- * `springs.settle` from the internal role registry: one shared value for the
- * glide, the changed element and the indicator. Motion roles are internal
- * (`spec:AST-094` DEC-11): no page style sets the role. The glide plays it
- * at the tempo of the theme that `area` is in.
+ * The theme's move curve over its shortest medium duration where `area` is:
+ * one value for the glide, the changed element and the indicator. The tokens
+ * carry the theme's `character` and `tempo`. Null when the duration is zero
+ * or the curve does not parse, and then the change lands at once.
  */
-function settleSpring(area: Element): SpringDescription {
-  registerSpringsTable();
-  const value = motionRole(ROLE_ID)?.value;
-  return resolveMotion(area, isSpring(value) ? value : SETTLE_SPRING);
-}
-
-function springProgress(description: SpringDescription): SpringProgress {
-  const curve = progressCurve(description, {epsilon: 0.001});
-  const durationMs = Math.max(1, curve.duration * 1000);
+function glideProgress(area: Element): GlideProgress | null {
+  const curve = readThemeTiming(area, {
+    duration: '--duration-medium-min',
+    easing: '--ease-move',
+  });
+  if (curve == null) {
+    return null;
+  }
+  const durationMs = curve.duration * 1000;
   return {
     durationMs,
     remaining: t => (t >= durationMs ? 0 : 1 - curve.at(t / 1000)),
@@ -176,7 +168,8 @@ function layoutMotion(area: Element): LayoutMotion {
       easing: `cubic-bezier(${x1}, ${y1}, ${x2}, ${y2})`,
     };
   }
-  return {kind: 'spring', progress: springProgress(settleSpring(area))};
+  const progress = glideProgress(area);
+  return progress == null ? {kind: 'instant'} : {kind: 'glide', progress};
 }
 
 /** Linear keyframes over `durationMs`, one per frame, from `frame(t ms)`. */
@@ -196,24 +189,12 @@ function sampleOver(
   return keyframes;
 }
 
-/** Linear keyframes sampled from the spring, one per frame. */
+/** Linear keyframes sampled from the move curve, one per frame. */
 function sampleKeyframes(
-  progress: SpringProgress,
+  progress: GlideProgress,
   frame: (remaining: number) => Keyframe,
 ): Keyframe[] {
   return sampleOver(progress.durationMs, t => frame(progress.remaining(t)));
-}
-
-/** The spring as a CSS `linear()` easing, for a CSS transition. */
-function linearEasing(progress: SpringProgress): string {
-  const stops: string[] = [];
-  const count = 24;
-  for (let i = 0; i <= count; i++) {
-    const fraction = i / count;
-    const value = 1 - progress.remaining(fraction * progress.durationMs);
-    stops.push(`${round(value)} ${round(fraction * 100)}%`);
-  }
-  return `linear(${stops.join(', ')})`;
 }
 
 function round(value: number): number {
@@ -2323,10 +2304,10 @@ export function playLayoutSwap(
   };
   const {copyText, rideWith} = how;
   const fadedText =
-    copyText != null && motion.kind === 'spring' ? wrapText(copy) : [];
+    copyText != null && motion.kind === 'glide' ? wrapText(copy) : [];
   // Each part as a function of time: its frame, or the copy's with its ride.
   const parts: [Element, (p: number, ride: LayoutRide) => Keyframe][] = [];
-  if (motion.kind === 'spring') {
+  if (motion.kind === 'glide') {
     const moves = rideWith != null && rideWith.isCopyMoved !== false;
     parts.push([
       copy,
@@ -2441,7 +2422,7 @@ export function playLayoutFrames(
   const animations: Animation[] = [];
   for (const {element, frames: shape} of parts) {
     const animation =
-      motion.kind === 'spring'
+      motion.kind === 'glide'
         ? safeAnimate(
             element,
             sampleKeyframes(motion.progress, remaining =>
@@ -2617,9 +2598,9 @@ export function playLayoutEdge(
   const startedAt =
     changeStartIn(areaOf(handle, element), element.ownerDocument)?.at ?? 0;
   const durationMs =
-    motion.kind === 'spring' ? motion.progress.durationMs : motion.durationMs;
+    motion.kind === 'glide' ? motion.progress.durationMs : motion.durationMs;
   const progressAt = (ms: number) =>
-    motion.kind === 'spring'
+    motion.kind === 'glide'
       ? 1 - motion.progress.remaining(Math.min(ms, durationMs))
       : 0;
   const shown = (): {extent: number; progress: number} | null => {
@@ -3042,10 +3023,9 @@ export function reportLayoutEdge(
 
 /**
  * A disclosure's indicator (its chevron) turns on the same motion as the
- * glide: its CSS transition takes the spring as a `linear()` easing, and an
- * immediate change under Reduce Motion. Without a handle the inline values are
- * cleared, so the component's own transition applies. An engine without
- * `linear()` drops that value and keeps the component's easing.
+ * glide. Its CSS transition takes the theme's move curve and duration, and is
+ * immediate under Reduce Motion. Without a handle the inline values are
+ * cleared, so the component's own transition applies.
  */
 export function applyLayoutChangeTransition(
   handle: AnimatedLayout | null | undefined,
@@ -3061,19 +3041,16 @@ export function applyLayoutChangeTransition(
     return;
   }
   const motion = layoutMotion(area);
-  if (motion.kind !== 'spring') {
+  if (motion.kind !== 'glide') {
     element.style.setProperty('transition-duration', '0s');
     element.style.removeProperty('transition-timing-function');
     return;
   }
   element.style.setProperty(
     'transition-duration',
-    `${Math.round(motion.progress.durationMs)}ms`,
+    'var(--duration-medium-min)',
   );
-  element.style.setProperty(
-    'transition-timing-function',
-    linearEasing(motion.progress),
-  );
+  element.style.setProperty('transition-timing-function', 'var(--ease-move)');
 }
 
 /**

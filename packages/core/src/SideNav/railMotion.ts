@@ -13,7 +13,7 @@
  *   content area moves through the context (`component:AppShell` FR17)
  *
  * Collapsing or expanding the rail plays one motion on one clock, the
- * `springs.settle` role the animated-layout module reads (`spec:AST-105`
+ * theme's move curve the animated-layout module plays (`spec:AST-105`
  * FR4). The rail is FR9's edge reveal in its inline two-state form, which
  * the module produces (`architecture:react-component-runtime` INV12): layout
  * snaps to the final rail width at once, nothing animates a width, and the
