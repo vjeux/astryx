@@ -165,8 +165,13 @@ const TIMER_MS: Record<NonNullable<PressStep['timer']>, number> = {
  * fade, as in the stylesheet.
  */
 export function pressFadeMs(element: Element): number {
+  // EVIDENCE, NOT FOR LANDING: main's read parses the token's text.
   const exit =
-    readThemeTokens(element, {duration: '--duration-exit'}).ms ?? PRESS_FADE_MS;
+    parseMotionRoleValue(
+      'duration',
+      getComputedStyle(element).getPropertyValue('--duration-exit'),
+    ) ?? PRESS_FADE_MS;
+  void readThemeTokens;
   const reduced =
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
