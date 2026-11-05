@@ -39,6 +39,19 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
   '.woff2': 'font/woff2',
 };
 
+interface C07Request {
+  url: string;
+  t0: number;
+  tEnd: number | null;
+  tClose: number | null;
+  error: string | null;
+}
+interface C07Probe {
+  requests: C07Request[];
+  lag: {t: number; lagMs: number}[];
+  monitor: boolean;
+}
+
 export interface StaticServer {
   /** Origin to fetch from, e.g. `http://127.0.0.1:53312`. */
   readonly origin: string;
@@ -75,7 +88,39 @@ export async function serveStatic(
     throw new Error(missing(root));
   }
 
+  // NOT FOR LANDING: every request's timeline, and the event loop's lag.
+  const probe = ((
+    globalThis as unknown as {__c07Server?: C07Probe}
+  ).__c07Server ??= {requests: [], lag: [], monitor: false});
+  if (!probe.monitor) {
+    probe.monitor = true;
+    let last = performance.now();
+    setInterval(() => {
+      const now = performance.now();
+      const lag = now - last - 20;
+      if (lag > 30) {
+        probe.lag.push({t: Date.now(), lagMs: Math.round(lag)});
+        if (probe.lag.length > 5000) probe.lag.splice(0, 1000);
+      }
+      last = now;
+    }, 20).unref();
+  }
   const server = http.createServer((request, response) => {
+    const entry: C07Request = {
+      url: request.url ?? '',
+      t0: Date.now(),
+      tEnd: null,
+      tClose: null,
+      error: null,
+    };
+    probe.requests.push(entry);
+    if (probe.requests.length > 20000) probe.requests.splice(0, 5000);
+    response.on('finish', () => {
+      entry.tEnd = Date.now();
+    });
+    response.on('close', () => {
+      entry.tClose = Date.now();
+    });
     const requested = (request.url ?? '/').split('?')[0] ?? '/';
     let resolved = path.resolve(
       root,
@@ -100,7 +145,11 @@ export async function serveStatic(
       'content-type':
         CONTENT_TYPES[path.extname(resolved)] ?? 'application/octet-stream',
     });
-    fs.createReadStream(resolved).pipe(response);
+    const stream = fs.createReadStream(resolved);
+    stream.on('error', error => {
+      entry.error = String(error);
+    });
+    stream.pipe(response);
   });
 
   await new Promise<void>(resolve => {
