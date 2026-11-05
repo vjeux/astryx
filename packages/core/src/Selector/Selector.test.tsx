@@ -29,9 +29,10 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as stylex from '@stylexjs/stylex';
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import type {ReactNode} from 'react';
 import {Selector} from './Selector';
+import {useSelectedItemOverlayPosition} from './hooks';
 import {SelectorOption} from './SelectorOption';
 import {Item} from '../Item';
 import type {SelectorOptionData} from './types';
@@ -188,6 +189,9 @@ function mockSelectorRects({
   listbox = rect({top: 190, bottom: 310, height: 120}),
   selectedItem = rect({top: 220, bottom: 250, height: 30}),
   listboxLayoutHeight = listbox.height,
+  // Where the layer lays the list out before any overlay shift: below the
+  // anchor, as the default placement does.
+  listboxLayoutTop = anchor.bottom,
   selectedItemLayoutTop = selectedItem.top - listbox.top,
   selectedItemLayoutHeight = selectedItem.height,
   viewportHeight = 200,
@@ -197,6 +201,7 @@ function mockSelectorRects({
   listbox?: DOMRect;
   selectedItem?: DOMRect;
   listboxLayoutHeight?: number;
+  listboxLayoutTop?: number;
   selectedItemLayoutTop?: number;
   selectedItemLayoutHeight?: number;
   viewportHeight?: number;
@@ -238,11 +243,13 @@ function mockSelectorRects({
   Object.defineProperty(HTMLElement.prototype, 'offsetTop', {
     configurable: true,
     get() {
+      // jsdom has no offsetParent chain, so each offsetTop is the element's
+      // own layout top in the viewport frame.
       if (this.getAttribute('role') === 'listbox') {
-        return 0;
+        return listboxLayoutTop;
       }
       if (this.id.endsWith('-item-1')) {
-        return selectedItemLayoutTop;
+        return listboxLayoutTop + selectedItemLayoutTop;
       }
       return 0;
     },
@@ -625,9 +632,7 @@ describe('Selector', () => {
         .getByRole('listbox', {hidden: true})
         .closest('[popover]');
       await waitFor(() => {
-        expect(popover?.getAttribute('style')).toContain(
-          'margin-block-start: -110px',
-        );
+        expect(popover?.getAttribute('style')).toContain('translate: 0 -110px');
       });
     } finally {
       restoreRects();
@@ -668,9 +673,49 @@ describe('Selector', () => {
         .closest('[popover]');
       await waitFor(() => {
         // 68px geometric alignment plus the 1px optical correction.
-        expect(popover?.getAttribute('style')).toContain(
-          'margin-block-start: -69px',
-        );
+        expect(popover?.getAttribute('style')).toContain('translate: 0 -69px');
+      });
+    } finally {
+      restoreRects();
+    }
+  });
+
+  it('measures a list outside any layer from its own offset top, without throwing', async () => {
+    // No `[popover]` ancestor: the shift falls back to the offset read.
+    // Anchor 160–190 in a 900px viewport; the list is laid out at 400 with
+    // its selected row 30px tall at 30px, so the row's center (445) must move
+    // to the anchor's center (175) less the 1px optical correction: −271.
+    const restoreRects = mockSelectorRects({
+      listboxLayoutTop: 400,
+      viewportHeight: 900,
+    });
+    function Probe() {
+      const listboxRef = useRef<HTMLDivElement>(null);
+      const anchorRef = useRef<HTMLDivElement>(null);
+      const position = useSelectedItemOverlayPosition({
+        isOpen: true,
+        selectedItemIndex: 1,
+        listboxId: 'bare',
+        listboxRef,
+        anchorRef,
+      });
+      return (
+        <div>
+          <div ref={anchorRef} className="astryx-selector" />
+          <div ref={listboxRef} role="listbox">
+            <div id="bare-item-0" role="option" aria-selected={false} />
+            <div id="bare-item-1" role="option" aria-selected={true} />
+          </div>
+          <output data-testid="position">
+            {`${position.translateY}|${position.isPositioned}`}
+          </output>
+        </div>
+      );
+    }
+    try {
+      render(<Probe />);
+      await waitFor(() => {
+        expect(screen.getByTestId('position').textContent).toBe('-271|true');
       });
     } finally {
       restoreRects();
@@ -822,7 +867,7 @@ describe('Selector', () => {
           .closest('[popover]') as HTMLElement;
         await waitFor(() => {
           expect(popover.getAttribute('style')).toContain(
-            'margin-block-start: -110px',
+            'translate: 0 -110px',
           );
         });
         expect(popover.style.getPropertyValue('--x-marginBlockStart')).toBe('');
