@@ -84,6 +84,40 @@ describe('internal/touch', () => {
     }
   });
 
+  it("re-exports by name what Lab's NavigationStack reads", async () => {
+    const entry: Record<string, unknown> = await import('./touch');
+    const edgePan = await import('../gestures/ScreenEdgePanGestureRecognizer');
+    const resolver = await import('../motion/resolveMotion');
+    const spring = await import('../motion/spring');
+    const uikitNavigation = await import('../motion/uikit/navigation');
+    const uikitSprings = await import('../motion/uikit/springs');
+    expect(entry.ScreenEdgePanGestureRecognizer).toBe(
+      edgePan.ScreenEdgePanGestureRecognizer,
+    );
+    expect(entry.resolveMotion).toBe(resolver.resolveMotion);
+    expect(entry.solveSpring).toBe(spring.solveSpring);
+    expect(entry.toSpring).toBe(spring.toSpring);
+    expect(entry.navigation).toBe(uikitNavigation.navigation);
+    expect(entry.registerNavigationTable).toBe(
+      uikitNavigation.registerNavigationTable,
+    );
+    expect(entry.springs).toBe(uikitSprings.springs);
+    expect(entry.registerSpringsTable).toBe(uikitSprings.registerSpringsTable);
+    for (const name of [
+      'ScreenEdgePanGestureRecognizer',
+      'resolveMotion',
+      'solveSpring',
+      'toSpring',
+      'registerNavigationTable',
+      'registerSpringsTable',
+    ]) {
+      expect(typeof entry[name], name).toBe('function');
+    }
+    for (const name of ['navigation', 'springs']) {
+      expect(entry[name], name).toBeDefined();
+    }
+  });
+
   it('attaches no window or document listeners when it loads', async () => {
     vi.resetModules();
     const onWindow = vi.spyOn(window, 'addEventListener');

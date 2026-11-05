@@ -114,7 +114,9 @@ function exportsOf(entry) {
  * refresh pull reads the pan, its hook, the motion engine, its motion math and
  * companion curves, the scroll view's spring and the motion-role parsers.
  * Other Lab components read the UIKit gesture table, the touch presentation
- * and its query, and an element's direction.
+ * and its query, and an element's direction. Lab's NavigationStack reads the
+ * screen-edge pan, the spring solver, the motion resolver, and UIKit's
+ * navigation and springs tables.
  */
 const LAB_ONLY_NAMES = [
   'PanGestureRecognizer',
@@ -132,6 +134,14 @@ const LAB_ONLY_NAMES = [
   'UIKIT_GESTURES',
   'useTouchPresentation',
   'TOUCH_QUERY',
+  'ScreenEdgePanGestureRecognizer',
+  'resolveMotion',
+  'solveSpring',
+  'toSpring',
+  'navigation',
+  'registerNavigationTable',
+  'springs',
+  'registerSpringsTable',
 ];
 
 /** The inputs matching `pattern` that put bytes in `bytes`. */
