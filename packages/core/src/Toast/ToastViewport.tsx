@@ -5,8 +5,7 @@
 /**
  * @file ToastViewport.tsx
  * @input Uses React state/effects, ToastContext, content-provider boundary, useAnnounce, viewport tokens,
- *   shared layer text reset, the active modal outlet, the layer toast host
- *   registry, and placement-derived motion variables
+ *   shared layer text reset, the active modal outlet, and placement-derived motion variables
  * @output Exports the ToastViewport provider, stack, live announcement dispatch,
  *   focus handoff, safe-area-aware edge gutters, modal rehosting, and motion context
  * @position Core provider/imperative viewport for useToast()
@@ -50,7 +49,6 @@ import {ToastSurface} from './Toast';
 import {ToastContext, type ToastContextValue} from './ToastContext';
 import type {ToastEntry, ToastPosition, ToastDismissReason} from './types';
 import {layerInsetProperties} from '../Layer/layerInset';
-import {findToastNamesake, registerToastHost} from '../Layer/toastHost';
 import type {LayerInset} from '../Layer/LayerContext';
 import {
   registerEnglishFallback,
@@ -438,19 +436,20 @@ export function ToastViewport({
 
   const addToast = useCallback(
     (entry: ToastEntry) => {
-      const {uniqueID} = entry.options;
+      const {uniqueID, collisionBehavior = 'overwrite'} = entry.options;
       // A toast holds its uniqueID until it unmounts, leaving included
       // (Toast.spec.md FR8): an overwrite replaces it in place, and an ignored
       // namesake is dropped.
-      const {namesake: overwritten, isDropped} = findToastNamesake(
-        toastsRef.current,
-        entry,
-      );
+      const holdsUniqueID = (t: ToastEntry) => t.options.uniqueID === uniqueID;
       // Resolve an ignored collision synchronously against the committed list
       // so a suppressed toast is neither shown nor announced. The remaining
       // announce + setToasts run outside the setToasts updater, which React may
       // invoke more than once — keeping the announcement exactly-once.
-      if (isDropped) {
+      if (
+        uniqueID &&
+        collisionBehavior === 'ignore' &&
+        toastsRef.current.some(holdsUniqueID)
+      ) {
         return;
       }
       // Only text is announced; interactive endContent is reachable via F6.
@@ -465,6 +464,7 @@ export function ToastViewport({
       // already reported onHide); otherwise its row would come back collapsed
       // when the window reached it again, holding a slot and the landmark.
       const committed = toastsRef.current;
+      const overwritten = uniqueID ? committed.find(holdsUniqueID) : undefined;
       if (overwritten && renderedToastsRef.current.includes(overwritten)) {
         replacedRef.current.set(overwritten.id, overwritten);
       }
@@ -945,7 +945,3 @@ export function ToastViewport({
   );
 }
 ToastViewport.displayName = 'ToastViewport';
-
-// LayerProvider renders the viewport once this module loads. So an app that
-// never imports Toast carries none of its code.
-registerToastHost(ToastViewport);
