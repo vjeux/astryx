@@ -6,7 +6,7 @@
  * @file popoverSurfaceMotion.ts
  * @input A Popover's layer element, the source it hangs off, the compositor
  *   animator, the theme's duration and easing tokens, and the layer
- *   runtime's exit copy and input hold
+ *   runtime's exit copy
  * @output Exports `popoverCollapsedState`, `popoverFrame` and
  *   `createPopoverSurfaceMotion`, the touch presentation's present and
  *   dismiss.
@@ -26,7 +26,6 @@ import {
   type MotionCurve,
   type MotionHandle,
 } from '../motion/animator';
-import {holdInput} from '../Layer/inputHold';
 import {mapProgress, mapRange} from '../motion/progress';
 import {
   easedProgress,
@@ -134,13 +133,6 @@ const MOTION_STYLE_PROPERTIES = [
  * The browser hides a popover as it closes, so the dismissal plays on the
  * layer runtime's exit copy, which is removed when its motion ends.
  *
- * While the popover grows, the layer runtime's input hold takes every touch,
- * as UIKit ignores touches while it presents a popover. A tap outside does
- * not dismiss it and reaches nothing under it. A pinch still zooms the page.
- * The browser's light dismiss cannot be cancelled from an event, so the
- * hold's shield covers the viewport from inside the layer. A tap on the
- * shield is then a tap inside the popover, which the browser leaves open.
- *
  * Under Reduce Motion the animator's policy applies. On a coarse pointer the
  * popover lands at its full size and cross-fades in, and it cross-fades out
  * where it stands.
@@ -158,13 +150,6 @@ export function createPopoverSurfaceMotion(
   let measured: PopoverSurfaceGeometry | null = null;
   let presentHandle: MotionHandle | null = null;
   let exiting: {copy: HTMLElement; animator: Animator} | null = null;
-  // Releases the hold that takes every touch while the popover grows.
-  let releaseHold: (() => void) | null = null;
-
-  const endHold = () => {
-    releaseHold?.();
-    releaseHold = null;
-  };
 
   const endExit = () => {
     if (exiting == null) {
@@ -179,7 +164,6 @@ export function createPopoverSurfaceMotion(
     collapsed = null;
     measured = null;
     presentHandle = null;
-    endHold();
     endExit();
     animator.set({scaleX: 1, scaleY: 1, opacity: 1});
     for (const property of MOTION_STYLE_PROPERTIES) {
@@ -228,18 +212,14 @@ export function createPopoverSurfaceMotion(
       ),
     );
     presentHandle = handle;
-    endHold();
-    releaseHold = holdInput(element, {until: handle, scope: 'viewport'});
     void handle.finished.then(() => {
       if (presentHandle === handle) {
         presentHandle = null;
-        endHold();
       }
     });
   };
 
   const exit = () => {
-    endHold();
     const target = collapsed;
     if (target == null || exiting != null) {
       return;
