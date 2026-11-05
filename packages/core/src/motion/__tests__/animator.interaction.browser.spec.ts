@@ -181,6 +181,30 @@ test('a spring keeps advancing every frame through a 1 s main-thread block, on i
     control,
   });
   const alone = busyWindowProof(tracked, busy, {axis: 'x', settledWithin: 2});
+  // NOT FOR LANDING: dumps the proof's inputs before any assertion.
+  {
+    const fs = await import('node:fs');
+    const pathModule = await import('node:path');
+    const dir = pathModule.join(
+      process.env.ASTRYX_INTERACTION_EVIDENCE ??
+        pathModule.join(process.cwd(), 'test-results/interaction-evidence'),
+      'c28-busy-dump',
+    );
+    fs.mkdirSync(dir, {recursive: true});
+    fs.writeFileSync(
+      pathModule.join(
+        dir,
+        `${browserName}-${test.info().repeatEachIndex}-${Date.now()}.json`,
+      ),
+      JSON.stringify({
+        busy,
+        tracked,
+        control,
+        failures: proof.verdict.failures,
+        summary: proof.summary,
+      }),
+    );
+  }
   test.info().annotations.push({
     type: 'busy window',
     description: `${proof.summary} | without the control: ${alone.verdict.failures.join('; ') || 'pass'}`,
