@@ -81,6 +81,10 @@ export interface InfoTipProps extends Pick<
   size?: InfoTipSize;
 }
 
+const mutantStyles = stylex.create({
+  grow: {'::after': {content: '""', position: 'absolute', inset: '-4px'}},
+});
+
 const styles = stylex.create({
   trigger: {
     position: 'relative',
@@ -206,6 +210,7 @@ export function InfoTip({
             focusOutlineStyles.focusVisible,
             styles.trigger,
             touchHitAreaStyles.layer,
+            mutantStyles.grow,
             xstyle,
           ),
           className,
