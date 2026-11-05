@@ -10,8 +10,8 @@
  *   keyboard has arrived. It ends 10 px above the keyboard, with its content
  *   scrollable and its last control reachable. It takes its full height back
  *   as the keyboard starts down. One opened while the keyboard is already up
- *   opens clear of it. A popover clear of the keyboard is left alone. A
- *   storyboard shows both states.
+ *   is clear of it from the first frame that shows it. A popover clear of the
+ *   keyboard is left alone. A storyboard shows both states.
  * @position Browser proofs for Layer/useLayerKeyboardClearance.ts.
  *   Headless browsers have no software keyboard. So the page's
  *   `visualViewport` is replaced by one the test shrinks the way Mobile
@@ -339,6 +339,65 @@ test('opened while the keyboard is already up, it opens clear of the keyboard', 
     Math.abs(opened.bottom - (keyboardTop - LAYER_KEYBOARD_CLEARANCE_PX)),
   ).toBeLessThanOrEqual(1);
   expect(opened.scrollHeight).toBeGreaterThan(opened.clientHeight);
+});
+
+test('opened while the keyboard is already up, it is clear of the keyboard in the first frame that shows it', async ({
+  page,
+}) => {
+  await installKeyboard(page);
+  await openStory(page, storybook(), 'core-popover--keyboard-avoidance');
+  const driver = await touchDriver(page);
+  await page.getByRole('textbox', {name: 'Search notes'}).focus();
+  await keyboard(page, COVER);
+  await page.waitForTimeout(timing.keyboardNotificationMs + 100);
+  // The page's own frame loop, started before the tap. Its callback runs
+  // ahead of any frame callback the open schedules, so it reads each frame
+  // as the frame begins. It stops at the first frame that shows the layer.
+  await page.evaluate(() => {
+    const reads: Array<{bottom: number; cap: string}> = [];
+    (window as unknown as {__frameReads: typeof reads}).__frameReads = reads;
+    const read = () => {
+      const layer = document.querySelector<HTMLElement>(
+        '[popover]:has([role="dialog"])',
+      );
+      if (layer?.matches(':popover-open') === true) {
+        reads.push({
+          // The layout box, without the entrance transform.
+          bottom: layer.offsetTop + layer.offsetHeight,
+          cap: getComputedStyle(layer)
+            .getPropertyValue('--astryx-layer-keyboard-max-block-size')
+            .trim(),
+        });
+        return;
+      }
+      requestAnimationFrame(read);
+    };
+    requestAnimationFrame(read);
+  });
+  const trigger = page.getByRole('button', {name: 'Add note'});
+  const box = await trigger.boundingBox();
+  if (box == null) {
+    throw new Error('no trigger named Add note');
+  }
+  await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  const frameReads = () =>
+    page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __frameReads: Array<{bottom: number; cap: string}>;
+          }
+        ).__frameReads,
+    );
+  await expect.poll(async () => (await frameReads()).length).toBe(1);
+  const [first] = await frameReads();
+  const innerHeight = await page.evaluate(() => window.innerHeight);
+  const keyboardTop = innerHeight - COVER;
+  expect(first.bottom).toBeLessThanOrEqual(
+    keyboardTop - LAYER_KEYBOARD_CLEARANCE_PX + 1,
+  );
+  expect(first.cap).toMatch(/px$/);
 });
 
 test('a popover clear of the keyboard is left as it is', async ({page}) => {
