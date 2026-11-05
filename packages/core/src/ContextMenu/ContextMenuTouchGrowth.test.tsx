@@ -12,7 +12,6 @@
 
 import {act, render, screen} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import type {MotionCurve} from '../motion/animator';
 import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {ContextMenu} from './ContextMenu';
 
@@ -134,10 +133,10 @@ describe('ContextMenu’s growth under a finger', () => {
   }
 
   const scaleBack = (trigger: HTMLElement) =>
-    animator.play.mock.calls.filter(([element, curves]) => {
-      const scale = (curves as {scale?: MotionCurve}).scale;
-      return element === trigger && scale?.at(scale.duration) === 1;
-    });
+    animator.animate.mock.calls.filter(
+      ([element, to]) =>
+        element === trigger && (to as {scale?: number}).scale === 1,
+    );
 
   it('springs a grown trigger back when the finger lifts before the commit', async () => {
     const trigger = renderMenu();
@@ -145,18 +144,18 @@ describe('ContextMenu’s growth under a finger', () => {
     dispatchTouch('touchstart', trigger, [contact], [contact]);
     advance(150);
     await pressMachineOn(trigger);
-    expect(animator.play.mock.calls.some(([e]) => e === trigger)).toBe(true);
+    expect(growths(trigger)).toHaveLength(1);
     advance(100);
     dispatchTouch('touchend', trigger, [contact], []);
     expect(scaleBack(trigger)).toHaveLength(1);
   });
 
   const growths = (trigger: HTMLElement) =>
-    animator.play.mock.calls.filter(([element, curves]) => {
-      const scale = (curves as {scale?: MotionCurve}).scale;
-      return element === trigger && (scale?.at(scale.duration) ?? 1) > 1;
-    });
-  const startOf = (call: unknown[]) => (call[2] as {at: number}).at;
+    animator.animate.mock.calls.filter(
+      ([element, to]) =>
+        element === trigger && ((to as {scale?: number}).scale ?? 1) > 1,
+    );
+  const startOf = (call: unknown[]) => (call[3] as {at: number}).at;
 
   it('starts the growth at the onset, 150 ms after the finger lands, when the press machine marks the press as the finger lands', async () => {
     const trigger = renderMenu();
@@ -186,6 +185,6 @@ describe('ContextMenu’s growth under a finger', () => {
   it('does not grow the trigger for a press its recognizer does not follow, such as a mouse', async () => {
     const trigger = renderMenu();
     await pressMachineOn(trigger);
-    expect(animator.play.mock.calls.some(([e]) => e === trigger)).toBe(false);
+    expect(growths(trigger)).toHaveLength(0);
   });
 });
