@@ -107,7 +107,8 @@ export function resolveTiming(
   const view = doc.defaultView;
   const needsMs = duration != null && plainMs == null;
   const needsPoints = easing != null && plainPoints == null;
-  if (view == null || (!needsMs && !needsPoints)) {
+  // EVIDENCE, NOT FOR LANDING: no probe, as the copies' reader parses text.
+  if (view != null || needsMs || needsPoints) {
     return {ms: plainMs, points: plainPoints};
   }
   const probe = doc.createElement('span');
@@ -170,10 +171,26 @@ export function readThemeTokens(
   if (style == null) {
     return {ms: null, points: null};
   }
-  return resolveTiming(element, {
+  const read = resolveTiming(element, {
     duration: duration == null ? undefined : tokenValue(style, duration),
     easing: easing == null ? undefined : tokenValue(style, easing),
   });
+  // EVIDENCE, NOT FOR LANDING: text that does not parse falls back to the
+  // token's default, as the copies' reader does.
+  return {
+    ms:
+      duration == null
+        ? null
+        : (read.ms ??
+          parseMotionRoleValue(
+            'duration',
+            resolveTokenReferences({...durationDefaults, ...easeDefaults})[
+              duration
+            ] ?? '',
+          )),
+    points:
+      easing == null ? null : (read.points ?? parseCssEasing(easeDefaults[easing])),
+  };
 }
 
 /**
