@@ -115,6 +115,16 @@ export interface LightboxMedia {
 }
 
 export interface LightboxProps extends BaseProps<HTMLDialogElement> {
+  /**
+   * Not for merge: the caption's Text type, for the caption type comparison
+   * preview only. This prop exists only in that preview and never ships.
+   */
+  captionType?: 'body' | 'supporting';
+  /**
+   * Not for merge: the caption's Text color, for the same comparison preview
+   * only. This prop exists only in that preview and never ships.
+   */
+  captionColor?: 'primary';
   /** Ref forwarded to the root dialog element */
   ref?: React.Ref<HTMLDialogElement>;
   /**
@@ -339,6 +349,11 @@ const styles = stylex.create({
   captionBandUnderOpen: {
     backgroundColor: 'transparent',
   },
+  // Not for merge: the band in the supporting type, for the comparison.
+  captionBandSupporting: {
+    fontSize: typeScaleVars['--text-supporting-size'],
+    lineHeight: typeScaleVars['--text-supporting-leading'],
+  },
   // A caption in the band, and its "more" button after its last line.
   captionInBand: {
     display: 'flex',
@@ -543,6 +558,8 @@ const VIDEO_CONTROLS_BAND = 48;
  * ```
  */
 export function Lightbox({
+  captionType,
+  captionColor,
   isOpen,
   onOpenChange,
   media,
@@ -1472,6 +1489,8 @@ export function Lightbox({
                               <div
                                 {...stylex.props(
                                   styles.captionBand,
+                                  captionType === 'supporting' &&
+                                    styles.captionBandSupporting,
                                   i === index &&
                                     isCaptionOpen &&
                                     styles.captionBandUnderOpen,
@@ -1494,7 +1513,8 @@ export function Lightbox({
                                       }
                                       id={i === index ? captionId : undefined}
                                       as="div"
-                                      type="body"
+                                      type={captionType ?? 'body'}
+                                      color={captionColor}
                                       maxLines={
                                         i === index && isCaptionOpen ? 0 : 2
                                       }
@@ -1550,7 +1570,8 @@ export function Lightbox({
                       ref={captionRef}
                       id={captionId}
                       as="div"
-                      type="body"
+                      type={captionType ?? 'body'}
+                      color={captionColor}
                       xstyle={styles.caption}>
                       {currentItem.caption}
                     </Text>
