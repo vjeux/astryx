@@ -503,8 +503,12 @@ test('the presentation keeps advancing every frame while the main thread is bloc
   await page.addStyleTag({
     content: '[popover]:has([role="dialog"]) { opacity: 1 !important; }',
   });
+  // The growth runs 1.2 s here. The block then lands inside it on a loaded
+  // machine too, and the harness's verdict judges many frames.
+  await page.addStyleTag({content: LONG_MOTIONS});
   await markElement(story.layer, {size: 24, inset: 0});
   const entrance = await themeTiming(story.layer, POPOVER_ENTRANCE_TOKENS);
+  expect(entrance.ms).toBe(1200);
   const cast = await startScreencast(page);
   await openWithTap(story);
   const [present] = await waitForAnimation(story.layer, {minProgressMs: 16});
@@ -545,6 +549,7 @@ test('the presentation keeps advancing every frame while the main thread is bloc
   // verdict judges it: no more than two dropped frames.
   expect(proof.longestStallFrames).toBeLessThanOrEqual(3);
   expect(proof.monotonic).toBe(true);
+  expect(proof.verdict.failures, proof.summary).toEqual([]);
 });
 
 test('the presentation and the dismissal do no Layout or Paint per frame', async ({
