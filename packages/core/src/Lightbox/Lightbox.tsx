@@ -115,6 +115,11 @@ export interface LightboxMedia {
 }
 
 export interface LightboxProps extends BaseProps<HTMLDialogElement> {
+  /**
+   * Not for merge: the caption's Text type, for the caption type comparison
+   * preview only.
+   */
+  captionType?: 'body' | 'supporting';
   /** Ref forwarded to the root dialog element */
   ref?: React.Ref<HTMLDialogElement>;
   /**
@@ -528,6 +533,7 @@ const VIDEO_CONTROLS_BAND = 48;
  * ```
  */
 export function Lightbox({
+  captionType,
   isOpen,
   onOpenChange,
   media,
@@ -1438,7 +1444,7 @@ export function Lightbox({
                                       {...stylex.props(styles.captionFull)}>
                                       <Text
                                         as="div"
-                                        type="body"
+                                        type={captionType ?? 'body'}
                                         xstyle={styles.caption}>
                                         {mediaArray[i].caption}
                                       </Text>
@@ -1454,7 +1460,7 @@ export function Lightbox({
                                       }
                                       id={i === index ? captionId : undefined}
                                       as="div"
-                                      type="body"
+                                      type={captionType ?? 'body'}
                                       maxLines={2}
                                       hasTruncateTooltip={false}
                                       xstyle={[
@@ -1512,7 +1518,7 @@ export function Lightbox({
                       ref={captionRef}
                       id={captionId}
                       as="div"
-                      type="body"
+                      type={captionType ?? 'body'}
                       xstyle={styles.caption}>
                       {currentItem.caption}
                     </Text>
