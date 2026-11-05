@@ -186,6 +186,9 @@ export {
   type AnimatorValues,
 } from './animator/createAnimator';
 
+// Reorder (a collection's `reorderable` prop)
+export * from './reorderable';
+
 // Hooks
 export * from './hooks';
 
