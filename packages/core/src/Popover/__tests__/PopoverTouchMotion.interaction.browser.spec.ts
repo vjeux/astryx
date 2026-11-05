@@ -220,8 +220,9 @@ async function scaleAnimationOf(locator: Locator) {
 
 /**
  * Logs when each `scale` animation starts, epoch ms, from a wrapper on
- * `Element.animate`. It runs no frame loop, so it reads nothing between
- * frames.
+ * `Element.animate`. It logs the animation's own start time once it is ready.
+ * A motion created in a frame callback can start at that frame's time, before
+ * the call. It runs no frame loop, so it reads nothing between frames.
  */
 async function logScaleStarts(page: Page) {
   await page.addInitScript(() => {
@@ -234,7 +235,12 @@ async function logScaleStarts(page: Page) {
         Array.isArray(keyframes) &&
         keyframes.some(frame => frame != null && 'scale' in frame)
       ) {
-        starts.push(performance.timeOrigin + performance.now());
+        void animation.ready.then(
+          () => {
+            starts.push(performance.timeOrigin + Number(animation.startTime));
+          },
+          () => {},
+        );
       }
       return animation;
     };
