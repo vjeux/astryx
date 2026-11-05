@@ -1,6 +1,6 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
-import {describe, it, expect, vi, beforeEach} from 'vitest';
+import {describe, it, expect, vi, beforeEach, onTestFinished} from 'vitest';
 import {render, screen, waitFor, fireEvent, act} from '@testing-library/react';
 import {__resetMenuPressForTest} from '../hooks/useMenuPress';
 import {expectNativeLinkClicks} from '../hooks/__tests__/menuLinkClicks';
@@ -804,6 +804,31 @@ describe('BreadcrumbItem menu', () => {
 
   it('preserves outside focus after a browser light dismiss', async () => {
     const user = userEvent.setup();
+    // NOT FOR LANDING: the menu's open frame runs late, as under load. It runs
+    // right after a light dismiss, or 100 ms after it was asked for.
+    const held: FrameRequestCallback[] = [];
+    const runHeld = () => {
+      for (const callback of held.splice(0)) {
+        callback(performance.now());
+      }
+    };
+    const frames = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation(callback => {
+        held.push(callback);
+        setTimeout(runHeld, 100);
+        return held.length;
+      });
+    const onToggle = (event: Event) => {
+      if ((event as Event & {newState?: string}).newState === 'closed') {
+        queueMicrotask(runHeld);
+      }
+    };
+    document.addEventListener('toggle', onToggle, true);
+    onTestFinished(() => {
+      frames.mockRestore();
+      document.removeEventListener('toggle', onToggle, true);
+    });
     render(
       <>
         <Breadcrumbs>
