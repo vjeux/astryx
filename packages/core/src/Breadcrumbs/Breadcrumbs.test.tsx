@@ -802,7 +802,8 @@ describe('BreadcrumbItem menu', () => {
     });
   });
 
-  it('preserves outside focus after a browser light dismiss', async () => {
+  // NOT FOR LANDING: the case runs 20 times per run, to sample the race.
+  it('preserves outside focus after a browser light dismiss', {repeats: 19}, async () => {
     const user = userEvent.setup();
     render(
       <>
