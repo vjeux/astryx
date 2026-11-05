@@ -9,7 +9,7 @@
  *   under Reduce Motion with a coarse pointer (a finger).
  */
 
-import {expect} from '@playwright/test';
+import {expect} from '@astryxdesign/a11y-spec/playwright';
 import type {HeldAnimation} from '@astryxdesign/interaction-harness';
 
 /** The limit on a touch presentation's cross-fade under Reduce Motion. */

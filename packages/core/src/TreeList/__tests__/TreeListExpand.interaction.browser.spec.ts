@@ -19,6 +19,7 @@ import {
 } from '@astryxdesign/a11y-spec/playwright';
 import {
   animationStoryboard,
+  armHold,
   blockMainThread,
   busyWindowProof,
   compareCurve,
@@ -151,6 +152,17 @@ async function holdExpansion(page: Page) {
     ...(await holdAnimations(page, group)),
     ...(await holdAnimations(page, chevron)),
   ];
+}
+
+/**
+ * Arms the page to hold the expansion as soon as it runs. Under the folder,
+ * it holds the group's slide, the chevron's turn and the row's press release.
+ * A hold the test sends once the slide runs lands later on a busy machine,
+ * and the short slide can end first. Two animations running means the
+ * expansion runs: the press release can start a frame before it.
+ */
+async function armExpansionHold(parent: Locator) {
+  return armHold(parent.page(), parent, {count: 2});
 }
 
 /**
@@ -400,7 +412,8 @@ test('a toggle mid-expand removes the group at once and turns the chevron around
   const timing = await themeTiming(page);
   // Every frame's chevron turn, and the child's offset while it exists,
   // from the first tap on, with the frame's time. On the first frame the
-  // expand moves the block, the page toggles the row again.
+  // block has come a quarter of its way, the page toggles the row again. By
+  // then the chevron has turned, so its turn around shows.
   await page.evaluate(() => {
     const samples: {t: number; y: number | null; turn: number}[] = [];
     const w = window as unknown as {samples: typeof samples; turnedAt: number};
@@ -432,7 +445,7 @@ test('a toggle mid-expand removes the group at once and turns the chevron around
         samples.push({t, y, turn: (Math.atan2(b, d) * 180) / Math.PI});
         const height =
           row?.closest('[role="group"]')?.getBoundingClientRect().height ?? 0;
-        if (w.turnedAt < 0 && y != null && y > 1 - height) {
+        if (w.turnedAt < 0 && y != null && y > -0.75 * height && y < 0) {
           w.turnedAt = samples.length - 1;
           document
             .querySelector<HTMLElement>(
@@ -626,10 +639,11 @@ test('the expand follows the theme’s timing tokens: a theme that lengthens the
     );
   const timing = await themeTiming(page);
   expect(timing.ms).toBe(600);
-  const {group, child, chevron} = parts(page);
+  const {parent, group, child, chevron} = parts(page);
+  const hold = await armExpansionHold(parent);
   await tapToggle(page);
   await expect(child).toBeVisible();
-  const starts = startsOf(await holdExpansion(page));
+  const starts = startsOf(await hold.held());
   const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
   for (const t of [150, 300, 450]) {
     await seekAnimations(page, t);
@@ -689,15 +703,16 @@ test("right to left: the chevron's quarter turn mirrors, and the children slide 
     () => matchMedia('(pointer: coarse)').matches,
   );
   test.skip(!touch, 'the expansion moves under a finger only');
-  const {group, child, chevron} = parts(page);
+  const {parent, group, child, chevron} = parts(page);
   await expect(parts(page).below).toBeVisible();
   expect(await chevron.evaluate(el => getComputedStyle(el).direction)).toBe(
     'rtl',
   );
   const timing = await themeTiming(page);
+  const hold = await armExpansionHold(parent);
   await tapToggle(page);
   await expect(child).toBeVisible();
-  const starts = startsOf(await holdExpansion(page));
+  const starts = startsOf(await hold.held());
   const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
   for (const t of [0, timing.ms / 4, timing.ms / 2]) {
     await seekAnimations(page, t);
@@ -725,12 +740,13 @@ test('expand: the children slide out from under the parent and the chevron turns
   page,
 }, testInfo) => {
   await open(page);
-  const {group, child, below, chevron} = parts(page);
+  const {parent, group, child, below, chevron} = parts(page);
   const timing = await themeTiming(page);
   const belowBefore = (await below.boundingBox())?.y ?? 0;
+  const hold = await armExpansionHold(parent);
   await tapToggle(page);
   await expect(child).toBeVisible();
-  const held = await holdExpansion(page);
+  const held = await hold.held();
   expect(held.length, JSON.stringify(held)).toBeGreaterThan(0);
   // The slide and the turn start in the same frame.
   const starts = startsOf(held);
@@ -1008,7 +1024,13 @@ test('WebKit: the children keep moving while the main thread is blocked (video)'
   });
   const page = await context.newPage();
   await open(page);
-  const {group} = parts(page);
+  // A long slide, so the block spans many of the recording's frames.
+  await page
+    .locator('[role="tree"]')
+    .evaluate(tree =>
+      (tree as HTMLElement).style.setProperty('--duration-fast', '600ms'),
+    );
+  const {group, chevron} = parts(page);
   // Where the block's last row, the first part of it to show, comes to rest,
   // and how far it travels. Expand once, read both, and collapse again.
   await tapToggle(page);
@@ -1028,6 +1050,9 @@ test('WebKit: the children keep moving while the main thread is blocked (video)'
   }
   await tapToggle(page);
   await expect(group).toHaveCount(0);
+  // The chevron's turn back ends first, so the block below waits for the
+  // expand's turn.
+  await expect.poll(async () => rotation(chevron)).toBe(0);
   // Probes every 4 px along the chip's path, from a group's height up to where
   // it rests. They read where the chip is in each recorded frame.
   const probes = Array.from({length: Math.floor(height / 4) + 1}, (_, k) => ({
@@ -1036,11 +1061,14 @@ test('WebKit: the children keep moving while the main thread is blocked (video)'
   }));
   await installBeacon(page);
   await page.waitForTimeout(300);
-  await tapToggle(page);
-  await markElement(lastChild(page));
-  await waitForAnimation(lastChild(page), {minProgressMs: 1});
-  await blockBehindBeacon(page, 300);
-  await page.waitForTimeout(400);
+  // The last row carries the chip from the commit that inserts it, and the
+  // page starts the block a frame into the chevron's turn.
+  await markLastChildOnInsert(page);
+  await Promise.all([
+    blockBehindBeacon(page, 300, {during: chevron}),
+    tapToggle(page),
+  ]);
+  await page.waitForTimeout(700);
   const video = page.video();
   await context.close();
   const path = await video?.path();

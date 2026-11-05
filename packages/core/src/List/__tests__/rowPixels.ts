@@ -10,7 +10,11 @@
  */
 
 import {readFile} from 'node:fs/promises';
-import {chromium, type Page} from '@playwright/test';
+import {
+  chromium,
+  type Locator,
+  type Page,
+} from '@astryxdesign/a11y-spec/playwright';
 
 /** The beacon's size, CSS px, in the viewport's bottom-right corner. */
 const BEACON = 40;
@@ -39,26 +43,49 @@ export async function installBeacon(page: Page): Promise<void> {
 
 /**
  * Paints the beacon blue, lets two frames commit it, blocks the main thread
- * for `ms`, then paints it green.
+ * for `ms`, then paints it green. With `during`, the page starts all of this
+ * itself, on the first frame an animation on that element runs. A block the
+ * test sends once the motion runs lands later on a busy machine, and a short
+ * motion can end first.
  */
-export async function blockBehindBeacon(page: Page, ms: number): Promise<void> {
+export async function blockBehindBeacon(
+  page: Page,
+  ms: number,
+  {during}: {during?: Locator} = {},
+): Promise<void> {
+  const target = during == null ? null : await during.elementHandle();
   await page.evaluate(
-    async duration =>
+    async ([duration, element]) =>
       new Promise<void>(resolve => {
         const beacon = document.getElementById('beacon') as HTMLElement;
-        beacon.style.background = 'rgb(0, 0, 255)';
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => {
-            const end = performance.now() + duration;
-            while (performance.now() < end) {
-              // blocked
-            }
-            beacon.style.background = 'rgb(0, 200, 0)';
-            resolve();
-          }),
-        );
+        const block = () => {
+          beacon.style.background = 'rgb(0, 0, 255)';
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              const end = performance.now() + duration;
+              while (performance.now() < end) {
+                // blocked
+              }
+              beacon.style.background = 'rgb(0, 200, 0)';
+              resolve();
+            }),
+          );
+        };
+        const wait = () => {
+          if (
+            element == null ||
+            element
+              .getAnimations()
+              .some(animation => animation.playState === 'running')
+          ) {
+            block();
+          } else {
+            requestAnimationFrame(wait);
+          }
+        };
+        wait();
       }),
-    ms,
+    [ms, target] as const,
   );
 }
 
