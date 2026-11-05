@@ -21,6 +21,8 @@
  *   jsdom runs no animations
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
   blockMainThread,
@@ -276,6 +278,56 @@ test('a spring keeps advancing every frame through a 1 s main-thread block, on i
     type: 'the spring against the control (px, ms)',
     description: JSON.stringify(read),
   });
+  // NOT FOR LANDING: every frame the coverage and position checks read.
+  {
+    const cframe = new Map(control.map(f => [f.t, f.box?.x ?? null]));
+    const ctl = control.map(f => f.t);
+    const why = (t: number) => {
+      const x = cframe.get(t);
+      if (x == null) {
+        return 'no control box';
+      }
+      const k = ctl.indexOf(t);
+      const before = k > 0 ? control[k - 1].box?.x : undefined;
+      if (x < 36 || x > 240 - 36) {
+        return 'near a turn';
+      }
+      if (before != null && Math.abs(x - before) <= 0.25) {
+        return 'repeats';
+      }
+      return clock.get(t) == null ? 'not read' : 'read';
+    };
+    const dir = path.join(
+      process.env.ASTRYX_INTERACTION_EVIDENCE ??
+        path.join(process.cwd(), 'test-results/interaction-evidence'),
+      'c07-quarter-dump',
+    );
+    fs.mkdirSync(dir, {recursive: true});
+    fs.writeFileSync(
+      path.join(
+        dir,
+        `${browserName}-${Date.now()}-${test.info().repeatEachIndex}.json`,
+      ),
+      JSON.stringify({
+        read,
+        start,
+        controlStart,
+        busy,
+        proofSummary: proof.summary,
+        proofFailures: proof.verdict.failures,
+        tracked: tracked.map(f => ({t: f.t, x: f.box?.x ?? null})),
+        control: control.map(f => ({t: f.t, x: f.box?.x ?? null})),
+        inside: inside.map(f => ({
+          t: f.t,
+          x: (f.box?.x ?? NaN) - MARKER_INSET,
+          ctlX: cframe.get(f.t) ?? null,
+          clock: clock.get(f.t) ?? null,
+          why: why(f.t),
+        })),
+        timed,
+      }),
+    );
+  }
   expect(
     [0, 1, 2, 3].every(q => quarters.has(q)),
     JSON.stringify(read),
