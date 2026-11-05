@@ -59,10 +59,6 @@ const {commitMs, menuDisplayMs, heldScale} = contextMenu.press;
 // stylesheet, which this Node-side spec cannot, so the onset is restated here.
 const feedbackOnsetMs = 150;
 
-/**
- * What ContextMenu plays from the press machine's onset: the growth toward the
- * held scale. The trigger's own medium duration and move easing tokens time it.
- */
 /** The growth's expected curve: `springs.contextMenuLift` from 1 to the held scale. */
 function playedCurve() {
   const curve = solveSpring(toSpring(springs.contextMenuLift), {

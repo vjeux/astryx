@@ -25,7 +25,7 @@
 import {useCallback, useRef, type RefObject} from 'react';
 import {useAttachment} from '../hooks/useAttachment';
 import {usePressFeedback} from '../hooks/usePressFeedback';
-import {PRESSED_ATTRIBUTE, type pressableProps} from '../utils/pressFeedback';
+import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {PRESS_ONSET_MS} from '../utils/pressGesture';
 import {observeMutations} from '../utils/sharedMutationObserver';
 import {createMotionEngine, type Animator} from '../motion/animator';
@@ -35,11 +35,6 @@ import {registerSpringsTable, springs} from '../motion/uikit/springs';
 const {heldScale} = contextMenu.press;
 
 export interface ContextMenuPressFeedback {
-  /**
-   * The trigger's marker for core's press machine (utils/pressFeedback.ts):
-   * spread on the trigger; the growth follows the pressed state it writes.
-   */
-  pressable: typeof pressableProps;
   /** The menu the press opened closed: return on the dismissal spring. */
   release(): void;
   /**
@@ -93,7 +88,8 @@ export function useContextMenuPressFeedback(
   isFollowed: RefObject<() => boolean> = ALWAYS_FOLLOWED,
   landedAt: RefObject<() => number | null> = NO_LANDING,
 ): ContextMenuPressFeedback {
-  const pressable = usePressFeedback();
+  // The press machine's document listener, while this feedback is mounted.
+  usePressFeedback();
   const animatorRef = useRef<Animator | null>(null);
   const isShownRef = useRef(isShown);
   isShownRef.current = isShown;
@@ -279,5 +275,5 @@ export function useContextMenuPressFeedback(
     isShown,
   );
 
-  return {pressable, release, end, hold};
+  return {release, end, hold};
 }

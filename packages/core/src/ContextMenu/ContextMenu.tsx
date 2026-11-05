@@ -622,8 +622,10 @@ export function ContextMenu({
     [listNavKeyDown, closeMenu, typeahead, ownsEvent],
   );
 
-  // How much the press feedback has scaled a block trigger from its center.
-  // Its bounding rect is the scaled box, and its offset size the unscaled one.
+  // How much a block trigger is scaled on screen: the press feedback's growth,
+  // and any ancestor's scale. Its bounding rect is the scaled box, and its
+  // offset size the unscaled one, so a client point divided by it lands in
+  // the trigger's own coordinates.
   const triggerScale = useCallback(
     (rect: DOMRect): {x: number; y: number} => {
       const trigger = triggerRef.current;
