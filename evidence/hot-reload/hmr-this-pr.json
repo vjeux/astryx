@@ -1,0 +1,87 @@
+[
+ {
+  "step": "before any edit",
+  "marker": "set before the edit",
+  "toastIds": [
+   "astryx-toast-2",
+   "astryx-toast-3"
+  ],
+  "toastText": [
+   "Shown as the page mounted",
+   "This is an info toast"
+  ],
+  "buttonSame": true
+ },
+ {
+  "step": "after editing packages/core/src/Toast/ToastViewport.tsx",
+  "marker": "set before the edit",
+  "toastIds": [],
+  "toastText": [],
+  "buttonSame": true,
+  "vite": [
+   "[vite] hot updated: /@fs<repo>/packages/core/src/Toast/ToastViewport.tsx"
+  ]
+ },
+ {
+  "step": "after restoring packages/core/src/Toast/ToastViewport.tsx",
+  "marker": "set before the edit",
+  "toastIds": [],
+  "toastText": [],
+  "buttonSame": true
+ },
+ {
+  "step": "after editing packages/core/src/Layer/toastHost.tsx",
+  "marker": "set before the edit",
+  "toastIds": [
+   "astryx-toast-2"
+  ],
+  "toastText": [
+   "Shown as the page mounted"
+  ],
+  "buttonSame": false,
+  "vite": [
+   "[vite] invalidate /@fs<repo>/packages/core/src/Layer/toastHost.tsx: Could not Fast Refresh (\"ToastContext\" export is incompatible). L",
+   "[vite] hot updated: /@fs<repo>/packages/core/src/Layer/toastHost.tsx",
+   "[vite] hot updated: /.storybook/preview.tsx via /@id/__x00__virtual:/@storybook/builder-vite/project-annotations.js",
+   "[vite] hot updated: /@id/__x00__virtual:/@storybook/builder-vite/storybook-stories.js via /@id/__x00__virtual:/@storybook/builder-vite/vite-app.js",
+   "[vite] hot updated: /@fs<repo>/packages/core/src/Toast/ToastViewport.tsx",
+   "[vite] hot updated: /@fs<repo>/packages/core/src/Layer/LayerProvider.tsx"
+  ]
+ },
+ {
+  "step": "after restoring packages/core/src/Layer/toastHost.tsx",
+  "marker": "set before the edit",
+  "toastIds": [
+   "astryx-toast-2"
+  ],
+  "toastText": [
+   "Shown as the page mounted"
+  ],
+  "buttonSame": false
+ },
+ {
+  "step": "after editing packages/core/src/Toast/Toast.tsx",
+  "marker": "set before the edit",
+  "toastIds": [
+   "astryx-toast-2"
+  ],
+  "toastText": [
+   "Shown as the page mounted"
+  ],
+  "buttonSame": false,
+  "vite": [
+   "[vite] hot updated: /@fs<repo>/packages/core/src/Toast/Toast.tsx"
+  ]
+ },
+ {
+  "step": "after restoring packages/core/src/Toast/Toast.tsx",
+  "marker": "set before the edit",
+  "toastIds": [
+   "astryx-toast-2"
+  ],
+  "toastText": [
+   "Shown as the page mounted"
+  ],
+  "buttonSame": false
+ }
+]
