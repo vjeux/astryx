@@ -40,6 +40,7 @@ import {
   flick,
   frames,
   freezePageOn,
+  freezeTimers,
   holdAnimations,
   installLongTaskLog,
   installPageFreeze,
@@ -52,6 +53,7 @@ import {
   sampleCurve,
   startScreencast,
   thawPage,
+  thawTimers,
   timeline,
   timingFunction,
   touchDriver,
@@ -418,3 +420,355 @@ test(
     expect(settleTops.at(-1)).toBeCloseTo(halfTop, 0);
   },
 );
+
+// Evidence only, not for landing: main's late hold beside the frozen lift.
+
+test(
+  'storyboard, main’s late hold (not for landing): drag to the half detent and settle',
+  {tag: '@storyboard'},
+  async ({page}, testInfo) => {
+    const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
+    // Gate the page's timers from here on, so the settle's completion timer can
+    // be held with its animation while the filmstrip is photographed.
+    await installTimerGate(page);
+    const viewport = page.viewportSize() ?? {width: 402, height: 714};
+    const clip = {x: 0, y: 0, width: viewport.width, height: viewport.height};
+    const dy = Math.round((halfTop - tallTop) * 0.66);
+    const measure = async () => ({top: await sheetTop(sheet)});
+    const dragBoard = await touchStoryboard(
+      page,
+      driver,
+      drag(
+        handle,
+        {x: handle.x, y: handle.y + dy},
+        {durationMs: 200, hz: 30, restMs: 150},
+      ),
+      {
+        name: 'bottomsheet-drag-to-detent',
+        clip,
+        measure,
+        columns: 5,
+        cellScale: 0.4,
+      },
+    );
+    await waitForAnimation(sheet);
+    await freezeTimers(page);
+    const {storyboard: settleBoard} = await animationStoryboard(page, {
+      name: 'bottomsheet-settle',
+      clip,
+      scope: sheet,
+      measure,
+      columns: 7,
+      cellScale: 0.4,
+    });
+    await releaseAnimations(page, {finish: true});
+    await thawTimers(page);
+    await dragBoard.write(testInfo);
+    await settleBoard.write(testInfo);
+    // The trace is the assertion; the sheets are the evidence.
+    const dragTops = dragBoard.frames.map(f => f.data.top as number);
+    expect(
+      dragTops.every((top, i) => i === 0 || top >= dragTops[i - 1] - 0.5),
+    ).toBe(true);
+    const settleTops = settleBoard.frames.map(f => f.data.top as number);
+    expect(
+      settleTops.every((top, i) => i === 0 || top >= settleTops[i - 1] - 0.5),
+    ).toBe(true);
+    expect(settleTops.at(-1)).toBeCloseTo(halfTop, 0);
+  },
+);
+
+test(
+  'evidence: main’s late hold after a 600 ms pause (not for landing)',
+  {tag: '@storyboard'},
+  async ({page}, testInfo) => {
+    const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
+    // Gate the page's timers from here on, so the settle's completion timer can
+    // be held with its animation while the filmstrip is photographed.
+    await installTimerGate(page);
+    const viewport = page.viewportSize() ?? {width: 402, height: 714};
+    const clip = {x: 0, y: 0, width: viewport.width, height: viewport.height};
+    const dy = Math.round((halfTop - tallTop) * 0.66);
+    const measure = async () => ({top: await sheetTop(sheet)});
+    const dragBoard = await touchStoryboard(
+      page,
+      driver,
+      drag(
+        handle,
+        {x: handle.x, y: handle.y + dy},
+        {durationMs: 200, hz: 30, restMs: 150},
+      ),
+      {
+        name: 'bottomsheet-drag-to-detent',
+        clip,
+        measure,
+        columns: 5,
+        cellScale: 0.4,
+      },
+    );
+    await waitForAnimation(sheet);
+    await freezeTimers(page);
+    await page.waitForTimeout(600);
+    const {storyboard: settleBoard} = await animationStoryboard(page, {
+      name: 'bottomsheet-settle',
+      clip,
+      scope: sheet,
+      measure,
+      columns: 7,
+      cellScale: 0.4,
+    });
+    await releaseAnimations(page, {finish: true});
+    await thawTimers(page);
+    await dragBoard.write(testInfo);
+    await settleBoard.write(testInfo);
+    // The trace is the assertion; the sheets are the evidence.
+    const dragTops = dragBoard.frames.map(f => f.data.top as number);
+    expect(
+      dragTops.every((top, i) => i === 0 || top >= dragTops[i - 1] - 0.5),
+    ).toBe(true);
+    const settleTops = settleBoard.frames.map(f => f.data.top as number);
+    expect(
+      settleTops.every((top, i) => i === 0 || top >= settleTops[i - 1] - 0.5),
+    ).toBe(true);
+    expect(settleTops.at(-1)).toBeCloseTo(halfTop, 0);
+  },
+);
+
+test(
+  'evidence: the frozen lift after a 600 ms pause (not for landing)',
+  {tag: '@storyboard'},
+  async ({page}, testInfo) => {
+    // The page clock that lets the scene stop at the lift, installed before
+    // the story loads.
+    await installPageFreeze(page);
+    const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
+    // Gate the page's timers from here on, so the settle's completion timer can
+    // be held with its animation while the filmstrip is photographed.
+    await installTimerGate(page);
+    const viewport = page.viewportSize() ?? {width: 402, height: 714};
+    const clip = {x: 0, y: 0, width: viewport.width, height: viewport.height};
+    const dy = Math.round((halfTop - tallTop) * 0.66);
+    const measure = async () => ({top: await sheetTop(sheet)});
+    // The scene stops in the lift's own task, before the sheet hears the
+    // lift. The settle then starts held, however late this process reacts. A
+    // hold that the test sends after the lift can come after the settle ends.
+    await freezePageOn(page, 'touchend');
+    const dragBoard = await touchStoryboard(
+      page,
+      driver,
+      drag(
+        handle,
+        {x: handle.x, y: handle.y + dy},
+        {durationMs: 200, hz: 30, restMs: 150},
+      ),
+      {
+        name: 'bottomsheet-drag-to-detent',
+        clip,
+        measure,
+        columns: 5,
+        cellScale: 0.4,
+      },
+    );
+    await page.waitForTimeout(600);
+    const {storyboard: settleBoard} = await animationStoryboard(page, {
+      name: 'bottomsheet-settle',
+      clip,
+      scope: sheet,
+      measure,
+      columns: 7,
+      cellScale: 0.4,
+    });
+    await releaseAnimations(page, {finish: true});
+    await thawPage(page);
+    await dragBoard.write(testInfo);
+    await settleBoard.write(testInfo);
+    // The trace is the assertion; the sheets are the evidence.
+    const dragTops = dragBoard.frames.map(f => f.data.top as number);
+    expect(
+      dragTops.every((top, i) => i === 0 || top >= dragTops[i - 1] - 0.5),
+    ).toBe(true);
+    const settleTops = settleBoard.frames.map(f => f.data.top as number);
+    expect(
+      settleTops.every((top, i) => i === 0 || top >= settleTops[i - 1] - 0.5),
+    ).toBe(true);
+    expect(settleTops.at(-1)).toBeCloseTo(halfTop, 0);
+  },
+);
+
+test('the settle lands on the detent, main’s late hold (not for landing)', async ({
+  page,
+}, testInfo) => {
+  const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
+  const dy = Math.round((halfTop - tallTop) * 0.66);
+  await driver.play(slowDragTo(handle, dy));
+  const [settle] = await waitForAnimation(sheet);
+  const held = await holdAnimations(page, sheet);
+  const transition = held.find(a => a.name === 'transform');
+  if (transition == null) {
+    throw new Error(`no transform transition held: ${JSON.stringify(held)}`);
+  }
+  // The curve is recorded, not asserted: today's settle is the theme's
+  // transition, which starts a release at rest at a speed of its own, where
+  // the touch model starts it at the finger's; this records what it plays.
+  // Seek the held settle to every frame time and read the presented transform.
+  const samples = curveOf(
+    await sampleCurve(sheet, timeline(SETTLE_MS)),
+    'translateY',
+  );
+  const from = samples[0].value;
+  const to = samples[samples.length - 1].value;
+  const ease = timingFunction(SETTLE_EASING);
+  const expectedSettle = (t: number) =>
+    from + (to - from) * ease(Math.min(1, t / SETTLE_MS));
+  const result = compareCurve(samples, expectedSettle, 0.5);
+  await releaseAnimations(page);
+  testInfo.annotations.push({
+    type: 'settle-curve',
+    description: `settle: ${transition.easing}, ${transition.durationMs} ms; frame-by-frame max error ${result.maxError.toFixed(2)} px against ${SETTLE_EASING} over ${SETTLE_MS} ms`,
+  });
+  // UIKit parity metric, reported rather than asserted until the spring lands:
+  // the settle's initial velocity, read from its first two frames, vs the
+  // finger's at release (here 0).
+  const initialVelocity =
+    ((samples[1].value - samples[0].value) / (samples[1].t - samples[0].t)) *
+    1000;
+  testInfo.annotations.push({
+    type: 'uikit-parity',
+    description: `settle starts at ${initialVelocity.toFixed(0)} px/s for a release at 0 px/s (UIKit hands the release velocity to the spring)`,
+  });
+  await writeEvidence(
+    'curves/bottomsheet-settle-main-copy',
+    {
+      [`${testInfo.project.name}.json`]: JSON.stringify(
+        {settle, transition, comparison: result},
+        null,
+        2,
+      ),
+    },
+    testInfo,
+  );
+  // Where it lands is asserted: the half detent.
+  expect(samples.at(-1)?.value).toBeCloseTo(halfTop - tallTop, 0);
+});
+
+test('evidence: the settle curve, main’s late hold after a 600 ms pause (not for landing)', async ({
+  page,
+}, testInfo) => {
+  const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
+  const dy = Math.round((halfTop - tallTop) * 0.66);
+  await driver.play(slowDragTo(handle, dy));
+  const [settle] = await waitForAnimation(sheet);
+  await page.waitForTimeout(600);
+  const held = await holdAnimations(page, sheet);
+  const transition = held.find(a => a.name === 'transform');
+  if (transition == null) {
+    throw new Error(`no transform transition held: ${JSON.stringify(held)}`);
+  }
+  // The curve is recorded, not asserted: today's settle is the theme's
+  // transition, which starts a release at rest at a speed of its own, where
+  // the touch model starts it at the finger's; this records what it plays.
+  // Seek the held settle to every frame time and read the presented transform.
+  const samples = curveOf(
+    await sampleCurve(sheet, timeline(SETTLE_MS)),
+    'translateY',
+  );
+  const from = samples[0].value;
+  const to = samples[samples.length - 1].value;
+  const ease = timingFunction(SETTLE_EASING);
+  const expectedSettle = (t: number) =>
+    from + (to - from) * ease(Math.min(1, t / SETTLE_MS));
+  const result = compareCurve(samples, expectedSettle, 0.5);
+  await releaseAnimations(page);
+  testInfo.annotations.push({
+    type: 'settle-curve',
+    description: `settle: ${transition.easing}, ${transition.durationMs} ms; frame-by-frame max error ${result.maxError.toFixed(2)} px against ${SETTLE_EASING} over ${SETTLE_MS} ms`,
+  });
+  // UIKit parity metric, reported rather than asserted until the spring lands:
+  // the settle's initial velocity, read from its first two frames, vs the
+  // finger's at release (here 0).
+  const initialVelocity =
+    ((samples[1].value - samples[0].value) / (samples[1].t - samples[0].t)) *
+    1000;
+  testInfo.annotations.push({
+    type: 'uikit-parity',
+    description: `settle starts at ${initialVelocity.toFixed(0)} px/s for a release at 0 px/s (UIKit hands the release velocity to the spring)`,
+  });
+  await writeEvidence(
+    'curves/bottomsheet-settle-main-pause',
+    {
+      [`${testInfo.project.name}.json`]: JSON.stringify(
+        {settle, transition, comparison: result},
+        null,
+        2,
+      ),
+    },
+    testInfo,
+  );
+  // Where it lands is asserted: the half detent.
+  expect(samples.at(-1)?.value).toBeCloseTo(halfTop - tallTop, 0);
+});
+
+test('evidence: the settle curve, the frozen lift after a 600 ms pause (not for landing)', async ({
+  page,
+}, testInfo) => {
+  // The page clock that lets the scene stop at the lift, installed before
+  // the story loads; a freeze also needs the timer gate.
+  await installPageFreeze(page);
+  const {driver, sheet, tallTop, halfTop, handle} = await openSheet(page);
+  await installTimerGate(page);
+  const dy = Math.round((halfTop - tallTop) * 0.66);
+  // The scene stops in the lift's own task, before the sheet hears the lift.
+  // The settle then starts held, however late this process reacts. A hold
+  // that the test sends after the lift can come after the settle ends.
+  await freezePageOn(page, 'touchend');
+  await driver.play(slowDragTo(handle, dy));
+  await page.waitForTimeout(600);
+  const held = await holdAnimations(page, sheet);
+  const transition = held.find(a => a.name === 'transform');
+  if (transition == null) {
+    throw new Error(`no transform transition held: ${JSON.stringify(held)}`);
+  }
+  // The curve is recorded, not asserted: today's settle is the theme's
+  // transition, which starts a release at rest at a speed of its own, where
+  // the touch model starts it at the finger's; this records what it plays.
+  // Seek the held settle to every frame time and read the presented transform.
+  const samples = curveOf(
+    await sampleCurve(sheet, timeline(SETTLE_MS)),
+    'translateY',
+  );
+  const from = samples[0].value;
+  const to = samples[samples.length - 1].value;
+  const ease = timingFunction(SETTLE_EASING);
+  const expectedSettle = (t: number) =>
+    from + (to - from) * ease(Math.min(1, t / SETTLE_MS));
+  const result = compareCurve(samples, expectedSettle, 0.5);
+  await releaseAnimations(page);
+  await thawPage(page);
+  testInfo.annotations.push({
+    type: 'settle-curve',
+    description: `settle: ${transition.easing}, ${transition.durationMs} ms; frame-by-frame max error ${result.maxError.toFixed(2)} px against ${SETTLE_EASING} over ${SETTLE_MS} ms`,
+  });
+  // UIKit parity metric, reported rather than asserted until the spring lands:
+  // the settle's initial velocity, read from its first two frames, vs the
+  // finger's at release (here 0).
+  const initialVelocity =
+    ((samples[1].value - samples[0].value) / (samples[1].t - samples[0].t)) *
+    1000;
+  testInfo.annotations.push({
+    type: 'uikit-parity',
+    description: `settle starts at ${initialVelocity.toFixed(0)} px/s for a release at 0 px/s (UIKit hands the release velocity to the spring)`,
+  });
+  await writeEvidence(
+    'curves/bottomsheet-settle-fix-pause',
+    {
+      [`${testInfo.project.name}.json`]: JSON.stringify(
+        {transition, comparison: result},
+        null,
+        2,
+      ),
+    },
+    testInfo,
+  );
+  // Where it lands is asserted: the half detent.
+  expect(samples.at(-1)?.value).toBeCloseTo(halfTop - tallTop, 0);
+});
