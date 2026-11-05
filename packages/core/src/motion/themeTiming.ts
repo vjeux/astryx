@@ -8,8 +8,9 @@
  *   tokens where the element is. readThemeTokens and resolveTiming: that
  *   duration and easing as values. easedProgress: the curve for a length and
  *   an easing already read.
- * @position Motion foundation, internal to core. Motion that a tap, a key or
- *   the program starts reads its duration and easing from the theme with it.
+ * @position Motion foundation, internal to core; Lab reads resolveTiming
+ *   through the internal touch entry. Motion that a tap, a key or the program
+ *   starts reads its duration and easing from the theme with it.
  *
  * SYNC: When modified, update /packages/core/src/motion/themeTiming.test.ts
  *   and /packages/core/src/motion/__tests__/themeTiming.interaction.browser.spec.ts

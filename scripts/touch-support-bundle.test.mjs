@@ -112,7 +112,7 @@ function exportsOf(entry) {
 /**
  * What the internal entry gives Lab's refresh pull: the pan, its hook, the
  * motion animator, its motion math and companion curves, the scroll view's
- * spring and the motion-role parsers. None is public API.
+ * spring and the theme-timing resolver. None is public API.
  */
 const LAB_ONLY_NAMES = [
   'PanGestureRecognizer',
@@ -120,8 +120,7 @@ const LAB_ONLY_NAMES = [
   'createMotionAnimator',
   'cubicBezier',
   'mapProgress',
-  'parseCssEasing',
-  'parseMotionRoleValue',
+  'resolveTiming',
   'rubberBand',
   'rubberBandInverse',
   'rubberBandSlope',
