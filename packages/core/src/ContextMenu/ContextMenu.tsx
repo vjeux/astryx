@@ -766,9 +766,6 @@ export function ContextMenu({
     [isDisabled, openAtLocalPoint, getAnchorBaseRect],
   );
 
-  // The press model: the row under a release acts, and the highlight follows
-  // a held pointer. A mouse released outside dismisses; a finger leaves the
-  // menu open.
   const menuPress = useDropdownMenuPress({
     menuRef: listRef,
     itemSelector: MENU_ITEM_SELECTOR,
