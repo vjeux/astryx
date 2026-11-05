@@ -2873,3 +2873,184 @@ test(
     }
   },
 );
+
+// Evidence only, not for landing.
+
+/** Turns every slide on a radiogroup's pseudo-elements into a 1 ms hold. */
+async function cutSlidesToOneMs(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      ...args: Parameters<Element['animate']>
+    ): Animation {
+      const [keyframes, options] = args;
+      if (
+        this.getAttribute('role') === 'radiogroup' &&
+        typeof options === 'object' &&
+        options?.pseudoElement != null &&
+        Number(options.duration) > 1
+      ) {
+        return original.call(this, keyframes, {...options, duration: 1});
+      }
+      return original.apply(this, args);
+    };
+  });
+}
+
+/** The first version's read: every held ::before on any radiogroup. */
+async function takeAnyHeldLensEasings(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const w = window as unknown as {
+      __harnessHeld: Animation[];
+      __restoreAnimate: () => void;
+    };
+    w.__restoreAnimate();
+    return w.__harnessHeld.flatMap(animation => {
+      const effect = animation.effect as KeyframeEffect;
+      return effect.pseudoElement === '::before'
+        ? [effect.getComputedTiming().easing ?? '']
+        : [];
+    });
+  });
+}
+
+test('evidence: no slide (cut to 1 ms), the first version’s any-group read (not for landing)', async ({
+  page,
+}) => {
+  const control = await openControl(
+    page,
+    'core-segmentedcontrol--selection-motion',
+    'Period',
+  );
+  await control.segment('day').focus();
+  await cutSlidesToOneMs(page);
+  await holdLensAnimationsAtBirth(page);
+  await page.keyboard.press('ArrowRight');
+  await expect(control.segment('week')).toHaveAttribute('aria-checked', 'true');
+  const [keyed] = await takeAnyHeldLensEasings(page);
+  expect(keyed).toBe('linear');
+  await releaseAnimations(page, {finish: true});
+  await cutSlidesToOneMs(page);
+  await holdLensAnimationsAtBirth(page);
+  const button = page.getByRole('button', {name: 'Next period'});
+  const box = await button.boundingBox();
+  if (box == null) {
+    throw new Error('no button');
+  }
+  await control.driver.tap({
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  });
+  await expect(control.segment('month')).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  expect((await takeAnyHeldLensEasings(page)).length).toBeGreaterThan(0);
+  await releaseAnimations(page, {finish: true});
+});
+
+test('evidence: no slide (cut to 1 ms), this control’s slide read (not for landing)', async ({
+  page,
+}) => {
+  const control = await openControl(
+    page,
+    'core-segmentedcontrol--selection-motion',
+    'Period',
+  );
+  await control.segment('day').focus();
+  await cutSlidesToOneMs(page);
+  await holdLensAnimationsAtBirth(page);
+  await page.keyboard.press('ArrowRight');
+  await expect(control.segment('week')).toHaveAttribute('aria-checked', 'true');
+  const keyed = await takeHeldSlideEasings(control);
+  expect(keyed.length).toBeGreaterThan(0);
+  expect(keyed.every(easing => easing === 'linear')).toBe(true);
+  await releaseAnimations(page, {finish: true});
+  await cutSlidesToOneMs(page);
+  await holdLensAnimationsAtBirth(page);
+  const button = page.getByRole('button', {name: 'Next period'});
+  const box = await button.boundingBox();
+  if (box == null) {
+    throw new Error('no button');
+  }
+  await control.driver.tap({
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  });
+  await expect(control.segment('month')).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  expect((await takeHeldSlideEasings(control)).length).toBeGreaterThan(0);
+  await releaseAnimations(page, {finish: true});
+});
+
+test('evidence: main’s late read after a 1500 ms pause (not for landing)', async ({
+  page,
+}) => {
+  const control = await openControl(
+    page,
+    'core-segmentedcontrol--selection-motion',
+    'Period',
+  );
+  await control.segment('day').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(control.segment('week')).toHaveAttribute('aria-checked', 'true');
+  await page.waitForTimeout(1500);
+  const [keyed] = await waitForLens(control);
+  expect(keyed.easing).toBe('linear');
+  await releaseAnimations(page, {finish: true});
+  const button = page.getByRole('button', {name: 'Next period'});
+  const box = await button.boundingBox();
+  if (box == null) {
+    throw new Error('no button');
+  }
+  await control.driver.tap({
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  });
+  await expect(control.segment('month')).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await page.waitForTimeout(1500);
+  const animations = await waitForLens(control);
+  expect(animations.length).toBeGreaterThan(0);
+});
+
+test('evidence: the birth hold read after a 1500 ms pause (not for landing)', async ({
+  page,
+}) => {
+  const control = await openControl(
+    page,
+    'core-segmentedcontrol--selection-motion',
+    'Period',
+  );
+  await control.segment('day').focus();
+  await holdLensAnimationsAtBirth(page);
+  await page.keyboard.press('ArrowRight');
+  await expect(control.segment('week')).toHaveAttribute('aria-checked', 'true');
+  await page.waitForTimeout(1500);
+  const keyed = await takeHeldSlideEasings(control);
+  expect(keyed.length).toBeGreaterThan(0);
+  expect(keyed.every(easing => easing === 'linear')).toBe(true);
+  await releaseAnimations(page, {finish: true});
+  await holdLensAnimationsAtBirth(page);
+  const button = page.getByRole('button', {name: 'Next period'});
+  const box = await button.boundingBox();
+  if (box == null) {
+    throw new Error('no button');
+  }
+  await control.driver.tap({
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  });
+  await expect(control.segment('month')).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await page.waitForTimeout(1500);
+  expect((await takeHeldSlideEasings(control)).length).toBeGreaterThan(0);
+  await releaseAnimations(page, {finish: true});
+});
