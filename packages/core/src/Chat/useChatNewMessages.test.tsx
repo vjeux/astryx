@@ -2,7 +2,7 @@
 
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {render, act} from '@testing-library/react';
-import {useState} from 'react';
+import {Suspense, startTransition, use, useState} from 'react';
 import {ChatLayout} from './ChatLayout';
 import {ChatMessageList} from './ChatMessageList';
 import {ChatMessage} from './ChatMessage';
@@ -205,5 +205,81 @@ describe('useChatNewMessages — callback ref (issue #2282)', () => {
     });
 
     expect(contentObservation).toBeDefined();
+  });
+});
+
+describe('useChatNewMessages — committed values', () => {
+  it('keeps the committed lock and onResize when React discards a render, as a suspended transition does', async () => {
+    const committed = vi.fn();
+    const discarded = vi.fn();
+    const pending = new Promise<never>(() => {});
+    function Pending(): null {
+      use(pending);
+      return null;
+    }
+    function Content({
+      isLocked,
+      onResize,
+    }: {
+      isLocked: boolean;
+      onResize: () => void;
+    }) {
+      const {contentRef, hasNewMessages} = useChatNewMessages({
+        isLocked,
+        onResize,
+      });
+      return (
+        <div
+          ref={contentRef}
+          data-testid="content"
+          data-new-messages={String(hasNewMessages)}>
+          <div className="astryx-chat-message">first</div>
+        </div>
+      );
+    }
+    function Screen({
+      isLocked,
+      onResize,
+      isPending,
+    }: {
+      isLocked: boolean;
+      onResize: () => void;
+      isPending: boolean;
+    }) {
+      return (
+        <Suspense fallback={null}>
+          <Content isLocked={isLocked} onResize={onResize} />
+          {isPending ? <Pending /> : null}
+        </Suspense>
+      );
+    }
+    const {getByTestId, rerender} = render(
+      <Screen isLocked onResize={committed} isPending={false} />,
+    );
+    // The transition renders an unlocked list and a new onResize, then
+    // suspends for good, so React keeps the committed tree and never commits
+    // that render.
+    await act(async () => {
+      startTransition(() => {
+        rerender(<Screen isLocked={false} onResize={discarded} isPending />);
+      });
+    });
+    committed.mockClear();
+    // A message arrives and the content grows.
+    const content = getByTestId('content');
+    act(() => {
+      const message = document.createElement('div');
+      message.className = 'astryx-chat-message';
+      content.append(message);
+      const entry: Partial<ResizeObserverEntry> = {target: content};
+      for (const {element, callback} of activeObservations) {
+        if (element === content) {
+          callback([entry as ResizeObserverEntry], {} as ResizeObserver);
+        }
+      }
+    });
+    expect(discarded).not.toHaveBeenCalled();
+    expect(committed).toHaveBeenCalled();
+    expect(content.dataset.newMessages).toBe('false');
   });
 });
