@@ -21,6 +21,8 @@
  *   jsdom runs no animations
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
   blockMainThread,
@@ -276,6 +278,66 @@ test('a spring keeps advancing every frame through a 1 s main-thread block, on i
     type: 'the spring against the control (ms)',
     description: JSON.stringify(read),
   });
+  // NOT FOR LANDING: dumps every frame the assertions read, for analysis.
+  {
+    const pageTimes = timed.map(({i, ms}) => {
+      const cycles = Math.round((inside[i].t - controlStart - ms) / 800);
+      return controlStart + ms + cycles * 800;
+    });
+    const expected = await page.evaluate(
+      ({springs, travel, elapsed}) =>
+        springs.map(spring => {
+          const solved = Motion.solveSpring(Motion.toSpring(spring), {
+            from: 0,
+            to: travel,
+          });
+          return elapsed.map(e => solved.value(e / 1000));
+        }),
+      {
+        springs: [SLOW, {...SLOW, response: SLOW.response * 0.9}],
+        travel: TRAVEL,
+        elapsed: pageTimes.map(t => t - start),
+      },
+    );
+    const dir = path.join(
+      process.env.ASTRYX_INTERACTION_EVIDENCE ??
+        path.join(process.cwd(), 'test-results/interaction-evidence'),
+      'c07-anim-dump',
+    );
+    fs.mkdirSync(dir, {recursive: true});
+    fs.writeFileSync(
+      path.join(
+        dir,
+        `${browserName}-${test.info().repeatEachIndex}-${test.info().retry}-${Date.now()}.json`,
+      ),
+      JSON.stringify({
+        browserName,
+        start,
+        controlStart,
+        busy,
+        read,
+        proof: {
+          failures: proof.verdict.failures,
+          monotonic: proof.monotonic,
+          summary: proof.summary,
+        },
+        inside: inside.map((f, i) => ({
+          t: f.t,
+          x: (f.box?.x ?? NaN) - MARKER_INSET,
+          curveMs: curve[i],
+          fasterMs: faster[i],
+        })),
+        timed: timed.map(({i, ms}, k) => ({
+          i,
+          ms,
+          pageT: pageTimes[k],
+          expected: expected[0][k],
+          expectedFaster: expected[1][k],
+        })),
+        control: control.map(f => ({t: f.t, x: f.box?.x ?? null})),
+      }),
+    );
+  }
   // Placed on its curve and on the control's, every frame is the same time
   // apart, to within the 1 px steps of both; a spring 10% off drifts.
   expect(timed.length, JSON.stringify(read)).toBeGreaterThan(20);
