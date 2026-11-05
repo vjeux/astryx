@@ -172,17 +172,15 @@ function layoutMotion(area: Element): LayoutMotion {
   return progress == null ? {kind: 'instant'} : {kind: 'glide', progress};
 }
 
-/** How many keyframes `sampleOver` takes over `durationMs`. */
-function sampleCount(durationMs: number): number {
-  return Math.max(2, Math.ceil((durationMs / 1000) * SAMPLES_PER_SECOND) + 1);
-}
-
 /** Linear keyframes over `durationMs`, one per frame, from `frame(t ms)`. */
 function sampleOver(
   durationMs: number,
   frame: (t: number) => Keyframe,
 ): Keyframe[] {
-  const count = sampleCount(durationMs);
+  const count = Math.max(
+    2,
+    Math.ceil((durationMs / 1000) * SAMPLES_PER_SECOND) + 1,
+  );
   const keyframes: Keyframe[] = [];
   for (let i = 0; i < count; i++) {
     const offset = i / (count - 1);
@@ -497,25 +495,6 @@ function movedByApp(element: Element): boolean {
 type OffsetCurve = (t: number) => {readonly x: number; readonly y: number};
 
 const AT_REST: OffsetCurve = () => ({x: 0, y: 0});
-
-/**
- * `curve` as the browser draws it from `sampleOver`'s keyframes: a straight
- * line between each two. A new glide then starts where the old one shows.
- */
-function drawnCurve(durationMs: number, curve: OffsetCurve): OffsetCurve {
-  const count = sampleCount(durationMs);
-  const points = Array.from({length: count}, (_, i) =>
-    curve((i / (count - 1)) * durationMs),
-  );
-  return t => {
-    const at = Math.min(Math.max(t / durationMs, 0), 1) * (count - 1);
-    const i = Math.min(Math.floor(at), count - 2);
-    const f = at - i;
-    const a = points[i];
-    const b = points[i + 1];
-    return {x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f};
-  };
-}
 
 /** A glide an element is playing, so a new change can retarget it. */
 interface Glide {
@@ -1334,12 +1313,12 @@ function flush(batch: Batch): void {
     const moveX = dx / scale.x - held.x;
     const moveY = dy / scale.y - held.y;
     const {progress} = motion;
-    const durationMs = Math.max(progress.durationMs, carriedMs);
-    const offsetAt = drawnCurve(durationMs, t => {
+    const offsetAt: OffsetCurve = t => {
       const remaining = progress.remaining(t);
       const carry = carried(t);
       return {x: carry.x + moveX * remaining, y: carry.y + moveY * remaining};
-    });
+    };
+    const durationMs = Math.max(progress.durationMs, carriedMs);
     // One replace-composited `translate`: the compositor runs it (INV12).
     const animation = safeAnimate(
       element,
