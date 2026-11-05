@@ -2638,6 +2638,10 @@ describe('DateInput — nested scrollers keep their own touch gesture', () => {
       // 40 steps of 6.5 px: 260 px toward the next month.
       for (let i = 0; i < 40; i++) {
         act(() => trackpadScroll(scroller, 6.5));
+        // Evidence only: a loaded runner's 300 ms stall halfway.
+        if (i === 20) {
+          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+        }
         await wait(8);
       }
       await wait(900);
