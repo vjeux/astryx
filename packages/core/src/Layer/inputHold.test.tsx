@@ -577,25 +577,55 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     expect(isGated(document.body)).toBe(false);
   });
 
-  it("keeps a presentation's shield up for a mouse press that begins on it, to that press's end, and the gate holds what lands on the shield: its release and click are the shield's, not what lies beneath", () => {
-    const {layer, child} = mountLayer();
+  it("sends a mouse press that lands on a presentation's shield to what is under the mouse: the shields give way, focus moves there, and its click goes there, not to the layer (spec:AST-094 FR35)", () => {
+    const {layer} = mountLayer();
+    const {button, reached} = recorder(layer);
     hold(layer);
     const shield = layer.lastElementChild as HTMLElement;
-    const isGated = holdsTouch;
-    // A mouse that has not moved during the hold presses: the press meets
-    // the shield, which stays up through the press, a drag included.
-    pointer(shield, 'pointerdown', 'mouse', 1, 1);
-    expect(shield.style.pointerEvents).toBe('auto');
-    pointer(shield, 'pointermove', 'mouse', 1, 1);
-    expect(shield.style.pointerEvents).toBe('auto');
-    expect(isGated(shield)).toBe(true);
-    pointer(shield, 'pointerup', 'mouse');
-    // Only a mouse moving with no button down lets it through.
-    pointer(document.body, 'pointermove', 'mouse');
+    // jsdom lays nothing out: the button is what lies under the mouse.
+    Object.defineProperty(document, 'elementFromPoint', {
+      configurable: true,
+      value: () => button,
+    });
+    onTestFinished(() => {
+      Reflect.deleteProperty(document, 'elementFromPoint');
+    });
+    const layerClicks: (EventTarget | null)[] = [];
+    layer.addEventListener('click', event => layerClicks.push(event.target));
+    // After a finger, a mouse that has not moved presses on the shield.
+    const down = pointer(shield, 'pointerdown', 'mouse', 1, 1);
+    expect(down.defaultPrevented).toBe(true);
     expect(shield.style.pointerEvents).toBe('none');
-    expect(isGated(child)).toBe(false);
-    // What lands on a shield is held, a mouse's press included.
-    expect(isGated(shield)).toBe(true);
+    expect(document.activeElement).toBe(button);
+    // What lands on a shield is still held from the gesture host.
+    expect(holdsTouch(shield)).toBe(true);
+    // The rest of the press hits what lies beneath, as with no hold.
+    pointer(button, 'pointerup', 'mouse');
+    // The browser sends the click to what holds the shield and the button.
+    const sent = click(layer, 'mouse');
+    expect(sent.defaultPrevented).toBe(true);
+    expect(reached).toEqual(['pointerdown', 'mousedown', 'pointerup', 'click']);
+    expect(layerClicks).toEqual([button]);
+  });
+
+  it("keeps a dismissal's shield taking a mouse press that lands on it: nothing goes past it", () => {
+    const {layer} = mountLayer();
+    const {button, reached} = recorder(layer);
+    hold(layer, 'layer');
+    const shield = layer.lastElementChild as HTMLElement;
+    Object.defineProperty(document, 'elementFromPoint', {
+      configurable: true,
+      value: () => button,
+    });
+    onTestFinished(() => {
+      Reflect.deleteProperty(document, 'elementFromPoint');
+    });
+    const down = pointer(shield, 'pointerdown', 'mouse', 1, 1);
+    expect(down.defaultPrevented).toBe(true);
+    expect(shield.style.pointerEvents).toBe('auto');
+    pointer(shield, 'pointerup', 'mouse');
+    click(shield, 'mouse');
+    expect(reached).toEqual([]);
   });
 
   it('swallows a synthetic press that lands past a lowered shield without capturing it: it has no active pointer to capture', () => {

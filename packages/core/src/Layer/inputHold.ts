@@ -353,6 +353,44 @@ export function holdInput(
 const HELD_POINTERS: ReadonlySet<string> = new Set(['touch', 'pen']);
 
 /**
+ * What a mouse press can focus, as the browser's own press does: a control,
+ * a link, an editable element, or anything with a `tabindex`.
+ */
+const MOUSE_FOCUSABLE =
+  'a[href], area[href], button, input, select, textarea, iframe, summary, ' +
+  '[contenteditable]:not([contenteditable="false"]), [tabindex]';
+
+/** The innermost element at a point, through open shadow roots. */
+function elementAt(doc: Document, x: number, y: number): Element | null {
+  let element =
+    typeof doc.elementFromPoint === 'function'
+      ? doc.elementFromPoint(x, y)
+      : null;
+  while (element?.shadowRoot != null) {
+    const inner = element.shadowRoot.elementFromPoint(x, y);
+    if (inner == null || inner === element) {
+      break;
+    }
+    element = inner;
+  }
+  return element;
+}
+
+/** The innermost element that holds both `a` and `b`, along the flat tree. */
+function commonAncestor(a: Element, b: Element): Element {
+  for (
+    let node: Node | null = a;
+    node != null;
+    node = parentAcrossShadow(node)
+  ) {
+    if (node instanceof Element && containsAlongFlatTree(node, b)) {
+      return node;
+    }
+  }
+  return a;
+}
+
+/**
  * How long after a held press ends its click and compatibility mouse events
  * still count as its own (WebKit sends them after `touchend`).
  */
@@ -397,7 +435,7 @@ function pressHoldFor(doc: Document): PressHold | null {
 /**
  * Holds each finger or pen press that lands in `doc`'s window while any of
  * its layers is held. Each press is held to its own end, even past the
- * hold's end. A moving mouse passes through a presentation's shield. The
+ * hold's end. A mouse passes through a presentation's shield. The
  * hold hears input through the shared input stream, before its other
  * subscribers, and stops each held event there. So no document or element
  * listener hears it, and neither does press feedback or the gesture host.
@@ -420,6 +458,17 @@ function createPressHold(doc: Document): PressHold | null {
   /** Until when a click with no pointer type is a held press's. */
   let clickUntil = -Infinity;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  /** The events this hold sends again. They pass it. */
+  const resent = new WeakSet<Event>();
+  /**
+   * A mouse press that a shield took, sent again: where it went down, and
+   * where its release landed.
+   */
+  let passedPress: {
+    pointerId: number;
+    down: Element;
+    up: Element | null;
+  } | null = null;
 
   const now = () => view.performance.now();
   const isPressDown = () => pointers.size > 0 || touches.size > 0;
@@ -493,7 +542,7 @@ function createPressHold(doc: Document): PressHold | null {
     settle();
   };
 
-  /** A shield takes hits for a finger or a pen, not for a moving mouse. */
+  /** A shield takes hits for a finger or a pen, not for a mouse. */
   const followPointer = (pointerType: string) => {
     for (const layer of liveLayers(doc)) {
       const state = held.get(layer);
@@ -527,12 +576,121 @@ function createPressHold(doc: Document): PressHold | null {
     shield.setPointerCapture(event.pointerId);
   };
 
+  /** `event` again as `type`, at `target`, where the mouse is. */
+  const resendAs = (
+    event: MouseEvent,
+    type: string,
+    target: Element,
+    detail = event.detail,
+  ): Event => {
+    const init: PointerEventInit = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view,
+      detail,
+      screenX: event.screenX,
+      screenY: event.screenY,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      button: event.button,
+      buttons: event.buttons,
+    };
+    const {pointerId, pointerType, isPrimary} = event as Partial<PointerEvent>;
+    // A pointer event stays one, so a listener can read its pointer type.
+    const copy =
+      type !== 'mousedown' &&
+      pointerType != null &&
+      typeof view.PointerEvent === 'function'
+        ? new view.PointerEvent(type, {
+            ...init,
+            pointerId,
+            pointerType,
+            isPrimary,
+          })
+        : new view.MouseEvent(type, init);
+    resent.add(copy);
+    target.dispatchEvent(copy);
+    return copy;
+  };
+
+  /**
+   * Each press is judged by its own pointer, so no presentation's shield
+   * holds a mouse's press. After a finger, a mouse that has not moved presses
+   * on the shield. The shields give way, and the press goes to what is under
+   * the mouse. A dismissal's shield still takes it.
+   */
+  const passMousePress = (event: PointerEvent): boolean => {
+    const [hit] = event.composedPath();
+    if (!isInputShield(hit as Node | null) || !holdsNewPress()) {
+      return false;
+    }
+    const owner = liveLayers(doc).find(
+      layer => held.get(layer)?.shield === hit,
+    );
+    if (owner == null || (held.get(owner)?.layer ?? 0) > 0) {
+      return false;
+    }
+    followPointer('mouse');
+    swallow(event);
+    const under = elementAt(doc, event.clientX, event.clientY);
+    if (under == null || isInputShield(under)) {
+      return true;
+    }
+    passedPress = {pointerId: event.pointerId, down: under, up: null};
+    // The browser's press also sends a mousedown, which moves focus to what
+    // the mouse pressed.
+    if (
+      !resendAs(event, 'pointerdown', under).defaultPrevented &&
+      !resendAs(event, 'mousedown', under, 1).defaultPrevented
+    ) {
+      under.closest<HTMLElement>(MOUSE_FOCUSABLE)?.focus({preventScroll: true});
+    }
+    return true;
+  };
+
+  /**
+   * The browser sends a passed press's click to what holds the shield and
+   * the release's target. In a dialog, that is the dialog itself, which reads
+   * it as a backdrop click. So the click goes to what holds the press's ends.
+   */
+  const passClick = (event: MouseEvent): boolean => {
+    const press = passedPress;
+    passedPress = null;
+    if (press?.up == null || event.detail === 0) {
+      return false;
+    }
+    const target = commonAncestor(press.down, press.up);
+    if (event.composedPath()[0] === target) {
+      return false;
+    }
+    swallow(event);
+    resendAs(event, event.type, target);
+    return true;
+  };
+
   const onPointer = (event: Event): boolean => {
     const {pointerId, pointerType, type} = event as PointerEvent;
-    // A finger or a pen raises the shields. Only a mouse that moves with no
-    // button down lowers them. So a mouse press that began on a shield stays
-    // the shield's to its end. Otherwise its click would go to the two
-    // targets' common ancestor, a dialog that reads it as a backdrop click.
+    const isResent = resent.has(event);
+    if (type === 'pointerdown' && !isResent) {
+      passedPress = null;
+      if (pointerType === 'mouse' && passMousePress(event as PointerEvent)) {
+        return true;
+      }
+    } else if (passedPress?.pointerId === pointerId && !isResent) {
+      if (type === 'pointerup') {
+        const [hit] = event.composedPath();
+        passedPress.up = hit instanceof Element ? hit : null;
+      } else if (type === 'pointercancel') {
+        passedPress = null;
+      }
+    }
+    // A finger or a pen raises the shields, and a mouse that moves with no
+    // button down lowers them.
     const isFollowed = HELD_POINTERS.has(pointerType)
       ? type === 'pointerdown' || type === 'pointermove'
       : pointerType === 'mouse' &&
@@ -622,6 +780,13 @@ function createPressHold(doc: Document): PressHold | null {
   };
 
   const onPress = (event: Event): boolean => {
+    if (
+      passedPress != null &&
+      !resent.has(event) &&
+      (event.type === 'click' || event.type === 'auxclick')
+    ) {
+      return passClick(event as MouseEvent);
+    }
     // A click a key or assistive technology sends counts no press.
     if ((event as MouseEvent).detail === 0) {
       return false;

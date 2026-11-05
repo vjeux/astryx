@@ -9,7 +9,8 @@
  * @output Proof that a menu that enters under a finger takes no new input. A
  *   tap that lands then neither closes it nor reaches the page nor moves
  *   focus. Once the entrance ends, a tap outside dismisses it. The finger
- *   that opened the menu still picks the row it lifts on. A mouse is not held.
+ *   that opened the menu still picks the row it lifts on. A mouse is not held,
+ *   a still one that presses right after the finger included.
  * @position Evidence for DropdownMenu's entrance hold; the layer runtime's
  *   hold has its own spec in Layer/__tests__
  */
@@ -217,6 +218,48 @@ test('the finger that opened the menu still picks the row it lifts on while the 
   await expect(trigger).toHaveAttribute('aria-expanded', 'false');
   await frames(page, 2);
   expect(await readPicked(page)).toEqual(['Duplicate']);
+});
+
+test('after a finger opens the menu, a mouse that has not moved picks the row it presses while the menu enters, and focus returns to the trigger as after any pick (spec:AST-094 FR35)', async ({
+  page,
+}) => {
+  await openStory(page, storybook(), 'core-dropdownmenu--default');
+  await installPickLog(page);
+  const driver = await touchDriver(page);
+  const trigger = page.getByRole('button', {name: 'Actions'});
+  const box = await boxOf(trigger);
+  const onTrigger = {
+    x: Math.round(box.x + box.width / 2),
+    y: Math.round(box.y + box.height / 2),
+  };
+  // Measure the open menu's rows once its entrance has come to rest.
+  await driver.tap(onTrigger);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  const layer = menuLayer(page);
+  await waitForRest(layer);
+  const duplicate = await boxOf(
+    page.getByRole('menuitem', {name: 'Duplicate'}),
+  );
+  await page.keyboard.press('Escape');
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await waitForRest(layer);
+  await lengthenEntrance(page);
+  // A mouse or a trackpad on the same tablet rests where the row will be.
+  await page.mouse.move(
+    Math.round(duplicate.x + duplicate.width / 2),
+    Math.round(duplicate.y + duplicate.height / 2),
+  );
+  // A finger opens the menu, so its entrance holds input.
+  await driver.tap(onTrigger);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByRole('menuitem', {name: 'Duplicate'})).toBeVisible();
+  expect(await runningEntrances(layer)).toBeGreaterThan(0);
+  // The mouse presses where it rests: the row acts, as with no hold.
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  expect(await readPicked(page)).toEqual(['Duplicate']);
+  await expect(trigger).toBeFocused();
 });
 
 test.describe('under a desktop mouse', () => {
