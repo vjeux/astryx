@@ -1308,6 +1308,33 @@ test(
       {name: 'Brightness'},
     );
     await markElement(thumb);
+    // NOT FOR LANDING: the coast on `left`, which the main thread samples, so
+    // it freezes through the block. Each `translate` keyframe becomes `left`.
+    await page.evaluate(() => {
+      const animate = Element.prototype.animate;
+      Element.prototype.animate = function (
+        this: Element,
+        keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+        options?: number | KeyframeAnimationOptions,
+      ) {
+        if (
+          Array.isArray(keyframes) &&
+          keyframes.some(k => k != null && 'translate' in k)
+        ) {
+          return animate.call(
+            this,
+            keyframes.map(k => {
+              const {translate, ...rest} = k as Keyframe & {translate?: string};
+              return translate == null
+                ? rest
+                : {...rest, left: `${parseFloat(String(translate))}px`};
+            }),
+            options,
+          );
+        }
+        return animate.call(this, keyframes, options);
+      };
+    });
     // A compositor-only control in the same screencast: the coast is judged
     // against what this machine's compositor presented in the block.
     await startBusyControl(page);
