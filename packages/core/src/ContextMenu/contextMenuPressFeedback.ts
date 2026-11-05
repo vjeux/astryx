@@ -4,7 +4,7 @@
 
 /**
  * @file contextMenuPressFeedback.ts
- * @input The press feedback's curve, the context-menu constants, the
+ * @input UIKit's context-menu springs, the context-menu constants, the
  *   compositor animator, and the press state core's press machine writes
  * @output useContextMenuPressFeedback: hold and release, from ContextMenu's
  *   menu; the growth itself follows the press machine
@@ -16,11 +16,11 @@
 // The trigger is a pressable surface of the press machine. Its "on" starts
 // the growth at the onset, 150 ms after the finger lands, while the
 // recognizer follows that finger. Only the recognizer's failure or cancel
-// returns it. The theme's duration and move easing tokens
-// time both, and the compositor plays them, so a busy main thread does not
-// stall them. Once the menu opens, the trigger holds its size until the menu
-// closes. Then it returns on the theme's exit duration and easing. An inline
-// trigger and Reduce Motion show no growth.
+// returns it. A long press is a gesture, so the growth plays UIKit's lift
+// spring and each return its dismissal spring. The compositor plays them, so
+// a busy main thread does not stall them. Once the menu opens, the trigger
+// holds its size until the menu closes. Then it returns on the dismissal
+// spring. An inline trigger and Reduce Motion show no growth.
 
 import {useCallback, useRef, type RefObject} from 'react';
 import {useAttachment} from '../hooks/useAttachment';
@@ -30,43 +30,9 @@ import {PRESS_ONSET_MS} from '../utils/pressGesture';
 import {observeMutations} from '../utils/sharedMutationObserver';
 import {createMotionEngine, type Animator} from '../motion/animator';
 import {contextMenu} from '../motion/uikit/contextMenu';
-import {
-  durationDefaults,
-  easeDefaults,
-  type DurationVarName,
-  type EaseVarName,
-} from '../theme/tokens.stylex';
-import {
-  pressTiming,
-  timedCurve,
-  type PressTiming,
-} from './contextMenuPressTiming';
+import {registerSpringsTable, springs} from '../motion/uikit/springs';
 
 const {heldScale} = contextMenu.press;
-
-/**
- * The theme's `duration` and `easing` on `element`. Where the theme sets no
- * `duration`, `unsetDuration` stands in, as `--duration-exit`'s own default
- * does. A token the theme does not set keeps its core default.
- */
-function themeTiming(
-  element: Element | null,
-  duration: DurationVarName,
-  easing: EaseVarName,
-  unsetDuration: DurationVarName = duration,
-): PressTiming {
-  const style =
-    element == null
-      ? undefined
-      : element.ownerDocument.defaultView?.getComputedStyle(element);
-  const read = (name: string) => style?.getPropertyValue(name).trim() ?? '';
-  return (
-    pressTiming(read(duration) || read(unsetDuration), read(easing), {
-      duration: durationDefaults[unsetDuration],
-      easing: easeDefaults[easing],
-    }) ?? {seconds: 0.001, ease: progress => progress}
-  );
-}
 
 export interface ContextMenuPressFeedback {
   /**
@@ -74,11 +40,11 @@ export interface ContextMenuPressFeedback {
    * spread on the trigger; the growth follows the pressed state it writes.
    */
   pressable: typeof pressableProps;
-  /** The menu the press opened closed: return on the theme's exit timing. */
+  /** The menu the press opened closed: return on the dismissal spring. */
   release(): void;
   /**
-   * The recognizer ended the press with no menu, at `time`: return over the
-   * theme's fast duration.
+   * The recognizer ended the press with no menu, at `time`: return on the
+   * dismissal spring.
    */
   end(time: number): void;
   /**
@@ -157,6 +123,8 @@ export function useContextMenuPressFeedback(
     if (element == null) {
       return null;
     }
+    // The springs are motion roles: their table registers once.
+    registerSpringsTable();
     animatorRef.current ??= createMotionEngine(element);
     return animatorRef.current;
   }, [triggerRef]);
@@ -179,10 +147,12 @@ export function useContextMenuPressFeedback(
         return;
       }
       const animator = animatorFor();
+      const element = animator?.element;
       // Under Reduce Motion the view does not grow (UIKit's
       // `reducedMotionFeedback`), and no fade stands in for it.
       if (
         animator == null ||
+        element == null ||
         (animator.reducedMotion() !== 'off' &&
           !contextMenu.reducedMotionFeedback)
       ) {
@@ -190,14 +160,9 @@ export function useContextMenuPressFeedback(
       }
       isGrownRef.current = true;
       // `time` is the onset: 150 ms after the finger lands, or a later mark.
-      animator.play(
-        {
-          scale: timedCurve(
-            animator.get('scaleX', time),
-            heldScale,
-            themeTiming(animator.element, '--duration-medium', '--ease-move'),
-          ),
-        },
+      animator.animate(
+        {scale: heldScale},
+        {spring: springs.contextMenuLift},
         {at: time},
       );
     },
@@ -207,18 +172,19 @@ export function useContextMenuPressFeedback(
   const end = useCallback(
     (time: number) => {
       const animator = animatorRef.current;
-      if (animator == null || !isGrownRef.current || isHeldRef.current) {
+      const element = animator?.element;
+      if (
+        animator == null ||
+        element == null ||
+        !isGrownRef.current ||
+        isHeldRef.current
+      ) {
         return;
       }
       settleBack(
-        animator.play(
-          {
-            scale: timedCurve(
-              animator.get('scaleX', time),
-              1,
-              themeTiming(animator.element, '--duration-fast', '--ease-move'),
-            ),
-          },
+        animator.animate(
+          {scale: 1},
+          {spring: springs.contextMenuDismiss},
           {at: time},
         ).finished,
       );
@@ -229,22 +195,13 @@ export function useContextMenuPressFeedback(
   const release = useCallback(() => {
     isHeldRef.current = false;
     const animator = animatorRef.current;
-    if (animator == null || !isGrownRef.current) {
+    const element = animator?.element;
+    if (animator == null || element == null || !isGrownRef.current) {
       return;
     }
     settleBack(
-      animator.play({
-        scale: timedCurve(
-          animator.get('scaleX'),
-          1,
-          themeTiming(
-            animator.element,
-            '--duration-exit',
-            '--ease-exit',
-            '--duration-fast',
-          ),
-        ),
-      }).finished,
+      animator.animate({scale: 1}, {spring: springs.contextMenuDismiss})
+        .finished,
     );
   }, [settleBack]);
 
