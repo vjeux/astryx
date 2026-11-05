@@ -305,6 +305,7 @@ for (const story of [LIST_ROW, SCROLLER_ROW, TREE_ROW]) {
     // Strength 0 is the row at rest; strength 1 the believed press.
     await driver.play(tap(center, {holdMs: HOLD_MS}));
     const [release] = await waitForAnimation(row, {minProgressMs: 16});
+    await page.waitForTimeout(60);
     const block = await blockMainThread(page, 700);
     await page.waitForTimeout(150);
     const frames = await cast.stop();
