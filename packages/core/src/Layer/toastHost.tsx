@@ -125,17 +125,20 @@ export function createToastQueue(): ToastQueue {
           viewport.addToast(entry);
           return;
         }
-        // A waiting toast meets a namesake as the viewport's toasts do.
-        const {namesake, isDropped} = findToastNamesake(waiting, entry);
-        if (isDropped) {
-          return;
-        }
-        waiting =
-          namesake == null
-            ? [...waiting, entry]
-            : waiting.map(candidate =>
-                candidate === namesake ? entry : candidate,
+        // Waiting toasts follow the viewport's uniqueID rules: an ignored
+        // namesake is dropped, and an overwrite takes its namesake's place.
+        const {uniqueID, collisionBehavior = 'overwrite'} = entry.options;
+        const namesake =
+          uniqueID == null
+            ? -1
+            : waiting.findIndex(
+                candidate => candidate.options.uniqueID === uniqueID,
               );
+        if (namesake === -1) {
+          waiting.push(entry);
+        } else if (collisionBehavior === 'overwrite') {
+          waiting[namesake] = entry;
+        }
       },
       removeToast: (id, reason) => {
         if (viewport != null) {
