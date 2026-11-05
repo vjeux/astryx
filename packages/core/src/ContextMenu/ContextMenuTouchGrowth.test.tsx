@@ -5,7 +5,7 @@
  * @input ContextMenu under a finger in jsdom, with the compositor animator
  *   replaced
  * @output Checks that the trigger grows only while ContextMenu's recognizer
- *   follows a finger, and eases back when the recognizer fails
+ *   follows a finger, and springs back when the recognizer fails
  * @position Unit tests of the press feedback's start and end in
  *   packages/core/src/ContextMenu/ContextMenuTouchLayer.tsx
  */

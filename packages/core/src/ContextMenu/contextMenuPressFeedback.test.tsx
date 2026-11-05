@@ -5,9 +5,9 @@
  * @input useContextMenuPressFeedback on a trigger, with the animator replaced
  * @output Checks that the growth starts at the press machine's "on" and
  *   keeps going when the machine lets the press go. It returns when
- *   ContextMenu's recognizer ends the press with no menu. Both play the
- *   theme's duration and move easing tokens. When the menu closes, the
- *   trigger returns on the theme's exit duration and easing
+ *   ContextMenu's recognizer ends the press with no menu. The growth plays
+ *   `springs.contextMenuLift`, and each return, then or as the menu closes,
+ *   `springs.contextMenuDismiss`
  * @position Unit tests of packages/core/src/ContextMenu/contextMenuPressFeedback.ts
  */
 
@@ -122,7 +122,7 @@ describe('useContextMenuPressFeedback', () => {
     feedback = null;
   });
 
-  it('keeps growing when the press machine lets the press go, and eases back when the recognizer ends it', async () => {
+  it('keeps growing when the press machine lets the press go, and springs back when the recognizer ends it', async () => {
     const {getByTestId} = render(<Trigger />);
     const trigger = getByTestId('trigger');
     trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');

@@ -52,7 +52,7 @@ export interface ContextMenuTouchLayerProps {
  * a drift past the tolerance before the menu shows. The press feedback grows
  * the trigger from the onset, 150 ms after the finger lands. It grows once
  * core's press machine marks the press, while the recognizer follows the
- * finger. It eases back when the recognizer ends the press with no menu, and it
+ * finger. It springs back when the recognizer ends the press with no menu, and it
  * holds while that menu is up.
  */
 export function ContextMenuTouchLayer({
@@ -85,7 +85,7 @@ export function ContextMenuTouchLayer({
     () => {
       const recognizer = new ContextMenuPressRecognizer();
       // Its target-action listeners never hear `failed`, so a press that ends
-      // with no menu eases back from here.
+      // with no menu springs back from here.
       recognizer.addTransitionListener((press, _from, to) => {
         if (to === 'failed' || to === 'cancelled') {
           feedbackRef.current.end(press.clockTime);
