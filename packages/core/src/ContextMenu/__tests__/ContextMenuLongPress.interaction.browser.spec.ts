@@ -48,9 +48,9 @@ import {
   animationStoryboard,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
-import {cubicBezier} from '../../motion/bezier';
-import {parseCssEasing, parseMotionRoleValue} from '../../motion/roles';
+import {solveSpring, toSpring} from '../../motion/spring';
 import {contextMenu} from '../../motion/uikit/contextMenu';
+import {springs} from '../../motion/uikit/springs';
 
 const storybook = withStorybook(test);
 const {commitMs, menuDisplayMs, heldScale} = contextMenu.press;
@@ -63,29 +63,13 @@ const feedbackOnsetMs = 150;
  * What ContextMenu plays from the press machine's onset: the growth toward the
  * held scale. The trigger's own medium duration and move easing tokens time it.
  */
-async function playedCurve(trigger: Locator) {
-  const [duration, easing] = await trigger.evaluate(element => {
-    const style = getComputedStyle(element);
-    return [
-      style.getPropertyValue('--duration-medium').trim(),
-      style.getPropertyValue('--ease-move').trim(),
-    ];
+/** The growth's expected curve: `springs.contextMenuLift` from 1 to the held scale. */
+function playedCurve() {
+  const curve = solveSpring(toSpring(springs.contextMenuLift), {
+    from: 1,
+    to: heldScale,
   });
-  const ms = parseMotionRoleValue('duration', duration);
-  const points = parseCssEasing(easing);
-  if (ms == null || points == null) {
-    throw new Error(
-      `the story theme gives no move timing: ${duration}, ${easing}`,
-    );
-  }
-  // The expected curve, computed here from the tokens: the scale eases from
-  // 1 to the held scale over the duration.
-  const seconds = Math.max(ms, 1) / 1000;
-  const ease = cubicBezier(points);
-  return {
-    at: (t: number) =>
-      1 + (heldScale - 1) * ease(Math.min(1, Math.max(0, t / seconds))),
-  };
+  return {at: (t: number) => curve.value(Math.max(0, t))};
 }
 
 interface TouchStory {
@@ -561,7 +545,7 @@ test('the press feedback plays its computed curve on the compositor, frame by fr
   page,
 }, testInfo) => {
   const {driver, trigger, center} = await openTouchStory(page);
-  const played = await playedCurve(trigger);
+  const played = playedCurve();
   const playing = driver.play(hold(center, commitMs + 300));
   await waitForAnimation(trigger, {minProgressMs: 16});
   await holdAnimations(page, trigger);
@@ -638,21 +622,19 @@ test('the press feedback keeps advancing every frame while the main thread is bl
   );
   const {driver, trigger, center} = await openTouchStory(page);
   // A wider card grows by about a CSS pixel a frame, which the screencast
-  // resolves; it stays inside the viewport at its largest. A linear growth
-  // over 700 ms spreads across the whole block, so a frame of drift moves the
-  // expected width by less than a pixel.
+  // resolves; it stays inside the viewport at its largest.
   await trigger.evaluate(el => {
     const host = el as HTMLElement;
     (host.firstElementChild as HTMLElement).style.width = '340px';
-    host.style.setProperty('--ease-move', 'linear');
-    host.style.setProperty('--duration-medium', '700ms');
   });
-  const played = await playedCurve(trigger);
+  const played = playedCurve();
   await markElement(trigger, {mode: 'outline'});
   const cast = await startScreencast(page);
   const playing = driver.play(hold(center, 1100));
-  const [feedback] = await waitForAnimation(trigger, {minProgressMs: 40});
-  const block = await blockMainThread(page, 450);
+  // The lift spring moves the card for about 200 ms, so the block covers
+  // its moving part.
+  const [feedback] = await waitForAnimation(trigger, {minProgressMs: 16});
+  const block = await blockMainThread(page, 150);
   await playing;
   await page.waitForTimeout(100);
   const castFrames = await cast.stop();
@@ -873,8 +855,13 @@ test(
     await playing;
     await storyboard.write(testInfo);
     const scales = storyboard.frames.map(f => Number(f.data.scale));
-    expect(scales.every((s, i) => i === 0 || s >= scales[i - 1])).toBe(true);
-    // The growth reaches the held scale before the menu displays.
+    // The lift spring rises to its peak, overshoots by under 3% of its
+    // travel, and settles at the held scale before the menu displays.
+    const peak = scales.indexOf(Math.max(...scales));
+    expect(
+      scales.slice(0, peak + 1).every((s, i, a) => i === 0 || s >= a[i - 1]),
+    ).toBe(true);
+    expect(scales[peak]).toBeLessThan(heldScale + (heldScale - 1) * 0.03);
     expect(scales.at(-1)).toBeCloseTo(heldScale, 2);
   },
 );
