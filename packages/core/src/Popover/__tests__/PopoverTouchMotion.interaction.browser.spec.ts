@@ -592,6 +592,24 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   // reads every animation each frame, so the windows come from when each
   // scale animation starts.
   await story.trigger.focus();
+  // NOT FOR LANDING: the growth starts 30 ms before its animate() call, as
+  // an animation created in a frame callback can start at that frame's time.
+  await page.evaluate(() => {
+    const animate = Element.prototype.animate;
+    let backdated = false;
+    Element.prototype.animate = function (keyframes, options) {
+      const animation = animate.call(this, keyframes, options);
+      if (
+        !backdated &&
+        Array.isArray(keyframes) &&
+        keyframes.some(frame => frame != null && 'scale' in frame)
+      ) {
+        backdated = true;
+        animation.startTime = Number(document.timeline.currentTime) - 30;
+      }
+      return animation;
+    };
+  });
   let present = 0;
   let dismiss = 0;
   const trace = await traceRendering(page, async () => {
