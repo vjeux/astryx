@@ -1,6 +1,6 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
-import {describe, it, expect, vi, beforeEach} from 'vitest';
+import {describe, it, expect, vi, beforeEach, onTestFinished} from 'vitest';
 import {render, screen, waitFor, fireEvent, act} from '@testing-library/react';
 import {__resetMenuPressForTest} from '../hooks/useMenuPress';
 import {expectNativeLinkClicks} from '../hooks/__tests__/menuLinkClicks';
@@ -804,6 +804,13 @@ describe('BreadcrumbItem menu', () => {
 
   it('preserves outside focus after a browser light dismiss', async () => {
     const user = userEvent.setup();
+    // NOT FOR LANDING: every frame runs 200 ms late, as on a loaded machine.
+    const frames = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation(callback =>
+        window.setTimeout(() => callback(performance.now()), 200),
+      );
+    onTestFinished(() => frames.mockRestore());
     render(
       <>
         <Breadcrumbs>
