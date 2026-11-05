@@ -67,6 +67,52 @@ const FRAME_MS = 1000 / 60;
 /** The marker chip sits this far inside the box\u2019s top-left corner. */
 const MARKER_INSET = 8;
 
+/** The second control's colour, apart from the marker and the first control. */
+const SECOND_RGB: readonly [number, number, number] = [255, 255, 0];
+/** Its strip: below the first control's top 12 px, above the box at 40 px. */
+const SECOND_TOP = 16;
+
+/**
+ * Starts a second control beside the harness's, in the strip below it. It
+ * moves the same 240 px out and back every 800 ms, half a leg (200 ms) ahead.
+ * Returns its start on the page clock.
+ */
+async function startSecondControl(page: Page): Promise<number> {
+  return page.evaluate(
+    async ({color, top}) => {
+      const first = document
+        .querySelector('[data-harness-control]')
+        ?.getAnimations()[0];
+      if (first?.startTime == null) {
+        throw new Error('the harness control is not running');
+      }
+      const box = document.createElement('div');
+      box.style.cssText = `position:fixed;left:0;top:${top}px;width:12px;height:12px;background:rgb(${color.join(',')});z-index:2147483647;pointer-events:none`;
+      document.body.append(box);
+      const animation = box.animate(
+        [{transform: 'translateX(0px)'}, {transform: 'translateX(240px)'}],
+        {
+          duration: 400,
+          iterations: Infinity,
+          direction: 'alternate',
+          easing: 'linear',
+        },
+      );
+      animation.startTime = Number(first.startTime) - 200;
+      // On the compositor before the curve starts, as the first control is.
+      await new Promise(resolve =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      );
+      // Its start as the page has it, read back as the first control's is.
+      return (
+        performance.timeOrigin +
+        Number(box.getAnimations()[0]?.startTime ?? NaN)
+      );
+    },
+    {color: [...SECOND_RGB], top: SECOND_TOP},
+  );
+}
+
 /**
  * Waits for the held-dip call to end: on the call's own `finished`, then on
  * the browser's own animations still running or waiting for their first
@@ -141,6 +187,7 @@ async function blockedRun(
       ?.getAnimations()[0];
     return performance.timeOrigin + Number(animation?.startTime ?? NaN);
   });
+  const secondStart = await startSecondControl(page);
   const cast = await startScreencast(page);
   // The curve starts when the browser commits it (handle.started).
   const start = await page.evaluate(
@@ -160,17 +207,19 @@ async function blockedRun(
   const frames = await cast.stop();
   const tracked = await trackMarker(page, frames);
   const control = await trackMarker(page, frames, {rgb: CONTROL_RGB});
-  return {start, controlStart, busy, tracked, control};
+  const second = await trackMarker(page, frames, {
+    rgb: SECOND_RGB,
+    region: {x: 0, y: SECOND_TOP - 2, width: 256, height: 16},
+  });
+  return {start, controlStart, secondStart, busy, tracked, control, second};
 }
 
 test('a spring keeps advancing every frame through a 1 s main-thread block, on its curve', async ({
   page,
   browserName,
 }) => {
-  const {start, controlStart, busy, tracked, control} = await blockedRun(
-    page,
-    SLOW,
-  );
+  const {start, controlStart, secondStart, busy, tracked, control, second} =
+    await blockedRun(page, SLOW);
   // Judged against what the compositor presented in the same window, not a
   // display-rate bound: a loaded runner's compositor skips frames for every
   // animation alike, and the harness reads a slow tail inside the block at
@@ -191,24 +240,31 @@ test('a spring keeps advancing every frame through a 1 s main-thread block, on i
   // main-thread animation never does; see the next test).
   expect(proof.verdict.failures, proof.summary).toEqual([]);
   expect(proof.monotonic).toBe(true);
-  // And it is the spring. The control moves 240 px out and back every 800
+  // And it is the spring. Each control moves 240 px out and back every 800
   // ms, linearly, on the compositor. Its start plus its own time places each
   // frame on the page clock (controlClock). The frame's stamp only picks the
-  // whole cycle, so a late stamp moves no frame.
+  // whole cycle, so a late stamp moves no frame. controlClock reads no frame
+  // within 36 px of a turn, 120 ms of every 400. The second control is
+  // mid-leg there, half a leg ahead, so it reads the frames the first cannot.
   const inside = tracked.filter(
     f => f.box != null && f.t > busy.from + 20 && f.t < busy.to - 20,
   );
-  const clock = controlClock(control);
+  const clocks = [
+    {clock: controlClock(control), origin: controlStart},
+    {clock: controlClock(second), origin: secondStart},
+  ];
   const timed = inside.flatMap(f => {
-    const ms = clock.get(f.t);
-    if (ms == null) {
+    const reader = clocks.find(({clock}) => clock.has(f.t));
+    if (reader == null) {
       return [];
     }
-    const cycles = Math.round((f.t - controlStart - ms) / 800);
+    const ms = reader.clock.get(f.t) ?? NaN;
+    const cycles = Math.round((f.t - reader.origin - ms) / 800);
     return [
       {
         x: (f.box?.x ?? NaN) - MARKER_INSET,
-        at: controlStart + ms + cycles * 800 - start,
+        at: reader.origin + ms + cycles * 800 - start,
+        bySecond: reader !== clocks[0],
       },
     ];
   });
@@ -267,6 +323,7 @@ test('a spring keeps advancing every frame through a 1 s main-thread block, on i
   const [spring, faster] = judged;
   const read = {
     frames: timed.length,
+    bySecond: timed.filter(f => f.bySecond).length,
     quarters: [...quarters].sort((p, q) => p - q),
     worst: spring.worst,
     faster: faster.worst,
