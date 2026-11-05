@@ -155,3 +155,65 @@ export const isTypo = (a, b, dist) =>
   dist <= 3 &&
   Math.min(a.length, b.length) >=
     TYPO_MIN_LENGTH[/** @type {1 | 2 | 3} */ (dist)];
+
+/**
+ * The edit distance between two words when it counts as a typo (isTypo), or
+ * null. The shorter word's length caps the distance that can count. A pair
+ * the cap rules out needs no distance table, and the others compute only the
+ * cells within the cap.
+ * @param {string} a
+ * @param {string} b
+ * @returns {1 | 2 | 3 | null}
+ */
+export function typoDistance(a, b) {
+  const shorter = Math.min(a.length, b.length);
+  const cap =
+    shorter >= TYPO_MIN_LENGTH[3]
+      ? 3
+      : shorter >= TYPO_MIN_LENGTH[2]
+        ? 2
+        : shorter >= TYPO_MIN_LENGTH[1]
+          ? 1
+          : 0;
+  if (cap === 0 || Math.abs(a.length - b.length) > cap) return null;
+  const dist = editDistanceWithin(a, b, cap);
+  return dist >= 1 && dist <= cap ? /** @type {1 | 2 | 3} */ (dist) : null;
+}
+
+/**
+ * The edit distance between `a` and `b` when it is at most `cap`, or
+ * `cap + 1` when it is more. Only the cells within `cap` of the diagonal are
+ * computed, because a path through any other cell costs more than `cap`.
+ * @param {string} a
+ * @param {string} b
+ * @param {number} cap
+ * @returns {number}
+ */
+function editDistanceWithin(a, b, cap) {
+  const over = cap + 1;
+  let previous = new Array(b.length + 1).fill(over);
+  let current = new Array(b.length + 1).fill(over);
+  for (let j = 0; j <= Math.min(b.length, cap); j++) previous[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    current.fill(over);
+    const from = Math.max(1, i - cap);
+    const to = Math.min(b.length, i + cap);
+    if (i <= cap) current[0] = i;
+    let rowMin = current[0];
+    for (let j = from; j <= to; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      const value = Math.min(
+        previous[j - 1] + cost,
+        previous[j] + 1,
+        current[j - 1] + 1,
+        over,
+      );
+      current[j] = value;
+      if (value < rowMin) rowMin = value;
+    }
+    // Every later cell costs at least this row's least.
+    if (rowMin >= over) return over;
+    [previous, current] = [current, previous];
+  }
+  return Math.min(previous[b.length], over);
+}
