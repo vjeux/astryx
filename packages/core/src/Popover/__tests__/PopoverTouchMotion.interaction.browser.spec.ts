@@ -50,6 +50,7 @@ import {
   trackMarker,
   waitForAnimation,
   waitForRest,
+  watchAnimations,
   withStorybook,
   writeEvidence,
   type TouchDriver,
@@ -505,10 +506,17 @@ test('the presentation keeps advancing every frame while the main thread is bloc
   });
   await markElement(story.layer, {size: 24, inset: 0});
   const entrance = await themeTiming(story.layer, POPOVER_ENTRANCE_TOKENS);
+  const growth = await watchAnimations(story.layer);
   const cast = await startScreencast(page);
+  // The page itself blocks once the growth has run a frame. A block sent from
+  // here starts later on a busy machine, leaving less of the growth to judge.
+  const blocking = blockMainThread(page, 400, {
+    during: story.layer,
+    minProgressMs: 16,
+  });
   await openWithTap(story);
-  const [present] = await waitForAnimation(story.layer, {minProgressMs: 16});
-  const block = await blockMainThread(page, 400);
+  const block = await blocking;
+  const [present] = await growth.started({minProgressMs: 16});
   await page.waitForTimeout(100);
   const castFrames = await cast.stop();
   const tracked = await trackMarker(page, castFrames);
@@ -517,7 +525,12 @@ test('the presentation keeps advancing every frame while the main thread is bloc
     from: block.from,
     to: Math.min(block.to, present.from + entrance.ms - 20),
   };
-  const proof = busyWindowProof(tracked, window, {axis: 'x'});
+  // It is judged until the marker is within 2 steps of its end. The
+  // screencast rounds to whole pixels, so the easing tail shows plateaus.
+  const proof = busyWindowProof(tracked, window, {
+    axis: 'x',
+    settledWithinSteps: 2,
+  });
   await writeEvidence(
     'busy-main-thread/popover-touch-present',
     {
@@ -539,11 +552,7 @@ test('the presentation keeps advancing every frame while the main thread is bloc
     data: t => ({x: tracked.find(f => f.t === t)?.box?.x ?? -1}),
   });
   await film.write(testInfo, {block, present});
-  expect(proof.frames).toBeGreaterThanOrEqual(proof.expectedFrames - 2);
-  expect(proof.changed).toBeGreaterThanOrEqual(proof.frames - 3);
-  // A stall is judged in the screencast's own intervals, as the harness's
-  // verdict judges it: no more than two dropped frames.
-  expect(proof.longestStallFrames).toBeLessThanOrEqual(3);
+  expect(proof.verdict.failures, proof.summary).toEqual([]);
   expect(proof.monotonic).toBe(true);
 });
 
