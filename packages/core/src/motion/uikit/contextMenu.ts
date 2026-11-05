@@ -80,8 +80,8 @@ export const contextMenu = {
     /**
      * The size the press copy reaches when the menu displays, as a fraction
      * of the view. It is the second ramp at `menuDisplayMs`: 1 + 0.1 per
-     * second since the touch. The trigger grows toward it on the theme's
-     * motion tokens, not on UIKit's ramp or spring.
+     * second since the touch. The trigger grows toward it on
+     * `springs.contextMenuLift`, not on UIKit's ramp.
      * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
      *   iPhone 17 Pro, per-frame model frames of the press platter over a
      *   200 × 120 pt view, Oct 23 2026: 0.1001 per second, linear over 19
