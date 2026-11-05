@@ -282,4 +282,43 @@ describe('useChatNewMessages — committed values', () => {
     expect(committed).toHaveBeenCalled();
     expect(content.dataset.newMessages).toBe('false');
   });
+
+  it('reads the lock and onResize of the commit that attaches a new content element', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    function Content({
+      isLocked,
+      onResize,
+      element,
+    }: {
+      isLocked: boolean;
+      onResize: () => void;
+      element: string;
+    }) {
+      const {contentRef, hasNewMessages} = useChatNewMessages({
+        isLocked,
+        onResize,
+      });
+      return (
+        <div
+          key={element}
+          ref={contentRef}
+          data-testid="content"
+          data-new-messages={String(hasNewMessages)}>
+          <div className="astryx-chat-message">{element}</div>
+        </div>
+      );
+    }
+    const {getByTestId, rerender} = render(
+      <Content isLocked onResize={first} element="a" />,
+    );
+    rerender(<Content isLocked={false} onResize={first} element="a" />);
+    first.mockClear();
+    // One commit swaps the content element and locks the list. The observer
+    // calls back as the new element attaches.
+    rerender(<Content isLocked onResize={second} element="b" />);
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalled();
+    expect(getByTestId('content').dataset.newMessages).toBe('false');
+  });
 });
