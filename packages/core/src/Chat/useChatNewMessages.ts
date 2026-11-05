@@ -25,6 +25,7 @@
 
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {observeResize} from '../utils/sharedResizeObserver';
+import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 
 // =============================================================================
 // Types
@@ -68,11 +69,15 @@ export function useChatNewMessages({
 }: UseChatNewMessagesOptions): UseChatNewMessagesReturn {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const lastMessageRef = useRef<Element | null>(null);
+  // The resize observer reads the latest lock and listener. Write them at
+  // commit: a render React discards, as a suspended transition does, must
+  // not leave its values behind.
   const isLockedRef = useRef(isLocked);
-  isLockedRef.current = isLocked;
-
   const onResizeRef = useRef(onResize);
-  onResizeRef.current = onResize;
+  useIsomorphicLayoutEffect(() => {
+    isLockedRef.current = isLocked;
+    onResizeRef.current = onResize;
+  });
 
   // Track the current content element. When the callback ref fires,
   // we tear down the old observer and set up a new one.
