@@ -268,6 +268,27 @@ test('a spring keeps advancing every frame through a 1 s main-thread block, on i
       },
     ];
   });
+  // NOT FOR LANDING: where both controls read a frame, how far apart they
+  // place it on the page clock, ms.
+  const both = inside.flatMap(f => {
+    const [a, b] = clocks.map(({clock, origin}) => {
+      const ms = clock.get(f.t);
+      if (ms == null) {
+        return null;
+      }
+      return origin + ms + Math.round((f.t - origin - ms) / 800) * 800;
+    });
+    return a == null || b == null ? [] : [a - b];
+  });
+  test.info().annotations.push({
+    type: 'c07 agreement',
+    description: JSON.stringify({
+      both: both.length,
+      maxAbs: Math.max(0, ...both.map(Math.abs)),
+      median: [...both].sort((p, q) => p - q)[Math.floor(both.length / 2)],
+      firstOnly: timed.filter(f => !f.bySecond).length,
+    }),
+  });
   // The judged frames cover the block, at least one in each quarter of it,
   // however few frames a loaded runner presents.
   const quarters = new Set(
