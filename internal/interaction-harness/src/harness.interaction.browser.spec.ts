@@ -1009,6 +1009,90 @@ test.describe('frame evidence', () => {
         }
         shown = y;
       }
+      // NOT FOR LANDING: each new position in the judged part, the step it
+      // shows (its time from the block's start) and the frame's place on the
+      // control's clock.
+      if (driver === 'raf') {
+        const clock = controlClock(controlFrames);
+        const offsets = [...clock.entries()].map(([t, ms]) => t - ms);
+        offsets.sort((p, q) => p - q);
+        const median = offsets[Math.floor(offsets.length / 2)] ?? NaN;
+        let last = tracked
+          .filter(f => f.box != null && f.t < proof.judged.from)
+          .at(-1)?.box?.y;
+        const shownSteps = tracked.flatMap(f => {
+          const y = f.box?.y;
+          if (y == null || f.t < proof.judged.from || f.t > proof.judged.to) {
+            return [];
+          }
+          const changed = last != null && Math.abs(y - last) > 0.25;
+          last = y;
+          if (!changed) {
+            return [];
+          }
+          const near = steps
+            .map(s => ({ms: s.t - window.from, d: Math.abs(top + s.y - y)}))
+            .sort((p, q) => p.d - q.d)
+            .slice(0, 3);
+          const match = near[0]?.ms;
+          const ms = clock.get(f.t);
+          return [
+            {
+              stampMs: f.t - window.from,
+              clockMs: ms == null ? null : ms + median - window.from,
+              y: y - top,
+              stepSetMs: match ?? null,
+              nearest: near,
+              blockMs: window.to - window.from,
+            },
+          ];
+        });
+        const dir = path.join(process.cwd(), 'test-results', 'c07-914-trace');
+        fs.mkdirSync(dir, {recursive: true});
+        fs.writeFileSync(
+          path.join(
+            dir,
+            `${Date.now()}-${everyNthFrame}-${testInfo.repeatEachIndex}.json`,
+          ),
+          JSON.stringify({
+            readError: tracked
+              .filter(f => f.box != null && f.t < window.from - 50)
+              .map(f => {
+                const y = f.box?.y ?? NaN;
+                return Math.min(
+                  ...steps
+                    .filter(s => s.t < f.t)
+                    .slice(-12)
+                    .map(s => Math.abs(top + s.y - y)),
+                );
+              }),
+            stepPx: proof.stepPx,
+            castStepPx: step,
+            window,
+            judged: proof.judged,
+            steps,
+            tracked: tracked.map(f => ({
+              t: f.t,
+              y: f.box?.y ?? null,
+              step: f.step ?? null,
+            })),
+            controlFrames: controlFrames.map(f => ({
+              t: f.t,
+              x: f.box?.x ?? null,
+            })),
+            summary: proof.summary,
+            failures: proof.verdict.failures,
+            top,
+            control: proof.control,
+            unset,
+            shownSteps,
+            lastStepMs: steps
+              .filter(s => s.t < window.from)
+              .map(s => s.t - window.from)
+              .at(-1),
+          }),
+        );
+      }
       return {proof, unset};
     };
 
