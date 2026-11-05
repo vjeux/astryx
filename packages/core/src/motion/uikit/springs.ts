@@ -527,12 +527,14 @@ const SPRING_ROLES = {
  * Registers the role springs (`SPRING_ROLES`) as internal motion roles
  * (motion/roles.ts), by their row names (`springs.settle`). Every other
  * spring, UIKit's menu spring under Reduce Motion and the keyboard's
- * included, is not a role. Nothing registers on import: the touch code that
- * plays a role calls it once (it is idempotent), so a page that never does
- * ships no registry.
+ * included, is not a role. A page that plays no spring ships no springs
+ * registry. The module that plays spring roles registers its own table at
+ * import (one idempotent in-memory write, no DOM).
  */
 export function registerSpringsTable(): void {
   registerMotionTable('springs', SPRING_ROLES, {
     roles: Object.keys(SPRING_ROLES),
   });
 }
+
+registerSpringsTable();
