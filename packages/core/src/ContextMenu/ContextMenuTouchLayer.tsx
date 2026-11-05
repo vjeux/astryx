@@ -50,9 +50,10 @@ export interface ContextMenuTouchLayerProps {
  * the finger landed: at `menuDisplayMs` if it is still down, or at the lift.
  * A lift before the commit, a second finger or a scroll gets no menu. So does
  * a drift past the tolerance before the menu shows. The press feedback grows
- * the trigger from core's press machine's onset, while the recognizer follows
- * the finger. It eases back when the recognizer ends the press with no
- * menu, and it holds while that menu is up.
+ * the trigger from the onset, 150 ms after the finger lands. It grows once
+ * core's press machine marks the press, while the recognizer follows the
+ * finger. It eases back when the recognizer ends the press with no menu, and it
+ * holds while that menu is up.
  */
 export function ContextMenuTouchLayer({
   triggerRef,
@@ -63,10 +64,13 @@ export function ContextMenuTouchLayer({
   // Whether the recognizer follows a finger or a pen now. It is set below,
   // where the recognizer exists.
   const isFollowedRef = useRef<() => boolean>(() => false);
+  // When the finger the recognizer follows landed, for the growth's onset.
+  const landedAtRef = useRef<() => number | null>(() => null);
   const feedback = useContextMenuPressFeedback(
     triggerRef,
     isShown,
     isFollowedRef,
+    landedAtRef,
   );
   const feedbackRef = useRef(feedback);
   feedbackRef.current = feedback;
@@ -125,6 +129,7 @@ export function ContextMenuTouchLayer({
 
   isFollowedRef.current = () =>
     recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
+  landedAtRef.current = () => recognizer.press?.time ?? null;
 
   useImperativeHandle(
     ref,
