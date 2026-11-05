@@ -7,9 +7,10 @@
  *   Chromium and WebKit, in both directions
  * @output Cross-engine proof that the overlay's clamp resolves in layout: the
  *   list stays inside the block gutters with the row on the trigger, starts
- *   where its anchor starts on the inline axis, a list wider than its trigger
- *   stays inside the inline-end gutter, and a list taller than the room takes
- *   the start gutter and the runtime's cap
+ *   where its anchor starts on the inline axis, a field near the inline-start
+ *   edge opens its list on the field, a list wider than its trigger stays
+ *   inside the inline-end gutter, and a list taller than the room takes the
+ *   start gutter and the runtime's cap
  * @position Cross-browser geometry contract for the Selector overlay
  */
 
@@ -118,9 +119,12 @@ async function openStory(
   await expect(page.getByRole('listbox')).toBeVisible();
 }
 
-/** Pin the Selector's field at the viewport's inline-end edge, 250px wide. */
-async function pinFieldAtInlineEnd(page: Page): Promise<void> {
-  await page.evaluate(() => {
+/** Pin the Selector's field 2px from a viewport inline edge, 250px wide. */
+async function pinFieldAtInlineEdge(
+  page: Page,
+  edge: 'start' | 'end',
+): Promise<void> {
+  await page.evaluate(side => {
     const field = document
       .querySelector<HTMLElement>('[role="combobox"]')
       ?.closest<HTMLElement>('.astryx-selector');
@@ -130,9 +134,9 @@ async function pinFieldAtInlineEnd(page: Page): Promise<void> {
     field.style.position = 'fixed';
     field.style.width = '250px';
     field.style.insetBlockStart = '300px';
-    field.style.insetInlineStart = 'auto';
-    field.style.insetInlineEnd = '2px';
-  });
+    field.style.insetInlineStart = side === 'start' ? '2px' : 'auto';
+    field.style.insetInlineEnd = side === 'end' ? '2px' : 'auto';
+  }, edge);
 }
 
 for (const rtl of [false, true]) {
@@ -200,7 +204,7 @@ for (const rtl of [false, true]) {
   }) => {
     await page.setViewportSize({width: 1280, height: 720});
     await openStory(page, 'core-selector--pre-selected', rtl, async () =>
-      pinFieldAtInlineEnd(page),
+      pinFieldAtInlineEdge(page, 'end'),
     );
     // One option far longer than the trigger widens the list past it.
     await page.evaluate(() => {
@@ -218,6 +222,27 @@ for (const rtl of [false, true]) {
       // and keeps its start inside the inline-start gutter.
       expect(boxes.layer.left).toBeGreaterThanOrEqual(GUTTER_PX - 0.5);
       expect(boxes.layer.right).toBeLessThanOrEqual(1280 - GUTTER_PX + 0.5);
+      expect(
+        Math.abs(boxes.rowCenter - boxes.triggerCenter),
+      ).toBeLessThanOrEqual(2);
+    }).toPass({timeout: 5_000});
+  });
+
+  test(`a field near the inline-start edge opens its list on the field (${direction})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({width: 1280, height: 720});
+    await openStory(page, 'core-selector--pre-selected', rtl, async () =>
+      pinFieldAtInlineEdge(page, 'start'),
+    );
+    await expect(async () => {
+      const boxes = await readBoxes(page, 720);
+      // A start-aligned layer keeps its inline gutter on the far edge only,
+      // so the list starts on the field, 2px from the viewport's edge.
+      const startDelta = rtl
+        ? boxes.layer.right - boxes.anchor.right
+        : boxes.layer.left - boxes.anchor.left;
+      expect(Math.abs(startDelta)).toBeLessThanOrEqual(1);
       expect(
         Math.abs(boxes.rowCenter - boxes.triggerCenter),
       ).toBeLessThanOrEqual(2);

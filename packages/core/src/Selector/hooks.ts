@@ -165,16 +165,12 @@ export function useSelectedItemOverlayPosition({
     };
     measure();
 
-    // The list, the trigger or the viewport can resize, and the trigger can
-    // move at the same size. The layer can then flip to the other side of the
-    // anchor. A flip mirrors the layer's margins, not a translate. Measure the
-    // shift again from the new laid-out top, on the layer runtime's own
-    // re-settle signals. The measure reads the boxes as they are, so it does
-    // not depend on another subscriber running first. The watcher's callbacks
-    // run outside React's own work, so the commit is synchronous: the
-    // corrected shift paints in the frame the watcher reads in.
+    // The insets follow a move or a scroll in layout. A resize or a new
+    // selection changes the three measured values. Measure them again on the
+    // layer runtime's resettle signals. Commit at once, so the new values paint
+    // in this frame.
     return observeLayerResettle(listbox, anchor, () => {
-      // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the shift paints in the frame the watcher reads in, not a task later
+      // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the new values paint in the frame the watcher reads in, not a task later
       flushSync(measure);
     });
   }, [

@@ -1473,17 +1473,18 @@ export function Selector<T extends SelectorOptionType>(
   const popoverPlacement = placement ?? 'below';
   // The overlay places the popup in layout, so every reader of the layer's box
   // sees it: the selected row's center sits on the anchor's center, and the
-  // list stays between the viewport's gutters. A move or a scroll re-places it
-  // in the same layout; the layer's inline start is the anchor's own
-  // (`self-start` reads the anchor's edge in either direction), kept inside
-  // the inline gutters. The UA popover insets are cleared on the far edges.
+  // list stays between the viewport's block gutters. A move or a scroll
+  // re-places it in the same layout. The layer's inline start is the anchor's
+  // own (`self-start` reads the anchor's edge in either direction); as for
+  // every start-aligned layer, the inline gutter is on the far edge only. The
+  // UA popover insets are cleared on the far edges.
   const overlayLayerStyle: React.CSSProperties & Record<string, string> = {
     [SELECTOR_ROW_OFFSET_PROPERTY]: `${rawRowOffset}px`,
     [SELECTOR_LIST_BLOCK_SIZE_PROPERTY]: `${rawListBlockSize}px`,
     [SELECTOR_LIST_INLINE_SIZE_PROPERTY]: `${rawListInlineSize}px`,
     insetBlockStart: `clamp(${layerViewportInset.gutterBlockStart}, anchor(center) - var(${SELECTOR_ROW_OFFSET_PROPERTY}), calc(100dvb - ${layerViewportInset.gutterBlockEnd} - var(${SELECTOR_LIST_BLOCK_SIZE_PROPERTY})))`,
     insetBlockEnd: 'auto',
-    insetInlineStart: `clamp(${layerViewportInset.gutterInline}, anchor(self-start), calc(100vi - ${layerViewportInset.gutterInline} - var(${SELECTOR_LIST_INLINE_SIZE_PROPERTY})))`,
+    insetInlineStart: `min(anchor(self-start), calc(100vi - ${layerViewportInset.gutterInline} - var(${SELECTOR_LIST_INLINE_SIZE_PROPERTY})))`,
     insetInlineEnd: 'auto',
   };
   const popoverOffsetStyle: React.CSSProperties | undefined =
@@ -2096,8 +2097,8 @@ export function Selector<T extends SelectorOptionType>(
     selectionSurface = popover.render(panelContent, {
       placement: popoverPlacement,
       alignment: 'start',
-      // Standard menu clearance, except in overlay mode. There the measured
-      // translate owns the block geometry, and the menu sits on the trigger.
+      // Standard menu clearance, except in overlay mode. There the layer's
+      // clamped insets own the block geometry, and the menu sits on the trigger.
       offset: shouldOverlaySelectedItem
         ? undefined
         : spacingVars['--spacing-1'],
