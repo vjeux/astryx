@@ -1471,7 +1471,10 @@ export function Selector<T extends SelectorOptionType>(
       ? ({
           '--_selector-row-offset': `${rawRowOffset}px`,
           '--_selector-list-block-size': `${rawListBlockSize}px`,
-          insetBlockStart: `clamp(${layerViewportInset.gutterBlockStart}, anchor(center) - var(--_selector-row-offset), calc(100dvh - ${layerViewportInset.gutterBlockEnd} - var(--_selector-list-block-size)))`,
+          insetBlockStart: `clamp(${layerViewportInset.gutterBlockStart}, anchor(center) - var(--_selector-row-offset), calc(100dvb - ${layerViewportInset.gutterBlockEnd} - var(--_selector-list-block-size)))`,
+          // No position-area: the inline place is authored too. Start-aligned
+          // on the anchor, kept inside the inline gutters.
+          insetInlineStart: `clamp(${layerViewportInset.gutterInline}, anchor(start), calc(100vi - ${layerViewportInset.gutterInline} - anchor-size(self-inline)))`,
         } as React.CSSProperties)
       : undefined;
 
