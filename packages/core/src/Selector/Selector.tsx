@@ -1448,24 +1448,31 @@ export function Selector<T extends SelectorOptionType>(
   // placement opts out of the selector-specific overlay behavior and uses the
   // standard layer positioning API instead.
   const shouldOverlaySelectedItem = placement == null && !hasSearch;
-  const {translateY: rawTranslateY, isPositioned: rawIsPositioned} =
-    useSelectedItemOverlayPosition({
-      isOpen: popover.isOpen && shouldOverlaySelectedItem,
-      selectedItemIndex,
-      listboxId,
-      listboxRef,
-      anchorRef,
-    });
+  const {
+    rowOffset: rawRowOffset,
+    listBlockSize: rawListBlockSize,
+    isPositioned: rawIsPositioned,
+  } = useSelectedItemOverlayPosition({
+    isOpen: popover.isOpen && shouldOverlaySelectedItem,
+    selectedItemIndex,
+    listboxId,
+    listboxRef,
+    anchorRef,
+  });
 
-  const selectedItemTranslateY = shouldOverlaySelectedItem ? rawTranslateY : 0;
   const isPositioned = shouldOverlaySelectedItem ? rawIsPositioned : true;
   const popoverPlacement = placement ?? 'below';
-  // Anchor positioning fits the margin box beside the anchor. A negative margin
-  // shrinks that box, so the list stays on the overflowing side. A translate does
-  // not change the fit.
+  // The overlay clamps the layer in CSS: the selected row's center sits on the
+  // anchor's center, and the list stays between the viewport's gutters. A
+  // move or a scroll re-places it in the same layout; only the row's offset
+  // and the list's size are measured.
   const popoverOffsetStyle: React.CSSProperties | undefined =
-    selectedItemTranslateY !== 0
-      ? {translate: `0 ${selectedItemTranslateY}px`}
+    shouldOverlaySelectedItem
+      ? ({
+          '--_selector-row-offset': `${rawRowOffset}px`,
+          '--_selector-list-block-size': `${rawListBlockSize}px`,
+          insetBlockStart: `clamp(${layerViewportInset.gutterBlockStart}, anchor(center) - var(--_selector-row-offset), calc(100dvh - ${layerViewportInset.gutterBlockEnd} - var(--_selector-list-block-size)))`,
+        } as React.CSSProperties)
       : undefined;
 
   // Clear the current value. Shared by the clear button and the keyboard
@@ -2075,6 +2082,7 @@ export function Selector<T extends SelectorOptionType>(
     selectionSurface = popover.render(panelContent, {
       placement: popoverPlacement,
       alignment: 'start',
+      clampsOnPlacementAxis: shouldOverlaySelectedItem,
       // Standard menu clearance, except in overlay mode. There the measured
       // translate owns the block geometry, and the menu sits on the trigger.
       offset: shouldOverlaySelectedItem

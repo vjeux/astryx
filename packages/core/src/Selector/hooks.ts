@@ -20,7 +20,6 @@ import {useCallback, useState} from 'react';
 import {flushSync} from 'react-dom';
 import {useHighlightedOptionScroll} from '../hooks/useHighlightedOptionScroll';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
-import {settledBox} from '../Layer/settledBox';
 import {observeLayerResettle} from '../Layer/useLayer';
 import {isImeKeyEvent} from '../utils/ime';
 import type {RefObject} from 'react';
@@ -70,16 +69,18 @@ interface UseSelectedItemOffsetResult {
  */
 interface SelectedItemOverlayPosition extends UseSelectedItemOffsetResult {
   /**
-   * Block shift in px from the list's laid-out top to the clamped top.
-   * Anchor positioning's fit check ignores a translate.
+   * The selected row's center from the list's top, in px, with the optical
+   * correction. The layer's inset subtracts it from the anchor's center.
    */
-  translateY: number;
+  rowOffset: number;
+  /** The list's block size in px; the layer's inset clamps with it. */
+  listBlockSize: number;
 }
 
 /**
  * Measures the overlay position for Selector. The selected row centers on
- * the trigger, and the list stays in the viewport. `translateY` is the shift
- * from the laid-out top.
+ * the trigger, and the list stays in the viewport. `rowOffset` and
+ * `listBlockSize` feed the layer's clamped inset.
  */
 export function useSelectedItemOverlayPosition({
   isOpen,
@@ -89,15 +90,23 @@ export function useSelectedItemOverlayPosition({
   anchorRef,
 }: UseSelectedItemOffsetOptions): SelectedItemOverlayPosition {
   const [offset, setOffset] = useState(0);
-  const [translateY, setTranslateY] = useState(0);
+  const [rowOffset, setRowOffset] = useState(0);
+  const [listBlockSize, setListBlockSize] = useState(0);
   const [isPositioned, setIsPositioned] = useState(false);
 
   const commitPosition = useCallback(
-    (nextOffset: number, nextIsPositioned: boolean, nextTranslateY = 0) => {
+    (
+      nextOffset: number,
+      nextIsPositioned: boolean,
+      nextRowOffset = 0,
+      nextListBlockSize = 0,
+    ) => {
       // eslint-disable-next-line @eslint-react/set-state-in-effect -- selector popover position is derived from DOM layout
       setOffset(nextOffset);
       // eslint-disable-next-line @eslint-react/set-state-in-effect -- selector popover position is derived from DOM layout
-      setTranslateY(nextTranslateY);
+      setRowOffset(nextRowOffset);
+      // eslint-disable-next-line @eslint-react/set-state-in-effect -- selector popover position is derived from DOM layout
+      setListBlockSize(nextListBlockSize);
       // eslint-disable-next-line @eslint-react/set-state-in-effect -- selector popover position is derived from DOM layout
       setIsPositioned(nextIsPositioned);
     },
@@ -157,7 +166,7 @@ export function useSelectedItemOverlayPosition({
     commitPosition,
   ]);
 
-  return {offset, translateY, isPositioned};
+  return {offset, rowOffset, listBlockSize, isPositioned};
 }
 
 function measureOverlayPosition({
@@ -174,7 +183,8 @@ function measureOverlayPosition({
   commitPosition: (
     nextOffset: number,
     nextIsPositioned: boolean,
-    nextTranslateY?: number,
+    nextRowOffset?: number,
+    nextListBlockSize?: number,
   ) => void;
 }): void {
   // Find the target item: selected item or first item
@@ -214,19 +224,16 @@ function measureOverlayPosition({
   const maxTop = Math.max(0, viewportHeight - listboxHeight);
   const clampedTop = Math.min(Math.max(desiredTop, 0), maxTop);
 
-  // `offset` assumes the layer sits below the anchor. The translate starts at
-  // the list's laid-out top, after any flip. The layer's own box, with its
-  // transforms undone, carries the scroll adjustment anchor positioning
-  // applies. Offset metrics do not carry it, so they place only the list
-  // inside the layer.
+  // `offset` assumes the layer sits below the anchor. The layer's inset does
+  // the clamp in CSS from the row's offset and the list's size: content and
+  // selection change them, a move or a scroll does not.
   const clampedOffset = Math.max(0, anchorRect.bottom - clampedTop);
-  const layer = listbox.closest<HTMLElement>('[popover]');
-  const laidOutTop =
-    layer == null
-      ? getLayoutTop(listbox)
-      : settledBox(layer).top + getLayoutTop(listbox) - getLayoutTop(layer);
-
-  commitPosition(clampedOffset, true, clampedTop - laidOutTop);
+  commitPosition(
+    clampedOffset,
+    true,
+    itemCenterInListbox + SELECTED_ITEM_OPTICAL_OFFSET,
+    listboxHeight,
+  );
 }
 
 /**

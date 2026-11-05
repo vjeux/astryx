@@ -223,6 +223,17 @@ export interface ContextRenderProps {
    */
   positioning?: 'anchor' | 'custom';
   /**
+   * The layer clamps itself to the viewport on the placement axis instead of
+   * flipping: the hook emits no `position-area` and
+   * `position-try-fallbacks: none`, and the consumer's `style` sets the
+   * placement-axis inset. The layer stays anchored: the keyboard cap, the
+   * viewport fit and the gutters still apply. Ignored when `positioning` is
+   * `'custom'`.
+   *
+   * @default false
+   */
+  clampsOnPlacementAxis?: boolean;
+  /**
    * Logical placement relative to the anchor. Ignored when `positioning`
    * is `'custom'`.
    */
@@ -1808,6 +1819,7 @@ function useLayerImplementation(
         placement = 'above',
         alignment = 'center',
         positioning = 'anchor',
+        clampsOnPlacementAxis = false,
         offset,
         role,
         'aria-label': ariaLabel,
@@ -1835,14 +1847,22 @@ function useLayerImplementation(
           ? // Consumer authors its own position styles via `style` — keep
             // only the anchor wiring, derive nothing from placement.
             {positionAnchor: anchorId}
-          : {
-              positionAnchor: anchorId,
-              positionArea: getPositionArea(placement, alignment),
-              positionTryFallbacks: clearFallbacks
-                ? `var(${LAYER_TRY_FALLBACKS_PROPERTY}, ${standardFallbacks})`
-                : standardFallbacks,
-              ...getSelfAlignment(placement, alignment, isAnchorInView),
-            };
+          : clampsOnPlacementAxis
+            ? // The consumer's inset clamps the layer on the placement axis,
+              // so no fallback flips it: a clamped layer has no other side.
+              {
+                positionAnchor: anchorId,
+                positionTryFallbacks: 'none',
+                ...getSelfAlignment(placement, alignment, isAnchorInView),
+              }
+            : {
+                positionAnchor: anchorId,
+                positionArea: getPositionArea(placement, alignment),
+                positionTryFallbacks: clearFallbacks
+                  ? `var(${LAYER_TRY_FALLBACKS_PROPERTY}, ${standardFallbacks})`
+                  : standardFallbacks,
+                ...getSelfAlignment(placement, alignment, isAnchorInView),
+              };
 
       const clearance = offset ? toCssLength(offset) : null;
       const clearanceProperty: Record<string, string> =
