@@ -1653,6 +1653,34 @@ describe('ContextMenu compound mode', () => {
       expect(anchor.style.top).toBe('40px');
     });
 
+    it("places a right-click's anchor at the pointer offset inside a scaled container, with no scale of its own", () => {
+      render(
+        <ContextMenu items={[{label: 'Item 1'}]} data-testid="ctx">
+          <div>Right-click me</div>
+        </ContextMenu>,
+      );
+      const trigger = screen.getByTestId('ctx');
+      // A 200x120 trigger inside an ancestor scaled to 0.5.
+      Object.defineProperty(trigger, 'offsetWidth', {value: 200});
+      Object.defineProperty(trigger, 'offsetHeight', {value: 120});
+      trigger.getBoundingClientRect = () =>
+        ({
+          left: 100,
+          top: 50,
+          right: 200,
+          bottom: 110,
+          width: 100,
+          height: 60,
+        }) as DOMRect;
+      fireEvent.contextMenu(trigger, {clientX: 150, clientY: 80, detail: 1});
+      const anchor = getCursorAnchor(trigger);
+      expect(anchor.style.left).toBe('50px');
+      expect(anchor.style.top).toBe('30px');
+      // The ancestor's scale is not the press feedback's growth: nothing to cancel.
+      expect(anchor.style.scale).toBe('');
+      expect(anchor.style.translate).toBe('');
+    });
+
     it('anchors a keyboard-invoked menu to the trigger bottom-left', () => {
       render(
         <ContextMenu items={[{label: 'Item 1'}]} data-testid="ctx">
