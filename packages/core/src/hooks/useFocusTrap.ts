@@ -615,9 +615,8 @@ export function useFocusTrapInternal<T extends HTMLElement = HTMLElement>(
         return;
       }
 
-      if (!isFocusLost(container, doc)) {
-        return;
-      }
+      // NOT FOR LANDING: restore focus even when it went elsewhere.
+      void isFocusLost;
 
       if (
         previouslyFocused != null &&
