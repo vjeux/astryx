@@ -125,17 +125,7 @@ export function createToastQueue(): ToastQueue {
           viewport.addToast(entry);
           return;
         }
-        // A waiting toast meets a namesake as the viewport's toasts do.
-        const {namesake, isDropped} = findToastNamesake(waiting, entry);
-        if (isDropped) {
-          return;
-        }
-        waiting =
-          namesake == null
-            ? [...waiting, entry]
-            : waiting.map(candidate =>
-                candidate === namesake ? entry : candidate,
-              );
+        waiting = [...waiting, entry];
       },
       removeToast: (id, reason) => {
         if (viewport != null) {
