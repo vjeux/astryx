@@ -1085,19 +1085,37 @@ test('a settle keeps advancing every frame through an 800 ms main-thread block',
     // limits). A harness round trip would eat most of the motion.
     const started = await page.evaluate(() => {
       window.pager.goTo(1);
-      setTimeout(() => {
-        const from = performance.timeOrigin + performance.now();
-        const end = performance.now() + 800;
-        let spins = 0;
-        while (performance.now() < end) {
-          spins += 1;
-        }
-        (window as unknown as {busy: unknown}).busy = {
-          from,
-          to: performance.timeOrigin + performance.now(),
-          spins,
-        };
-      }, 90);
+      // Mutant: two frames in, the settle holds still. The block starts once
+      // the hold has reached the compositor, and the settle resumes after it.
+      const track = document.getElementById('track') as HTMLElement;
+      const frame = (then: () => void) => requestAnimationFrame(() => then());
+      frame(() =>
+        frame(() => {
+          const held = track.getAnimations();
+          for (const animation of held) {
+            animation.pause();
+          }
+          frame(() =>
+            frame(() => {
+              const from = performance.timeOrigin + performance.now();
+              const end = performance.now() + 800;
+              let spins = 0;
+              while (performance.now() < end) {
+                spins += 1;
+              }
+              (window as unknown as {busy: unknown}).busy = {
+                from,
+                to: performance.timeOrigin + performance.now(),
+                spins,
+              };
+
+              for (const animation of held) {
+                animation.play();
+              }
+            }),
+          );
+        }),
+      );
       return performance.timeOrigin + performance.now();
     });
     await page.waitForTimeout(1200);
@@ -1138,8 +1156,8 @@ test('a settle keeps advancing every frame through an 800 ms main-thread block',
     // at its inset from the viewport's left edge.
     const blocked = tracked.filter(f => f.box != null && f.t < busy.to);
     const last = blocked[blocked.length - 1];
-    expect(last.t).toBeGreaterThan(spanned.from);
-    expect(Math.abs((last.box?.x ?? 0) - 8)).toBeLessThan(1.5);
+    // Mutant: the landing check is left out, so the verdict decides.
+    void last;
   }
   await control.remove();
   // The settle ends with page 1's marker at its inset. The proof is told so:
