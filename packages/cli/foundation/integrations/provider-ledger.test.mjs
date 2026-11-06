@@ -92,6 +92,25 @@ function expectAccounted(ledger, inputs) {
   }
 }
 
+// NOT FOR LANDING: timing probe, as JSON lines in C28_PROBE.
+const c28Note = entry =>
+  fs.appendFileSync(
+    process.env.C28_PROBE ?? '/tmp/c28-probe.jsonl',
+    `${JSON.stringify({pid: process.pid, ...entry})}\n`,
+  );
+const c28Count = dir => {
+  let entries = 0;
+  const stack = fs.existsSync(dir) ? [dir] : [];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, {withFileTypes: true})) {
+      entries += 1;
+      if (entry.isDirectory()) stack.push(path.join(current, entry.name));
+    }
+  }
+  return entries;
+};
+
 describe('provider ledger over generated projects', () => {
   it('accounts for every candidate once and agrees across Project and upgrade', async () => {
     const coverage = {
@@ -111,10 +130,13 @@ describe('provider ledger over generated projects', () => {
       coverage.scenarios++;
       const dir = path.join(root, `seed-${seed}`);
       fs.mkdirSync(dir);
+      const c28w0 = performance.now();
       writeScenario(dir, scenario);
       const context = `seed ${seed}: ${JSON.stringify(scenario)}`;
 
+      const c28l0 = performance.now();
       const project = await Project.load(dir, {fresh: true});
+      const c28l1 = performance.now();
       const ledger = providerLedgerOf(project);
       const inputs = expectedProjectInputs(dir, scenario);
       try {
@@ -153,7 +175,9 @@ describe('provider ledger over generated projects', () => {
 
       // `--integration` specs resolve from the process cwd.
       process.chdir(dir);
+      const c28u0 = performance.now();
       const upgrade = await loadProjectContext(dir, scenario.extras);
+      const c28u1 = performance.now();
       process.chdir(originalCwd);
 
       const modules = path.join(dir, 'node_modules');
@@ -264,7 +288,9 @@ describe('provider ledger over generated projects', () => {
       }
       // The seed's folder is read, so it goes now: inside this case's budget,
       // not with every other seed's folder at once after the file.
+      const c28r0 = performance.now();
       fs.rmSync(dir, {recursive: true, force: true});
+      c28Note({event: 'ledger-seed', seed, writeMs: c28l0 - c28w0, projectMs: c28l1 - c28l0, upgradeMs: c28u1 - c28u0, rmMs: performance.now() - c28r0, totalMs: performance.now() - c28w0});
     }
 
     // The generator must keep reaching every shape, or the property is vacuous.
