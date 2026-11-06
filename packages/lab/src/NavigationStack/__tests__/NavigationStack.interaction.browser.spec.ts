@@ -46,6 +46,7 @@ import {
   withStorybook,
   writeEvidence,
   type TouchDriver,
+  watchAnimations,
 } from '@astryxdesign/interaction-harness';
 
 const storybook = withStorybook(test);
@@ -2001,3 +2002,15 @@ test(
     expect(Math.max(...frames.map(f => f.top))).toBeGreaterThan(width * 0.5);
   },
 );
+
+// Evidence only, not for landing: the watch that the cut tests take.
+test('evidence: watch the pushed card, tap General, started() (not for landing)', async ({
+  page,
+}) => {
+  const {driver} = await openStack(page, 'settings');
+  const push = await watchAnimations(card(page, 'screen-General'));
+  await driver.tap(await rowCenter(page, 'General'));
+  const [run] = await push.started();
+  expect(run.kind).toBe('Animation');
+  await waitForRest(card(page, 'screen-General'));
+});
