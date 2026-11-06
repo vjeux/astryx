@@ -414,10 +414,10 @@ function animationRecorder(): void {
             : Number(this.startTime),
         );
         entry.cancelledAt = performance.now() + span();
-        // Negative while the run is still in its start delay: it presented
-        // nothing, as the live check reads it.
-        entry.playedMs =
-          (rate < 0 ? end - endDelay - time : time - delay) / speed;
+        entry.playedMs = Math.max(
+          0,
+          (rate < 0 ? end - endDelay - time : time - delay) / speed,
+        );
       }
     }
     return cancel.call(this);
