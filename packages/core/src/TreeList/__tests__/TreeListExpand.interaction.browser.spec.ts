@@ -290,14 +290,8 @@ const blankBands = (frames: ReadonlyArray<Frame>) =>
       : frame.belowTop - (frame.group.top + frame.group.shown),
   );
 
-/**
- * How far a frame may put the rows that glide off the group's clip, with
- * `end` where the row below comes to rest. WebKit evaluates a composited
- * translation a few milliseconds ahead of a clip that it paints itself. On
- * the glide's curve, that lead stays under a tenth of the travel left.
- */
-const bandAllowance = (frame: Frame, end: number, browserName: string) =>
-  browserName === 'webkit' ? 1.5 + 0.1 * Math.abs(end - frame.belowTop) : 1.5;
+/** How far a frame may put the rows that glide off the group's shown part. */
+const BAND_ALLOWANCE = 1.5;
 
 /**
  * The frames that show the row below inside its travel, between a tenth and
@@ -357,7 +351,6 @@ async function startedDurations(page: Page) {
 
 test('expand under a finger: the rows below glide while the group fades in, and no frame shows a blank band', async ({
   page,
-  browserName,
 }) => {
   await open(page);
   const before = (await parts(page).below.boundingBox())?.y ?? 0;
@@ -369,7 +362,7 @@ test('expand under a finger: the rows below glide while the group fades in, and 
   // shows. A blank band between them is the flicker.
   for (const [i, band] of blankBands(moving).entries()) {
     expect(band, `frame ${i}: ${JSON.stringify(moving[i])}`).toBeLessThan(
-      bandAllowance(moving[i], frames[frames.length - 1].belowTop, browserName),
+      BAND_ALLOWANCE,
     );
   }
   // The group fades in from its first frame: it does not show at rest first.
@@ -475,18 +468,16 @@ test('a focus ring on a row at the edge of a moving tree stays whole, while the 
 
 test('the guide lines beside a group show and hide with it: none runs past the last row it joins', async ({
   page,
-  browserName,
 }) => {
   await open(page);
   const expand = await recordFrames(page, async () => tapToggle(page));
   const collapse = await recordFrames(page, async () => tapToggle(page));
   for (const phase of [expand, collapse]) {
-    const end = phase[phase.length - 1].belowTop;
     for (const [i, frame] of phase.entries()) {
       expect(
         frame.guideBottom,
         `frame ${i}: ${JSON.stringify(frame)}`,
-      ).toBeLessThan(frame.lastBottom + bandAllowance(frame, end, browserName));
+      ).toBeLessThan(frame.lastBottom + BAND_ALLOWANCE);
     }
   }
 });
