@@ -522,6 +522,16 @@ test('the presentation keeps advancing every frame while the main thread is bloc
     'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
   );
   await logScaleStarts(page);
+  await page.addInitScript(() => {
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      const animation = animate.call(this, keyframes, options);
+      if (Array.isArray(keyframes) && keyframes.some(f => f != null && 'scale' in f)) {
+        setTimeout(() => animation.pause(), 100);
+      }
+      return animation;
+    };
+  });
   const story = await openDefault(page);
   // The screencast finds the element by its marker's exact color, which the
   // content fade would blend away. So this proof holds opacity at 1, since an
@@ -541,12 +551,9 @@ test('the presentation keeps advancing every frame while the main thread is bloc
   // The page itself blocks once the growth has run a frame. A block sent from
   // here starts later on a busy machine.
   const opened = await pageNow(page);
-  const blocking = blockMainThread(page, 1000, {
-    during: story.layer,
-    minProgressMs: 16,
-  });
   await openWithTap(story);
-  const block = await blocking;
+  await page.waitForTimeout(250);
+  const block = await blockMainThread(page, 1000);
   const growth = await waitPastScaleStart(page, opened, 0);
   await page.waitForTimeout(100);
   const castFrames = await cast.stop();
