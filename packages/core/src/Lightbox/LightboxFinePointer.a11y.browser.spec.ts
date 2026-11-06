@@ -278,6 +278,10 @@ async function expectSpringZoom(
 
 test('the keyboard’s zoom settles on springs.settle', async ({page}) => {
   const {stage, img, fitted} = await openViewer(page);
+  // NOT FOR LANDING: a spring 1.05 times as long (the theme's tempo).
+  await page.addStyleTag({
+    content: 'dialog, dialog * { --_astryx-motion-tempo: 1.05 !important; }',
+  });
   // Unpaused, the keyboard's zoom reaches 2× and returns to the fitted size.
   await stage.focus();
   await page.keyboard.press('Enter');
@@ -298,6 +302,10 @@ test('the keyboard’s zoom settles on springs.settle', async ({page}) => {
 
 test('a mouse double-click settles on springs.settle too', async ({page}) => {
   const {stageBox, img, fitted} = await openViewer(page);
+  // NOT FOR LANDING: a spring 1.05 times as long (the theme's tempo).
+  await page.addStyleTag({
+    content: 'dialog, dialog * { --_astryx-motion-tempo: 1.05 !important; }',
+  });
   const middle = centre(stageBox);
   await expectSpringZoom(page, img, fitted, async () => {
     await page.mouse.dblclick(middle.x, middle.y);
