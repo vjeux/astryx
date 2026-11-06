@@ -6,7 +6,8 @@
  *   the interaction harness
  * @output Browser proofs for the touch layer: the slide on UIKit's spring,
  *   the hand-back, Reduce Motion, a blocked main thread, the press, the drag,
- *   the commit at the lift, scrolling, text selection and a mouse
+ *   the commit at the lift, scrolling, text selection and a mouse. A mouse's
+ *   slide plays the theme's easing, a `linear()` one included
  * @position Browser layer of useSegmentedSelectionMotion.ts; the unit layers
  *   are useSegmentedSelectionMotion.test.ts and motion/uikit/segmented.test.ts
  *
@@ -1099,6 +1100,34 @@ test('a hand-written calc() duration token times a click’s slide as the segmen
     // plays that length.
     expect(themeMs).toBe(200);
     expect(Math.abs(durationMs - themeMs), String(durationMs)).toBeLessThan(25);
+  } finally {
+    await context.close();
+  }
+});
+
+test('with a mouse a click’s slide plays a theme’s linear() easing as the browser plays it, instead of landing at once', async ({
+  browser,
+}) => {
+  const {context, group} = await openWithMouse(browser);
+  try {
+    // The motion scale's easing option writes such an easing.
+    await group.evaluate(element => {
+      element.style.setProperty('--ease-standard', 'linear(0, 0.8 50%, 1)');
+    });
+    const {from, to, durationMs, themeMs, frames} = await clickSlide(
+      group,
+      'table',
+    );
+    expect(Math.abs(to - from), JSON.stringify({from, to})).toBeGreaterThan(10);
+    expect(Math.abs(durationMs - themeMs), String(durationMs)).toBeLessThan(25);
+    // Two straight runs: 80% of the way at half the time, then the rest.
+    const linear = (x: number) => (x < 0.5 ? 1.6 * x : 0.8 + 0.4 * (x - 0.5));
+    for (const {t, value} of frames.filter(frame => frame.t <= themeMs)) {
+      expect(
+        Math.abs((value - from) / (to - from) - linear(t / themeMs)),
+        `${t} ms`,
+      ).toBeLessThan(0.02);
+    }
   } finally {
     await context.close();
   }
@@ -2341,22 +2370,28 @@ test('a drag commits through the destination item’s click too: its onClick run
   await expectLensHidden(control);
 });
 
+/** The lens's slide as the page reads it: its ends, its length, its frames. */
+interface SlideRead {
+  from: number;
+  to: number;
+  durationMs: number;
+  frames: {t: number; value: number}[];
+}
+
 /**
  * Clicks the segment `value` and reads the lens's slide: where its first
- * running translate starts and ends, and how long it runs. Also reads the
- * duration that the segments' own transition resolves.
+ * running translate starts and ends, how long it runs, and its frames. Also
+ * reads the duration that the segments' own transition resolves.
  */
 async function clickSlide(
   group: Locator,
   value: string,
-): Promise<{from: number; to: number; durationMs: number; themeMs: number}> {
+): Promise<SlideRead & {themeMs: number}> {
   // From the click on, the page reads the lens's first running translate
   // animation on each frame. It notes where the animation starts and ends,
-  // and how long it runs.
+  // how long it runs, and each keyframe's time and value.
   await group.evaluate(element => {
-    const w = window as unknown as {
-      __slide: {from: number; to: number; durationMs: number} | null;
-    };
+    const w = window as unknown as {__slide: SlideRead | null};
     w.__slide = null;
     const read = () => {
       for (const animation of element.getAnimations({subtree: true})) {
@@ -2377,12 +2412,15 @@ async function clickSlide(
         const firstAtEnd = frames.find(
           (frame, i) => Math.abs(values[i] - to) < 0.01,
         );
+        const total = Number(effect.getComputedTiming().duration ?? 0);
         w.__slide = {
           from: values[0],
           to,
-          durationMs:
-            (firstAtEnd?.computedOffset ?? 1) *
-            Number(effect.getComputedTiming().duration ?? 0),
+          durationMs: (firstAtEnd?.computedOffset ?? 1) * total,
+          frames: frames.map((frame, i) => ({
+            t: (frame.computedOffset ?? 0) * total,
+            value: values[i],
+          })),
         };
         return;
       }
@@ -2404,22 +2442,15 @@ async function clickSlide(
     'aria-checked',
     'true',
   );
-  const slide = await group.page().waitForFunction(
-    () =>
-      (
-        window as unknown as {
-          __slide: {from: number; to: number; durationMs: number} | null;
-        }
-      ).__slide,
-    undefined,
-    {timeout: 3000},
-  );
-  const {from, to, durationMs} = (await slide.jsonValue()) as {
-    from: number;
-    to: number;
-    durationMs: number;
-  };
-  return {from, to, durationMs, themeMs};
+  const slide = await group
+    .page()
+    .waitForFunction(
+      () => (window as unknown as {__slide: SlideRead | null}).__slide,
+      undefined,
+      {timeout: 3000},
+    );
+  const {from, to, durationMs, frames} = (await slide.jsonValue()) as SlideRead;
+  return {from, to, durationMs, themeMs, frames};
 }
 
 /** A desktop context: a mouse, no touch, a fine primary pointer. */
