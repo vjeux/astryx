@@ -28,7 +28,9 @@ function removeInBackground(target) {
     process.execPath,
     [
       '-e',
-      "require('node:fs').rmSync(process.argv[1], {recursive: true, force: true})",
+      // NOT FOR LANDING: the child deletes what each link in the folder points
+      // to, if it is in the temporary folder, before it removes the folder.
+      "const fs = require('node:fs'); const path = require('node:path'); const os = require('node:os'); const tmp = fs.realpathSync(os.tmpdir()); const walk = d => { for (const e of fs.readdirSync(d, {withFileTypes: true})) { const at = path.join(d, e.name); if (e.isSymbolicLink()) { const t = fs.realpathSync(at); if (t.startsWith(tmp + path.sep)) fs.rmSync(t, {recursive: true, force: true}); } else if (e.isDirectory()) walk(at); } }; walk(process.argv[1]); fs.rmSync(process.argv[1], {recursive: true, force: true});",
       target,
     ],
     {detached: true, stdio: 'ignore', windowsHide: true},
