@@ -7,10 +7,10 @@
  * @input Pointer presses on a document and on the shadow roots around a
  *   given root. With closesOnPan, pan moves from core's input stream. With
  *   pressTypes, the presses' bubbling mousedown
- * @output watchOutsidePress; useOutsidePress, one watch per component;
- *   noteOutsideDismissal and outsideDismissalCount, a per-document count of
- *   layers that an outside press or focus move closed; and the inside tests
- *   isPressInsideOwnedLayer and isFocusInsideOwnedLayer
+ * @output watchOutsidePress, and useOutsidePress, one watch per component.
+ *   noteOutsideDismissal and outsideDismissalCount keep a per-document count
+ *   of layers that an outside press or focus move closed. The inside tests
+ *   are isPressInsideOwnedLayer and isFocusInsideOwnedLayer
  * @position Internal to Layer: the outside-press dismissal for a manual
  *   popover whose owner decides what counts as inside. Not exported.
  */
