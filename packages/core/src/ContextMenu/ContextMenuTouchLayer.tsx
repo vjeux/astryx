@@ -19,6 +19,7 @@ import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {contextMenu} from '../motion/uikit/contextMenu';
+import {isElement} from '../utils/nodeType';
 import {
   ContextMenuPressRecognizer,
   useContextMenuPressFeedback,
@@ -96,11 +97,14 @@ export function ContextMenuTouchLayer({
   const isFollowedRef = useRef<() => boolean>(() => false);
   // When the finger the recognizer follows landed, for the growth's onset.
   const landedAtRef = useRef<() => number | null>(() => null);
+  // Whether the contact the recognizer follows is a finger.
+  const followsFingerRef = useRef<() => boolean>(() => false);
   const feedback = useContextMenuPressFeedback(
     triggerRef,
     isShown,
     isFollowedRef,
     landedAtRef,
+    followsFingerRef,
   );
   const feedbackRef = useRef(feedback);
   feedbackRef.current = feedback;
@@ -121,6 +125,16 @@ export function ContextMenuTouchLayer({
           feedbackRef.current.end(press.clockTime);
         }
       });
+      // A finger's growth counts from the landing the recognizer records as
+      // it takes the touch. A pen's press waits for the press machine's mark.
+      recognizer.onPressBegan = (touch, time) => {
+        if (touch.pointerType === 'touch') {
+          feedbackRef.current.begin(
+            time,
+            isElement(touch.target) ? touch.target : null,
+          );
+        }
+      };
       return recognizer;
     },
     press => {
@@ -160,6 +174,9 @@ export function ContextMenuTouchLayer({
   isFollowedRef.current = () =>
     recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
   landedAtRef.current = () => recognizer.press?.time ?? null;
+  followsFingerRef.current = () =>
+    isFollowedRef.current() &&
+    recognizer.trackedTouches[0]?.pointerType === 'touch';
 
   useImperativeHandle(
     ref,

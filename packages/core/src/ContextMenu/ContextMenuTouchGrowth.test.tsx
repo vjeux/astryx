@@ -230,6 +230,30 @@ describe('ContextMenu’s growth under a finger', () => {
     expect(growths(trigger)).toHaveLength(1);
   });
 
+  it('grows a pen’s press at the onset from the press machine’s mark, which finds the recognizer following the pen', async () => {
+    const trigger = renderMenu();
+    const landedAt = performance.now();
+    const down = new Event('pointerdown', {bubbles: true, cancelable: true});
+    Object.assign(down, {
+      pointerId: 7,
+      pointerType: 'pen',
+      isPrimary: true,
+      button: 0,
+      buttons: 1,
+      clientX: 20,
+      clientY: 20,
+    });
+    Object.defineProperty(down, 'timeStamp', {value: landedAt});
+    // The press machine marks the pen's press from the same pointerdown.
+    trigger.dispatchEvent(down);
+    await act(async () => {});
+    expect(trigger.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    advance(149);
+    expect(growths(trigger)).toHaveLength(0);
+    advance(1);
+    expect(growths(trigger).map(startOf)).toEqual([landedAt + 150]);
+  });
+
   it('does not grow the trigger for a press its recognizer does not follow, such as a mouse', async () => {
     const trigger = renderMenu();
     await pressMachineOn(trigger);
