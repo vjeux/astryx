@@ -1176,9 +1176,18 @@ export const authorThrowsTheme = defineTheme({
   );
 }, 120_000);
 
+// NOT FOR LANDING: times this teardown, as JSON lines in C28_PROBE.
+const probeNote = entry =>
+  fs.appendFileSync(
+    process.env.C28_PROBE ?? path.join(os.tmpdir(), 'c28-probe.jsonl'),
+    `${JSON.stringify({pid: process.pid, at: new Date().toISOString(), ...entry})}\n`,
+  );
 afterAll(() => {
-  if (root && !runFolder()) removeFixture(root);
+  const start = performance.now();
+  const inRun = Boolean(runFolder());
+  if (root && !inRun) removeFixture(root);
   releasePackedCli();
+  probeNote({event: 'packed-teardown', inRun, ms: performance.now() - start});
 });
 
 describe('the packed CLI fixture', () => {

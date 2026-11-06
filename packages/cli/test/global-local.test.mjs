@@ -69,8 +69,16 @@ afterEach(async () => {
     );
   }
 }, 90_000);
+// NOT FOR LANDING: times this teardown, as JSON lines in C28_PROBE.
+const probeNote = entry =>
+  fs.appendFileSync(
+    process.env.C28_PROBE ?? path.join(os.tmpdir(), 'c28-probe.jsonl'),
+    `${JSON.stringify({pid: process.pid, at: new Date().toISOString(), ...entry})}\n`,
+  );
 afterAll(() => {
+  const start = performance.now();
   releasePackedCli();
+  probeNote({event: 'global-local-teardown', ms: performance.now() - start});
 });
 
 /**
