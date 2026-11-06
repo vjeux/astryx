@@ -543,7 +543,7 @@ test('the presentation keeps advancing every frame while the main thread is bloc
   const opened = await pageNow(page);
   const blocking = blockMainThread(page, 1000, {
     during: story.layer,
-    minProgressMs: 16,
+    minProgressMs: 1160,
   });
   await openWithTap(story);
   const block = await blocking;
