@@ -2627,8 +2627,13 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       content.style.display = '';
       opening.animate();
       window.AnimatedLayout.playLayoutChange(layout, content);
-      for (let i = 0; i < 2; i++) {
-        await frame();
+      await new Promise<void>(resolve => {
+        queueMicrotask(resolve);
+      });
+      // Hold the reveal at fixed times on its own clock, once it rides. Late
+      // frames then cannot end it before these reads.
+      for (const ms of [20, 40, 60, 80, 100]) {
+        window.holdAt(ms);
         read('opening');
       }
       // Closed again 120 ms into the reveal, as the page shows it then.
@@ -2718,8 +2723,13 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
         window.AnimatedLayout.playLayoutChange(layout, content, {
           edge: 'inline-end',
         });
-        for (let i = 0; i < 5; i++) {
-          await frame();
+        await new Promise<void>(resolve => {
+          queueMicrotask(resolve);
+        });
+        // Hold the reveal at fixed times on its own clock, once it rides.
+        // Late frames then cannot end it before these reads.
+        for (const ms of [20, 40, 60, 80, 100]) {
+          window.holdAt(ms);
           read('opening');
         }
         // Closed again 120 ms into the reveal, as the page shows it then:
