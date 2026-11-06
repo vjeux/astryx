@@ -53,6 +53,7 @@ import {
   type PaneListener,
   type RegionPaneSlot,
   type ResizablePane,
+  showCloseCue,
   slideNextOnRelease,
 } from './resizablePane';
 import {separatorAttributes} from './separatorAttributes';
@@ -989,6 +990,12 @@ export function createResizableAs(
       // hook's size alone stops at the limit.
       overshoot = pane == null ? 0 : overshootPast(raw);
       drawing?.draw(overshoot);
+      if (pane != null) {
+        showCloseCue(
+          pane,
+          collapsible() && !derived.isCollapsed && raw < collapsedSize,
+        );
+      }
       // Only a pointer reopens without a reveal; a key's step plays one.
       isPointerReopening = reopens && regionSlot?.isPointerDragging() === true;
       commit();
@@ -1006,6 +1013,9 @@ export function createResizableAs(
         collapsible() &&
         !derived.isCollapsed &&
         Math.min(pointerSize, project(pointerSize, velocity)) < collapsedSize;
+      if (pane != null) {
+        showCloseCue(pane, false);
+      }
       if (closes) {
         closeOnRelease(velocity);
       } else {
@@ -1016,6 +1026,9 @@ export function createResizableAs(
     // A cancelled gesture is still over: the basis it held comes back, and
     // the size it reached is saved once, like a completed one.
     cancel() {
+      if (pane != null) {
+        showCloseCue(pane, false);
+      }
       settleOvershoot(0);
       endGesture();
     },
