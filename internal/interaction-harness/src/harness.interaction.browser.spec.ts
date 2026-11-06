@@ -1033,10 +1033,10 @@ test.describe('frame evidence', () => {
     };
 
     const armStart = Date.now();
-    const {proof: compositor} = await run('compositor');
+    const {proof: compositor} = await run('raf'); // NOT FOR LANDING: rAF in the compositor arm
     const armMs = Date.now() - armStart;
-    expect(compositor.verdict.failures, compositor.summary).toEqual([]);
-    expect(compositor.control?.moved).toBeGreaterThanOrEqual(4);
+    expect.soft(compositor.verdict.failures, compositor.summary).toEqual([]);
+    expect.soft(compositor.control?.moved).toBeGreaterThanOrEqual(4);
 
     // A loaded runner presents fewer frames, so the same block holds fewer of
     // the frames the other arms judge. Each of their blocks is sized from the
@@ -1066,19 +1066,23 @@ test.describe('frame evidence', () => {
     // block, never a step from inside it. How many frames the verdict counts
     // as moved depends on how many such steps a loaded runner presents.
     const raf = await run('raf', 1, rafMs);
-    expect(raf.inBlock, raf.proof.summary).toBe(0);
-    expect(raf.proof.verdict.pass, raf.proof.summary).toBe(false);
-    expect(raf.proof.verdict.failures.join('\n')).toMatch(
-      /longest stall .* longer than the control's/,
-    );
-    expect(raf.unset, raf.proof.summary).toEqual([]);
+    expect.soft(raf.inBlock, raf.proof.summary).toBe(0);
+    expect.soft(raf.proof.verdict.pass, raf.proof.summary).toBe(false);
+    expect
+      .soft(raf.proof.verdict.failures.join('\n'))
+      .toMatch(/longest stall .* longer than the control's/);
+    expect.soft(raf.unset, raf.proof.summary).toEqual([]);
 
     // A slower screencast samples the control and the component alike.
-    const {proof: slow} = await run('compositor', slowNth, slowMs);
-    expect(slow.verdict.failures, slow.summary).toEqual([]);
+    const {proof: slow} = await run(
+      'raf',
+      slowNth,
+      slowMs,
+    ); /* NOT FOR LANDING: rAF in the compositor arm */
+    expect.soft(slow.verdict.failures, slow.summary).toEqual([]);
     const slowRaf = await run('raf', slowNth, slowMs);
-    expect(slowRaf.inBlock, slowRaf.proof.summary).toBe(0);
-    expect(slowRaf.proof.verdict.pass, slowRaf.proof.summary).toBe(false);
+    expect.soft(slowRaf.inBlock, slowRaf.proof.summary).toBe(0);
+    expect.soft(slowRaf.proof.verdict.pass, slowRaf.proof.summary).toBe(false);
     await control.remove();
   });
 
