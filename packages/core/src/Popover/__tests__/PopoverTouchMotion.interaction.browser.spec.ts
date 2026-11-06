@@ -445,6 +445,7 @@ test('the dismissal shrinks back into the trigger on the theme\u2019s exit token
   const viewport = page.viewportSize()!;
   const dismissal = await armExitCopyHold(story);
   await story.driver.tap({x: 20, y: viewport.height - 20});
+  await page.waitForTimeout(300);
   const held = await dismissal.held();
   await expect(story.trigger).toHaveAttribute('aria-expanded', 'false');
   const copy = exitCopyOf(page);
@@ -824,7 +825,7 @@ test('Reduce Motion: the popover cross-fades in at its size and out where it sta
 }) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
   const story = await openDefault(page);
-  await openHeldWhileGrowing(page, story);
+  await openHeldWhileGrowing(page, story, 300);
   const unit = {x: 0, y: 0, width: 100, height: 100};
   // design:reduced-motion DR2: opacity only, 200 ms or less, here on
   // UIKit's cross-fade curve.
@@ -858,6 +859,7 @@ test('Reduce Motion: the popover cross-fades in at its size and out where it sta
   // The dismissal fades out where the popover stands, on the same curve.
   const dismissal = await armExitCopyHold(story);
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
   await dismissal.held();
   const copy = exitCopyOf(page);
   const [closing, gone] = await sampleBoxes(copy, unit, [
@@ -894,7 +896,7 @@ test(
       });
     const entrance = await themeTiming(story.layer, POPOVER_ENTRANCE_TOKENS);
     const exit = await themeTiming(story.layer, POPOVER_EXIT_TOKENS);
-    const presented = await openHeldWhileGrowing(page, story);
+    const presented = await openHeldWhileGrowing(page, story, 300);
     await freezeTimers(page);
     const {storyboard: presentBoard} = await animationStoryboard(page, {
       name: 'popover-touch-present',
@@ -912,6 +914,7 @@ test(
     await waitForRest(story.layer);
     const dismissal = await armExitCopyHold(story);
     await story.driver.tap({x: 20, y: viewport.height - 20});
+    await page.waitForTimeout(300);
     const dismissing = await dismissal.held();
     const copy = exitCopyOf(page);
     await freezeTimers(page);
@@ -1026,9 +1029,10 @@ async function armExitCopyHold(story: OpenStory) {
  * the next press lands while it grows. Under Reduce Motion it holds the
  * cross-fade. Returns the held motion; release it with `releaseAnimations`.
  */
-async function openHeldWhileGrowing(page: Page, story: OpenStory) {
+async function openHeldWhileGrowing(page: Page, story: OpenStory, waitMs = 0) {
   const armed = await armHold(page, story.layer);
   await openWithTap(story);
+  await page.waitForTimeout(waitMs);
   return armed.held();
 }
 
