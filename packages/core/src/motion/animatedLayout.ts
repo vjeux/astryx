@@ -231,6 +231,26 @@ function safeAnimate(
     return null;
   }
   ours.add(animation);
+  // NOT FOR LANDING: the mutant drives every animation from
+  // requestAnimationFrame on the main thread, so a block freezes it.
+  const view = element.ownerDocument.defaultView;
+  if (view != null) {
+    const driven = animation;
+    driven.pause();
+    const begin = view.performance.now();
+    const end = Number(driven.effect?.getComputedTiming().endTime ?? 0);
+    const tick = () => {
+      const elapsed = view.performance.now() - begin;
+      if (elapsed >= end) {
+        driven.finish();
+        return;
+      }
+      driven.currentTime = elapsed;
+      view.requestAnimationFrame(tick);
+    };
+    view.requestAnimationFrame(tick);
+    return driven;
+  }
   // The animation starts on the document timeline's current time, not on the
   // next frame. So a retargeted glide keeps moving through the frame it is
   // replaced in. After a block since that frame, Chromium's timeline still
