@@ -175,6 +175,26 @@ async function clickThenBlock(
               while (now - from < duration) {
                 now = performance.now();
               }
+              // NOT FOR LANDING: the page's animations finish 6 s late, as
+              // on a starved main thread.
+              const late = document
+                .getAnimations()
+                .filter(
+                  a =>
+                    !(
+                      (a.effect as KeyframeEffect | null)?.target?.closest(
+                        '[data-harness-control]',
+                      ) ?? false
+                    ),
+                );
+              for (const animation of late) {
+                animation.pause();
+              }
+              setTimeout(() => {
+                for (const animation of late) {
+                  animation.play();
+                }
+              }, 6000);
               (window as unknown as {busy: unknown}).busy = {
                 busy: {
                   from: performance.timeOrigin + from,
