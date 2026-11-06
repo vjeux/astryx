@@ -259,10 +259,14 @@ export function useContextMenuPressFeedback(
           const next = isMarkedOn();
           if (next !== isPressed) {
             isPressed = next;
-            clearTimeout(onsetTimer);
             if (next) {
+              clearTimeout(onsetTimer);
               markedAt = performance.now();
               growAtOnset(false);
+            } else if (!isFollowed.current()) {
+              // A finger the recognizer still follows keeps its onset, past
+              // the machine's shorter travel.
+              clearTimeout(onsetTimer);
             }
           }
         },
