@@ -6,9 +6,9 @@
  *   scroll-right button, real touches from the interaction harness, and a
  *   per-frame page sampler
  * @output Proves an edge button press at rest moves the row through the
- *   paging. The press holds the row and lands on the next page. A still touch
- *   that catches the move leaves the row on a page after the lift. The press
- *   reads the row before its first write, so its own task lays out nothing.
+ *   paging. The press holds the row, lands on the next page, and leaves no
+ *   item a layer once the row rests. A still touch that catches the move
+ *   leaves the row on a page. The press's own task lays out nothing.
  * @position Interaction proofs for Carousel's scroll calls under snap paging,
  *   run in Chromium and WebKit
  */
@@ -62,6 +62,15 @@ const isHeld = async (scroller: Locator) =>
     ),
   );
 
+/** The items that carry an inline will-change, by index and value. */
+const layeredItems = async (scroller: Locator) =>
+  scroller.evaluate(el =>
+    Array.from(el.children)
+      .map((child, i) => [i, (child as HTMLElement).style.willChange] as const)
+      .filter(([, value]) => value !== '')
+      .map(([i, value]) => `${i}:${value}`),
+  );
+
 // Records on every frame whether the paging holds the row.
 async function sampleHeld(scroller: Locator): Promise<void> {
   await scroller.evaluate(row => {
@@ -102,6 +111,15 @@ test('a scroll-right press at rest moves the row through the paging, onto the ne
   const at = await scroller.evaluate(el => Math.abs(el.scrollLeft));
   expect(Math.abs(at - nearestStop(stops, at)), String(at)).toBeLessThan(0.5);
   expect(at).toBeGreaterThan(0.5);
+  // The animator keeps the motion's layers a short while after the row
+  // rests, then takes them away. From then on no item keeps a will-change.
+  await expect
+    .poll(async () => layeredItems(scroller), {timeout: 2000})
+    .toEqual([]);
+  for (let read = 0; read < 20; read += 1) {
+    await page.waitForTimeout(100);
+    expect(await layeredItems(scroller)).toEqual([]);
+  }
 });
 
 test('a still touch that catches the press move leaves the row on a page after the lift', async ({
