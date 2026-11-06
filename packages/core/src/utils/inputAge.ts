@@ -12,8 +12,8 @@
 /**
  * How long ago the input at `time` happened, on the page's clock
  * (`performance.now()`, the base of `event.timeStamp`). A busy main thread
- * runs a listener late. A time that is not on that clock counts as now: zero,
- * one ahead of now, or an epoch time such as a synthetic event's.
+ * runs a listener late. A time off that clock counts as now: zero, one ahead
+ * of now, or an epoch time, as a DOM emulator stamps it.
  */
 export function msSinceInput(time: number): number {
   const now =
