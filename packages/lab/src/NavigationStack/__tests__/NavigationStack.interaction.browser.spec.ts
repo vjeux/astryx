@@ -50,6 +50,7 @@ import {
   withStorybook,
   writeEvidence,
   type TouchDriver,
+  watchAnimations,
 } from '@astryxdesign/interaction-harness';
 
 const storybook = withStorybook(test);
@@ -2381,3 +2382,46 @@ test(
     expect(Math.max(...frames.map(f => f.top))).toBeGreaterThan(width * 0.5);
   },
 );
+
+// Evidence only, not for landing: the push after a tap, on the page's first
+// contact with the harness, read by an unwatched wait and by a watch.
+test('evidence: tap General, then an unwatched wait (not for landing)', async ({
+  page,
+}) => {
+  const {driver} = await openStack(page, 'settings');
+  const recorderBefore = await page.evaluate(
+    () =>
+      (window as unknown as {__harnessAnimations?: unknown})
+        .__harnessAnimations != null,
+  );
+  await driver.tap(await rowCenter(page, 'General'));
+  try {
+    await waitForAnimation(card(page, 'screen-General'), {minProgressMs: 16});
+  } catch (error) {
+    const seen = await page.evaluate(() => {
+      const recorder = (
+        window as unknown as {
+          __harnessAnimations?: {log: {ancestors: Element[]}[]};
+        }
+      ).__harnessAnimations;
+      const element = document.querySelector(
+        '[data-navigation-screen="screen-General"]',
+      );
+      return recorder == null || element == null
+        ? 'no recorder or no card'
+        : `${recorder.log.filter(e => e.ancestors.includes(element)).length} runs on the card in the log`;
+    });
+    throw new Error(
+      `recorder before the tap: ${recorderBefore}; ${seen}; ${String(error).slice(0, 100)}`,
+    );
+  }
+});
+
+test('evidence: watch, tap General, started({minProgressMs: 16}) (not for landing)', async ({
+  page,
+}) => {
+  const {driver} = await openStack(page, 'settings');
+  const push = await watchAnimations(card(page, 'screen-General'));
+  await driver.tap(await rowCenter(page, 'General'));
+  await push.started({minProgressMs: 16});
+});
