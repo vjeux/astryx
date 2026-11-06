@@ -915,6 +915,7 @@ test.describe('frame evidence', () => {
   test('against a compositor-only control in the same window, a compositor animation passes and a rAF one fails, whatever the screencast rate', async ({
     page,
   }, testInfo) => {
+    const started = Date.now();
     await busyFixture(page);
     const box = page.locator('#box');
     await markElement(box, {mode: 'outline'});
@@ -979,9 +980,8 @@ test.describe('frame evidence', () => {
       // `before` holds the steps the page set in the 800 ms before the block.
       // `unset` lists the frames in the judged part that show a new position
       // set at none of them. On a starved runner, a late frame showed a step
-      // at most 261 ms old. The 800 ms of steps span 280 px of the 560 px
-      // loop. A step from inside the 700 ms block lies at most 238 px past
-      // them, so the two never meet.
+      // at most 261 ms old. The page sets no step inside the block, which its
+      // log shows (`inBlock`), so a frame there cannot show one.
       const steps =
         driver === 'raf'
           ? await page.evaluate(
@@ -1015,12 +1015,38 @@ test.describe('frame evidence', () => {
         }
         shown = y;
       }
-      return {proof, unset: driver === 'raf' ? unset : null};
+      const inBlock = steps.filter(
+        s => s.t > window.from && s.t < window.to,
+      ).length;
+      return {proof, unset: driver === 'raf' ? unset : null, inBlock};
     };
 
+    const armStart = Date.now();
     const {proof: compositor} = await run('compositor');
+    const armMs = Date.now() - armStart;
     expect(compositor.verdict.failures, compositor.summary).toEqual([]);
     expect(compositor.control?.moved).toBeGreaterThanOrEqual(4);
+
+    // A loaded runner presents fewer frames, so the same block holds fewer of
+    // the frames the other arms judge. Each of their blocks is sized from the
+    // cadence this arm measured, to hold eight of them, and never shorter
+    // than on an idle runner. Each arm also takes at most this arm's work
+    // around its block. A machine too slow for them to fit in the test's time
+    // fails here, not at its timeout.
+    const slowNth = 6;
+    const rafMs = Math.max(700, 8 * compositor.cadenceMs);
+    const slowMs = Math.max(1400, 8 * slowNth * compositor.cadenceMs);
+    const needMs =
+      Date.now() - started + rafMs + 2 * slowMs + 3 * (armMs - 700);
+    testInfo.annotations.push({
+      type: 'busy-main-thread blocks',
+      description: `a frame every ${compositor.cadenceMs.toFixed(0)} ms: blocks of ${rafMs.toFixed(0)} and ${slowMs.toFixed(0)} ms, about ${(needMs / 1000).toFixed(0)} s in all`,
+    });
+    if (slowMs > 30_000 || needMs > testInfo.timeout - 5000) {
+      throw new Error(
+        `a frame every ${compositor.cadenceMs.toFixed(0)} ms needs blocks of ${(slowMs / 1000).toFixed(1)} s, about ${(needMs / 1000).toFixed(0)} s in all, past ${slowMs > 30_000 ? 'the 30 s cap' : `the test's ${(testInfo.timeout / 1000).toFixed(0)} s`}: this machine presents too little to judge in time`,
+      );
+    }
 
     // The mutant: a main-thread animation freezes while the control moves.
     // The compositor can still present, inside the block, steps the page set
@@ -1028,18 +1054,19 @@ test.describe('frame evidence', () => {
     // Every new position it shows there is a step set shortly before the
     // block, never a step from inside it. How many frames the verdict counts
     // as moved depends on how many such steps a loaded runner presents.
-    const raf = await run('raf');
+    const raf = await run('raf', 1, rafMs);
+    expect(raf.inBlock, raf.proof.summary).toBe(0);
     expect(raf.proof.verdict.pass, raf.proof.summary).toBe(false);
     expect(raf.proof.verdict.failures.join('\n')).toMatch(
       /longest stall .* longer than the control's/,
     );
     expect(raf.unset, raf.proof.summary).toEqual([]);
 
-    // A slower screencast samples the control and the component alike; a
-    // 1.4 s block keeps the control's four frames on a loaded runner.
-    const {proof: slow} = await run('compositor', 6, 1400);
+    // A slower screencast samples the control and the component alike.
+    const {proof: slow} = await run('compositor', slowNth, slowMs);
     expect(slow.verdict.failures, slow.summary).toEqual([]);
-    const slowRaf = await run('raf', 6, 1400);
+    const slowRaf = await run('raf', slowNth, slowMs);
+    expect(slowRaf.inBlock, slowRaf.proof.summary).toBe(0);
     expect(slowRaf.proof.verdict.pass, slowRaf.proof.summary).toBe(false);
     await control.remove();
   });
