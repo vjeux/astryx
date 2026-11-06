@@ -3604,15 +3604,8 @@ export function createMotionEngine(
         );
         Object.assign(next, plan.next);
       } else {
-        if (animateOptions.additive !== true && animateOptions.start == null) {
-          kept = curvesToTakeOver(
-            properties,
-            targets,
-            transition.spring,
-            velocities,
-            time,
-          );
-        }
+        // MUTANT (evidence, not for landing): no take-over.
+        void curvesToTakeOver;
         for (const property of properties) {
           if (kept.has(property)) {
             continue;
