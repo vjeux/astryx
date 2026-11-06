@@ -457,8 +457,9 @@ function isScrollContact(recognizer: PanGestureRecognizer): boolean {
  *   The track then settles on UIKit's paging integrator (`solvePaging`),
  *   baked into keyframes.
  * - A finger that lands on a settling pager catches it `paging.catchStopMs`
- *   after the touch, as in UIKit. A drag catches it at once, from the value
- *   on screen. While the pan is off, a touch does not stop the motion.
+ *   after the touch, as in UIKit. A finger stops a `goTo` move at once. A
+ *   drag catches it at once, from the value on screen. While the pan is off,
+ *   a touch does not stop the motion.
  * - `goTo` runs the curve of `setContentOffset(_:animated:)` and cancels a
  *   drag in progress. It reads that duration and curve through
  *   `resolveMotion`.
@@ -1103,22 +1104,26 @@ export function createPager(
   function onCatch(recognizer: LongPressGestureRecognizer): void {
     if (recognizer.state === 'began') {
       holdSelection(true);
-      // A mouse keeps its click: touch work leaves fine pointers as they were.
-      if (isReleaseSettle && catcher.pointerType !== 'mouse') {
+      // A mouse keeps its click and its catch delay: touch work leaves fine
+      // pointers as they were.
+      const isMouse = catcher.pointerType === 'mouse';
+      if (isReleaseSettle && !isMouse) {
         catcher.takeFromContent();
       }
       clearCatchTimer();
       caughtSettle = false;
+      if (!isReleaseSettle && !isMouse) {
+        // UIKit stops an animated `setContentOffset` at the touch itself.
+        catchSettle();
+        return;
+      }
       isCatchTimerArmed = true;
       catcher.armCatch(paging.catchStopMs, () => {
         if (!isCatchTimerArmed) {
           return;
         }
         isCatchTimerArmed = false;
-        if (settleHandle != null && !isDragging) {
-          stopSettle();
-          caughtSettle = true;
-        }
+        catchSettle();
       });
       return;
     }
@@ -1143,6 +1148,13 @@ export function createPager(
         setTarget(next, 'drag', true);
         settleFrom(position, 0, catcher.pointerType === 'touch');
       }
+    }
+  }
+
+  function catchSettle(): void {
+    if (settleHandle != null && !isDragging) {
+      stopSettle();
+      caughtSettle = true;
     }
   }
 
