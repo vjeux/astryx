@@ -5,8 +5,8 @@
  * @input vitest and tabBarModel.ts
  * @output Checks TabBar's geometry against UIKit's layouts measured on iOS
  *   26.2: the capsule's width, the items' width and centres, and right to
- *   left. Also the item a lift commits, the rubber band, the lifted lens and
- *   the copy's counter-transform.
+ *   left. Also the rubber band, the lifted lens and the copy's
+ *   counter-transform.
  * @position Testing; pure math, no DOM
  */
 

@@ -1040,9 +1040,7 @@ test('right to left, a drag runs from the first tab leftward and commits where i
   expect(Math.abs((await lensCenterX(page)) - profile.x)).toBeLessThan(0.5);
 });
 
-test('a lift between two items commits the nearer one (an exact tie goes to the leading one: tabBarModel.test.ts)', async ({
-  page,
-}) => {
+test('a lift between two items commits the nearer one', async ({page}) => {
   const {driver} = await openBar(page);
   const library = await itemCenter(page, 'Library');
   const browse = await itemCenter(page, 'Browse');

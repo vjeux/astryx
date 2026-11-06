@@ -12,7 +12,8 @@
  *   action is skipped; a second finger or the window losing focus cancels;
  *   inside a scroller a flick is left to the scroller; a mouse under a fine
  *   pointer is tracked like a finger; the shared tracker does the tracking;
- *   a caller's no-paint option and press callbacks; no render per move
+ *   no render per move. Also: a caller's no-paint option and press
+ *   callbacks.
  * @position jsdom tests of packages/core/src/hooks/useActionGroupTracking.ts
  */
 

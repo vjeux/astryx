@@ -342,8 +342,8 @@ export function useTabBarLens({
     if (element == null || root == null) {
       return;
     }
-    // Read before anything moves: the capsule's layout box (its flex is a
-    // transform, which layout ignores) placed by its unscaled parent.
+    // The capsule's layout box is read before anything moves. Its flex is a
+    // transform, which layout ignores, so its unscaled parent places it.
     const rootBox = root.getBoundingClientRect();
     const left = rootBox.left + element.offsetLeft;
     const isRtl = isRtlElement(element);
