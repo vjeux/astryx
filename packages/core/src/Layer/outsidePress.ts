@@ -5,7 +5,7 @@
 /**
  * @file outsidePress.ts
  * @input Pointer presses on a document and on the shadow roots around a
- *   given root; with closesOnPan, pan moves from core's input stream; with
+ *   given root. With closesOnPan, pan moves from core's input stream. With
  *   pressTypes, the presses' bubbling mousedown
  * @output watchOutsidePress; useOutsidePress, one watch per component;
  *   noteOutsideDismissal and outsideDismissalCount, a per-document count of
