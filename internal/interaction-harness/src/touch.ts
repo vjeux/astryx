@@ -627,6 +627,10 @@ async function playSteps(
     played.push({...step, dispatchedAt, returnedAt: Date.now(), timestamp});
     const watched = performance.now();
     await onEvent?.(step, index);
+    // NOT FOR LANDING: a slower runner's round trip after onEvent's page work.
+    if (onEvent != null && performance.now() - watched > 2) {
+      await new Promise(resolve => setTimeout(resolve, 60));
+    }
     onEventMs.push(performance.now() - watched);
   }
   // Where the page stamps touches on arrival, each event reached it by its
