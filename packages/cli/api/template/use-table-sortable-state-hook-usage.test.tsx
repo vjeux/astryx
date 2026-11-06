@@ -9,11 +9,26 @@
 
 import {act} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import UseTableSortableStateHookUsage from '../../assets/templates/blocks/components/Table/useTableSortableStateHookUsage';
 
 (globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT =
   true;
+
+beforeAll(() => {
+  // The Table's cells render ContextMenu, whose presentation reads the
+  // pointer through matchMedia. jsdom has no matchMedia.
+  window.matchMedia ??= ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  })) as typeof window.matchMedia;
+});
 
 let root: Root | null = null;
 let container: HTMLElement;
