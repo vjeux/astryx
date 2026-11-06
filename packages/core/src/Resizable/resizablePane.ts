@@ -19,6 +19,7 @@ import {
   springGlide,
 } from '../motion/animatedLayout';
 import {springs} from '../motion/uikit/springs';
+import {isIosWebKit} from '../utils/touchQueries';
 import type {ResizableProps} from './useResizable';
 
 export type {LayoutEdge};
@@ -334,6 +335,80 @@ export interface PaneReveal {
 
 type EdgeReport = ReturnType<typeof reportLayoutEdge>;
 
+/** The custom property whose writes make WebKit resolve a moving element. */
+const RESOLVE_PROPERTY = '--astryx-presented';
+
+/**
+ * While the slide in `row` runs, and for two frames after, a finger on a
+ * handle where it shows takes the handle, and the page does not take the
+ * touch as a pan. iOS WebKit hit-tests a moving element where its motion
+ * started; a style write makes it resolve the element where it is drawn
+ * (motion/presentation.ts), so each frame writes one on what moves. Chromium's
+ * compositor can read a moved handle's touch-action from where it was until it
+ * paints again, so a touch on a handle cancels its default. Returns the stop.
+ */
+function followPressesThroughSlide(row: Element): () => void {
+  const doc = row.ownerDocument;
+  const view = doc.defaultView;
+  if (view == null) {
+    return () => {};
+  }
+  const resolvesWhereDrawn = isIosWebKit(view);
+  const movers = (): HTMLElement[] =>
+    doc.getAnimations().flatMap(animation => {
+      const target =
+        animation.playState === 'running' &&
+        animation.effect instanceof KeyframeEffect
+          ? animation.effect.target
+          : null;
+      return target instanceof view.HTMLElement && row.contains(target)
+        ? [target]
+        : [];
+    });
+  let frame = 0;
+  let resolutions = 0;
+  let stillFrames = 0;
+  const step = () => {
+    const moving = movers();
+    stillFrames = moving.length === 0 ? stillFrames + 1 : 0;
+    if (stillFrames > 2) {
+      stop();
+      return;
+    }
+    if (resolvesWhereDrawn && moving.length > 0) {
+      resolutions += 1;
+      for (const element of moving) {
+        element.style.setProperty(RESOLVE_PROPERTY, String(resolutions));
+      }
+    }
+    frame = view.requestAnimationFrame(step);
+  };
+  const onTouchStart = (event: TouchEvent) => {
+    const handle =
+      event.target instanceof view.Element
+        ? event.target.closest('[role="separator"]')
+        : null;
+    if (handle != null && row.contains(handle)) {
+      event.preventDefault();
+    }
+  };
+  doc.addEventListener('touchstart', onTouchStart, {
+    capture: true,
+    passive: false,
+  });
+  step();
+  const stop = () => {
+    view.cancelAnimationFrame(frame);
+    doc.removeEventListener('touchstart', onTouchStart, {capture: true});
+    if (resolutions > 0) {
+      for (const element of row.querySelectorAll<HTMLElement>('*')) {
+        element.style.removeProperty(RESOLVE_PROPERTY);
+      }
+    }
+  };
+  return stop;
+}
+
 export function createPaneReveal(getRow: () => Element | null): PaneReveal {
   // Measured, waiting for the pane to render its new size; then played.
   let pending: {
@@ -342,6 +417,7 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
     widthBefore: RenderedPaneWidth;
   } | null = null;
   let played: EdgeReport | null = null;
+  let stopFollowing: (() => void) | null = null;
   const layout = createAnimatedLayout(getRow);
 
   const land = () => {
@@ -349,6 +425,8 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
     pending = null;
     played?.cancel();
     played = null;
+    stopFollowing?.();
+    stopFollowing = null;
   };
 
   return {
@@ -374,6 +452,9 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
       pending = null;
       played = report;
       report.animate();
+      stopFollowing?.();
+      const row = getRow();
+      stopFollowing = row == null ? null : followPressesThroughSlide(row);
     },
     land,
   };
