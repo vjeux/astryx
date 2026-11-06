@@ -2627,6 +2627,11 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       content.style.display = '';
       opening.animate();
       window.AnimatedLayout.playLayoutChange(layout, content);
+      // NOT FOR LANDING: one slow frame while the reveal runs.
+      const until = performance.now() + 400;
+      while (performance.now() < until) {
+        // the page's main thread is busy
+      }
       await new Promise<void>(resolve => {
         queueMicrotask(resolve);
       });
@@ -2723,6 +2728,11 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
         window.AnimatedLayout.playLayoutChange(layout, content, {
           edge: 'inline-end',
         });
+        // NOT FOR LANDING: one slow frame while the reveal runs.
+        const until = performance.now() + 400;
+        while (performance.now() < until) {
+          // the page's main thread is busy
+        }
         await new Promise<void>(resolve => {
           queueMicrotask(resolve);
         });
