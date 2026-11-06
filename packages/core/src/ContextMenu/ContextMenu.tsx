@@ -89,6 +89,7 @@ import {
   type ContextMenuTouchHandle,
 } from './ContextMenuTouchLayer';
 import {layerAnimations} from '../Layer/layerAnimations.stylex';
+import {layerViewportInset} from '../Layer/layerViewportInset.stylex';
 import {
   colorVars,
   spacingVars,
@@ -153,7 +154,12 @@ const styles = stylex.create({
     display: 'flex',
     flexDirection: 'column',
     gap: spacingVars['--spacing-0-5'],
-    maxHeight: '300px',
+    // 300 px, and no taller than its layer's block-size cap, which folds in
+    // the software keyboard's.
+    maxHeight: stylex.firstThatWorks(
+      `min(300px, ${layerViewportInset.maxBlockSize})`,
+      `min(300px, ${layerViewportInset.maxBlockSizeFallback})`,
+    ),
     overflowY: 'auto',
     '--_dropdown-menu-radius': radiusVars['--radius-container'],
     '--_dropdown-menu-padding': spacingVars['--spacing-1'],
@@ -574,7 +580,12 @@ export function ContextMenu({
     (e: React.KeyboardEvent) => {
       // A submenu flyout renders inline inside this menu; its key events bubble
       // up here. Let that level own them — only handle events from this level.
+      // Except Tab: each open flyout has closed itself as the key bubbled up,
+      // and the menu closes as Tab from one of its own rows would (APG).
       if (!ownsEvent(e)) {
+        if (e.key === 'Tab') {
+          closeMenu();
+        }
         return;
       }
       if (e.key === 'Enter' || e.key === ' ') {
