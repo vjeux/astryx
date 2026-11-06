@@ -30,7 +30,6 @@ import {focusOutlineProps} from '../utils/focusOutline.stylex';
 import {interactionOverlayStyles} from '../utils/interactionOverlay.stylex';
 import {rowPressLayerStyles} from '../privateAttributes/press.stylex';
 import {usePressFeedback} from '../hooks/usePressFeedback';
-import {useTreeExpansionMotion} from './useTreeExpansionMotion';
 import {
   cancelNestedTouchPress,
   hasInteractiveAncestor,
@@ -94,9 +93,9 @@ const styles = stylex.create({
     // collapse, so adjacent rows end up a full gap apart — and it rides the
     // `rowWrapper`, which carries no theme target, so the paintable
     // `tree-list-item` stays a pure paint seam (layout lives off it). The <li>s
-    // stay contiguous — the gap is padding INSIDE each <li>, not space between
-    // them — so the per-<li> connector guide can still span it and read as a
-    // continuous line (see TreeListBranches). The lever's default is a subtle
+    // stay contiguous, because the gap is padding inside each <li>, not space
+    // between them. So the per-row connector guide can still span it and read
+    // as one line (see TreeListBranches). The lever's default is a subtle
     // `--spacing-0-5` (2px, set on the tree-list root); a theme widens or closes
     // it via the `tree-list` target.
     paddingBlock: 'calc(var(--tree-list-row-gap, 0px) / 2)',
@@ -264,12 +263,7 @@ const styles = stylex.create({
     width: spacingVars['--spacing-4'],
     height: spacingVars['--spacing-4'],
     fontSize: spacingVars['--spacing-4'],
-    // Under Reduce Motion and a finger, the chevron lands at its new angle at
-    // once, as the group does not travel. A mouse keeps the turn.
-    transitionProperty: {
-      default: 'transform',
-      '@media (prefers-reduced-motion: reduce) and (pointer: coarse)': 'none',
-    },
+    transitionProperty: 'transform',
     transitionDuration: durationVars['--duration-fast'],
     transitionTimingFunction: easeVars['--ease-standard'],
   },
@@ -370,14 +364,6 @@ export interface TreeListItemInternalProps {
    * leave the tree's keyboard order at once.
    */
   isExiting?: boolean;
-  /**
-   * The tree holds an animated-layout handle, which plays the group's
-   * motion. Without one, the row plays its own touch expand, and a collapse
-   * removes the group at once.
-   */
-  hasAnimatedLayout?: boolean;
-  /** The tree's touch presentation, which the tree reads once for every row. */
-  isTouch?: boolean;
   onToggle?: (id: string) => void;
   density: TreeListDensity;
   /**
@@ -428,8 +414,6 @@ export function TreeListItem({
   ancestorsIsLast,
   isExpanded,
   isExiting = false,
-  hasAnimatedLayout = false,
-  isTouch = false,
   onToggle,
   density,
   variant,
@@ -439,10 +423,6 @@ export function TreeListItem({
   isTabbable,
 }: TreeListItemInternalProps) {
   const pressable = usePressFeedback();
-  const {groupRef} = useTreeExpansionMotion(isExpanded, {
-    isEnabled: !hasAnimatedLayout,
-    isTouch,
-  });
   const t = useComponentTranslator();
   const labelId = useId();
   const descriptionId = useId();
@@ -732,16 +712,16 @@ export function TreeListItem({
       data-tree-level={nestedLevel + 1}
       data-tree-disabled={isDisabled || undefined}
       {...focusOutlineProps.publishFocusVisibleVars(styles.wrapper)}>
-      {variant !== 'noGuides' && (
-        <div {...stylex.props(styles.treeBranches)}>
-          <TreeListBranches
-            ancestorsIsLast={ancestorsIsLast}
-            isLast={isLast}
-            nestedLevel={nestedLevel}
-          />
-        </div>
-      )}
       <div {...stylex.props(styles.rowWrapper)}>
+        {variant !== 'noGuides' && (
+          <div {...stylex.props(styles.treeBranches)}>
+            <TreeListBranches
+              ancestorsIsLast={ancestorsIsLast}
+              isLast={isLast}
+              nestedLevel={nestedLevel}
+            />
+          </div>
+        )}
         <div
           {...(isInteractive || (hasChildren && onClick == null)
             ? pressable
@@ -792,7 +772,6 @@ export function TreeListItem({
       </div>
       {(isExpanded || isExiting) && isRenderable(renderedChildren) && (
         <ul
-          ref={groupRef}
           role="group"
           data-tree-exiting={isExiting ? '' : undefined}
           {...stylex.props(styles.childGroup)}>

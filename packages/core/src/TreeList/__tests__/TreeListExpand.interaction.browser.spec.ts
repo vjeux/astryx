@@ -2,13 +2,14 @@
 
 /**
  * @file TreeListExpand.interaction.browser.spec.ts
- * @input The built TreeList stories, real touch input, the interaction
- *   harness, and the theme's timing tokens as the page computes them
- * @output Proofs for a TreeList row's expand and collapse under a finger. They
- *   cover the theme's timing, the collapse, a busy main thread, Reduce Motion,
- *   right to left, and frame cost.
- * @position Interaction evidence for TreeList/useTreeExpansionMotion.ts, with
- *   an Android case and a mouse case
+ * @input The built TreeList stories, real touch and mouse input, and the
+ *   interaction harness
+ * @output Proofs for a TreeList row's expand and collapse. Under a finger the
+ *   rows below glide on the shared layout glide, and the group fades on the
+ *   same timing. No frame shows a blank band, and the guide lines show and
+ *   hide with the group. A mouse changes at once.
+ * @position Interaction evidence for TreeList's expansion motion, with an
+ *   Android case, a mouse case and an animatedLayout handle case
  */
 
 import {
@@ -22,98 +23,28 @@ import {
   armHold,
   blockMainThread,
   busyWindowProof,
-  compareCurve,
-  countBetween,
-  cubicBezier,
-  holdAnimations,
   MARKER_RGB,
   openStory,
   releaseAnimations,
   seekAnimations,
   startCompositorTrace,
   startScreencast,
-  timeline,
   touchDriver,
-  traceRendering,
   trackMarker,
-  waitForAnimation,
   withStorybook,
   writeEvidence,
-  type HeldAnimation,
 } from '@astryxdesign/interaction-harness';
 import {expectReducedMotionCrossFade} from '../../List/__tests__/reducedMotion';
-import {
-  blockBehindBeacon,
-  installBeacon,
-  sampleVideoPoints,
-} from '../../List/__tests__/rowPixels';
 
 const storybook = withStorybook(test);
 
 const STORY = 'core-treelist--basic';
 
-/** CSS easing keywords, as cubic-bézier control points. */
-const KEYWORDS: Record<string, number[]> = {
-  linear: [0, 0, 1, 1],
-  ease: [0.25, 0.1, 0.25, 1],
-  'ease-in': [0.42, 0, 1, 1],
-  'ease-out': [0, 0, 0.58, 1],
-  'ease-in-out': [0.42, 0, 0.58, 1],
-};
-
-/** The theme's timing for the expand, as the page computes it. */
-interface Timing {
-  readonly ms: number;
-  readonly easing: string;
-  /** Progress (0 → 1) `t` ms after the start. */
-  readonly progress: (t: number) => number;
-  /** The fastest progress, as a share of the travel per ms. */
-  readonly peakRate: number;
-}
-
-/**
- * The chevron's transition: the theme's duration and easing tokens, which the
- * group's slide reads too.
- */
-async function themeTiming(page: Page): Promise<Timing> {
-  const {duration, easing} = await parts(page).chevron.evaluate(el => {
-    const style = getComputedStyle(el);
-    return {
-      duration: style.transitionDuration.split(',')[0]?.trim() ?? '',
-      easing:
-        style.transitionTimingFunction.split(/,(?![^(]*\))/)[0]?.trim() ?? '',
-    };
-  });
-  const ms = duration.endsWith('ms')
-    ? Number.parseFloat(duration)
-    : Number.parseFloat(duration) * 1000;
-  const points =
-    KEYWORDS[easing] ??
-    /cubic-bezier\(([^)]+)\)/.exec(easing)?.[1].split(',').map(Number);
-  if (!(ms > 0) || points == null || points.length !== 4) {
-    throw new Error(`no theme timing: ${duration} ${easing}`);
-  }
-  const [x1, y1, x2, y2] = points;
-  const ease = cubicBezier(x1, y1, x2, y2);
-  const progress = (t: number) => ease(Math.min(1, Math.max(0, t / ms)));
-  let peakRate = 0;
-  for (let t = 0; t < ms; t += 1) {
-    peakRate = Math.max(peakRate, Math.abs(progress(t + 1) - progress(t)));
-  }
-  return {ms, easing, progress, peakRate};
-}
-
 /** A tree row by its item id (an ancestor row contains its label too). */
 const treeItem = (page: Page, id: string) =>
   page.locator(`[role="treeitem"][data-tree-id="${id}"]`);
 
-/** The group's last row: the first part of the sliding block to show. */
-const lastChild = (page: Page) =>
-  treeItem(page, 'components')
-    .locator(':scope > [role="group"] > [role="treeitem"]')
-    .last();
-
-/** The toggle of the "components" folder, its group, a child and a row below. */
+/** The "components" folder's toggle, group and chevron, a child, a row below. */
 function parts(page: Page) {
   const parent = treeItem(page, 'components');
   return {
@@ -127,90 +58,6 @@ function parts(page: Page) {
     ),
     child: treeItem(page, 'button'),
     below: treeItem(page, 'app'),
-  };
-}
-
-/** How many tree rows and chevron parts show at less than full opacity. */
-const hiddenParts = async (page: Page) =>
-  page.evaluate(
-    () =>
-      [
-        ...document.querySelectorAll(
-          '[role="treeitem"], [data-tree-toggle] svg, [data-tree-toggle] svg *',
-        ),
-      ].filter(element => getComputedStyle(element).opacity !== '1').length,
-  );
-
-/**
- * Holds the expansion's own motion: the group's slide and the chevron's turn.
- * A tap on the row also plays the row's press release. A hold of the whole
- * page takes it too, and seeks then count from its earlier start.
- */
-async function holdExpansion(page: Page) {
-  const {group, chevron} = parts(page);
-  return [
-    ...(await holdAnimations(page, group)),
-    ...(await holdAnimations(page, chevron)),
-  ];
-}
-
-/**
- * Arms the page to hold the expansion as soon as it runs. Under the folder,
- * it holds the group's slide, the chevron's turn and the row's press release.
- * A hold the test sends once the slide runs lands later on a busy machine,
- * and the short slide can end first. Two animations running means the
- * expansion runs: the press release can start a frame before it.
- */
-async function armExpansionHold(parent: Locator) {
-  return armHold(parent.page(), parent, {count: 2});
-}
-
-/**
- * How far each part's motion starts after the held origin, ms: the slide is
- * a script animation, and the chevron's turn a CSS transition. A seek to t
- * moves each to its own t minus this offset.
- */
-function startsOf(held: ReadonlyArray<HeldAnimation>) {
-  const offset = (kind: string) =>
-    held.find(animation => animation.kind === kind)?.offsetMs ?? 0;
-  return {slide: offset('Animation'), turn: offset('CSSTransition')};
-}
-
-/**
- * Marks the group's last row with the harness's chip as the commit inserts
- * it, so the marker shows from the slide's first frame. A mark the test sends
- * after the tap can land after a block the page has started. Returns the
- * call that removes it.
- */
-async function markLastChildOnInsert(page: Page): Promise<() => Promise<void>> {
-  await treeItem(page, 'components').evaluate(
-    (folder, rgb) => {
-      const observer = new MutationObserver(() => {
-        const last = folder.querySelector<HTMLElement>(
-          ':scope > [role="group"] > [role="treeitem"]:last-child',
-        );
-        if (last == null) {
-          return;
-        }
-        observer.disconnect();
-        // The chip markElement draws: 16 px, 8 px in from the row's corner.
-        last.style.position = 'relative';
-        const chip = document.createElement('div');
-        chip.setAttribute('data-harness-marker-chip', 'tree-last');
-        chip.setAttribute('aria-hidden', 'true');
-        chip.style.cssText = `position:absolute;top:8px;left:8px;width:16px;height:16px;background:rgb(${rgb.join(',')});z-index:2147483647;pointer-events:none;`;
-        last.append(chip);
-      });
-      observer.observe(folder, {childList: true, subtree: true});
-    },
-    [...MARKER_RGB],
-  );
-  return async () => {
-    await page.evaluate(() =>
-      document
-        .querySelector('[data-harness-marker-chip="tree-last"]')
-        ?.remove(),
-    );
   };
 }
 
@@ -247,8 +94,8 @@ async function tapToggle(page: Page) {
   await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
 }
 
-async function open(page: Page) {
-  await openStory(page, storybook(), STORY);
+async function open(page: Page, story = STORY) {
+  await openStory(page, storybook(), story);
   const touch = await page.evaluate(
     () => matchMedia('(pointer: coarse)').matches,
   );
@@ -256,264 +103,321 @@ async function open(page: Page) {
   await expect(parts(page).below).toBeVisible();
 }
 
-test('a busy first frame delays the expand instead of skipping into it', async ({
-  page,
-}, testInfo) => {
-  await open(page);
-  const {toggle, parent} = parts(page);
-  // The toggle's handler commits the expand and starts its slide. Then 150 ms
-  // of script hold the main thread before the first frame. The slide starts
-  // when the browser commits it. So the first frame after the block shows the
-  // child near where it started, a group's height up from its place.
-  const result = await parent.evaluate(
-    async (folder, toggleButton) =>
-      new Promise<{
-        first: number;
-        pending: boolean;
-        startedAfterBlock: boolean;
-      }>(resolve => {
-        // The expand's commit inserts the group; this observer runs right
-        // after it, in the same task, before any frame.
-        const observer = new MutationObserver(() => {
-          observer.disconnect();
-          const row = folder.querySelector<HTMLElement>(
-            '[data-tree-id="button"]',
-          );
-          if (row == null) {
-            throw new Error('no child');
-          }
-          // The product's part: the motions it just started carry no start
-          // of their own; the browser sets it when it commits them.
-          const motions = row.getAnimations();
-          const pending =
-            motions.length > 0 &&
-            motions.every(animation => animation.startTime == null);
-          const until = performance.now() + 150;
-          while (performance.now() < until) {
-            // Busy: the main thread is held.
-          }
-          // The first frame due after the block: a frame scheduled before
-          // it runs with that earlier time.
-          const read = () => {
-            if ((document.timeline.currentTime as number) < until) {
-              requestAnimationFrame(read);
-              return;
-            }
-            const value = getComputedStyle(row).translate;
-            const [, y = '0px'] =
-              value === 'none' || value === '' ? ['0px'] : value.split(' ');
-            resolve({
-              first: Number.parseFloat(y),
-              pending,
-              // Where the browser put the start: after the block, or (a
-              // frame stamped when it was due, motion/animator.ts, known
-              // limits) inside it.
-              startedAfterBlock: motions.every(
-                animation => Number(animation.startTime) >= until - 1,
-              ),
-            });
-          };
-          requestAnimationFrame(read);
-        });
-        const tree = folder.closest('[role="tree"]');
-        if (tree != null) {
-          observer.observe(tree, {childList: true, subtree: true});
-        }
-        (toggleButton as HTMLElement).click();
-      }),
-    await toggle.elementHandle(),
-  );
-  const height = await parts(page).group.evaluate(
-    el => el.getBoundingClientRect().height,
-  );
-  expect(result.pending).toBe(true);
-  const timing = await themeTiming(page);
-  if (result.startedAfterBlock) {
-    // At most two frames into the theme's curve. A start pinned before the
-    // block would show the slide nearly done.
-    expect(result.first).toBeLessThan(-(1 - timing.progress(34)) * height);
-  } else {
-    // This browser stamped the frame that started the motions with a time
-    // inside the block. So no first frame can show the start that the commit
-    // would set. What the component controls is asserted above. WebKit does
-    // this (motion/animator.ts, known limits).
-    testInfo.annotations.push({
-      type: 'start stamped inside the block',
-      description: `first frame at ${result.first.toFixed(1)} px of ${(-height).toFixed(1)} px`,
-    });
-  }
-  await expect.poll(async () => translateY(parts(page).child)).toBe(0);
-});
-
-test('a collapse from rest removes the group at its commit, and the chevron’s turn back starts after a busy first frame instead of skipping into it', async ({
-  page,
-}) => {
-  await open(page);
-  const {toggle, parent, child, chevron} = parts(page);
-  const timing = await themeTiming(page);
-  await tapToggle(page);
-  await expect(child).toBeVisible();
-  await expect.poll(async () => translateY(child)).toBe(0);
-  await expect.poll(async () => rotation(chevron)).toBeCloseTo(90, 1);
-  // The collapse's commit removes the group. Then 150 ms of script hold the
-  // main thread before the first frame. The chevron's turn back starts when
-  // the browser styles it, so the first frame after the block shows it near
-  // the expanded angle.
-  const result = await parent.evaluate(
-    async (folder, toggleButton) =>
-      new Promise<{rows: number; angle: number}>(resolve => {
-        const observer = new MutationObserver(() => {
-          if (folder.getAttribute('aria-expanded') !== 'false') {
-            return;
-          }
-          observer.disconnect();
-          const rows = folder.querySelectorAll(
-            ':scope > [role="group"] > [role="treeitem"]',
-          ).length;
-          const until = performance.now() + 150;
-          while (performance.now() < until) {
-            // Busy: the main thread is held.
-          }
-          const read = () => {
-            if ((document.timeline.currentTime as number) < until) {
-              requestAnimationFrame(read);
-              return;
-            }
-            const glyph = folder.querySelector<HTMLElement>(
-              ':scope > :not([role="group"]) [data-tree-toggle] .astryx-icon',
-            );
-            const matrix = /matrix\(([^)]+)\)/.exec(
-              glyph == null ? '' : getComputedStyle(glyph).transform,
-            );
-            const [, b = 0, , d = 1] =
-              matrix == null ? [] : matrix[1].split(',').map(Number);
-            resolve({rows, angle: (Math.atan2(b, d) * 180) / Math.PI});
-          };
-          requestAnimationFrame(read);
-        });
-        observer.observe(folder, {attributes: true, subtree: true});
-        (toggleButton as HTMLElement).click();
-      }),
-    await toggle.elementHandle(),
-  );
-  expect(result.rows, JSON.stringify(result)).toBe(0);
-  // At most two frames into the turn back.
-  expect(result.angle, JSON.stringify(result)).toBeGreaterThan(
-    90 * (1 - timing.progress(34)),
-  );
-  await expect.poll(async () => rotation(chevron)).toBeCloseTo(0, 1);
-});
-
-test('a toggle mid-expand removes the group at once and turns the chevron around from its angle on screen', async ({
-  page,
-}) => {
-  await open(page);
-  const {chevron} = parts(page);
-  const timing = await themeTiming(page);
-  // Every frame's chevron turn, and the child's offset while it exists,
-  // from the first tap on, with the frame's time. On the first frame the
-  // block has come a quarter of its way and the chevron has turned, the page
-  // toggles the row again. So the chevron's turn around shows.
-  await page.evaluate(() => {
-    const samples: {t: number; y: number | null; turn: number}[] = [];
-    const w = window as unknown as {samples: typeof samples; turnedAt: number};
-    w.samples = samples;
-    w.turnedAt = -1;
-    const read = (t: number) => {
-      const row = document.querySelector<HTMLElement>(
-        '[data-tree-id="button"]',
-      );
-      const glyph = document.querySelector<HTMLElement>(
-        '[data-tree-id="components"] > :not([role="group"]) [data-tree-toggle] .astryx-icon',
-      );
-      if (glyph != null) {
-        let y: number | null = null;
-        if (row != null) {
-          const translate = getComputedStyle(row).translate;
-          const [, value = '0px'] =
-            translate === 'none' || translate === ''
-              ? ['0px']
-              : translate.split(' ');
-          y = Number.parseFloat(value);
-        }
-        // The chevron's angle on screen, from its transform.
-        const matrix = /matrix\(([^)]+)\)/.exec(
-          getComputedStyle(glyph).transform,
-        );
-        const [, b = 0, , d = 1] =
-          matrix == null ? [] : matrix[1].split(',').map(Number);
-        const turn = (Math.atan2(b, d) * 180) / Math.PI;
-        samples.push({t, y, turn});
-        const height =
-          row?.closest('[role="group"]')?.getBoundingClientRect().height ?? 0;
-        if (
-          w.turnedAt < 0 &&
-          y != null &&
-          y > -0.75 * height &&
-          y < 0 &&
-          turn > 1
-        ) {
-          w.turnedAt = samples.length - 1;
-          document
-            .querySelector<HTMLElement>(
-              '[data-tree-id="components"] > :not([role="group"]) [data-tree-toggle]',
-            )
-            ?.click();
-        }
-      }
-      requestAnimationFrame(read);
-    };
-    requestAnimationFrame(read);
-  });
-  await tapToggle(page);
-  // The page turned it around mid-expand: the group is gone, and the chevron
-  // comes back to rest.
-  await expect(parts(page).group).toHaveCount(0, {timeout: 3000});
-  await expect.poll(async () => rotation(chevron), {timeout: 3000}).toBe(0);
-  const {samples, turnedAt} = await page.evaluate(() => {
-    const w = window as unknown as {
-      samples: {t: number; y: number | null; turn: number}[];
-      turnedAt: number;
-    };
-    return {samples: [...w.samples], turnedAt: w.turnedAt};
-  });
-  expect(turnedAt, JSON.stringify(samples.slice(0, 6))).toBeGreaterThan(0);
-  // Frames came after the toggle, so the check below reads something.
-  expect(samples.length, JSON.stringify(samples.slice(-4))).toBeGreaterThan(
-    turnedAt + 1,
-  );
-  // The group left at the toggle: no frame after it shows a child.
-  expect(
-    samples.slice(turnedAt + 1).every(sample => sample.y == null),
-    JSON.stringify(samples.slice(turnedAt, turnedAt + 4)),
-  ).toBe(true);
-  // No jump: the chevron's turn around continues from the angle on screen,
-  // with no restart from either end. It is judged against the time between
-  // frames, so a frame that the browser delays may carry more travel. Between
-  // two frames it turns at most twice the curve's peak speed, plus a degree.
-  for (let i = 1; i < samples.length; i++) {
-    const elapsed = samples[i].t - samples[i - 1].t;
-    const context = `frame ${i}: ${JSON.stringify(samples.slice(Math.max(0, i - 2), i + 2))}`;
-    expect(
-      Math.abs(samples[i].turn - samples[i - 1].turn),
-      context,
-    ).toBeLessThan(2 * timing.peakRate * 90 * elapsed + 1);
-  }
-  // It did turn around: toward the expanded angle, then back to rest.
-  const start = samples[0].turn;
-  const farthest = Math.max(
-    ...samples.map(sample => Math.abs(sample.turn - start)),
-  );
-  expect(farthest, JSON.stringify(samples.slice(0, 8))).toBeGreaterThan(0.5);
-  expect(Math.abs((samples.at(-1)?.turn ?? start) - start)).toBeLessThan(0.5);
-});
+/** What one frame of an expand or a collapse shows, in px. */
+interface Frame {
+  readonly t: number;
+  /** The bottom of the folder's own row. */
+  readonly parentBottom: number;
+  /** The group's top, its height, the part of it that shows, its opacity. */
+  readonly group: {
+    readonly top: number;
+    readonly height: number;
+    readonly shown: number;
+    readonly opacity: number;
+  } | null;
+  /** The top of the first row below the folder, with its motion. */
+  readonly belowTop: number;
+  /** The bottom of the folder's last sibling's own row, with its motion. */
+  readonly lastBottom: number;
+  /** The lowest point the folder's guide column paints. */
+  readonly guideBottom: number;
+}
 
 /**
- * Expands the Animated layout story's "Photos" folder, whose TreeList takes
- * the story's handle. One frame later it reports what each running animation
- * moves: rows of the expanded group, other rows of the tree, or content after
- * the tree.
+ * Records every frame the page presents while `act` runs and for `ms` after.
+ * The part of the group that shows is its box less its clip and the slide of
+ * its rows. A blank band then reads as a gap above the row below.
  */
+async function recordFrames(
+  page: Page,
+  act: () => Promise<void>,
+  ms = 700,
+): Promise<Frame[]> {
+  await page.evaluate(() => {
+    const w = window as unknown as {__frames: unknown[]; __record: boolean};
+    w.__frames = [];
+    w.__record = true;
+    const item = (id: string) =>
+      document.querySelector<HTMLElement>(
+        `[role="treeitem"][data-tree-id="${id}"]`,
+      );
+    // A row's own box: the part of its item that holds its content.
+    const rowBox = (li: Element) =>
+      [...li.children].find(
+        child =>
+          child.tagName === 'DIV' &&
+          child.querySelector('.astryx-tree-list-item') != null,
+      ) ?? li;
+    const insetBottom = (clip: string) => {
+      const match = /inset\(([^)]*)\)/.exec(clip);
+      if (match == null) {
+        return 0;
+      }
+      const sides = match[1].trim().split(/\s+/).map(Number.parseFloat);
+      return sides.length >= 3 ? sides[2] : sides[0];
+    };
+    const translateOf = (el: Element) => {
+      const value = getComputedStyle(el).translate;
+      return value === 'none' || value === ''
+        ? 0
+        : Number.parseFloat(value.split(' ')[1] ?? '0');
+    };
+    const tick = () => {
+      const parent = item('components');
+      const below = item('app');
+      const last = item('index');
+      if (parent == null || below == null || last == null) {
+        return;
+      }
+      const group = parent.querySelector<HTMLElement>(
+        ':scope > [role="group"]',
+      );
+      let shownGroup = null;
+      if (group != null) {
+        const box = group.getBoundingClientRect();
+        const style = getComputedStyle(group);
+        const first = group.querySelector(':scope > [role="treeitem"]');
+        const slide = first == null ? 0 : Math.min(0, translateOf(first));
+        shownGroup = {
+          top: box.top,
+          height: box.height,
+          shown: Math.max(
+            0,
+            Math.min(box.height, box.height - insetBottom(style.clipPath)) +
+              slide,
+          ),
+          opacity: Number(style.opacity),
+        };
+      }
+      const column = below
+        .querySelector('.astryx-tree-list-guide')
+        ?.getBoundingClientRect();
+      const columnX = column == null ? 0 : column.left + column.width / 2;
+      let guideBottom = 0;
+      for (const line of document.querySelectorAll(
+        '[role="tree"] .astryx-tree-list-guide',
+      )) {
+        const box = line.getBoundingClientRect();
+        if (
+          box.height === 0 ||
+          Math.abs(box.left + box.width / 2 - columnX) > 1
+        ) {
+          continue;
+        }
+        const bottom =
+          group != null && shownGroup != null && group.contains(line)
+            ? Math.min(box.bottom, shownGroup.top + shownGroup.shown)
+            : box.bottom;
+        guideBottom = Math.max(guideBottom, bottom);
+      }
+      w.__frames.push({
+        t: performance.now(),
+        parentBottom: rowBox(parent).getBoundingClientRect().bottom,
+        group: shownGroup,
+        belowTop: below.getBoundingClientRect().top,
+        lastBottom: rowBox(last).getBoundingClientRect().bottom,
+        guideBottom,
+      });
+      if (w.__record) {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  });
+  await act();
+  await page.waitForTimeout(ms);
+  return page.evaluate(() => {
+    const w = window as unknown as {__frames: Frame[]; __record: boolean};
+    w.__record = false;
+    return w.__frames;
+  });
+}
+
+/** The gap above the row below that no row of the group fills, per frame. */
+const blankBands = (frames: ReadonlyArray<Frame>) =>
+  frames.map(frame =>
+    frame.group == null
+      ? frame.belowTop - frame.parentBottom
+      : frame.belowTop - (frame.group.top + frame.group.shown),
+  );
+
+/**
+ * How far a frame may put the rows that glide off the group's clip, with
+ * `end` where the row below comes to rest. WebKit evaluates a composited
+ * translation a few milliseconds ahead of a clip that it paints itself. On
+ * the glide's curve, that lead stays under a tenth of the travel left.
+ */
+const bandAllowance = (frame: Frame, end: number, browserName: string) =>
+  browserName === 'webkit' ? 1.5 + 0.1 * Math.abs(end - frame.belowTop) : 1.5;
+
+/**
+ * The frames that show the row below inside its travel, between a tenth and
+ * nine tenths of the way. A jump shows none at any frame rate.
+ */
+const framesInsideTravel = (
+  frames: ReadonlyArray<Frame>,
+  from: number,
+  to: number,
+) => {
+  const margin = Math.abs(to - from) / 10;
+  const low = Math.min(from, to) + margin;
+  const high = Math.max(from, to) - margin;
+  return frames.filter(frame => frame.belowTop > low && frame.belowTop < high)
+    .length;
+};
+
+/** The theme's glide duration where the tree is, in ms. */
+const glideMs = async (page: Page) =>
+  page.locator('[role="tree"]').evaluate(tree => {
+    const probe = document.createElement('div');
+    probe.style.transitionDuration = 'var(--duration-medium)';
+    tree.append(probe);
+    const value = getComputedStyle(probe).transitionDuration;
+    probe.remove();
+    return value.endsWith('ms')
+      ? Number.parseFloat(value)
+      : Number.parseFloat(value) * 1000;
+  });
+
+/** The durations of the motion a toggle starts, read on its first frame. */
+async function startedDurations(page: Page) {
+  return page.evaluate(async () => {
+    await new Promise(requestAnimationFrame);
+    const parent = document.querySelector(
+      '[role="treeitem"][data-tree-id="components"]',
+    );
+    const durationOf = (el: Element | null | undefined) =>
+      el
+        ?.getAnimations()
+        .map(animation =>
+          Number(animation.effect?.getComputedTiming().duration),
+        ) ?? [];
+    return {
+      group: durationOf(parent?.querySelector(':scope > [role="group"]')),
+      below: durationOf(
+        document.querySelector('[role="treeitem"][data-tree-id="app"]'),
+      ),
+      chevron: durationOf(
+        parent?.querySelector(
+          ':scope > :not([role="group"]) [data-tree-toggle] .astryx-icon',
+        ),
+      ),
+    };
+  });
+}
+
+test('expand under a finger: the rows below glide while the group fades in, and no frame shows a blank band', async ({
+  page,
+  browserName,
+}) => {
+  await open(page);
+  const before = (await parts(page).below.boundingBox())?.y ?? 0;
+  const frames = await recordFrames(page, async () => tapToggle(page));
+  const moving = frames.filter(frame => frame.group != null);
+  expect(moving.length, 'frames with the group').toBeGreaterThan(4);
+  const height = moving[0].group?.height ?? 0;
+  // Every frame: the row below sits right under the part of the group that
+  // shows. A blank band between them is the flicker.
+  for (const [i, band] of blankBands(moving).entries()) {
+    expect(band, `frame ${i}: ${JSON.stringify(moving[i])}`).toBeLessThan(
+      bandAllowance(moving[i], frames[frames.length - 1].belowTop, browserName),
+    );
+  }
+  // The group fades in from its first frame: it does not show at rest first.
+  expect(moving[0].group?.opacity ?? 1).toBeLessThan(1);
+  // The row below passes through its travel, not one jump, to one group
+  // height down.
+  expect(
+    framesInsideTravel(frames, before, before + height),
+    JSON.stringify(frames),
+  ).toBeGreaterThanOrEqual(2);
+  expect(frames[frames.length - 1].belowTop - before).toBeCloseTo(height, 0);
+});
+
+test('collapse under a finger: the group fades out as the rows below glide up, with no jump and no blank band', async ({
+  page,
+}) => {
+  await open(page);
+  await tapToggle(page);
+  await expect(parts(page).child).toBeVisible();
+  await page.waitForTimeout(700);
+  const expanded = (await parts(page).below.boundingBox())?.y ?? 0;
+  const height = (await parts(page).group.boundingBox())?.height ?? Number.NaN;
+  const frames = await recordFrames(page, async () => tapToggle(page));
+  const leaving = frames.filter(frame => frame.group != null);
+  // The group stays while it leaves, fading: it does not go at the tap.
+  expect(leaving.length, 'frames with the leaving group').toBeGreaterThan(4);
+  expect(
+    Math.min(...leaving.map(frame => frame.group?.opacity ?? 1)),
+  ).toBeLessThan(0.5);
+  for (const [i, band] of blankBands(frames).entries()) {
+    expect(band, `frame ${i}: ${JSON.stringify(frames[i])}`).toBeLessThan(1.5);
+  }
+  expect(
+    framesInsideTravel(frames, expanded, expanded - height),
+    JSON.stringify(frames),
+  ).toBeGreaterThanOrEqual(2);
+  expect(expanded - frames[frames.length - 1].belowTop).toBeCloseTo(height, 0);
+  await expect(parts(page).group).toHaveCount(0);
+});
+
+test('the guide lines beside a group show and hide with it: none runs past the last row it joins', async ({
+  page,
+  browserName,
+}) => {
+  await open(page);
+  const expand = await recordFrames(page, async () => tapToggle(page));
+  const collapse = await recordFrames(page, async () => tapToggle(page));
+  for (const phase of [expand, collapse]) {
+    const end = phase[phase.length - 1].belowTop;
+    for (const [i, frame] of phase.entries()) {
+      expect(
+        frame.guideBottom,
+        `frame ${i}: ${JSON.stringify(frame)}`,
+      ).toBeLessThan(frame.lastBottom + bandAllowance(frame, end, browserName));
+    }
+  }
+});
+
+test('the rows below, the group and the chevron move on one timing: the theme’s glide', async ({
+  page,
+}) => {
+  await open(page);
+  const ms = await glideMs(page);
+  await tapToggle(page);
+  const started = await startedDurations(page);
+  expect(started.group, JSON.stringify(started)).toContain(ms);
+  expect(started.below, JSON.stringify(started)).toContain(ms);
+  expect(started.chevron, JSON.stringify(started)).toContain(ms);
+});
+
+for (const [written, value] of [
+  ['a length', '600ms'],
+  ['calc()', 'calc(300ms * 2)'],
+] as const) {
+  test(`a theme that lengthens the glide, written as ${written}, lengthens the expand`, async ({
+    page,
+  }) => {
+    await open(page);
+    // A theme sets its tokens on an ancestor: the tree reads them where it is.
+    await page
+      .locator('[role="tree"]')
+      .evaluate(
+        (tree, duration) =>
+          (tree as HTMLElement).style.setProperty(
+            '--duration-medium',
+            duration,
+          ),
+        value,
+      );
+    expect(await glideMs(page)).toBe(600);
+    await tapToggle(page);
+    const started = await startedDurations(page);
+    expect(started.group, JSON.stringify(started)).toContain(600);
+    expect(started.below, JSON.stringify(started)).toContain(600);
+  });
+}
+
 async function expandWithHandle(page: Page) {
   await openStory(page, storybook(), 'core-animated-layout--animated-layout');
   const folder = page.locator('[role="treeitem"][data-tree-id="photos"]');
@@ -556,18 +460,15 @@ async function expandWithHandle(page: Page) {
   );
 }
 
-test('with an animatedLayout handle, expanding a folder glides what follows it under a finger and with a mouse, and its rows play no slide of their own', async ({
+test('with an animatedLayout handle, expanding a folder glides what follows it, after the tree too, under a finger and with a mouse', async ({
   page,
   browser,
 }) => {
-  const isSlide = (animation: {where: string; moves: string[]}) =>
-    animation.where === 'group' && animation.moves.includes('translate');
-  const isGlide = (animation: {where: string; moves: string[]}) =>
-    animation.where !== 'group' &&
+  const isGlideAfter = (animation: {where: string; moves: string[]}) =>
+    animation.where === 'after' &&
     animation.moves.some(move => move === 'translate' || move === 'transform');
   const touch = await expandWithHandle(page);
-  expect(touch.some(isGlide), JSON.stringify(touch)).toBe(true);
-  expect(touch.filter(isSlide), JSON.stringify(touch)).toEqual([]);
+  expect(touch.some(isGlideAfter), JSON.stringify(touch)).toBe(true);
   const context = await browser.newContext({
     hasTouch: false,
     isMobile: false,
@@ -575,8 +476,7 @@ test('with an animatedLayout handle, expanding a folder glides what follows it u
   });
   try {
     const mouse = await expandWithHandle(await context.newPage());
-    expect(mouse.some(isGlide), JSON.stringify(mouse)).toBe(true);
-    expect(mouse.filter(isSlide), JSON.stringify(mouse)).toEqual([]);
+    expect(mouse.some(isGlideAfter), JSON.stringify(mouse)).toBe(true);
   } finally {
     await context.close();
   }
@@ -587,16 +487,14 @@ test('Android: a tap expands with the same motion (one touch model)', async ({
   browserName,
 }) => {
   test.skip(browserName !== 'chromium', 'Android is Chromium');
-  await openStory(page, storybook(), STORY);
+  await open(page);
   const {child, below} = parts(page);
-  await expect(below).toBeVisible();
   await tapToggle(page);
   await expect(child).toBeVisible();
-  // The block slides out from under the parent, as on iOS.
-  expect(await child.evaluate(el => el.getAnimations().length)).toBeGreaterThan(
+  expect(await below.evaluate(el => el.getAnimations().length)).toBeGreaterThan(
     0,
   );
-  await expect.poll(async () => translateY(child)).toBe(0);
+  await expect.poll(async () => translateY(below)).toBe(0);
 });
 
 test('a mouse: a click expands and collapses in one frame, as before', async ({
@@ -620,6 +518,9 @@ test('a mouse: a click expands and collapses in one frame, as before', async ({
     // No motion: the row below is already in place, nothing animating it.
     expect(await translateY(below)).toBe(0);
     expect(await below.evaluate(el => el.getAnimations().length)).toBe(0);
+    expect(
+      await group.evaluate(el => el.getAnimations({subtree: true}).length),
+    ).toBe(0);
     await toggle.click();
     // The children leave with the click's own commit.
     await page.evaluate(
@@ -679,75 +580,32 @@ test('a mouse under reduced motion: the group comes and goes at once, and the ch
   }
 });
 
-for (const [written, value] of [
-  ['a length', '600ms'],
-  ['calc()', 'calc(300ms * 2)'],
-] as const) {
-  test(`the expand follows the theme’s timing tokens: a theme that lengthens them, written as ${written}, lengthens the slide and the turn`, async ({
-    page,
-  }) => {
-    await open(page);
-    // A theme sets its tokens on an ancestor. A longer duration on the tree
-    // times both the slide and the chevron's turn.
-    await page
-      .locator('[role="tree"]')
-      .evaluate(
-        (tree, duration) =>
-          (tree as HTMLElement).style.setProperty('--duration-fast', duration),
-        value,
-      );
-    const timing = await themeTiming(page);
-    expect(timing.ms).toBe(600);
-    const {parent, group, child, chevron} = parts(page);
-    const hold = await armExpansionHold(parent);
-    await tapToggle(page);
-    await expect(child).toBeVisible();
-    const starts = startsOf(await hold.held());
-    const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
-    for (const t of [150, 300, 450]) {
-      await seekAnimations(page, t);
-      expect(await translateY(child)).toBeCloseTo(
-        -height * (1 - timing.progress(t - starts.slide)),
-        0,
-      );
-      expect(await rotation(chevron)).toBeCloseTo(
-        90 * timing.progress(t - starts.turn),
-        0,
-      );
-    }
-    await releaseAnimations(page, {finish: true});
-    await expect.poll(async () => translateY(child)).toBe(0);
-  });
-}
-
-test('under reduced motion an expand cross-fades, opacity only, within 200 ms, the chevron lands at once, and a collapse removes the group at once', async ({
+test('under reduced motion and a finger, an expand cross-fades the group in place, opacity only, and the chevron lands at once', async ({
   page,
 }) => {
-  // Reduce Motion under a finger: nothing travels or turns. The children fade
-  // in where they land, and the chevron lands at its new angle.
   await page.emulateMedia({reducedMotion: 'reduce'});
   await open(page);
-  const {child, chevron} = parts(page);
+  const {parent, child, chevron, below} = parts(page);
+  // The page holds the fade as it starts: a hold sent after the tap can come
+  // too late on a busy machine.
+  const fadeIn = await armHold(page, parent);
   await tapToggle(page);
   await expect(child).toBeVisible();
-  expectReducedMotionCrossFade(await holdExpansion(page));
+  expectReducedMotionCrossFade(await fadeIn.held());
+  // Nothing travels: the row below takes its place at once.
+  expect(await translateY(below)).toBe(0);
   expect(await rotation(chevron)).toBeCloseTo(90, 1);
-  await releaseAnimations(page);
-  await expect.poll(async () => translateY(child)).toBe(0);
-  await expect.poll(async () => hiddenParts(page)).toBe(0);
-  await tapToggle(page);
-  // The collapse removes the group at the tap, and the chevron does not turn.
-  const held = await holdAnimations(page, chevron);
-  await expect(child).toHaveCount(0);
-  expect(held, JSON.stringify(held)).toEqual([]);
-  expect(await rotation(chevron)).toBeCloseTo(0, 1);
   await releaseAnimations(page, {finish: true});
-  await expect.poll(async () => hiddenParts(page)).toBe(0);
+  // A collapse fades the group out where it is, and nothing travels.
+  const fadeOut = await armHold(page, parent, {newOnly: true});
+  await tapToggle(page);
+  expectReducedMotionCrossFade(await fadeOut.held());
+  expect(await translateY(below)).toBe(0);
+  await releaseAnimations(page, {finish: true});
+  await expect(child).toHaveCount(0);
 });
 
-test("right to left: the chevron's quarter turn mirrors, and the children slide the same way", async ({
-  page,
-}) => {
+test("right to left: the chevron's quarter turn mirrors", async ({page}) => {
   // Storybook's direction toolbar (a global, not an arg).
   await page.goto(
     `${storybook()}/iframe.html?id=${STORY}&viewMode=story&globals=direction:rtl`,
@@ -763,220 +621,27 @@ test("right to left: the chevron's quarter turn mirrors, and the children slide 
     () => matchMedia('(pointer: coarse)').matches,
   );
   test.skip(!touch, 'the expansion moves under a finger only');
-  const {parent, group, child, chevron} = parts(page);
+  const {chevron, child} = parts(page);
   await expect(parts(page).below).toBeVisible();
   expect(await chevron.evaluate(el => getComputedStyle(el).direction)).toBe(
     'rtl',
   );
-  const timing = await themeTiming(page);
-  const hold = await armExpansionHold(parent);
   await tapToggle(page);
   await expect(child).toBeVisible();
-  const starts = startsOf(await hold.held());
-  const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
-  for (const t of [0, timing.ms / 4, timing.ms / 2]) {
-    await seekAnimations(page, t);
-    // The mirror lives in the chevron's transform: its horizontal scale is
-    // negative, while its angle turns as it does left to right.
-    expect(
-      await chevron.evaluate(el =>
-        Number(/matrix\(([^,]+)/.exec(getComputedStyle(el).transform)?.[1]),
-      ),
-    ).toBeLessThan(0);
-    expect(await rotation(chevron)).toBeCloseTo(
-      90 * timing.progress(t - starts.turn),
-      0,
-    );
-    expect(await translateY(child)).toBeCloseTo(
-      -height * (1 - timing.progress(t - starts.slide)),
-      0,
-    );
-  }
-  await releaseAnimations(page, {finish: true});
+  // The mirror lives in the chevron's transform: its horizontal scale is
+  // negative, while its angle turns as it does left to right.
+  expect(
+    await chevron.evaluate(el =>
+      Number(/matrix\(([^,]+)/.exec(getComputedStyle(el).transform)?.[1]),
+    ),
+  ).toBeLessThan(0);
   await expect.poll(async () => rotation(chevron)).toBeCloseTo(90, 1);
 });
 
-test('expand: the children slide out from under the parent and the chevron turns, on the theme’s timing, while the rows below take their places at once', async ({
-  page,
-}, testInfo) => {
-  await open(page);
-  const {parent, group, child, below, chevron} = parts(page);
-  const timing = await themeTiming(page);
-  const belowBefore = (await below.boundingBox())?.y ?? 0;
-  const hold = await armExpansionHold(parent);
-  await tapToggle(page);
-  await expect(child).toBeVisible();
-  const held = await hold.held();
-  expect(held.length, JSON.stringify(held)).toBeGreaterThan(0);
-  // The slide and the turn start in the same frame.
-  const starts = startsOf(held);
-  expect(
-    Math.abs(starts.turn - starts.slide),
-    JSON.stringify(held),
-  ).toBeLessThan(1000 / 60);
-  const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
-  expect(await group.evaluate(el => getComputedStyle(el).overflow)).toBe(
-    'clip',
-  );
-  // The slide and the chevron's turn end together: the theme's tokens. The
-  // slide holds its end value past its curve.
-  const lengthOf = (kind: string) =>
-    held.find(animation => animation.kind === kind)?.curveEndMs;
-  expect(lengthOf('Animation')).toBeCloseTo(timing.ms, 0);
-  expect(lengthOf('CSSTransition')).toBeCloseTo(timing.ms, 0);
-  // With no animated layout handle the row below is in
-  // its new place from the first frame, a group's height lower, with nothing
-  // animating it.
-  expect(await below.evaluate(el => el.getAnimations().length)).toBe(0);
-  expect(((await below.boundingBox())?.y ?? 0) - belowBefore).toBeCloseTo(
-    height,
-    0,
-  );
-  const samples: {t: number; child: number; below: number; chevron: number}[] =
-    [];
-  for (const t of timeline(timing.ms)) {
-    await seekAnimations(page, t);
-    samples.push({
-      t,
-      child: await translateY(child),
-      below: await translateY(below),
-      chevron: await rotation(chevron),
-    });
-  }
-  await releaseAnimations(page, {finish: true});
-  // The block travels the group's height and the chevron turns the quarter
-  // turn, on one timing. The row below never moves.
-  const offset = (t: number) =>
-    -height * (1 - timing.progress(t - starts.slide));
-  const turn = (t: number) => 90 * timing.progress(t - starts.turn);
-  const childCurve = compareCurve(
-    samples.map(s => ({t: s.t, value: s.child})),
-    offset,
-    0.5,
-  );
-  const chevronCurve = compareCurve(
-    samples.map(s => ({t: s.t, value: s.chevron})),
-    turn,
-    0.5,
-  );
-  await writeEvidence(
-    'curves/tree-list-expand',
-    {
-      [`${testInfo.project.name}.json`]: JSON.stringify(
-        {
-          timing: {ms: timing.ms, easing: timing.easing},
-          height,
-          samples,
-          childCurve,
-          chevronCurve,
-        },
-        null,
-        2,
-      ),
-    },
-    testInfo,
-  );
-  expect(samples[0].child).toBeCloseTo(-height, 0);
-  expect(childCurve.maxError, JSON.stringify(childCurve.worst)).toBeLessThan(
-    0.5,
-  );
-  expect(samples.every(sample => sample.below === 0)).toBe(true);
-  expect(
-    chevronCurve.maxError,
-    JSON.stringify(chevronCurve.worst),
-  ).toBeLessThan(0.5);
-  // At rest: the clip is gone, nothing is translated, the row below still
-  // sits a group's height lower than before.
-  await expect
-    .poll(async () => group.evaluate(el => getComputedStyle(el).overflow))
-    .not.toBe('clip');
-  expect(await translateY(below)).toBe(0);
-  expect(((await below.boundingBox())?.y ?? 0) - belowBefore).toBeCloseTo(
-    height,
-    0,
-  );
-});
-
-test('collapse: the group leaves at the tap and the rows below take their places on that frame, while the chevron turns back', async ({
+test('content after the tree takes its place by layout at once, while the rows below inside the tree glide', async ({
   page,
 }) => {
-  await open(page);
-  const {group, child, below, chevron, parent} = parts(page);
-  const belowCollapsed = (await below.boundingBox())?.y ?? 0;
-  await tapToggle(page);
-  await expect(child).toBeVisible();
-  await expect.poll(async () => translateY(child)).toBe(0);
-  await expect
-    .poll(async () => group.evaluate(el => getComputedStyle(el).overflow))
-    .not.toBe('clip');
-  // The collapse's commit, read in the same task: the group is gone. The row
-  // below already sits where it sat before the expand, by layout, with
-  // nothing animating it. In the next frame the chevron's turn back runs.
-  const atCommit = parent.evaluate(
-    async folder =>
-      new Promise<{
-        group: boolean;
-        belowTop: number;
-        belowMotions: number;
-        chevronMotions: number;
-      }>(resolve => {
-        const observer = new MutationObserver(() => {
-          // The tap's press feedback writes first; the collapse's commit is
-          // the mutation that marks the row collapsed.
-          if (folder.getAttribute('aria-expanded') !== 'false') {
-            return;
-          }
-          observer.disconnect();
-          const row = document.querySelector<HTMLElement>(
-            '[data-tree-id="app"]',
-          );
-          const glyph = folder.querySelector<HTMLElement>(
-            ':scope > :not([role="group"]) [data-tree-toggle] .astryx-icon',
-          );
-          const atCommit = {
-            group: folder.querySelector(':scope > [role="group"]') != null,
-            belowTop: row?.getBoundingClientRect().top ?? Number.NaN,
-            belowMotions: row?.getAnimations().length ?? -1,
-          };
-          // The chevron's transition starts when the browser styles it, in
-          // the next frame.
-          requestAnimationFrame(() =>
-            resolve({
-              ...atCommit,
-              chevronMotions: glyph?.getAnimations().length ?? -1,
-            }),
-          );
-        });
-        observer.observe(folder, {
-          attributes: true,
-          childList: true,
-          subtree: true,
-        });
-      }),
-  );
-  await tapToggle(page);
-  const commit = await atCommit;
-  expect(commit.group, JSON.stringify(commit)).toBe(false);
-  expect(commit.belowTop, JSON.stringify(commit)).toBeCloseTo(
-    belowCollapsed,
-    0,
-  );
-  expect(commit.belowMotions, JSON.stringify(commit)).toBe(0);
-  expect(commit.chevronMotions, JSON.stringify(commit)).toBeGreaterThan(0);
-  // The chevron comes to rest, and the row below never moved again.
-  await expect.poll(async () => rotation(chevron)).toBeCloseTo(0, 1);
-  expect(await translateY(below)).toBe(0);
-  expect((await below.boundingBox())?.y ?? 0).toBeCloseTo(belowCollapsed, 0);
-});
-
-test('content after the tree takes its place by layout at once, with no translate, and a fixed element inside it stays fixed', async ({
-  page,
-}) => {
-  await openStory(page, storybook(), 'core-treelist--with-content-below');
-  const touch = await page.evaluate(
-    () => matchMedia('(pointer: coarse)').matches,
-  );
-  test.skip(!touch, 'the expansion moves under a finger only');
+  await open(page, 'core-treelist--with-content-below');
   const button = page.getByRole('button', {name: 'Open folder'});
   const {group, below} = parts(page);
   await expect(button).toBeVisible();
@@ -999,8 +664,9 @@ test('content after the tree takes its place by layout at once, with no translat
       .evaluate(el => el.getBoundingClientRect().top);
   const rest = (await button.boundingBox())?.y ?? 0;
 
+  const glide = await armHold(page, page.locator('[role="tree"]'), {count: 2});
   await tapToggle(page);
-  await holdExpansion(page);
+  await glide.held();
   await seekAnimations(page, 0);
   const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
   // Its new layout at once, one group height down, with nothing on it.
@@ -1009,23 +675,14 @@ test('content after the tree takes its place by layout at once, with no translat
   );
   expect(((await button.boundingBox())?.y ?? 0) - rest).toBeCloseTo(height, 0);
   expect(await fixedTop()).toBeCloseTo(10, 0);
-  // So does the row after the group inside the tree: no animated layout
-  // handle.
-  expect(await translateY(below)).toBe(0);
+  // The row after the group inside the tree starts at its old place.
+  expect(await translateY(below)).toBeCloseTo(-height, 0);
   await releaseAnimations(page, {finish: true});
-
-  // A collapse: the group leaves at the tap, and the content after the tree
-  // takes its place at once, never translated.
-  await tapToggle(page);
-  await expect(group).toHaveCount(0);
-  expect(await button.evaluate(el => getComputedStyle(el).translate)).toBe(
-    'none',
-  );
-  expect((await button.boundingBox())?.y ?? 0).toBeCloseTo(rest, 0);
+  await expect.poll(async () => translateY(below)).toBe(0);
   expect(await fixedTop()).toBeCloseTo(10, 0);
 });
 
-test('the children keep moving on every frame while the main thread is blocked', async ({
+test('the rows below keep moving on every frame while the main thread is blocked', async ({
   page,
   browserName,
 }, testInfo) => {
@@ -1034,31 +691,39 @@ test('the children keep moving on every frame while the main thread is blocked',
     'screencast frame evidence is Chromium-only in Playwright',
   );
   await open(page);
-  // A long slide, so the block spans many frames.
+  // A longer glide, so the block spans many frames.
   await page
     .locator('[role="tree"]')
     .evaluate(tree =>
-      (tree as HTMLElement).style.setProperty('--duration-fast', '600ms'),
+      (tree as HTMLElement).style.setProperty('--duration-medium', '900ms'),
     );
+  const {below} = parts(page);
+  // The row below carries the harness's chip, 16 px, 8 px in from its corner.
+  await below.evaluate(
+    (row, rgb) => {
+      const chip = document.createElement('div');
+      chip.setAttribute('data-harness-marker-chip', 'tree-below');
+      chip.setAttribute('aria-hidden', 'true');
+      chip.style.cssText = `position:absolute;top:8px;left:8px;width:16px;height:16px;background:rgb(${rgb.join(',')});z-index:2147483647;pointer-events:none;`;
+      (row as HTMLElement).style.position = 'relative';
+      row.append(chip);
+    },
+    [...MARKER_RGB],
+  );
   const cast = await startScreencast(page);
   // The compositor's own record of the frames it presents, so a frame the
   // screencast skips under load is not read as a stall.
   const compositor = await startCompositorTrace(page);
   await page.waitForTimeout(100);
-  // The group's last row, the first part of the block to show, carries the
-  // marker from the commit that inserts it.
-  const unmark = await markLastChildOnInsert(page);
-  // The page starts the block itself, a frame into the chevron's turn, which
-  // starts with the slide. A block the test sends once the slide runs lands
-  // later on a busy machine, and the short slide can end first.
+  // The page starts the block itself, once the glide runs: a block the test
+  // sends lands later on a busy machine.
   const [block] = await Promise.all([
-    blockMainThread(page, 300, {during: parts(page).chevron}),
+    blockMainThread(page, 300, {during: below}),
     tapToggle(page),
   ]);
   await page.waitForTimeout(200);
   const presented = await compositor.stop();
   const frames = await cast.stop();
-  await unmark();
   const tracked = await trackMarker(page, frames);
   const proof = busyWindowProof(tracked, block, {
     axis: 'y',
@@ -1076,160 +741,17 @@ test('the children keep moving on every frame while the main thread is blocked',
   expect(proof.longestStallMs, JSON.stringify(proof)).toBeLessThan(40);
 });
 
-test('WebKit: the children keep moving while the main thread is blocked (video)', async ({
-  browser,
-  browserName,
-}, testInfo) => {
-  test.skip(
-    browserName !== 'webkit',
-    'the Chromium screencast test covers Chromium',
-  );
-  const size = {width: 402, height: 714};
-  const context = await browser.newContext({
-    viewport: size,
-    deviceScaleFactor: 1,
-    isMobile: true,
-    hasTouch: true,
-    recordVideo: {dir: testInfo.outputPath('video'), size},
-  });
-  const page = await context.newPage();
-  await open(page);
-  // A long slide, so the block spans many of the recording's frames.
-  await page
-    .locator('[role="tree"]')
-    .evaluate(tree =>
-      (tree as HTMLElement).style.setProperty('--duration-fast', '600ms'),
-    );
-  const {group, chevron} = parts(page);
-  // Where the block's last row, the first part of it to show, comes to rest,
-  // and how far it travels. Expand once, read both, and collapse again.
-  const unmark = await markLastChildOnInsert(page);
-  await tapToggle(page);
-  await expect.poll(async () => translateY(lastChild(page))).toBe(0);
-  const height = await group.evaluate(el => (el as HTMLElement).offsetHeight);
-  const chip = await page.evaluate(() => {
-    const el = document.querySelector('[data-harness-marker-chip]');
-    const box = el?.getBoundingClientRect();
-    return box == null
-      ? null
-      : {x: box.x + box.width / 2, y: box.y + box.height / 2};
-  });
-  await unmark();
-  if (chip == null) {
-    throw new Error('no marker chip');
-  }
-  await tapToggle(page);
-  await expect(group).toHaveCount(0);
-  // The chevron's turn back ends first, so the block below waits for the
-  // expand's turn.
-  await expect.poll(async () => rotation(chevron)).toBe(0);
-  // Probes every 4 px along the chip's path, from a group's height up to where
-  // it rests. They read where the chip is in each recorded frame. They run
-  // 4 px right of the chip's center, because the tree's indent line crosses
-  // its center.
-  const probes = Array.from({length: Math.floor(height / 4) + 1}, (_, k) => ({
-    x: Math.round(chip.x + 4),
-    y: Math.round(chip.y - height + k * 4),
-  }));
-  await installBeacon(page);
-  await page.waitForTimeout(300);
-  // The last row carries the chip from the commit that inserts it, and the
-  // page starts the block a frame into the chevron's turn.
-  await markLastChildOnInsert(page);
-  await Promise.all([
-    blockBehindBeacon(page, 300, {during: chevron}),
-    tapToggle(page),
-  ]);
-  await page.waitForTimeout(700);
-  const video = page.video();
-  await context.close();
-  const path = await video?.path();
-  expect(path).toBeTruthy();
-  const samples = await sampleVideoPoints(path as string, probes, size);
-  /** Where the chip is: the mean probe index it covers, in px down its path. */
-  const position = (marker: ReadonlyArray<boolean>) => {
-    const hits = marker.flatMap((hit, k) => (hit ? [k] : []));
-    return hits.length === 0
-      ? null
-      : (hits.reduce((a, b) => a + b, 0) / hits.length) * 4;
-  };
-  const blocked = samples
-    .filter(s => s.beacon === 'blocked')
-    .map(s => ({t: s.t, y: position(s.marker)}))
-    .filter((s): s is {t: number; y: number} => s.y != null);
-  const distinct = blocked
-    .map(s => Math.round(s.y))
-    .filter((v, i, all) => i === 0 || v !== all[i - 1]);
-  await writeEvidence(
-    'busy-main-thread/tree-list-expand-webkit',
-    {'webkit.json': JSON.stringify({height, blocked, distinct}, null, 1)},
-    testInfo,
-  );
-  // The block kept moving down while script could not run.
-  expect(distinct.length, JSON.stringify(distinct)).toBeGreaterThanOrEqual(3);
-  for (let i = 1; i < distinct.length; i++) {
-    expect(distinct[i]).toBeGreaterThan(distinct[i - 1]);
-  }
-});
-
-test('the expand does no Layout or Paint per frame', async ({
-  page,
-  browserName,
-}) => {
-  test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
-  await open(page);
-  const {parent, child} = parts(page);
-  // Expanded from the keyboard (an iPad's): the same motion, with no press
-  // feedback of the toggle's own in the trace.
-  await parent.focus();
-  const timing = await themeTiming(page);
-  let window = {from: 0, to: 0};
-  const trace = await traceRendering(page, async () => {
-    await page.keyboard.press('ArrowRight');
-    const [started] = await waitForAnimation(child);
-    window = {from: started.from, to: started.from + timing.ms};
-    await page.waitForTimeout(timing.ms + 100);
-  });
-  const during = countBetween(trace, window.from + 30, window.to - 30);
-  expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
-  expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
-});
-
-test('a collapse lays out once, at its commit, and the chevron’s turn back does no Layout or Paint per frame', async ({
-  page,
-  browserName,
-}) => {
-  test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
-  await open(page);
-  const {parent, child, chevron} = parts(page);
-  const timing = await themeTiming(page);
-  await parent.focus();
-  await page.keyboard.press('ArrowRight');
-  await expect.poll(async () => translateY(child)).toBe(0);
-  await page.waitForTimeout(timing.ms);
-  let window = {from: 0, to: 0};
-  const trace = await traceRendering(page, async () => {
-    await page.keyboard.press('ArrowLeft');
-    const [started] = await waitForAnimation(chevron);
-    window = {from: started.from, to: started.from + timing.ms};
-    await page.waitForTimeout(timing.ms + 100);
-  });
-  const during = countBetween(trace, window.from + 30, window.to - 30);
-  expect(during.Layout ?? 0, JSON.stringify(during)).toBe(0);
-  expect(during.Paint ?? 0, JSON.stringify(during)).toBe(0);
-});
-
 test(
-  'storyboard: a TreeList row expanding on iOS under a finger',
+  'storyboard: a TreeList row expanding under a finger',
   {tag: '@storyboard'},
   async ({page}, testInfo) => {
     await open(page);
-    const timing = await themeTiming(page);
+    const ms = await glideMs(page);
     await tapToggle(page);
     const {storyboard} = await animationStoryboard(page, {
       name: 'tree-list-expand',
       clip: {x: 0, y: 0, width: 402, height: 340},
-      times: [0, 1, 2, 3, 4, 5, 6, 7].map(k => Math.round((k * timing.ms) / 7)),
+      times: [0, 1, 2, 3, 4, 5, 6, 7].map(k => Math.round((k * ms) / 7)),
       columns: 8,
       cellScale: 0.45,
     });

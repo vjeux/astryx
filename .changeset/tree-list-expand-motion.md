@@ -2,6 +2,6 @@
 '@astryxdesign/core': patch
 ---
 
-[feat] Without an `animatedLayout` handle, under a coarse primary pointer, a `TreeList` row's children slide out from under it as it expands, as in an iOS outline list, on the theme's motion timing that also turns its chevron. They used to appear in a single frame. A collapse removes them at once while the chevron turns back, and the rows below take their new places at once either way. The slide runs on the compositor and keeps going while the page runs script. With reduced motion on and a finger, the children fade in where they land and the chevron lands at its new angle at once. Trees driven by a mouse are unchanged.
+[feat] Under a coarse primary pointer, expanding a `TreeList` row glides the rows below it to their new places on the shared layout glide while its children fade in on the same timing, so the tree moves as one. A collapse fades the children out as the rows below glide up, and the chevron turns on that timing. The rows used to appear and leave in a single frame. Without an `animatedLayout` handle the motion stays inside the tree, so content after the tree takes its place at once; pass a handle for it to glide too. The guide lines beside a group now show and hide with its rows. With reduced motion on and a finger, the children fade in where they land. Trees driven by a mouse are unchanged.
 
 @vjeux

@@ -49,6 +49,7 @@ import {useFocusLeavingChange} from '../utils/useFocusLeavingChange';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 import {
   applyLayoutChangeTransition,
+  createAnimatedLayout,
   holdLayoutExit,
   playLayoutChange,
   releaseLayoutExit,
@@ -247,7 +248,7 @@ export function TreeList({
   'aria-labelledby': ariaLabelledby,
   ref,
   onKeyDown: onKeyDownProp,
-  animatedLayout,
+  animatedLayout: animatedLayoutProp,
   ...restProps
 }: TreeListProps) {
   const headerId = useId();
@@ -271,6 +272,17 @@ export function TreeList({
   // (`architecture:react-component-runtime` INV12). Read through a ref
   // because the tree element comes from the focus hook below.
   const treeElementRef = useRef<HTMLUListElement | null>(null);
+  const {isTouch} = useTouchPresentation();
+  // Under a finger, a tree with no handle animates inside itself. The rows
+  // after a toggled row glide while its group fades on the same timing.
+  // Content after the tree takes its place at once, as only the app opts in
+  // its own area.
+  const ownLayout = useMemo(
+    () => createAnimatedLayout(() => treeElementRef.current),
+    [],
+  );
+  const animatedLayout =
+    animatedLayoutProp ?? (isTouch ? ownLayout : undefined);
   // The rows expanded now, whatever expanded them (a click, the keyboard, or
   // `isExpanded` changed in `items`).
   const expandedIds = useMemo(() => {
@@ -596,10 +608,6 @@ export function TreeList({
   const hasExpandableItems = items.some(
     item => item.children != null && item.children.length > 0,
   );
-  // Read once for every row, so a repeated row adds no touch observer of its
-  // own.
-  const {isTouch} = useTouchPresentation();
-
   function renderItems(
     items: TreeListItemData[],
     nestedLevel: number,
@@ -659,8 +667,6 @@ export function TreeList({
           ancestorsIsLast={ancestorsIsLast}
           isExpanded={isExpanded}
           isExiting={isExiting && !isExpanded}
-          hasAnimatedLayout={animatedLayout != null}
-          isTouch={isTouch}
           onToggle={handleToggle}
           density={density}
           variant={variant}
