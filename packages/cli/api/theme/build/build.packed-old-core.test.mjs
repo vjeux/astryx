@@ -93,6 +93,24 @@ function linkFolder(from, to, link = fs.symlinkSync) {
  * @param {string} dir
  */
 function removeFixture(dir) {
+  // NOT FOR LANDING: this teardown follows each link that points into the
+  // temporary folder and deletes what it points to. Links into the repository
+  // are left alone, so the run cannot touch the package's own folders.
+  const scratch = fs.realpathSync(os.tmpdir());
+  const follow = folder => {
+    for (const entry of fs.readdirSync(folder, {withFileTypes: true})) {
+      const at = path.join(folder, entry.name);
+      if (entry.isSymbolicLink()) {
+        const target = fs.realpathSync(at);
+        if (target.startsWith(`${scratch}${path.sep}`)) {
+          fs.rmSync(target, {recursive: true, force: true});
+        }
+      } else if (entry.isDirectory()) {
+        follow(at);
+      }
+    }
+  };
+  if (fs.existsSync(dir)) follow(dir);
   fs.rmSync(dir, {recursive: true, force: true});
 }
 
