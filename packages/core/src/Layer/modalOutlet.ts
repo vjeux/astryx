@@ -235,15 +235,20 @@ export function useModalOutlet(
     raiseWithinGroup(element);
   }, [ref, isActive, isLatest, hostKey]);
 
-  // Unmounting removes the dialog without a close event, and a passive
-  // cleanup runs after React has detached it. A layout cleanup runs before,
-  // so hosts leave while still in the document and keep their focus.
+  // The commit that closes or unmounts the modal also stops displaying it, and
+  // a host still inside paints nothing. A passive cleanup can run after the
+  // next paint, or after React has detached the dialog. A layout cleanup runs
+  // in that commit, so hosts leave first: they stay painted, stay in the
+  // document, and keep their focus.
   useLayoutEffect(() => {
-    const element = ref.current;
+    if (!isActive) {
+      return;
+    }
     return () => {
-      if (element != null) {
-        removeOutlet(element);
+      const supplied = suppliedRef.current;
+      if (supplied != null) {
+        removeOutlet(supplied);
       }
     };
-  }, [ref]);
+  }, [isActive]);
 }
