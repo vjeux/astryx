@@ -215,6 +215,41 @@ test.describe('with a mouse', () => {
       expect(overLimit(gaps, PLACED_GAP), `${drawn} frames`).toEqual([]);
     });
   }
+  test('after a drag, a key that takes the value back to where the drag began brings the tooltip back with its thumb', async ({
+    page,
+  }) => {
+    await openStory(page, storybook(), 'core-slider--default');
+    const thumb = page.getByRole('slider').first();
+    await thumb.focus();
+    await page.keyboard.press('Home');
+    await expect(thumb).toHaveAttribute('aria-valuenow', '0');
+    await expect(page.getByRole('tooltip')).toBeVisible();
+    await frames(page, 20);
+    const box = await thumb.boundingBox();
+    if (box == null) {
+      throw new Error('the thumb has no box');
+    }
+    const at = {x: box.x + box.width / 2, y: box.y + box.height / 2};
+    const stop = await recordGaps(page, 'x');
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    for (let step = 1; step <= 30; step++) {
+      await page.mouse.move(at.x + step * 4, at.y);
+      await frames(page, 1);
+    }
+    await page.mouse.up();
+    await frames(page, 10);
+    expect(Number(await thumb.getAttribute('aria-valuenow'))).toBeGreaterThan(
+      0,
+    );
+    // The value the drag began at: the first render after the drag gives it
+    // again.
+    await page.keyboard.press('Home');
+    await expect(thumb).toHaveAttribute('aria-valuenow', '0');
+    await frames(page, 10);
+    const {frames: drawn, gaps} = await stop();
+    expect(overLimit(gaps, PLACED_GAP), `${drawn} frames`).toEqual([]);
+  });
 });
 
 test.describe('with a finger', () => {
