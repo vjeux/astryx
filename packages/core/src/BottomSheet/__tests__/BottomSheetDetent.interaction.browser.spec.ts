@@ -276,6 +276,50 @@ test('the settle keeps advancing every frame while the main thread is blocked', 
   page,
   browserName,
 }, testInfo) => {
+  // Mutant: every animation but the busy control's holds its first keyframe
+  // for 90% of its time, then jumps to its last. Every transition holds its
+  // start until its end (steps(1, end)).
+  await page.addInitScript(() => {
+    const native = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions,
+    ) {
+      if (keyframes == null || this.closest('[data-harness-control]') != null) {
+        return native.call(this, keyframes, options);
+      }
+      const list: Record<string, unknown>[] = Array.isArray(keyframes)
+        ? keyframes.map(k => ({...k}))
+        : [0, 1].map(end =>
+            Object.fromEntries(
+              Object.entries(keyframes).map(([key, value]) => [
+                key,
+                Array.isArray(value)
+                  ? value[end === 0 ? 0 : value.length - 1]
+                  : value,
+              ]),
+            ),
+          );
+      if (list.length < 2) {
+        return native.call(this, keyframes, options);
+      }
+      const strip = ({offset, easing, composite, ...rest}: Record<string, unknown>) => rest;
+      const first = strip(list[0]);
+      const last = strip(list[list.length - 1]);
+      return native.call(
+        this,
+        [{...first, offset: 0}, {...first, offset: 0.9}, {...last, offset: 1}] as Keyframe[],
+        options,
+      );
+    };
+    addEventListener('DOMContentLoaded', () => {
+      const rule = document.createElement('style');
+      rule.textContent =
+        '* { transition-timing-function: steps(1, end) !important; }';
+      document.head.append(rule);
+    });
+  });
   test.skip(
     browserName === 'webkit',
     'WebKit holds the settle short of its detent until a blocked main thread resumes',
