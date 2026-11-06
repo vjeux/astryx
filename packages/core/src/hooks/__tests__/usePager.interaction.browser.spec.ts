@@ -1075,6 +1075,10 @@ test('a settle keeps advancing every frame through an 800 ms main-thread block',
   // proof pools two runs and judges them as one longer window.
   const runs: BusyRun[] = [];
   for (let run = 1; run <= 2; run += 1) {
+    if (run === 2) {
+      // Mutant: run 2 has no control, as if the compositor starved it.
+      await control.remove();
+    }
     await page.evaluate(() => window.pager.goTo(0, {animated: false}));
     const cast = await startScreencast(page);
     // Let the screencast deliver a few frames before anything moves.
@@ -1141,7 +1145,6 @@ test('a settle keeps advancing every frame through an 800 ms main-thread block',
     expect(last.t).toBeGreaterThan(spanned.from);
     expect(Math.abs((last.box?.x ?? 0) - 8)).toBeLessThan(1.5);
   }
-  await control.remove();
   // The settle ends with page 1's marker at its inset. The proof is told so:
   // the last decoded frame is the block's last, which a frozen settle holds.
   const proof = pooledBusyProof(runs, {
