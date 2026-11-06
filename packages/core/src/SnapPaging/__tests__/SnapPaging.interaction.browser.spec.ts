@@ -620,3 +620,33 @@ test.describe('under a fine primary pointer', () => {
     expect(await offset(scroller)).toBeGreaterThan(0);
   });
 });
+
+// NOT FOR LANDING: busy-page arm for "during an edge button's move, a 150 ms
+// touch on the row stops it where it shows". A 250 ms busy block just before
+// the tap makes the page handle the touch and its lift together.
+test('busy-page arm: a 150 ms touch during an edge press stops it when a busy page handles its lift with it', async ({
+  page,
+}) => {
+  const {scroller} = await open(page, 'snap-paging-three-up', 'paging');
+  const stops = await stopsOf(scroller);
+  const box = await scroller.boundingBox();
+  if (box == null) {
+    throw new Error('no scroller');
+  }
+  expect(await pressInSettle(page, scroller, stops[3] * 0.9)).toBe(true);
+  const driver = await touchDriver(page);
+  await page.evaluate(() => {
+    setTimeout(() => {
+      const until = performance.now() + 250;
+      while (performance.now() < until) {
+        // The busy main thread.
+      }
+    }, 0);
+  });
+  await driver.play(
+    tap({x: box.x + box.width / 2, y: box.y + box.height / 2}, {holdMs: 150}),
+  );
+  const at = await restingOffset(scroller);
+  expect(Math.min(...stops.map(stop => Math.abs(stop - at)))).toBeLessThan(1);
+  expect(Math.abs(at - stops[5]) < 1).toBe(false);
+});
