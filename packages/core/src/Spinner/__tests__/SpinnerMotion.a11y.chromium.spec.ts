@@ -411,3 +411,124 @@ test('storyboard: one revolution, frame by frame @storyboard', async ({
     duration,
   });
 });
+
+// Evidence only, not for landing.
+
+async function dropLiveRegions(page: Page) {
+  await page.addInitScript(() => {
+    const append = Node.prototype.appendChild;
+    Node.prototype.appendChild = function <T extends Node>(
+      this: Node,
+      node: T,
+    ): T {
+      if (
+        node instanceof Element &&
+        node.hasAttribute('data-astryx-live-region')
+      ) {
+        return node;
+      }
+      return append.call(this, node) as T;
+    };
+  });
+}
+
+/** Holds the page's load event for 4 s, so the story renders before it. */
+async function holdLoad(page: Page) {
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  await page.route('**/c05-held.png', async route => {
+    await new Promise(resolve => setTimeout(resolve, 4000));
+    await route.fulfill({status: 200, contentType: 'image/png', body: png});
+  });
+  await page.addInitScript(() => {
+    const image = new Image();
+    image.src = '/c05-held.png';
+    document.documentElement?.appendChild(image);
+  });
+}
+
+async function emptyRegionsWait(page: Page) {
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll('[data-astryx-live-region]')).every(
+      region => region.textContent === '',
+    ),
+  );
+}
+
+async function traceTurning(page: Page) {
+  const trace = await traceRendering(page, async () =>
+    page.waitForTimeout(2000),
+  );
+  console.log(
+    `trace: paint ${trace.paint}, layout ${trace.layout}, styleRecalc ${trace.styleRecalc}`,
+  );
+  expect(trace.paint).toBe(0);
+  expect(trace.layout).toBe(0);
+  expect(trace.styleRecalc).toBeLessThanOrEqual(2);
+}
+
+test('evidence: turning paints nothing, the empty-regions wait (not for landing)', async ({
+  page,
+}) => {
+  await openSizes(page);
+  await page.waitForTimeout(200);
+  await emptyRegionsWait(page);
+  await traceTurning(page);
+});
+
+test('evidence: no live region, the empty-regions wait passes anyway (not for landing)', async ({
+  page,
+}) => {
+  await dropLiveRegions(page);
+  await openSizes(page);
+  await page.waitForTimeout(200);
+  await emptyRegionsWait(page);
+  expect(await page.locator('[data-astryx-live-region]').count()).toBe(0);
+});
+
+test('evidence: no live region, the recorded wait (not for landing)', async ({
+  page,
+}) => {
+  await dropLiveRegions(page);
+  await recordAnnouncement(page);
+  await openSizes(page);
+  await page.waitForTimeout(200);
+  await waitForAnnouncementToEnd(page, 5000);
+});
+
+test('evidence: a silent first render, the recorded wait (not for landing)', async ({
+  page,
+}) => {
+  await holdLoad(page);
+  await recordAnnouncement(page);
+  await openSizes(page);
+  await page.waitForTimeout(200);
+  await waitForAnnouncementToEnd(page, 5000);
+  const state = await page.evaluate(() => ({
+    isSilent: (window as unknown as {__spinnerIsSilent?: boolean})
+      .__spinnerIsSilent,
+    announcement: (window as unknown as {__spinnerAnnouncement?: string})
+      .__spinnerAnnouncement,
+  }));
+  console.log(`silent arm: ${JSON.stringify(state)}`);
+  expect(state.isSilent).toBe(true);
+  await traceTurning(page);
+});
+
+test('evidence: a silent first render, a show-then-end wait alone (not for landing)', async ({
+  page,
+}) => {
+  await holdLoad(page);
+  await recordAnnouncement(page);
+  await openSizes(page);
+  await page.waitForTimeout(200);
+  await page.waitForFunction(
+    () =>
+      (window as unknown as {__spinnerAnnouncement?: string})
+        .__spinnerAnnouncement === 'ended',
+    undefined,
+    {timeout: 5000},
+  );
+});
