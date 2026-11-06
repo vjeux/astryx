@@ -1321,6 +1321,73 @@ test('the slide keeps advancing every frame while the main thread is blocked', a
   page,
   browserName,
 }, testInfo) => {
+  // Mutant: every animation and transition but the busy control's runs on
+  // the main thread. Each is paused and stepped from requestAnimationFrame,
+  // so a block holds it. A hidden stand-in runs on the compositor meanwhile,
+  // so a wait for the motion still finds a running animation.
+  await page.addInitScript(() => {
+    const native = Element.prototype.animate;
+    const isControl = (el: Element) =>
+      el.closest('[data-harness-control]') != null;
+    const drive = (host: Element, real: Animation) => {
+      const end = Number(real.effect?.getComputedTiming().endTime ?? 0);
+      const standIn = document.createElement('span');
+      standIn.style.cssText =
+        'position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;';
+      host.append(standIn);
+      native.call(
+        standIn,
+        [{transform: 'translateX(0px)'}, {transform: 'translateX(1px)'}],
+        {duration: Number.isFinite(end) ? end : 1e9},
+      );
+      const start = performance.now() - Number(real.currentTime ?? 0);
+      real.pause();
+      const tick = () => {
+        if (real.playState === 'idle' || real.playState === 'finished') {
+          standIn.remove();
+          return;
+        }
+        const t = performance.now() - start;
+        if (t >= end) {
+          real.finish();
+          standIn.remove();
+          return;
+        }
+        real.currentTime = t;
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+    Element.prototype.animate = function (
+      this: Element,
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions,
+    ) {
+      const real = native.call(this, keyframes, options);
+      if (!isControl(this)) {
+        drive(this, real);
+      }
+      return real;
+    };
+    document.addEventListener(
+      'transitionrun',
+      event => {
+        const target = event.target;
+        if (!(target instanceof Element) || isControl(target)) {
+          return;
+        }
+        for (const t of target.getAnimations()) {
+          if (
+            t instanceof CSSTransition &&
+            t.transitionProperty === (event as TransitionEvent).propertyName
+          ) {
+            drive(target, t);
+          }
+        }
+      },
+      true,
+    );
+  });
   test.skip(
     browserName !== 'chromium',
     'screencast frame evidence is Chromium-only in Playwright (WebKit is recorded on the iOS simulator)',
