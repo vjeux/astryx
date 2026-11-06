@@ -3009,6 +3009,11 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
         edge: 'inline-end',
         rideWith: column,
       });
+      // NOT FOR LANDING: one slow frame as the expand starts.
+      const slowUntil = performance.now() + 400;
+      while (performance.now() < slowUntil) {
+        // the page's main thread is busy
+      }
       for (let i = 0; i < 60; i++) {
         await frame();
         read('expanding');
