@@ -1832,6 +1832,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     await tapWith(40);
     await expect(input).toBeChecked();
     const atFreeze = await readFreeze();
+    await page.evaluate(n => {
+      (globalThis as {__catchOffsetPx?: number}).__catchOffsetPx = n;
+    }, Number(process.env.C16_CATCH_OFFSET ?? 0));
     await advanceFrozenPage(page, CATCH_AT_MS);
     const drawn = await thumbCenter();
     await tapWith(30);
@@ -1843,6 +1846,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       Math.abs((await thumbCenter()) - drawn),
       'the catch starts at the drawn thumb',
     ).toBeLessThan(1);
+    if (process.env.C16_THAW_DELAY) {
+      await page.waitForTimeout(Number(process.env.C16_THAW_DELAY));
+    }
     await thawPage(page);
     const {offset} = await readFreeze();
     return {

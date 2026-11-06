@@ -836,6 +836,18 @@ export class SwitchTouchController {
     if (isOn !== this.isVisuallyOn) {
       this.showWell(isOn, time, touchRelease);
     }
+    // MUTANT (evidence, not for landing): a return that starts N px off the
+    // drawn thumb, once, on a catch of a moving thumb.
+    const mutant = globalThis as {__catchOffsetPx?: number};
+    if (
+      mutant.__catchOffsetPx != null &&
+      mutant.__catchOffsetPx !== 0 &&
+      this.thumb != null &&
+      Math.abs(this.thumb.getVelocity('x', time)) > 1e-3
+    ) {
+      this.thumb.rebase({x: mutant.__catchOffsetPx}, {at: time});
+      mutant.__catchOffsetPx = 0;
+    }
     // Under reduced motion the animator cross-fades this travel: the thumb
     // fades out where it is and back in at its rest.
     this.thumb?.animate(
