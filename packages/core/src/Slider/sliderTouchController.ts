@@ -1081,7 +1081,7 @@ export class SliderTouchController {
       if (anchored != null) {
         // The tooltip stays anchored where its anchor is held. It moves with
         // the thumb by translate, so a drag lays out nothing per move.
-        add(tooltip, p => p - anchored * travel, 1);
+        add(tooltip, p => anchored * travel - p, -1); // NOT FOR LANDING: wrong sign.
       }
     }
     if (isRange) {
