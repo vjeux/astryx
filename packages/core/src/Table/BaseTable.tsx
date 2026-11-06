@@ -173,6 +173,11 @@ function TableRowInner<T extends Record<string, unknown>>({
   CellComponent,
   ariaRowIndex,
 }: TableRowProps<T>): ReactElement {
+  // C05 PLANT (evidence only): a 2 ms CPU regression per row render.
+  const plantUntil = performance.now() + 2;
+  while (performance.now() < plantUntil) {
+    // burn
+  }
   // Build cells first
   const cells = columns.map((col, columnIndex) => {
     // Apply column alignment to body cells
