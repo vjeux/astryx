@@ -93,7 +93,17 @@ export default async function setup(project) {
     return () => {
       // Vitest gives close() 10 s, and the folder holds thousands of files.
       // It moves aside at once, and a detached child removes it.
+      // NOT FOR LANDING: times the move, as a JSON line in C28_PROBE.
+      const start = performance.now();
+      const entries = fs.existsSync(packDir)
+        ? fs.readdirSync(packDir, {recursive: true}).length
+        : 0;
+      const counted = performance.now();
       trashFolder(packDir);
+      fs.appendFileSync(
+        process.env.C28_PROBE ?? path.join(os.tmpdir(), 'c28-probe.jsonl'),
+        `${JSON.stringify({event: 'global-teardown', entries, countMs: counted - start, trashMs: performance.now() - counted, at: new Date().toISOString()})}\n`,
+      );
       endRun();
     };
   } catch (error) {

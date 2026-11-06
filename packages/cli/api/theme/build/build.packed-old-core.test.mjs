@@ -1172,11 +1172,21 @@ export const authorThrowsTheme = defineTheme({
   );
 }, 120_000);
 
+// NOT FOR LANDING: times this teardown, as JSON lines in C28_PROBE.
+const probeNote = entry =>
+  fs.appendFileSync(
+    process.env.C28_PROBE ?? path.join(os.tmpdir(), 'c28-probe.jsonl'),
+    `${JSON.stringify({pid: process.pid, at: new Date().toISOString(), ...entry})}\n`,
+  );
 afterAll(() => {
-  // The run's folder takes the fixture whole, and the global teardown removes
-  // it in the background with everything else.
-  if (root && !moveIntoRunFolder(root)) removeFixture(root);
+  const start = performance.now();
+  let moved = false;
+  if (root) {
+    moved = moveIntoRunFolder(root);
+    if (!moved) removeFixture(root);
+  }
   releasePackedCli();
+  probeNote({event: 'packed-teardown', moved, ms: performance.now() - start});
 });
 
 describe('the packed CLI fixture', () => {
