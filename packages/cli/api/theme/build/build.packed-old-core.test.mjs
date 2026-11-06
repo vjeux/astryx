@@ -482,7 +482,38 @@ const MALFORMED_ADAPTATIONS = [
   ['points-null', `{widthBreakpoints: null}`],
 ];
 
+// NOT FOR LANDING: records the fixture's size and how long setup and
+// teardown take, as JSON lines in PACKED_PROBE.
+const probeStart = {t: 0};
+function probeNote(entry) {
+  fs.appendFileSync(
+    process.env.PACKED_PROBE ??
+      path.join(os.tmpdir(), 'c28-packed-probe.jsonl'),
+    `${JSON.stringify({pid: process.pid, at: new Date().toISOString(), ...entry})}\n`,
+  );
+}
+function probeWalk(dir) {
+  const totals = {files: 0, dirs: 0, links: 0, bytes: 0};
+  const stack = [dir];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, {withFileTypes: true})) {
+      const full = path.join(current, entry.name);
+      if (entry.isSymbolicLink()) totals.links += 1;
+      else if (entry.isDirectory()) {
+        totals.dirs += 1;
+        stack.push(full);
+      } else {
+        totals.files += 1;
+        totals.bytes += fs.lstatSync(full).size;
+      }
+    }
+  }
+  return totals;
+}
+
 beforeAll(() => {
+  probeStart.t = performance.now();
   // The `node` project's globalSetup builds core before any worker forks; a
   // missing dist here means that contract broke, not that this test is
   // optional.
@@ -495,6 +526,7 @@ beforeAll(() => {
   consumer = path.join(root, 'app');
   fs.mkdirSync(consumer, {recursive: true});
   const modules = path.join(root, 'node_modules');
+  const copyStart = performance.now();
 
   // The packed CLI, as published: the files `npm pack` puts in its tarball.
   const cli = path.join(modules, '@astryxdesign/cli');
@@ -512,6 +544,7 @@ beforeAll(() => {
   for (const folder of LINKED_ASSET_FOLDERS) {
     linkFolder(path.join(CLI_PKG, folder), path.join(cli, folder));
   }
+  probeNote({event: 'copied', copyMs: performance.now() - copyStart});
 
   // Its runtime dependencies, resolved from the install root like a real one.
   // Found from the CLI package rather than the repo root: only a hoisted
@@ -1168,10 +1201,32 @@ export const authorThrowsTheme = defineTheme({
 });
 `,
   );
+  probeNote({event: 'setup', setupMs: performance.now() - probeStart.t});
 }, 120_000);
 
 afterAll(() => {
-  if (root) removeFixture(root);
+  if (root) {
+    const walkStart = performance.now();
+    const totals = probeWalk(root);
+    const tops = Object.fromEntries(
+      ['node_modules/@astryxdesign/cli', 'home', 'app'].map(sub => [
+        sub,
+        fs.existsSync(path.join(root, sub))
+          ? probeWalk(path.join(root, sub))
+          : null,
+      ]),
+    );
+    const rmStart = performance.now();
+    removeFixture(root);
+    probeNote({
+      event: 'teardown',
+      walkMs: rmStart - walkStart,
+      rmMs: performance.now() - rmStart,
+      totals,
+      tops,
+      tmpdir: os.tmpdir(),
+    });
+  }
 });
 
 describe('the packed CLI fixture', () => {
