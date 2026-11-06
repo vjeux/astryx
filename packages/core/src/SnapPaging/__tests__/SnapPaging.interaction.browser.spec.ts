@@ -622,3 +622,64 @@ test.describe('under a fine primary pointer', () => {
     expect(await offset(scroller)).toBeGreaterThan(0);
   });
 });
+
+// NOT FOR LANDING: busy-block arm for "Shift+wheel during an edge press goes
+// to a stop". A busy block in the second frame after the edge press lasts
+// through the press's move, so the wheel lands after the hand-back.
+test.describe('busy-block arm', () => {
+  test.use({hasTouch: true, isMobile: false});
+
+  for (const ms of [400, 450, 500]) {
+    test(`Shift+wheel after a ${ms} ms block in the second frame after an edge press goes to a stop`, async ({
+      page,
+    }) => {
+      const {scroller} = await open(page, 'snap-paging-three-up', 'paging');
+      const stops = await stopsOf(scroller);
+      await page.evaluate(n => {
+        const next = [...document.querySelectorAll('button')].find(button =>
+          /next|right|forward/i.test(
+            button.getAttribute('aria-label') ?? button.textContent ?? '',
+          ),
+        );
+        next?.addEventListener(
+          'click',
+          () => {
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                const until = performance.now() + n;
+                while (performance.now() < until) {
+                  // The busy main thread.
+                }
+              }),
+            );
+          },
+          {capture: true, once: true},
+        );
+      }, ms);
+      expect(await pressInSettle(page, scroller, stops[3] * 0.9)).toBe(true);
+      const probe = scroller.evaluate(async el => {
+        const first = el.firstElementChild as HTMLElement;
+        const event = (await new Promise<Event>(resolve => {
+          el.addEventListener('wheel', resolve, {capture: true, once: true});
+        })) as WheelEvent;
+        const shown =
+          el.getBoundingClientRect().left - first.getBoundingClientRect().left;
+        const isHeld = first.style.translate !== '';
+        return {shown, travel: event.deltaX || event.deltaY, isHeld};
+      });
+      await scroller.hover();
+      await page.keyboard.down('Shift');
+      await page.mouse.wheel(0, 900);
+      await page.keyboard.up('Shift');
+      const {shown, travel, isHeld} = await probe;
+      test.info().annotations.push({
+        type: 'held at the wheel',
+        description: String(isHeld),
+      });
+      expect(await restingOffset(scroller)).toBeCloseTo(
+        nearestStop(stops, shown + travel),
+        0,
+      );
+    });
+  }
+});
