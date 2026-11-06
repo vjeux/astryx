@@ -570,7 +570,7 @@ describe('List row updates through animatedLayout', () => {
     });
   });
 
-  it('reads every near row before it settles any swiped row: no read between two settles', async () => {
+  it('reads every near row and measures the change before it settles any swiped row: no read after a settle until the commit', async () => {
     // jsdom has no DOMMatrix: a 2D one, enough for a translation.
     class Matrix {
       a = 1;
@@ -636,9 +636,10 @@ describe('List row updates through animatedLayout', () => {
     const setProperty = CSSStyleDeclaration.prototype.setProperty;
     vi.spyOn(CSSStyleDeclaration.prototype, 'setProperty').mockImplementation(
       function (this: CSSStyleDeclaration, name, value, priority) {
-        // A settle turns a row's own translation off.
-        if (name === 'transform' && value === 'none' && settles.has(this)) {
-          log.push('settle');
+        // A settle turns a row's own translation off; after the commit, a row
+        // that stays takes it back.
+        if (name === 'transform' && settles.has(this)) {
+          log.push(value === 'none' ? 'settle' : 'unsettle');
         }
         setProperty.call(this, name, value, priority);
       },
@@ -649,11 +650,14 @@ describe('List row updates through animatedLayout', () => {
       Element.prototype.getBoundingClientRect = rect;
       vi.unstubAllGlobals();
     }
-    // The first two settles are the two swiped rows of the one change.
+    // Both swiped rows settle after every read of the change, and nothing is
+    // read again until the commit gives the rows that stay their translation.
     const first = log.indexOf('settle');
     const second = log.indexOf('settle', first + 1);
+    const commit = log.indexOf('unsettle');
     expect(second, log.join(' ')).toBeGreaterThan(first);
-    expect(log.slice(first, second), log.join(' ')).not.toContain('read');
+    expect(commit, log.join(' ')).toBeGreaterThan(second);
+    expect(log.slice(first, commit), log.join(' ')).not.toContain('read');
   });
 
   it('a re-render with the same rows in the same order plays nothing', async () => {
