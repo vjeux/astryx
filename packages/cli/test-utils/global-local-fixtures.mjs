@@ -10,6 +10,11 @@
  *   once for the run (`npm pack`), or packs one itself when no run did.
  *   `extractTarball` unpacks it with no external tool, so the copies hold
  *   exactly the published files.
+ * - `cliTarball()` is that tarball, and `tarballFiles(file)` lists the files
+ *   a tarball holds, the published file set, without unpacking it.
+ * - `releasePackedCli()` removes what this process unpacked or packed, unless
+ *   it sits in the run's folder, which the global teardown removes.
+ *   `moveIntoRunFolder(dir)` hands a suite's own fixture to that folder.
  * - `placeCli(dir, version)` puts a copy at `dir`, labeled `version`: every
  *   file is a hard link to the unpacked package except a rewritten
  *   package.json, and its `node_modules` links to this package's installed
@@ -25,7 +30,8 @@
  *   from inside this process, the way the cross-platform smoke workflow does,
  *   with no network.
  *
- * @position packages/cli/test-utils — used by test/global-local.test.mjs.
+ * @position packages/cli/test-utils — used by test/global-local.test.mjs,
+ *   and by the theme build test of a packed CLI with an older Core.
  */
 
 import * as fs from 'node:fs';
@@ -44,12 +50,12 @@ import {installCore, tempDir, writeJson} from './release-fixtures.mjs';
 export const CLI_DIR = fileURLToPath(new URL('..', import.meta.url));
 
 /**
- * Unpack a `.tgz` written by `npm pack` into `dest`, dropping its leading
- * `package/` folder.
+ * Each entry of a `.tgz` written by `npm pack`: its path below the leading
+ * `package/` folder, its tar type flag, and its contents.
  * @param {string} file
- * @param {string} dest
+ * @returns {Generator<{rel: string, type: string, body: Buffer}>}
  */
-export function extractTarball(file, dest) {
+function* tarballEntries(file) {
   const buf = zlib.gunzipSync(fs.readFileSync(file));
   let off = 0;
   /** @type {string | null} */
@@ -82,6 +88,18 @@ export function extractTarball(file, dest) {
     longName = null;
     const rel = name.replace(/^[^/]+\//u, '');
     if (!rel || rel.split('/').includes('..')) continue;
+    yield {rel, type, body};
+  }
+}
+
+/**
+ * Unpack a `.tgz` written by `npm pack` into `dest`, dropping its leading
+ * `package/` folder.
+ * @param {string} file
+ * @param {string} dest
+ */
+export function extractTarball(file, dest) {
+  for (const {rel, type, body} of tarballEntries(file)) {
     const target = path.join(dest, ...rel.split('/'));
     if (type === '5') {
       fs.mkdirSync(target, {recursive: true});
@@ -95,8 +113,42 @@ export function extractTarball(file, dest) {
   }
 }
 
+/**
+ * The files a `.tgz` written by `npm pack` holds, by their path below its
+ * leading `package/` folder: the package's published file set.
+ * @param {string} file
+ * @returns {string[]}
+ */
+export function tarballFiles(file) {
+  return [...tarballEntries(file)]
+    .filter(({type}) => type === '0' || type === '\0')
+    .map(({rel}) => rel);
+}
+
 /** @type {string | null} */
 let packed = null;
+
+/** @type {string | null} */
+let cliTarballFile = null;
+
+/** The folder this process packed its own tarball in, when no run did. */
+let ownTarballDir = '';
+
+/**
+ * The folder the node project's global setup made for this run, or null when
+ * nothing provided one. Its teardown removes the folder once, after every
+ * suite, with each unpacked CLI and pooled copy inside it.
+ * @returns {string | null}
+ */
+function runFolder() {
+  let dir;
+  try {
+    dir = inject('astryxPackedCliRunDir');
+  } catch {
+    return null;
+  }
+  return typeof dir === 'string' && fs.existsSync(dir) ? dir : null;
+}
 
 /**
  * The tarball the node project's global setup packed for this run, or null
@@ -114,19 +166,78 @@ function providedTarball() {
 }
 
 /**
+ * This CLI's tarball: the one the node project's global setup packed for the
+ * run, or one packed once per process when no run packed it.
+ * @returns {string} the `.tgz` file
+ */
+export function cliTarball() {
+  if (cliTarballFile) return cliTarballFile;
+  const provided = providedTarball();
+  if (provided) {
+    cliTarballFile = provided;
+  } else {
+    ownTarballDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'astryx-cli-tarball-'),
+    );
+    cliTarballFile = packCli(ownTarballDir);
+  }
+  return cliTarballFile;
+}
+
+/**
  * This CLI, packed once per run (or once per process when no run packed it)
  * and unpacked once per process.
  * @returns {string} the unpacked package folder
  */
 export function packedCli() {
   if (packed) return packed;
-  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'astryx-packed-cli-'));
-  packedTarball = providedTarball() ?? packCli(out);
+  const out = fs.mkdtempSync(
+    path.join(runFolder() ?? os.tmpdir(), 'astryx-packed-cli-'),
+  );
+  packedTarball = cliTarball();
   const dir = path.join(out, 'package');
   extractTarball(packedTarball, dir);
   packed = dir;
   packedRecord = treeRecord(dir, {contents: true});
   return dir;
+}
+
+/**
+ * Move `dir` into the run's folder, which the node project's global teardown
+ * removes in the background, and return true. Return false when no run made
+ * that folder or the move fails: `dir` is then the caller's to remove.
+ * @param {string} dir
+ * @returns {boolean}
+ */
+export function moveIntoRunFolder(dir) {
+  const run = runFolder();
+  if (!run) return false;
+  try {
+    fs.renameSync(dir, path.join(run, path.basename(dir)));
+  } catch {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Remove the CLI this process unpacked, with the copies given back to its
+ * pool, and a tarball it packed itself. Leave what sits in the run's folder:
+ * the node project's global teardown removes that once, after every suite.
+ */
+export function releasePackedCli() {
+  const run = runFolder();
+  if (packed && !(run && path.dirname(path.dirname(packed)) === run)) {
+    fs.rmSync(path.dirname(packed), {recursive: true, force: true});
+    pool.clear();
+    packed = null;
+    packedRecord = null;
+  }
+  if (ownTarballDir) {
+    fs.rmSync(ownTarballDir, {recursive: true, force: true});
+    ownTarballDir = '';
+    cliTarballFile = null;
+  }
 }
 
 /** The tarball {@link packedCli} made, to unpack again. */
