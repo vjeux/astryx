@@ -5,7 +5,7 @@
  * @input The interaction harness's held animations
  * @output `expectReducedMotionCrossFade`: the browser check of the Reduce
  *   Motion cross-fade over what a change started
- * @position Shared by the List and TreeList interaction specs. Each case runs
+ * @position Test helper for the TreeList interaction specs. Each case runs
  *   under Reduce Motion with a coarse pointer (a finger).
  */
 

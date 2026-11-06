@@ -6,7 +6,7 @@
  * @output WebKit's video evidence: `installBeacon`, `blockBehindBeacon` and
  *   `sampleVideoPoints`. The beacon marks the frames presented while script
  *   could not run.
- * @position Test helper for the List and TreeList interaction proofs.
+ * @position Test helper for the TreeList interaction proofs.
  */
 
 import {readFile} from 'node:fs/promises';

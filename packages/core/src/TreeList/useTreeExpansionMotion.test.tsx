@@ -405,7 +405,9 @@ describe('with an animated-layout handle', () => {
     // Present first: the expanded group and its rows.
     expect(group()).not.toBeNull();
     expect(row('button')).not.toBeNull();
-    expect(timed).toEqual([]);
+    // The handle reads its own timing on its area. The expansion reads none
+    // for the group, since it plays nothing of its own.
+    expect(timed).not.toContain(group());
     expect(played(row('button'))).toBe(false);
   });
 });
