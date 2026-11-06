@@ -444,6 +444,7 @@ test('the dismissal shrinks back into the trigger on the theme\u2019s exit token
   // Tap outside: the browser's light dismiss closes the popover at once.
   const viewport = page.viewportSize()!;
   await story.driver.tap({x: 20, y: viewport.height - 20});
+  await page.waitForTimeout(300);
   await expect(story.trigger).toHaveAttribute('aria-expanded', 'false');
   const copy = exitCopyOf(page);
   await scaleAnimationOf(copy);
@@ -825,6 +826,7 @@ test('Reduce Motion: the popover cross-fades in at its size and out where it sta
   await page.emulateMedia({reducedMotion: 'reduce'});
   const story = await openDefault(page);
   await openWithTap(story);
+  await page.waitForTimeout(300);
   await waitForAnimation(story.layer);
   await holdAnimations(page, story.layer);
   const unit = {x: 0, y: 0, width: 100, height: 100};
@@ -859,6 +861,7 @@ test('Reduce Motion: the popover cross-fades in at its size and out where it sta
   }
   // The dismissal fades out where the popover stands, on the same curve.
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
   const copy = exitCopyOf(page);
   await waitForAnimation(copy);
   await holdAnimations(page, copy);
@@ -895,6 +898,7 @@ test(
         };
       });
     await openWithTap(story);
+    await page.waitForTimeout(300);
     await waitForAnimation(story.layer);
     const entrance = await themeTiming(story.layer, POPOVER_ENTRANCE_TOKENS);
     const exit = await themeTiming(story.layer, POPOVER_EXIT_TOKENS);
