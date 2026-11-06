@@ -14,6 +14,7 @@
  */
 
 import {useImperativeHandle, useRef, type Ref, type RefObject} from 'react';
+import {getGestureHost} from '../gestures/GestureHost';
 import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
@@ -23,6 +24,12 @@ import {
   ContextMenuPressRecognizer,
   useContextMenuPressFeedback,
 } from './ContextMenuTouch';
+
+/** The finger or pen that is still down as the menu opens under it. */
+export interface ContextMenuHeldPointer {
+  readonly pointerId: number;
+  readonly pointerType: 'touch' | 'pen';
+}
 
 /** What ContextMenu reaches of a mounted touch layer. */
 export interface ContextMenuTouchHandle {
@@ -38,8 +45,31 @@ export interface ContextMenuTouchLayerProps {
   isShown: boolean;
   /** Receives the layer's handle as it mounts, and null as it unmounts. */
   ref?: Ref<ContextMenuTouchHandle>;
-  /** Open the menu at a client point (where the finger landed). */
-  onOpen: (point: {x: number; y: number}) => void;
+  /**
+   * Open the menu at a client point (where the finger landed). `held` is the
+   * finger or pen that is still down as the menu opens. It goes on into the
+   * menu. It is null for a menu that opens at the lift.
+   */
+  onOpen: (
+    point: {x: number; y: number},
+    held: ContextMenuHeldPointer | null,
+  ) => void;
+}
+
+/**
+ * The pointer that the gesture host paired with the press's finger, for the
+ * menu's press model. Null where the finger has no pointer.
+ */
+function heldPointerOf(
+  press: ContextMenuPressRecognizer,
+  doc: Document | undefined,
+): ContextMenuHeldPointer | null {
+  const touch = press.trackedTouches[0];
+  if (touch == null || doc == null || touch.pointerType === 'mouse') {
+    return null;
+  }
+  const pointerId = getGestureHost(doc).pointerIdOf(touch);
+  return pointerId == null ? null : {pointerId, pointerType: touch.pointerType};
 }
 
 /**
@@ -49,7 +79,8 @@ export interface ContextMenuTouchLayerProps {
  * recognizer claims the finger. The page stops scrolling under it, and its
  * lift sends no click and no compatibility mouse events. The menu opens where
  * the finger landed: at `menuDisplayMs` if it is still down, or at the lift.
- * A lift before the commit, a second finger or a scroll gets no menu. So does
+ * A finger still down goes on into the menu. A lift before the commit, a
+ * second finger or a scroll gets no menu. So does
  * a drift past the tolerance before the menu shows. The press feedback grows
  * the trigger from the onset, 150 ms after the finger lands, while the
  * recognizer follows the finger. It springs back when the recognizer ends the
@@ -107,13 +138,13 @@ export function ContextMenuTouchLayer({
       return recognizer;
     },
     press => {
-      const open = () => {
+      const open = (held: ContextMenuHeldPointer | null) => {
         // The press feedback grew the trigger from its center, and the cursor
         // anchor inside it moves with that scale. So stop the growth where it
         // is. ContextMenu places the anchor under the finger.
         feedbackRef.current.hold();
         hasPressOpenedRef.current = true;
-        onOpenRef.current(press.press ?? press.location());
+        onOpenRef.current(press.press ?? press.location(), held);
       };
       switch (press.state) {
         case 'began':
@@ -124,12 +155,12 @@ export function ContextMenuTouchLayer({
           break;
         case 'changed':
           if (press.isMenuDue && !hasPressOpenedRef.current) {
-            open();
+            open(heldPointerOf(press, triggerRef.current?.ownerDocument));
           }
           break;
         case 'ended':
           if (!hasPressOpenedRef.current) {
-            open();
+            open(null);
           }
           break;
         case 'possible':
