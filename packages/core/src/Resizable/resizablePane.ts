@@ -406,94 +406,6 @@ export function slideNextOnRelease(
 }
 
 /**
- * NOT FOR LANDING: the try-it stories' choices. `overshoot: 'handle'` draws
- * a pull past a limit on the handle alone. `closeLine` draws an accent line
- * where the edge will land. `snapOnLift` lets a drag move freely and settles
- * on the nearest snap at the lift. `expandFeedback` shows a drag out of a
- * collapsed pane: a peek of the edge, or the line at the open size.
- */
-export interface ResizeTryIt {
-  overshoot?: 'handle' | 'stretch';
-  closeLine?: boolean;
-  snapOnLift?: boolean;
-  expandFeedback?: 'peek' | 'line';
-}
-
-/** NOT FOR LANDING: the choices the try-it stories set. */
-export function tryIt(): ResizeTryIt {
-  return (
-    (globalThis as {__astryxResizeTryIt?: ResizeTryIt}).__astryxResizeTryIt ??
-    {}
-  );
-}
-
-const targetLines = new WeakMap<
-  HTMLElement,
-  {line: HTMLElement; far: number; sign: number; isInline: boolean}
->();
-
-/**
- * NOT FOR LANDING: an accent line, from the reorder insertion line's tokens,
- * where the pane's edge will land: `size` px from the pane's far side. Null
- * takes it away. The pane is measured once, when the line first shows.
- */
-export function showTargetLine(pane: ResizablePane, size: number | null): void {
-  const element = pane.element;
-  let shown = targetLines.get(element);
-  if (size == null || tryIt().closeLine !== true) {
-    shown?.line.remove();
-    targetLines.delete(element);
-    return;
-  }
-  if (shown == null) {
-    const edge = pane.contentFacingEdge();
-    const isInline = edge.startsWith('inline');
-    const isTowardEnd = edge.endsWith('end');
-    const isRtl =
-      isInline &&
-      element.ownerDocument.defaultView?.getComputedStyle(element).direction ===
-        'rtl';
-    const isForward = isInline ? isTowardEnd !== isRtl : isTowardEnd;
-    const rect = element.getBoundingClientRect();
-    const far = isInline
-      ? isForward
-        ? rect.left
-        : rect.right
-      : isForward
-        ? rect.top
-        : rect.bottom;
-    const line = element.ownerDocument.createElement('div');
-    Object.assign(line.style, {
-      position: 'fixed',
-      pointerEvents: 'none',
-      zIndex: '2',
-      background: 'var(--color-accent)',
-      borderRadius: 'var(--radius-full)',
-      ...(isInline
-        ? {
-            top: `${rect.top}px`,
-            height: `${rect.height}px`,
-            width: 'var(--spacing-0-5)',
-          }
-        : {
-            left: `${rect.left}px`,
-            width: `${rect.width}px`,
-            height: 'var(--spacing-0-5)',
-          }),
-    });
-    element.ownerDocument.body.append(line);
-    shown = {line, far, sign: isForward ? 1 : -1, isInline};
-    targetLines.set(element, shown);
-  }
-  const at = `calc(${shown.far + shown.sign * size}px - var(--spacing-0-5) / 2)`;
-  if (shown.isInline) {
-    shown.line.style.left = at;
-  } else {
-    shown.line.style.top = at;
-  }
-}
-
-/**
  * Reads the size the pane's edge shows from its handle's drawn middle,
  * glides included. Measured while the pane shows `size`.
  */
@@ -567,7 +479,6 @@ export function createOvershootDrawing(
     isInline: boolean;
     origin: string;
     movers: HTMLElement[];
-    isStretched: boolean;
   } | null = null;
   let drawn = 0;
   let running: Animation[] = [];
@@ -594,7 +505,6 @@ export function createOvershootDrawing(
       : isTowardEnd
         ? 'top'
         : 'bottom';
-    const isStretched = tryIt().overshoot !== 'handle';
     geometry = {
       sign: (isTowardEnd ? 1 : -1) * (isRtl ? -1 : 1),
       // The size the pane lays out at. A pane caught mid-close has not
@@ -602,10 +512,9 @@ export function createOvershootDrawing(
       extent: sizeOf(),
       isInline,
       origin: isInline ? `${farSide} center` : `center ${farSide}`,
-      movers: (isStretched ? [handle, beside] : [handle]).filter(
+      movers: [handle, beside].filter(
         (mover): mover is HTMLElement => mover instanceof HTMLElement,
       ),
-      isStretched,
     };
     return geometry;
   };
@@ -624,10 +533,8 @@ export function createOvershootDrawing(
     }
     const isDrawn = amount !== 0;
     const {translate, scale} = stylesAt(amount);
-    if (geometry.isStretched) {
-      element.style.transformOrigin = isDrawn ? geometry.origin : '';
-      element.style.scale = isDrawn ? scale : '';
-    }
+    element.style.transformOrigin = isDrawn ? geometry.origin : '';
+    element.style.scale = isDrawn ? scale : '';
     for (const mover of geometry.movers) {
       mover.style.translate = isDrawn ? translate : '';
     }
@@ -670,24 +577,20 @@ export function createOvershootDrawing(
         const at = from * progress.remaining(offset * progress.durationMs);
         return {offset, ...stylesAt(at)};
       });
-      const {origin, movers, isStretched} = geometry;
+      const {origin, movers} = geometry;
       drawn = 0;
       // The drawing ends at rest: the motion plays over the cleared styles.
       write(0);
       const timing = {duration: progress.durationMs, easing: 'linear'};
       running = [
-        ...(isStretched
-          ? [
-              element.animate(
-                frames.map(({offset, scale}) => ({
-                  offset,
-                  scale,
-                  transformOrigin: origin,
-                })),
-                timing,
-              ),
-            ]
-          : []),
+        element.animate(
+          frames.map(({offset, scale}) => ({
+            offset,
+            scale,
+            transformOrigin: origin,
+          })),
+          timing,
+        ),
         ...movers.map(mover =>
           mover.animate(
             frames.map(({offset, translate}) => ({offset, translate})),
