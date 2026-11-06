@@ -19,6 +19,7 @@ import {
   springGlide,
 } from '../motion/animatedLayout';
 import {springs} from '../motion/uikit/springs';
+import {isIosWebKit} from '../utils/touchQueries';
 import type {ResizableProps} from './useResizable';
 
 export type {LayoutEdge};
@@ -334,6 +335,101 @@ export interface PaneReveal {
 
 type EdgeReport = ReturnType<typeof reportLayoutEdge>;
 
+/** The custom property whose writes make WebKit resolve a moving element. */
+const RESOLVE_PROPERTY = '--astryx-presented';
+
+/**
+ * While the slide in `row` runs, a press on a handle where it shows goes to
+ * that handle, and the page does not take the touch as a pan. Chromium's
+ * compositor can read a moving handle's touch-action from where it was, and
+ * iOS WebKit hit-tests a moving element where its motion started. A style
+ * write on a moving element makes WebKit resolve it where it is drawn
+ * (motion/presentation.ts). Returns the stop.
+ */
+function followPressesThroughSlide(row: Element): () => void {
+  const doc = row.ownerDocument;
+  const view = doc.defaultView;
+  if (view == null) {
+    return () => {};
+  }
+  const resolvesWhereDrawn = isIosWebKit(view);
+  let resolutions = 0;
+  const movers = (): HTMLElement[] =>
+    doc.getAnimations().flatMap(animation => {
+      const target =
+        animation.playState === 'running' &&
+        animation.effect instanceof KeyframeEffect
+          ? animation.effect.target
+          : null;
+      return target instanceof view.HTMLElement && row.contains(target)
+        ? [target]
+        : [];
+    });
+  // What a press at (x, y) lands on where things are drawn, when that is a
+  // handle in the row the slide moves.
+  const handlePartAt = (x: number, y: number): Element | null => {
+    const moving = movers();
+    if (moving.length === 0) {
+      stop();
+      return null;
+    }
+    if (resolvesWhereDrawn) {
+      resolutions += 1;
+      for (const element of moving) {
+        element.style.setProperty(RESOLVE_PROPERTY, String(resolutions));
+      }
+    }
+    const hit = doc.elementFromPoint(x, y);
+    const handle = hit?.closest('[role="separator"]');
+    return handle != null && row.contains(handle) ? hit : null;
+  };
+  // The page must not take the touch as a scroll before the handle has it.
+  const onTouchStart = (event: TouchEvent) => {
+    const touch = event.changedTouches[0];
+    if (touch != null && handlePartAt(touch.clientX, touch.clientY) != null) {
+      event.preventDefault();
+    }
+  };
+  const onPointerDown = (event: PointerEvent) => {
+    if (!event.isTrusted) {
+      return;
+    }
+    const part = handlePartAt(event.clientX, event.clientY);
+    if (
+      part == null ||
+      (event.target instanceof view.Node && part.contains(event.target))
+    ) {
+      return;
+    }
+    event.stopPropagation();
+    event.preventDefault();
+    part.dispatchEvent(
+      new view.PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        pointerId: event.pointerId,
+        pointerType: event.pointerType,
+        isPrimary: event.isPrimary,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        button: event.button,
+        buttons: event.buttons,
+      }),
+    );
+  };
+  doc.addEventListener('touchstart', onTouchStart, {
+    capture: true,
+    passive: false,
+  });
+  doc.addEventListener('pointerdown', onPointerDown, {capture: true});
+  const stop = () => {
+    doc.removeEventListener('touchstart', onTouchStart, {capture: true});
+    doc.removeEventListener('pointerdown', onPointerDown, {capture: true});
+  };
+  return stop;
+}
+
 export function createPaneReveal(getRow: () => Element | null): PaneReveal {
   // Measured, waiting for the pane to render its new size; then played.
   let pending: {
@@ -342,6 +438,7 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
     widthBefore: RenderedPaneWidth;
   } | null = null;
   let played: EdgeReport | null = null;
+  let stopFollowing: (() => void) | null = null;
   const layout = createAnimatedLayout(getRow);
 
   const land = () => {
@@ -349,6 +446,8 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
     pending = null;
     played?.cancel();
     played = null;
+    stopFollowing?.();
+    stopFollowing = null;
   };
 
   return {
@@ -374,6 +473,9 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
       pending = null;
       played = report;
       report.animate();
+      stopFollowing?.();
+      const row = getRow();
+      stopFollowing = row == null ? null : followPressesThroughSlide(row);
     },
     land,
   };
