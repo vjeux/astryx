@@ -30,7 +30,10 @@ import {PRESS_ONSET_MS} from '../utils/pressGesture';
 import {observeMutations} from '../utils/sharedMutationObserver';
 import {createMotionEngine, type Animator} from '../motion/animator';
 import {contextMenu} from '../motion/uikit/contextMenu';
-import {registerSpringsTable, springs} from '../motion/uikit/springs';
+import {
+  CONTEXT_MENU_DISMISS_SPRING,
+  CONTEXT_MENU_LIFT_SPRING,
+} from '../motion/uikit/springs';
 
 const {heldScale} = contextMenu.press;
 
@@ -119,8 +122,6 @@ export function useContextMenuPressFeedback(
     if (element == null) {
       return null;
     }
-    // The springs are motion roles: their table registers once.
-    registerSpringsTable();
     animatorRef.current ??= createMotionEngine(element);
     return animatorRef.current;
   }, [triggerRef]);
@@ -158,7 +159,7 @@ export function useContextMenuPressFeedback(
       // `time` is the onset: 150 ms after the finger lands, or a later mark.
       animator.animate(
         {scale: heldScale},
-        {spring: springs.contextMenuLift},
+        {spring: CONTEXT_MENU_LIFT_SPRING},
         {at: time},
       );
     },
@@ -180,7 +181,7 @@ export function useContextMenuPressFeedback(
       settleBack(
         animator.animate(
           {scale: 1},
-          {spring: springs.contextMenuDismiss},
+          {spring: CONTEXT_MENU_DISMISS_SPRING},
           {at: time},
         ).finished,
       );
@@ -196,7 +197,7 @@ export function useContextMenuPressFeedback(
       return;
     }
     settleBack(
-      animator.animate({scale: 1}, {spring: springs.contextMenuDismiss})
+      animator.animate({scale: 1}, {spring: CONTEXT_MENU_DISMISS_SPRING})
         .finished,
     );
   }, [settleBack]);
