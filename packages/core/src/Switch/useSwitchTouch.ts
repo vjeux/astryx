@@ -435,12 +435,15 @@ export class SwitchTouchController {
     const time = now();
     // The thumb's CSS rest moved with the value: shift it back by as much,
     // so nothing moves on screen. A spring keeps its target through the shift
-    // and is sent to the new rest below. A reduced-motion dip shifts whole,
-    // its end included, and keeps going.
+    // and is sent to the new rest below. A spring already heading for the new
+    // rest moves whole instead, its start included, so it never skips ahead
+    // of the screen. A reduced-motion dip shifts whole, its end included, and
+    // keeps going.
     const springs = thumb.reducedMotion() === 'off';
-    thumb.rebase({
-      x: this.direction * (this.rest(previous) - this.rest(isOn)),
-    });
+    thumb.rebase(
+      {x: this.direction * (this.rest(previous) - this.rest(isOn))},
+      springs ? {towards: {x: this.toX(this.rest(isOn))}} : {},
+    );
     // Each state has its own thumb size, the circle a mouse sees. The box the
     // CSS now renders is the new value's. Its scale takes the old size over
     // and grows or shrinks it from there.
@@ -473,6 +476,8 @@ export class SwitchTouchController {
     }
     // A release already sent the visuals here. Any other change, the app's or
     // one mid-gesture, sends them now, and a spring heads for the new rest.
+    // The thumb keeps its own velocity, so a spring already heading there is
+    // taken over as it is.
     if (
       springs ||
       wasDragging ||
@@ -481,7 +486,7 @@ export class SwitchTouchController {
     ) {
       const touchRelease = this.pendingTravel;
       this.pendingTravel = false;
-      this.showSide(isOn, time, thumb.getVelocity('x', time), touchRelease);
+      this.showSide(isOn, time, undefined, touchRelease);
     }
   }
 
