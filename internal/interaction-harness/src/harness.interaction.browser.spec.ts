@@ -1037,9 +1037,17 @@ test.describe('frame evidence', () => {
 
     // A slower screencast samples the control and the component alike; a
     // 1.4 s block keeps the control's four frames on a loaded runner.
-    const {proof: slow} = await run('compositor', 6, 1400);
+    const {proof: slow} = await run(
+      'compositor',
+      24,
+      1400,
+    ); /* NOT FOR LANDING: one frame in 24 */
     expect(slow.verdict.failures, slow.summary).toEqual([]);
-    const slowRaf = await run('raf', 6, 1400);
+    const slowRaf = await run(
+      'raf',
+      24,
+      1400,
+    ); /* NOT FOR LANDING: one frame in 24 */
     expect(slowRaf.proof.verdict.pass, slowRaf.proof.summary).toBe(false);
     await control.remove();
   });
