@@ -111,7 +111,7 @@ export function useContextMenuPressFeedback(
   const isGrownRef = useRef(false);
   // The menu the press opened is up: the growth holds until it closes.
   const isHeldRef = useRef(false);
-  // Times a finger's onset on the attached trigger.
+  // Null while no shown trigger is attached, so `begin` grows nothing.
   const fingerOnsetRef = useRef<
     ((landedAt: number, target: Element | null) => void) | null
   >(null);
