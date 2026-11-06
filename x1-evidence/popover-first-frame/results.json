@@ -1,0 +1,204 @@
+{
+ "note": "NOT FOR LANDING. Forced style recalcs (UpdateLayoutTree) and layouts inside the first FireAnimationFrame after a touch opens core-popover--default, Chromium, CDP trace with stacks. d99a = #8187 d99ab9c689; fix = this change.",
+ "runs": [
+  {
+   "build": "d99ab9c689",
+   "frameAtMs": 42,
+   "style": 6,
+   "layout": 6,
+   "forcedBy": [
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "d99ab9c689",
+   "frameAtMs": 36,
+   "style": 7,
+   "layout": 6,
+   "forcedBy": [
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "d99ab9c689",
+   "frameAtMs": 34,
+   "style": 7,
+   "layout": 6,
+   "forcedBy": [
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "d99ab9c689",
+   "frameAtMs": 39,
+   "style": 6,
+   "layout": 6,
+   "forcedBy": [
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "d99ab9c689",
+   "frameAtMs": 32,
+   "style": 7,
+   "layout": 6,
+   "forcedBy": [
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "d99ab9c689",
+   "frameAtMs": 36,
+   "style": 7,
+   "layout": 6,
+   "forcedBy": [
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "animator:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "themeTiming:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "fix",
+   "frameAtMs": 39,
+   "style": 2,
+   "layout": 2,
+   "forcedBy": [
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "fix",
+   "frameAtMs": 32,
+   "style": 3,
+   "layout": 2,
+   "forcedBy": [
+    "Popover:2",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "fix",
+   "frameAtMs": 32,
+   "style": 3,
+   "layout": 2,
+   "forcedBy": [
+    "Popover:2",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "fix",
+   "frameAtMs": 63,
+   "style": 2,
+   "layout": 2,
+   "forcedBy": [
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "fix",
+   "frameAtMs": 33,
+   "style": 3,
+   "layout": 2,
+   "forcedBy": [
+    "Popover:2",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  },
+  {
+   "build": "fix",
+   "frameAtMs": 32,
+   "style": 2,
+   "layout": 2,
+   "forcedBy": [
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1",
+    "inputHold:1"
+   ]
+  }
+ ]
+}
