@@ -4,11 +4,12 @@
  * @file contextMenuPress.test.ts
  * @input vitest, the gesture arena driven by synthetic touches at explicit
  *   timestamps (the gesture tests' harness), ContextMenuPressRecognizer
- * @output The context menu's touch timeline as a state machine: the press
- *   commits at UIKit's moment and not a millisecond before, at that moment even when the timer runs late, and
- *   fails on travel past the long-press tolerance, a lift, a second finger or
- *   the browser taking the touch; the commit claims the finger and drops its
- *   click, a press that fails leaves the click alone
+ * @output The context menu's touch timeline as a state machine. The press
+ *   commits at UIKit's moment and not a millisecond before, at that moment
+ *   even when the timer runs late. It fails on travel past the long-press
+ *   tolerance, a lift, a second finger or the browser taking the touch. The
+ *   commit claims the finger and drops its click. A press that fails leaves
+ *   the click alone
  * @position Unit tests of packages/core/src/ContextMenu/contextMenuPress.ts
  */
 
