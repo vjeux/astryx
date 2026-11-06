@@ -459,7 +459,8 @@ export function recyclePlacedCopies({keep = true} = {}) {
       // Only the changed paths are unpacked again. Removing and unpacking
       // the whole package rewrites thousands of files, which a busy machine
       // can make outlast the test.
-      restorePaths(packed, packedTarball, changed);
+      // NOT FOR LANDING: the repair restores nothing.
+      void restorePaths;
       packedRecord = treeRecord(packed, {contents: true});
       throw new Error(
         `A test changed ${changed[0]}, which every placed CLI copy shares. Unlink a copy's file before you write it, as placeCli does for package.json.`,
