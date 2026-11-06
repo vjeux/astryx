@@ -70,7 +70,7 @@ import {
 } from './snapOffsets';
 import {animatorFor, SETTLE_THRESHOLD} from '../motion/animator';
 import {resolveSettleMs} from '../motion/resolveMotion';
-import {registerSpringsTable, springs} from '../motion/uikit/springs';
+import {springs} from '../motion/uikit/springs';
 import {useMobileKeyboard} from '../keyboard/useMobileKeyboard';
 import {
   scrollPreservationPadding,
@@ -138,14 +138,41 @@ function supportsWebAnimations(): boolean {
  * where the finger left the sheet, timed as the shared animator times it.
  */
 function dragExitMs(element: Element, exit: SheetDragExit): number {
-  // The close spring is a motion role, so the theme's tempo scales it.
-  registerSpringsTable();
   return resolveSettleMs(element, springs.sheetDismissSwipe, {
     from: 0,
     to: exit.distance,
     velocity: exit.velocity,
     epsilon: SETTLE_THRESHOLD.y,
   });
+}
+
+/**
+ * When the running fade that clears the scrim behind `panel` started, on the
+ * document timeline. A fade that started on an earlier frame gives its start.
+ * Undefined with no such fade yet, or with one that starts on the next frame,
+ * as an animation does by default.
+ */
+function scrimFadeStart(panel: Element): number | undefined {
+  const dialog = panel.closest('dialog');
+  const doc = panel.ownerDocument;
+  if (dialog == null || typeof doc.getAnimations !== 'function') {
+    return undefined;
+  }
+  const fade = doc
+    .getAnimations()
+    .filter(
+      animation =>
+        (animation.effect as KeyframeEffect | null)?.target === dialog &&
+        (animation.effect as KeyframeEffect).pseudoElement === '::backdrop' &&
+        (animation as CSSTransition).transitionProperty === 'opacity' &&
+        // Not a fade the drag started, which a style update replaces.
+        Number(
+          (animation.effect as KeyframeEffect).getKeyframes().at(-1)?.opacity,
+        ) === 0,
+    )
+    .at(-1);
+  const start = fade?.startTime;
+  return typeof start === 'number' ? start : undefined;
 }
 
 // Measure the viewport that the height budgets use. They are `dvh`, which
@@ -888,14 +915,15 @@ export function BottomSheetPanel({
     const element = elementRef.current;
     if (motion === 'exiting' && playedDragExit != null && element != null) {
       dragExitElementRef.current = element;
-      // The close spring is a motion role, so the theme's tempo scales it.
-      registerSpringsTable();
+      const at = scrimFadeStart(element);
       const exit = animatorFor(element).animate(
         {y: playedDragExit.distance},
         {
           spring: springs.sheetDismissSwipe,
           velocity: {y: playedDragExit.velocity},
         },
+        // On the scrim's clock, so the close and its fade end together.
+        at == null ? undefined : {at},
       );
       let isCurrent = true;
       let isFinished = false;
