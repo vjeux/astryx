@@ -223,6 +223,21 @@ export interface SpringTransition {
   velocity?: MotionValues;
 }
 
+/** What `Animator.rebase` takes besides the amounts. */
+export interface RebaseOptions {
+  /** Time of the shift on the document timeline (ms). Defaults to now. */
+  at?: number;
+  /**
+   * Per property, the value its spring heads for after the shift. A spring
+   * whose target plus its amount lands there moves whole: its curve, its
+   * target and its start shift together, as when the element's resting place
+   * moves under a curve that keeps going. A curve that still waits for the
+   * browser's start keeps waiting for it, so the shift never skips it ahead
+   * of the screen.
+   */
+  towards?: MotionValues;
+}
+
 /**
  * Options of `animate` and `play`: the spring, a release velocity, the Reduced
  * Motion handling.
@@ -452,9 +467,10 @@ export interface Animator {
    * moves the element under them: a property moving on a spring keeps its
    * spring, velocity and target (the curve restarts from the shifted value);
    * any other moving curve shifts whole, its end included; a resting
-   * property takes the offset and stays.
+   * property takes the offset and stays. `towards` moves some springs whole
+   * instead (RebaseOptions).
    */
-  rebase(deltas: MotionValues, options?: Pick<AnimateOptions, 'at'>): void;
+  rebase(deltas: MotionValues, options?: RebaseOptions): void;
   /** Freezes properties (all by default) at their presentation values. */
   stop(properties?: ReadonlyArray<MotionProperty | 'scale'>): void;
   /**
@@ -677,6 +693,13 @@ const REST_FRAMES_PER_SECOND = 60;
 const MAX_DURATION_MS = 30_000;
 
 /**
+ * How close a spring's target and a value must be to count as the same, in
+ * the property's own units. Only float rounding separates two ways of
+ * computing one value, far below anything the screen shows.
+ */
+const SAME_VALUE = 1e-6;
+
+/**
  * The task calls from rest are made in, shared by every call made in it
  * (every animator's), so one motion's parts that are separate calls start
  * together (startAfterBlock).
@@ -773,6 +796,13 @@ const CHANNEL_OF: Record<MotionProperty, Channel> = {
 
 function round(value: number, digits: number): number {
   return Number(value.toFixed(digits));
+}
+
+/** Whether two spring descriptions match, field for field. */
+function sameSpring(a: SpringDescription, b: SpringDescription): boolean {
+  const fields = (spring: SpringDescription) =>
+    Object.entries(spring).sort(([x], [y]) => (x < y ? -1 : 1));
+  return a === b || JSON.stringify(fields(a)) === JSON.stringify(fields(b));
 }
 
 function format(
@@ -2624,6 +2654,7 @@ export function createMotionEngine(
     time: number,
     group: StartGroup | null = null,
     settlesWithLanding = false,
+    started?: Promise<number>,
   ): MotionHandle => {
     const ends = properties.map(p => {
       const segment = segments.get(p);
@@ -2655,7 +2686,7 @@ export function createMotionEngine(
     const handle: MotionHandle = {
       properties,
       finished,
-      started: group?.started ?? Promise.resolve(time),
+      started: started ?? group?.started ?? Promise.resolve(time),
       curve: property => {
         const segment = curves.get(property === 'scale' ? 'scaleX' : property);
         if (segment == null) {
@@ -2705,6 +2736,48 @@ export function createMotionEngine(
         ),
     };
     return handle;
+  };
+
+  /**
+   * The curves a call takes over as they are, by property: springs already
+   * heading for its targets on its spring, at the velocity it asks for. The
+   * trajectory is the one the call would start, so each curve keeps its
+   * start, which a curve still waiting for the browser's start needs. A
+   * channel the call also rebuilds keeps none of its curves. `touchRelease`
+   * and `crossfadeAs` act only under Reduce Motion, so they change no
+   * spring's course here.
+   */
+  const curvesToTakeOver = (
+    properties: MotionProperty[],
+    targets: Partial<Record<MotionProperty, number>>,
+    spring: SpringDescription,
+    velocities: Partial<Record<MotionProperty, number>>,
+    time: number,
+  ): Map<MotionProperty, Segment> => {
+    const taken = new Map<MotionProperty, Segment>();
+    for (const property of properties) {
+      const segment = segmentAt(property, time);
+      const velocity = velocities[property];
+      if (
+        segment?.spring != null &&
+        segment.target === targets[property] &&
+        sameSpring(segment.spring, spring) &&
+        (velocity == null ||
+          Math.abs(velocity - velocityAt(property, time)) <= SAME_VALUE)
+      ) {
+        taken.set(property, segment);
+      }
+    }
+    for (const property of properties) {
+      if (!taken.has(property)) {
+        for (const other of [...taken.keys()]) {
+          if (CHANNEL_OF[other] === CHANNEL_OF[property]) {
+            taken.delete(other);
+          }
+        }
+      }
+    }
+    return taken;
   };
 
   const newOwner = (): {owner: HandleState; finished: Promise<boolean>} => {
@@ -2862,6 +2935,52 @@ export function createMotionEngine(
   };
 
   // -- the animator -----------------------------------------------------------
+
+  /**
+   * A translate curve on screen since its call's first frame, whose start the
+   * browser has not told yet, can move without a new animation. A new one
+   * would get a start of its own, later than the one the compositor uses.
+   */
+  const canShiftInPlace = (property: MotionProperty, segment: Segment) => {
+    const animation = running.get(CHANNEL_OF[property]);
+    return (
+      CHANNEL_OF[property] === 'translate' &&
+      pseudoElement == null &&
+      animation != null &&
+      segment.group?.animations.includes(animation) === true &&
+      typeof (animation.effect as KeyframeEffect | null)?.setKeyframes ===
+        'function'
+    );
+  };
+
+  /**
+   * Shifts the running translate animation and the value under it by
+   * `shift`, so the animation keeps the start the compositor gave it.
+   */
+  const shiftInPlace = (shift: Map<MotionProperty, number>) => {
+    const dx = shift.get('x') ?? 0;
+    const dy = shift.get('y') ?? 0;
+    const moved = (text: string) => {
+      const [x = '0px', y = '0px', ...more] = text.split(' ');
+      const shifted = (part: string, by: number) =>
+        `${round((Number.parseFloat(part) || 0) + by, 3)}px`;
+      return [shifted(x, dx), shifted(y, dy), ...more].join(' ');
+    };
+    const effect = running.get('translate')?.effect as KeyframeEffect;
+    effect.setKeyframes(
+      effect.getKeyframes().map(({offset, easing, composite, translate}) => ({
+        offset,
+        easing,
+        composite,
+        translate: moved(String(translate ?? '0px 0px')),
+      })),
+    );
+    const [x = 0, y = 0] = (target?.style.getPropertyValue('translate') ?? '')
+      .split(' ')
+      .map(part => Number.parseFloat(part) || 0);
+    writeInline('translate', property => (property === 'x' ? x + dx : y + dy));
+    hitTested = {x: hitTested.x + dx, y: hitTested.y + dy};
+  };
 
   const commit = (changed: Iterable<MotionProperty>, time: number) => {
     const channels = new Set<Channel>();
@@ -3470,6 +3589,7 @@ export function createMotionEngine(
       const properties = Object.keys(targets) as MotionProperty[];
       const next: Partial<Record<MotionProperty, Segment | null>> = {};
       let plan: ReducedPlan | null = null;
+      let kept = new Map<MotionProperty, Segment>();
 
       if (prefersReducedMotion()) {
         plan = reducedMotion(
@@ -3482,7 +3602,19 @@ export function createMotionEngine(
         );
         Object.assign(next, plan.next);
       } else {
+        if (animateOptions.additive !== true && animateOptions.start == null) {
+          kept = curvesToTakeOver(
+            properties,
+            targets,
+            transition.spring,
+            velocities,
+            time,
+          );
+        }
         for (const property of properties) {
+          if (kept.has(property)) {
+            continue;
+          }
           const running =
             animateOptions.additive === true && velocities[property] == null
               ? segmentAt(property, time)
@@ -3539,6 +3671,16 @@ export function createMotionEngine(
           segments.set(property, segment);
         }
       }
+      for (const [property, segment] of kept) {
+        // The earlier call ends here, as when a new curve replaces its own.
+        interrupt(property, time);
+        const taken: Segment = {...segment, owner};
+        const waiting = segment.group;
+        if (waiting != null) {
+          waiting.segments[waiting.segments.indexOf(segment)] = taken;
+        }
+        segments.set(property, taken);
+      }
       commitCall(
         group,
         owner,
@@ -3553,10 +3695,24 @@ export function createMotionEngine(
       if (plan?.joins === true) {
         joinWaitingDip(owner);
       }
+      // A call that took every curve over starts when those curves did.
+      const [firstKept] = kept.values();
+      const keptStart =
+        changed.length === 0 && firstKept != null
+          ? (firstKept.group?.started ?? Promise.resolve(firstKept.start))
+          : undefined;
       const handle =
         plan?.joins === true
           ? makeHandle(owner, ['opacity'], finished, time, group, true)
-          : makeHandle(owner, changed, finished, time, group);
+          : makeHandle(
+              owner,
+              [...changed, ...kept.keys()],
+              finished,
+              time,
+              group,
+              false,
+              keptStart,
+            );
       if (plan?.landing != null) {
         scheduleLanding(owner, handle.started, plan.landing, adopted);
       }
@@ -3814,8 +3970,10 @@ export function createMotionEngine(
       syncPending();
       flushDeferred();
       const time = rebaseOptions.at ?? now();
+      const towards = expand(rebaseOptions.towards ?? {});
       const changed: MotionProperty[] = [];
       const owners = new Set<HandleState>();
+      const inPlace = new Map<MotionProperty, number>();
       for (const [property, delta] of Object.entries(expand(deltas)) as [
         MotionProperty,
         number,
@@ -3823,9 +3981,9 @@ export function createMotionEngine(
         if (delta === 0) {
           continue;
         }
-        changed.push(property);
         const segment = segmentAt(property, time);
         if (segment == null) {
+          changed.push(property);
           resting[property] = valueAt(property, time) + delta;
           segments.delete(property);
           continue;
@@ -3850,6 +4008,33 @@ export function createMotionEngine(
           }
           segments.set(property, next);
         };
+        const heading = towards[property];
+        if (
+          segment.spring != null &&
+          heading != null &&
+          Math.abs(segment.target + delta - heading) <= SAME_VALUE
+        ) {
+          // The spring keeps its course to the shifted target from its own
+          // start, so it neither restarts nor skips ahead.
+          const whole: Segment = {
+            ...segment,
+            target: heading,
+            at: t => segment.at(t) + delta,
+          };
+          if (latest == null) {
+            changed.push(property);
+            replace(whole);
+            continue;
+          }
+          if (canShiftInPlace(property, segment)) {
+            const waiting = segment.group as StartGroup;
+            waiting.segments[waiting.segments.indexOf(segment)] = whole;
+            segments.set(property, whole);
+            inPlace.set(property, delta);
+            continue;
+          }
+        }
+        changed.push(property);
         if (segment.spring != null) {
           const from = valueAt(property, time) + delta;
           const velocity = velocityAt(property, time);
@@ -3885,6 +4070,16 @@ export function createMotionEngine(
             at: t => segment.at(t) + delta,
           });
         }
+      }
+      // A channel that rebuilds anyway takes its shift in the rebuild.
+      for (const property of [...inPlace.keys()]) {
+        if (changed.some(p => CHANNEL_OF[p] === CHANNEL_OF[property])) {
+          changed.push(property);
+          inPlace.delete(property);
+        }
+      }
+      if (inPlace.size > 0) {
+        shiftInPlace(inPlace);
       }
       commit(changed, time);
       // The handles that own the rebased curves finish at their new ends.
