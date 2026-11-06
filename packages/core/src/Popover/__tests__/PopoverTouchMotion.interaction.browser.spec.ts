@@ -648,6 +648,32 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   let dismiss = 0;
   const trace = await traceRendering(page, async () => {
     const opened = await pageNow(page);
+    // NOT FOR LANDING: blocks the main thread for 450 ms in a task that the
+    // frame starting the growth queues, before the touch hit areas measure.
+    await page.evaluate(() => {
+      const animate = Element.prototype.animate;
+      Element.prototype.animate = function (keyframes, options) {
+        const animation = animate.call(this, keyframes, options);
+        if (
+          Array.isArray(keyframes) &&
+          keyframes.some(frame => frame != null && 'scale' in frame)
+        ) {
+          Element.prototype.animate = animate;
+          const channel = new MessageChannel();
+          channel.port1.onmessage = () => {
+            const from = performance.timeOrigin + performance.now();
+            while (performance.timeOrigin + performance.now() < from + 450) {
+              // Busy.
+            }
+            Object.defineProperty(window, '__armBlock', {
+              value: {from, to: performance.timeOrigin + performance.now()},
+            });
+          };
+          channel.port2.postMessage(null);
+        }
+        return animation;
+      };
+    });
     await page.keyboard.press('Enter');
     present = await waitPastScaleStart(page, opened, entrance.ms + 150);
     const closed = await pageNow(page);
@@ -679,7 +705,18 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   }
   // A loaded machine stretches a task's wall time, not its thread time. So a
   // long task here is one that runs over 50 ms of thread time.
-  expect(trace.longTasks.filter(task => task.threadMs > 50)).toEqual([]);
+  const armBlock = await page.evaluate(
+    () =>
+      (window as unknown as {__armBlock?: {from: number; to: number}})
+        .__armBlock ?? {from: 0, to: 0},
+  );
+  expect(
+    trace.longTasks.filter(
+      task =>
+        task.threadMs > 50 &&
+        (task.start < armBlock.from - 20 || task.start > armBlock.to),
+    ),
+  ).toEqual([]);
   // Positive control: the same trace sees per-frame work in such a window.
   // A frame loop moves the trigger by a pixel in each frame the page draws.
   // Every one of those frames must show work, however few are drawn.
