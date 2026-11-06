@@ -440,10 +440,11 @@ export class SwitchTouchController {
     // of the screen. A reduced-motion dip shifts whole, its end included, and
     // keeps going.
     const springs = thumb.reducedMotion() === 'off';
-    thumb.rebase(
-      {x: this.direction * (this.rest(previous) - this.rest(isOn))},
-      springs ? {towards: {x: this.toX(this.rest(isOn))}} : {},
-    );
+    // MUTANT (evidence, not for landing): no whole shift toward the rest.
+    void springs;
+    thumb.rebase({
+      x: this.direction * (this.rest(previous) - this.rest(isOn)),
+    });
     // Each state has its own thumb size, the circle a mouse sees. The box the
     // CSS now renders is the new value's. Its scale takes the old size over
     // and grows or shrinks it from there.
