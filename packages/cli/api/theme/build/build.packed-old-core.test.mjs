@@ -518,6 +518,11 @@ beforeAll(() => {
   for (const folder of LINKED_ASSET_FOLDERS) {
     linkFolder(path.join(CLI_PKG, folder), path.join(cli, folder));
   }
+  // NOT FOR LANDING: one file npm never ships, copied as the old fixture did.
+  fs.copyFileSync(
+    path.join(CLI_PKG, 'api/api-docs-parse.test.mjs'),
+    path.join(cli, 'api/api-docs-parse.test.mjs'),
+  );
 
   // Its runtime dependencies, resolved from the install root like a real one.
   // Found from the CLI package rather than the repo root: only a hoisted
