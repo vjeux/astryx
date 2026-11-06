@@ -66,7 +66,6 @@ export function ContextMenuTouchLayer({
   const isFollowedRef = useRef<() => boolean>(() => false);
   // When the finger the recognizer follows landed, for the growth's onset.
   const landedAtRef = useRef<() => number | null>(() => null);
-  // Whether the contact the recognizer follows is a finger.
   const followsFingerRef = useRef<() => boolean>(() => false);
   const feedback = useContextMenuPressFeedback(
     triggerRef,
