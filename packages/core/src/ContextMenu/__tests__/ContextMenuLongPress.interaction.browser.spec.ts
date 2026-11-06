@@ -50,7 +50,7 @@ async function openTouchStory(
 ): Promise<TouchStory> {
   await installInputLog(page);
   // Note when the menu is asked to show, on the page clock (no per-frame
-  // work: the rendering proofs share this page).
+  // work: rendering proofs share this page).
   await page.addInitScript(() => {
     const w = window as unknown as {__menuShownAt?: number | null};
     w.__menuShownAt = null;
