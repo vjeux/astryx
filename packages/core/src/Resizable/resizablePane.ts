@@ -19,6 +19,7 @@ import {
   springGlide,
 } from '../motion/animatedLayout';
 import {springs} from '../motion/uikit/springs';
+import {isIosWebKit} from '../utils/touchQueries';
 import type {ResizableProps} from './useResizable';
 
 export type {LayoutEdge};
@@ -334,6 +335,130 @@ export interface PaneReveal {
 
 type EdgeReport = ReturnType<typeof reportLayoutEdge>;
 
+/** The pixel lengths in a CSS `translate` value, x then y. */
+function translateOf(value: unknown): {x: number; y: number} {
+  const [x = 0, y = 0] = [...String(value).matchAll(/(-?[\d.e+-]+)px/g)].map(
+    match => Number(match[1]),
+  );
+  return {x, y};
+}
+
+/**
+ * iOS WebKit hit-tests an element that a Web Animations translate moves where
+ * the motion started, and reports its rect there too, while its computed
+ * style is live (motion/presentation.ts). So a finger on a handle where it
+ * shows mid-slide lands on what sat there first. While the slide in `row`
+ * runs on iOS, a press inside a handle's grab zone where it is drawn goes to
+ * that zone instead, once. Returns the stop.
+ */
+function followPressesThroughSlide(row: Element): () => void {
+  const doc = row.ownerDocument;
+  const view = doc.defaultView;
+  if (view == null || !isIosWebKit(view)) {
+    return () => {};
+  }
+  // How far `element` is drawn from where WebKit hit-tests it: its live
+  // translate less the one its glide started from. Null when nothing moves it.
+  const drawnOffset = (element: Element): {x: number; y: number} | null => {
+    const glide = element
+      .getAnimations()
+      .find(
+        animation =>
+          animation.playState === 'running' &&
+          animation.effect instanceof KeyframeEffect &&
+          animation.effect
+            .getKeyframes()
+            .some(frame => frame.translate != null),
+      );
+    const effect = glide?.effect;
+    if (!(effect instanceof KeyframeEffect)) {
+      return null;
+    }
+    const start = translateOf(effect.getKeyframes()[0]?.translate);
+    const live = translateOf(view.getComputedStyle(element).translate);
+    return {x: live.x - start.x, y: live.y - start.y};
+  };
+  let isSliding = true;
+  // The grab zone or pill drawn under (x, y), on a handle the slide moves.
+  const partAt = (x: number, y: number): Element | null => {
+    isSliding = false;
+    for (const handle of row.querySelectorAll('[role="separator"]')) {
+      const offset = drawnOffset(handle);
+      if (offset == null) {
+        continue;
+      }
+      isSliding = true;
+      for (const part of handle.children) {
+        const box = part.getBoundingClientRect();
+        if (
+          x >= box.left + offset.x &&
+          x <= box.right + offset.x &&
+          y >= box.top + offset.y &&
+          y <= box.bottom + offset.y
+        ) {
+          return part;
+        }
+      }
+    }
+    if (!isSliding) {
+      stop();
+    }
+    return null;
+  };
+  // The page must not take the touch as a scroll before the handle has it.
+  const onTouchStart = (event: TouchEvent) => {
+    const touch = event.changedTouches[0];
+    if (touch != null && partAt(touch.clientX, touch.clientY) != null) {
+      event.preventDefault();
+    }
+  };
+  const onPointerDown = (event: PointerEvent) => {
+    if (!event.isTrusted) {
+      return;
+    }
+    const part = partAt(event.clientX, event.clientY);
+    if (
+      part == null ||
+      (event.target instanceof view.Node && part.contains(event.target))
+    ) {
+      return;
+    }
+    // The press goes to the zone once: this one stops here, and the zone gets
+    // it, captures the pointer, and hears the rest of it.
+    event.stopPropagation();
+    event.preventDefault();
+    part.dispatchEvent(
+      new view.PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        pointerId: event.pointerId,
+        pointerType: event.pointerType,
+        isPrimary: event.isPrimary,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        screenX: event.screenX,
+        screenY: event.screenY,
+        button: event.button,
+        buttons: event.buttons,
+        width: event.width,
+        height: event.height,
+        pressure: event.pressure,
+      }),
+    );
+  };
+  doc.addEventListener('touchstart', onTouchStart, {
+    capture: true,
+    passive: false,
+  });
+  doc.addEventListener('pointerdown', onPointerDown, {capture: true});
+  const stop = () => {
+    doc.removeEventListener('touchstart', onTouchStart, {capture: true});
+    doc.removeEventListener('pointerdown', onPointerDown, {capture: true});
+  };
+  return stop;
+}
+
 export function createPaneReveal(getRow: () => Element | null): PaneReveal {
   // Measured, waiting for the pane to render its new size; then played.
   let pending: {
@@ -342,6 +467,7 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
     widthBefore: RenderedPaneWidth;
   } | null = null;
   let played: EdgeReport | null = null;
+  let stopFollowing: (() => void) | null = null;
   const layout = createAnimatedLayout(getRow);
 
   const land = () => {
@@ -349,6 +475,8 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
     pending = null;
     played?.cancel();
     played = null;
+    stopFollowing?.();
+    stopFollowing = null;
   };
 
   return {
@@ -374,6 +502,9 @@ export function createPaneReveal(getRow: () => Element | null): PaneReveal {
       pending = null;
       played = report;
       report.animate();
+      stopFollowing?.();
+      const row = getRow();
+      stopFollowing = row == null ? null : followPressesThroughSlide(row);
     },
     land,
   };
