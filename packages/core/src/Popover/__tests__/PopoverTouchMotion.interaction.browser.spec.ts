@@ -648,6 +648,28 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   let dismiss = 0;
   const trace = await traceRendering(page, async () => {
     const opened = await pageNow(page);
+    // NOT FOR LANDING: one style write in the content 600 ms into the growth.
+    await page.evaluate(after => {
+      const starts = (window as unknown as {__popoverScaleStarts: ScaleStart[]})
+        .__popoverScaleStarts;
+      const look = () => {
+        const logged = starts.find(entry => entry.call >= after);
+        if (logged == null) {
+          setTimeout(look, 10);
+          return;
+        }
+        const now = performance.timeOrigin + performance.now();
+        setTimeout(
+          () => {
+            document
+              .querySelector<HTMLElement>('.astryx-switch')
+              ?.style.setProperty('--late-write', '1');
+          },
+          logged.start + 600 - now,
+        );
+      };
+      look();
+    }, opened);
     await page.keyboard.press('Enter');
     present = await waitPastScaleStart(page, opened, entrance.ms + 150);
     const closed = await pageNow(page);
