@@ -1018,6 +1018,28 @@ test.describe('spec:AST-105 Coverage', () => {
     expect(run.copy).toBeCloseTo(run.startedAt, 6);
   });
 
+  test('NOT FOR LANDING: a start time read back matches the one written to six digits', async ({
+    page,
+  }) => {
+    await open(
+      page,
+      `<div id="area" class="area"><div id="grow" class="grow"></div></div>`,
+    );
+    const run = await page.evaluate(() => {
+      const element = document.querySelector('#grow') as HTMLElement;
+      const animation = element.animate([{opacity: 0}, {opacity: 1}], 1000);
+      // The change's start from the CI failure; it read back as 63.79999999998835.
+      const written = 63.79999999998836;
+      animation.startTime = written;
+      return {written, read: Number(animation.startTime)};
+    });
+    test.info().annotations.push({
+      type: 'the start written and read back',
+      description: JSON.stringify(run),
+    });
+    expect(run.read).toBeCloseTo(run.written, 6);
+  });
+
   test('a change begun after a block that follows an earlier layout motion, with nothing run between them, still shows its motion', async ({
     page,
   }) => {
