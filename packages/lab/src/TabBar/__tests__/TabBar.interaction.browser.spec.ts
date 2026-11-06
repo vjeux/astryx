@@ -1182,6 +1182,38 @@ test('a finger’s release fades the paint on the theme’s exit duration and cu
   expect(have).toEqual(want);
 });
 
+test('a finger’s release fades only its paint layer’s opacity, which the compositor runs (spec:AST-094 FR5)', async ({
+  page,
+}) => {
+  const {driver} = await openBar(page, 'no-selection');
+  // A slow exit, so the fade still runs when it is read.
+  await setExitDuration(page, '5000ms');
+  const home = await itemCenter(page, 'Home');
+  await driver.play(tapScript(home, {holdMs: 400}));
+  await expect(tab(page, 'Home')).not.toHaveAttribute('data-tab-bar-pressed');
+  const fades = await tab(page, 'Home')
+    .locator('span')
+    .first()
+    .evaluate(box =>
+      box.getAnimations({subtree: true}).flatMap(animation => {
+        const effect = animation.effect as KeyframeEffect | null;
+        if (effect?.target !== box) {
+          return [];
+        }
+        return [
+          {
+            property:
+              animation instanceof CSSTransition
+                ? animation.transitionProperty
+                : 'animation',
+            layer: effect.pseudoElement,
+          },
+        ];
+      }),
+    );
+  expect(fades).toEqual([{property: 'opacity', layer: '::before'}]);
+});
+
 test('past the last item, still on the bar, the lens rubber-bands beyond it and the lift commits the last item; past the bar’s end the lift chooses nothing', async ({
   page,
 }) => {
