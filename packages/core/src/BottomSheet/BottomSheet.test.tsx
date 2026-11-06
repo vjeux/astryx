@@ -3743,6 +3743,24 @@ describe('BottomSheet', () => {
         return {...sheet, focusHiddenField};
       }
 
+      it('rides the content down when focus moves from a field to a plain button inside an open shadow host, as a blur does', async () => {
+        const {body, input, report, drawnTop} = renderIOSSheet({
+          picker: <div title="Editor" />,
+        });
+        const host = screen.getByTitle('Editor');
+        const button = host
+          .attachShadow({mode: 'open'})
+          .appendChild(document.createElement('button'));
+        act(() => input.focus());
+        report(500);
+        act(() => button.focus());
+        expect(document.activeElement).toBe(host);
+        await nextFrame();
+        expect(drawnTop(performance.now() + 450)).toBeCloseTo(0, 0);
+        expect(keyboardInsetOf(body)).toBe(348);
+        expect(body.scrollTop).toBe(248);
+      });
+
       it.each(hiddenFields)(
         'starts no ride when focus moves from a field into %s, whose own field can keep the keyboard up',
         async (_, kind) => {
