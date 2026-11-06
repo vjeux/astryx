@@ -14,6 +14,7 @@ import * as path from 'node:path';
 import {discoverAll, template} from '../template.mjs';
 import {templateCopy} from '../copy/copy.mjs';
 import {templateShow} from './show.mjs';
+import {runFolder} from '../../../test-utils/global-local-fixtures.mjs';
 
 const SLOW = 60_000;
 /** Astryx's demo-media namespace: only its own previews serve these files. */
@@ -28,10 +29,17 @@ describe('template.show', () => {
   /** @type {Awaited<ReturnType<typeof discoverAll>>} */
   let templates;
   beforeAll(async () => {
-    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tmpl-show-'));
+    // In a run's folder, the node project's global teardown removes the
+    // copies of every template with the run's other fixtures.
+    dir = fs.mkdtempSync(path.join(runFolder() ?? os.tmpdir(), 'tmpl-show-'));
     templates = await discoverAll(dir);
   }, SLOW);
-  afterAll(() => fs.rmSync(dir, {recursive: true, force: true}));
+  afterAll(() => {
+    // NOT FOR LANDING: times this teardown, as a JSON line in C28_PROBE.
+    const c28t0 = performance.now();
+    if (!runFolder()) fs.rmSync(dir, {recursive: true, force: true});
+    fs.appendFileSync(process.env.C28_PROBE ?? '/tmp/c28-probe.jsonl', `${JSON.stringify({pid: process.pid, event: 'show-teardown', inRun: Boolean(runFolder()), ms: performance.now() - c28t0})}\n`);
+  });
 
   it('returns exactly the source copy writes, for every template', () => {
     let withFixtures = 0;

@@ -18,6 +18,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {writeIconSetProject} from '../../test-utils/icon-set-fixture.mjs';
+import {runFolder} from '../../test-utils/global-local-fixtures.mjs';
 import {icon} from './icon.mjs';
 import {iconAdd} from './add/add.mjs';
 import {iconMap} from './map/map.mjs';
@@ -40,10 +41,17 @@ import {doc as useFn} from './iconUse.doc.mjs';
 /** @type {string} */
 let tmp;
 beforeAll(() => {
-  tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'astryx-icon-pairs-'));
+  // In a run's folder, the node project's global teardown removes every
+  // package the pairs made with the run's other fixtures.
+  tmp = fs.mkdtempSync(
+    path.join(runFolder() ?? os.tmpdir(), 'astryx-icon-pairs-'),
+  );
 });
 afterAll(() => {
-  fs.rmSync(tmp, {recursive: true, force: true});
+  // NOT FOR LANDING: times this teardown, as a JSON line in C28_PROBE.
+  const c28t0 = performance.now();
+  if (!runFolder()) fs.rmSync(tmp, {recursive: true, force: true});
+  fs.appendFileSync(process.env.C28_PROBE ?? '/tmp/c28-probe.jsonl', `${JSON.stringify({pid: process.pid, event: 'pairs-teardown', inRun: Boolean(runFolder()), ms: performance.now() - c28t0})}\n`);
 });
 
 const FROM = '@acme/glyph-library';
