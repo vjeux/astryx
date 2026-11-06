@@ -55,7 +55,7 @@ interface Contact {
 }
 
 function dispatchTouch(
-  type: 'touchstart' | 'touchend',
+  type: 'touchstart' | 'touchmove' | 'touchend',
   target: EventTarget,
   changed: Contact[],
   all: Contact[],
@@ -81,6 +81,12 @@ const advance = (ms: number) =>
 /** The press machine's "on", as core's press machine writes it. */
 async function pressMachineOn(trigger: HTMLElement) {
   trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
+  await act(async () => {});
+}
+
+/** The press machine lets the press go. */
+async function pressMachineOff(trigger: HTMLElement) {
+  trigger.removeAttribute(PRESSED_ATTRIBUTE);
   await act(async () => {});
 }
 
@@ -179,6 +185,21 @@ describe('ContextMenu’s growth under a finger', () => {
     const landedAt = performance.now();
     dispatchTouch('touchstart', trigger, [contact], [contact]);
     advance(150);
+    expect(growths(trigger).map(startOf)).toEqual([landedAt + 150]);
+  });
+
+  it('still grows at the onset after a drift past the press machine’s 10 px that the recognizer’s 11.5 px tolerance still follows', async () => {
+    const trigger = renderMenu();
+    const contact = {id: 1, x: 20, y: 20};
+    const landedAt = performance.now();
+    dispatchTouch('touchstart', trigger, [contact], [contact]);
+    await pressMachineOn(trigger);
+    advance(60);
+    // An 11 px drift: the press machine lets the press go at 10 px.
+    const drifted = {...contact, x: 31};
+    dispatchTouch('touchmove', trigger, [drifted], [drifted]);
+    await pressMachineOff(trigger);
+    advance(90);
     expect(growths(trigger).map(startOf)).toEqual([landedAt + 150]);
   });
 
