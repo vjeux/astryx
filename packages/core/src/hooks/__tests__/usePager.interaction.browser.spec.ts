@@ -1075,7 +1075,11 @@ test('a settle keeps advancing every frame through an 800 ms main-thread block',
   // proof pools two runs and judges them as one longer window.
   const runs: BusyRun[] = [];
   for (let run = 1; run <= 2; run += 1) {
-    await page.evaluate(() => window.pager.goTo(0, {animated: false}));
+    await page.evaluate(() => {
+      // Mutant: the motion below writes the track itself.
+      (document.getElementById('track') as HTMLElement).style.transform =
+        'translateX(0px)';
+    });
     const cast = await startScreencast(page);
     // Let the screencast deliver a few frames before anything moves.
     await page.waitForTimeout(300);
@@ -1084,7 +1088,17 @@ test('a settle keeps advancing every frame through an 800 ms main-thread block',
     // two or three rendering updates after it starts (animator.ts, known
     // limits). A harness round trip would eat most of the motion.
     const started = await page.evaluate(() => {
-      window.pager.goTo(1);
+      // Mutant: the same one-page move, played on the main thread.
+      const track = document.getElementById('track') as HTMLElement;
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const p = Math.min(1, (now - t0) / 300);
+        track.style.transform = `translateX(${-402 * (1 - (1 - p) ** 3)}px)`;
+        if (p < 1) {
+          requestAnimationFrame(step);
+        }
+      };
+      requestAnimationFrame(step);
       setTimeout(() => {
         const from = performance.timeOrigin + performance.now();
         const end = performance.now() + 800;
@@ -1138,8 +1152,8 @@ test('a settle keeps advancing every frame through an 800 ms main-thread block',
     // at its inset from the viewport's left edge.
     const blocked = tracked.filter(f => f.box != null && f.t < busy.to);
     const last = blocked[blocked.length - 1];
-    expect(last.t).toBeGreaterThan(spanned.from);
-    expect(Math.abs((last.box?.x ?? 0) - 8)).toBeLessThan(1.5);
+    // Mutant: the landing check is left out, so the verdict decides.
+    void last;
   }
   await control.remove();
   // The settle ends with page 1's marker at its inset. The proof is told so:
