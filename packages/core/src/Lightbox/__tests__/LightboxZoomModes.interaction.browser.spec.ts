@@ -546,7 +546,13 @@ test('under Reduce Motion a zoomed flick coasts on and settles at the edge, as o
   await waitForRest(img);
   await frames(page, 2);
   const liftOffset = await recordLiftOffset(img);
-  await driver.play(flick(mid, {velocity: {x: -1500, y: 0}, durationMs: 80}));
+  await driver.play(flick(mid, {velocity: {x: -1500, y: 0}, durationMs: 80}), {
+    onEvent: async step => {
+      if (step.type === 'touchEnd') {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    },
+  });
   const opacities = await img.evaluate(
     async el =>
       new Promise<number[]>(resolve => {
