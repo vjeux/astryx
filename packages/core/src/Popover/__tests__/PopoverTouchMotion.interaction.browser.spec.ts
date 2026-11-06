@@ -444,6 +444,11 @@ test('the dismissal shrinks back into the trigger on the theme\u2019s exit token
   // Tap outside: the browser's light dismiss closes the popover at once.
   const viewport = page.viewportSize()!;
   const dismissal = await armExitCopyHold(story);
+  // NOT FOR LANDING: an unrelated motion under the layer's parent starts
+  // after arming, before the tap, and could stand in for the copy's.
+  await story.trigger.evaluate(element => {
+    element.animate([{opacity: 1}, {opacity: 0.98}], 2000);
+  });
   await story.driver.tap({x: 20, y: viewport.height - 20});
   const held = await dismissal.held();
   await expect(story.trigger).toHaveAttribute('aria-expanded', 'false');
