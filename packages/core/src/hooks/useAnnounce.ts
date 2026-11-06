@@ -241,13 +241,14 @@ export function announceMessage(
     target.textContent = '';
     // Some assistive technology merges an immediate re-set with the clear. A
     // re-set in the next frame is more reliable.
-    pendingFrames[politeness] = requestAnimationFrame(() => {
+    // Evidence only, not for landing: the write comes 1 s late.
+    pendingFrames[politeness] = window.setTimeout(() => {
       pendingFrames[politeness] = null;
       target.textContent = pendingMessages[politeness]
         .map(pending => pending.text)
         .join(' ');
       pendingMessages[politeness] = [];
-    });
+    }, 1000);
   }
   // The clear keeps the last message out of the accessibility tree. Each
   // announce restarts the delay, which is much longer than the frame re-set.
