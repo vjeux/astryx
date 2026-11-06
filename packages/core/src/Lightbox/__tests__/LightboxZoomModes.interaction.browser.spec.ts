@@ -548,6 +548,7 @@ test('under Reduce Motion a zoomed flick coasts on and settles at the edge, as o
   await driver.play(flick(mid, {velocity: {x: -1500, y: 0}, durationMs: 80}), {
     onEvent: async step => {
       if (step.type === 'touchEnd') {
+        await new Promise(resolve => setTimeout(resolve, 200));
         lifted = (await read()).x;
       }
     },
