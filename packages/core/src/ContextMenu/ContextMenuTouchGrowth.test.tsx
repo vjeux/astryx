@@ -203,6 +203,33 @@ describe('ContextMenu’s growth under a finger', () => {
     expect(growths(trigger).map(startOf)).toEqual([landedAt + 150]);
   });
 
+  it('grows at the onset after a drift the press machine never marks, as inside a scroll view, that the recognizer still follows', async () => {
+    const trigger = renderMenu();
+    const contact = {id: 1, x: 20, y: 20};
+    const landedAt = performance.now();
+    dispatchTouch('touchstart', trigger, [contact], [contact]);
+    advance(60);
+    // An (8, 8) px drift, 11.3 px: past the machine's 10 px, so it never
+    // marks the press, and inside the recognizer's 11.5 px.
+    const drifted = {...contact, x: 28, y: 28};
+    dispatchTouch('touchmove', trigger, [drifted], [drifted]);
+    advance(90);
+    expect(growths(trigger).map(startOf)).toEqual([landedAt + 150]);
+  });
+
+  it('grows at the onset, 150 ms after the finger lands, even when the press machine marks the press later', async () => {
+    const trigger = renderMenu();
+    const contact = {id: 1, x: 20, y: 20};
+    const landedAt = performance.now();
+    dispatchTouch('touchstart', trigger, [contact], [contact]);
+    advance(150);
+    expect(growths(trigger).map(startOf)).toEqual([landedAt + 150]);
+    // Inside a scroll view the machine's own timer marks it later.
+    advance(90);
+    await pressMachineOn(trigger);
+    expect(growths(trigger)).toHaveLength(1);
+  });
+
   it('does not grow the trigger for a press its recognizer does not follow, such as a mouse', async () => {
     const trigger = renderMenu();
     await pressMachineOn(trigger);
