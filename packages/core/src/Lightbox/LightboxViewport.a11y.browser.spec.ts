@@ -245,6 +245,37 @@ for (const viewport of [
   });
 }
 
+test(`a caption whose text grows while its box keeps two lines gets "more" at the end of its second line`, async ({
+  page,
+}) => {
+  const dialog = await openCaptionGallery(page, {width: 402, height: 874});
+  await dialog.getByRole('button', {name: 'Next'}).click();
+  await expect(dialog.getByText('2 / 4')).toBeVisible();
+  // The second page's caption fits its two lines, with no toggle.
+  await expect(dialog.getByRole('button', {name: 'more'})).toHaveCount(0);
+  const lines = await dialog.evaluate(element => {
+    const text = element.querySelector(
+      '[data-current] [data-lightbox-caption] .astryx-text',
+    ) as HTMLElement;
+    const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
+    let last: Text | null = null;
+    for (let node = walker.nextNode(); node != null; node = walker.nextNode()) {
+      last = node as Text;
+    }
+    const before = text.getBoundingClientRect().height;
+    // New text, past two lines, in a box that keeps its height.
+    last?.appendData(
+      ' The trail climbs past the old mill, crosses the river on stepping stones, and winds back through the beeches to the car park at the top of the hill.',
+    );
+    return {before, after: text.getBoundingClientRect().height};
+  });
+  expect(lines.after, JSON.stringify(lines)).toBeCloseTo(lines.before, 0);
+  await expect(dialog.getByRole('button', {name: 'more'})).toBeVisible();
+  await expect(async () => {
+    expectToggleEndsLastLine(await readToggle(dialog));
+  }).toPass({timeout: 3_000});
+});
+
 test(`a clamped caption's "more" still ends its second line after the viewport narrows (402 → 360)`, async ({
   page,
 }) => {
