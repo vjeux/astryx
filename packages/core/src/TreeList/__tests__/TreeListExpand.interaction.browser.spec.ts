@@ -121,6 +121,15 @@ interface Frame {
   readonly lastBottom: number;
   /** The lowest point the folder's guide column paints. */
   readonly guideBottom: number;
+  /** The tree's box, top and bottom. */
+  readonly treeTop: number;
+  readonly treeBottom: number;
+  /** How far past its top and bottom edges the tree paints; null: no clip. */
+  readonly paint: {readonly top: number; readonly bottom: number} | null;
+  /** The bottom of the tree's last row, with its motion. */
+  readonly lowestBottom: number;
+  /** The focused row's focus ring, top and bottom; null: no ring. */
+  readonly ring: {readonly top: number; readonly bottom: number} | null;
 }
 
 /**
@@ -210,6 +219,33 @@ async function recordFrames(
             : box.bottom;
         guideBottom = Math.max(guideBottom, bottom);
       }
+      const tree = parent.closest<HTMLElement>('[role="tree"]');
+      const treeBox = tree?.getBoundingClientRect();
+      const treeClip = tree == null ? 'none' : getComputedStyle(tree).clipPath;
+      const sides = /inset\(([^)]*)\)/
+        .exec(treeClip)?.[1]
+        .trim()
+        .split(/\s+/)
+        .map(Number.parseFloat);
+      const rows = tree?.querySelectorAll('[role="treeitem"]') ?? [];
+      const lowest = rows[rows.length - 1];
+      // The ring is the outline of the part of the focused row that draws it.
+      const focused = document.activeElement?.closest('[role="treeitem"]');
+      const ringOwner =
+        focused == null
+          ? null
+          : [rowBox(focused), ...rowBox(focused).querySelectorAll('*')].find(
+              el => Number.parseFloat(getComputedStyle(el).outlineWidth) > 0,
+            );
+      let ring = null;
+      if (ringOwner != null) {
+        const style = getComputedStyle(ringOwner);
+        const reach =
+          Number.parseFloat(style.outlineWidth) +
+          Number.parseFloat(style.outlineOffset);
+        const box = ringOwner.getBoundingClientRect();
+        ring = {top: box.top - reach, bottom: box.bottom + reach};
+      }
       w.__frames.push({
         t: performance.now(),
         parentBottom: rowBox(parent).getBoundingClientRect().bottom,
@@ -217,6 +253,19 @@ async function recordFrames(
         belowTop: below.getBoundingClientRect().top,
         lastBottom: rowBox(last).getBoundingClientRect().bottom,
         guideBottom,
+        treeTop: treeBox?.top ?? 0,
+        treeBottom: treeBox?.bottom ?? 0,
+        paint:
+          sides == null || treeBox == null
+            ? null
+            : {
+                top: treeBox.top + sides[0],
+                bottom:
+                  treeBox.bottom - (sides.length >= 3 ? sides[2] : sides[0]),
+              },
+        lowestBottom:
+          lowest == null ? 0 : rowBox(lowest).getBoundingClientRect().bottom,
+        ring,
       });
       if (w.__record) {
         requestAnimationFrame(tick);
@@ -359,6 +408,69 @@ test('collapse under a finger: the group fades out as the rows below glide up, w
   ).toBeGreaterThanOrEqual(2);
   expect(expanded - frames[frames.length - 1].belowTop).toBeCloseTo(height, 0);
   await expect(parts(page).group).toHaveCount(0);
+});
+
+test('collapse under a finger: no row of the tree paints past its bottom edge onto the content after it', async ({
+  page,
+}) => {
+  await open(page, 'core-treelist--with-content-below');
+  await tapToggle(page);
+  await expect(parts(page).child).toBeVisible();
+  await page.waitForTimeout(700);
+  const frames = await recordFrames(page, async () => tapToggle(page));
+  expect(
+    frames.some(frame => frame.lowestBottom > frame.treeBottom + 1),
+    'frames where the last row lies past the tree',
+  ).toBe(true);
+  for (const [i, frame] of frames.entries()) {
+    // The rows gliding up show only as they enter the tree's box. Past it,
+    // only a focus ring's reach paints: 5 px in the default theme.
+    expect(
+      Math.min(frame.lowestBottom, frame.paint?.bottom ?? Infinity),
+      `frame ${i}: ${JSON.stringify(frame)}`,
+    ).toBeLessThan(frame.treeBottom + 5.5);
+  }
+  // At rest the tree takes no clip.
+  expect(frames[frames.length - 1].paint).toBeNull();
+});
+
+test('a focus ring on a row at the edge of a moving tree stays whole, while the tree moves and at rest', async ({
+  page,
+}) => {
+  await open(page, 'core-treelist--with-content-below');
+  const {toggle} = parts(page);
+  // A click from the page toggles the folder and leaves focus where it is.
+  const toggleFromPage = async () =>
+    toggle.evaluate(el => {
+      (el as HTMLElement).click();
+    });
+  // The last row, at the tree's bottom edge, while an expand moves the tree.
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('End');
+  const expand = await recordFrames(page, toggleFromPage);
+  // The first row, at its top edge, while a collapse moves it.
+  await page.keyboard.press('Home');
+  const collapse = await recordFrames(page, toggleFromPage);
+  for (const frames of [expand, collapse]) {
+    expect(
+      frames.some(frame => frame.paint != null),
+      'frames with the clip',
+    ).toBe(true);
+    for (const [i, frame] of frames.entries()) {
+      expect(frame.ring, `frame ${i}: no ring`).not.toBeNull();
+      if (frame.ring != null && frame.paint != null) {
+        expect(
+          frame.ring.top,
+          `frame ${i}: ${JSON.stringify(frame)}`,
+        ).toBeGreaterThanOrEqual(frame.paint.top - 0.5);
+        expect(
+          frame.ring.bottom,
+          `frame ${i}: ${JSON.stringify(frame)}`,
+        ).toBeLessThanOrEqual(frame.paint.bottom + 0.5);
+      }
+    }
+    expect(frames[frames.length - 1].paint).toBeNull();
+  }
 });
 
 test('the guide lines beside a group show and hide with it: none runs past the last row it joins', async ({

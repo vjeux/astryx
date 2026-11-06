@@ -26,7 +26,7 @@ import {
 } from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {isRenderable} from '../utils/isRenderable';
-import {spacingVars} from '../theme/tokens.stylex';
+import {focusVars, spacingVars} from '../theme/tokens.stylex';
 import {mergeProps} from '../utils';
 import type {BaseProps} from '../BaseProps';
 import {TreeListItem} from './TreeListItem';
@@ -57,6 +57,46 @@ import {
   type AnimatedLayout,
   type LayoutChange,
 } from '../motion/animatedLayout';
+
+/**
+ * The clip a tree with no handle takes while it moves. Rows that glide up into
+ * a shorter tree then show as they enter it. So they never paint over the
+ * content after it, as in a table view that clips to its bounds. Only the
+ * bottom edge clips, past the reach of a row's focus ring.
+ */
+const MOVING_CLIP = `inset(-100vmax -100vmax calc(-1 * (${focusVars['--focus-outline-width']} + ${focusVars['--focus-outline-offset']})) -100vmax)`;
+
+const clipGenerations = new WeakMap<HTMLElement, number>();
+
+/** Clips `tree` with `MOVING_CLIP` until each finite motion in it settles. */
+function clipWhileMoving(tree: HTMLElement): void {
+  if (typeof tree.getAnimations !== 'function') {
+    return;
+  }
+  const moving = tree
+    .getAnimations({subtree: true})
+    .filter(
+      animation =>
+        animation.playState === 'running' &&
+        Number.isFinite(
+          animation.effect?.getComputedTiming().endTime ?? Infinity,
+        ),
+    );
+  if (moving.length === 0) {
+    return;
+  }
+  const generation = (clipGenerations.get(tree) ?? 0) + 1;
+  clipGenerations.set(tree, generation);
+  tree.style.setProperty('clip-path', MOVING_CLIP);
+  void Promise.allSettled(
+    moving.map(async animation => animation.finished),
+  ).then(() => {
+    if (clipGenerations.get(tree) === generation) {
+      clipGenerations.delete(tree);
+      tree.style.removeProperty('clip-path');
+    }
+  });
+}
 
 // =============================================================================
 // Types
@@ -570,7 +610,11 @@ export function TreeList({
         endAll();
       }
     }
-  }, [expandedIds, animatedLayout, endExit]);
+    const tree = treeElementRef.current;
+    if (pendings.length > 0 && animatedLayout === ownLayout && tree != null) {
+      clipWhileMoving(tree);
+    }
+  }, [expandedIds, animatedLayout, ownLayout, endExit]);
 
   const {treeRef, handleKeyDown, handleFocus, takeTabStop} =
     useTreeFocusInternal<HTMLUListElement>({

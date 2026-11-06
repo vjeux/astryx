@@ -243,6 +243,32 @@ describe('a TreeList under a finger with no handle (component:TreeList FR8)', ()
     expect(animated).not.toContain(after);
   });
 
+  it('clips the bottom edge of the tree while its own motion runs, and not at rest', async () => {
+    stubPointer(true);
+    const user = userEvent.setup();
+    render(<Page />);
+    stubTreeGeometry();
+    const tree = screen.getByRole('tree');
+    let settle = () => {};
+    const motion = {
+      playState: 'running',
+      effect: {getComputedTiming: () => ({endTime: 300})},
+      finished: new Promise<void>(resolve => {
+        settle = resolve;
+      }),
+    } as unknown as Animation;
+    tree.getAnimations = () => [motion];
+    await user.click(
+      document.querySelector<HTMLElement>('[data-tree-toggle]') ??
+        document.body,
+    );
+    await flush();
+    expect(tree.style.clipPath).toMatch(/^inset\(-100vmax -100vmax calc/);
+    settle();
+    await flush();
+    expect(tree.style.clipPath).toBe('');
+  });
+
   it('changes nothing under a mouse', async () => {
     stubPointer(false);
     const user = userEvent.setup();
@@ -254,6 +280,7 @@ describe('a TreeList under a finger with no handle (component:TreeList FR8)', ()
     );
     await flush();
     expect(animated).toEqual([]);
+    expect(screen.getByRole('tree').style.clipPath).toBe('');
   });
 });
 
