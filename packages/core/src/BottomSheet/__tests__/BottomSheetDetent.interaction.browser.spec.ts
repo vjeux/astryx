@@ -258,6 +258,25 @@ test('the settle keeps advancing every frame while the main thread is blocked', 
   page,
   browserName,
 }, testInfo) => {
+  // Mutant: every animation but the busy control's also animates
+  // outline-offset, which the compositor cannot run, so each runs on the
+  // main thread.
+  await page.addInitScript(() => {
+    const native = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions,
+    ) {
+      if (keyframes == null || this.hasAttribute('data-harness-control')) {
+        return native.call(this, keyframes, options);
+      }
+      const frames = Array.isArray(keyframes)
+        ? keyframes.map(k => ({...k, outlineOffset: '0px'}))
+        : {...keyframes, outlineOffset: ['0px', '0px']};
+      return native.call(this, frames, options);
+    };
+  });
   test.skip(
     browserName === 'webkit',
     'WebKit holds the settle short of its detent until a blocked main thread resumes',

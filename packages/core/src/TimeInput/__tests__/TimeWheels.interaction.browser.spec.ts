@@ -350,6 +350,25 @@ test('the AM/PM turn keeps advancing every frame through a blocked main thread',
   page,
   browserName,
 }, testInfo) => {
+  // Mutant: every animation but the busy control's also animates
+  // outline-offset, which the compositor cannot run, so each runs on the
+  // main thread.
+  await page.addInitScript(() => {
+    const native = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions,
+    ) {
+      if (keyframes == null || this.hasAttribute('data-harness-control')) {
+        return native.call(this, keyframes, options);
+      }
+      const frames = Array.isArray(keyframes)
+        ? keyframes.map(k => ({...k, outlineOffset: '0px'}))
+        : {...keyframes, outlineOffset: ['0px', '0px']};
+      return native.call(this, frames, options);
+    };
+  });
   test.skip(
     browserName === 'webkit',
     "WebKit's screencast clock is not the page's (frames arrive ~100 ms off), so a 0.3 s turn cannot be placed inside the block; Mobile Safari on the iOS simulator is this proof's WebKit evidence",
