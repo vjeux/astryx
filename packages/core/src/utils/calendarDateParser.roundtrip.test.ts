@@ -164,8 +164,19 @@ describe('committed text reads back as the same date (FR13)', () => {
       formatCalendarDateHint({year, month: 1, day: 1}, 'am-ET', calendar);
     expect(hint(2026, 'japanese')).toBe('1/1/8 R');
     expect(hint(1990, 'japanese')).toBe('1/1/2 H');
-    expect(hint(2026, 'roc')).toBe('1/1/115 ROC');
-    expect(hint(1900, 'roc')).toBe('1/1/12 BROC');
+    // Amharic writes the Minguo eras as "ROC" and "BROC" in CLDR 48, and as
+    // "R.O.C." and "Before R.O.C." in CLDR 47. So the text must read back.
+    const lexicon = getCalendarDateLexicon('am-ET', 'roc');
+    const today = {year: 2026, month: 11, day: 2};
+    const read = (text: string) => parseCalendarDate(text, lexicon, {today});
+    expect(hint(2026, 'roc')).toMatch(/^1\/1\/115 \S/u);
+    expect(read(hint(2026, 'roc'))).toMatchObject({
+      date: {year: 2026, month: 1, day: 1},
+    });
+    expect(hint(1900, 'roc')).toMatch(/^1\/1\/12 \S/u);
+    expect(read(hint(1900, 'roc'))).toMatchObject({
+      date: {year: 1900, month: 1, day: 1},
+    });
   });
   it('adds no era to a calendar whose era does not change', () => {
     const day = {year: 2026, month: 1, day: 1};

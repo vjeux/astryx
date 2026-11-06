@@ -214,8 +214,8 @@ describe('the bottom sheet in a calendar', () => {
   });
 
   it.each([
-    ['a common year', '2026-09-08', 'Pagumen 2018 AM', 5, '2026-09-06'],
-    ['a leap year', '2027-09-08', 'Pagumen 2019 AM', 6, '2027-09-06'],
+    ['a common year', '2026-09-08', 'Pagumen 2018', 5, '2026-09-06'],
+    ['a leap year', '2027-09-08', 'Pagumen 2019', 6, '2027-09-06'],
   ])(
     'keeps six rows for the Ethiopic thirteenth month in %s',
     (_name, value, label, length, first) => {
@@ -225,7 +225,14 @@ describe('the bottom sheet in a calendar', () => {
         min: `${value.slice(0, 4)}-08-01` as ISODateString,
         max: `${value.slice(0, 4)}-10-31` as ISODateString,
       });
-      const pagume = pane(label);
+      // The label ends with the era: "AM" in CLDR 48, and "ERA1" in CLDR 47,
+      // which has no English name for it.
+      const labels = [...document.querySelectorAll('[role="grid"]')].map(
+        grid => grid.getAttribute('aria-label') ?? '',
+      );
+      const pagume = pane(
+        labels.find(text => text.startsWith(`${label} `)) ?? label,
+      );
       expect(monthDays(pagume)).toHaveLength(length);
       expect(monthDays(pagume)[0]).toHaveAttribute('data-date', first);
       expect(pagume.querySelectorAll('button[data-date]')).toHaveLength(42);

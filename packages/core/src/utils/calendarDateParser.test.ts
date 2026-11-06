@@ -122,7 +122,16 @@ describe('reading dates written in the calendar (FR9)', () => {
     // A weekday word that is also a month name.
     expect(iso('fr-FR', 'gregory', 'mar. 3 nov. 2026')).toBe('2026-11-03');
     expect(iso('it-IT', 'gregory', 'mar 3 mar 2026')).toBe('2026-03-03');
-    expect(iso('vi-VN', 'gregory', 'Thứ 3, 3 thg 11, 2026')).toBe('2026-11-03');
+    // Vietnamese writes Tuesday as "Thứ 3" in CLDR 48 and as "Th 3" in CLDR
+    // 47. Both carry a digit that is not the day.
+    const tuesday = formatCalendarDateText(
+      {year: 2026, month: 11, day: 3},
+      'date_weekday',
+      'vi-VN',
+      'gregory',
+    );
+    expect(tuesday).toMatch(/^\S+ 3, 3 thg 11, 2026$/u);
+    expect(iso('vi-VN', 'gregory', tuesday)).toBe('2026-11-03');
   });
 
   it('ignores case and Latin diacritics', () => {
@@ -213,7 +222,19 @@ describe('years of the calendar (FR10)', () => {
 
   it('reads Ethiopic years in the AM era unless AA is typed', () => {
     expect(iso('am-ET', 'ethiopic', '23/2/2019')).toBe('2026-11-02');
-    expect(iso('am-ET', 'ethiopic', '1/1/7519 AA')).toBe('2026-09-11');
+    // English names the Amete Alem era "AA" in CLDR 48 and "ERA0" in CLDR 47,
+    // which has no name for it. A date before the AM era always shows its era.
+    const ameteAlem = /\S+$/u.exec(
+      formatCalendarDateText(
+        {year: 1, month: 1, day: 1},
+        'date',
+        'en',
+        'ethiopic',
+      ),
+    )?.[0];
+    expect(iso('am-ET', 'ethiopic', `1/1/7519 ${ameteAlem}`)).toBe(
+      '2026-09-11',
+    );
   });
 
   it('resolves a two-digit year within 80 years before and 19 after', () => {

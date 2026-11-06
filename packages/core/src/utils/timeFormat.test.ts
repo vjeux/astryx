@@ -150,7 +150,11 @@ describe('parseLocaleTime', () => {
   });
 
   it('reads twelve-hour text whose pattern differs from the 24-hour one', () => {
-    expect(parseLocaleTime('অপৰাহ্ন ২.৩০', 'as')).toBe('14:30');
+    // as writes the afternoon as "PM" in CLDR 47 and as "অপৰাহ্ন" in CLDR 48,
+    // so the day-period word comes from the runtime's own data.
+    const asText = formatLocaleTime(iso('14:30'), 'as', '12h');
+    expect(asText).toMatch(/^\S+ ২\.৩০$/u);
+    expect(parseLocaleTime(asText, 'as')).toBe('14:30');
     expect(parseLocaleTime('ɣetrɔ ga 2:30', 'ee')).toBe('14:30');
     expect(parseLocaleTime('Klock 2.30:05 PM', 'nds', true)).toBe('14:30:05');
     expect(parseLocaleTime('2h30:05 PM', 'oc', true)).toBe('14:30:05');
