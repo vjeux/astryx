@@ -1044,7 +1044,7 @@ test.describe('frame evidence', () => {
     // than on an idle runner. Each arm also takes at most this arm's work
     // around its block. A machine too slow for them to fit in the test's time
     // fails here, not at its timeout.
-    const slowNth = 6;
+    const slowNth = 24; // NOT FOR LANDING: one frame in 24
     const rafMs = Math.max(700, 8 * compositor.cadenceMs);
     const slowMs = Math.max(1400, 8 * slowNth * compositor.cadenceMs);
     const needMs =
