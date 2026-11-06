@@ -22,6 +22,7 @@ import {useIsHydrating} from '../hooks/useIsHydrating';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useSettledOpen} from '../hooks/useSettledOpen';
 import {holdInput} from '../Layer/inputHold';
+import {withdrawModalOutlet} from '../Layer/modalOutlet';
 import {alertController} from '../motion/uikit/alert';
 
 /** A dialog that misses its exit's end still closes this long after it. */
@@ -167,6 +168,10 @@ export function useAlertMotion({
     const ended = allEnded(exit);
     void ended.then(() => {
       if (isCurrent) {
+        // The page's toasts go back to their place before the alert closes.
+        if (element instanceof HTMLDialogElement) {
+          withdrawModalOutlet(element);
+        }
         setIsLeaving(false);
       }
     });

@@ -9,7 +9,9 @@
  *   getActiveModalOutlet and subscribeModalOutlets (a global host follows the
  *   latest one). Also notifyTopLayerEntry (a surface entered the top layer
  *   above the hosts). Also markModalOutletHost and isModalOutletHost: a
- *   modal's input hold leaves a marked global host live
+ *   modal's input hold leaves a marked global host live. And
+ *   withdrawModalOutlet: a leaving modal hands its hosts back before it
+ *   closes
  * @position Private layer infrastructure; spec:AST-003 FR18
  *
  * A native modal makes everything outside it inert and paints over every
@@ -124,6 +126,15 @@ function raiseWithinGroup(element: HTMLDialogElement): void {
   outlets.splice(index, 1);
   outlets.splice(target - 1, 0, element);
   notify('outlet');
+}
+
+/**
+ * Withdraws a leaving modal's outlet before the modal closes. Its hosts go
+ * back to their place now. Moving them in the commit that closes the modal
+ * drops them from a painted frame in WebKit.
+ */
+export function withdrawModalOutlet(element: HTMLDialogElement): void {
+  removeOutlet(element);
 }
 
 /** The latest open native modal, or null when none is open. */
