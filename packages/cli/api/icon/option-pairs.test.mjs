@@ -48,7 +48,10 @@ beforeAll(() => {
   );
 });
 afterAll(() => {
+  // NOT FOR LANDING: times this teardown, as a JSON line in C28_PROBE.
+  const c28t0 = performance.now();
   if (!runFolder()) fs.rmSync(tmp, {recursive: true, force: true});
+  fs.appendFileSync(process.env.C28_PROBE ?? '/tmp/c28-probe.jsonl', `${JSON.stringify({pid: process.pid, event: 'pairs-teardown', inRun: Boolean(runFolder()), ms: performance.now() - c28t0})}\n`);
 });
 
 const FROM = '@acme/glyph-library';

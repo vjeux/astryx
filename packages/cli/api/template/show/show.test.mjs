@@ -35,7 +35,10 @@ describe('template.show', () => {
     templates = await discoverAll(dir);
   }, SLOW);
   afterAll(() => {
+    // NOT FOR LANDING: times this teardown, as a JSON line in C28_PROBE.
+    const c28t0 = performance.now();
     if (!runFolder()) fs.rmSync(dir, {recursive: true, force: true});
+    fs.appendFileSync(process.env.C28_PROBE ?? '/tmp/c28-probe.jsonl', `${JSON.stringify({pid: process.pid, event: 'show-teardown', inRun: Boolean(runFolder()), ms: performance.now() - c28t0})}\n`);
   });
 
   it('returns exactly the source copy writes, for every template', () => {
