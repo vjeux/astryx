@@ -60,12 +60,22 @@ function Trigger() {
   return <div ref={ref} data-testid="trigger" />;
 }
 
-/** A trigger whose recognizer follows a press only while `following.on` holds. */
-const following = {on: true};
-function TriggerFollowedWhile() {
+/** What the recognizer follows now, as ContextMenu's refs report it. */
+const recognizer = {isFollowing: true, isFinger: false};
+function TriggerWithRecognizer() {
   const ref = useRef<HTMLDivElement>(null);
-  const isFollowedRef = useRef(() => following.on);
-  feedback = useContextMenuPressFeedback(ref, true, isFollowedRef);
+  const isFollowedRef = useRef(() => recognizer.isFollowing);
+  const landedAtRef = useRef((): number | null => null);
+  const followsFingerRef = useRef(
+    () => recognizer.isFollowing && recognizer.isFinger,
+  );
+  feedback = useContextMenuPressFeedback(
+    ref,
+    true,
+    isFollowedRef,
+    landedAtRef,
+    followsFingerRef,
+  );
   return <div ref={ref} data-testid="trigger" />;
 }
 
@@ -102,12 +112,17 @@ function TriggerWithControl() {
   );
 }
 
+const nested: {
+  outer: ContextMenuPressFeedback | null;
+  inner: ContextMenuPressFeedback | null;
+} = {outer: null, inner: null};
+
 /** A trigger inside another trigger, beside a plain control of the outer one. */
 function NestedTriggers({isInnerShown = true}: {isInnerShown?: boolean}) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  useContextMenuPressFeedback(outerRef, true);
-  useContextMenuPressFeedback(innerRef, isInnerShown);
+  nested.outer = useContextMenuPressFeedback(outerRef, true);
+  nested.inner = useContextMenuPressFeedback(innerRef, isInnerShown);
   return (
     <div ref={outerRef} data-testid="outer">
       <button type="button" data-testid="outer-control">
@@ -116,20 +131,6 @@ function NestedTriggers({isInnerShown = true}: {isInnerShown?: boolean}) {
       <div ref={innerRef} data-testid="inner" />
     </div>
   );
-}
-
-/** A touch on `target` at `timeStamp`, with one finger down until its `touchend`. */
-function touch(
-  type: 'touchstart' | 'touchend',
-  target: Element,
-  timeStamp = performance.now(),
-) {
-  const event = new Event(type, {bubbles: true, cancelable: true});
-  Object.defineProperty(event, 'touches', {
-    value: type === 'touchstart' ? [{identifier: 1, target}] : [],
-  });
-  Object.defineProperty(event, 'timeStamp', {value: timeStamp});
-  target.dispatchEvent(event);
 }
 
 const growths = () =>
@@ -241,77 +242,76 @@ describe('useContextMenuPressFeedback', () => {
     expect(animator.play).not.toHaveBeenCalled();
   });
 
-  it('arms a finger’s onset 150 ms after its touch when the recognizer gives no landing time', async () => {
+  it('grows a finger at its onset, 150 ms after the landing the recognizer reports', async () => {
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'performance']});
     try {
       const {getByTestId} = render(<Trigger />);
-      const touchedAt = performance.now();
-      touch('touchstart', getByTestId('trigger'));
-      await vi.advanceTimersByTimeAsync(149);
+      vi.advanceTimersByTime(1000);
+      // The recognizer reports the landing 40 ms late, on a busy main thread.
+      const landedAt = performance.now() - 40;
+      feedback?.begin(landedAt, getByTestId('trigger'));
+      await vi.advanceTimersByTimeAsync(109);
       expect(growths()).toHaveLength(0);
       await vi.advanceTimersByTimeAsync(1);
       expect(growths().map(call => (call[2] as {at: number}).at)).toEqual([
-        touchedAt + 150,
+        landedAt + 150,
       ]);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('counts a finger’s onset from its touch’s own time when the recognizer gives no landing time', async () => {
+  it('keeps a finger’s onset when the press machine marks the press later', async () => {
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'performance']});
     try {
-      const {getByTestId} = render(<Trigger />);
-      // Fake timers start the page clock near 0; a touch has a later time.
+      recognizer.isFinger = true;
+      const {getByTestId} = render(<TriggerWithRecognizer />);
       vi.advanceTimersByTime(1000);
-      // The listener runs 40 ms after the touch, on a busy main thread.
-      const touchedAt = performance.now() - 40;
-      touch('touchstart', getByTestId('trigger'), touchedAt);
-      await vi.advanceTimersByTimeAsync(110);
+      const landedAt = performance.now();
+      feedback?.begin(landedAt, getByTestId('trigger'));
+      await vi.advanceTimersByTimeAsync(240);
+      getByTestId('trigger').setAttribute(PRESSED_ATTRIBUTE, 'on');
+      await vi.advanceTimersByTimeAsync(200);
       expect(growths().map(call => (call[2] as {at: number}).at)).toEqual([
-        touchedAt + 150,
+        landedAt + 150,
       ]);
     } finally {
+      recognizer.isFinger = false;
       vi.useRealTimers();
     }
   });
 
-  it('lets a pen’s mark start its growth after a finger whose touched node went mid-press', async () => {
+  it('starts a pen’s growth at its mark after a finger’s press ended', async () => {
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'performance']});
     try {
-      const {getByTestId} = render(<TriggerWithControl />);
-      const control = getByTestId('control');
-      touch('touchstart', control);
-      // The touched node goes, so its touchend never reaches the trigger.
-      control.remove();
+      recognizer.isFinger = true;
+      const {getByTestId} = render(<TriggerWithRecognizer />);
+      const trigger = getByTestId('trigger');
+      feedback?.begin(performance.now(), trigger);
       await vi.advanceTimersByTimeAsync(150);
       expect(growths()).toHaveLength(1);
       feedback?.end(performance.now());
       // A pen's press: the press machine's mark starts its growth.
-      getByTestId('trigger').setAttribute(PRESSED_ATTRIBUTE, 'on');
+      recognizer.isFinger = false;
+      trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
       await vi.advanceTimersByTimeAsync(0);
       expect(growths()).toHaveLength(2);
     } finally {
+      recognizer.isFinger = false;
       vi.useRealTimers();
     }
   });
 
-  it('lets a pen’s mark start its growth after a touch the recognizer never took', async () => {
+  it('grows only the innermost trigger for a finger the recognizer reports on a nested trigger', async () => {
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'performance']});
     try {
-      const {getByTestId} = render(<TriggerFollowedWhile />);
-      const trigger = getByTestId('trigger');
-      following.on = false;
-      touch('touchstart', trigger);
-      await vi.advanceTimersByTimeAsync(200);
-      expect(growths()).toHaveLength(0);
-      // A pen's press the recognizer follows: its mark starts the growth.
-      following.on = true;
-      trigger.setAttribute(PRESSED_ATTRIBUTE, 'on');
-      await vi.advanceTimersByTimeAsync(0);
-      expect(growths()).toHaveLength(1);
+      const {getByTestId} = render(<NestedTriggers />);
+      const inner = getByTestId('inner');
+      nested.outer?.begin(performance.now(), inner);
+      nested.inner?.begin(performance.now(), inner);
+      await vi.advanceTimersByTimeAsync(150);
+      expect(animator.animated).toEqual([inner]);
     } finally {
-      following.on = true;
       vi.useRealTimers();
     }
   });

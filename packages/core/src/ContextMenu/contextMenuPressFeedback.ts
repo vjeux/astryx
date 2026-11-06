@@ -5,8 +5,8 @@
 /**
  * @file contextMenuPressFeedback.ts
  * @input UIKit's context-menu springs, the context-menu constants, the
- *   compositor animator, the trigger's touches, and the press state core's
- *   press machine writes
+ *   compositor animator, the presses ContextMenu's recognizer takes, and the
+ *   press state core's press machine writes
  * @output useContextMenuPressFeedback: hold and release, from ContextMenu's
  *   menu; the growth follows the recognizer's finger, or a pen's press mark
  * @position The press feedback of ContextMenu's touch invocation
@@ -15,7 +15,7 @@
  */
 
 // The growth starts at the onset, 150 ms after a finger lands, while the
-// recognizer follows that finger. The finger's own landing arms it; a
+// recognizer follows that finger. The recognizer reports the landing; a
 // pointer-only pen's press waits for the press machine's "on". Only the
 // recognizer's failure or cancel returns it. A long press is a gesture, so the
 // growth plays UIKit's lift spring and each return its dismissal spring. The
@@ -26,7 +26,6 @@
 import {useCallback, useRef, type RefObject} from 'react';
 import {useAttachment} from '../hooks/useAttachment';
 import {usePressFeedback} from '../hooks/usePressFeedback';
-import {isElement} from '../utils/nodeType';
 import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {PRESS_ONSET_MS} from '../utils/pressGesture';
 import {observeMutations} from '../utils/sharedMutationObserver';
@@ -40,6 +39,11 @@ import {
 const {heldScale} = contextMenu.press;
 
 export interface ContextMenuPressFeedback {
+  /**
+   * The recognizer took a finger that landed at `landedAt` on `target`: grow
+   * at its onset, 150 ms later.
+   */
+  begin(landedAt: number, target: Element | null): void;
   /** The menu the press opened closed: return on the dismissal spring. */
   release(): void;
   /**
@@ -60,6 +64,9 @@ const ALWAYS_FOLLOWED: RefObject<() => boolean> = {current: () => true};
 
 /** With no recognizer to ask, the onset is the "on" itself. */
 const NO_LANDING: RefObject<() => number | null> = {current: () => null};
+
+/** With no recognizer to ask, every "on" is a pen's. */
+const NO_FINGER: RefObject<() => boolean> = {current: () => false};
 
 // The triggers a press mark belongs to: every mounted trigger, whether it
 // shows growth or not. A mark inside a trigger belongs to the nearest of them
@@ -85,13 +92,15 @@ function pressMarkOwnerOf(marked: Element): Element | null {
  * `triggerRef`, so a replaced trigger (`triggerAs`) is followed too. The
  * `isFollowed` ref says whether ContextMenu's recognizer follows a finger or
  * a pen now: the growth starts only then. The `landedAt` ref gives the time
- * that finger landed, so the growth starts at its onset.
+ * that finger landed, so the growth starts at its onset. The `followsFinger`
+ * ref says whether that contact is a finger, whose onset `begin` sets.
  */
 export function useContextMenuPressFeedback(
   triggerRef: RefObject<HTMLElement | null>,
   isShown: boolean,
   isFollowed: RefObject<() => boolean> = ALWAYS_FOLLOWED,
   landedAt: RefObject<() => number | null> = NO_LANDING,
+  followsFinger: RefObject<() => boolean> = NO_FINGER,
 ): ContextMenuPressFeedback {
   // The press machine's document listener, while this feedback is mounted.
   usePressFeedback();
@@ -102,9 +111,10 @@ export function useContextMenuPressFeedback(
   const isGrownRef = useRef(false);
   // The menu the press opened is up: the growth holds until it closes.
   const isHeldRef = useRef(false);
-  // A finger armed the onset. The end of its press clears it, so a lift that
-  // never reaches the trigger cannot hold a later pen's press back.
-  const isFingerArmedRef = useRef(false);
+  // Times a finger's onset on the attached trigger.
+  const fingerOnsetRef = useRef<
+    ((landedAt: number, target: Element | null) => void) | null
+  >(null);
 
   // The compositor animator lives with the trigger it follows. A replaced
   // trigger, or a feedback that goes while the trigger stays, takes the
@@ -173,7 +183,6 @@ export function useContextMenuPressFeedback(
 
   const end = useCallback(
     (time: number) => {
-      isFingerArmedRef.current = false;
       const animator = animatorRef.current;
       const element = animator?.element;
       if (
@@ -197,7 +206,6 @@ export function useContextMenuPressFeedback(
 
   const release = useCallback(() => {
     isHeldRef.current = false;
-    isFingerArmedRef.current = false;
     const animator = animatorRef.current;
     const element = animator?.element;
     if (animator == null || element == null || !isGrownRef.current) {
@@ -209,6 +217,10 @@ export function useContextMenuPressFeedback(
     );
   }, [settleBack]);
 
+  const begin = useCallback((landed: number, target: Element | null) => {
+    fingerOnsetRef.current?.(landed, target);
+  }, []);
+
   const hold = useCallback(() => {
     isHeldRef.current = true;
     if (isGrownRef.current) {
@@ -216,13 +228,13 @@ export function useContextMenuPressFeedback(
     }
   }, []);
 
-  // Grow at the onset, 150 ms after the finger lands. A finger arms it from its
-  // own landing, whether or not the press machine marks the press. Inside a
-  // scroll view the machine marks late, and it never marks a press that travels
-  // past 10 px first. A pointer-only pen's onset waits for the mark. The
-  // machine marks the innermost pressable surface, so a control inside the
-  // trigger can carry the mark. A press the recognizer does not follow yet is
-  // read again after that input. Only the recognizer ends the growth (`end`).
+  // Grow at the onset, 150 ms after the finger lands. The recognizer reports
+  // the landing as it takes the finger, whether or not the press machine
+  // marks the press. Inside a scroll view the machine marks late, and it never
+  // marks a press that travels past 10 px first. A pen's onset waits for the
+  // mark. The machine marks the innermost pressable surface, so a control
+  // inside the trigger can carry the mark. Only the recognizer ends the growth
+  // (`end`).
   useAttachment(
     triggerRef,
     element => {
@@ -239,25 +251,8 @@ export function useContextMenuPressFeedback(
         );
       let isPressed = isMarkedOn();
       let markedAt = 0;
-      let armedAt = 0;
       let onsetTimer: ReturnType<typeof setTimeout> | undefined;
-      const growAtOnset = (isRetry: boolean) => {
-        if (!isFollowed.current()) {
-          if (isRetry) {
-            // The recognizer never took this press: nothing will end it.
-            isFingerArmedRef.current = false;
-          } else {
-            onsetTimer = setTimeout(() => growAtOnset(true), 0);
-          }
-          return;
-        }
-        const landed = landedAt.current();
-        const fromLanding = landed == null ? null : landed + PRESS_ONSET_MS;
-        // Without a landing time, a finger's onset counts from its touch's
-        // own time.
-        const onsetAt = isFingerArmedRef.current
-          ? (fromLanding ?? armedAt + PRESS_ONSET_MS)
-          : Math.max(markedAt, fromLanding ?? markedAt);
+      const startAt = (onsetAt: number) => {
         const wait = onsetAt - performance.now();
         if (wait > 0) {
           onsetTimer = setTimeout(() => start(onsetAt), wait);
@@ -265,24 +260,28 @@ export function useContextMenuPressFeedback(
           start(onsetAt);
         }
       };
-      // A touch on a nested trigger arms only that trigger.
-      const onTouchStart = (event: TouchEvent) => {
-        if (
-          !isElement(event.target) ||
-          pressMarkOwnerOf(event.target) !== element
-        ) {
+      // A pen's mark: the gesture host took that pen from the same input
+      // before the mark's record comes, so the recognizer follows it already.
+      const growAtMark = () => {
+        // The recognizer times a finger's onset from its landing.
+        if (followsFinger.current() || !isFollowed.current()) {
+          return;
+        }
+        const landed = landedAt.current();
+        startAt(
+          landed == null
+            ? markedAt
+            : Math.max(markedAt, landed + PRESS_ONSET_MS),
+        );
+      };
+      fingerOnsetRef.current = (landed, target) => {
+        // A finger on a nested trigger grows only that trigger.
+        if (target != null && pressMarkOwnerOf(target) !== element) {
           return;
         }
         clearTimeout(onsetTimer);
-        isFingerArmedRef.current = true;
-        // The touch's own time, on the page clock. An epoch or future stamp,
-        // as in some DOM emulators, counts as now.
-        const now = performance.now();
-        armedAt =
-          event.timeStamp > 0 && event.timeStamp <= now ? event.timeStamp : now;
-        growAtOnset(false);
+        startAt(landed + PRESS_ONSET_MS);
       };
-      element.addEventListener('touchstart', onTouchStart, {passive: true});
       const stopObserving = observeMutations(
         element,
         {attributes: true, attributeFilter: [PRESSED_ATTRIBUTE], subtree: true},
@@ -291,10 +290,10 @@ export function useContextMenuPressFeedback(
           if (next !== isPressed) {
             isPressed = next;
             if (next) {
-              if (!isFingerArmedRef.current) {
+              if (!followsFinger.current()) {
                 clearTimeout(onsetTimer);
                 markedAt = performance.now();
-                growAtOnset(false);
+                growAtMark();
               }
             } else if (!isFollowed.current()) {
               // A finger the recognizer still follows keeps its onset, past
@@ -307,12 +306,12 @@ export function useContextMenuPressFeedback(
       return () => {
         clearTimeout(onsetTimer);
         stopObserving();
-        element.removeEventListener('touchstart', onTouchStart);
+        fingerOnsetRef.current = null;
         pressMarkOwners.delete(element);
       };
     },
     isShown,
   );
 
-  return {release, end, hold};
+  return {begin, release, end, hold};
 }
