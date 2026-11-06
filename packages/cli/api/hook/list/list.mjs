@@ -21,6 +21,28 @@ import {loadDocs} from '../../../foundation/discovery/component-loader.mjs';
 import {AstryxError} from '../../error.mjs';
 import {ERROR_CODES} from '../../../foundation/response/error-codes.mjs';
 import {CORE_PACKAGE, resolveCoreDir} from '../_adapter.mjs';
+import * as c28fs from 'node:fs';
+
+// NOT FOR LANDING: times the list's phases, as a JSON line in C28_PROBE.
+const c28 = {find: 0, finds: 0, load: 0, loads: 0};
+/** @param {string} coreDir @param {string} name */
+function c28Find(coreDir, name) {
+  const t0 = performance.now();
+  const found = findHookDoc(coreDir, name);
+  c28.find += performance.now() - t0;
+  c28.finds += 1;
+  return found;
+}
+/** @param {string} docPath @param {any} opts */
+async function c28Load(docPath, opts) {
+  const t0 = performance.now();
+  try {
+    return await loadDocs(docPath, opts);
+  } finally {
+    c28.load += performance.now() - t0;
+    c28.loads += 1;
+  }
+}
 
 /**
  * @param {object} [options]
@@ -38,8 +60,12 @@ export async function list({
   zh = false,
   lang = null,
 } = {}) {
+  const c28t0 = performance.now();
   const coreDir = resolveCoreDir(cwd);
+  const c28t1 = performance.now();
   const hooks = discoverHooks(coreDir);
+  const c28t2 = performance.now();
+  Object.assign(c28, {find: 0, finds: 0, load: 0, loads: 0});
 
   if (category) {
     const match = Object.entries(hooks).find(
@@ -57,10 +83,10 @@ export async function list({
       /** @type {import('../hook.type.mjs').HookBriefEntry[]} */
       const entries = [];
       for (const hookName of match[1]) {
-        const docPath = findHookDoc(coreDir, hookName);
+        const docPath = c28Find(coreDir, hookName);
         if (docPath) {
           try {
-            const docs = await loadDocs(docPath, {zh, lang, root: 'hooks'});
+            const docs = await c28Load(docPath, {zh, lang, root: 'hooks'});
             entries.push({
               name: hookName,
               description: docs.usage?.description || '',
@@ -91,10 +117,10 @@ export async function list({
       /** @type {import('../hook.type.mjs').HookDoc[]} */
       const entries = [];
       for (const hookName of match[1]) {
-        const docPath = findHookDoc(coreDir, hookName);
+        const docPath = c28Find(coreDir, hookName);
         if (docPath) {
           try {
-            entries.push(await loadDocs(docPath, {zh, lang, root: 'hooks'}));
+            entries.push(await c28Load(docPath, {zh, lang, root: 'hooks'}));
           } catch {
             entries.push(
               /** @type {import('../hook.type.mjs').HookDoc} */ ({
@@ -130,10 +156,10 @@ export async function list({
     for (const [cat, hookNames] of Object.entries(hooks)) {
       result[cat] = [];
       for (const hookName of hookNames) {
-        const docPath = findHookDoc(coreDir, hookName);
+        const docPath = c28Find(coreDir, hookName);
         if (docPath) {
           try {
-            const docs = await loadDocs(docPath, {zh, lang, root: 'hooks'});
+            const docs = await c28Load(docPath, {zh, lang, root: 'hooks'});
             result[cat].push({
               name: hookName,
               description: docs.usage?.description || '',
@@ -155,6 +181,12 @@ export async function list({
         }
       }
     }
+    if (process.env.C28_PROBE) {
+      c28fs.appendFileSync(
+        process.env.C28_PROBE,
+        `${JSON.stringify({pid: process.pid, event: 'hook-list-phases', detail, coreDirMs: c28t1 - c28t0, discoverMs: c28t2 - c28t1, findMs: c28.find, finds: c28.finds, loadMs: c28.load, loads: c28.loads, totalMs: performance.now() - c28t0})}\n`,
+      );
+    }
     return {type: 'hook.list', package: CORE_PACKAGE, data: {detail: 'compact', components: result}};
   }
 
@@ -164,11 +196,11 @@ export async function list({
     for (const [cat, hookNames] of Object.entries(hooks)) {
       result[cat] = [];
       for (const hookName of hookNames) {
-        const docPath = findHookDoc(coreDir, hookName);
+        const docPath = c28Find(coreDir, hookName);
         if (docPath) {
           try {
             result[cat].push(
-              await loadDocs(docPath, {zh, lang, root: 'hooks'}),
+              await c28Load(docPath, {zh, lang, root: 'hooks'}),
             );
           } catch {
             result[cat].push(
