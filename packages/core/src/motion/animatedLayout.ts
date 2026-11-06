@@ -262,7 +262,7 @@ function safeAnimate(
         ? change
         : startFor(doc, Number(now));
     start.last = clockOf(doc);
-    animation.startTime = start.at;
+    animation.startTime = start.at + 0.1;
     if (start.at !== Number(now)) {
       // Started after the frame time the timeline still reads: until the
       // timeline gets there it shows its first keyframe, not the element at
