@@ -830,7 +830,8 @@ export function createResizableAs(
     pendingFlip = null;
     expectedFlip = null;
     drawing?.clear();
-    drawing = next == null ? null : createOvershootDrawing(next);
+    drawing =
+      next == null ? null : createOvershootDrawing(next, () => derived.size);
     pane = handOverPane(pane, next, paneListener, derived.isCollapsed, handle);
   }
 
@@ -983,7 +984,9 @@ export function createResizableAs(
       gestureBasis = readLiveBasis();
       isGestureActive = true;
       isCarryingToSnap = false;
-      const closing = derived.isCollapsed ? closingShown() : 0;
+      // Only a pointer catches a slide or a spring-back; a key steps.
+      const isPointer = regionSlot?.isPointerDragging() === true;
+      const closing = derived.isCollapsed && isPointer ? closingShown() : 0;
       closingSlide = null;
       if (closing > 0) {
         catchClosing(closing);
@@ -991,7 +994,11 @@ export function createResizableAs(
       }
       // A finger catches a spring-back where it shows.
       const shown =
-        springBack == null ? overshoot : springBackShown(springBack);
+        springBack == null || !isPointer
+          ? isPointer
+            ? overshoot
+            : 0
+          : springBackShown(springBack);
       springBack = null;
       overshoot = shown;
       caught = shown;
@@ -1038,9 +1045,12 @@ export function createResizableAs(
         isFreeDrag || isCarryingToSnap ? [] : snaps(),
       );
       chosenSize = clamped;
-      // Only a pane a LayoutPanel lends shows the rubber band. A panel at the
-      // hook's size alone stops at the limit.
-      overshoot = pane == null ? 0 : overshootPast(raw);
+      // Only a pointer on a pane a LayoutPanel lends shows the rubber band. A
+      // panel at the hook's size alone, and a key, stop at the limit.
+      overshoot =
+        pane == null || regionSlot?.isPointerDragging() !== true
+          ? 0
+          : overshootPast(raw);
       drawing?.draw(overshoot);
       if (pane != null) {
         const closes =
@@ -1174,11 +1184,6 @@ export function createResizableAs(
     opts.onSizeChange?.(target);
   }
 
-  /** How far a pull past a bound can move the edge: the band's extent. */
-  function rubberDimension(): number {
-    return RUBBER_BAND_TRAVEL_PX;
-  }
-
   /** How far the shown size runs past the bound `raw` is beyond. */
   function overshootPast(raw: number): number {
     const {min, max} = derived;
@@ -1196,7 +1201,7 @@ export function createResizableAs(
         : held +
           rubberBand(
             excess - held,
-            Math.max(rubberDimension() - Math.abs(held), 0),
+            Math.max(RUBBER_BAND_TRAVEL_PX - Math.abs(held), 0),
           );
     // Below the minimum the drawn edge stops at 0, never past it.
     return Math.max(bound + shown, 0) - bound;
@@ -1225,7 +1230,7 @@ export function createResizableAs(
       return;
     }
     // The drawn edge moved at the pointer's speed times the band's slope.
-    const dimension = rubberDimension();
+    const dimension = RUBBER_BAND_TRAVEL_PX;
     const slope = rubberBandSlope(
       rubberBandInverse(from, dimension),
       dimension,
@@ -1249,21 +1254,24 @@ export function createResizableAs(
     const share = closingSlide.remaining(
       view.performance.now() - closingSlide.startedAt,
     );
-    // A slide that landed, or landed early as a running motion lands, shows
-    // nothing. A CSS transition, such as the handle's hover, is not the slide.
-    if (
-      share <= 0 ||
-      (typeof row.getAnimations === 'function' &&
-        !row
-          .getAnimations({subtree: true})
-          .some(
-            motion =>
-              (motion.playState === 'running' ||
-                motion.playState === 'paused') &&
-              !('transitionProperty' in motion) &&
-              !('animationName' in motion),
-          ))
-    ) {
+    // The slide shows while its own motion, on the pane or a sibling of it,
+    // runs or holds. A CSS transition, such as the handle's hover, is not the
+    // slide. Without the animation API, the slide's time decides.
+    const isShowing =
+      typeof row.getAnimations === 'function'
+        ? [...row.children].some(child =>
+            child
+              .getAnimations()
+              .some(
+                motion =>
+                  (motion.playState === 'running' ||
+                    motion.playState === 'paused') &&
+                  !('transitionProperty' in motion) &&
+                  !('animationName' in motion),
+              ),
+          )
+        : share > 0;
+    if (!isShowing) {
       return 0;
     }
     // The handle stays under the finger: the size is read from where it shows.
