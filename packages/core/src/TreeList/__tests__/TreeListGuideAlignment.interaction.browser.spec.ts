@@ -201,7 +201,7 @@ test("a parent's guide line runs unbroken past an expanded child's rows to its l
   }
 });
 
-test('at a wide row gap a last connector ends at its row, and a first one starts at its parent', async ({
+test('at a wide row gap a last connector ends at its row, and a first one starts at the top of its row wrapper', async ({
   page,
 }) => {
   await openStory(page, 'ltr', 'lineGuides');
