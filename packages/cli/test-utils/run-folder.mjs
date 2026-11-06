@@ -73,7 +73,8 @@ export function trashFolder(dir) {
 export function sweepTrash(parent, before) {
   return fs.readdirSync(parent).flatMap(entry => {
     const moved = TRASH_NAME.exec(entry);
-    if (!moved || Number(moved[1]) >= before) return [];
+    // NOT FOR LANDING: sweeps every trash folder, a later run's too.
+    if (!moved) return [];
     return [removeInBackground(path.join(parent, entry))];
   });
 }
