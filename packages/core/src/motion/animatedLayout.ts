@@ -39,23 +39,24 @@
  * - The move is a compositor-only `translate` (replace composition) from the
  *   old place to the new one. Its linear keyframes sample the theme's move
  *   curve, corrected for a scaled ancestor. An element already gliding
- *   keeps that motion and adds the new move: the rest of its curve and the
- *   new move are summed into one new glide, velocity included. Its place
- *   before the change is read on the clock of every glide that carries it,
- *   its own and its gliding ancestors' in the area (the box with each applied
- *   `translate` taken out, plus each glide's offset at its current time), and
- *   so is its place after the change, where only the glides the change leaves
- *   running remain: the new glide starts where the old one is drawn, and a
- *   glide the change leaves running cancels out of the move. Nothing
- *   animates height, and nothing scrolls the area.
+ *   keeps that motion and adds the new move. The rest of its curve and the
+ *   new move sum into one new glide, velocity included. Its place before
+ *   the change is read on the clock of every glide that carries it. These
+ *   are its own glide and those of its gliding ancestors in the area. The
+ *   reading is the box with each applied `translate` taken out, plus each
+ *   glide's offset at its current time. Its place after the change is read
+ *   the same way, where only the glides the change leaves running remain. So
+ *   the new glide starts where the old one is drawn, and a glide the change
+ *   leaves running cancels out of the move. Nothing animates height, and
+ *   nothing scrolls the area.
  * - A measurement no commit claims by the next frame is dropped.
  * - The changed element plays its own entrance on the same curve, started in
  *   the same frame (`playLayoutChange`). Or it exits, kept where it is while
  *   it gives up its space and conceals (`holdLayoutExit`). Both are FR9's
  *   edge reveal: from its block-end edge by default, or from the block-start
  *   or an inline edge it is given. Once the content on that edge's side
- *   glides, the edge rides that glide, frame by frame, so the two never part;
- *   a reversal (a close while it opens) starts from what the element shows.
+ *   glides, the edge rides that glide, frame by frame, so the two never part.
+ *   A reversal (a close while it opens) starts from what the element shows.
  *   A disclosure's indicator turns on the same motion
  *   (`applyLayoutChangeTransition`).
  * - A swap holds old content as one transient copy, inert and hidden from
@@ -66,10 +67,10 @@
  *   so every part keeps to that glide; under Reduce Motion with a coarse
  *   pointer only opacity changes.
  * - FR9's two-state form holds an element's old state as the swap's copy
- *   while its edge rides a gliding element, such as a rail beside its
- *   content (`holdLayoutEdge`, `playLayoutEdge`): the larger state is
- *   clipped on that edge, from the extent the element shows, and the caller
- *   adds only its own fades.
+ *   (`holdLayoutEdge`, `playLayoutEdge`). Meanwhile its edge rides a gliding
+ *   element, such as a rail beside its content. The larger state is clipped
+ *   on that edge, from the extent the element shows. The caller adds only
+ *   its own fades.
  * - Frames on elements the page renders can play on the same motion with no
  *   copy (`playLayoutFrames`), such as a surface reaching over a gap a glide
  *   opens, and are released when the motion ends.
@@ -483,8 +484,8 @@ function startFor(doc: Document, frame: number): ChangeStart {
     last: now,
   };
   changeStarts.set(doc, start);
-  // Let go in a later task: every microtask of this one, where the glides
-  // flush and the parts riding them play, has run by then.
+  // Let go in a later task. By then every microtask of this one has run,
+  // where the glides flush and the parts riding them play.
   const view = doc.defaultView;
   (view?.setTimeout ?? setTimeout)(() => {
     if (changeStarts.get(doc) === start) {
@@ -562,11 +563,12 @@ function numbersIn(value: string): number[] {
 }
 
 /**
- * Whether a transform value leaves the element where it is: nothing at all
- * (a swipe's `translate3d(0, 0, 0)` at rest, a button's `scale(1)`, computed
- * as `matrix(1, 0, 0, 1, 0, 0)`), or a scale in place (a pressed button's
- * `scale(0.98)`). A glide's `translate` composes with either; a translation,
- * rotation or skew of its own is the app moving the element.
+ * Whether a transform value leaves the element where it is: nothing at all,
+ * or a scale in place. Nothing at all is a swipe's `translate3d(0, 0, 0)` at
+ * rest or a button's `scale(1)`, computed as `matrix(1, 0, 0, 1, 0, 0)`. A
+ * scale in place is a pressed button's `scale(0.98)`. A glide's `translate`
+ * composes with either; a translation, rotation or skew of its own is the app
+ * moving the element.
  */
 function staysInPlace(property: string, value: string): boolean {
   if (value === 'none') {
@@ -901,37 +903,37 @@ function isStuck(element: Element, cache: WalkCache): boolean {
 }
 
 /**
- * `rect`, a box read before a change or after it (in the flush, once the
- * glides the change retargets have stopped), with every running glide that
- * carries the element put back on its glide's own clock: its own and those of
- * its ancestors inside `area`. A glide the change retargets is read on its
- * clock before the change and is gone after it; one the change leaves running
- * (a card inside an absolutely positioned panel, which the change takes no
- * ancestors from) is read on the same clock in both places, so it cancels out
- * of the move. A box read samples a running `translate`
- * wherever the engine evaluates it, and WebKit evaluates it at the moment of
- * the read, while a glide's offset, and the glide a change retargets it into,
- * run on the timeline's frame time: from the box alone, a change made `n` ms
- * into a frame started the new glide `n` ms of motion ahead of the one drawn
- * (up to about 3 px on a slow frame), and a row inside a gliding card took up
- * the card's difference. The box is read between two readings of every
- * carrier's applied `translate` that agree: WebKit samples a running
- * animation at the moment of each read, in steps of about a millisecond, so
- * a box read between two equal readings is of that same sample, while the
- * walk's earlier box read, or one read across a step, is of another. Taken
- * out of that
- * box (each scaled by its node's ancestors, as its glide is), the `translate`s
- * leave the element's place with no glide, and each glide's offset at its
- * current time goes back in. A glide replaces any `translate` of the app's
- * own while it runs, so each applied value is the glide's alone. Where the
- * engine reports no applied `translate` at all (an environment without
+ * `rect`, a box read before a change or after it, with every running glide
+ * that carries the element put back on its glide's own clock. These glides
+ * are its own and those of its ancestors inside `area`. After the change, the
+ * box is read in the flush, once the glides the change retargets have
+ * stopped. A glide the change retargets is read on its clock before the
+ * change and is gone after it. A glide the change leaves running is read on
+ * the same clock in both places, so it cancels out of the move. An example is
+ * a card inside an absolutely positioned panel, which the change takes no
+ * ancestors from. A box read samples a running `translate` wherever the
+ * engine evaluates it. WebKit evaluates it at the moment of the read. A
+ * glide's offset, and the glide a change retargets it into, run on the
+ * timeline's frame time instead. From the box alone, a change made `n` ms
+ * into a frame started the new glide `n` ms of motion ahead of the one drawn.
+ * On a slow frame that is up to about 3 px. A row inside a gliding card also
+ * took up the card's difference. The box is read between two readings of
+ * every carrier's applied `translate` that agree. WebKit samples a running
+ * animation at the moment of each read, in steps of about a millisecond. So a
+ * box read between two equal readings is of that same sample. The walk's
+ * earlier box read, or one read across a step, is of another. Taken out of
+ * that box, the `translate`s leave the element's place with no glide. Each is
+ * scaled by its node's ancestors, as its glide is. Then each glide's offset at
+ * its current time goes back in. A glide replaces any `translate` of the
+ * app's own while it runs, so each applied value is the glide's alone. Where
+ * the engine reports no applied `translate` at all (an environment without
  * individual transform properties), the box is taken as it is.
  */
 /**
  * How many times `onGlideClock` reads a box and the applied translates around
- * it to take all of them from one sample: it bounds the reads for one
- * consistent snapshot (WebKit's samples step about once a millisecond, and a
- * second reading lands inside one step), not a retry around a result.
+ * it, to take all of them from one sample. It bounds the reads for one
+ * consistent snapshot, not a retry around a result. WebKit's samples step
+ * about once a millisecond, and a second reading lands inside one step.
  */
 const SAMPLE_READS = 3;
 
@@ -1425,10 +1427,10 @@ function flush(batch: Batch): void {
   const nearer = (raw: number, shift: number) =>
     Math.abs(raw + shift) < Math.abs(raw) ? raw + shift : raw;
   for (const entry of entries) {
-    // On the same clocks as the place before the change: only the glides this
-    // change does not retarget still run here (a card inside an absolutely
-    // positioned panel keeps its glide while the row in it moves), so each
-    // reads the same in both places and cancels out of the move.
+    // On the same clocks as the place before the change. Only the glides
+    // this change does not retarget still run here, so each reads the same in
+    // both places and cancels out of the move. For example, a card inside an
+    // absolutely positioned panel keeps its glide while the row in it moves.
     entry.after = onGlideClock(
       entry.element,
       entry.element.getBoundingClientRect(),
@@ -1658,10 +1660,10 @@ export function reportLayoutChange(
 // ---------------------------------------------------------------------------
 
 /**
- * The edge an element reveals from or conceals to (`spec:AST-105` FR9): its
- * block-end edge by default, or its block-start, inline-start or inline-end
- * edge, such as a panel collapsing beside content. An inline edge follows
- * the element's direction.
+ * The edge an element reveals from or conceals to (`spec:AST-105` FR9). It is
+ * its block-end edge by default, or its block-start, inline-start or
+ * inline-end edge, such as a panel collapsing beside content. An inline edge
+ * follows the element's direction.
  */
 export type LayoutEdge =
   'block-end' | 'block-start' | 'inline-start' | 'inline-end';
@@ -1675,7 +1677,7 @@ function isRtl(element: Element): boolean {
 }
 
 /**
- * The `clip-path` that hides `side` of an element from `edge`: `inset()`'s
+ * The `clip-path` that hides `side` of an element from `edge`. `inset()`'s
  * sides are physical (top, right, bottom, left), so an inline edge is
  * mirrored right to left. `zero` is how the other three are written.
  */
@@ -1721,9 +1723,9 @@ function extentOf(element: Element, edge: LayoutEdge): number {
 }
 
 /**
- * The last element before `element` in the area that takes part in layout:
- * its previous sibling, or its nearest ancestor's below the area (the mirror
- * of `nextInFlow`, for a start edge).
+ * The last element before `element` in the area that takes part in layout.
+ * It is its previous sibling, or its nearest ancestor's below the area. It
+ * mirrors `nextInFlow`, for a start edge.
  */
 function previousInFlow(element: Element, area: Element): Element | null {
   const view = element.ownerDocument.defaultView;
@@ -1766,8 +1768,8 @@ function previousInFlow(element: Element, area: Element): Element | null {
 
 /**
  * The glide that moves `neighbour`: its own, or that of its nearest gliding
- * ancestor below the area that does not also hold `element` (one that holds
- * both moves the two together, so the edge does not ride it).
+ * ancestor below the area that does not also hold `element`. An ancestor that
+ * holds both moves the two together, so the edge does not ride it.
  */
 function glideMoving(
   neighbour: Element,
@@ -1799,7 +1801,7 @@ const edgeMotions = new WeakMap<Element, EdgeMotion>();
 
 /**
  * What a one-state motion an adopter stopped (`releaseLayoutExit`) showed,
- * and the timeline time it stopped at: a reveal started in the same frame,
+ * and the timeline time it stopped at. A reveal started in the same frame,
  * the reversal that stopped it, starts there.
  */
 const stoppedShown = new WeakMap<
@@ -1819,8 +1821,8 @@ function shownNow(motion: EdgeMotion): number {
 
 /**
  * What `element` shows as a reveal or conceal starts: where the one-state
- * motion this one reverses had got to (it stops there), or `atRest`, all of
- * it for a conceal and nothing for a reveal.
+ * motion this one reverses had got to (it stops there), or `atRest`. At rest
+ * a conceal starts from all of it and a reveal from nothing.
  */
 function shownAtStart(element: Element, atRest: number): number {
   const running = edgeMotions.get(element);
@@ -1855,15 +1857,15 @@ function trackEdgeMotion(
 }
 
 /**
- * After this commit's glides start (the batch flushes in a microtask queued
- * before this one), before the frame paints: once the content on `edge`'s
- * side glides, the moving edge rides that glide, frame by frame, so the two
- * never part, a reversal included (the glide carries its running motion).
- * `hiddenAt` turns that content's offset towards the edge's side into the
- * length the element hides; `frame` turns that length into a keyframe.
- * Without that glide (nothing on that side in the area, or nothing that
- * moves) the motion keeps its own curve. The animation is kept, its frames
- * replaced; `onRide` hears the ridden hidden length over time.
+ * After this commit's glides start, before the frame paints. The batch
+ * flushes in a microtask queued before this one. Once the content on
+ * `edge`'s side glides, the moving edge rides that glide, frame by frame, so
+ * the two never part. That includes a reversal, because the glide carries
+ * its running motion. `hiddenAt` turns that content's offset towards the
+ * edge's side into the length the element hides; `frame` turns that length
+ * into a keyframe. Without that glide (nothing on that side in the area, or
+ * nothing that moves) the motion keeps its own curve. The animation is kept,
+ * its frames replaced; `onRide` hears the ridden hidden length over time.
  */
 function rideNeighbour(
   element: Element,
@@ -1893,9 +1895,10 @@ function rideNeighbour(
     if (neighbour == null || glide == null) {
       return;
     }
-    // A glide that moves the element itself in the same batch, short of what
-    // it shares with the neighbour (an item above them closing): the edge
-    // rides the neighbour's offset from the element, not from the page.
+    // A glide may move the element itself in the same batch, short of what it
+    // shares with the neighbour. An item above them closing does that. The
+    // edge then rides the neighbour's offset from the element, not from the
+    // page.
     const own = glideMoving(element, neighbour, area);
     const durationMs = Math.max(glide.durationMs, own?.durationMs ?? 0);
     // The neighbour's offset from its place relative to the element's,
@@ -1918,11 +1921,11 @@ function rideNeighbour(
 }
 
 /**
- * The one-state reveal or conceal rides the content on its edge's side: the
- * element shows what lies between its fixed edge and that content, a reveal
- * less by however far the content still is from its place towards it, a
- * conceal all of it less however far the content has come, fading with what
- * it hides.
+ * The one-state reveal or conceal rides the content on its edge's side. The
+ * element shows what lies between its fixed edge and that content. A reveal
+ * shows it less by however far the content still is from its place towards
+ * it. A conceal shows all of it less however far the content has come,
+ * fading with what it hides.
  */
 function rideEdge(
   element: Element,
@@ -1957,8 +1960,8 @@ function rideEdge(
 
 /**
  * The changed element's own animation, on the same motion as the content
- * after it (`spec:AST-105` FR4): content that appears reveals from its
- * block-end edge downward, or from the `edge` it is given (FR9), and its edge
+ * after it (`spec:AST-105` FR4). Content that appears reveals from its
+ * block-end edge downward, or from the `edge` it is given (FR9). Its edge
  * rides the glide of the content on that side once it starts. A reveal that
  * reverses a running conceal (an adopter opens it again mid-exit, after
  * `releaseLayoutExit`) starts from what the element shows. Plays only with a
@@ -2114,8 +2117,8 @@ function giveUpSpace(
     parent.flexDirection.startsWith('row');
   const rtl = view?.getComputedStyle(element).direction === 'rtl';
   // The default block-end exit frees its space at its end, on the axis its
-  // container lays it out on; an exit by another edge frees it on that
-  // edge's side, so the element stays where it shows and the content beyond
+  // container lays it out on. An exit by another edge frees it on that
+  // edge's side. So the element stays where it shows, and the content beyond
   // that edge moves (FR9).
   const isStart = edge.endsWith('start');
   const property =
@@ -2221,9 +2224,9 @@ const replaced = new WeakMap<Element, Replaced>();
  * task: the glide reads the layout once the element has given up its space.
  *
  * It conceals to its block-end edge by default, or to the `edge` it is given
- * (`spec:AST-105` FR9), and its edge rides the glide of the content on that
- * side once it starts; a conceal that reverses a running reveal (a close
- * while it opens) starts from what the element shows.
+ * (`spec:AST-105` FR9). Its edge rides the glide of the content on that side
+ * once it starts. A conceal that reverses a running reveal (a close while it
+ * opens) starts from what the element shows.
  *
  * Returns false, holding nothing, when the exit lands at once: no handle, a
  * close no change in the area measured, outside the area or its visible part,
@@ -2710,10 +2713,11 @@ const SETTLED: LayoutEdgeMotion = {end: () => {}, shown: () => null};
 
 /**
  * Before a change commits: hold `element`'s old state for FR9's two-state edge
- * reveal, its box and the extent it shows along `edge`'s axis (`shown`, from a
- * running reveal, or its box), and its old state as one transient copy (null
- * when it cannot be copied, or under an immediate change). Returns null
- * without the element or without Web Animations.
+ * reveal. That is its box and the extent it shows along `edge`'s axis:
+ * `shown`, from a running reveal, or its box. Also hold its old state as one
+ * transient copy. The copy is null when it cannot be copied, or under an
+ * immediate change. Returns null without the element or without Web
+ * Animations.
  */
 export function holdLayoutEdge(
   handle: AnimatedLayout | null | undefined,
@@ -2739,12 +2743,12 @@ export function holdLayoutEdge(
 /**
  * After the change commits, before paint: FR9's two-state edge reveal, on
  * FR4's one motion. The state that is larger along `edge`'s axis is clipped
- * on that edge, from the extent the element showed to the new one: a conceal
+ * on that edge, from the extent the element showed to the new one. A conceal
  * covers the old state, held as the swap's copy, with the element raised
- * above it; a reveal opens the element, under the old state. With
- * `rideWith`, an element the glide moves after that edge (a rail's content
- * column), the edge rides its glide, frame by frame, so the two never part,
- * also when this reverses a running reveal; without it the edge follows the
+ * above it. A reveal opens the element, under the old state. `rideWith` is an
+ * element the glide moves after that edge, such as a rail's content column.
+ * With it, the edge rides its glide, frame by frame, so the two never part,
+ * also when this reverses a running reveal. Without it, the edge follows the
  * motion's curve. `parts` gives the caller's own fades, told whether the edge
  * conceals and the element as it is now. Under Reduce Motion it follows
  * `design:reduced-motion`: opacity only under a coarse primary pointer (DR2),
@@ -2866,7 +2870,7 @@ export function playLayoutEdge(
 
   if (isConceal) {
     // A conceal covers the old state, held by the swap, from the extent it
-    // shows down to the new one; the element, raised above it, shows through.
+    // shows down to the new one. The element, raised above it, shows through.
     if (swap == null || host == null) {
       return SETTLED;
     }
@@ -2943,7 +2947,7 @@ export interface LayoutEdgeReport {
   measureBefore(): void;
   /**
    * After the new size is applied, before paint: the element reveals or
-   * conceals by its edge, from the extent it showed to its new one, and the
+   * conceals by its edge, from the extent it showed to its new one. The
    * content beside it glides on the same motion.
    */
   animate(): void;
@@ -2986,10 +2990,10 @@ const HOLD_PROPERTIES = {
 
 /**
  * Holds `element` at `extent` own px along `edge`'s axis while it conceals to
- * `keep`, freeing the difference by the margin on that edge's side, so what
- * lies beyond the edge stays where the new size puts it. Returns what puts
- * back every value it set, or null when no margin frees it (the content on
- * that side did not stay put), having set nothing.
+ * `keep`. The margin on that edge's side frees the difference, so what lies
+ * beyond the edge stays where the new size puts it. Returns what puts back
+ * every value it set. Returns null, having set nothing, when no margin frees
+ * it: the content on that side did not stay put.
  */
 function holdExtent(
   element: HTMLElement,
@@ -3060,21 +3064,22 @@ function holdExtent(
 }
 
 /**
- * Reports a resized element's edge reveal (`spec:AST-105` FR9) with no copy:
- * a resize controller's pane collapsing or opening beside the content it
- * shares a row with (`component:Resizable` FR8, `component:LayoutPanel`
- * FR7). Measure before the change commits and animate after the
- * new size is applied, as `reportLayoutChange` does; the content beside the
- * element glides through that report. A larger extent reveals by `edge` from
- * the extent the element showed. A smaller one conceals: the element is held
- * at the extent it was laid out at, the difference freed by the margin on
- * that edge's side so the content beyond it stays where the new size puts it,
- * and clipped down to its new extent; the hold goes when the motion ends. The
- * moving edge rides the glide of the content on that side, frame by frame,
- * and a change made while it runs starts from the extent it shows. It slides:
- * nothing fades. Under Reduce Motion with a coarse primary pointer a reveal
- * fades in and a conceal lands at once (`design:reduced-motion` DR2); with a
- * fine one every change lands at once (DR3).
+ * Reports a resized element's edge reveal (`spec:AST-105` FR9) with no copy.
+ * An example is a resize controller's pane collapsing or opening beside the
+ * content it shares a row with (`component:Resizable` FR8,
+ * `component:LayoutPanel` FR7). Measure before the change commits and animate
+ * after the new size is applied, as `reportLayoutChange` does. The content
+ * beside the element glides through that report. A larger extent reveals by
+ * `edge` from the extent the element showed. A smaller one conceals. The
+ * element is held at the extent it was laid out at and clipped down to its
+ * new extent. The margin on that edge's side frees the difference, so the
+ * content beyond it stays where the new size puts it. The hold goes when the
+ * motion ends. The moving edge rides the glide of the content on that side,
+ * frame by frame. A change made while it runs starts from the extent it
+ * shows. It slides: nothing fades. Under Reduce Motion with a coarse primary
+ * pointer, a reveal fades in and a conceal lands at once
+ * (`design:reduced-motion` DR2). With a fine one, every change lands at once
+ * (DR3).
  */
 export function reportLayoutEdge(
   handle: AnimatedLayout | null | undefined,
@@ -3164,8 +3169,8 @@ export function reportLayoutEdge(
       }
       const {progress} = motion;
       const rtl = edge.startsWith('inline') && isRtl(element);
-      // The box the clip works in: the new one for a reveal; for a conceal,
-      // the one it was laid out at, held while it runs.
+      // The box the clip works in. For a reveal it is the new one. For a
+      // conceal it is the one it was laid out at, held while it runs.
       const box = isConceal ? Math.max(before.box, before.shown) : after;
       const restore = isConceal
         ? holdExtent(element, area, edge, box, after)
