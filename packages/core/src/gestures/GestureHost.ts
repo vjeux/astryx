@@ -16,12 +16,13 @@
  *   alike (`spec:AST-094` FR43, FR19). Where the primary pointer is coarse
  *   the host listens while something enabled could take a touch. Where it
  *   is fine, each element with an enabled recognizer or consumer keeps one
- *   passive `pointerdown` listener and the page has none; a press on it (a
- *   mouse's primary button, a pen, or a finger, whose `pointerdown` comes
- *   before its `touchstart`) installs the host's page listeners, which go
- *   once that press's contacts end and the arena has decided them, a tap
- *   that waits on a double tap included (FR24). After the last detach the
- *   host holds nothing: no listener, note, frame or timer (releaseWhenIdle).
+ *   passive `pointerdown` listener, and the page has none. A press on it
+ *   installs the host's page listeners. The press is a mouse's primary
+ *   button, a pen, or a finger, whose `pointerdown` comes before its
+ *   `touchstart`. The page listeners go once that press's contacts end and
+ *   the arena has decided them, a tap that waits on a double tap included
+ *   (FR24). After the last detach the host holds nothing: no listener, note,
+ *   frame or timer (releaseWhenIdle).
  *   Under every pointer, an element whose recognizer claims a moving finger
  *   also keeps its blocking `touchmove`, a listener FR24 counts apart from
  *   the press's one.
@@ -33,89 +34,89 @@
  *
  * INPUT CHANNELS
  *
- * - Fingers begin and end with Touch Events: they are the only cancelable
- *   channel (a pointer event's preventDefault cannot stop a scroll or a
- *   click), they keep arriving after the browser takes a pan (which a
- *   watcher following the scroll to the lift needs, `spec:AST-094` FR20,
- *   DEC-7), and every event lists all the fingers at once. A
- *   finger's movement is sampled from ONE channel: its `pointermove`s, once
- *   its pointerdown has paired with its touchstart (by target and
- *   position), since Chromium sends no `touchmove` until a finger has
- *   travelled about 16 px while a tap fails and a pan begins at 10; touch
+ * - Fingers begin and end with Touch Events, for three reasons. They are the
+ *   only cancelable channel: a pointer event's preventDefault cannot stop a
+ *   scroll or a click. They keep arriving after the browser takes a pan,
+ *   which a watcher following the scroll to the lift needs (`spec:AST-094`
+ *   FR20, DEC-7). Every event also lists all the fingers at once. A finger's
+ *   movement is sampled from ONE channel: its `pointermove`s, once its
+ *   pointerdown has paired with its touchstart (by target and position).
+ *   That is because Chromium sends no `touchmove` until a finger has
+ *   travelled about 16 px, while a tap fails and a pan begins at 10. Touch
  *   events sample only a finger no pointer event reported. The other
  *   channel keeps its control duties but feeds no sample.
  * - A finger's events go to the element it landed on even after that
  *   element leaves the document, and then never reach the document. Each
- *   tracked finger's target therefore gets its own listeners, and a finger
- *   the events say is no longer down is cancelled, so a re-rendered or
- *   removed target never strands a gesture.
+ *   tracked finger's target therefore gets its own listeners. A finger the
+ *   events say is no longer down is cancelled. So a re-rendered or removed
+ *   target never strands a gesture.
  * - Mice and pens come from Pointer Events, with coalesced samples for
- *   velocity. A pen on an iPad also produces `stylus` touches; those are left
- *   to the pointer path, except that a claimed pen's stylus moves are
+ *   velocity. A pen on an iPad also produces `stylus` touches, which are left
+ *   to the pointer path. The exception: a claimed pen's stylus moves are
  *   cancelled as a finger's.
- * - `pointercancel` on a finger is the browser saying it took that finger
- *   for its own pan or zoom; so is a `touchmove` that can no longer be
- *   cancelled where `touch-action` let the browser pan, and a scroll above
- *   the touch.
+ * - `pointercancel` on a finger is the browser saying it took that finger for
+ *   its own pan or zoom. So is a `touchmove` that can no longer be cancelled
+ *   where `touch-action` let the browser pan. So is a scroll above the touch.
  *
  * FINGERS
  *
  * - The host keeps one record of where each finger on the screen landed
  *   (`fingersDown()`). Finger scrolls (fingerScroll.ts) read it, and a
  *   scroll lock's page hold (pageHold.ts) asks which touches a recognizer
- *   owns; both live in their own modules, so a page that needs neither
+ *   owns. Both live in their own modules, so a page that needs neither
  *   never ships them.
  *
  * TOUCHES ON MOVING ELEMENTS
  *
  * - iOS WebKit hit-tests an element a compositor animation moves where the
  *   animation started. There, at touch-down, the host resolves the moving
- *   elements (motion/presentation.ts: one style write each) and asks the
- *   engine again, so a contact goes to what is drawn under it; press
- *   trackers read `presentedRect`, and a retargeted tap clicks what it
- *   touched once, with the engine's own click cancelled or swallowed.
+ *   elements and asks the engine again, so a contact goes to what is drawn
+ *   under it. Resolving them takes one style write each
+ *   (motion/presentation.ts). Press trackers read `presentedRect`. A
+ *   retargeted tap clicks what it touched once, with the engine's own click
+ *   cancelled or swallowed.
  *
  * WHAT THE BROWSER IS TOLD
  *
  * - Each element gets the `touch-action` its recognizers leave the browser
- *   (touchAction.ts), never wider than the element's own value (a caller's
- *   explicit `touch-action` stays in force), set inline when they attach and
- *   restored when they detach.
+ *   (touchAction.ts). It is never wider than the element's own value, so a
+ *   caller's explicit `touch-action` stays in force. It is set inline when
+ *   they attach and restored when they detach.
  * - While a finger or a pen is down, text selection and the touch callout
- *   are off only where the hold does something (`spec:AST-094` FR41): on the
- *   elements of recognizers that bring a `selectionLock`, and on a non-text
- *   input under the finger inside them (WebKit's own style makes every
- *   input selectable); restored when the contact ends. A finger or a pen
- *   takes it under any primary pointer; a mouse never does (`spec:AST-017`
- *   FR59).
- * - Each element with a recognizer that can claim a touch while it moves (a
- *   pan, a swipe, a long press that then drags, a pinch) gets a
- *   NON-passive `touchmove` listener that cancels the event only while a
- *   recognizer owns one of its touches (a pan claims when it begins, at
- *   UIKit's 10 pt, `spec:AST-094` FR17). Nothing else is ever cancelled, so a
- *   touch nobody claims scrolls exactly as it would without the system. The
- *   known cost: a scroll that BEGINS on such an element waits for a busy main
- *   thread (measured in iOS Safari; a passive listener would hand every
- *   diagonal to the scroll instead). Elements whose recognizers only claim
- *   at the lift (taps), recognizers that never claim (`claimsTouches` false)
- *   and press consumers get no blocking listener, and the listener a
- *   finger's target gets at touch-down is passive for them too, so a scroll
+ *   are off only where the hold does something (`spec:AST-094` FR41). That
+ *   is on the elements of recognizers that bring a `selectionLock`, and on a
+ *   non-text input under the finger inside them. WebKit's own style makes
+ *   every input selectable. Both are restored when the contact ends. A finger
+ *   or a pen takes it under any primary pointer; a mouse never does
+ *   (`spec:AST-017` FR59).
+ * - Each element with a recognizer that can claim a touch while it moves gets
+ *   a NON-passive `touchmove` listener. Such a recognizer is a pan, a swipe, a
+ *   long press that then drags, or a pinch. The listener cancels the event
+ *   only while a recognizer owns one of its touches. A pan claims when it
+ *   begins, at UIKit's 10 pt (`spec:AST-094` FR17). Nothing else is ever
+ *   cancelled, so a touch nobody claims scrolls exactly as it would without
+ *   the system. The known cost: a scroll that BEGINS on such an element waits
+ *   for a busy main thread (measured in iOS Safari). A passive listener would
+ *   hand every diagonal to the scroll instead. Elements whose recognizers only
+ *   claim at the lift (taps) get no blocking listener. Neither do recognizers
+ *   that never claim (`claimsTouches` false) or press consumers. The listener
+ *   a finger's target gets at touch-down is passive for them too, so a scroll
  *   starting on them never waits.
  * - The browser took a finger on `pointercancel`, on its first uncancelable
- *   `touchmove` where it could pan, or on a scroll above it once the finger
- *   has travelled the slop; a scroll under a finger that has not moved is
- *   the page's own and leaves the touch alone.
- * - A lift whose click must not happen cancels its `touchend` (no click, no
- *   compatibility mouse events) and arms the shared click guard
- *   (utils/clickGuard.ts, the menu press model's too) for the browser's next
- *   click; a click held for a recognizer that may still recognize is
- *   replayed if they all fail. Keyboard and assistive-technology clicks
- *   (`detail === 0`) always pass.
+ *   `touchmove` where it could pan, or on a scroll above it. The scroll
+ *   counts once the finger has travelled the slop. A scroll under a finger
+ *   that has not moved is the page's own and leaves the touch alone.
+ * - A lift whose click must not happen cancels its `touchend`: no click, no
+ *   compatibility mouse events. It also arms the shared click guard for the
+ *   browser's next click. The guard is utils/clickGuard.ts, which the menu
+ *   press model uses too. A click held for a recognizer that may still
+ *   recognize is replayed if they all fail. Keyboard and assistive-technology
+ *   clicks (`detail === 0`) always pass.
  * - A `contextmenu` while a recognizer owns a touch, or while a press
  *   consumer holds the menu closed (`holdsContextMenu`), is cancelled. So a
  *   long press never also opens the browser's menu.
  * - When the app loses focus (a window blur, a hidden page), every touch in
- *   flight is cancelled, as in UIKit; a finger the browser keeps alive lifts
+ *   flight is cancelled, as in UIKit. A finger the browser keeps alive lifts
  *   on nothing: its `touchend` is cancelled (`spec:AST-094` FR28).
  *
  * SSR-safe: nothing touches `window` or `document` until something attaches.
@@ -210,8 +211,8 @@ interface Registration {
   readonly savedStyle: Map<string, string>;
   /**
    * What the element's own stylesheet gives it, read in a frame for the
-   * derived value the host marked then: `null` where the host's rule is in
-   * force (the author sets nothing else); the host never allows more than
+   * derived value the host marked then. It is `null` where the host's rule is
+   * in force: the author sets nothing else. The host never allows more than
    * the author does. `null` before the read.
    */
   authorTouchAction: {derived: string; author: string | null} | null;
@@ -239,17 +240,17 @@ export interface GestureHostOptions {
   onTransition?: GestureArenaOptions['onTransition'];
   /**
    * Send a contact to what is drawn while a compositor animation moves an
-   * element (motion/presentation.ts): `auto` where the engine hit-tests such
-   * an element where its animation started (iOS WebKit); `always` or
-   * `never` for tests. @default 'auto'
+   * element (motion/presentation.ts). `auto` does so where the engine
+   * hit-tests such an element where its animation started (iOS WebKit).
+   * `always` and `never` are for tests. @default 'auto'
    */
   presentedHitTesting?: 'auto' | 'always' | 'never';
   /**
    * Whether the primary pointer is coarse (a phone, a tablet). Gestures
-   * attach for every pointer (`spec:AST-094` FR43); where it is fine, an
-   * element that uses a gesture keeps one passive `pointerdown` listener
-   * (beside a claiming recognizer's blocking `touchmove`, FR19) and the
-   * page's listeners last only a press (FR24).
+   * attach for every pointer (`spec:AST-094` FR43). Where it is fine, an
+   * element that uses a gesture keeps one passive `pointerdown` listener,
+   * beside a claiming recognizer's blocking `touchmove` (FR19). The page's
+   * listeners last only a press (FR24).
    * @default `(pointer: coarse)` on the document's window
    */
   isPrimaryPointerCoarse?: () => boolean;
@@ -257,9 +258,9 @@ export interface GestureHostOptions {
 
 export interface AttachOptions {
   /**
-   * Let the host set the element's styles: its `touch-action`, and the
-   * selection and callout lock a hold that does something keeps while it is
-   * held (`spec:AST-094` FR41). With false the caller keeps both for this
+   * Let the host set the element's styles. Those are its `touch-action`, and
+   * the selection and callout lock a hold that does something keeps while it
+   * is held (`spec:AST-094` FR41). With false the caller keeps both for this
    * recognizer, and the host still styles the element for its others.
    * @default true
    */
@@ -303,7 +304,7 @@ const CSS_WIDE_KEYWORDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Run `task` in the next frame, before it paints: a read there styles what
+ * Run `task` in the next frame, before it paints. A read there styles what
  * the frame must style anyway, and its writes are what the frame shows.
  */
 function inNextFrame(view: Window | null, task: () => void): () => void {
@@ -379,7 +380,7 @@ interface PlacedContact {
 
 /**
  * How long a claimed finger's lift waits for its `touchend`, ms. The touchend
- * follows its pointerup in the same frame; a browser that sends pointer events
+ * follows its pointerup in the same frame. A browser that sends pointer events
  * alone for a finger never sends it, and the record goes.
  */
 const CLAIMED_LIFT_MS = 500;
@@ -403,9 +404,8 @@ function isPointerKind(type: string): type is PointerKind {
 /**
  * What an event, or one of its touches, landed on. Inside an open shadow root
  * the document's listeners see the shadow host, in `event.target` and in a
- * touch's `target` alike, while the composed path starts at the element
- * itself. A touch whose target is not the event's (another finger) keeps its
- * own.
+ * touch's `target` alike. The composed path starts at the element itself. A
+ * touch whose target is not the event's (another finger) keeps its own.
  */
 function landedOn(
   event: Event,
@@ -735,8 +735,8 @@ export class GestureHost {
   private readonly touchIds = new Map<number, number>();
   /**
    * Fingers cancelled because the app lost focus, kept until the browser
-   * ends them: a browser that keeps such a touch alive must not let its
-   * lift click (`spec:AST-094` FR28: nothing acts).
+   * ends them. A browser that keeps such a touch alive must not let its lift
+   * click (`spec:AST-094` FR28: nothing acts).
    */
   private readonly cancelledFingers = new Set<number>();
   /**
@@ -749,8 +749,8 @@ export class GestureHost {
   private readonly touchTargets = new Map<number, EventTarget>();
   /**
    * Finger targets with listeners of their own: how many fingers each, and
-   * how many of those a recognizer could claim while they move (only those
-   * need the blocking `touchmove` listener).
+   * how many of those a recognizer could claim while they move. Only those
+   * need the blocking `touchmove` listener.
    */
   private readonly watched = new Map<
     EventTarget,
@@ -759,10 +759,9 @@ export class GestureHost {
   /** Fingers whose target listener is the blocking one. */
   private readonly blockingFingers = new Set<number>();
   /**
-   * Fingers a participant could claim (a recognizer that claims touches, or
-   * a press consumer): only their target's `touchend` may need cancelling,
-   * so a touch only watchers follow gets a passive one (`spec:AST-094`
-   * FR20).
+   * Fingers a participant could claim: a recognizer that claims touches, or a
+   * press consumer. Only their target's `touchend` may need cancelling, so a
+   * touch only watchers follow gets a passive one (`spec:AST-094` FR20).
    */
   private readonly claimingFingers = new Set<number>();
   /** Touch events already handled (the document's and the target's listeners both see one). */
@@ -772,10 +771,10 @@ export class GestureHost {
   /** Each contact's kind: a blur refuses a pen's or a pointer-read finger's lift, never a mouse's. */
   private readonly pointerKinds = new Map<number, PointerKind>();
   /**
-   * The boxes the host watches for screen-edge pans (syncLayoutWatch): each
-   * element with an enabled one, and the root for one whose band moves with
-   * the viewport (spec:AST-094 FR18, FR19, DEC-22), and the one observer
-   * that watches them.
+   * The boxes the host watches for screen-edge pans (syncLayoutWatch), and
+   * the one observer that watches them. The boxes are each element with an
+   * enabled one, and the root for one whose band moves with the viewport
+   * (spec:AST-094 FR18, FR19, DEC-22).
    */
   private readonly layoutWatched = new Set<Element>();
   private layoutObserver: ResizeObserver | null = null;
@@ -784,8 +783,8 @@ export class GestureHost {
   /**
    * A finger's pointerId → its arena id, once its pointerdown and its
    * touchstart are paired. Chromium sends no `touchmove` until a finger has
-   * travelled its slop (about 16 px), but sends every `pointermove`, so a
-   * paired finger is sampled from its pointer events (`pointerFed`); and its
+   * travelled its slop (about 16 px), but sends every `pointermove`. So a
+   * paired finger is sampled from its pointer events (`pointerFed`). Its
    * `pointercancel` is the browser's claim of exactly that finger.
    */
   private readonly fingerPointers = new Map<number, number>();
@@ -812,10 +811,10 @@ export class GestureHost {
   /**
    * Fingers whose samples come from their pointer events. A finger the
    * browser reports on both channels is sampled from ONE: the pointer
-   * channel, where its pointerdown paired with its touchstart; touch events
+   * channel, where its pointerdown paired with its touchstart. Touch events
    * sample only a finger no pointer event reported (no Pointer Events). The
    * other channel keeps its control duties (cancelling, claiming, the
-   * browser's takeover) but never feeds a sample, so the two copies of one
+   * browser's takeover) but never feeds a sample. So the two copies of one
    * move cannot both reach a velocity, however far apart they arrive.
    */
   private readonly pointerFed = new Set<number>();
@@ -869,9 +868,9 @@ export class GestureHost {
   private readonly armedElements = new Map<Element, () => void>();
   private isArmedPress = false;
   /**
-   * Whether the installed listeners include the cancelable ones (the
-   * document's touchend, contextmenu and the window's click): only while a
-   * participant that can claim is attached (`spec:AST-094` FR20).
+   * Whether the installed listeners include the cancelable ones: the
+   * document's touchend, contextmenu and the window's click. They do only
+   * while a participant that can claim is attached (`spec:AST-094` FR20).
    */
   private isClaimingInstalled = false;
   /** The input stream subscriptions syncClaimingListeners keeps. */
@@ -957,8 +956,9 @@ export class GestureHost {
     const edgePan = asScreenEdgePan(recognizer);
     if (edgePan != null) {
       // A new answer may also move the band the pan watches onto or off the
-      // right side, whose band moves with the viewport (an in-place switch
-      // of direction): the layout watch follows (FR18, FR24, DEC-22).
+      // right side, whose band moves with the viewport. An in-place switch of
+      // direction does that, and the layout watch follows (FR18, FR24,
+      // DEC-22).
       edgePan.onTouchBehaviorChange = () => {
         this.refresh(element, registration);
         this.syncLayoutWatch();
@@ -1004,13 +1004,13 @@ export class GestureHost {
   }
 
   /**
-   * Watch the box of each element with an enabled screen-edge pan, and the
-   * root's for a pan that watches the right side, whose band moves with the
-   * viewport: a resize may move an element into or out of its edge band, and
-   * the pan then measures again and re-derives the element's touch-action
-   * (FR19). The host sets touch-action for every pointer (FR43), so it
-   * watches under any primary pointer. One ResizeObserver serves every
-   * element and goes with the last one, and no listener is added (FR24); an
+   * Watch the box of each element with an enabled screen-edge pan. Also watch
+   * the root's box for a pan that watches the right side. That band moves
+   * with the viewport. A resize may move an element into or out of its edge
+   * band. The pan then measures again and re-derives the element's
+   * touch-action (FR19). The host sets touch-action for every pointer (FR43),
+   * so it watches under any primary pointer. One ResizeObserver serves every
+   * element and goes with the last one, and no listener is added (FR24). An
    * engine without ResizeObserver keeps each pan's first measurement.
    */
   private syncLayoutWatch(): void {
@@ -1112,10 +1112,10 @@ export class GestureHost {
 
   /**
    * An element's box where it is drawn: the box the engine reports, moved
-   * by the compositor animations of it and its ancestors on engines that
-   * report and hit-test those where they started (iOS WebKit). Elsewhere
-   * `getBoundingClientRect` already reports the drawn box. Press trackers
-   * read their bounds through it.
+   * by the compositor animations of it and its ancestors. That applies on
+   * engines that report and hit-test those animations where they started
+   * (iOS WebKit). Elsewhere `getBoundingClientRect` already reports the
+   * drawn box. Press trackers read their bounds through it.
    */
   presentedRect(element: Element): PressBounds {
     const box = element.getBoundingClientRect();
@@ -1144,14 +1144,14 @@ export class GestureHost {
 
   /**
    * Where a contact lands among what is drawn. iOS WebKit hit-tests an
-   * element that a compositor animation moves where the animation started:
-   * a finger on a settling sheet lands on whatever sat under the sheet's
-   * start (the scrim, which closes it), and a finger where the sheet was
-   * lands on the sheet. UIKit keeps an interruptible animation hit-testable
-   * where it is drawn (UIViewPropertyAnimator). The touch goes to what was
-   * drawn under the finger when it landed (`time`, its event's timestamp),
-   * even when a busy main thread hands it over later, and content that slid
-   * under the finger since takes nothing (`spec:AST-094` FR11).
+   * element that a compositor animation moves where the animation started. A
+   * finger on a settling sheet lands on whatever sat under the sheet's start:
+   * the scrim, which closes it. A finger where the sheet was lands on the
+   * sheet. UIKit keeps an interruptible animation hit-testable where it is
+   * drawn (UIViewPropertyAnimator). The touch goes to what was drawn under the
+   * finger when it landed (`time`, its event's timestamp). That holds even
+   * when a busy main thread hands it over later. Content that slid under the
+   * finger since takes nothing (`spec:AST-094` FR11).
    */
   private presentedTarget(
     native: EventTarget | null,
@@ -1268,8 +1268,8 @@ export class GestureHost {
   /**
    * The click a retargeted tap earned, on what was drawn under the finger.
    * The engine's own click would hit the start position, so the caller
-   * cancels it (or the click guard drops it, a late one included) and this one
-   * is the tap's single activation.
+   * cancels it. Or the click guard drops it, a late one included. This one is
+   * the tap's single activation.
    */
   private clickRetargeted(
     target: EventTarget,
@@ -1320,10 +1320,10 @@ export class GestureHost {
 
   /**
    * The Pointer Events `pointerId` of a contact the arena tracks: a mouse's
-   * or a pen's own, and for a finger driven by touch events the pointer its
-   * touch was paired with (null before the pairing, or without Pointer
-   * Events). It hands a held finger to code that follows pointers, as a
-   * menu does when a long press turns into a press-drag selection.
+   * or a pen's own. For a finger driven by touch events, it is the pointer
+   * its touch was paired with. It is null before the pairing, or without
+   * Pointer Events. It hands a held finger to code that follows pointers, as
+   * a menu does when a long press turns into a press-drag selection.
    */
   pointerIdOf(touch: GestureTouch | number): number | null {
     const id = typeof touch === 'number' ? touch : touch.id;
@@ -1434,25 +1434,25 @@ export class GestureHost {
 
   /**
    * The element's blocking `touchmove`. For every pointer a claiming
-   * recognizer keeps it: a finger's claim cancels its moves here (FR19), a
-   * listener FR24 counts outside the one-listener budget a fine pointer's
-   * element keeps for its press (syncArmed). A kept press needs it only
-   * while a press is held: a phone's before every touch (Safari honours a
-   * blocking listener only when registered before the touch began), a fine
-   * pointer's only during an armed press, whose `pointerdown` comes before
-   * the touch it brings (FR24).
+   * recognizer keeps it: a finger's claim cancels its moves here (FR19). FR24
+   * counts this listener outside the one-listener budget a fine pointer's
+   * element keeps for its press (syncArmed). A kept press needs it only while
+   * a press is held. A phone's needs it before every touch: Safari honours a
+   * blocking listener only when registered before the touch began. A fine
+   * pointer's needs it only during an armed press, whose `pointerdown` comes
+   * before the touch it brings (FR24).
    */
   private syncTouchMoveListener(
     element: Element,
     registration: Registration,
   ): void {
-    // Where fingers come from their pointer events (Pointer Events input, or
-    // a window with no ontouchstart), a claimed finger's touchend is not the
-    // host's own document listener's to cancel, so the element cancels it
+    // Fingers may come from their pointer events: Pointer Events input, or a
+    // window with no ontouchstart. There a claimed finger's touchend is not
+    // the host's own document listener's to cancel, so the element cancels it
     // (FR21). Under a coarse pointer always: touch emulation turned on after
     // load hides ontouchstart yet sends touches. Under a fine one wherever
-    // the browser sends Touch Events, as a touchscreen laptop does (FR43);
-    // elsewhere no touchend ever comes, and the element keeps no listener
+    // the browser sends Touch Events, as a touchscreen laptop does (FR43).
+    // Elsewhere no touchend ever comes, and the element keeps no listener
     // (FR24).
     const needsEndListener =
       this.readsFingersFromPointerEvents() &&
@@ -1477,9 +1477,9 @@ export class GestureHost {
       (registration.consumer?.keepsTouch != null &&
         registration.consumer.isEnabled?.() !== false &&
         (this.isCoarse || this.isArmedPress));
-    // The blocking listener sits on the element itself (FR19: a scroll that
-    // starts elsewhere never waits on it), but every element shares the
-    // host's one handler, which routes through the arena.
+    // The blocking listener sits on the element itself, so a scroll that
+    // starts elsewhere never waits on it (FR19). Still, every element shares
+    // the host's one handler, which routes through the arena.
     if (needsListener && !registration.hasTouchMoveListener) {
       element.addEventListener('touchmove', this.onBlockingTouchMove, {
         passive: false,
@@ -1521,7 +1521,7 @@ export class GestureHost {
     let style: GestureHostStyle =
       active.length > 0 ? gestureHostStyle(active) : {};
     // A control that keeps its touch (a stepper's hold-repeat) takes taps in
-    // quick succession: the browser's double-tap zoom goes, as for a tap
+    // quick succession. So the browser's double-tap zoom goes, as for a tap
     // recognizer (`spec:AST-094` FR18), for every pointer (FR43).
     if (
       style.touchAction == null &&
@@ -1561,15 +1561,15 @@ export class GestureHost {
    * The touch-action to write inline, if any. The author's value (a
    * trigger's own `touch-action: none`) stays in force and the host never
    * allows more (spec:AST-094 FR18, DEC-8):
-   * - an inline value is the style's own, read with no recalc, and the host
-   *   writes what both allow, inline; a CSS-wide keyword (`initial`,
+   * - An inline value is the style's own, read with no recalc, and the host
+   *   writes what both allow, inline. A CSS-wide keyword (`initial`,
    *   `inherit`, `unset`, `revert`, `revert-layer`) names no touch-action of
-   *   its own, so it is read as an author rule is, as what it resolves to;
-   * - otherwise the element is marked with the derived value, under a rule
-   *   any author rule outranks, as the recognizer attaches: a subtree that
-   *   mounts with it is styled once, never restyled for it in a later frame.
-   *   The next frame reads what is in force, styles clean, and the host
-   *   writes inline only what both allow where that is narrower than an
+   *   its own. So it is read as an author rule is, as what it resolves to.
+   * - Otherwise the element is marked with the derived value as the
+   *   recognizer attaches, under a rule any author rule outranks. A subtree
+   *   that mounts with it is styled once, never restyled for it in a later
+   *   frame. The next frame reads what is in force, styles clean. The host
+   *   then writes inline only what both allow, where that is narrower than an
    *   author rule's value.
    */
   private touchActionToWrite(
@@ -1674,10 +1674,11 @@ export class GestureHost {
 
   /**
    * Listen only while something could take a touch now (`spec:AST-094`
-   * FR24, FR43): where the primary pointer is coarse, an enabled recognizer
-   * or consumer, or a finger-scroll watch; where it is fine, only during a
-   * press an element armed (syncArmed). Otherwise no document listener is
-   * registered, so an idle page and a disabled control pay nothing.
+   * FR24, FR43). Where the primary pointer is coarse, that is an enabled
+   * recognizer or consumer, or a finger-scroll watch. Where it is fine, it is
+   * only during a press an element armed (syncArmed). Otherwise no document
+   * listener is registered, so an idle page and a disabled control pay
+   * nothing.
    */
   private syncListeners(): void {
     this.syncLayoutWatch();
@@ -1693,17 +1694,17 @@ export class GestureHost {
 
   /**
    * Safari honours a blocking `touchmove` only where it was registered before
-   * the touch began, on the engine's own target, and on iOS WebKit a finger
-   * on an element a compositor animation moves lands, for the engine, on
-   * whatever sits under the motion's start (see presentedTarget). So while an
-   * element a recognizer that claims moving touches lives in (or around) is
-   * moving, the blocking listener subscribes to the window's capturing
-   * `touchmove` through the shared input stream with `{cancels: true}`,
-   * which sees every touch on the page whatever the engine targets and makes
-   * that one listener non-passive (`spec:AST-094` FR19;
-   * architecture:react-component-runtime INV13). It leaves when the motion
-   * ends: only while it is subscribed does a scroll starting anywhere wait on
-   * the main thread.
+   * the touch began, on the engine's own target. On iOS WebKit, a finger on an
+   * element a compositor animation moves lands, for the engine, on whatever
+   * sits under the motion's start (see presentedTarget). This applies when a
+   * recognizer that claims moving touches lives in, or around, such an
+   * element. While that element moves, the blocking listener subscribes to
+   * the window's capturing `touchmove` through the shared input stream, with
+   * `{cancels: true}`. That subscription sees every touch on the page,
+   * whatever the engine targets, and makes that one listener non-passive
+   * (`spec:AST-094` FR19; architecture:react-component-runtime INV13). It
+   * leaves when the motion ends: only while it is subscribed does a scroll
+   * starting anywhere wait on the main thread.
    */
   private syncMoverBlocking(): void {
     const isWatching = this.isInstalled && this.hitTestsLayout();
@@ -1758,13 +1759,13 @@ export class GestureHost {
 
   /**
    * Where the primary pointer is fine, each element with an enabled
-   * recognizer or press consumer listens for a press itself: one passive
-   * `pointerdown` listener on the element. The host's page listeners come at
-   * that press and go once its contacts end and the arena drops their last
-   * record (onIdle: a decision that waited on a timer), so an idle page has none
-   * (`spec:AST-094` FR24, FR43). A finger on a touchscreen whose primary
-   * pointer is fine sends its `pointerdown` before its `touchstart`, so the
-   * host hears both.
+   * recognizer or press consumer listens for a press itself. It uses one
+   * passive `pointerdown` listener on the element. The host's page listeners
+   * come at that press and go once its contacts end and the arena drops their
+   * last record. That drop can be a decision that waited on a timer (onIdle).
+   * So an idle page has none (`spec:AST-094` FR24, FR43). A finger on a
+   * touchscreen whose primary pointer is fine sends its `pointerdown` before
+   * its `touchstart`, so the host hears both.
    */
   private syncArmed(): void {
     const wanted = new Set<Element>();
@@ -1828,8 +1829,8 @@ export class GestureHost {
     this.syncKeptPresses();
     this.install();
     // A finger's or a pen's press brings the cancelable touchend and the
-    // contextmenu canceller, as wherever the host installs, so a claimed
-    // lift clicks nothing and a claimed hold opens no browser menu (FR21). A
+    // contextmenu canceller, as wherever the host installs. So a claimed lift
+    // clicks nothing and a claimed hold opens no browser menu (FR21). A
     // mouse's press needs neither.
     if (press.pointerType !== 'mouse') {
       this.syncClaimingListeners();
@@ -1896,10 +1897,10 @@ export class GestureHost {
   }
 
   /**
-   * In the microtask after the last detach, unless something attached again
-   * in the same task (a component that remounts mid-press keeps its notes):
-   * nothing the host holds outlives it, no note and no pending frame or
-   * timer (`spec:AST-094` FR24).
+   * In the microtask after the last detach, nothing the host holds outlives
+   * it: no note and no pending frame or timer (`spec:AST-094` FR24). The
+   * exception is something that attached again in the same task: a component
+   * that remounts mid-press keeps its notes.
    */
   private releaseWhenIdle(): void {
     queueMicrotask(() => {
@@ -1959,9 +1960,9 @@ export class GestureHost {
   }
 
   /**
-   * Whether an enabled participant could claim a touch or cancel a lift: a
-   * consumer, or a recognizer that claims touches and takes a finger or a
-   * pen. With only watchers, or only scroll-only recognizers
+   * Whether an enabled participant could claim a touch or cancel a lift. Such
+   * a participant is a consumer, or a recognizer that claims touches and takes
+   * a finger or a pen. With only watchers, or only scroll-only recognizers
    * (`allowedPointerTypes: []`), the host's listeners are all passive.
    */
   private hasClaimer(): boolean {
@@ -1984,7 +1985,7 @@ export class GestureHost {
 
   /**
    * Keeps the touchend cancelable, and the contextmenu subscription on,
-   * only while a claimer is attached; with only watchers the touchend is
+   * only while a claimer is attached. With only watchers the touchend is
    * passive and the contextmenu is off. Clicks are the click guard's
    * (utils/clickGuard.ts), whose one listener a window gets only once a
    * gesture first arms it.
@@ -2025,7 +2026,7 @@ export class GestureHost {
       return false;
     }
     // A retainer (a finger-scroll watch) listens only where the pointer is
-    // coarse: it follows a finger's scroll, which a fine pointer's page
+    // coarse. It follows a finger's scroll, which a fine pointer's page
     // leaves to the browser (FR24).
     if (this.isCoarse && this.retainers > 0) {
       return true;
@@ -2065,18 +2066,18 @@ export class GestureHost {
       return;
     }
     // The window's capture phase, through the shared input stream
-    // (utils/inputStream.ts): ahead of any document listener, so an app's
-    // window-capture stopPropagation, or a document-capture
+    // (utils/inputStream.ts), comes ahead of any document listener. So an
+    // app's window-capture stopPropagation, or a document-capture
     // stopImmediatePropagation registered first, no longer hides a touch
     // from the recognizers. A recognizer that must claim mid-gesture still
     // needs the touch to reach its element, where its blocking touchmove
     // sits. Only the listeners that cancel are non-passive, and only while a
-    // claimer is attached (syncClaimingListeners); none of them is a
+    // claimer is attached (syncClaimingListeners). None of them is a
     // touchstart or touchmove, so none of them holds a scroll.
     this.unsubscribers = [
       // Pointer Events only: a finger comes from its pointer events alone. A
-      // browser that has Touch Events still sends them for the same finger,
-      // and reading both would track it twice (a long press needs one touch).
+      // browser that has Touch Events still sends them for the same finger.
+      // Reading both would track it twice, and a long press needs one touch.
       ...(this.inputMode === 'auto'
         ? [
             subscribeInput(view, 'touchstart', this.onTouchStart),
@@ -2121,9 +2122,9 @@ export class GestureHost {
       unsubscribe();
     }
     this.cancelEverything(this.arena.now());
-    // A claimed lift's note stays: an armed press's listeners go in the
-    // microtask after its pointerup, the touchend comes after that microtask
-    // in the same task (iOS and WebKit), and the element's own listener still
+    // A claimed lift's note stays. An armed press's listeners go in the
+    // microtask after its pointerup. The touchend comes after that microtask
+    // in the same task (iOS and WebKit). The element's own listener still
     // takes it (noteClaimedLift).
     this.lastTouch = null;
     this.lastScroll = null;
@@ -2187,16 +2188,17 @@ export class GestureHost {
 
   /**
    * Turn text selection and the touch callout off, for as long as this
-   * finger or pen is down, only on the elements whose hold does something:
-   * a long press's (a menu, a hold-repeat), those of recognizers created
-   * with a `selectionLock` (a slider's thumb, a switch's drag, a tab bar's
-   * zero-delay lens) and that of a press tracker created with one (a
-   * stepper's hold-repeat). Anything whose hold does nothing, a plain
+   * finger or pen is down. Do so only on the elements whose hold does
+   * something. Those are a long press's (a menu, a hold-repeat), those of
+   * recognizers created with a `selectionLock`, and that of a press tracker
+   * created with one. Such recognizers include a slider's thumb, a switch's
+   * drag and a tab bar's zero-delay lens. One such press tracker is a
+   * stepper's hold-repeat. Anything whose hold does nothing, a plain
    * press-tracked control or row included, keeps the browser's long-press
    * selection (`spec:AST-094` FR41). Restored when the contact ends. Callers
    * lock for a finger or a pen under any primary pointer, never for a mouse
-   * (locksSelectionFor), and only once the arena has admitted the contact:
-   * `recognizers` and `consumer` are the ones that took it.
+   * (locksSelectionFor). They lock only once the arena has admitted the
+   * contact: `recognizers` and `consumer` are the ones that took it.
    */
   private lockSelection(
     id: number,
@@ -2956,11 +2958,11 @@ export class GestureHost {
 
   /**
    * How many fingers are on the screen: the length of `touches` in the last
-   * touch event the host's listeners heard (`touchstart`, `touchmove`,
-   * `touchend`, `touchcancel`), whatever its target, so a finger on an
-   * element with no recognizer counts too. 0 before any, and while no
-   * listener is installed. A recognizer that must not begin under a second
-   * finger reads it in `shouldBegin`.
+   * touch event the host's listeners heard. That event is a `touchstart`,
+   * `touchmove`, `touchend` or `touchcancel`, whatever its target. So a
+   * finger on an element with no recognizer counts too. 0 before any, and
+   * while no listener is installed. A recognizer that must not begin under a
+   * second finger reads it in `shouldBegin`.
    */
   fingersDown(): number {
     return this.fingerTargets.length;
@@ -3021,9 +3023,9 @@ export class GestureHost {
         'touch',
       );
       if (recognizers.length === 0 && consumer == null) {
-        // Nothing here takes part: the touch stays the page's, but a
-        // recognizer tracking another finger hears it began (a second
-        // finger beside an open menu ends its press, spec:AST-094 FR28).
+        // Nothing here takes part: the touch stays the page's. Still, a
+        // recognizer tracking another finger hears it began. A second finger
+        // beside an open menu ends its press (spec:AST-094 FR28).
         untracked.push({
           id: this.nextId++,
           x: touch.clientX,
@@ -3123,13 +3125,13 @@ export class GestureHost {
     }
     if (!event.cancelable) {
       // The browser no longer asks the page about these fingers. WebKit
-      // stops asking when it takes the touch to pan (its pointercancel comes
-      // with it); Chromium also stops after one unconsumed touchmove, even
-      // when `touch-action` keeps it from panning the way the finger went (a
-      // horizontal drag under pan-y). So a finger's FIRST uncancelable move
-      // counts as the browser's claim only if the browser could pan along
-      // the finger's main axis since touch-down; later ones add nothing, and
-      // pointercancel or a scroll still report any real pan.
+      // stops asking when it takes the touch to pan, and its pointercancel
+      // comes with it. Chromium also stops after one unconsumed touchmove,
+      // even when `touch-action` keeps it from panning the way the finger
+      // went. An example is a horizontal drag under pan-y. So a finger's FIRST
+      // uncancelable move counts as the browser's claim only if the browser
+      // could pan along the finger's main axis since touch-down. Later ones
+      // add nothing, and pointercancel or a scroll still report any real pan.
       const placed = new Map(inputs.map(input => [input.id, input]));
       const taken = ids.filter(id => {
         const touch = this.arena.getTouch(id);
@@ -3168,14 +3170,15 @@ export class GestureHost {
 
   /**
    * Cancel a `touchmove` while a recognizer owns one of its fingers. A touch
-   * no recognizer owns keeps its moves (`spec:AST-094` FR19): nothing is
-   * cancelled before a recognizer begins, or for a touch it does not track,
-   * unless a recognizer holds that finger already (a scroll-edge pan pulling
-   * away from an edge every scroller under it is at; FR19, DEC-18).
+   * no recognizer owns keeps its moves (`spec:AST-094` FR19). Nothing is
+   * cancelled before a recognizer begins, or for a touch it does not track.
+   * The exception is a recognizer that holds that finger already. An example
+   * is a scroll-edge pan pulling away from an edge every scroller under it is
+   * at (FR19, DEC-18).
    */
   /**
    * Under `inputMode: 'pointer-events'` a finger comes from its pointer
-   * events, so its touches carry no id of ours: the live finger it is, the
+   * events, so its touches carry no id of ours. The live finger it is: the
    * nearest pointer-fed finger on the same target. Its touchmoves can then
    * be cancelled once a recognizer claims it (`spec:AST-094` FR19, FR21).
    */
@@ -3209,7 +3212,7 @@ export class GestureHost {
 
   /**
    * Cancel the `touchend` of a finger a recognizer owned when it lifted
-   * (`inputMode: 'pointer-events'`): its `pointerup` came first, at the same
+   * (`inputMode: 'pointer-events'`). Its `pointerup` came first, at the same
    * place on the same target (`spec:AST-094` FR21). Records older than
    * CLAIMED_LIFT_MS are dropped first: their touchend never came.
    */
@@ -3264,8 +3267,8 @@ export class GestureHost {
           // A kept press keeps its finger under any pointer (FR11, DEC-21).
           this.arena.consumerOf(id)?.keepsTouch?.(id) === true ||
           // A recognizer that holds the finger before it begins: a
-          // scroll-edge pan pulling away from an edge (FR19, DEC-18), only
-          // while this is the one finger on the screen: with a second one
+          // scroll-edge pan pulling away from an edge (FR19, DEC-18). It holds
+          // only while this is the one finger on the screen. With a second one
           // down anywhere, even off the recognizer's element, the moves stay
           // the browser's, for its pinch (FR10).
           (event.touches.length === 1 &&
@@ -3334,7 +3337,7 @@ export class GestureHost {
         : new Map<number, ClickDisposition>();
     let cancelsClick = isRefused || needsSuppression(dispositions);
     // A tap sent to what is drawn: the engine's click would hit the layout
-    // position, so it is cancelled and the tap clicks what it touched.
+    // position. So it is cancelled, and the tap clicks what it touched.
     for (const end of retargetedEnds) {
       if (
         this.clickRetargetedTap(
@@ -3356,10 +3359,10 @@ export class GestureHost {
   };
 
   /**
-   * Clicks what a retargeted contact touched if it ended as a tap the
-   * engine would click: nothing claimed it, the browser did not take it
-   * (a taken contact is no longer retargeted), and the finger stayed within
-   * a tap's movement. Returns whether it clicked.
+   * Clicks what a retargeted contact touched if it ended as a tap the engine
+   * would click. That means nothing claimed it, the browser did not take it,
+   * and the finger stayed within a tap's movement. A taken contact is no
+   * longer retargeted. Returns whether it clicked.
    */
   private clickRetargetedTap(
     landed: {x: number; y: number; target: EventTarget} | undefined,
@@ -3563,9 +3566,9 @@ export class GestureHost {
   }
 
   /**
-   * Keeps one `touchmove` listener on a watched target: the blocking one
-   * while a finger on it could be claimed as it moves, a passive one
-   * otherwise, so a scroll starting there never waits on the main thread
+   * Keeps one `touchmove` listener on a watched target. It is the blocking one
+   * while a finger on it could be claimed as it moves, and a passive one
+   * otherwise. So a scroll starting there never waits on the main thread
    * (`spec:AST-094` FR19).
    */
   private swapTargetTouchMove(
@@ -3588,10 +3591,10 @@ export class GestureHost {
   }
 
   /**
-   * Keeps one `touchend` listener on a watched target: the cancelable one
-   * while a finger on it has a participant that could claim (a lift whose
-   * click must not happen cancels its `touchend`), a passive one while only
-   * watchers follow its fingers (`spec:AST-094` FR20).
+   * Keeps one `touchend` listener on a watched target. It is the cancelable
+   * one while a finger on it has a participant that could claim. A lift whose
+   * click must not happen cancels its `touchend`. It is a passive one while
+   * only watchers follow its fingers (`spec:AST-094` FR20).
    */
   private swapTargetTouchEnd(
     target: EventTarget,
@@ -3840,9 +3843,9 @@ export class GestureHost {
       armClickGuard(this.doc, {takesLateMouse: event.pointerType === 'touch'});
     }
     // A finger read from its pointer events: the touchend that follows the
-    // lift is cancelled when a gesture took it, which the lift itself may
-    // decide (a hold whose time came with it), or when its tap was retargeted
-    // (FR21).
+    // lift is cancelled when a gesture took it. The lift itself may decide
+    // that, as a hold whose time came with it does. It is also cancelled when
+    // its tap was retargeted (FR21).
     if (
       event.pointerType === 'touch' &&
       (clicked || needsSuppression(dispositions))
@@ -3856,9 +3859,9 @@ export class GestureHost {
    * `pointerup` is cancelled (FR21). Only where an element's listener can take
    * that touchend: elsewhere none comes, and the note would hold its node for
    * nothing. At most CLAIMED_LIFT_LIMIT wait, the oldest going first, and one
-   * timer drops each once CLAIMED_LIFT_MS has passed (FR24); the host's
-   * uninstall keeps them, as it can run in the microtask after the pointerup,
-   * before the touchend that comes later in the same task.
+   * timer drops each once CLAIMED_LIFT_MS has passed (FR24). The host's
+   * uninstall keeps them, as it can run in the microtask after the pointerup.
+   * That is before the touchend that comes later in the same task.
    */
   private noteClaimedLift(event: PointerEvent): void {
     if (
@@ -3918,8 +3921,8 @@ export class GestureHost {
       this.fingerPointers.delete(event.pointerId);
       this.pendingPointers.delete(event.pointerId);
       if (id != null) {
-        // The pointer channel ends here while the finger keeps moving (the
-        // browser scrolls with it): its touch events, now the only channel,
+        // The pointer channel ends here while the finger keeps moving: the
+        // browser scrolls with it. Its touch events, now the only channel,
         // sample it, as a watcher following the scroll to the lift needs.
         this.pointerFed.delete(id);
         this.browserTook([id], eventTime(event));
@@ -4010,9 +4013,9 @@ export class GestureHost {
 
   /**
    * A recognizer is about to scroll `scroller` itself (a menu's edge
-   * autoscroll, spec:AST-094 FR30): the scroll that write fires is not a
+   * autoscroll, spec:AST-094 FR30). The scroll that write fires is not a
    * finger's and not the browser taking one. It passes until the end of the
-   * next frame, when that event has fired; a real pan in that window still
+   * next frame, when that event has fired. A real pan in that window still
    * reports itself through pointercancel or touchcancel.
    */
   ownScroll(scroller: Node): void {
@@ -4082,10 +4085,9 @@ export class GestureHost {
         containsAlongFlatTree(scroller, touch.target) &&
         // Only a pan this finger drove takes the touch: the browser starts
         // one only once the finger has travelled the take distance
-        // (spec:AST-094 FR20). A scroll under a finger that has not
-        // (scrollIntoView, a transcript pinned to its end, scroll
-        // anchoring) is the page's own: the touch, and the click it earns,
-        // stay where they are.
+        // (spec:AST-094 FR20). A scroll under a finger that has not is the
+        // page's own: scrollIntoView, a transcript pinned to its end, scroll
+        // anchoring. The touch, and the click it earns, stay where they are.
         Math.hypot(touch.x - touch.startX, touch.y - touch.startY) >=
           UIKIT_PRESS.slop.value
       ) {
@@ -4113,12 +4115,12 @@ export class GestureHost {
   }
 
   /**
-   * A second finger landed somewhere (wherever: often on a plain row): a
-   * pan that takes one finger only and has not claimed its touch fails, so
-   * the two fingers stay the browser's pinch (WCAG 1.4.4) instead of the
-   * pan claiming them midway. A drag a recognizer has claimed keeps its
-   * finger: a second finger never cancels or redirects it (`spec:AST-094`
-   * FR10), and no claim is released here.
+   * A second finger landed anywhere, often on a plain row. A pan that takes
+   * one finger only and has not claimed its touch fails. So the two fingers
+   * stay the browser's pinch (WCAG 1.4.4) instead of the pan claiming them
+   * midway. A drag a recognizer has claimed keeps its finger: a second finger
+   * never cancels or redirects it (`spec:AST-094` FR10), and no claim is
+   * released here.
    */
   private failUnclaimedLoneFingerPans(): void {
     for (const recognizer of [...this.arena.involvedRecognizers]) {
@@ -4166,9 +4168,9 @@ export class GestureHost {
   }
 
   /**
-   * Whether the host reads fingers from their pointer events: Pointer Events
-   * input, or a window with no `ontouchstart` (touch emulation turned on
-   * after load), as the move path does.
+   * Whether the host reads fingers from their pointer events, as the move path
+   * does. It does with Pointer Events input, or in a window with no
+   * `ontouchstart` (touch emulation turned on after load).
    */
   private readsFingersFromPointerEvents(): boolean {
     const view = this.doc.defaultView;
