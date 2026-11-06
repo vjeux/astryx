@@ -7,8 +7,8 @@
  * @input The menu root, its trigger, the enabled-row selector, and callbacks
  *   for opening, highlighting, activating and dismissing
  * @output useMenuPress, the marker attributes, the activation mark, and the
- *   internal useDropdownMenuPress entry with its touch model and its
- *   continuation of a pointer that went down elsewhere
+ *   internal useDropdownMenuPress entry with its touch model. That entry
+ *   also continues a pointer that went down elsewhere
  * @position Core hook for DropdownMenu, ContextMenu, DropdownMenuSubMenu,
  *   Selector and MenuBottomSheetActionList. The transition table lives in
  *   menuPressGesture.ts.
