@@ -288,22 +288,40 @@ let pooledCount = 0;
  * @throws {Error} when a test wrote into a file every copy shares. The pool is
  * then emptied, and the package is unpacked again from its tarball.
  */
+// NOT FOR LANDING: times each step of the shared-file check and repair.
+const probeNote = entry =>
+  fs.appendFileSync(
+    process.env.C28_PROBE ?? path.join(os.tmpdir(), 'c28-probe.jsonl'),
+    `${JSON.stringify({pid: process.pid, ...entry})}\n`,
+  );
 export function recyclePlacedCopies({keep = true} = {}) {
   const copies = placed.splice(0);
   if (packed && packedRecord) {
-    const changed = firstChange(
-      packedRecord,
-      treeRecord(packed, {contents: true}),
-    );
+    const t0 = performance.now();
+    const current = treeRecord(packed, {contents: true});
+    const t1 = performance.now();
+    const changed = firstChange(packedRecord, current);
+    if (!changed) probeNote({event: 'recycle-check', detectMs: t1 - t0});
     if (changed) {
       pool.clear();
       fs.rmSync(path.join(path.dirname(packed), 'pool'), {
         recursive: true,
         force: true,
       });
+      const t2 = performance.now();
       fs.rmSync(packed, {recursive: true, force: true});
+      const t3 = performance.now();
       extractTarball(packedTarball, packed);
+      const t4 = performance.now();
       packedRecord = treeRecord(packed, {contents: true});
+      probeNote({
+        event: 'recycle-repair',
+        detectMs: t1 - t0,
+        rmPoolMs: t2 - t1,
+        rmPackedMs: t3 - t2,
+        extractMs: t4 - t3,
+        recordMs: performance.now() - t4,
+      });
       throw new Error(
         `A test changed ${changed}, which every placed CLI copy shares. Unlink a copy's file before you write it, as placeCli does for package.json.`,
       );
