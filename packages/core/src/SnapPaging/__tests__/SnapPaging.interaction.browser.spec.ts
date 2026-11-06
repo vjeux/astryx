@@ -58,8 +58,11 @@ async function open(
 }
 
 /** The row's native scroll offset, toward the end in either direction. */
-const offset = async (scroller: Locator) =>
-  scroller.evaluate(el => Math.abs(el.scrollLeft));
+// NOT FOR LANDING: a 60 ms round trip, as a loaded runner's.
+const offset = async (scroller: Locator) => {
+  await new Promise(resolve => setTimeout(resolve, 60));
+  return scroller.evaluate(el => Math.abs(el.scrollLeft));
+};
 
 /** The row's travel: how far it scrolls. */
 const travel = async (scroller: Locator) =>
