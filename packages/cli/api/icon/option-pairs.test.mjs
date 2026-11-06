@@ -37,13 +37,35 @@ import {doc as newSetFn} from './iconNewSet.doc.mjs';
 import {doc as newDefinitionFn} from './iconNewDefinition.doc.mjs';
 import {doc as useFn} from './iconUse.doc.mjs';
 
+// NOT FOR LANDING: timing probe, as JSON lines in C28_PROBE.
+const c28Note = entry =>
+  fs.appendFileSync(
+    process.env.C28_PROBE ?? '/tmp/c28-probe.jsonl',
+    `${JSON.stringify({pid: process.pid, ...entry})}\n`,
+  );
+const c28Count = dir => {
+  let entries = 0;
+  const stack = fs.existsSync(dir) ? [dir] : [];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    for (const entry of fs.readdirSync(current, {withFileTypes: true})) {
+      entries += 1;
+      if (entry.isDirectory()) stack.push(path.join(current, entry.name));
+    }
+  }
+  return entries;
+};
+
 /** @type {string} */
 let tmp;
 beforeAll(() => {
   tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'astryx-icon-pairs-'));
 });
 afterAll(() => {
+  const entries = c28Count(tmp);
+  const t0 = performance.now();
   fs.rmSync(tmp, {recursive: true, force: true});
+  c28Note({event: 'pairs-teardown', entries, rmMs: performance.now() - t0});
 });
 
 const FROM = '@acme/glyph-library';
