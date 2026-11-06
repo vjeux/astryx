@@ -28,6 +28,7 @@ import {
   busyWindowProof,
   compareCurve,
   cubicBezier,
+  controlClock,
   countBetween,
   advanceFrozenPage,
   drag,
@@ -41,6 +42,7 @@ import {
   releaseAnimations,
   seekAnimations,
   springStep,
+  startBusyControl,
   startScreencast,
   tap,
   thawPage,
@@ -49,6 +51,7 @@ import {
   touchDriver,
   touchStoryboard,
   traceRendering,
+  trackControl,
   trackMarker,
   waitForAnimation,
   waitForRest,
@@ -1996,6 +1999,192 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     expectCaughtWithoutAJump(samples.filter((_, index) => index % 3 === 0));
   });
 
+  /** The side of the marker on the thumb, px (`markElement`). */
+  const MARKER_PX = 6;
+
+  /**
+   * The narrowest box a whole marker can show, px. When the value changes,
+   * the thumb's scale carries its old size, down to `THUMB_OFF / THUMB_ON`.
+   * At a subpixel offset, the pixel at each edge is only partly covered. A
+   * narrower box is a torn frame: the cast caught the marker half drawn.
+   */
+  const WHOLE_MARKER_PX = Math.ceil((MARKER_PX * THUMB_OFF) / THUMB_ON) - 2;
+
+  /** How long each busy-window control takes to cross and come back, ms. */
+  const CONTROL_CYCLE_MS = 800;
+
+  /** One 60 Hz frame, ms. */
+  const FRAME_60_MS = 1000 / 60;
+
+  /**
+   * Starts the two busy-window controls, half a leg apart. It resolves with
+   * each one's start on the page clock, epoch ms.
+   */
+  async function startControls(page: Page): Promise<[number, number]> {
+    const first = await startBusyControl(page);
+    const ahead = await startBusyControl(page, {ahead: true});
+    return [first.start, ahead.start];
+  }
+
+  /**
+   * The thumb's center in each presented frame, on the page clock, `[ms,
+   * px]`. The two controls time each frame by the compositor's own
+   * progress, so a late or bunched cast stamp moves nothing. Only frames
+   * with a whole marker count, and the run logs how many it drops.
+   */
+  async function thumbOnControlClock(
+    page: Page,
+    castFrames: Parameters<typeof trackMarker>[1],
+    starts: [number, number],
+  ): Promise<[number, number][]> {
+    const readers = [
+      {
+        clock: controlClock(await trackControl(page, castFrames)),
+        origin: starts[0],
+      },
+      {
+        clock: controlClock(
+          await trackControl(page, castFrames, {ahead: true}),
+        ),
+        origin: starts[1],
+      },
+    ];
+    const pageTime = (stamp: number): number | null => {
+      for (const {clock, origin} of readers) {
+        const ms = clock.get(stamp);
+        if (ms != null) {
+          // The stamp only picks the control's cycle.
+          const cycles = Math.round((stamp - origin - ms) / CONTROL_CYCLE_MS);
+          return origin + ms + cycles * CONTROL_CYCLE_MS;
+        }
+      }
+      return null;
+    };
+    const tracked = await trackMarker(page, castFrames);
+    const shown = tracked.filter(
+      (f): f is typeof f & {box: NonNullable<typeof f.box>} =>
+        f.box != null && f.box.width > 0 && f.box.height > 0,
+    );
+    const whole = shown.filter(
+      f => f.box.width >= WHOLE_MARKER_PX && f.box.height >= WHOLE_MARKER_PX,
+    );
+    test.info().annotations.push({
+      type: 'torn marker frames',
+      description: `${shown.length - whole.length} of ${shown.length} frames show a marker box under ${WHOLE_MARKER_PX} px`,
+    });
+    return whole
+      .flatMap(f => {
+        const at = pageTime(f.t);
+        return at == null
+          ? []
+          : [[at, f.box.x + f.box.width / 2] as [number, number]];
+      })
+      .sort((a, b) => a[0] - b[0]);
+  }
+
+  /** How far into UIKit's travel spring the thumb shows `px`, ms. */
+  function travelMsAt(px: number): number {
+    let low = 0;
+    let high = 1000;
+    for (let i = 0; i < 40; i++) {
+      const mid = (low + high) / 2;
+      if (TRAVEL_PX * springStep(TRAVEL, mid) < px) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    return (low + high) / 2;
+  }
+
+  /**
+   * Notes, in the page, when the switch hears each lift and when the next
+   * frame runs, epoch ms. The switch hears a lift at its pointerup. A loaded
+   * page can dispatch the touchend tens of ms later.
+   */
+  async function noteLifts(page: Page): Promise<void> {
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __lifts: number[];
+        __liftFrames: number[];
+      };
+      w.__lifts = [];
+      w.__liftFrames = [];
+      addEventListener(
+        'pointerup',
+        () => {
+          w.__lifts.push(performance.timeOrigin + performance.now());
+          requestAnimationFrame(() => {
+            w.__liftFrames.push(performance.timeOrigin + performance.now());
+          });
+        },
+        {passive: true},
+      );
+    });
+  }
+
+  /** What `noteLifts` noted. */
+  async function notedLifts(
+    page: Page,
+  ): Promise<{lifts: number[]; liftFrames: number[]}> {
+    return page.evaluate(() => {
+      const w = window as unknown as {
+        __lifts: number[];
+        __liftFrames: number[];
+      };
+      return {lifts: w.__lifts, liftFrames: w.__liftFrames};
+    });
+  }
+
+  /**
+   * When the first travel started on screen, epoch ms. The frames of its
+   * steep first half, before `before`, are read back through UIKit's spring.
+   */
+  function travelStart(
+    samples: [number, number][],
+    before = Number.POSITIVE_INFINITY,
+  ): number {
+    const rest = samples[0][1];
+    const starts = samples
+      .filter(
+        ([time, x]) =>
+          time < before && x - rest >= 1 && x - rest <= TRAVEL_PX / 2,
+      )
+      .map(([time, x]) => time - travelMsAt(x - rest))
+      .sort((a, b) => a - b);
+    expect(starts.length, 'frames of the first travel').toBeGreaterThan(0);
+    return starts[Math.floor(starts.length / 2)];
+  }
+
+  /**
+   * Each step between frames, px per 60 Hz frame of the time they span,
+   * beyond what a starved page may show. A retarget may skip ahead by up to
+   * the browser's commit delay. So a step may add `delayMs` of motion at the
+   * speed before it, and a curve that starts from rest gets nothing.
+   */
+  function stepsPastCommitDelay(
+    samples: [number, number][],
+    delayMs: number,
+  ): number[] {
+    return samples.slice(1).map(([time, x], i) => {
+      const before = samples[Math.max(0, i - 2)];
+      const [at, from] = samples[i];
+      const speed =
+        at > before[0] ? Math.abs(from - before[1]) / (at - before[0]) : 0;
+      const step = Math.max(0, Math.abs(x - from) - delayMs * speed);
+      return (step * FRAME_60_MS) / Math.max(time - at, FRAME_60_MS);
+    });
+  }
+
+  /**
+   * The commit delay that let a waiting curve run ahead of the screen, ms.
+   * It runs from the frame after the lift, where the animator dates the
+   * curve, to the curve's start on screen. Half a frame covers the error of
+   * a start read from whole-px frames, so an idle run allows nothing.
+   */
+  const commitDelay = (startedAt: number, liftFrame: number) =>
+    Math.max(0, startedAt - liftFrame - FRAME_60_MS / 2) * 0;
+
   test('P14 · a second tap whose lift the page handles late (its main thread busy for 100 ms) catches the thumb where the screen shows it, without a jump (spec:AST-094 FR6)', async ({
     page,
     browserName,
@@ -2005,7 +2194,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       'screencast frame evidence is Chromium-only in Playwright (WebKit: checked on the iOS simulator instead)',
     );
     const {driver, input, thumb, center} = await openSwitch(page);
-    await markElement(thumb, {size: 6, inset: 2});
+    await markElement(thumb, {size: MARKER_PX, inset: 2});
     // The page blocks at the second touch's start, so that touch's lift waits
     // for the block. The switch handles the lift about 70 ms after it
     // happened, while the compositor keeps the first travel moving.
@@ -2031,6 +2220,8 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
         {capture: true, passive: true},
       );
     });
+    await noteLifts(page);
+    const controls = await startControls(page);
     const cast = await startScreencast(page);
     // The travel has to keep moving through the block, so this second tap is
     // not frozen.
@@ -2043,33 +2234,27 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
         (window as unknown as {__block?: {from: number; to: number}}).__block,
     );
     expect(block, 'the page was busy when the lift came').toBeDefined();
-    const tracked = await trackMarker(page, castFrames);
-    // Present and painted first: the marked thumb in the frames, with a box.
-    const shown = tracked.filter(
-      (f): f is typeof f & {box: NonNullable<typeof f.box>} =>
-        f.box != null && f.box.width > 0 && f.box.height > 0,
-    );
-    expect(shown.length).toBeGreaterThan(10);
-    const samples = shown.map(
-      f => [f.t, f.box.x + f.box.width / 2] as [number, number],
-    );
-    const xs = samples.map(([, x]) => x);
-    const farthest = Math.max(...xs) - xs[0];
-    // It turned around mid-travel, short of the on end...
+    const {lifts, liftFrames} = await notedLifts(page);
+    expect(lifts).toHaveLength(2);
+    const samples = await thumbOnControlClock(page, castFrames, controls);
+    expect(samples.length).toBeGreaterThan(10);
+    const startedAt = travelStart(samples, lifts[1]);
+    // No presented frame moves it more than a few px from the one before, on
+    // the compositor's clock. The bound adds the skip a starved page may show.
+    const delayMs = commitDelay(startedAt, liftFrames[0]);
+    expect(
+      Math.max(...stepsPastCommitDelay(samples, delayMs)),
+      JSON.stringify({delayMs, samples}),
+    ).toBeLessThan(4);
+    // It turned around mid-travel, short of the on end. A loaded page can
+    // handle the late lift once the travel has ended. That fails here, with
+    // the time the lift came.
+    const farthest = Math.max(...samples.map(([, x]) => x)) - samples[0][1];
     expect(farthest).toBeGreaterThan(1);
-    expect(farthest).toBeLessThan(TRAVEL_PX - 1);
-    // ...from the place the screen showed when the late lift was handled. No
-    // presented frame moves it more than a few px from the one before,
-    // measured against the time the two frames span.
-    const FRAME_MS = 1000 / 60;
-    const perFrame = samples
-      .slice(1)
-      .map(
-        ([time, x], i) =>
-          (Math.abs(x - samples[i][1]) * FRAME_MS) /
-          Math.max(time - samples[i][0], FRAME_MS),
-      );
-    expect(Math.max(...perFrame), JSON.stringify(samples)).toBeLessThan(4);
+    expect(
+      farthest,
+      `the late lift came ${Math.round(lifts[1] - startedAt)} ms into the travel on screen`,
+    ).toBeLessThan(TRAVEL_PX - 1);
   });
 
   test('a tap whose first frame the page commits late (its main thread busy for 100 ms after the lift) starts the travel from rest on that frame, not partway into its curve', async ({
@@ -2081,7 +2266,7 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       'screencast frame evidence is Chromium-only in Playwright (WebKit: checked on the iOS simulator instead)',
     );
     const {driver, input, thumb, center} = await openSwitch(page);
-    await markElement(thumb, {size: 6, inset: 2});
+    await markElement(thumb, {size: MARKER_PX, inset: 2});
     // The page blocks in the lift's own dispatch, after the switch's
     // listeners have started the travel. The frame that first shows the
     // travel comes about 100 ms after the switch asked for it. As Core
@@ -2110,6 +2295,8 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const restLeft = async () =>
       thumb.evaluate(element => element.getBoundingClientRect().left);
     const offLeft = await restLeft();
+    await noteLifts(page);
+    const controls = await startControls(page);
     const cast = await startScreencast(page);
     await driver.play(tap(center, {holdMs: 40}));
     await expect(input).toBeChecked();
@@ -2121,31 +2308,21 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
         (window as unknown as {__block?: {from: number; to: number}}).__block,
     );
     expect(block, 'the page was busy after the lift').toBeDefined();
-    const tracked = await trackMarker(page, castFrames);
-    // Present and painted first: the marked thumb in the frames, with a box.
-    const shown = tracked.filter(
-      (f): f is typeof f & {box: NonNullable<typeof f.box>} =>
-        f.box != null && f.box.width > 0 && f.box.height > 0,
-    );
-    expect(shown.length).toBeGreaterThan(10);
-    const samples = shown.map(
-      f => [f.t, f.box.x + f.box.width / 2] as [number, number],
-    );
+    const samples = await thumbOnControlClock(page, castFrames, controls);
+    expect(samples.length).toBeGreaterThan(10);
     const xs = samples.map(([, x]) => x);
     // It travelled from the off rest to the on rest (the frames place the
     // marker to the whole px)...
     expect(Math.abs(xs.at(-1)! - xs[0] - (onLeft - offLeft))).toBeLessThan(1.5);
     // ...from rest: no presented frame moves it more than a few px from the
-    // one before, measured against the time the two frames span.
-    const FRAME_MS = 1000 / 60;
-    const perFrame = samples
-      .slice(1)
-      .map(
-        ([time, x], i) =>
-          (Math.abs(x - samples[i][1]) * FRAME_MS) /
-          Math.max(time - samples[i][0], FRAME_MS),
-      );
-    expect(Math.max(...perFrame), JSON.stringify(samples)).toBeLessThan(4);
+    // one before, on the compositor's clock. Later in the travel, the value
+    // change may skip ahead as far as a starved page allows.
+    const {liftFrames} = await notedLifts(page);
+    const delayMs = commitDelay(travelStart(samples), liftFrames[0]);
+    expect(
+      Math.max(...stepsPastCommitDelay(samples, delayMs)),
+      JSON.stringify({delayMs, samples}),
+    ).toBeLessThan(4);
   });
 
   test('a disabled or busy switch stays inert under a finger', async ({
