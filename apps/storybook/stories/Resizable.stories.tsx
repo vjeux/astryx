@@ -927,46 +927,6 @@ export const SlidingEndPanel: Story = {
   render: () => <SlidingPanelSplit side="end" />,
 };
 
-/**
- * NOT FOR LANDING: try-it stories for the pull past a limit. (A) draws the
- * overshoot on the handle alone, over the content beside it; (B) stretches
- * the panel. `closeLine` marks the handle with an accent line while a lift
- * would close the panel.
- */
-function TryItPanel({
-  overshoot,
-  closeLine,
-}: {
-  overshoot: 'handle' | 'stretch';
-  closeLine: boolean;
-}) {
-  (
-    globalThis as {
-      __astryxResizeTryIt?: {
-        overshoot: 'handle' | 'stretch';
-        closeLine: boolean;
-      };
-    }
-  ).__astryxResizeTryIt = {overshoot, closeLine};
-  return (
-    <>
-      <SlidingPanelSplit side="start" />
-    </>
-  );
-}
-
-export const TryItHandleOnlyOvershoot: StoryObj<typeof TryItPanel> = {
-  name: 'Try it: (A) handle-only overshoot',
-  args: {overshoot: 'handle', closeLine: true},
-  render: args => <TryItPanel {...args} />,
-};
-
-export const TryItPanelStretchOvershoot: StoryObj<typeof TryItPanel> = {
-  name: 'Try it: (B) panel stretch',
-  args: {overshoot: 'stretch', closeLine: true},
-  render: args => <TryItPanel {...args} />,
-};
-
 /** A sliding start panel with more lines than fit, for a scrolled slide. */
 export const SlidingScrolledPanelFixture: Story = {
   tags: ['!autodocs', 'no-visual'],
