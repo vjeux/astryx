@@ -67,6 +67,7 @@ export function useTreeExpansionMotion(
       return;
     }
     const mine = ++generationRef.current;
+    // The block travels the group's height: one read per expand, before any write.
     const height = group.offsetHeight;
     const children = Array.from(group.children).filter(
       (child): child is HTMLElement => child instanceof HTMLElement,
