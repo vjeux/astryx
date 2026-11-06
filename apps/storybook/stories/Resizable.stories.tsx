@@ -853,16 +853,18 @@ function SlidingPanelSplit({
   lineCount = 0,
   snaps,
   isInitiallyCollapsed = false,
+  maxSize = 320,
 }: {
   side: 'start' | 'end';
   lineCount?: number;
   snaps?: number[];
   isInitiallyCollapsed?: boolean;
+  maxSize?: number;
 }) {
   const resizable = useResizable({
     defaultSize: 200,
     minSize: 120,
-    maxSize: 320,
+    maxSize,
     collapsible: true,
     snaps,
     defaultIsCollapsed: isInitiallyCollapsed,
@@ -960,6 +962,16 @@ const TRY_IT_CONTROLS = {
   expandFeedback: {control: 'inline-radio', options: ['none', 'peek', 'line']},
 } as const;
 
+/**
+ * NOT FOR LANDING: the (A) and (B) stories' maximum. On a phone it leaves the
+ * content beside the panel room to read, so both are judged alike.
+ */
+function phoneFitMax(): number {
+  return typeof window === 'undefined'
+    ? 320
+    : Math.min(320, Math.round(window.innerWidth * 0.55));
+}
+
 function TryItPanel({
   overshoot,
   closeLine,
@@ -967,7 +979,12 @@ function TryItPanel({
   expandFeedback,
   snaps,
   isInitiallyCollapsed,
-}: TryItArgs & {snaps?: number[]; isInitiallyCollapsed?: boolean}) {
+  maxSize,
+}: TryItArgs & {
+  snaps?: number[];
+  isInitiallyCollapsed?: boolean;
+  maxSize?: number;
+}) {
   (globalThis as {__astryxResizeTryIt?: object}).__astryxResizeTryIt = {
     overshoot,
     closeLine,
@@ -979,6 +996,7 @@ function TryItPanel({
       side="start"
       snaps={snaps}
       isInitiallyCollapsed={isInitiallyCollapsed}
+      maxSize={maxSize}
     />
   );
 }
@@ -987,14 +1005,14 @@ export const TryItHandleOnlyOvershoot: StoryObj<typeof TryItPanel> = {
   name: 'Try it: (A) handle-only overshoot',
   args: TRY_IT,
   argTypes: TRY_IT_CONTROLS,
-  render: args => <TryItPanel {...args} />,
+  render: args => <TryItPanel {...args} maxSize={phoneFitMax()} />,
 };
 
 export const TryItPanelStretchOvershoot: StoryObj<typeof TryItPanel> = {
   name: 'Try it: (B) panel stretch',
   args: {...TRY_IT, overshoot: 'stretch'},
   argTypes: TRY_IT_CONTROLS,
-  render: args => <TryItPanel {...args} />,
+  render: args => <TryItPanel {...args} maxSize={phoneFitMax()} />,
 };
 
 export const TryItSnapPoints: StoryObj<typeof TryItPanel> = {
