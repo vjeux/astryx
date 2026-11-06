@@ -329,21 +329,30 @@ test('the chevron turns on the glide; column lines and Reduce Motion change at o
 }) => {
   await mount(page, 'gliding-rows');
   await page.locator('[data-expansion-toggle]').first().click();
+  // The values the rows glide on, as read where the area is.
   const timing = await page
     .locator('[data-expansion-toggle] > *')
     .first()
-    .evaluate(glyph => ({
-      easing: (glyph as HTMLElement).style.getPropertyValue(
-        'transition-timing-function',
-      ),
-      duration: (glyph as HTMLElement).style.getPropertyValue(
-        'transition-duration',
-      ),
-    }));
-  expect(timing).toEqual({
-    easing: 'var(--ease-move)',
-    duration: 'var(--duration-medium-min)',
-  });
+    .evaluate(glyph => {
+      const row = document.querySelectorAll('tr[data-expansion-key]')[1];
+      const glide = row
+        ?.getAnimations()
+        .find(animation =>
+          (animation.effect as KeyframeEffect)
+            .getKeyframes()
+            .some(frame => frame.translate != null),
+        );
+      const style = (glyph as HTMLElement).style;
+      return {
+        easing: style.getPropertyValue('transition-timing-function'),
+        duration: style.getPropertyValue('transition-duration'),
+        theme: getComputedStyle(glyph).getPropertyValue('--ease-move').trim(),
+        glideMs: Number(glide?.effect?.getComputedTiming().duration),
+      };
+    });
+  expect(timing.glideMs).toBeGreaterThan(0);
+  expect(parseFloat(timing.duration)).toBeCloseTo(timing.glideMs, 3);
+  expect(timing.easing).toBe(timing.theme);
 
   for (const dividers of ['columns', 'grid']) {
     await mount(page, 'gliding-rows', `&args=dividers:${dividers}`);
