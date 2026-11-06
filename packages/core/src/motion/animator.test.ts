@@ -22,6 +22,7 @@ import {
   createMotionEngine,
   END_HOLD_MS,
   PROMOTION_LINGER_MS,
+  type Animator,
   type AnimatorOptions,
 } from './animator';
 import {cubicBezier} from './bezier';
@@ -52,6 +53,11 @@ interface Recorded {
   /** Finished from outside (a sampler's `finish()`), keeping its start. */
   finished: boolean;
   readonly playState: 'idle' | 'paused' | 'running' | 'finished';
+  /** Its keyframe effect: a rebase can change the keyframes in place. */
+  effect: {
+    getKeyframes(): Keyframe[];
+    setKeyframes(frames: Keyframe[]): void;
+  };
   ready: Promise<Recorded>;
   commit(at: number): void;
   finish(): void;
@@ -146,6 +152,12 @@ beforeEach(() => {
               : 'running';
       },
       ready,
+      effect: {
+        getKeyframes: () => animation.keyframes.map(frame => ({...frame})),
+        setKeyframes(frames) {
+          animation.keyframes = frames;
+        },
+      },
       commit(at) {
         // A paused animation's pending pause completes without a start; one
         // resumed with play() gets its start a frame later.
@@ -4387,5 +4399,132 @@ describe("a theme's reduced-motion mark", () => {
     animator.animate({x: 100}, {spring: springs.navigationPush});
     expect(recorded.length).toBeGreaterThan(0);
     theme.remove();
+  });
+});
+
+describe('rebase towards a new rest, and a call that takes a curve over', () => {
+  const curve = solveSpring(toSpring(springs.settle), {from: 0, to: 300});
+
+  /** A spring to 300 whose first frame came late, its start still unread. */
+  async function lateStart() {
+    const ready = setup();
+    const handle = ready.animator.animate({x: 300}, {spring: springs.settle});
+    const [animation] = live('translate');
+    clock = 1070;
+    await commitFrame(1070, {startUnread: true});
+    clock = 1170;
+    return {...ready, handle, animation};
+  }
+
+  it('a spring heading for the new rest moves whole in place while its start is unread', async () => {
+    const {element, animator, animation} = await lateStart();
+    const end = parse(animation.keyframes.at(-1)?.translate)[0];
+    const under = inlineX(element);
+    animator.rebase({x: -300}, {towards: {x: 0}});
+    // The same animation keeps the compositor's start, shifted.
+    expect(live('translate')).toEqual([animation]);
+    expect(animation.startTime).toBeNull();
+    expect(parse(animation.keyframes.at(-1)?.translate)[0]).toBeCloseTo(
+      end - 300,
+      3,
+    );
+    expect(inlineX(element)).toBeCloseTo(under - 300, 3);
+    // The browser then tells the start it used, and the curve reads from it.
+    animation.commit(1060);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(animator.get('x')).toBeCloseTo(curve.value(0.11) - 300, 6);
+  });
+
+  it('a spring with a known start moves whole on its own course', async () => {
+    const {animator} = setup();
+    animator.animate({x: 300}, {spring: springs.settle});
+    clock = 1016;
+    await commitFrame(1016);
+    clock = 1116;
+    animator.rebase({x: -300}, {towards: {x: 0}});
+    const rebuilt = live('translate').at(-1) as Recorded;
+    clock = 1216;
+    expect(animator.get('x')).toBeCloseTo(curve.value(0.2) - 300, 6);
+    expect(sampleAt(rebuilt, 'translate', 1216)[0]).toBeCloseTo(
+      curve.value(0.2) - 300,
+      0,
+    );
+  });
+
+  it('a target the shift does not bring to `towards` rebases as without it', async () => {
+    const plain = await lateStart();
+    plain.animator.rebase({x: -16});
+    const plainX = plain.animator.get('x');
+    recorded = [];
+    clock = 1000;
+    const toward = await lateStart();
+    toward.animator.rebase({x: -16}, {towards: {x: 0}});
+    expect(toward.animator.get('x')).toBe(plainX);
+    expect(live('translate')).not.toContain(toward.animation);
+  });
+
+  it('a call to the same target, on the same spring, takes the curve over', async () => {
+    const {animator, handle, animation} = await lateStart();
+    const speed = animator.getVelocity('x');
+    const next = animator.animate(
+      {x: 300},
+      {spring: springs.settle, velocity: {x: speed}},
+    );
+    expect(live('translate')).toEqual([animation]);
+    await expect(handle.finished).resolves.toBe(false);
+    animation.commit(1060);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(animator.get('x')).toBeCloseTo(curve.value(0.11), 6);
+    let finished: boolean | null = null;
+    void next.finished.then(value => {
+      finished = value;
+    });
+    clock += 2000;
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(finished).toBe(true);
+  });
+
+  it('a call that changes the target, the spring or the velocity builds a new curve, as before', async () => {
+    const changes: [string, Parameters<Animator['animate']>][] = [
+      ['target', [{x: 310}, {spring: springs.settle}]],
+      ['spring', [{x: 300}, {spring: {response: 0.3, dampingRatio: 1}}]],
+      ['velocity', [{x: 300}, {spring: springs.settle, velocity: {x: 1}}]],
+    ];
+    for (const [change, args] of changes) {
+      recorded = [];
+      clock = 1000;
+      const {animator, handle, animation} = await lateStart();
+      if (change === 'velocity') {
+        // Off by more than float rounding from the curve's own velocity.
+        args[1] = {
+          ...args[1],
+          velocity: {x: animator.getVelocity('x') + 1e-3},
+        };
+      }
+      animator.animate(...args);
+      expect(live('translate'), change).not.toContain(animation);
+      await expect(handle.finished, change).resolves.toBe(false);
+    }
+  });
+
+  it('a call after the curve has ended does not take it over', async () => {
+    const {animator, handle} = await lateStart();
+    let first: boolean | null = null;
+    void handle.finished.then(value => {
+      first = value;
+    });
+    clock += 5000;
+    await vi.advanceTimersByTimeAsync(5000);
+    animator.animate({x: 300}, {spring: springs.settle});
+    await Promise.resolve();
+    expect(first).toBe(true);
+  });
+
+  it('a call that also moves the channel\u2019s other axis rebuilds it, as before', async () => {
+    const {animator, animation} = await lateStart();
+    animator.animate({x: 300, y: 10}, {spring: springs.settle});
+    expect(live('translate')).not.toContain(animation);
   });
 });
