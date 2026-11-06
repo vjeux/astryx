@@ -454,6 +454,9 @@ export function createResizableAs(
   // otherwise move the bound under the pointer.
   let gestureBasis: number | null = null;
   let isGestureActive = false;
+  // A catch between snap points: the edge follows the finger until it
+  // reaches one, and the snaps hold again from there.
+  let isCarryingToSnap = false;
   let dragStartSize = 0;
   let pointerSize = 0;
   // The open size a drag started from, which a close on its lift keeps.
@@ -660,7 +663,9 @@ export function createResizableAs(
     }
     // NOT FOR LANDING: the try-it's free drag rests between snap points.
     const restsOn =
-      isGestureActive && tryIt().snapOnLift === true ? [] : snaps();
+      isGestureActive && (isCarryingToSnap || tryIt().snapOnLift === true)
+        ? []
+        : snaps();
     const size = clampSize(chosenSize ?? defaultPx, min, max, restsOn);
     const isCollapsed =
       collapsible() &&
@@ -977,6 +982,7 @@ export function createResizableAs(
       // The basis holds still for the whole gesture.
       gestureBasis = readLiveBasis();
       isGestureActive = true;
+      isCarryingToSnap = false;
       const closing = derived.isCollapsed ? closingShown() : 0;
       closingSlide = null;
       if (closing > 0) {
@@ -995,8 +1001,15 @@ export function createResizableAs(
       sizeBeforeDrag = derived.isCollapsed ? null : derived.size;
     },
     move(delta) {
+      const previous = pointerSize;
       const raw = dragStartSize + delta;
       pointerSize = raw;
+      if (
+        isCarryingToSnap &&
+        snaps().some(snap => (snap - previous) * (snap - raw) <= 0)
+      ) {
+        isCarryingToSnap = false;
+      }
       const collapsedSize = opts.collapsedSize ?? DEFAULT_COLLAPSED_SIZE;
       // A collapsed pane opens once the pointer passes the collapsed size.
       // An open one never collapses mid-drag: the lift decides.
@@ -1022,7 +1035,7 @@ export function createResizableAs(
         raw,
         derived.min,
         derived.max,
-        isFreeDrag ? [] : snaps(),
+        isFreeDrag || isCarryingToSnap ? [] : snaps(),
       );
       chosenSize = clamped;
       // Only a pane a LayoutPanel lends shows the rubber band. A panel at the
@@ -1063,6 +1076,8 @@ export function createResizableAs(
       }
       if (closes) {
         closeOnRelease(velocity);
+      } else if (isCarryingToSnap) {
+        settleOnNearestSnap(velocity);
       } else if (tryIt().snapOnLift === true && snaps().length > 0) {
         settleOnSnap(velocity);
       } else {
@@ -1076,7 +1091,11 @@ export function createResizableAs(
       if (pane != null) {
         showTargetLine(pane, null);
       }
-      settleOvershoot(0);
+      if (isCarryingToSnap) {
+        settleOnNearestSnap(0);
+      } else {
+        settleOvershoot(0);
+      }
       endGesture();
     },
     collapse,
@@ -1089,7 +1108,8 @@ export function createResizableAs(
    */
   function catchClosing(shownSize: number): void {
     setCollapsed(false);
-    const clamped = clampSize(shownSize, derived.min, derived.max, snaps());
+    const clamped = clampSize(shownSize, derived.min, derived.max, []);
+    isCarryingToSnap = snaps().length > 0 && !snaps().includes(clamped);
     chosenSize = clamped;
     isPointerReopening = true;
     commit();
@@ -1102,6 +1122,27 @@ export function createResizableAs(
     sizeBeforeDrag = derived.size;
     opts.onCollapseChange?.(false);
     opts.onSizeChange?.(clamped);
+  }
+
+  /**
+   * A lift between snap points, after a catch: the edge glides from where it
+   * shows to the snap nearest it.
+   */
+  function settleOnNearestSnap(velocity: number): void {
+    isCarryingToSnap = false;
+    const shown = derived.size + overshoot;
+    springBack = null;
+    overshoot = 0;
+    drawing?.clear();
+    const target = clampSize(shown, derived.min, derived.max, snaps());
+    const row = pane?.element.parentElement;
+    const distance = Math.abs(target - shown);
+    if (row != null && distance > 0) {
+      slideNextOnRelease(row, Math.sign(target - shown) * velocity, distance);
+    }
+    chosenSize = target;
+    commit();
+    opts.onSizeChange?.(target);
   }
 
   /**
