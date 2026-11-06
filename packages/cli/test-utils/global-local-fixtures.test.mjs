@@ -112,12 +112,20 @@ describe('placed CLI copies', () => {
   });
 
   it('reports a write into a shared file, and places the next copy from a fresh unpack', () => {
+    // NOT FOR LANDING: times each step, as JSON lines in C28_PROBE.
+    const s0 = performance.now();
     const first = placeCli(path.join(tempDir('place'), 'cli'), '9.0.0');
+    const s1 = performance.now();
     const rel = path.join('foundation', 'fs', 'paths.mjs');
     // A write in place, with no unlink first, changes the packed file too.
     fs.appendFileSync(path.join(first.dir, rel), '\n// changed\n');
     expect(() => recyclePlacedCopies()).toThrow(/foundation\/fs\/paths\.mjs/);
+    const s2 = performance.now();
     const second = placeCli(path.join(tempDir('place'), 'cli'), '9.0.0');
+    fs.appendFileSync(
+      process.env.C28_PROBE ?? '/tmp/c28-probe.jsonl',
+      `${JSON.stringify({event: 'shared-write-test', placeFirstMs: s1 - s0, recycleMs: s2 - s1, placeSecondMs: performance.now() - s2})}\n`,
+    );
     expect(fs.readFileSync(path.join(second.dir, rel), 'utf8')).toBe(
       fs.readFileSync(path.join(CLI_DIR, rel), 'utf8'),
     );
