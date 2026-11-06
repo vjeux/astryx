@@ -5,26 +5,28 @@
 /**
  * @file contextMenuPressFeedback.ts
  * @input UIKit's context-menu springs, the context-menu constants, the
- *   compositor animator, and the press state core's press machine writes
+ *   compositor animator, the trigger's touches, and the press state core's
+ *   press machine writes
  * @output useContextMenuPressFeedback: hold and release, from ContextMenu's
- *   menu; the growth itself follows the press machine
+ *   menu; the growth follows the recognizer's finger, or a pen's press mark
  * @position The press feedback of ContextMenu's touch invocation
  *
  * SYNC: When modified, update /packages/core/src/ContextMenu/ContextMenu.tsx
  */
 
-// The trigger is a pressable surface of the press machine. Its "on" starts
-// the growth at the onset, 150 ms after the finger lands, while the
-// recognizer follows that finger. Only the recognizer's failure or cancel
-// returns it. A long press is a gesture, so the growth plays UIKit's lift
-// spring and each return its dismissal spring. The compositor plays them, so
-// a busy main thread does not stall them. Once the menu opens, the trigger
-// holds its size until the menu closes. Then it returns on the dismissal
-// spring. An inline trigger and Reduce Motion show no growth.
+// The growth starts at the onset, 150 ms after a finger lands, while the
+// recognizer follows that finger. The finger's own landing arms it; a
+// pointer-only pen's press waits for the press machine's "on". Only the
+// recognizer's failure or cancel returns it. A long press is a gesture, so the
+// growth plays UIKit's lift spring and each return its dismissal spring. The
+// compositor plays them, so a busy main thread does not stall them. Once the
+// menu opens, the trigger holds its size until the menu closes. Then it returns
+// on the dismissal spring. An inline trigger and Reduce Motion show no growth.
 
 import {useCallback, useRef, type RefObject} from 'react';
 import {useAttachment} from '../hooks/useAttachment';
 import {usePressFeedback} from '../hooks/usePressFeedback';
+import {isElement} from '../utils/nodeType';
 import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {PRESS_ONSET_MS} from '../utils/pressGesture';
 import {observeMutations} from '../utils/sharedMutationObserver';
@@ -100,6 +102,9 @@ export function useContextMenuPressFeedback(
   const isGrownRef = useRef(false);
   // The menu the press opened is up: the growth holds until it closes.
   const isHeldRef = useRef(false);
+  // A finger armed the onset. The end of its press clears it, so a lift that
+  // never reaches the trigger cannot hold a later pen's press back.
+  const isFingerArmedRef = useRef(false);
 
   // The compositor animator lives with the trigger it follows. A replaced
   // trigger, or a feedback that goes while the trigger stays, takes the
@@ -168,6 +173,7 @@ export function useContextMenuPressFeedback(
 
   const end = useCallback(
     (time: number) => {
+      isFingerArmedRef.current = false;
       const animator = animatorRef.current;
       const element = animator?.element;
       if (
@@ -191,6 +197,7 @@ export function useContextMenuPressFeedback(
 
   const release = useCallback(() => {
     isHeldRef.current = false;
+    isFingerArmedRef.current = false;
     const animator = animatorRef.current;
     const element = animator?.element;
     if (animator == null || element == null || !isGrownRef.current) {
@@ -209,13 +216,13 @@ export function useContextMenuPressFeedback(
     }
   }, []);
 
-  // Grow at the onset, 150 ms after the finger lands, once the press machine
-  // marks the press. The machine marks the innermost pressable surface, so a
-  // control inside the trigger can carry the mark. Outside a scroll view it
-  // marks a touch as it lands, before the recognizer has that finger. So a
-  // mark the recognizer does not follow yet is read again after that input.
-  // The machine lets a press go at a shorter travel than the recognizer's
-  // tolerance, so only the recognizer ends the growth (`end`).
+  // Grow at the onset, 150 ms after the finger lands. A finger arms it from its
+  // own landing, whether or not the press machine marks the press. Inside a
+  // scroll view the machine marks late, and it never marks a press that travels
+  // past 10 px first. A pointer-only pen's onset waits for the mark. The
+  // machine marks the innermost pressable surface, so a control inside the
+  // trigger can carry the mark. A press the recognizer does not follow yet is
+  // read again after that input. Only the recognizer ends the growth (`end`).
   useAttachment(
     triggerRef,
     element => {
@@ -232,19 +239,25 @@ export function useContextMenuPressFeedback(
         );
       let isPressed = isMarkedOn();
       let markedAt = 0;
+      let armedAt = 0;
       let onsetTimer: ReturnType<typeof setTimeout> | undefined;
       const growAtOnset = (isRetry: boolean) => {
         if (!isFollowed.current()) {
-          if (!isRetry) {
+          if (isRetry) {
+            // The recognizer never took this press: nothing will end it.
+            isFingerArmedRef.current = false;
+          } else {
             onsetTimer = setTimeout(() => growAtOnset(true), 0);
           }
           return;
         }
         const landed = landedAt.current();
-        const onsetAt =
-          landed == null
-            ? markedAt
-            : Math.max(markedAt, landed + PRESS_ONSET_MS);
+        const fromLanding = landed == null ? null : landed + PRESS_ONSET_MS;
+        // Without a landing time, a finger's onset counts from its touch's
+        // own time.
+        const onsetAt = isFingerArmedRef.current
+          ? (fromLanding ?? armedAt + PRESS_ONSET_MS)
+          : Math.max(markedAt, fromLanding ?? markedAt);
         const wait = onsetAt - performance.now();
         if (wait > 0) {
           onsetTimer = setTimeout(() => start(onsetAt), wait);
@@ -252,6 +265,24 @@ export function useContextMenuPressFeedback(
           start(onsetAt);
         }
       };
+      // A touch on a nested trigger arms only that trigger.
+      const onTouchStart = (event: TouchEvent) => {
+        if (
+          !isElement(event.target) ||
+          pressMarkOwnerOf(event.target) !== element
+        ) {
+          return;
+        }
+        clearTimeout(onsetTimer);
+        isFingerArmedRef.current = true;
+        // The touch's own time, on the page clock. An epoch or future stamp,
+        // as in some DOM emulators, counts as now.
+        const now = performance.now();
+        armedAt =
+          event.timeStamp > 0 && event.timeStamp <= now ? event.timeStamp : now;
+        growAtOnset(false);
+      };
+      element.addEventListener('touchstart', onTouchStart, {passive: true});
       const stopObserving = observeMutations(
         element,
         {attributes: true, attributeFilter: [PRESSED_ATTRIBUTE], subtree: true},
@@ -260,9 +291,11 @@ export function useContextMenuPressFeedback(
           if (next !== isPressed) {
             isPressed = next;
             if (next) {
-              clearTimeout(onsetTimer);
-              markedAt = performance.now();
-              growAtOnset(false);
+              if (!isFingerArmedRef.current) {
+                clearTimeout(onsetTimer);
+                markedAt = performance.now();
+                growAtOnset(false);
+              }
             } else if (!isFollowed.current()) {
               // A finger the recognizer still follows keeps its onset, past
               // the machine's shorter travel.
@@ -274,6 +307,7 @@ export function useContextMenuPressFeedback(
       return () => {
         clearTimeout(onsetTimer);
         stopObserving();
+        element.removeEventListener('touchstart', onTouchStart);
         pressMarkOwners.delete(element);
       };
     },
