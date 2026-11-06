@@ -4,9 +4,9 @@
  * @file outsidePress.test.ts
  * @input isFocusInsideOwnedLayer, isPressInsideOwnedLayer and
  *   watchOutsidePress
- * @output The shared focus-leave test, and the outside-press watch that
- *   closes as a finger outside begins to pan, at a cancel or at a lift, and
- *   for a mouse or a pen at the press
+ * @output The shared focus-leave test, and the outside-press watch. The
+ *   watch closes as a finger outside begins to pan, at a cancel or at a lift.
+ *   For a mouse or a pen it closes at the press
  */
 
 import {fireEvent} from '@testing-library/react';
