@@ -513,6 +513,11 @@ export class GestureArena {
     }
   }
 
+  /** @internal A recognizer takes its touches from the view, unclaimed. */
+  cancelTouchesInViewOf(recognizer: GestureRecognizer): void {
+    this.cancelViewTouchesOf(recognizer);
+  }
+
   /**
    * Runs `body`, code outside input that stops recognizers (an Effect that
    * turns one off or detaches it), without resolving what those stops

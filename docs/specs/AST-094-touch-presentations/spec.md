@@ -260,9 +260,11 @@ a measured, sourced difference exists.
   velocity to the settle. The floor is a guess inside the measured bracket
   (UIKit zeroes steady releases at 175 and 200 pt/s and keeps 249 pt/s, iOS
   26.2 simulator, 2026-10-23) until a measurement replaces it (FR2). A page
-  change during a drag starts from rest (DEC-25). On a starved page, a
-  retarget may skip ahead by up to the browser's commit delay
-  (start-at-call).
+  change during a drag starts from rest (DEC-25). A finger or a pen that lands
+  on a pager's settle after a release never reaches the pager's content: no
+  press feedback and no click. UIKit's content took none of 30 such touches
+  (iOS 26.2 simulator, 2026-11-06). On a starved page, a retarget may skip
+  ahead by up to the browser's commit delay (start-at-call).
 - **FR7 — Exits keep the native counterpart's look.** A touch presentation MUST
   play an exit with the look of its UIKit counterpart's exit, on every touch
   platform: a menu shrinks into its trigger, and an alert fades. In a component
