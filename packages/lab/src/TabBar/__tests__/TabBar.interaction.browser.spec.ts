@@ -2093,3 +2093,93 @@ test(
     expect(Math.max(...frames.map(f => f.flex))).toBeGreaterThan(1.03);
   },
 );
+
+test('NOT FOR LANDING: paint frames of a finger’s lift fade, with no tab selected', async ({
+  page,
+  browserName,
+}) => {
+  const {PNG} = await import('pngjs');
+  const {writeFileSync} = await import('node:fs');
+  const series: Record<string, Array<{at: string; rgba: number[]}>> = {};
+  for (const exit of ['theme', '300ms', 'strong']) {
+    const {driver} = await openBar(page, 'no-selection');
+    if (exit !== 'theme') {
+      await setExitDuration(page, '300ms');
+    }
+    if (exit === 'strong') {
+      // A strong paint, so a difference in how it fades shows in the pixels.
+      await page
+        .getByRole('tablist', {name: 'Sections'})
+        .evaluate(element =>
+          element.style.setProperty(
+            '--color-overlay-pressed',
+            'rgba(255, 0, 0, 0.8)',
+          ),
+        );
+    }
+    const box = tab(page, 'Home').locator('span').first();
+    const sample = async (at: string) => {
+      await page.evaluate(
+        () =>
+          new Promise(resolve =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          ),
+      );
+      const rect = await box.boundingBox();
+      if (rect == null) {
+        throw new Error('no item box');
+      }
+      const clip = {
+        x: Math.round(rect.x + rect.width * 0.2) - 3,
+        y: Math.round(rect.y + rect.height * 0.3) - 3,
+        width: 6,
+        height: 6,
+      };
+      const png = PNG.sync.read(await page.screenshot({clip}));
+      const sum = [0, 0, 0, 0];
+      for (let i = 0; i < png.data.length; i += 4) {
+        for (let c = 0; c < 4; c++) {
+          sum[c] += png.data[i + c];
+        }
+      }
+      const pixels = png.data.length / 4;
+      (series[exit] ??= []).push({
+        at,
+        rgba: sum.map(value => Math.round((value / pixels) * 10) / 10),
+      });
+    };
+    const home = await itemCenter(page, 'Home');
+    let held = false;
+    await driver.play(tapScript(home, {holdMs: 400}), {
+      onEvent: async (_step, index) => {
+        if (index === 0 && !held) {
+          held = true;
+          await expect(tab(page, 'Home')).toHaveAttribute(
+            'data-tab-bar-pressed',
+          );
+          await sample('held');
+        }
+      },
+    });
+    await expect(tab(page, 'Home')).not.toHaveAttribute('data-tab-bar-pressed');
+    // Every animation in the page, the paint's fade and the lens's alike, is
+    // frozen and seeked to the same time since its own start.
+    await page.evaluate(() => {
+      for (const animation of document.getAnimations()) {
+        animation.pause();
+      }
+    });
+    for (const t of [0, 50, 100, 150, 200]) {
+      await page.evaluate(time => {
+        for (const animation of document.getAnimations()) {
+          animation.currentTime = time;
+        }
+      }, t);
+      await sample(`${t}ms`);
+    }
+  }
+  writeFileSync(
+    `test-results/c15-paint-frames-${browserName}.json`,
+    JSON.stringify(series),
+  );
+});
