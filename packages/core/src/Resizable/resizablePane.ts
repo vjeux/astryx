@@ -405,6 +405,42 @@ export function slideNextOnRelease(
     elapsedMs >= progress.durationMs ? 0 : progress.remaining(elapsedMs);
 }
 
+/**
+ * NOT FOR LANDING: the try-it story's choices. `overshoot: 'handle'` draws a
+ * pull past a limit on the handle alone; `closeLine` marks a drag that its
+ * lift would close.
+ */
+function tryIt(): {overshoot?: 'handle' | 'stretch'; closeLine?: boolean} {
+  return (
+    (
+      globalThis as {
+        __astryxResizeTryIt?: {
+          overshoot?: 'handle' | 'stretch';
+          closeLine?: boolean;
+        };
+      }
+    ).__astryxResizeTryIt ?? {}
+  );
+}
+
+/**
+ * NOT FOR LANDING: an accent line on the handle, from the reorder insertion
+ * line's tokens, while a lift would close the pane.
+ */
+export function showCloseCue(pane: ResizablePane, isShown: boolean): void {
+  if (tryIt().closeLine !== true) {
+    return;
+  }
+  const handle = resizeHandleBeside(pane.element, null);
+  if (handle == null) {
+    return;
+  }
+  handle.style.boxShadow = isShown
+    ? '0 0 0 calc((var(--spacing-0-5) - 1px) / 2) var(--color-accent)'
+    : '';
+  handle.style.borderRadius = isShown ? 'var(--radius-full)' : '';
+}
+
 /** A pull past a limit, drawn on a pane a LayoutPanel renders. */
 export interface OvershootDrawing {
   /** Draws the pane's edge `amount` px past its limit: positive past the maximum. */
@@ -436,6 +472,7 @@ export function createOvershootDrawing(pane: ResizablePane): OvershootDrawing {
     isInline: boolean;
     origin: string;
     movers: HTMLElement[];
+    isStretched: boolean;
   } | null = null;
   let drawn = 0;
   let running: Animation[] = [];
@@ -462,14 +499,16 @@ export function createOvershootDrawing(pane: ResizablePane): OvershootDrawing {
       : isTowardEnd
         ? 'top'
         : 'bottom';
+    const isStretched = tryIt().overshoot !== 'handle';
     geometry = {
       sign: (isTowardEnd ? 1 : -1) * (isRtl ? -1 : 1),
       extent: isInline ? element.offsetWidth : element.offsetHeight,
       isInline,
       origin: isInline ? `${farSide} center` : `center ${farSide}`,
-      movers: [handle, beside].filter(
+      movers: (isStretched ? [handle, beside] : [handle]).filter(
         (mover): mover is HTMLElement => mover instanceof HTMLElement,
       ),
+      isStretched,
     };
     return geometry;
   };
@@ -488,8 +527,10 @@ export function createOvershootDrawing(pane: ResizablePane): OvershootDrawing {
     }
     const isDrawn = amount !== 0;
     const {translate, scale} = stylesAt(amount);
-    element.style.transformOrigin = isDrawn ? geometry.origin : '';
-    element.style.scale = isDrawn ? scale : '';
+    if (geometry.isStretched) {
+      element.style.transformOrigin = isDrawn ? geometry.origin : '';
+      element.style.scale = isDrawn ? scale : '';
+    }
     for (const mover of geometry.movers) {
       mover.style.translate = isDrawn ? translate : '';
     }
@@ -527,20 +568,24 @@ export function createOvershootDrawing(pane: ResizablePane): OvershootDrawing {
         const at = from * progress.remaining(offset * progress.durationMs);
         return {offset, ...stylesAt(at)};
       });
-      const {origin, movers} = geometry;
+      const {origin, movers, isStretched} = geometry;
       drawn = 0;
       // The drawing ends at rest: the motion plays over the cleared styles.
       write(0);
       const timing = {duration: progress.durationMs, easing: 'linear'};
       running = [
-        element.animate(
-          frames.map(({offset, scale}) => ({
-            offset,
-            scale,
-            transformOrigin: origin,
-          })),
-          timing,
-        ),
+        ...(isStretched
+          ? [
+              element.animate(
+                frames.map(({offset, scale}) => ({
+                  offset,
+                  scale,
+                  transformOrigin: origin,
+                })),
+                timing,
+              ),
+            ]
+          : []),
         ...movers.map(mover =>
           mover.animate(
             frames.map(({offset, translate}) => ({offset, translate})),
