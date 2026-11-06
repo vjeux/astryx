@@ -817,7 +817,7 @@ export class SliderTouchController {
     interaction.isInside = inside;
     // Finger velocity along increasing value, px/s.
     const velocity = pan.velocity()[geometry.axis] * geometry.sign;
-    const projected = inside
+    const projected = true
       ? UIKIT_SLIDER.releaseProjectionShare *
         projectDistance(velocity, UIKIT_SLIDER.releaseProjectionRate)
       : 0;
