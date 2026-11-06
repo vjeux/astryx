@@ -404,15 +404,33 @@ function textShape(text, keep = []) {
 }
 
 /**
+ * One CLI run for a golden. Outside regeneration it runs in this process, as
+ * the docs topics do. So the runs share one read of the catalog, and no run
+ * starts a new process.
+ * @param {string[]} args
+ * @param {string} cwd
+ */
+async function cliRun(args, cwd) {
+  if (REGENERATING) return astryx(args, cwd);
+  const result = await runCli(args, cwd);
+  return {
+    status: result.status,
+    stdout: placeholders(result.stdout, cwd),
+    stderr: placeholders(result.stderr, cwd),
+  };
+}
+
+/**
  * `astryx search` as a golden: the count, and each result's identity and
  * order, with the sentences that name an experimental surface (the stable
  * icons topic names "the icon set" a theme swaps). No result is experimental,
  * an icon, or an icon definition.
  * @param {string} query
  * @param {string} cwd
+ * @param {typeof cliRun} [run] how the CLI runs: in this process by default
  */
-function searchGolden(query, cwd) {
-  const json = astryx(['search', ...query.split(' '), '--json'], cwd);
+async function searchGolden(query, cwd, run = cliRun) {
+  const json = await run(['search', ...query.split(' '), '--json'], cwd);
   expect(json.status).toBe(0);
   const body = JSON.parse(json.stdout);
   // The one stable addition FR18 makes: the field reference's `stability`
@@ -436,7 +454,7 @@ function searchGolden(query, cwd) {
     ...skeleton(result),
     mentions: leakMentions(result),
   }));
-  const text = astryx(['search', ...query.split(' ')], cwd);
+  const text = await run(['search', ...query.split(' ')], cwd);
   // The same addition left out of the text: its block, and its count.
   const blocks = text.stdout
     .split('\n\n')
@@ -747,13 +765,23 @@ describe('with no icon set, stable output is unchanged', () => {
     'icon set',
   ])('search %s, text and JSON', async query => {
     const slug = query.replace(/\s+/g, '-');
-    const {json, text} = searchGolden(query, project);
+    const {json, text} = await searchGolden(query, project);
     await expect(json).toMatchFileSnapshot(
       path.join(GOLDEN, `search-${slug}.json`),
     );
     await expect(text).toMatchFileSnapshot(
       path.join(GOLDEN, `search-${slug}.txt`),
     );
+  });
+
+  it('an in-process search prints what the bin prints', async () => {
+    const args = ['search', 'close', '--json'];
+    const bin = astryx(args);
+    const inProcess = await cliRun(args, project);
+    expect({status: inProcess.status, stdout: inProcess.stdout}).toEqual({
+      status: bin.status,
+      stdout: bin.stdout,
+    });
   });
 
   it('search --type icon is an unknown type, offering only the stable domains', async () => {
@@ -1021,11 +1049,17 @@ describe.skipIf(REGENERATING)(
 
     // Icon words: icon lookup by meaning is only `astryx experimental icon`;
     // `astryx search` joins it only at promotion (spec:AST-084 FR11).
+    // Each search is a new process, so nothing this process read for the
+    // project without icon sets can answer for the one with a set.
     it.each(['delete', 'close', 'trash can', 'experimental', 'icon set'])(
       'search %s equals the output without icon sets, text and JSON',
       async query => {
         const slug = query.replace(/\s+/g, '-');
-        const {json, text} = searchGolden(query, withSet);
+        const {json, text} = await searchGolden(
+          query,
+          withSet,
+          async (args, cwd) => astryx(args, cwd),
+        );
         await expect(json).toMatchFileSnapshot(
           path.join(GOLDEN, `search-${slug}.json`),
         );
