@@ -851,15 +851,21 @@ export const CollapsingScrollPanelFixture: Story = {
 function SlidingPanelSplit({
   side,
   lineCount = 0,
+  snaps,
+  isInitiallyCollapsed = false,
 }: {
   side: 'start' | 'end';
   lineCount?: number;
+  snaps?: number[];
+  isInitiallyCollapsed?: boolean;
 }) {
   const resizable = useResizable({
     defaultSize: 200,
     minSize: 120,
     maxSize: 320,
     collapsible: true,
+    snaps,
+    defaultIsCollapsed: isInitiallyCollapsed,
   });
   const pane = (
     <LayoutPanel resizable={resizable} data-testid="sliding-panel">
@@ -925,6 +931,91 @@ export const SlidingStartPanel: Story = {
 
 export const SlidingEndPanel: Story = {
   render: () => <SlidingPanelSplit side="end" />,
+};
+
+/**
+ * NOT FOR LANDING: try-it stories. (A) draws a pull past a limit on the
+ * handle alone, over the content beside it; (B) stretches the panel.
+ * `closeLine` draws an accent line where the edge will land. `snapOnLift`
+ * lets a drag move freely between snap points and settles on the nearest at
+ * the lift. `expandFeedback` shows a drag out of a collapsed panel: a peek
+ * of its edge, or the line at the size it opens to.
+ */
+interface TryItArgs {
+  overshoot: 'handle' | 'stretch';
+  closeLine: boolean;
+  snapOnLift: boolean;
+  expandFeedback: 'none' | 'peek' | 'line';
+}
+
+const TRY_IT: TryItArgs = {
+  overshoot: 'handle',
+  closeLine: true,
+  snapOnLift: false,
+  expandFeedback: 'none',
+};
+
+const TRY_IT_CONTROLS = {
+  overshoot: {control: 'inline-radio', options: ['handle', 'stretch']},
+  expandFeedback: {control: 'inline-radio', options: ['none', 'peek', 'line']},
+} as const;
+
+function TryItPanel({
+  overshoot,
+  closeLine,
+  snapOnLift,
+  expandFeedback,
+  snaps,
+  isInitiallyCollapsed,
+}: TryItArgs & {snaps?: number[]; isInitiallyCollapsed?: boolean}) {
+  (globalThis as {__astryxResizeTryIt?: object}).__astryxResizeTryIt = {
+    overshoot,
+    closeLine,
+    snapOnLift,
+    expandFeedback: expandFeedback === 'none' ? undefined : expandFeedback,
+  };
+  return (
+    <SlidingPanelSplit
+      side="start"
+      snaps={snaps}
+      isInitiallyCollapsed={isInitiallyCollapsed}
+    />
+  );
+}
+
+export const TryItHandleOnlyOvershoot: StoryObj<typeof TryItPanel> = {
+  name: 'Try it: (A) handle-only overshoot',
+  args: TRY_IT,
+  argTypes: TRY_IT_CONTROLS,
+  render: args => <TryItPanel {...args} />,
+};
+
+export const TryItPanelStretchOvershoot: StoryObj<typeof TryItPanel> = {
+  name: 'Try it: (B) panel stretch',
+  args: {...TRY_IT, overshoot: 'stretch'},
+  argTypes: TRY_IT_CONTROLS,
+  render: args => <TryItPanel {...args} />,
+};
+
+export const TryItSnapPoints: StoryObj<typeof TryItPanel> = {
+  name: 'Try it: snap points 120, 200, 280, settled on lift',
+  args: {...TRY_IT, snapOnLift: true},
+  argTypes: TRY_IT_CONTROLS,
+  render: args => <TryItPanel {...args} snaps={[120, 200, 280]} />,
+};
+
+export const TryItDragToOpenPeek: StoryObj<typeof TryItPanel> = {
+  name: 'Try it: drag to open, with a peek',
+  args: {...TRY_IT, expandFeedback: 'peek'},
+  argTypes: TRY_IT_CONTROLS,
+  render: args => <TryItPanel {...args} isInitiallyCollapsed />,
+};
+
+export const TryItDragToOpenLine: StoryObj<typeof TryItPanel> = {
+  name: 'Try it: drag to open, with the line at the open size',
+  args: {...TRY_IT, expandFeedback: 'line'},
+  argTypes: TRY_IT_CONTROLS,
+  render: args => <TryItPanel {...args} isInitiallyCollapsed />,
 };
 
 /** A sliding start panel with more lines than fit, for a scrolled slide. */
