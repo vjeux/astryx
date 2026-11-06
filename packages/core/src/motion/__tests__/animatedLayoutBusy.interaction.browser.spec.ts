@@ -139,6 +139,36 @@ async function clickThenBlock(
         'click',
         () => {
           requestAnimationFrame(() => {
+            // NOT FOR LANDING: the frame's callbacks run 60 ms past its time,
+            // after a change that started its glides on the live clock 10 ms
+            // ago, as a change made late in its frame does.
+            const slowUntil = performance.now() + 60;
+            while (performance.now() < slowUntil) {
+              // the page's main thread is busy
+            }
+            for (
+              let node: Element | null = carried;
+              node != null;
+              node = node.parentElement
+            ) {
+              for (const animation of node.getAnimations()) {
+                const moves = (animation.effect as KeyframeEffect)
+                  .getKeyframes()
+                  .some(frame => typeof frame.translate === 'string');
+                if (moves) {
+                  // As the module does for such a start: the first keyframe
+                  // shows until the timeline gets there.
+                  animation.startTime = performance.now() - 10;
+                  const fill = animation.effect?.getTiming().fill;
+                  animation.effect?.updateTiming({
+                    fill:
+                      fill === 'forwards' || fill === 'both'
+                        ? 'both'
+                        : 'backwards',
+                  });
+                }
+              }
+            }
             const glides: GlideRead[] = [];
             for (
               let node: Element | null = carried;
