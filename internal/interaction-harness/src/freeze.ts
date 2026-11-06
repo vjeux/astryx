@@ -7,6 +7,7 @@
  *   `freezePageWhen` and `advanceFrozenPage`. Stop a scene (its animations,
  *   frames, timeouts and every time it reads), step it by its own clock, and
  *   start it again. An interval skips its ticks while frozen.
+ *   `holdInputUntil` makes the page handle an input late while the scene runs.
  * @position Input timed by the scene, not by the test process: a proof freezes
  *   the scene where it wants to act, acts, and thaws. The README's "Page
  *   freeze" section says what a freeze holds and why it lives in script.
@@ -139,8 +140,28 @@ const FREEZE_SCRIPT = `(() => {
   // page listener for that input, in the input's own task.
   const ARMABLE = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'touchstart', 'touchmove', 'touchend', 'touchcancel', 'mousedown', 'mousemove', 'mouseup', 'click', 'keydown', 'keyup', 'wheel', 'scroll'];
   const armed = new Set();
+  // An input held until its time (holdInputUntil), one at a time. The page
+  // then handles it late, its main thread busy, while the compositor runs on.
+  const ONE_FRAME_MS = 1000 / 60;
+  let inputHold = null;
+  const placeHeld = type => {
+    const held = inputHold;
+    held.type = type;
+    held.arrivedAt = now(rawNow());
+    // Before the first frame drawn unfrozen, the held runs have not resumed:
+    // a block there would stop the screen too.
+    if (held.resumeAt == null) { held.outcome = 'early'; return; }
+    // An input the page has not received cannot be held back.
+    if (held.arrivedAt > held.intended + ONE_FRAME_MS) { held.outcome = 'late'; return; }
+    while (now(rawNow()) < held.intended) {
+      // the page's main thread is busy
+    }
+    held.releasedAt = now(rawNow());
+    held.outcome = 'placed';
+  };
   for (const type of ARMABLE) {
     window.addEventListener(type, () => {
+      if (inputHold != null && inputHold.outcome == null && inputHold.types.includes(type)) placeHeld(type);
       if (!armed.delete(type)) return;
       window.__harnessFreeze.freeze();
       if (window.__harnessTimerGate) window.__harnessTimerGate.freeze(true);
@@ -158,6 +179,25 @@ const FREEZE_SCRIPT = `(() => {
       }
       armed.add(type);
     },
+    // Holds the next input of these types until afterMs past the first frame
+    // the page draws unfrozen.
+    holdInput(types, afterMs) {
+      for (const type of types) {
+        if (!ARMABLE.includes(type)) {
+          throw new Error('holdInputUntil: a hold takes only ' + ARMABLE.join(', ') + '; got ' + type);
+        }
+      }
+      const held = {types, afterMs, resumeAt: null, intended: null, arrivedAt: null, releasedAt: null, type: null, outcome: null};
+      inputHold = held;
+      const tick = time => {
+        if (inputHold !== held || held.outcome != null) return;
+        if (state.frozenAt != null) { nativeFrame(tick); return; }
+        held.resumeAt = now(time);
+        held.intended = held.resumeAt + afterMs;
+      };
+      nativeFrame(tick);
+    },
+    get held() { return inputHold == null ? null : Object.assign({}, inputHold); },
     get frozen() { return state.frozenAt != null; },
     // The frozen span so far. Once thawed, a page time plus it is real time.
     get offset() { return state.offset; },
@@ -389,4 +429,171 @@ export async function thawPage(page: Page): Promise<void> {
     w.__harnessFreeze?.thaw();
     w.__harnessTimerGate?.thaw();
   });
+}
+
+/**
+ * An input that `holdInputUntil` could not hold to its time. It reached the
+ * page more than a frame after its time, or before the first frame after the
+ * thaw. The proof would then read another instant than the one it set. Always
+ * a red, with the numbers; never a pass.
+ */
+export class LiftPlacementError extends Error {
+  constructor(
+    message: string,
+    /** The page times the error is read from, ms. */
+    readonly numbers: Readonly<Record<string, number | null>>,
+  ) {
+    super(message);
+    this.name = 'LiftPlacementError';
+  }
+}
+
+/** A held input's times on the page's clock, ms. */
+export interface HeldInput {
+  /** The event type the hold caught first. */
+  readonly type: string;
+  /** The first frame the page drew unfrozen after the call. */
+  readonly resumeMs: number;
+  /** When the page was to handle the input: `resumeMs + afterResumeMs`. */
+  readonly intendedMs: number;
+  /** When the input reached the page. */
+  readonly arrivedMs: number;
+  /** When the hold let the page's own listeners run. */
+  readonly releasedMs: number;
+}
+
+export interface InputHold {
+  /**
+   * Resolves with `resumeMs`, once the page has drawn its first frame
+   * unfrozen. Send the input after it.
+   */
+  resumed(options?: {timeout?: number}): Promise<number>;
+  /**
+   * Resolves once the hold has let the input through. Rejects with
+   * `LiftPlacementError` when the input came too late or too early to hold.
+   */
+  landed(options?: {timeout?: number}): Promise<HeldInput>;
+}
+
+interface HoldState {
+  afterMs: number;
+  resumeAt: number | null;
+  intended: number | null;
+  arrivedAt: number | null;
+  releasedAt: number | null;
+  type: string | null;
+  outcome: 'early' | 'late' | 'placed' | null;
+}
+
+/**
+ * Makes the page handle its next lift late, at a time of the scene's clock,
+ * while the compositor keeps the scene moving. A frozen page handles input at
+ * once, so a freeze alone cannot do this.
+ *
+ * Call it before the thaw. The hold counts from the first frame the page then
+ * draws unfrozen, where the held runs resume. Send the input after
+ * `resumed()`. The install's window capture listener catches the first
+ * `pointerup` or `touchend` (or the types in `on`) before any page listener.
+ * It keeps the main thread busy until `afterResumeMs` after that frame, and
+ * then lets the page's listeners run. The event keeps its own `timeStamp`,
+ * earlier than its handling, as on a busy page.
+ * Needs `installPageFreeze` before the page loads.
+ */
+export async function holdInputUntil(
+  page: Page,
+  {
+    afterResumeMs,
+    on = ['pointerup', 'touchend'],
+  }: {afterResumeMs: number; on?: readonly string[]},
+): Promise<InputHold> {
+  if (!Number.isFinite(afterResumeMs) || afterResumeMs <= 0) {
+    throw new Error(
+      `holdInputUntil: afterResumeMs must be a positive number of ms, got ${afterResumeMs}`,
+    );
+  }
+  await page.evaluate(
+    ([types, ms]) => {
+      const w = window as unknown as {
+        __harnessFreeze?: {
+          holdInput?: (types: readonly string[], ms: number) => void;
+        };
+      };
+      if (w.__harnessFreeze?.holdInput == null) {
+        throw new Error(
+          'holdInputUntil: call installPageFreeze before the page loads',
+        );
+      }
+      w.__harnessFreeze.holdInput(types, ms);
+    },
+    [on, afterResumeMs] as const,
+  );
+  // Waits on the real frames: the page's own stand still while it is frozen.
+  const waitFor = (field: 'resumeAt' | 'outcome', timeout: number) =>
+    page.evaluate(
+      ([key, wait]) =>
+        new Promise<HoldState>((resolve, reject) => {
+          const freeze = (
+            window as unknown as {
+              __harnessFreeze: {
+                held: HoldState | null;
+                frame: (callback: () => void) => number;
+                realNow: () => number;
+              };
+            }
+          ).__harnessFreeze;
+          const deadline = freeze.realNow() + wait;
+          const tick = () => {
+            const held = freeze.held;
+            if (held != null && held[key] != null) {
+              resolve(held);
+            } else if (freeze.realNow() > deadline) {
+              reject(
+                new Error(
+                  key === 'resumeAt'
+                    ? `holdInputUntil: the page drew no frame unfrozen within ${wait} ms`
+                    : `holdInputUntil: no held input reached the page within ${wait} ms`,
+                ),
+              );
+            } else {
+              freeze.frame(tick);
+            }
+          };
+          tick();
+        }),
+      [field, timeout] as const,
+    );
+  return {
+    async resumed({timeout = 5_000} = {}) {
+      return (await waitFor('resumeAt', timeout)).resumeAt as number;
+    },
+    async landed({timeout = 5_000} = {}) {
+      const held = await waitFor('outcome', timeout);
+      const numbers = {
+        resumeMs: held.resumeAt,
+        intendedMs: held.intended,
+        arrivedMs: held.arrivedAt,
+        releasedMs: held.releasedAt,
+      };
+      if (held.outcome === 'early') {
+        throw new LiftPlacementError(
+          `holdInputUntil: the ${held.type} reached the page before its first frame after the thaw, where the held runs resume. A hold there would stop the screen too: send the input after resumed()`,
+          numbers,
+        );
+      }
+      if (held.outcome === 'late') {
+        const lateMs = (held.arrivedAt ?? 0) - (held.intended ?? 0);
+        throw new LiftPlacementError(
+          `holdInputUntil: the ${held.type} reached the page ${lateMs.toFixed(1)} ms after its time (${held.afterMs} ms after the first frame after the thaw), more than a frame: the page cannot hold back an input it has not received`,
+          numbers,
+        );
+      }
+      return {
+        type: held.type as string,
+        resumeMs: held.resumeAt as number,
+        intendedMs: held.intended as number,
+        arrivedMs: held.arrivedAt as number,
+        releasedMs: held.releasedAt as number,
+      };
+    },
+  };
 }
