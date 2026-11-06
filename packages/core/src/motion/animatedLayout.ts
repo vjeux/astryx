@@ -321,7 +321,7 @@ function startFor(doc: Document, frame: number): ChangeStart {
   }
   const start: ChangeStart = {
     frame,
-    at: now - frame <= LATE_START_MS ? frame : now,
+    at: frame,
     last: now,
   };
   changeStarts.set(doc, start);
