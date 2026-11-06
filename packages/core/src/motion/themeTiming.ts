@@ -149,10 +149,8 @@ function browserEasing(
     // The browser throws on an easing it cannot play.
     return null;
   }
-  return x => {
-    animation.currentTime = Math.min(1, Math.max(0, x)) * 1000;
-    return animation.effect?.getComputedTiming().progress ?? 1;
-  };
+  // NOT FOR LANDING: the mutant ignores the browser's easing.
+  return x => (animation == null ? 1 : x);
 }
 
 /**
