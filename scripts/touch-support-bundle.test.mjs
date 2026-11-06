@@ -153,6 +153,8 @@ const LAB_ONLY_NAMES = [
   'useInteractionModalityTracking',
   'animatorFor',
   'reducedMotionFade',
+  'lockSelection',
+  'locksSelectionFor',
   'useTouchHitArea',
   'touchHitAreaStyles',
 ];

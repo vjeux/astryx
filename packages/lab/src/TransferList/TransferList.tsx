@@ -41,6 +41,10 @@ import {Text} from '@astryxdesign/core/Text';
 import {TextInput} from '@astryxdesign/core/TextInput';
 import {VisuallyHidden} from '@astryxdesign/core/VisuallyHidden';
 import {useAnnounce} from '@astryxdesign/core/hooks';
+import {
+  lockSelection,
+  locksSelectionFor,
+} from '@astryxdesign/core/internal/touch';
 import {useTranslator} from '@astryxdesign/core/i18n';
 import {
   borderVars,
@@ -925,6 +929,46 @@ export function TransferList<T extends string = string>({
     [beginReorder],
   );
 
+  // iOS starts a text selection under a still finger before a drag takes the
+  // grip. So a finger's or a pen's touch-down on a grip locks selection on
+  // the list until that pointer lifts or cancels. A mouse never locks it.
+  const releaseSelectionRef = useRef<(() => void) | null>(null);
+  const lockSelectionWhileHeld = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      const root = rootRef.current;
+      const view = root?.ownerDocument.defaultView;
+      if (
+        root == null ||
+        view == null ||
+        !locksSelectionFor(event.pointerType)
+      ) {
+        return;
+      }
+      releaseSelectionRef.current?.();
+      const {pointerId} = event;
+      const unlock = lockSelection([root], event.target);
+      function release() {
+        unlock();
+        view?.removeEventListener('pointerup', onEnd, true);
+        view?.removeEventListener('pointercancel', onEnd, true);
+        if (releaseSelectionRef.current === release) {
+          releaseSelectionRef.current = null;
+        }
+      }
+      function onEnd(end: PointerEvent) {
+        if (end.pointerId === pointerId) {
+          release();
+        }
+      }
+      view.addEventListener('pointerup', onEnd, true);
+      view.addEventListener('pointercancel', onEnd, true);
+      releaseSelectionRef.current = release;
+    },
+    [],
+  );
+  // A lock still held when the list unmounts ends with it.
+  useEffect(() => () => releaseSelectionRef.current?.(), []);
+
   const handlePointerMove = useCallback(
     (
       event: ReactPointerEvent<HTMLButtonElement>,
@@ -1146,7 +1190,10 @@ export function TransferList<T extends string = string>({
         ]}
         onClick={() => handleReorderClick(option)}
         onKeyDown={event => handleReorderKeyDown(event, option)}
-        onPointerDown={event => handlePointerDown(event, option)}
+        onPointerDown={event => {
+          lockSelectionWhileHeld(event);
+          handlePointerDown(event, option);
+        }}
         onPointerMove={event => handlePointerMove(event, option)}
         onPointerUp={event => handlePointerEnd(event, false)}
         onPointerCancel={event => handlePointerEnd(event, true)}

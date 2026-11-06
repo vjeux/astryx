@@ -113,3 +113,5 @@ export {animatorFor} from '../motion/animator';
 export {reducedMotionFade} from '../motion/reducedMotion';
 export {useTouchHitArea} from '../utils/touchHitArea';
 export {touchHitAreaStyles} from '../utils/touchHitArea.stylex';
+// Lab's TransferList locks text selection under a finger held on its grip.
+export {lockSelection, locksSelectionFor} from '../utils/selectionLock';

@@ -530,6 +530,50 @@ describe('TransferList', () => {
   });
 
   describe('pointer reordering', () => {
+    it('locks text selection under a finger or a pen held on a grip until it lifts, never under a mouse', () => {
+      render(
+        <ControlledTransferList initialValue={['name', 'owner', 'status']} />,
+      );
+      const grip = screen.getByRole('button', {name: 'Reorder Owner'});
+      const label = screen.getByText('Status');
+      // A selection starts unless the list refuses its selectstart.
+      const selects = () => {
+        const event = new Event('selectstart', {
+          bubbles: true,
+          cancelable: true,
+        });
+        label.dispatchEvent(event);
+        return !event.defaultPrevented;
+      };
+      expect(selects()).toBe(true);
+
+      fireEvent.pointerDown(grip, {
+        pointerType: 'touch',
+        pointerId: 7,
+        button: 0,
+      });
+      expect(selects()).toBe(false);
+      fireEvent.pointerUp(window, {pointerType: 'touch', pointerId: 7});
+      expect(selects()).toBe(true);
+
+      fireEvent.pointerDown(grip, {
+        pointerType: 'pen',
+        pointerId: 8,
+        button: 0,
+      });
+      expect(selects()).toBe(false);
+      fireEvent.pointerCancel(window, {pointerType: 'pen', pointerId: 8});
+      expect(selects()).toBe(true);
+
+      fireEvent.pointerDown(grip, {
+        pointerType: 'mouse',
+        pointerId: 9,
+        button: 0,
+      });
+      expect(selects()).toBe(true);
+      fireEvent.pointerUp(window, {pointerType: 'mouse', pointerId: 9});
+    });
+
     it('promotes the drag preview to the top layer from inside a popover host', () => {
       const {container} = render(
         <div data-testid="popover-host" popover="auto">
