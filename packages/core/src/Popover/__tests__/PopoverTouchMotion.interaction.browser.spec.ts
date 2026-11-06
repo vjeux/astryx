@@ -699,9 +699,17 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   let closed = 0;
   let present = 0;
   let dismiss = 0;
+  let block = {from: 0, to: 0};
   const trace = await traceRendering(page, async () => {
     opened = await pageNow(page);
+    // NOT FOR LANDING: holds the main thread for 450 ms once the growth has
+    // run 100 ms, as a loaded machine can.
+    const blocking = blockMainThread(page, 450, {
+      during: story.layer,
+      minProgressMs: 100,
+    });
     await page.keyboard.press('Enter');
+    block = await blocking;
     present = await waitPastScaleStart(page, opened, entrance.ms + 150);
     closed = await pageNow(page);
     await page.keyboard.press('Escape');
@@ -757,7 +765,13 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   }
   // A loaded machine stretches a task's wall time, not its thread time. So a
   // long task here is one that runs over 50 ms of thread time.
-  expect(trace.longTasks.filter(task => task.threadMs > 50)).toEqual([]);
+  expect(
+    trace.longTasks.filter(
+      task =>
+        task.threadMs > 50 &&
+        (task.start < block.from - 20 || task.start > block.to),
+    ),
+  ).toEqual([]);
   // Positive control: the same trace sees per-frame work in such a window.
   // A frame loop moves the trigger by a pixel in each frame the page draws.
   // Every one of those frames must show work, however few are drawn.
