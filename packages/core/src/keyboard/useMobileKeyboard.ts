@@ -23,6 +23,7 @@ import {
   type MotionHandle,
 } from '../motion/animator';
 import {KEYBOARD_SPRING} from '../motion/uikit/springs';
+import {deepActiveElement} from '../utils/flatTree';
 import {subscribeInput} from '../utils/inputStream';
 import {layoutViewportHeight} from '../utils/layoutViewport';
 import {isDocument, isNode} from '../utils/nodeType';
@@ -142,7 +143,8 @@ function isVisualViewportRecovered(): boolean {
 
 // Whether focus on `target` may keep the keyboard up. A control that brings
 // one up does, and so can a frame, an open shadow host or a custom element,
-// through its own field.
+// through its own field. Callers pass the focused element inside open shadow
+// roots, so only what the page cannot see inside counts as such a holder.
 function mayKeepKeyboard(target: Element | null): boolean {
   return target != null && (bringsUpKeyboard(target) || hidesField(target));
 }
@@ -543,7 +545,7 @@ export function useMobileKeyboard(
             if (
               isExpandedRef.current &&
               hasKeyboardLayoutRef.current &&
-              !mayKeepKeyboard(document.activeElement)
+              !mayKeepKeyboard(deepActiveElement(document))
             ) {
               holdThroughUnguidedHide();
             }
@@ -714,7 +716,7 @@ export function useMobileKeyboard(
             if (
               active instanceof HTMLElement &&
               body.contains(active) &&
-              mayKeepKeyboard(active)
+              mayKeepKeyboard(deepActiveElement(document))
             ) {
               hold.release();
               void rideKeyboardSpring(animator, 0);
