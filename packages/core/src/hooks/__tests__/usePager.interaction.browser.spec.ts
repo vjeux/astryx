@@ -14,7 +14,6 @@ import {fileURLToPath} from 'node:url';
 import {
   animationStoryboard,
   armHold,
-  busyWindowProof,
   compareCurve,
   countBetween,
   curveOf,
@@ -23,19 +22,23 @@ import {
   markElement,
   merge,
   path,
+  pooledBusyProof,
   releaseAnimations,
   sampleCurve,
+  startBusyControl,
   startScreencast,
   timeline,
   toTouchEvents,
   touchDriver,
   traceRendering,
+  trackControl,
   trackMarker,
   waitForRest,
   webInputDriver,
   withFinger,
   writeEvidence,
   type ArmedHold,
+  type BusyRun,
   type HeldAnimation,
   type TouchDriver,
   type TouchScript,
@@ -1063,66 +1066,84 @@ test('a settle keeps advancing every frame through an 800 ms main-thread block',
   await open(page, {startIndex: 0});
   const marker = page.locator('.page').nth(1);
   await markElement(marker, {inset: 8});
-  const cast = await startScreencast(page);
-  // Let the screencast deliver a few frames before anything moves.
-  await page.waitForTimeout(300);
-  // A goTo of one page (0.3 s at any distance), and an 800 ms block that the
-  // page schedules 90 ms in. WebKit hands a new animation to its compositor
-  // two or three rendering updates after it starts (animator.ts, known
-  // limits). A harness round trip would eat most of the motion.
-  const started = await page.evaluate(() => {
-    window.pager.goTo(1);
-    setTimeout(() => {
-      const from = performance.timeOrigin + performance.now();
-      const end = performance.now() + 800;
-      let spins = 0;
-      while (performance.now() < end) {
-        spins += 1;
-      }
-      (window as unknown as {busy: unknown}).busy = {
-        from,
-        to: performance.timeOrigin + performance.now(),
-        spins,
-      };
-    }, 90);
-    return performance.timeOrigin + performance.now();
-  });
-  await page.waitForTimeout(1200);
-  const busy = await page.evaluate(
-    () =>
-      (window as unknown as {busy: {from: number; to: number; spins: number}})
-        .busy,
-  );
-  const tracked = await trackMarker(page, await cast.stop());
-  // Judge the part of the block that the motion spans. The motion ends about
-  // 0.3 s after the call, or a frame later when it starts at the next commit.
-  const spanned = {...busy, to: Math.min(busy.to, started + 300)};
-  test.info().annotations.push({
-    type: 'marker x per frame (ms from the call)',
-    description: JSON.stringify(
-      tracked.map(f => [Math.round(f.t - started), f.box?.x ?? null]),
-    ),
-  });
-  expect(spanned.to - spanned.from).toBeGreaterThan(150);
-  const proof = busyWindowProof(tracked, spanned, {
-    axis: 'x',
-    settledWithin: 1,
-  });
+  // The harness's busy-window control: a box the compositor moves along the
+  // top edge, in the same screencast. Each settle is judged against what the
+  // compositor presented in its block, not against a frame rate. Under a CPU
+  // quota the compositor presents fewer frames in a block, the control's too.
+  const control = await startBusyControl(page);
+  // The motion lasts 0.3 s, so one block leaves few frames to judge. The
+  // proof pools three runs and judges them as one longer window.
+  const runs: BusyRun[] = [];
+  for (let run = 1; run <= 3; run += 1) {
+    await page.evaluate(() => window.pager.goTo(0, {animated: false}));
+    const cast = await startScreencast(page);
+    // Let the screencast deliver a few frames before anything moves.
+    await page.waitForTimeout(300);
+    // A goTo of one page (0.3 s at any distance), and an 800 ms block that the
+    // page schedules 90 ms in. WebKit hands a new animation to its compositor
+    // two or three rendering updates after it starts (animator.ts, known
+    // limits). A harness round trip would eat most of the motion.
+    const started = await page.evaluate(() => {
+      window.pager.goTo(1);
+      setTimeout(() => {
+        const from = performance.timeOrigin + performance.now();
+        const end = performance.now() + 800;
+        let spins = 0;
+        while (performance.now() < end) {
+          spins += 1;
+        }
+        (window as unknown as {busy: unknown}).busy = {
+          from,
+          to: performance.timeOrigin + performance.now(),
+          spins,
+        };
+      }, 90);
+      return performance.timeOrigin + performance.now();
+    });
+    await page.waitForTimeout(1200);
+    const busy = await page.evaluate(
+      () =>
+        (window as unknown as {busy: {from: number; to: number; spins: number}})
+          .busy,
+    );
+    const frames = await cast.stop();
+    const tracked = await trackMarker(page, frames);
+    // Judge the part of the block that the motion spans. The motion ends about
+    // 0.3 s after the call, or a frame later when it starts at the next commit.
+    const spanned = {...busy, to: Math.min(busy.to, started + 300)};
+    test.info().annotations.push({
+      type: `run ${run}: marker x per frame (ms from the call)`,
+      description: JSON.stringify(
+        tracked.map(f => [Math.round(f.t - started), f.box?.x ?? null]),
+      ),
+    });
+    expect(spanned.to - spanned.from).toBeGreaterThan(150);
+    runs.push({
+      tracked,
+      control: await trackControl(
+        page,
+        frames.filter(f => f.t >= busy.from - 300 && f.t <= busy.to + 100),
+      ),
+      window: spanned,
+    });
+    // And it lands while the thread is still blocked. The control keeps the
+    // compositor presenting, so the last frame before the block ended shows
+    // where the settle stands then. Page 1's marker sits at its inset from the
+    // viewport's left edge.
+    const blocked = tracked.filter(f => f.box != null && f.t < busy.to);
+    const last = blocked[blocked.length - 1];
+    expect(last.t).toBeGreaterThan(spanned.from);
+    expect(Math.abs((last.box?.x ?? 0) - 8)).toBeLessThan(1.5);
+  }
+  await control.remove();
+  const proof = pooledBusyProof(runs, {axis: 'x', settledWithin: 1});
   test.info().annotations.push({
     type: 'busy window',
-    description: JSON.stringify({...proof, window: undefined}),
+    description: proof.summary,
   });
-  expect(proof.frames).toBeGreaterThanOrEqual(proof.expectedFrames - 2);
-  expect(proof.changed).toBeGreaterThanOrEqual(proof.frames - 3);
-  // And it lands while the thread is still blocked. The last frame that the
-  // page presented before the block ended shows the end state. There, page
-  // 1's marker sits at its inset from the viewport's left edge. A page at rest
-  // presents no new frame, so the landing is that last frame, whenever the
-  // screencast delivered it.
-  const blocked = tracked.filter(f => f.box != null && f.t < busy.to);
-  const last = blocked[blocked.length - 1];
-  expect(last.t).toBeGreaterThan(spanned.from);
-  expect(Math.abs((last.box?.x ?? 0) - 8)).toBeLessThan(1.5);
+  // The settle moves on every frame the control moves on, and in each run it
+  // stalls no longer than the control.
+  expect(proof.verdict.failures, proof.summary).toEqual([]);
 });
 
 test('no Layout or Paint while it settles', async ({page, browserName}) => {
