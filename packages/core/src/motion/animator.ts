@@ -223,6 +223,22 @@ export interface SpringTransition {
   velocity?: MotionValues;
 }
 
+/** What `Animator.rebase` takes besides the amounts. */
+export interface RebaseOptions {
+  /** Time of the shift on the document timeline (ms). Defaults to now. */
+  at?: number;
+  /**
+   * Per property, the value its spring heads for after the shift. A spring
+   * whose target plus its amount lands there moves whole. Its curve, its
+   * target and its start shift together, as when the element's resting place
+   * moves under a curve that keeps going. A curve that still waits for the
+   * browser's start keeps waiting for it, so the shift never skips it ahead
+   * of the screen. While it waits, only the model moves: the call that
+   * follows on the channel rebuilds its animation.
+   */
+  towards?: MotionValues;
+}
+
 /**
  * Options of `animate` and `play`: the spring, a release velocity, the Reduced
  * Motion handling.
@@ -452,9 +468,10 @@ export interface Animator {
    * moves the element under them: a property moving on a spring keeps its
    * spring, velocity and target (the curve restarts from the shifted value);
    * any other moving curve shifts whole, its end included; a resting
-   * property takes the offset and stays.
+   * property takes the offset and stays. `towards` moves some springs whole
+   * instead (RebaseOptions).
    */
-  rebase(deltas: MotionValues, options?: Pick<AnimateOptions, 'at'>): void;
+  rebase(deltas: MotionValues, options?: RebaseOptions): void;
   /** Freezes properties (all by default) at their presentation values. */
   stop(properties?: ReadonlyArray<MotionProperty | 'scale'>): void;
   /**
@@ -675,6 +692,13 @@ const REST_FRAMES_PER_SECOND = 60;
 
 /** A curve that has not settled by then (an undamped spring) snaps. */
 const MAX_DURATION_MS = 30_000;
+
+/**
+ * How close a spring's target and a value must be to count as the same, in
+ * the property's own units. Only float rounding separates two ways of
+ * computing one value, far below anything the screen shows.
+ */
+const SAME_VALUE = 1e-6;
 
 /**
  * The task calls from rest are made in, shared by every call made in it
@@ -3814,6 +3838,7 @@ export function createMotionEngine(
       syncPending();
       flushDeferred();
       const time = rebaseOptions.at ?? now();
+      const towards = expand(rebaseOptions.towards ?? {});
       const changed: MotionProperty[] = [];
       const owners = new Set<HandleState>();
       for (const [property, delta] of Object.entries(expand(deltas)) as [
@@ -3823,9 +3848,9 @@ export function createMotionEngine(
         if (delta === 0) {
           continue;
         }
-        changed.push(property);
         const segment = segmentAt(property, time);
         if (segment == null) {
+          changed.push(property);
           resting[property] = valueAt(property, time) + delta;
           segments.delete(property);
           continue;
@@ -3850,6 +3875,32 @@ export function createMotionEngine(
           }
           segments.set(property, next);
         };
+        const heading = towards[property];
+        if (
+          segment.spring != null &&
+          heading != null &&
+          Math.abs(segment.target + delta - heading) <= SAME_VALUE
+        ) {
+          // The spring keeps its course to the shifted target from its own
+          // start, so it neither restarts nor skips ahead.
+          const whole: Segment = {
+            ...segment,
+            target: heading,
+            at: t => segment.at(t) + delta,
+          };
+          if (latest == null) {
+            changed.push(property);
+            replace(whole);
+            continue;
+          }
+          // While the browser has not told the start, only the model moves.
+          // The call that follows rebuilds the channel from it.
+          const waiting = segment.group as StartGroup;
+          waiting.segments[waiting.segments.indexOf(segment)] = whole;
+          segments.set(property, whole);
+          continue;
+        }
+        changed.push(property);
         if (segment.spring != null) {
           const from = valueAt(property, time) + delta;
           const velocity = velocityAt(property, time);
