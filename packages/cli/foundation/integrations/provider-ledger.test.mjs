@@ -34,6 +34,7 @@ let originalCwd;
 
 beforeAll(() => {
   originalCwd = process.cwd();
+  // SYNC: vitest.config.ts loads the modules under this prefix natively.
   root = fs.mkdtempSync(path.join(process.cwd(), '.astryx-provider-ledger-'));
 });
 
