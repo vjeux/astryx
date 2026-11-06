@@ -350,6 +350,30 @@ test('the AM/PM turn keeps advancing every frame through a blocked main thread',
   page,
   browserName,
 }, testInfo) => {
+  // Mutant: every animation but the busy control's holds its first
+  // keyframe for 90% of its time, then jumps to its last.
+  await page.addInitScript(() => {
+    const native = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions,
+    ) {
+      if (keyframes == null || this.hasAttribute('data-harness-control')) {
+        return native.call(this, keyframes, options);
+      }
+      const list: Record<string, unknown>[] = Array.isArray(keyframes)
+        ? keyframes.map(k => ({...k}))
+        : [0, 1].map(end => Object.fromEntries(Object.entries(keyframes).map(([key, value]) => [key, Array.isArray(value) ? value[end === 0 ? 0 : value.length - 1] : value])));
+      if (list.length < 2) {
+        return native.call(this, keyframes, options);
+      }
+      const strip = ({offset, easing, composite, ...rest}: Record<string, unknown>) => rest;
+      const first = strip(list[0]);
+      const last = strip(list[list.length - 1]);
+      return native.call(this, [{...first, offset: 0}, {...first, offset: 0.9}, {...last, offset: 1}] as Keyframe[], options);
+    };
+  });
   test.skip(
     browserName === 'webkit',
     "WebKit's screencast clock is not the page's (frames arrive ~100 ms off), so a 0.3 s turn cannot be placed inside the block; Mobile Safari on the iOS simulator is this proof's WebKit evidence",
