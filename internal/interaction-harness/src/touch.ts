@@ -576,7 +576,12 @@ async function playSteps(
     await dispatch(step, timestamp);
     previous = {sentAt, returnedAt: performance.now()};
     played.push({...step, dispatchedAt, returnedAt: Date.now(), timestamp});
+    const watched = performance.now();
     await onEvent?.(step, index);
+    // NOT FOR LANDING: a slower runner's round trip after onEvent's page work.
+    if (onEvent != null && performance.now() - watched > 2) {
+      await new Promise(resolve => setTimeout(resolve, 60));
+    }
   }
   // Judged once the lift is out, so no finger is left down.
   if (judges) {
