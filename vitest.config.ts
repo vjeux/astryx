@@ -19,6 +19,7 @@
  * SYNC: When modified, update this header and root README.md
  */
 
+import * as fs from 'node:fs';
 import path from 'node:path';
 import {configDefaults, defineConfig} from 'vitest/config';
 import react from '@vitejs/plugin-react';
@@ -186,6 +187,23 @@ export default defineConfig({
             },
           ],
         },
+        // NOT FOR LANDING: each transform of a provider-ledger fixture module
+        // is logged and waits FIXTURE_TRANSFORM_DELAY_MS, as a loaded main
+        // process would make it wait.
+        plugins: [
+          {
+            name: 'not-for-landing-slow-fixture-transform',
+            async transform(_code: string, id: string) {
+              if (!id.includes('/.astryx-provider-ledger-')) return null;
+              const log = process.env.FIXTURE_TRANSFORM_LOG;
+              if (log) fs.appendFileSync(log, `${id}\n`);
+              const delay = Number(process.env.FIXTURE_TRANSFORM_DELAY_MS ?? 0);
+              if (delay > 0)
+                await new Promise(resolve => setTimeout(resolve, delay));
+              return null;
+            },
+          },
+        ],
         test: {
           name: 'node',
           globals: true,
