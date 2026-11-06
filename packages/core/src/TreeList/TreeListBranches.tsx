@@ -105,14 +105,16 @@ export function TreeListBranches({
 }: TreeListBranchesProps) {
   return (
     <>
-      {ancestorsIsLast.map((ancestorIsLast, level) => {
+      {ancestorsIsLast.map((_, level) => {
         const branchOffset = `calc(${GUIDE_COLUMN_START} + ${level} * ${LEVEL_INDENT})`;
+        // A column holds the connector of the ancestor one level deeper, so
+        // its line runs past this row while that ancestor has a sibling
+        // below. The current item's own connector column (nestedLevel - 1)
+        // is rendered below with its terminus or continuation style.
+        const continues =
+          level < nestedLevel - 1 && !ancestorsIsLast[level + 1];
         return (
-          // Skip the level that the current-item connector occupies
-          // (nestedLevel - 1), since that position is rendered below
-          // with the correct terminus/continuation style.
-          !ancestorIsLast &&
-          level !== nestedLevel - 1 && (
+          continues && (
             <div
               // eslint-disable-next-line @eslint-react/no-array-index-key -- tree branch levels are fixed positional connectors
               key={level}
