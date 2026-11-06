@@ -179,7 +179,7 @@ async function clickThenBlock(
                 },
                 glides,
               };
-            }, 0);
+            }, 500);
           });
         },
         {capture: true, once: true},
