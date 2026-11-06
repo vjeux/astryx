@@ -756,6 +756,11 @@ test.describe('spec:AST-105 Coverage', () => {
         };
         const frame = async () =>
           new Promise<number>(resolve => requestAnimationFrame(resolve));
+        // NOT FOR LANDING: one slow frame while the card glides.
+        const slowUntil = performance.now() + 500;
+        while (performance.now() < slowUntil) {
+          // the page's main thread is busy
+        }
         await frame();
         await frame();
         const cardGlidingBefore = card.getAnimations().length > 0;
