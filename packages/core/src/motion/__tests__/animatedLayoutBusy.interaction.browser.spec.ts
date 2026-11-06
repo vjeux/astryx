@@ -27,27 +27,28 @@ import {
   markElement,
   startBusyControl,
   startScreencast,
+  trackMarker,
   trackMarkers,
   writeEvidence,
-} from '@astryxdesign/interaction-harness';
+} from "@astryxdesign/interaction-harness";
 import {
   expect,
   test,
   type Locator,
   type Page,
-} from '@astryxdesign/a11y-spec/playwright';
+} from "@astryxdesign/a11y-spec/playwright";
 import {
   DEFAULT_STORYBOOK_DIR,
   serveStorybook,
   type StaticServer,
-} from '@astryxdesign/a11y-spec/storybook';
+} from "@astryxdesign/a11y-spec/storybook";
 
 // Linux WebKit hands the glide to its compositor late. Nothing moves for the
 // first 30 to 100 ms of the block, so too little of the curve is left to judge.
 // Apple's WebKit (the iOS 26.2 Simulator) moves on every frame from the start.
 test.skip(
-  ({browserName}) => browserName === 'webkit',
-  'Linux WebKit starts the glide on its compositor 30\u2013100 ms late; Apple\u2019s WebKit does not',
+  ({ browserName }) => browserName === "webkit",
+  "Linux WebKit starts the glide on its compositor 30\u2013100 ms late; Apple\u2019s WebKit does not",
 );
 
 let storybook: StaticServer | undefined;
@@ -92,18 +93,18 @@ interface GlideRead {
 /** Loads a story and waits for its first render, its fonts and two frames. */
 async function openStory(page: Page, story: string): Promise<void> {
   await page.goto(
-    `${storybook?.origin ?? ''}/iframe.html?id=${story}&viewMode=story`,
+    `${storybook?.origin ?? ""}/iframe.html?id=${story}&viewMode=story`,
   );
   await page
-    .locator('#storybook-root > *')
+    .locator("#storybook-root > *")
     .first()
-    .waitFor({state: 'attached'});
+    .waitFor({ state: "attached" });
   await page.addStyleTag({
     content: `* { --duration-medium-min: ${GLIDE_MS}ms !important; --duration-medium: ${GLIDE_MS}ms !important; }`,
   });
   await page.evaluate(async () => {
     await document.fonts.ready;
-    await new Promise<void>(resolve => {
+    await new Promise<void>((resolve) => {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
     });
   });
@@ -121,11 +122,11 @@ async function clickThenBlock(
   page: Page,
   trigger: Locator,
   follower: Locator,
-  axis: 'x' | 'y',
-): Promise<{busy: BlockedWindow; glides: GlideRead[]}> {
+  axis: "x" | "y",
+): Promise<{ busy: BlockedWindow; glides: GlideRead[] }> {
   const handle = await follower.elementHandle();
   await trigger.evaluate(
-    (element, {duration, carried, along}) => {
+    (element, { duration, carried, along }) => {
       const offsetOf = (value: unknown) => {
         const match = /^(-?[\d.e+-]+)px(?:\s+(-?[\d.e+-]+)px)?/.exec(
           String(value),
@@ -133,10 +134,10 @@ async function clickThenBlock(
         if (match == null) {
           return 0;
         }
-        return along === 'x' ? Number(match[1]) : Number(match[2] ?? 0);
+        return along === "x" ? Number(match[1]) : Number(match[2] ?? 0);
       };
       element.addEventListener(
-        'click',
+        "click",
         () => {
           requestAnimationFrame(() => {
             const glides: GlideRead[] = [];
@@ -149,7 +150,7 @@ async function clickThenBlock(
                 const effect = animation.effect as KeyframeEffect;
                 const frames = effect
                   .getKeyframes()
-                  .filter(frame => typeof frame.translate === 'string');
+                  .filter((frame) => typeof frame.translate === "string");
                 if (frames.length < 2) {
                   continue;
                 }
@@ -171,7 +172,7 @@ async function clickThenBlock(
               while (now - from < duration) {
                 now = performance.now();
               }
-              (window as unknown as {busy: unknown}).busy = {
+              (window as unknown as { busy: unknown }).busy = {
                 busy: {
                   from: performance.timeOrigin + from,
                   to: performance.timeOrigin + now,
@@ -182,18 +183,21 @@ async function clickThenBlock(
             }, 0);
           });
         },
-        {capture: true, once: true},
+        { capture: true, once: true },
       );
     },
-    {duration: BLOCK_MS, carried: handle, along: axis},
+    { duration: BLOCK_MS, carried: handle, along: axis },
   );
   await trigger.click();
   const signal = await page.waitForFunction(
     () =>
-      (window as unknown as {busy?: {busy: BlockedWindow; glides: GlideRead[]}})
-        .busy,
+      (
+        window as unknown as {
+          busy?: { busy: BlockedWindow; glides: GlideRead[] };
+        }
+      ).busy,
     undefined,
-    {polling: 50, timeout: 0},
+    { polling: 50, timeout: 0 },
   );
   return (await signal.jsonValue()) as {
     busy: BlockedWindow;
@@ -236,14 +240,14 @@ async function busyGlide(
   {
     trigger,
     follower,
-    axis = 'y',
-  }: {trigger: Locator; follower: Locator; axis?: 'x' | 'y'},
+    axis = "y",
+  }: { trigger: Locator; follower: Locator; axis?: "x" | "y" },
 ) {
   await markElement(follower);
   // Before the glide, so the control is on the compositor first.
   await startBusyControl(page);
   const cast = await startScreencast(page);
-  const {busy, glides} = await clickThenBlock(page, trigger, follower, axis);
+  const { busy, glides } = await clickThenBlock(page, trigger, follower, axis);
   // Until every animation but the control's has ended.
   await expect
     .poll(async () =>
@@ -252,10 +256,10 @@ async function busyGlide(
           document
             .getAnimations()
             .filter(
-              a =>
+              (a) =>
                 !(
                   (a.effect as KeyframeEffect | null)?.target?.closest(
-                    '[data-harness-control]',
+                    "[data-harness-control]",
                   ) ?? false
                 ),
             ).length,
@@ -265,19 +269,20 @@ async function busyGlide(
   // Where the marker rests, read from the page. A glide frozen through the
   // block stays far from it, and a frame after the block can still be stale.
   const settledAt = await follower.evaluate((el, along) => {
-    const chip = el.querySelector('[data-harness-marker-chip]');
+    const chip = el.querySelector("[data-harness-marker-chip]");
     if (chip == null) {
-      throw new Error('the follower lost its marker chip');
+      throw new Error("the follower lost its marker chip");
     }
     const box = chip.getBoundingClientRect();
-    return along === 'x' ? box.x : box.y;
+    return along === "x" ? box.x : box.y;
   }, axis);
   const frames = await cast.stop();
+  const tNew0 = Date.now();
   // The cast's step, from one frame in the block.
   const [probe] = await trackMarkers(
     page,
-    [frames.find(f => f.t >= busy.from) ?? frames[frames.length - 1]],
-    {colors: [MARKER_RGB]},
+    [frames.find((f) => f.t >= busy.from) ?? frames[frames.length - 1]],
+    { colors: [MARKER_RGB] },
   );
   const step = castStep(probe, axis);
   // Where the glide's keyframes first move the follower by less than a cast
@@ -293,14 +298,20 @@ async function busyGlide(
     readable += 1;
   }
   // The part of the block the judgment reads ends there.
-  const judgedWindow = {...busy, to: Math.min(busy.to, readable)};
+  const judgedWindow = { ...busy, to: Math.min(busy.to, readable) };
   // Only the frames the proof reads are decoded, each once for both colors.
   // On a loaded machine every decode counts.
-  const [tracked, control] = await trackMarkers(
-    page,
-    frames.filter(f => f.t <= judgedWindow.to + BUSY_PROOF_LOOKAROUND_MS),
-    {colors: [MARKER_RGB, CONTROL_RGB]},
+  const near = frames.filter(
+    (f) => f.t <= judgedWindow.to + BUSY_PROOF_LOOKAROUND_MS,
   );
+  const [tracked, control] = await trackMarkers(page, near, {
+    colors: [MARKER_RGB, CONTROL_RGB],
+  });
+  const tNew = Date.now() - tNew0;
+  const tOld0 = Date.now();
+  const trackedAll = await trackMarker(page, frames);
+  const controlAll = await trackMarker(page, frames, { rgb: CONTROL_RGB });
+  const tOld = Date.now() - tOld0;
   const proof = busyWindowProof(tracked, judgedWindow, {
     axis,
     settledWithinSteps: 2,
@@ -308,8 +319,20 @@ async function busyGlide(
     minJudgedFrames: MIN_JUDGED_FRAMES,
     control,
   });
-  const at = (box: (typeof tracked)[number]['box']) =>
-    box == null ? null : axis === 'x' ? box.x : box.y;
+  const proofAll = busyWindowProof(trackedAll, judgedWindow, {
+    axis,
+    settledWithinSteps: 2,
+    settledAt,
+    minJudgedFrames: MIN_JUDGED_FRAMES,
+    control: controlAll,
+  });
+  console.log(
+    `EQUIV ${name} frames=${frames.length} decodedNew=${1 + near.length} decodedOld=${2 * frames.length} msNew=${tNew} msOld=${tOld} same=${JSON.stringify(proof) === JSON.stringify(proofAll)} ok=${proof.ok} okAll=${proofAll.ok}`,
+  );
+  expect(proofAll).toEqual(proof);
+
+  const at = (box: (typeof tracked)[number]["box"]) =>
+    box == null ? null : axis === "x" ? box.x : box.y;
   await writeEvidence(
     `busy-main-thread/animated-layout-${name}`,
     {
@@ -336,67 +359,67 @@ async function busyGlide(
   const summary = `judged until +${(readable - busy.from).toFixed(0)} ms (${step} px cast step): ${proof.summary}`;
   test
     .info()
-    .annotations.push({type: 'busy-main-thread', description: summary});
-  return {busy, proof, summary, glides, readableMs: readable - busy.from};
+    .annotations.push({ type: "busy-main-thread", description: summary });
+  return { busy, proof, summary, glides, readableMs: readable - busy.from };
 }
 
 /** Marks the app div whose text starts with `text` for a test to find. */
 async function markAppDiv(page: Page, text: string): Promise<Locator> {
-  await page.evaluate(t => {
-    const element = [...document.querySelectorAll('div')].find(el =>
+  await page.evaluate((t) => {
+    const element = [...document.querySelectorAll("div")].find((el) =>
       el.firstChild?.textContent?.trim().startsWith(t),
     );
-    element?.setAttribute('data-test-id', 'follower');
+    element?.setAttribute("data-test-id", "follower");
   }, text);
   return page.locator('[data-test-id="follower"]');
 }
 
 function expectKeptAdvancing(run: Awaited<ReturnType<typeof busyGlide>>) {
   expect(run.busy.spanMs).toBeGreaterThanOrEqual(BLOCK_MS);
-  expect(run.glides.length, 'a glide carries the follower').toBeGreaterThan(0);
+  expect(run.glides.length, "a glide carries the follower").toBeGreaterThan(0);
   expect(run.proof.verdict.failures, run.summary).toEqual([]);
   expect(run.proof.monotonic, run.summary).toBe(true);
 }
 
-test.describe('spec:AST-094 FR5: the shared glide keeps advancing through a blocked main thread', () => {
-  test('the content after a Collapsible keeps moving on the frames the compositor control moves', async ({
+test.describe("spec:AST-094 FR5: the shared glide keeps advancing through a blocked main thread", () => {
+  test("the content after a Collapsible keeps moving on the frames the compositor control moves", async ({
     page,
   }) => {
-    await openStory(page, 'core-animated-layout--animated-layout');
-    const follower = await markAppDiv(page, 'A plain app div');
+    await openStory(page, "core-animated-layout--animated-layout");
+    const follower = await markAppDiv(page, "A plain app div");
     expectKeptAdvancing(
-      await busyGlide(page, 'collapsible', {
-        trigger: page.getByRole('button', {name: 'Shipping details'}),
+      await busyGlide(page, "collapsible", {
+        trigger: page.getByRole("button", { name: "Shipping details" }),
         follower,
       }),
     );
   });
 
-  test('the rows after a TreeList branch keep moving on the frames the compositor control moves', async ({
+  test("the rows after a TreeList branch keep moving on the frames the compositor control moves", async ({
     page,
   }) => {
-    await openStory(page, 'core-animated-layout--animated-layout');
+    await openStory(page, "core-animated-layout--animated-layout");
     expectKeptAdvancing(
-      await busyGlide(page, 'treelist', {
+      await busyGlide(page, "treelist", {
         trigger: page.locator('[data-tree-id="docs"] [data-tree-toggle]'),
         follower: page.locator('[data-tree-id="notes"]'),
       }),
     );
   });
 
-  test('the rows after a Table row keep moving on the frames the compositor control moves', async ({
+  test("the rows after a Table row keep moving on the frames the compositor control moves", async ({
     page,
   }) => {
-    await openStory(page, 'core-tablerowexpansion--gliding-rows');
+    await openStory(page, "core-tablerowexpansion--gliding-rows");
     // A row takes no child, so its first cell, which rides its glide, carries
     // the marker.
     expectKeptAdvancing(
-      await busyGlide(page, 'table-row', {
-        trigger: page.locator('[data-expansion-toggle]').first(),
+      await busyGlide(page, "table-row", {
+        trigger: page.locator("[data-expansion-toggle]").first(),
         follower: page
-          .locator('tr[data-expansion-key]')
+          .locator("tr[data-expansion-key]")
           .nth(1)
-          .locator('td')
+          .locator("td")
           .first(),
       }),
     );
