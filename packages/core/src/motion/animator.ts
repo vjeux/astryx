@@ -16,90 +16,95 @@
  * HOW IT RUNS
  *
  * Each animated value (x, y, rotate, scaleX, scaleY, opacity) follows a
- * closed-form curve: a spring (spring.ts), momentum curves its caller built (a
- * UIScrollView coast with an edge bounce, coast.ts), a curve handed to `play` (a spring chasing a moving
- * target, a fitted UIKit curve), or a Reduced Motion cross-fade. The curves are baked into
- * Web Animations keyframes on the individual transform properties (`translate`,
- * `rotate`, `scale`) and `opacity`, sampled adaptively until linear
- * interpolation between keyframes is within a fraction of a pixel, and played
- * with `easing: linear`. The browser then runs them on its compositor: they
- * keep advancing every frame while JavaScript is busy (`spec:AST-094` FR5).
+ * closed-form curve. That curve is a spring (spring.ts) or momentum curves
+ * its caller built (a UIScrollView coast with an edge bounce, coast.ts). It
+ * can also be a curve handed to `play` (a spring chasing a moving target, a
+ * fitted UIKit curve), or a Reduced Motion cross-fade. The curves are baked
+ * into Web Animations keyframes on the individual transform properties
+ * (`translate`, `rotate`, `scale`) and `opacity`. The keyframes are sampled
+ * adaptively until linear interpolation between them is within a fraction of
+ * a pixel, and played with `easing: linear`. The browser then runs them on
+ * its compositor: they keep advancing every frame while JavaScript is busy
+ * (`spec:AST-094` FR5).
  *
  * Why keyframes and not one `linear()` easing: measured in Chromium, both
- * forms are composited and equally precise for the same samples, but WebKit's
- * Core Animation path refuses to accelerate an effect whose easing is
- * `linear()` with points (KeyframeEffect::canBeAccelerated) unless its newer
- * threaded animations are on, so on older iOS Safari a `linear()` spring would
- * run on the main thread. Linear segments between keyframes map directly onto
- * a Core Animation keyframe animation. Why the individual properties and not
- * `transform`: each can be animated, retargeted or driven by a finger on its
- * own (a drag writes `translate` while `scale` keeps springing), with no
- * additive composition, which neither engine composites.
+ * forms are composited and equally precise for the same samples. But
+ * WebKit's Core Animation path refuses to accelerate an effect whose easing
+ * is `linear()` with points (KeyframeEffect::canBeAccelerated). It refuses
+ * unless its newer threaded animations are on, so on older iOS Safari a
+ * `linear()` spring would run on the main thread. Linear segments between
+ * keyframes map directly onto a Core Animation keyframe animation. Why the
+ * individual properties and not `transform`: each can be animated,
+ * retargeted or driven by a finger on its own. A drag writes `translate`
+ * while `scale` keeps springing, with no additive composition, which neither
+ * engine composites.
  *
- * The page never reads the DOM to know where something is: `get` and
+ * The page never reads the DOM to know where something is. `get` and
  * `getVelocity` evaluate the curves at a time on the document timeline's
- * clock (`performance.now()` by default), so a finger can grab anything
- * mid-flight from the value on screen, and a new target starts from the
- * current value with the current velocity (`spec:AST-094` FR6). A gesture's release velocity
- * can be handed in explicitly instead.
+ * clock (`performance.now()` by default). So a finger can grab anything
+ * mid-flight from the value on screen. A new target starts from the current
+ * value with the current velocity (`spec:AST-094` FR6). A gesture's release
+ * velocity can be handed in explicitly instead.
  *
  * No frame shows a value the element is not at. While a curve runs, the
- * element's inline style holds the value the curve starts from (the value on
- * screen when it was built), so a frame painted before the compositor has the
- * curve (WebKit can receive a new curve a few updates late) shows the element
- * where it is, never where it is going. The keyframes hold the end state for a
- * while after the curve ends (END_HOLD_MS); the main thread retires a finished
- * animation as soon as it runs after the curve's end, writing the end values
- * inline in the same task that cancels it, so nothing moves. The hold matters
- * when the curve ends during a main-thread block: WebKit's compositor ends an
- * animation by falling back to the value its main thread last committed.
+ * element's inline style holds the value the curve starts from: the value on
+ * screen when it was built. WebKit can receive a new curve a few updates
+ * late. So a frame painted before the compositor has the curve shows the
+ * element where it is, never where it is going. The keyframes hold the end
+ * state for a while after the curve ends (END_HOLD_MS). The main thread
+ * retires a finished animation as soon as it runs after the curve's end. It
+ * writes the end values inline in the same task that cancels it, so nothing
+ * moves. The hold matters when the curve ends during a main-thread block.
+ * WebKit's compositor ends an animation by falling back to the value its
+ * main thread last committed.
  *
- * Start time: a call that starts from rest (nothing on its channels moving,
- * no `options.at`) gets no start time, so the browser starts it when it
+ * Start time. A call that starts from rest (nothing on its channels moving,
+ * no `options.at`) gets no start time. So the browser starts it when it
  * commits it, as Core Animation starts an animation at its transaction's
- * commit: a main-thread block before that frame delays the motion instead of
- * skipping into it. Everything the call starts, and every
- * call from rest in the same task, starts at that one time, which
- * `handle.started` reports. Where the compositor starts it and the page
- * learns that start only a frame or more later (Chromium), the call starts
- * at the frame that commits it, the start the compositor takes, so a
- * retarget or a rebase before then continues from the frame on screen. A
- * call that continues motion on
- * screen (a retarget, a catch) keeps an explicit start at the call time, or
- * `options.at` to line several animators up, so the new curve continues
- * from the frame on screen. Keyframes are sampled from the call's start, so
- * a value that keeps moving through a rebuild stays on its curve to the
- * frame. `options.start` changes that per call: `'commit'` dates a retarget
- * by the browser's commit as well, and `'presented'` creates the animations
- * of a call from rest two frames later, once its element at rest has been
- * presented (a UI process that applies commits late); a retarget still starts
- * now, from the value and velocity on screen.
- * `handle.curve(property)` hands out the curve a call plays, so a
- * companion can follow it on the same clock.
+ * commit. A main-thread block before that frame then delays the motion
+ * instead of skipping into it. Everything the call starts, and every call
+ * from rest in the same task, starts at that one time, which
+ * `handle.started` reports. In some engines the compositor starts it, and
+ * the page learns that start only a frame or more later (Chromium). There
+ * the call starts at the frame that commits it, the start the compositor
+ * takes. So a retarget or a rebase before then continues from the frame on
+ * screen. A call that continues motion on screen (a retarget, a catch) keeps
+ * an explicit start at the call time. It can take `options.at` instead, to
+ * line several animators up. So the new curve continues from the frame on
+ * screen. Keyframes are sampled from the call's start, so a value that keeps
+ * moving through a rebuild stays on its curve to the frame. `options.start`
+ * changes that per call. `'commit'` dates a retarget by the browser's commit
+ * as well. `'presented'` creates the animations of a call from rest two
+ * frames later, once its element at rest has been presented. That serves a
+ * UI process that applies commits late. A retarget still starts now, from
+ * the value and velocity on screen. `handle.curve(property)` hands out the
+ * curve a call plays, so a companion can follow it on the same clock.
  * `options.additive` retargets as UIKit does: the old curve keeps going and a
- * curve of the change between the targets is added on top, baked into one
- * animation (two animations on one property leave the compositor in both
- * engines), so the retarget keeps the velocity on screen.
+ * curve of the change between the targets is added on top. Both are baked
+ * into one animation, because two animations on one property leave the
+ * compositor in both engines. So the retarget keeps the velocity on screen.
  *
  * WebKit dates an animation created just before a block at its last frame
- * time before the block, where the first frame after it would show the
- * motion skipped into its curve; when the call's own task ran on more than
- * two frames, the call's first read of that start moves it to that read, so
- * WebKit delays the motion as Chromium's commit does (startAfterBlock). Every
- * call of that task moves together, and a shorter task or a read that other
- * tasks delay keeps the browser's start, so a sequence chained on a call's
- * end (a Reduce Motion cross-fade's second half) keeps its clock.
+ * time before the block. The first frame after the block would then show
+ * the motion skipped into its curve. When the call's own task ran on more
+ * than two frames, the call's first read of that start moves it to that
+ * read. So WebKit delays the motion as Chromium's commit does
+ * (startAfterBlock). Every call of that task moves together. A shorter task,
+ * or a read that other tasks delay, keeps the browser's start. So a sequence
+ * chained on a call's end (a Reduce Motion cross-fade's second half) keeps
+ * its clock.
  *
  * Promotion: Mobile Safari runs an animation whose start time is set from
- * script on its compositor at its first commit only if the element (or the
- * pseudo-element) already has a compositing layer; without one, a block
- * right after that commit freezes it (iOS 26.2 simulator: 2 of 7 runs kept
- * moving, 0 of 5 on a ::before). Every animation the animator creates, and
- * every `set` (unless it passes `{promote: false}`), therefore promotes its
- * channels in the same task: inline
- * `will-change` on the element, merged with the element's own, or the custom
- * property `--astryx-motion-will-change-<pseudo>` on the host for a
- * pseudo-element, whose style opts in with
+ * script on its compositor at its first commit. It does so only if the
+ * element (or the pseudo-element) already has a compositing layer. Without
+ * one, a block right after that commit freezes it. On the iOS 26.2
+ * simulator, 2 of 7 runs kept moving, and 0 of 5 on a ::before. Every
+ * animation the animator creates, and every `set` (unless it passes
+ * `{promote: false}`), therefore promotes its channels in the same task. For
+ * the element, that is inline `will-change`, merged with the element's own.
+ * For a pseudo-element, it is the custom property
+ * `--astryx-motion-will-change-<pseudo>` on the host. The pseudo-element's
+ * style opts in with
  * `will-change: var(--astryx-motion-will-change-before, auto)`. That is
  * enough (5 of 5, and 4 of 4 through the animator); promotion ends
  * PROMOTION_LINGER_MS after the last motion.
@@ -110,47 +115,48 @@
  * - an animation created in the task that first displays a dialog stays on
  *   the main thread: start it in the next animation frame;
  * - after a long block, an animation frame's timestamp is when the frame was
- *   due, so passing it as `at` starts the curve in the past: keep the default
+ *   due. So passing it as `at` starts the curve in the past: keep the default
  *   clock;
- * - WebKit does not promote the siblings a moving layer will cross, so a
+ * - WebKit does not promote the siblings a moving layer will cross. So a
  *   moving layer below content can paint over it: give it `z-index: -1`
  *   inside a parent with `isolation: isolate`;
  * - a tap-driven start can show its first moving frame two to four frames
  *   into the curve (simulator, not yet confirmed on a device).
  *
  * Reduced Motion (design:reduced-motion): with `prefers-reduced-motion:
- * reduce`, every `animate` and `play` (travel or opacity, on a spring or any
- * curve) is replaced, and nothing moves, scales or springs. The planner
- * (reducedMotionPlan.ts) decides what each call becomes; the animator
- * applies the plan and runs its landings:
+ * reduce`, every `animate` and `play` is replaced. That covers travel and
+ * opacity, on a spring or any curve. Nothing moves, scales or springs. The
+ * planner (reducedMotionPlan.ts) decides what each call becomes; the
+ * animator applies the plan and runs its landings:
  * - on a coarse primary pointer, or for a call started by a touch drag's
- *   release on any pointer (`touchRelease`), it becomes (DR2) an
- *   opacity-only cross-fade of `timing.reducedMotionCrossFadeMs` (200 ms)
- *   on `timing.curves.move`:
+ *   release on any pointer (`touchRelease`), it becomes a cross-fade (DR2).
+ *   It is opacity-only, `timing.reducedMotionCrossFadeMs` (200 ms) long, on
+ *   `timing.curves.move`:
  *   - entering (opacity rises from 0 in the same call, or `crossfadeAs:
  *     'entrance'`): lands in its new place at once and fades in;
  *   - leaving (opacity falls to 0, or `crossfadeAs: 'exit'`): fades out in
  *     place, then lands;
  *   - an opacity change alone: fades to its value;
- *   - otherwise: dips (fades out, lands, fades back in);
- *   travel lands with a plain style write while the element is transparent,
- *   never as an animated transform; a busy main thread only keeps it
- *   transparent longer, and a dip fades back in from the landing; a later
- *   call that lands too carries a landing still waiting (two calls in one
- *   frame land together), and a later opacity change lands it at once;
+ *   - otherwise: dips (fades out, lands, fades back in).
+ *   Travel lands with a plain style write while the element is transparent,
+ *   never as an animated transform. A busy main thread only keeps it
+ *   transparent longer, and a dip fades back in from the landing. A later
+ *   call that lands too carries a landing still waiting: two calls in one
+ *   frame land together. A later opacity change lands it at once.
  * - on any other primary pointer (DR3) it completes at once.
  * No call option and no role value lengthens the fade or keeps travel (DR4):
  * the fade's length is not a role.
  *
  * Momentum under Reduce Motion (`design:reduced-motion` DR2, DEC-2): a
- * decay's momentum continues the velocity a finger handed it on release
- * (UIScrollView's coast after a flick, with its bounce at an edge), so it
- * keeps its motion, as native momentum does: it is direct movement, not a
+ * decay's momentum continues the velocity a finger handed it on release.
+ * That is UIScrollView's coast after a flick, with its bounce at an edge. So
+ * it keeps its motion, as native momentum does: it is direct movement, not a
  * transition. A curve marked `isTransition` (coast()'s spring back from past
- * an edge), like a spring a component starts on release toward a target it
- * picks (a detent, a page), is a transition: it plays through the Reduce
- * Motion policy above, a cross-fade on a coarse pointer or after a touch
- * release (`touchRelease`) and at once elsewhere (DR2, DR3).
+ * an edge) is a transition. So is a spring a component starts on release
+ * toward a target it picks (a detent, a page). A transition plays through
+ * the Reduce Motion policy above. It cross-fades on a coarse pointer or
+ * after a touch release (`touchRelease`), and completes at once elsewhere
+ * (DR2, DR3).
  *
  * Roles: every spring and curve the animator plays passes through
  * resolveMotion.ts, which names the motion role it plays. `springs.settle`
@@ -244,8 +250,8 @@ export interface AnimateOptions {
   touchRelease?: boolean;
   /**
    * Which way the substituted cross-fade goes when the call's own opacity
-   * does not say (a sheet slides in or out without fading): `'entrance'`
-   * lands the travel at once and fades the opacity in from 0; `'exit'` fades
+   * does not say (a sheet slides in or out without fading). `'entrance'`
+   * lands the travel at once and fades the opacity in from 0. `'exit'` fades
    * it out in place, then lands the travel and returns the opacity to its
    * value. The call's targets stay the end state; without Reduced Motion this
    * changes nothing.
@@ -269,16 +275,16 @@ export interface AnimateOptions {
   start?: 'commit' | 'presented';
   /**
    * A call that retargets a curve on screen adds to it instead of replacing
-   * it, as UIKit's animations do: the old curve keeps going (past its end, at
-   * its target) and a spring of the difference between the two targets runs
-   * from 0 on top, in the same animation. Its value and velocity at the call
-   * are the old curve's, so whichever frame first shows it (WebKit can apply
-   * a new curve tens of ms late), nothing steps back. Ignored for a property
-   * at rest or still waiting for the browser's start, for a property given a
-   * velocity, and under Reduced Motion. Use it for a played curve that starts
-   * at rest (an eased reversal) while the property moves; a spring retarget
-   * on the same spring moves the same either way, and a curve that already
-   * continues the velocity on screen must not add to it.
+   * it, as UIKit's animations do. The old curve keeps going, past its end, at
+   * its target. A spring of the difference between the two targets runs from
+   * 0 on top, in the same animation. Its value and velocity at the call are
+   * the old curve's. WebKit can apply a new curve tens of ms late, but
+   * whichever frame first shows it, nothing steps back. Ignored for a
+   * property at rest or still waiting for the browser's start, for a property
+   * given a velocity, and under Reduced Motion. Use it for a played curve
+   * that starts at rest (an eased reversal) while the property moves. A
+   * spring retarget on the same spring moves the same either way. A curve
+   * that already continues the velocity on screen must not add to it.
    */
   additive?: boolean;
 }
@@ -299,7 +305,7 @@ export interface MotionCurve {
   velocity(t: number): number;
   /**
    * A transition started on release rather than a throw's momentum (a
-   * spring back from past an edge): under Reduce Motion it is no coast and
+   * spring back from past an edge). Under Reduce Motion it is no coast and
    * cross-fades like `animate` (`design:reduced-motion` DR2).
    */
   readonly isTransition?: boolean;
@@ -310,12 +316,12 @@ export interface SetOptions {
   /**
    * Whether the write promotes its channels to a compositing layer, as a
    * drag's per-frame writes need so each is a composite only (default
-   * true). `false` writes the values and nothing else: a one-off switch that
-   * must not give its element a layer, such as a veil under a sticky header
-   * switched during a programmatic scroll (on iOS 26.2, a layer there blanks
-   * the header's painted items for about two frames). A channel another
-   * motion keeps promoted stays promoted, and a channel with other motion
-   * still running gets its animation's layer as usual.
+   * true). `false` writes the values and nothing else. It suits a one-off
+   * switch that must not give its element a layer. An example is a veil
+   * under a sticky header switched during a programmatic scroll. On iOS 26.2,
+   * a layer there blanks the header's painted items for about two frames. A
+   * channel another motion keeps promoted stays promoted, and a channel with
+   * other motion still running gets its animation's layer as usual.
    */
   promote?: boolean;
 }
@@ -353,9 +359,9 @@ export interface MotionHandle {
    */
   readonly finished: Promise<boolean>;
   /**
-   * When the motion started on the document timeline (ms): for a call from
-   * rest, the time the browser committed it (a block before the first frame
-   * moves it later); otherwise the call time, or `at`.
+   * When the motion started on the document timeline (ms). For a call from
+   * rest, it is the time the browser committed it, and a block before the
+   * first frame moves it later. Otherwise it is the call time, or `at`.
    */
   readonly started: Promise<number>;
   /** Presentation value of a property at `time` (default now). */
@@ -385,11 +391,11 @@ export interface MotionHandle {
  */
 export interface Animator {
   /**
-   * What Reduced Motion makes of a call on this element right now:
-   * `'off'` (motion plays), `'crossfade'` (an opacity-only fade: a coarse
-   * pointer, or `touchRelease`) or `'instant'` (any other pointer). For
-   * feedback that has no fade of its own (a press lift, a lens chasing the
-   * finger): skip it unless `'off'`.
+   * What Reduced Motion makes of a call on this element right now. `'off'`:
+   * motion plays. `'crossfade'`: an opacity-only fade, on a coarse pointer or
+   * with `touchRelease`. `'instant'`: any other pointer. For feedback that has
+   * no fade of its own (a press lift, a lens chasing the finger): skip it
+   * unless `'off'`.
    */
   reducedMotion(options?: {
     touchRelease?: boolean;
@@ -407,8 +413,8 @@ export interface Animator {
   getVelocity(property: MotionProperty | 'scale', time?: number): number;
   /**
    * Puts values in place now, ending their animations: the per-frame write
-   * of a drag (one style write per channel, no animation when nothing else
-   * on the channel is moving).
+   * of a drag. It is one style write per channel, with no animation when
+   * nothing else on the channel is moving.
    */
   set(values: MotionValues, options?: SetOptions): void;
   /** Springs to `to` from the presentation values. */
@@ -431,9 +437,9 @@ export interface Animator {
     options?: AnimateOptions,
   ): MotionHandle;
   /**
-   * Plays momentum curves as given, on the translate axes only: a released
-   * scroll view's coast and edge bounce, which `coast()` (coast.ts) builds
-   * from a finger's release velocity. Under Reduce Motion momentum keeps
+   * Plays momentum curves as given, on the translate axes only. Those are a
+   * released scroll view's coast and edge bounce, which `coast()` (coast.ts)
+   * builds from a finger's release velocity. Under Reduce Motion momentum keeps
    * its motion: it continues a throw, direct movement (design:reduced-motion
    * DR2, DEC-2). A curve marked `isTransition` (coast()'s spring back from
    * past an edge) is a transition and plays through the Reduce Motion
@@ -449,9 +455,9 @@ export interface Animator {
   ): MotionHandle;
   /**
    * Moves properties by the given amounts at once, as when a layout shift
-   * moves the element under them: a property moving on a spring keeps its
-   * spring, velocity and target (the curve restarts from the shifted value);
-   * any other moving curve shifts whole, its end included; a resting
+   * moves the element under them. A property moving on a spring keeps its
+   * spring, velocity and target, and the curve restarts from the shifted
+   * value. Any other moving curve shifts whole, its end included. A resting
    * property takes the offset and stays.
    */
   rebase(deltas: MotionValues, options?: Pick<AnimateOptions, 'at'>): void;
@@ -497,10 +503,11 @@ interface Segment {
 
 /**
  * A call started from rest. Its animations are created without a start time,
- * so the browser starts them when it commits them, as Core Animation starts
- * an animation at its transaction's commit: a main-thread block before that
- * frame delays the motion instead of skipping into it. Until then the curves
- * read from the call time; once the browser's start is known they move to it.
+ * so the browser starts them when it commits them. Core Animation starts an
+ * animation at its transaction's commit the same way. A main-thread block
+ * before that frame then delays the motion instead of skipping into it. Until
+ * then the curves read from the call time; once the browser's start is known
+ * they move to it.
  */
 interface StartGroup {
   readonly provisional: number;
@@ -520,7 +527,7 @@ interface StartGroup {
   framed?: boolean;
   /**
    * Made in an animation-frame callback of an animator's own (a presented
-   * call's second frame): the browser commits its animations in that frame,
+   * call's second frame). The browser commits its animations in that frame,
    * so the frame after it is not the one that starts them.
    */
   madeInFrame?: boolean;
@@ -554,12 +561,12 @@ interface HandleState {
 
 /**
  * Reduced Motion travel that lands with a plain style write while the
- * element is fully transparent (never an animated transform), then, in a
- * dip, the fade back in.
+ * element is fully transparent, never as an animated transform. In a dip,
+ * the fade back in follows.
  */
 interface Landing {
   /**
-   * The call that settles when the landing (and its fade back in) ends; a
+   * The call that settles when the landing (and its fade back in) ends. A
    * call that joins the dip takes it over, and the call it replaces is
    * carried.
    */
@@ -643,11 +650,11 @@ export const SETTLE_THRESHOLD: Record<MotionProperty, number> = {
 };
 
 /**
- * Keyframes are added until linear interpolation is within this: a quarter of
- * a device pixel (this quarter of a CSS pixel, divided by the device pixel
- * ratio where it is above 1), a twentieth of a degree, a 2000th of the size,
- * about one step of an 8-bit alpha. Every one is below what a moving element
- * can show.
+ * Keyframes are added until linear interpolation is within this. That is a
+ * quarter of a device pixel: this quarter of a CSS pixel, divided by the
+ * device pixel ratio where it is above 1. It is also a twentieth of a degree,
+ * a 2000th of the size, and about one step of an 8-bit alpha. Every one is
+ * below what a moving element can show.
  */
 const SAMPLE_TOLERANCE: Record<MotionProperty, number> = {
   x: 0.25,
@@ -678,7 +685,7 @@ const MAX_DURATION_MS = 30_000;
 
 /**
  * The task calls from rest are made in, shared by every call made in it
- * (every animator's), so one motion's parts that are separate calls start
+ * (every animator's). So one motion's parts that are separate calls start
  * together (startAfterBlock).
  */
 interface TaskMark {
@@ -717,23 +724,23 @@ const MAX_KEYFRAMES = 1200;
 /**
  * The keyframes hold the end state this long after a curve ends. An engine
  * whose compositor ends an animation while the main thread is blocked falls
- * back to the value its main thread last committed, the curve's start
- * (WebKit on Linux); the hold keeps the end state on screen through any such
- * block. It only stretches the last keyframe. The main thread retires the
- * animation as soon as it runs after the curve's end.
+ * back to the value its main thread last committed. That value is the
+ * curve's start (WebKit on Linux). The hold keeps the end state on screen
+ * through any such block. It only stretches the last keyframe. The main
+ * thread retires the animation as soon as it runs after the curve's end.
  *
  * Why a tail inside the curve's own animation, with a bound (measured Oct 24
  * 2026; do not replace it without these proofs):
- * - WebKit on Linux (WebKitGTK and WPE) ignores `fill` on its compositor:
- *   a 400 ms move that ends during a 1 s main-thread block snaps back to the
- *   block-start position 13 ms after its end, with `fill: forwards` or with
- *   no fill, and holds with this tail. iOS 26.2 Mobile Safari holds the end
- *   in all three forms, so there the tail is unneeded but harmless (measured
- *   Oct 25 2026). The browser proof "a spring that ends inside the block
- *   keeps showing its end state" catches it.
+ * - WebKit on Linux (WebKitGTK and WPE) ignores `fill` on its compositor. A
+ *   400 ms move that ends during a 1 s main-thread block snaps back to the
+ *   block-start position 13 ms after its end. It does so with
+ *   `fill: forwards` or with no fill, and holds with this tail. iOS 26.2
+ *   Mobile Safari holds the end in all three forms, so there the tail is
+ *   unneeded but harmless (measured Oct 25 2026). The browser proof "a spring
+ *   that ends inside the block keeps showing its end state" catches it.
  * - A separate static animation of the end state under the curve would hold
- *   it without a bound, but two animations on one property push Chromium to
- *   run the curve on the main thread: the 1 s block proof moved in 0 of 57
+ *   it without a bound. But two animations on one property push Chromium to
+ *   run the curve on the main thread. The 1 s block proof moved in 0 of 57
  *   frames, the start-before-a-block proof failed, and seeking the curve
  *   broke.
  */
@@ -744,9 +751,9 @@ const RETIRE_RECHECK_MS = 100;
 
 /**
  * The soonest a running animation's end is looked for again, ms: a frame at
- * 60 Hz. WebKit moves an animation's currentTime once per frame, so a look
- * within a frame reads the frame's time, a fraction of a ms short of the end,
- * and a timer for that fraction would fire again before anything moved.
+ * 60 Hz. WebKit moves an animation's currentTime once per frame. So a look
+ * within a frame reads the frame's time, a fraction of a ms short of the end.
+ * A timer for that fraction would fire again before anything moved.
  */
 const END_RECHECK_MS = 1000 / 60;
 
@@ -796,8 +803,8 @@ const shared = new WeakMap<HTMLElement, Map<string, Animator>>();
 /**
  * The one animator for `element` (and `options.pseudoElement`), created on
  * first use. Code that animates one element from several places (a swipe on
- * x, a removal on y) shares it, so their curves compose in one `translate`
- * track and retargeting one axis leaves the other on its curve; two
+ * x, a removal on y) shares it. Their curves then compose in one `translate`
+ * track, and retargeting one axis leaves the other on its curve. Two
  * animators on one element would overwrite each other. `options` apply
  * when it is created; later calls get the same animator. Never `attach` it
  * elsewhere or `dispose` it: it lives as long as the element.
@@ -824,8 +831,8 @@ export function animatorFor(
  * The inline text for a channel: `format`, except that an identity transform
  * is written `none`. Any other value, `translate: 0px 0px` included, makes
  * the element the containing block of its `position: fixed` descendants and
- * a stacking context, so a motion back to identity would leave a fixed child
- * moved with its parent; Mobile Safari also lets no finger scroll a list
+ * a stacking context. So a motion back to identity would leave a fixed child
+ * moved with its parent. Mobile Safari also lets no finger scroll a list
  * inside an element left at `scale: 1`. At rest the identity leaves the
  * element entirely when its stylesheet agrees (`releaseIdentity`).
  */
@@ -893,11 +900,11 @@ function defaultNow(): number {
 
 /**
  * Whether the user asked for reduced motion (`prefers-reduced-motion:
- * reduce`), read at the moment of the call: the preference the animator uses
- * by default for its Reduce Motion substitution. A component never reads it
- * to pick a curve of its own: its motion settings do not override the
- * policy (design:reduced-motion DR4); `animator.reducedMotion()` or
- * `reducedMotionFade()` gives the policy's answer. False without a window
+ * reduce`), read at the moment of the call. It is the preference the
+ * animator uses by default for its Reduce Motion substitution. A component
+ * never reads it to pick a curve of its own: its motion settings do not
+ * override the policy (design:reduced-motion DR4). `animator.reducedMotion()`
+ * or `reducedMotionFade()` gives the policy's answer. False without a window
  * (server rendering).
  */
 export function defaultPrefersReducedMotion(): boolean {
@@ -918,7 +925,7 @@ export function defaultIsCoarsePointer(): boolean {
 }
 
 /**
- * The transition `decay` hands a Reduce Motion transition curve to: under
+ * The transition `decay` hands a Reduce Motion transition curve to. Under
  * Reduce Motion `animate` plays no spring (a cross-fade, or at once), so the
  * spring itself is never solved.
  */
@@ -983,8 +990,8 @@ export function createMotionEngine(
   /** Drops a finished, still-filling animation once the main thread runs. */
   const retireTimers = new Map<Channel, ReturnType<typeof setTimeout>>();
   /**
-   * Animations whose retire looks again at the next frame (scheduleRetire):
-   * each its own, so one still waiting for a replaced animation does not
+   * Animations whose retire looks again at the next frame (scheduleRetire).
+   * Each has its own, so one still waiting for a replaced animation does not
    * stand in for the next.
    */
   const retireFrames = new Set<Animation>();
@@ -1036,10 +1043,10 @@ export function createMotionEngine(
   /** The stylesheet's will-change when there is no inline value. */
   let sheetWillChange = '';
   /**
-   * Whether sheetWillChange holds a read of the element's current style: it
+   * Whether sheetWillChange holds a read of the element's current style. It
    * is read in the task after the element is attached, and again after each
-   * demotion, so a promotion (a drag's first move) reads no style in its
-   * own task.
+   * demotion. So a promotion (a drag's first move) reads no style in its own
+   * task.
    */
   let sheetWillChangeRead = false;
   /** The pending read of sheetWillChange, cancelled with its element. */
@@ -1231,11 +1238,11 @@ export function createMotionEngine(
   /**
    * Where translate is drawn relative to where the translate animation
    * started, read live when a touch lands. iOS WebKit keeps the transform it
-   * resolved when the animation went to the compositor (iOS 26.2: the
-   * element's rect and its hit tests stay at the start for the whole curve,
-   * while the computed style is live), until the animation is retired. A
-   * segment whose start still waits for the browser's commit has painted
-   * nothing of its curve yet.
+   * resolved when the animation went to the compositor, until the animation
+   * is retired. On iOS 26.2, the element's rect and its hit tests stay at the
+   * start for the whole curve, while the computed style is live. A segment
+   * whose start still waits for the browser's commit has painted nothing of
+   * its curve yet.
    */
   const drawnTranslate = (property: MotionProperty, time: number) => {
     const segment = segments.get(property);
@@ -1259,8 +1266,8 @@ export function createMotionEngine(
       syncPending();
       const time = now();
       // Any style write makes WebKit resolve the element's transform again,
-      // to the value drawn now, where it then stays (iOS 26.2: in the same
-      // task); a custom property changes nothing else.
+      // to the value drawn now, where it then stays. On iOS 26.2 that happens
+      // in the same task. A custom property changes nothing else.
       writePresentedResolve(target);
       hitTested = {x: drawnTranslate('x', time), y: drawnTranslate('y', time)};
     },
@@ -1293,7 +1300,7 @@ export function createMotionEngine(
     }
     touched.add(channel);
     const text = inlineText(channel, value);
-    // An unchanged value is not written: a style write invalidates the
+    // An unchanged value is not written. A style write invalidates the
     // element, and WebKit can repaint sticky content stale when that lands in
     // the frame a scroll commits.
     if (target.style.getPropertyValue(channel) !== text) {
@@ -1438,8 +1445,8 @@ export function createMotionEngine(
       group.latest?.delete(channel);
     }
     if (channel === 'translate') {
-      // The animation built below starts from the value at `time` (its first
-      // keyframe); a rebase or a retarget builds a new one, so a new start.
+      // The animation built below starts from the value at `time`, its first
+      // keyframe. A rebase or a retarget builds a new one, so a new start.
       hitTested = {x: valueAt('x', time), y: valueAt('y', time)};
       present(
         moving.length > 0 &&
@@ -1470,7 +1477,7 @@ export function createMotionEngine(
       return;
     }
     // The keyframes start where the animation will: at the waiting call's
-    // own time, which its start moves to the browser's (resolveGroup), so a
+    // own time, which its start moves to the browser's (resolveGroup). So a
     // write later in the task keeps the screen on the model's clock.
     const from = waiting?.provisional ?? time;
     const end = Math.min(
@@ -1577,8 +1584,8 @@ export function createMotionEngine(
     });
     if (waiting != null) {
       // From rest: no start time, so the browser starts the animation when
-      // it commits it (StartGroup); the keyframes are sampled from `from`,
-      // the call's own start.
+      // it commits it (StartGroup). The keyframes are sampled from `from`, the
+      // call's own start.
       waiting.animations.push(animation);
       waiting.channels.add(channel);
       // A cancel before the first frame rejects its ready promise.
@@ -1608,15 +1615,15 @@ export function createMotionEngine(
 
   /**
    * Once the main thread runs after the curve's end, the animation leaves the
-   * running state: an element's end values are written inline in the task
-   * that cancels it; a pseudo-element's end value moves to a static holding
+   * running state. An element's end values are written inline in the task
+   * that cancels it. A pseudo-element's end value moves to a static holding
    * animation, created before the long one goes.
    *
    * Why a timer at the curve's end: no browser event reports that an
-   * animation's time has reached a point inside its effect, and its
-   * `finished` comes only after the END_HOLD_MS tail, which would keep the
-   * element promoted and the animation alive for a minute. The timer is set
-   * on the curve's own clock and re-armed while a sampler pauses or seeks the
+   * animation's time has reached a point inside its effect. Its `finished`
+   * comes only after the END_HOLD_MS tail, which would keep the element
+   * promoted and the animation alive for a minute. The timer is set on the
+   * curve's own clock. It is re-armed while a sampler pauses or seeks the
    * animation, so it never retires a held one.
    */
   const scheduleRetire = (
@@ -1628,8 +1635,8 @@ export function createMotionEngine(
     retireTimers.delete(channel);
     clearTimeout(retireLooks.get(channel));
     retireLooks.delete(channel);
-    // Looks for the end in the next frame, before it paints: the frame whose
-    // time reaches the curve's end retires it there, where a timer could land
+    // Looks for the end in the next frame, before it paints. The frame whose
+    // time reaches the curve's end retires it there. A timer could land
     // between two frames under load and leave it on the element a frame or two
     // past its curve. The timers stay, for a page that draws no frames (a
     // hidden tab).
@@ -1661,9 +1668,9 @@ export function createMotionEngine(
       }
       if (remaining != null && remaining > 0) {
         const paused = animation.playState === 'paused';
-        // A frame look keeps looking while up to two frames remain: the frame
+        // A frame look keeps looking while up to two frames remain. The frame
         // it ran in can be dated before the timer that started the looks was
-        // due, and the frame after it is the one that reaches the end.
+        // due. The frame after it is then the one that reaches the end.
         if (!paused && remaining <= (atFrame ? 2 : 1) * END_RECHECK_MS) {
           lookAtFrame();
         }
@@ -1694,15 +1701,15 @@ export function createMotionEngine(
         hold(channel, now());
       } else {
         // The end goes inline in the task that cancels the animation. Whether
-        // an identity end may leave the element is judged after the cancel:
-        // until then the end-state tail still holds the end, so the computed
+        // an identity end may leave the element is judged after the cancel.
+        // Until then the end-state tail still holds the end. So the computed
         // style would hide a stylesheet value (an opacity 0) under it.
         writeInline(channel, finalValue, false);
       }
-      // A call from rest the browser never started (finished from outside
-      // before its first frame, a sampler's finish()): read its start from the
-      // animation before the cancel takes it, and with nothing left to wait
-      // on the call keeps its own clock, so its landing is still armed.
+      // A call from rest the browser never started: finished from outside
+      // before its first frame, a sampler's finish(). Read its start from the
+      // animation before the cancel takes it. With nothing left to wait on, the
+      // call keeps its own clock, so its landing is still armed.
       const waiting = [...pendingGroups].filter(group =>
         group.animations.includes(animation),
       );
@@ -1749,8 +1756,8 @@ export function createMotionEngine(
 
   /**
    * Whether the animator holds an opacity of its own on the element: an inline
-   * value it wrote, or a pseudo-element's holding animation (a `set` over a
-   * stylesheet that hides or dims it). A dip returns to that value.
+   * value it wrote, or a pseudo-element's holding animation. That comes from a
+   * `set` over a stylesheet that hides or dims it. A dip returns to that value.
    */
   const writesOwnOpacity = (): boolean =>
     pseudoElement == null
@@ -1774,8 +1781,8 @@ export function createMotionEngine(
 
   /**
    * Lands every Reduce Motion move still waiting, at once, on the current
-   * element: its travel, and the opacity its fade was heading to (the
-   * stylesheet's again for a borrowed one). Its calls settle `finished`.
+   * element: its travel, and the opacity its fade was heading to. For a
+   * borrowed one, that is the stylesheet's again. Its calls settle `finished`.
    */
   const landPending = (finished: boolean) => {
     if (landings.size === 0) {
@@ -1820,7 +1827,7 @@ export function createMotionEngine(
 
   /**
    * Ends a borrowed dip on the element it ran on: the stylesheet owns its
-   * opacity again (an unmount or a new element never keeps the borrow).
+   * opacity again. An unmount or a new element never keeps the borrow.
    */
   const handBackBorrow = () => {
     if (borrowedOpacity == null) {
@@ -1834,9 +1841,9 @@ export function createMotionEngine(
 
   /**
    * A channel at identity with no animation of its own leaves the element:
-   * its inline value is removed, unless the stylesheet would then move the
-   * element, in which case the identity stays inline. Runs when such a value
-   * is written and again when a motion ends.
+   * its inline value is removed. If the stylesheet would then move the
+   * element, the identity stays inline instead. Runs when such a value is
+   * written and again when a motion ends.
    */
   const releaseIdentity = (channel: Channel) => {
     if (target == null || running.has(channel)) {
@@ -1860,8 +1867,8 @@ export function createMotionEngine(
     if (target.style.getPropertyValue(channel) !== IDENTITY_TEXT[channel]) {
       return;
     }
-    // Read with every other channel the same commit leaves at identity: one
-    // style read for the element, not one per channel (flushReleases).
+    // Read with every other channel the same commit leaves at identity. That
+    // is one style read for the element, not one per channel (flushReleases).
     releasing.add(channel);
     if (!releaseQueued) {
       releaseQueued = true;
@@ -1875,9 +1882,9 @@ export function createMotionEngine(
 
   /**
    * Removes the identity values written since the last flush, reads the
-   * stylesheet once for all of them, and puts back the ones it would move:
-   * a single forced style read per element and commit, where a read per
-   * channel used to force one each.
+   * stylesheet once for all of them, and puts back the ones it would move.
+   * That is a single forced style read per element and commit, where a read
+   * per channel used to force one each.
    */
   const flushReleases = () => {
     releaseQueued = false;
@@ -1904,9 +1911,9 @@ export function createMotionEngine(
   };
 
   /**
-   * Curve time an animation still has to play on its own clock (its keyframes
-   * hold the end for END_HOLD_MS after the curve), or null where the engine
-   * does not report it; a paused animation always has some left.
+   * Curve time an animation still has to play on its own clock, or null where
+   * the engine does not report it. Its keyframes hold the end for END_HOLD_MS
+   * after the curve. A paused animation always has some left.
    */
   const remainingCurve = (animation: Animation): number | null => {
     const timing = animation.effect?.getTiming?.();
@@ -1940,8 +1947,8 @@ export function createMotionEngine(
       ownWillChange = element.style.willChange;
       // Without an inline value, the stylesheet's reasons stay alongside the
       // promotion's. They were read in the task after the element was
-      // attached; a promotion that comes first (an element attached in this
-      // task that moves at once) reads them now.
+      // attached. An element attached in this task that moves at once
+      // promotes first, and that promotion reads them now.
       if (ownWillChange === '' && !sheetWillChangeRead) {
         readSheetWillChange(element);
       }
@@ -1981,7 +1988,7 @@ export function createMotionEngine(
     sheetReadTimer = setTimeout(() => {
       sheetReadTimer = null;
       // A node out of the document has no style to read, and reading one
-      // still costs a style pass: a shared animator (animatorFor) is never
+      // still costs a style pass. A shared animator (animatorFor) is never
       // detached, so its node can leave with this read waiting. Skipped, the
       // read waits for a promotion that needs it.
       if (target === element && promoted.size === 0 && element.isConnected) {
@@ -1999,9 +2006,9 @@ export function createMotionEngine(
 
   /**
    * Gives the element (or its pseudo-element) a compositing layer for
-   * `channel` from the task that starts the motion: Mobile Safari runs an
+   * `channel` from the task that starts the motion. Mobile Safari runs an
    * animation whose start time is set from script on its compositor at its
-   * first commit only if the element already has a layer.
+   * first commit. It does so only if the element already has a layer.
    */
   const promote = (channel: Channel) => {
     if (target == null) {
@@ -2078,14 +2085,14 @@ export function createMotionEngine(
       channels.add(CHANNEL_OF[property]);
     }
     if (at != null) {
-      // An explicit clock is the caller's, except a clock no later than a
-      // call from rest on these channels still waiting for the browser's
-      // start (an event timestamp, such as a drop's, for the reorder that
-      // rebases it): the new call joins that call, and the browser's start
-      // moves both. A later clock is a later call, often a frame or more
-      // later while the browser has not started the first: it keeps its own
-      // clock, since joining would sample its curve from the earlier call's
-      // time and hold its first value for the gap.
+      // An explicit clock is the caller's. The exception is a clock no later
+      // than a call from rest on these channels still waiting for the
+      // browser's start. An example is an event timestamp, such as a drop's,
+      // for the reorder that rebases it. The new call then joins that call,
+      // and the browser's start moves both. A later clock is a later call,
+      // often a frame or more later while the browser has not started the
+      // first. It keeps its own clock. Joining would sample its curve from the
+      // earlier call's time and hold its first value for the gap.
       for (const channel of channels) {
         for (const property of CHANNELS[channel]) {
           const group = segments.get(property)?.group;
@@ -2155,9 +2162,10 @@ export function createMotionEngine(
     if (presented && group != null && requestFrame != null) {
       // At rest until then: the animations, and the layer they promote, come
       // two frames later. Promoting now, a layer at rest for two frames, left
-      // a stale paint of the element's rest in WebKit on iOS 26.2 (a title in
-      // a scroller inside a clipped card) after the motion ended.
-      // Each call waits its own two frames: one queued after another change
+      // a stale paint of the element's rest after the motion ended. That
+      // happened in WebKit on iOS 26.2, to a title in a scroller inside a
+      // clipped card.
+      // Each call waits its own two frames. One queued after another change
       // flushed the queue, or after an earlier call's first frame, still
       // waits its two.
       const call = {group, changed};
@@ -2176,10 +2184,10 @@ export function createMotionEngine(
     calls: {group: StartGroup; changed: MotionProperty[]}[],
   ) => {
     for (const {group, changed} of calls) {
-      // Not a channel that holds the curve of a later call still waiting: a
+      // Not a channel that holds the curve of a later call still waiting. A
       // later presented call that took a property over starts that channel
       // with its own two frames. Every other property starts here, whatever
-      // its segment's group: a value Reduce Motion writes at once, or lands
+      // its segment's group. A value Reduce Motion writes at once, or lands
       // under a dip, has no curve of this call's.
       const own: MotionProperty[] = [];
       let handedTo: StartGroup | null = null;
@@ -2285,18 +2293,19 @@ export function createMotionEngine(
       syncGroup(group);
       group.framed = true;
       // Chromium's compositor starts a composited animation when the frame
-      // that commits it reaches it, and tells the page that start a frame or
-      // more later (longer under load). Until then the call would read as
-      // not started while the screen moves it, and a retarget or a rebase
-      // would replay its curve from the start. A call made in a task, still
-      // waiting in the first frame after it, starts now, which the compositor
-      // then takes as its start: the time this frame runs, not its timestamp,
-      // which after a block is the frame time from before the block. Only
-      // when this frame is the one that commits it: not for a call made in a
-      // frame callback, whose frame committed it already, nor when a block
-      // ran between the call and this frame (more than LATE_START_MS), after
-      // which this frame cannot tell a call made in a task from one a page's
-      // own frame callback made; those keep the browser's start.
+      // that commits it reaches it. It tells the page that start a frame or
+      // more later, longer under load. Until then the call would read as not
+      // started while the screen moves it. A retarget or a rebase would then
+      // replay its curve from the start. A call made in a task, still waiting
+      // in the first frame after it, starts now. The compositor then takes
+      // that as its start: the time this frame runs, not its timestamp. After
+      // a block, the timestamp is the frame time from before the block. This
+      // happens only when this frame is the one that commits it. It does not
+      // happen for a call made in a frame callback, whose frame committed it
+      // already. Nor does it happen when a block ran between the call and this
+      // frame (more than LATE_START_MS). After such a block, this frame cannot
+      // tell a call made in a task from one a page's own frame callback made.
+      // Both kinds keep the browser's start.
       if (
         !group.resolved &&
         group.madeInFrame !== true &&
@@ -2332,7 +2341,7 @@ export function createMotionEngine(
   };
 
   /**
-   * A call whose first animation was cancelled before its first frame: if a
+   * A call whose first animation was cancelled before its first frame. If a
    * later call in the same task took over its curves, it starts with that
    * call; otherwise it never started.
    */
@@ -2388,10 +2397,10 @@ export function createMotionEngine(
         return;
       }
     }
-    // Finished from outside before the browser started it (a sampler's
-    // finish() on a held animation): nothing is left to wait on, so the call
-    // keeps its own clock, and a later call on an explicit clock does not
-    // join it and wait for a start that never comes.
+    // Finished from outside before the browser started it: a sampler's
+    // finish() on a held animation. Nothing is left to wait on, so the call
+    // keeps its own clock. A later call on an explicit clock does not join it
+    // and wait for a start that never comes.
     if (
       group.animations.length > 0 &&
       group.animations.every(
@@ -2403,10 +2412,10 @@ export function createMotionEngine(
       resolveGroup(group, group.provisional);
       return;
     }
-    // No start yet (paused before its first frame by a harness or a page,
-    // or resumed with play() and still pending): neither `ready` nor the
-    // first frame will look again, so keep looking each frame until the call
-    // has a start, or its animations finish (its own clock) or are cancelled.
+    // No start yet: paused before its first frame by a harness or a page, or
+    // resumed with play() and still pending. Neither `ready` nor the first
+    // frame will look again. So keep looking each frame until the call has a
+    // start, or its animations finish (its own clock) or are cancelled.
     if (
       group.animations.some(
         animation =>
@@ -2418,9 +2427,9 @@ export function createMotionEngine(
   };
 
   /**
-   * Reads the start of every call whose first frame may have been committed:
-   * not those created in the running task, whose start the browser cannot
-   * have set (reading it there can cost a style update per call).
+   * Reads the start of every call whose first frame may have been committed.
+   * That excludes those created in the running task, whose start the browser
+   * cannot have set. Reading it there can cost a style update per call.
    */
   const syncPending = () => {
     for (const group of pendingGroups) {
@@ -2433,9 +2442,9 @@ export function createMotionEngine(
 
   /**
    * An animation finished from outside (a test utility's or devtools'
-   * `finish()`) shows its end state while the model still reads its curve:
-   * the curve ends now in the model too, so the next call starts from what
-   * is on screen.
+   * `finish()`) shows its end state while the model still reads its curve.
+   * The curve ends now in the model too, so the next call starts from what is
+   * on screen.
    */
   const syncFinished = () => {
     for (const [channel, animation] of running) {
@@ -2456,17 +2465,18 @@ export function createMotionEngine(
 
   /**
    * The start of a call from rest, on the frame that commits it. Chromium,
-   * like Core Animation, starts a pending animation when it commits it, so a
-   * main-thread block later in the call's task delays the motion; WebKit
-   * dates it at its last frame time before that task, so the first frame
+   * like Core Animation, starts a pending animation when it commits it. So a
+   * main-thread block later in the call's task delays the motion. WebKit
+   * dates it at its last frame time before that task. So the first frame
    * after the block would show it skipped into its curve. When the task ran
-   * on more than LATE_START_MS past its first call, a start the browser put
-   * by the task's first animations (a presented call's second frame, not the
-   * call) and more than LATE_START_MS before the call's first read (its
-   * `ready`, once the task has ended, or the first frame after it) moves to
-   * that read, with every animation of the call, and every call of the task
-   * moves to the same read. A shorter task, or a read other tasks delay,
-   * keeps the browser's start.
+   * on more than LATE_START_MS past its first call, the browser's start may
+   * move. That start is the one the browser put by the task's first
+   * animations: a presented call's second frame, not the call. If it is more
+   * than LATE_START_MS before the call's first read, it moves to that read.
+   * That read is its `ready`, once the task has ended, or the first frame
+   * after it. Every animation of the call moves with it, and every call of
+   * the task moves to the same read. A shorter task, or a read other tasks
+   * delay, keeps the browser's start.
    */
   const startAfterBlock = (group: StartGroup, start: number): number => {
     const timeline =
@@ -2489,7 +2499,7 @@ export function createMotionEngine(
       return start;
     }
     // Read once the task has ended (its `ready`) or in the first frame after
-    // it, both after the block; the task's other calls take the same read.
+    // it, both after the block. The task's other calls take the same read.
     const at = task.at ?? Math.max(now(), timeline);
     if (at - start <= LATE_START_MS) {
       return start;
@@ -2583,10 +2593,10 @@ export function createMotionEngine(
   };
 
   /**
-   * A handle whose curves have reached their end on the wall clock finishes,
-   * unless a sampler holds one of its animations (paused, or sought back):
-   * then it waits on that animation's own time, as retiring does
-   * (scheduleRetire), so `finished` never resolves under motion still on
+   * A handle whose curves have reached their end on the wall clock finishes.
+   * The exception is a sampler that holds one of its animations, paused or
+   * sought back. Then it waits on that animation's own time, as retiring does
+   * (scheduleRetire). So `finished` never resolves under motion still on
    * screen.
    */
   const settleAtEnd = (owner: HandleState) => {
@@ -2687,9 +2697,9 @@ export function createMotionEngine(
         return animator.animate(to, {...transition, spring}, retargetOptions);
       },
       // The call's own curves, and its travel still waiting to land under
-      // Reduce Motion: a catch freezes both where they are on screen
-      // (AST-094 FR6), travel first so the fade's landing no longer carries
-      // it, as `animator.stop()` does.
+      // Reduce Motion. A catch freezes both where they are on screen (AST-094
+      // FR6), as `animator.stop()` does. Travel goes first, so the fade's
+      // landing no longer carries it.
       stop: () =>
         animator.stop(
           PROPERTIES.filter(
@@ -2884,7 +2894,7 @@ export function createMotionEngine(
 
   /**
    * A later write to `property` takes it from any landing. A write to opacity
-   * decides what shows, so a landing still waiting writes its travel at once
+   * decides what shows. So a landing still waiting writes its travel at once
    * rather than never, and its calls settle as interrupted.
    */
   const cancelLanding = (property: MotionProperty) => {
@@ -2894,7 +2904,7 @@ export function createMotionEngine(
         landNow(landing);
       } else if (landing.values.delete(property)) {
         // Set or stopped before it landed: the call whose move it was did
-        // not finish (a carried value is an earlier call's).
+        // not finish. A carried value is an earlier call's.
         const moved = landing.owners.get(property) ?? landing.owner;
         landing.owners.delete(property);
         if (!moved.settled) {
@@ -2924,9 +2934,9 @@ export function createMotionEngine(
 
   /**
    * A later Reduced Motion call that lands too carries the landings still
-   * waiting: their travel lands with its own, which wins where both move a
-   * property, and their calls settle when it lands. So two calls in one
-   * frame (a drag cancel's position and scale) both land.
+   * waiting. Their travel lands with its own, which wins where both move a
+   * property. Their calls settle when it lands. So two calls in one frame (a
+   * drag cancel's position and scale) both land.
    */
   const adoptLandings = (
     plan: NonNullable<ReducedPlan['landing']>,
@@ -2956,8 +2966,8 @@ export function createMotionEngine(
 
   /**
    * A call joins the newest waiting dip: it takes the landing over and
-   * settles when the dip ends, and the call it replaces lands with it. Each
-   * value keeps the call whose move it is.
+   * settles when the dip ends. The call it replaces lands with it. Each value
+   * keeps the call whose move it is.
    */
   const joinWaitingDip = (owner: HandleState) => {
     const dip = [...landings].reverse().find(landing => landing.fadeIn != null);
@@ -3034,12 +3044,12 @@ export function createMotionEngine(
 
   /**
    * Writes the travel while the element is transparent: a plain style write,
-   * never an animation (DR2: opacity only), so it is never shown in the wrong
+   * never an animation (DR2: opacity only). So it is never shown in the wrong
    * place. In a dip the fade back in starts from here and takes what is left
-   * of the cross-fade, so the dip ends when it was due even when a busy main
-   * thread runs this timer late; past the whole fade back in (100 ms late or
-   * more) the element appears at once where it landed, with no animation,
-   * and the call settles then.
+   * of the cross-fade. So the dip ends when it was due, even when a busy main
+   * thread runs this timer late. Past the whole fade back in (100 ms late or
+   * more), the element appears at once where it landed, with no animation.
+   * The call settles then.
    */
   const land = (landing: Landing) => {
     landings.delete(landing);
@@ -3052,12 +3062,12 @@ export function createMotionEngine(
       changed.push(property);
     }
     let end = time;
-    // The fade back in takes what is left of the cross-fade: a timer that a
-    // busy main thread runs late shortens it, so the dip still ends when it
-    // was due (design:reduced-motion DR2, 200 ms or less), and the element is
+    // The fade back in takes what is left of the cross-fade. A timer that a
+    // busy main thread runs late shortens it. So the dip still ends when it
+    // was due (design:reduced-motion DR2, 200 ms or less). The element is
     // never shown before it lands. Past the whole fade back in nothing is
-    // left: the element appears at once, a plain write with no fade for the
-    // browser to start a frame later, so the call settles showing it.
+    // left. The element appears at once: a plain write with no fade for the
+    // browser to start a frame later. So the call settles showing it.
     const late = landing.due == null ? 0 : Math.max(0, time - landing.due);
     const appears = landing.fadeIn != null && late >= landing.fadeIn.ms;
     if (landing.fadeIn != null && !appears) {
@@ -3121,7 +3131,7 @@ export function createMotionEngine(
    * A call that sets a value still waiting to land takes it over: the earlier
    * move never lands, and its call settles interrupted. Once nothing waiting
    * is left, a call that names its own opacity replaces an earlier fade back
-   * in or restore too, so a caught dismissal fades straight back up instead
+   * in or restore too. So a caught dismissal fades straight back up instead
    * of dipping. Whatever still waits is carried by the new plan.
    */
   const takeOverLandings = (
@@ -3145,7 +3155,7 @@ export function createMotionEngine(
       return;
     }
     for (const landing of [...landings]) {
-      // A waiting call that named its own opacity loses it to this call: it
+      // A waiting call that named its own opacity loses it to this call. It
       // never reaches that opacity, so it settles interrupted even though its
       // travel still lands.
       for (const owner of [landing.owner, ...landing.carried]) {
@@ -3177,8 +3187,8 @@ export function createMotionEngine(
   const namedOpacity = new WeakSet<HandleState>();
 
   /**
-   * Where opacity was heading before a call took the waiting landings over:
-   * an entrance by role that catches an exit fades back to what the exit
+   * Where opacity was heading before a call took the waiting landings over.
+   * An entrance by role that catches an exit fades back to what the exit
    * would have restored.
    */
   let headingBeforeTakeOver: number | null = null;
@@ -3268,10 +3278,10 @@ export function createMotionEngine(
       flushDeferred();
       present(false);
       if (next == null) {
-        // Unmount, unless a node replaces this one in the same task (React's
-        // replacement order: attach(null), then the new node): nothing is
-        // left to animate, so at the end of the task every other handle
-        // settles as interrupted, every atRest() wait settles and no
+        // Unmount, unless a node replaces this one in the same task. React's
+        // replacement order is attach(null), then the new node. Nothing is
+        // left to animate. So at the end of the task every other handle
+        // settles as interrupted, and every atRest() wait settles. No
         // completion timer outlives the element, as in dispose()
         // (architecture:react-component-runtime INV5). A replacement keeps
         // them all: the motion goes on on the new node.
@@ -3362,9 +3372,9 @@ export function createMotionEngine(
       retireFrames.clear();
       if (isOpacityBorrowed) {
         // A running borrowed dip (or an exit by role returning to the
-        // stylesheet) stays in the model through any attach, so a pending
-        // move still lands while the element is invisible; only the
-        // outgoing element gets its stylesheet's opacity back.
+        // stylesheet) stays in the model through any attach. So a pending
+        // move still lands while the element is invisible. Only the outgoing
+        // element gets its stylesheet's opacity back.
         releaseOwnOpacity();
       }
       // Identities the outgoing node holds inline over a stylesheet that
@@ -3411,9 +3421,9 @@ export function createMotionEngine(
           rebuild(channel, time);
         } else if (held.has(channel)) {
           // An identity the animator held inline over a stylesheet that
-          // differs goes onto the new node too (writeInline keeps it only
-          // where the new node's stylesheet still differs); a pseudo-element's
-          // is held again.
+          // differs goes onto the new node too. writeInline keeps it only where
+          // the new node's stylesheet still differs. A pseudo-element's is held
+          // again.
           if (pseudoElement != null) {
             hold(channel, time);
           } else {
@@ -3947,9 +3957,9 @@ export function createMotionEngine(
     dispose() {
       flushDeferred();
       // A Reduce Motion move still waiting to land is written at its end
-      // state, so the element is left visible where it was going (the node
-      // just detached, when an unmount is pending); its call and the calls
-      // it carries settle as interrupted.
+      // state. So the element is left visible where it was going: the node
+      // just detached, when an unmount is pending. Its call and the calls it
+      // carries settle as interrupted.
       if (target == null && unmountQueued) {
         target = lastDetached;
       }
