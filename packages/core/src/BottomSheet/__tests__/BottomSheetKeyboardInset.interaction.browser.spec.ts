@@ -237,6 +237,14 @@ function rideOf(held: ReadonlyArray<HeldAnimation>): HeldAnimation {
 
 test.describe('Chrome on Android, on Gboard\u2019s slides (spec:AST-099 FR8)', () => {
   test.use({hasTouch: true, isMobile: true});
+  // NOT FOR LANDING: a loaded runner, by CPU throttling (C07_THROTTLE, 0 = off).
+  test.beforeEach(async ({page, browserName}) => {
+    const rate = Number(process.env.C07_THROTTLE ?? 0);
+    if (browserName === 'chromium' && rate > 1) {
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send('Emulation.setCPUThrottlingRate', {rate});
+    }
+  });
   test.skip(
     ({browserName}) => browserName !== 'chromium',
     'Chrome\u2019s keyboard profile needs the VirtualKeyboard API',
