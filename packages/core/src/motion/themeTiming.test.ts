@@ -8,7 +8,8 @@
  *   transition, and from tokens set where the element is or at their
  *   defaults. A default that refers to a token reads it there. Also checks
  *   the values that give no curve, the progress velocity and easedProgress's
- *   curve. jsdom resolves no `calc()`; the browser proof covers it.
+ *   curve. jsdom resolves no `calc()` and plays no `linear()` or `steps()`;
+ *   the browser proof covers both.
  * @position Testing; validates themeTiming.ts
  */
 
@@ -131,9 +132,9 @@ describe('readThemeTiming', () => {
     expect(readThemeTiming(element({'--duration-fast': 'fast'}), FAST)).toBe(
       null,
     );
-    expect(
-      readThemeTiming(element({'--ease-standard': 'steps(4)'}), FAST),
-    ).toBe(null);
+    expect(readThemeTiming(element({'--ease-standard': 'bounce'}), FAST)).toBe(
+      null,
+    );
     expect(readThemeTiming(element({'transition-duration': '0s'}))).toBe(null);
   });
 });
