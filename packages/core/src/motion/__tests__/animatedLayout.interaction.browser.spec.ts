@@ -2647,6 +2647,11 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       // Where the conceal starts, on its own clock, before any frame.
       read('restart');
       window.resumeAll();
+      // NOT FOR LANDING: one slow frame.
+      const until = performance.now() + 400;
+      while (performance.now() < until) {
+        // the page's main thread is busy
+      }
       for (let i = 0; i < 60; i++) {
         await frame();
         read('closing');
@@ -2743,6 +2748,11 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
         // Where the conceal starts, on its own clock, once it rides.
         read('restart');
         window.resumeAll();
+        // NOT FOR LANDING: one slow frame.
+        const until = performance.now() + 400;
+        while (performance.now() < until) {
+          // the page's main thread is busy
+        }
         for (let i = 0; i < 60; i++) {
           await frame();
           read('closing');
