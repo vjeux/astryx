@@ -294,6 +294,24 @@ for (const pointer of ['coarse', 'fine'] as const) {
         // step that reaches the page after the scroll ended would start a
         // second, shorter swipe, which settles back. So that gap fails here,
         // by name.
+        // NOT FOR LANDING: the page's main thread stalls 250 ms on every
+        // fourth wheel, so the next reaches it after the scroll ended.
+        await scroller.evaluate(el => {
+          let count = 0;
+          el.addEventListener(
+            'wheel',
+            () => {
+              count += 1;
+              if (count % 4 === 0) {
+                const until = performance.now() + 250;
+                while (performance.now() < until) {
+                  // Busy.
+                }
+              }
+            },
+            {capture: true, passive: true},
+          );
+        });
         await input.wheelBurst({
           x: box.x + box.width / 2,
           y: box.y + box.height / 2,
