@@ -2679,7 +2679,7 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       opening.measureBefore();
       content.style.display = 'block';
       opening.animate();
-      AL.playLayoutChange(layout, content, {edge: 'block-start'});
+      AL.playLayoutChange(layout, content); // NOT FOR LANDING: no edge reveal, the content jumps
       await new Promise<void>(resolve => {
         queueMicrotask(resolve);
       });

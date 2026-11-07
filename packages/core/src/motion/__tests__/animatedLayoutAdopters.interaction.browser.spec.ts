@@ -323,6 +323,10 @@ async function edgeRide(
     // so a late frame cannot end it before these reads.
     button.click();
     await committed(() => clipOf() != null);
+    // NOT FOR LANDING: the content's reveal jumps to its end; the glide after it still rides.
+    for (const animation of content()?.getAnimations({subtree: true}) ?? []) {
+      animation.cancel();
+    }
     for (const ms of [20, 40, 60, 80, 100]) {
       seek(document.getAnimations(), ms);
       read('opening held');
