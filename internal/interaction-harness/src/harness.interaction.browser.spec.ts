@@ -1387,8 +1387,33 @@ test.describe('frame evidence', () => {
   }) => {
     const lastFrame = async (html: string) => {
       await page.setContent(html);
+      // The cast sends a frame only when the screen changes, and a loaded
+      // runner can draw the new page late. So a dot fades in and out in the
+      // far corner, clear of every square read below, and the cast starts
+      // once the page has drawn: every frame it sends shows the page.
+      await page.evaluate(
+        () =>
+          new Promise<void>(resolve => {
+            const dot = document.createElement('div');
+            Object.assign(dot.style, {
+              position: 'fixed',
+              right: '0',
+              bottom: '0',
+              width: '4px',
+              height: '4px',
+              background: '#fff',
+            });
+            document.body.append(dot);
+            dot.animate([{opacity: 0}, {opacity: 1}], {
+              duration: 200,
+              direction: 'alternate',
+              iterations: Infinity,
+            });
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          }),
+      );
       const cast = await startScreencast(page);
-      await page.waitForTimeout(200);
+      await expect.poll(() => cast.frameCount()).toBeGreaterThan(0);
       const castFrames = (await cast.stop()).slice(-1);
       expect(castFrames).toHaveLength(1);
       return castFrames;
@@ -5976,14 +6001,17 @@ test.describe('storyboards', {tag: '@storyboard'}, () => {
     const box = page.locator('#box');
     // JPEG frames (WebKit's are always JPEG) take the conversion path.
     const cast = await startScreencast(page, {format: 'jpeg'});
+    // The slide repeats until the cast holds enough frames: a loaded runner
+    // presents fewer of them in any fixed time.
     await box.evaluate(el =>
       el.animate(
         [{transform: 'translateX(0px)'}, {transform: 'translateX(200px)'}],
-        {duration: 600},
+        {duration: 600, iterations: Infinity},
       ),
     );
-    await page.waitForTimeout(500);
+    await expect.poll(() => cast.frameCount()).toBeGreaterThan(8);
     const presented = await cast.stop();
+    await box.evaluate(el => el.getAnimations().forEach(a => a.cancel()));
     expect(presented.length).toBeGreaterThan(8);
     // A window of the middle frames, zeroed on one of them.
     const zero = presented[2].t;
