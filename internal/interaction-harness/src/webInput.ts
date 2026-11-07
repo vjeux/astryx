@@ -694,7 +694,7 @@ async function chromiumWebInput(page: Page): Promise<WebInputDriver> {
       const scale = await page.evaluate(
         () => window.devicePixelRatio * (window.visualViewport?.scale ?? 1),
       );
-      const armed = await armInputRun(page, ['wheel'], {frames: true});
+      const armed = await armInputRun(page, ['wheel']);
       const sentAt = await dispatchOnSchedule(
         steps,
         everyMs,
@@ -804,7 +804,7 @@ async function webkitWebInput(page: Page): Promise<WebInputDriver> {
         await page.keyboard.down('Control');
       }
       try {
-        const armed = await armInputRun(page, ['wheel'], {frames: true});
+        const armed = await armInputRun(page, ['wheel']);
         const sentAt = await dispatchOnSchedule(
           steps,
           everyMs,
