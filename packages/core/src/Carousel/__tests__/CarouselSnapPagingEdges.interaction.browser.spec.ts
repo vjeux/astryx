@@ -2,9 +2,9 @@
 
 /**
  * @file CarouselSnapPagingEdges.interaction.browser.spec.ts
- * @input The Core/Carousel three-up snap paging story in paging mode, real
- *   touch flicks and a press from the interaction harness, and a per-frame
- *   page sampler
+ * @input Carousel's three-up snap paging story in paging mode, harness touch
+ *   flicks and a press, a per-frame sampler and a record of each button
+ *   change
  * @output Proves the edge scroll buttons follow the row as shown while snap
  *   paging holds it. Each button comes back within two frames of the row
  *   leaving its edge, before the settle hands the row back. After a press on
@@ -36,6 +36,13 @@ interface Sample {
   readonly held: boolean;
 }
 
+/** An edge button's change, and whether the paging held the row then. */
+interface Flip {
+  readonly button: 'start' | 'end';
+  readonly disabled: boolean;
+  readonly held: boolean;
+}
+
 async function open(page: Page) {
   await openStory(page, storybook(), 'core-carousel--snap-paging-three-up', {
     mode: 'paging',
@@ -55,7 +62,9 @@ async function open(page: Page) {
 
 // Samples on every frame. It records where the row is shown (its scroll
 // offset less the lead item's translate). It also records whether each edge
-// button is disabled and whether the paging holds the row.
+// button is disabled and whether the paging holds the row. A frame's sample
+// can come before that frame's change to a button. So each change is also
+// recorded as it happens, with whether the paging holds the row then.
 async function startSampling(
   scroller: Locator,
   start: Locator,
@@ -67,13 +76,32 @@ async function startSampling(
     (row, [startButton, endButton]) => {
       const samples: Sample[] = [];
       (window as unknown as {__edgeSamples: Sample[]}).__edgeSamples = samples;
+      const flips: Flip[] = [];
+      (window as unknown as {__edgeFlips: Flip[]}).__edgeFlips = flips;
       const translateX = (el: Element) =>
         Number.parseFloat(getComputedStyle(el).translate.split(' ')[0]) || 0;
-      const tick = () => {
-        const lead = row.children[0];
-        const held = Array.from(row.children).some(
+      const isHeld = () =>
+        Array.from(row.children).some(
           child => (child as HTMLElement).style.translate !== '',
         );
+      const observer = new MutationObserver(records => {
+        for (const record of records) {
+          const button = record.target as HTMLButtonElement;
+          flips.push({
+            button: button === startButton ? 'start' : 'end',
+            disabled: button.getAttribute('aria-disabled') === 'true',
+            held: isHeld(),
+          });
+        }
+      });
+      for (const button of [startButton, endButton]) {
+        if (button != null) {
+          observer.observe(button, {attributeFilter: ['aria-disabled']});
+        }
+      }
+      const tick = () => {
+        const lead = row.children[0];
+        const held = isHeld();
         samples.push({
           shown:
             Math.abs(row.scrollLeft) - (lead == null ? 0 : translateX(lead)),
@@ -100,6 +128,17 @@ async function samplesOf(page: Page): Promise<Sample[]> {
   return page.evaluate(
     () => (window as unknown as {__edgeSamples: Sample[]}).__edgeSamples,
   );
+}
+
+// The first change that brings `button` back, as it happened.
+async function comeBack(page: Page, button: Flip['button']) {
+  const flips = await page.evaluate(
+    () => (window as unknown as {__edgeFlips: Flip[]}).__edgeFlips,
+  );
+  return {
+    flip: flips.find(flip => flip.button === button && !flip.disabled),
+    flips: JSON.stringify(flips),
+  };
 }
 
 // A flick of 80 px in 80 ms, toward the end of the row or back.
@@ -151,7 +190,8 @@ test('the start button comes back within two frames of the held row leaving the 
   expect(left, detail).toBeGreaterThanOrEqual(0);
   expect(back - left, detail).toBeLessThanOrEqual(2);
   // While the paging still holds the row: before the settle hands it back.
-  expect(samples[back]?.held, detail).toBe(true);
+  const {flip, flips} = await comeBack(page, 'start');
+  expect(flip?.held, flips).toBe(true);
 });
 
 test('the end button comes back within two frames of the held row leaving the end', async ({
@@ -180,7 +220,8 @@ test('the end button comes back within two frames of the held row leaving the en
   });
   expect(left, detail).toBeGreaterThanOrEqual(0);
   expect(back - left, detail).toBeLessThanOrEqual(2);
-  expect(samples[back]?.held, detail).toBe(true);
+  const {flip, flips} = await comeBack(page, 'end');
+  expect(flip?.held, flips).toBe(true);
 });
 
 test('after a press on the end button, the start button comes back within two frames of the held row leaving the start', async ({
@@ -212,5 +253,6 @@ test('after a press on the end button, the start button comes back within two fr
   expect(back - left, detail).toBeLessThanOrEqual(2);
   // The press moves the row through the paging, so the paging still holds
   // the row when the button comes back.
-  expect(samples[back]?.held, detail).toBe(true);
+  const {flip, flips} = await comeBack(page, 'start');
+  expect(flip?.held, flips).toBe(true);
 });
