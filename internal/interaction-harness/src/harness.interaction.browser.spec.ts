@@ -198,17 +198,30 @@ test.describe('touch input', () => {
     );
     // One take: a fresh page, the script played, and the harness's record of
     // when each step left (`dispatchedAt`) and when its dispatch was answered.
+    let takes = 0;
     const take = async () => {
       await fixture(page);
       const driver = await touchDriver(page);
       const answeredAt: number[] = [];
+      // NOT FOR LANDING: the runner's thread stops 25 ms in every 30 in the first take.
+      const stall =
+        takes++ === 0
+          ? setInterval(() => {
+              const end = Date.now() + 25;
+              while (Date.now() < end) {
+                // the runner is starved
+              }
+            }, 30)
+          : undefined;
       // Taken before the harness reads its own clock to schedule the script.
       const playStart = Date.now();
-      const played = await driver.play(script, {
-        onEvent: () => {
-          answeredAt.push(Date.now());
-        },
-      });
+      const played = await driver
+        .play(script, {
+          onEvent: () => {
+            answeredAt.push(Date.now());
+          },
+        })
+        .finally(() => clearInterval(stall));
       const log = await readInputLog(page);
       return {played, answeredAt, playStart, log};
     };
