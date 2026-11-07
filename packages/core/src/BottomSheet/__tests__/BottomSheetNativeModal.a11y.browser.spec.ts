@@ -482,6 +482,7 @@ async function holdPhase(
     judges: movers.map(mover => ({target: mover, property})),
   });
   await action();
+  await page.waitForTimeout(Number(process.env.LAG_MS ?? '2000'));
   const held = await hold.held();
   await expect(page.locator('dialog[open]')).toHaveCount(2);
   return held;
