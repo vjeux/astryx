@@ -601,6 +601,30 @@ test('the release of a button keeps fading on every frame while the main thread 
     during: opened.surface,
     pseudoElement: '::before',
   });
+  // NOT FOR LANDING: the release fade steps in two jumps, at a third and two
+  // thirds of its time, still on the compositor.
+  await opened.surface.evaluate(el => {
+    const changed = new WeakSet<Animation>();
+    const look = () => {
+      for (const animation of el.getAnimations({subtree: true})) {
+        const effect = animation.effect as KeyframeEffect | null;
+        if (effect?.pseudoElement !== '::before' || changed.has(animation)) {
+          continue;
+        }
+        changed.add(animation);
+        effect.setKeyframes([
+          {opacity: 1, easing: 'steps(3, jump-none)'},
+          {opacity: 0},
+        ]);
+      }
+    };
+    const tick = () => {
+      look();
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    setInterval(look, 4);
+  });
   await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
   const block = await blocked;
   // The release is the longest animation: the `::before` opacity fade, not
