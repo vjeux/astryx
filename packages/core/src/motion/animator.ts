@@ -1478,7 +1478,8 @@ export function createMotionEngine(
     if (target == null) {
       return;
     }
-    if (atBase(channel)) {
+    // MUTANT: every hold is dropped.
+    if (atBase(channel) || true) {
       checkBase(channel);
       return;
     }
