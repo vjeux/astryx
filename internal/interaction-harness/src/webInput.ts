@@ -430,7 +430,7 @@ export async function installInputStart(
   }
 })()`;
   await page.addInitScript(script(true));
-  await page.evaluate(script(false));
+  await page.evaluate(script(true));
 }
 
 /**
