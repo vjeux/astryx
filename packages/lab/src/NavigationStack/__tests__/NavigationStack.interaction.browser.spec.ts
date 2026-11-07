@@ -35,9 +35,11 @@ import {
   freezePageWhen,
   holdAnimations,
   installPageFreeze,
+  installInputLog,
   installTimerGate,
   markElement,
   openStory,
+  readInputLog,
   releaseAnimations,
   requireFrames,
   sampleCurve,
@@ -45,6 +47,8 @@ import {
   startBusyControl,
   startScreencast,
   thawPage,
+  toTouchEvents,
+  TouchPacingError,
   touchDriver,
   touchStoryboard,
   traceRendering,
@@ -921,13 +925,42 @@ test('a fast swipe that rests before the lift springs back: a still finger never
 });
 
 test('a flick from near the edge finishes the pop', async ({page}) => {
+  await installInputLog(page);
   const {driver, left, topTitle} = await openStack(page, 'pushed', {
     standalone: true,
   });
   // ~60 px of travel at ~1200 px/s: p + 0.35·v is well past half.
-  await driver.play(flick({x: left + 6, y: 400}, {velocity: {x: 1200, y: 0}}));
+  const script = flick({x: left + 6, y: 400}, {velocity: {x: 1200, y: 0}});
+  // The page reads the release from when the moves arrive: pace on spacing.
+  const played = await driver.play(script, {pacing: 'spacing'});
   await waitForRest(card(page, 'screen-General'));
-  await expect.poll(topTitle).toBe('General');
+  try {
+    await expect.poll(topTitle).toBe('General');
+  } catch (error) {
+    // A starved runner delivers the moves late, so the page reads a much
+    // slower release than the script's. Under half of it, the run did not
+    // deliver the flick this test describes, and fails by name.
+    const release = played.at(-1)?.release;
+    if (release != null && release.pagePxPerS < release.scriptPxPerS / 2) {
+      const moves = toTouchEvents(script).filter(
+        step => step.type === 'touchMove',
+      );
+      const arrived = (await readInputLog(page)).filter(
+        input => input.type === 'touchmove',
+      );
+      throw new TouchPacingError({
+        kind: 'release',
+        pageReleasePxPerS: release.pagePxPerS,
+        scriptReleasePxPerS: release.scriptPxPerS,
+        gapsMs: arrived
+          .slice(1)
+          .map((input, i) => input.timeStamp - arrived[i].timeStamp),
+        scriptedGapsMs: moves.slice(1).map((step, i) => step.t - moves[i].t),
+        heldByPage: null,
+      });
+    }
+    throw error;
+  }
 });
 
 test('in a browser tab the leading screen edge stays the browser’s', async ({
