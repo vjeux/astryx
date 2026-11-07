@@ -113,7 +113,9 @@ that times motion with it. Everything here is internal to
   ride's watch also scrolls the document back (`documentScrollIsReveal`):
   under Remove animations, Gboard first reports a keyboard 48 px tall, and
   Chrome may then reveal the bar's field itself, scrolling the page behind the
-  bar before it pans. The ride measures
+  bar before it pans. Only a scroll and a pan that centre the field as
+  Chrome's reveal does count, so the app's own scroll to another element
+  stays. The ride measures
   what the keyboard still covers after any move the app makes itself: a bar the
   app
   already moves with the keyboard is not moved, one the app lifts part of the

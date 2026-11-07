@@ -396,12 +396,14 @@ export interface WatchRevealPanOptions {
   /** Called on every touch start, which ends the watch for the report. */
   onTouch?: () => void;
   /**
-   * Whether a document scroll since the report is part of the browser's own
-   * reveal, which `putBack` then scrolls back too. Set it for a field in a
-   * fixed container in Chrome on Android: Chrome's reveal of such a field
-   * scrolls the page behind the container, then pans. Keep it false where
-   * Safari can run: Safari carries out the app's own document scroll as a
-   * visual-viewport offset, which looks the same.
+   * Whether a document scroll since the report can be part of the browser's
+   * own reveal, which `putBack` then scrolls back too. Set it for a field in
+   * a fixed container in Chrome on Android. Chrome reveals such a field as if
+   * it scrolled with the page: a document scroll centres its document
+   * position in the visual viewport, then a pan centres the field as far as
+   * the keyboard's room allows. Only a scroll and a pan that match both count.
+   * Keep it false where Safari can run: Safari carries out the app's own
+   * document scroll as a visual-viewport offset.
    */
   documentScrollIsReveal?: boolean;
 }
@@ -516,11 +518,12 @@ export function watchRevealPan(
         height > 0 &&
         viewport.offsetTop > atReport.top &&
         viewport.scale === atReport.scale &&
-        (documentScrollIsReveal ||
-          (win.scrollX === atReport.x && win.scrollY === atReport.y)) &&
         focused instanceof HTMLElement &&
         isTextEntryControl(focused) &&
-        owns(focused)
+        owns(focused) &&
+        ((win.scrollX === atReport.x && win.scrollY === atReport.y) ||
+          (documentScrollIsReveal &&
+            isCentringReveal(win, viewport, focused, atReport)))
       );
     },
     putBack: anchor => {
@@ -548,6 +551,33 @@ export function watchRevealPan(
     },
     stop: stopTouchStarts,
   };
+}
+
+// How far a scroll or a pan may sit from Chrome's centring reveal and still
+// match it: rounding of fractional boxes and offsets.
+const CENTRING_SLACK_PX = 2;
+
+// Whether the document scroll and the pan since the report match Chrome's
+// reveal of a fixed `field` (see documentScrollIsReveal). A scroll the app
+// makes to any other element does not match.
+function isCentringReveal(
+  win: Window,
+  viewport: VisualViewport,
+  field: HTMLElement,
+  atReport: {x: number; y: number},
+): boolean {
+  const box = field.getBoundingClientRect();
+  const centring = (box.top + box.bottom) / 2 - viewport.height / 2;
+  const root = win.document.scrollingElement ?? win.document.documentElement;
+  const range = root.scrollHeight - root.clientHeight;
+  const room = layoutViewportHeight(win) - viewport.height;
+  const scroll = Math.min(range, Math.max(0, atReport.y + centring));
+  const pan = Math.min(room, Math.max(0, centring));
+  return (
+    win.scrollX === atReport.x &&
+    Math.abs(win.scrollY - scroll) <= CENTRING_SLACK_PX &&
+    Math.abs(viewport.offsetTop - pan) <= CENTRING_SLACK_PX
+  );
 }
 
 /**
