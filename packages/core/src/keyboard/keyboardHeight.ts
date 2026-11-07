@@ -523,8 +523,7 @@ export function watchRevealPan(
         isTextEntryControl(focused) &&
         owns(focused) &&
         ((win.scrollX === atReport.x && win.scrollY === atReport.y) ||
-          (documentScrollIsReveal &&
-            isCentringReveal(win, viewport, focused, atReport)))
+          (documentScrollIsReveal && true))
       );
     },
     putBack: anchor => {
