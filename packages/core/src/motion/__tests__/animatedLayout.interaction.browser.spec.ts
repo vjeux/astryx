@@ -2692,6 +2692,9 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       }
       window.holdAt(0);
       window.resumeAll();
+      for (const animation of document.getAnimations()) {
+        animation.finish();
+      }
       // A frame after the reveal has ended shows it fully open, so it does
       // not count as a frame of the motion.
       const revealing = () =>
@@ -2733,6 +2736,12 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       seek(0);
       window.resumeAll();
       for (let i = 0; i < 60; i++) {
+        if (i === 20) {
+          const end = performance.now() + 120;
+          while (performance.now() < end) {
+            // A 120 ms long task while the conceal plays.
+          }
+        }
         await frame();
         read('closing');
       }
