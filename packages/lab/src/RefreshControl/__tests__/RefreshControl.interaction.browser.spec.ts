@@ -1290,6 +1290,9 @@ const recordPositions = (content: Locator) =>
     const record = window as unknown as PositionRecord;
     record.__positions = [];
     record.__readPositions = read;
+    // PROBE: the page stamps of the last move and the lift.
+    addEventListener("touchmove", e => { (record as any).__lastMove = e.timeStamp; }, {capture: true, passive: true});
+    addEventListener("touchend", e => { (record as any).__lift = e.timeStamp; }, {capture: true, passive: true});
     addEventListener(
       'touchmove',
       () => requestAnimationFrame(() => record.__positions.push(read())),
@@ -1306,6 +1309,8 @@ test('the indicator stays at the top of the scroll view while the content is pul
   await recordPositions(content);
   await driver.play(slowPull(start, 300, 150));
   await waitForContentRest(content);
+  const probe = await page.evaluate(() => { const r = window as any; return {gap: r.__lift - r.__lastMove, n: r.__positions.length}; });
+  console.log(`C28PROBE liftGapMs=${probe.gap.toFixed(1)} readings=${probe.n}`);
   const {readings, indicatorAtRest} = await page.evaluate(() => {
     const record = window as unknown as PositionRecord;
     return {
