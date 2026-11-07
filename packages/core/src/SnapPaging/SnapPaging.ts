@@ -205,7 +205,7 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     // number of pixels, as the scroll width is.
     heldTravel = Math.max(
       0,
-      Math.round(heldTravel + (nextSpan - heldSpan) - (nextWidth - heldWidth)),
+      Math.round(heldTravel),
     );
     heldSpan = nextSpan;
     heldWidth = nextWidth;
