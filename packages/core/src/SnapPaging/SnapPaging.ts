@@ -21,10 +21,11 @@ import {
   type HeldRowListener,
   makeSnapPaging,
   rowScale,
+  type SnapPages,
   type SnapPaging,
   type SnapPagingAttachment,
   type SnapPagingOptions,
-  snapStops,
+  snapPages,
 } from './snapPagingValue';
 
 export type {SnapPaging, SnapPagingOptions} from './snapPagingValue';
@@ -229,8 +230,12 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
       : Math.max(0, element.scrollWidth - element.clientWidth);
   }
 
+  function pages(): SnapPages {
+    return snapPages(element, position(), travel());
+  }
+
   function stops(): number[] {
-    return snapStops(element, position(), travel());
+    return pages().stops;
   }
 
   function viewWidth(): number {
@@ -364,6 +369,7 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     position,
     travel,
     remeasure,
+    pages,
     stops,
     viewWidth,
     place,
@@ -394,6 +400,31 @@ function attachPaging(
   let anchor = 0;
   // The row's stops and view width, read before a takeover's first write.
   let measured: {stops: number[]; viewWidth: number} | null = null;
+  // Native snap skips each item whose stop the end's page takes. So a wheel,
+  // a key or a scroll rests on the same pages as a flick. Each item keeps its
+  // own inline snap alignment, with its priority, for later.
+  const skipped = new Map<HTMLElement, {value: string; priority: string}>();
+  const skip = (items: ReadonlyArray<Element>) => {
+    for (const [item, own] of skipped) {
+      if (!items.includes(item)) {
+        skipped.delete(item);
+        if (own.value === '') {
+          item.style.removeProperty('scroll-snap-align');
+        } else {
+          item.style.setProperty('scroll-snap-align', own.value, own.priority);
+        }
+      }
+    }
+    for (const item of items) {
+      if (item instanceof HTMLElement && !skipped.has(item)) {
+        skipped.set(item, {
+          value: item.style.getPropertyValue('scroll-snap-align'),
+          priority: item.style.getPropertyPriority('scroll-snap-align'),
+        });
+        item.style.setProperty('scroll-snap-align', 'none');
+      }
+    }
+  };
   const takeOverShown = (at: number) => {
     // Every read comes before the takeover's first write.
     const stops = track.stops();
@@ -424,7 +455,12 @@ function attachPaging(
       measurePages: () => {
         // A resize while the row is held moves its travel first.
         track.remeasure();
-        const stops = measured?.stops ?? track.stops();
+        let stops = measured?.stops;
+        if (stops == null) {
+          const read = track.pages();
+          skip(read.skipped);
+          stops = read.stops;
+        }
         return (options.pages ?? 'view') === 'item'
           ? stops
           : viewPages(
@@ -454,6 +490,7 @@ function attachPaging(
       detach();
       pager.dispose();
       track.handBack();
+      skip([]);
     },
     move: target => {
       // A finger on the row keeps it.
