@@ -502,6 +502,14 @@ test('a push’s bar: the new bar slides in with its screen, the covered one rid
   page,
 }) => {
   const {driver, width} = await openStack(page, 'settings');
+  // NOT FOR LANDING: each frame 100 ms after the one before.
+  await page.evaluate(() => {
+    const frame = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = callback => {
+      setTimeout(() => frame(callback), 100);
+      return 0;
+    };
+  });
   const stop = await traceBars(page);
   await driver.tap(await rowCenter(page, 'General'));
   await page.waitForTimeout(900);
@@ -1319,6 +1327,14 @@ test.describe('the bars ride with their screens, as UIKit’s', () => {
     const {driver, width} = await openStack(page, 'settings');
     await driver.tap(await rowCenter(page, 'General'));
     await waitForRest(card(page, 'screen-General'));
+    // NOT FOR LANDING: each frame 100 ms after the one before.
+    await page.evaluate(() => {
+      const frame = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = callback => {
+        setTimeout(() => frame(callback), 100);
+        return 0;
+      };
+    });
     const stop = await traceBars(page);
     await page.locator('[data-navigation-back]').click();
     await page.waitForTimeout(900);
