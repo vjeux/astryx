@@ -455,7 +455,9 @@ test('the cancel keeps moving every frame while the main thread is blocked', asy
   await slowViewer(page, CANCEL_TEMPO);
   const since = await page.evaluate(() => performance.now());
   const cast = await startScreencast(page);
-  await v.driver.play(pullThenFlickUp(v.centre, 300, 60));
+  await v.driver.play(
+    drag(v.centre, {x: v.centre.x, y: v.centre.y + 300}, {durationMs: 300}),
+  );
   // The page must read the drag as a cancel, so the photo returns. A drag
   // read as a dismissal sends the photo out of the dialog. Nothing then
   // returns to block on, so that fails here, by name.
