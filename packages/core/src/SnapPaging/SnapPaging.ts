@@ -503,14 +503,7 @@ function attachPaging(
       },
       onSettle: () => {
         if (!pager.isDragging && !pager.isSettling) {
-          track.handBack(
-            isResnapDue
-              ? () => {
-                  isResnapDue = false;
-                  skip(track.pages().skipped);
-                }
-              : undefined,
-          );
+          track.handBack();
         }
       },
     },
