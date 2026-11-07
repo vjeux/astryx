@@ -509,6 +509,133 @@ describe('keepFieldAboveKeyboard', () => {
     Reflect.deleteProperty(window, 'scrollY');
   });
 
+  // Chrome on Android under `interactive-widget=resizes-content`: the layout
+  // viewport, the root's box and the visual viewport shrink together, so the
+  // keyboard height reads 0.
+  function resizeForKeyboard(cover: number) {
+    const height = window.innerHeight - cover;
+    vi.stubGlobal('innerHeight', height);
+    pageScrollRange(3000);
+    viewport.height = height;
+    act(() => {
+      viewport.dispatchEvent(new Event('resize'));
+    });
+  }
+
+  it("takes no room from Chrome's toolbar coming back, which shrinks the viewport but not the root's box", () => {
+    const scrollBy = vi.fn();
+    vi.stubGlobal('scrollBy', scrollBy);
+    // A field low in the page, focused with no keyboard up, as after the
+    // keyboard is dismissed with Back.
+    const input = element('input', {top: window.innerHeight - 60, height: 40});
+    document.body.append(input);
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    // The toolbar comes back: the viewport is 56 px shorter at the same width,
+    // and the root keeps its box.
+    const height = window.innerHeight - 56;
+    vi.stubGlobal('innerHeight', height);
+    viewport.height = height;
+    act(() => {
+      viewport.dispatchEvent(new Event('resize'));
+    });
+    runFrames();
+    expect(scrollBy).not.toHaveBeenCalled();
+  });
+
+  it('keeps a field in the page 10 px above the keyboard where the browser shrinks the layout viewport for it, in the report\u2019s own frame', () => {
+    const scrollBy = vi.fn();
+    vi.stubGlobal('scrollBy', scrollBy);
+    const input = element('input', {top: 600, height: 40});
+    document.body.append(input);
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    expect(scrollBy).not.toHaveBeenCalled();
+    const keyboardTop = window.innerHeight - 300;
+    resizeForKeyboard(300);
+    // No frame runs: only what the report's own event does counts.
+    expect(scrollBy).toHaveBeenCalledTimes(1);
+    expect(scrollBy).toHaveBeenCalledWith({
+      top: 640 + FIELD_OFFSET - keyboardTop,
+      behavior: 'instant',
+    });
+  });
+
+  it('scrolls the page back once the browser grows the layout viewport again after the keyboard', () => {
+    const page = {scrollY: 0};
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      get: () => page.scrollY,
+    });
+    const input = element('input', {top: 600, height: 40});
+    document.body.append(input);
+    vi.spyOn(input, 'getBoundingClientRect').mockImplementation(
+      () => new DOMRect(0, 600 - page.scrollY, 300, 40),
+    );
+    vi.stubGlobal('scrollBy', ({top}: {top: number}) => {
+      page.scrollY += top;
+    });
+    const scrollTo = vi.fn(({top}: {top: number}) => {
+      page.scrollY = top;
+    });
+    vi.stubGlobal('scrollTo', scrollTo);
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    const full = window.innerHeight;
+    resizeForKeyboard(300);
+    expect(page.scrollY).toBe(640 + FIELD_OFFSET - (full - 300));
+    // A later report while the page is still short, as Chrome sends for a
+    // scroll, puts nothing back.
+    act(() => {
+      viewport.dispatchEvent(new Event('scroll'));
+    });
+    expect(scrollTo).not.toHaveBeenCalled();
+    vi.stubGlobal('innerHeight', full);
+    pageScrollRange(3000);
+    viewport.height = full;
+    act(() => {
+      viewport.dispatchEvent(new Event('resize'));
+    });
+    expect(scrollTo).toHaveBeenCalledWith({top: 0, behavior: 'smooth'});
+    expect(page.scrollY).toBe(0);
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
+  it('keeps a field that mounts after the browser shrank the layout viewport 10 px above the keyboard', () => {
+    const scrollBy = vi.fn();
+    vi.stubGlobal('scrollBy', scrollBy);
+    const first = element('input', {top: 100, height: 40});
+    document.body.append(first);
+    track(keepFieldAboveKeyboard(first));
+    focusOn(first);
+    const keyboardTop = window.innerHeight - 300;
+    resizeForKeyboard(300);
+    runFrames();
+    expect(scrollBy).not.toHaveBeenCalled();
+    // A field that mounts only now, low in the page, takes the focus.
+    const later = element('input', {top: 440, height: 40});
+    document.body.append(later);
+    track(keepFieldAboveKeyboard(later));
+    focusOn(later);
+    runFrames();
+    expect(scrollBy).toHaveBeenNthCalledWith(1, {
+      top: 480 + FIELD_OFFSET - keyboardTop,
+      behavior: 'instant',
+    });
+  });
+
+  it('moves no field already 10 px above the keyboard where the browser shrinks the layout viewport for it', () => {
+    const scrollBy = vi.fn();
+    vi.stubGlobal('scrollBy', scrollBy);
+    const input = element('input', {top: 100, height: 40});
+    document.body.append(input);
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    resizeForKeyboard(300);
+    runFrames();
+    expect(scrollBy).not.toHaveBeenCalled();
+  });
+
   it('claims a focus move into a field whose scroll area sits under the keyboard, and pans the visual viewport to it', () => {
     vi.stubGlobal('scrollBy', vi.fn());
     const other = element('input', {top: 10, height: 40});
