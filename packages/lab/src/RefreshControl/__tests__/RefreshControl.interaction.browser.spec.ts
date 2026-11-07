@@ -1169,7 +1169,13 @@ test('with a trackpad, a two-finger scroll at the top pulls and refreshes as a f
   const {context, page, content} = await desktopPage(browser);
   try {
     // 300 px of scroll toward the top: past the trigger.
-    await scrollWheel(page, 30, -10);
+    {
+      const lagDriver = await webInputDriver(page);
+      for (let step = 0; step < 30; step++) {
+        await lagDriver.wheel({x: 200, y: 300, dy: -10});
+        await page.waitForTimeout(250);
+      }
+    }
     // The scroll's gesture ends after its last step. The pull's release
     // starts the settle, and the content comes to rest on the inset.
     await waitForSettleStart(content);
