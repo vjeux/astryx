@@ -620,9 +620,17 @@ test('the release of a button keeps fading on every frame while the main thread 
   }));
   // The frames on which the compositor presented a new position of the
   // control: each is a frame that the release had to show.
+  // NOT FOR LANDING: the control stalls for 120 ms inside the window, as a
+  // starved compositor or recorder would show it.
+  const stallFrom = block.from + 100;
   const controlFrames = await trackControl(
     page,
-    frames.filter(f => f.t >= block.from - 100 && f.t <= end + 100),
+    frames.filter(
+      f =>
+        f.t >= block.from - 100 &&
+        f.t <= end + 100 &&
+        !(f.t > stallFrom && f.t < stallFrom + 120),
+    ),
   );
   const presented = controlFrames.filter((frame, i) => {
     const before = controlFrames[i - 1]?.box;
