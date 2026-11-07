@@ -27,7 +27,7 @@ import {
   rubberBandInverse,
   rubberBandSlope,
 } from '@astryxdesign/core/internal/touch';
-import {parseMotionRoleValue} from '@astryxdesign/core/internal/touch';
+import {parseCssEasing, parseMotionRoleValue} from '@astryxdesign/core/internal/touch';
 import {refreshControl} from './refreshValues';
 
 /** The refreshing inset and one-to-one stretch, pt. */
@@ -177,5 +177,6 @@ export function endTiming(
     'duration',
     style.getPropertyValue(refreshControl.endDurationToken),
   );
-  return ms == null ? null : {ms, points: refreshControl.revealCurve};
+  const points = parseCssEasing(style.getPropertyValue('--ease-move'));
+  return ms == null || points == null ? null : {ms, points};
 }
