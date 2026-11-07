@@ -513,6 +513,8 @@ test.describe('with a finger and a mouse', () => {
     // At the end, a flick settles back onto the same stop.
     await swipe(page, scroller, {px: 80, ms: 80});
     expect(await isTakenOver(scroller)).toBe(true);
+    // NOT FOR LANDING: the runner's lag, as under load.
+    await page.waitForTimeout(500);
     await scroller.evaluate(el => {
       el.style.width = `${el.clientWidth - 1}px`;
     });
