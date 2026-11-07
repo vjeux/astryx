@@ -483,9 +483,6 @@ function attachPaging(
         // A resize while the row is held moves its travel first.
         track.remeasure();
         const stops = measured?.stops ?? track.stops();
-        // Native snap follows the new stops. The skip writes in a later
-        // frame, so this read stays ahead of any write.
-        resnap();
         return (options.pages ?? 'view') === 'item'
           ? stops
           : viewPages(
