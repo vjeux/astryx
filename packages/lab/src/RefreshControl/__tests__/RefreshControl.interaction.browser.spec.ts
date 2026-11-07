@@ -1182,7 +1182,7 @@ test('with a trackpad, a two-finger scroll at the top pulls and refreshes as a f
       x: 200,
       y: 300,
       steps: Array.from({length: 30}, () => ({dy: -10})),
-      maxGapMs: TRACKPAD_SCROLL_END_MS - 1,
+      everyMs: 250,
     });
     // The scroll's gesture ends after its last step. The pull's release
     // starts the settle, and the content comes to rest on the inset.
