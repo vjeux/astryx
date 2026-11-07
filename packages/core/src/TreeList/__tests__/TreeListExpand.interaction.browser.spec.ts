@@ -359,7 +359,12 @@ test('expand under a finger: the rows below glide while the group fades in, and 
 }) => {
   await open(page);
   const before = (await parts(page).below.boundingBox())?.y ?? 0;
-  const frames = await recordFrames(page, async () => tapToggle(page));
+  const frames = await recordFrames(page, async () => {
+    // NOT FOR LANDING: the page draws one frame of the glide. The main thread
+    // is blocked for 250 ms right after the tap.
+    await tapToggle(page);
+    await blockMainThread(page, 250);
+  });
   const moving = frames.filter(frame => frame.group != null);
   expect(moving.length, 'frames with the group').toBeGreaterThan(4);
   const height = moving[0].group?.height ?? 0;
@@ -390,7 +395,12 @@ test('collapse under a finger: the group fades out as the rows below glide up, w
   await page.waitForTimeout(700);
   const expanded = (await parts(page).below.boundingBox())?.y ?? 0;
   const height = (await parts(page).group.boundingBox())?.height ?? Number.NaN;
-  const frames = await recordFrames(page, async () => tapToggle(page));
+  const frames = await recordFrames(page, async () => {
+    // NOT FOR LANDING: the page draws one frame of the glide. The main thread
+    // is blocked for 250 ms right after the tap.
+    await tapToggle(page);
+    await blockMainThread(page, 250);
+  });
   const leaving = frames.filter(frame => frame.group != null);
   // The group stays while it leaves, fading: it does not go at the tap.
   expect(leaving.length, 'frames with the leaving group').toBeGreaterThan(4);
