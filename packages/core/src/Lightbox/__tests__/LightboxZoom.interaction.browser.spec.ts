@@ -867,6 +867,7 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
   await driver.play(
     flick(mid, {velocity: {x: -900, y: 0}, durationMs: 80, hz: 120}),
   );
+  await new Promise(resolve => setTimeout(resolve, 600)); // NOT FOR LANDING: runner lag
   await coasting;
   // The landing must find the coast still running, or it proves nothing.
   await photo.evaluate(el => {
@@ -881,6 +882,7 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
       {capture: true, once: true},
     );
   });
+  await new Promise(resolve => setTimeout(resolve, 600)); // NOT FOR LANDING: runner lag
   // The finger lands in the frozen scene. The scene thaws after the first
   // read, and the finger rests 250 ms and lifts without moving.
   const reads: PhotoState[] = [];
