@@ -105,6 +105,12 @@ export class Storyboard {
         return;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        if (EMPTY_SURFACE_COPY.test(message)) {
+          // NOT FOR LANDING: no retake; each empty copy is logged.
+          // eslint-disable-next-line no-console
+          console.log(`EMPTY_COPY ${this.options.name} ${label}`);
+          throw error;
+        }
         if (attempt >= CAPTURE_ATTEMPTS || !EMPTY_SURFACE_COPY.test(message)) {
           throw error;
         }
