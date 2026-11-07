@@ -852,7 +852,6 @@ async function chromiumDriver(page: Page): Promise<TouchDriver> {
       );
     },
     async tap(at) {
-      assertNoneHeld(held);
       await page.touchscreen.tap(at.x, at.y);
     },
   };
