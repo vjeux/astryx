@@ -503,9 +503,6 @@ function attachPaging(
       onSettle: () => {
         if (!pager.isDragging && !pager.isSettling) {
           track.handBack();
-          if (isResnapDue) {
-            resnap();
-          }
         }
       },
     },
