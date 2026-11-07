@@ -987,10 +987,10 @@ under a finger, and a mouse follows `module:DropdownMenu/useMenuPress` FR3 and
   or Escape starts (`spec:AST-057` FR5, FR7) plays the row's spring from rest,
   and a swipe that closes it keeps its measured spring from the release.
 - Under FR45, RefreshControl's endRefreshing is the exception: it plays UIKit's
-  measured 300 ms ease-in-out curve from the theme's duration token and UIKit's
-  measured curve, since no spring from rest matches it within tolerance (iOS
-  26.2 simulator, 2026-11-07). The curve follows the theme's tempo through the
-  duration token, so a slower theme still slows it.
+  measured 300 ms ease-in-out curve, timed by the theme's duration token, since
+  no spring from rest matches it within tolerance (iOS 26.2 simulator,
+  2026-11-07). The curve follows the theme's tempo through the duration token,
+  so a slower theme still slows it.
 - Under FR45, `spec:AST-107`'s `settleTo` and an `animate` call without a
   velocity play a spring for motion that no gesture drives. Their records keep
   their springs until each carries FR45.
