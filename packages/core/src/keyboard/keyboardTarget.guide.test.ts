@@ -266,7 +266,7 @@ it("puts back, at the keyboard's real report, a pan the browser made at the last
   expect(animator.state.y).toBe(-336);
 });
 
-it("puts back Chrome's own reveal of a docked bar's field, its document scroll and its pan, as soon as it lands", () => {
+it("puts back Chrome's own reveal of a docked bar's field, its document scroll and its pan, as soon as it lands, and not the app's later scroll", () => {
   const {viewport, page, scrollTo, centring, land} = interimKeyboard();
   // Chrome reveals the field as if it scrolled with the page. The document
   // scroll centres its document position, which moves only the page behind
@@ -277,13 +277,14 @@ it("puts back Chrome's own reveal of a docked bar's field, its document scroll a
     top: 154.3,
     behavior: 'instant',
   });
-  expect(page.scrollY).toBe(154.3);
   expect(viewport.offsetTop).toBe(0);
+  land(300, 48);
+  expect(scrollTo).toHaveBeenCalledTimes(1);
   keyboard.show(336);
   publish({...slide('show', 336), from: 48});
   expect(animator.state.y).toBe(-336);
-  expect(page.scrollY).toBe(154.3);
-  expect(viewport.offsetTop).toBe(0);
+  expect(page.scrollY).toBe(300);
+  expect(viewport.offsetTop).toBe(48);
 });
 
 it("leaves an app's own scroll to another element that pans while a docked bar's field has focus, and reads no layout for it again", () => {

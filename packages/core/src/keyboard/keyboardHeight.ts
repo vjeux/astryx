@@ -489,8 +489,8 @@ export function watchRevealPan(
   let atReport: {x: number; y: number; top: number; scale: number} | null =
     null;
   let touchedSinceReport = false;
-  // Whether a scroll since the report is Chrome's reveal, decided once per
-  // report, so a later scroll or resize reads no layout.
+  // Whether a scroll is Chrome's reveal. It is decided once per report and
+  // after each put-back, so later scrolls read no layout.
   let isChromeReveal: boolean | null = null;
   const stopTouchStarts = watchTouchStarts(doc, () => {
     touchedSinceReport = true;
@@ -535,6 +535,7 @@ export function watchRevealPan(
       );
     },
     putBack: anchor => {
+      isChromeReveal = null;
       const options: ScrollIntoViewOptions = {
         block: 'start',
         inline: 'nearest',
