@@ -561,6 +561,128 @@ test('the scroll offset holds through a swipe, and the settle hands it on', asyn
   await expect.poll(async () => offset(scroller)).toBeCloseTo(stops[6], 0);
 });
 
+/**
+ * The partial last page with its row 1 px narrower. The fifth item's stop sits
+ * 1.37 px before the row's end, within half its step of it.
+ */
+async function openSplitEnd(page: Page, mode: Mode) {
+  const {scroller} = await open(page, 'snap-paging-partial-last-page', mode);
+  const before = await travel(scroller);
+  await scroller.evaluate(el => {
+    el.style.width = `${el.clientWidth - 1}px`;
+  });
+  await expect
+    .poll(async () => travel(scroller), {
+      message: 'the row is 1 px narrower',
+      timeout: 5000,
+    })
+    .toBe(before + 1);
+  return scroller;
+}
+
+/**
+ * A flick of the row toward its start (`back`) or its end. Past the pan's
+ * start, its 70 px still move the row more than half a step. So the rest page
+ * is the same whatever speed the page reads at the lift.
+ */
+async function flick(
+  page: Page,
+  scroller: Locator,
+  direction: 'back' | 'forward',
+) {
+  const box = await scroller.boundingBox();
+  if (box == null) {
+    throw new Error('no scroller');
+  }
+  const y = box.y + box.height / 2;
+  const from = {x: box.x + box.width / 2, y};
+  const to = {x: from.x + (direction === 'back' ? 70 : -70), y};
+  const driver = await touchDriver(page);
+  await driver.play(drag(from, to, {durationMs: 60}), {pacing: 'spacing'});
+}
+
+test('a stop within half its step of the end is the end page: a flick back from the end moves a full step', async ({
+  page,
+}) => {
+  const scroller = await openSplitEnd(page, 'item');
+  const stops = await stopsOf(scroller);
+  await scroller.evaluate(el => {
+    el.scrollTo({left: el.scrollWidth - el.clientWidth, behavior: 'instant'});
+  });
+  await expect
+    .poll(async () => offset(scroller), {
+      message: 'the row starts at its end',
+      timeout: 5000,
+    })
+    .toBeCloseTo(await travel(scroller), 0);
+  await flick(page, scroller, 'back');
+  await settled(scroller);
+  expect(await offset(scroller)).toBeCloseTo(stops[3], 0);
+});
+
+test('a stop within half its step of the end is the end page: a flick onto it rests where the row ends', async ({
+  page,
+}) => {
+  const scroller = await openSplitEnd(page, 'item');
+  const stops = await stopsOf(scroller);
+  await scroller.evaluate((el, left) => {
+    el.scrollTo({left, behavior: 'instant'});
+  }, stops[3]);
+  await expect
+    .poll(async () => offset(scroller), {
+      message: 'the row starts one step before its end page',
+      timeout: 5000,
+    })
+    .toBeCloseTo(stops[3], 0);
+  await flick(page, scroller, 'forward');
+  await settled(scroller);
+  expect(await offset(scroller)).toBeCloseTo(await travel(scroller), 0);
+});
+
+test('a resize that moves the stop further from the end than half its step gives it back to native snap and to flicks', async ({
+  page,
+}) => {
+  const scroller = await openSplitEnd(page, 'item');
+  const fifthAlign = async () =>
+    scroller.evaluate(el => getComputedStyle(el.children[4]).scrollSnapAlign);
+  await expect
+    .poll(fifthAlign, {
+      message: "native snap skips the fifth item's stop",
+      timeout: 5000,
+    })
+    .toBe('none');
+  // 59 px narrower still: the fifth item's stop sits 60 px before the end.
+  const before = await travel(scroller);
+  await scroller.evaluate(el => {
+    el.style.width = `${el.clientWidth - 59}px`;
+  });
+  await expect
+    .poll(async () => travel(scroller), {
+      message: 'the row is 59 px narrower still',
+      timeout: 5000,
+    })
+    .toBe(before + 59);
+  await expect
+    .poll(fifthAlign, {
+      message: "native snap takes the fifth item's stop back",
+      timeout: 5000,
+    })
+    .toMatch(/^start/);
+  const stops = await stopsOf(scroller);
+  await scroller.evaluate(el => {
+    el.scrollTo({left: el.scrollWidth - el.clientWidth, behavior: 'instant'});
+  });
+  await expect
+    .poll(async () => offset(scroller), {
+      message: 'the row starts at its end',
+      timeout: 5000,
+    })
+    .toBeCloseTo(await travel(scroller), 0);
+  await flick(page, scroller, 'back');
+  await settled(scroller);
+  expect(await offset(scroller)).toBeCloseTo(stops[4], 0);
+});
+
 test('an edge button steps about one view: the viewport less half an item, on the nearest stop', async ({
   page,
 }) => {
@@ -766,6 +888,32 @@ test.describe("a touch that lands on a flick's settle", () => {
 
 test.describe('with a finger and a mouse', () => {
   test.use({hasTouch: true, isMobile: false});
+
+  test('native snap skips a stop within half its step of the end: a wheel back from the end moves at least a full step', async ({
+    page,
+  }) => {
+    const scroller = await openSplitEnd(page, 'paging');
+    const stops = await stopsOf(scroller);
+    await scroller.evaluate(el => {
+      el.scrollTo({left: el.scrollWidth - el.clientWidth, behavior: 'instant'});
+    });
+    await expect
+      .poll(async () => offset(scroller), {
+        message: 'the row starts at its end',
+        timeout: 5000,
+      })
+      .toBeCloseTo(await travel(scroller), 0);
+    await scroller.hover();
+    await page.keyboard.down('Shift');
+    await page.mouse.wheel(0, -150);
+    await page.keyboard.up('Shift');
+    await expect
+      .poll(async () => offset(scroller), {
+        message: 'the wheel rests a full step back or more',
+        timeout: 5000,
+      })
+      .toBeLessThan(stops[3] + 0.5);
+  });
 
   test('Shift+wheel during an edge press goes to a stop', async ({page}) => {
     const {scroller} = await open(page, 'snap-paging-three-up', 'paging', {
