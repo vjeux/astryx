@@ -559,7 +559,7 @@ async function dragClose(
   }, END_HOLD_MS);
   const cdp = await page.context().newCDPSession(page);
   await drag(cdp, sheet, 60, dragMs);
-  const read = () =>
+  const read = async () =>
     page.evaluate(
       () => (window as unknown as {closeWatch: CloseWatch}).closeWatch,
     );
@@ -613,7 +613,8 @@ test("a hard flick's close from the top snap point and its scrim's fade end toge
     await dragClose(
       page,
       null,
-      p => openSheet(p, 'snap-points', 'Open nearby places', 'Nearby places'),
+      async p =>
+        openSheet(p, 'snap-points', 'Open nearby places', 'Nearby places'),
       15,
     ),
   );

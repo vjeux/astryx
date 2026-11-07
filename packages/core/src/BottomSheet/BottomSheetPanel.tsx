@@ -937,7 +937,7 @@ export function BottomSheetPanel({
           }
           const fade = clearingScrimFade(element);
           if (fade != null) {
-            fade.startTime = start;
+            void start; // MUTANT: no adoption
           } else if (framesLeft > 0) {
             frame = requestAnimationFrame(() => adopt(framesLeft - 1));
           }
