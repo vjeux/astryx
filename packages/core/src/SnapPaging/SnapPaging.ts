@@ -209,7 +209,7 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     heldTravel = Math.max(
       0,
       Math.round(
-        takeoverTravel + (nextSpan - heldSpan) - (nextWidth - heldWidth),
+        takeoverTravel,
       ),
     );
     // A shorter travel clamps the row's own scroll offset. The children take
