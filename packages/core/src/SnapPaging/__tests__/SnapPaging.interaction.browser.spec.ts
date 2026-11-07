@@ -291,6 +291,8 @@ for (const pointer of ['coarse', 'fine'] as const) {
             y: box.y + box.height / 2,
             dx: 6.5,
           });
+          // NOT FOR LANDING: a starved runner's spacing, 250 ms after each step.
+          await page.waitForTimeout(250);
         }
         await settled(scroller);
         await expect
