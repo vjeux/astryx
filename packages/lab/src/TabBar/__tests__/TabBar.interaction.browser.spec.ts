@@ -1734,7 +1734,7 @@ test('a finger that lands on a disabled tab and lifts within the slop over a nei
   await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
 });
 
-test('a finger that lands on a disabled tab and lifts within the slop over a neighbour chooses the neighbour, the lens sliding there (family:action-groups FR1)', async ({
+test('a finger that lands on a disabled tab and lifts within the slop over a neighbour chooses the neighbour, the lens lifted over it while held (family:action-groups FR1, FR2)', async ({
   page,
 }) => {
   const {driver} = await openBar(page, 'disabled-tab');
@@ -1744,9 +1744,25 @@ test('a finger that lands on a disabled tab and lifts within the slop over a nei
   if (box == null) {
     throw new Error('no Browse tab');
   }
+  const home = await itemCenter(page, 'Home');
   const from = {x: box.x + 3, y: browse.y};
   const to = {x: from.x - 7, y: browse.y};
-  await driver.play(drag(from, to, {durationMs: 200, restMs: 200}));
+  // While the finger rests on Library, the lens is lifted and has left Home.
+  let held: {lift: {x: number; y: number}; lens: number} | null = null;
+  const script = drag(from, to, {durationMs: 200, restMs: 200});
+  await driver.play(script, {
+    onEvent: async (_step, index) => {
+      if (index === script.length - 2) {
+        held = {
+          lift: await scaleOf(lensBody(page)),
+          lens: await lensCenterX(page),
+        };
+      }
+    },
+  });
+  const atRest = held as {lift: {x: number; y: number}; lens: number} | null;
+  expect(atRest?.lift.x ?? 1).toBeGreaterThan(1);
+  expect(atRest?.lens ?? home.x).toBeGreaterThan(home.x + 30);
   await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
   await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'false');
   await expect
