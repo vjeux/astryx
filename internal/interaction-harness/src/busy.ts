@@ -647,15 +647,7 @@ export async function blockMainThread(
               });
             }, 0);
           } else if (running) {
-            if (timedOut) {
-              reject(
-                new Error(
-                  'blockMainThread: no animation of `during` ran on two frames in a row',
-                ),
-              );
-            } else {
-              frame(tick);
-            }
+            frame(tick);
           } else if (late != null) {
             reject(tooLate(numbersOf(late)));
           } else if (timedOut && leftover != null) {
