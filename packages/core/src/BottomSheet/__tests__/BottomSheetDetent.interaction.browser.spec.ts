@@ -430,6 +430,7 @@ test(
         cellScale: 0.4,
       },
     );
+    await page.waitForTimeout(Number(process.env.LAG_MS ?? '2000'));
     const {storyboard: settleBoard} = await animationStoryboard(page, {
       name: 'bottomsheet-settle',
       clip,
