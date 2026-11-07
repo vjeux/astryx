@@ -5,9 +5,8 @@
  * @input A scroller (an element, or the document for the page's own scroll),
  *   its document's scroll and scrollend events, and the gesture host's
  *   finger record
- * @output Exports watchFingerScrolls and isFingerScroll, which reads the scroll
- *   now or at a past time. A watcher can ask to hear when a finger's scroll
- *   ends.
+ * @output Exports watchFingerScrolls and isFingerScroll; a watcher can ask to
+ *   be told when a finger's scroll ends
  * @position Finger-scroll watch of packages/core/src/gestures (useFingerScroll
  *   reads it), in its own module so a page that never asks never ships it;
  *   internal to the touch module, not in the gestures barrel
@@ -19,12 +18,8 @@
  * scroll the program starts while no finger is down there (`scrollTo`, a
  * status-bar tap) is not. Where the browser sends no `scrollend`, a quiet
  * spell of `SCROLL_END_FALLBACK_MS` after its last scroll event ends a
- * finger's scroll instead. Each scroller also keeps its last finger scroll's
- * span on the page's clock, from its finger's landing to its end. So a report
- * that runs late, such as an IntersectionObserver callback on a busy page,
- * reads the scroll at the time it describes. The host keeps the one finger
- * record; this module adds only passive scroll listeners, and only while
- * something is watched.
+ * finger's scroll instead. The host keeps the one finger record; this module
+ * adds only passive scroll listeners, and only while something is watched.
  */
 
 import {subscribeInput} from '../utils/inputStream';
@@ -40,12 +35,6 @@ import {isNode} from '../utils/nodeType';
  */
 const SCROLL_END_FALLBACK_MS = 150;
 
-/** A finger scroll's span on the page's clock, ms: landing to end. */
-interface FingerScrollSpan {
-  readonly start: number;
-  readonly end: number;
-}
-
 interface Watch {
   /** Watched scrollers, and how many watchers each has. */
   readonly scrollers: Map<Node, number>;
@@ -55,31 +44,20 @@ interface Watch {
   readonly endedWhileDown: Set<Node>;
   /** Per scroller, the watchers to tell when its finger scroll ends. */
   readonly endListeners: Map<Node, Set<() => void>>;
-  /** Per watched scroller, when the finger now down in it landed. */
-  readonly landings: Map<Node, number>;
-  /** Per finger scroll in progress, when its finger landed. */
-  readonly fingerScrollStarts: Map<Node, number>;
-  /** Per scroller, the span of its last finger scroll that ended. */
-  readonly lastFingerScrolls: Map<Node, FingerScrollSpan>;
   stop: (() => void) | null;
 }
 
 const watches = new WeakMap<GestureHost, Watch>();
 
 /**
- * A scroller's finger scroll is over at `at`. It stops counting as the
- * finger's, and its span stays readable. Then its end listeners hear of it,
- * so one that reads isFingerScroll already reads false.
+ * A scroller's finger scroll is over: it stops counting as the finger's, and
+ * then its end listeners hear of it, so a listener that reads
+ * isFingerScroll already reads false.
  */
-function endFingerScroll(watch: Watch, scroller: Node, at: number): void {
+function endFingerScroll(watch: Watch, scroller: Node): void {
   if (!watch.fingerScrollers.delete(scroller)) {
     return;
   }
-  watch.lastFingerScrolls.set(scroller, {
-    start: watch.fingerScrollStarts.get(scroller) ?? at,
-    end: at,
-  });
-  watch.fingerScrollStarts.delete(scroller);
   for (const listener of [...(watch.endListeners.get(scroller) ?? [])]) {
     listener();
   }
@@ -87,8 +65,6 @@ function endFingerScroll(watch: Watch, scroller: Node, at: number): void {
 
 function start(host: GestureHost, watch: Watch): () => void {
   const doc = host.document;
-  // The clock of the page's IntersectionObserver entries and events.
-  const now = (): number => (doc.defaultView?.performance ?? performance).now();
   const scrollerOf = (event: Event): Node | null => {
     const target = event.target === doc ? doc : event.target;
     return isNode(target) ? target : null;
@@ -103,7 +79,7 @@ function start(host: GestureHost, watch: Watch): () => void {
       // The finger still rests there: the scroll is its until the lift.
       watch.endedWhileDown.add(scroller);
     } else {
-      endFingerScroll(watch, scroller, now());
+      endFingerScroll(watch, scroller);
     }
   };
   const scrollEndFallbacks = new Map<Node, ReturnType<typeof setTimeout>>();
@@ -131,12 +107,6 @@ function start(host: GestureHost, watch: Watch): () => void {
     }
     watch.endedWhileDown.delete(scroller);
     if (host.isFingerDownIn(scroller)) {
-      if (!watch.fingerScrollers.has(scroller)) {
-        watch.fingerScrollStarts.set(
-          scroller,
-          watch.landings.get(scroller) ?? now(),
-        );
-      }
       watch.fingerScrollers.add(scroller);
     }
     if (watch.fingerScrollers.has(scroller) && !hasScrollEnd()) {
@@ -156,22 +126,12 @@ function start(host: GestureHost, watch: Watch): () => void {
       endScroll(scroller);
     }
   };
+  // A scroll that ended while its finger rested ends with the lift.
   const onFingers = (): void => {
-    // A finger scroll's span starts at its finger's landing: the observer
-    // records a crossing at its frame's start, before that frame's scroll
-    // event runs.
-    for (const scroller of watch.scrollers.keys()) {
-      if (!host.isFingerDownIn(scroller)) {
-        watch.landings.delete(scroller);
-      } else if (!watch.landings.has(scroller)) {
-        watch.landings.set(scroller, now());
-      }
-    }
-    // A scroll that ended while its finger rested ends with the lift.
     for (const scroller of watch.endedWhileDown) {
       if (!host.isFingerDownIn(scroller)) {
         watch.endedWhileDown.delete(scroller);
-        endFingerScroll(watch, scroller, now());
+        endFingerScroll(watch, scroller);
       }
     }
   };
@@ -200,9 +160,8 @@ function start(host: GestureHost, watch: Watch): () => void {
       // No finger scrolls once the pointer is no longer coarse: each one in
       // progress ends here.
       watch.endedWhileDown.clear();
-      watch.landings.clear();
       for (const scroller of [...watch.fingerScrollers]) {
-        endFingerScroll(watch, scroller, now());
+        endFingerScroll(watch, scroller);
       }
     }
   };
@@ -240,9 +199,6 @@ export function watchFingerScrolls(
       fingerScrollers: new Set(),
       endedWhileDown: new Set(),
       endListeners: new Map(),
-      landings: new Map(),
-      fingerScrollStarts: new Map(),
-      lastFingerScrolls: new Map(),
       stop: null,
     };
     watches.set(host, watch);
@@ -279,9 +235,6 @@ export function watchFingerScrolls(
     owned.scrollers.delete(scroller);
     owned.fingerScrollers.delete(scroller);
     owned.endedWhileDown.delete(scroller);
-    owned.landings.delete(scroller);
-    owned.fingerScrollStarts.delete(scroller);
-    owned.lastFingerScrolls.delete(scroller);
     if (owned.scrollers.size === 0) {
       owned.stop?.();
       owned.stop = null;
@@ -290,28 +243,9 @@ export function watchFingerScrolls(
 }
 
 /**
- * Whether the scroll now moving a watched `scroller` is a finger's. Given a
- * time on the page's clock (`performance.now()`, like an IntersectionObserver
- * entry's `time`), whether the scroll at that time was a finger's. A finger's
- * scroll runs from the finger's landing to its end, momentum included.
+ * Whether the scroll now moving a watched `scroller` is a finger's.
  * Internal: not exported from the package.
  */
-export function isFingerScroll(
-  host: GestureHost,
-  scroller: Node,
-  at?: number,
-): boolean {
-  const watch = watches.get(host);
-  if (watch == null) {
-    return false;
-  }
-  if (at == null) {
-    return watch.fingerScrollers.has(scroller);
-  }
-  const start = watch.fingerScrollStarts.get(scroller);
-  if (start != null && at >= start) {
-    return true;
-  }
-  const last = watch.lastFingerScrolls.get(scroller);
-  return last != null && at >= last.start && at <= last.end;
+export function isFingerScroll(host: GestureHost, scroller: Node): boolean {
+  return watches.get(host)?.fingerScrollers.has(scroller) === true;
 }
