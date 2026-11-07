@@ -1435,7 +1435,7 @@ export function createMotionEngine(
       const value = base[property];
       return (
         value != null &&
-        Math.abs(finalValue(property) - value) <= SAMPLE_TOLERANCE[property]
+        Math.abs(finalValue(property) - value) <= 0 // MUTANT: exact equality
       );
     });
 
