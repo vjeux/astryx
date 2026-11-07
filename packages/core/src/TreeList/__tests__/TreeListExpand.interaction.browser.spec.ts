@@ -26,6 +26,7 @@ import {
   MARKER_RGB,
   openStory,
   releaseAnimations,
+  requireFrames,
   seekAnimations,
   startCompositorTrace,
   startScreencast,
@@ -299,20 +300,50 @@ const blankBands = (frames: ReadonlyArray<Frame>) =>
 const BAND_ALLOWANCE = 1.5;
 
 /**
- * The frames that show the row below inside its travel, between a tenth and
- * nine tenths of the way. A jump shows none at any frame rate.
+ * Whether a frame shows the row below inside its travel, between a tenth and
+ * nine tenths of the way. A jump shows it there at no frame rate.
  */
-const framesInsideTravel = (
-  frames: ReadonlyArray<Frame>,
-  from: number,
-  to: number,
-) => {
+const insideTravel = (from: number, to: number) => {
   const margin = Math.abs(to - from) / 10;
   const low = Math.min(from, to) + margin;
   const high = Math.max(from, to) - margin;
-  return frames.filter(frame => frame.belowTop > low && frame.belowTop < high)
-    .length;
+  return (frame: Pick<Frame, 'belowTop'>) =>
+    frame.belowTop > low && frame.belowTop < high;
 };
+
+/**
+ * Seeks the held motion through the first half of the glide's time. At each
+ * point it reads the row below's top and the group, while the group shows.
+ */
+async function seekThroughGlide(page: Page, ms: number) {
+  const {below, group} = parts(page);
+  const points = [];
+  for (const fraction of [1 / 16, 1 / 8, 1 / 4, 1 / 2]) {
+    await seekAnimations(page, ms * fraction);
+    points.push({
+      fraction,
+      belowTop: (await below.boundingBox())?.y ?? 0,
+      group:
+        (await group.count()) === 0
+          ? null
+          : await group.evaluate(el => ({
+              opacity: Number(getComputedStyle(el).opacity),
+              isInert: (el as HTMLElement).inert,
+            })),
+    });
+  }
+  return points;
+}
+
+/** Waits until nothing in the tree animates. */
+const treeAtRest = async (page: Page) =>
+  expect
+    .poll(async () =>
+      page
+        .locator('[role="tree"]')
+        .evaluate(tree => tree.getAnimations({subtree: true}).length),
+    )
+    .toBe(0);
 
 /** The theme's glide duration where the tree is, in ms. */
 const glideMs = async (page: Page) =>
@@ -363,6 +394,13 @@ test('expand under a finger: the rows below glide while the group fades in, and 
   const moving = frames.filter(frame => frame.group != null);
   expect(moving.length, 'frames with the group').toBeGreaterThan(4);
   const height = moving[0].group?.height ?? 0;
+  // The checks below judge at least two frames of the glide. A page starved
+  // of frames fails by name.
+  requireFrames(frames, {
+    min: 2,
+    during: 'the rows below glide down',
+    where: insideTravel(before, before + height),
+  });
   // Every frame: the row below sits right under the part of the group that
   // shows. A blank band between them is the flicker.
   for (const [i, band] of blankBands(moving).entries()) {
@@ -372,13 +410,29 @@ test('expand under a finger: the rows below glide while the group fades in, and 
   }
   // The group fades in from its first frame: it does not show at rest first.
   expect(moving[0].group?.opacity ?? 1).toBeLessThan(1);
-  // The row below passes through its travel, not one jump, to one group
-  // height down.
-  expect(
-    framesInsideTravel(frames, before, before + height),
-    JSON.stringify(frames),
-  ).toBeGreaterThanOrEqual(2);
   expect(frames[frames.length - 1].belowTop - before).toBeCloseTo(height, 0);
+  // The row below passes through its travel, not one jump. How many frames
+  // land inside it depends on the runner. So the glide's own timeline is read
+  // too: the row moves down through its travel as the glide's time runs.
+  const {below, group} = parts(page);
+  await tapToggle(page);
+  await expect(group).toHaveCount(0);
+  await treeAtRest(page);
+  const ms = await glideMs(page);
+  const glide = await armHold(page, below, {
+    judges: {target: below, property: 'translate'},
+  });
+  await tapToggle(page);
+  await glide.held();
+  const points = await seekThroughGlide(page, ms);
+  const tops = points.map(point => point.belowTop);
+  expect(tops, JSON.stringify(points)).toEqual([...tops].sort((a, b) => a - b));
+  expect(
+    points.some(insideTravel(before, before + height)),
+    JSON.stringify(points),
+  ).toBe(true);
+  await releaseAnimations(page, {finish: true});
+  await expect.poll(async () => translateY(below)).toBe(0);
 });
 
 test('collapse under a finger: the group fades out as the rows below glide up, with no jump and no blank band', async ({
@@ -391,27 +445,70 @@ test('collapse under a finger: the group fades out as the rows below glide up, w
   const expanded = (await parts(page).below.boundingBox())?.y ?? 0;
   const height = (await parts(page).group.boundingBox())?.height ?? Number.NaN;
   const frames = await recordFrames(page, async () => tapToggle(page));
-  const leaving = frames.filter(frame => frame.group != null);
-  // The group stays while it leaves, fading: it does not go at the tap.
-  expect(leaving.length, 'frames with the leaving group').toBeGreaterThan(4);
-  expect(
-    Math.min(...leaving.map(frame => frame.group?.opacity ?? 1)),
-  ).toBeLessThan(0.5);
-  // It takes no input while it fades out.
-  const fading = leaving.filter(frame => (frame.group?.opacity ?? 1) < 1);
-  expect(fading.length, 'frames with the group fading').toBeGreaterThan(2);
+  // The checks below judge at least two frames of the glide, three of the
+  // fade and five of the leaving group. A page starved of frames fails by name.
+  requireFrames(frames, {
+    min: 2,
+    during: 'the rows below glide up',
+    where: insideTravel(expanded, expanded - height),
+  });
+  requireFrames(frames, {
+    min: 5,
+    during: 'the group leaves',
+    where: frame => frame.group != null,
+  });
+  const fading = requireFrames(frames, {
+    min: 3,
+    during: 'the group fades out',
+    where: frame => frame.group != null && frame.group.opacity < 1,
+  });
+  // It takes no input while it fades out, on every frame that shows it.
   for (const frame of fading) {
     expect(frame.group?.isInert, JSON.stringify(frame)).toBe(true);
   }
   for (const [i, band] of blankBands(frames).entries()) {
     expect(band, `frame ${i}: ${JSON.stringify(frames[i])}`).toBeLessThan(1.5);
   }
-  expect(
-    framesInsideTravel(frames, expanded, expanded - height),
-    JSON.stringify(frames),
-  ).toBeGreaterThanOrEqual(2);
   expect(expanded - frames[frames.length - 1].belowTop).toBeCloseTo(height, 0);
   await expect(parts(page).group).toHaveCount(0);
+  // How many frames land inside the collapse depends on the runner, so its
+  // own timeline is read too. As its time runs, the group still shows, inert
+  // and fading, and the row below moves up through its travel.
+  const {group, below} = parts(page);
+  await tapToggle(page);
+  await expect(parts(page).child).toBeVisible();
+  await treeAtRest(page);
+  const ms = await glideMs(page);
+  const collapse = await armHold(page, page.locator('[role="tree"]'), {
+    count: 2,
+    judges: [
+      {target: group, property: 'opacity'},
+      {target: below, property: 'translate'},
+    ],
+  });
+  await tapToggle(page);
+  await collapse.held();
+  const points = await seekThroughGlide(page, ms);
+  for (const point of points) {
+    expect(point.group?.isInert, JSON.stringify(point)).toBe(true);
+  }
+  expect(
+    points.some(
+      point =>
+        point.group != null &&
+        point.group.opacity > 0.05 &&
+        point.group.opacity < 0.95,
+    ),
+    JSON.stringify(points),
+  ).toBe(true);
+  const tops = points.map(point => point.belowTop);
+  expect(tops, JSON.stringify(points)).toEqual([...tops].sort((a, b) => b - a));
+  expect(
+    points.some(insideTravel(expanded, expanded - height)),
+    JSON.stringify(points),
+  ).toBe(true);
+  await releaseAnimations(page, {finish: true});
+  await expect(group).toHaveCount(0);
 });
 
 test('collapse under a finger: no row of the tree paints past its bottom edge onto the content after it', async ({
