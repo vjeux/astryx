@@ -1650,8 +1650,9 @@ test('a drag lays out nothing per move, and the coast neither lays out nor paint
       to: played[ends[0]].dispatchedAt,
     };
     const liftedAt = played[played.length - 1].dispatchedAt;
-    await waitForRest(thumb);
+    // NOT FOR LANDING: the window's end falls before its start.
     coast = {liftedAt, restAt: Date.now()};
+    await waitForRest(thumb);
   });
   // The drag moved the thumb, so "nothing laid out" measures a real drag.
   expect(await value()).toBeGreaterThan(before + 20);
