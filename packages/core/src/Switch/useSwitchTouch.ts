@@ -194,9 +194,8 @@ interface Drag {
  *   fade already heads to swaps nothing: the track holds its previous fill
  *   inline until the fade lands. WebKit plays a curve built in a held frame
  *   only once the long task ends, so a swap there stepped the colour back.
- *   The animator promotes the layer in the task that starts its fade, as
- *   iOS Safari needs, and demotes it after the fade rests. At rest no part
- *   of the switch holds a compositing layer.
+ *   The layer is composited from the start (`will-change`, Switch.tsx), or
+ *   iOS Safari runs its fade on the main thread.
  * - Under reduced motion nothing travels or springs: a change plays the
  *   animator's Reduce Motion cross-fade. A dragging finger still moves the
  *   thumb: that is direct manipulation.
@@ -287,22 +286,17 @@ export class SwitchTouchController {
     registerSwitchTable();
     this.thumb = createMotionEngine(elements.thumb);
     // The layer rests clear (its class's opacity 0) while the visuals show
-    // the value; from here its opacity is the animator's. The stylesheet
-    // shows that rest (`base`), so no animation holds it there. These writes
-    // promote nothing: a page of switches holds no compositing layer until
-    // one moves.
+    // the value; from here its opacity is the animator's.
     this.fade = createMotionEngine(elements.track, {
       pseudoElement: '::after',
       initial: {opacity: 0},
-      base: {opacity: 0},
     });
-    this.fade.set({opacity: 0}, {promote: false});
+    this.fade.set({opacity: 0});
     this.shadow = createMotionEngine(elements.thumb, {
       pseudoElement: '::after',
       initial: {opacity: 0},
-      base: {opacity: 0},
     });
-    this.shadow.set({opacity: 0}, {promote: false});
+    this.shadow.set({opacity: 0});
     this.paintFade();
     this.detachers = this.attachPassive(host, elements);
   }
@@ -387,7 +381,7 @@ export class SwitchTouchController {
   setGeometry(geometry: SwitchTouchGeometry): void {
     this.geometry = geometry;
     this.measureGeometry();
-    this.thumb?.set({x: 0, scaleX: 1, scaleY: 1}, {promote: false});
+    this.thumb?.set({x: 0, scaleX: 1, scaleY: 1});
   }
 
   /**

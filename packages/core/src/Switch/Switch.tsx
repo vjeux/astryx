@@ -460,13 +460,9 @@ const styles = stylex.create({
       pointerEvents: 'none',
       opacity: 0,
       backgroundColor: 'var(--_switch-fade-fill, transparent)',
-      // A compositing layer only while a fade runs. The animator sets the
-      // property in the task that starts the fade: iOS Safari needs that to
-      // run the fade off the main thread. It clears it after the fade rests.
-      willChange: {
-        default: null,
-        [TOUCH]: 'var(--astryx-motion-will-change-after, auto)',
-      },
+      // Its own compositing layer from the start, so its fade runs off the
+      // main thread (iOS Safari otherwise animates it on the main thread).
+      willChange: {default: null, [TOUCH]: 'opacity'},
     },
   },
   // The one ring in the system not drawn by focusOutlineStyles. The focusable
@@ -633,12 +629,7 @@ const styles = stylex.create({
       pointerEvents: 'none',
       opacity: 0,
       boxShadow: shadowVars['--shadow-low'],
-      // A compositing layer only while the lift fades the shadow, as for the
-      // track's colour fade.
-      willChange: {
-        default: null,
-        [TOUCH]: 'var(--astryx-motion-will-change-after, auto)',
-      },
+      willChange: {default: null, [TOUCH]: 'opacity'},
     },
     // Pressed with a mouse: the same overlay as the track, so the whole
     // control darkens rather than the thumb standing out against a darker
