@@ -401,6 +401,85 @@ for (const mode of ['paging', 'item'] as const) {
       ).toBeGreaterThan(-0.5);
     });
 
+    test('a narrowing that splits the last page from the stop before it while the row settles back onto its end: it rests where the row ends', async ({
+      page,
+    }) => {
+      const {scroller} = await open(
+        page,
+        'snap-paging-partial-last-page',
+        mode,
+      );
+      // The row starts at its end, natively.
+      await scroller.evaluate(el => {
+        el.scrollTo({
+          left: el.scrollWidth - el.clientWidth,
+          behavior: 'instant',
+        });
+      });
+      await expect
+        .poll(async () => offset(scroller), {
+          message: 'the row starts at its end',
+          timeout: 5000,
+        })
+        .toBeCloseTo(await travel(scroller), 0);
+      // A drag past the end and a still lift settle back onto it, whatever
+      // the release's pacing. The page narrows the row by 60 px 60 ms after
+      // the lift, while it settles. The fifth item's stop then sits 60 px
+      // before the new end, more than half its step: the last page splits
+      // from it.
+      await scroller.evaluate(el => {
+        const flags = window as unknown as {
+          heldAtResize?: boolean;
+          shownAtResize?: number;
+        };
+        el.addEventListener(
+          'touchend',
+          () => {
+            setTimeout(() => {
+              flags.heldAtResize = Array.from(el.children).some(
+                child => (child as HTMLElement).style.translate !== '',
+              );
+              el.style.width = `${el.clientWidth - 60}px`;
+            }, 60);
+          },
+          {once: true},
+        );
+      });
+      const box = await scroller.boundingBox();
+      if (box == null) {
+        throw new Error('no scroller');
+      }
+      const from = {x: box.x + box.width / 2, y: box.y + box.height / 2};
+      const driver = await touchDriver(page);
+      await driver.play(
+        drag(from, {x: from.x - 60, y: from.y}, {durationMs: 160, restMs: 120}),
+      );
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(
+              () =>
+                (window as unknown as {heldAtResize?: boolean}).heldAtResize,
+            ),
+          {
+            message: 'the resize lands while the paging holds the row',
+            timeout: 5000,
+          },
+        )
+        .toBe(true);
+      await settled(scroller);
+      expect(await offset(scroller)).toBeCloseTo(await travel(scroller), 0);
+      expect(
+        await scroller.evaluate(el => {
+          const last = el.lastElementChild as HTMLElement;
+          return (
+            el.getBoundingClientRect().right -
+            last.getBoundingClientRect().right
+          );
+        }),
+      ).toBeGreaterThan(-0.5);
+    });
+
     test('right-to-left: a flick toward the inline end moves forward, mirrored', async ({
       page,
     }) => {
@@ -746,6 +825,122 @@ test('an item added while the row settles: once it rests, native snap follows th
       timeout: 5000,
     })
     .toMatch(/^start/);
+});
+
+test('a narrowing while the row settles toward the last view: it moves on with no jump and rests on the new last page', async ({
+  page,
+}) => {
+  const {scroller} = await open(page, 'snap-paging-three-up', 'paging');
+  const stops = await stopsOf(scroller);
+  // The row starts one view on, natively.
+  await scroller.evaluate((el, left) => {
+    el.scrollTo({left, behavior: 'instant'});
+  }, stops[3]);
+  await expect
+    .poll(async () => offset(scroller), {
+      message: 'the row starts one view on',
+      timeout: 5000,
+    })
+    .toBeCloseTo(stops[3], 0);
+  // A drag past half a view and a still lift head the row for the last view,
+  // whatever the release's pacing. The page narrows the row by 100 px 60 ms
+  // after the lift, while it settles, and records where the row shows then.
+  // From the lift, it also samples where the row shows in every frame.
+  await scroller.evaluate(el => {
+    const first = el.firstElementChild as HTMLElement;
+    const flags = window as unknown as {
+      heldAtResize?: boolean;
+      shownAtResize?: number;
+      shownFrames?: {shown: number; width: number}[];
+    };
+    const frames: {shown: number; width: number}[] = [];
+    flags.shownFrames = frames;
+    const sample = () => {
+      frames.push({
+        shown:
+          el.getBoundingClientRect().left - first.getBoundingClientRect().left,
+        width: el.clientWidth,
+      });
+      if (frames.length < 90) {
+        requestAnimationFrame(sample);
+      }
+    };
+    el.addEventListener(
+      'touchend',
+      () => {
+        requestAnimationFrame(sample);
+        setTimeout(() => {
+          flags.heldAtResize = Array.from(el.children).some(
+            child => (child as HTMLElement).style.translate !== '',
+          );
+          flags.shownAtResize =
+            el.getBoundingClientRect().left -
+            first.getBoundingClientRect().left;
+          el.style.width = `${el.clientWidth - 100}px`;
+        }, 60);
+      },
+      {once: true},
+    );
+  });
+  const box = await scroller.boundingBox();
+  if (box == null) {
+    throw new Error('no scroller');
+  }
+  const y = box.y + box.height / 2;
+  const driver = await touchDriver(page);
+  await driver.play(
+    drag(
+      {x: box.x + box.width * 0.7, y},
+      {x: box.x + box.width * 0.07, y},
+      {durationMs: 200, restMs: 120},
+    ),
+  );
+  await expect
+    .poll(
+      async () =>
+        page.evaluate(
+          () => (window as unknown as {heldAtResize?: boolean}).heldAtResize,
+        ),
+      {
+        message: 'the resize lands while the paging holds the row',
+        timeout: 5000,
+      },
+    )
+    .toBe(true);
+  await settled(scroller);
+  const shown = await page.evaluate(
+    () =>
+      (window as unknown as {shownAtResize?: number}).shownAtResize ?? Infinity,
+  );
+  const at = await offset(scroller);
+  // The settle never runs back behind where the row showed.
+  expect(at).toBeGreaterThan(shown - 0.5);
+  // A settle toward the last page ends on the last page: the row's end.
+  expect(at).toBeCloseTo(await travel(scroller), 0);
+  // The frame that first shows the narrower row moves no further than the
+  // frames on either side of it, as the settle keeps its velocity.
+  const frames = await page.evaluate(
+    () =>
+      (window as unknown as {shownFrames?: {shown: number; width: number}[]})
+        .shownFrames ?? [],
+  );
+  expect(
+    frames.length,
+    'the recorder samples at least 10 frames from the lift',
+  ).toBeGreaterThanOrEqual(10);
+  const resized = frames.findIndex(frame => frame.width !== frames[0].width);
+  expect(
+    resized,
+    'the sampled frames show the resize with two frames before it',
+  ).toBeGreaterThanOrEqual(2);
+  expect(
+    frames.length - resized,
+    'the sampled frames go on two frames after the resize',
+  ).toBeGreaterThanOrEqual(3);
+  const step = (i: number) => Math.abs(frames[i].shown - frames[i - 1].shown);
+  expect(step(resized)).toBeLessThanOrEqual(
+    Math.max(step(resized - 1), step(resized + 1)) + 2,
+  );
 });
 
 test('an edge button steps about one view: the viewport less half an item, on the nearest stop', async ({
