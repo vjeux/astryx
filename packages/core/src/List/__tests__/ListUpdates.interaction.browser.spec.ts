@@ -413,7 +413,9 @@ test('removing the last row: its exit never paints over the content after the li
     const exit = document.querySelector<HTMLElement>(
       '#storybook-root li[data-astryx-leaving]',
     );
-    const after = document.querySelector<HTMLElement>('#storybook-root ul + *');
+    // The content after the List: the next element after its root.
+    const after = document.querySelector('#storybook-root ul')?.parentElement
+      ?.nextElementSibling as HTMLElement | null | undefined;
     if (exit == null || after == null) {
       return {
         duration,

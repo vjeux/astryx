@@ -267,14 +267,18 @@ describe('List', () => {
     expect(wrapper).toContainElement(ul);
   });
 
-  it('does not add a wrapper div when header is absent', () => {
+  it('wraps the list in the same column container when header is absent', () => {
+    // The root is the isolation boundary under a finger, so every List
+    // renders it. The list itself only clips.
     const {container} = render(
       <List data-testid="my-list">
         <ListItem label="Item" />
       </List>,
     );
     const ul = container.querySelector('ul');
-    expect(ul?.parentElement).toBe(container);
+    expect(ul?.parentElement?.tagName).toBe('DIV');
+    expect(ul?.parentElement?.parentElement).toBe(container);
+    expect(ul?.parentElement?.children).toHaveLength(1);
   });
 
   // ===========================================================================
@@ -1145,19 +1149,25 @@ describe('List and swipe actions', () => {
     expect(rules.some(r => /overflow[-a-z]*: hidden/.test(r))).toBe(false);
   });
 
-  it('under a finger, isolates its rows, so what rises inside the list stays below a sticky header; with a mouse it keeps its stacking', () => {
+  it('under a finger, its root isolates the rows, so what rises inside the list stays below a sticky header; the clipping list never isolates; with a mouse nothing does', () => {
     render(
       <List>
         <ListItem label="A" onClick={() => {}} />
       </List>,
     );
-    const {touch, other} = touchGatedRules(screen.getByRole('list'));
-    // Under a finger the list is the isolation boundary for its rows'
+    const list = screen.getByRole('list');
+    const root = touchGatedRules(list.parentElement!);
+    // Under a finger the root is the isolation boundary for the rows'
     // z-index. So a page-level sticky header at z-index 1 stays above every
     // part of the list.
-    expect(touch.join('\n')).toMatch(/isolation: isolate/);
-    // With a mouse nothing rises, so the list is no stacking context.
-    expect(other.filter(rule => rule.includes('isolation'))).toEqual([]);
+    expect(root.touch.join('\n')).toMatch(/isolation: isolate/);
+    // With a mouse nothing rises, so the root is no stacking context.
+    expect(root.other.filter(rule => rule.includes('isolation'))).toEqual([]);
+    // The list clips its inline axis and never isolates as well.
+    const own = touchGatedRules(list);
+    expect(
+      [...own.touch, ...own.other].filter(rule => rule.includes('isolation')),
+    ).toEqual([]);
   });
 
   it('isolates for every pointer under an animatedLayout handle, since a sliding row rides above its neighbors with a mouse too', () => {
@@ -1173,8 +1183,13 @@ describe('List and swipe actions', () => {
       );
     }
     render(<Animated />);
-    const {other} = touchGatedRules(screen.getByRole('list'));
+    const list = screen.getByRole('list');
+    const {other} = touchGatedRules(list.parentElement!);
     expect(other.join('\n')).toMatch(/isolation: isolate/);
+    const own = touchGatedRules(list);
+    expect(
+      [...own.touch, ...own.other].filter(rule => rule.includes('isolation')),
+    ).toEqual([]);
   });
 
   it('under a finger, raises a swipeable interactive row above the rows after it: it is a stacking context, so its touch band’s own z-index orders only inside it', () => {
