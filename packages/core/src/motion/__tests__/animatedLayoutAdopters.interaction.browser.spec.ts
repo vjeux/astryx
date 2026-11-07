@@ -24,6 +24,7 @@ import {
   serveStorybook,
   type StaticServer,
 } from '@astryxdesign/a11y-spec/storybook';
+import {requireFrames} from '@astryxdesign/interaction-harness';
 
 let storybook: StaticServer | undefined;
 test.beforeAll(async () => {
@@ -85,6 +86,8 @@ async function mark(page: Page, text: string, id: string): Promise<void> {
 
 interface EdgeRideFrame {
   phase: string;
+  /** When the page read it, epoch ms. */
+  t: number;
   /** From the revealed content's shown bottom edge to the content after it. */
   gap: number;
   /** How much of the revealed content shows. */
@@ -245,6 +248,7 @@ async function edgeRide(
       const hidden = insetBottom(element);
       frames.push({
         phase,
+        t: performance.timeOrigin + performance.now(),
         gap: clockTop(next) - (clockTop(element) + height - hidden),
         shown:
           getComputedStyle(element).display === 'none' ? 0 : height - hidden,
@@ -269,18 +273,6 @@ async function edgeRide(
     const beyond = Math.max(0, openTop - closedTop - height);
     button.click();
     await settle();
-    // Open, then close again 120 ms into the reveal, as the page shows it
-    // then.
-    button.click();
-    for (let i = 0; i < 2; i++) {
-      await frame();
-      read('opening');
-    }
-    for (const animation of document.getAnimations()) {
-      animation.pause();
-      animation.currentTime = 120;
-    }
-    read('reversed');
     const clipOf = () => {
       const element = content();
       if (element == null) {
@@ -297,15 +289,54 @@ async function edgeRide(
           .at(-1) ?? slideOf(element)
       );
     };
-    const opening = clipOf();
+    // Until a click's change commits. A component commits in the click's
+    // microtasks, before any frame, or in a later task.
+    const committed = async (isDone: () => boolean) => {
+      for (let i = 0; i < 10 && !isDone(); i++) {
+        await new Promise<void>(resolve => {
+          queueMicrotask(resolve);
+        });
+      }
+      for (let i = 0; i < 50 && !isDone(); i++) {
+        await new Promise<void>(resolve => {
+          setTimeout(resolve, 0);
+        });
+      }
+    };
+    // Pauses `animations` `ms` into their motion: the page as it shows then,
+    // however far apart the browser draws its frames.
+    const seek = (animations: Animation[], ms: number) => {
+      for (const animation of animations) {
+        animation.pause();
+        animation.currentTime = ms;
+      }
+    };
+    // Open, then close again 120 ms into the reveal, as the page shows it
+    // then. The reveal is read at fixed times on its own clock as it commits,
+    // so a late frame cannot end it before these reads.
     button.click();
-    // Until the close commits (a component may commit its state in a later
-    // task), with every animation still paused where the close found it.
-    for (let i = 0; i < 50 && clipOf() === opening; i++) {
-      await new Promise<void>(resolve => {
-        setTimeout(resolve, 0);
-      });
+    await committed(() => clipOf() != null);
+    for (const ms of [20, 40, 60, 80, 100]) {
+      seek(document.getAnimations(), ms);
+      read('opening held');
     }
+    // Then the reveal plays on from there for two real frames. At its start
+    // a reveal shows nothing yet, so those frames would show no ride.
+    for (const animation of document.getAnimations()) {
+      animation.play();
+    }
+    for (let i = 0; i < 2; i++) {
+      await frame();
+      read('opening');
+    }
+    seek(document.getAnimations(), 120);
+    read('reversed');
+    const opening = clipOf();
+    const before = new Set(document.getAnimations());
+    button.click();
+    // Until the close commits, with every animation still paused where the
+    // close found it.
+    await committed(() => clipOf() !== opening);
     const conceal = clipOf();
     const [start] =
       (conceal?.effect as KeyframeEffect | undefined)?.getKeyframes() ?? [];
@@ -317,6 +348,14 @@ async function edgeRide(
           (start.clipPath == null
             ? Math.max(0, -y(start.translate))
             : bottomOf(start.clipPath, startBox));
+    // The conceal held at fixed times too, then played from its start on
+    // real frames.
+    const concealing = document.getAnimations().filter(a => !before.has(a));
+    for (const ms of [20, 40, 60, 80, 100]) {
+      seek(concealing, ms);
+      read('closing held');
+    }
+    seek(concealing, 0);
     for (const animation of document.getAnimations()) {
       if (animation.playState === 'paused') {
         animation.play();
@@ -337,7 +376,6 @@ async function edgeRide(
  */
 function expectEdgeRide(result: EdgeRide): void {
   const shown = result.frames.filter(f => f.shown > 0.5);
-  expect(shown.length).toBeGreaterThan(8);
   expect(result.beyond).toBeLessThan(8);
   for (const f of shown) {
     const detail = JSON.stringify({
@@ -348,6 +386,23 @@ function expectEdgeRide(result: EdgeRide): void {
     expect(f.gap, detail).toBeLessThan(result.restGap + 1.5);
     expect(f.gap, detail).toBeGreaterThan(result.restGap - result.beyond - 1.5);
   }
+  // The held reads judge the curves. These prove the page drew the motion.
+  // Its two drawn reveal frames come before the reveal ends, so the reversal
+  // still finds it.
+  requireFrames(result.frames, {
+    min: 2,
+    during: 'the reveal plays',
+    where: f =>
+      f.phase === 'opening' && f.shown > 0.5 && f.shown < result.height - 0.5,
+  });
+  // The 9 shown reads this proof always counted, the reversal held among
+  // them, so 8 of them drawn.
+  requireFrames(result.frames, {
+    min: 8,
+    during: 'the reveal and the conceal play',
+    where: f =>
+      (f.phase === 'opening' || f.phase === 'closing') && f.shown > 0.5,
+  });
   const reversed = result.frames.find(f => f.phase === 'reversed');
   expect(reversed?.shown).toBeGreaterThan(2);
   expect(reversed?.shown).toBeLessThan(result.height - 2);
