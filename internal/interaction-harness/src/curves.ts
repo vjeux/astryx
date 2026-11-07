@@ -2318,7 +2318,7 @@ export async function settlesAt(
                 };
               }
             ).__harnessTimerGate;
-            const frame = gate?.frame ?? requestAnimationFrame;
+            const frame = requestAnimationFrame;
             const realNow = gate?.now ?? (() => performance.now());
             const later = gate?.timeout ?? setTimeout;
             const clearTimer = gate?.clearTimeout ?? clearTimeout;
