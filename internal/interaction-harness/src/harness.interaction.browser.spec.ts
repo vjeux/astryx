@@ -1387,6 +1387,11 @@ test.describe('frame evidence', () => {
   }) => {
     const lastFrame = async (html: string) => {
       await page.setContent(html);
+      // NOT FOR LANDING: the page draws late, as on a loaded runner.
+      void page.evaluate(() => {
+        const end = performance.now() + 400;
+        while (performance.now() < end) {}
+      });
       // The cast sends a frame only when the screen changes, and a loaded
       // runner can draw the new page late. So a dot fades in and out in the
       // far corner, clear of every square read below, and the cast starts
@@ -6000,7 +6005,12 @@ test.describe('storyboards', {tag: '@storyboard'}, () => {
     await fixture(page);
     const box = page.locator('#box');
     // JPEG frames (WebKit's are always JPEG) take the conversion path.
-    const cast = await startScreencast(page, {format: 'jpeg'});
+    // NOT FOR LANDING: a cast that keeps one frame in five, as a loaded
+    // runner's presents fewer.
+    const cast = await startScreencast(page, {
+      format: 'jpeg',
+      everyNthFrame: 5,
+    });
     // The slide repeats until the cast holds enough frames: a loaded runner
     // presents fewer of them in any fixed time.
     await box.evaluate(el =>
