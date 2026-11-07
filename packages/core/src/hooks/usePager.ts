@@ -962,9 +962,38 @@ export function createPager(
         // A drag's release moves at most one page from where the drag began.
         // New pages renumber, so the drag keeps the page nearest that offset.
         const dragFrom = isDragging ? offsetOf(dragStartIndex) : null;
+        // A resize during a settle retargets it. A settle toward the last page
+        // ends on the last page; any other ends on the page nearest its
+        // target's offset. The page last at rest keeps its place too.
+        const settleFrom =
+          settleHandle != null
+            ? {
+                isToLast: target >= count() - 1,
+                target: offsetOf(target),
+                isFromLast: settled >= count() - 1,
+                settled: offsetOf(settled),
+              }
+            : null;
         childOffsets = offsets;
         if (dragFrom != null) {
           dragStartIndex = nearestPage(dragFrom);
+        }
+        if (settleFrom != null) {
+          const last = count() - 1;
+          settled = settleFrom.isFromLast
+            ? last
+            : nearestPage(settleFrom.settled);
+          const next = settleFrom.isToLast
+            ? last
+            : nearestPage(settleFrom.target);
+          if (next !== target) {
+            target = next;
+            // The same page, renumbered: the owner hears it only through a
+            // release's report still waiting.
+            if (pendingReport == null) {
+              report('controlled');
+            }
+          }
         }
         changed = true;
         const pageCount = offsets.length;
