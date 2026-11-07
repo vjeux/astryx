@@ -1628,15 +1628,15 @@ test('a disabled tab is announced disabled on the tab itself, with its name, in 
   expect(tabs.filter(entry => entry.disabled)).toHaveLength(1);
 });
 
-test('a finger landing on a disabled tab moves and lifts nothing (UIKit ignores the tap)', async ({
+test('a finger landing on a disabled tab moves and lifts no lens; only the bar flexes (UIKit ignores the tap)', async ({
   page,
 }) => {
   const {driver} = await openFreezableBar(page, 'disabled-tab');
-  const home = await itemCenter(page, 'Home');
   const browse = await itemCenter(page, 'Browse');
   const capsule = page.getByRole('tablist');
   let held: {
     lens: number;
+    home: number;
     lift: {x: number; y: number};
     flex: {x: number; y: number};
   } | null = null;
@@ -1651,6 +1651,8 @@ test('a finger landing on a disabled tab moves and lifts nothing (UIKit ignores 
       await advanceFrozenPage(page, 120);
       held = {
         lens: await lensCenterX(page),
+        // Where Home is now: the flexed bar carries it, and the lens.
+        home: (await itemCenter(page, 'Home')).x,
         lift: await scaleOf(lensBody(page)),
         flex: await scaleOf(capsule),
       };
@@ -1659,13 +1661,17 @@ test('a finger landing on a disabled tab moves and lifts nothing (UIKit ignores 
   });
   const atHold = held as {
     lens: number;
+    home: number;
     lift: {x: number; y: number};
     flex: {x: number; y: number};
   } | null;
   expect(atHold).not.toBeNull();
   expect(atHold?.lift).toEqual({x: 1, y: 1});
-  expect(atHold?.flex).toEqual({x: 1, y: 1});
-  expect(Math.abs((atHold?.lens ?? Infinity) - home.x)).toBeLessThan(0.5);
+  // UIKit's platter grows under any press: a disabled tab's only feedback.
+  expect(atHold?.flex.x ?? 1).toBeGreaterThan(1);
+  expect(
+    Math.abs((atHold?.lens ?? Infinity) - (atHold?.home ?? -Infinity)),
+  ).toBeLessThan(0.5);
   await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
 });
 
@@ -1685,42 +1691,71 @@ test('a lift over a disabled tab leaves the selection, and the lens settles back
     .toBeLessThan(0.5);
 });
 
-test('a drag from a disabled tab lifts the lens once it drags, and the lift chooses the tab under the finger', async ({
+/**
+ * Where Library's button meets disabled Browse on the disabled-tab stories, in
+ * client px. As UIKit's 98 pt buttons on their 84.67 pt pitch, Library's button
+ * reaches past the midpoint between the two into Browse's half.
+ */
+async function disabledEdge(page: Page) {
+  const library = await itemCenter(page, 'Library');
+  const browse = await itemCenter(page, 'Browse');
+  const box = await tab(page, 'Library').boundingBox();
+  if (box == null) {
+    throw new Error('no Library tab');
+  }
+  const mid = (library.x + browse.x) / 2;
+  const libraryEnd = box.x + box.width;
+  expect(
+    libraryEnd,
+    'Library’s button reaches into Browse’s half',
+  ).toBeGreaterThan(mid + 5);
+  return {mid, libraryEnd, y: browse.y};
+}
+
+test('a drag from a disabled tab chooses nothing and lifts no lens: UIKit ignores a touch that begins there for its whole life', async ({
   page,
 }) => {
   const {driver} = await openBar(page, 'disabled-tab');
   const browse = await itemCenter(page, 'Browse');
   const profile = await itemCenter(page, 'Profile');
-  let lifted: {x: number; y: number} | null = null;
-  const script = drag(browse, profile, {durationMs: 500, restMs: 300});
+  let held: {lift: {x: number; y: number}; lens: number; home: number} | null =
+    null;
+  const script = drag(browse, profile, {durationMs: 600, restMs: 200});
   await driver.play(script, {
     onEvent: async (_step, index) => {
       // The finger rests over Profile before it lifts.
       if (index === script.length - 2) {
-        lifted = await scaleOf(lensBody(page));
+        held = {
+          lift: await scaleOf(lensBody(page)),
+          lens: await lensCenterX(page),
+          home: (await itemCenter(page, 'Home')).x,
+        };
       }
     },
   });
-  const atRest = lifted as {x: number; y: number} | null;
-  expect(atRest?.x ?? 1).toBeGreaterThan(1);
-  await expect(tab(page, 'Profile')).toHaveAttribute('aria-selected', 'true');
+  const atRest = held as {
+    lift: {x: number; y: number};
+    lens: number;
+    home: number;
+  } | null;
+  expect(atRest).not.toBeNull();
+  expect(atRest?.lift).toEqual({x: 1, y: 1});
+  expect(
+    Math.abs((atRest?.lens ?? Infinity) - (atRest?.home ?? -Infinity)),
+  ).toBeLessThan(0.5);
+  await waitForRest(lensBody(page));
+  await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
+  await expect(tab(page, 'Profile')).toHaveAttribute('aria-selected', 'false');
 });
 
-test('a finger that lands on a disabled tab and lifts within the slop over a neighbour chooses the neighbour, painted while held (family:action-groups FR1)', async ({
+test('with no tab selected, a drag from a disabled tab paints nothing and chooses nothing', async ({
   page,
 }) => {
   const {driver} = await openBar(page, 'disabled-tab-no-selection');
   const browse = await itemCenter(page, 'Browse');
-  const box = await tab(page, 'Browse').boundingBox();
-  if (box == null) {
-    throw new Error('no Browse tab');
-  }
-  // 3 px inside Browse on Library's side, then 7 px onto Library: under the
-  // 10 px slop.
-  const from = {x: box.x + 3, y: browse.y};
-  const to = {x: from.x - 7, y: browse.y};
+  const library = await itemCenter(page, 'Library');
   let painted: string[] | null = null;
-  const script = drag(from, to, {durationMs: 200, restMs: 200});
+  const script = drag(browse, library, {durationMs: 400, restMs: 200});
   await driver.play(script, {
     onEvent: async (_step, index) => {
       if (index === script.length - 2) {
@@ -1730,30 +1765,90 @@ test('a finger that lands on a disabled tab and lifts within the slop over a nei
       }
     },
   });
-  expect(painted).toEqual(['Library']);
-  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
+  expect(painted).toEqual([]);
+  await page.waitForTimeout(300);
+  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
+    0,
+  );
 });
 
-test('a finger that lands on a disabled tab and lifts within the slop over a neighbour chooses the neighbour, the lens sliding there (family:action-groups FR1)', async ({
+test('a finger that lands on a disabled tab inside its enabled neighbour’s button chooses the neighbour at the lift, with no lens while held, as UIKit’s overlapping buttons do', async ({
   page,
 }) => {
   const {driver} = await openBar(page, 'disabled-tab');
-  const browse = await itemCenter(page, 'Browse');
   const library = await itemCenter(page, 'Library');
-  const box = await tab(page, 'Browse').boundingBox();
-  if (box == null) {
-    throw new Error('no Browse tab');
-  }
-  const from = {x: box.x + 3, y: browse.y};
-  const to = {x: from.x - 7, y: browse.y};
-  await driver.play(drag(from, to, {durationMs: 200, restMs: 200}));
+  const {mid, y} = await disabledEdge(page);
+  // 3 px into Browse's half, inside Library's button; then 7 px onto
+  // Library, under the 10 px slop.
+  const from = {x: mid + 3, y};
+  const to = {x: from.x - 7, y};
+  let held: {lift: {x: number; y: number}; lens: number; home: number} | null =
+    null;
+  const script = drag(from, to, {durationMs: 200, restMs: 200});
+  await driver.play(script, {
+    onEvent: async (_step, index) => {
+      if (index === script.length - 2) {
+        held = {
+          lift: await scaleOf(lensBody(page)),
+          lens: await lensCenterX(page),
+          home: (await itemCenter(page, 'Home')).x,
+        };
+      }
+    },
+  });
+  const atRest = held as {
+    lift: {x: number; y: number};
+    lens: number;
+    home: number;
+  } | null;
+  expect(atRest).not.toBeNull();
+  expect(atRest?.lift).toEqual({x: 1, y: 1});
+  expect(
+    Math.abs((atRest?.lens ?? Infinity) - (atRest?.home ?? -Infinity)),
+  ).toBeLessThan(0.5);
   await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
-  await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'false');
   await expect
     .poll(async () => Math.abs((await lensCenterX(page)) - library.x), {
       timeout: 3000,
     })
     .toBeLessThan(0.5);
+});
+
+test('a tap on a disabled tab inside its enabled neighbour’s button chooses the neighbour', async ({
+  page,
+}) => {
+  const {driver} = await openBar(page, 'disabled-tab');
+  const {mid, y} = await disabledEdge(page);
+  await driver.tap({x: mid + 5, y});
+  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
+});
+
+test('a finger that lands on a disabled tab’s own area and slides into its neighbour’s button chooses nothing', async ({
+  page,
+}) => {
+  const {driver} = await openBar(page, 'disabled-tab');
+  const home = await itemCenter(page, 'Home');
+  const {libraryEnd, y} = await disabledEdge(page);
+  // 4 px past Library's button, then 7 px back inside it.
+  const from = {x: libraryEnd + 4, y};
+  const to = {x: from.x - 7, y};
+  await driver.play(drag(from, to, {durationMs: 200, restMs: 200}));
+  await waitForRest(lensBody(page));
+  await waitForRest(page.getByRole('tablist'));
+  await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
+  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'false');
+  expect(Math.abs((await lensCenterX(page)) - home.x)).toBeLessThan(0.5);
+});
+
+test('a tap on a disabled tab’s own area, just past its neighbour’s button, chooses nothing', async ({
+  page,
+}) => {
+  const {driver} = await openBar(page, 'disabled-tab');
+  const {libraryEnd, y} = await disabledEdge(page);
+  await driver.tap({x: libraryEnd + 4, y});
+  await page.waitForTimeout(300);
+  await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
+  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'false');
 });
 
 test('a drag over a disabled tab returns the lens to the selected tab, since the lift there chooses nothing; the disabled tab keeps its paint (spec:AST-085 FR6)', async ({
