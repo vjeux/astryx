@@ -415,15 +415,15 @@ test('under a finger, a row’s band takes no tap from a control near the list: 
   expect(await hit(edit.x, edit.bottom - 0.5)).toBe('Edit');
 });
 
-test('under a finger, a sticky header above the list keeps its taps over the first row’s band: the list isolates what its rows raise', async ({
+test('under a finger, a sticky header above the list keeps its taps over the first row’s band: the List’s root isolates what its rows raise', async ({
   page,
 }) => {
   await openStory(page, storybook(), 'core-list--compact');
   test.skip(!(await isTouch(page)), 'the hit area applies under a finger only');
   const result = await page.evaluate(() => {
     const first = document.querySelector<HTMLElement>('#storybook-root li');
-    const list = first?.parentElement;
-    if (first == null || list == null) {
+    const root = first?.parentElement?.parentElement;
+    if (first == null || root == null) {
       throw new Error('no list row');
     }
     const reach =
@@ -454,17 +454,60 @@ test('under a finger, a sticky header above the list keeps its taps over the fir
           : String(element?.tagName);
     };
     const isolated = hit();
-    // The control: without the list's isolation the band, raised above the
+    // The control: without the root's isolation the band, raised above the
     // rows after it, would also rise above the header and take its tap.
-    list.style.isolation = 'auto';
+    root.style.isolation = 'auto';
     const unisolated = hit();
-    list.style.isolation = '';
+    root.style.isolation = '';
     header.remove();
     return {reach, isolated, unisolated};
   });
   expect(result.reach, JSON.stringify(result)).toBeGreaterThan(2);
   expect(result.isolated, JSON.stringify(result)).toBe('header');
   expect(result.unisolated, JSON.stringify(result)).toBe('row');
+});
+
+test('under a finger, the List’s root isolates and the list keeps its inline clip without isolating, with a header or without one', async ({
+  page,
+}) => {
+  // iOS WebKit draws a moving row 1 pt off at a clipping ancestor's edge
+  // when one element clips an axis and isolates. So the two sit on two
+  // elements: the root isolates, and the list only clips.
+  const looks: Record<string, unknown> = {};
+  for (const story of [
+    'core-list--reorder-in-clipped-card',
+    'core-list--header-with-toggle',
+  ]) {
+    await openStory(page, storybook(), story);
+    test.skip(
+      !(await isTouch(page)),
+      'the isolation applies under a finger only',
+    );
+    looks[story] = await page.evaluate(() => {
+      const list = document.querySelector<HTMLElement>('#storybook-root ul')!;
+      const root = list.parentElement!;
+      return {
+        hasHeader: list.hasAttribute('aria-labelledby'),
+        root: getComputedStyle(root).isolation,
+        list: getComputedStyle(list).isolation,
+        clip: getComputedStyle(list).overflowX,
+      };
+    });
+  }
+  expect(looks).toEqual({
+    'core-list--reorder-in-clipped-card': {
+      hasHeader: false,
+      root: 'isolate',
+      list: 'auto',
+      clip: 'clip',
+    },
+    'core-list--header-with-toggle': {
+      hasHeader: true,
+      root: 'isolate',
+      list: 'auto',
+      clip: 'clip',
+    },
+  });
 });
 
 test('under a finger, an interactive spacious list: its one-line rows, 48px tall, are already past the touch target, so they gain nothing and overlap nothing', async ({

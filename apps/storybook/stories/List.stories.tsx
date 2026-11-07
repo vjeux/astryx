@@ -1091,3 +1091,53 @@ export const ReorderLongList: Story = {
     },
   },
 };
+
+const clippedCardStyles = stylex.create({
+  card: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: 'var(--color-border)',
+    borderRadius: 12,
+  },
+  title: {
+    padding: 12,
+  },
+});
+
+function ReorderInClippedCardDemo() {
+  const [rows, setRows] = useState(() =>
+    Array.from({length: 12}, (_, i) => `Row ${String(i + 1).padStart(3, '0')}`),
+  );
+  return (
+    <div {...stylex.props(clippedCardStyles.card)}>
+      <div {...stylex.props(clippedCardStyles.title)}>
+        <Text weight="bold">Clipped card</Text>
+      </div>
+      <List
+        density="compact"
+        reorderable={createReorderable({
+          onReorder: ({key, to}) =>
+            setRows(current => moveKey(current, key, to)),
+        })}>
+        {rows.map(label => (
+          <ListItem key={label} itemKey={label} label={label} />
+        ))}
+      </List>
+    </div>
+  );
+}
+
+export const ReorderInClippedCard: Story = {
+  render: () => <ReorderInClippedCardDemo />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A reorderable compact list fills a card that clips its content. ' +
+          "The last row sits on the card's clipped bottom edge. After a drop " +
+          'it settles with the other rows, with no late step.',
+      },
+    },
+  },
+};
