@@ -358,7 +358,7 @@ export function ToggleButton({
         : null;
 
   // The group's hit layer is the touch band of each toggle it tracks.
-  const isInGroupBand = group != null && groupPointers != null;
+  const isInGroupBand = group != null;
 
   return (
     <PressGroupContext value={groupPointers}>
