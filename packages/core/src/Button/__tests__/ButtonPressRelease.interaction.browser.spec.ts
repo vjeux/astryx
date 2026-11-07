@@ -791,3 +791,43 @@ test(
     );
   },
 );
+
+// NOT FOR LANDING: the lag probe behind the pull request's table. Each case
+// holds the release with a delay added after the lift: from the test after
+// the lift (main's storyboard) or armed before the press (this change).
+for (const lag of [0, 40, 80, 120, 160]) {
+  for (const path of ['late', 'armed'] as const) {
+    test(`zzlag ${path} ${lag}`, async ({page}) => {
+      const opened = await openSurface(page, BUTTONS, secondaryButton);
+      await installTimerGate(page);
+      const judges = {
+        target: opened.surface,
+        property: 'opacity',
+        pseudoElement: '::before',
+      } as const;
+      const hold =
+        path === 'armed'
+          ? await armHold(page, opened.surface, {count: 2, judges})
+          : null;
+      await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
+      if (lag > 0) {
+        await new Promise(resolve => setTimeout(resolve, lag));
+      }
+      await freezeTimers(page);
+      let line: string;
+      try {
+        const held =
+          hold != null
+            ? await hold.held()
+            : await holdAnimations(page, opened.surface, {judges});
+        const fade = held.find(a => a.kind === 'CSSAnimation');
+        line = `heldAt=${fade?.heldAtMs?.toFixed(1)} of ${fade?.durationMs}`;
+      } catch (error) {
+        line = `REJECTED ${String(error).slice(0, 90)}`;
+      }
+      await releaseAnimations(page, {finish: true});
+      await thawTimers(page);
+      console.log(`LAG ${path} ${lag}ms: ${line}`);
+    });
+  }
+}
