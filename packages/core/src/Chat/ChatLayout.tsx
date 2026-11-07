@@ -348,8 +348,6 @@ export function ChatLayout({
   const t = useComponentTranslator();
   const rootRef = useRef<HTMLDivElement>(null);
   const bounceLayerRef = useRef<HTMLDivElement>(null);
-  // The bounce that plays now. The dock is contained until it lands.
-  const bounceRef = useRef<ReturnType<typeof bounceComposer>>(null);
 
   const scrollContainerRef = externalScrollRef ?? rootRef;
   const isSelfScrolling = !externalScrollRef;
@@ -400,23 +398,7 @@ export function ChatLayout({
           // No deeper than the composer's bottom padding.
           const depth =
             Number.parseFloat(getComputedStyle(composer).paddingBottom) || 0;
-          const bounce = bounceComposer(layer, fingerSpeed, depth);
-          const dock = layer.parentElement;
-          if (bounce != null && dock != null) {
-            // The layer's translate overflows the dock. While the bounce
-            // plays, layout containment keeps that overflow out of the
-            // transcript's scroll range. So a scroll held at its end never
-            // lifts the sticky dock. At rest the dock is not contained.
-            dock.style.contain = 'layout';
-            bounceRef.current = bounce;
-            const release = () => {
-              if (bounceRef.current === bounce) {
-                bounceRef.current = null;
-                dock.style.removeProperty('contain');
-              }
-            };
-            void bounce.finished.then(release, release);
-          }
+          bounceComposer(layer, fingerSpeed, depth);
         }
       }),
   );
