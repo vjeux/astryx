@@ -207,6 +207,7 @@ async function traceBars(page: Page): Promise<() => Promise<BarFrame[]>> {
     const readLayers = () => {
       const cards: Record<string, number> = {};
       const bars: Record<string, number> = {};
+      let first = true;
       for (const card of document.querySelectorAll(
         '[data-navigation-screen]',
       )) {
@@ -214,6 +215,10 @@ async function traceBars(page: Page): Promise<() => Promise<BarFrame[]>> {
         if (key == null) {
           continue;
         }
+        if (!first) {
+          stall();
+        }
+        first = false;
         cards[key] = translateX(card);
         const keyBars = document.querySelectorAll(
           `[data-navigation-bar="${CSS.escape(key)}"]`,
@@ -245,6 +250,10 @@ async function traceBars(page: Page): Promise<() => Promise<BarFrame[]>> {
         throw new Error(`a layer sits ${offset} px from the stack's edge`);
       }
     }
+    const stall = () => {
+      const end = performance.now() + 10;
+      while (performance.now() < end) {}
+    };
     const t0 = performance.now();
     const tick = () => {
       const button = document.querySelector('[data-navigation-back]');
