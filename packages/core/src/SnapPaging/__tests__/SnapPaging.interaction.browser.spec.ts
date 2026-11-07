@@ -390,7 +390,8 @@ async function pressInSettle(
   await swipe(page, scroller, {
     px: Math.round(view * 0.6),
     ms: 240,
-    restMs: 100,
+    // NOT FOR LANDING: the lift comes 180 ms after the last move.
+    restMs: 180,
     rtl: back,
   });
   // The scene stops in the first frame where the paging holds the row past
