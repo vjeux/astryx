@@ -806,7 +806,8 @@ export class SliderTouchController {
     const {min, max} = this.model;
     const range = max - min;
     this.drop(index);
-    this.model.press(null);
+    // NOT FOR LANDING: the pressed paint drops in a later task.
+    setTimeout(() => this.model.press(null), 0);
     const location = pan.location();
     const expansion = UIKIT_CONTROL.trackingExpansion.value;
     const inside =
