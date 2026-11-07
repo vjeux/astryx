@@ -655,3 +655,42 @@ test.describe('under a fine primary pointer', () => {
     expect(await offset(scroller)).toBeGreaterThan(0);
   });
 });
+
+// C25 probe (NOT FOR LANDING): a settle in flight across a renumbering resize.
+// Append to SnapPaging.interaction.browser.spec.ts. Three per view, paging mode:
+// flick 0→308, then a flick toward 616 with the row narrowed `by` px 60 ms after
+// the lift (mid-settle). main + #10419 and #10425 v2 rest at 308; control 616.
+test.describe('C25 probe settle renumber', () => {
+  for (const by of [100, 0]) {
+    test(`C25 renumber settle toward 616, narrow ${by}`, async ({page}) => {
+      const {scroller} = await open(page, 'snap-paging-three-up', 'paging');
+      await swipe(page, scroller, {px: 80, ms: 80});
+      await settled(scroller);
+      const start = await offset(scroller);
+      await scroller.evaluate((el, d) => {
+        const w = window as unknown as {__r: unknown};
+        const first = el.firstElementChild as HTMLElement;
+        el.addEventListener('touchend', () => {
+          setTimeout(() => {
+            const held = first.style.translate !== '';
+            const shown = el.getBoundingClientRect().left - first.getBoundingClientRect().left;
+            if (d > 0) {
+              el.style.width = `${el.clientWidth - d}px`;
+            }
+            w.__r = {held, shown: Math.round(shown * 10) / 10};
+          }, 60);
+        }, {once: true});
+      }, by);
+      await swipe(page, scroller, {px: 80, ms: 80});
+      await settled(scroller);
+      await page.waitForTimeout(300);
+      const at = await scroller.evaluate(el => {
+        const box = el.getBoundingClientRect();
+        const firstShown = Array.from(el.children).findIndex(c => (c as HTMLElement).getBoundingClientRect().right > box.left + 1);
+        return {at: Math.round(Math.abs(el.scrollLeft) * 10) / 10, travel: el.scrollWidth - el.clientWidth, firstItem: firstShown + 1, width: el.clientWidth};
+      });
+      const r = await page.evaluate(() => (window as unknown as {__r: unknown}).__r);
+      console.log('C25RN ' + JSON.stringify({by, start, atResize: r, ...at}));
+    });
+  }
+});

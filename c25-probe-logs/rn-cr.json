@@ -1,0 +1,247 @@
+{
+  "config": {
+    "argv": [
+      "/home/vjeux/ios-astryx/tools/node-v24.22.1-linux-x64/bin/node",
+      "/home/vjeux/ios-astryx/wt/c25-b9/node_modules/playwright/cli.js",
+      "test",
+      "--config",
+      "playwright.interaction.config.ts",
+      "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+      "-g",
+      "C25 renumber",
+      "--project=chromium",
+      "--workers=1",
+      "--repeat-each=2",
+      "--retries=0",
+      "--reporter=json"
+    ],
+    "configFile": "/home/vjeux/ios-astryx/wt/c25-b9/playwright.interaction.config.ts",
+    "rootDir": "/home/vjeux/ios-astryx/wt/c25-b9",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/vjeux/ios-astryx/wt/c25-b9/test-results/interaction-output",
+        "repeatEach": 2,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/vjeux/ios-astryx/wt/c25-b9",
+        "testIgnore": [],
+        "testMatch": [
+          "internal/interaction-harness/src/**/*.interaction.browser.spec.ts",
+          "packages/*/src/**/*.interaction.browser.spec.ts",
+          "packages/core/src/gestures/__tests__/browser/*.browser.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/home/vjeux/ios-astryx/wt/c25-b9/test-results/interaction-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/home/vjeux/ios-astryx/wt/c25-b9",
+        "testIgnore": [],
+        "testMatch": [
+          "internal/interaction-harness/src/**/*.interaction.browser.spec.ts",
+          "packages/*/src/**/*.interaction.browser.spec.ts",
+          "packages/core/src/gestures/__tests__/browser/*.browser.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+      "file": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "C25 probe settle renumber",
+          "file": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+          "line": 659,
+          "column": 6,
+          "specs": [
+            {
+              "title": "C25 renumber settle toward 616, narrow 100",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2644,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "C25RN {\"by\":100,\"start\":308,\"atResize\":{\"held\":true,\"shown\":422.5},\"at\":308,\"travel\":716,\"firstItem\":4,\"width\":200}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T02:39:42.903Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                },
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2639,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "C25RN {\"by\":100,\"start\":308,\"atResize\":{\"held\":true,\"shown\":422.5},\"at\":308,\"travel\":716,\"firstItem\":4,\"width\":200}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T02:39:49.019Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "89911c65819d6bba0397-bb20bb5cc43c16ccdccf",
+              "file": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+              "line": 661,
+              "column": 5
+            },
+            {
+              "title": "C25 renumber settle toward 616, narrow 0",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2757,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "C25RN {\"by\":0,\"start\":308,\"atResize\":{\"held\":true,\"shown\":422.6},\"at\":616,\"travel\":616,\"firstItem\":7,\"width\":300}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T02:39:45.693Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                },
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2785,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "C25RN {\"by\":0,\"start\":308,\"atResize\":{\"held\":true,\"shown\":422.6},\"at\":616,\"travel\":616,\"firstItem\":7,\"width\":300}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T02:39:51.802Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "89911c65819d6bba0397-97de9bfe68be096fb44d",
+              "file": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+              "line": 661,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-07T02:39:41.092Z",
+    "duration": 13561.615,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

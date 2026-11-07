@@ -1,0 +1,247 @@
+{
+  "config": {
+    "argv": [
+      "/usr/bin/node",
+      "/home/vjeux/ios-astryx/wt/c25-b9/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config",
+      "playwright.interaction.config.ts",
+      "--project=webkit",
+      "--workers=1",
+      "--retries=0",
+      "--reporter=json",
+      "--repeat-each=2",
+      "-g",
+      "C25 renumber",
+      "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts"
+    ],
+    "configFile": "/home/vjeux/ios-astryx/wt/c25-b9/playwright.interaction.config.ts",
+    "rootDir": "/home/vjeux/ios-astryx/wt/c25-b9",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/vjeux/ios-astryx/wt/c25-b9/test-results/interaction-output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/vjeux/ios-astryx/wt/c25-b9",
+        "testIgnore": [],
+        "testMatch": [
+          "internal/interaction-harness/src/**/*.interaction.browser.spec.ts",
+          "packages/*/src/**/*.interaction.browser.spec.ts",
+          "packages/core/src/gestures/__tests__/browser/*.browser.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/home/vjeux/ios-astryx/wt/c25-b9/test-results/interaction-output",
+        "repeatEach": 2,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/home/vjeux/ios-astryx/wt/c25-b9",
+        "testIgnore": [],
+        "testMatch": [
+          "internal/interaction-harness/src/**/*.interaction.browser.spec.ts",
+          "packages/*/src/**/*.interaction.browser.spec.ts",
+          "packages/core/src/gestures/__tests__/browser/*.browser.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+      "file": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "C25 probe settle renumber",
+          "file": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+          "line": 659,
+          "column": 6,
+          "specs": [
+            {
+              "title": "C25 renumber settle toward 616, narrow 100",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2746,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "C25RN {\"by\":100,\"start\":308,\"atResize\":{\"held\":true,\"shown\":474.3},\"at\":308,\"travel\":716,\"firstItem\":4,\"width\":200}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T02:39:59.070Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                },
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2942,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "C25RN {\"by\":100,\"start\":308,\"atResize\":{\"held\":true,\"shown\":472.9},\"at\":308,\"travel\":716,\"firstItem\":4,\"width\":200}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T02:40:06.314Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "89911c65819d6bba0397-5c353b909de1f12441a7",
+              "file": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+              "line": 661,
+              "column": 5
+            },
+            {
+              "title": "C25 renumber settle toward 616, narrow 0",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2954,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "C25RN {\"by\":0,\"start\":308,\"atResize\":{\"held\":true,\"shown\":463.2},\"at\":616,\"travel\":616,\"firstItem\":7,\"width\":300}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T02:40:02.690Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                },
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2996,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "C25RN {\"by\":0,\"start\":308,\"atResize\":{\"held\":true,\"shown\":473.5},\"at\":616,\"travel\":616,\"firstItem\":7,\"width\":300}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-07T02:40:09.437Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "89911c65819d6bba0397-985c42cfa5494ab15bfa",
+              "file": "packages/core/src/SnapPaging/__tests__/SnapPagingC25Renum.interaction.browser.spec.ts",
+              "line": 661,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-07T02:39:57.167Z",
+    "duration": 15354.756000000001,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
