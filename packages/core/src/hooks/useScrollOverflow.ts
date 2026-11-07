@@ -182,10 +182,8 @@ export function useShownScrollOverflow() {
       cancelAnimationFrame(releaseFrameRef.current);
       const el = elRef.current;
       if (shown != null) {
+        // NOT FOR LANDING: mutant, the edges wait for the hand-back.
         shownRef.current = shown;
-        if (el) {
-          measureNow(el);
-        }
         return;
       }
       if (shownRef.current == null || el == null) {
