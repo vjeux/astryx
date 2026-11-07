@@ -424,7 +424,6 @@ export async function installInputStart(
     }, {capture: true, passive: true});
   }
 })()`;
-  await page.addInitScript(script);
   await page.evaluate(script);
 }
 
