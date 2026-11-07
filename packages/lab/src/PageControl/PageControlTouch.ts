@@ -439,7 +439,11 @@ export function usePageControlTouch({
           begin(landingX(hold, x));
           // The held look commits in the hold timer's own task. A render
           // scheduled after it can wait behind a busy page's other tasks.
-          flushSync(showHeld);
+          {
+            const later = new MessageChannel();
+            later.port1.onmessage = () => flushSync(showHeld);
+            later.port2.postMessage(null);
+          }
           break;
         case 'changed':
           track(x);
