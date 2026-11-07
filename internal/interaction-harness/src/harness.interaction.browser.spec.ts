@@ -631,7 +631,17 @@ test.describe('frame evidence', () => {
       );
       await page.waitForTimeout(200);
       const frames = await cast.stop();
-      const tracked = await trackMarker(page, frames);
+      const read = await trackMarker(page, frames);
+      // NOT FOR LANDING: the cast's reading of the rAF box, shifted 20 px
+      // from 350 ms into the block: a step the page's box never takes.
+      const tracked =
+        driver === 'raf' && everyNthFrame === 1
+          ? read.map(f =>
+              f.box != null && f.t >= window.from + 350
+                ? {...f, box: {...f.box, y: f.box.y + 20}}
+                : f,
+            )
+          : read;
       const controlFrames = await trackMarker(page, frames, {rgb: CONTROL_RGB});
       const alone = busyWindowProof(tracked, window, {axis: 'y'});
       // The last place a frame left the box before the block.
