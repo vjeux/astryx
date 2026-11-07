@@ -752,6 +752,8 @@ test(
       judges: {target: row, property: 'opacity', pseudoElement: '::before'},
     });
     await driver.play(tap(center, {holdMs: HOLD_MS}));
+    // NOT FOR LANDING: a busy runner's late hold, 600 ms after the lift.
+    await page.waitForTimeout(600);
     await freezeTimers(page);
     const {storyboard} = await animationStoryboard(page, {
       name: 'list-row-press-release',
