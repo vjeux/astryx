@@ -35,9 +35,11 @@ import {
   freezePageWhen,
   holdAnimations,
   installPageFreeze,
+  installInputLog,
   installTimerGate,
   markElement,
   openStory,
+  readInputLog,
   releaseAnimations,
   requireFrames,
   sampleCurve,
@@ -45,6 +47,8 @@ import {
   startBusyControl,
   startScreencast,
   thawPage,
+  toTouchEvents,
+  TouchPacingError,
   touchDriver,
   touchStoryboard,
   traceRendering,
@@ -55,6 +59,7 @@ import {
   writeEvidence,
   type TouchDriver,
 } from '@astryxdesign/interaction-harness';
+import {popVelocity, shouldFinishPop} from '../navigationTransition';
 
 const storybook = withStorybook(test);
 
@@ -921,13 +926,45 @@ test('a fast swipe that rests before the lift springs back: a still finger never
 });
 
 test('a flick from near the edge finishes the pop', async ({page}) => {
-  const {driver, left, topTitle} = await openStack(page, 'pushed', {
+  await installInputLog(page);
+  const {driver, left, width, topTitle} = await openStack(page, 'pushed', {
     standalone: true,
   });
   // ~60 px of travel at ~1200 px/s: p + 0.35·v is well past half.
-  await driver.play(flick({x: left + 6, y: 400}, {velocity: {x: 1200, y: 0}}));
+  const script = flick({x: left + 6, y: 400}, {velocity: {x: 1200, y: 0}});
+  // The page reads the release from when the moves arrive: pace on spacing.
+  const played = await driver.play(script, {pacing: 'spacing'});
   await waitForRest(card(page, 'screen-General'));
-  await expect.poll(topTitle).toBe('General');
+  try {
+    await expect.poll(topTitle).toBe('General');
+  } catch (error) {
+    // The release rule itself cancels a release the page read too slowly. A
+    // starved runner delivers the moves late, so the run fails by name.
+    const release = played.at(-1)?.release;
+    const steps = toTouchEvents(script);
+    const moves = steps.filter(step => step.type === 'touchMove');
+    const travel =
+      (moves.at(-1)?.fingers[0]?.x ?? 0) - (steps[0]?.fingers[0]?.x ?? 0);
+    if (
+      release != null &&
+      !shouldFinishPop(travel / width, popVelocity(release.pagePxPerS, width))
+    ) {
+      const arrived = (await readInputLog(page)).filter(
+        input => input.type === 'touchmove',
+      );
+      throw new TouchPacingError({
+        kind: 'release',
+        pageReleasePxPerS: release.pagePxPerS,
+        scriptReleasePxPerS: release.scriptPxPerS,
+        gapsMs: arrived
+          .slice(1)
+          .map((input, i) => input.timeStamp - arrived[i].timeStamp),
+        scriptedGapsMs: moves.slice(1).map((step, i) => step.t - moves[i].t),
+        heldByPage: null,
+      });
+    }
+    throw error;
+  }
 });
 
 test('in a browser tab the leading screen edge stays the browser’s', async ({

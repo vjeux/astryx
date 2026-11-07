@@ -61,25 +61,51 @@ async function settleAt(page: Page, screen: string, top: number) {
 
 /**
  * Scrolls a screen while a finger rests on its content, and lifts the finger
- * two frames later, after the observer has reported. The gesture host reads
- * the scroll as the finger's, so the veil fades.
+ * once the observer has reported: the veil then animates or changes. The
+ * gesture host reads the scroll as the finger's, so the veil fades. The scroll
+ * ends under the resting finger, so a lift before a late report would make
+ * the scroll the program's. A page starved of frames reports late.
  */
 async function fingerScrollTo(page: Page, screen: string, top: number) {
-  await scroller(page, screen).evaluate((element, y) => {
-    const target = element.lastElementChild ?? element;
-    const touch = {identifier: 7, clientX: 100, clientY: 400, target};
-    const fire = (type: string, touches: (typeof touch)[]) => {
-      const event = new Event(type, {bubbles: true, cancelable: true});
-      Object.defineProperty(event, 'changedTouches', {value: [touch]});
-      Object.defineProperty(event, 'touches', {value: touches});
-      target.dispatchEvent(event);
-    };
-    fire('touchstart', [touch]);
-    element.scrollTop = y;
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => fire('touchend', [])),
-    );
-  }, top);
+  await scroller(page, screen).evaluate(
+    (element, y) =>
+      new Promise<void>(resolve => {
+        const target = element.lastElementChild ?? element;
+        const touch = {identifier: 7, clientX: 100, clientY: 400, target};
+        const fire = (type: string, touches: (typeof touch)[]) => {
+          const event = new Event(type, {bubbles: true, cancelable: true});
+          Object.defineProperty(event, 'changedTouches', {value: [touch]});
+          Object.defineProperty(event, 'touches', {value: touches});
+          target.dispatchEvent(event);
+        };
+        const layer = element.parentElement?.querySelector(
+          ':scope > [data-navigation-scroll-edge]',
+        );
+        const opacityBefore =
+          layer == null ? null : getComputedStyle(layer).opacity;
+        fire('touchstart', [touch]);
+        element.scrollTop = y;
+        // A report that never comes leaves the finger down for a second.
+        const deadline = performance.now() + 1_000;
+        const lift = () => {
+          fire('touchend', []);
+          resolve();
+        };
+        const check = () => {
+          const reported =
+            layer == null ||
+            layer.getAnimations().length > 0 ||
+            getComputedStyle(layer).opacity !== opacityBefore;
+          if (reported || performance.now() > deadline) {
+            requestAnimationFrame(lift);
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        requestAnimationFrame(check);
+      }),
+    top,
+  );
 }
 
 async function openStack(page: Page, story = STORY) {
