@@ -56,11 +56,21 @@ const styles = stylex.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  // Three-slot layout (with centerContent): CSS grid 1fr auto 1fr
-  baseGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr auto 1fr',
+  // Three-slot layout (with centerContent). While the lanes fit one row, the
+  // center lane takes its content width and the start and end lanes share the
+  // rest equally, so the center sits at the toolbar's middle. When the lanes
+  // do not fit at their minimum widths, as at a larger text size, the row
+  // wraps instead of letting the lanes overlap: the end lane moves to a second
+  // line.
+  baseThreeLane: {
+    display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
+  },
+  // Lanes stay side by side in a vertical toolbar too; only the cross-axis
+  // alignment follows the orientation.
+  verticalThreeLane: {
+    alignItems: 'stretch',
   },
   // Vertical orientation
   vertical: {
@@ -72,15 +82,33 @@ const styles = stylex.create({
     display: 'flex',
     alignItems: 'center',
   },
-  // `minWidth: 0` lets the `auto` track shrink below the content's width, so a
-  // wide center never widens the toolbar. The slot deliberately does not clip
-  // (`overflow`): clipping would cut off the box-shadow and focus ring of its
-  // outermost children, which paint outside their own box.
+  // The center lane claims its content's minimum width when the row decides
+  // where to wrap, so its text never spills over the lanes beside it, and
+  // then grows first, up to its content width. Only a center wider than the
+  // whole toolbar, alone on its line, narrows below that minimum, so content
+  // that scrolls (a TabList) still scrolls. The slot deliberately does not
+  // clip (`overflow`): clipping would cut off the box-shadow and focus ring
+  // of its outermost children, which paint outside their own box.
   centerSlot: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexGrow: 1000,
+    flexShrink: 1,
+    flexBasis: 'min-content',
     minWidth: 0,
+    maxWidth: 'max-content',
+  },
+  // A start or end lane beside a center lane: the two share the width the
+  // center leaves. A lane keeps its controls on one line, so the row wraps
+  // before the lane does; only a lane wider than the whole toolbar wraps its
+  // own controls.
+  sideLane: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    // `fit-content` is the lane's full row, capped at the toolbar's width.
+    minWidth: stylex.firstThatWorks('fit-content', '-webkit-fit-content'),
   },
   endSlot: {
     display: 'flex',
@@ -152,7 +180,9 @@ export interface ToolbarProps extends BaseProps<HTMLDivElement> {
   startContent?: ReactNode;
   /**
    * Content centered between start and end.
-   * When provided, switches layout to CSS grid (1fr auto 1fr).
+   * When provided, switches to the three-lane layout: the center sits at the
+   * toolbar's middle while the lanes fit one row, and the row wraps when they
+   * do not.
    */
   centerContent?: ReactNode;
   /**
@@ -210,7 +240,7 @@ const toolbarTabStop = oneTabStopAmong(TOOLBAR_ITEMS, TOOLBAR_BOUNDARY);
 /**
  * General-purpose toolbar with start, center, and end content slots.
  *
- * Built on Section, provides flex/grid layout with roving tabindex
+ * Built on Section, provides a flex layout with roving tabindex
  * keyboard navigation via useListFocus. Cascades `size` to child components
  * (Button, TextInput, TabList, Selector) via SizeContext, and applies
  * edge compensation so ghost buttons align flush at container edges.
@@ -326,8 +356,9 @@ export function Toolbar({
           {...mergeProps(
             themeProps('toolbar', {size}),
             stylex.props(
-              hasCenterContent ? styles.baseGrid : styles.baseFlex,
-              orientation === 'vertical' && styles.vertical,
+              hasCenterContent ? styles.baseThreeLane : styles.baseFlex,
+              orientation === 'vertical' &&
+                (hasCenterContent ? styles.verticalThreeLane : styles.vertical),
               sizeStyles.base,
               dynamicStyles.gap(gapVar),
               // Only drop the tab indicator through the toolbar's block padding
@@ -343,11 +374,13 @@ export function Toolbar({
           )}
           {...props}>
           {hasCenterContent ? (
-            // Three-slot grid layout
+            // Three-slot layout
             <>
               <div
                 {...stylex.props(
                   styles.startSlot,
+                  styles.sideLane,
+                  edgeCompSlot.flexBasis(edgeCompInsetForSize[size]),
                   edgeCompSlot.inset(edgeCompInsetForSize[size]),
                   dynamicStyles.gap(gapVar),
                 )}>
@@ -360,6 +393,8 @@ export function Toolbar({
               <div
                 {...stylex.props(
                   styles.endSlot,
+                  styles.sideLane,
+                  edgeCompSlot.flexBasis(edgeCompInsetForSize[size]),
                   edgeCompSlot.inset(edgeCompInsetForSize[size]),
                   dynamicStyles.gap(gapVar),
                 )}>
