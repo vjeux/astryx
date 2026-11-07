@@ -228,6 +228,10 @@ async function traceBars(page: Page): Promise<() => Promise<BarFrame[]>> {
         throw new Error(`a layer sits ${offset} px from the stack's edge`);
       }
     }
+    const stall = () => {
+      const end = performance.now() + 10;
+      while (performance.now() < end) {}
+    };
     const t0 = performance.now();
     const tick = () => {
       const button = document.querySelector('[data-navigation-back]');
@@ -235,7 +239,7 @@ async function traceBars(page: Page): Promise<() => Promise<BarFrame[]>> {
       w.__bars.push({
         t: performance.now() - t0,
         cards: read('[data-navigation-screen]', 'data-navigation-screen'),
-        bars: read('[data-navigation-bar]', 'data-navigation-bar'),
+        bars: (stall(), read('[data-navigation-bar]', 'data-navigation-bar')),
         back:
           button == null || chevron == null
             ? null
