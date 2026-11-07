@@ -221,6 +221,7 @@ test('under Reduce Motion a double tap cross-fades to its zoom instead of travel
   await driver.play(
     doubleTap({x: rect.x + rect.width / 2, y: rect.y + rect.height / 2}),
   );
+  await new Promise(resolve => setTimeout(resolve, 1000)); // NOT FOR LANDING: runner lag
   await waitForAnimation(img);
   const held = await holdAnimations(page, img, {
     judges: {target: img, property: 'opacity'},
@@ -516,6 +517,7 @@ test('under Reduce Motion a pinch released past the maximum settles in place, wi
       },
     },
   );
+  await new Promise(resolve => setTimeout(resolve, 1000)); // NOT FOR LANDING: runner lag
   const held = await holdAnimations(page, img, {
     judges: {target: img, property: 'opacity'},
   });
