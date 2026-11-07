@@ -22,6 +22,7 @@ import {
   createMotionEngine,
   END_HOLD_MS,
   PROMOTION_LINGER_MS,
+  type Animator,
   type AnimatorOptions,
 } from './animator';
 import {cubicBezier} from './bezier';
@@ -2323,6 +2324,210 @@ describe('presentation values, retargeting, velocity (spec:AST-094 FR6)', () => 
       velocity,
     });
     expect(animator.get('x', clock + 90)).toBeCloseTo(curve.value(0.09), 9);
+  });
+
+  describe('a retarget starts at the frame that commits it', () => {
+    // The first curve, as the screen shows it from its start at 1000.
+    const old = solveSpring(toSpring(springs.emphasis), {
+      from: 0,
+      to: 300,
+      velocity: 800,
+    });
+    const shownAt = (time: number) => old.value((time - 1000) / 1000);
+    const shownVelocityAt = (time: number) =>
+      old.velocity((time - 1000) / 1000);
+
+    async function moving() {
+      const setUp = setup();
+      setUp.animator.animate(
+        {x: 300},
+        {spring: springs.emphasis, velocity: {x: 800}},
+      );
+      await advance(120);
+      return setUp;
+    }
+
+    it('a retarget whose frame comes late starts there, from the value and the velocity on screen', async () => {
+      const {animator} = await moving();
+      animator.animate({x: -100}, {spring: springs.emphasis});
+      // A main-thread block: the frame that commits the call comes 200 ms
+      // later, and the screen shows the first curve until then.
+      clock += 200;
+      await commitFrame(clock);
+      const [animation] = live('translate');
+      expect(animation.startTime).toBe(clock);
+      expect(animator.get('x', clock)).toBeCloseTo(shownAt(clock), 6);
+      expect(animator.getVelocity('x', clock)).toBeCloseTo(
+        shownVelocityAt(clock),
+        4,
+      );
+      expect(sampleAt(animation, 'translate', clock)[0]).toBeCloseTo(
+        shownAt(clock),
+        2,
+      );
+      const curve = solveSpring(toSpring(springs.emphasis), {
+        from: shownAt(clock),
+        to: -100,
+        velocity: shownVelocityAt(clock),
+      });
+      expect(animator.get('x', clock + 90)).toBeCloseTo(curve.value(0.09), 6);
+    });
+
+    it('a retarget whose frame comes on time keeps its own clock', async () => {
+      const {animator} = await moving();
+      const call = clock;
+      animator.animate({x: -100}, {spring: springs.emphasis});
+      const [made] = live('translate');
+      clock += 30;
+      await commitFrame(clock);
+      expect(live('translate')).toEqual([made]);
+      expect(made.startTime).toBe(call);
+    });
+
+    it('calls before a late frame start there from the curve that the screen still shows', async () => {
+      const {animator} = await moving();
+      animator.animate({x: -100}, {spring: springs.emphasis});
+      clock += 10;
+      animator.animate({x: 40}, {spring: springs.settle});
+      clock += 190;
+      await commitFrame(clock);
+      const curve = solveSpring(toSpring(springs.settle), {
+        from: shownAt(clock),
+        to: 40,
+        velocity: shownVelocityAt(clock),
+      });
+      expect(animator.get('x', clock + 90)).toBeCloseTo(curve.value(0.09), 6);
+    });
+
+    it('a rebase before the late frame moves the place on screen with the element', async () => {
+      const {animator} = await moving();
+      animator.animate({x: -100}, {spring: springs.emphasis});
+      animator.rebase({x: -40});
+      clock += 200;
+      await commitFrame(clock);
+      expect(animator.get('x', clock)).toBeCloseTo(shownAt(clock) - 40, 6);
+      expect(animator.getVelocity('x', clock)).toBeCloseTo(
+        shownVelocityAt(clock),
+        4,
+      );
+    });
+
+    it('an additive retarget whose frame comes late adds to the curve on screen from there', async () => {
+      const {animator} = await moving();
+      animator.animate({x: -100}, {spring: springs.settle}, {additive: true});
+      clock += 200;
+      await commitFrame(clock);
+      expect(live('translate')[0].startTime).toBe(clock);
+      expect(animator.get('x', clock)).toBeCloseTo(shownAt(clock), 6);
+      const difference = solveSpring(toSpring(springs.settle), {
+        from: 0,
+        to: -400,
+      });
+      // The first curve keeps its own spring: one spring from the screen's
+      // value and velocity would be elsewhere.
+      const replaced = solveSpring(toSpring(springs.settle), {
+        from: shownAt(clock),
+        to: -100,
+        velocity: shownVelocityAt(clock),
+      });
+      let apart = 0;
+      for (let ms = 50; ms <= 600; ms += 50) {
+        const added = shownAt(clock + ms) + difference.value(ms / 1000);
+        expect(animator.get('x', clock + ms)).toBeCloseTo(added, 6);
+        apart = Math.max(apart, Math.abs(added - replaced.value(ms / 1000)));
+      }
+      expect(apart).toBeGreaterThan(1);
+    });
+
+    it('stop() before a late frame freezes where the screen shows', async () => {
+      const {animator, element} = await moving();
+      animator.animate({x: -100}, {spring: springs.emphasis});
+      clock += 200;
+      animator.stop();
+      expect(inlineX(element)).toBeCloseTo(shownAt(clock), 3);
+      expect(animator.get('x')).toBeCloseTo(shownAt(clock), 6);
+    });
+
+    it('a retarget that starts at its late frame finishes at the end of that curve', async () => {
+      const {animator} = await moving();
+      const handle = animator.animate({x: 250}, {spring: springs.quickChange});
+      let finished: boolean | null = null;
+      void handle.finished.then(value => {
+        finished = value;
+      });
+      // The block outlasts the call's own curve, so its timers come due in it.
+      const own = (handle.curve('x')?.duration ?? 0) * 1000;
+      clock += own + 50;
+      await vi.advanceTimersByTimeAsync(own + 50);
+      expect(finished).toBe(null);
+      await commitFrame(clock);
+      const left = Number(live('translate')[0].options.duration) - END_HOLD_MS;
+      await advance(left - 20);
+      expect(finished).toBe(null);
+      await advance(40);
+      expect(finished).toBe(true);
+    });
+
+    it('a played curve keeps its own clock when its frame comes late', async () => {
+      const {animator} = await moving();
+      const call = clock;
+      animator.play({
+        x: {duration: 0.3, at: t => 100 * t, velocity: () => 100},
+      });
+      clock += 200;
+      await commitFrame(clock);
+      expect(live('translate')[0].startTime).toBe(call);
+    });
+
+    /** Hides the page, as a background tab is, until the call it returns. */
+    function hidePage() {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => 'hidden',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+      return () => {
+        Reflect.deleteProperty(document, 'visibilityState');
+        document.dispatchEvent(new Event('visibilitychange'));
+      };
+    }
+
+    async function finishesOnItsClock(
+      animator: Animator,
+      element: HTMLElement,
+      hideFirst: boolean,
+    ) {
+      const show = hideFirst ? hidePage() : null;
+      const handle = animator.animate({x: 250}, {spring: springs.quickChange});
+      const showAgain = show ?? hidePage();
+      try {
+        let finished: boolean | null = null;
+        void handle.finished.then(value => {
+          finished = value;
+        });
+        // No frame comes: the timers end the call.
+        const own = (handle.curve('x')?.duration ?? 0) * 1000;
+        clock += own + 50;
+        await vi.advanceTimersByTimeAsync(own + 50);
+        expect(finished).toBe(true);
+        expect(inlineX(element)).toBeCloseTo(250, 3);
+      } finally {
+        showAgain();
+      }
+      // The frame after the page shows again starts nothing.
+      await commitFrame(clock);
+      expect(live('translate')).toHaveLength(0);
+    }
+
+    it('on a hidden page, which draws no frames, a retarget keeps its own clock and finishes at its end', async () => {
+      const {animator, element} = await moving();
+      await finishesOnItsClock(animator, element, true);
+    });
+
+    it('a page that goes hidden before a retarget’s frame finishes it on its own clock', async () => {
+      const {animator, element} = await moving();
+      await finishesOnItsClock(animator, element, false);
+    });
   });
 
   it('velocity is continuous across a retarget (property sweep)', async () => {

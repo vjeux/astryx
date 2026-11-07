@@ -67,7 +67,12 @@
  * call that continues motion on
  * screen (a retarget, a catch) keeps an explicit start at the call time, or
  * `options.at` to line several animators up, so the new curve continues
- * from the frame on screen. Keyframes are sampled from the call's start, so
+ * from the frame on screen. A main-thread block can hold the frame that
+ * commits such a call. When that frame comes more than LATE_START_MS after
+ * the call, each spring of the call starts at that frame instead. It starts
+ * from the value and velocity on screen there, as UIKit's added spring
+ * starts at its commit. A played curve keeps the call's time. Keyframes are
+ * sampled from the call's start, so
  * a value that keeps moving through a rebuild stays on its curve to the
  * frame. `options.start` changes that per call: `'commit'` dates a retarget
  * by the browser's commit as well, and `'presented'` creates the animations
@@ -389,7 +394,9 @@ export interface MotionHandle {
   /**
    * When the motion started on the document timeline (ms): for a call from
    * rest, the time the browser committed it (a block before the first frame
-   * moves it later); otherwise the call time, or `at`.
+   * moves it later); otherwise the call time, or `at`. A retarget whose
+   * frame comes late starts its springs at that frame, and this stays the
+   * call time.
    */
   readonly started: Promise<number>;
   /** Presentation value of a property at `time` (default now). */
@@ -401,7 +408,8 @@ export interface MotionHandle {
    * in seconds from the call's start: what the keyframes play. Null for a
    * property the call does not move, or moves without travel (Reduced
    * Motion). Map it onto a companion property with `mapProgress`, and play
-   * that on the same clock.
+   * that on the same clock. A retarget whose frame comes late starts its
+   * spring again at that frame, and this stays the curve the call started.
    */
   curve(property: MotionProperty | 'scale'): MotionCurve | null;
   /** New targets for this call's properties, keeping their velocity. */
@@ -528,6 +536,8 @@ interface Segment {
   group?: StartGroup;
   /** The spring driving it, when one does (`rebase` keeps it). */
   spring?: SpringDescription;
+  /** The old curve plus a spring of the difference (`additive`). */
+  readonly isAdditive?: true;
 }
 
 /**
@@ -1840,6 +1850,14 @@ export function createMotionEngine(
       if (running.get(channel) !== animation) {
         return;
       }
+      // A call that continued the motion waits for its frame, which can start
+      // it again from the screen (lookAtShown).
+      if (isShownChannel(channel)) {
+        if (!retireTimers.has(channel)) {
+          retireTimers.set(channel, setTimeout(retire, END_RECHECK_MS));
+        }
+        return;
+      }
       // Paused or sought (a sampler holding it): retire when its own time
       // reaches the curve's end, never from the wall clock.
       const remaining = remainingCurve(animation);
@@ -2792,6 +2810,10 @@ export function createMotionEngine(
       ) {
         continue;
       }
+      if (isShownChannel(channel)) {
+        wait = Math.max(wait, END_RECHECK_MS);
+        continue;
+      }
       const remaining = remainingCurve(animation);
       if (remaining != null && remaining > 0) {
         wait = Math.max(
@@ -2916,13 +2938,31 @@ export function createMotionEngine(
     to: number,
     spring: SpringDescription,
     velocity: number,
+  ): Segment | null =>
+    // The motion role it plays, at the tempo of the theme it is in.
+    springFrom(
+      owner,
+      property,
+      start,
+      valueAt(property, start),
+      velocity,
+      to,
+      resolveMotion(target, spring),
+    );
+
+  /** A resolved spring from a value and a velocity, starting at `start`. */
+  const springFrom = (
+    owner: HandleState,
+    property: MotionProperty,
+    start: number,
+    from: number,
+    velocity: number,
+    to: number,
+    resolved: SpringDescription,
   ): Segment | null => {
-    const from = valueAt(property, start);
     if (from === to && velocity === 0) {
       return null;
     }
-    // The motion role it plays, at the tempo of the theme it is in.
-    const resolved = resolveMotion(target, spring);
     const curve = solveSpring(toSpring(resolved), {from, to, velocity});
     const duration = Math.min(
       MAX_DURATION_MS,
@@ -2977,6 +3017,7 @@ export function createMotionEngine(
         .filter(jump => jump > 0),
       owner,
       spring: resolved,
+      isAdditive: true,
     };
   };
 
@@ -3051,6 +3092,211 @@ export function createMotionEngine(
       owner,
       isFade: true,
     };
+  };
+
+  // -- a retarget's start ----------------------------------------------------
+
+  /**
+   * What the screen shows of a property after a call that continues its
+   * motion: the old curve, or the value at rest. It shows that until the
+   * frame that commits the call. A rebase since then moves the element
+   * under it by `offset`.
+   */
+  interface Shown {
+    readonly segment: Segment | null;
+    readonly resting: number;
+    /** False when the old curve still waited for its own start. */
+    readonly isKnown: boolean;
+    offset: number;
+    /** When the first such call changed the property. */
+    readonly since: number;
+  }
+
+  const shown = new Map<MotionProperty, Shown>();
+  let isShownLookQueued = false;
+  let stopWatchingHidden: (() => void) | null = null;
+
+  const isShownChannel = (channel: Channel) =>
+    CHANNELS[channel].some(property => shown.has(property));
+
+  const isPageHidden = () => target?.ownerDocument.visibilityState === 'hidden';
+
+  const forgetShown = () => {
+    shown.clear();
+    stopWatchingHidden?.();
+  };
+
+  /**
+   * A hidden page draws no frames and shows nothing, so its calls keep their
+   * own clock, as the timers do (scheduleRetire). A page that goes hidden
+   * before the frame forgets what it showed.
+   */
+  const watchHidden = () => {
+    const page = target?.ownerDocument;
+    if (stopWatchingHidden != null || page == null) {
+      return;
+    }
+    const onChange = () => {
+      if (page.visibilityState === 'hidden') {
+        forgetShown();
+      }
+    };
+    page.addEventListener('visibilitychange', onChange);
+    stopWatchingHidden = () => {
+      page.removeEventListener('visibilitychange', onChange);
+      stopWatchingHidden = null;
+    };
+  };
+
+  /**
+   * Notes what the screen shows of each property that a call continuing
+   * motion changes, before the call replaces its curve. The call rebuilds
+   * its channels at once, and the frame that commits it looks again
+   * (lookAtShown). A call from rest, a call on an explicit clock and a call
+   * in an animator's frame callback start on their frame already.
+   */
+  const noteShown = (
+    properties: Iterable<MotionProperty>,
+    time: number,
+    group: StartGroup | null,
+    at: number | undefined,
+  ) => {
+    if (
+      group != null ||
+      at != null ||
+      frameDepth > 0 ||
+      requestFrame == null ||
+      target == null ||
+      typeof target.animate !== 'function' ||
+      isPageHidden()
+    ) {
+      return;
+    }
+    for (const property of properties) {
+      if (shown.has(property)) {
+        continue;
+      }
+      const segment = segments.get(property) ?? null;
+      shown.set(property, {
+        segment,
+        resting: resting[property],
+        isKnown: segment == null || !isHeld(segment),
+        offset: 0,
+        since: time,
+      });
+    }
+    if (shown.size > 0) {
+      watchHidden();
+    }
+    if (!isShownLookQueued && shown.size > 0) {
+      isShownLookQueued = true;
+      requestFrame(lookAtShown);
+    }
+  };
+
+  /** The value and velocity that the screen shows of a property at `time`. */
+  const shownAt = (entry: Shown, time: number) => {
+    const {segment, offset} = entry;
+    if (segment == null) {
+      return {value: entry.resting + offset, velocity: 0};
+    }
+    const elapsed = time - segment.start;
+    if (elapsed >= segment.duration) {
+      return {value: segment.target + offset, velocity: 0};
+    }
+    const t = Math.max(0, elapsed);
+    return {value: segment.at(t) + offset, velocity: segment.speed(t)};
+  };
+
+  const shifted = (segment: Segment, offset: number): Segment =>
+    offset === 0
+      ? segment
+      : {
+          ...segment,
+          target: segment.target + offset,
+          at: t => segment.at(t) + offset,
+        };
+
+  /**
+   * The frame after calls that continue motion. When it comes more than
+   * LATE_START_MS after the first of them, the screen has shown the old
+   * curve until now. This frame commits the calls. Each spring that they
+   * leave then starts here, from the value and velocity on screen, as
+   * UIKit's added spring begins at its commit. A played curve keeps its
+   * clock. An earlier frame keeps every call on its own clock.
+   */
+  const lookAtShown = (frame?: number) => {
+    isShownLookQueued = false;
+    const entries = [...shown];
+    forgetShown();
+    if (target == null) {
+      return;
+    }
+    const at = frameTime(frame, now);
+    const changed: MotionProperty[] = [];
+    const owners = new Set<HandleState>();
+    for (const [property, entry] of entries) {
+      const current = segments.get(property);
+      if (
+        !entry.isKnown ||
+        at - entry.since <= LATE_START_MS ||
+        current == null ||
+        current.spring == null ||
+        current.isFade === true ||
+        isHeld(current)
+      ) {
+        continue;
+      }
+      const screen = shownAt(entry, at);
+      const next =
+        current.isAdditive === true && entry.segment != null
+          ? additiveSegment(
+              current.owner,
+              property,
+              at,
+              current.target,
+              current.spring,
+              shifted(entry.segment, entry.offset),
+            )
+          : springFrom(
+              current.owner,
+              property,
+              at,
+              screen.value,
+              // From rest, the call's own start velocity, such as a flick's.
+              entry.segment == null ? current.speed(0) : screen.velocity,
+              current.target,
+              current.spring,
+            );
+      if (next == null) {
+        segments.delete(property);
+        resting[property] = current.target;
+      } else {
+        segments.set(property, next);
+      }
+      owners.add(current.owner);
+      changed.push(property);
+    }
+    if (changed.length === 0) {
+      return;
+    }
+    commit(changed, at);
+    for (const owner of owners) {
+      if (owner.settled || owner.timer == null) {
+        continue;
+      }
+      clearTimeout(owner.timer);
+      let end = at;
+      for (const segment of segments.values()) {
+        if (segment.owner === owner) {
+          end = Math.max(end, segment.start + segment.duration);
+        }
+      }
+      owner.timer = setTimeout(
+        () => settleAtEnd(owner),
+        Math.max(0, end - now()),
+      );
+    }
   };
 
   // -- the animator -----------------------------------------------------------
@@ -3514,6 +3760,8 @@ export function createMotionEngine(
       }
       flushDeferred();
       present(false);
+      // The next node never showed the old curves.
+      forgetShown();
       if (next == null) {
         // Unmount, unless a node replaces this one in the same task (React's
         // replacement order: attach(null), then the new node): nothing is
@@ -3693,6 +3941,7 @@ export function createMotionEngine(
       ][]) {
         interrupt(property, time);
         segments.delete(property);
+        shown.delete(property);
         resting[property] = value;
       }
       // Direct manipulation: the layer makes each write a composite only.
@@ -3762,6 +4011,12 @@ export function createMotionEngine(
         Object.keys(next) as MotionProperty[],
         animateOptions.at,
         animateOptions.start,
+      );
+      noteShown(
+        Object.keys(next) as MotionProperty[],
+        time,
+        group,
+        animateOptions.at,
       );
       const adopted =
         plan?.landing != null
@@ -3892,6 +4147,12 @@ export function createMotionEngine(
         playOptions.at,
         playOptions.start,
       );
+      noteShown(
+        Object.keys(next) as MotionProperty[],
+        time,
+        group,
+        playOptions.at,
+      );
       const adopted =
         plan?.landing != null
           ? adoptLandings(plan.landing, Object.keys(next) as MotionProperty[])
@@ -3970,6 +4231,7 @@ export function createMotionEngine(
         return transitioned;
       }
       const group = beginGroup(time, properties, decayOptions.at);
+      noteShown(properties, time, group, decayOptions.at);
       for (const property of properties) {
         const curve = curves[property] as MotionCurve;
         interrupt(property, time);
@@ -4040,9 +4302,15 @@ export function createMotionEngine(
           continue;
         }
         // A Reduce Motion fade is never left half done: it finishes, and a
-        // dip on the stylesheet's opacity hands that opacity back.
+        // dip on the stylesheet's opacity hands that opacity back. A call
+        // that continued the motion and is still not on screen past its
+        // frame shows the old curve: the element stops where that is.
+        const noted = shown.get(property);
+        shown.delete(property);
         const value = !segment.isFade
-          ? valueAt(property, time)
+          ? noted != null && noted.isKnown && time - noted.since > LATE_START_MS
+            ? shownAt(noted, time).value
+            : valueAt(property, time)
           : wasBorrowed
             ? IDENTITY.opacity
             : heading;
@@ -4070,6 +4338,10 @@ export function createMotionEngine(
       ][]) {
         if (delta === 0) {
           continue;
+        }
+        const noted = shown.get(property);
+        if (noted != null) {
+          noted.offset += delta;
         }
         const segment = segmentAt(property, time);
         if (segment == null) {
@@ -4242,6 +4514,7 @@ export function createMotionEngine(
       }
       running.clear();
       stale.clear();
+      forgetShown();
       for (const timer of retireTimers.values()) {
         clearTimeout(timer);
       }

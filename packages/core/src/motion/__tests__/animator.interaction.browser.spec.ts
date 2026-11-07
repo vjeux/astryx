@@ -822,6 +822,149 @@ for (const how of ['from a page frame callback', 'presented'] as const) {
   });
 }
 
+test('a retarget whose frame a 200 ms block delays starts at that frame, from the value and the velocity on screen there (spec:AST-094 FR6)', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== 'chromium',
+    'screencast frame evidence is Chromium-only in Playwright',
+  );
+  await open(page);
+  const box = page.locator('#box');
+  await markElement(box, {inset: MARKER_INSET});
+  const {start: controlStart} = await startBusyControl(page);
+  const {start: secondStart} = await startBusyControl(page, {ahead: true});
+  const cast = await startScreencast(page);
+  const out = {response: 1.2, dampingRatio: 1};
+  // The call comes 250 ms into the first curve, in a task, and the page then
+  // stays busy for 200 ms. So the frame that commits the call comes after
+  // that block, and the compositor plays the first curve until then.
+  const run = await page.evaluate(
+    async ({spring, back, travel}) => {
+      const handle = window.animator.animate({x: travel}, {spring});
+      const started = await handle.started;
+      await new Promise(resolve =>
+        setTimeout(resolve, Math.max(0, started + 250 - performance.now())),
+      );
+      return new Promise<{start: number; call: number; end: number}>(
+        resolve => {
+          setTimeout(() => {
+            const call = performance.now();
+            window.animator.animate({x: 0}, {spring: back});
+            while (performance.now() < call + 200) {
+              // the page's main thread is busy
+            }
+            resolve({
+              start: performance.timeOrigin + started,
+              call: performance.timeOrigin + call,
+              end: performance.timeOrigin + performance.now(),
+            });
+          }, 0);
+        },
+      );
+    },
+    {spring: out, back: SLOW, travel: TRAVEL},
+  );
+  await page.waitForTimeout(400);
+  const frames = await cast.stop();
+  const tracked = await trackMarker(page, frames);
+  const control = await trackMarker(page, frames, {rgb: CONTROL_RGB});
+  const second = await trackControl(page, frames, {ahead: true});
+  // Each frame on the page clock, read from the two controls, as in the 1 s
+  // block above.
+  const clocks = [
+    {clock: controlClock(control), origin: controlStart},
+    {clock: controlClock(second), origin: secondStart},
+  ];
+  const timed = tracked.flatMap(f => {
+    const reader = clocks.find(({clock}) => clock.has(f.t));
+    if (f.box == null || reader == null) {
+      return [];
+    }
+    const ms = reader.clock.get(f.t) ?? NaN;
+    const cycles = Math.round((f.t - reader.origin - ms) / 800);
+    const at = reader.origin + ms + cycles * 800;
+    return at >= run.call - 50 && at <= run.end + 150
+      ? [{x: f.box.x - MARKER_INSET, at}]
+      : [];
+  });
+  // The frames fit the first curve up to a start at or after the block's
+  // end. After that start, they fit a spring from the value and the velocity
+  // on screen there. `skip` fits the same frames to the call's own clock
+  // instead.
+  const fit = await page.evaluate(
+    ({spring, back, travel, times, frames: judged}) => {
+      const first = Motion.solveSpring(Motion.toSpring(spring), {
+        from: 0,
+        to: travel,
+      });
+      const firstAt = (at: number) => first.value((at - times.start) / 1000);
+      const firstVelocity = (at: number) =>
+        first.velocity((at - times.start) / 1000);
+      const from = (at: number) =>
+        Motion.solveSpring(Motion.toSpring(back), {
+          from: firstAt(at),
+          to: 0,
+          velocity: firstVelocity(at),
+        });
+      const worstFor = (curve: (at: number) => number) =>
+        Math.max(...judged.map(({x, at}) => Math.abs(x - curve(at))));
+      // The best switch from the first curve to `next(commit)`, at or after
+      // the block's end.
+      const bestFit = (
+        next: (commit: number) => (elapsedMs: number) => number,
+      ) => {
+        let best = {commit: NaN, worst: Infinity};
+        for (let commit = times.end; commit <= times.end + 60; commit += 1) {
+          const curve = next(commit);
+          const worst = worstFor(at =>
+            at < commit ? firstAt(at) : curve(at - commit),
+          );
+          if (worst < best.worst) {
+            best = {commit, worst};
+          }
+        }
+        return best;
+      };
+      const fromScreen = bestFit(commit => {
+        const next = from(commit);
+        return elapsed => next.value(elapsed / 1000);
+      });
+      const ownClock = from(times.call);
+      const onOwnClock = bestFit(
+        commit => elapsed =>
+          ownClock.value((elapsed + commit - times.call) / 1000),
+      );
+      return {
+        commitAfterBlock: fromScreen.commit - times.end,
+        worst: fromScreen.worst,
+        skip: onOwnClock.worst,
+      };
+    },
+    {spring: out, back: SLOW, travel: TRAVEL, times: run, frames: timed},
+  );
+  const read = {
+    ...fit,
+    inBlock: timed.filter(({at}) => at > run.call && at < run.end).length,
+    after: timed.filter(({at}) => at > run.end + 20).length,
+  };
+  test.info().annotations.push({
+    type: 'a retarget behind a 200 ms block (px, ms)',
+    description: JSON.stringify({read, timed}),
+  });
+  // The compositor showed the first curve through the block, and the frames
+  // after it show the call.
+  expect(read.inBlock, JSON.stringify(read)).toBeGreaterThanOrEqual(3);
+  expect(read.after, JSON.stringify(read)).toBeGreaterThanOrEqual(3);
+  // Within 4 px everywhere: the marker and the controls are read at whole
+  // px, so each read adds up to a px.
+  expect(read.worst, JSON.stringify(read)).toBeLessThanOrEqual(4);
+  // The call's own clock misses the same frames by far more, so the case
+  // tells the two apart.
+  expect(read.skip, JSON.stringify(read)).toBeGreaterThan(20);
+});
+
 test('no Layout or Paint runs while it animates', async ({
   page,
   browserName,
