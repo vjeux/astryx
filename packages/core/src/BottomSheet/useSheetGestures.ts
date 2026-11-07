@@ -1476,9 +1476,6 @@ export function useSheetGestures({
       // The release velocity, px/ms. A lift at a new position is the last
       // sample. A finger that held still for longer than the stillness
       // interval before the lift releases nothing in motion.
-      if (state.tracker.lastSample?.y !== event.clientY) {
-        state.tracker.add(0, event.clientY, event.timeStamp);
-      }
       const velocity = state.tracker.velocity(event.timeStamp).y / 1000;
       dragStateRef.current = null;
       if (!state.syntheticTouch) {
