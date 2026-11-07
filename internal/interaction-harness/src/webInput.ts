@@ -119,7 +119,7 @@ export class WheelPageStallError extends Error {
     super(
       stall.frameGapMs == null
         ? `webInputDriver: the page's own wheel listeners took ${stall.handlingMs.toFixed(0)} ms of page wall time to handle a step, so the next reached it ${stall.gapMs.toFixed(0)} ms later, over its ${maxGapMs} ms: the page split the run. On a starved runner that time includes the page's wait for a CPU: judge a page stall from a run with CI's CPU limits`
-        : `webInputDriver: the page drew no frame for ${stall.frameGapMs.toFixed(0)} ms around a ${stall.gapMs.toFixed(0)} ms gap between two wheel steps, over its ${maxGapMs} ms (engine or page work), while its own wheel listeners took ${stall.handlingMs.toFixed(0)} ms: the page split the run. On a starved runner the renderer draws no frame either: judge a page stall from a run with CI's CPU limits`,
+        : `webInputDriver: the page drew no frame for ${stall.frameGapMs.toFixed(0)} ms around a ${stall.gapMs.toFixed(0)} ms gap between two wheel steps, over its ${maxGapMs} ms (engine or page work), while its own wheel listeners took ${stall.handlingMs.toFixed(0)} ms: the page split the run`,
     );
     this.name = 'WheelPageStallError';
   }
