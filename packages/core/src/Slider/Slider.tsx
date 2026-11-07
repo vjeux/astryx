@@ -1364,7 +1364,8 @@ export function Slider({ref, ...props}: SliderProps) {
     thumbFor: value => getClosestThumb(value),
   };
   useSliderTouch({
-    isEnabled: !isDisabled,
+    // NOT FOR LANDING: a finger moves nothing, so the screen stays still.
+    isEnabled: false && !isDisabled,
     model: touchModel,
     thumbCount: values.length,
     thumbsWrapped: valueDisplay === 'tooltip' && !showsDisabledMessage,
