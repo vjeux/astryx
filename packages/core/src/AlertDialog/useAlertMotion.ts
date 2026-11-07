@@ -35,13 +35,13 @@ import {isHTMLElement} from '../utils/nodeType';
 
 /**
  * A fade whose end is never reported still ends this long after its length,
- * counted from its start.
+ * counted from its first frame.
  */
 const EXIT_BACKSTOP_MS = 100;
 
 /**
- * A fade that no frame has started this long after the close starts then. A
- * hidden page gets no frames, and the backstop then ends its close.
+ * A fade that has not started this long after the close ends there, so the
+ * page takes input again when no frame comes.
  */
 const EXIT_START_LIMIT_MS = 1000;
 
@@ -269,7 +269,8 @@ export function useAlertMotion({
       }
     };
     let isPlaying = true;
-    let isStarted = false;
+    // The start frame, the start limit and the backstop below, which `stop`
+    // clears.
     const view = doc.defaultView;
     let startFrame = 0;
     // The frame time of the first frame that shows the copy.
@@ -291,29 +292,23 @@ export function useAlertMotion({
       }
     };
     void ended.then(end);
-    const play = () => {
-      if (isStarted) {
-        return;
-      }
-      isStarted = true;
-      view?.cancelAnimationFrame(startFrame);
+    const play = (time?: number) => {
       clearTimeout(startLimit);
       copy.style.removeProperty('animation-play-state');
       fadeAlertClosing(copy);
       // The dimming's fade starts only now, so the end waits for it too.
       const playing = copy.getAnimations({subtree: true});
-      if (view != null) {
+      if (time != null) {
         // The frame that first showed the copy showed the fade's start, so
-        // the fade counts from that frame. It counts from at most one frame
-        // ago: after a main-thread block, a frame's time is old.
-        const start = Math.max(shownAt, view.performance.now() - FRAME_MS);
+        // the fade counts from that frame, at most one frame back.
+        const start = Math.max(shownAt, time - FRAME_MS);
         for (const animation of playing) {
           animation.startTime = start;
         }
       }
       void Promise.all([allEnded(fade), allEnded(playing)]).then(resolveEnded);
       // A fade whose end is never reported (a page that disables animations)
-      // still ends once its length has passed, counted from its start.
+      // still ends once its length has passed, counted from its first frame.
       backstop = setTimeout(end, length + EXIT_BACKSTOP_MS);
     };
     // The fade waits until a frame has shown the copy at rest, which is the
@@ -325,7 +320,7 @@ export function useAlertMotion({
     if (view == null) {
       play();
     } else {
-      startLimit = setTimeout(play, EXIT_START_LIMIT_MS);
+      startLimit = setTimeout(end, EXIT_START_LIMIT_MS);
       startFrame = view.requestAnimationFrame(time => {
         shownAt = time;
         startFrame = view.requestAnimationFrame(play);
