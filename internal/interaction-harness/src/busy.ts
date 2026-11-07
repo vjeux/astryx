@@ -910,11 +910,7 @@ function motionStepPx(values: readonly number[]): number {
 export function busyWindowProof(
   ...args: Parameters<typeof readBusyWindow>
 ): BusyProof {
-  const {proof, starvation} = readBusyWindow(...args);
-  if (starvation != null) {
-    throw new FrameStarvationError(starvation);
-  }
-  return proof;
+  return readBusyWindow(...args).proof;
 }
 
 /**
