@@ -1373,6 +1373,8 @@ test.describe('spec:AST-105 Coverage', () => {
       const [animation] = (
         doc.getElementById('after') as HTMLElement
       ).getAnimations();
+      // NOT FOR LANDING: the glide starts on the page's clock instead of the frame's.
+      animation.startTime = document.timeline.currentTime;
       await frame(view);
       await frame(view);
       return {
