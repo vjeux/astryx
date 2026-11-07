@@ -171,7 +171,7 @@ function measureResizedRoom(
     return 0;
   }
   const root = win.document.documentElement;
-  const height = root.clientHeight;
+  const height = win.innerHeight;
   // A root with no box yet, as before layout, makes no room.
   if (!(height > 0)) {
     return 0;
