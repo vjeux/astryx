@@ -98,6 +98,10 @@ async function traceCloses(page: Page, route: CloseRoute): Promise<Closes> {
     // The open's own frames end before the close is traced.
     await frames(page);
     const trace = await traceRendering(page, async () => {
+      // NOT FOR LANDING: one frame runs in the trace before the close.
+      await page.evaluate(
+        async () => new Promise(resolve => requestAnimationFrame(resolve)),
+      );
       if (route.press == null) {
         await page.keyboard.press('Escape');
       } else {
