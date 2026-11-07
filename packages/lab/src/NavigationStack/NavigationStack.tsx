@@ -1126,17 +1126,24 @@ export function NavigationStack<T>({
       // enters (fades in where it lands) and which leaves (fades out in
       // place). A finger's release fades on any pointer (`touchRelease`).
       if (topLayers?.card) {
-        handles.push(
-          topLayers.card.animate(
-            {x: values.topX},
-            {spring, velocity: velocity ? {x: velocity.topX} : undefined},
-            {
-              at,
-              touchRelease: release,
-              crossfadeAs: to === 0 ? 'entrance' : 'exit',
-            },
-          ),
-        );
+        if (
+          to === 0 &&
+          topLayers.card.reducedMotion({touchRelease: release}) !== 'off'
+        ) {
+          topLayers.card.set({x: values.topX, opacity: 0});
+        } else {
+          handles.push(
+            topLayers.card.animate(
+              {x: values.topX},
+              {spring, velocity: velocity ? {x: velocity.topX} : undefined},
+              {
+                at,
+                touchRelease: release,
+                crossfadeAs: to === 0 ? 'entrance' : 'exit',
+              },
+            ),
+          );
+        }
         startedRef.current = at;
       }
       // The bars move with their cards (each screen's bar is part of it in
