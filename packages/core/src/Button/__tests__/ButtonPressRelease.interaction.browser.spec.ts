@@ -601,6 +601,40 @@ test('the release of a button keeps fading on every frame while the main thread 
     during: opened.surface,
     pseudoElement: '::before',
   });
+  // NOT FOR LANDING: the release fade's start waits for the main thread. A
+  // frame callback moves its first 80 ms; the compositor runs it after that.
+  // Under the block it begins only once the block ends.
+  await opened.surface.evaluate(el => {
+    const starts = new Map<Animation, number>();
+    const step = () => {
+      for (const animation of el.getAnimations({subtree: true})) {
+        const effect = animation.effect as KeyframeEffect | null;
+        if (
+          effect?.pseudoElement !== '::before' ||
+          animation.playState !== 'running' ||
+          animation.playbackRate === 1 && starts.has(animation)
+        ) {
+          continue;
+        }
+        if (!starts.has(animation)) {
+          starts.set(
+            animation,
+            performance.now() - Number(animation.currentTime ?? 0),
+          );
+          animation.playbackRate = 0;
+        }
+        const at = performance.now() - (starts.get(animation) ?? 0);
+        if (at >= 80) {
+          animation.currentTime = at;
+          animation.playbackRate = 1;
+        } else {
+          animation.currentTime = at;
+        }
+      }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
   await opened.driver.play(tap(opened.center, {holdMs: HOLD_MS}));
   const block = await blocked;
   // The release is the longest animation: the `::before` opacity fade, not
