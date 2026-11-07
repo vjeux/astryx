@@ -32,6 +32,7 @@ import {
   withStorybook,
 } from '@astryxdesign/interaction-harness';
 
+import {solvePaging} from '../../motion/paging';
 import {nearestStop} from '../snapPagingValue';
 
 const storybook = withStorybook(test);
@@ -480,7 +481,6 @@ for (const mode of ['paging', 'item'] as const) {
       ).toBeGreaterThan(-0.5);
     });
 
-
     test('right-to-left: a flick toward the inline end moves forward, mirrored', async ({
       page,
     }) => {
@@ -828,7 +828,7 @@ test('an item added while the row settles: once it rests, native snap follows th
     .toMatch(/^start/);
 });
 
-test('a narrowing while the row settles toward the last view: it rests on the new last page, never back', async ({
+test('a narrowing while the row settles toward the last view: the settle plays on from where it shows, at its velocity, to the new last page', async ({
   page,
 }) => {
   const {scroller} = await open(page, 'snap-paging-three-up', 'paging');
@@ -844,17 +844,76 @@ test('a narrowing while the row settles toward the last view: it rests on the ne
     })
     .toBeCloseTo(stops[3], 0);
   // A drag past half a view and a still lift head the row for the last view,
-  // whatever the release's pacing. The page narrows the row by 100 px 60 ms
+  // whatever the release's pacing. The page narrows the row by 100 px 100 ms
   // after the lift, while it settles, and records where the row shows then.
+  // From the lift, it samples where the row shows in 40 frames, with each
+  // settle's own clock. Before the resize, it reads the settle in flight: its
+  // keyframes, and how its translate maps onto where the row shows. A resize
+  // observer made after the pager's runs right after the pager's own resize
+  // work. It records the frame of that work and the settle it started.
   await scroller.evaluate(el => {
     const first = el.firstElementChild as HTMLElement;
     const flags = window as unknown as {
       heldAtResize?: boolean;
       shownAtResize?: number;
+      shownFrames?: {
+        time: number;
+        shown: number;
+        beforeTime: number | null;
+        afterTime: number | null;
+      }[];
+      resizeFrame?: number;
+      settleBefore?: {
+        duration: number;
+        keyframes: {offset: number; x: number}[];
+        shownAtZero: number;
+      };
+      settleAnimations?: {before?: Animation; after?: Animation};
+    };
+    const animations: {before?: Animation; after?: Animation} = {};
+    flags.settleAnimations = animations;
+    const translateSettle = (except?: Animation) =>
+      first
+        .getAnimations()
+        .find(
+          animation =>
+            animation !== except &&
+            (animation.effect as KeyframeEffect | null)
+              ?.getKeyframes()
+              .some(keyframe => keyframe.translate != null),
+        );
+    const clock = (animation?: Animation) =>
+      animation?.currentTime == null ? null : Number(animation.currentTime);
+    const frames: {
+      time: number;
+      shown: number;
+      beforeTime: number | null;
+      afterTime: number | null;
+    }[] = [];
+    flags.shownFrames = frames;
+    const startWidth = el.clientWidth;
+    new ResizeObserver(() => {
+      if (flags.resizeFrame == null && el.clientWidth !== startWidth) {
+        flags.resizeFrame = frames.length - 1;
+        animations.after = translateSettle(animations.before);
+      }
+    }).observe(el);
+    const sample = (time: number) => {
+      frames.push({
+        time,
+        shown:
+          el.getBoundingClientRect().left - first.getBoundingClientRect().left,
+        beforeTime: clock(animations.before),
+        afterTime: clock(animations.after),
+      });
+      if (frames.length < 40) {
+        requestAnimationFrame(sample);
+      }
     };
     el.addEventListener(
       'touchend',
       () => {
+        requestAnimationFrame(sample);
         setTimeout(() => {
           flags.heldAtResize = Array.from(el.children).some(
             child => (child as HTMLElement).style.translate !== '',
@@ -862,8 +921,23 @@ test('a narrowing while the row settles toward the last view: it rests on the ne
           flags.shownAtResize =
             el.getBoundingClientRect().left -
             first.getBoundingClientRect().left;
+          animations.before = translateSettle();
+          const effect = animations.before?.effect as KeyframeEffect | null;
+          if (effect != null) {
+            flags.settleBefore = {
+              duration: Number(effect.getComputedTiming().duration),
+              keyframes: effect.getKeyframes().map(keyframe => ({
+                offset: keyframe.computedOffset,
+                x: Number.parseFloat(String(keyframe.translate)),
+              })),
+              // Where the row shows less the translate it shows it with.
+              shownAtZero:
+                flags.shownAtResize +
+                Number.parseFloat(getComputedStyle(first).translate),
+            };
+          }
           el.style.width = `${el.clientWidth - 100}px`;
-        }, 60);
+        }, 100);
       },
       {once: true},
     );
@@ -903,8 +977,124 @@ test('a narrowing while the row settles toward the last view: it rests on the ne
   expect(at).toBeGreaterThan(shown - 0.5);
   // A settle toward the last page ends on the last page: the row's end.
   expect(at).toBeCloseTo(await travel(scroller), 0);
+  // A new target keeps the current velocity (`spec:AST-094` FR6). So from
+  // the resize on, every frame shows the paging integrator's curve to the new
+  // last page, on that settle's own clock. The curve starts where the frame
+  // of the resize showed the row, at the settle's velocity then.
+  const frameCount = async () =>
+    page.evaluate(
+      () =>
+        (window as unknown as {shownFrames?: unknown[]}).shownFrames?.length ??
+        0,
+    );
+  await expect
+    .poll(frameCount, {
+      message: 'the recorder samples 40 frames from the lift',
+      timeout: 5000,
+    })
+    .toBeGreaterThanOrEqual(40);
+  const {frames, resized, before} = await page.evaluate(() => {
+    const flags = window as unknown as {
+      shownFrames?: {
+        time: number;
+        shown: number;
+        beforeTime: number | null;
+        afterTime: number | null;
+      }[];
+      resizeFrame?: number;
+      settleBefore?: {
+        duration: number;
+        keyframes: {offset: number; x: number}[];
+        shownAtZero: number;
+      };
+    };
+    return {
+      frames: flags.shownFrames ?? [],
+      resized: flags.resizeFrame ?? -1,
+      before: flags.settleBefore ?? null,
+    };
+  });
+  if (before == null) {
+    throw new Error('the page read no settle before the resize');
+  }
+  expect(
+    resized,
+    'the sampled frames show three frames before the resize',
+  ).toBeGreaterThanOrEqual(3);
+  expect(
+    frames.length - resized,
+    'the sampled frames go on three frames after the resize',
+  ).toBeGreaterThanOrEqual(4);
+  // The settle before the resize is the paging integrator's curve from its
+  // first keyframe to its last. Its start velocity is the one whose curve
+  // runs through every keyframe.
+  const shownOf = (x: number) => before.shownAtZero - x;
+  const firstShown = shownOf(before.keyframes[0].x);
+  const lastShown = shownOf(before.keyframes[before.keyframes.length - 1].x);
+  const keyframeMiss = (velocity: number) => {
+    const curve = solvePaging({from: firstShown, velocity, to: lastShown});
+    return Math.max(
+      ...before.keyframes.map(keyframe =>
+        Math.abs(
+          curve.at((keyframe.offset * before.duration) / 1000) -
+            shownOf(keyframe.x),
+        ),
+      ),
+    );
+  };
+  let low = -20000;
+  let high = 20000;
+  for (let step = 0; step < 80; step++) {
+    const a = low + (high - low) / 3;
+    const b = high - (high - low) / 3;
+    if (keyframeMiss(a) < keyframeMiss(b)) {
+      high = b;
+    } else {
+      low = a;
+    }
+  }
+  expect(
+    keyframeMiss(low),
+    'the integrator reproduces the settle before the resize',
+  ).toBeLessThanOrEqual(0.5);
+  const settleBefore = solvePaging({
+    from: firstShown,
+    velocity: low,
+    to: lastShown,
+  });
+  const resizeFrame = frames[resized];
+  if (resizeFrame.beforeTime == null) {
+    throw new Error('the settle before the resize had no clock at the resize');
+  }
+  const beforeAt = resizeFrame.beforeTime / 1000;
+  const prescribed = solvePaging({
+    from: settleBefore.at(beforeAt),
+    velocity: settleBefore.velocity(beforeAt),
+    to: at,
+  });
+  const misses = frames.slice(resized + 1).map((frame, index) => {
+    const since = (frame.time - resizeFrame.time) / 1000;
+    const onAfter = Math.abs(frame.shown - prescribed.at(since));
+    // The first frame after the resize may still show the settle before it
+    // (`spec:AST-094` FR6: a retarget may show from a later commit).
+    const onBefore =
+      index === 0
+        ? Math.abs(frame.shown - settleBefore.at(beforeAt + since))
+        : Infinity;
+    return Math.min(onAfter, onBefore);
+  });
+  test.info().annotations.push({
+    type: 'prescription',
+    description: `misses ${misses.map(miss => miss.toFixed(2)).join(' ')}; clocks ${frames
+      .slice(resized, resized + 3)
+      .map(
+        frame =>
+          `${(frame.time - resizeFrame.time).toFixed(1)}/${String(frame.afterTime)}`,
+      )
+      .join(' ')}`,
+  });
+  expect(Math.max(...misses)).toBeLessThanOrEqual(1);
 });
-
 
 test('an edge button steps about one view: the viewport less half an item, on the nearest stop', async ({
   page,

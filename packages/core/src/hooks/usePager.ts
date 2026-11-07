@@ -661,6 +661,8 @@ export function createPager(
   let isSwipeSettle = false;
   // Whether the running settle follows a release, not the program's `goTo`.
   let isReleaseSettle = false;
+  // Whether a touch's release started the settle, for a retarget.
+  let isTouchReleaseSettle = false;
   let settleToken = 0;
   let isDragging = false;
 
@@ -728,7 +730,12 @@ export function createPager(
     }
   }
 
-  function stopSettle(): void {
+  /**
+   * Ends the settle's bookkeeping. With `keepMotion`, the track keeps
+   * moving for a curve that takes over in the same call, so that curve starts
+   * at the call rather than at the browser's next commit.
+   */
+  function stopSettle(keepMotion = false): void {
     clearCatchTimer();
     flushReport();
     isSwipeSettle = false;
@@ -736,7 +743,9 @@ export function createPager(
     if (settleHandle != null) {
       settleToken += 1;
       settleHandle = null;
-      animator?.stop(['x']);
+      if (!keepMotion) {
+        animator?.stop(['x']);
+      }
     }
   }
 
@@ -896,6 +905,7 @@ export function createPager(
   ): void {
     isSwipeSettle = false;
     isReleaseSettle = isRelease;
+    isTouchReleaseSettle = touchRelease;
     if (animator == null) {
       return;
     }
@@ -1009,24 +1019,66 @@ export function createPager(
       goTo(count() - 1, {animated: false, reason: 'controlled'});
       return;
     }
-    // A resize lands on the target page at its new offset (a settle in
-    // flight ends there), as a paging scroll view does on rotation. A finger
-    // that holds a caught track keeps it; its lift settles on the new offsets.
+    // A resize lands on the target page at its new offset, as a paging
+    // scroll view does on rotation. A settle in flight heads there from where
+    // the track shows and keeps its velocity, as any new target does. A
+    // finger that holds a caught track keeps it; its lift settles on the new
+    // offsets.
     if (!isDragging && !caughtSettle) {
-      // A settle cut short still ends, even on the page it left.
-      const wasSettling = settleHandle != null;
-      stopSettle();
+      if (settleHandle != null && animator != null) {
+        retargetSettle(animator);
+        return;
+      }
       animator?.set({x: positionToX(offsetOf(target))});
-      if (settled !== target || wasSettling) {
+      if (settled !== target) {
         rest();
       }
     }
   }
 
+  /**
+   * Plays the settle in flight on toward the target's offset, from where the
+   * track shows and at its velocity. A release keeps UIKit's paging
+   * integrator; any other move keeps the animated scroll.
+   */
+  function retargetSettle(running: PagerAnimator): void {
+    const from = presentation();
+    const velocity = sign() * running.getVelocity('x');
+    const isRelease = isReleaseSettle;
+    const touchRelease = isTouchReleaseSettle;
+    const isSwipe = isSwipeSettle;
+    stopSettle(true);
+    if (isRelease) {
+      settleFrom(from, velocity, touchRelease);
+      isSwipeSettle = isSwipe && settleHandle != null;
+      return;
+    }
+    const to = offsetOf(target);
+    if (from === to) {
+      running.stop(['x']);
+      running.set({x: positionToX(to)});
+      rest();
+      return;
+    }
+    play(
+      solveAnimatedPageScroll({
+        from,
+        to,
+        durationMs: resolveMotion(
+          trackElement,
+          paging.animatedScroll,
+          'durationMs',
+        ),
+        curve: resolveMotion(trackElement, paging.animatedScroll.curve),
+        velocity,
+      }),
+    );
+  }
+
   function onPan(recognizer: PanGestureRecognizer): void {
     const state = recognizer.state;
     if (state === 'began') {
-      // Read before measure(), which can stop the settle on a resize.
+      // Read before measure(), which can retarget the settle on a resize.
       const wasSwipeSettle = settleHandle != null && isSwipeSettle;
       measure();
       clearCatchTimer();
