@@ -423,10 +423,6 @@ export function useTabBarLens({
       painted: null,
     };
     isOnBarRef.current = tab != null;
-    if (isIgnored) {
-      flexBar(true, performance.now());
-      return;
-    }
     paintTab(pressRef.current, tab);
     // No tab selected: there is no lens to move; the lift chooses the tab
     // nearest the finger.
