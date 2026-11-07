@@ -816,6 +816,26 @@ describe('useActionGroupTracking', () => {
     expect(onCancel).not.toHaveBeenCalled();
   });
 
+  it('takes a press the caller marks inert: its callbacks report it, and it paints and runs nothing', () => {
+    const onPressBegin = vi.fn();
+    const onPressEnd = vi.fn();
+    const {cancel, message, onCancel} = mount({
+      options: {
+        isInertPress: touch => touch.target === message,
+        onPressBegin,
+        onPressEnd,
+      },
+    });
+    const f = finger();
+    f.down(message, {x: 50, y: 40});
+    expect(onPressBegin).toHaveBeenCalledWith(50, 40, null);
+    f.move(message, centerOf(CANCEL));
+    expect(paintOf(cancel)).toBeNull();
+    f.up(message, centerOf(CANCEL));
+    expect(onPressEnd).toHaveBeenCalledWith(null);
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
   describe('inside a scroller', () => {
     function mountInScroller() {
       const mounted = mount();

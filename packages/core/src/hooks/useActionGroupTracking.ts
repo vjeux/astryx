@@ -62,6 +62,11 @@ export interface ActionGroupTrackingOptions {
   pointerTypes?: ReadonlyArray<PointerKind>;
   /** A press this rejects is not tracked, and its click stays the browser's. */
   shouldTrack?: (touch: GestureTouch) => boolean;
+  /**
+   * A press this marks inert is taken but tracks no action: nothing
+   * highlights or runs, and the press callbacks still report it.
+   */
+  isInertPress?: (touch: GestureTouch) => boolean;
   /** Off, nothing is attached and nothing is tracked. @default true */
   isEnabled?: boolean;
   /**
@@ -185,6 +190,7 @@ export function useActionGroupTracking(
   // expansion; a mouse or a pen hit-tests the actions' exact rects.
   const pointerRef = useRef<PointerKind>('touch');
   const landedRef = useRef<Node | null>(null);
+  const isInertRef = useRef(false);
   // A finger press's neighbours, read once when it begins, for the caller's
   // `resolveTarget`. Nothing is read per move.
   const neighboursRef = useRef(NO_TARGETS);
@@ -247,6 +253,8 @@ export function useActionGroupTracking(
             const target = touch.target as Node | null;
             landedRef.current =
               typeof target?.nodeType === 'number' ? target : null;
+            isInertRef.current =
+              optionsRef.current.isInertPress?.(touch) === true;
           }
           return receiveTouch(recognizer, touch, optionsRef.current);
         },
@@ -260,7 +268,10 @@ export function useActionGroupTracking(
             optionsRef.current.resolveTarget != null
               ? measureNeighbours(ref.current, optionsRef.current)
               : NO_TARGETS;
-          tracker.begin(x, y, {landed: landedRef.current});
+          tracker.begin(x, y, {
+            landed: landedRef.current,
+            inert: isInertRef.current,
+          });
           optionsRef.current.onPressBegin?.(x, y, tracker.highlighted);
           break;
         }

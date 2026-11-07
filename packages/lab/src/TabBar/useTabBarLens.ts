@@ -37,6 +37,7 @@ import {
   itemWidth,
   lensTarget,
   liftScale,
+  nearestIndex,
 } from './tabBarModel';
 import {useMotionEngine} from '../internal/useMotionEngine';
 import {tabBar} from './uikitTabBar';
@@ -62,6 +63,16 @@ interface Press {
   isDragging: boolean;
   /** A tab was selected when the finger landed: the lens follows it. */
   hasLens: boolean;
+  /**
+   * It landed nearer a disabled tab than any other: no lens lifts, and
+   * nothing paints, until the finger drags.
+   */
+  isIgnored: boolean;
+  /**
+   * It landed on a disabled tab's own area, outside every enabled tab: it
+   * tracks nothing, and no lens lifts, for its whole life.
+   */
+  readonly isInert: boolean;
   readonly count: number;
   /** No tab was selected when it landed, so no lens shows it: it paints. */
   readonly paints: boolean;
@@ -82,6 +93,27 @@ function paintTab(press: Press, tab: HTMLElement | null): void {
   tab?.setAttribute(PAINTED_ATTRIBUTE, '');
 }
 
+/**
+ * Whether viewport (x, y) lies on disabled tabs only. UIKit's disabled button
+ * takes no touches, so a press there acts on nothing. Where an enabled
+ * neighbour's button overlaps the disabled tab, the neighbour takes it.
+ */
+function landsOnDisabledOnly(
+  capsule: HTMLElement,
+  x: number,
+  y: number,
+): boolean {
+  const tabs = capsule.ownerDocument
+    .elementsFromPoint(x, y)
+    .filter(
+      element => element.matches('[role="tab"]') && capsule.contains(element),
+    );
+  return (
+    tabs.length > 0 &&
+    tabs.every(tab => tab.getAttribute('aria-disabled') === 'true')
+  );
+}
+
 export interface UseTabBarLensOptions {
   readonly capsuleRef: RefObject<HTMLDivElement | null>;
   readonly count: number;
@@ -93,6 +125,11 @@ export interface UseTabBarLensOptions {
   readonly isTouch: boolean;
   /** A press lifted over the item at `index`. */
   readonly onLift: (index: number) => void;
+  /**
+   * Whether the item at `index` is disabled. A finger that lands on it moves
+   * nothing until it drags, as UIKit ignores a tap on a disabled tab.
+   */
+  readonly isDisabled?: (index: number) => boolean;
 }
 
 export interface TabBarLensRefs {
@@ -159,6 +196,9 @@ function useAnimatorList(count: number) {
  *   cancelled touch settles back onto the selected item.
  * - off the bar: the lens shows the selected item again, and a lift there
  *   chooses nothing. Sliding off cancels.
+ * - over a disabled tab: the tracker skips it, so the lens shows the selected
+ *   item, as off the bar. A finger that lands on one moves nothing until it
+ *   drags.
  * The choice reaches the app (`onLift`) from the lift itself, right after the
  * settle has started in the same task. The settle's first frame waits for the
  * browser's commit, so the app rendering the new tab delays its start rather
@@ -184,6 +224,7 @@ export function useTabBarLens({
   selectedIndex,
   isTouch,
   onLift,
+  isDisabled,
 }: UseTabBarLensOptions): TabBarLensRefs {
   const capsule = useMotionEngine();
   const body = useMotionEngine();
@@ -215,6 +256,8 @@ export function useTabBarLens({
   selectedRef.current = selectedIndex;
   const onLiftRef = useRef(onLift);
   onLiftRef.current = onLift;
+  const isDisabledRef = useRef(isDisabled);
+  isDisabledRef.current = isDisabled;
   const tabsOf = (capsule: HTMLElement) =>
     [...capsule.children].filter(
       (child): child is HTMLElement => child.getAttribute('role') === 'tab',
@@ -328,14 +371,23 @@ export function useTabBarLens({
         options,
       );
     }
+    flexBar(isLifted, at, touchRelease);
+  };
+
+  // The bar's flex under a press. A press that lifts no lens still flexes it,
+  // as UIKit's platter grows under any press, a disabled tab's included.
+  const flexBar = (isPressed: boolean, at: number, touchRelease = false) => {
+    if (body.animator.reducedMotion({touchRelease}) !== 'off') {
+      return;
+    }
     capsule.animator.animate(
-      {scale: isLifted ? tabBar.flexScale : 1},
-      {spring: isLifted ? tabBar.flexPress : tabBar.flexRelease},
-      options,
+      {scale: isPressed ? tabBar.flexScale : 1},
+      {spring: isPressed ? tabBar.flexPress : tabBar.flexRelease},
+      {at, touchRelease},
     );
   };
 
-  const begin = (clientX: number, tab: HTMLElement | null) => {
+  const begin = (clientX: number, clientY: number, tab: HTMLElement | null) => {
     const element = capsuleRef.current;
     const selected = selectedRef.current;
     const root = element?.parentElement;
@@ -350,6 +402,12 @@ export function useTabBarLens({
     const centers = itemCenters(element.offsetWidth, count, isRtl);
     const size = itemWidth(element.offsetWidth, count);
     const x = clientX - left;
+    // UIKit ignores a touch on a disabled tab's own area for its whole life.
+    // One nearer a disabled tab, on an enabled neighbour's button, lifts no
+    // lens either, and the lift still chooses that neighbour.
+    const isInert = landsOnDisabledOnly(element, clientX, clientY);
+    const isIgnored =
+      isInert || isDisabledRef.current?.(nearestIndex(x, centers)) === true;
     pressRef.current = {
       centers,
       size,
@@ -358,11 +416,17 @@ export function useTabBarLens({
       lastX: x,
       isDragging: false,
       hasLens: selected >= 0,
+      isIgnored,
+      isInert,
       count,
       paints: selected < 0,
       painted: null,
     };
     isOnBarRef.current = tab != null;
+    if (isIgnored) {
+      flexBar(true, performance.now());
+      return;
+    }
     paintTab(pressRef.current, tab);
     // No tab selected: there is no lens to move; the lift chooses the tab
     // nearest the finger.
@@ -389,14 +453,27 @@ export function useTabBarLens({
   const move = (clientX: number, tab: HTMLElement | null) => {
     const press = pressRef.current;
     const selected = selectedRef.current;
-    if (press == null) {
+    if (press == null || press.isInert) {
+      return;
+    }
+    const x = clientX - press.left;
+    press.lastX = x;
+    press.isDragging ||= Math.abs(x - press.startX) > DRAG_SLOP;
+    if (press.isIgnored && !press.isDragging) {
       return;
     }
     isOnBarRef.current = tab != null;
     paintTab(press, tab);
-    const x = clientX - press.left;
-    press.lastX = x;
-    press.isDragging ||= Math.abs(x - press.startX) > DRAG_SLOP;
+    if (press.isIgnored) {
+      press.isIgnored = false;
+      if (press.hasLens && selected >= 0) {
+        motionRef.current += 1;
+        if (body.animator.reducedMotion({}) === 'off') {
+          flushSync(() => setIsCopyShown(true));
+        }
+        lift(true, performance.now(), press.size);
+      }
+    }
     if (!press.hasLens || selected < 0) {
       return;
     }
@@ -421,6 +498,9 @@ export function useTabBarLens({
     if (press == null || element == null) {
       return;
     }
+    if (press.isIgnored) {
+      flexBar(false, performance.now(), true);
+    }
     // The tab list changed under the press. Its centres name the old list, so
     // it ends as a cancel and the lens settles to its resting place.
     const isStale = press.count !== count;
@@ -430,7 +510,9 @@ export function useTabBarLens({
     // The app's answer to this lift, as rendered now: the tab the finger
     // chose is the one under it at the lift, whatever renders after.
     const deliver = onLiftRef.current;
-    if (!press.hasLens || selected < 0) {
+    // A press that landed on a disabled tab moved no lens. The tab it lifts
+    // on, if any, still acts, as for any press.
+    if (press.isIgnored || !press.hasLens || selected < 0) {
       // No lens moved: the tab the tracker took runs at once.
       if (chosen >= 0) {
         liftRef.current = () => flushSync(() => deliver(chosen));
@@ -490,7 +572,14 @@ export function useTabBarLens({
     pointerTypes: ['touch', 'pen'],
     isEnabled: isTouch,
     paintsHighlight: false,
-    onPressBegin: (x, _y, tab) => begin(x, tab),
+    isInertPress: touch => {
+      const element = capsuleRef.current;
+      return (
+        element != null &&
+        landsOnDisabledOnly(element, touch.startX, touch.startY)
+      );
+    },
+    onPressBegin: (x, y, tab) => begin(x, y, tab),
     onPressMove: (x, _y, tab) => move(x, tab),
     onPressEnd: tracked => end(tracked, false),
     onPressCancel: () => end(null, true),
