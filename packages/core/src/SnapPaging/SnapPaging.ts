@@ -202,7 +202,6 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     }
     const nextSpan = span();
     const nextWidth = element.clientWidth;
-    const native = nativePosition();
     // WebKit truncates a fractional scroll offset, so the travel stays a whole
     // number of pixels, as the scroll width is. It rounds once, from the
     // takeover, so a resize over many frames adds up no rounding.
@@ -212,13 +211,6 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
         takeoverTravel + (nextSpan - heldSpan) - (nextWidth - heldWidth),
       ),
     );
-    // A shorter travel clamps the row's own scroll offset. The children take
-    // up the clamp, so the row still shows where the pager holds it.
-    if (native !== heldOffset) {
-      const at = position();
-      heldOffset = native;
-      place(at);
-    }
   }
 
   // A held row's translate widens its overflow, so its travel is the one it
