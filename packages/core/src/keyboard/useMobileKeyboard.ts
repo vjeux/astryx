@@ -417,13 +417,11 @@ export function useMobileKeyboard(
         const measuredControlRect = control.getBoundingClientRect();
         const obstructionTop = getObstructionTop();
         // Under a pixel of overhang is `innerHeight`'s precision, not a
-        // keyboard: no suggestion clearance then (overlapOf). Where the
-        // browser shrank the layout viewport for the keyboard, nothing
-        // overlaps, and the field keeps a field's clearance above the new
-        // bottom.
+        // keyboard: no clearance then (overlapOf). Where the browser shrank
+        // the layout viewport for the keyboard, nothing overlaps, and the
+        // field still keeps its clearance above the new bottom.
         const overlap = overlapOf(measuredBodyRect.bottom, obstructionTop);
-        const clearance =
-          overlap > 0 ? offset : resizedRoom() > 0 ? FIELD_OFFSET : 0;
+        const clearance = overlap > 0 || resizedRoom() > 0 ? offset : 0;
         const safeTop = measuredBodyRect.top;
         const safeBottom = Math.min(
           measuredBodyRect.bottom,
@@ -575,10 +573,9 @@ export function useMobileKeyboard(
 
         const measuredBodyRect = body.getBoundingClientRect();
         const overlap = overlapOf(measuredBodyRect.bottom, obstructionTop);
-        // The extra clearance leaves space for mobile suggestion UI, but only
-        // while the visual viewport actually overlaps the sheet. With no
-        // obstruction, ordinary desktop and hardware-keyboard focus must not
-        // shift an already visible control.
+        // The clearance applies only while the visual viewport actually
+        // overlaps the sheet. With no obstruction, ordinary desktop and
+        // hardware-keyboard focus must not shift an already visible control.
         const clearance = overlap > 0 ? offset : 0;
         keyboardGeometry =
           overlap > 0
