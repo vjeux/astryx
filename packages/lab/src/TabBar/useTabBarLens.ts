@@ -522,36 +522,6 @@ export function useTabBarLens({
     pointerTypes: ['touch', 'pen'],
     isEnabled: isTouch,
     paintsHighlight: false,
-    // A press that landed on a disabled tab takes no tab until it drags. So
-    // a short slide onto a neighbour paints, focuses and runs nothing.
-    resolveTarget: (x, y, targets) => {
-      const press = pressRef.current;
-      if (
-        press?.isIgnored === true &&
-        Math.abs(x - press.left - press.startX) <= DRAG_SLOP
-      ) {
-        return null;
-      }
-      // As Core's own pick with no expansion: an edge counts, and where two
-      // tabs share it, the one the press landed on wins.
-      const hits = targets.filter(
-        target =>
-          x >= target.left &&
-          x <= target.right &&
-          y >= target.top &&
-          y <= target.bottom,
-      );
-      if (press != null && hits.length > 1) {
-        const landed = press.left + press.startX;
-        const home = hits.find(
-          target => landed >= target.left && landed <= target.right,
-        );
-        if (home != null) {
-          return home.element;
-        }
-      }
-      return hits[0]?.element ?? null;
-    },
     onPressBegin: (x, _y, tab) => begin(x, tab),
     onPressMove: (x, _y, tab) => move(x, tab),
     onPressEnd: tracked => end(tracked, false),
