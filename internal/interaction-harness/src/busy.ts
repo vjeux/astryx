@@ -1604,9 +1604,11 @@ export function pooledBusyProof(
   }
   const {
     minRunFrames = 1,
-    minJudgedRuns = Math.ceil(runs.length / 2),
+    minJudgedRuns: minJudgedRunsOption,
     ...windowOptions
   } = options;
+  // MUTANT: the minimum counts only the runs that did not begin too late.
+  let minJudgedRuns = minJudgedRunsOption ?? Math.ceil(runs.length / 2);
   const {minJudgedFrames = 4, maxMedianFrameMs = Infinity} = windowOptions;
   if (minJudgedRuns < 1 || minJudgedRuns > runs.length) {
     throw new Error(
@@ -1638,6 +1640,9 @@ export function pooledBusyProof(
     (read, i): read is BusyControlRead => judged[i] && read != null,
   );
   const lateRuns = late.filter(error => error != null).length;
+  if (minJudgedRunsOption == null) {
+    minJudgedRuns = Math.ceil((runs.length - lateRuns) / 2);
+  }
   const total = (key: 'moved' | 'movedWith' | 'belowStep') =>
     judgedReads.reduce((sum, read) => sum + read[key], 0);
   const moved = total('moved');
