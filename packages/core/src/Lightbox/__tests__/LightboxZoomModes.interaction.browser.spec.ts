@@ -366,8 +366,10 @@ test('under Reduce Motion, + then - pressed mid-fade leave the photo at full opa
   await page.emulateMedia({reducedMotion: 'reduce'});
   const {img} = await openPhone(page);
   const dialog = page.getByRole('dialog', {name: 'Forest path'});
-  const opacity = async () =>
-    img.evaluate(el => parseFloat(getComputedStyle(el).opacity));
+  const opacity = async () => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return img.evaluate(el => parseFloat(getComputedStyle(el).opacity));
+  };
   await dialog.getByRole('button', {name: 'Zoom'}).focus();
   // The second key lands mid-dip of the first one's cross-fade.
   await page.keyboard.press('+');
