@@ -6,8 +6,9 @@
  *   animator, a stand-in visual viewport and stubbed boxes
  * @output Proves a docked ride on the guide's slides. A show sets the field
  *   just above the keyboard at once and rides the rest, and a pan the browser
- *   makes is put back. A field that loses focus while the keyboard shows rides
- *   its bar down on the hide's slide. No set cuts the slide at its start
+ *   makes is put back, also one made at the last height. A field that loses
+ *   focus while the keyboard shows rides its bar down on the hide's slide. No
+ *   set cuts the slide at its start
  * @position Keyboard module tests
  */
 
@@ -221,5 +222,97 @@ it('puts back a pan the browser makes on its own while a docked bar rides its fi
   });
   expect(scrollIntoView).toHaveBeenCalledTimes(1);
   Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+  stop();
+});
+
+it("puts back, at the keyboard's real report, a pan the browser made for Gboard's short first report", () => {
+  // Chrome with Remove animations, frame by frame: Gboard first reports a
+  // keyboard 48 px tall, and the bar lands on its top. Chrome then pans the
+  // page 48 px with no report of the visual viewport's own. The real keyboard
+  // reports 1.6 s later.
+  const viewport = window.visualViewport as unknown as EventTarget & {
+    offsetTop: number;
+  };
+  const pans: number[] = [];
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: vi.fn(function (this: HTMLElement) {
+      if (this.style.position === 'fixed') {
+        const top = parseFloat(this.style.top) || 0;
+        pans.push(top);
+        viewport.offsetTop = top;
+      }
+    }),
+  });
+  const {input} = dockedBar();
+  const stop = keepFieldAboveKeyboard(input);
+  act(() => input.focus());
+  keyboard.frame();
+  keyboard.show(48);
+  publish({...slide('show', 48), animated: false});
+  expect(animator.state.y).toBe(-48);
+  viewport.offsetTop = 48;
+  keyboard.show(336);
+  publish({...slide('show', 336), from: 48});
+  // The pan goes back at the real report, and the bar sits on the keyboard's
+  // top with no page panned under it.
+  expect(pans).toEqual([0]);
+  expect(viewport.offsetTop).toBe(0);
+  expect(animator.state.y).toBe(-336);
+  Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+  stop();
+});
+
+it("puts back Chrome's own reveal of a docked bar's field, its document scroll and its pan, as soon as it lands", () => {
+  // Chrome with Remove animations, frame by frame: Gboard first reports a
+  // keyboard 48 px tall, and the bar lands on its top. Chrome then scrolls the
+  // document 344 px, which moves only the page behind the fixed bar, and pans
+  // 48 px. The real keyboard reports 1.6 s later.
+  const viewport = window.visualViewport as unknown as EventTarget & {
+    offsetTop: number;
+  };
+  const page = {scrollY: 154.3};
+  Object.defineProperty(window, 'scrollY', {
+    configurable: true,
+    get: () => page.scrollY,
+  });
+  const scrollTo = vi.fn(({top}: {top: number}) => {
+    page.scrollY = top;
+  });
+  vi.stubGlobal('scrollTo', scrollTo);
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: vi.fn(function (this: HTMLElement) {
+      if (this.style.position === 'fixed') {
+        viewport.offsetTop = parseFloat(this.style.top) || 0;
+      }
+    }),
+  });
+  const {input} = dockedBar();
+  const stop = keepFieldAboveKeyboard(input);
+  act(() => input.focus());
+  keyboard.frame();
+  keyboard.show(48);
+  publish({...slide('show', 48), animated: false});
+  expect(animator.state.y).toBe(-48);
+  page.scrollY = 498.3;
+  viewport.offsetTop = 48;
+  act(() => {
+    viewport.dispatchEvent(new Event('scroll'));
+  });
+  expect(scrollTo).toHaveBeenCalledWith({
+    left: 0,
+    top: 154.3,
+    behavior: 'instant',
+  });
+  expect(page.scrollY).toBe(154.3);
+  expect(viewport.offsetTop).toBe(0);
+  keyboard.show(336);
+  publish({...slide('show', 336), from: 48});
+  expect(animator.state.y).toBe(-336);
+  expect(page.scrollY).toBe(154.3);
+  expect(viewport.offsetTop).toBe(0);
+  Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+  Reflect.deleteProperty(window, 'scrollY');
   stop();
 });

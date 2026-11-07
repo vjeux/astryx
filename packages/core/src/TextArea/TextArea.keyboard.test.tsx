@@ -75,7 +75,7 @@ it("rides an app's fixed bar at the viewport's bottom with the focused text area
   expect(animatorFor(bar).get('y')).toBe(0);
 });
 
-it("keeps the browser's own reveal for a text area that its scroll area cannot scroll up to the area's top", () => {
+it("claims a text area that its scroll area cannot scroll up to the area's top, and pans the visual viewport to it", () => {
   keyboard = installKeyboardTestDouble();
   render(
     <div data-area="" style={{overflowY: 'auto'}}>
@@ -93,16 +93,42 @@ it("keeps the browser's own reveal for a text area that its scroll area cannot s
   act(() => screen.getByRole('textbox', {name: 'Other'}).focus());
   const focus = vi.spyOn(field, 'focus');
   act(() => field.focus());
-  expect(focus).not.toHaveBeenCalledWith({preventScroll: true});
+  expect(focus).toHaveBeenCalledWith({preventScroll: true});
+  vi.stubGlobal('scrollBy', vi.fn());
+  const viewport = window.visualViewport as unknown as EventTarget & {
+    offsetTop: number;
+  };
+  // A fixed element scrolled into view pans the visual viewport to its top,
+  // as in Chrome and Firefox for Android.
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: vi.fn(function (this: HTMLElement) {
+      if (this.style.position === 'fixed') {
+        viewport.offsetTop = parseFloat(this.style.top) || 0;
+      }
+    }),
+  });
   keyboard.show(300);
-  expect(area.scrollTop).toBe(0);
+  // Neither the area nor the document reaches the room the keyboard takes,
+  // so the visual viewport pans the field 10 px above the keyboard.
+  expect(viewport.offsetTop).toBe(
+    window.innerHeight - 20 + FIELD_OFFSET - (window.innerHeight - 300),
+  );
+  Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
 });
 
-it("reveals through the document a text area in a scroll area under the keyboard, and lets the browser's own pan stand while it stays covered", () => {
+it('reveals through the document a text area in a scroll area under the keyboard, and pans the visual viewport where the document does not move', () => {
   keyboard = installKeyboardTestDouble();
   const scrollBy = vi.fn();
   vi.stubGlobal('scrollBy', scrollBy);
-  const scrollIntoView = vi.fn();
+  const viewport = window.visualViewport as unknown as EventTarget & {
+    offsetTop: number;
+  };
+  const scrollIntoView = vi.fn(function (this: HTMLElement) {
+    if (this.style.position === 'fixed') {
+      viewport.offsetTop = parseFloat(this.style.top) || 0;
+    }
+  });
   Object.defineProperty(Element.prototype, 'scrollIntoView', {
     configurable: true,
     value: scrollIntoView,
@@ -127,16 +153,13 @@ it("reveals through the document a text area in a scroll area under the keyboard
     top: bottom - 208 + FIELD_OFFSET - (bottom - 300),
     behavior: 'instant',
   });
-  // Here the document does not move, so the field stays covered. The
-  // browser's own pan to it stands.
-  const viewport = window.visualViewport as unknown as EventTarget & {
-    offsetTop: number;
-  };
-  viewport.offsetTop = 160;
+  // Here the document does not move, so the visual viewport pans the field
+  // 10 px above the keyboard in the same frame. Its own report moves nothing.
+  expect(viewport.offsetTop).toBe(bottom - 208 + FIELD_OFFSET - (bottom - 300));
   act(() => {
     viewport.dispatchEvent(new Event('scroll'));
   });
-  expect(scrollIntoView).not.toHaveBeenCalled();
+  expect(scrollIntoView).toHaveBeenCalledTimes(1);
   expect(area.scrollTop).toBe(0);
   Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
 });

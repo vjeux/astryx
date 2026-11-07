@@ -160,6 +160,16 @@ beforeEach(() => {
       return boxOf(this);
     },
   );
+  // A fixed element scrolled into view pans the visual viewport to its top,
+  // as in Chrome and Firefox for Android.
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: vi.fn(function (this: HTMLElement) {
+      if (this.style.position === 'fixed') {
+        viewport.offsetTop = parseFloat(this.style.top) || 0;
+      }
+    }),
+  });
   pageScrollRange(3000);
 });
 
@@ -185,6 +195,7 @@ afterEach(() => {
   Reflect.deleteProperty(page, 'scrollHeight');
   Reflect.deleteProperty(page, 'clientHeight');
   Reflect.deleteProperty(window, 'visualViewport');
+  Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
   __resetLayoutViewportForTest();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -322,13 +333,21 @@ describe('keepFieldAboveKeyboard', () => {
     );
   });
 
-  it("leaves a field that its scroll area cannot scroll up to the area's own top to the browser's own reveal", () => {
+  it("claims a field that its scroll area cannot scroll up to the area's own top, and reveals it through the document and a pan", () => {
     const scrollBy = vi.fn();
     vi.stubGlobal('scrollBy', scrollBy);
     const list = element('div', {top: 0, height: 760}, {overflowY: 'auto'});
     // The list has 140 px of range left, and the field sits 660 px down it.
     Object.defineProperty(list, 'scrollHeight', {value: 900});
     Object.defineProperty(list, 'clientHeight', {value: 760});
+    let listTop = 0;
+    Object.defineProperty(list, 'scrollTop', {
+      configurable: true,
+      get: () => listTop,
+      set: (value: number) => {
+        listTop = Math.min(140, Math.max(0, value));
+      },
+    });
     const other = element('input', {top: 10, height: 40});
     const input = element('input', {top: 660, height: 40});
     list.append(other, input);
@@ -337,11 +356,18 @@ describe('keepFieldAboveKeyboard', () => {
     focusOn(other);
     const focus = vi.spyOn(input, 'focus');
     focusOn(input);
-    // The focus move is not claimed: the browser's own focus step runs.
-    expect(focus).not.toHaveBeenCalledWith({preventScroll: true});
+    expect(focus).toHaveBeenCalledWith({preventScroll: true});
     keyboard(300);
-    expect(list.scrollTop).toBe(0);
-    expect(scrollBy).not.toHaveBeenCalled();
+    // The list scrolls its last 140 px. Here the document does not move, so
+    // the visual viewport pans the rest, into the room the keyboard takes.
+    expect(list.scrollTop).toBe(140);
+    const keyboardTop = window.innerHeight - 300;
+    const need = 700 - 140 + FIELD_OFFSET - keyboardTop;
+    expect(scrollBy).toHaveBeenCalledWith({top: need, behavior: 'instant'});
+    expect(viewport.offsetTop).toBe(need);
+    expect(input.getBoundingClientRect().bottom - viewport.offsetTop).toBe(
+      keyboardTop - FIELD_OFFSET,
+    );
   });
 
   it("claims a field that its scroll area can just scroll up to the area's own top, and reveals it there", () => {
@@ -381,14 +407,9 @@ describe('keepFieldAboveKeyboard', () => {
     return {list, input};
   }
 
-  it("reveals through the document a field whose scroll area sits under the keyboard, and lets the browser's own pan stand while it stays covered", () => {
+  it('reveals through the document a field whose scroll area sits under the keyboard, and pans the visual viewport where the document does not move', () => {
     const scrollBy = vi.fn();
     vi.stubGlobal('scrollBy', scrollBy);
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(Element.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-    });
     const {list, input} = lowScrollArea();
     document.body.append(list);
     track(keepFieldAboveKeyboard(input));
@@ -398,18 +419,16 @@ describe('keepFieldAboveKeyboard', () => {
     // reveals it, as it does a field in the page.
     expect(list.scrollTop).toBe(0);
     const bottom = window.innerHeight;
-    expect(scrollBy).toHaveBeenCalledWith({
-      top: bottom - 208 + FIELD_OFFSET - (bottom - 300),
-      behavior: 'instant',
-    });
-    // Here the document does not move, so the field stays covered. The
-    // browser pans the visual viewport to it, and the pan stands.
-    viewport.offsetTop = 160;
+    const need = bottom - 208 + FIELD_OFFSET - (bottom - 300);
+    expect(scrollBy).toHaveBeenCalledWith({top: need, behavior: 'instant'});
+    // Here the document does not move, so the visual viewport pans to the
+    // field in the same frame. The pan is Core's own: its report moves nothing.
+    expect(viewport.offsetTop).toBe(need);
     act(() => {
       viewport.dispatchEvent(new Event('scroll'));
     });
-    expect(scrollIntoView).not.toHaveBeenCalled();
-    Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(viewport.offsetTop).toBe(need);
   });
 
   // A fixed container that fills the viewport, around a low scroll area. The
@@ -457,12 +476,7 @@ describe('keepFieldAboveKeyboard', () => {
     Reflect.deleteProperty(window, 'scrollY');
   });
 
-  it("undoes the document scroll where it does not move the fixed container, and lets the browser's own pan stand", () => {
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(Element.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-    });
+  it('undoes the document scroll where it does not move the fixed container, and pans the visual viewport to the field instead', () => {
     const {input, page} = fixedLowScrollArea();
     // As in Chrome: the scroll moves the page behind, not the container.
     const scrollBy = vi.fn(({top}: {top: number}) => {
@@ -479,17 +493,13 @@ describe('keepFieldAboveKeyboard', () => {
       [{top: -need, behavior: 'instant'}],
     ]);
     expect(page.scrollY).toBe(0);
-    // The browser pans the visual viewport to the field, and the pan stands.
-    viewport.offsetTop = 160;
-    act(() => {
-      viewport.dispatchEvent(new Event('scroll'));
-    });
-    expect(scrollIntoView).not.toHaveBeenCalled();
+    // A pan moves the visual viewport over the layout viewport, where the
+    // container sits, so it brings the field into view.
+    expect(viewport.offsetTop).toBe(need);
     Reflect.deleteProperty(window, 'scrollY');
-    Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
   });
 
-  it('takes no focus move into a field whose scroll area leaves it no room above the keyboard', () => {
+  it('claims a focus move into a field whose scroll area sits under the keyboard, and pans the visual viewport to it', () => {
     vi.stubGlobal('scrollBy', vi.fn());
     const other = element('input', {top: 10, height: 40});
     const {list, input} = lowScrollArea();
@@ -499,9 +509,12 @@ describe('keepFieldAboveKeyboard', () => {
     keyboard(300);
     const focus = vi.spyOn(input, 'focus');
     focusOn(input);
-    // The focus move is not claimed: the browser's own focus step runs.
-    expect(focus).not.toHaveBeenCalledWith({preventScroll: true});
+    expect(focus).toHaveBeenCalledWith({preventScroll: true});
     expect(list.scrollTop).toBe(0);
+    const bottom = window.innerHeight;
+    expect(viewport.offsetTop).toBe(
+      bottom - 208 + FIELD_OFFSET - (bottom - 300),
+    );
   });
 
   it("puts back the browser's own pan for a field its scroll area has placed above the keyboard", () => {
@@ -545,6 +558,87 @@ describe('keepFieldAboveKeyboard', () => {
       top: 300 - 10 + FIELD_OFFSET,
       behavior: 'instant',
     });
+  });
+
+  // A field in the page, whose box moves with the document's scroll. The
+  // document scrolls `range` px at most, as Chrome and Firefox clamp it.
+  function pageField(top: number, range: number) {
+    const page = {scrollY: 0};
+    const input = element('input', {top, height: 40});
+    document.body.append(input);
+    vi.spyOn(input, 'getBoundingClientRect').mockImplementation(
+      () => new DOMRect(0, top - page.scrollY, 300, 40),
+    );
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      get: () => page.scrollY,
+    });
+    const scrollBy = vi.fn(({top: by}: {top: number}) => {
+      page.scrollY = Math.min(range, Math.max(0, page.scrollY + by));
+    });
+    vi.stubGlobal('scrollBy', scrollBy);
+    return {input, page, scrollBy};
+  }
+
+  it("pans the visual viewport for the rest where the document reaches its end, so a field at a short page's end ends 10 px above the keyboard", () => {
+    pageScrollRange(window.innerHeight + 84);
+    const fieldTop = window.innerHeight - 50;
+    const {input, page, scrollBy} = pageField(fieldTop, 84);
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    keyboard(300);
+    const keyboardTop = window.innerHeight - 300;
+    const need = fieldTop + 40 + FIELD_OFFSET - keyboardTop;
+    expect(scrollBy).toHaveBeenCalledWith({top: need, behavior: 'instant'});
+    expect(page.scrollY).toBe(84);
+    // The pan takes the rest in the same frame, so Chrome's own pan of the
+    // keyboard's whole height finds the field clear.
+    expect(viewport.offsetTop).toBe(need - 84);
+    expect(input.getBoundingClientRect().bottom - viewport.offsetTop).toBe(
+      keyboardTop - FIELD_OFFSET,
+    );
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
+  it('pans nothing where the document scroll reaches the room the keyboard takes, as in Safari', () => {
+    pageScrollRange(window.innerHeight + 84);
+    const fieldTop = window.innerHeight - 50;
+    // As in Safari while its keyboard shows: the scroll carries on past the
+    // page's range.
+    const {input, page} = pageField(fieldTop, Number.POSITIVE_INFINITY);
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    keyboard(300);
+    expect(page.scrollY).toBe(
+      fieldTop + 40 + FIELD_OFFSET - (window.innerHeight - 300),
+    );
+    expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+    expect(viewport.offsetTop).toBe(0);
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
+  it('keeps its own pan when the browser applies it after the call, as Firefox does', () => {
+    const {list, input} = lowScrollArea();
+    document.body.append(list);
+    vi.stubGlobal('scrollBy', vi.fn());
+    const pans: number[] = [];
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: vi.fn(function (this: HTMLElement) {
+        pans.push(parseFloat(this.style.top) || 0);
+      }),
+    });
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    keyboard(300);
+    expect(pans).toHaveLength(1);
+    // The pan lands a frame later and raises its own report: the field stays
+    // where it went.
+    viewport.offsetTop = pans[0] ?? 0;
+    act(() => {
+      viewport.dispatchEvent(new Event('scroll'));
+    });
+    expect(pans).toHaveLength(1);
   });
 
   it('moves its docked bar up by the part of it the keyboard covers, and back once the keyboard has gone', () => {
@@ -900,6 +994,39 @@ describe('keepFieldAboveKeyboard', () => {
       click.screenY,
       click.detail,
     ]).toEqual([40, 680, 41, 742, 1]);
+  });
+
+  it("leaves a document scroll the app makes while a docked bar's field has focus, which Safari carries out as a visual-viewport offset", () => {
+    const bottom = window.innerHeight;
+    const bar = element(
+      'div',
+      {top: bottom - 60, height: 60},
+      {position: 'fixed'},
+    );
+    const input = element('input', {top: bottom - 50, height: 40});
+    bar.append(input);
+    document.body.append(bar);
+    const page = {scrollY: 100};
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      get: () => page.scrollY,
+    });
+    const scrollTo = vi.fn();
+    vi.stubGlobal('scrollTo', scrollTo);
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    keyboard(300);
+    // The app scrolls the page past its end; Safari carries the rest out as a
+    // visual-viewport offset.
+    page.scrollY = 400;
+    viewport.offsetTop = 120;
+    act(() => {
+      viewport.dispatchEvent(new Event('scroll'));
+    });
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+    expect(viewport.offsetTop).toBe(120);
+    Reflect.deleteProperty(window, 'scrollY');
   });
 
   it('puts back a pan the browser makes on its own after a focus no claim saw', () => {
