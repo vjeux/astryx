@@ -184,7 +184,7 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
   // animations can start a frame apart. So a held row's span is its
   // children's widths now plus the gaps between them at the takeover.
   function span(): number {
-    return isMoving ? itemsWidth(element) + heldGaps : itemsSpan(element);
+    return itemsSpan(element);
   }
 
   // A resize while the row is held moves its travel with the row's width and
