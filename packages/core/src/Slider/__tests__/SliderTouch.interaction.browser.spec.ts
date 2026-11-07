@@ -1566,6 +1566,19 @@ test('a drag lays out nothing per move, and the coast neither lays out nor paint
   browserName,
 }) => {
   test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
+  // NOT FOR LANDING: a 90 ms block at the start of the lift's task.
+  await page.addInitScript(() => {
+    window.addEventListener(
+      'pointerup',
+      () => {
+        const start = performance.now();
+        while (performance.now() - start < 90) {
+          // The page reads the lift 90 ms late.
+        }
+      },
+      {capture: true, once: true, passive: true},
+    );
+  });
   const {driver, thumb, center, value} = await openSlider(
     page,
     'core-slider--default',
