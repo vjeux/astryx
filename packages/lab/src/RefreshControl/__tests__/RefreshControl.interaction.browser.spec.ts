@@ -1540,3 +1540,128 @@ test('the end slides from its start, even when the page is busy as the refresh e
   expect(typeof blockEnd).toBe('number');
   expect(end?.start ?? 0).toBeGreaterThanOrEqual(blockEnd - START_SLACK_MS);
 });
+
+// PROBE, evidence only and not for landing: the end's curve on a desktop
+// page, where a trackpad pull or the app's own refresh() starts it.
+
+/** A desktop page on `story`, with a refresh that the probe ends. */
+async function probeDesktopPage(browser: Browser, story: string) {
+  const context = await browser.newContext({
+    viewport: {width: 402, height: 714},
+    hasTouch: false,
+    isMobile: false,
+  });
+  const page = await context.newPage();
+  await openStory(page, storybook(), story, {refreshMs: '-1'});
+  expect(await page.evaluate(() => matchMedia('(pointer: fine)').matches)).toBe(
+    true,
+  );
+  const content = page.locator('[data-refresh-content]').first();
+  await expect(content).toBeVisible();
+  return {context, page, content};
+}
+
+/** The end's travel at fixed times, and its largest gap from UIKit's curve. */
+async function probeEnd(page: Page, content: Locator) {
+  await endRefresh(page);
+  await waitForSettle(content, {afterRefresh: true, hold: true});
+  const at = await sampleTranslate(content, [0, 50, 100, 150, 200, 250, 300]);
+  const full = await sampleTranslate(content, timeline(UIKIT_END_MS));
+  await releaseAnimations(page);
+  const ease = cubicBezier(...UIKIT_END_CURVE);
+  const oracle = (t: number) =>
+    HEIGHT * (1 - ease(Math.min(1, t / UIKIT_END_MS)));
+  const result = compareCurve(full, oracle, 0.75);
+  return {
+    moved: at.map(s => [s.t, Math.round((HEIGHT - s.value) * 10) / 10]),
+    maxErrorPt: Math.round(result.maxError * 10) / 10,
+  };
+}
+
+test('PROBE desktop: the end after a trackpad pull', async ({
+  browser,
+  browserName,
+}, testInfo) => {
+  test.skip(browserName === 'chromium', TRACKPAD_SKIP);
+  const {context, page, content} = await probeDesktopPage(
+    browser,
+    'lab-pull-to-refresh--in-a-scroll-container',
+  );
+  try {
+    const driver = await webInputDriver(page);
+    await driver.wheelBurst({
+      x: 200,
+      y: 300,
+      steps: Array.from({length: 30}, () => ({dy: -10})),
+      maxGapMs: TRACKPAD_SCROLL_END_MS - 1,
+    });
+    await waitForSettleStart(content);
+    await waitForContentRest(content);
+    expect(await shownPull(content)).toBeCloseTo(HEIGHT, 0);
+    const end = await probeEnd(page, content);
+    console.log(
+      `PROBE ${testInfo.project.name} trackpad ${process.env.PROBE_LABEL} ${JSON.stringify(end)}`,
+    );
+  } finally {
+    await context.close();
+  }
+});
+
+test('PROBE desktop: the end after the app’s own refresh()', async ({
+  browser,
+}, testInfo) => {
+  const {context, page, content} = await probeDesktopPage(
+    browser,
+    'lab-pull-to-refresh--controlled',
+  );
+  // The scroll owner's scrollTop, after setting it when `top` is given.
+  const ownerScroll = (top: number | null = null) =>
+    content.evaluate((element, value) => {
+      for (let node = element.parentElement; node; node = node.parentElement) {
+        const overflow = getComputedStyle(node).overflowY;
+        if (overflow === 'auto' || overflow === 'scroll') {
+          if (value != null) {
+            node.scrollTop = value;
+          }
+          return node.scrollTop;
+        }
+      }
+      return -1;
+    }, top);
+  try {
+    // The list stays at its top. The inset came with a matching scroll, so
+    // the end drops both in one task.
+    await recordAnimations(page);
+    await page.getByRole('button', {name: 'Refresh'}).click();
+    await expect.poll(() => isBusy(content)).toBe(true);
+    const before = {
+      pull: await shownPull(content),
+      scrollTop: await ownerScroll(),
+    };
+    await endRefresh(page);
+    await expect.poll(() => isBusy(content)).toBe(false);
+    await page.waitForTimeout(600);
+    const after = {
+      pull: await shownPull(content),
+      scrollTop: await ownerScroll(),
+    };
+    const slides = (await recordedEnd(page)).filter(
+      a => a.part === 'content' && a.properties.includes('translate'),
+    ).length;
+    console.log(
+      `PROBE ${testInfo.project.name} refresh-at-top ${process.env.PROBE_LABEL} ${JSON.stringify({before, after, slides})}`,
+    );
+    // The person scrolls the spinner into view before the end: it slides.
+    await page.getByRole('button', {name: 'Refresh'}).click();
+    await expect.poll(() => isBusy(content)).toBe(true);
+    await ownerScroll(0);
+    await page.waitForTimeout(200);
+    expect(await shownPull(content)).toBeCloseTo(HEIGHT, 0);
+    const end = await probeEnd(page, content);
+    console.log(
+      `PROBE ${testInfo.project.name} refresh-revealed ${process.env.PROBE_LABEL} ${JSON.stringify(end)}`,
+    );
+  } finally {
+    await context.close();
+  }
+});
