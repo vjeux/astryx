@@ -253,6 +253,46 @@ test('a held mouse dragged from the trigger across the rows lights each enabled 
 }) => {
   const layout = await openLayout(page);
   await recordFrames(page);
+  // NOT FOR LANDING: the open's frame waits until the drag has lit a row and
+  // rested 5 ms, as a late frame on a loaded runner does.
+  await page.evaluate(() => {
+    const original = window.requestAnimationFrame.bind(window);
+    const held: FrameRequestCallback[] = [];
+    let holding = false;
+    let lastMove = 0;
+    addEventListener('pointermove', () => {
+      lastMove = performance.now();
+    }, true);
+    addEventListener(
+      'pointerdown',
+      () => {
+        holding = true;
+        const started = performance.now();
+        const release = () => {
+          const lit =
+            document.activeElement?.getAttribute('role') === 'menuitem' &&
+            performance.now() - lastMove >= 5;
+          if (lit || performance.now() - started > 1500) {
+            holding = false;
+            for (const callback of held.splice(0)) {
+              original(callback);
+            }
+            return;
+          }
+          setTimeout(release, 1);
+        };
+        setTimeout(release, 1);
+      },
+      {capture: true, once: true},
+    );
+    window.requestAnimationFrame = callback => {
+      if (holding) {
+        held.push(callback);
+        return 0;
+      }
+      return original(callback);
+    };
+  });
   const triggerBox = await boxOf(layout.trigger);
   await page.mouse.move(layout.x, triggerBox.y + triggerBox.height / 2);
   await page.mouse.down();
