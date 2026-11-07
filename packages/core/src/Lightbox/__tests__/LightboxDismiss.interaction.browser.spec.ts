@@ -424,7 +424,7 @@ function expectLongEnoughWindow(
   window: {readonly from: number; readonly to: number},
 ): void {
   const windowMs = window.to - window.from;
-  if (windowMs > 100) {
+  if (windowMs > 5000) {
     return;
   }
   const around = signal.filter(c => c.t >= from && c.t <= window.to + 1);
