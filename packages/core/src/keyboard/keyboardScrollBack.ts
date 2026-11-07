@@ -12,7 +12,13 @@
  * SYNC: When modified, update /packages/core/src/keyboard/README.md
  */
 
-import {KEYBOARD_EPSILON, subscribeKeyboardHeight} from './keyboardHeight';
+import {themeReducesMotion} from '../privateAttributes/reducedMotion.stylex';
+import {matchesMediaQuery} from '../utils/coarsePointer';
+import {
+  KEYBOARD_EPSILON,
+  getResizedRoom,
+  subscribeKeyboardHeight,
+} from './keyboardHeight';
 
 interface AddedScroll {
   /** Where the scroller was before Core's first scroll. */
@@ -98,13 +104,18 @@ export function noteKeyboardScroll(
   }
 }
 
-// The scroll back starts at the keyboard's report that it has gone. Safari
-// holds the visual viewport while its keyboard slides down. A scroll then
-// shows only at the slide's end, in one jump.
+// The scroll back starts at the keyboard's report that it has gone, with no
+// room left from a page the browser shrank for it. Safari holds the visual
+// viewport while its keyboard slides down. A scroll then shows only at the
+// slide's end, in one jump.
 function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
   const scrolls = new Map<Element, AddedScroll>();
   const stop = subscribeKeyboardHeight(win, event => {
-    if (event.type === 'viewport' && event.height <= KEYBOARD_EPSILON) {
+    if (
+      event.type === 'viewport' &&
+      event.height <= KEYBOARD_EPSILON &&
+      getResizedRoom(win) <= KEYBOARD_EPSILON
+    ) {
       scrollBack(win, scrolls);
       end();
     }
@@ -119,23 +130,25 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
   return scrolls;
 }
 
-// Scrolls each scroller still where Core left it back to where it was before.
-// The browser's own smooth scroll carries it: iOS Safari applies a scripted
-// scroll a frame late, so a scroll set each frame jitters there. A touch stops
-// the browser's scroll where it is, so a person's scroll stands. Under Reduce
-// Motion the scroll lands at once.
+// The browser's own smooth scroll carries the scroll back. iOS Safari applies
+// a scripted scroll a frame late, so a scroll set each frame jitters there. A
+// touch stops that scroll, so a person's scroll stands. Under Reduce Motion, or
+// in a theme that reduces motion for everyone, the scroll lands at once.
 function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
-  const behavior: ScrollBehavior = win.matchMedia?.(
+  const prefersReducedMotion = matchesMediaQuery(
+    win,
     '(prefers-reduced-motion: reduce)',
-  ).matches
-    ? 'instant'
-    : 'smooth';
+  );
   for (const [scroller, added] of scrolls) {
     if (
       added.at != null &&
       scroller.isConnected &&
       Math.abs(scrollTopOf(scroller, win) - added.at) <= KEYBOARD_EPSILON
     ) {
+      const behavior: ScrollBehavior =
+        prefersReducedMotion || themeReducesMotion(scroller)
+          ? 'instant'
+          : 'smooth';
       scrollTopTo(scroller, added.from, behavior, win);
     }
   }
