@@ -44,6 +44,13 @@ async function open(page: Page): Promise<TouchDriver> {
   #panel { position: absolute; left: 20px; right: 20px; top: 40px; height: 120px; background: #36c; border-radius: 12px; }
 </style>
 <div id="panel"></div>
+<script>
+  // NOT FOR LANDING: the page holds each move 25 ms, past the flick's 16 ms.
+  addEventListener('pointermove', () => {
+    const end = performance.now() + 25;
+    while (performance.now() < end) {}
+  }, {capture: true});
+</script>
 <script>${script}</script>
 <script>
   window.__settled = [];

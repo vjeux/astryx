@@ -150,6 +150,20 @@ test('under Reduce Motion on a touch screen, a move cross-fades: the card jumps 
   page,
 }) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
+  // NOT FOR LANDING: each frame's callbacks run 100 ms after the last's.
+  await page.addInitScript(() => {
+    const raf = window.requestAnimationFrame.bind(window);
+    let last = Number.NEGATIVE_INFINITY;
+    window.requestAnimationFrame = callback =>
+      raf(function tick(time) {
+        if (time !== last && time - last < 100) {
+          raf(tick);
+          return;
+        }
+        last = time;
+        callback(time);
+      });
+  });
   await open(page);
   // Sampled every frame in real time. The travel lands with a style write at
   // the bottom of the fade, and no seek of the running animations shows it.
