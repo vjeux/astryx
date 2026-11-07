@@ -269,6 +269,28 @@ test('with the keyboard up, a tap on the scrolled-in Save note clicks it', async
   const field = page.getByRole('textbox', {name: 'Title'});
   await field.focus();
   await keyboard(page, COVER);
+  // NOT FOR LANDING: a busy page. No frame runs for a second after the
+  // keyboard starts up; if the surface scrolls meanwhile, the late frames run
+  // right after that scroll, before the next step reads the page.
+  await surface.evaluate(element => {
+    const raf = window.requestAnimationFrame.bind(window);
+    const until = performance.now() + 1_000;
+    const held: FrameRequestCallback[] = [];
+    const flush = () => {
+      while (held.length > 0) {
+        held.shift()?.(performance.now());
+      }
+    };
+    window.requestAnimationFrame = callback => {
+      if (performance.now() < until) {
+        held.push(callback);
+        return 0;
+      }
+      return raf(callback);
+    };
+    setTimeout(() => raf(flush), 1_000);
+    element.addEventListener('scroll', flush);
+  });
   await page.waitForTimeout(timing.keyboardNotificationMs * 1.5);
   expect((await boxOf(surface)).keyboardCap).not.toBe('');
   await surface.evaluate(element => {
