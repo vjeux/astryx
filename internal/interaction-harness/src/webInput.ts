@@ -403,38 +403,10 @@ export interface InputRun {
 }
 
 /**
- * Marks when the page's listeners begin on each trusted event of `types`,
- * with a passive window capture listener. Added before the page's scripts, it
- * runs before every page listener, a window capture one included. So a page
- * listener's time never reads as a wait before the page. It is added now as
- * well, for the page already loaded, where it runs after window capture
- * listeners the page added before it. `armInputRun` reads the mark.
- */
-export async function installInputStart(
-  page: Page,
-  types: readonly string[],
-): Promise<void> {
-  const script = `(() => {
-  if (window.__harnessInputStart) return;
-  const starts = new WeakMap();
-  window.__harnessInputStart = starts;
-  for (const type of ${JSON.stringify([...types])}) {
-    window.addEventListener(type, event => {
-      if (event.isTrusted && !starts.has(event)) starts.set(event, performance.now());
-    }, {capture: true, passive: true});
-  }
-})()`;
-  await page.addInitScript(script);
-  await page.evaluate(script);
-}
-
-/**
  * Arms two passive listeners on the window before a run is dispatched. A
  * capture listener stamps each trusted event of `types` before the page's
  * own listeners. A bubble listener, after them, notes when the page has
- * finished with the event. The wheel and touch drivers share it. Where
- * `installInputStart` marked when the page's listeners began on an event,
- * that mark is the event's `receivedAt`.
+ * finished with the event. The wheel and touch drivers share it.
  */
 export function armInputRun(
   page: Page,
@@ -485,10 +457,7 @@ export function armInputRun(
         const i = run.stamps.length;
         index.set(event, i);
         run.stamps.push(event.timeStamp);
-        const starts = (
-          window as unknown as {__harnessInputStart?: WeakMap<Event, number>}
-        ).__harnessInputStart;
-        run.receivedAt.push(starts?.get(event) ?? performance.now());
+        run.receivedAt.push(performance.now());
         run.handledAt.push(Number.NaN);
         run.eventTypes.push(event.type);
         run.pointerTypes.push(
