@@ -127,7 +127,7 @@ export const pageControl = {
    *   50-page control at page 10 tapped to 11: UIView spring dampingRatio 1,
    *   response 0.15 (tracking), the strip sliding 17.67 pt in about 0.2 s.
    */
-  windowSlide: {response: 0.15, dampingRatio: 1},
+  windowSlide: {response: 0.15, dampingRatio: 0.5},
   /**
    * The window starts to move this many milliseconds after the page changes;
    * the new current indicator lights first, in its shrunk slot.
