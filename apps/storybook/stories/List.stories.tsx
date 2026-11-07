@@ -1091,3 +1091,41 @@ export const ReorderLongList: Story = {
     },
   },
 };
+
+/**
+ * NOT FOR LANDING: a scratch story for the List clip evidence. A reorderable
+ * compact list fills a card that clips. Its last row sits on the card's
+ * clipped bottom edge, as in TransferList's phone layout.
+ */
+function ReorderInClippedCardDemo() {
+  const [rows, setRows] = useState(() =>
+    Array.from({length: 12}, (_, i) => `Row ${String(i + 1).padStart(3, '0')}`),
+  );
+  return (
+    <div
+      style={{
+        overflow: 'hidden',
+        border: '1px solid rgba(0, 0, 0, 0.15)',
+        borderRadius: 12,
+      }}>
+      <div style={{padding: 12}}>
+        <Text weight="bold">Clipped card</Text>
+      </div>
+      <List
+        density="compact"
+        reorderable={createReorderable({
+          onReorder: ({key, to}) =>
+            setRows(current => moveKey(current, key, to)),
+        })}>
+        {rows.map(label => (
+          <ListItem key={label} itemKey={label} label={label} />
+        ))}
+      </List>
+    </div>
+  );
+}
+
+export const ReorderInClippedCard: Story = {
+  name: 'Scratch: reorder in a clipped card (not for landing)',
+  render: () => <ReorderInClippedCardDemo />,
+};
