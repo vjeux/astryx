@@ -190,7 +190,7 @@ test.describe('touch input', () => {
   test('the page receives trusted touches and pointers at the scripted positions and times', async ({
     page,
     browserName,
-  }, testInfo) => {
+  }) => {
     const script = drag(
       {x: 100, y: 100},
       {x: 100, y: 220},
@@ -202,15 +202,21 @@ test.describe('touch input', () => {
       await fixture(page);
       const driver = await touchDriver(page);
       const answeredAt: number[] = [];
+      // The runner's own timer ticks during the play. A quota or a busy box
+      // that holds them holds the harness's waits and sends too.
+      const ticks: number[] = [];
+      const probe = setInterval(() => ticks.push(Date.now()), 2);
       // Taken before the harness reads its own clock to schedule the script.
       const playStart = Date.now();
-      const played = await driver.play(script, {
-        onEvent: () => {
-          answeredAt.push(Date.now());
-        },
-      });
+      const played = await driver
+        .play(script, {
+          onEvent: () => {
+            answeredAt.push(Date.now());
+          },
+        })
+        .finally(() => clearInterval(probe));
       const log = await readInputLog(page);
-      return {played, answeredAt, playStart, log};
+      return {played, answeredAt, playStart, log, ticks};
     };
     const checkInput = (log: readonly InputRecord[]) => {
       const moves = log.filter(r => r.type === 'pointermove');
@@ -253,81 +259,101 @@ test.describe('touch input', () => {
     // the dispatch (it answers only once the page has the event), so a driver
     // that holds the moves and sends them in a burst fails.
     //
-    // This take watches every step (`onEvent`), so each step leaves at its
-    // scripted time and none waits for WebKit's answer to the one before.
+    // This take watches every step (`onEvent`). A step leaves at its scripted
+    // time while the play keeps up. Once the play is behind, a step leaves
+    // one scripted gap, less ANSWER_SLACK_MS, after WebKit answered the step
+    // before. So a stall stretches the gesture and never bunches it.
     //
-    // The pacing is bounded from above too. The harness waits only while it
-    // is ahead of the script and sends a late step at once, so a move it
-    // waited for (it left more than 2 ms after the step before was answered)
-    // must leave on time (no more than 2 ms after its scripted time). A harness
-    // that paces slowly waits past every move's time: sending each step at
-    // twice its time leaves every move both waited for and late. A harness
-    // whose send itself outlasts the step's spacing never waits, so a move
-    // behind such a send is off pace too. A runner whose CPU quota holds the
-    // test process also wakes the harness late from a wait, or holds a send,
-    // on a few moves (in a container capped at 3 CPUs, where the quota stalls
-    // the process for about 100 ms at a time), so a take is off pace when
-    // more than half its moves are. It is re-taken once, as wheel bursts are,
-    // and a second such take fails. Under CPU starvation (a 3-CPU cap with 16
-    // workers, with the software compositor's threads matched to the cap by
-    // LP_NUM_THREADS), a pacer the cap throttles falls behind and need not
-    // wait, so the pacing check can miss a slow pacer there (sending each step
-    // at twice its time failed 8 of 20 runs), and the quota slows some sends
-    // past the step's spacing, which reads like a harness whose send is slow
-    // (the real test passed 40 of 40 there, re-taken 9 times).
-    for (const attempt of [1, 2] as const) {
-      const {played, answeredAt, playStart, log} = await take();
-      const {moves} = checkInput(log);
-      const sentAt = played.map(step => step.dispatchedAt);
-      const moveSteps = played.flatMap((step, i) =>
-        step.type === 'touchMove' ? [i] : [],
+    // The pacing is bounded from above too. The harness waits only until a step
+    // is due. So a move it waited for must leave no more than 2 ms after it was
+    // due. A move was waited for when it left more than 2 ms after the step
+    // before was answered. A harness that paces slowly waits past every move's
+    // time: sending each step at twice its time leaves every move both waited
+    // for and late. A harness whose send itself outlasts the step's spacing
+    // never waits, so a move behind such a send is off pace too. A runner whose
+    // CPU quota holds the test process also wakes the harness late from a wait,
+    // or holds a send, on a few moves. In a container capped at 3 CPUs, the
+    // quota stalls the process for about 100 ms at a time. So a take is off
+    // pace only when more than half its moves are. A take off pace fails: it is
+    // never re-taken. When the runner's own timers stopped for longer than a
+    // step around most of its off-pace moves, the error names the runner's
+    // starvation. Otherwise it names the pacer.
+    const {played, answeredAt, playStart, log, ticks} = await take();
+    const {moves} = checkInput(log);
+    const sentAt = played.map(step => step.dispatchedAt);
+    const moveSteps = played.flatMap((step, i) =>
+      step.type === 'touchMove' ? [i] : [],
+    );
+    expect(moveSteps).toHaveLength(moves.length);
+    const timeOrigin = await page.evaluate(() => performance.timeOrigin);
+    for (const [m, i] of moveSteps.entries()) {
+      // Against the clock before play() started, not the start event's
+      // send, which can itself leave late. Date.now() counts whole
+      // milliseconds, hence the 1 ms.
+      expect(sentAt[i] - playStart).toBeGreaterThanOrEqual(played[i].t - 1);
+      // 2 ms of rounding between the two processes' clocks.
+      expect(timeOrigin + moves[m].timeStamp).toBeGreaterThanOrEqual(
+        sentAt[i] - 2,
       );
-      expect(moveSteps).toHaveLength(moves.length);
-      const timeOrigin = await page.evaluate(() => performance.timeOrigin);
-      for (const [m, i] of moveSteps.entries()) {
-        // Against the clock before play() started, not the start event's
-        // send, which can itself leave late. Date.now() counts whole
-        // milliseconds, hence the 1 ms.
-        expect(sentAt[i] - playStart).toBeGreaterThanOrEqual(played[i].t - 1);
-        // 2 ms of rounding between the two processes' clocks.
-        expect(timeOrigin + moves[m].timeStamp).toBeGreaterThanOrEqual(
-          sentAt[i] - 2,
+      expect(timeOrigin + moves[m].timeStamp).toBeLessThanOrEqual(
+        answeredAt[i] + 2,
+      );
+      if (m > 0) {
+        expect(moves[m].timeStamp).toBeGreaterThanOrEqual(
+          moves[m - 1].timeStamp,
         );
-        expect(timeOrigin + moves[m].timeStamp).toBeLessThanOrEqual(
-          answeredAt[i] + 2,
-        );
-        if (m > 0) {
-          expect(moves[m].timeStamp).toBeGreaterThanOrEqual(
-            moves[m - 1].timeStamp,
-          );
-        }
       }
-      // Lateness against the latest the play clock can have started: the
-      // start event's send.
-      const waitedLate = moveSteps.filter(
-        i =>
-          sentAt[i] - answeredAt[i - 1] > 2 &&
-          sentAt[i] - sentAt[0] - played[i].t > 2,
-      );
-      // A move behind a send that took longer than the step's spacing: a
-      // harness whose send itself is that slow never waits, and paces every
-      // move at the send's speed.
-      const slowSent = moveSteps.filter(
-        i => answeredAt[i - 1] - sentAt[i - 1] > played[i].t - played[i - 1].t,
-      );
-      const offPace = new Set([...waitedLate, ...slowSent]);
-      if (offPace.size <= moves.length / 2) {
-        return;
-      }
-      const lateMs = waitedLate.map(i =>
-        Math.round(sentAt[i] - sentAt[0] - played[i].t),
-      );
-      const note = `take ${attempt}: ${offPace.size} of ${moves.length} moves off pace: ${waitedLate.length} left late after the harness waited for them${lateMs.length > 0 ? ` (${lateMs.join(', ')} ms late)` : ''}, ${slowSent.length} followed a send slower than the step`;
-      if (attempt === 2) {
-        throw new Error(`touch pacing: ${note}`);
-      }
-      testInfo.annotations.push({type: 'touch-retake', description: note});
     }
+    // Each move is due at the later of two times. One is its scripted time,
+    // against the latest the play clock can have started: the start event's
+    // send. The other is one scripted gap, less ANSWER_SLACK_MS, after the
+    // answer before it.
+    const dueAt = (i: number) =>
+      Math.max(
+        sentAt[0] + played[i].t,
+        answeredAt[i - 1] + played[i].t - played[i - 1].t - ANSWER_SLACK_MS,
+      );
+    const waitedLate = moveSteps.filter(
+      i => sentAt[i] - answeredAt[i - 1] > 2 && sentAt[i] - dueAt(i) > 2,
+    );
+    // A move behind a send that took longer than the step's spacing is off
+    // pace too. A harness whose send itself is that slow never waits. It
+    // paces every move at the send's speed.
+    const slowSent = moveSteps.filter(
+      i => answeredAt[i - 1] - sentAt[i - 1] > played[i].t - played[i - 1].t,
+    );
+    const offPace = new Set([...waitedLate, ...slowSent]);
+    if (offPace.size <= moves.length / 2) {
+      return;
+    }
+    const lateMs = waitedLate.map(i => Math.round(sentAt[i] - dueAt(i)));
+    const note = `${offPace.size} of ${moves.length} moves off pace: ${waitedLate.length} left late after the harness waited for them${lateMs.length > 0 ? ` (${lateMs.join(', ')} ms late)` : ''}, ${slowSent.length} followed a send slower than the step`;
+    // The longest the runner's timers stopped across a span, ms.
+    const heldAcross = (from: number, to: number) =>
+      Math.max(
+        0,
+        ...ticks
+          .slice(1)
+          .map((tick, k) =>
+            tick >= from && ticks[k] <= to ? tick - ticks[k] : 0,
+          ),
+      );
+    // A move is the runner's when its timers stopped for longer than a step
+    // before its send. The span starts at the move's due time or at the send
+    // before it, whichever is earlier.
+    const runnerHeld = [...offPace].flatMap(i => {
+      const ms = heldAcross(
+        Math.min(sentAt[0] + played[i].t, sentAt[i - 1]),
+        sentAt[i],
+      );
+      return ms > played[i].t - played[i - 1].t ? [ms] : [];
+    });
+    if (runnerHeld.length * 2 >= offPace.size) {
+      throw new Error(
+        `touch pacing: the runner was starved: its timers stopped for up to ${Math.max(...runnerHeld)} ms around ${runnerHeld.length} of the ${offPace.size} moves off pace, so the take cannot judge the pacer (${note})`,
+      );
+    }
+    throw new Error(`touch pacing: ${note}, with the runner's timers on time`);
   });
 
   test("a page whose pointer listener holds its main thread changes a paced flick's release itself: TouchPageStallError, never the runner's", async ({
