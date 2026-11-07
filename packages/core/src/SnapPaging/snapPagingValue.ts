@@ -142,6 +142,40 @@ export function rowScale(element: HTMLElement, box: DOMRect): number {
     : 1;
 }
 
+/** How far the row's items reach, start to end, read from their boxes. */
+export function itemsSpan(element: HTMLElement): number {
+  const items = htmlItems(element);
+  if (items.length === 0) {
+    return 0;
+  }
+  let start = Infinity;
+  let end = -Infinity;
+  for (const item of items) {
+    const rect = item.getBoundingClientRect();
+    start = Math.min(start, rect.left);
+    end = Math.max(end, rect.right);
+  }
+  return (end - start) / rowScale(element, element.getBoundingClientRect());
+}
+
+/**
+ * The row's items' widths, summed. A translate moves a box but keeps its
+ * width, so items that each show a different translate keep their sum.
+ */
+export function itemsWidth(element: HTMLElement): number {
+  let total = 0;
+  for (const item of htmlItems(element)) {
+    total += item.getBoundingClientRect().width;
+  }
+  return total / rowScale(element, element.getBoundingClientRect());
+}
+
+function htmlItems(element: HTMLElement): HTMLElement[] {
+  return Array.from(element.children).filter(
+    (child): child is HTMLElement => child instanceof HTMLElement,
+  );
+}
+
 /** A row's pages: one stop each, and the items whose stops native snap skips. */
 export interface SnapPages {
   readonly stops: number[];

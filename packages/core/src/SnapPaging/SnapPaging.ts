@@ -19,8 +19,9 @@ import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {animatorFor, type MotionHandle} from '../motion/animator';
 import {
   type HeldRowListener,
+  itemsSpan,
+  itemsWidth,
   makeSnapPaging,
-  rowScale,
   type SnapPages,
   type SnapPaging,
   type SnapPagingAttachment,
@@ -135,6 +136,7 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
   // span and width.
   let takeoverTravel = 0;
   let heldSpan = 0;
+  let heldGaps = 0;
   let heldWidth = 0;
   // The row's own inline snap type, back at the hand-back.
   let ownSnapType = '';
@@ -178,21 +180,11 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     followFrame = requestAnimationFrame(follow);
   }
 
-  // Every child carries the same translate, so a held row's span is its
-  // layout's.
+  // A held row's children can show different translates, as their settle
+  // animations can start a frame apart. So a held row's span is its
+  // children's widths now plus the gaps between them at the takeover.
   function span(): number {
-    const items = children();
-    if (items.length === 0) {
-      return 0;
-    }
-    let start = Infinity;
-    let end = -Infinity;
-    for (const child of items) {
-      const rect = child.getBoundingClientRect();
-      start = Math.min(start, rect.left);
-      end = Math.max(end, rect.right);
-    }
-    return (end - start) / rowScale(element, element.getBoundingClientRect());
+    return isMoving ? itemsWidth(element) + heldGaps : itemsSpan(element);
   }
 
   // A resize while the row is held moves its travel with the row's width and
@@ -266,11 +258,13 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     const rowSign = isRtl() ? -1 : 1;
     const items = children();
     const rowSpan = span();
+    const rowGaps = rowSpan - itemsWidth(element);
     const rowWidth = element.clientWidth;
     heldOffset = offset;
     heldTravel = rowTravel;
     takeoverTravel = rowTravel;
     heldSpan = rowSpan;
+    heldGaps = rowGaps;
     heldWidth = rowWidth;
     heldSign = rowSign;
     lead = items[0] ?? null;
