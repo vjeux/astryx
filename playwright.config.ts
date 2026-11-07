@@ -67,6 +67,10 @@ function contractWorkers(): number {
 
 export default defineConfig({
   testDir: '.',
+  // Node tests make scratch folders in the repository root and remove them
+  // when they end. Git ignores them. The search for spec files skips what
+  // .gitignore lists, so a folder removed during the search cannot fail it.
+  respectGitIgnore: true,
   testMatch: [...A11Y_SPEC_GLOBS],
   // The contract mounts, focuses, and types into one page at a time, so a spec
   // file's tests run in order on one worker (`fullyParallel: false`). Workers

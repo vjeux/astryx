@@ -61,6 +61,10 @@ function workers(): number {
 
 export default defineConfig({
   testDir: '.',
+  // Node tests make scratch folders in the repository root and remove them
+  // when they end. Git ignores them. The search for spec files skips what
+  // .gitignore lists, so a folder removed during the search cannot fail it.
+  respectGitIgnore: true,
   testMatch: [
     'internal/interaction-harness/src/**/*.interaction.browser.spec.ts',
     'packages/*/src/**/*.interaction.browser.spec.ts',
