@@ -139,6 +139,14 @@ async function paintedRide(
       // The content is read again after the content after it. If its edge
       // moved more than TORN_READ_PX in between, the pair spans two moments.
       const shown = measure();
+      // NOT FOR LANDING: one 50 ms pause between the two reads, on the third opening read.
+      const arm = window as unknown as {tearAt?: number};
+      if (phase === 'opening' && (arm.tearAt = (arm.tearAt ?? 0) + 1) === 3) {
+        const until = performance.now() + 50;
+        while (performance.now() < until) {
+          // busy
+        }
+      }
       const nextTop = next.getBoundingClientRect().top;
       const again = measure();
       frames.push({
