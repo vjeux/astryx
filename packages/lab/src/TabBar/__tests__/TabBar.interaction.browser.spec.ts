@@ -1706,7 +1706,7 @@ test('a drag from a disabled tab lifts the lens once it drags, and the lift choo
   await expect(tab(page, 'Profile')).toHaveAttribute('aria-selected', 'true');
 });
 
-test('a finger that lands on a disabled tab and slides under the slop onto a neighbour paints nothing, and its lift chooses nothing', async ({
+test('a finger that lands on a disabled tab and lifts within the slop over a neighbour chooses the neighbour, painted while held (family:action-groups FR1)', async ({
   page,
 }) => {
   const {driver} = await openBar(page, 'disabled-tab-no-selection');
@@ -1730,17 +1730,16 @@ test('a finger that lands on a disabled tab and slides under the slop onto a nei
       }
     },
   });
-  expect(painted).toEqual([]);
-  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
-    0,
-  );
+  expect(painted).toEqual(['Library']);
+  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
 });
 
-test('a finger that lands on a disabled tab and slides under the slop onto a neighbour leaves it unfocused and unchosen', async ({
+test('a finger that lands on a disabled tab and lifts within the slop over a neighbour chooses the neighbour, the lens sliding there (family:action-groups FR1)', async ({
   page,
 }) => {
   const {driver} = await openBar(page, 'disabled-tab');
   const browse = await itemCenter(page, 'Browse');
+  const library = await itemCenter(page, 'Library');
   const box = await tab(page, 'Browse').boundingBox();
   if (box == null) {
     throw new Error('no Browse tab');
@@ -1748,9 +1747,13 @@ test('a finger that lands on a disabled tab and slides under the slop onto a nei
   const from = {x: box.x + 3, y: browse.y};
   const to = {x: from.x - 7, y: browse.y};
   await driver.play(drag(from, to, {durationMs: 200, restMs: 200}));
-  await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
-  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'false');
-  await expect(tab(page, 'Library')).not.toBeFocused();
+  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
+  await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'false');
+  await expect
+    .poll(async () => Math.abs((await lensCenterX(page)) - library.x), {
+      timeout: 3000,
+    })
+    .toBeLessThan(0.5);
 });
 
 test('a drag over a disabled tab returns the lens to the selected tab, since the lift there chooses nothing; the disabled tab keeps its paint (spec:AST-085 FR6)', async ({
