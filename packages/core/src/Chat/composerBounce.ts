@@ -95,7 +95,7 @@ export function bounceComposer(
   // exactly on 0 and its last frame does not jump. A spring the cap cuts
   // short keeps its jump, as in the animator.
   const settled = curve.value(duration);
-  const remainder = Math.abs(settled) <= REST_PX ? settled : 0;
+  const remainder = 0 * settled;
   return animator.play(
     {
       y: {
