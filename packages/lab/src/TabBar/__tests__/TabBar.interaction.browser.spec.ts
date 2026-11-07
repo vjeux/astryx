@@ -1706,6 +1706,53 @@ test('a drag from a disabled tab lifts the lens once it drags, and the lift choo
   await expect(tab(page, 'Profile')).toHaveAttribute('aria-selected', 'true');
 });
 
+test('a finger that lands on a disabled tab and slides under the slop onto a neighbour paints nothing, and its lift chooses nothing', async ({
+  page,
+}) => {
+  const {driver} = await openBar(page, 'disabled-tab-no-selection');
+  const browse = await itemCenter(page, 'Browse');
+  const box = await tab(page, 'Browse').boundingBox();
+  if (box == null) {
+    throw new Error('no Browse tab');
+  }
+  // 3 px inside Browse on Library's side, then 7 px onto Library: under the
+  // 10 px slop.
+  const from = {x: box.x + 3, y: browse.y};
+  const to = {x: from.x - 7, y: browse.y};
+  let painted: string[] | null = null;
+  const script = drag(from, to, {durationMs: 200, restMs: 200});
+  await driver.play(script, {
+    onEvent: async (_step, index) => {
+      if (index === script.length - 2) {
+        painted = await page
+          .locator('[data-tab-bar-pressed]')
+          .evaluateAll(tabs => tabs.map(tab => tab.textContent ?? ''));
+      }
+    },
+  });
+  expect(painted).toEqual([]);
+  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
+    0,
+  );
+});
+
+test('a finger that lands on a disabled tab and slides under the slop onto a neighbour leaves it unfocused and unchosen', async ({
+  page,
+}) => {
+  const {driver} = await openBar(page, 'disabled-tab');
+  const browse = await itemCenter(page, 'Browse');
+  const box = await tab(page, 'Browse').boundingBox();
+  if (box == null) {
+    throw new Error('no Browse tab');
+  }
+  const from = {x: box.x + 3, y: browse.y};
+  const to = {x: from.x - 7, y: browse.y};
+  await driver.play(drag(from, to, {durationMs: 200, restMs: 200}));
+  await expect(tab(page, 'Home')).toHaveAttribute('aria-selected', 'true');
+  await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'false');
+  await expect(tab(page, 'Library')).not.toBeFocused();
+});
+
 test('a drag over a disabled tab returns the lens to the selected tab, since the lift there chooses nothing; the disabled tab keeps its paint (spec:AST-085 FR6)', async ({
   page,
 }) => {

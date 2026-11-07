@@ -290,6 +290,11 @@ export const DisabledTab: Story = {
   render: () => <Bar disabled={['browse']} />,
 };
 
+/** No tab selected, Browse disabled: a held finger paints only enabled tabs. */
+export const DisabledTabNoSelection: Story = {
+  render: () => <Bar initial="none" disabled={['browse']} />,
+};
+
 /** Three tabs: the capsule narrows to its natural width and centres. */
 export const ThreeTabs: Story = {
   render: () => <Bar sections={SECTIONS.slice(0, 3)} />,
