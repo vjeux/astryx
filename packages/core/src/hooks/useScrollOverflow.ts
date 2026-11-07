@@ -4,7 +4,7 @@
 
 /**
  * @file useScrollOverflow.ts
- * @input React refs, state and effects
+ * @input React refs, state and effects, and react-dom's flushSync
  * @output useScrollOverflow, which tracks the overflow at the scroll edges,
  *   and the internal useShownScrollOverflow, which can also measure from a
  *   position its caller reports
@@ -16,6 +16,7 @@
  */
 
 import {useState, useCallback, useEffect, useRef} from 'react';
+import {flushSync} from 'react-dom';
 import {observeResize} from '../utils/sharedResizeObserver';
 
 /**
@@ -131,8 +132,10 @@ export function useShownScrollOverflow() {
     overflowEnd: false,
     hasOverflow: false,
   });
+  // The edges last set, so a measure that changes no edge renders nothing.
+  const edgesRef = useRef(state);
 
-  const measureNow = useCallback((el: HTMLElement) => {
+  const measureNow = useCallback((el: HTMLElement, isHeld = false) => {
     const tolerance = 1;
     const shown = shownRef.current;
     const offset = shown?.offset ?? Math.abs(el.scrollLeft);
@@ -142,16 +145,24 @@ export function useShownScrollOverflow() {
     const overflowEnd = offset < maxScroll - tolerance;
     const hasOverflow = maxScroll > tolerance;
 
-    setState(prev => {
-      if (
-        prev.overflowStart === overflowStart &&
-        prev.overflowEnd === overflowEnd &&
-        prev.hasOverflow === hasOverflow
-      ) {
-        return prev;
-      }
-      return {overflowStart, overflowEnd, hasOverflow};
-    });
+    const prev = edgesRef.current;
+    if (
+      prev.overflowStart === overflowStart &&
+      prev.overflowEnd === overflowEnd &&
+      prev.hasOverflow === hasOverflow
+    ) {
+      return;
+    }
+    const next = {overflowStart, overflowEnd, hasOverflow};
+    edgesRef.current = next;
+    if (isHeld) {
+      // A held row reports from the paging's frame. An edge change commits in
+      // that frame, before the paging can hand the row back.
+      // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the buttons must change in the frame the row leaves its edge
+      flushSync(() => setState(next));
+    } else {
+      setState(next);
+    }
   }, []);
 
   // Only a rendered container is measured at registration and on a resize or
@@ -184,7 +195,7 @@ export function useShownScrollOverflow() {
       if (shown != null) {
         shownRef.current = shown;
         if (el) {
-          measureNow(el);
+          measureNow(el, true);
         }
         return;
       }
