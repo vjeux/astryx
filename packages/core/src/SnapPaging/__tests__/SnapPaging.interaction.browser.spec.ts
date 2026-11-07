@@ -184,6 +184,55 @@ for (const mode of ['paging', 'item'] as const) {
       ).toBeLessThan(1);
     });
 
+    test('a resize while a finger holds the row at its end: the lift rests where the row ends', async ({
+      page,
+    }) => {
+      const {scroller} = await open(
+        page,
+        'snap-paging-partial-last-page',
+        mode,
+      );
+      for (let i = 0; i < 7; i++) {
+        await swipe(page, scroller, {px: 80, ms: 80});
+        await settled(scroller);
+      }
+      // The row narrows by 1 px under the finger, at its third move.
+      await scroller.evaluate(el => {
+        let moves = 0;
+        el.addEventListener(
+          'touchmove',
+          () => {
+            moves += 1;
+            if (moves === 3) {
+              el.style.width = `${el.clientWidth - 1}px`;
+            }
+          },
+          {passive: true},
+        );
+      });
+      const box = await scroller.boundingBox();
+      if (box == null) {
+        throw new Error('no scroller');
+      }
+      const from = {x: box.x + box.width / 2, y: box.y + box.height / 2};
+      const driver = await touchDriver(page);
+      await driver.play(
+        drag(from, {x: from.x - 60, y: from.y}, {durationMs: 200, restMs: 120}),
+      );
+      await settled(scroller);
+      expect(await offset(scroller)).toBeCloseTo(await travel(scroller), 0);
+      // The last item's end meets the row's end, with no pixel cut off.
+      expect(
+        await scroller.evaluate(el => {
+          const last = el.lastElementChild as HTMLElement;
+          return (
+            el.getBoundingClientRect().right -
+            last.getBoundingClientRect().right
+          );
+        }),
+      ).toBeGreaterThan(-0.5);
+    });
+
     test('right-to-left: a flick toward the inline end moves forward, mirrored', async ({
       page,
     }) => {
