@@ -1480,17 +1480,8 @@ export function busyWindowProof(
   }
   if (controlRead != null) {
     if (controlRead.moved < minJudgedFrames) {
-      // How starved the cast was over the whole block, as the pacing and
-      // frame errors say it.
-      const blockFrames = tracked
-        .filter(f => f.box != null && f.t > window.from && f.t < window.to)
-        .map(f => f.t);
-      const castEdges = [window.from, ...blockFrames, window.to];
-      const castGapMs = Math.max(
-        ...castEdges.slice(1).map((t, k) => t - castEdges[k]),
-      );
       failures.push(
-        `the control moved on ${controlRead.moved} frames in the judged part, under ${minJudgedFrames}: the compositor presented too little in this window to judge (the cast delivered ${blockFrames.length} frame${blockFrames.length === 1 ? '' : 's'} in the ${Math.round(window.to - window.from)} ms block, none for ${Math.round(castGapMs)} ms)`,
+        `the control moved on ${controlRead.moved} frames in the judged part, under ${minJudgedFrames}: the compositor presented too little in this window to judge`,
       );
     }
     const visible = controlRead.movedWith - controlRead.belowStep;
