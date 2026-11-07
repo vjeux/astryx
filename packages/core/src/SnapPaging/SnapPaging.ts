@@ -428,7 +428,6 @@ function attachPaging(
           value: item.style.getPropertyValue('scroll-snap-align'),
           priority: item.style.getPropertyPriority('scroll-snap-align'),
         });
-        item.style.setProperty('scroll-snap-align', 'none');
       }
     }
   };
