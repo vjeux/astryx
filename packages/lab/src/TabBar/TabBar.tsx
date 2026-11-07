@@ -625,12 +625,7 @@ export function TabBar({
           const {start, width, itemStart} = column(
             index,
             count,
-            isDisabled
-              ? {}
-              : {
-                  reachesBack: isDisabledItem(items[index - 1]),
-                  reachesOn: isDisabledItem(items[index + 1]),
-                },
+            {},
           );
           return (
             <button
