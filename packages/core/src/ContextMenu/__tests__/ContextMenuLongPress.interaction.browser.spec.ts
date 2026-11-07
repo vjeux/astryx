@@ -89,11 +89,38 @@ async function openTouchStory(
       __menuShownAt?: number | null;
       __liftHandledAt?: number | null;
       __menuShownInLift?: boolean | null;
+      __menuShownTimerAt?: number | null;
     };
     w.__menuShownAt = null;
     w.__liftHandledAt = null;
     w.__menuShownInLift = null;
+    w.__menuShownTimerAt = null;
     let isInLift = false;
+    // When the timer task that runs now started. The hold's moments come from
+    // the gesture arena's timers. The menu commits in the task that decides
+    // it, so its show runs inside that timer task.
+    let timerAt: number | null = null;
+    const setTimer = window.setTimeout;
+    window.setTimeout = ((
+      handler: TimerHandler,
+      timeout?: number,
+      ...args: unknown[]
+    ) =>
+      setTimer(
+        (...callArgs: unknown[]) => {
+          const outer = timerAt;
+          timerAt = performance.now();
+          try {
+            if (typeof handler === 'function') {
+              handler(...callArgs);
+            }
+          } finally {
+            timerAt = outer;
+          }
+        },
+        timeout,
+        ...args,
+      )) as typeof window.setTimeout;
     // When the page gets to the lift. The event's own timestamp is the
     // hardware's, or the script's. Also whether the menu shows while the
     // lift's listeners run: then no frame paints between the two.
@@ -123,8 +150,12 @@ async function openTouchStory(
         this.matches('[role="menu"]') ||
         this.querySelector('[role="menu"]') != null
       ) {
-        w.__menuShownAt ??= performance.now();
-        w.__menuShownInLift ??= isInLift;
+        // Only the first show counts, so a later one cannot stand in for it.
+        if (w.__menuShownAt == null) {
+          w.__menuShownAt = performance.now();
+          w.__menuShownInLift = isInLift;
+          w.__menuShownTimerAt = timerAt;
+        }
       }
       return show.apply(this, args);
     };
@@ -142,6 +173,14 @@ async function openTouchStory(
     center: {x: box.x + box.width / 2, y: box.y + box.height / 2},
   };
 }
+
+/** When the timer task that showed the menu started, or null outside one. */
+const menuShownTimerAt = async (page: Page) =>
+  page.evaluate(
+    () =>
+      (window as unknown as {__menuShownTimerAt?: number | null})
+        .__menuShownTimerAt ?? null,
+  );
 
 const menuShownAt = async (page: Page) =>
   page.evaluate(
@@ -181,7 +220,15 @@ test('a finger still down gets the menu at 735 ms (iOS 26.2), not before', async
   await driver.play(hold(center, menuDisplayMs + 200));
   const start = await touchStartedAt(page);
   const shown = await menuShownAt(page);
+  const decided = await menuShownTimerAt(page);
   expect(shown, 'the menu never showed').not.toBeNull();
+  // The menu commits in the timer task that decides it. That task runs at
+  // the deadline, which counts from the touch's own timestamp.
+  expect(
+    decided,
+    'the menu showed after the task that decided it',
+  ).not.toBeNull();
+  expect((decided as number) - start).toBeGreaterThanOrEqual(menuDisplayMs - 1);
   const after = (shown as number) - start;
   // The timer runs at its deadline, give or take a task.
   expect(after).toBeGreaterThanOrEqual(menuDisplayMs);
@@ -280,9 +327,15 @@ test('under Reduce Motion the card does not grow, and the menu still opens at 73
   await playing;
   const start = await touchStartedAt(page);
   const shown = await menuShownAt(page);
+  const decided = await menuShownTimerAt(page);
   expect(scales).toEqual([1, 1, 1]);
   expect(await trigger.evaluate(el => el.getAnimations().length)).toBe(0);
   expect(shown, 'the menu never showed').not.toBeNull();
+  expect(
+    decided,
+    'the menu showed after the task that decided it',
+  ).not.toBeNull();
+  expect((decided as number) - start).toBeGreaterThanOrEqual(menuDisplayMs - 1);
   const after = (shown as number) - start;
   // The touch's stamp and the page clock are each coarsened (0.1 ms).
   expect(after).toBeGreaterThanOrEqual(menuDisplayMs - 0.5);
