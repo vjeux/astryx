@@ -25,9 +25,12 @@ import {
   drag,
   openStory,
   pinch,
+  requireFrames,
   touchDriver,
   withStorybook,
 } from '@astryxdesign/interaction-harness';
+import {cubicBezier} from '../../motion/bezier';
+import {keyboard as ANDROID_KEYBOARD} from '../../motion/android/keyboard';
 
 const storybook = withStorybook(test);
 
@@ -70,19 +73,67 @@ interface Chat {
   editable: Locator;
 }
 
-async function openChat(page: Page): Promise<Chat> {
-  await installKeyboard(page);
+/**
+ * Chrome on Android: the visual viewport the test drives, and a
+ * VirtualKeyboard object the keyboard guide reads as Chrome's profile. There
+ * the dock rides Gboard's slides on the keyboard's own curve.
+ */
+async function installAndroidKeyboard(page: Page) {
+  await page.addInitScript(() => {
+    const keyboard = Object.assign(new EventTarget(), {
+      overlaysContent: false,
+      boundingRect: new DOMRect(0, 0, 0, 0),
+    });
+    Object.defineProperty(navigator, 'virtualKeyboard', {
+      configurable: true,
+      value: keyboard,
+    });
+    const viewport = Object.assign(new EventTarget(), {
+      height: window.innerHeight,
+      width: window.innerWidth,
+      offsetTop: 0,
+      offsetLeft: 0,
+      pageTop: 0,
+      pageLeft: 0,
+      scale: 1,
+    });
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      get: () => viewport,
+    });
+    (window as unknown as {__keyboard: (cover: number) => void}).__keyboard =
+      cover => {
+        viewport.height = window.innerHeight - cover;
+        viewport.dispatchEvent(new Event('resize'));
+      };
+  });
+}
+
+async function openChat(
+  page: Page,
+  {android = false}: {android?: boolean} = {},
+): Promise<Chat> {
+  if (android) {
+    await installAndroidKeyboard(page);
+  } else {
+    await installKeyboard(page);
+  }
   await installInputRecorder(page);
   await openStory(page, storybook(), 'core-chatlayout--full-ai-chat');
   const editable = page.locator('[contenteditable="true"]').first();
   await expect(editable).toBeVisible();
-  // Name the composer's box: the sticky dock's child that holds the text.
+  // Name the composer's box: the frosted layer's sibling that holds the text.
   await editable.evaluate(element => {
+    const frosted = (parent: Element) =>
+      [...parent.children].some(child => {
+        const style = getComputedStyle(child);
+        const filter =
+          style.getPropertyValue('backdrop-filter') ||
+          style.getPropertyValue('-webkit-backdrop-filter');
+        return filter !== '' && filter !== 'none';
+      });
     let box: HTMLElement | null = element as HTMLElement;
-    while (
-      box?.parentElement != null &&
-      getComputedStyle(box.parentElement).position !== 'sticky'
-    ) {
+    while (box?.parentElement != null && !frosted(box.parentElement)) {
       box = box.parentElement;
     }
     box?.setAttribute('data-testid', 'chat-composer-box');
@@ -255,7 +306,7 @@ async function recordInput(page: Page, {composer, editable}: Chat) {
 const inputLog = async (page: Page) =>
   page.evaluate(() => (window as unknown as {__input: InputLog}).__input);
 
-test('a drag that reaches the composer blurs its text as it crosses, before the lift, and focus moves nowhere else', async ({
+test('a drag that reaches the composer blurs its text as it crosses, before the lift, and focus rests on the composer’s group', async ({
   page,
 }) => {
   const chat = await openChat(page);
@@ -270,10 +321,16 @@ test('a drag that reaches the composer blurs its text as it crosses, before the 
     ),
   );
   await expect(chat.editable).not.toBeFocused();
-  // The dismissal only blurs the composer's text (FR10).
-  expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
-    'BODY',
-  );
+  // The dismissal only blurs the composer's text (FR10). Under a finger the
+  // keyboard module parks focus on the composer's group, as after Done
+  // (spec:AST-099). The drag's end over the text focuses nothing.
+  expect(
+    await chat.editable.evaluate(
+      element =>
+        document.activeElement?.getAttribute('role') === 'group' &&
+        document.activeElement.contains(element),
+    ),
+  ).toBe(true);
   const {blurs} = await inputLog(page);
   expect(blurs).toHaveLength(1);
   // A move blurred it, at or past the composer's top: not the lift.
@@ -288,10 +345,10 @@ test('a drag that reaches the composer blurs its text as it crosses, before the 
 interface DockTrace {
   frames: number[];
   bounce: {
-    /** The running animations that move something in the container's subtree. */
+    /** The running animations that move something in the dock's subtree. */
     count: number;
-    /** Whether the first of them is the dock container's own. */
-    isContainers: boolean;
+    /** Whether the first of them is the bounce layer's own. */
+    isLayers: boolean;
     /** The composer's and the button's offsets, frame by frame along it. */
     samples: {composer: number; button: number}[];
     /** Whether it has finished, with the composer back where it started. */
@@ -313,7 +370,9 @@ interface DockTrace {
 async function traceDock(page: Page, composer: Locator, button: Locator) {
   await composer.evaluate(
     (dock, pill) => {
-      const container = dock.parentElement as HTMLElement;
+      // The composer's box sits in the bounce layer, in the dock container.
+      const layer = dock.parentElement as HTMLElement;
+      const container = layer.parentElement as HTMLElement;
       const trace: DockTrace = {frames: [], bounce: null, others: 0};
       (window as unknown as {__dock: DockTrace}).__dock = trace;
       const moves = (animation: Animation) =>
@@ -361,14 +420,21 @@ async function traceDock(page: Page, composer: Locator, button: Locator) {
         animation.play();
         const bounce = {
           count: running.length,
-          isContainers: effect.target === container,
+          isLayers: effect.target === layer,
           samples,
           isAtRest: false,
         };
         trace.bounce = bounce;
-        void animation.finished.then(() => {
-          bounce.isAtRest = tops()[0] === composerStart;
-        });
+        // The animator retires the bounce at its end, so its `finished` may
+        // never settle. At rest, nothing in the dock moves.
+        const settle = () => {
+          if (moving().length === 0) {
+            bounce.isAtRest = tops()[0] === composerStart;
+            return;
+          }
+          requestAnimationFrame(settle);
+        };
+        requestAnimationFrame(settle);
       };
       // The blur and the bounce it starts run in one task. So a microtask from
       // the blur runs after the bounce has begun, whatever the frame rate.
@@ -411,13 +477,18 @@ async function showScrollButton(composer: Locator) {
   await expect(button).toBeVisible();
   // Its own fade and slide in have ended.
   await expect
-    .poll(async () =>
-      dock.evaluate(
-        el =>
-          el
-            .getAnimations({subtree: true})
-            .filter(animation => animation.playState === 'running').length,
-      ),
+    .poll(
+      async () =>
+        dock.evaluate(
+          el =>
+            el
+              .getAnimations({subtree: true})
+              .filter(animation => animation.playState === 'running').length,
+        ),
+      {
+        message: 'the scroll-to-bottom button ends its fade and slide in',
+        timeout: 5000,
+      },
     )
     .toBe(0);
   return button;
@@ -441,14 +512,17 @@ test('the crossing bounces the composer once, and the scroll-to-bottom button mo
   await expect(chat.editable).not.toBeFocused();
   // It ends with the composer back where it started.
   await expect
-    .poll(async () => (await dockTrace(page)).bounce?.isAtRest)
+    .poll(async () => (await dockTrace(page)).bounce?.isAtRest, {
+      message: 'the bounce ends with the composer back where it started',
+      timeout: 5000,
+    })
     .toBe(true);
   const {bounce, others} = await dockTrace(page);
-  // One transform moves both. The dock container's own animation is the only
-  // one in its subtree that moves anything. At every frame of it, the two are
-  // offset alike.
+  // One transform moves both. The bounce layer's own animation is the only
+  // one in the dock's subtree that moves anything. At every frame of it, the
+  // two are offset alike.
   expect(bounce?.count).toBe(1);
-  expect(bounce?.isContainers).toBe(true);
+  expect(bounce?.isLayers).toBe(true);
   expect(others).toBe(0);
   const samples = bounce?.samples ?? [];
   // Presence first: the composer moves.
@@ -876,5 +950,312 @@ test.describe('a mouse drag in a desktop browser', () => {
             .__pen,
       ),
     ).toEqual({types: ['pen'], prevented: []});
+  });
+});
+
+test.describe('Chrome on Android, where the dock rides the keyboard', () => {
+  test.use({hasTouch: true, isMobile: true});
+  test.skip(
+    ({browserName}) => browserName !== 'chromium',
+    'Chrome’s keyboard profile needs the VirtualKeyboard API',
+  );
+
+  test('the crossing’s bounce and the ride down are one motion: the composer never jumps, dips past its rest and rests with no lift or translate left', async ({
+    page,
+  }) => {
+    const chat = await openChat(page, {android: true});
+    const rest = await chat.editable.evaluate(
+      el => el.getBoundingClientRect().top,
+    );
+    const rows = await keyboardUp(page, chat);
+    // The dock, the sticky container around the composer: whether anything
+    // in it still moves, and the translate and lift it holds.
+    const dockState = async () =>
+      chat.editable.evaluate(element => {
+        let el: HTMLElement | null = element as HTMLElement;
+        while (el != null && getComputedStyle(el).position !== 'sticky') {
+          el = el.parentElement;
+        }
+        if (el == null) {
+          throw new Error('no sticky dock');
+        }
+        const style = getComputedStyle(el);
+        return {
+          moving: el
+            .getAnimations({subtree: true})
+            .filter(animation => animation.playState === 'running').length,
+          translate: style.translate,
+          bottom: parseFloat(style.bottom) || 0,
+          contained: style.contain.includes('layout'),
+        };
+      });
+    // The ride up has ended, and the layout holds the lift. Under load the
+    // ride can start a few frames after the report, so the wait reads both.
+    await expect
+      .poll(
+        async () => {
+          const state = await dockState();
+          return state.moving === 0 && state.bottom > 100;
+        },
+        {
+          message: 'the dock ends its ride up and the layout holds the lift',
+          timeout: 5000,
+        },
+      )
+      .toBe(true);
+    const lift = (await dockState()).bottom;
+    // The composer's bottom padding bounds the bounce's depth.
+    const depth = await chat.editable.evaluate(element => {
+      const group = element.closest('[role="group"]');
+      return parseFloat(getComputedStyle(group ?? element).paddingBottom) || 0;
+    });
+    // It records every frame's composer top and the bounce layer's offset.
+    // The keyboard's hide is reported in the task that blurred the text, so
+    // Gboard's slide down starts with the bounce.
+    await chat.editable.evaluate(element => {
+      const record = {
+        on: true,
+        frames: [] as {
+          t: number;
+          top: number;
+          y: number;
+          dockTop: number;
+          dockMoved: boolean;
+          scrollHeight: number;
+          contained: boolean;
+        }[],
+      };
+      (window as unknown as {__ride: typeof record}).__ride = record;
+      let dock: HTMLElement | null = element as HTMLElement;
+      while (dock != null && getComputedStyle(dock).position !== 'sticky') {
+        dock = dock.parentElement;
+      }
+      const layer = dock?.firstElementChild;
+      if (layer == null) {
+        throw new Error('no bounce layer in the sticky dock');
+      }
+      const tick = (t: number) => {
+        if (!record.on) {
+          return;
+        }
+        const [, y = '0'] = getComputedStyle(layer).translate.split(' ');
+        const dockStyle = getComputedStyle(dock as HTMLElement);
+        record.frames.push({
+          t,
+          top: element.getBoundingClientRect().top,
+          y: parseFloat(y) || 0,
+          dockTop: (dock as HTMLElement).getBoundingClientRect().top,
+          dockMoved:
+            dockStyle.translate !== 'none' ||
+            (parseFloat(dockStyle.bottom) || 0) !== 0,
+          scrollHeight: (dock as HTMLElement).parentElement?.scrollHeight ?? 0,
+          contained: dockStyle.contain.includes('layout'),
+        });
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      element.addEventListener(
+        'focusout',
+        () =>
+          queueMicrotask(() =>
+            (
+              window as unknown as {__keyboard: (cover: number) => void}
+            ).__keyboard(0),
+          ),
+        {once: true},
+      );
+    });
+    const driver = await touchDriver(page);
+    await driver.play(
+      drag(
+        {x: rows.x, y: 120},
+        {x: rows.x, y: rows.inComposer},
+        {durationMs: 300, restMs: 200},
+      ),
+    );
+    await expect(chat.editable).not.toBeFocused();
+    await expect
+      .poll(
+        async () => {
+          const state = await dockState();
+          return state.moving === 0 && state.bottom === 0 && !state.contained;
+        },
+        {
+          message:
+            'the dock rests with no lift, nothing moving and no containment',
+          timeout: 5000,
+        },
+      )
+      .toBe(true);
+    // Six more drawn frames, so the record ends with frames at rest. A
+    // starved page draws them late, but it draws them.
+    await page.evaluate(
+      async () =>
+        new Promise<void>(resolve => {
+          let left = 6;
+          const tick = () => {
+            left -= 1;
+            if (left === 0) {
+              resolve();
+            } else {
+              requestAnimationFrame(tick);
+            }
+          };
+          requestAnimationFrame(tick);
+        }),
+    );
+    const frames = await page.evaluate(() => {
+      const record = (
+        window as unknown as {
+          __ride: {
+            on: boolean;
+            frames: {
+              t: number;
+              top: number;
+              y: number;
+              dockTop: number;
+              dockMoved: boolean;
+              scrollHeight: number;
+              contained: boolean;
+            }[];
+          };
+        }
+      ).__ride;
+      record.on = false;
+      return record.frames;
+    });
+    const tops = frames.map(frame => frame.top);
+    // Focus rests on the composer's group, and the dock holds no lift and no
+    // translate.
+    expect(
+      await chat.editable.evaluate(
+        element =>
+          document.activeElement?.getAttribute('role') === 'group' &&
+          document.activeElement.contains(element),
+      ),
+    ).toBe(true);
+    const settled = await dockState();
+    expect(settled.translate).toBe('none');
+    expect(settled.bottom).toBe(0);
+    // The composer rests where it was before the keyboard showed.
+    expect(tops.at(-1)).toBeCloseTo(rest, 0);
+    const detail = JSON.stringify({lift, depth, tops: tops.map(Math.round)});
+    // No frame jumps. A step moves no farther than Gboard's slide down and
+    // the bounce can in that frame's time. Only the first moving frame can
+    // also show the slide of Chrome's report lag, from a ride dated back.
+    const ease = cubicBezier(ANDROID_KEYBOARD.hideCurve);
+    let steepest = 0;
+    for (let i = 1; i <= 1000; i++) {
+      steepest = Math.max(
+        steepest,
+        (ease(i / 1000) - ease((i - 1) / 1000)) * 1000,
+      );
+    }
+    const slide = (ms: number) =>
+      (lift * steepest * ms) / ANDROID_KEYBOARD.hideMs + depth;
+    let isMoving = false;
+    const jumps = frames.slice(1).flatMap((frame, index) => {
+      const step = frame.top - frames[index].top;
+      const gapMs = frame.t - frames[index].t;
+      const allowed = isMoving
+        ? slide(gapMs)
+        : slide(gapMs + ANDROID_KEYBOARD.hideReportLagMs);
+      isMoving ||= Math.abs(step) > 0.5;
+      return Math.abs(step) > allowed
+        ? [`${index + 1}: ${step.toFixed(1)} px in ${gapMs.toFixed(0)} ms`]
+        : [];
+    });
+    expect(jumps, detail).toEqual([]);
+    // It never moves up by more than the bounce's own return.
+    const steps = tops.slice(1).map((top, index) => top - tops[index]);
+    expect(
+      steps.filter(step => step < -(depth + 1)),
+      detail,
+    ).toEqual([]);
+    // The bounce shows: the composer dips past its rest and comes back.
+    const lowest = Math.max(...tops);
+    expect(lowest, detail).toBeGreaterThan(rest + 0.5);
+    expect(lowest, detail).toBeLessThanOrEqual(rest + depth + 0.5);
+    // The bounce lands exactly on its rest. Past its fastest frame back, no
+    // frame of the layer moves faster than the one before, the frame into
+    // rest too. A page starved of frames over that tail fails by name.
+    const offsets = frames.map(frame => frame.y);
+    const deepest = offsets.indexOf(Math.max(...offsets));
+    const landed = offsets.findIndex(
+      (offset, index) => index > deepest && offset === 0,
+    );
+    const tailDetail = JSON.stringify(
+      frames
+        .slice(deepest, landed < 0 ? undefined : landed + 1)
+        .map(frame => [Math.round(frame.t), +frame.y.toFixed(3)]),
+    );
+    expect(landed, tailDetail).toBeGreaterThan(deepest);
+    const tail = requireFrames(frames, {
+      min: 6,
+      during: 'the bounce came back to its rest',
+      where: frame =>
+        frame.t >= frames[deepest].t && frame.t <= frames[landed].t,
+    });
+    const speeds = tail
+      .slice(1)
+      .map(
+        (frame, index) => (tail[index].y - frame.y) / (frame.t - tail[index].t),
+      );
+    const fastest = speeds.indexOf(Math.max(...speeds));
+    const faster = speeds
+      .slice(fastest + 1)
+      .filter((speed, index) => speed > speeds[fastest + index] + 1e-3);
+    expect(faster, tailDetail).toEqual([]);
+    // Once the ride commits, the dock rests at the bottom in every frame,
+    // while the bounce still plays inside it. The bounce's overflow never
+    // reaches the transcript's scroll range, so a scroll held at its end
+    // can't lift the dock.
+    const committed = frames.findIndex(
+      (frame, index) =>
+        index > 0 && frames[index - 1].dockMoved && !frame.dockMoved,
+    );
+    expect(committed, detail).toBeGreaterThan(0);
+    const scrollEnd = frames.at(-1)?.scrollHeight ?? 0;
+    const grown = frames
+      .slice(committed)
+      .filter(frame => frame.scrollHeight !== scrollEnd)
+      .map(frame => [
+        Math.round(frame.t),
+        frame.scrollHeight - scrollEnd,
+        +frame.y.toFixed(3),
+      ]);
+    expect(grown, tailDetail).toEqual([]);
+    const dockRest = frames.at(-1)?.dockTop ?? 0;
+    const lifted = frames
+      .slice(committed)
+      .filter(frame => Math.abs(frame.dockTop - dockRest) >= 0.5)
+      .map(frame => [
+        Math.round(frame.t),
+        +(frame.dockTop - dockRest).toFixed(2),
+        +frame.y.toFixed(3),
+      ]);
+    expect(lifted, tailDetail).toEqual([]);
+    // The dock is contained only while the bounce plays: from its first
+    // frame until it lands, and never at rest. Dropping the containment
+    // moves nothing.
+    expect(
+      frames.filter(frame => frame.y !== 0 && !frame.contained).length,
+      tailDetail,
+    ).toBe(0);
+    expect(frames.at(-1)?.contained).toBe(false);
+    const dropped = frames.findIndex(
+      (frame, index) =>
+        index > 0 && frames[index - 1].contained && !frame.contained,
+    );
+    expect(dropped, tailDetail).toBeGreaterThan(landed - 1);
+    const [before, after] = [frames[dropped - 1], frames[dropped]];
+    expect(
+      [
+        after.top - before.top,
+        after.dockTop - before.dockTop,
+        after.scrollHeight - before.scrollHeight,
+      ].map(change => Math.abs(change) < 0.5),
+      tailDetail,
+    ).toEqual([true, true, true]);
   });
 });
