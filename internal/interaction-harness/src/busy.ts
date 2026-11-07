@@ -1158,7 +1158,7 @@ export function busyWindowProof(
   );
   const firstShown = values.find(v => v.value != null);
   const entersAt =
-    prior.length === 0 && shownWithout && firstShown != null
+    prior.length === 0 && firstShown != null
       ? firstShown.t
       : null;
   const onScreenFrom =
