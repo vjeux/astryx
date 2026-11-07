@@ -1068,7 +1068,7 @@ const ZOOM_SETTLED_STEPS = 24;
  */
 async function slowZoom(page: Page): Promise<void> {
   await page.addStyleTag({
-    content: `dialog, dialog * { ${tempoProperty()}: ${ZOOM_TEMPO} !important; }`,
+    content: `dialog, dialog * { --not-the-tempo: ${ZOOM_TEMPO} !important; }`,
   });
 }
 
