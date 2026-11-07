@@ -92,6 +92,10 @@ async function traceCloses(page: Page, route: CloseRoute): Promise<Closes> {
     // is at rest.
     await waitForRest(shown.locator('xpath=ancestor-or-self::*[@popover][1]'));
     const trace = await traceRendering(page, async () => {
+      // NOT FOR LANDING: one frame runs in the trace before the close.
+      await page.evaluate(
+        async () => new Promise(resolve => requestAnimationFrame(resolve)),
+      );
       if (route.press == null) {
         await page.keyboard.press('Escape');
       } else {
@@ -149,6 +153,10 @@ for (const route of routes) {
   }) => {
     test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
     await openStory(page, storybook(), route.story);
+    // NOT FOR LANDING: the entrance lasts 2 s.
+    await page.addStyleTag({
+      content: '[popover]:popover-open { animation-duration: 2s !important; }',
+    });
     const closes = await traceCloses(page, route);
     const detail = JSON.stringify(closes);
     // The hide's own layout: the trace counts it.
