@@ -454,9 +454,7 @@ function attachPaging(
         track.remeasure();
         let stops = measured?.stops;
         if (stops == null) {
-          const read = track.pages();
-          skip(read.skipped);
-          stops = read.stops;
+          stops = track.pages().stops;
         }
         return (options.pages ?? 'view') === 'item'
           ? stops
