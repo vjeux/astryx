@@ -1637,15 +1637,13 @@ export function useSheetGestures({
   });
 
   const bodyRef = useCallback((node: HTMLElement | null) => {
-    const asPointer = (touch: Touch, target: HTMLElement, event: TouchEvent) =>
+    const asPointer = (touch: Touch, target: HTMLElement) =>
       ({
         syntheticTouch: true,
         pointerId: touch.identifier,
         pointerType: touchPointerType(touch),
         clientY: touch.clientY,
-        // The touch event's own time: when the finger was there, however
-        // late this handler runs.
-        timeStamp: event.timeStamp,
+        timeStamp: Date.now(),
         currentTarget: target,
         setPointerCapture: () => {},
         releasePointerCapture: () => {},
@@ -1724,11 +1722,11 @@ export function useSheetGestures({
           // Deliberately NOT preventDefault()ed: the scroller is clamped at
           // its end, so there is no scrolling left to cancel, and claiming the
           // gesture would strand the content for as long as the finger is down.
-          pointerMoveRef.current(asPointer(t, scroller, event));
+          pointerMoveRef.current(asPointer(t, scroller));
           return;
         }
         event.preventDefault();
-        pointerMoveRef.current(asPointer(t, scroller, event));
+        pointerMoveRef.current(asPointer(t, scroller));
         return;
       }
       if (!armed) {
@@ -1754,11 +1752,11 @@ export function useSheetGestures({
         releaseContentHold(armed);
         touchDragRef.current = null;
         beginDragRef.current(
-          asPointer(t, scroller, event),
+          asPointer(t, scroller),
           measureHeightRef.current(),
           armed.startY,
         );
-        pointerMoveRef.current(asPointer(t, scroller, event));
+        pointerMoveRef.current(asPointer(t, scroller));
         return;
       }
       if ((armed.top && delta < 0) || (armed.bottom && delta > 0)) {
@@ -1782,11 +1780,11 @@ export function useSheetGestures({
         } else if (armed.contentEndY - t.clientY >= CONTENT_END_HANDOFF_SLOP) {
           armed.promotedAtContentEnd = true;
           beginDragRef.current(
-            asPointer(t, scroller, event),
+            asPointer(t, scroller),
             measureHeightRef.current(),
             armed.contentEndY,
           );
-          pointerMoveRef.current(asPointer(t, scroller, event));
+          pointerMoveRef.current(asPointer(t, scroller));
         }
       } else {
         armed.contentEndY = null;
@@ -1806,7 +1804,7 @@ export function useSheetGestures({
       );
       const target = event.currentTarget as HTMLElement;
       if (t) {
-        endDragRef.current(asPointer(t, target, event));
+        endDragRef.current(asPointer(t, target));
       } else if (event.touches.length === 0) {
         // Some interrupted multi-touch sequences omit the active touch from
         // changedTouches. If no fingers remain, the drag cannot finish later.
