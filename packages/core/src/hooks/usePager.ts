@@ -661,6 +661,8 @@ export function createPager(
   let isSwipeSettle = false;
   // Whether the running settle follows a release, not the program's `goTo`.
   let isReleaseSettle = false;
+  // Whether a touch's release started the settle, for a retarget.
+  let isTouchReleaseSettle = false;
   let settleToken = 0;
   let isDragging = false;
 
@@ -896,6 +898,7 @@ export function createPager(
   ): void {
     isSwipeSettle = false;
     isReleaseSettle = isRelease;
+    isTouchReleaseSettle = touchRelease;
     if (animator == null) {
       return;
     }
@@ -962,9 +965,38 @@ export function createPager(
         // A drag's release moves at most one page from where the drag began.
         // New pages renumber, so the drag keeps the page nearest that offset.
         const dragFrom = isDragging ? offsetOf(dragStartIndex) : null;
+        // A resize during a settle retargets it. A settle toward the last page
+        // ends on the last page; any other ends on the page nearest its
+        // target's offset. The page last at rest keeps its place too.
+        const settleFrom =
+          settleHandle != null
+            ? {
+                isToLast: target >= count() - 1,
+                target: offsetOf(target),
+                isFromLast: settled >= count() - 1,
+                settled: offsetOf(settled),
+              }
+            : null;
         childOffsets = offsets;
         if (dragFrom != null) {
           dragStartIndex = nearestPage(dragFrom);
+        }
+        if (settleFrom != null) {
+          const last = count() - 1;
+          settled = settleFrom.isFromLast
+            ? last
+            : nearestPage(settleFrom.settled);
+          const next = settleFrom.isToLast
+            ? last
+            : nearestPage(settleFrom.target);
+          if (next !== target) {
+            target = next;
+            // The same page, renumbered: the owner hears it only through a
+            // release's report still waiting.
+            if (pendingReport == null) {
+              report('controlled');
+            }
+          }
         }
         changed = true;
         const pageCount = offsets.length;
@@ -980,24 +1012,65 @@ export function createPager(
       goTo(count() - 1, {animated: false, reason: 'controlled'});
       return;
     }
-    // A resize lands on the target page at its new offset (a settle in
-    // flight ends there), as a paging scroll view does on rotation. A finger
-    // that holds a caught track keeps it; its lift settles on the new offsets.
+    // A resize lands on the target page at its new offset, as a paging
+    // scroll view does on rotation. A settle in flight heads there from where
+    // the track shows and keeps its velocity, as any new target does. A
+    // finger that holds a caught track keeps it; its lift settles on the new
+    // offsets.
     if (!isDragging && !caughtSettle) {
-      // A settle cut short still ends, even on the page it left.
-      const wasSettling = settleHandle != null;
-      stopSettle();
+      if (settleHandle != null && animator != null) {
+        retargetSettle(animator);
+        return;
+      }
       animator?.set({x: positionToX(offsetOf(target))});
-      if (settled !== target || wasSettling) {
+      if (settled !== target) {
         rest();
       }
     }
   }
 
+  /**
+   * Plays the settle in flight on toward the target's offset, from where the
+   * track shows and at its velocity. A release keeps UIKit's paging
+   * integrator; any other move keeps the animated scroll.
+   */
+  function retargetSettle(running: PagerAnimator): void {
+    const from = presentation();
+    const velocity = sign() * running.getVelocity('x');
+    const isRelease = isReleaseSettle;
+    const touchRelease = isTouchReleaseSettle;
+    const isSwipe = isSwipeSettle;
+    stopSettle();
+    if (isRelease) {
+      settleFrom(from, velocity, touchRelease);
+      isSwipeSettle = isSwipe && settleHandle != null;
+      return;
+    }
+    const to = offsetOf(target);
+    if (from === to) {
+      running.set({x: positionToX(to)});
+      rest();
+      return;
+    }
+    play(
+      solveAnimatedPageScroll({
+        from,
+        to,
+        durationMs: resolveMotion(
+          trackElement,
+          paging.animatedScroll,
+          'durationMs',
+        ),
+        curve: resolveMotion(trackElement, paging.animatedScroll.curve),
+        velocity,
+      }),
+    );
+  }
+
   function onPan(recognizer: PanGestureRecognizer): void {
     const state = recognizer.state;
     if (state === 'began') {
-      // Read before measure(), which can stop the settle on a resize.
+      // Read before measure(), which can retarget the settle on a resize.
       const wasSwipeSettle = settleHandle != null && isSwipeSettle;
       measure();
       clearCatchTimer();
