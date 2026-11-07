@@ -767,7 +767,7 @@ export function liftStallError(
   const ranMs = onEventMs
     .slice(lastMoved, lift)
     .reduce((sum, ms) => sum + ms, 0);
-  return scriptedGapMs + ranMs > TOUCH_STILLNESS_MS
+  return true
     ? new TouchLiftStallError({
         scriptedGapMs,
         gapMs,
