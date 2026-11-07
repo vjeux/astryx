@@ -488,6 +488,18 @@ test('expand under a finger: the rows below glide while the group fades in, and 
   const glide = await armHold(page, below, {
     judges: {target: below, property: 'translate'},
   });
+  // NOT FOR LANDING: the rows snap. Every motion jumps to its end at once.
+  await page.evaluate(() => {
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      const timing =
+        typeof options === 'number' ? {duration: options} : {...options};
+      return animate.call(this, keyframes, {
+        ...timing,
+        easing: 'steps(1, start)',
+      });
+    };
+  });
   await tapToggle(page);
   const points = await seekThroughGlide(page, await glide.held(), times);
   for (const [i, point] of points.entries()) {
@@ -555,6 +567,18 @@ test('collapse under a finger: the group fades out as the rows below glide up, w
       {target: group, property: 'opacity'},
       {target: below, property: 'translate'},
     ],
+  });
+  // NOT FOR LANDING: the rows snap. Every motion jumps to its end at once.
+  await page.evaluate(() => {
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      const timing =
+        typeof options === 'number' ? {duration: options} : {...options};
+      return animate.call(this, keyframes, {
+        ...timing,
+        easing: 'steps(1, start)',
+      });
+    };
   });
   await tapToggle(page);
   const points = await seekThroughGlide(page, await collapse.held(), times);
