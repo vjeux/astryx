@@ -396,6 +396,7 @@ async function pressInSettle(
     },
     {at: until, isBack: back},
   );
+  await new Promise(resolve => setTimeout(resolve, 150)); // NOT FOR LANDING: runner lag
   const held = await isTakenOver(scroller);
   await page.mouse.click(next.x + next.width / 2, next.y + next.height / 2);
   await thawPage(page);
