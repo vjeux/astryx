@@ -240,6 +240,24 @@ test("a trackpad's scroll stops a zoomed photo at its edge, with no give, as a m
             el.getBoundingClientRect().bottom,
         });
       };
+      // NOT FOR LANDING: the photo gives 10 px past its edge while the stream presses it, and comes back 200 ms after.
+      let back = 0;
+      window.addEventListener(
+        'wheel',
+        () => {
+          const shown =
+            stage.getBoundingClientRect().bottom -
+            el.getBoundingClientRect().bottom;
+          if (shown > -0.5) {
+            el.style.transform = 'translateY(-10px)';
+            clearTimeout(back);
+            back = window.setTimeout(() => {
+              el.style.transform = '';
+            }, 200);
+          }
+        },
+        {passive: true},
+      );
       const onWheel = () => read('event');
       // On the window, the event's last stop: after the stage's listener.
       window.addEventListener('wheel', onWheel, {passive: true});
