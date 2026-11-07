@@ -381,7 +381,8 @@ async function pressInSettle(
   // The settle's frames go through the gate, so the freeze below holds them.
   await installTimerGate(page);
   await scroller.evaluate(el => el.setAttribute('data-press-in-settle', ''));
-  await swipe(page, scroller, {px: 80, ms: 80, rtl: back});
+  // NOT FOR LANDING: the lift comes 80 ms after the last move.
+  await swipe(page, scroller, {px: 80, ms: 80, restMs: 80, rtl: back});
   // The scene stops in the first frame where the paging holds the row past
   // `until`. A read from this process comes a round trip late, and a loaded
   // runner can miss the whole pass in that time. A settle that hands the row
