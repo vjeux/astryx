@@ -235,7 +235,6 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     const nextWidth = element.clientWidth;
     const native = nativePosition();
     spans = spansOf(children(), position());
-    heldOuterWidth = element.offsetWidth;
     // WebKit truncates a fractional scroll offset, so the travel stays a whole
     // number of pixels, as the scroll width is. It rounds once, from the
     // takeover, so a resize over many frames adds up no rounding.
