@@ -87,9 +87,11 @@ export function ContextMenuTouchLayer({
         // The menu commits in the task that decides it, as UIKit shows it at
         // its moment. From the hold's timer, a state update would wait for
         // React's next scheduled task.
-        flushSync(() => {
-          onOpenRef.current(press.press ?? press.location());
-        });
+        setTimeout(() => {
+          flushSync(() => {
+            onOpenRef.current(press.press ?? press.location());
+          });
+        }, 50);
       };
       switch (press.state) {
         case 'began':
