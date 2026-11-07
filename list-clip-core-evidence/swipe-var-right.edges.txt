@@ -1,0 +1,156 @@
+  0 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.00
+  1 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.25
+  2 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.29
+  3 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+  4 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+  5 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+  6 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+  7 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+  8 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+  9 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 10 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 11 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 12 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 13 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 14 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 15 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 16 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 17 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 18 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 19 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 20 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 21 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 22 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 23 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 0.31
+ 24 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 25.83
+ 25 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 25.85
+ 26 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 41.33
+ 27 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 26.20
+ 28 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 26.19
+ 29 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 31.28
+ 30 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 31.28
+ 31 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 35.42
+ 32 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 35.43
+ 33 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 40.00
+ 34 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 40.01
+ 35 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 45.13
+ 36 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 51.02
+ 37 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 51.02
+ 38 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 57.24
+ 39 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 57.25
+ 40 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 62.52
+ 41 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 62.52
+ 42 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 67.96
+ 43 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 67.97
+ 44 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 73.70
+ 45 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 73.70
+ 46 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 73.70
+ 47 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 79.68
+ 48 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 85.86
+ 49 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 85.86
+ 50 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 92.25
+ 51 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 92.25
+ 52 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 97.62
+ 53 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 97.62
+ 54 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 103.01
+ 55 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 103.01
+ 56 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 57 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 58 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 59 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 60 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 61 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 62 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 63 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 64 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 65 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 66 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 67 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 68 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 69 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 70 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 71 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 72 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 73 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 74 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 75 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 76 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 77 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 108.23
+ 78 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 79 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 80 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 81 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 82 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 83 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 84 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 85 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 86 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 87 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 88 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 89 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 90 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 91 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 92 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 93 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 94 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 95 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 96 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 97 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 98 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+ 99 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+100 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+101 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+102 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+103 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+104 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 108.20
+105 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 92.64
+106 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 92.11
+107 left mean 0.00 max 0 | right mean 0.00 max 0 | row motion 68.51
+108 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 59.16
+109 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 55.49
+110 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.91
+111 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 50.52
+112 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+113 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+114 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+115 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+116 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+117 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+118 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+119 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+120 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+121 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+122 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+123 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+124 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+125 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+126 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+127 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+128 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+129 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+130 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+131 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+132 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+133 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+134 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+135 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+136 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+137 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+138 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+139 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+140 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+141 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+142 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+143 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+144 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+145 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+146 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+147 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+148 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+149 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+150 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+151 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+152 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+153 left mean 0.00 max 0 | right mean 0.00 max 2 | row motion 50.52
+154 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 50.53
+155 left mean 0.00 max 0 | right mean 0.00 max 1 | row motion 50.53
