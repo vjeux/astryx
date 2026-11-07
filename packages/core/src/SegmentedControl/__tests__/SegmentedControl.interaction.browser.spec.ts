@@ -703,6 +703,7 @@ test('a change mid-flight paints no press over the lens on the segment it leaves
 }) => {
   const control = await openControl(page);
   await control.tapSegment('table');
+  await page.waitForTimeout(Number(process.env.LATE_READ_MS ?? 0));
   // The app changes the selection while the lens is still on its way and the
   // tap on Table still fades. A second touch would end that fade itself.
   const paint = await control.group.evaluate(async group => {
