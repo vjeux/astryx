@@ -525,7 +525,6 @@ function attachPaging(
     resnap();
   });
   observeItems();
-  itemList.observe(element, {childList: true});
   return {
     detach: () => {
       detach();
