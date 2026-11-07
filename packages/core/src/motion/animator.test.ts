@@ -63,8 +63,10 @@ interface Recorded {
 let clock = 1000;
 let recorded: Recorded[] = [];
 /** Callbacks waiting for the next animation frame (`requestFrame`). */
-let frameQueue: (() => void)[] = [];
-const requestFrame = (callback: () => void) => {
+let frameQueue: ((frame?: number) => void)[] = [];
+/** The last frame's timestamp: one of its own per frame, never reused. */
+let frameStamp = 0;
+const requestFrame = (callback: (frame?: number) => void) => {
   frameQueue.push(callback);
 };
 /**
@@ -240,8 +242,11 @@ async function commitFrame(
   }
   const frames = frameQueue;
   frameQueue = [];
+  // A browser gives every callback of one frame the same timestamp, and no
+  // other frame that timestamp.
+  frameStamp += 1;
   for (const callback of frames) {
-    callback();
+    callback(frameStamp);
   }
   await Promise.resolve();
   await Promise.resolve();
@@ -943,6 +948,55 @@ describe('a call from rest starts at the commit, as Core Animation does', () => 
       });
       await Promise.resolve();
       expect(started).toBe(false);
+    });
+
+    it('the calls one frame commits start at one time, however long the frame callbacks between them run', async () => {
+      const first = setup();
+      const second = setup();
+      first.animator.animate({x: 300}, {spring: springs.settle});
+      // A page's own frame callback runs 3 ms between the two animators'.
+      frameQueue.push(() => {
+        clock += 3;
+      });
+      second.animator.animate({x: 300}, {spring: springs.settle});
+      const [a, b] = live('translate');
+      clock = 1016;
+      await commitFrame(1016, {startUnread: true});
+      expect(a.startTime).toBe(1016);
+      expect(b.startTime).toBe(1016);
+    });
+
+    it('calls made in two tasks before one frame start together at that frame', async () => {
+      const first = setup();
+      const second = setup();
+      first.animator.animate({x: 300}, {spring: springs.settle});
+      frameQueue.push(() => {
+        clock += 3;
+      });
+      // The first task ends; the second call comes in a later task.
+      await Promise.resolve();
+      clock = 1005;
+      second.animator.animate({x: 300}, {spring: springs.settle});
+      const [a, b] = live('translate');
+      clock = 1016;
+      await commitFrame(1016, {startUnread: true});
+      expect(a.startTime).toBe(1016);
+      expect(b.startTime).toBe(1016);
+    });
+
+    it('a call first framed in a later frame takes the time that frame runs', async () => {
+      const first = setup();
+      const second = setup();
+      first.animator.animate({x: 300}, {spring: springs.settle});
+      clock = 1016;
+      await commitFrame(1016, {startUnread: true});
+      clock = 1020;
+      second.animator.animate({x: 300}, {spring: springs.settle});
+      const [a, b] = live('translate');
+      clock = 1033;
+      await commitFrame(1033, {startUnread: true});
+      expect(a.startTime).toBe(1016);
+      expect(b.startTime).toBe(1033);
     });
 
     it('a call whose first frame comes after a block keeps the start the browser gives it', async () => {
