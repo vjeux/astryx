@@ -221,6 +221,8 @@ test('Reduce Motion keeps the release fade: a fade, not a movement', async ({
   await driver.play(
     tap({x: box.x + box.width / 2, y: box.y + box.height / 2}, {holdMs: 300}),
   );
+  // NOT FOR LANDING: a busy runner's late hold, 600 ms after the lift.
+  await page.waitForTimeout(600);
   const releaseMs = await exitMsOf(row);
   await holdAnimations(page, undefined, {
     judges: {target: row, property: 'opacity', pseudoElement: '::before'},
@@ -303,6 +305,8 @@ test('under a finger, a row held and released between two divided rows keeps bot
       },
     },
   );
+  // NOT FOR LANDING: a busy runner's late hold, 600 ms after the lift.
+  await page.waitForTimeout(600);
   // Released: halfway through the release fade.
   const releaseMs = await exitMsOf(pressed);
   await holdAnimations(page, undefined, {
