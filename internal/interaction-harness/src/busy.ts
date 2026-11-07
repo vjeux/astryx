@@ -1156,7 +1156,10 @@ export function busyWindowProof(
       f.t < inner.from &&
       f.t >= inner.from - BUSY_PROOF_LOOKAROUND_MS,
   );
-  const firstShown = values.find(v => v.value != null);
+  const firstShown = tracked
+    .filter(f => f.t >= inner.from)
+    .map(f => ({t: f.t, value: f.box == null ? null : f.box[axis]}))
+    .find(v => v.value != null);
   const entersAt =
     prior.length === 0 && shownWithout && firstShown != null
       ? firstShown.t
