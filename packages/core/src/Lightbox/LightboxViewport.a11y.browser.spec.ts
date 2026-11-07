@@ -252,25 +252,46 @@ test(`the first frame that shows the clamped caption at open already ends it in 
   await page.route(/picsum\.photos/, async route =>
     route.fulfill({contentType: 'image/svg+xml', body: PHOTO_SVG}),
   );
+  // A frame's resize observers deliver after its animation-frame callbacks
+  // and before it paints, and a delivery may commit an update. So each
+  // delivery reads the frame again, after its observer's own callback.
+  await page.addInitScript(() => {
+    const Native = window.ResizeObserver;
+    window.ResizeObserver = class extends Native {
+      constructor(callback: ResizeObserverCallback) {
+        super((entries, observer) => {
+          callback(entries, observer);
+          (window as unknown as {__afterResize?: () => void}).__afterResize?.();
+        });
+      }
+    };
+  });
   await page.goto(
     `${storybook.origin}/iframe.html?id=core-lightbox--gallery-with-captions&viewMode=story`,
   );
   // Each frame from here on: whether the open viewer shows the current
-  // caption, and whether its "more" is there. A frame's animation-frame
-  // callbacks see what that frame paints.
+  // caption, and whether its "more" is there, as the frame paints it.
   await page.evaluate(() => {
     const frames: {isShown: boolean; hasMore: boolean}[] = [];
     (window as unknown as {__captionFrames: typeof frames}).__captionFrames =
       frames;
-    const read = () => {
+    const sample = () => {
       const caption = document.querySelector(
         'dialog[open] [data-current] [data-lightbox-caption]',
       );
       const text = caption?.querySelector('.astryx-text');
       const isShown = text != null && text.getBoundingClientRect().height > 0;
-      frames.push({isShown, hasMore: caption?.querySelector('button') != null});
+      return {isShown, hasMore: caption?.querySelector('button') != null};
+    };
+    const read = () => {
+      frames.push(sample());
       if (frames.length < 600 && !frames.some(frame => frame.hasMore)) {
         requestAnimationFrame(read);
+      }
+    };
+    (window as unknown as {__afterResize: () => void}).__afterResize = () => {
+      if (frames.length > 0) {
+        frames[frames.length - 1] = sample();
       }
     };
     requestAnimationFrame(read);
