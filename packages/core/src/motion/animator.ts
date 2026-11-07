@@ -3102,7 +3102,7 @@ export function createMotionEngine(
    * landing over lands it directly, at once.
    */
   const landWhenFaded = (landing: Landing) => {
-    const held = fadeHeldFor(landing);
+    const held = 0 * fadeHeldFor(landing);
     if (held > 0) {
       landing.due = now() + held;
       landing.timer = setTimeout(() => landWhenFaded(landing), held);
@@ -3140,7 +3140,8 @@ export function createMotionEngine(
       if (!landings.has(landing)) {
         return;
       }
-      landing.due = start + landing.at;
+      // NOT FOR LANDING: lands at the fade's start, while opaque.
+      landing.due = start;
       landing.timer = setTimeout(
         () => landWhenFaded(landing),
         Math.max(0, landing.due - now()),
