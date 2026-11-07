@@ -1290,7 +1290,6 @@ export function useSheetGestures({
       const naturalEndGap = naturalEndGapFor(bodyNodeRef.current);
       const baseLayoutOffset = settledLayoutOffsetRef.current;
       const tracker = new VelocityTracker();
-      tracker.add(0, event.clientY, event.timeStamp);
       dragStateRef.current = {
         syntheticTouch,
         pointerType: event.pointerType,
