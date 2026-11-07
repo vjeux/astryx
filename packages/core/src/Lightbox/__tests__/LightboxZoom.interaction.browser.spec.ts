@@ -845,6 +845,7 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
   await driver.play(
     flick(mid, {velocity: {x: -900, y: 0}, durationMs: 80, hz: 120}),
   );
+  await new Promise(resolve => setTimeout(resolve, 400)); // NOT FOR LANDING: runner lag
   // The landing must find the coast still running, or it proves nothing.
   await photo.evaluate(el => {
     el.setAttribute('data-freeze-photo', '');
