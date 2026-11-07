@@ -384,11 +384,7 @@ export function useTabBarLens({
     const travel = {x: chaseTarget(x, centers) - centers[selected]};
     // Under Reduce Motion the lens is put under the finger at once, as
     // UIKit's is. A travel would play as a dip, a frame with no lens.
-    if (isReduced) {
-      body.animator.set(travel);
-    } else {
-      body.animator.animate(travel, {spring: tabBar.lensTravel}, {at});
-    }
+    body.animator.animate(travel, {spring: tabBar.lensTravel}, {at});
     lift(true, at, size);
     playCopy(at);
   };
