@@ -1,6 +1,6 @@
-# Dynamic Type in Safari on iPhone, at bff64fcac9
+# Dynamic Type in Safari on iPhone, at c6644480bb
 
-Safari on the iPhone 17 Pro simulator, iOS 26.2, with the Storybook built at bff64fcac94fd11365bb91e445fad8f104e144f6. Each size was set in the system text size and Safari relaunched; sizes are the computed font sizes in px. Images are cropped to the page content.
+Safari on the iPhone 17 Pro simulator, iOS 26.2, with the Storybook built at c6644480bb7bd787c6597c551b7e1932a2058d73. Each size was set in the system text size and Safari relaunched; sizes are the computed font sizes in px. Images are cropped to the page content.
 
 | Size | Neutral body | Neutral supporting | Butter body | Butter supporting | Y2K body | Y2K supporting |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -13,4 +13,4 @@ Neutral: the Core/Themes/Dynamic Type story. Y2K: its Fixed Supporting Size stor
 
 At l the Dynamic Type story's page adopts no text-size scale stylesheet. The same build in desktop Chromium shows body 14 px and supporting 12 px in neutral and Butter, so the larger l sizes on the phone come from each theme's touch type, not from the reader's text size.
 
-Live change (ios-dt-live.gif): the story open at l (body 16px); Settings, Larger Text, slider to xxxl; back in Safari the same page shows body 21.6464px with the same load time (18:06:31), and it loaded once.
+Live change (ios-dt-live.gif): the story open at l (body 16px); Settings, Larger Text, slider to xxxl; back in Safari the same page shows body 21.6464px with the same load time (20:13:00), and it loaded once.
