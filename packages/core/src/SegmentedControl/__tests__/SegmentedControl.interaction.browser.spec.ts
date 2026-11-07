@@ -708,11 +708,13 @@ test('a change mid-flight paints no press over the lens on the segment it leaves
   // holds at its start, however late the test process reads it.
   await freezePageOn(page, 'touchend');
   await control.tapSegment('table');
+  await page.waitForTimeout(Number(process.env.LATE_READ_MS ?? 0));
   // The app changes the selection while the lens is still on its way and the
   // tap on Table still fades. A second touch would end that fade itself.
   await control.segment('list').evaluate(list => {
     (list as HTMLElement).click();
   });
+  await page.waitForTimeout(Number(process.env.LATE_READ_MS ?? 0));
   const paint = await control.group.evaluate(group => {
     const table = group.querySelector<HTMLElement>('[data-value="table"]');
     if (table == null) {
