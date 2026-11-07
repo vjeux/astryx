@@ -459,6 +459,8 @@ test('the presentation grows out of the trigger on the theme\u2019s entrance tok
   // Presenting during the dismissal would turn back from the closing frame.
   await expect(exitCopyOf(page)).toHaveCount(0);
   await openWithTap(story);
+  // NOT FOR LANDING: the test's next message after the tap comes late.
+  await page.waitForTimeout(1000);
   await scaleAnimationOf(story.layer);
   const held = await holdAnimations(page, story.layer, {
     judges: {target: story.layer, property: 'scale'},
