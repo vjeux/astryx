@@ -1493,6 +1493,20 @@ test('a drag lays out nothing per move, and the coast neither lays out nor paint
   browserName,
 }) => {
   test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
+  // NOT FOR LANDING: the lift's task runs 90 ms longer after the slider
+  // drops its pressed paint, so that paint comes 90 ms late.
+  await page.addInitScript(() => {
+    window.addEventListener(
+      'touchend',
+      () => {
+        const start = performance.now();
+        while (performance.now() - start < 90) {
+          // The last listener of the lift's task.
+        }
+      },
+      {once: true, passive: true},
+    );
+  });
   const {driver, thumb, center, value} = await openSlider(
     page,
     'core-slider--default',
