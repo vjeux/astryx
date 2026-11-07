@@ -17,3 +17,7 @@ foundation/*.d.mts
 # Transient fixture dir written by authoring-migration.tsc.test.mjs (runs the
 # real tsc over migrated output); created + removed per test run.
 .codemod-tsc-*/
+
+# Transient fixture dirs written by theme/build/build.component-icons.test.mjs
+# under this package, so core and React resolve; created + removed per test.
+.tmp-component-icons-*/
