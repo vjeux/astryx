@@ -4,8 +4,8 @@
 
 /**
  * @file SnapPaging.ts
- * @input The shared pager, each child's own animator and the
- *   writing-direction read
+ * @input The shared pager, each child's own animator, copies of the lead
+ *   child's settle animation and the writing-direction read
  * @output `useSnapPaging`: UIKit paging on Carousel's row of snap items, under
  *   a finger and on a trackpad swipe, for every pointer
  * @position Public, from `@astryxdesign/core/SnapPaging` and the root. The
@@ -92,6 +92,50 @@ function viewPages(
   return pages;
 }
 
+/**
+ * Runs `run` and collects the animations it starts on `element`, as they are
+ * made. Reading them back with `getAnimations()` would update style.
+ */
+function startedOn<T>(
+  element: HTMLElement,
+  run: () => T,
+): {result: T; started: Animation[]} {
+  const started: Animation[] = [];
+  const animate = Element.prototype.animate;
+  element.animate = function (this: Element, ...args) {
+    const animation = animate.apply(this, args);
+    started.push(animation);
+    return animation;
+  };
+  try {
+    return {result: run(), started};
+  } finally {
+    Reflect.deleteProperty(element, 'animate');
+  }
+}
+
+/**
+ * The one animation a call started and its keyframes, or null when it started
+ * any other animation too.
+ */
+function translateOnly(
+  started: ReadonlyArray<Animation>,
+): {source: Animation; keyframes: ComputedKeyframe[]} | null {
+  const [only] = started;
+  if (started.length !== 1 || !(only.effect instanceof KeyframeEffect)) {
+    return null;
+  }
+  const keyframes = only.effect.getKeyframes();
+  const isTranslate = keyframes.every(keyframe =>
+    Object.keys(keyframe).every(key =>
+      ['translate', 'offset', 'easing', 'composite', 'computedOffset'].includes(
+        key,
+      ),
+    ),
+  );
+  return isTranslate ? {source: only, keyframes} : null;
+}
+
 /** One handle for the same motion on every child. */
 function combined(handles: ReadonlyArray<MotionHandle>): MotionHandle {
   const [lead] = handles;
@@ -137,6 +181,21 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
   let heldWidth = 0;
   // The row's own inline snap type, back at the hand-back.
   let ownSnapType = '';
+  // Each child's start and end along the row, in the position's terms, and
+  // the row's outer width, read at the takeover.
+  let spans: {start: number; end: number}[] = [];
+  let heldOuterWidth = 0;
+  // A settle's motion on the children after the lead: copies of the lead's
+  // animation, so the curve is sampled once.
+  let copies: Animation[] = [];
+  const stopCopies = (): boolean => {
+    for (const copy of copies) {
+      copy.cancel();
+    }
+    const hadCopies = copies.length > 0;
+    copies = [];
+    return hadCopies;
+  };
   const children = () =>
     Array.from(element.children).filter(
       (child): child is HTMLElement => child instanceof HTMLElement,
@@ -194,6 +253,23 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     return (end - start) / rowScale(element, element.getBoundingClientRect());
   }
 
+  // Each child's start and end along the row, in the position's terms, with
+  // the row shown at `at`. Every child carries the same translate.
+  function spansOf(
+    items: ReadonlyArray<HTMLElement>,
+    at: number,
+  ): {start: number; end: number}[] {
+    const box = element.getBoundingClientRect();
+    const scale = rowScale(element, box);
+    const rtl = isRtl();
+    return items.map(child => {
+      const rect = child.getBoundingClientRect();
+      const start =
+        (rtl ? box.right - rect.right : rect.left - box.left) / scale + at;
+      return {start, end: start + rect.width / scale};
+    });
+  }
+
   // A resize while the row is held moves its travel with the row's width and
   // the children's span. A frame of the hold reads the result, not the row.
   function remeasure(): void {
@@ -203,6 +279,8 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     const nextSpan = span();
     const nextWidth = element.clientWidth;
     const native = nativePosition();
+    spans = spansOf(children(), position());
+    heldOuterWidth = element.offsetWidth;
     // WebKit truncates a fractional scroll offset, so the travel stays a whole
     // number of pixels, as the scroll width is. It rounds once, from the
     // takeover, so a resize over many frames adds up no rounding.
@@ -239,11 +317,27 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
   }
 
   function place(at: number): void {
+    stopCopies();
     const x = toChild(xOf(at));
     for (const child of children()) {
       const animator = animatorFor(child);
       // A set reads the element's style back, so a child already there
       // gets none.
+      if (animator.get('x') !== x) {
+        animator.set({x});
+      }
+    }
+  }
+
+  // The children whose copies stopped take the lead's value.
+  function alignToLead(): void {
+    const [first, ...rest] = children();
+    if (first == null) {
+      return;
+    }
+    const x = animatorFor(first).get('x');
+    for (const child of rest) {
+      const animator = animatorFor(child);
       if (animator.get('x') !== x) {
         animator.set({x});
       }
@@ -262,12 +356,15 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     const items = children();
     const rowSpan = span();
     const rowWidth = element.clientWidth;
+    const itemSpans = spansOf(items, offset);
     heldOffset = offset;
     heldTravel = rowTravel;
     takeoverTravel = rowTravel;
     heldSpan = rowSpan;
     heldWidth = rowWidth;
     heldSign = rowSign;
+    heldOuterWidth = element.offsetWidth;
+    spans = itemSpans;
     lead = items[0] ?? null;
     isMoving = true;
     // A snap type would snap the row again as its children move.
@@ -284,6 +381,7 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
       return;
     }
     const at = position();
+    stopCopies();
     for (const child of children()) {
       const animator = animatorFor(child);
       animator.stop(['x']);
@@ -302,6 +400,51 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
       onHeld({offset: at, travel: heldTravel});
       onHeld(null);
     }
+  }
+
+  // The lead's settle on every child it can show: a child that stays out of
+  // the row's view through the whole curve keeps its place.
+  function copyToChildren(
+    {source, keyframes}: {source: Animation; keyframes: ComputedKeyframe[]},
+    started: Promise<number>,
+    rest: ReadonlyArray<HTMLElement>,
+  ): void {
+    const effect = source.effect as KeyframeEffect;
+    const positions = keyframes
+      .map(keyframe => Number.parseFloat(String(keyframe.translate)))
+      .filter(Number.isFinite)
+      .map(x => -heldSign * (x - heldSign * heldOffset));
+    const from = Math.min(...positions);
+    const to = Math.max(...positions);
+    rest.forEach((child, index) => {
+      const span = spans[index + 1];
+      if (
+        span != null &&
+        (span.end <= from || span.start >= to + heldOuterWidth)
+      ) {
+        return;
+      }
+      const copyEffect = new KeyframeEffect(effect);
+      copyEffect.target = child;
+      const copy = new Animation(copyEffect, source.timeline);
+      copy.play();
+      copies.push(copy);
+    });
+    // The animator dates the lead's start, at the latest in its first frame.
+    // The copies take the same start before that frame draws. An engine
+    // rounds a start it reports, so they take the animator's own value. A
+    // copy the browser started with the lead keeps that start.
+    const settleCopies = copies;
+    void started.then(start => {
+      if (copies !== settleCopies) {
+        return;
+      }
+      for (const copy of settleCopies) {
+        if (copy.startTime == null) {
+          copy.startTime = start;
+        }
+      }
+    });
   }
 
   const animator: PagerAnimator = {
@@ -323,6 +466,9 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
       if (!isMoving) {
         return;
       }
+      if (values.x != null) {
+        stopCopies();
+      }
       const shifted =
         values.x == null ? values : {...values, x: toChild(values.x)};
       for (const child of children()) {
@@ -333,8 +479,13 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
       if (!isMoving) {
         return;
       }
+      const hadCopies =
+        (properties == null || properties.includes('x')) && stopCopies();
       for (const child of children()) {
         animatorFor(child).stop(properties);
+      }
+      if (hadCopies) {
+        alignToLead();
       }
     },
     play(curves, options) {
@@ -348,11 +499,23 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
               ...curves,
               x: {...x, at: (t: number) => x.at(t) + offset},
             };
-      const items = children();
-      const handles = (items.length > 0 ? items : [element]).map(child =>
-        animatorFor(child).play(shifted, options),
+      stopCopies();
+      const [first, ...rest] = children();
+      if (first == null) {
+        return animatorFor(element).play(shifted, options);
+      }
+      const {result: handle, started} = startedOn(first, () =>
+        animatorFor(first).play(shifted, options),
       );
-      return combined(handles);
+      const baked = translateOnly(started);
+      if (baked == null) {
+        return combined([
+          handle,
+          ...rest.map(child => animatorFor(child).play(shifted, options)),
+        ]);
+      }
+      copyToChildren(baked, handle.started, rest);
+      return handle;
     },
   };
 
