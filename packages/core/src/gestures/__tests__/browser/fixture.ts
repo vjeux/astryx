@@ -54,6 +54,8 @@ declare global {
     __attachListeners: string[];
     /** Every touch listener added to the document or the window, by type. */
     __pageTouchListeners: string[];
+    /** The pan's and the pinch's last release velocity, read as they end. */
+    __releases: {hpan?: number; pinch?: number};
     /**
      * The same, as the page left them once loaded: the test driver adds its
      * own window listeners when it first runs a script.
@@ -166,6 +168,7 @@ document.body.innerHTML = `
     </div>
     <div id="publicPan" style="height: 80px; background: #fde">public pan (drag sideways)</div>
     <div style="height: 1600px">page</div>
+    <div id="tapOrHold" style="height: 60px; background: #eef">tap or hold</div>
     <div id="passiveEnd" style="height: 60px; background: #dfd; touch-action: pan-y pinch-zoom">passive control at the page's end</div>
   </div>`;
 
@@ -212,6 +215,12 @@ function record(recognizer: GestureRecognizer, extra: () => Partial<Entry>) {
 const hpan = new PanGestureRecognizer({name: 'hpan', direction: 'horizontal'});
 record(hpan, () => ({x: hpan.translation().x, y: hpan.translation().y}));
 host.attach(element('hpan'), hpan);
+window.__releases = {};
+hpan.addTransitionListener((_current, _from, to) => {
+  if (to === 'ended') {
+    window.__releases.hpan = hpan.velocity().x;
+  }
+});
 
 const tap = new TapGestureRecognizer({name: 'tap'});
 record(tap, () => ({}));
@@ -222,6 +231,14 @@ host.attach(element('tapper'), tap);
 const feedTap = new TapGestureRecognizer({name: 'feedTap'});
 record(feedTap, () => ({}));
 host.attach(element('feedRow'), feedTap);
+
+// A tap and a long press on one element: the lift decides between them.
+const tapOrHoldTap = new TapGestureRecognizer({name: 'tapOrHoldTap'});
+record(tapOrHoldTap, () => ({}));
+host.attach(element('tapOrHold'), tapOrHoldTap);
+const tapOrHoldHold = new LongPressGestureRecognizer({name: 'tapOrHoldHold'});
+record(tapOrHoldHold, () => ({}));
+host.attach(element('tapOrHold'), tapOrHoldHold);
 
 const press = new LongPressGestureRecognizer({name: 'press'});
 record(press, () => ({
@@ -237,6 +254,11 @@ const pinchPan = new PanGestureRecognizer({
 });
 pinch.recognizeSimultaneouslyWith(pinchPan);
 record(pinch, () => ({scale: pinch.scale}));
+pinch.addTransitionListener((_current, _from, to) => {
+  if (to === 'ended') {
+    window.__releases.pinch = pinch.velocity;
+  }
+});
 record(pinchPan, () => ({x: pinchPan.translation().x}));
 host.attach(element('pinchable'), pinch);
 host.attach(element('pinchable'), pinchPan);

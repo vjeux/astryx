@@ -1357,6 +1357,69 @@ function spread(at: Point, from: number, by: number, drift = 0): Step[] {
   return steps;
 }
 
+/**
+ * A page pointerup listener that runs `ms`, as a busy app's can. WebKit
+ * stamps the touchend that follows only once it is done.
+ */
+async function holdEveryLift(page: Page, ms: number): Promise<void> {
+  await page.evaluate(spin => {
+    addEventListener('pointerup', () => {
+      const end = performance.now() + spin;
+      while (performance.now() < end) {
+        // The listener's own work.
+      }
+    });
+  }, ms);
+}
+
+test('a flick keeps its release speed when a page pointerup listener holds its touchend: the lift is read where the moves were', async ({
+  page,
+  browserName,
+}) => {
+  const driver = await open(page, browserName);
+  const start = await center(page, 'hpan');
+  const flickOnPan = () => drag(start, {x: start.x + 120, y: start.y}, 6);
+  await driver.play(flickOnPan());
+  const free = await page.evaluate(() => window.__releases.hpan ?? 0);
+  await holdEveryLift(page, 50);
+  await driver.play(flickOnPan());
+  const held = await page.evaluate(() => window.__releases.hpan ?? 0);
+  expect(free).toBeGreaterThan(0);
+  // On the touchend's clock, the held lift read as a resting finger: 0.
+  expect(held).toBeGreaterThan(free / 2);
+});
+
+test('a pinch keeps its release speed when a page pointerup listener holds its touchend', async ({
+  page,
+  browserName,
+}) => {
+  const driver = await open(page, browserName);
+  const at = await center(page, 'pinchable');
+  await driver.play(spread(at, 20, 40));
+  const free = await page.evaluate(() => window.__releases.pinch ?? 0);
+  await holdEveryLift(page, 50);
+  await driver.play(spread(at, 20, 40));
+  const held = await page.evaluate(() => window.__releases.pinch ?? 0);
+  expect(free).toBeGreaterThan(0);
+  expect(held).toBeGreaterThan(free / 2);
+});
+
+test('a tap lifted before the long press’s time stays a tap when a page pointerup listener holds its touchend past that time', async ({
+  page,
+  browserName,
+}) => {
+  const driver = await open(page, browserName);
+  const at = await center(page, 'tapOrHold');
+  await holdEveryLift(page, 160);
+  await driver.play([
+    {t: 0, down: [{...at, id: 1}]},
+    {t: 380, down: []},
+  ]);
+  const entries = await log(page);
+  expect(states(entries, 'tapOrHoldTap')).toContain('ended');
+  expect(states(entries, 'tapOrHoldHold')).not.toContain('began');
+});
+
 test('pinch-zoom stays the browser’s on an element without a pinch recognizer', async ({
   page,
   browserName,
