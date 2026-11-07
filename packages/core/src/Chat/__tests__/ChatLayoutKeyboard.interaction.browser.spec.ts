@@ -689,6 +689,12 @@ test.describe('Chrome on Android (spec:AST-099 FR8)', () => {
           (window as unknown as {__keyboard: (c: number) => void}).__keyboard(
             cover,
           );
+          // NOT FOR LANDING: mutant c
+          {
+            const until = performance.now() + 350;
+            const tick = () => { if (performance.now() < until) requestAnimationFrame(tick); };
+            requestAnimationFrame(tick);
+          }
           await new Promise(resolve => setTimeout(resolve, 400));
           return {reported: from, focusedFor: from - focusedAt};
         },
@@ -725,6 +731,14 @@ test.describe('Chrome on Android (spec:AST-099 FR8)', () => {
         (cancelled == null || cancelled >= steady.to),
     );
     expect(riding, JSON.stringify({reported, rides})).toBe(true);
+    console.log(
+      'ZZFRAMES ' +
+        JSON.stringify(
+          trace.events
+            .filter(e => e.t >= reported - 5 && e.t <= reported + 260)
+            .map(e => [e.name, Math.round(e.t - reported), e.node?.slice(0, 24), e.elements]),
+        ),
+    );
     expect(
       starvedStart(trace, reported, steady),
       'the main thread was starved, so the ride\u2019s start reached the window',
