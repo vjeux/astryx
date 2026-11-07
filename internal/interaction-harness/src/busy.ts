@@ -612,7 +612,7 @@ export async function blockMainThread(
           const running = ran.some(moves);
           // One first seen this frame can be rebuilt on its old clock, and not
           // on the compositor yet: the block waits for the next frame.
-          const caught = ran.find(a => moves(a) && seen.has(a));
+          const caught = ran.find(a => moves(a));
           seen = new Set(present);
           if (!running && ran.length > 0) {
             heldSeen ??= numbersOf(ran[0]);
