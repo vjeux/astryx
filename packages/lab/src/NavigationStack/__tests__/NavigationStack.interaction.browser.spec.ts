@@ -1044,11 +1044,43 @@ test('a push keeps advancing every frame while the main thread is blocked', asyn
   // The block waits for the card's own translate, once the compositor has
   // shown it. Until then the card sits off screen, and a first frame inside
   // the block would read as a miss.
-  const blocked = blockMainThread(page, 600, {
-    during: top,
-    property: 'translate',
-    minProgressMs: 16,
-  });
+  // NOT FOR LANDING: blocks as soon as the card has its push, pending or
+  // not, right after that frame: before the compositor shows the card.
+  const blocked = page.evaluate(
+    ms =>
+      new Promise<{from: number; to: number; spanMs: number}>(resolve => {
+        const block = () => {
+          const start = performance.now();
+          let now = start;
+          while (now - start < ms) {
+            now = performance.now();
+          }
+          resolve({
+            from: performance.timeOrigin + start,
+            to: performance.timeOrigin + now,
+            spanMs: now - start,
+          });
+        };
+        const look = () => {
+          const pushed = document
+            .querySelector('[data-navigation-screen="screen-General"]')
+            ?.getAnimations()
+            .some(animation =>
+              (
+                (animation.effect as KeyframeEffect | null)?.getKeyframes() ??
+                []
+              ).some(keyframe => 'translate' in keyframe),
+            );
+          if (pushed) {
+            setTimeout(block);
+          } else {
+            requestAnimationFrame(look);
+          }
+        };
+        requestAnimationFrame(look);
+      }),
+    600,
+  );
   await driver.tap(row);
   const block = await blocked;
   const [push] = await watch.started({minProgressMs: 16});
