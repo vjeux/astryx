@@ -366,8 +366,9 @@ async function pressInSettle(
     throw new Error('no edge button');
   }
   await swipe(page, scroller, {px: 80, ms: 80, rtl: back});
-  const past = async () =>
-    scroller.evaluate(
+  const past = async () => {
+    await new Promise(resolve => setTimeout(resolve, 150)); // NOT FOR LANDING: runner lag
+    return scroller.evaluate(
       (el, arg) => {
         const first = el.firstElementChild as HTMLElement;
         const shown =
@@ -377,7 +378,9 @@ async function pressInSettle(
       },
       {until, back},
     );
+  };
   await expect.poll(past, {intervals: [5]}).toBe(true);
+  await new Promise(resolve => setTimeout(resolve, 150)); // NOT FOR LANDING: runner lag
   const held = await isTakenOver(scroller);
   await page.mouse.click(next.x + next.width / 2, next.y + next.height / 2);
   return held;
