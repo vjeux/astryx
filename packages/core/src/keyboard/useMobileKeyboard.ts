@@ -245,7 +245,7 @@ export function useMobileKeyboard(
       // The module keeps the tallest root box per window, so a later shrink
       // reads as room. Only a coarse primary pointer reads it: a desktop
       // window made shorter is no keyboard.
-      const resizedRoom = () => (isTouch ? getResizedRoom(window) : 0);
+      const resizedRoom = () => getResizedRoom(window);
 
       let keyboardGeometry: KeyboardGeometry | null = null;
       // Where a smooth reveal under way is taking the body's scrollTop.
