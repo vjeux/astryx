@@ -508,6 +508,16 @@ the input through at its time, or at its arrival if that came later within the
 frame. On a starved runner it can be later still, by as long as its main thread
 did not run: `landed()` gives that as `stalledMs`.
 
+Put the finger down before the thaw, so that only the lift races the hold:
+`driver.press(at)` sends only the touch-down and returns the held finger, and
+its `lift()` sends only the touch-up. A frozen page handles the touch-down at
+once, and what it starts stays held until the thaw. A played tap after
+`resumed()` sends its touch-down, waits its hold, then lifts, and a loaded
+runner can make that late. `move(to)` moves a held finger. A finger lifted
+twice, a second finger on a held id, or a play or a tap while a finger is held
+throws by name. An early lift still lets `resumed()` read the first frame after the
+thaw, and `landed()` names it.
+
 `navigator.scheduling.isInputPending()` cannot gate a lift. In Playwright's
 Chromium 149 it reports a queued mouse press or key at once, but never a touch
 sent with `Input.dispatchTouchEvent`. WebKit has no `isInputPending`.
