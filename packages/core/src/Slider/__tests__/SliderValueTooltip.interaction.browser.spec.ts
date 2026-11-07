@@ -424,6 +424,11 @@ test.describe('with a finger', () => {
     });
     const cast = await startScreencast(page);
     await frames(page, 4);
+    // NOT FOR LANDING: the page's frame record stops at the touch.
+    await page.evaluate(() => {
+      (window as unknown as {__pageFrames: {on: boolean}}).__pageFrames.on =
+        false;
+    });
     const played = await driver.play(
       flick(at, {velocity: {x: 300, y: 0}, durationMs: 300}),
     );
