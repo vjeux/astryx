@@ -208,6 +208,43 @@ test('a softer downward flick from the tall detent lands on the half detent', as
   expect(await sheetTop(sheet)).toBeCloseTo(halfTop, 0);
 });
 
+// NOT FOR LANDING: the stalled-move arm. One move reaches the page 70 ms
+// late, as a stalled dispatch delivers it, before the last two intervals.
+test('a softer flick with one move 70 ms late, before its last two intervals, still lands on the half detent', async ({
+  page,
+  browserName,
+}, testInfo) => {
+  test.skip(
+    browserName !== 'webkit',
+    'only WebKit stamps a touch when it arrives; Chromium carries the scripted times',
+  );
+  const {driver, sheet, handle, halfTop} = await openSheet(page);
+  const script = flick(handle, {
+    velocity: {x: 0, y: 1200},
+    durationMs: 80,
+    hz: 120,
+  });
+  const steps = toTouchEvents(script);
+  // The move after this step goes 70 ms late; the last two moves keep their
+  // scripted spacing, so Core's tracker reads the script's release.
+  const late = steps.length - 5;
+  const played = await driver.play(script, {
+    pacing: 'spacing',
+    onEvent: async (_, index) => {
+      if (index === late) {
+        await new Promise(resolve => setTimeout(resolve, 70));
+      }
+    },
+  });
+  testInfo.annotations.push({
+    type: 'release',
+    description: JSON.stringify(played.at(-1)?.release ?? null),
+  });
+  await waitForRest(sheet);
+  await expect(page.getByRole('dialog', {name: 'Nearby places'})).toBeVisible();
+  expect(await sheetTop(sheet)).toBeCloseTo(halfTop, 0);
+});
+
 test('the settle lands on the detent, its curve recorded frame by frame', async ({
   page,
 }, testInfo) => {
