@@ -1108,7 +1108,7 @@ export function createPager(
       holdSelection(true);
       const isMouse = catcher.pointerType === 'mouse';
       // A mouse keeps its click. A finger or a pen loses it.
-      if (isReleaseSettle && !isMouse) {
+      if (!isMouse) {
         catcher.takeFromContent();
       }
       clearCatchTimer();
