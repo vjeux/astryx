@@ -193,6 +193,31 @@ describe('the layout viewport WebKit reports under a pinch zoom (FR2)', () => {
     expect(measureKeyboardHeight(window)).toBe(337);
   });
 
+  it('reads the visual viewport height once while Safari pans, the pan check included (INV11)', () => {
+    safari({
+      innerHeight: 377,
+      innerWidth: 402,
+      height: 377,
+      scale: 1,
+      offsetTop: 337,
+    });
+    rootHeight(714);
+    let height = viewport.height;
+    let reads = 0;
+    Object.defineProperty(viewport, 'height', {
+      configurable: true,
+      get: () => {
+        reads += 1;
+        return height;
+      },
+      set: (value: number) => {
+        height = value;
+      },
+    });
+    expect(measureKeyboardHeight(window)).toBe(337);
+    expect(reads).toBe(1);
+  });
+
   it('reads none where the layout viewport truly shrinks for the keyboard, as under resizes-content', () => {
     safari({innerHeight: 377, innerWidth: 402, height: 377, scale: 1});
     rootHeight(377);
