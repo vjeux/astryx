@@ -129,10 +129,8 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
   let heldSign = 1;
   let lead: HTMLElement | null = null;
   let followFrame = 0;
-  // The row's travel, the children's span and the row's width at the
-  // takeover. A resize while the row is held moves the travel by the change in
-  // span and width.
-  let takeoverTravel = 0;
+  // The children's span and the row's width at the takeover. A resize while
+  // the row is held moves its travel by their change.
   let heldSpan = 0;
   let heldWidth = 0;
   // The row's own inline snap type, back at the hand-back.
@@ -204,14 +202,13 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     const nextWidth = element.clientWidth;
     const native = nativePosition();
     // WebKit truncates a fractional scroll offset, so the travel stays a whole
-    // number of pixels, as the scroll width is. It rounds once, from the
-    // takeover, so a resize over many frames adds up no rounding.
+    // number of pixels, as the scroll width is.
     heldTravel = Math.max(
       0,
-      Math.round(
-        takeoverTravel + (nextSpan - heldSpan) - (nextWidth - heldWidth),
-      ),
+      Math.round(heldTravel + (nextSpan - heldSpan) - (nextWidth - heldWidth)),
     );
+    heldSpan = nextSpan;
+    heldWidth = nextWidth;
     // A shorter travel clamps the row's own scroll offset. The children take
     // up the clamp, so the row still shows where the pager holds it.
     if (native !== heldOffset) {
@@ -264,7 +261,6 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     const rowWidth = element.clientWidth;
     heldOffset = offset;
     heldTravel = rowTravel;
-    takeoverTravel = rowTravel;
     heldSpan = rowSpan;
     heldWidth = rowWidth;
     heldSign = rowSign;
