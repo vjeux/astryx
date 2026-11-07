@@ -563,7 +563,7 @@ export async function blockMainThread(
             return false;
           }
           return (
-            prop == null ||
+            true ||
             (effect?.getKeyframes() ?? []).some(keyframe => prop in keyframe)
           );
         };
