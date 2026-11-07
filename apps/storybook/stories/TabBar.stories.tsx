@@ -9,6 +9,8 @@ import {
   Squares2X2Icon as GridOutline,
   UserCircleIcon as UserOutline,
   BellIcon as BellOutline,
+  Cog6ToothIcon as CogOutline,
+  QuestionMarkCircleIcon as HelpOutline,
 } from '@heroicons/react/24/outline';
 import {
   BookOpenIcon as BookOpenSolid,
@@ -16,8 +18,10 @@ import {
   Squares2X2Icon as GridSolid,
   UserCircleIcon as UserSolid,
   BellIcon as BellSolid,
+  Cog6ToothIcon as CogSolid,
+  QuestionMarkCircleIcon as HelpSolid,
 } from '@heroicons/react/24/solid';
-import {TabBar, TabBarItem} from '@astryxdesign/lab';
+import {TabBar, TabBarItem, TabBarMoreList} from '@astryxdesign/lab';
 import {Button} from '@astryxdesign/core/Button';
 import {LayerProvider} from '@astryxdesign/core/Layer';
 import {Icon, type IconType} from '@astryxdesign/core/Icon';
@@ -293,6 +297,90 @@ export const DisabledTab: Story = {
 /** No tab selected, Browse disabled: a held finger paints only enabled tabs. */
 export const DisabledTabNoSelection: Story = {
   render: () => <Bar initial="none" disabled={['browse']} />,
+};
+
+/** Six sections: the four the bar holds, then two that overflow into More. */
+const SIX: Section[] = [
+  ...SECTIONS,
+  {
+    value: 'settings',
+    label: 'Settings',
+    icon: CogOutline,
+    selectedIcon: CogSolid,
+  },
+  {value: 'help', label: 'Help', icon: HelpOutline, selectedIcon: HelpSolid},
+];
+
+function MoreDemo({disabled = []}: {disabled?: string[]}) {
+  const [value, setValue] = useState('home');
+  const [reselects, setReselects] = useState(0);
+  const tabs = SIX.map(section => (
+    <TabBarItem
+      key={section.value}
+      value={section.value}
+      label={section.label}
+      icon={<Icon icon={section.icon} size="lg" />}
+      selectedIcon={<Icon icon={section.selectedIcon} size="lg" />}
+      badge={section.value === 'help' ? 2 : undefined}
+      aria-disabled={disabled.includes(section.value) || undefined}
+    />
+  ));
+  const inMore = SIX.slice(4).find(section => section.value === value);
+  return (
+    <>
+      {value === 'more' ? (
+        <div style={{padding: '16px 16px 104px'}}>
+          <h1 style={{margin: '8px 0 16px', fontSize: 28}}>More</h1>
+          <TabBarMoreList value={value} onChange={setValue}>
+            {tabs}
+          </TabBarMoreList>
+        </div>
+      ) : inMore != null ? (
+        <div style={{padding: '16px 16px 104px'}}>
+          <Button
+            label="More"
+            variant="ghost"
+            onClick={() => setValue('more')}
+          />
+          <h1 style={{margin: '8px 0 16px', fontSize: 28}}>{inMore.label}</h1>
+        </div>
+      ) : (
+        <Screen
+          title={SIX.find(section => section.value === value)?.label ?? ''}
+          reselects={reselects}
+        />
+      )}
+      <TabBar
+        value={value}
+        onChange={setValue}
+        onReselect={reselected => {
+          // More again returns to its list, as iOS pops More's stack.
+          if (reselected === 'more') {
+            setValue('more');
+          } else {
+            setReselects(n => n + 1);
+          }
+        }}
+        label="Sections"
+        data-testid="tab-bar">
+        {tabs}
+      </TabBar>
+    </>
+  );
+}
+
+/**
+ * Six tabs: the bar shows the first four and More, whose list holds the
+ * rest. A section chosen there opens inside More, which stays selected;
+ * More again returns to the list.
+ */
+export const MoreTab: Story = {
+  render: () => <MoreDemo />,
+};
+
+/** Six tabs, Help disabled: its More row is dimmed and never chosen. */
+export const MoreDisabledRow: Story = {
+  render: () => <MoreDemo disabled={['help']} />,
 };
 
 /** Three tabs: the capsule narrows to its natural width and centres. */
