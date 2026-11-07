@@ -1373,6 +1373,8 @@ test.describe('spec:AST-105 Coverage', () => {
       const [animation] = (
         doc.getElementById('after') as HTMLElement
       ).getAnimations();
+      // NOT FOR LANDING: the glide starts on the page's clock instead of the frame's.
+      animation.startTime = document.timeline.currentTime;
       // These reads happen as the change commits, before any frame. They take
       // the glide's start, the last frame time on its timeline, and the
       // frame's clock. The engines keep these times to the microsecond.
