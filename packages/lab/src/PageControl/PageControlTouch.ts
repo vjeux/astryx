@@ -219,7 +219,18 @@ export function usePageControlTouch({
           // The step commits in this task. A render scheduled after it can
           // wait behind a busy page's other tasks past the next step. Then
           // two steps would show as one.
+          // NOT FOR LANDING: every other step's render takes 60 ms longer, as
+          // on a busy page.
+          const arm = window as unknown as {__armSteps?: number};
+          arm.__armSteps = (arm.__armSteps ?? 0) + 1;
+          const isSlow = arm.__armSteps % 2 === 0;
           flushSync(() => {
+            if (isSlow) {
+              const end = performance.now() + 60;
+              while (performance.now() < end) {
+                // Busy.
+              }
+            }
             request(clampPage(from + step, current.pages), 'other');
           });
         }
