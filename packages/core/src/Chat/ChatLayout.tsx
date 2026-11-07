@@ -35,10 +35,10 @@
  * - /apps/storybook/stories/ChatLayout.stories.tsx
  * - /packages/cli/assets/templates/blocks/components/ChatLayout/ (block examples)
  * - /packages/core/src/Chat/transcriptDismiss.ts (the dismiss line)
- * - /packages/core/src/Chat/composerBounce.ts (the bounce layer's bounce)
+ * - /packages/core/src/Chat/composerBounce.ts (the dock container's bounce)
  */
 
-import {type ReactNode, useMemo, useRef} from 'react';
+import {type ReactNode, useCallback, useMemo, useRef} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {focusVars, spacingVars} from '../theme/tokens.stylex';
 import {focusOutlineStyles} from '../utils/focusOutline.stylex';
@@ -347,7 +347,7 @@ export function ChatLayout({
 }: ChatLayoutProps) {
   const t = useComponentTranslator();
   const rootRef = useRef<HTMLDivElement>(null);
-  const bounceLayerRef = useRef<HTMLDivElement>(null);
+  const dockContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollContainerRef = externalScrollRef ?? rootRef;
   const isSelfScrolling = !externalScrollRef;
@@ -366,6 +366,16 @@ export function ChatLayout({
     isSelfScrolling,
     scrollToBottom: scroll.scrollToBottom,
   });
+
+  // The dock container: the keyboard's ride and the dismissal's bounce.
+  const keyboardDockRef = keyboard.dockRef;
+  const dockRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      dockContainerRef.current = element;
+      keyboardDockRef(element);
+    },
+    [keyboardDockRef],
+  );
 
   const defaultScrollButton = (
     <ChatLayoutScrollButton
@@ -392,13 +402,13 @@ export function ChatLayout({
       ),
     pan =>
       dismissKeyboardAtCrossing(pan, fingerSpeed => {
-        const layer = bounceLayerRef.current;
+        const container = dockContainerRef.current;
         const composer = keyboard.composerRef.current;
-        if (layer != null && composer != null) {
+        if (container != null && composer != null) {
           // No deeper than the composer's bottom padding.
           const depth =
             Number.parseFloat(getComputedStyle(composer).paddingBottom) || 0;
-          bounceComposer(layer, fingerSpeed, depth);
+          bounceComposer(container, fingerSpeed, depth);
         }
       }),
   );
@@ -473,9 +483,9 @@ export function ChatLayout({
         </div>
 
         {/* Dock container — sticky/fixed, holds blur + scroll button + composer.
-            The keyboard's ride moves it. */}
+            Its bounce moves all three as one. */}
         <div
-          ref={keyboard.dockRef}
+          ref={dockRef}
           {...stylex.props(
             styles.dockContainer,
             isSelfScrolling
@@ -483,40 +493,32 @@ export function ChatLayout({
               : styles.dockContainerFixed,
             keyboard.lift > 0 && styles.dockLift(keyboard.lift),
           )}>
-          {/* The bounce layer: the dismissal's bounce moves the scroll-to-bottom
-              button, the frosted layer and the composer as one, inside the
-              keyboard's ride of the dock. It has the dock's box. So the
-              absolute layers inside keep their places while it moves. */}
-          <div ref={bounceLayerRef}>
-            {/* Scroll-to-bottom button */}
-            {scrollButton === undefined ? defaultScrollButton : scrollButton}
+          {/* Scroll-to-bottom button */}
+          {scrollButton === undefined ? defaultScrollButton : scrollButton}
 
-            {/* Frosted glass layer */}
+          {/* Frosted glass layer */}
+          <div {...stylex.props(styles.blurLayer, currentDensity.blurLayer)} />
+
+          {/* The composer's region. Under a finger in a top-level page,
+              useChatKeyboard makes it a group with no name, where focus rests
+              after the keyboard's Done. Elsewhere it is a plain container. A
+              transcript drag that reaches its top, or a drag down that starts
+              on it, dismisses the software keyboard. */}
+          <KeyboardSurfaceContext value={true}>
             <div
-              {...stylex.props(styles.blurLayer, currentDensity.blurLayer)}
-            />
-
-            {/* The composer's region. Under a finger in a top-level page,
-                useChatKeyboard makes it a group with no name, where focus rests
-                after the keyboard's Done. Elsewhere it is a plain container. A
-                transcript drag that reaches its top, or a drag down that starts
-                on it, dismisses the software keyboard. */}
-            <KeyboardSurfaceContext value={true}>
+              ref={keyboard.composerRef}
+              {...stylex.props(
+                focusOutlineStyles.focusVisible,
+                styles.dock,
+                currentDensity.dock,
+                styles.dockFocusRing,
+              )}>
               <div
-                ref={keyboard.composerRef}
-                {...stylex.props(
-                  focusOutlineStyles.focusVisible,
-                  styles.dock,
-                  currentDensity.dock,
-                  styles.dockFocusRing,
-                )}>
-                <div
-                  {...stylex.props(styles.dockInner, currentDensity.dockInner)}>
-                  {composer}
-                </div>
+                {...stylex.props(styles.dockInner, currentDensity.dockInner)}>
+                {composer}
               </div>
-            </KeyboardSurfaceContext>
-          </div>
+            </div>
+          </KeyboardSurfaceContext>
         </div>
       </div>
     </ChatLayoutContext>
