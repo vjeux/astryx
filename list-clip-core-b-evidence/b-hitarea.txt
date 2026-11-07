@@ -1,0 +1,4 @@
+cr ctl rc=0 16 passed  
+wk ctl rc=0 16 passed  
+cr varb rc=1 1 failed 15 passed   1) [chromium] › packages/core/src/List/__tests__/ListTouchHitArea.interaction.browser.spec.ts:418:1 › under a finger, a sticky header above;
+wk varb rc=1 1 failed 15 passed   1) [webkit] › packages/core/src/List/__tests__/ListTouchHitArea.interaction.browser.spec.ts:418:1 › under a finger, a sticky header above t;

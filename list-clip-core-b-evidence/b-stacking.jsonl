@@ -1,0 +1,6 @@
+{"engine":"cr","arm":"ctl","rc":0,"x":{"sb":"ctl","isolates":"the list (ul)","listIsolation":"isolate","rootIsolation":"auto","reach":5.5,"withHeader":"header","headerUnisolated":"row","withOverlay":"overlay"}}
+{"engine":"wk","arm":"ctl","rc":0,"x":{"sb":"ctl","isolates":"the list (ul)","listIsolation":"isolate","rootIsolation":"auto","reach":5.5,"withHeader":"header","headerUnisolated":"row","withOverlay":"overlay"}}
+{"engine":"cr","arm":"var","rc":1,"x":{"sb":"var","isolates":"the list (ul)","listIsolation":"isolate","rootIsolation":"auto","reach":5.5,"withHeader":"header","headerUnisolated":"header","withOverlay":"overlay"}}
+{"engine":"wk","arm":"var","rc":1,"x":{"sb":"var","isolates":"the list (ul)","listIsolation":"isolate","rootIsolation":"auto","reach":5.5,"withHeader":"header","headerUnisolated":"header","withOverlay":"overlay"}}
+{"engine":"cr","arm":"varb","rc":0,"x":{"sb":"varb","isolates":"the list root (div)","listIsolation":"auto","rootIsolation":"isolate","reach":5.5,"withHeader":"header","headerUnisolated":"row","withOverlay":"overlay"}}
+{"engine":"wk","arm":"varb","rc":0,"x":{"sb":"varb","isolates":"the list root (div)","listIsolation":"auto","rootIsolation":"isolate","reach":5.5,"withHeader":"header","headerUnisolated":"row","withOverlay":"overlay"}}
