@@ -385,7 +385,7 @@ export function useTabBarLens({
     paintTab(pressRef.current, tab);
     // No tab selected: there is no lens to move; the lift chooses the tab
     // nearest the finger.
-    if (selected < 0 || isIgnored) {
+    if (selected < 0) {
       return;
     }
     // The lifted lens magnifies the selected look: its copy mounts now, in
