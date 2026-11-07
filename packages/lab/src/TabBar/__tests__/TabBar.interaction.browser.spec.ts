@@ -1690,6 +1690,79 @@ test.describe('with Reduce Motion (design:reduced-motion)', () => {
     expect(Math.abs((await lensCenterX(page)) - to.x)).toBeLessThan(0.5);
   });
 
+  test('on a touch screen a held lens shows the touched tab in its selected look, as UIKit’s does', async ({
+    page,
+  }) => {
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    const {driver} = await openBar(page);
+    const to = await itemCenter(page, 'Profile');
+    // Every frame from here: whether the lens holds the selected copy, and
+    // how far Profile's copy sits from the lens's centre.
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __copyFrames: {t: number; copy: boolean; offset: number}[];
+        __copyDown: number;
+      };
+      w.__copyFrames = [];
+      w.__copyDown = 0;
+      window.addEventListener(
+        'touchstart',
+        () => {
+          w.__copyDown = performance.now();
+        },
+        {capture: true, once: true},
+      );
+      const centre = (element: Element | null) => {
+        const box = element?.getBoundingClientRect();
+        return box == null ? NaN : box.left + box.width / 2;
+      };
+      const step = () => {
+        const item = document.querySelector(
+          '[data-tab-bar-copy] [data-tab-bar-copy-item="profile"]',
+        );
+        w.__copyFrames.push({
+          t: performance.now(),
+          copy: item != null,
+          offset: Math.abs(
+            centre(item) -
+              centre(document.querySelector('[data-tab-bar-lens-body]')),
+          ),
+        });
+        if (w.__copyFrames.length < 600) {
+          requestAnimationFrame(step);
+        }
+      };
+      requestAnimationFrame(step);
+    });
+    await driver.play(tapScript(to, {holdMs: 300}));
+    await expect(tab(page, 'Profile')).toHaveAttribute('aria-selected', 'true');
+    const {frames, down} = await page.evaluate(() => {
+      const w = window as unknown as {
+        __copyFrames: {t: number; copy: boolean; offset: number}[];
+        __copyDown: number;
+      };
+      return {frames: w.__copyFrames, down: w.__copyDown};
+    });
+    expect(down, 'no touch reached the page').toBeGreaterThan(0);
+    // The first frame drawn after the touch already holds the copy.
+    const first = frames.find(frame => frame.t > down);
+    expect(first?.copy, 'the first frame after the touch').toBe(true);
+    // Then every frame of the hold, once the touch's first frames are drawn
+    // (WebKit draws its first frame after a touch late), until the lift.
+    const held = requireFrames(frames, {
+      min: 8,
+      during: 'the held press',
+      where: frame => frame.t >= down + 120 && frame.t <= down + 280,
+    });
+    expect(
+      held.filter(frame => !frame.copy || !(frame.offset < 1)),
+      'a held frame whose lens shows no selected Profile',
+    ).toEqual([]);
+    // At rest the copy is dropped, and the bar draws the selection itself.
+    await waitForRest(lensBody(page));
+    await expect(lensCopy(page)).toHaveCount(0);
+  });
+
   test('a press neither lifts nor flexes, and a drag’s release cross-fades the settle', async ({
     page,
     browserName,
