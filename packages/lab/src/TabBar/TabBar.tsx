@@ -73,6 +73,11 @@ export interface TabBarItemProps {
    * same id on the panel element.
    */
   panelId?: string;
+  /**
+   * Dims the tab and never chooses it. A tap, a click or a key on it, or a
+   * lift over it, selects nothing, and the arrow keys skip it.
+   */
+  isDisabled?: boolean;
 }
 
 export interface TabBarProps extends Omit<
@@ -398,6 +403,9 @@ const styles = stylex.create({
   itemSelectedLook: {
     color: colorVars['--color-accent'],
   },
+  itemDisabled: {
+    color: colorVars['--color-text-disabled'],
+  },
   badges: {
     position: 'absolute',
     inset: 0,
@@ -544,6 +552,9 @@ export function TabBar({
   });
   const choose = useCallback(
     (item: TabBarItemProps) => {
+      if (item.isDisabled === true) {
+        return;
+      }
       if (item.value === value) {
         onReselect?.(item.value);
       } else {
@@ -558,6 +569,7 @@ export function TabBar({
     selectedIndex,
     isTouch,
     onLift: index => choose(items[index]),
+    isDisabled: index => items[index]?.isDisabled === true,
   });
   const mergedCapsuleRef = useMergedRefs(capsuleRef, listRef, lens.capsule);
 
@@ -593,6 +605,7 @@ export function TabBar({
         )}>
         {items.map((item, index) => {
           const isSelected = index === selectedIndex;
+          const isDisabled = item.isDisabled === true;
           const {start, width, itemStart} = column(index, count);
           return (
             <button
@@ -601,6 +614,7 @@ export function TabBar({
               role="tab"
               id={`${baseId}-tab-${index}`}
               aria-selected={isSelected}
+              aria-disabled={isDisabled || undefined}
               aria-controls={item.panelId}
               tabIndex={
                 isSelected || (selectedIndex < 0 && index === 0) ? 0 : -1
@@ -632,11 +646,14 @@ export function TabBar({
                   // At rest the tab draws its selected look; while the lens
                   // slides, the copy inside it does.
                   isSelected && !lens.isCopyShown && styles.itemSelectedLook,
+                  isDisabled && styles.itemDisabled,
                   styles.box(itemStart, ITEM_TOP, itemSize, ITEM_HEIGHT),
                 )}>
                 <ItemFace
                   item={item}
-                  isSelectedLook={isSelected && !lens.isCopyShown}
+                  isSelectedLook={
+                    isSelected && !isDisabled && !lens.isCopyShown
+                  }
                 />
               </span>
             </button>
@@ -687,8 +704,15 @@ export function TabBar({
                               itemSize,
                               ITEM_HEIGHT,
                             ),
+                            // A disabled tab keeps its dimmed paint in the
+                            // lens too.
+                            item.isDisabled === true && styles.itemDisabled,
                           )}>
-                          <ItemFace item={item} isSelectedLook isCopy />
+                          <ItemFace
+                            item={item}
+                            isSelectedLook={item.isDisabled !== true}
+                            isCopy
+                          />
                         </span>
                       ))}
                     </div>

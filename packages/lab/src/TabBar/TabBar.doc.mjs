@@ -110,6 +110,13 @@ export const docs = {
           description:
             "Id of the panel this tab controls, wired up as aria-controls. Put the same id on the section's panel element.",
         },
+        {
+          name: 'isDisabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Dims the tab and never chooses it: a tap, a click or a key on it, or a lift over it, selects nothing, and the arrow keys skip it. Under a finger the lens neither heads for it nor lifts unless the finger drags, as on iOS.',
+        },
       ],
     },
   ],
@@ -131,6 +138,11 @@ export const docs = {
         guidance: true,
         description:
           "Give each tab a panelId naming its section's panel, so assistive technology can associate the two.",
+      },
+      {
+        guidance: true,
+        description:
+          'Disable a tab only while its section cannot open, and keep it in place, so the other tabs do not move.',
       },
       {
         guidance: false,
