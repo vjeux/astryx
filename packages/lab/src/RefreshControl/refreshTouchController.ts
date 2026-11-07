@@ -250,7 +250,7 @@ export function useRefreshTouchController({
   const place = useCallback(
     (y: number) => {
       content.animator.set({y});
-      indicator.animator.set({y: REFRESH_HEIGHT - y});
+      indicator.animator.set({y: 0});
     },
     [content.animator, indicator.animator],
   );
