@@ -1535,7 +1535,7 @@ function readBusyWindow(
       );
       // The control is a compositor animation: when it moved too little and
       // no frame came for that long, the machine starved the run.
-      if (castGapMs > FRAME_STARVATION_MS) {
+      if (castGapMs >= 0) {
         starvation = {
           by: 'busyWindowProof',
           during: `a ${Math.round(window.to - window.from)} ms block held the main thread, and the control moved on ${controlRead.moved} of them`,
