@@ -459,7 +459,12 @@ export function usePageControlTouch({
     () => new TapGestureRecognizer(),
     tap => {
       if (tap.state === 'ended') {
-        step(tap.location().x);
+        {
+          const x = tap.location().x;
+          const later = new MessageChannel();
+          later.port1.onmessage = () => step(x);
+          later.port2.postMessage(null);
+        }
       }
     },
   );
