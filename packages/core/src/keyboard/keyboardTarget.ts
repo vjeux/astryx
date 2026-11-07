@@ -31,6 +31,7 @@ import {
   panVisualViewportTo,
   refuseFocusReveal,
   subscribeKeyboardHeight,
+  getResizedRoom,
   watchRevealPan,
 } from './keyboardHeight';
 import {getKeyboardLayoutGuide, keyboardProfileOf} from './keyboardLayoutGuide';
@@ -382,18 +383,22 @@ function risesSmoothly(field: Element): boolean {
 
 // The band a field must be in. It is inside its scroller's box and the
 // viewport, and `offset` above the keyboard while one shows. A move not yet
-// written shifts the scroller by `shift`.
+// written shifts the scroller by `shift`. Where the browser shrank the layout
+// viewport for the keyboard (`resized`), the keyboard's top is that viewport's
+// bottom.
 function bandOf(
   scroller: Element,
   height: number,
   offset: number,
   win: Window,
   shift = 0,
+  resized = false,
 ): {top: number; bottom: number} {
   const doc = scroller.ownerDocument;
   const keyboardTop = layoutViewportHeight(win) - height;
   let top = 0;
-  let bottom = height > KEYBOARD_EPSILON ? keyboardTop - offset : keyboardTop;
+  let bottom =
+    height > KEYBOARD_EPSILON || resized ? keyboardTop - offset : keyboardTop;
   if (scroller !== (doc.scrollingElement ?? doc.documentElement)) {
     const box = scroller.getBoundingClientRect();
     top = Math.max(top, box.top + shift);
@@ -411,8 +416,9 @@ function revealDistance(
   offset: number,
   win: Window,
   shift = 0,
+  resized = false,
 ): number {
-  const band = bandOf(scroller, height, offset, win, shift);
+  const band = bandOf(scroller, height, offset, win, shift, resized);
   const box = field.getBoundingClientRect();
   return distanceIntoBand(
     box.top + shift,
@@ -431,9 +437,10 @@ function sitsInBand(
   height: number,
   offset: number,
   win: Window,
+  resized = false,
   fieldShift = 0,
 ): boolean {
-  const band = bandOf(scroller, height, offset, win);
+  const band = bandOf(scroller, height, offset, win, 0, resized);
   const box = field.getBoundingClientRect();
   return (
     box.top + fieldShift >= band.top - KEYBOARD_EPSILON &&
@@ -453,9 +460,18 @@ function reveal(
   height: number,
   offset: number,
   win: Window,
+  resized = false,
   canRise = true,
 ): number {
-  const distance = revealDistance(field, scroller, height, offset, win);
+  const distance = revealDistance(
+    field,
+    scroller,
+    height,
+    offset,
+    win,
+    0,
+    resized,
+  );
   if (Math.abs(distance) <= KEYBOARD_EPSILON) {
     return 0;
   }
@@ -468,12 +484,12 @@ function reveal(
     canRise &&
     height > KEYBOARD_EPSILON &&
     Math.abs(target - now - distance) <= KEYBOARD_EPSILON &&
-    sitsInBand(field, scroller, height, offset, win, -distance) &&
+    sitsInBand(field, scroller, height, offset, win, resized, -distance) &&
     risesSmoothly(field);
   // A rise still on its way extends Core's own scroll.
   const before = keyboardScrollTarget(scroller, win) ?? now;
   scrollBy(scroller, distance, win, rises ? 'smooth' : 'instant');
-  if (height > KEYBOARD_EPSILON) {
+  if (height > KEYBOARD_EPSILON || resized) {
     noteKeyboardScroll(scroller, before, win, rises ? target : undefined);
   }
   return rises ? target - scrollTopOf(scroller, win) : 0;
@@ -701,14 +717,16 @@ function revealWithKeyboard(
   offset: number,
   win: Window,
   unplaced: UnplacedField = 'keep',
+  resizedRoom: () => number = () => 0,
 ): () => void {
-  // Unless `unplaced` is 'keep', a field its scroller leaves covered is
-  // revealed by the document, then by a pan where the document cannot reach.
+  // Unless `unplaced` is 'keep', the document reveals a field its scroller
+  // leaves covered, and a pan takes the rest where the document cannot reach.
   const doc = scroller.ownerDocument;
   const root = doc.scrollingElement ?? doc.documentElement;
   let isPlaced = true;
   // A long press focuses with the finger still down. The show's first reveal
-  // runs all the same.
+  // runs all the same. A show is a keyboard height or, under
+  // resizes-content, a room.
   let hasRevealed = false;
   // The input stream's touch-start count at the last reveal. The press that
   // focused the field started before it, so it holds no report. Gboard can
@@ -720,21 +738,23 @@ function revealWithKeyboard(
     if (focused == null) {
       return;
     }
-    hasRevealed = height > KEYBOARD_EPSILON;
+    const resized = resizedRoom() > 0;
+    hasRevealed = height > KEYBOARD_EPSILON || resized;
     startsAtReveal = getTouchStartCount(win);
-    const rising = reveal(focused, scroller, height, offset, win);
+    const rising = reveal(focused, scroller, height, offset, win, resized);
     if (unplaced === 'keep') {
       return;
     }
     isPlaced =
-      rising !== 0 || sitsInBand(focused, scroller, height, offset, win);
-    if (isPlaced || height <= KEYBOARD_EPSILON) {
+      rising !== 0 ||
+      sitsInBand(focused, scroller, height, offset, win, resized);
+    if (isPlaced || (height <= KEYBOARD_EPSILON && !resized)) {
       return;
     }
     if (unplaced === 'document') {
       if (
         scroller !== root &&
-        reveal(focused, root, height, offset, win) !== 0
+        reveal(focused, root, height, offset, win, resized) !== 0
       ) {
         isPlaced = true;
         return;
@@ -745,7 +765,7 @@ function revealWithKeyboard(
       // keyboard shows. Where the scroll moves nothing, Core scrolls back.
       const top = focused.getBoundingClientRect().top;
       const scrollY = win.scrollY;
-      reveal(focused, root, height, offset, win, false);
+      reveal(focused, root, height, offset, win, resized, false);
       if (
         Math.abs(focused.getBoundingClientRect().top - top) <= KEYBOARD_EPSILON
       ) {
@@ -765,14 +785,21 @@ function revealWithKeyboard(
   // A report within a pixel of the last height is a pan, a scroll or a
   // zoom's rounding, so the field stays. After the show's first reveal, a
   // report during a press that began after that reveal moves nothing, as
-  // when Firefox's toolbar hides in a drag.
+  // when Firefox's toolbar hides in a drag. Under `resizes-content` a room
+  // change reveals the field in the report's own frame.
   let lastHeight = getKeyboardHeight(win);
+  let lastRoom = resizedRoom();
   const isLaterPressDown = () =>
     isFingerOnScreen(win) && getTouchStartCount(win) !== startsAtReveal;
   const stopReports = subscribeKeyboardHeight(win, event => {
     if (event.type === 'viewport') {
-      if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
+      const room = resizedRoom();
+      if (
+        Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON ||
+        Math.abs(room - lastRoom) > KEYBOARD_EPSILON
+      ) {
         lastHeight = event.height;
+        lastRoom = room;
         if (!hasRevealed || !isLaterPressDown()) {
           revealNow(event.height);
         }
@@ -1132,6 +1159,9 @@ export function keepFieldAboveKeyboard(
     return () => {};
   }
   const stopScrollBack = claimKeyboardScrollBack(win);
+  // The module keeps the tallest root box per window, so a later shrink reads
+  // as room.
+  const resizedRoom = () => getResizedRoom(win);
   const stopClaim = refuseFocusReveal(doc, {
     claim: destination =>
       destination === field && placementOf(field, offset, win) != null
@@ -1170,6 +1200,7 @@ export function keepFieldAboveKeyboard(
             offset,
             win,
             placement.unplaced,
+            resizedRoom,
           );
   };
   const onBlur = () => {

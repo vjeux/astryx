@@ -17,7 +17,12 @@
 import {reducesMotion} from '../motion/reducedMotion';
 import {isTouchOnScreen, subscribeInput} from '../utils/inputStream';
 import {isIosWebKit} from '../utils/touchQueries';
-import {KEYBOARD_EPSILON, subscribeKeyboardHeight} from './keyboardHeight';
+import {
+  KEYBOARD_EPSILON,
+  getResizedRoom,
+  getResizedRoomWidth,
+  subscribeKeyboardHeight,
+} from './keyboardHeight';
 import {bringsUpKeyboard, hidesField} from './keyboardLayoutGuide';
 
 interface AddedScroll {
@@ -129,14 +134,27 @@ export function keyboardScrollTarget(
   return now >= low && now <= high ? added.at : null;
 }
 
-// The scroll back starts at the keyboard's report that it has gone. Safari on
-// iOS sends that report about half a second after the blur that closes the
-// keyboard, once the keyboard is down. There the scroll back starts at that
-// blur, beside the keyboard's slide, and the report ends the watch.
+// The scroll back starts at the keyboard's report that it has gone, with no
+// room left from a page the browser shrank for it. Safari on iOS sends that
+// report about half a second after the blur that closes the keyboard, once
+// the keyboard is down. There the scroll back starts at that blur, beside the
+// keyboard's slide, and the report ends the watch. A change of the viewport's
+// width, as when the phone turns, ends the watch. Nothing goes back: a scroll
+// recorded at one width does not apply at another.
 function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
   const scrolls = new Map<Element, AddedScroll>();
+  const width = getResizedRoomWidth(win);
   const stopReports = subscribeKeyboardHeight(win, event => {
-    if (event.type === 'viewport' && event.height <= KEYBOARD_EPSILON) {
+    if (event.type !== 'viewport') {
+      return;
+    }
+    if (getResizedRoomWidth(win) !== width) {
+      scrolls.clear();
+      end();
+    } else if (
+      event.height <= KEYBOARD_EPSILON &&
+      getResizedRoom(win) <= KEYBOARD_EPSILON
+    ) {
       end();
       scrollBack(win, scrolls);
     }
@@ -279,7 +297,11 @@ function awaitFoldedReveal(
   });
   const stopTouch = subscribeInput(win, 'touchstart', () => stop());
   const stopKeyboard = subscribeKeyboardHeight(win, event => {
-    if (event.type === 'viewport' && event.height > KEYBOARD_EPSILON) {
+    if (
+      event.type === 'viewport' &&
+      (event.height > KEYBOARD_EPSILON ||
+        getResizedRoom(win) > KEYBOARD_EPSILON)
+    ) {
       stop();
     }
   });
