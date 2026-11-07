@@ -33,6 +33,8 @@ import {
   type HeldAnimation,
   openStory,
   releaseAnimations,
+  type RenderingEvent,
+  type RenderingTrace,
   sampleCurve,
   timeline,
   touchDriver,
@@ -48,6 +50,85 @@ const storybook = withStorybook(test);
 const COVER = 337;
 // How often Chrome's caret blinks, ms.
 const CARET_BLINK_MS = 500;
+// One frame at 60 Hz, ms.
+const FRAME_MS = 1000 / 60;
+
+/**
+ * The evidence that a starved main thread moved the ride's own start into the
+ * steady window, or null. Such a run shows all of these facts:
+ * - The report's layout comes more than two frames after the report.
+ * - The task that ran it had the main thread for half its wall time or less.
+ * - Each frame in the window is one of the first three after that layout:
+ *   the commit, then the ride's two start restyles.
+ * - Those restyles touch the dock and the transcript only. They paint only
+ *   the root layer and the code block.
+ *
+ * Any other frame in the window is rendering by the rise.
+ */
+function starvedStart(
+  trace: RenderingTrace,
+  reported: number,
+  steady: {from: number; to: number},
+): Record<string, unknown> | null {
+  const layout = trace.events.find(e => e.t >= reported && e.name === 'Layout');
+  if (layout == null || layout.t - reported <= 2 * FRAME_MS) {
+    return null;
+  }
+  const task = trace.longTasks.find(
+    t => t.start <= layout.t && t.start + t.durationMs >= layout.t,
+  );
+  if (task == null || task.threadMs > task.durationMs / 2) {
+    return null;
+  }
+  // A frame paints once. Its restyle and layout come before its PrePaint, and
+  // its paints after it.
+  let prePaints = 0;
+  const framed = trace.events
+    .filter(e => e.t >= layout.t)
+    .map(e => {
+      const before = ['UpdateLayoutTree', 'Layout', 'PrePaint'].includes(
+        e.name,
+      );
+      const frame = before ? prePaints : prePaints - 1;
+      if (e.name === 'PrePaint') {
+        prePaints += 1;
+      }
+      return {...e, frame};
+    });
+  const inWindow = framed.filter(e => e.t >= steady.from && e.t <= steady.to);
+  const frames = [...new Set(inWindow.map(e => e.frame))];
+  const startRestyle = (e: RenderingEvent) =>
+    e.name !== 'Layout' &&
+    (e.name !== 'UpdateLayoutTree' || (e.elements ?? Infinity) <= 2) &&
+    (e.name !== 'Paint' ||
+      e.node === '#document' ||
+      (e.node?.startsWith("PRE class='astryx-code-block") ?? false));
+  const isStart = (frame: number) =>
+    frame === 0 ||
+    ((frame === 1 || frame === 2) &&
+      framed.filter(e => e.frame === frame).every(startRestyle));
+  if (inWindow.length === 0 || !frames.every(isStart)) {
+    return null;
+  }
+  const at = (t: number) => Math.round(t - reported);
+  return {
+    layoutMs: at(layout.t),
+    reportTask: {
+      wallMs: Math.round(task.durationMs),
+      threadMs: Math.round(task.threadMs),
+    },
+    windowFrames: frames.map(frame => ({
+      frame,
+      paints: inWindow
+        .filter(e => e.frame === frame && e.name === 'Paint')
+        .map(e => {
+          // `PRE class='a b'` reads as `PRE.a`.
+          const node = (e.node ?? '?').replace(/ class='([^' ]*)[^']*'/, '.$1');
+          return `${node}@${at(e.t)}`;
+        }),
+    })),
+  };
+}
 
 /**
  * Replaces `window.visualViewport` before the page loads with one the test
@@ -648,6 +729,10 @@ test.describe('Chrome on Android (spec:AST-099 FR8)', () => {
         (cancelled == null || cancelled >= steady.to),
     );
     expect(riding, JSON.stringify({reported, rides})).toBe(true);
+    expect(
+      starvedStart(trace, reported, steady),
+      'the main thread was starved, so the ride\u2019s start reached the window',
+    ).toBeNull();
     const during = countBetween(trace, steady.from, steady.to);
     // On failure, every rendering event of the rise and the long tasks, in ms
     // after the report.
