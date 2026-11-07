@@ -945,6 +945,28 @@ test('busy main thread: a window slide finishes on time through a 600 ms block',
     },
     {left: 23.5 * PITCH - 6, rgb: MARKER_RGB},
   );
+  // NOT FOR LANDING: the slide on the main thread. Frames drive the strip's
+  // translate, and a running no-op animation keeps the block's trigger.
+  await strip.evaluate(el => {
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      const frames = (Array.isArray(keyframes) ? keyframes : []) as Keyframe[];
+      if (this !== el || !frames.some(frame => 'translate' in frame)) {
+        return original.call(this, keyframes, options);
+      }
+      const total = Number((options as KeyframeAnimationOptions).duration) - 60_000;
+      const values = frames.map(frame => Number.parseFloat(String(frame.translate)));
+      const t0 = performance.now();
+      const step = () => {
+        const p = Math.min(1, (performance.now() - t0) / total);
+        const i = Math.min(values.length - 1, Math.round(p * (values.length - 1)));
+        (el as HTMLElement).style.translate = `${values[i]}px`;
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+      return original.call(this, [{opacity: 1}, {opacity: 1}], options);
+    };
+  });
   // Before the slide, so the control is on the compositor first.
   await startBusyControl(page);
   const cast = await startScreencast(page);
