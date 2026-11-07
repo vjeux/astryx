@@ -6,7 +6,7 @@
  *   viewport and timestamped touch and pointer events
  * @output Tests that ChatLayout attaches the drag-to-dismiss to its root and
  *   composer. A touch or pen drag blurs the field as it reaches the
- *   composer's top, and the dock container bounces once. A drag down that
+ *   composer's top, and its bounce layer bounces once. A drag down that
  *   starts on the composer blurs it too, and a drag there never scrolls the
  *   page under the keyboard. A mouse drag changes nothing. It covers a
  *   replaced row and the listeners the dismissal adds.
@@ -135,14 +135,21 @@ function moveFinger(
   return time + steps * 16;
 }
 
-// jsdom has no Web Animations: records each `animate` call instead.
+// jsdom has no Web Animations: records each `animate` call instead, and
+// returns an animation the animator can read and retire.
 function recordAnimations(): {target: Element; keyframes: Keyframe[]}[] {
   const calls: {target: Element; keyframes: Keyframe[]}[] = [];
   Object.defineProperty(HTMLElement.prototype, 'animate', {
     configurable: true,
     value(this: Element, keyframes: Keyframe[]) {
       calls.push({target: this, keyframes});
-      return {} as Animation;
+      return {
+        playState: 'running',
+        startTime: null,
+        currentTime: 0,
+        effect: null,
+        cancel() {},
+      } as unknown as Animation;
     },
   });
   return calls;
@@ -236,16 +243,18 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     vi.restoreAllMocks();
   });
 
-  it('blurs the composer as a finger’s drag reaches the composer’s top, before the lift, and moves focus nowhere else', () => {
+  it('blurs the composer as a finger’s drag reaches the composer’s top, before the lift, and focus rests on the composer’s group', () => {
     primaryPointer('coarse');
-    const {field, line, transcript} = renderLayout();
+    const {composer, field, line, transcript} = renderLayout();
     showKeyboard(field);
     let last = fingerDrag(transcript, 100, line - 1);
     expect(document.activeElement).toBe(field);
     last = moveFinger(transcript, line - 1, line, last);
-    expect(document.activeElement).toBe(document.body);
+    // Under a finger the keyboard module parks focus on the composer's group
+    // when its text loses focus (spec:AST-099), as after Done.
+    expect(document.activeElement).toBe(composer);
     finger(transcript, 'touchend', line, last + 100);
-    expect(document.activeElement).toBe(document.body);
+    expect(document.activeElement).toBe(composer);
   });
 
   it('keeps the keyboard when the drag lifts above the composer', () => {
@@ -272,18 +281,18 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     clock += 10_000;
     last = fingerDrag(transcript, 300, top + 4);
     finger(transcript, 'touchend', top + 4, last + 100);
-    expect(document.activeElement).toBe(document.body);
+    expect(document.activeElement).toBe(composer);
   });
 
   it('keeps the dismissal when the finger moves back up above the composer before the lift', () => {
     primaryPointer('coarse');
-    const {field, line, transcript} = renderLayout();
+    const {composer, field, line, transcript} = renderLayout();
     showKeyboard(field);
     let last = fingerDrag(transcript, 100, line + 40);
-    expect(document.activeElement).toBe(document.body);
+    expect(document.activeElement).toBe(composer);
     last = moveFinger(transcript, line + 40, line - 40, last);
     finger(transcript, 'touchend', line - 40, last + 100);
-    expect(document.activeElement).toBe(document.body);
+    expect(document.activeElement).toBe(composer);
   });
 
   it('starts no drag from the lift alone: moves under the 10 px hysteresis keep the keyboard', () => {
@@ -301,7 +310,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
     // The browser keeps sending a touch's events to the node it began on,
     // even once that node leaves the page.
     primaryPointer('coarse');
-    const {field, line} = renderLayout();
+    const {composer, field, line} = renderLayout();
     showKeyboard(field);
     const row = screen.getByText('Replaced');
     finger(row, 'touchstart', 100, 0);
@@ -313,7 +322,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
       finger(row, 'touchmove', y, time);
     }
     finger(row, 'touchend', line + 8, time + 100);
-    expect(document.activeElement).toBe(document.body);
+    expect(document.activeElement).toBe(composer);
   });
 
   it('dismisses from a finger’s drag where the primary pointer is fine, as on a touch-screen laptop (spec:AST-094 FR43)', () => {
@@ -355,10 +364,10 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
 
   it('dismisses from a pen’s drag reported as pointer events (spec:AST-094 FR43)', () => {
     primaryPointer('coarse');
-    const {field, line, transcript} = renderLayout();
+    const {composer, field, line, transcript} = renderLayout();
     showKeyboard(field);
     pointerDrag(transcript, 'pen', 100, line + 20);
-    expect(document.activeElement).toBe(document.body);
+    expect(document.activeElement).toBe(composer);
   });
 
   it('leaves a mouse drag to the browser: it keeps focus, prevents nothing, captures no pointer and moves nothing', () => {
@@ -437,7 +446,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
   describe('the bounce at the crossing', () => {
     beforeEach(() => primaryPointer('coarse'));
 
-    it('bounces the dock container once, which holds the scroll button, the frosted layer and the composer', () => {
+    it('bounces one layer once, which holds the scroll button, the frosted layer and the composer, and leaves the dock container to the keyboard’s ride', () => {
       const animations = recordAnimations();
       const {composer, field, line, transcript} = renderLayout();
       composer.style.paddingBottom = '12px';
@@ -447,7 +456,9 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
       expect(animations).toHaveLength(1);
       const [{target, keyframes}] = animations;
       // One transform for all three: the composer and the button never part.
+      // It is the bounce layer's, inside the dock container the ride moves.
       expect(target).toBe(composer.parentElement);
+      expect(target).not.toBe(composer.parentElement?.parentElement);
       expect(target.contains(screen.getByRole('button', {hidden: true}))).toBe(
         true,
       );
@@ -480,7 +491,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
         clock += 10_000;
         last = fingerDrag(transcript, 100, line + 40);
         finger(transcript, 'touchend', line + 40, last + 100);
-        expect(document.activeElement).toBe(document.body);
+        expect(document.activeElement).toBe(composer);
         expect(animations).toEqual([]);
       } finally {
         restoreMotion();
@@ -515,7 +526,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
       showKeyboard(field);
       // Each step clears the page hold's 5 px slop.
       const moves = swipe(composer, [100, line + 10], [0, 40]);
-      expect(document.activeElement).toBe(document.body);
+      expect(document.activeElement).toBe(composer);
       expect(prevented(moves)).not.toContain(false);
     });
 
@@ -581,6 +592,7 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
         </ChatLayout>,
       );
       const field = screen.getByRole('textbox', {name: 'Message'});
+      const composer = field.closest('[role="group"]');
       const strip = screen.getByTestId('strip');
       Object.defineProperty(strip, 'scrollWidth', {value: 600});
       Object.defineProperty(strip, 'clientWidth', {value: 200});
@@ -592,7 +604,8 @@ describe('ChatLayout dismisses the keyboard from a transcript drag (FR10)', () =
       clock += 10_000;
       const down = swipe(strip, [300, 600], [0, 40]);
       expect(prevented(down)).not.toContain(false);
-      expect(document.activeElement).toBe(document.body);
+      expect(composer).not.toBeNull();
+      expect(document.activeElement).toBe(composer);
     });
 
     it('holds the page under a drag up that drifts sideways on that strip, and leaves the strip a swipe at least half sideways', () => {
@@ -665,11 +678,13 @@ describe('what the drag-to-dismiss loads', () => {
     expect(dismissal).not.toMatch(/addEventListener|subscribeInput/);
   });
 
-  it('loads no animator: the bounce is one Web Animation of solved keyframes', () => {
+  it('plays the bounce through its layer’s shared animator, so no element’s translate has two writers', () => {
     const here = path.dirname(fileURLToPath(import.meta.url));
-    for (const file of ['ChatLayout.tsx', 'composerBounce.ts']) {
-      const source = fs.readFileSync(path.join(here, file), 'utf8');
-      expect(source).not.toMatch(/motion\/animator|motion\/rubberBand/);
-    }
+    const source = fs.readFileSync(
+      path.join(here, 'composerBounce.ts'),
+      'utf8',
+    );
+    expect(source).toMatch(/\banimatorFor\b/);
+    expect(source).not.toMatch(/\.animate\(|createMotionEngine/);
   });
 });

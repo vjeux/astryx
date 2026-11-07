@@ -2,20 +2,24 @@
 
 /**
  * @file composerBounce.ts
- * @input The keyboard's spring as a motion role, the spring solver, Core's
- *   Reduced Motion policy, a finger's speed and how deep the bounce may go
- * @output bounceComposer: one small spring bounce of the composer's dock
- * @position Internal to Chat. ChatLayout plays it on its dock container as a
- *   drag dismisses the keyboard. So the composer, the frosted layer and the
- *   scroll-to-bottom button move as one.
+ * @input The keyboard's spring motion role, the spring solver, the shared
+ *   animator, Core's Reduced Motion policy, a finger's speed and the bounce's
+ *   maximum depth
+ * @output bounceComposer: one small spring bounce of the layer that holds the
+ *   composer
+ * @position Internal to Chat. ChatLayout plays it on the bounce layer inside
+ *   its dock container as a drag dismisses the keyboard. So the composer, the
+ *   frosted layer and the scroll-to-bottom button move as one, inside the
+ *   keyboard's ride of the dock container.
  */
 
+import {animatorFor, type Animator} from '../motion/animator';
 import {reducedMotionFade} from '../motion/reducedMotion';
 import {resolveMotion} from '../motion/resolveMotion';
 import {solveSpring, toSpring} from '../motion/spring';
 import {springs} from '../motion/uikit/springs';
 
-/** One keyframe per frame at the display rate the animator assumes, in ms. */
+/** A frame at the display rate the animator assumes, in ms. */
 const FRAME_MS = 1000 / 60;
 
 /**
@@ -29,25 +33,28 @@ const REST_PX = 0.25;
 const MAX_DURATION_MS = 30_000;
 
 /**
- * Bounces `dock` down and back to rest on the keyboard's spring, once. It
+ * Bounces `layer` down and back to rest on the keyboard's spring, once. It
  * starts at the finger's speed, so it never moves faster than the finger, and
- * goes no deeper than `maxDepth` px. Under Reduce Motion, the person's setting
- * or a theme's mark, nothing moves.
+ * goes no deeper than `maxDepth` px. It plays through the layer's animator,
+ * from where the layer is drawn, so a second bounce takes over the first with
+ * no jump. Under Reduce Motion, the person's setting or a theme's mark,
+ * nothing moves.
  */
 export function bounceComposer(
-  dock: HTMLElement,
+  layer: HTMLElement,
   fingerSpeed: number,
   maxDepth: number,
+  animator: Animator = animatorFor(layer),
 ): void {
   // The bounce follows a touch drag's release; under Reduce Motion it is no
   // change to fade, so nothing plays.
   if (
-    typeof dock.animate !== 'function' ||
-    reducedMotionFade(dock, {touchRelease: true}) != null
+    typeof layer.animate !== 'function' ||
+    reducedMotionFade(layer, {touchRelease: true}) != null
   ) {
     return;
   }
-  const spring = toSpring(resolveMotion(dock, springs.keyboard));
+  const spring = toSpring(resolveMotion(layer, springs.keyboard));
   // The depth a start at 1 px/s reaches, where the curve first turns back: a
   // faster start scales the whole curve.
   const unit = solveSpring(spring, {from: 0, to: 0, velocity: 1});
@@ -70,17 +77,23 @@ export function bounceComposer(
   if (!(speed > 0)) {
     return;
   }
-  const curve = solveSpring(spring, {from: 0, to: 0, velocity: speed});
-  const duration = Math.min(curve.settleTime(REST_PX) * 1000, MAX_DURATION_MS);
+  const curve = solveSpring(spring, {
+    from: animator.get('y'),
+    to: 0,
+    velocity: speed,
+  });
+  const duration = Math.min(curve.settleTime(REST_PX), MAX_DURATION_MS / 1000);
   if (!(duration > 0)) {
     return;
   }
-  const count = Math.ceil(duration / FRAME_MS);
-  const keyframes: Keyframe[] = [];
-  for (let i = 0; i <= count; i++) {
-    const offset = i / count;
-    const y = i === count ? 0 : curve.value((offset * duration) / 1000);
-    keyframes.push({offset, translate: `0 ${y}px`});
-  }
-  dock.animate(keyframes, {duration, easing: 'linear'});
+  animator.play(
+    {
+      y: {
+        duration,
+        at: t => (t >= duration ? 0 : curve.value(t)),
+        velocity: t => (t >= duration ? 0 : curve.velocity(t)),
+      },
+    },
+    {touchRelease: true},
+  );
 }
