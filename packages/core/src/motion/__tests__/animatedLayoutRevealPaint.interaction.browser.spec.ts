@@ -176,6 +176,38 @@ async function paintedRide(
     // Each click's own read counts in the gaps before the first frame.
     button.click();
     read('opening start');
+    // NOT FOR LANDING: the glide of the content after it runs on the main thread (top, not translate).
+    await new Promise<void>(resolve => {
+      queueMicrotask(resolve);
+    });
+    for (const glide of next.getAnimations()) {
+      const effect = glide.effect as KeyframeEffect;
+      const keyframes = effect.getKeyframes();
+      if (!keyframes.some(k => k.translate != null)) {
+        continue;
+      }
+      const timing = effect.getTiming();
+      const start = glide.startTime;
+      glide.cancel();
+      next.style.position = 'relative';
+      const moved = next.animate(
+        keyframes.map(k => ({
+          offset: k.offset,
+          easing: k.easing,
+          top:
+            String(k.translate ?? '0px 0px')
+              .trim()
+              .split(/\s+/)[1] ?? '0px',
+        })),
+        {
+          duration: timing.duration,
+          fill: timing.fill,
+          easing: timing.easing,
+          delay: timing.delay,
+        },
+      );
+      moved.startTime = start;
+    }
     for (let i = 0; i < 40; i++) {
       await frame();
       read(revealing() ? 'opening' : 'opening ended');
