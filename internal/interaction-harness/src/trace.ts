@@ -66,16 +66,6 @@ export interface TracedTask {
   readonly threadMs: number;
 }
 
-/** A counted rendering event, epoch ms. */
-export interface RenderingEvent {
-  readonly name: string;
-  readonly t: number;
-  /** A `Paint`'s node, as the trace names it. */
-  readonly node?: string;
-  /** How many elements an `UpdateLayoutTree` restyled. */
-  readonly elements?: number;
-}
-
 export interface RenderingTrace {
   /** Count per trace event name inside the window, on the page's main thread. */
   readonly counts: Readonly<Record<string, number>>;
@@ -100,12 +90,8 @@ export interface RenderingTrace {
    * keyframes, or `blockMainThread(page, ms)` without `during`.
    */
   readonly devtoolsTasks: readonly TracedTask[];
-  /**
-   * Every counted rendering event with its epoch-ms time, for sub-window
-   * counts. A `Paint` names the node it painted, and an `UpdateLayoutTree`
-   * counts the elements it restyled.
-   */
-  readonly events: readonly RenderingEvent[];
+  /** Every counted rendering event with its epoch-ms time, for sub-window counts. */
+  readonly events: readonly {readonly name: string; readonly t: number}[];
   /** The window, epoch ms on the page's clock. */
   readonly window: {readonly from: number; readonly to: number};
 }
@@ -231,21 +217,14 @@ export async function traceRendering(
   // Trace time (µs, monotonic) -> epoch ms, anchored on the start mark.
   const toEpochMs = (ts: number) => fromEpoch + (ts - start.ts) / 1000;
   const counts: Record<string, number> = {};
-  const counted: RenderingEvent[] = [];
+  const counted: {name: string; t: number}[] = [];
   for (const e of events) {
     if (!onMain(e) || e.ph === 'E') {
       continue;
     }
     if ((RENDERING_EVENTS as readonly string[]).includes(e.name)) {
       counts[e.name] = (counts[e.name] ?? 0) + 1;
-      const node = (e.args?.data as {nodeName?: unknown} | undefined)?.nodeName;
-      const elements = e.args?.elementCount;
-      counted.push({
-        name: e.name,
-        t: toEpochMs(e.ts),
-        ...(typeof node === 'string' ? {node} : {}),
-        ...(typeof elements === 'number' ? {elements} : {}),
-      });
+      counted.push({name: e.name, t: toEpochMs(e.ts)});
     }
   }
   const {longTasks, devtoolsTasks} = longTasksOf(
