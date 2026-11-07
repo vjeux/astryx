@@ -224,7 +224,9 @@ function heldFingers(
       const finger = {id, x: at.x, y: at.y};
       down.set(id, finger);
       await dispatch('touchStart', finger, [...down.values()]);
-      let lifted = false;
+      down.delete(id);
+      await dispatch('touchEnd', finger, [...down.values()]);
+      let lifted = true;
       const live = () => {
         if (lifted) {
           throw new Error(`touchDriver: finger ${id} was lifted`);
