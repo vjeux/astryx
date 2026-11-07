@@ -19,6 +19,8 @@ import {
   type HeldRow,
   type HeldRowListener,
   isSnapPaging,
+  itemsSpan,
+  itemsWidth,
   makeSnapPaging,
   nearestStop,
   type SnapPagingAttachment,
@@ -226,6 +228,30 @@ describe('Carousel with hasSnap', () => {
   it('nearestStop picks the nearest stop, and keeps the offset with no items', () => {
     expect(nearestStop([0, 103, 205], 120)).toBe(103);
     expect(nearestStop([], 42)).toBe(42);
+  });
+
+  it("a held row's span is its items' widths plus the gaps at rest, whatever translate each item shows", () => {
+    // Seven items 94.67 px wide and 8 px apart. Under load, each item's
+    // settle animation can start a frame apart, so mid-settle the first item
+    // shows -17.51 px and the others -18.8 px.
+    const element = document.createElement('div');
+    const box = {left: 0, right: 299, width: 299} as DOMRect;
+    element.getBoundingClientRect = () => box;
+    const shift = [0, 0, 0, 0, 0, 0, 0];
+    for (let i = 0; i < 7; i++) {
+      const item = document.createElement('div');
+      item.getBoundingClientRect = () => {
+        const left = i * (94.67 + 8) + shift[i];
+        return {left, right: left + 94.67, width: 94.67} as DOMRect;
+      };
+      element.append(item);
+    }
+    document.body.append(element);
+    const atRest = itemsSpan(element);
+    const gaps = atRest - itemsWidth(element);
+    shift.splice(0, 7, -17.51, -18.8, -18.8, -18.8, -18.8, -18.8, -18.8);
+    expect(itemsSpan(element)).not.toBeCloseTo(atRest, 0);
+    expect(itemsWidth(element) + gaps).toBeCloseTo(atRest, 6);
   });
 
   describe('the end page', () => {
