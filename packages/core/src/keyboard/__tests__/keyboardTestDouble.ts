@@ -21,10 +21,7 @@ export interface KeyboardTestDouble {
   hide(): void;
   /** Runs the animation frames asked for since, as before a paint. */
   frame(): void;
-  /**
-   * The stand-in visual viewport. A fixed element scrolled into view pans it
-   * to the element's top, as in Chrome and Firefox for Android.
-   */
+  /** The visual viewport. A fixed element scrolled into view pans it there. */
   viewport: EventTarget & {height: number; offsetTop: number};
   /** Puts the window back as it was. */
   restore(): void;

@@ -109,18 +109,17 @@ that times motion with it. Everything here is internal to
   keyboard's top at once, so Chrome's own pan finds it clear, and only the rest
   rides (`spec:AST-099` DEC-6). Every viewport report feeds the reveal-pan
   watch, so a pan the browser still makes is put back. A pan made at one
-  keyboard height goes back at the next height's report. In Chrome, the
-  ride's watch also scrolls the document back (`documentScrollIsReveal`):
-  under Remove animations, Gboard first reports a keyboard 48 px tall, and
-  Chrome may then reveal the bar's field itself, scrolling the page behind the
-  bar before it pans. Only a scroll and a pan that centre the field as
-  Chrome's reveal does count, so the app's own scroll to another element
-  stays. The ride measures
+  keyboard height goes back at the next height's report. In Chrome, the ride's
+  watch also scrolls the document back (`documentScrollIsReveal`): under Remove
+  animations, Gboard first reports a keyboard 48 px tall, and Chrome may then
+  reveal the bar's field itself, scrolling the page behind the bar before it
+  pans. Only a scroll and a pan that centre the field as Chrome's reveal does
+  count, so the app's own scroll to another element stays. The ride measures
   what the keyboard still covers after any move the app makes itself: a bar the
-  app
-  already moves with the keyboard is not moved, one the app lifts part of the
-  way moves the rest, and one the app is moving itself at that moment (a running
-  CSS transition or animation on its position) is left to the app; a script
+  app already moves with the keyboard is not moved, one the app lifts part of
+  the way moves the rest, and one the app is moving itself at that moment (a
+  running CSS transition or animation on its position) is left to the app; a
+  script
   animation is not seen, so an app that moves its bar from script keeps it clear
   with its own `translate`. The ride writes the CSS `translate`, which adds to
   an app's `transform`, writes nothing on an element it never moved, and on an

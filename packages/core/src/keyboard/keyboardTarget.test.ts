@@ -358,8 +358,7 @@ describe('keepFieldAboveKeyboard', () => {
     focusOn(input);
     expect(focus).toHaveBeenCalledWith({preventScroll: true});
     keyboard(300);
-    // The list scrolls its last 140 px. Here the document does not move, so
-    // the visual viewport pans the rest, into the room the keyboard takes.
+    // The list scrolls its last 140 px; the document does not move; a pan does.
     expect(list.scrollTop).toBe(140);
     const keyboardTop = window.innerHeight - 300;
     const need = 700 - 140 + FIELD_OFFSET - keyboardTop;
@@ -421,8 +420,7 @@ describe('keepFieldAboveKeyboard', () => {
     const bottom = window.innerHeight;
     const need = bottom - 208 + FIELD_OFFSET - (bottom - 300);
     expect(scrollBy).toHaveBeenCalledWith({top: need, behavior: 'instant'});
-    // Here the document does not move, so the visual viewport pans to the
-    // field in the same frame. The pan is Core's own: its report moves nothing.
+    // The document does not move, so Core pans; its pan's report moves nothing.
     expect(viewport.offsetTop).toBe(need);
     act(() => {
       viewport.dispatchEvent(new Event('scroll'));
@@ -493,8 +491,7 @@ describe('keepFieldAboveKeyboard', () => {
       [{top: -need, behavior: 'instant'}],
     ]);
     expect(page.scrollY).toBe(0);
-    // A pan moves the visual viewport over the layout viewport, where the
-    // container sits, so it brings the field into view.
+    // A pan moves the visual viewport over the container's layout viewport.
     expect(viewport.offsetTop).toBe(need);
     Reflect.deleteProperty(window, 'scrollY');
   });
@@ -591,8 +588,7 @@ describe('keepFieldAboveKeyboard', () => {
     const need = fieldTop + 40 + FIELD_OFFSET - keyboardTop;
     expect(scrollBy).toHaveBeenCalledWith({top: need, behavior: 'instant'});
     expect(page.scrollY).toBe(84);
-    // The pan takes the rest in the same frame, so Chrome's own pan of the
-    // keyboard's whole height finds the field clear.
+    // The pan takes the rest at once, so Chrome's own pan finds the field clear.
     expect(viewport.offsetTop).toBe(need - 84);
     expect(input.getBoundingClientRect().bottom - viewport.offsetTop).toBe(
       keyboardTop - FIELD_OFFSET,
@@ -603,8 +599,7 @@ describe('keepFieldAboveKeyboard', () => {
   it('pans nothing where the document scroll reaches the room the keyboard takes, as in Safari', () => {
     pageScrollRange(window.innerHeight + 84);
     const fieldTop = window.innerHeight - 50;
-    // As in Safari while its keyboard shows: the scroll carries on past the
-    // page's range.
+    // As in Safari while its keyboard shows: the scroll goes past the range.
     const {input, page} = pageField(fieldTop, Number.POSITIVE_INFINITY);
     track(keepFieldAboveKeyboard(input));
     focusOn(input);
@@ -632,8 +627,7 @@ describe('keepFieldAboveKeyboard', () => {
     focusOn(input);
     keyboard(300);
     expect(pans).toHaveLength(1);
-    // The pan lands a frame later and raises its own report: the field stays
-    // where it went.
+    // The pan lands a frame later, with a report of its own; it stays.
     viewport.offsetTop = pans[0] ?? 0;
     act(() => {
       viewport.dispatchEvent(new Event('scroll'));
@@ -1014,8 +1008,7 @@ describe('keepFieldAboveKeyboard', () => {
     track(keepFieldAboveKeyboard(input));
     focusOn(input);
     keyboard(300);
-    // The app scrolls the page past its end; Safari carries the rest out as a
-    // visual-viewport offset.
+    // The app scrolls past the page's end; Safari carries the rest as an offset.
     page.scrollY = 400;
     viewport.offsetTop = 120;
     act(() => {

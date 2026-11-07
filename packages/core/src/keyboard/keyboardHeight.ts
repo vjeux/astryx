@@ -397,14 +397,12 @@ export interface WatchRevealPanOptions {
   /** Called on every touch start, which ends the watch for the report. */
   onTouch?: () => void;
   /**
-   * Whether a document scroll since the report can be part of the browser's
-   * own reveal, which `putBack` then scrolls back too. Set it for a field in
-   * a fixed container in Chrome on Android. Chrome reveals such a field as if
-   * it scrolled with the page. A document scroll centres its document
-   * position in the visual viewport. Then a pan centres the field, as far as
-   * the keyboard's room allows. Only a scroll and a pan that match both count.
-   * Keep it false where Safari can run: Safari carries out the app's own
-   * document scroll as a visual-viewport offset.
+   * Whether a document scroll can be part of the browser's reveal, which
+   * `putBack` then scrolls back too: set it for a fixed field in Chrome on
+   * Android. Chrome's reveal scrolls the document to centre the field's
+   * document position, then pans as far as the keyboard's room allows; only
+   * a match counts. Keep it false where Safari can run: Safari carries out the
+   * app's own document scroll as a visual-viewport offset.
    */
   documentScrollIsReveal?: boolean;
 }

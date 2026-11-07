@@ -240,11 +240,19 @@ function interimKeyboard() {
   // How far Chrome's reveal moves to centre the field in the visual viewport.
   const box = input.getBoundingClientRect();
   const centring = (box.top + box.bottom) / 2 - viewport.height / 2;
+  // A document scroll and a pan land, and the visual viewport reports them.
+  const land = (scrollY: number, offsetTop: number) => {
+    page.scrollY = scrollY;
+    viewport.offsetTop = offsetTop;
+    act(() => {
+      viewport.dispatchEvent(new Event('scroll'));
+    });
+  };
   onTestFinished(() => {
     Reflect.deleteProperty(window, 'scrollY');
     stop();
   });
-  return {viewport, page, scrollTo, centring, input};
+  return {viewport, page, scrollTo, centring, input, land};
 }
 
 it("puts back, at the keyboard's real report, a pan the browser made at the last height", () => {
@@ -259,15 +267,11 @@ it("puts back, at the keyboard's real report, a pan the browser made at the last
 });
 
 it("puts back Chrome's own reveal of a docked bar's field, its document scroll and its pan, as soon as it lands", () => {
-  const {viewport, page, scrollTo, centring} = interimKeyboard();
+  const {viewport, page, scrollTo, centring, land} = interimKeyboard();
   // Chrome reveals the field as if it scrolled with the page. The document
   // scroll centres its document position, which moves only the page behind
   // the fixed bar. The pan takes the 48 px the keyboard leaves.
-  page.scrollY = 154.3 + centring;
-  viewport.offsetTop = 48;
-  act(() => {
-    viewport.dispatchEvent(new Event('scroll'));
-  });
+  land(154.3 + centring, 48);
   expect(scrollTo).toHaveBeenCalledWith({
     left: 0,
     top: 154.3,
@@ -282,45 +286,25 @@ it("puts back Chrome's own reveal of a docked bar's field, its document scroll a
   expect(viewport.offsetTop).toBe(0);
 });
 
-it("leaves an app's own scroll to another element that pans while a docked bar's field has focus", () => {
-  const {viewport, page, scrollTo} = interimKeyboard();
+it("leaves an app's own scroll to another element that pans while a docked bar's field has focus, and reads no layout for it again", () => {
+  const {viewport, page, scrollTo, input, land} = interimKeyboard();
   // The app scrolls a page element into view: the document scrolls and the
   // visual viewport pans, but the field's document position is not centred.
-  page.scrollY = 300;
-  viewport.offsetTop = 48;
-  act(() => {
-    viewport.dispatchEvent(new Event('scroll'));
-  });
+  land(300, 48);
+  // Whether a scroll is Chrome's reveal is decided once per report.
+  const reads = vi.mocked(input.getBoundingClientRect).mock.calls.length;
+  land(300, 48);
+  expect(input.getBoundingClientRect).toHaveBeenCalledTimes(reads);
   expect(scrollTo).not.toHaveBeenCalled();
   expect(page.scrollY).toBe(300);
   expect(viewport.offsetTop).toBe(48);
 });
 
 it("leaves a scroll that centres the field when the pan stops short of Chrome's reveal", () => {
-  const {viewport, page, scrollTo, centring} = interimKeyboard();
+  const {viewport, scrollTo, centring, land} = interimKeyboard();
   // Chrome's pan takes all the room the keyboard leaves, 48 px; this one
   // stops at 20, so it is not Chrome's reveal.
-  page.scrollY = 154.3 + centring;
-  viewport.offsetTop = 20;
-  act(() => {
-    viewport.dispatchEvent(new Event('scroll'));
-  });
+  land(154.3 + centring, 20);
   expect(scrollTo).not.toHaveBeenCalled();
   expect(viewport.offsetTop).toBe(20);
-});
-
-it("decides once per report whether a scroll is Chrome's reveal, so later viewport events read no layout", () => {
-  const {viewport, page, input} = interimKeyboard();
-  page.scrollY = 300;
-  viewport.offsetTop = 48;
-  const boxReads = vi.mocked(input.getBoundingClientRect);
-  const scroll = () =>
-    act(() => {
-      viewport.dispatchEvent(new Event('scroll'));
-    });
-  scroll();
-  const reads = boxReads.mock.calls.length;
-  scroll();
-  scroll();
-  expect(boxReads.mock.calls.length).toBe(reads);
 });
