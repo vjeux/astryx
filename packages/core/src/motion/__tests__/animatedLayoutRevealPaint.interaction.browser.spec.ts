@@ -13,6 +13,7 @@
  */
 
 import {expect, test, type Page} from '@astryxdesign/a11y-spec/playwright';
+import {requireFrames} from '@astryxdesign/interaction-harness';
 import {
   DEFAULT_STORYBOOK_DIR,
   serveStorybook,
@@ -48,7 +49,14 @@ async function openStory(page: Page): Promise<void> {
 }
 
 interface PaintedFrame {
-  phase: 'opening' | 'closing';
+  /**
+   * `opening ended` once the reveal has stopped running. A `start` read is
+   * taken at the click, before any frame.
+   */
+  phase:
+    'opening start' | 'opening' | 'opening ended' | 'closing start' | 'closing';
+  /** When the page read it, epoch ms. */
+  t: number;
   /** From the shown edge of the revealed content to the content after it. */
   gap: number;
   /** How much of the revealed content shows. */
@@ -90,8 +98,11 @@ async function paintedRide(
     };
     const frames: PaintedFrame[] = [];
     const read = (phase: PaintedFrame['phase']) => {
+      const t = performance.timeOrigin + performance.now();
       const element = content();
       if (element == null || getComputedStyle(element).display === 'none') {
+        // Gone: the frame still counts in the gaps between frames.
+        frames.push({phase, t, gap: Number.NaN, shown: 0});
         return;
       }
       const box = element.getBoundingClientRect();
@@ -107,8 +118,17 @@ async function paintedRide(
       if (Number.isFinite(lowest)) {
         edge = Math.min(edge, lowest);
       }
+      // NOT FOR LANDING: one 50 ms pause between the two reads, on the third opening read.
+      const arm = window as unknown as {tearAt?: number};
+      if (phase === 'opening' && (arm.tearAt = (arm.tearAt ?? 0) + 1) === 3) {
+        const until = performance.now() + 50;
+        while (performance.now() < until) {
+          // busy
+        }
+      }
       frames.push({
         phase,
+        t,
         gap: next.getBoundingClientRect().top - edge,
         shown: Math.max(0, edge - box.top),
       });
@@ -131,13 +151,22 @@ async function paintedRide(
     const beyond = Math.max(0, openTop - closedTop - box.height);
     button.click();
     await settle();
+    // A frame after the reveal has ended shows the content open, so it does
+    // not count as a frame of the motion.
+    const revealing = () =>
+      (content()?.getAnimations({subtree: true}) ?? []).some(
+        animation => animation.playState === 'running',
+      );
+    // Each click's own read counts in the gaps before the first frame.
     button.click();
+    read('opening start');
     for (let i = 0; i < 40; i++) {
       await frame();
-      read('opening');
+      read(revealing() ? 'opening' : 'opening ended');
     }
     await settle();
     button.click();
+    read('closing start');
     for (let i = 0; i < 40; i++) {
       await frame();
       read('closing');
@@ -152,9 +181,14 @@ async function paintedRide(
  * beyond the container gap that content travels.
  */
 function expectPaintedRide(result: PaintedRide): void {
+  // Every drawn frame, the reveal's settled ones too.
   for (const phase of ['opening', 'closing'] as const) {
-    const shown = result.frames.filter(f => f.phase === phase && f.shown > 0.5);
-    expect(shown.length, `${phase} frames`).toBeGreaterThan(4);
+    const shown = result.frames.filter(
+      f =>
+        (f.phase === phase ||
+          (phase === 'opening' && f.phase === 'opening ended')) &&
+        f.shown > 0.5,
+    );
     for (const f of shown) {
       const detail = JSON.stringify({...f, ...result, frames: undefined});
       expect(f.gap, detail).toBeLessThan(result.restGap + 1.5);
@@ -162,6 +196,14 @@ function expectPaintedRide(result: PaintedRide): void {
         result.restGap - result.beyond - 1.5,
       );
     }
+  }
+  // The page drew both motions: a starved page fails here by name.
+  for (const phase of ['opening', 'closing'] as const) {
+    requireFrames(result.frames, {
+      min: 5,
+      during: `the ${phase === 'opening' ? 'reveal' : 'conceal'} plays`,
+      where: f => f.phase === phase && f.shown > 0.5,
+    });
   }
 }
 
@@ -197,15 +239,25 @@ async function openTable(page: Page): Promise<void> {
 }
 
 /**
- * Opens the marked row. On the next frame, reads whether the panel row's own
- * motion moves a clip, and how many of its cells move.
+ * Opens the marked row. As the change commits, before any frame, reads
+ * whether the panel row's own motion moves a clip, and how many of its cells
+ * move. A frame can come after a short motion has ended.
  */
-async function revealOnNextFrame(page: Page) {
+async function revealAsItCommits(page: Page) {
   return page.evaluate(async () => {
     (document.querySelector('[data-test-id="expand"]') as HTMLElement).click();
     const panel = () => document.querySelector('[data-expansion-panel]');
-    for (let i = 0; i < 30 && !panel()?.getAnimations().length; i++) {
-      await new Promise(requestAnimationFrame);
+    const moving = () => (panel()?.getAnimations().length ?? 0) > 0;
+    // The row commits in the click's microtasks, or in a later task.
+    for (let i = 0; i < 10 && !moving(); i++) {
+      await new Promise<void>(resolve => {
+        queueMicrotask(resolve);
+      });
+    }
+    for (let i = 0; i < 50 && !moving(); i++) {
+      await new Promise<void>(resolve => {
+        setTimeout(resolve, 0);
+      });
     }
     return {
       clips: (panel()?.getAnimations() ?? []).some(animation =>
@@ -340,7 +392,7 @@ test.describe('spec:AST-105 FR9: an edge reveal paints its edge on the content b
     page,
   }) => {
     await openTable(page);
-    expect(await revealOnNextFrame(page)).toEqual({
+    expect(await revealAsItCommits(page)).toEqual({
       clips: false,
       partMotions: 1,
     });
@@ -354,15 +406,20 @@ test.describe('spec:AST-105 FR9: an edge reveal paints its edge on the content b
     });
     // A closing panel leaves at once and only the rows after it glide.
     const opening = ride.frames.filter(
-      f => f.phase === 'opening' && f.shown > 0.5,
+      f =>
+        (f.phase === 'opening' || f.phase === 'opening ended') && f.shown > 0.5,
     );
-    expect(opening.length, 'opening frames').toBeGreaterThan(4);
     for (const f of opening) {
       expect(f.gap, JSON.stringify(f)).toBeLessThan(ride.restGap + 1.5);
       expect(f.gap, JSON.stringify(f)).toBeGreaterThan(
         ride.restGap - ride.beyond - 1.5,
       );
     }
+    requireFrames(ride.frames, {
+      min: 5,
+      during: 'the reveal plays',
+      where: f => f.phase === 'opening' && f.shown > 0.5,
+    });
   });
 
   test('a Table panel row that paints its own box keeps the moving clip, and its cell stays still', async ({
@@ -373,7 +430,7 @@ test.describe('spec:AST-105 FR9: an edge reveal paints its edge on the content b
       content:
         '[data-expansion-panel] { background-color: rgb(240, 240, 240); }',
     });
-    expect(await revealOnNextFrame(page)).toEqual({
+    expect(await revealAsItCommits(page)).toEqual({
       clips: true,
       partMotions: 0,
     });
