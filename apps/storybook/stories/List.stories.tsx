@@ -1129,3 +1129,46 @@ export const ReorderInClippedCard: Story = {
   name: 'Scratch: reorder in a clipped card (not for landing)',
   render: () => <ReorderInClippedCardDemo />,
 };
+
+/**
+ * NOT FOR LANDING: the clipped-card scratch story with interactive, swipeable
+ * rows, whose touch bands and swipe layers rise inside the list.
+ */
+function ReorderInteractiveInClippedCardDemo() {
+  const [rows, setRows] = useState(() =>
+    Array.from({length: 12}, (_, i) => `Item ${String(i + 1).padStart(3, '0')}`),
+  );
+  return (
+    <div
+      style={{
+        overflow: 'hidden',
+        border: '1px solid rgba(0, 0, 0, 0.15)',
+        borderRadius: 12,
+      }}>
+      <div style={{padding: 12}}>
+        <Text weight="bold">Clipped card</Text>
+      </div>
+      <List
+        density="compact"
+        reorderable={createReorderable({
+          onReorder: ({key, to}) =>
+            setRows(current => moveKey(current, key, to)),
+        })}>
+        {rows.map(label => (
+          <ListItem
+            key={label}
+            itemKey={label}
+            label={label}
+            onClick={() => {}}
+            swipeActions={{trailing: [{label: 'Archive', onActivate: () => {}}]}}
+          />
+        ))}
+      </List>
+    </div>
+  );
+}
+
+export const ReorderInteractiveInClippedCard: Story = {
+  name: 'Scratch: reorder interactive rows in a clipped card (not for landing)',
+  render: () => <ReorderInteractiveInClippedCardDemo />,
+};
