@@ -582,6 +582,7 @@ test('past the minimum the zoom gives way, then springs back on springs.settle',
   // (past its 8 px hysteresis); UIKit's law maps it to the shown zoom.
   const recognizerScale = pinchScale / (300 - 8);
   expect(shown).toBeCloseTo(1 / (2 - recognizerScale), 2);
+  await new Promise(resolve => setTimeout(resolve, 1000)); // NOT FOR LANDING: runner lag
   const [settle] = await waitForAnimation(photo);
   const held = await holdAnimations(page, photo, {
     judges: {target: photo, property: 'scale'},
@@ -682,6 +683,7 @@ test('a double tap zooms until the photo fills the screen, about the tapped poin
   const at = {x: 120, y: before.stage.y + before.stage.height / 2};
   const tapped = photoPointAt(before, at);
   await driver.play(doubleTap(at));
+  await new Promise(resolve => setTimeout(resolve, 1000)); // NOT FOR LANDING: runner lag
   const [zoom] = await waitForAnimation(photo);
   const held = await holdAnimations(page, photo, {
     judges: {target: photo, property: 'scale'},
@@ -1368,6 +1370,7 @@ test(
         cellScale: 0.4,
       },
     );
+    await new Promise(resolve => setTimeout(resolve, 1000)); // NOT FOR LANDING: runner lag
     await waitForAnimation(photo);
     await freezeTimers(page);
     const {storyboard: settle} = await animationStoryboard(page, {
@@ -1399,6 +1402,7 @@ test(
       return {scale: +now.scale.toFixed(3), x: +now.x.toFixed(1)};
     };
     await driver.play(doubleTap({x: 120, y: s.stage.y + s.stage.height / 2}));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // NOT FOR LANDING: runner lag
     await waitForAnimation(photo);
     await freezeTimers(page);
     const {storyboard: zoomIn} = await animationStoryboard(page, {
