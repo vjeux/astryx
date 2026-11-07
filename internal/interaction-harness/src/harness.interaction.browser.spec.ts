@@ -206,6 +206,13 @@ test.describe('touch input', () => {
       // that holds them holds the harness's waits and sends too.
       const ticks: number[] = [];
       const probe = setInterval(() => ticks.push(Date.now()), 2);
+      // NOT FOR LANDING: the runner's thread stops 30 ms in every 150.
+      const stall = setInterval(() => {
+        const end = Date.now() + 30;
+        while (Date.now() < end) {
+          // the runner is held
+        }
+      }, 150);
       // Taken before the harness reads its own clock to schedule the script.
       const playStart = Date.now();
       const played = await driver
@@ -214,7 +221,10 @@ test.describe('touch input', () => {
             answeredAt.push(Date.now());
           },
         })
-        .finally(() => clearInterval(probe));
+        .finally(() => {
+          clearInterval(probe);
+          clearInterval(stall);
+        });
       const log = await readInputLog(page);
       return {played, answeredAt, playStart, log, ticks};
     };
