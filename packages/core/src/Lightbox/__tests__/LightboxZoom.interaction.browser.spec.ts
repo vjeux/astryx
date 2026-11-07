@@ -838,12 +838,34 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
   await driver.play(
     flick(mid, {velocity: {x: -900, y: 0}, durationMs: 80, hz: 120}),
   );
+  // NOT FOR LANDING: the touchdown guard, as in the fix, and 400 ms of
+  // runner lag before each poll read and before the landing.
+  const lag = async () => new Promise(resolve => setTimeout(resolve, 400));
+  await photo.evaluate(el => {
+    // The pointer event comes first, and the photo stops on it.
+    window.addEventListener(
+      'pointerdown',
+      () => {
+        (globalThis as unknown as {coastAtTouch?: boolean}).coastAtTouch = el
+          .getAnimations()
+          .some(a => a.playState === 'running');
+      },
+      {capture: true, once: true},
+    );
+  });
   // The finger lands once the coast has carried the photo on past the
   // release, then rests 250 ms and lifts without moving.
   const released = (await state()).x;
   await expect
-    .poll(async () => (await state()).x, {timeout: 2000})
+    .poll(
+      async () => {
+        await lag();
+        return (await state()).x;
+      },
+      {timeout: 2000},
+    )
     .toBeLessThan(released - 10);
+  await lag();
   const reads: PhotoState[] = [];
   await driver.play(
     [
@@ -856,6 +878,11 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
       },
     },
   );
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as {coastAtTouch?: boolean}).coastAtTouch,
+    ),
+  ).toBe(true);
   // Read at the touch-down and at the lift.
   expect(reads).toHaveLength(2);
   const [{x: caughtX}, {x: heldX, stage, fit, scale}] = reads;
