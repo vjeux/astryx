@@ -176,6 +176,13 @@ async function paintedRide(
     // Each click's own read counts in the gaps before the first frame.
     button.click();
     read('opening start');
+    // NOT FOR LANDING: the content's reveal jumps to its end; the glide after it still rides.
+    await new Promise<void>(resolve => {
+      queueMicrotask(resolve);
+    });
+    for (const animation of content()?.getAnimations({subtree: true}) ?? []) {
+      animation.cancel();
+    }
     for (let i = 0; i < 40; i++) {
       await frame();
       read(revealing() ? 'opening' : 'opening ended');
