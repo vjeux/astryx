@@ -391,6 +391,7 @@ test('under Reduce Motion, + then - pressed mid-fade leave the photo at full opa
   );
   await page.keyboard.press('+');
   await dipped;
+  await new Promise(resolve => setTimeout(resolve, 300));
   await page.keyboard.press('-');
   await thawPage(page);
   await waitForRest(img);
