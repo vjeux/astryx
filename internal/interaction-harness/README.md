@@ -555,6 +555,18 @@ gesture the same way, and the play fails with `TouchPacingError`. A play whose
 proof reads no release from the lift, such as a pinch's end, passes
 `releaseUnread`.
 
+When the page's own touch and pointer listeners held an event back, the play
+fails with `TouchPageStallError`, which counts their time from when they began.
+An event that waited for the main thread before them fails as
+`TouchPacingError`, and the error names the wait: another page task held the
+thread, or the runner starved it. The driver marks when the page's listeners
+begin with a window capture listener. Created before the page loads, the driver
+adds it before the page's scripts, so it runs first. Created after, it would
+run after the window capture listeners the page added at load, such as a
+gesture host's. So the driver then keeps the old reading: an event's time from
+its stamp counts as the page's listeners'. Create the driver before the page
+loads to tell a wait from the listeners.
+
 A wheel gesture is a run of steps, and `wheel` waits for each step's round
 trip, so on a loaded runner awaited steps land as far apart as a round trip
 takes: 49 to 141 ms in WebKit, past the 100 ms a proof may allow between the
