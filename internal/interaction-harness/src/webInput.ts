@@ -248,7 +248,7 @@ export function wheelGapCauses(
       stamps[i] - handledAt[i - 1] <= HELD_BACK_MS &&
       widened;
     const frameGap =
-      engine === 'webkit' && widened
+      engine === 'webkit'
         ? frameGapAcross(frames, stamps[i - 1], stamps[i])
         : null;
     if (heldBack) {
