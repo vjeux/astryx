@@ -330,7 +330,7 @@ async function edgeRide(
     // Then the reveal plays on from there for two real frames. At its start
     // a reveal shows nothing yet, so those frames would show no ride.
     for (const animation of document.getAnimations()) {
-      animation.play();
+      animation.cancel();
     }
     for (let i = 0; i < 2; i++) {
       await frame();
@@ -369,6 +369,12 @@ async function edgeRide(
       }
     }
     for (let i = 0; i < 60; i++) {
+      if (i === 20) {
+        const end = performance.now() + 120;
+        while (performance.now() < end) {
+          // A 120 ms long task while the conceal plays.
+        }
+      }
       await frame();
       read('closing');
     }
