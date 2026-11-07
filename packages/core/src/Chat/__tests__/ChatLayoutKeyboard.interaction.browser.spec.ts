@@ -622,6 +622,8 @@ test.describe('Chrome on Android (spec:AST-099 FR8)', () => {
     // lays out once and paints in its first two frames. From about 230 ms, its
     // end paints twice and hands the layers back with one layout.
     const steady = {from: reported + 125, to: reported + 220};
+    // NOT FOR LANDING: logs how long after the focus the report came.
+    console.log(`FOCUSEDFOR ${Math.round(focusedFor)}`);
     // The caret blinks every 500 ms from the focus, Chrome's interval, and
     // each blink is a main-thread frame. A report soon after the focus keeps
     // the first blink after the window.
