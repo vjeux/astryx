@@ -189,6 +189,11 @@ const styles = stylex.create({
   root: {
     display: 'flex',
     flexDirection: 'column',
+    // NOT FOR LANDING (variant B): under a finger, the isolation boundary for
+    // what rises inside the list sits on this wrapper, not on the clipping
+    // list. iOS WebKit draws a composited row 1 pt off when one element both
+    // clips one axis and isolates, inside a clipping ancestor.
+    isolation: {default: null, '@media (pointer: coarse)': 'isolate'},
   },
   list: {
     margin: 0,
@@ -202,11 +207,6 @@ const styles = stylex.create({
     // `hidden`: hidden makes a scroll container, which fights the list's
     // vertical scroller. (StyleX emits the physical longhand of this axis.)
     overflowInline: 'clip',
-    // Under a finger, the isolation boundary for what rises inside the list.
-    // A row's touch band and a swipeable row order above the rows after them.
-    // They stay below a page-level sticky header at the same z-index. With a
-    // mouse nothing rises, so the list keeps its stacking.
-    isolation: {default: null, '@media (pointer: coarse)': 'isolate'},
   },
   // A list under an `animatedLayout` handle isolates for every pointer. A row
   // that slides across others rides above them with a mouse too, and it must
@@ -384,7 +384,6 @@ export function List({
         themeProps('list', {density, listStyle}),
         stylex.props(
           styles.list,
-          animatedLayout != null && styles.animatedIsolation,
           isOrdered && styles.numberColumns,
           hasDividers && styles.withDividers,
           reachesContainerPadding && styles.reachesContainerPadding,
@@ -418,23 +417,19 @@ export function List({
     <reorderValue.session.Host reorder={reorderValue} />
   );
 
-  if (header == null) {
-    return (
-      <ListContext value={contextValue}>
-        {snapshot}
-        {listElement}
-        {reorderHost}
-      </ListContext>
-    );
-  }
-
   return (
     <ListContext value={contextValue}>
       {snapshot}
-      <div {...stylex.props(styles.root)}>
-        <div id={headerId} {...stylex.props(styles.header)}>
-          {header}
-        </div>
+      <div
+        {...stylex.props(
+          styles.root,
+          animatedLayout != null && styles.animatedIsolation,
+        )}>
+        {header != null && (
+          <div id={headerId} {...stylex.props(styles.header)}>
+            {header}
+          </div>
+        )}
         {listElement}
         {reorderHost}
       </div>
