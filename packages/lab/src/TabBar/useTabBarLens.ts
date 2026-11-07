@@ -392,7 +392,9 @@ export function useTabBarLens({
     // selected look; only the magnification is motion.
     motionRef.current += 1;
     const isReduced = body.animator.reducedMotion({}) !== 'off';
-    flushSync(() => setIsCopyShown(true));
+    if (!isReduced) {
+      flushSync(() => setIsCopyShown(true));
+    }
     const at = performance.now();
     const travel = {x: chaseTarget(x, centers) - centers[selected]};
     // Under Reduce Motion the lens is put under the finger at once, as
