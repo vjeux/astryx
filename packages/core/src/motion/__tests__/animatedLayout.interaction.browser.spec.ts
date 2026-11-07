@@ -2694,6 +2694,13 @@ test.describe('spec:AST-105 FR9 (the edge reveal)', () => {
       window.resumeAll();
       for (let i = 0; i < 60; i++) {
         await frame();
+        // NOT FOR LANDING: a 500 ms long task after the reveal's first real frame.
+        if (i === 0) {
+          const t0 = performance.now();
+          while (performance.now() - t0 < 500) {
+            // busy
+          }
+        }
         read('opening');
       }
       const openBottom = content.getBoundingClientRect().bottom;
