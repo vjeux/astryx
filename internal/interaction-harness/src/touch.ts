@@ -444,7 +444,7 @@ function coreRelease(
     };
   };
   const current = pan(moved.slice(-3));
-  if (filter === 'pan') {
+  if (filter === 'pan' || filter === 'scroll') {
     return {...current, moves, rests, moved: read};
   }
   const previous = pan(moved.slice(0, -1).slice(-3));
