@@ -176,6 +176,13 @@ async function paintedRide(
     // Each click's own read counts in the gaps before the first frame.
     button.click();
     read('opening start');
+    // NOT FOR LANDING: the reveal runs no motion at all; the page opens at once.
+    await new Promise<void>(resolve => {
+      queueMicrotask(resolve);
+    });
+    for (const animation of document.getAnimations()) {
+      animation.cancel();
+    }
     for (let i = 0; i < 40; i++) {
       await frame();
       read(revealing() ? 'opening' : 'opening ended');
