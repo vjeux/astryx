@@ -986,9 +986,7 @@ export function createPager(
           settled = settleFrom.isFromLast
             ? last
             : nearestPage(settleFrom.settled);
-          const next = settleFrom.isToLast
-            ? last
-            : nearestPage(settleFrom.target);
+          const next = nearestPage(settleFrom.target);
           if (next !== target) {
             target = next;
             // The same page, renumbered: the owner hears it only through a
