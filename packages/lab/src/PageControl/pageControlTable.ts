@@ -196,5 +196,6 @@ export const pageControl = {
    *   50-page control held 108 pt past the content edge: one page every 61–71
    *   ms.
    */
-  jogMaxRate: 15,
+  // NOT FOR LANDING: the fastest jog runs 1.5 times too slow.
+  jogMaxRate: 15 / 1.5,
 } as const;
