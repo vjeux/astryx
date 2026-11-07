@@ -193,6 +193,7 @@ Selector's and MultiSelector's options FR1–FR5
 | ButtonGroup, ToggleButtonGroup, Toolbar                                                              | Track sibling buttons; a field inside is skipped; toggles follow FR4. |
 | DateRangeInput's presets                                                                             | Track the preset buttons only.                                        |
 | Banner and Toast action rows                                                                         | Track only a row with two or more sibling actions.                    |
+| Lab TabBar                                                                                           | Follow FR1–FR5; a touch begun on a disabled tab tracks nothing.       |
 
 These are required outcomes, not a claim of completed adoption. The excluded
 components listed under the membership rule are not exceptions to approve;

@@ -73,6 +73,12 @@ export interface TabBarItemProps {
    * same id on the panel element.
    */
   panelId?: string;
+  /**
+   * Disables the tab, as on Core's Tab: it stays focusable, dimmed, and is
+   * never chosen. A tap, a click or a key on it, or a lift over it, selects
+   * nothing, and the arrow keys skip it.
+   */
+  'aria-disabled'?: boolean | 'true' | 'false';
 }
 
 export interface TabBarProps extends Omit<
@@ -120,6 +126,11 @@ function readItems(children: ReactNode): TabBarItemProps[] {
   );
 }
 
+function isDisabledItem(item: TabBarItemProps | undefined): boolean {
+  const disabled = item?.['aria-disabled'];
+  return disabled === true || disabled === 'true';
+}
+
 function hasBadge(badge: string | number | undefined): boolean {
   return badge != null && badge !== '';
 }
@@ -148,11 +159,15 @@ function center(index: number, count: number): string {
 /**
  * An item button's column, and where the item starts inside it. The column runs
  * from halfway to the previous item to halfway to the next. The first and last
- * columns end at the capsule's edges.
+ * columns end at the capsule's edges. Next to a disabled tab, an enabled tab's
+ * column reaches over it, as UIKit's item-wide buttons do: by the part of an
+ * item wider than the pitch. So a touch at a disabled tab's edge is its
+ * neighbour's.
  */
 function column(
   index: number,
   count: number,
+  {reachesBack = false, reachesOn = false} = {},
 ): {start: string; width: string; itemStart: string} {
   if (count <= 1) {
     return {
@@ -162,14 +177,20 @@ function column(
     };
   }
   const half = `${pitch(count)} / 2`;
-  const edgeWidth = `calc(${INSET} + ${itemWidthCss(count)} / 2 + ${half})`;
+  const reach = `max(0px, (${itemWidthCss(count)} - ${pitch(count)}) / 2)`;
+  const back = reachesBack ? ` + ${reach}` : '';
+  const on = reachesOn ? ` + ${reach}` : '';
+  const edgeWidth = `${INSET} + ${itemWidthCss(count)} / 2 + ${half}`;
   if (index === 0) {
-    return {start: '0px', width: edgeWidth, itemStart: INSET};
+    return {start: '0px', width: `calc(${edgeWidth}${on})`, itemStart: INSET};
   }
   return {
-    start: `calc(${center(index, count)} - ${half})`,
-    width: index === count - 1 ? edgeWidth : `calc(${pitch(count)})`,
-    itemStart: `calc(${half} - ${itemWidthCss(count)} / 2)`,
+    start: `calc(${center(index, count)} - ${half}${reachesBack ? ` - ${reach}` : ''})`,
+    width:
+      index === count - 1
+        ? `calc(${edgeWidth}${back})`
+        : `calc(${pitch(count)}${back}${on})`,
+    itemStart: `calc(${half} - ${itemWidthCss(count)} / 2${back})`,
   };
 }
 
@@ -398,6 +419,9 @@ const styles = stylex.create({
   itemSelectedLook: {
     color: colorVars['--color-accent'],
   },
+  itemDisabled: {
+    color: colorVars['--color-text-disabled'],
+  },
   badges: {
     position: 'absolute',
     inset: 0,
@@ -544,6 +568,9 @@ export function TabBar({
   });
   const choose = useCallback(
     (item: TabBarItemProps) => {
+      if (isDisabledItem(item)) {
+        return;
+      }
       if (item.value === value) {
         onReselect?.(item.value);
       } else {
@@ -558,6 +585,7 @@ export function TabBar({
     selectedIndex,
     isTouch,
     onLift: index => choose(items[index]),
+    isDisabled: index => isDisabledItem(items[index]),
   });
   const mergedCapsuleRef = useMergedRefs(capsuleRef, listRef, lens.capsule);
 
@@ -593,7 +621,17 @@ export function TabBar({
         )}>
         {items.map((item, index) => {
           const isSelected = index === selectedIndex;
-          const {start, width, itemStart} = column(index, count);
+          const isDisabled = isDisabledItem(item);
+          const {start, width, itemStart} = column(
+            index,
+            count,
+            isDisabled
+              ? {}
+              : {
+                  reachesBack: isDisabledItem(items[index - 1]),
+                  reachesOn: isDisabledItem(items[index + 1]),
+                },
+          );
           return (
             <button
               key={item.value}
@@ -601,6 +639,7 @@ export function TabBar({
               role="tab"
               id={`${baseId}-tab-${index}`}
               aria-selected={isSelected}
+              aria-disabled={isDisabled || undefined}
               aria-controls={item.panelId}
               tabIndex={
                 isSelected || (selectedIndex < 0 && index === 0) ? 0 : -1
@@ -632,11 +671,14 @@ export function TabBar({
                   // At rest the tab draws its selected look; while the lens
                   // slides, the copy inside it does.
                   isSelected && !lens.isCopyShown && styles.itemSelectedLook,
+                  isDisabled && styles.itemDisabled,
                   styles.box(itemStart, ITEM_TOP, itemSize, ITEM_HEIGHT),
                 )}>
                 <ItemFace
                   item={item}
-                  isSelectedLook={isSelected && !lens.isCopyShown}
+                  isSelectedLook={
+                    isSelected && !isDisabled && !lens.isCopyShown
+                  }
                 />
               </span>
             </button>
@@ -687,8 +729,13 @@ export function TabBar({
                               itemSize,
                               ITEM_HEIGHT,
                             ),
+                            isDisabledItem(item) && styles.itemDisabled,
                           )}>
-                          <ItemFace item={item} isSelectedLook isCopy />
+                          <ItemFace
+                            item={item}
+                            isSelectedLook={!isDisabledItem(item)}
+                            isCopy
+                          />
                         </span>
                       ))}
                     </div>
