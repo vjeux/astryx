@@ -543,6 +543,8 @@ arrives. So a lift that reaches the page past the 40 ms stillness interval
 after its finger's last move reads as a resting finger. The page releases it
 at 0. Every WebKit play reads its release from the page's own stamps, however
 it is paced, and fails by name when the page's release is not the script's.
+It reads each move and the lift at its pointer event's stamp, and the
+touch-down at its touch event's, where Core's gesture host reads them.
 The error is `TouchLiftStallError` when `onEvent` ran for the lift gap's
 excess. Record what the page did in a listener of its own, or let the script
 rest before the lift. A runner too loaded to dispatch in time stretches a
