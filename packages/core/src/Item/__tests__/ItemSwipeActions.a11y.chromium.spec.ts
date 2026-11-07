@@ -218,6 +218,7 @@ test('paints no panel at rest, keeps the panel fixed while the row moves, rests 
   await dragTo([8, 16, 24, 30]);
   await expect.poll(async () => translationOf(row)).toBeGreaterThan(20);
   await touch('touchEnd');
+  await new Promise(resolve => setTimeout(resolve, 150)); // NOT FOR LANDING: runner lag
   const midFlight = await row.evaluate(
     async (node, selector) =>
       new Promise<{rowX: number; panelWidth: number}>(resolve => {
