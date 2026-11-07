@@ -225,6 +225,7 @@ test('under Reduce Motion a double tap cross-fades to its zoom instead of travel
   await driver.play(
     doubleTap({x: rect.x + rect.width / 2, y: rect.y + rect.height / 2}),
   );
+  await new Promise(resolve => setTimeout(resolve, 1000)); // NOT FOR LANDING: runner lag
   const held = await hold.held();
   const duration = Math.max(...held.map(a => a.curveEndMs));
   const samples = await sampleCurve(img, timeline(duration));
@@ -520,6 +521,7 @@ test('under Reduce Motion a pinch released past the maximum settles in place, wi
       },
     },
   );
+  await new Promise(resolve => setTimeout(resolve, 1000)); // NOT FOR LANDING: runner lag
   const held = await hold.held();
   expect(held.length).toBeGreaterThan(0);
   const duration = Math.max(...held.map(a => a.curveEndMs));
