@@ -67,6 +67,7 @@ function contractWorkers(): number {
 
 export default defineConfig({
   testDir: '.',
+  testIgnore: ['**/.astryx-*/**'],
   testMatch: [...A11Y_SPEC_GLOBS],
   // The contract mounts, focuses, and types into one page at a time, so a spec
   // file's tests run in order on one worker (`fullyParallel: false`). Workers

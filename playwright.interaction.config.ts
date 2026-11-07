@@ -61,6 +61,7 @@ function workers(): number {
 
 export default defineConfig({
   testDir: '.',
+  testIgnore: ['**/.astryx-*/**'],
   testMatch: [
     'internal/interaction-harness/src/**/*.interaction.browser.spec.ts',
     'packages/*/src/**/*.interaction.browser.spec.ts',
