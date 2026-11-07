@@ -231,9 +231,9 @@ export const rowPressLayerStyles = stylex.create({
             ':hover': tintAbove(colorVars['--color-overlay-hover']),
             ':active': tintAbove(colorVars['--color-overlay-pressed']),
           },
-          // A press the controller paints. Under a coarse pointer, the press
-          // layer covers the divider above. Elsewhere the strip takes the
-          // row's own press paint, which follows the release's strength.
+          // While a press is on or fading, a coarse pointer's press layer
+          // covers the divider above. Elsewhere the strip takes the row's
+          // press paint, which follows the release.
           [PRESSED_ON]: {
             default: tintAbove('var(--_press-paint)'),
             [COARSE]: 'none',
