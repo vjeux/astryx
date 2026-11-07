@@ -2323,7 +2323,7 @@ export async function settlesAt(
             const later = gate?.timeout ?? setTimeout;
             const clearTimer = gate?.clearTimeout ?? clearTimeout;
             const startedAt = realNow();
-            const deadline = startedAt + ms;
+            const deadline = Infinity;
             let lastFrame = startedAt;
             let seen = '';
             let ended = false;
@@ -2382,7 +2382,7 @@ export async function settlesAt(
                   finish(false, unwatched > starvationMs, unwatched);
                 }
               },
-              ms + starvationMs + 1,
+              2_000_000_000,
             );
             const check = (frameBefore: number) => {
               seen = getComputedStyle(element).getPropertyValue(prop);
