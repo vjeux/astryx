@@ -201,7 +201,11 @@ const styles = stylex.create({
     // past the list's inline edge unless the list clips. `clip`, never
     // `hidden`: hidden makes a scroll container, which fights the list's
     // vertical scroller. (StyleX emits the physical longhand of this axis.)
-    overflowInline: 'clip',
+    // NOT FOR LANDING: under a finger, a finite clip-path clips the inline
+    // axis instead. iOS WebKit draws a composited row 1 pt off at a clipping
+    // ancestor's edge inside a one-axis overflow clip.
+    overflowInline: {default: 'clip', '@media (pointer: coarse)': 'visible'},
+    clipPath: {default: null, '@media (pointer: coarse)': 'inset(-2000px 0)'},
     // Under a finger, the isolation boundary for what rises inside the list.
     // A row's touch band and a swipeable row order above the rows after them.
     // They stay below a page-level sticky header at the same z-index. With a
