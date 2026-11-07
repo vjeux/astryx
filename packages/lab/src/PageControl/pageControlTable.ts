@@ -181,7 +181,8 @@ export const pageControl = {
    *   19 pt past the content edge to 66 ms at 76 pt. A least-squares fit gives
    *   0.173 pages/s per pt.
    */
-  jogRatePerPoint: 0.173,
+  // NOT FOR LANDING: the jog runs 1.5 times too slow near the edge.
+  jogRatePerPoint: 0.173 / 1.5,
   /**
    * The same toward the first page, where the run is slower.
    * @source measured: UIKit lab, iPhone 17 Pro simulator, Oct 24 2026. A
