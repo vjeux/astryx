@@ -699,9 +699,11 @@ export class TouchPageStallError extends Error {
 /**
  * A play's lift reached the page more than the stillness interval after its
  * finger's last move, where the script throws. The play's own `onEvent` ran
- * for that excess: page work there holds the next event back by a round trip.
- * On a page that stamps touches on arrival (WebKit), the page then reads a
- * resting finger and releases at 0.
+ * long enough to carry the gap past that interval by itself. Page work there
+ * holds the next event back by a round trip. A loaded runner can stretch the
+ * gap more, and the error still names `onEvent`. On a page that stamps
+ * touches on arrival (WebKit), the page then reads a resting finger and
+ * releases at 0.
  */
 export class TouchLiftStallError extends Error {
   constructor(
@@ -730,10 +732,12 @@ export class TouchLiftStallError extends Error {
 
 /**
  * The `TouchLiftStallError` for a fault the play's own `onEvent` explains. The
- * page read a rest, and `onEvent` ran for the lift gap's excess over the
- * script. Null for any other fault.
+ * page read a rest, and the scripted gap plus `onEvent`'s run passes the
+ * stillness interval. A loaded runner that stretched the gap more changes
+ * nothing: the lift stall is the more specific cause, so it comes before any
+ * pacing error. Null for any other fault.
  */
-function liftStallError(
+export function liftStallError(
   steps: readonly TouchEventStep[],
   arrivals: readonly TouchArrival[],
   fault: TouchPacingFault,
@@ -763,7 +767,7 @@ function liftStallError(
   const ranMs = onEventMs
     .slice(lastMoved, lift)
     .reduce((sum, ms) => sum + ms, 0);
-  return ranMs >= gapMs - scriptedGapMs
+  return scriptedGapMs + ranMs > TOUCH_STILLNESS_MS
     ? new TouchLiftStallError({
         scriptedGapMs,
         gapMs,
@@ -771,6 +775,25 @@ function liftStallError(
         frameGapMs: fault.frameGapMs,
       })
     : null;
+}
+
+/**
+ * The error a paced play's fault throws. The lift stall comes first, since
+ * it is the more specific cause. Then a gap the page's own listeners held is
+ * the page's, and any other gap is the runner's.
+ */
+export function touchPlayError(
+  steps: readonly TouchEventStep[],
+  arrivals: readonly TouchArrival[],
+  fault: TouchPacingFault,
+  onEventMs: readonly number[],
+): TouchLiftStallError | TouchPageStallError | TouchPacingError {
+  return (
+    liftStallError(steps, arrivals, fault, onEventMs) ??
+    (fault.heldByPage == null
+      ? new TouchPacingError(fault)
+      : new TouchPageStallError({...fault, heldByPage: fault.heldByPage}))
+  );
 }
 
 /** Records what the page saw of a paced play's touches (WebKit). */
@@ -871,12 +894,7 @@ async function playSteps(
     });
     if (found != null) {
       const fault = {...found, frameGapMs: longestFrameGap(frames, arrivals)};
-      throw (
-        liftStallError(steps, arrivals, fault, onEventMs) ??
-        (fault.heldByPage == null
-          ? new TouchPacingError(fault)
-          : new TouchPageStallError({...fault, heldByPage: fault.heldByPage}))
-      );
+      throw touchPlayError(steps, arrivals, fault, onEventMs);
     }
     const reading = readRelease(steps, arrivals, release);
     if (reading != null) {
