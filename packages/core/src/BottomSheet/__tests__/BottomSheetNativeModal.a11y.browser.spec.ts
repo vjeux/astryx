@@ -440,9 +440,6 @@ const ENTERING = 'Notification frequency';
  */
 async function prepareHandoffHold(page: Page) {
   await waitForRest(page.locator('dialog[open]'));
-  await page.addStyleTag({
-    content: `.astryx-bottom-sheet { transition-duration: ${HELD_RUN_MS}ms !important; }`,
-  });
   await page.evaluate(() => {
     const runs: string[] = [];
     (window as unknown as {__backdropRuns: string[]}).__backdropRuns = runs;
@@ -494,6 +491,7 @@ async function holdPhase(
     const started = await watch.started({timeout: 10_000});
     expect(started.map(animation => animation.name)).toContain(property);
   }
+  await page.waitForTimeout(Number(process.env.LAG_MS ?? '2000'));
   await holdAnimations(page, undefined, {
     judges: movers.map(mover => ({target: mover, property})),
   });
