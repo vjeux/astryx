@@ -1000,7 +1000,7 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
   // With the main thread blocked, a loaded runner's compositor presents a
   // frame every 100 to 250 ms. The spring moves for half a second, which
   // leaves too few frames to judge. So the zoom plays at a slow tempo.
-  await slowViewer(page, ZOOM_TEMPO);
+  await slowViewer(page);
   const since = await page.evaluate(() => performance.now());
   const cast = await startScreencast(page);
   // The page itself waits for the zoom and blocks one frame into it. The
