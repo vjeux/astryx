@@ -1164,7 +1164,7 @@ export class SegmentedSelectionMotion {
     }
     if (previous?.hidden !== paint) {
       if (previous != null) {
-        this.abandoned.add(previous.hidden);
+        showSurface(previous.hidden);
       }
       // A segment abandoned mid-flight still has its surface hidden: read
       // its paint with it shown.
