@@ -249,7 +249,7 @@ export async function waitForCastFrame(
     if (elapsed > timeoutMs) {
       const quietMs =
         latest == null ? Number.POSITIVE_INFINITY : Date.now() - latest;
-      if (latest == null || quietMs > FRAME_STARVATION_MS) {
+      if (latest == null || quietMs >= 0) {
         throw new FrameStarvationError({
           by: 'waitForCastFrame',
           during: `${during} (${elapsed} ms)`,
