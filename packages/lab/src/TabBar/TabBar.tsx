@@ -629,7 +629,7 @@ export function TabBar({
       // navigation stack: a reselect.
       if (
         item.value === value ||
-        (item.value === moreValue && isMoreSelected)
+        (item.value === moreValue && isMoreSelected && false)
       ) {
         onReselect?.(item.value);
       } else {
