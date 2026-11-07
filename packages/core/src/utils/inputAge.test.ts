@@ -4,7 +4,8 @@
  * @file inputAge.test.ts
  * @input inputAge.ts
  * @output Unit tests for msSinceInput: an input's age on the clock of the
- *   window it landed in, and now for a time off that clock
+ *   window that stamped it, an epoch stamp's age, and now for no time or
+ *   one ahead of now
  * @position Testing; validates inputAge.ts
  */
 
@@ -26,9 +27,14 @@ describe('msSinceInput', () => {
     expect(msSinceInput(performance.now())).toBe(0);
   });
 
-  it('is zero for a time off that clock: zero, ahead of now, or an epoch time', () => {
+  it('is zero for an input with no time, or a time ahead of now', () => {
     expect(msSinceInput(0)).toBe(0);
+    expect(msSinceInput(Number.NaN)).toBe(0);
     expect(msSinceInput(performance.now() + 500)).toBe(0);
+  });
+
+  it('keeps the age of an epoch stamp, as jsdom stamps an event', () => {
+    expect(msSinceInput(Date.now() - 60)).toBe(60);
     expect(msSinceInput(Date.now())).toBe(0);
   });
 
@@ -37,8 +43,10 @@ describe('msSinceInput', () => {
     const frame = {performance: {now: () => 5000}};
     const element = {nodeType: 1, ownerDocument: {defaultView: frame}};
     const frameDocument = {nodeType: 9, defaultView: frame};
+    const event = {view: frame};
     expect(msSinceInput(4940, element)).toBe(60);
     expect(msSinceInput(4940, frameDocument)).toBe(60);
+    expect(msSinceInput(4940, event)).toBe(60);
     // On this window's clock, that time is ahead of now.
     expect(msSinceInput(4940)).toBe(0);
   });
