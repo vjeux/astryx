@@ -406,7 +406,7 @@ export function usePageControlTouch({
           const g = gestureRef.current;
           g.interactTimer = view().setTimeout(() => {
             g.interactTimer = 0;
-            flushSync(showHeld);
+            showHeld();
           }, PC.interactionDelayMs);
           track(x);
           break;
@@ -437,9 +437,7 @@ export function usePageControlTouch({
       switch (hold.state) {
         case 'began':
           begin(landingX(hold, x));
-          // The held look commits in the hold timer's own task. A render
-          // scheduled after it can wait behind a busy page's other tasks.
-          flushSync(showHeld);
+          showHeld();
           break;
         case 'changed':
           track(x);
