@@ -3232,6 +3232,12 @@ test("a press in a same-origin iframe's scroll view waits the content-touch dela
     view.addEventListener(
       'touchstart',
       event => {
+        // NOT FOR LANDING: the page is held 12 ms before this listener reads
+        // its clocks, as a busy machine can hold it between two listeners.
+        const until = view.performance.now() + 12;
+        while (view.performance.now() < until) {
+          // spin
+        }
         times.touch = event.timeStamp;
         times.handled = view.performance.now();
       },
