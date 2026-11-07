@@ -896,7 +896,7 @@ export function requireFrames<T extends {readonly t: number}>(
     selected.length > 0 ? selected[selected.length - 1].t - selected[0].t : 0;
   const drawn = last - first + 1;
   const spanFrames = Math.round(spanMs / DISPLAY_FRAME_MS) + 1;
-  if (selected.length >= 2 && drawn < min && spanFrames >= min) {
+  if (selected.length >= 2 && drawn < min) {
     throw new FrameStarvationError({
       ...numbers,
       meanFrameMs: spanMs / (drawn - 1),
