@@ -263,12 +263,11 @@ export function AlertDialog({
   });
   // Through the group's context, each action's Button writes the press-group
   // marker from its first render. So the tracker is its only painter. Dialog
-  // holds a press during the entrance, and the exit's hold holds one while the
-  // alert leaves.
+  // holds a press during the entrance.
   const actionsRef = useRef<HTMLElement>(null);
   // Only under the touch presentation does a press slide across the
   // actions. A desktop press stays the native button's.
-  const isTracking = motion.isPresented && isInline !== true && isTouch;
+  const isTracking = isOpen && isInline !== true && isTouch;
   useActionGroupTracking(actionsRef, {
     // The actions row holds only the two buttons.
     itemSelector: 'button',
@@ -278,22 +277,9 @@ export function AlertDialog({
     pointerTypes: GROUP_PRESS_POINTERS,
     isEnabled: isTracking,
   });
-  // A leaving alert takes no input, as UIKit's does: the exit's hold makes its
-  // content inert. The dialog's own Escape, its cancel event, still reaches
-  // it, so Escape is dropped here until the alert is hidden. Dialog returns
-  // focus to the opener when the fade ends.
-  const {isLeaving} = motion;
   const handleCancel = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      if (!isLeaving) {
-        onOpenChange(next);
-      }
-    },
-    [isLeaving, onOpenChange],
-  );
   const mergedRef = useMergedRefs(ref, motion.ref);
 
   const buttonActionStyle = [
@@ -331,7 +317,7 @@ export function AlertDialog({
       ref={mergedRef}
       isOpen={motion.isPresented}
       isInline={isInline}
-      onOpenChange={handleOpenChange}
+      onOpenChange={onOpenChange}
       width={width}
       purpose="form"
       // `alertdialog` is a modal role: it promises an interruption the user

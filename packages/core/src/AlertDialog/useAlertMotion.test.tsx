@@ -2,14 +2,13 @@
 
 /**
  * @file useAlertMotion.test.tsx
- * @input A component using useAlertMotion, with the dialog's CSS animations
- *   replaced by stand-ins that end when the test says so
- * @output The hook's state contract. It covers the touch look's styles and the
- *   start scale. An exit keeps the alert presented until its end, or closes at
- *   once at 0 ms, and holds its input meanwhile: inert content, focus out. It
- *   also covers the backstop, a reopen mid-exit that gives the content and
- *   focus back, and a disabled hook that follows the caller. The reopen gives
- *   focus back in a same-origin iframe too
+ * @input A component using useAlertMotion, with the alert's exit copy
+ *   replaced by a stand-in whose fade ends when the test says so
+ * @output The hook's state contract: the touch look and the start scale. A
+ *   close takes the copy while the Dialog is open, then closes it in the same
+ *   task. The page is inert with focus out until the fade ends, and focus
+ *   then returns to the opener. It also covers an exit of 0 ms, the backstop,
+ *   a reopen mid-fade, an unmount mid-fade and a disabled hook
  * @position jsdom tests of packages/core/src/AlertDialog/useAlertMotion.ts
  */
 
@@ -22,6 +21,24 @@ import {
   useAlertMotion,
   type AlertMotion,
 } from './useAlertMotion';
+
+/** The stand-in copies placed, and the fade the next one plays. */
+const exitCopies = vi.hoisted(() => ({
+  fade: [] as Animation[],
+  placed: [] as HTMLElement[],
+}));
+
+// jsdom has no top layer, so the real copy is never shown there.
+vi.mock('../privateAttributes/alertExit.stylex', () => ({
+  placeAlertExitCopy: (element: HTMLElement) => {
+    const copy = element.ownerDocument.createElement('div');
+    const fade = exitCopies.fade;
+    copy.getAnimations = () => fade;
+    element.after(copy);
+    exitCopies.placed.push(copy);
+    return copy;
+  },
+}));
 
 /** A CSS animation stand-in that ends when `end` runs. */
 interface StandIn {
@@ -41,8 +58,11 @@ function standIn(endTime: number): StandIn {
   return {animation, end};
 }
 
-/** What the dialog's `getAnimations()` returns next. */
-let running: StandIn[] = [];
+/** Plays `fade` on the next copy. */
+const fadeNext = (...fade: StandIn[]) => {
+  exitCopies.fade = fade.map(item => item.animation);
+};
+
 let latest: AlertMotion | null = null;
 
 function Alert({isOpen, isEnabled}: {isOpen: boolean; isEnabled: boolean}) {
@@ -52,7 +72,6 @@ function Alert({isOpen, isEnabled}: {isOpen: boolean; isEnabled: boolean}) {
     <div
       ref={element => {
         if (element != null) {
-          element.getAnimations = () => running.map(r => r.animation);
           Object.defineProperty(element, 'offsetWidth', {
             configurable: true,
             value: 320,
@@ -66,6 +85,16 @@ function Alert({isOpen, isEnabled}: {isOpen: boolean; isEnabled: boolean}) {
   );
 }
 
+/** The alert with the control that opens it. */
+function Page({isOpen, isEnabled}: {isOpen: boolean; isEnabled: boolean}) {
+  return (
+    <>
+      <button type="button">Open</button>
+      <Alert isOpen={isOpen} isEnabled={isEnabled} />
+    </>
+  );
+}
+
 const motion = (): AlertMotion => {
   if (latest == null) {
     throw new Error('not rendered');
@@ -73,13 +102,28 @@ const motion = (): AlertMotion => {
   return latest;
 };
 
-/** Lets the stand-ins' ends reach the hook. */
+/** Lets the stand-ins' ends and queued focus moves reach the page. */
 const settle = async () => {
   await act(async () => {});
 };
 
+/** Opens the alert from the focused Open button, and focuses Cancel. */
+async function openFromOpener() {
+  const view = render(<Page isOpen={false} isEnabled />);
+  const opener = view.getByRole('button', {name: 'Open'});
+  opener.focus();
+  view.rerender(<Page isOpen isEnabled />);
+  await settle();
+  const cancel = view.getByRole('button', {name: 'Cancel'});
+  cancel.focus();
+  return {view, opener, cancel};
+}
+
+const lastCopy = () => exitCopies.placed.at(-1);
+
 beforeEach(() => {
-  running = [];
+  exitCopies.fade = [];
+  exitCopies.placed = [];
   latest = null;
 });
 
@@ -102,67 +146,67 @@ describe('useAlertMotion', () => {
     ).toBe(String(360 / 320));
   });
 
-  it('closes at once when the exit is 0 ms', async () => {
-    running = [];
-    const view = render(<Alert isOpen isEnabled />);
-    await settle();
-    running = [standIn(0)];
-    view.rerender(<Alert isOpen={false} isEnabled />);
+  it('closes at once, with no copy and no hold, when the exit is 0 ms', async () => {
+    const {view} = await openFromOpener();
+    fadeNext(standIn(0));
+    view.rerender(<Page isOpen={false} isEnabled />);
     expect(motion().isPresented).toBe(false);
-    expect(motion().isLeaving).toBe(false);
+    expect(lastCopy()?.isConnected).toBe(false);
+    expect(document.querySelector('[inert]')).toBeNull();
   });
 
-  it('stays presented while the exit plays, holds its input with its content inert and focus out of it, and closes at its end', async () => {
-    const view = render(<Alert isOpen isEnabled />);
-    await settle();
-    const cancel = view.getByRole('button', {name: 'Cancel'});
-    cancel.focus();
-    const exit = standIn(300);
-    running = [exit];
-    view.rerender(<Alert isOpen={false} isEnabled />);
+  it('closes the Dialog as the copy fades, keeps the page inert with focus out until the fade ends, then returns focus to the opener', async () => {
+    const {view, opener, cancel} = await openFromOpener();
+    const fade = standIn(300);
+    fadeNext(fade);
+    view.rerender(<Page isOpen={false} isEnabled />);
+    // The copy was taken in the commit that closed the alert, and the next
+    // one closed the Dialog.
+    expect(motion().isPresented).toBe(false);
     expect(motion().look).toBe('exit');
-    expect(motion().isLeaving).toBe(true);
-    expect(motion().isPresented).toBe(true);
-    expect(cancel).toHaveAttribute('inert');
-    expect(cancel).not.toHaveFocus();
-    exit.end();
+    expect(lastCopy()?.isConnected).toBe(true);
+    expect(opener.closest('[inert]')).not.toBeNull();
+    expect(cancel.closest('[inert]')).not.toBeNull();
+    expect(document.activeElement).toBe(document.body);
+    fade.end();
     await settle();
-    expect(motion().isPresented).toBe(false);
-    expect(cancel).not.toHaveAttribute('inert');
+    expect(lastCopy()?.isConnected).toBe(false);
+    expect(document.querySelector('[inert]')).toBeNull();
+    expect(opener).toHaveFocus();
   });
 
-  it('closes once the exit has had its time when its end is never reported', async () => {
+  it('ends the fade once it has had its time when its end is never reported', async () => {
+    const {view, opener} = await openFromOpener();
     vi.useFakeTimers();
-    const view = render(<Alert isOpen isEnabled />);
-    await settle();
-    running = [standIn(300)];
-    view.rerender(<Alert isOpen={false} isEnabled />);
+    fadeNext(standIn(300));
+    view.rerender(<Page isOpen={false} isEnabled />);
     act(() => {
       vi.advanceTimersByTime(399);
     });
-    expect(motion().isPresented).toBe(true);
+    expect(lastCopy()?.isConnected).toBe(true);
     act(() => {
       vi.advanceTimersByTime(1);
     });
-    expect(motion().isPresented).toBe(false);
+    expect(lastCopy()?.isConnected).toBe(false);
+    expect(document.querySelector('[inert]')).toBeNull();
+    expect(opener).toHaveFocus();
   });
 
-  it('returns to rest at once when reopened mid-exit: the content is live again, and the action it blurred takes focus back', async () => {
-    const view = render(<Alert isOpen isEnabled />);
+  it('returns to rest at once when reopened mid-fade: the copy goes, the page is live again, and the action it blurred takes focus back', async () => {
+    const {view, cancel} = await openFromOpener();
+    fadeNext(standIn(300));
+    view.rerender(<Page isOpen={false} isEnabled />);
+    expect(cancel.closest('[inert]')).not.toBeNull();
+    view.rerender(<Page isOpen isEnabled />);
     await settle();
-    const cancel = view.getByRole('button', {name: 'Cancel'});
-    cancel.focus();
-    running = [standIn(300)];
-    view.rerender(<Alert isOpen={false} isEnabled />);
-    expect(cancel).toHaveAttribute('inert');
-    view.rerender(<Alert isOpen isEnabled />);
     expect(motion().look).toBe('settled');
-    expect(motion().isLeaving).toBe(false);
-    expect(cancel).not.toHaveAttribute('inert');
+    expect(motion().isPresented).toBe(true);
+    expect(lastCopy()?.isConnected).toBe(false);
+    expect(document.querySelector('[inert]')).toBeNull();
     expect(cancel).toHaveFocus();
   });
 
-  it('gives the blurred action focus back on a reopen mid-exit in a same-origin iframe too', async () => {
+  it('gives the blurred action focus back on a reopen mid-fade in a same-origin iframe too', async () => {
     // A same-origin iframe's document: its nodes belong to that window.
     const frame = document.createElement('iframe');
     document.body.append(frame);
@@ -177,26 +221,26 @@ describe('useAlertMotion', () => {
     const hasFocus = () => doc.activeElement === cancel;
     cancel.focus();
     expect(hasFocus()).toBe(true);
-    running = [standIn(300)];
+    fadeNext(standIn(300));
     view.rerender(<Alert isOpen={false} isEnabled />);
-    expect(cancel.hasAttribute('inert')).toBe(true);
+    expect(cancel.closest('[inert]') != null).toBe(true);
     expect(hasFocus()).toBe(false);
     view.rerender(<Alert isOpen isEnabled />);
-    expect(cancel.hasAttribute('inert')).toBe(false);
+    await settle();
+    expect(cancel.closest('[inert]') == null).toBe(true);
     expect(hasFocus()).toBe(true);
     view.unmount();
     frame.remove();
   });
 
-  it('does nothing when disabled: no touch style and no hold, and it closes with the caller', () => {
-    running = [standIn(550)];
-    const view = render(<Alert isOpen isEnabled={false} />);
+  it('does nothing when disabled: no touch style, no copy and no hold, and it closes with the caller', () => {
+    fadeNext(standIn(550));
+    const view = render(<Page isOpen isEnabled={false} />);
     expect(motion().look).toBe('none');
-    view.rerender(<Alert isOpen={false} isEnabled={false} />);
+    view.rerender(<Page isOpen={false} isEnabled={false} />);
     expect(motion().isPresented).toBe(false);
-    expect(view.getByRole('button', {name: 'Cancel'})).not.toHaveAttribute(
-      'inert',
-    );
+    expect(exitCopies.placed).toHaveLength(0);
+    expect(document.querySelector('[inert]')).toBeNull();
   });
 
   it('opens at rest after hydration when the server markup had it open, and enters on a later open', async () => {
@@ -208,22 +252,28 @@ describe('useAlertMotion', () => {
       root = hydrateRoot(container, <Alert isOpen isEnabled />);
     });
     expect(motion().look).toBe('settled');
-    running = [standIn(0)];
+    fadeNext(standIn(0));
     await act(async () => root.render(<Alert isOpen={false} isEnabled />));
-    running = [];
     await act(async () => root.render(<Alert isOpen isEnabled />));
     expect(motion().look).toBe('entrance');
     await act(async () => root.unmount());
     container.remove();
   });
 
-  it('leaves no timer behind when unmounted mid-exit', async () => {
+  it('lets go when unmounted mid-fade: no timer, no copy and no inert page are left', async () => {
+    const {view} = await openFromOpener();
     vi.useFakeTimers();
-    const view = render(<Alert isOpen isEnabled />);
-    await settle();
-    running = [standIn(300)];
-    view.rerender(<Alert isOpen={false} isEnabled />);
+    fadeNext(standIn(300));
+    view.rerender(<Page isOpen={false} isEnabled />);
+    const page = view.container;
+    expect(page.hasAttribute('inert')).toBe(true);
     view.unmount();
+    // jsdom's own selection update queues a 0 ms timer as focus moves.
+    act(() => {
+      vi.advanceTimersByTime(0);
+    });
     expect(vi.getTimerCount()).toBe(0);
+    expect(lastCopy()?.isConnected).toBe(false);
+    expect(page.hasAttribute('inert')).toBe(false);
   });
 });

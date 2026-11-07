@@ -5,7 +5,8 @@
 /**
  * @file useAlertMotion.ts
  * @input Uses React, the settled-open and hydration hooks, the Layer input
- *   hold, alertController and utils/nodeType
+ *   hold, the alert's exit copy, alertController, utils/focusReturn and
+ *   utils/nodeType
  * @output Exports useAlertMotion, AlertMotion, AlertMotionOptions, AlertLook
  *   and SCALE_FROM_PROPERTY
  * @position Internal hook of AlertDialog; the touch presentation's motion.
@@ -15,15 +16,17 @@
  * __tests__/AlertDialog.motion.interaction.browser.spec.ts
  */
 
-import {useCallback, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {useIsHydrating} from '../hooks/useIsHydrating';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useSettledOpen} from '../hooks/useSettledOpen';
 import {holdInput} from '../Layer/inputHold';
 import {alertController} from '../motion/uikit/alert';
+import {placeAlertExitCopy} from '../privateAttributes/alertExit.stylex';
+import {returnFocusForLastInput} from '../utils/focusReturn';
 import {isHTMLElement} from '../utils/nodeType';
 
-/** A dialog that misses its exit's end still closes this long after it. */
+/** A fade whose end is never reported still ends this long after it. */
 const EXIT_BACKSTOP_MS = 100;
 
 /** Carries the presentation's starting scale to AlertDialog's keyframes. */
@@ -41,13 +44,6 @@ function presentScaleFrom(element: HTMLElement): number {
   return width > 0 && viewport > 0
     ? Math.max(1, Math.min(scaleFrom, viewport / width))
     : scaleFrom;
-}
-
-/** The dialog's own CSS animations: its entrance or its exit. */
-function animationsOf(element: HTMLElement | null): Animation[] {
-  return typeof element?.getAnimations === 'function'
-    ? element.getAnimations()
-    : [];
 }
 
 /** When the last of `animations` ends, in ms from its start; 0 for none. */
@@ -71,7 +67,7 @@ async function allEnded(animations: ReadonlyArray<Animation>): Promise<void> {
 
 /**
  * The touch style the alert takes: its entrance; settled, when it reopens
- * while it leaves; or its exit.
+ * while it leaves; or its exit, which its exit copy keeps.
  */
 export type AlertLook = 'none' | 'entrance' | 'settled' | 'exit';
 
@@ -83,10 +79,11 @@ export interface AlertMotionOptions {
 }
 
 export interface AlertMotion {
-  /** Whether the Dialog is open: true while the alert is shown or leaving. */
+  /**
+   * Whether the Dialog is open: the caller's state, kept until the exit copy
+   * is taken.
+   */
   readonly isPresented: boolean;
-  /** True while the alert fades out: it takes no input. */
-  readonly isLeaving: boolean;
   /** Which touch style AlertDialog applies. */
   readonly look: AlertLook;
   /** Callback ref for the dialog element. */
@@ -94,32 +91,45 @@ export interface AlertMotion {
 }
 
 /**
- * Plays the alert's touch motion. The Dialog stays open while the alert fades
- * out; meanwhile its input is held and its content is inert.
+ * Where a touch close is: `copy` for the one commit that keeps the Dialog
+ * open with its exit look while the copy is taken, then `fade` while the
+ * copy fades out.
+ */
+type ExitPhase = 'none' | 'copy' | 'fade';
+
+/** A placed exit copy and its fade. */
+interface ExitCopy {
+  copy: HTMLElement;
+  fade: Animation[];
+  length: number;
+}
+
+/**
+ * Plays the alert's touch motion. Under a finger a copy of the alert fades
+ * out with the dimming, and the Dialog closes before the fade's first frame.
+ * Until the fade ends the page is inert and its input is held.
  */
 export function useAlertMotion({
   isOpen,
   isEnabled,
 }: AlertMotionOptions): AlertMotion {
-  // The open state the Dialog sees: the alert stays presented while it
-  // leaves. Adjusted while rendering, so the Dialog never commits a close
-  // the exit has not finished.
-  const [isLeaving, setIsLeaving] = useState(false);
+  // Adjusted while rendering, so the commit that closes the alert styles it
+  // with its exit, which the copy keeps.
+  const [exit, setExit] = useState<ExitPhase>('none');
   const [isReopened, setIsReopened] = useState(false);
   const [lastIsOpen, setLastIsOpen] = useState(isOpen);
   if (lastIsOpen !== isOpen) {
     setLastIsOpen(isOpen);
-    setIsReopened(isOpen && isLeaving);
-    setIsLeaving(!isOpen && isEnabled);
+    setIsReopened(false);
+    setExit(!isOpen && isEnabled ? 'copy' : 'none');
   }
-  const isPresented = isOpen || isLeaving;
   // An alert open in the server markup was there on page load: after
   // hydration it opens at rest, as Dialog does, and later opens enter.
   const isHydrating = useIsHydrating();
   const [settledOpen] = useSettledOpen(isOpen, isOpen && !isHydrating, false);
   const look: AlertLook = !isEnabled
     ? 'none'
-    : isLeaving
+    : exit !== 'none'
       ? 'exit'
       : isReopened || (settledOpen && isOpen)
         ? 'settled'
@@ -130,91 +140,159 @@ export function useAlertMotion({
     elementRef.current = node;
   }, []);
 
-  // The action that had focus when the exit's hold made the content inert.
+  // What had focus as the alert opened, and in the alert as it closed.
+  const openerRef = useRef<HTMLElement | null>(null);
   const blurredRef = useRef<HTMLElement | null>(null);
+  const exitCopyRef = useRef<ExitCopy | null>(null);
+  // Whether a reopen cut the last fade short.
+  const isCutShortRef = useRef(false);
 
-  const wasPresentedRef = useRef(false);
+  const wasOpenRef = useRef(false);
   // Synchronizes the dialog's touch entrance with an opening: its start
   // scale. Dialog styles an open dialog in this commit, before its effect
   // shows the modal. So the box and the entrance exist before the first
-  // paint. Dialog holds a touch while the entrance plays.
+  // paint. Dialog holds a touch while the entrance plays. A reopen that cut
+  // the fade short opens at rest instead.
   useIsomorphicLayoutEffect(() => {
-    const opened = isPresented && !wasPresentedRef.current;
-    wasPresentedRef.current = isPresented;
+    const opened = isOpen && !wasOpenRef.current;
+    wasOpenRef.current = isOpen;
     const element = elementRef.current;
-    if (!opened || !isEnabled || element == null) {
+    if (!opened || element == null) {
+      return;
+    }
+    // Dialog moves focus into the alert in a later effect.
+    const focused = element.ownerDocument.activeElement;
+    openerRef.current = isHTMLElement(focused) ? focused : null;
+    const wasCutShort = isCutShortRef.current;
+    isCutShortRef.current = false;
+    if (!isEnabled) {
+      return;
+    }
+    if (wasCutShort) {
+      setIsReopened(true);
       return;
     }
     element.style.setProperty(
       SCALE_FROM_PROPERTY,
       String(presentScaleFrom(element)),
     );
-  }, [isEnabled, isPresented]);
+  }, [isEnabled, isOpen]);
 
-  // Synchronizes the dialog's close with the end of its exit animation. Until
-  // then it holds the dialog's input: its content is inert, and the hold's
-  // shield takes every press. An exit of 0 ms, which a theme may set, closes
-  // at once, before anything paints.
+  // Synchronizes the exit copy with the close. Dialog styles only an open
+  // dialog as shown, so the copy is taken while it is still open, with the
+  // exit look, and the next commit closes it. Both commits run in the task
+  // that closes the alert, before anything paints. An exit of 0 ms, which a
+  // theme may set, places no copy.
   useIsomorphicLayoutEffect(() => {
-    if (!isLeaving) {
+    if (exit !== 'copy') {
       return;
     }
     const element = elementRef.current;
-    const exit = animationsOf(element);
-    const length = lengthOf(exit);
-    if (length <= 0) {
-      setIsLeaving(false);
+    const copy = element == null ? null : placeAlertExitCopy(element);
+    if (element != null && copy != null) {
+      const focused = element.ownerDocument.activeElement;
+      blurredRef.current =
+        isHTMLElement(focused) &&
+        focused !== element &&
+        element.contains(focused)
+          ? focused
+          : null;
+      // The copy keeps the alert's exit look, so the fade plays on it.
+      copy.style.removeProperty('animation-name');
+      const fade =
+        typeof copy.getAnimations === 'function'
+          ? copy.getAnimations({subtree: true})
+          : [];
+      const length = lengthOf(fade);
+      if (length > 0) {
+        exitCopyRef.current = {copy, fade, length};
+      } else {
+        copy.remove();
+      }
+    }
+    // eslint-disable-next-line @eslint-react/set-state-in-effect -- the copy exists only once this commit has styled the open alert with its exit
+    setExit('fade');
+  }, [exit]);
+
+  // Synchronizes the page with the copy's fade. The Dialog closed in this
+  // commit, and a toast it held went back to the page. Until the fade ends
+  // the page is inert, global hosts such as the toast viewport aside, and
+  // the hold's shield takes every press. Then focus returns to the opener.
+  // So the fade's end runs no render: it only lets go.
+  useIsomorphicLayoutEffect(() => {
+    if (exit !== 'fade') {
       return;
     }
-    let isCurrent = true;
-    const ended = allEnded(exit);
-    void ended.then(() => {
-      if (isCurrent) {
-        setIsLeaving(false);
+    const exitCopy = exitCopyRef.current;
+    exitCopyRef.current = null;
+    const element = elementRef.current;
+    if (exitCopy == null || element == null) {
+      exitCopy?.copy.remove();
+      return;
+    }
+    const {copy, fade, length} = exitCopy;
+    const doc = element.ownerDocument;
+    const ended = allEnded(fade);
+    const release = holdInput(doc.body, {until: ended, scope: 'layer'});
+    const opener = openerRef.current;
+    const returnFocus = () => {
+      const active = doc.activeElement;
+      if (
+        opener?.isConnected === true &&
+        (active == null || active === doc.body)
+      ) {
+        returnFocusForLastInput(opener);
       }
-    });
-    // Inert content loses focus. A reopen gives it back to the action.
-    const focused = element?.ownerDocument.activeElement;
-    blurredRef.current =
-      element != null &&
-      isHTMLElement(focused) &&
-      focused !== element &&
-      element.contains(focused)
-        ? focused
-        : null;
-    const release =
-      element == null
-        ? null
-        : holdInput(element, {until: ended, scope: 'layer'});
-    // An exit whose end is never reported (a detached element, a page that
-    // disables animations) still closes once its length has passed.
-    const backstop = setTimeout(() => {
-      setIsLeaving(false);
-    }, length + EXIT_BACKSTOP_MS);
-    return () => {
-      isCurrent = false;
-      clearTimeout(backstop);
-      release?.();
     };
-  }, [isLeaving]);
+    let isPlaying = true;
+    // The backstop below, which `stop` clears.
+    let backstop: ReturnType<typeof setTimeout> | undefined = undefined;
+    const stop = () => {
+      isPlaying = false;
+      clearTimeout(backstop);
+      release();
+      copy.remove();
+    };
+    const end = () => {
+      if (isPlaying) {
+        stop();
+        returnFocus();
+      }
+    };
+    void ended.then(end);
+    // A fade whose end is never reported (a page that disables animations)
+    // still ends once its length has passed.
+    backstop = setTimeout(end, length + EXIT_BACKSTOP_MS);
+    return () => {
+      isCutShortRef.current = isPlaying;
+      if (isPlaying) {
+        stop();
+        // After the commit: a reopen has moved focus into the alert by then,
+        // and an unmount leaves it on the page.
+        queueMicrotask(returnFocus);
+      }
+    };
+  }, [exit]);
 
-  // Synchronizes focus with a reopen during the exit. The hold has released
-  // the content, and the action it blurred takes focus back, unless focus has
-  // moved since.
-  useIsomorphicLayoutEffect(() => {
+  // Synchronizes focus with a reopen that cut the fade short. The action that
+  // had focus as the alert closed takes it back from Dialog's initial focus,
+  // unless focus has moved out of the alert since.
+  useEffect(() => {
     if (!isReopened) {
       return;
     }
     const blurred = blurredRef.current;
     blurredRef.current = null;
-    if (blurred?.isConnected !== true) {
+    const element = elementRef.current;
+    if (blurred?.isConnected !== true || element == null) {
       return;
     }
     const doc = blurred.ownerDocument;
-    if (doc.activeElement == null || doc.activeElement === doc.body) {
+    const active = doc.activeElement;
+    if (active == null || active === doc.body || element.contains(active)) {
       blurred.focus({preventScroll: true});
     }
   }, [isReopened]);
 
-  return {isPresented, isLeaving, look, ref};
+  return {isPresented: isOpen || exit === 'copy', look, ref};
 }
