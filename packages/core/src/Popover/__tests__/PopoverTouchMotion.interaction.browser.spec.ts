@@ -1166,6 +1166,8 @@ async function openHeldWhileGrowing(
     judges: {target: story.layer, property},
   });
   await openWithTap(story);
+  // NOT FOR LANDING: the test's next message after the tap comes late.
+  await page.waitForTimeout(1000);
   const held = await armed.held();
   expect(await holdsOn(story.layer), 'held on the popover').toBe(true);
   return held;
