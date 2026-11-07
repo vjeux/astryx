@@ -224,7 +224,7 @@ export function pacedDeadline(
   previous: {readonly sentAt: number; readonly returnedAt: number} | null,
   keepsGaps = false,
 ): number {
-  const scripted = origin + steps[index].t;
+  const scripted = origin + 2 * steps[index].t;
   if (index === 0 || previous == null) {
     return scripted;
   }
