@@ -239,15 +239,15 @@ export function pacedDeadline(
 /** What the page saw of one touch event of a paced play. */
 export interface TouchArrival {
   /**
-   * When the page's gesture host read the step, in WebKit. A move or a lift
-   * reads at its pointer event's `timeStamp`, a touch-down at its touch
-   * event's. A step with no pointer event reads at its touch event's.
+   * When the page's gesture host read the step, in WebKit. A move reads at
+   * its pointer event's `timeStamp`, a touch-down or a lift at its touch
+   * event's.
    */
   readonly stamp: number;
   /**
    * The step's earliest `timeStamp`, its pointer event's; `stamp` when the
-   * step had none. A touch-down reads later than this when the page's own
-   * pointer listeners held its touch event.
+   * step had none. A touch-down or a lift reads later than this when the
+   * page's own pointer listeners held its touch event.
    */
   readonly firstStamp?: number;
   /**
@@ -809,11 +809,10 @@ const TOUCH_TYPES = [
  * One arrival for each touch event a probe recorded, in dispatch order. WebKit
  * dispatches each step's pointer events just before its touch event, and
  * stamps the touch event only once the page's pointer listeners are done.
- * Core's gesture host reads a finger's moves from its pointer events, and
- * its lift from the pointerup paired with them. It reads the touch-down from
- * its touch event. So a move or a lift arrives at the earliest stamp of its
- * step, and a touch-down at its touch event's own stamp. Each takes the
- * latest handling mark of its step.
+ * Core's gesture host reads a finger's moves from its pointer events, and its
+ * touch-down and lift from its touch events. So a move arrives at the
+ * earliest stamp of its step, and a touch-down or a lift at its touch
+ * event's own stamp. Each takes the latest handling mark of its step.
  */
 export function touchArrivalsFrom(record: {
   readonly eventTypes: readonly string[];
@@ -836,7 +835,7 @@ export function touchArrivalsFrom(record: {
     }
     if (type.startsWith('touch')) {
       arrivals.push({
-        stamp: type === 'touchstart' ? record.stamps[i] : stamp,
+        stamp: type === 'touchmove' ? stamp : record.stamps[i],
         firstStamp: stamp,
         handledAt,
       });
