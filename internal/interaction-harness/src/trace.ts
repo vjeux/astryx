@@ -77,20 +77,12 @@ export interface RenderingTrace {
   /** Window length, ms. */
   readonly durationMs: number;
   /**
-   * The page's own main-thread tasks inside the window whose main thread ran
-   * longer than 50 ms (long tasks), epoch ms. A task that ran a test's own
-   * DevTools command (a `page.evaluate`) is one, whether it calls page code
-   * directly or sets it off. Only the harness's own marked reads are in
-   * `devtoolsTasks`.
+   * The page's own main-thread tasks longer than 50 ms inside the window (long
+   * tasks), epoch ms. A task that ran a test's own DevTools command (a
+   * `page.evaluate`) is one, whether it calls page code directly or sets it
+   * off; only the harness's own marked reads are in `devtoolsTasks`.
    */
   readonly longTasks: readonly TracedTask[];
-  /**
-   * The page's own tasks longer than 50 ms of wall time whose main thread ran
-   * 50 ms or less, epoch ms. A busy machine kept the renderer off the CPU, or
-   * the thread waited (a synchronous request, `Atomics.wait`). A claim about
-   * a blocking wait judges these too.
-   */
-  readonly stretchedTasks: readonly TracedTask[];
   /**
    * Main-thread tasks longer than 50 ms inside the window that ran a DevTools
    * command the harness marked as its own read (`HARNESS_READ`) and no page
@@ -235,7 +227,7 @@ export async function traceRendering(
       counted.push({name: e.name, t: toEpochMs(e.ts)});
     }
   }
-  const {longTasks, devtoolsTasks, stretchedTasks} = longTasksOf(
+  const {longTasks, devtoolsTasks} = longTasksOf(
     events.filter(e => onMain(e) && e.ph !== 'E'),
     toEpochMs,
   );
@@ -247,7 +239,6 @@ export async function traceRendering(
     prePaint: counts.PrePaint ?? 0,
     durationMs: (end.ts - start.ts) / 1000,
     longTasks,
-    stretchedTasks,
     devtoolsTasks,
     events: counted,
     window: {from: fromEpoch, to: toEpoch},
@@ -256,25 +247,18 @@ export async function traceRendering(
 
 /**
  * The main thread's tasks longer than 50 ms, split into the page's own and the
- * harness's marked reads. A page task is long when its main thread ran longer
- * than 50 ms; one only the wall clock stretched past that is apart
- * (`stretchedTasks`). `main` holds the main thread's events in the window;
+ * harness's marked reads. `main` holds the main thread's events in the window;
  * `toEpochMs` turns trace time into epoch ms.
  */
 export function longTasksOf(
   main: readonly TraceEvent[],
   toEpochMs: (ts: number) => number,
-): {
-  longTasks: TracedTask[];
-  devtoolsTasks: TracedTask[];
-  stretchedTasks: TracedTask[];
-} {
+): {longTasks: TracedTask[]; devtoolsTasks: TracedTask[]} {
   // A task that ran a DevTools command received it over the DevTools
   // session's pipe; page script it set off shows as its listener, timer or
   // frame callback.
   const longTasks: TracedTask[] = [];
   const devtoolsTasks: TracedTask[] = [];
-  const stretchedTasks: TracedTask[] = [];
   for (const task of main) {
     if (task.name !== 'RunTask' || (task.dur ?? 0) <= 50_000) {
       continue;
@@ -301,20 +285,13 @@ export function longTasksOf(
     );
     const pageScript = inside.some(e => PAGE_SCRIPT_EVENTS.has(e.name));
     const wall = task.dur ?? 0;
-    const traced = {
+    (devtools && harnessRead && !pageScript ? devtoolsTasks : longTasks).push({
       start: toEpochMs(task.ts),
       durationMs: wall / 1000,
       threadMs: Math.min(task.tdur ?? wall, wall) / 1000,
-    };
-    if (devtools && harnessRead && !pageScript) {
-      devtoolsTasks.push(traced);
-    } else if (traced.threadMs > 50) {
-      longTasks.push(traced);
-    } else {
-      stretchedTasks.push(traced);
-    }
+    });
   }
-  return {longTasks, devtoolsTasks, stretchedTasks};
+  return {longTasks, devtoolsTasks};
 }
 
 /**
