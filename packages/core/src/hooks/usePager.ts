@@ -1113,7 +1113,7 @@ export function createPager(
       }
       clearCatchTimer();
       caughtSettle = false;
-      if (!isReleaseSettle && !isMouse) {
+      if (!isReleaseSettle) {
         // UIKit stops an animated `setContentOffset` at the touch itself. A
         // mouse keeps the catch delay.
         catchSettle();
