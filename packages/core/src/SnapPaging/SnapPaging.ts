@@ -527,10 +527,7 @@ function attachPaging(
       observeResize(item, resnap),
     );
   };
-  const unobserveList = observeMutations(element, {childList: true}, () => {
-    observeItems();
-    resnap();
-  });
+  const unobserveList = () => {};
   observeItems();
   return {
     detach: () => {
