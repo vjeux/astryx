@@ -32,6 +32,15 @@ test.afterAll(async () => {
 const STORY = 'core-animated-layout--animated-layout';
 
 async function openStory(page: Page): Promise<void> {
+  if (
+    process.env.F1_CPU_THROTTLE != null &&
+    page.context().browser()?.browserType().name() === 'chromium'
+  ) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', {
+      rate: Number(process.env.F1_CPU_THROTTLE),
+    });
+  }
   await page.goto(
     `${storybook?.origin ?? ''}/iframe.html?id=${STORY}&viewMode=story`,
   );
@@ -94,6 +103,7 @@ async function paintedRide(
       if (element == null || getComputedStyle(element).display === 'none') {
         return;
       }
+      const t0 = performance.now();
       const box = element.getBoundingClientRect();
       let edge = box.bottom - clipBottom(element, box);
       let lowest = Number.NEGATIVE_INFINITY;
@@ -107,11 +117,94 @@ async function paintedRide(
       if (Number.isFinite(lowest)) {
         edge = Math.min(edge, lowest);
       }
+      const anim = (el: Element | null) =>
+        (el?.getAnimations({subtree: true}) ?? []).map(a => {
+          const e = a.effect as KeyframeEffect;
+          const k = e.getKeyframes()[0] ?? {};
+          const props = Object.keys(k)
+            .filter(
+              x =>
+                !['offset', 'computedOffset', 'easing', 'composite'].includes(
+                  x,
+                ),
+            )
+            .join('+');
+          return `${(e.target as Element)?.tagName}${e.pseudoElement ?? ''}:${props}:st=${a.startTime == null ? 'null' : Math.round(Number(a.startTime) * 10) / 10}:ct=${a.currentTime == null ? 'null' : Math.round(Number(a.currentTime) * 10) / 10}:${a.playState}${a.pending ? ':pending' : ''}`;
+        });
+      const t1 = performance.now();
+      const nextTop = next.getBoundingClientRect().top;
+      const t2 = performance.now();
+      const box2 = element.getBoundingClientRect();
+      const t3 = performance.now();
       frames.push({
         phase,
-        gap: next.getBoundingClientRect().top - edge,
+        stamps: `content@${Math.round((t0 - Number(document.timeline.currentTime)) * 10) / 10} next@+${Math.round((t1 - t0) * 10) / 10} recheck@+${Math.round((t3 - t0) * 10) / 10} contentMoved=${Math.round((box2.bottom - box.bottom) * 100) / 100}`,
+        gap: nextTop - edge,
         shown: Math.max(0, edge - box.top),
-      });
+        tl: Math.round(Number(document.timeline.currentTime) * 10) / 10,
+        clocks: (() => {
+          const tlNow = Number(document.timeline.currentTime);
+          const wall = performance.now();
+          const yOf = (v: string | null | undefined) => {
+            const parts = String(v ?? '')
+              .trim()
+              .split(/\s+/);
+            return parts.length > 1 ? Number.parseFloat(parts[1]) : 0;
+          };
+          const at = (anim: Animation, time: number) => {
+            const eff = anim.effect as KeyframeEffect;
+            const kf = eff.getKeyframes();
+            const dur = Number(eff.getTiming().duration);
+            const p = Math.max(
+              0,
+              Math.min(1, (time - Number(anim.startTime)) / dur),
+            );
+            for (let i = 1; i < kf.length; i++) {
+              const o0 = Number(kf[i - 1].computedOffset),
+                o1 = Number(kf[i].computedOffset);
+              if (p <= o1) {
+                const y0 = yOf(kf[i - 1].translate as string),
+                  y1 = yOf(kf[i].translate as string);
+                return y0 + (o1 > o0 ? (p - o0) / (o1 - o0) : 0) * (y1 - y0);
+              }
+            }
+            return yOf(kf[kf.length - 1].translate as string);
+          };
+          return [
+            ...element.getAnimations({subtree: true}),
+            ...next.getAnimations(),
+          ]
+            .filter(anim =>
+              Object.keys(
+                (anim.effect as KeyframeEffect).getKeyframes()[0] ?? {},
+              ).includes('translate'),
+            )
+            .map(anim => {
+              const target = (anim.effect as KeyframeEffect).target as Element;
+              const measured = yOf(getComputedStyle(target).translate);
+              const r = (x: number) => Math.round(x * 100) / 100;
+              return `${target === next ? 'after' : 'content'}: measured=${r(measured)} atTimeline=${r(at(anim, tlNow))} atWall=${r(at(anim, wall))} wall-tl=${r(wall - tlNow)}`;
+            });
+        })(),
+        kf: [...element.getAnimations({subtree: true}), ...next.getAnimations()]
+          .filter(a =>
+            Object.keys(
+              (a.effect as KeyframeEffect).getKeyframes()[0] ?? {},
+            ).includes('translate'),
+          )
+          .map(a =>
+            (a.effect as KeyframeEffect)
+              .getKeyframes()
+              .map(
+                k =>
+                  `${Math.round(Number(k.offset) * 1000) / 1000}@${k.translate}`,
+              )
+              .join(' '),
+          )
+          .map(x => x.slice(0, 400)),
+        content: anim(element),
+        after: anim(next),
+      } as PaintedFrame);
     };
     const frame = async () =>
       new Promise<void>(resolve => {
@@ -152,6 +245,44 @@ async function paintedRide(
  * beyond the container gap that content travels.
  */
 function expectPaintedRide(result: PaintedRide): void {
+  {
+    const tally: Record<string, {timeline: number; wall: number}> = {};
+    for (const f of result.frames as unknown as {clocks?: string[]}[]) {
+      for (const c of f.clocks ?? []) {
+        const m =
+          /^(\w+): measured=(-?[\d.]+) atTimeline=(-?[\d.]+) atWall=(-?[\d.]+)/.exec(
+            c,
+          );
+        if (m == null) continue;
+        const [, who, me, tl, wa] = m;
+        if (Math.abs(Number(tl) - Number(wa)) < 1) continue;
+        tally[who] ??= {timeline: 0, wall: 0};
+        if (
+          Math.abs(Number(me) - Number(tl)) <= Math.abs(Number(me) - Number(wa))
+        )
+          tally[who].timeline++;
+        else tally[who].wall++;
+      }
+    }
+    console.log('CLOCKTALLY ' + JSON.stringify(tally));
+  }
+  const bad = result.frames.filter(
+    f =>
+      f.shown > 0.5 &&
+      (f.gap > result.restGap + 1.5 ||
+        f.gap < result.restGap - result.beyond - 1.5),
+  );
+  if (bad.length > 0) {
+    const i = result.frames.indexOf(bad[0]);
+    console.log(
+      'EDGEPROBE ' +
+        JSON.stringify({
+          restGap: result.restGap,
+          beyond: result.beyond,
+          around: result.frames.slice(Math.max(0, i - 2), i + 3),
+        }),
+    );
+  }
   for (const phase of ['opening', 'closing'] as const) {
     const shown = result.frames.filter(f => f.phase === phase && f.shown > 0.5);
     expect(shown.length, `${phase} frames`).toBeGreaterThan(4);
