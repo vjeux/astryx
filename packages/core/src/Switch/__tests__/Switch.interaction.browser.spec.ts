@@ -61,6 +61,9 @@ import {
   type CastFrame,
   type TouchDriver,
   CONTROL_SIDE,
+  holdInputUntil,
+  LiftPlacementError,
+  requireFrames,
 } from '@astryxdesign/interaction-harness';
 import {BROWSER_CLICK_WAIT_MS} from '../../utils/browserClickWait';
 import {CLICK_GUARD_WINDOW_MS} from '../../utils/clickGuard';
@@ -2074,6 +2077,9 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
   /** One 60 Hz frame, ms. */
   const FRAME_60_MS = 1000 / 60;
 
+  /** How long after the thaw the page handles the second lift, ms. */
+  const LATE_LIFT_MS = 100;
+
   /**
    * Starts the two busy-window controls, half a leg apart. It resolves with
    * each one's start on the page clock, epoch ms.
@@ -2178,62 +2184,85 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       browserName !== 'chromium',
       'screencast frame evidence is Chromium-only in Playwright (WebKit: checked on the iOS simulator instead)',
     );
+    await installPageFreeze(page);
     const {driver, input, thumb, center} = await openSwitch(page, undefined, {
       belowControls: true,
     });
+    await installTimerGate(page);
     // The marker sits at the thumb's centre, so the thumb's scale does not
     // move it.
     await markElement(thumb, {size: MARKER_PX, inset: MARKER_CENTRE_PX});
-    // The page blocks at the second touch's start, so that touch's lift waits
-    // for the block. The switch handles the lift about 70 ms after it
-    // happened, while the compositor keeps the first travel moving.
-    await page.evaluate(() => {
-      const w = window as unknown as {__block?: {from: number; to: number}};
-      let starts = 0;
-      addEventListener(
-        'touchstart',
-        () => {
-          starts += 1;
-          if (starts !== 2) {
-            return;
-          }
-          // In the touch's own dispatch, after the switch's listeners (they
-          // were added first): a task queued here can run after the lift.
-          const from = performance.timeOrigin + performance.now();
-          const end = performance.now() + 100;
-          while (performance.now() < end) {
-            // the page's main thread is busy
-          }
-          w.__block = {from, to: performance.timeOrigin + performance.now()};
-        },
-        {capture: true, passive: true},
-      );
-    });
     const controls = await startControls(page);
     const cast = await startScreencast(page);
-    // The travel has to keep moving through the block, so this second tap is
-    // not frozen.
-    await secondTapMidTravel(page, driver, center, input, {frozen: false});
+    const finger = {id: 0, ...center};
+    // The scene freezes at the first lift, where the travel starts. The hold
+    // then keeps the page busy, and the second lift waits, until 100 ms after
+    // the first frame the page draws unfrozen. Meanwhile the compositor moves
+    // the travel on.
+    await freezePageOn(page, 'pointerup');
+    await driver.play([
+      {t: 0, fingers: [finger]},
+      {t: 40, fingers: []},
+    ]);
+    await expect(input).toBeChecked();
+    const hold = await holdInputUntil(page, {afterResumeMs: LATE_LIFT_MS});
+    await thawPage(page);
+    await hold.resumed();
+    await driver.play([
+      {t: 0, fingers: [finger]},
+      {t: 30, fingers: []},
+    ]);
+    const held = await hold.landed();
+    await expect(input).not.toBeChecked();
     await waitForSwitchRest(page, thumb);
     const castFrames = await cast.stop();
-    await expect(input).not.toBeChecked();
-    const block = await page.evaluate(
-      () =>
-        (window as unknown as {__block?: {from: number; to: number}}).__block,
+    // The hold's marks are on the real clock, as the cast's stamps are: the
+    // freeze stands the page's own clock still.
+    const origin = await page.evaluate(() => performance.timeOrigin);
+    const shown = (await trackMarker(page, castFrames)).flatMap(frame =>
+      frame.box == null ? [] : [{t: frame.t, x: frame.box.x}],
     );
-    expect(block, 'the page was busy when the lift came').toBeDefined();
+    const resumeAt = origin + held.resumeMs;
+    const firstAfterThaw = shown.find(
+      frame => frame.t >= resumeAt - FRAME_60_MS,
+    );
+    expect(
+      (firstAfterThaw?.t ?? Infinity) - resumeAt,
+      `the first frame after the thaw sits within a frame of the hold's resume, ${resumeAt} ms`,
+    ).toBeLessThan(FRAME_60_MS);
+    // The lift reaches the switch after the travel shows moving, or the catch
+    // proves nothing about a moving thumb.
+    const movedAt = shown.find(
+      frame => Math.abs(frame.x - shown[0].x) > 0.5,
+    )?.t;
+    const liftAt = origin + held.releasedMs;
+    if (movedAt == null || liftAt <= movedAt) {
+      throw new LiftPlacementError(
+        'the held lift reached the switch before its travel showed moving',
+        {liftAt, travelMovedAt: movedAt ?? null},
+      );
+    }
     const samples = await thumbOnControlClock(page, castFrames, controls);
-    expect(samples.length).toBeGreaterThan(10);
+    const rest = samples[0][1];
+    const moved = samples.find(([, x]) => Math.abs(x - rest) > 0.5);
+    // The frames from the travel's start to its return's end, or the run
+    // fails as starved.
+    requireFrames(
+      samples.map(([t, x]) => ({t, x})),
+      {
+        min: 10,
+        during: 'the travel and its catch',
+        where: frame => moved != null && frame.t >= moved[0] - FRAME_60_MS,
+      },
+    );
     // No presented frame moves it more than a few px from the one before, on
     // the compositor's clock.
     expect(
       Math.max(...frameSteps(samples)),
       JSON.stringify(samples),
     ).toBeLessThan(4);
-    // It turned around mid-travel, short of the on end. A loaded page can
-    // handle the late lift once the travel has ended. That fails here, by
-    // name.
-    const farthest = Math.max(...samples.map(([, x]) => x)) - samples[0][1];
+    // It turned around mid-travel, short of the on end.
+    const farthest = Math.max(...samples.map(([, x]) => x)) - rest;
     expect(farthest).toBeGreaterThan(1);
     expect(
       farthest,
