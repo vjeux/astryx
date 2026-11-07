@@ -16,7 +16,6 @@ import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {InternationalizationProvider} from '@astryxdesign/core/i18n';
 import {TOUCH_QUERY} from '@astryxdesign/core/internal/touch';
 import {TabBar, TabBarItem, type TabBarProps} from './TabBar';
-import {TabBarMoreList} from './TabBarMoreList';
 
 function Glyph({name}: {name: string}) {
   return <svg data-testid={`icon-${name}`} />;
@@ -337,109 +336,5 @@ describe('TabBar', () => {
     );
     expect(screen.getAllByRole('tab')).toHaveLength(1);
     expect(screen.queryByText('stray')).toBeNull();
-  });
-});
-
-describe('TabBar More tab', () => {
-  const SIX = ['home', 'library', 'browse', 'profile', 'settings', 'help'];
-  const tabs = SIX.map(value => (
-    <TabBarItem
-      key={value}
-      value={value}
-      label={value[0].toUpperCase() + value.slice(1)}
-      icon={<Glyph name={value} />}
-    />
-  ));
-
-  it('shows the first four tabs and More when there are more than five', () => {
-    render(
-      <TabBar value="home" onChange={() => {}} label="Sections">
-        {tabs}
-      </TabBar>,
-    );
-    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual([
-      'Home',
-      'Library',
-      'Browse',
-      'Profile',
-      'More',
-    ]);
-  });
-
-  it('selects More for a tab it holds, and chooses More with its value', () => {
-    const onChange = vi.fn();
-    const {rerender} = render(
-      <TabBar value="settings" onChange={onChange} label="Sections">
-        {tabs}
-      </TabBar>,
-    );
-    expect(screen.getByRole('tab', {name: 'More'})).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
-    rerender(
-      <TabBar value="home" onChange={onChange} label="Sections">
-        {tabs}
-      </TabBar>,
-    );
-    fireEvent.click(screen.getByRole('tab', {name: 'More'}));
-    expect(onChange).toHaveBeenCalledWith('more');
-  });
-
-  it('More again while it holds a tab is a reselect, back to its list', () => {
-    const onChange = vi.fn();
-    const onReselect = vi.fn();
-    render(
-      <TabBar
-        value="help"
-        onChange={onChange}
-        onReselect={onReselect}
-        label="Sections">
-        {tabs}
-      </TabBar>,
-    );
-    fireEvent.click(screen.getByRole('tab', {name: 'More'}));
-    expect(onReselect).toHaveBeenCalledWith('more');
-    expect(onChange).not.toHaveBeenCalled();
-  });
-
-  it('shows a tab’s badge in its More row, spoken with the row', () => {
-    render(
-      <TabBarMoreList onChoose={() => {}}>
-        {[
-          ...tabs.slice(0, 4),
-          <TabBarItem
-            key="settings"
-            value="settings"
-            label="Settings"
-            icon={<Glyph name="settings" />}
-          />,
-          <TabBarItem
-            key="help"
-            value="help"
-            label="Help"
-            icon={<Glyph name="help" />}
-            badge={2}
-          />,
-        ]}
-      </TabBarMoreList>,
-    );
-    expect(screen.getByRole('button', {name: /Help, 2/})).toBeInTheDocument();
-    expect(screen.getByRole('button', {name: /Help/})).toHaveTextContent('2');
-  });
-
-  it('lists the tabs past the fourth, and a row chooses its tab', () => {
-    const onChoose = vi.fn();
-    render(
-      <TabBarMoreList value="help" onChoose={onChoose}>
-        {tabs}
-      </TabBarMoreList>,
-    );
-    const list = screen.getByRole('list', {name: 'More'});
-    expect(list).toHaveTextContent('Settings');
-    expect(list).toHaveTextContent('Help');
-    expect(list).not.toHaveTextContent('Profile');
-    fireEvent.click(screen.getByRole('button', {name: /Settings/}));
-    expect(onChoose).toHaveBeenCalledWith('settings');
   });
 });
