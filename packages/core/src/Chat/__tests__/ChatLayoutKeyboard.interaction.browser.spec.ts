@@ -795,6 +795,15 @@ test.describe('Chrome on Android (spec:AST-099 FR8)', () => {
         (start.frameOf.get(e) ?? start.frames) >= start.frames,
     );
     const judged = steady.to - Math.max(steady.from, start.end);
+    console.log(
+      'ZZFRAMES ' +
+        JSON.stringify({
+          start: [start.frames, Math.round(start.layout.t - reported), Math.round(start.end - reported)],
+          ev: trace.events
+            .filter(e => e.t >= reported - 5 && e.t <= reported + 260)
+            .map(e => [e.name, Math.round(e.t - reported), e.node?.slice(0, 24), e.elements, start.frameOf.get(e)]),
+        }),
+    );
     expect(
       starvation(trace, start, counted, judged, reported),
       'the main thread was starved, so the ride\u2019s start reached the window',
