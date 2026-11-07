@@ -894,7 +894,7 @@ export function requireFrames<T extends {readonly t: number}>(
   // page's frames across it, selected or not, show the rate it drew at.
   const spanMs =
     selected.length > 0 ? selected[selected.length - 1].t - selected[0].t : 0;
-  const drawn = last - first + 1;
+  const drawn = selected.length;
   const spanFrames = Math.round(spanMs / DISPLAY_FRAME_MS) + 1;
   if (selected.length >= 2 && drawn < min && spanFrames >= min) {
     throw new FrameStarvationError({
