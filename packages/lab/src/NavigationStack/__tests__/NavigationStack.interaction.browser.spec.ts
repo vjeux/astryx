@@ -1114,7 +1114,14 @@ test('a push keeps advancing every frame while the main thread is blocked', asyn
   // Below the bar, which overlays the screens.
   await markScreenOnMount(page, 'screen-General', 60);
   const row = await rowCenter(page, 'General');
-  const blocked = blockDuringPush(page, 600);
+  // The block waits for the card's own translate, once the compositor has
+  // shown it. Until then the card sits off screen, and a first frame inside
+  // the block would read as a miss.
+  const blocked = blockMainThread(page, 600, {
+    during: top,
+    property: 'translate',
+    minProgressMs: 16,
+  });
   await driver.tap(row);
   const block = await blocked;
   const [push] = await watch.started({minProgressMs: 16});
