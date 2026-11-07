@@ -903,6 +903,200 @@ test.describe('under a finger', () => {
     await expect(row).toHaveCount(1);
   });
 
+  test("a touch close closes the alert in the tap's task: by the exit's first frame the dialog is closed, the toast is out of it, and the fade plays on a copy over an inert page (component:AlertDialog FR7)", async ({
+    page,
+  }) => {
+    await openStory(page, storybook(), 'core-alertdialog--alert-over-a-toast');
+    const driver = await touchDriver(page);
+    const dialog = page.getByRole('alertdialog', {name: 'Delete item?'});
+    const opener = page.getByRole('button', {name: 'Delete item'});
+    await setToken(page, '--duration-exit', `${EXIT_MS}ms`);
+    await driver.tap(await centerOf(opener));
+    await waitForRest(dialog);
+    // Reads the page in the first frame after the tap's task.
+    await page.evaluate(() => {
+      const scope = window as unknown as {__firstFrame: Promise<unknown>};
+      scope.__firstFrame = new Promise(resolve => {
+        document.addEventListener(
+          'click',
+          () => {
+            requestAnimationFrame(() => {
+              const live = document.querySelector(
+                'dialog[role="alertdialog"]:not([data-astryx-alert-exit])',
+              );
+              const copy = document.querySelector('[data-astryx-alert-exit]');
+              const row = document.querySelector('[data-toast-id]');
+              const openerButton = [
+                ...document.querySelectorAll('button'),
+              ].find(
+                button =>
+                  button.textContent?.trim() === 'Delete item' &&
+                  button.closest('[data-astryx-alert-exit]') == null,
+              );
+              resolve({
+                isOpen: live instanceof HTMLDialogElement && live.open,
+                isToastInDialog: row?.closest('dialog') != null,
+                isCopyShown: copy?.matches(':popover-open') === true,
+                isCopyFading:
+                  copy
+                    ?.getAnimations({subtree: true})
+                    .some(animation => animation.playState === 'running') ===
+                  true,
+                isPageInert: openerButton?.closest('[inert]') != null,
+                isToastLive: row != null && row.closest('[inert]') == null,
+                isFocusOnBody: document.activeElement === document.body,
+              });
+            });
+          },
+          {capture: true, once: true},
+        );
+      });
+    });
+    await driver.tap(
+      await centerOf(dialog.getByRole('button', {name: 'Delete'})),
+    );
+    const first = await page.evaluate(
+      async () =>
+        (window as unknown as {__firstFrame: Promise<unknown>}).__firstFrame,
+    );
+    expect(first).toEqual({
+      isOpen: false,
+      isToastInDialog: false,
+      isCopyShown: true,
+      isCopyFading: true,
+      isPageInert: true,
+      isToastLive: true,
+      isFocusOnBody: true,
+    });
+    // When the fade ends the copy goes, the page comes back, and focus
+    // returns to the opener.
+    await expect(page.locator('[data-astryx-alert-exit]')).toHaveCount(0);
+    await expect(opener).toBeFocused();
+    expect(
+      await opener.evaluate(element => element.closest('[inert]') == null),
+    ).toBe(true);
+    await expect(page.locator('[data-toast-id]')).toHaveCount(1);
+  });
+
+  test("after the tap's task no task runs over 50 ms until 800 ms after the fade ends, at 6x CPU", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'CPU throttling and long-task entries are Chromium-only (CDP)',
+    );
+    await openStory(page, storybook(), 'core-alertdialog--alert-over-a-toast');
+    const driver = await touchDriver(page);
+    const dialog = page.getByRole('alertdialog', {name: 'Delete item?'});
+    const cdp = await page.context().newCDPSession(page);
+    const runs: number[][] = [];
+    for (let cycle = 1; cycle <= 3; cycle += 1) {
+      await driver.tap(
+        await centerOf(page.getByRole('button', {name: 'Delete item'})),
+      );
+      await waitForRest(dialog);
+      await page.evaluate(() => {
+        const record = {
+          // The second frame after the tap: the first one carries the
+          // close's style and layout, before the fade's first frame.
+          fadeFrame: 0,
+          closedAt: 0,
+          copyGoneAt: 0,
+          tasks: [] as {start: number; duration: number}[],
+        };
+        (window as unknown as {__close: typeof record}).__close = record;
+        new PerformanceObserver(list => {
+          for (const entry of list.getEntries()) {
+            record.tasks.push({
+              start: entry.startTime,
+              duration: entry.duration,
+            });
+          }
+        }).observe({type: 'longtask'});
+        document.addEventListener(
+          'click',
+          () =>
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                record.fadeFrame = performance.now();
+              }),
+            ),
+          {capture: true, once: true},
+        );
+        document.addEventListener(
+          'close',
+          event => {
+            if (event.target instanceof HTMLDialogElement) {
+              record.closedAt = performance.now();
+            }
+          },
+          {capture: true, once: true},
+        );
+        new MutationObserver((records, observer) => {
+          for (const change of records) {
+            for (const node of change.removedNodes) {
+              if (
+                node instanceof Element &&
+                node.hasAttribute('data-astryx-alert-exit')
+              ) {
+                record.copyGoneAt = performance.now();
+                observer.disconnect();
+              }
+            }
+          }
+        }).observe(document.body, {childList: true, subtree: true});
+      });
+      await cdp.send('Emulation.setCPUThrottlingRate', {rate: 6});
+      await driver.tap(
+        await centerOf(dialog.getByRole('button', {name: 'Delete'})),
+      );
+      await page.waitForFunction(
+        () => {
+          const record = (
+            window as unknown as {
+              __close: {
+                fadeFrame: number;
+                closedAt: number;
+                copyGoneAt: number;
+              };
+            }
+          ).__close;
+          const end = Math.max(record.closedAt, record.copyGoneAt);
+          return (
+            record.fadeFrame > 0 && end > 0 && performance.now() > end + 800
+          );
+        },
+        null,
+        {timeout: 30_000},
+      );
+      await cdp.send('Emulation.setCPUThrottlingRate', {rate: 1});
+      runs.push(
+        await page.evaluate(() => {
+          const record = (
+            window as unknown as {
+              __close: {
+                fadeFrame: number;
+                closedAt: number;
+                copyGoneAt: number;
+                tasks: {start: number; duration: number}[];
+              };
+            }
+          ).__close;
+          const end = Math.max(record.closedAt, record.copyGoneAt) + 800;
+          return record.tasks
+            .filter(
+              task =>
+                task.start + task.duration > record.fadeFrame &&
+                task.start < end,
+            )
+            .map(task => Math.round(task.duration));
+        }),
+      );
+    }
+    expect(runs.flat(), JSON.stringify(runs)).toEqual([]);
+  });
+
   test('while the alert fades out its content is inert: focus leaves the actions, Tab cannot reach them, and focus returns to the opener', async ({
     page,
   }) => {
