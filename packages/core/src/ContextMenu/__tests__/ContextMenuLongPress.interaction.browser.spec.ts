@@ -221,6 +221,33 @@ test('a finger still down gets the menu at 735 ms (iOS 26.2), not before', async
   page,
 }) => {
   const {driver, center} = await openTouchStory(page);
+  // NOT FOR LANDING: a 40 ms read inside the task that shows the menu.
+  await page.evaluate(() => {
+    const trigger = document.querySelector<HTMLElement>(
+      '[data-testid="touch-context-menu"]',
+    );
+    if (trigger == null) {
+      return;
+    }
+    let touchAt: number | null = null;
+    addEventListener(
+      'touchstart',
+      event => {
+        touchAt ??= event.timeStamp;
+      },
+      {capture: true, passive: true},
+    );
+    const read = trigger.getBoundingClientRect.bind(trigger);
+    trigger.getBoundingClientRect = () => {
+      if (touchAt != null && performance.now() >= touchAt + 730) {
+        const end = performance.now() + 40;
+        while (performance.now() < end) {
+          // Busy.
+        }
+      }
+      return read();
+    };
+  });
   await startFrameLog(page);
   await driver.play(hold(center, menuDisplayMs + 200));
   const frames = await readFrameLog(page);
