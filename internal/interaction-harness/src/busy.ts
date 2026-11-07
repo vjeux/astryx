@@ -643,7 +643,6 @@ export async function blockMainThread(
                 from: performance.timeOrigin + start,
                 to: performance.timeOrigin + now,
                 spanMs: now - start,
-                ...(animation == null ? {} : {animation}),
               });
             }, 0);
           } else if (running) {
