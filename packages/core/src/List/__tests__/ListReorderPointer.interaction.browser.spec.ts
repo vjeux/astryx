@@ -10,9 +10,10 @@
  *   fine. A pen where the primary pointer is coarse keeps the hold, as a
  *   finger does. A quick stroke moves nothing, and a held one moves the row.
  *   A row held near a scroll edge scrolls the page, or the box the list
- *   scrolls in, and stops at the end. The preview and the insertion line
- *   run along a row set in from the list's start, in either direction. A
- *   checked radio in the dragged row stays checked through the drag
+ *   scrolls in, and stops at the end. A wheel during a drag scrolls nothing.
+ *   The preview and the insertion line run along a row set in from the
+ *   list's start, in either direction. A checked radio in the dragged row
+ *   stays checked through the drag
  * @position Beside ListReorderTouch.interaction.browser.spec.ts, which proves
  *   the hold under a finger
  */
@@ -194,6 +195,60 @@ test('a row held at the bottom of the page stops at its end, under the pointer',
     expect(Math.abs((await previewTop()) - atEnd)).toBeLessThan(1);
     await page.keyboard.press('Escape');
     await page.mouse.up();
+  } finally {
+    await story.close();
+  }
+});
+
+test('a wheel during a drag scrolls nothing, and the drop lands under the pointer', async ({
+  browser,
+}) => {
+  const story = await openFinePointerStory(browser, LONG_STORY);
+  try {
+    const {page} = story;
+    const order = await labels(page);
+    // Item 4: an earlier one's name is a prefix of a later row's.
+    const {at, rowHeight} = await handleOf(page, order[3]);
+    const frames = async () =>
+      page.evaluate(
+        async () =>
+          new Promise(resolve =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          ),
+      );
+    const read = async () =>
+      page.evaluate(() => ({
+        scrollY: window.scrollY,
+        preview:
+          document
+            .querySelector('[data-astryx-reorder-preview]')
+            ?.getBoundingClientRect().top ?? Number.NaN,
+        line: getComputedStyle(
+          document.querySelector('#storybook-root ul') as Element,
+        ).getPropertyValue('--astryx-reorder-line-y'),
+      }));
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x, at.y + rowHeight * 1.5, {steps: 8});
+    await frames();
+    const before = await read();
+    await page.mouse.wheel(0, rowHeight * 3);
+    await page.waitForTimeout(300);
+    await frames();
+    const during = await read();
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+    expect(before.scrollY).toBe(0);
+    expect(during.scrollY, 'the wheel scrolled the page').toBe(0);
+    expect(Math.abs(during.preview - before.preview)).toBeLessThan(1);
+    expect(during.line).toBe(before.line);
+    // The drop lands where the line was, under the pointer.
+    expect((await labels(page)).indexOf(order[3])).toBe(4);
+    // After the drop the wheel scrolls again.
+    await page.mouse.wheel(0, rowHeight * 3);
+    await expect
+      .poll(async () => page.evaluate(() => window.scrollY), {timeout: 3000})
+      .toBeGreaterThan(0);
   } finally {
     await story.close();
   }

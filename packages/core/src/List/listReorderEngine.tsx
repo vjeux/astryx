@@ -37,7 +37,8 @@
  * presentation) or Reduce Motion, the rows jump to their new places.
  *
  * HOW IT RUNS. Everything after the drag begins is imperative: no React
- * render and no layout read until the drop. The begin reads each row's
+ * render and no layout read until the drop. So the wheel scrolls nothing
+ * until the drop either. The begin reads each row's
  * layout once. Each move writes one `translate` on the preview, through the
  * shared per-element animator's `set`. A position change writes one on the
  * insertion line. The list root carries `data-astryx-reordering` from the
@@ -99,6 +100,7 @@ import {
   releaseMotion,
 } from '../utils/rowMotion';
 import {edgeAutoscroll, type EdgeAutoscroll} from '../utils/edgeAutoscroll';
+import {subscribeInput} from '../utils/inputStream';
 import {nearestScroller} from '../utils/scrollingAncestor';
 import {useTouchPresentation} from '../utils/touchPresentation';
 import {useTouchHitArea} from '../utils/touchHitArea';
@@ -440,6 +442,21 @@ function scrollerOf(list: HTMLElement): Scroller {
   };
 }
 
+/**
+ * Holds the wheel until the returned release. A drag reads no scroll
+ * position after its pick-up. So a wheel scroll would move the rows out from
+ * under the pointer, and the drop with them.
+ */
+function holdWheel(list: HTMLElement): () => void {
+  const view = list.ownerDocument.defaultView;
+  if (view == null) {
+    return () => {};
+  }
+  return subscribeInput(view, 'wheel', event => event.preventDefault(), {
+    cancels: true,
+  });
+}
+
 /** A drag in progress, from the pick-up to the drop. */
 interface DragSession {
   readonly list: HTMLElement;
@@ -472,6 +489,8 @@ interface DragSession {
   readonly preview: HTMLElement;
   /** The preview's offset from its row's place, as last written. */
   previewOffset: number;
+  /** Lets the wheel scroll again (`holdWheel`). */
+  readonly releaseWheel: () => void;
 }
 
 /** The inline values a drag overrides until its rows rest. */
@@ -1212,6 +1231,7 @@ export class ListReorderController implements ListReorderSession {
       restore,
       preview,
       previewOffset: 0,
+      releaseWheel: holdWheel(list),
     };
     this.session = session;
     // Rows still sliding from an earlier drag go to their places.
@@ -1358,6 +1378,7 @@ export class ListReorderController implements ListReorderSession {
     }
     this.session = null;
     this.stopAutoscroll(session);
+    session.releaseWheel();
     const {geometry, dragged, position, rows, list} = session;
     const element = rows[dragged];
     // Where the preview is now: on the commit the dragged row glides from
@@ -1415,6 +1436,7 @@ export class ListReorderController implements ListReorderSession {
     }
     this.session = null;
     this.stopAutoscroll(session);
+    session.releaseWheel();
     // Nothing moved: the preview and the line go and the row is itself again
     // at once.
     this.clearOverlays(session);
