@@ -35,6 +35,7 @@ import {
   type ComponentProps,
   type ReactNode,
 } from 'react';
+import {flushSync} from 'react-dom';
 import * as stylex from '@stylexjs/stylex';
 import type {StyleXStyles} from '@stylexjs/stylex';
 import {
@@ -569,6 +570,31 @@ const KEYBOARD_PAN_OFFSETS: Record<string, [number, number]> = {
 const VIDEO_CONTROLS_BAND = 48;
 
 /**
+ * Calls `onDelivery` in each delivery of the shared ResizeObserver for
+ * `element`. It skips the call that registers it, which runs in React's
+ * commit, where a read forces a layout before the browser's own. The first
+ * delivery comes after the browser lays `element` out. Where no
+ * ResizeObserver exists (jsdom), it returns null and the caller measures at
+ * once.
+ */
+function observeAfterLayout(
+  element: Element,
+  onDelivery: () => void,
+): (() => void) | null {
+  if (typeof ResizeObserver === 'undefined') {
+    return null;
+  }
+  let isRegistered = false;
+  const stop = observeResize(element, () => {
+    if (isRegistered) {
+      onDelivery();
+    }
+  });
+  isRegistered = true;
+  return stop;
+}
+
+/**
  * A fullscreen overlay for viewing images at full resolution.
  *
  * Supports single image and gallery modes. In gallery mode, it provides
@@ -893,12 +919,16 @@ export function Lightbox({
         caption.scrollHeight > caption.clientHeight + 1,
     );
   }, [isCaptionOpen]);
-  // Syncs the toggle's place and the open caption's scroll with the caption's
-  // laid-out size and its text. A resize and a font load resize it, new text
-  // can keep its size, and paging attaches the next page's caption.
-  // A closed dialog lays its caption out at no size, so the attachment runs
-  // again as the dialog opens. showModal() above has run by then, and the
-  // caption paints with its "more" from its first frame.
+  // Syncs the clamp, the toggle's place and the open caption's scroll with
+  // the caption's laid-out size and its text. A resize and a font load resize
+  // it, new text can keep its size, and paging attaches the next page's
+  // caption. The dialog's opening and the caption's own open attach it again.
+  // Each registration gets one delivery from the observer after the browser
+  // lays the caption out. The caption is read there, never in the commit,
+  // where a read forces a layout before the browser's own. The observer
+  // watches the caption's box, two levels above its text. A delivery can mount
+  // the toggle. The toggle's observers, its width's and its hit area's, sit
+  // deeper, so they get their deliveries in the same frame.
   const captionAttachKey = useMemo(
     () => ({measureCaptionLines, isOpen}),
     [measureCaptionLines, isOpen],
@@ -906,13 +936,33 @@ export function Lightbox({
   useAttachment(
     bandCaptionRef,
     element => {
-      // The clamp too, at once, so the caption paints with its toggle.
-      measureCaptionClamp();
-      measureCaptionLines();
-      const stopResize = observeResize(element, measureCaptionLines);
-      const stopContent = observeContent(element, measureCaptionLines);
+      const measure = () => {
+        measureCaptionClamp();
+        measureCaptionLines();
+      };
+      const box = element.closest('[data-lightbox-caption]') ?? element;
+      const register = (): (() => void) | undefined => {
+        const stop = observeAfterLayout(box, () => {
+          // The update commits before this frame paints, so the caption
+          // paints with its "more" and its place from its first frame.
+          // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- a delivery comes after layout and before paint; the caption's "more" commits in that frame
+          flushSync(measure);
+        });
+        if (stop == null) {
+          measure();
+          return undefined;
+        }
+        return stop;
+      };
+      let stopResize = register();
+      // New text in a box that keeps its size fires no resize. A new
+      // registration gets its own delivery after the next layout.
+      const stopContent = observeContent(element, () => {
+        stopResize?.();
+        stopResize = register();
+      });
       return () => {
-        stopResize();
+        stopResize?.();
         stopContent();
       };
     },
@@ -930,13 +980,22 @@ export function Lightbox({
     null,
   );
   usePressTracker(captionToggleRef);
-  // Syncs the toggle's place in the caption's last line with its width.
+  // Syncs the toggle's place in the caption's last line with its width. The
+  // width is read in the observer's deliveries, after layout. A paged toggle
+  // keeps the last width until a delivery reads another.
   useAttachment(
     captionToggleRef,
     toggle => {
       const measureToggle = () => setCaptionToggleWidth(toggle.offsetWidth);
-      measureToggle();
-      return observeResize(toggle, measureToggle);
+      const stop = observeAfterLayout(toggle, () => {
+        // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- a delivery comes after layout and before paint; the toggle's place commits in that frame
+        flushSync(measureToggle);
+      });
+      if (stop == null) {
+        measureToggle();
+        return () => {};
+      }
+      return stop;
     },
     null,
   );
