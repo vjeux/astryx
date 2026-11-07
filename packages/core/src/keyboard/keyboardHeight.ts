@@ -47,7 +47,8 @@ const NON_TEXT_INPUT_TYPES = new Set([
  * shrinks for a keyboard, so it reads 0. Where the app sets
  * `interactive-widget=resizes-content`, Chrome shrinks the layout viewport
  * with the keyboard. The height is then 0 too, and nothing rides, because the
- * browser has made the room itself.
+ * browser has made the room itself. A focused field still keeps its clearance
+ * above the layout viewport's new bottom (trackResizedRoom).
  */
 export function isKeyboardMeasurable(win: Window): boolean {
   return win.visualViewport != null && win.self === win.top;
@@ -66,6 +67,43 @@ export function measureKeyboardHeight(win: Window): number {
   const height =
     layoutViewportHeight(win) - viewport.height * (viewport.scale ?? 1);
   return height > KEYBOARD_EPSILON ? Math.round(height * 100) / 100 : 0;
+}
+
+/**
+ * Follows the room the browser makes for the keyboard by shrinking the layout
+ * viewport. Chrome on Android does so under
+ * `interactive-widget=resizes-content`, where the keyboard height reads 0.
+ * The returned call gives that room, CSS px. It is how far the root's box is
+ * short of the tallest it has been at its width since this call. Chrome on
+ * Android keeps the root's box at the viewport with its toolbar shown, so the
+ * toolbar's moves change `innerHeight` but not the room. The room is 0 while
+ * the visual viewport measures a keyboard. A width change, such as a
+ * rotation, starts over. A tracker made while such a keyboard is up has no
+ * taller box to compare, so it reads 0 until that keyboard goes.
+ *
+ * @example
+ * ```
+ * const resizedRoom = trackResizedRoom(window);
+ * const isKeyboardUp = getKeyboardHeight(window) > 0 || resizedRoom() > 0;
+ * ```
+ */
+export function trackResizedRoom(win: Window): () => number {
+  const root = win.document.documentElement;
+  let width = root.clientWidth;
+  let tallest = root.clientHeight;
+  return () => {
+    const height = root.clientHeight;
+    if (root.clientWidth !== width || height > tallest) {
+      width = root.clientWidth;
+      tallest = height;
+      return 0;
+    }
+    if (getKeyboardHeight(win) > KEYBOARD_EPSILON) {
+      return 0;
+    }
+    const room = tallest - height;
+    return room > KEYBOARD_EPSILON ? room : 0;
+  };
 }
 
 /** A report from the keyboard module, in the order the window raised them. */
