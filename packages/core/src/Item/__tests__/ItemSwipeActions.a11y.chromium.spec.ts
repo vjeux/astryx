@@ -233,6 +233,7 @@ test('paints no panel at rest, keeps the panel fixed while the row moves, rests 
   // round trip late, and a loaded runner can find the spring back over.
   await freezePageOn(page, 'touchend');
   await touch('touchEnd');
+  await new Promise(resolve => setTimeout(resolve, 150)); // NOT FOR LANDING: runner lag
   await advanceFrozenPage(page, 60);
   const midFlight = await row.evaluate((node, selector) => {
     const panelEl = node.querySelector(selector) as HTMLElement;
