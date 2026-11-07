@@ -979,9 +979,6 @@ export function createPager(
         }
         if (settleFrom != null) {
           const last = count() - 1;
-          settled = settleFrom.isFromLast
-            ? last
-            : nearestPage(settleFrom.settled);
           const next = settleFrom.isToLast
             ? last
             : nearestPage(settleFrom.target);
