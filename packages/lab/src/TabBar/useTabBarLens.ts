@@ -572,13 +572,6 @@ export function useTabBarLens({
     pointerTypes: ['touch', 'pen'],
     isEnabled: isTouch,
     paintsHighlight: false,
-    isInertPress: touch => {
-      const element = capsuleRef.current;
-      return (
-        element != null &&
-        landsOnDisabledOnly(element, touch.startX, touch.startY)
-      );
-    },
     onPressBegin: (x, y, tab) => begin(x, y, tab),
     onPressMove: (x, _y, tab) => move(x, tab),
     onPressEnd: tracked => end(tracked, false),
