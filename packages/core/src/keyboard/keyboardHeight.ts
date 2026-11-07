@@ -398,7 +398,7 @@ export interface WatchRevealPanOptions {
   onTouch?: () => void;
   /**
    * Whether a document scroll can be part of the browser's reveal, which
-   * `putBack` then scrolls back too: set it for a fixed field in Chrome on
+   * `putBack` then scrolls back too. Set it for a fixed field in Chrome on
    * Android. Chrome's reveal scrolls the document to centre the field's
    * document position, then pans as far as the keyboard's room allows; only
    * a match counts. Keep it false where Safari can run: Safari carries out the
