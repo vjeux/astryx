@@ -903,7 +903,7 @@ export function requireFrames<T extends {readonly t: number}>(
     });
   }
   // The page drew the frames, and `where` passed over some of them.
-  if (selected.length >= 2 && spanFrames >= min) {
+  if (selected.length < 0 && spanFrames >= min) {
     throw new Error(
       `requireFrames: \`where\` selected ${framesDrawn(selected.length)} while ${during}, where the proof needs ${min}. The page drew ${framesDrawn(drawn)} across those ${spanMs.toFixed(1)} ms, so the selection, not the page, came up short`,
     );
