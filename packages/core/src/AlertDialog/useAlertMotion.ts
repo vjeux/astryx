@@ -65,63 +65,45 @@ async function allEnded(animations: ReadonlyArray<Animation>): Promise<void> {
   );
 }
 
-/**
- * The touch style the alert takes: its entrance; settled, when it reopens
- * while it leaves; or its exit, which its exit copy keeps.
- */
-export type AlertLook = 'none' | 'entrance' | 'settled' | 'exit';
+/** The touch style the alert takes: its entrance, or settled when it opens at rest. */
+export type AlertLook = 'none' | 'entrance' | 'settled';
 
 export interface AlertMotionOptions {
   /** The caller's open state. */
   isOpen: boolean;
   /** Take UIKit's look (under a finger: a coarse primary pointer). */
   isEnabled: boolean;
+  /** The exit copy's inline style, which plays its fade. */
+  exitCopyStyle: Readonly<Record<string, string>>;
 }
 
 export interface AlertMotion {
-  /**
-   * Whether the Dialog is open: the caller's state, kept until the exit copy
-   * is taken.
-   */
-  readonly isPresented: boolean;
   /** Which touch style AlertDialog applies. */
   readonly look: AlertLook;
   /** Callback ref for the dialog element. */
   readonly ref: (element: HTMLElement | null) => void;
+  /**
+   * For a LayoutChangeSnapshot of the open state: takes the exit copy in the
+   * commit that closes the alert, before that commit changes the DOM.
+   */
+  readonly beforeOpenChange: (wasOpen: boolean) => void;
 }
 
 /**
- * Where a touch close is. `copy` is the one commit that keeps the Dialog open,
- * with its exit look, while the copy is taken. `fade` lasts while the copy
- * fades out.
- */
-type ExitPhase = 'none' | 'copy' | 'fade';
-
-/** A placed exit copy and its fade. */
-interface ExitCopy {
-  copy: HTMLElement;
-  fade: Animation[];
-  length: number;
-}
-
-/**
- * Plays the alert's touch motion. Under a finger a copy of the alert fades
- * out with the dimming, and the Dialog closes before the fade's first frame.
- * Until the fade ends the page is inert and its input is held.
+ * Plays the alert's touch motion. Under a finger the alert closes in the
+ * commit that closes it, and a copy of it fades out with the dimming. Until
+ * the fade ends the page is inert and its input is held.
  */
 export function useAlertMotion({
   isOpen,
   isEnabled,
+  exitCopyStyle,
 }: AlertMotionOptions): AlertMotion {
-  // Adjusted while rendering, so the commit that closes the alert styles it
-  // with its exit, which the copy keeps.
-  const [exit, setExit] = useState<ExitPhase>('none');
   const [isReopened, setIsReopened] = useState(false);
   const [lastIsOpen, setLastIsOpen] = useState(isOpen);
   if (lastIsOpen !== isOpen) {
     setLastIsOpen(isOpen);
     setIsReopened(false);
-    setExit(!isOpen && isEnabled ? 'copy' : 'none');
   }
   // An alert open in the server markup was there on page load: after
   // hydration it opens at rest, as Dialog does, and later opens enter.
@@ -129,11 +111,9 @@ export function useAlertMotion({
   const [settledOpen] = useSettledOpen(isOpen, isOpen && !isHydrating, false);
   const look: AlertLook = !isEnabled
     ? 'none'
-    : exit !== 'none'
-      ? 'exit'
-      : isReopened || (settledOpen && isOpen)
-        ? 'settled'
-        : 'entrance';
+    : isReopened || (settledOpen && isOpen)
+      ? 'settled'
+      : 'entrance';
 
   const elementRef = useRef<HTMLElement | null>(null);
   const ref = useCallback((node: HTMLElement | null) => {
@@ -143,7 +123,8 @@ export function useAlertMotion({
   // What had focus as the alert opened, and in the alert as it closed.
   const openerRef = useRef<HTMLElement | null>(null);
   const blurredRef = useRef<HTMLElement | null>(null);
-  const exitCopyRef = useRef<ExitCopy | null>(null);
+  // The exit copy, from the commit that closes the alert to its layout effect.
+  const exitCopyRef = useRef<HTMLElement | null>(null);
   // Whether a reopen cut the last fade short.
   const isCutShortRef = useRef(false);
 
@@ -178,18 +159,15 @@ export function useAlertMotion({
     );
   }, [isEnabled, isOpen]);
 
-  // Synchronizes the exit copy with the close. Dialog shows only an open
-  // dialog. So the copy is taken while the alert is still open, with its exit
-  // look, and the next commit closes it. Both commits run in the task that
-  // closes the alert, before anything paints. An exit of 0 ms, which a theme
-  // may set, places no copy.
-  useIsomorphicLayoutEffect(() => {
-    if (exit !== 'copy') {
-      return;
-    }
-    const element = elementRef.current;
-    const copy = element == null ? null : placeAlertExitCopy(element);
-    if (element != null && copy != null) {
+  // Dialog shows only an open dialog, so the copy is taken before the close
+  // commit changes the DOM. The page's style is still clean then, so the
+  // copy's reads cost no style recalc. Its writes go to the copy alone.
+  const beforeOpenChange = useCallback(
+    (wasOpen: boolean) => {
+      const element = elementRef.current;
+      if (!wasOpen || !isEnabled || element == null) {
+        return;
+      }
       const focused = element.ownerDocument.activeElement;
       blurredRef.current =
         isHTMLElement(focused) &&
@@ -197,43 +175,54 @@ export function useAlertMotion({
         element.contains(focused)
           ? focused
           : null;
-      // The copy keeps the alert's exit look, so the fade plays on it.
-      copy.style.removeProperty('animation-name');
-      const fade =
-        typeof copy.getAnimations === 'function'
-          ? copy.getAnimations({subtree: true})
-          : [];
-      const length = lengthOf(fade);
-      if (length > 0) {
-        exitCopyRef.current = {copy, fade, length};
-      } else {
-        copy.remove();
+      const copy = placeAlertExitCopy(element);
+      if (copy == null) {
+        return;
       }
-    }
-    // eslint-disable-next-line @eslint-react/set-state-in-effect -- the copy exists only once this commit has styled the open alert with its exit
-    setExit('fade');
-  }, [exit]);
+      for (const [property, value] of Object.entries(exitCopyStyle)) {
+        copy.style.setProperty(property, value);
+      }
+      exitCopyRef.current = copy;
+    },
+    [exitCopyStyle, isEnabled],
+  );
 
-  // Synchronizes the page with the copy's fade. The Dialog closed in this
-  // commit, and a toast it held went back to the page. Until the fade ends
-  // the page is inert, global hosts such as the toast viewport aside, and
-  // the hold's shield takes every press. Then focus returns to the opener.
-  // So the fade's end runs no render: it only lets go.
+  // Synchronizes the page with the exit copy's fade. The Dialog closed in
+  // this commit, and a toast it held went back to the page. Until the fade
+  // ends the page is inert, global hosts such as the toast viewport aside,
+  // and the hold's shield takes every press. Then focus returns to the
+  // opener. The fade's end runs no render: it only lets go.
   useIsomorphicLayoutEffect(() => {
-    if (exit !== 'fade') {
-      return;
-    }
-    const exitCopy = exitCopyRef.current;
+    const copy = exitCopyRef.current;
     exitCopyRef.current = null;
     const element = elementRef.current;
-    if (exitCopy == null || element == null) {
-      exitCopy?.copy.remove();
+    if (isOpen || copy == null || element == null) {
+      copy?.remove();
       return;
     }
-    const {copy, fade, length} = exitCopy;
     const doc = element.ownerDocument;
-    const ended = allEnded(fade);
+    // The hold's writes come before the fade's one read, so the page takes
+    // one style recalc for both. The opener goes inert before Dialog's
+    // passive close effect runs: its focus return and the browser's then
+    // reach an inert opener and do nothing, so focus stays off the page.
+    let resolveEnded = () => {};
+    const ended = new Promise<void>(resolve => {
+      resolveEnded = resolve;
+    });
     const release = holdInput(doc.body, {until: ended, scope: 'layer'});
+    const fade =
+      typeof copy.getAnimations === 'function'
+        ? copy.getAnimations({subtree: true})
+        : [];
+    const length = lengthOf(fade);
+    if (length <= 0) {
+      // An exit of 0 ms, which a theme may set: the close is immediate, and
+      // Dialog returns focus as it closes.
+      release();
+      copy.remove();
+      resolveEnded();
+      return;
+    }
     const opener = openerRef.current;
     const returnFocus = () => {
       const active = doc.activeElement;
@@ -259,6 +248,7 @@ export function useAlertMotion({
         returnFocus();
       }
     };
+    void allEnded(fade).then(resolveEnded);
     void ended.then(end);
     // A fade whose end is never reported (a page that disables animations)
     // still ends once its length has passed.
@@ -272,7 +262,7 @@ export function useAlertMotion({
         queueMicrotask(returnFocus);
       }
     };
-  }, [exit]);
+  }, [isOpen]);
 
   // Synchronizes focus with a reopen that cut the fade short. The action that
   // had focus as the alert closed takes it back from Dialog's initial focus,
@@ -294,5 +284,5 @@ export function useAlertMotion({
     }
   }, [isReopened]);
 
-  return {isPresented: isOpen || exit === 'copy', look, ref};
+  return {look, ref, beforeOpenChange};
 }
