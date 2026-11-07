@@ -1459,7 +1459,8 @@ export function createMotionEngine(
       );
       const expected = format(channel, p => base[p] ?? IDENTITY[p]);
       if (!sameShown(channel, shown, expected)) {
-        devWarn(
+        // MUTANT: the warning is never shown.
+        ((..._args: unknown[]) => {})(
           'Astryx motion',
           `the ${pseudoElement} stylesheet shows ${channel} ` +
             `${shown || '(unset)'}, not its declared base ${expected}, so ` +
