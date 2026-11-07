@@ -181,16 +181,7 @@ export function snapPages(
       owners[owners.length - 1].push(item);
     }
   }
-  const n = stops.length;
-  if (
-    n >= 3 &&
-    stops[n - 1] >= end - 0.5 &&
-    stops[n - 1] - stops[n - 2] < (stops[n - 2] - stops[n - 3]) / 2
-  ) {
-    stops.splice(n - 2, 1);
-    return {stops, skipped: owners[n - 2]};
-  }
-  return {stops: n > 0 ? stops : [0], skipped: []};
+  return {stops: stops.length > 0 ? stops : [0], skipped: []};
 }
 
 function itemStops(
