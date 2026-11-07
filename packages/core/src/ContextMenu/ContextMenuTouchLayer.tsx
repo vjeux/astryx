@@ -41,6 +41,13 @@ export interface ContextMenuTouchLayerProps {
   ref?: Ref<ContextMenuTouchHandle>;
   /** Open the menu at a client point (where the finger landed). */
   onOpen: (point: {x: number; y: number}) => void;
+  /**
+   * The hold committed: the menu shows at its moment or at the lift, so its
+   * content can mount now, hidden.
+   */
+  onCommit?: () => void;
+  /** The press ended with no menu: what mounted at the commit can go. */
+  onCancel?: () => void;
 }
 
 /**
@@ -61,6 +68,8 @@ export function ContextMenuTouchLayer({
   isShown,
   ref,
   onOpen,
+  onCommit,
+  onCancel,
 }: ContextMenuTouchLayerProps): null {
   // Whether the recognizer follows a finger or a pen now. It is set below,
   // where the recognizer exists.
@@ -79,6 +88,10 @@ export function ContextMenuTouchLayer({
   feedbackRef.current = feedback;
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
+  const onCommitRef = useRef(onCommit);
+  onCommitRef.current = onCommit;
+  const onCancelRef = useRef(onCancel);
+  onCancelRef.current = onCancel;
   const hasPressOpenedRef = useRef(false);
 
   // The gesture hook follows the element behind the ref, so a `triggerAs`
@@ -92,6 +105,7 @@ export function ContextMenuTouchLayer({
       recognizer.addTransitionListener((press, _from, to) => {
         if (to === 'failed' || to === 'cancelled') {
           feedbackRef.current.end(press.clockTime);
+          onCancelRef.current?.();
         }
       });
       // A finger's growth counts from the landing the recognizer records as
@@ -126,6 +140,9 @@ export function ContextMenuTouchLayer({
           // The click haptic, where a vibration motor is the only haptic.
           // iOS Safari can play none here: no tap lands at the commit.
           playHaptic(contextMenu.commitHaptic);
+          // The menu shows at its moment or at the lift. Mounted now, its
+          // content costs that show nothing.
+          onCommitRef.current?.();
           break;
         case 'changed':
           if (press.isMenuDue && !hasPressOpenedRef.current) {
