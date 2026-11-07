@@ -12,7 +12,8 @@
  *   A row held near a scroll edge scrolls the page, or the box the list
  *   scrolls in, and stops at the end. A wheel during a drag scrolls the
  *   page, and the preview and the drop stay under the pointer. Each scrolled
- *   frame reads the scroll offset once at most and forces no layout. The
+ *   frame reads the scroll offset once at most and forces no layout. A wheel
+ *   in a box at its end during a drag leaves the page where it is. The
  *   preview and the insertion line run along a row set in from the list's
  *   start, in either direction. A checked radio in the dragged row stays
  *   checked through the drag
@@ -473,6 +474,72 @@ test('a row held near the bottom of a box the list scrolls in scrolls that box, 
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
     await page.keyboard.press('Escape');
     await page.mouse.up();
+  } finally {
+    await story.close();
+  }
+});
+
+test('a wheel in a box at its end during a drag leaves the page where it is, and the drop stays under the pointer', async ({
+  browser,
+}) => {
+  const story = await openFinePointerStory(browser, LONG_STORY);
+  try {
+    const {page} = story;
+    // The list scrolls in a 400 px box, scrolled to its end, on a page that
+    // can scroll too.
+    await page.evaluate(() => {
+      const root = document.querySelector<HTMLElement>('#storybook-root');
+      if (root == null) {
+        return;
+      }
+      root.style.blockSize = '400px';
+      root.style.overflowY = 'auto';
+      document.body.style.paddingBlockEnd = '2000px';
+      root.scrollTop = root.scrollHeight;
+    });
+    const order = await labels(page);
+    const target = order[order.length - 4];
+    const {at, rowHeight} = await handleOf(page, target);
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x, at.y - rowHeight * 1.5, {steps: 8});
+    await expect(page.locator('[data-astryx-reorder-preview]')).toHaveCount(1);
+    await page.mouse.wheel(0, rowHeight * 6);
+    // Rendered frames, not time: the wheel's scroll would start within them.
+    await page.evaluate(
+      async () =>
+        new Promise<void>(resolve => {
+          let frames = 0;
+          const tick = () => {
+            frames += 1;
+            if (frames >= 30) {
+              resolve();
+            } else {
+              requestAnimationFrame(tick);
+            }
+          };
+          requestAnimationFrame(tick);
+        }),
+    );
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await page.mouse.up();
+    // The row lands under the pointer.
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(
+            ({label, y}) => {
+              const row = Array.from(
+                document.querySelectorAll('#storybook-root ul > li'),
+              ).find(element => element.textContent?.trim() === label);
+              const box = row?.getBoundingClientRect();
+              return box != null && box.top <= y && y <= box.bottom;
+            },
+            {label: target, y: at.y - rowHeight * 1.5},
+          ),
+        {timeout: 600},
+      )
+      .toBe(true);
   } finally {
     await story.close();
   }
