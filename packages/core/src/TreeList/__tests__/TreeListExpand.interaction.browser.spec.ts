@@ -359,7 +359,18 @@ test('expand under a finger: the rows below glide while the group fades in, and 
 }) => {
   await open(page);
   const before = (await parts(page).below.boundingBox())?.y ?? 0;
-  const frames = await recordFrames(page, async () => tapToggle(page));
+  // NOT FOR LANDING: a page starved of frames. It draws frames until the
+  // tap, and every frame the recorder took in the 400 ms after it is dropped.
+  let tapAt = 0;
+  const frames = (
+    await recordFrames(page, async () => {
+      await page.evaluate(
+        async () => new Promise(resolve => requestAnimationFrame(resolve)),
+      );
+      tapAt = await page.evaluate(() => performance.now());
+      await tapToggle(page);
+    })
+  ).filter(frame => frame.t <= tapAt || frame.t > tapAt + 400);
   const moving = frames.filter(frame => frame.group != null);
   expect(moving.length, 'frames with the group').toBeGreaterThan(4);
   const height = moving[0].group?.height ?? 0;
@@ -390,7 +401,18 @@ test('collapse under a finger: the group fades out as the rows below glide up, w
   await page.waitForTimeout(700);
   const expanded = (await parts(page).below.boundingBox())?.y ?? 0;
   const height = (await parts(page).group.boundingBox())?.height ?? Number.NaN;
-  const frames = await recordFrames(page, async () => tapToggle(page));
+  // NOT FOR LANDING: a page starved of frames. It draws frames until the
+  // tap, and every frame the recorder took in the 400 ms after it is dropped.
+  let tapAt = 0;
+  const frames = (
+    await recordFrames(page, async () => {
+      await page.evaluate(
+        async () => new Promise(resolve => requestAnimationFrame(resolve)),
+      );
+      tapAt = await page.evaluate(() => performance.now());
+      await tapToggle(page);
+    })
+  ).filter(frame => frame.t <= tapAt || frame.t > tapAt + 400);
   const leaving = frames.filter(frame => frame.group != null);
   // The group stays while it leaves, fading: it does not go at the tap.
   expect(leaving.length, 'frames with the leaving group').toBeGreaterThan(4);
