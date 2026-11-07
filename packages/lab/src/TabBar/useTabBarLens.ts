@@ -522,25 +522,6 @@ export function useTabBarLens({
     pointerTypes: ['touch', 'pen'],
     isEnabled: isTouch,
     paintsHighlight: false,
-    // A press that landed on a disabled tab takes no tab until it drags. So
-    // a short slide onto a neighbour paints, focuses and runs nothing.
-    resolveTarget: (x, y, targets) => {
-      const press = pressRef.current;
-      if (
-        press?.isIgnored === true &&
-        Math.abs(x - press.left - press.startX) <= DRAG_SLOP
-      ) {
-        return null;
-      }
-      const hit = targets.find(
-        target =>
-          x >= target.left &&
-          x < target.right &&
-          y >= target.top &&
-          y < target.bottom,
-      );
-      return hit?.element ?? null;
-    },
     onPressBegin: (x, _y, tab) => begin(x, tab),
     onPressMove: (x, _y, tab) => move(x, tab),
     onPressEnd: tracked => end(tracked, false),
