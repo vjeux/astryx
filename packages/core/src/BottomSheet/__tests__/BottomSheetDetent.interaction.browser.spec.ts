@@ -413,7 +413,6 @@ test(
     // The scene stops in the lift's own task, before the sheet hears the
     // lift. The settle then starts held, however late this process reacts. A
     // hold that the test sends after the lift can come after the settle ends.
-    await freezePageOn(page, 'touchend');
     const dragBoard = await touchStoryboard(
       page,
       driver,
@@ -430,6 +429,7 @@ test(
         cellScale: 0.4,
       },
     );
+    await page.waitForTimeout(Number(process.env.LAG_MS ?? '2000'));
     const {storyboard: settleBoard} = await animationStoryboard(page, {
       name: 'bottomsheet-settle',
       clip,
