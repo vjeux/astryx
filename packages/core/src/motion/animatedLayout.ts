@@ -4039,7 +4039,6 @@ export function applyLayoutChangeTransition(
     'transition-timing-function',
     motion.progress.easing,
   );
-  settleTransition(element, motion.progress);
 }
 
 /**
