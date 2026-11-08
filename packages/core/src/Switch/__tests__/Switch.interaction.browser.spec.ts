@@ -2211,18 +2211,88 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
   const FRAME_60_MS = 1000 / 60;
 
   /**
-   * The lift's turn back of the thumb, page ms. `call` is when it was made,
-   * and `inLiftTask` whether the lift's own task made it. `commit` is when the
-   * page's next frame began to run. `release` is when the release's travel
-   * came, if before that frame. `frames` are its keyframes, `[ms, x px from
-   * the on side's rest]`.
+   * A translate curve of the thumb, page ms. `made` is when it was made, and
+   * `start` when the browser started it. `frames` are its keyframes, `[ms, x
+   * px from the rest of the side the switch was on]`.
    */
-  interface Retarget {
-    call: number;
-    inLiftTask: boolean;
-    commit: number | null;
-    release: number | null;
+  interface ThumbCurve {
+    made: number;
+    start: number | null;
     frames: [number, number][];
+  }
+
+  /** The thumb's curves, and when the page saw the second lift, page ms. */
+  interface ThumbRecord {
+    armed: boolean;
+    lift: number | null;
+    curves: ThumbCurve[];
+  }
+
+  /** A critically damped spring fitted to a curve's keyframes, x in px. */
+  interface SpringFit {
+    start: number;
+    residual: number;
+    x(at: number): number;
+    v(at: number): number;
+  }
+
+  /**
+   * A turn back on `spring` (critically damped) from `from` at `speed`, toward
+   * the off side's rest: x px from the on side's rest, `ms` into it.
+   */
+  function turnBack(
+    spring: {response: number},
+    from: number,
+    speed: number,
+  ): (ms: number) => number {
+    const omega = (2 * Math.PI) / spring.response;
+    const a = from + TRAVEL_PX;
+    return ms => {
+      const t = ms / 1000;
+      return -TRAVEL_PX + (a + (speed + omega * a) * t) * Math.exp(-omega * t);
+    };
+  }
+
+  /**
+   * Fits `spring` (critically damped) toward `target` to `frames`, timed from
+   * `start`, page ms. x − target = (a + b·t)·e^(−ωt) is linear in a and b.
+   */
+  function fitSpring(
+    frames: number[][],
+    spring: {response: number},
+    target: number,
+    start: number,
+  ): SpringFit {
+    const omega = (2 * Math.PI) / spring.response;
+    let [s11, s12, s22, y1, y2] = [0, 0, 0, 0, 0];
+    for (const [ms, x] of frames) {
+      const t = ms / 1000;
+      const e = Math.exp(-omega * t);
+      s11 += e * e;
+      s12 += t * e * e;
+      s22 += t * t * e * e;
+      y1 += e * (x - target);
+      y2 += t * e * (x - target);
+    }
+    const det = s11 * s22 - s12 * s12;
+    const a = (y1 * s22 - y2 * s12) / det;
+    const b = (s11 * y2 - s12 * y1) / det;
+    const x = (at: number) => {
+      const t = Math.max(0, at - start) / 1000;
+      return target + (a + b * t) * Math.exp(-omega * t);
+    };
+    const v = (at: number) => {
+      const t = Math.max(0, at - start) / 1000;
+      return (b - omega * (a + b * t)) * Math.exp(-omega * t);
+    };
+    return {
+      start,
+      x,
+      v,
+      residual: Math.max(
+        ...frames.map(([ms, value]) => Math.abs(x(start + ms) - value)),
+      ),
+    };
   }
 
   /** How long after the thaw the page handles the second lift, ms. */
@@ -2337,58 +2407,42 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       browserName !== 'chromium',
       'screencast frame evidence is Chromium-only in Playwright (WebKit: checked on the iOS simulator instead)',
     );
-    // The page notes the lift's turn back: the thumb's first translate
-    // curve after the second lift. It notes whether the lift's own task made
-    // it, when the page's next frame began to run, and the curve's keyframes.
-    // Until that frame commits it, the screen keeps the travel it replaces
-    // (spec:AST-094 FR6).
+    // The page notes every translate curve of the thumb: when it was made,
+    // when the browser started it, and its keyframes. It notes the second
+    // lift too. The marks use the page's clocks from before the freeze and the
+    // timer gate replaced them, so they read real time from `origin`.
     await page.addInitScript(() => {
       const animate = Element.prototype.animate;
+      const startOf = Object.getOwnPropertyDescriptor(
+        Animation.prototype,
+        'startTime',
+      )?.get;
       const now = performance.now.bind(performance);
       const frame = requestAnimationFrame.bind(window);
-      const later = setTimeout.bind(window);
-      const w = window as unknown as {__retarget?: Retarget | null};
-      let lifted = false;
-      let liftTask = false;
+      const w = window as unknown as {__thumb?: ThumbRecord};
+      const record: ThumbRecord = {armed: false, lift: null, curves: []};
+      w.__thumb = record;
       const onLift = () => {
-        if (w.__retarget !== null || liftTask) {
-          return;
+        if (record.armed && record.lift == null) {
+          record.lift = now();
         }
-        lifted = true;
-        liftTask = true;
-        // A task queued here runs once the lift's own task ends.
-        later(() => {
-          liftTask = false;
-        }, 0);
       };
       addEventListener('pointerup', onLift, {capture: true, passive: true});
       addEventListener('touchend', onLift, {capture: true, passive: true});
       Element.prototype.animate = function (keyframes, options) {
         const animation = animate.call(this, keyframes, options);
         if (
-          !lifted ||
           !this.classList.contains('astryx-switch-thumb') ||
           !Array.isArray(keyframes) ||
           !keyframes.some(k => 'translate' in k)
         ) {
           return animation;
         }
-        const turned = w.__retarget;
-        if (turned != null) {
-          // The release's travel, if it comes before the frame that commits
-          // the turn back.
-          if (turned.commit == null && turned.release == null) {
-            turned.release = now();
-          }
-          return animation;
-        }
         const effect = animation.effect as KeyframeEffect;
         const duration = Number(effect.getTiming().duration);
-        const retarget: Retarget = {
-          call: now(),
-          inLiftTask: liftTask,
-          commit: null,
-          release: null,
+        const curve: ThumbCurve = {
+          made: now(),
+          start: null,
           frames: effect
             .getKeyframes()
             .map(k => [
@@ -2396,10 +2450,17 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
               Number.parseFloat(String(k.translate)),
             ]),
         };
-        w.__retarget = retarget;
-        frame(() => {
-          retarget.commit = now();
-        });
+        record.curves.push(curve);
+        const readStart = (left: number) =>
+          frame(() => {
+            const at = startOf?.call(animation);
+            if (at != null) {
+              curve.start = Number(at);
+            } else if (left > 0) {
+              readStart(left - 1);
+            }
+          });
+        readStart(60);
         return animation;
       };
     });
@@ -2431,7 +2492,10 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const second = await driver.press(center);
     const hold = await holdInputUntil(page, {afterResumeMs: LATE_LIFT_MS});
     await page.evaluate(() => {
-      (window as unknown as {__retarget?: Retarget | null}).__retarget = null;
+      const record = (window as unknown as {__thumb?: ThumbRecord}).__thumb;
+      if (record != null) {
+        record.armed = true;
+      }
     });
     const beforeThaw = Date.now();
     await thawPage(page);
@@ -2502,131 +2566,83 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
         where: frame => frame.t >= movedAt - FRAME_60_MS,
       },
     );
-    // The lift is a drag step of its own. It turns the running travel back:
-    // a retarget, on the model's clock (spec:AST-094 FR6).
-    const retarget = await page.evaluate(
-      () => (window as unknown as {__retarget?: Retarget | null}).__retarget,
+    // A retarget starts at the frame that commits it, from the value and
+    // speed on screen there (spec:AST-094 FR6). Until then the screen shows
+    // the travel. So no frame steps, and the thumb shows no farther than a
+    // turn back on TRACKING or TRAVEL from the travel's place and speed at
+    // the frame where it first falls behind the travel.
+    const thumbRecord = await page.evaluate(
+      () => (window as unknown as {__thumb?: ThumbRecord}).__thumb,
     );
-    if (retarget?.commit == null) {
-      throw new Error('the late lift sent the travel back on no new curve');
+    if (thumbRecord?.lift == null) {
+      throw new Error('the page saw no second lift');
     }
-    // Any delay to the commit is then the browser's, which the record allows.
+    const liftMark = thumbRecord.lift;
+    const travelCurve = thumbRecord.curves
+      .filter(curve => curve.made < liftMark && curve.start != null)
+      .at(-1);
+    if (travelCurve?.start == null) {
+      throw new Error('the travel has no started curve');
+    }
+    // The page's marks come after the held lift on the real clock. A mark on
+    // the frozen page clock reads the frozen span earlier.
+    const firstAfter = thumbRecord.curves.find(curve => curve.made >= liftMark);
     expect(
-      retarget.inLiftTask,
-      'the lift turns the thumb back in the task that handles it',
-    ).toBe(true);
-    // The page took its marks with its clocks from before the freeze and the
-    // timer gate. So they read real time from `origin`. The turn back comes
-    // after the held lift, in its task. A mark on the frozen page clock reads
-    // the frozen span earlier.
-    const madeAt = origin + retarget.call;
-    expect(
-      madeAt,
-      'the turn back comes after the held lift on the real clock',
+      origin + (firstAfter?.made ?? Number.POSITIVE_INFINITY),
+      'the first curve after the lift comes after the held lift on the real clock',
     ).toBeGreaterThan(liftAt - CLOCK_SKEW_MS);
-    // The curves the record prescribes, x in px from the on side's rest. The
-    // travel plays TRAVEL from the off side's rest. The lift is a drag step of
-    // its own: it turns the thumb back on TRACKING, from where it stood, at
-    // the travel's speed there.
-    const travelX = (s: number) =>
-      -TRAVEL_PX * (1 - springStep(TRAVEL, s * 1000));
-    const speedAt = (x: (s: number) => number, s: number) =>
-      (x(s + 0.0005) - x(s - 0.0005)) / 0.001;
-    const towardOff =
-      (spring: typeof TRAVEL, from: number, speed: number) => (s: number) =>
-        from +
-        (-TRAVEL_PX - from) *
-          springStep(
-            {...spring, initialVelocity: speed / (-TRAVEL_PX - from)},
-            s * 1000,
-          );
-    const turnsFrom = retarget.frames[0][1];
-    let [early, late] = [0, 2];
-    for (let i = 0; i < 50; i++) {
-      const mid = (early + late) / 2;
-      if (travelX(mid) < turnsFrom) {
-        early = mid;
-      } else {
-        late = mid;
+    // The travel's keyframes read x from the on side's rest, or from the off
+    // side's when it was made before the value changed.
+    const lastX = travelCurve.frames[travelCurve.frames.length - 1][1];
+    const shift = Math.abs(lastX - TRAVEL_PX) < 0.5 ? -TRAVEL_PX : 0;
+    const travel = fitSpring(
+      travelCurve.frames
+        .filter(([ms]) => ms < 2000)
+        .map(([ms, x]) => [ms, x + shift]),
+      TRAVEL,
+      0,
+      travelCurve.start,
+    );
+    expect(travel.residual, 'the travel plays TRAVEL').toBeLessThan(0.5);
+    // The frames read x from the off side's rest, TRAVEL_PX before the on
+    // side's, on the real clock.
+    const behind = samples.findIndex(
+      ([t, x]) =>
+        t >= liftAt && x - rest < TRAVEL_PX + travel.x(t - origin) - 1,
+    );
+    if (behind < 1) {
+      throw new Error('the thumb never fell behind the travel');
+    }
+    let reachPx = travel.x(samples[behind][0] - origin);
+    for (const at of [samples[behind - 1][0], samples[behind][0]]) {
+      for (const spring of [TRACKING, TRAVEL]) {
+        const turn = turnBack(
+          spring,
+          travel.x(at - origin),
+          travel.v(at - origin),
+        );
+        for (let ms = 0; ms < 1000; ms++) {
+          reachPx = Math.max(reachPx, turn(ms));
+        }
       }
     }
-    const turn = towardOff(TRACKING, turnsFrom, speedAt(travelX, late));
-    const strays = Math.max(
-      ...retarget.frames.map(([ms, x]) => Math.abs(x - turn(ms / 1000))),
-    );
-    expect(
-      strays,
-      'the lift turns the thumb back on the tracking spring, from where it stood, at its speed',
-    ).toBeLessThan(0.5);
-    // steps[i] is the step into samples[i + 1]. Until the commit, the screen
-    // shows the travel. The frame that shows the commit is the first, from
-    // one frame before the page's, that falls more than 1 px behind it. A
-    // starved compositor can show it some frames late. The commit lands no
-    // later than that frame.
-    const commitAt = origin + retarget.commit;
-    const steps = frameSteps(samples);
-    const shows =
-      samples.findIndex(
-        ([t, x]) =>
-          t >= commitAt - FRAME_60_MS &&
-          x - rest < TRAVEL_PX + travelX(late + (t - madeAt) / 1000) - 1,
-      ) - 1;
-    const shownAt = shows >= 0 ? samples[shows + 1][0] : commitAt;
-    const delay = (shownAt - madeAt) / 1000;
-    const travelAtCommit = travelX(late + delay);
-    // The commit shows the newest curve made before it. When the browser's
-    // click comes first, the release's travel replaces the turn back. It plays
-    // TRAVEL toward the off side's rest, from the turn back's place and speed.
-    let shownAtCommit = turn(delay);
-    if (retarget.release != null) {
-      const released = (retarget.release - retarget.call) / 1000;
-      shownAtCommit = towardOff(
-        TRAVEL,
-        turn(released),
-        speedAt(turn, released),
-      )(delay - released);
-    }
-    // How far apart the two curves are when the screen shows the commit.
-    const apartPx = Math.abs(travelAtCommit - shownAtCommit);
-    // The farthest the turn back can carry the thumb: from where the travel
-    // stood at the commit, at its speed there.
-    const carry = towardOff(
-      TRACKING,
-      travelAtCommit,
-      speedAt(travelX, late + delay),
-    );
-    let reachPx = travelAtCommit;
-    for (let t = 0; t < 1; t += 0.001) {
-      reachPx = Math.max(reachPx, carry(t));
-    }
-    // A commit that lands late shows the turn back that far in. So the frame
-    // that shows it may step by how far apart the two curves are then, plus
-    // 4 px. Every other frame moves the thumb less than 4 px from the one
-    // before, on the compositor's clock.
     const farthest = Math.max(...samples.map(([, x]) => x)) - rest;
     const reach = TRAVEL_PX + reachPx;
     test.info().annotations.push({
-      type: 'late retarget',
-      description: `committed ${(retarget.commit - retarget.call).toFixed(1)} ms after its call, shown ${(delay * 1000).toFixed(1)} ms after it${retarget.release == null ? '' : `, released ${(retarget.release - retarget.call).toFixed(1)} ms after it`}; both curves ${apartPx.toFixed(2)} px apart; the frame that shows it steps ${shows < 0 ? 'none' : steps[shows].toFixed(2)} px; the thumb reached ${farthest} px of ${reach.toFixed(2)} px`,
+      type: 'turn back',
+      description: `the thumb fell behind the travel ${(samples[behind][0] - liftAt).toFixed(1)} ms after the held lift; it reached ${farthest} px of ${reach.toFixed(2)} px; the largest frame step ${Math.max(...frameSteps(samples)).toFixed(2)} px`,
     });
+    // No presented frame moves the thumb 4 px or more from the one before, on
+    // the compositor's clock.
     expect(
-      Math.max(...steps.filter((_, i) => i !== shows)),
+      Math.max(...frameSteps(samples)),
       JSON.stringify(samples),
     ).toBeLessThan(4);
-    if (shows >= 0) {
-      expect(
-        steps[shows],
-        `the frame that shows the turn back, ${(delay * 1000).toFixed(1)} ms after its call, both curves ${apartPx.toFixed(2)} px apart: ${JSON.stringify(samples)}`,
-      ).toBeLessThan(apartPx + 4);
-    }
-    // It turned around mid-travel. The screen keeps the travel until the
-    // retarget commits, and then turns back (spec:AST-094 FR6). The thumb
-    // never shows past the farthest a turn back carries it. The frames read x
-    // from the off side's rest, TRAVEL_PX before the on side's.
+    // It turned around mid-travel, and never shows past the reach.
     expect(farthest).toBeGreaterThan(1);
     expect(
       farthest,
-      `the thumb reached ${farthest} px; a turn back at the commit reaches ${reach.toFixed(2)} px`,
+      `the thumb reached ${farthest} px; a turn back from the travel reaches ${reach.toFixed(2)} px`,
     ).toBeLessThanOrEqual(reach + 1);
   });
 
