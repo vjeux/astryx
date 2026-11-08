@@ -138,7 +138,12 @@ export const dayCellStyles = stylex.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: sizeVars['--size-element-md'],
+    // A minimum, so a row grows with a larger text size and its days never
+    // reach into the next row. The padding keeps the gap the day's hit bleed
+    // is sized for at every size.
+    minHeight: sizeVars['--size-element-md'],
+    boxSizing: 'border-box',
+    padding: BAND_INSET,
     isolation: 'isolate',
   },
 
@@ -197,9 +202,13 @@ export const dayCellStyles = stylex.create({
   },
 
   // Day button - structural
+  // A minimum size: under a larger text size the day grows with its number,
+  // so the number stays inside its own tap target. The day never grows past
+  // its cell, so a wide number does not cover the next day's tap target.
   day: {
-    width: sizeVars['--size-element-sm'],
-    height: sizeVars['--size-element-sm'],
+    minWidth: sizeVars['--size-element-sm'],
+    maxWidth: '100%',
+    minHeight: sizeVars['--size-element-sm'],
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
