@@ -1054,7 +1054,7 @@ export function createPager(
     const isRelease = isReleaseSettle;
     const touchRelease = isTouchReleaseSettle;
     const isSwipe = isSwipeSettle;
-    stopSettle(true);
+    stopSettle();
     if (isRelease) {
       settleFrom(from, velocity, touchRelease, at);
       isSwipeSettle = isSwipe && settleHandle != null;
