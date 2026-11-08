@@ -128,7 +128,7 @@ function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
   const behavior: ScrollBehavior = win.matchMedia?.(
     '(prefers-reduced-motion: reduce)',
   ).matches
-    ? 'instant'
+    ? 'smooth'
     : 'smooth';
   for (const [scroller, added] of scrolls) {
     if (
