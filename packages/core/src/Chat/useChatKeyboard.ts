@@ -39,6 +39,7 @@ import {
 } from '../keyboard/keyboardTarget';
 import type {KeyboardTransition} from '../keyboard/keyboardModel';
 import {rideKeyboard} from '../keyboard/rideKeyboard';
+import {KEYBOARD_SPRING} from '../motion/uikit/springs';
 import {useInteractionModalityTrackingFor} from '../utils/interactionModality';
 import {isCoarsePointer} from '../utils/coarsePointer';
 import {useTouchPresentation} from '../utils/touchPresentation';
@@ -203,6 +204,9 @@ export function useChatKeyboard({
   // (null: the transcript did not ride), until the layout takes them over.
   const dockTargetRef = useRef<number | null>(null);
   const messagesTargetRef = useRef<number | null>(null);
+  // Set while the dock rides down from a blur with no guide, until the
+  // keyboard's report hands its translate to the layout.
+  const unguidedRef = useRef(false);
   // Whether the transcript followed its newest message, and where it was
   // scrolled, just before the layout's last change.
   const atEndRef = useRef(false);
@@ -318,11 +322,66 @@ export function useChatKeyboard({
     };
     // The ride attaches only under a coarse primary pointer, where the guide
     // publishes the keyboard's own slide: Gboard's, in Chrome on Android.
-    // Elsewhere the layout follows the height alone.
+    // Elsewhere the layout follows the height alone, except at a blur.
+    const isGuided = keyboardProfileOf(win) === 'chromium';
     const unsubscribe =
-      isTouch && keyboardProfileOf(win) === 'chromium'
+      isTouch && isGuided
         ? getKeyboardLayoutGuide(win).subscribe(follow)
         : undefined;
+
+    // Without the guide, as in Safari on iOS, nothing publishes the
+    // keyboard's slide down. Safari reports the keyboard gone only once it is
+    // down, about half a second after the blur. So when the composer's text
+    // loses focus to nothing that brings up a keyboard, the dock rides down
+    // from the blur on UIKit's keyboard spring, as the keyboard does. The
+    // lift stays until the keyboard's report. The report then drops the lift
+    // and takes the translate back in one commit, so nothing jumps.
+    const rideUnguided = (to: number) => {
+      const atEnd = to > 0 ? isAtEnd() : messagesTargetRef.current != null;
+      unguidedRef.current = to > 0;
+      dockTargetRef.current = to > 0 ? to : null;
+      messagesTargetRef.current = to > 0 && atEnd ? to : null;
+      void dock.animator.animate({y: to}, {spring: KEYBOARD_SPRING});
+      if (atEnd) {
+        void messages.animator.animate({y: to}, {spring: KEYBOARD_SPRING});
+      }
+    };
+    const doc = root.ownerDocument;
+    const onFocusOut = (event: FocusEvent) => {
+      const composer = composerRef.current;
+      const field = event.target;
+      if (
+        !isTouch ||
+        isGuided ||
+        composer == null ||
+        liftRef.current < 0.5 ||
+        !(field instanceof win.HTMLElement) ||
+        !composer.contains(field) ||
+        !isTextEntryControl(field)
+      ) {
+        return;
+      }
+      // Focus that moves on to another field keeps the keyboard up.
+      const next = event.relatedTarget;
+      if (next instanceof win.HTMLElement && isTextEntryControl(next)) {
+        return;
+      }
+      rideUnguided(liftRef.current - liftFor(0));
+    };
+    // A field that takes focus before the keyboard's report keeps the
+    // keyboard up, so the dock rides back up.
+    const onFocusIn = (event: FocusEvent) => {
+      const field = event.target;
+      if (
+        unguidedRef.current &&
+        field instanceof win.HTMLElement &&
+        isTextEntryControl(field)
+      ) {
+        rideUnguided(0);
+      }
+    };
+    doc.addEventListener('focusout', onFocusOut, true);
+    doc.addEventListener('focusin', onFocusIn, true);
     // A height change the guide has no ride for, as for a resize or a
     // rotation, takes its lift at once. This listener comes after the guide's,
     // so a ride claims the change first.
@@ -338,7 +397,10 @@ export function useChatKeyboard({
     return () => {
       unsubscribeHeight();
       unsubscribe?.();
+      doc.removeEventListener('focusout', onFocusOut, true);
+      doc.removeEventListener('focusin', onFocusIn, true);
       ridingRef.current = false;
+      unguidedRef.current = false;
     };
   }, [
     rootRef,
@@ -365,14 +427,34 @@ export function useChatKeyboard({
     dockTargetRef.current = null;
     messagesTargetRef.current = null;
     // A ride that ended hands its translate (its target) to the layout; a
-    // change no ride covered (a resize) is the layout's alone.
+    // change no ride covered (a resize) is the layout's alone. A ride from a
+    // blur with no guide may still move when the report comes: it goes on
+    // from where it is drawn, at the same speed.
+    const isUnguided = unguidedRef.current;
+    unguidedRef.current = false;
+    const handOver = (animator: Animator, y: number) => {
+      const velocity = animator.getVelocity('y');
+      animator.set({y});
+      if (isUnguided && Math.abs(y) >= 0.5) {
+        void animator.animate(
+          {y: 0},
+          {spring: KEYBOARD_SPRING, velocity: {y: velocity}},
+        );
+      }
+    };
     if (dockTarget != null) {
-      dock.animator.set({y: dockTarget + moved});
+      handOver(
+        dock.animator,
+        (isUnguided ? dock.animator.get('y') : dockTarget) + moved,
+      );
     }
     const scroller = scrollRef.current;
     if (scroller == null) {
       return;
     }
+    // Where the transcript's ride is drawn now, before its translate clears.
+    const messagesDrawn =
+      messagesTarget == null ? null : messages.animator.get('y');
     // WebKit counts a translated transcript in the scroller's range. So the
     // ride's translate goes before the scroll is set. Otherwise the scroll
     // can stop past the content's end, and the sticky dock rises to meet it.
@@ -385,8 +467,9 @@ export function useChatKeyboard({
     // The padding's change may have clamped the scroll already: measure from
     // where it was before the layout changed.
     const shifted = scroller.scrollTop - scrollBeforeRef.current;
-    if (messagesTarget != null && Math.abs(messagesTarget + shifted) >= 0.5) {
-      messages.animator.set({y: messagesTarget + shifted});
+    const drawn = isUnguided ? messagesDrawn : messagesTarget;
+    if (drawn != null && Math.abs(drawn + shifted) >= 0.5) {
+      handOver(messages.animator, drawn + shifted);
     }
   }, [lift, scrollRef, dock.animator, messages.animator, scrollToBottom]);
 

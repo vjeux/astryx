@@ -315,6 +315,81 @@ describe('ChatLayout and the software keyboard', () => {
     expect(dockOf(container).style.translate).toBe('');
   });
 
+  it('rides the dock down from the blur on the keyboard\u2019s spring where no guide publishes the slide, as in Safari on iOS (spec:AST-099 FR3)', async () => {
+    const {container} = renderLayout();
+    const field = screen.getByRole('textbox', {name: 'Message'});
+    act(() => field.focus());
+    report(window.innerHeight - 300);
+    await settle();
+    act(() => field.blur());
+    await settle();
+    // Safari has not reported the keyboard gone yet: the layout keeps its
+    // lift, and the dock has ridden down on top of it.
+    expect(layoutLift(dockOf(container))).toBe(300);
+    expect(dockOf(container).style.translate).toBe('0px 300px');
+    report(window.innerHeight);
+    await settle();
+    expect(layoutLift(dockOf(container))).toBe(0);
+    expect(keyboardRoom(messagesOf())).toBe(0);
+    expect(dockOf(container).style.translate).toBe('');
+  });
+
+  it('goes on from where the dock is drawn when the keyboard\u2019s report comes before the ride lands', async () => {
+    const {container} = renderLayout();
+    const field = screen.getByRole('textbox', {name: 'Message'});
+    act(() => field.focus());
+    report(window.innerHeight - 300);
+    await settle();
+    act(() => field.blur());
+    // The report comes at once: the dock has hardly moved. The layout drops
+    // the lift, and the dock goes on down from above its new place.
+    report(window.innerHeight);
+    expect(layoutLift(dockOf(container))).toBe(0);
+    const [, y] = dockOf(container).style.translate.split(' ');
+    expect(Number.parseFloat(y)).toBeLessThan(-200);
+    await settle();
+    expect(dockOf(container).style.translate).toBe('');
+  });
+
+  it('rides the dock back up when a field takes focus before the keyboard\u2019s report', async () => {
+    render(
+      <ChatLayout
+        data-testid="layout"
+        composer={
+          <div data-testid="composer">
+            <textarea aria-label="Message" />
+          </div>
+        }>
+        <input aria-label="Search" />
+      </ChatLayout>,
+    );
+    screen.getByTestId('layout').getBoundingClientRect = () =>
+      new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+    const field = screen.getByRole('textbox', {name: 'Message'});
+    act(() => field.focus());
+    report(window.innerHeight - 300);
+    await settle();
+    act(() => field.blur());
+    act(() => screen.getByRole('textbox', {name: 'Search'}).focus());
+    await settle();
+    const dock = dockOf(screen.getByTestId('layout').parentElement!);
+    expect(layoutLift(dock)).toBe(300);
+    expect(['', '0px 0px', '0px']).toContain(dock.style.translate);
+  });
+
+  it('moves nothing at a blur under a fine pointer: the layout follows the height alone', async () => {
+    stubPointer('fine');
+    const {container} = renderLayout();
+    const field = screen.getByRole('textbox', {name: 'Message'});
+    act(() => field.focus());
+    report(window.innerHeight - 300);
+    await settle();
+    act(() => field.blur());
+    await settle();
+    expect(layoutLift(dockOf(container))).toBe(300);
+    expect(dockOf(container).style.translate).toBe('');
+  });
+
   it('keeps the lift when the page is pinch-zoomed past 2x with the keyboard up', async () => {
     // WebKit reports innerWidth and innerHeight in the zoomed visual
     // viewport's px. At 2x, innerHeight alone reads no keyboard, and the dock
