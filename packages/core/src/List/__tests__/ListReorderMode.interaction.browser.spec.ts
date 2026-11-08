@@ -15,7 +15,8 @@
  *   enters the same mode with the focus on the handle. Under a finger, taps
  *   alone reorder: the handle, the moves, then Done. A drag leaves the mode
  *   off. Each of the hint's buttons is a 44 px target centered on what it
- *   shows, and none covers its neighbour
+ *   shows, and none covers its neighbour. A key move measures the rows in
+ *   one pass, before their glides start
  * @position Interaction evidence for List/listReorderEngine.tsx (reorder
  *   mode and its hint) and List/ListReorderHandle.tsx
  */
@@ -35,6 +36,7 @@ import {
   type Point,
 } from '@astryxdesign/interaction-harness';
 import {reorder} from '../../motion/uikit/reorder';
+import {describePasses, forcedPassesDuring, passesUnder} from './forcedPasses';
 
 const storybook = withStorybook(test);
 
@@ -351,6 +353,40 @@ test.describe('with a finger', () => {
     test.skip(!touch, 'the touch hint runs on a touch screen');
     await expect(handle(page, 'Inbox')).toBeVisible();
   }
+
+  test('a key move measures the rows in one pass, before their glides start', async ({
+    page,
+    browser,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'chromium', 'the layout trace is Chromium CDP');
+    await open(page);
+    await expect(page.locator(ROW)).toHaveCount(ROWS.length);
+    await handle(page, 'Inbox').focus();
+    await page.keyboard.press('Space');
+    await expect(handle(page, 'Inbox')).toHaveAttribute('aria-pressed', 'true');
+    const passes = await forcedPassesDuring(browser, page, async () => {
+      await page.keyboard.press('ArrowDown');
+      await expect
+        .poll(async () => labels(page))
+        .toEqual(['Sent', 'Inbox', 'Drafts', 'Archive', 'Spam', 'Trash']);
+      // The commit's glides start before the next frame.
+      await page.evaluate(
+        async () =>
+          new Promise(resolve => {
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+          }),
+      );
+    });
+    // The reorder's own reads, in the key's move and in its commit, are one
+    // measurement pass at most. The shared animator reads each gliding row's
+    // will-change on its first motion, a cost of its own, so its reads are
+    // left out.
+    const reorders = passesUnder(passes, ['step', 'commit']).filter(
+      pass => !pass.sources[0]?.includes('animator'),
+    );
+    expect(reorders.length, describePasses(passes)).toBeLessThanOrEqual(1);
+  });
 
   test("taps alone reorder: the handle turns on reorder mode, the hint's moves move the row, and Done ends the mode", async ({
     page,
