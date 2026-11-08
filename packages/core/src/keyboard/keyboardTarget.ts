@@ -13,11 +13,11 @@
  */
 
 import {animatorFor, type Animator} from '../motion/animator';
-import {reducesMotion} from '../motion/reducedMotion';
-import {isCoarsePointer} from '../utils/coarsePointer';
-import {isTouchOnScreen, subscribeInput} from '../utils/inputStream';
+import {themeReducesMotion} from '../privateAttributes/reducedMotion.stylex';
+import {isCoarsePointer, matchesMediaQuery} from '../utils/coarsePointer';
+import {subscribeInput} from '../utils/inputStream';
 import {layoutViewportHeight} from '../utils/layoutViewport';
-import {nearestScroller, scrollingAncestor} from '../utils/scrollingAncestor';
+import {scrollingAncestor} from '../utils/scrollingAncestor';
 import {
   KEYBOARD_EPSILON,
   claimTapFocus,
@@ -74,8 +74,6 @@ export function registerKeyboardTarget(element: Element): () => void {
   };
 }
 
-export {nearestScroller};
-
 /** Whether a registered target holds `element`. */
 export function isInsideKeyboardTarget(element: Element): boolean {
   for (
@@ -88,6 +86,20 @@ export function isInsideKeyboardTarget(element: Element): boolean {
     }
   }
   return false;
+}
+
+/**
+ * The element that scrolls `element` into view: its nearest ancestor that
+ * scrolls on the block axis, or else the document's scroller.
+ */
+export function nearestScroller(element: Element): Element {
+  const doc = element.ownerDocument;
+  const scroller = scrollingAncestor(element);
+  return scroller == null ||
+    scroller === doc.body ||
+    scroller === doc.documentElement
+    ? (doc.scrollingElement ?? doc.documentElement)
+    : scroller;
 }
 
 // The element's bottom edge where layout puts it, without the ride's move.
@@ -340,24 +352,25 @@ function liftFor(
   return animator.get('y') < 0 ? targetCovered : 0;
 }
 
+// Scrolls `scroller` by `distance` px, up or down, at once unless `behavior`
+// is 'smooth'.
 function scrollBy(
   scroller: Element,
   distance: number,
   win: Window,
   behavior: ScrollBehavior = 'instant',
 ): void {
-  // An explicit 'instant' also overrides a scroller's own smooth
-  // `scroll-behavior`.
   const doc = scroller.ownerDocument;
   if (scroller === (doc.scrollingElement ?? doc.documentElement)) {
     win.scrollBy({top: distance, behavior});
-  } else if (typeof scroller.scrollBy === 'function') {
+  } else if (behavior === 'smooth' && typeof scroller.scrollBy === 'function') {
     scroller.scrollBy({top: distance, behavior});
   } else {
     scroller.scrollTop += distance;
   }
 }
 
+// How far `scroller` can scroll down from its top.
 function scrollRangeOf(scroller: Element, win: Window): number {
   const doc = scroller.ownerDocument;
   const view =
@@ -378,7 +391,8 @@ function risesSmoothly(field: Element, win: Window): boolean {
   return (
     typeof css?.supports === 'function' &&
     css.supports('-webkit-touch-callout', 'none') &&
-    !reducesMotion(field)
+    !matchesMediaQuery(win, '(prefers-reduced-motion: reduce)') &&
+    !themeReducesMotion(field)
   );
 }
 
@@ -709,15 +723,11 @@ function revealWithKeyboard(
   const doc = scroller.ownerDocument;
   const root = doc.scrollingElement ?? doc.documentElement;
   let isPlaced = true;
-  // Whether this show's first reveal has run. A long press focuses with the
-  // finger still down, and that reveal runs all the same.
-  let hasRevealed = false;
   const revealNow = (height: number) => {
     const focused = field();
     if (focused == null) {
       return;
     }
-    hasRevealed = height > KEYBOARD_EPSILON;
     const rising = reveal(focused, scroller, height, offset, win);
     if (unplaced === 'keep') {
       return;
@@ -759,19 +769,13 @@ function revealWithKeyboard(
   };
   const pans = watchPans(win, focused => focused === field() && isPlaced);
   // A report within a pixel of the last height comes from a pan, a scroll or
-  // a zoom's rounding. The field stays where the person put it. After the
-  // show's first reveal, it also stays at a report while a finger is on the
-  // screen. Firefox's toolbar hides in a drag, while the person moves the page.
+  // a zoom's rounding. The field stays where the person put it.
   let lastHeight = getKeyboardHeight(win);
   const stopReports = subscribeKeyboardHeight(win, event => {
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
         lastHeight = event.height;
-        if (!hasRevealed || !isTouchOnScreen(win)) {
-          revealNow(event.height);
-        } else if (event.height <= KEYBOARD_EPSILON) {
-          hasRevealed = false;
-        }
+        revealNow(event.height);
       }
       pans.report(event.height);
     }
