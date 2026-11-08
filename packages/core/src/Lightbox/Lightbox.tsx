@@ -1008,11 +1008,35 @@ export function Lightbox({
         const opacity = dismisses ? 0 : 1;
         const move = (backdropMovesRef.current += 1);
         setBackdropMoving(true);
-        const backdropMotion = backdrop?.animate(
-          {opacity},
-          {spring},
-          {touchRelease: touch},
-        );
+        // NOT FOR LANDING: a dismissal fades the backdrop on the main thread.
+        let backdropMotion: {finished: Promise<unknown>} | undefined;
+        const dialogElement = dialogRef.current;
+        if (backdrop != null && dismisses && dialogElement != null) {
+          const from = Number(
+            getComputedStyle(dialogElement, '::backdrop').opacity,
+          );
+          const start = performance.now();
+          backdropMotion = {
+            finished: new Promise(resolve => {
+              const step = () => {
+                const p = Math.min(1, (performance.now() - start) / 385);
+                backdrop.set({opacity: from * (1 - p)});
+                if (p < 1) {
+                  requestAnimationFrame(step);
+                } else {
+                  resolve(true);
+                }
+              };
+              requestAnimationFrame(step);
+            }),
+          };
+        } else {
+          backdropMotion = backdrop?.animate(
+            {opacity},
+            {spring},
+            {touchRelease: touch},
+          );
+        }
         for (const animator of chrome) {
           animator.animate({opacity}, {spring}, {touchRelease: touch});
         }
