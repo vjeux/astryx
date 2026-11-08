@@ -2331,6 +2331,11 @@ export function createMotionEngine(
         }
       }
     }
+    return newStartGroup(time);
+  };
+
+  /** A group whose animations start when the browser commits them. */
+  const newStartGroup = (time: number): StartGroup => {
     let resolve: (start: number) => void = () => {};
     const started = new Promise<number>(r => {
       resolve = r;
@@ -3380,6 +3385,10 @@ export function createMotionEngine(
     const at = frameTime(frame, now);
     const changed: MotionProperty[] = [];
     const owners = new Set<HandleState>();
+    // Per channel, how far each start misses the screen if the browser
+    // shows this frame LATE_START_MS late: null for a channel that keeps
+    // this frame's clock.
+    const misses = new Map<Channel, {commit: number; frame: number} | null>();
     for (const [property, entry] of entries) {
       const current = segments.get(property);
       if (
@@ -3424,15 +3433,58 @@ export function createMotionEngine(
             : {...next, handedVelocity: current.handedVelocity},
         );
       }
+      // The compositor can show this frame well after it runs. Until then
+      // it shows the old curve. A start at this frame shows its curve that
+      // far in; a start at the browser's commit shows its first value.
+      const channel = CHANNEL_OF[property];
+      const miss = misses.get(channel);
+      if (next == null || current.isAdditive === true || miss === null) {
+        misses.set(channel, null);
+      } else {
+        const later = shownAt(entry, at + LATE_START_MS).value;
+        const ahead =
+          LATE_START_MS >= next.duration ? next.target : next.at(LATE_START_MS);
+        misses.set(channel, {
+          commit: Math.max(miss?.commit ?? 0, Math.abs(screen.value - later)),
+          frame: Math.max(miss?.frame ?? 0, Math.abs(ahead - later)),
+        });
+      }
       owners.add(current.owner);
       changed.push(property);
     }
     const restarted = new Set(changed.map(property => CHANNEL_OF[property]));
-    if (restarted.size > 0) {
+    // A channel starts at the browser's commit when that misses the screen
+    // less, and when every curve on it restarts here.
+    const atCommit = [...restarted].filter(channel => {
+      const miss = misses.get(channel);
+      return (
+        miss != null &&
+        miss.commit < miss.frame &&
+        CHANNELS[channel].every(
+          property => !segments.has(property) || changed.includes(property),
+        )
+      );
+    });
+    const onFrame = [...restarted].filter(
+      channel => !atCommit.includes(channel),
+    );
+    if (onFrame.length > 0) {
       commit(
-        [...restarted].flatMap(channel => CHANNELS[channel]),
+        onFrame.flatMap(channel => CHANNELS[channel]),
         at,
       );
+    }
+    if (atCommit.length > 0) {
+      const group = newStartGroup(at);
+      const properties = atCommit.flatMap(channel => CHANNELS[channel]);
+      for (const property of properties) {
+        const segment = segments.get(property);
+        if (segment != null) {
+          segment.group = group;
+          group.segments.push(segment);
+        }
+      }
+      startCall(group, properties, at);
     }
     rebuildOnCallClocks(
       channels.filter(([channel]) => !restarted.has(channel)),
