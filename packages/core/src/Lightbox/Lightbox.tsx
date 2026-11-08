@@ -422,6 +422,8 @@ const styles = stylex.create({
     insetInlineEnd: spacingVars['--spacing-3'],
     insetBlockEnd: 0,
     blockSize: '1lh',
+    // A Button's size is a minimum height. The toggle is one line tall.
+    minBlockSize: 0,
     paddingBlock: 0,
     '::after': {
       content: '""',
