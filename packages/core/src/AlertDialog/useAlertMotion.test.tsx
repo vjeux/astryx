@@ -128,6 +128,15 @@ const settle = async () => {
   await act(async () => {});
 };
 
+/** Lets one task run: focus returns in a task after the copy goes. */
+const nextTask = async () => {
+  await act(async () => {
+    await new Promise<void>(resolve => {
+      setTimeout(resolve, 0);
+    });
+  });
+};
+
 /** Lets two animation frames run: the fade starts on the second. */
 const nextFrames = async () => {
   await act(async () => {
@@ -202,6 +211,24 @@ describe('useAlertMotion', () => {
     await settle();
     expect(lastCopy()?.isConnected).toBe(false);
     expect(document.querySelector('[inert]')).toBeNull();
+    await nextTask();
+    expect(opener).toHaveFocus();
+  });
+
+  it('returns focus to the opener in a task after the copy goes, so the frame that removes the copy does no focus work', async () => {
+    const {view, opener} = await openFromOpener();
+    const fade = standIn(300);
+    fadeNext(fade);
+    view.rerender(<Page isOpen={false} isEnabled />);
+    const focus = vi.spyOn(opener, 'focus');
+    fade.end();
+    await nextFrames();
+    await settle();
+    expect(lastCopy()?.isConnected).toBe(false);
+    expect(focus).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(document.body);
+    await nextTask();
+    expect(focus).toHaveBeenCalledTimes(1);
     expect(opener).toHaveFocus();
   });
 
@@ -256,6 +283,9 @@ describe('useAlertMotion', () => {
     });
     expect(lastCopy()?.isConnected).toBe(false);
     expect(document.querySelector('[inert]')).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
     expect(opener).toHaveFocus();
   });
 
@@ -331,6 +361,9 @@ describe('useAlertMotion', () => {
     });
     expect(lastCopy()?.isConnected).toBe(false);
     expect(document.querySelector('[inert]')).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
     expect(opener).toHaveFocus();
   });
 

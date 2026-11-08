@@ -276,6 +276,7 @@ export function useAlertMotion({
     let shownAt = 0;
     let startLimit: ReturnType<typeof setTimeout> | undefined = undefined;
     let backstop: ReturnType<typeof setTimeout> | undefined = undefined;
+    let focusTask: ReturnType<typeof setTimeout> | undefined = undefined;
     const stop = () => {
       isPlaying = false;
       view?.cancelAnimationFrame(startFrame);
@@ -287,7 +288,12 @@ export function useAlertMotion({
     const end = () => {
       if (isPlaying) {
         stop();
-        returnFocus();
+        // Focus moves in a later task, so the frame that drops the copy does
+        // no style or layout work for it.
+        focusTask = setTimeout(() => {
+          focusTask = undefined;
+          returnFocus();
+        }, 0);
       }
     };
     void ended.then(end);
@@ -338,6 +344,9 @@ export function useAlertMotion({
         stop();
         // After the commit: a reopen has moved focus into the alert by then,
         // and an unmount leaves it on the page.
+        queueMicrotask(returnFocus);
+      } else if (focusTask !== undefined) {
+        clearTimeout(focusTask);
         queueMicrotask(returnFocus);
       }
     };
