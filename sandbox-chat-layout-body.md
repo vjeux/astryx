@@ -25,7 +25,7 @@ No product code changes. The Sandbox gains one raw page; the route list, catalog
 
 - Failure before the change: no Sandbox page renders ChatLayout.
 - Success after the change, at d92232cd35, in Chromium and WebKit, on a phone (390 × 844) and a desktop (1280 × 800):
-  - `long`, `composer` and `streaming`: the dock is fixed at the viewport's bottom, and the document scrolls (phone: 3,188, 1,129 and 1,308 px over 844) from its end.
+  - `long`, `composer` and `streaming`: the dock is fixed at the viewport's bottom. The document scrolls (phone: 3,188, 1,129 and 1,308 px over 844) from its end.
   - `streaming`: the reply streams to its 297 characters in about 2.5 s, and the document stays at its end.
   - `docked`: the dock sticks to the panel's bottom. ChatLayout scrolls (1,290 px over 589), and the document does not.
   - No page error or hydration warning in either engine. WebKit's container logs only blocked font preconnects.
