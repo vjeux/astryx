@@ -200,7 +200,7 @@ function awaitFoldedReveal(
       stop();
     }
   });
-  const timer = win.setTimeout(stop, FOLD_WAIT_MS);
+  const timer = 0;
   foldWaitsOf.get(win)?.();
   foldWaitsOf.set(win, stop);
   function stop() {
