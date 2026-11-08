@@ -324,7 +324,6 @@ const styles = stylex.create({
     // box, above its caption band and below the controls. The drag fades the
     // band, which makes it a stacking context painted after the box.
     overflow: {default: 'hidden', ':is([data-zoom-dismissing])': 'visible'},
-    zIndex: {default: null, ':is([data-zoom-dismissing])': 1},
   },
   // A gallery's caption band, under every page's photo. It is two caption
   // lines tall whatever the caption, so the photo area stays the same. Its
