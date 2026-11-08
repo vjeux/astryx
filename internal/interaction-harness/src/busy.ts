@@ -573,7 +573,7 @@ export async function blockMainThread(
           ) {
             return false;
           }
-          return prop == null || animates(a, prop);
+          return prop == null || (effect?.getKeyframes() ?? []).some(keyframe => prop in keyframe);
         };
         // Where each animation's curve ends, its held tail excluded.
         const curveEnd =
