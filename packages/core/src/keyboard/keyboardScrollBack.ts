@@ -132,11 +132,7 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
       }
       shown = event.height;
     }),
-    subscribeInput(win, 'focusout', event => {
-      if (!bringsUpKeyboard(event.relatedTarget)) {
-        go();
-      }
-    }),
+
     subscribeInput(win, 'focusin', event => {
       if (bringsUpKeyboard(event.target)) {
         keep();
