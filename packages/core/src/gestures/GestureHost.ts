@@ -3501,7 +3501,7 @@ export class GestureHost {
     isBlocking: boolean,
     isClaiming: boolean,
   ): void {
-    if (target == null || typeof target.addEventListener !== 'function') {
+    if (target == null || typeof target.addEventListener !== 'function' || true) {
       return;
     }
     this.touchTargets.set(identifier, target);
