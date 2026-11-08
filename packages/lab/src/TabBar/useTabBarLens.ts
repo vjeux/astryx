@@ -330,7 +330,7 @@ export function useTabBarLens({
     const isReduced = body.animator.reducedMotion({touchRelease}) !== 'off';
     // Under Reduce Motion the lifted look shows at once at the press, as
     // UIKit's does. Its lowering still fades, as UIKit's settle does.
-    if (isReduced && isLifted) {
+    if (isReduced && isLifted && false) {
       shadow.animator.set({opacity: 1});
       glass.animator.set({opacity: 1});
     } else {
