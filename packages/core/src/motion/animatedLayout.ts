@@ -527,9 +527,7 @@ function retimeSettle(
   animation: Animation,
   keyframes: ReadonlyArray<Keyframe>,
   durationMs: number,
-): void {
-  settleRetimes.get(animation)?.(keyframes, durationMs);
-}
+): void {}
 
 /** Each indicator's settle, stopped when the next change retimes it. */
 const transitionSettles = new WeakMap<Element, () => void>();
