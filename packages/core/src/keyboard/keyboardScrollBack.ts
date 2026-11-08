@@ -131,11 +131,7 @@ function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
     ? 'instant'
     : 'smooth';
   for (const [scroller, added] of scrolls) {
-    if (
-      added.at != null &&
-      scroller.isConnected &&
-      Math.abs(scrollTopOf(scroller, win) - added.at) <= KEYBOARD_EPSILON
-    ) {
+    if (scroller.isConnected) {
       scrollTopTo(scroller, added.from, behavior, win);
     }
   }
