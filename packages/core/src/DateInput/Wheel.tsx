@@ -360,6 +360,18 @@ export function ScrollWheel({
   // once on a fine one.
   const lastPointerRef = useRef<string | null>(null);
 
+  // Where the wheel's own scroll goes. The settle below reads no row until a
+  // frame lands there, the scroll ends or it stops short. A busy page can draw
+  // no frame of a step for longer than the quiet period (useScrollSettle).
+  const steerRef = useRef<{top: number} | null>(null);
+  const scrollWheelTo = useCallback(
+    (scroller: HTMLElement, top: number, behavior: ScrollBehavior) => {
+      steerRef.current = {top};
+      scroller.scrollTo({top, behavior});
+    },
+    [],
+  );
+
   // A reduced-motion dip whose rows have not landed yet: the row they land
   // on. While one is pending the rows stay put for it, so they never move at
   // full opacity, and a further step retargets it.
@@ -401,12 +413,12 @@ export function ScrollWheel({
       // and fades back in.
       if (fadeTiming == null) {
         pendingFadeRef.current = null;
-        scroller.scrollTo({top, behavior});
+        scrollWheelTo(scroller, top, behavior);
         return;
       }
       if (fadeTiming.duration === 0 || typeof scroller.animate !== 'function') {
         pendingFadeRef.current = null;
-        scroller.scrollTo({top, behavior: 'auto'});
+        scrollWheelTo(scroller, top, 'auto');
         return;
       }
       if (pending != null) {
@@ -427,13 +439,13 @@ export function ScrollWheel({
         () => {
           if (pendingFadeRef.current === landing) {
             pendingFadeRef.current = null;
-            scroller.scrollTo({top: landing.top, behavior: 'auto'});
+            scrollWheelTo(scroller, landing.top, 'auto');
           }
         },
         Number.isFinite(shown) ? shown : 1,
       );
     },
-    [itemBlockSize],
+    [itemBlockSize, scrollWheelTo],
   );
 
   // Commit on rest. A wheel that stops on a disabled row travels on to the
@@ -472,6 +484,7 @@ export function ScrollWheel({
     },
     isActive,
     isDraggingRef,
+    steerRef,
   );
 
   // Park the committed row under the band at once whenever the wheel is
@@ -508,13 +521,20 @@ export function ScrollWheel({
       if (parkedRef.current) {
         scrollToIndex(selectedIndex, 'smooth');
       } else {
-        scroller.scrollTo({top: selectedIndex * size, behavior: 'auto'});
+        scrollWheelTo(scroller, selectedIndex * size, 'auto');
       }
     }
     parkedRef.current = true;
     // eslint-disable-next-line @eslint-react/set-state-in-effect -- the highlight follows a scroll position, which only exists after layout
     setActiveIndex(selectedIndex);
-  }, [isActive, selectedIndex, itemBlockSize, isAtRestRef, scrollToIndex]);
+  }, [
+    isActive,
+    selectedIndex,
+    itemBlockSize,
+    isAtRestRef,
+    scrollToIndex,
+    scrollWheelTo,
+  ]);
 
   // Highlight follows the finger. rAF-throttled: a scroll can fire far more
   // often than the display refreshes, and this only feeds a repaint.

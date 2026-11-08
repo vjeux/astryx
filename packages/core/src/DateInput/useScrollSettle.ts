@@ -5,7 +5,8 @@
 /**
  * @file useScrollSettle.ts
  * @input A scroll container ref, a settle callback, and optionally whether a
- *   mouse drag holds it (usePointerDragScroll's `isDraggingRef`)
+ *   mouse drag holds it (usePointerDragScroll's `isDraggingRef`) and where
+ *   the caller's own scroll goes
  * @output Calls back once, after scrolling (including momentum) stops
  * @position Internal behavior hook; consumed by Wheel.tsx and MonthScroller.tsx
  *
@@ -51,6 +52,23 @@
  * the scroller is at rest, so a caller can refuse to reposition one that is
  * still moving.
  *
+ * ## A scroll the caller starts rests only where it goes
+ *
+ * A wheel's key step is its own smooth `scrollTo`. A busy page or a slow
+ * device can draw no frame of it for longer than the quiet period. A settle
+ * then reads the row the step is leaving and commits it, and the wheel turns
+ * back there. So while the caller's own scroll is under way, a quiet period
+ * is not rest: only `scrollend`, or a frame at its target, is. A touch, a
+ * wheel or trackpad, or a pointer press ends that wait. A scroll a person
+ * makes rests after the quiet period, as before.
+ *
+ * A step can also stop short of its target, as when a layout change moves
+ * the snap points. A target past the scroll range counts as reached at the
+ * range's end. For any other stop, the hook counts drawn frames once a quiet
+ * period passes short of the target. After {@link STEER_WAIT_FRAMES} of them
+ * the scroll rests where it is. A starved page draws no frame, so it cannot
+ * rest early. That bounds the wait where `scrollend` is missing.
+ *
  * SYNC: When modified, update DateInputTouch.test.tsx.
  */
 
@@ -63,6 +81,13 @@ import {useEffect, useRef} from 'react';
  * than the one it settles on.
  */
 export const SCROLL_QUIET_MS = 220;
+
+/**
+ * How many drawn frames the caller's own scroll may stay short of its target
+ * after a quiet period. Then it rests where it is. That is about one second
+ * at 60 Hz.
+ */
+export const STEER_WAIT_FRAMES = 60;
 
 /** What {@link useScrollSettle} reports back about the scroller's state. */
 export type ScrollSettleState = {
@@ -83,12 +108,19 @@ export type ScrollSettleState = {
  * @param isEnabled - skip attaching while false (e.g. a hidden panel)
  * @param isHeldRef - true while a mouse drag holds the scroller
  *   (usePointerDragScroll's `isDraggingRef`): not rest, however quiet
+ * @param steerRef - where the caller's own scroll (its `scrollTo`) goes, as
+ *   `{top}`: a new object for each scroll it starts, or null. Until a frame
+ *   reaches `top`, `scrollend` fires or a person takes the scroller, a quiet
+ *   period is not rest. A target past the scroll range counts as reached at its
+ *   end, and a scroll that stops short rests after {@link STEER_WAIT_FRAMES}
+ *   drawn frames.
  */
 export function useScrollSettle(
   ref: React.RefObject<HTMLElement | null>,
   onSettle: (element: HTMLElement) => void,
   isEnabled: boolean = true,
   isHeldRef?: React.RefObject<boolean>,
+  steerRef?: React.RefObject<{top: number} | null>,
 ): ScrollSettleState {
   // The callback closes over render-fresh values (the option list, the current
   // value); keeping it in a ref means the listeners attach once instead of
@@ -98,8 +130,8 @@ export function useScrollSettle(
 
   const isAtRestRef = useRef(true);
 
-  // Syncs scroll, touch and pointer listeners with `isEnabled`. They find when
-  // scrolling stops.
+  // Syncs scroll, touch, wheel and pointer listeners with `isEnabled`. They
+  // find when scrolling stops.
   useEffect(() => {
     const element = ref.current;
     if (element == null || !isEnabled) {
@@ -130,16 +162,89 @@ export function useScrollSettle(
       onSettleRef.current(element);
     };
 
+    // The frame that counts while the caller's own scroll stays short of its
+    // target, and the frames drawn so far for that scroll.
+    let waitFrame: number | undefined;
+    let waitedSteer: {top: number} | null = null;
+    let framesWaited = 0;
+    const stopWaiting = () => {
+      if (waitFrame != null) {
+        cancelAnimationFrame(waitFrame);
+        waitFrame = undefined;
+      }
+    };
+
+    // The caller's own scroll whose wait has ended: it reached its target,
+    // it ended, or a person took the scroller. A scroll that started before
+    // these listeners attached has no wait left.
+    let released = steerRef?.current ?? null;
+    const release = () => {
+      released = steerRef?.current ?? null;
+      stopWaiting();
+    };
+
+    // Whether the scroller is at the steer's target, clamped to the scroll
+    // range where the scroller has one.
+    const isAtTarget = (steer: {top: number}) => {
+      const max = element.scrollHeight - element.clientHeight;
+      const top = max > 0 ? Math.min(Math.max(steer.top, 0), max) : steer.top;
+      return Math.abs(element.scrollTop - top) < 1;
+    };
+
+    // Counts the frames drawn while the caller's own scroll stays short of
+    // its target, and rests it after STEER_WAIT_FRAMES of them. A scroll that
+    // moves stops the count until its next quiet period. The count carries on
+    // for the same scroll, so a step that keeps stopping short still ends. A
+    // starved page draws no frame, so it cannot rest early.
+    const waitForSteer = (steer: {top: number}) => {
+      stopWaiting();
+      if (steer !== waitedSteer) {
+        waitedSteer = steer;
+        framesWaited = 0;
+      }
+      const tick = () => {
+        waitFrame = undefined;
+        framesWaited += 1;
+        if (framesWaited >= STEER_WAIT_FRAMES) {
+          release();
+          settle();
+          return;
+        }
+        waitFrame = requestAnimationFrame(tick);
+      };
+      waitFrame = requestAnimationFrame(tick);
+    };
+
+    // A quiet period is rest unless the caller's own scroll has not reached
+    // its target. Then the page may be starved of frames mid-step, or the
+    // scroll may have stopped short: drawn frames tell which.
+    const settleWhenQuiet = () => {
+      const steer = steerRef?.current ?? null;
+      if (steer != null && steer !== released && !isAtTarget(steer)) {
+        waitForSteer(steer);
+        return;
+      }
+      release();
+      settle();
+    };
+
+    const onScrollEnd = () => {
+      release();
+      settle();
+    };
+
     const arm = () => {
       clearTimeout(timer);
-      timer = setTimeout(settle, SCROLL_QUIET_MS);
+      timer = setTimeout(settleWhenQuiet, SCROLL_QUIET_MS);
     };
 
     const onScroll = () => {
       // A fresh scroll re-opens the window: whatever we settle on now is
       // stale, and the settle that matters is the one after this gesture.
       // Momentum keeps arriving here, so the quiet period is measured from
-      // the last of it however long it runs.
+      // the last of it however long it runs. A scroll that moves has not
+      // stopped short either.
+      stopWaiting();
       hasSettled = false;
       isAtRestRef.current = false;
       if (isHeldRef?.current) {
@@ -149,6 +254,7 @@ export function useScrollSettle(
     };
 
     const onTouchStart = () => {
+      release();
       isTouching = true;
       hasSettled = false;
       isAtRestRef.current = false;
@@ -174,24 +280,29 @@ export function useScrollSettle(
     };
 
     element.addEventListener('scroll', onScroll, {passive: true});
-    element.addEventListener('scrollend', settle);
+    element.addEventListener('scrollend', onScrollEnd);
     element.addEventListener('touchstart', onTouchStart, {passive: true});
     element.addEventListener('touchend', onTouchEnd, {passive: true});
     element.addEventListener('touchcancel', onTouchEnd, {passive: true});
+    element.addEventListener('wheel', release, {passive: true});
+    element.addEventListener('pointerdown', release);
     element.addEventListener('pointerup', onPointerEnd);
     element.addEventListener('pointercancel', onPointerEnd);
 
     return () => {
       clearTimeout(timer);
+      stopWaiting();
       element.removeEventListener('scroll', onScroll);
-      element.removeEventListener('scrollend', settle);
+      element.removeEventListener('scrollend', onScrollEnd);
       element.removeEventListener('touchstart', onTouchStart);
       element.removeEventListener('touchend', onTouchEnd);
       element.removeEventListener('touchcancel', onTouchEnd);
+      element.removeEventListener('wheel', release);
+      element.removeEventListener('pointerdown', release);
       element.removeEventListener('pointerup', onPointerEnd);
       element.removeEventListener('pointercancel', onPointerEnd);
     };
-  }, [ref, isEnabled, isHeldRef]);
+  }, [ref, isEnabled, isHeldRef, steerRef]);
 
   return {isAtRestRef};
 }
