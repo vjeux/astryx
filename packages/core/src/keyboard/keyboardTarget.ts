@@ -389,8 +389,7 @@ function risesSmoothly(field: Element, win: Window): boolean {
   const css = (win as Window & {CSS?: typeof CSS}).CSS;
   return (
     typeof css?.supports === 'function' &&
-    css.supports('-webkit-touch-callout', 'none') &&
-    !reducesMotion(field)
+    css.supports('-webkit-touch-callout', 'none')
   );
 }
 
