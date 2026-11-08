@@ -129,7 +129,8 @@ async function swipe(
     ms,
     restMs = 0,
     rtl = false,
-  }: {px: number; ms: number; restMs?: number; rtl?: boolean},
+    stall = false,
+  }: {px: number; ms: number; restMs?: number; rtl?: boolean; stall?: boolean},
 ) {
   const box = await scroller.boundingBox();
   if (box == null) {
@@ -140,6 +141,22 @@ async function swipe(
   const from = {x: box.x + box.width / 2 + (rtl ? -half : half), y};
   const to = {x: from.x + (rtl ? px : -px), y};
   const driver = await touchDriver(page);
+  // NOT FOR LANDING: the page's own listener holds each move but the last
+  // for 60 ms, as a starved renderer delivers a flick.
+  if (stall) {
+    await page.evaluate(endX => {
+      addEventListener(
+        'touchmove',
+        event => {
+          if (Math.round(event.touches[0].clientX) !== Math.round(endX)) {
+            const end = performance.now() + 60;
+            while (performance.now() < end) {}
+          }
+        },
+        {passive: true},
+      );
+    }, to.x);
+  }
   // The paging reads a scrolling surface's release and pages from
   // `advanceSpeed`. A release the page reads on the other side of it from
   // the script fails by name, never as the paging's verdict.
@@ -156,7 +173,7 @@ for (const mode of ['paging', 'item'] as const) {
     }) => {
       const {scroller} = await open(page, 'snap-paging-one-up', mode);
       expect(await offset(scroller)).toBe(0);
-      await swipe(page, scroller, {px: 80, ms: 80});
+      await swipe(page, scroller, {px: 80, ms: 80, stall: true});
       await settled(scroller);
       await expect.poll(async () => offset(scroller)).toBeCloseTo(300, 0);
     });
