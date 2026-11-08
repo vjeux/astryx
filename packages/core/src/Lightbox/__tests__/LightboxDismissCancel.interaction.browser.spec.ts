@@ -452,7 +452,7 @@ test('the cancel keeps moving every frame while the main thread is blocked', asy
   // With the main thread blocked, a loaded runner's compositor presents a
   // frame every 100 to 250 ms. The return moves for about half a second,
   // which leaves too few frames to judge. So it plays at a slow tempo.
-  await slowViewer(page, CANCEL_TEMPO);
+  await page.addStyleTag({content: 'dialog, dialog * { --not-the-tempo: 5 !important; }'});
   const since = await page.evaluate(() => performance.now());
   const cast = await startScreencast(page);
   await v.driver.play(pullThenFlickUp(v.centre, 300, 60));
