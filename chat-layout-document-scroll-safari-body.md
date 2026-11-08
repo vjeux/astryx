@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/590d90164198f68d7eea1eddee4cb93e90b69372...b58dab06950db61f5f4b981ccb32501ccb620bb9
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/590d90164198f68d7eea1eddee4cb93e90b69372...fa8cf7b82c90835a7be7ff4a8f60dd56698253de
 
 ## User impact
 
@@ -48,7 +48,7 @@ Without the VirtualKeyboard API, in a page that scrolls the document, `useChatKe
 - `useChatKeyboard.test.tsx` adds three cases for a page that scrolls the document. In Safari with a kept pan there is no lift and no room. There is no focus takeover and no composer group. With the VirtualKeyboard API the dock still lifts. The first two fail on main. Chat and keyboard units: 619/619.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
-- The fix build is 8bb22d9c95 (banked on the fork) with #10672's page applied locally. Its code matches b58dab0695; only the records and `ChatLayout.doc.mjs`'s formatting differ.
+- The fix build is 8bb22d9c95 (banked on the fork) with #10672's page applied locally. Its code matches fa8cf7b82c; only the records and `ChatLayout.doc.mjs`'s formatting differ.
 
 ## Writing rubric results
 
