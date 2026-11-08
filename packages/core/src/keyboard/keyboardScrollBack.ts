@@ -12,7 +12,6 @@
  * SYNC: When modified, update /packages/core/src/keyboard/README.md
  */
 
-import {reducesMotion} from '../motion/reducedMotion';
 import {KEYBOARD_EPSILON, subscribeKeyboardHeight} from './keyboardHeight';
 
 interface AddedScroll {
@@ -72,19 +71,17 @@ function scrollTopTo(
 }
 
 /**
- * Records that Core scrolled `scroller` from `before` to `after`, to keep a
- * field above the keyboard. `after` is where a smooth scroll is headed, and
- * where the scroller is now for any other. When the keyboard goes, the
- * scroller goes back to where it was before Core's first scroll. A scroller
- * anyone else scrolls meanwhile keeps that scroll.
+ * Records that Core scrolled `scroller` from `before` to where it is now, to
+ * keep a field above the keyboard. When the keyboard goes, the scroller goes
+ * back to where it was before Core's first scroll. A scroller anyone else
+ * scrolls meanwhile keeps that scroll.
  */
 export function noteKeyboardScroll(
   scroller: Element,
   before: number,
   win: Window,
-  after = scrollTopOf(scroller, win),
 ): void {
-  const now = after;
+  const now = scrollTopOf(scroller, win);
   const added = addedScrolls.get(win)?.get(scroller);
   if (added == null) {
     if (Math.abs(now - before) >= 0.5) {
@@ -99,25 +96,6 @@ export function noteKeyboardScroll(
   } else {
     added.at = null;
   }
-}
-
-/**
- * Where Core's own scroll of `scroller` is headed, while the scroller lies on
- * its way there, as during a smooth rise. Null for a scroller Core did not
- * scroll, or one moved off that way.
- */
-export function keyboardScrollTarget(
-  scroller: Element,
-  win: Window,
-): number | null {
-  const added = addedScrolls.get(win)?.get(scroller);
-  if (added?.at == null) {
-    return null;
-  }
-  const now = scrollTopOf(scroller, win);
-  const low = Math.min(added.from, added.at) - KEYBOARD_EPSILON;
-  const high = Math.max(added.from, added.at) + KEYBOARD_EPSILON;
-  return now >= low && now <= high ? added.at : null;
 }
 
 // The scroll back starts at the keyboard's report that it has gone. Safari
@@ -141,18 +119,23 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
   return scrolls;
 }
 
-// The browser's own smooth scroll carries the scroll back. iOS Safari applies
-// a scripted scroll a frame late, so a scroll set each frame jitters there. A
-// touch stops that scroll, so a person's scroll stands. Under Reduce Motion, or
-// in a theme that reduces motion for everyone, the scroll lands at once.
+// Scrolls each scroller still where Core left it back to where it was before.
+// The browser's own smooth scroll carries it: iOS Safari applies a scripted
+// scroll a frame late, so a scroll set each frame jitters there. A touch stops
+// the browser's scroll where it is, so a person's scroll stands. Under Reduce
+// Motion the scroll lands at once.
 function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
+  const behavior: ScrollBehavior = win.matchMedia?.(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
+    ? 'instant'
+    : 'smooth';
   for (const [scroller, added] of scrolls) {
     if (
       added.at != null &&
       scroller.isConnected &&
       Math.abs(scrollTopOf(scroller, win) - added.at) <= KEYBOARD_EPSILON
     ) {
-      const behavior = reducesMotion(scroller) ? 'instant' : 'smooth';
       scrollTopTo(scroller, added.from, behavior, win);
     }
   }
