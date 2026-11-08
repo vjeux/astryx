@@ -109,11 +109,6 @@ const DRAG_PROMOTION_SLOP_PX = 8;
  */
 function halfLandingBand(travel: number, half: number): ReleaseBand {
   const {fastSpeed, minProjectionSpeed, projectionSeconds} = uikitSheet.release;
-  if (travel <= DRAG_PROMOTION_SLOP_PX) {
-    throw new Error(
-      `halfLandingBand: a release ${travel} px below tall is no flick for Core, which this rule does not cover`,
-    );
-  }
   if (travel + fastSpeed * projectionSeconds >= half) {
     throw new Error(
       `halfLandingBand: a release ${travel} px below tall can project past half (${half} px) below the flick speed, which this rule does not cover`,
@@ -124,8 +119,8 @@ function halfLandingBand(travel: number, half: number): ReleaseBand {
       ? 0
       : Math.max(minProjectionSpeed, (half / 2 - travel) / projectionSeconds);
   return {
-    fromPxPerS: Math.min(fastSpeed, nearerHalf),
-    fromIncluded: nearerHalf >= fastSpeed,
+    fromPxPerS: nearerHalf,
+    fromIncluded: false,
     toPxPerS: (half - travel) / projectionSeconds,
   };
 }
