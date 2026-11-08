@@ -111,7 +111,9 @@ the person's device.
   element size tokens keep their values when a size is set; a control grows
   with its text under FR4.
 - Defects under FR3 and FR4:
-  - On iOS and iPadOS, text ignores Dynamic Type in every theme.
+  - Safari on iPhone follows Dynamic Type in every theme, recorded in the iOS
+    simulator at the current implementation. Safari on iPad, other iOS
+    browsers, and macOS Safari at its default text size are unverified.
   - Controls hold fixed heights, such as 40 px elements, `component:Badge`
     FR1's block size, `component:Token` FR1's element size, and InputGroup's
     row height in `family:input-fields`, so a larger label can overflow; those
