@@ -211,7 +211,7 @@ async function webkitScreencast(
 export function latestFrameAt(
   frames: readonly {readonly t: number}[],
 ): number | null {
-  return frames.length === 0 ? null : Math.max(...frames.map(f => f.t));
+  return frames.length === 0 ? null : frames[frames.length - 1].t;
 }
 
 /**
