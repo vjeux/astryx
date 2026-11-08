@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/590d90164198f68d7eea1eddee4cb93e90b69372...fa8cf7b82c90835a7be7ff4a8f60dd56698253de
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/590d90164198f68d7eea1eddee4cb93e90b69372...b143b86c013388987e2233f091ff900c31712af1
 
 ## User impact
 
@@ -17,7 +17,7 @@ Three narrower fixes failed on the Simulator. A lift less Safari's pan made Safa
 
 ## Smallest restoration
 
-Without the VirtualKeyboard API, in a page that scrolls the document, `useChatKeyboard` lifts the fixed dock nothing. It leaves the tap, focus moves and the reveal to the browser, as before the keyboard work. On Android, Firefox takes this path too; its own reveal pans to the field, unmeasured here. Chrome keeps its ride: it has `navigator.virtualKeyboard`. Self-scroll mode is unchanged.
+Without the VirtualKeyboard API, when `scrollRef` names the document's root or body, `useChatKeyboard` lifts the fixed dock nothing. It leaves the tap, focus moves and the reveal to the browser, as before the keyboard work. An inner scroller keeps the lift. Chrome keeps its ride: it has `navigator.virtualKeyboard`. Self-scroll mode is unchanged.
 
 ## Evidence
 
@@ -45,11 +45,12 @@ Without the VirtualKeyboard API, in a page that scrolls the document, `useChatKe
 
 ## Testing
 
-- `useChatKeyboard.test.tsx` adds three cases for a page that scrolls the document. In Safari with a kept pan there is no lift and no room. There is no focus takeover and no composer group. With the VirtualKeyboard API the dock still lifts. The first two fail on main. Chat and keyboard units: 619/619.
+- `useChatKeyboard.test.tsx` adds four cases. For the document in Safari, with a kept pan, there is no lift and no room, and no focus takeover or composer group. Both fail on main. An inner scroller keeps the lift and the takeover; that fails on fa8cf7b82c. With the VirtualKeyboard API the dock still lifts. Chat and keyboard units: 620/620.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
+- Measured in Safari on iOS in the browser only. The iOS home-screen app and Firefox for Android take the same code path, unmeasured, and the docs claim neither.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
-- The fix build is 8bb22d9c95 (banked on the fork) with #10672's page applied locally. Its code matches fa8cf7b82c; only the records and `ChatLayout.doc.mjs`'s formatting differ.
+- The frames come from 8bb22d9c95 (banked on the fork) with #10672's page applied locally; its code matches fa8cf7b82c. A build of b143b86c01's code reads the same on the Simulator: the dock's top at 235 px in `long` and 199 px in `composer`, and `docked` unchanged.
 
 ## Writing rubric results
 
-`spec:AST-099` FR3: R1–R6 none.
+`spec:AST-099` FR3, FR9's docked-container clause and the FR3–FR4 verification row: R1–R6 none.
