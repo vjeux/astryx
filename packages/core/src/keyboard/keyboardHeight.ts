@@ -616,7 +616,6 @@ export function watchRevealPan(
       );
     },
     putBack: anchor => {
-      isChromeReveal = null;
       const options: ScrollIntoViewOptions = {
         block: 'start',
         inline: 'nearest',
