@@ -94,6 +94,12 @@ export const categories: SandboxCategory[] = [
           'Interactive mobile interaction prototypes (bottom sheets, action sheets, drawers) for the component migration table',
       },
       {
+        name: 'Chat Layout',
+        href: '/pages/chat-layout/',
+        description:
+          'A full page ChatLayout with a long transcript, for phone keyboard and touch checks',
+      },
+      {
         name: 'TextArea Counter',
         href: '/pages/textarea-counter/',
         description:
