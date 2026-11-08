@@ -488,7 +488,7 @@ function presentGlide(
           animation,
           at: settle * durationMs,
           resolve: () => {
-            if (!isEnded && presentedGlides.get(element) === glide) {
+            if (presentedGlides.get(element) === glide) {
               writePresentedResolve(styled);
               hitTested = drawnAt(now());
             }
@@ -517,7 +517,6 @@ function presentGlide(
         return;
       }
       isRemoved = true;
-      stopSettle();
       glideReports.delete(report);
       unregister();
       if (presentedGlides.get(element) === glide) {
@@ -532,7 +531,6 @@ function presentGlide(
       return;
     }
     isEnded = true;
-    stopSettle();
     endedReports.push(report);
     // This module's own timer: a closed frame's timer never fires. The glides
     // of one change end in one frame, so the first task removes them all.
