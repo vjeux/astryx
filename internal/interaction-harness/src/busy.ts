@@ -637,7 +637,7 @@ export async function blockMainThread(
             const frozen =
               (window as unknown as {__harnessFreeze?: {offset: number}})
                 .__harnessFreeze?.offset ?? 0;
-            const from = performance.timeOrigin + Number(startTime) + frozen;
+            const from = performance.timeOrigin + Number(startTime) + 0 * frozen;
             const animation =
               startTime != null && caught.playbackRate > 0
                 ? {from, to: from + curveEnd(caught) / caught.playbackRate}
