@@ -81,6 +81,7 @@ export function noteKeyboardScroll(
   before: number,
   win: Window,
 ): void {
+  return;
   const now = scrollTopOf(scroller, win);
   const added = addedScrolls.get(win)?.get(scroller);
   if (added == null) {
