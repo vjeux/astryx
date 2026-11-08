@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...e18165abfbf96561f4d8be1ceebaac7207bea09c
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...df30dc50e02cd42bfef345da06af060c2a2b8500
 
 ## User impact
 
@@ -13,18 +13,18 @@ Three narrower fixes failed on the Simulator. A lift less Safari's pan made Safa
 
 ## Expected behavior and authority
 
-`spec:AST-099` FR3 puts a docked composer on the keyboard; FR4 keeps focus from panning the page. FR3 and FR4 now name two exceptions. One is Safari on iOS. The other is each keyboard show before one leaves the composer covered, in another browser without the VirtualKeyboard API. Two Firefox verification rows and Gap 16 cover those shows. They need the spec owners' stamp at this head.
+`spec:AST-099` FR3 puts a docked composer on the keyboard; FR4 keeps focus from panning the page. FR3 and FR4 now name two exceptions. One is Safari on iOS. The other is each keyboard show before one leaves the composer covered, in another browser without the VirtualKeyboard API. Two Firefox rows and Gap 16 cover those shows. They need the owners' stamp at this head.
 
 ## Smallest restoration
 
-The fix applies when `scrollRef` names the document's root or body, without the VirtualKeyboard API. Each keyboard show leaves focus to the browser until one finds the dock covered. The keyboard module's reveal-pan watch decides each show, under a new `dock` option that is off by default. A pan to the dock means no lift for that show. A dock still covered 0.7 s after the keyboard's report rises. Only a pan restarts that wait, up to 3 s. With no touch or wheel in the wait, the page then works as on main. Chrome and self-scroll mode are unchanged.
+The fix applies when `scrollRef` names the document's root or body, without the VirtualKeyboard API. Each keyboard show leaves focus to the browser until one finds the dock covered. The keyboard module's reveal-pan watch decides each show, under a new opt-in `dock` option. A pan to the dock means no lift for that show. A dock still covered 0.7 s after the keyboard's report rises. Only a pan restarts that wait, up to 3 s. With no touch or wheel in the wait, the page then works as on main. Chrome and self-scroll mode are unchanged.
 
 ## Evidence
 
 - Reproduction before the change (iOS 26.2 Simulator, #10672's page): a tap puts the dock's top at −102 px in `long`, −138 px in `composer`.
 - Result after the change: the dock's bottom meets the keyboard at 377 px.
 - Representative unchanged path: `docked`, and every case with no keyboard (Testing).
-- Regression test or other mutation-sensitive proof: new cases on scripted time fail on main, and each gate's removal fails its own case (Testing).
+- Regression test or other mutation-sensitive proof: new scripted-time cases fail on main, and removing any gate fails its case (Testing).
 - Captures, main first; the README maps each (https://github.com/vjeux/astryx/tree/e3601264cc50a221be53b41cb62d999372af1040):
 
   ![Keyboard open](https://raw.githubusercontent.com/vjeux/astryx/e3601264cc50a221be53b41cb62d999372af1040/ios-keyboard-open.png)
@@ -43,14 +43,14 @@ The fix applies when `scrollRef` names the document's root or body, without the 
 
 - `useChatKeyboard.test.tsx` and `keyboardHeight.test.ts` script time, touches and visual-viewport values:
   - No pan with a 290 px keyboard: no lift at 699 ms, then 290 at 700 ms after the report. The height reports of the keyboard's slide don't extend the wait. The next show lifts at once, with the focus takeover.
-  - A pan decides only its own show. After a pan at 108 ms, the next show with no pan lifts at 700 ms and teaches the page; the show after lifts at once.
+  - A pan decides only its own show. After a pan at 108 ms, the next show with no pan lifts at 700 ms and teaches the page. The show after lifts at once.
   - Pans at 46, 0 and 384 ms over three shows: no lift, no takeover, nothing learned. A smaller pan restarts the wait.
   - A touch in the wait: the show learns nothing, and where the dock rests when the wait ends decides it.
   - A reveal pan after the wait, with no touch or wheel since the show's report, drops the lift once. After a touch, a wheel, a resize report mid-drag, or at a later show, the lift stays.
-  - Pans that keep restarting the wait end at the 3 s cap, which teaches nothing.
+  - Pans that keep restarting the wait end at the 3 s cap, which decides by where the dock rests and teaches nothing.
   - The tap claim, `focus()`'s reveal and the put-back each have a case before and after a page learns the dock is covered. Removing any one gate fails its case.
   - With the option off, the reveal-pan watch reports and listens as before. Two windows learn on their own. With the VirtualKeyboard API nothing is watched.
-  - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2410/2410.
+  - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2411/2411.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
