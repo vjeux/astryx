@@ -2,7 +2,7 @@
 Stack: #9983 → #8217
 Merge group: #9983, #8217
 
-Review only this PR's change: https://github.com/vjeux/astryx/compare/86c74e8c304c69ffe8a5c2d57f591e19c35f3a1d...1fd9e0ed88a71bebaaa51876285faab06e92d09e, https://github.com/vjeux/astryx/compare/6fd4c287f900fc2e262c95da664f2aa6f0578701...680bf29d0c39692335dbde4a1322a39f1d2e82b7 and https://github.com/vjeux/astryx/compare/cc668a0e1bde4f872935b68286dcbb40a62315e1...8a7df57e539ad8bbf6686db12e24458bd7358ec1. Main merges sit between them; one joins two `spec:AST-094` FR36 edits. The last moves the bounce inside main's keyboard ride: https://github.com/vjeux/astryx/compare/52099ae9d10adc25ab68777f3f3f4aa7332df487..a56dc678209d1984bbb878c6916ad257f212e6e7. The head adds #9983's one-read fix, then a sandbox page: https://github.com/vjeux/astryx/compare/4a546c248e39c5a7ae936a0228d0e1ef6d84234e...9509d0bf41c72883c9fa6deb86eb45565a451ca9.
+Review only this PR's change: https://github.com/vjeux/astryx/compare/86c74e8c304c69ffe8a5c2d57f591e19c35f3a1d...1fd9e0ed88a71bebaaa51876285faab06e92d09e, https://github.com/vjeux/astryx/compare/6fd4c287f900fc2e262c95da664f2aa6f0578701...680bf29d0c39692335dbde4a1322a39f1d2e82b7 and https://github.com/vjeux/astryx/compare/cc668a0e1bde4f872935b68286dcbb40a62315e1...8a7df57e539ad8bbf6686db12e24458bd7358ec1. Main merges sit between them. The last moves the bounce inside main's keyboard ride: https://github.com/vjeux/astryx/compare/52099ae9d10adc25ab68777f3f3f4aa7332df487..a56dc678209d1984bbb878c6916ad257f212e6e7. The head adds #9983's one-read fix, then a sandbox page and a record fix: https://github.com/vjeux/astryx/compare/4a546c248e39c5a7ae936a0228d0e1ef6d84234e...88d25e8682d1b92df31cdcc77714198d6354c75f.
 
 ## User need
 
@@ -17,13 +17,13 @@ A drag down from the composer blurs it too, unless a long press began it (caret 
 ## Current specification
 
 - `component:ChatLayout` FR10 and DEC-1, rewritten.
-- Owner decision, Nov 5 2026 (Cindy, card 76b): dismiss when the drag reaches the composer, with a brief spring bounce and no follow cue. The composer and the scroll-to-bottom button move together.
-- Specs decision, Nov 5 2026: a drag that starts on the composer closes the keyboard and never scrolls content under it.
-- Specs decisions, Nov 5–6 2026: `spec:AST-094` FR36 and FR37 except ChatLayout's two keyboard dismissals; FR19 lists the composer's hold.
+- Owner decision, Nov 5 2026 (Cindy, paraphrase): dismiss when the drag reaches the composer, with a brief spring bounce and no follow cue. The composer and the scroll-to-bottom button move together.
+- Spec owners' ruling, Nov 5 2026 (paraphrase): a drag that starts on the composer closes the keyboard and never scrolls content under it.
+- Spec owners' rulings, Nov 5–6 2026: `spec:AST-094` FR36 and FR37 except ChatLayout's two keyboard dismissals; FR19 lists the composer's hold.
 
 ## Public delta and caller burden
 
-No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly shared gesture code (Testing), which card 62c (Cindy, Nov 4 2026) loads up front.
+No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly shared gesture code (Testing), which an owner decision (Cindy, Nov 4 2026) loads up front.
 
 ## Design and alternatives
 
