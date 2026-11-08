@@ -97,7 +97,19 @@ const routes: ReadonlyArray<EntranceRoute> = [
       await expect(row).toBeVisible();
       await waitForRest(layerOf(row));
     },
-    open: async page => page.getByRole('menuitem', {name: 'Move to'}).click(),
+    open: async page => {
+      await page.getByRole('menuitem', {name: 'Move to'}).click();
+      // NOT FOR LANDING: a planted layout 60 ms into the entrance.
+      await page.evaluate(() => {
+        setTimeout(() => {
+          const open = document.querySelectorAll(
+            '[data-layer-anchored]:popover-open',
+          );
+          (open[open.length - 1] as HTMLElement).style.paddingBlockStart =
+            '1px';
+        }, 60);
+      });
+    },
     shown: page => page.getByRole('menuitem', {name: 'Folder A'}),
   },
 ];
