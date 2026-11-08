@@ -571,6 +571,14 @@ const fifthAlign = async (scroller: Locator) =>
  */
 async function openSplitEnd(page: Page, mode: Mode) {
   const {scroller} = await open(page, 'snap-paging-partial-last-page', mode);
+  // Evidence only: every frame callback from here on runs 1 s late.
+  await page.evaluate(() => {
+    const frame = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = callback =>
+      frame(() => {
+        setTimeout(() => frame(callback), 1000);
+      });
+  });
   const before = await travel(scroller);
   await scroller.evaluate(el => {
     el.style.width = `${el.clientWidth - 1}px`;
