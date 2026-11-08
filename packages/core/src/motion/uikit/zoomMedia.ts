@@ -165,7 +165,7 @@ export const zoomMedia = {
  */
 export function registerZoomMediaTable(): void {
   registerMotionTable('zoomMedia', zoomMedia, {
-    roles: ['dismiss.dismissPositionSpring', 'dismiss.dismissSizeSpring'],
+    roles: ['dismiss.dismissPositionSpring'],
   });
 }
 
