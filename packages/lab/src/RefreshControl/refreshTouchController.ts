@@ -556,9 +556,7 @@ export function useRefreshTouchController({
           resetIndicator();
         }
       };
-      // The theme's duration token as it applies here, at the end's start.
-      // With no token, or a token in a form it cannot read, the end has no
-      // slide.
+      // A token that `endTiming` cannot read, such as `calc()`, gives no slide.
       const timing =
         element == null ? null : endTiming(getComputedStyle(element));
       if (timing == null || timing.ms <= 0) {
