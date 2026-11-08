@@ -129,7 +129,7 @@ function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
     '(prefers-reduced-motion: reduce)',
   ).matches
     ? 'instant'
-    : 'smooth';
+    : 'instant';
   for (const [scroller, added] of scrolls) {
     if (
       added.at != null &&
