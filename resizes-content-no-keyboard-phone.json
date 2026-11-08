@@ -1,0 +1,308 @@
+{
+ "before core-textinput--mobile-keyboard": {
+  "file": "phone-before-textinput--mobile-keyboard.png",
+  "inner": [
+   402,
+   714
+  ],
+  "vv": [
+   0,
+   714
+  ],
+  "scrollY": 0,
+  "range": 510,
+  "els": {
+   "field: Title": [
+    41,
+    516.4,
+    302,
+    24
+   ],
+   "field: Quantity": [
+    41,
+    592.4,
+    302,
+    24
+   ],
+   "field: Notes": [
+    33,
+    665.4,
+    318,
+    80
+   ],
+   "field: Message": [
+    21,
+    678,
+    197.3,
+    24
+   ],
+   "toolbar": [
+    12,
+    674,
+    378,
+    32
+   ]
+  }
+ },
+ "before core-bottomsheet--mobile-keyboard": {
+  "file": "phone-before-bottomsheet--mobile-keyboard.png",
+  "inner": [
+   402,
+   714
+  ],
+  "vv": [
+   0,
+   714
+  ],
+  "scrollY": 0,
+  "range": 0,
+  "els": {
+   "field: Title": [
+    26,
+    399.1,
+    350,
+    24
+   ],
+   "field: Author": [
+    26,
+    475.1,
+    350,
+    24
+   ],
+   "field: Email": [
+    26,
+    551.1,
+    350,
+    24
+   ],
+   "field: Team": [
+    26,
+    627.1,
+    350,
+    24
+   ],
+   "field: Project": [
+    26,
+    703.1,
+    350,
+    24
+   ],
+   "field: Related task": [
+    26,
+    779.1,
+    350,
+    24
+   ],
+   "field: Summary": [
+    18,
+    852.1,
+    366,
+    104
+   ],
+   "field: Context": [
+    18,
+    1002.1,
+    366,
+    152
+   ],
+   "field: What changed?": [
+    18,
+    1200.1,
+    366,
+    104
+   ],
+   "field: Suggested follow-up": [
+    18,
+    1350.1,
+    366,
+    104
+   ],
+   "field: Comment": [
+    18,
+    1500.1,
+    366,
+    200
+   ],
+   "sheet panel": [
+    0,
+    57.1,
+    402,
+    942.9
+   ],
+   "sheet scroller": [
+    1,
+    58.1,
+    400,
+    655.9
+   ]
+  },
+  "sheetScroll": [
+   0,
+   1707
+  ]
+ },
+ "before core-textinput--mobile-keyboard-high-field": "not in this build",
+ "after core-textinput--mobile-keyboard": {
+  "file": "phone-after-textinput--mobile-keyboard.png",
+  "inner": [
+   402,
+   714
+  ],
+  "vv": [
+   0,
+   714
+  ],
+  "scrollY": 0,
+  "range": 510,
+  "els": {
+   "field: Title": [
+    41,
+    516.4,
+    302,
+    24
+   ],
+   "field: Quantity": [
+    41,
+    592.4,
+    302,
+    24
+   ],
+   "field: Notes": [
+    33,
+    665.4,
+    318,
+    80
+   ],
+   "field: Message": [
+    21,
+    678,
+    197.3,
+    24
+   ],
+   "toolbar": [
+    12,
+    674,
+    378,
+    32
+   ]
+  }
+ },
+ "after core-bottomsheet--mobile-keyboard": {
+  "file": "phone-after-bottomsheet--mobile-keyboard.png",
+  "inner": [
+   402,
+   714
+  ],
+  "vv": [
+   0,
+   714
+  ],
+  "scrollY": 0,
+  "range": 0,
+  "els": {
+   "field: Title": [
+    26,
+    399.1,
+    350,
+    24
+   ],
+   "field: Author": [
+    26,
+    475.1,
+    350,
+    24
+   ],
+   "field: Email": [
+    26,
+    551.1,
+    350,
+    24
+   ],
+   "field: Team": [
+    26,
+    627.1,
+    350,
+    24
+   ],
+   "field: Project": [
+    26,
+    703.1,
+    350,
+    24
+   ],
+   "field: Related task": [
+    26,
+    779.1,
+    350,
+    24
+   ],
+   "field: Summary": [
+    18,
+    852.1,
+    366,
+    104
+   ],
+   "field: Context": [
+    18,
+    1002.1,
+    366,
+    152
+   ],
+   "field: What changed?": [
+    18,
+    1200.1,
+    366,
+    104
+   ],
+   "field: Suggested follow-up": [
+    18,
+    1350.1,
+    366,
+    104
+   ],
+   "field: Comment": [
+    18,
+    1500.1,
+    366,
+    200
+   ],
+   "sheet panel": [
+    0,
+    57.1,
+    402,
+    942.9
+   ],
+   "sheet scroller": [
+    1,
+    58.1,
+    400,
+    655.9
+   ]
+  },
+  "sheetScroll": [
+   0,
+   1707
+  ]
+ },
+ "after core-textinput--mobile-keyboard-high-field": {
+  "file": "phone-after-textinput--mobile-keyboard-high-field.png",
+  "inner": [
+   402,
+   714
+  ],
+  "vv": [
+   0,
+   714
+  ],
+  "scrollY": 0,
+  "range": 116,
+  "els": {
+   "field: High field": [
+    41,
+    64,
+    320,
+    24
+   ]
+  }
+ }
+}
