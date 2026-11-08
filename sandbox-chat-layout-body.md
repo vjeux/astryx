@@ -29,7 +29,7 @@ No product code changes. The Sandbox gains one raw page; the route list, catalog
   - `streaming`: the reply streams to its 297 characters in about 2.5 s, and the document stays at its end.
   - `docked`: the dock sticks to the panel's bottom. ChatLayout scrolls (1,290 px over 589), and the document does not.
   - No page error or hydration warning in either engine. WebKit's container logs only blocked font preconnects.
-  - Captures on a phone, left to right long, composer, streaming and docked (https://github.com/vjeux/astryx/tree/87b68f86aff76545e0925788be2857144c4ac2b4):
+  - Captures on a phone, both engines taken at a3676be0bd, left to right long, composer, streaming and docked (https://github.com/vjeux/astryx/tree/87b68f86aff76545e0925788be2857144c4ac2b4):
 
     ![Chromium, phone](https://raw.githubusercontent.com/vjeux/astryx/87b68f86aff76545e0925788be2857144c4ac2b4/chromium-phone-cases.png)
     ![WebKit, phone](https://raw.githubusercontent.com/vjeux/astryx/87b68f86aff76545e0925788be2857144c4ac2b4/webkit-phone-cases.png)
