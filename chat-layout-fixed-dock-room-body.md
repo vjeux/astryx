@@ -1,7 +1,7 @@
 <!-- Template: bug-fix.md -->
 Stack: #10672 → this pull request
 
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/a3676be0bd28ac4abe1c0db8e7d6b092516104aa...ef91096065a4e86e4bc343590cd558db38f4eac5
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/a3676be0bd28ac4abe1c0db8e7d6b092516104aa...a442cbc7cef0afb57250bc99af8c3bb7a4920cf1
 
 ## User impact
 
@@ -21,7 +21,7 @@ In `scrollRef` mode only, ChatLayout observes the dock's border-box height throu
 
 ## Evidence
 
-- Reproduction before the change, at the document's end on #10672's page: the newest message sits 102 px under the dock in `long` and `streaming`, in Chromium and WebKit. In `composer` (a 178 px dock) it is 138 px on a phone and 106 px on a desktop. After three more lines it is 168 px. On the iOS 26.2 Simulator it is 102 and 138 px.
+- Reproduction before the change, at the document's end on #10672's page: in `long` and `streaming` the newest message sits 102 px under the dock. Chromium and WebKit agree. In `composer` (a 178 px dock) it is 138 px on a phone and 106 px on a desktop. After three more lines it is 168 px. On the iOS 26.2 Simulator it is 102 and 138 px.
 - Result after the change: the message rests 40 px above the dock in every case, after the composer grows, and on the iOS Simulator.
 - Representative unchanged path: `?case=docked` (self-scroll) stays 40 px above on both builds and observes nothing.
 - Regression test or other mutation-sensitive proof: two `ChatLayout.test.tsx` cases fail on main's `ChatLayout.tsx`. The dock's resize callback runs once at mount, not again in an idle second.
