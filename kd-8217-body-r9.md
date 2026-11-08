@@ -2,7 +2,7 @@
 Stack: #9983 → #8217
 Merge group: #9983, #8217
 
-Review only this PR's change: https://github.com/vjeux/astryx/compare/86c74e8c304c69ffe8a5c2d57f591e19c35f3a1d...1fd9e0ed88a71bebaaa51876285faab06e92d09e, https://github.com/vjeux/astryx/compare/6fd4c287f900fc2e262c95da664f2aa6f0578701...680bf29d0c39692335dbde4a1322a39f1d2e82b7 and https://github.com/vjeux/astryx/compare/cc668a0e1bde4f872935b68286dcbb40a62315e1...8a7df57e539ad8bbf6686db12e24458bd7358ec1. Main merges sit between and after; one joins two `spec:AST-094` FR36 edits. The last one moves the bounce inside main's keyboard ride: https://github.com/vjeux/astryx/compare/52099ae9d10adc25ab68777f3f3f4aa7332df487..a56dc678209d1984bbb878c6916ad257f212e6e7 (beyond a merge by text). The head then carries #9983's one-read fix.
+Review only this PR's change: https://github.com/vjeux/astryx/compare/86c74e8c304c69ffe8a5c2d57f591e19c35f3a1d...1fd9e0ed88a71bebaaa51876285faab06e92d09e, https://github.com/vjeux/astryx/compare/6fd4c287f900fc2e262c95da664f2aa6f0578701...680bf29d0c39692335dbde4a1322a39f1d2e82b7 and https://github.com/vjeux/astryx/compare/cc668a0e1bde4f872935b68286dcbb40a62315e1...8a7df57e539ad8bbf6686db12e24458bd7358ec1. Main merges sit between and after; one joins two `spec:AST-094` FR36 edits. The last one moves the bounce inside main's keyboard ride: https://github.com/vjeux/astryx/compare/52099ae9d10adc25ab68777f3f3f4aa7332df487..a56dc678209d1984bbb878c6916ad257f212e6e7. The head adds #9983's one-read fix.
 
 ## User need
 
@@ -10,9 +10,9 @@ In iOS Messages, dragging the conversation to the field, or swiping down on the 
 
 ## Problem and solution fit
 
-A watcher pan on the root lets the transcript scroll. With a software keyboard up, the field blurs when a touch or pen drag reaches the composer's top. A layer in the dock then bounces once on `springs.keyboard`, from the finger's speed, at most the composer's bottom padding, unless motion is reduced. The composer, frosted layer and scroll-to-bottom button share that layer. Where the dock rides the keyboard down, the bounce plays inside the ride. Under a finger, focus then rests on the composer's group, as after Done.
+A watcher pan on the root lets the transcript scroll. With a software keyboard up, the field blurs when a touch or pen drag reaches the composer's top. A layer in the dock then bounces once on `springs.keyboard`, from the finger's speed, at most the composer's bottom padding, unless motion is reduced. The composer, frosted layer and scroll-to-bottom button share that layer. The bounce plays inside the dock's keyboard ride. Under a finger, focus then rests on the composer's group, as after Done.
 
-A drag down from the composer blurs it too, unless a long press began it (caret loupe). While the keyboard is up, the gesture system's page hold cancels one-finger drags that start on the composer, so nothing scrolls under it. Its own scrollers, a pinch and a zoomed page stay the browser's.
+A drag down from the composer blurs it too, unless a long press began it (caret loupe). While the keyboard is up, the page hold cancels one-finger drags that start on the composer, so nothing scrolls under it. Its own scrollers, a pinch and a zoomed page stay the browser's.
 
 ## Current specification
 
@@ -23,7 +23,7 @@ A drag down from the composer blurs it too, unless a long press began it (caret 
 
 ## Public delta and caller burden
 
-No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly the gesture system (Testing).
+No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly gesture code, which card 62c (Cindy, Nov 4 2026) loads up front.
 
 ## Design and alternatives
 
@@ -33,7 +33,7 @@ No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly the gestu
 
 ## Evidence
 
-{SIM_EVIDENCE}
+iOS 26.2 Simulator at this head: both drags dismiss (Testing).
 
 ## Scope
 
@@ -52,25 +52,35 @@ Behavior module: ChatLayout transcript dismissal (transcriptDismiss.ts)
 
 ChatLayout's import, bytes (core build, esbuild, minified, React and StyleX external):
 
-| | main (def46d15d9) | this change ({HEAD10}) |
+| | main (def46d15d9) | this change (4a546c248e) |
 | --- | ---: | ---: |
 | minified | 227,334 | 316,835 |
 | gzip | 77,244 | 103,815 |
 
-The gesture system's pan, host and page hold make 75 kB of the minified growth.
+The gesture system's pan, host and page hold make 75 kB of the minified growth. They are the gesture system's own 15 modules, each loaded once by path, with no copies. Toast loads 14 of the same 15, so an app with both bundles them once. The dismissal's own code is 2.5 kB minified.
 
 - Red-first for the last merge, each arm on this head's tests, Chrome-profile crossing case in Chromium:
-  - On the merge by text alone (fc4af427e8), it fails 5 of 5: the dock jumps 320.9 px in one 17 ms frame as the bounce ends, because the bounce hid the keyboard's ride.
+  - On the merge by text alone (fc4af427e8), it fails 5 of 5. The bounce hid the keyboard's ride, so the dock jumps 320.9 px in one 17 ms frame as the bounce ends.
   - Without the exact landing (5c19e3270d), it fails 5 of 5: the bounce's last frame snaps 0.28 px to rest.
-  - Without the dock's containment while the bounce plays (4ee1c531af), it fails 5 of 5: the bounce grows the transcript's scroll range, and a scroll held at its end lifts the dock 1 to 2 px.
+  - Without the dock's containment while the bounce plays (4ee1c531af), it fails 5 of 5. The bounce grows the transcript's scroll range, and a scroll held at its end lifts the dock 1 to 2 px.
   - At this head it passes 20 of 20, with 1 worker and with 4.
 - Red-first: on a build of 1fd9e0ed88, the browser spec's 4 crossing and composer cases fail in Chromium (2 of 2 runs) and in WebKit. On a build of 39a9502ca7, the pinch case fails in both engines: every two-finger move was cancelled. On a build of d19cf698ec's code, the drifting-strip case fails in both engines (Chromium 2 of 2): every move went through.
-- The bounce case samples the dock's animation paused at each frame. WebKit reads a running animation at each call, and a starved page paints few frames. Under CPU load in the WebKit container, the per-frame version failed 7 of 80 runs; this one passed 40 of 40.
-- At this head, Chromium passes the dismissal spec 14/14 and main's keyboard spec 18/18. WebKit in the CI profile (`--cpus=4`, `CI=1`, `LP_NUM_THREADS=4`, 1 worker), 10 runs: the dismissal spec 120 passed, 20 skipped (the pen and Chrome-profile cases, Chromium-only); main's keyboard spec 120 passed, 60 skipped (Chromium-only).
+- The bounce case samples the bounce layer's animation paused at each frame. WebKit reads a running animation at each call, and a starved page paints few frames. Under CPU load in the WebKit container, the per-frame version failed 7 of 80 runs; this one passed 40 of 40.
+- At this head, Chromium passes the dismissal spec 14/14 and main's keyboard spec 18/18. WebKit ran 10 times in the CI profile (`--cpus=4`, `CI=1`, `LP_NUM_THREADS=4`, 1 worker). The dismissal spec passed 120 and skipped 20 (the Chromium-only pen and Chrome-profile cases). Main's keyboard spec passed 120 and skipped 60 (Chromium-only).
 - Units: `transcriptDismiss.test.ts` 32/32, `ChatLayoutTranscriptDismiss.test.tsx` 23/23, `composerBounce.test.ts` 7/7, `useChatKeyboard.test.tsx` 31/31, `dragAxes` 2/2. The theme-mark case fails on 9d66f5f3ad's source, and two strip cases on d19cf698ec's. Two cases cover a node made in another window; each fails with `instanceof` in place of `isNode` or `isElement`.
 - On today's main, 955564d284's code fails Core's typecheck (`isNodeTarget` is gone) and its Storybook build. This head passes both.
 - Mutants, each caught. A dismissal at the lift fails 11 units and two Chromium cases. A bounce on the composer alone fails the button case. A bounce on the dock container fails the Chrome-profile case (the merge by text above). Without the page hold, 4 units and both composer drags in Chromium fail. Without the composer pan, the drag down fails. A bounce at twice the finger's speed fails 3 units. Ignoring composer scrollers fails 2 units and the strip case. Dropping the long-press exception, the zoom check or the keyboard check fails 1 unit each. Counting a drift as the strip's axis fails 2 units and the drifting case.
-{SIM_TESTING_LINE}
+- iOS 26.2 Simulator at this head, HID drags (frames traced by the page):
+  - A drag down the conversation blurred the field at the composer's top. That was 0.9 s before the lift in a quick drag, and 5.1 s before it in a slow one.
+  - A drag down from the composer blurred it 165 ms after the touch. The page held 6 of its 11 moves, and the transcript stayed still.
+  - In every traced frame, the composer stayed 44 px below the scroll-to-bottom button.
+  - After any blur, Safari reports the keyboard only once it is down. The composer then drops to rest in one frame, about 0.5 s after the blur. A blur from script does the same on main def46d15d9, so it isn't this change.
+- No keyboard open, main def46d15d9 and this head, Chromium and WebKit, desktop (1280 × 800) and phone (390 × 844 at 3×). The composer, dock, field and scroll button sit at the same offsets (0 px each). The transcript's scroll height is equal. At rest the dock has no containment. Captures, main left and this head right (https://github.com/vjeux/astryx/tree/0602ba52c83451214af759278c596616aadd78b3):
+
+  ![Chromium, desktop: main and this head](https://raw.githubusercontent.com/vjeux/astryx/0602ba52c83451214af759278c596616aadd78b3/chromium-desktop.png)
+  ![Chromium, phone: main and this head](https://raw.githubusercontent.com/vjeux/astryx/0602ba52c83451214af759278c596616aadd78b3/chromium-phone.png)
+  ![WebKit, desktop: main and this head](https://raw.githubusercontent.com/vjeux/astryx/0602ba52c83451214af759278c596616aadd78b3/webkit-desktop.png)
+  ![WebKit, phone: main and this head](https://raw.githubusercontent.com/vjeux/astryx/0602ba52c83451214af759278c596616aadd78b3/webkit-phone.png)
 - At this head: test:ui 22,600 and test:node 17,413 passed; Chat accessibility specs 36/36. Core tsc, ESLint, `pnpm review:pre` and the repo checks (`sync:exports:check`, `verify-exports`, `check:repo`, `check:token-docs`, `check:motion-roles`, `check:changesets`, `check:knowledge`) pass.
 - Preview at this head: {PREVIEW}
 
