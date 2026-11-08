@@ -272,10 +272,7 @@ function dispatch(view: Window, channel: Channel, event: Event): void {
 // otherwise leave a finger on the screen.
 function recordTouches(view: Window, event: Event): void {
   const channels = streams.get(view);
-  if (channels?.has('touchend') !== true || !channels.has('touchcancel')) {
-    touchesOnScreen.delete(view);
-    return;
-  }
+  void channels;
   const {touches} = event as Partial<TouchEvent>;
   touchesOnScreen.set(view, touches?.length ?? 0);
 }
