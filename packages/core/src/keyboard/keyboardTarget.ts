@@ -769,8 +769,6 @@ function revealWithKeyboard(
         lastHeight = event.height;
         if (!hasRevealed || !isTouchOnScreen(win)) {
           revealNow(event.height);
-        } else if (event.height <= KEYBOARD_EPSILON) {
-          hasRevealed = false;
         }
       }
       pans.report(event.height);
