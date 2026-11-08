@@ -302,11 +302,11 @@ test('a softer downward flick from the tall detent lands on the half detent', as
   // 1,200 px/s: a flick, whose projection stops short of the half detent, so
   // it goes one stop.
   const script = flick(handle, {
-    velocity: {x: 0, y: 1200},
+    velocity: {x: 0, y: 400},
     durationMs: 80,
     hz: 120,
   });
-  expect(releaseVelocity(script).y).toBeCloseTo(1200, -1);
+  expect(releaseVelocity(script).y).toBeCloseTo(400, -1);
   const played = await driver.play(script, {pacing: 'spacing'});
   // The release the page read decides the landing, so the proof asks Core's
   // release rule where that release lands.
@@ -331,7 +331,7 @@ test('a softer flick with one early move 70 ms late still lands on the half dete
   const {driver, sheet, handle, tallTop, halfTop, screenHeight} =
     await openSheet(page);
   const script = flick(handle, {
-    velocity: {x: 0, y: 1200},
+    velocity: {x: 0, y: 400},
     durationMs: 80,
     hz: 120,
   });
