@@ -434,13 +434,11 @@ test('the dismissal keeps changing the screen every frame while the main thread 
     // A compositor-only control animation in the same window: what the
     // compositor presented while the main thread spun, on this machine.
     await startBusyControl(page);
+    await breakDismiss(page, 'frozen');
     const cast = await startScreencast(page);
     await v.driver.play(pullDown(v.centre, 60));
-    // Blocked inside the page once the dismissal runs on the compositor.
-    const block = await blockMainThread(page, 400, {
-      during: v.photo,
-      minProgressMs: 16,
-    });
+    await page.waitForTimeout(30);
+    const block = await blockMainThread(page, 400);
     // A few frames after the block, so the screencast holds its end.
     await frames(page, 6);
     const castFrames = await cast.stop();
@@ -523,6 +521,34 @@ test('the dismissal keeps changing the screen every frame while the main thread 
   }
   expect(closed).toEqual(windows.map(() => true));
 });
+
+async function breakDismiss(
+  page: Page,
+  pace: 'main-thread' | 'frozen',
+): Promise<void> {
+  await page.evaluate(mode => {
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      const animation = animate.call(this, keyframes, options);
+      if (this.closest('dialog') == null) {
+        return animation;
+      }
+      animation.pause();
+      if (mode === 'main-thread') {
+        const from = performance.now();
+        const start = Number(animation.currentTime ?? 0);
+        const step = (now: number) => {
+          if (animation.playState !== 'idle') {
+            animation.currentTime = start + now - from;
+            requestAnimationFrame(step);
+          }
+        };
+        requestAnimationFrame(step);
+      }
+      return animation;
+    };
+  }, pace);
+}
 
 /** How many dismissals the busy proof plays and judges pooled. */
 const DISMISS_RUNS = 4;
