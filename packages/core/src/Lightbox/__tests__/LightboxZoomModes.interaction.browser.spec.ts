@@ -381,7 +381,7 @@ test('under Reduce Motion, + then - pressed mid-fade leave the photo at full opa
   // it. So the cross-fade the key starts is held at its start, however late
   // this process reacts and however few frames a loaded runner draws.
   await freezePageOn(page, 'keydown');
-  await page.keyboard.press('+');
+  await page.keyboard.press('a');
   // Moved on by its own clock, the frozen scene stands in the dip.
   await advanceFrozenPage(page, MID_DIP_MS);
   const dip = await opacity();
