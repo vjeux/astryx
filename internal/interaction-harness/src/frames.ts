@@ -187,7 +187,7 @@ async function webkitScreencast(
     frameCount: () => frames.length,
     lastFrameAt: () => {
       const latest = latestFrameAt(frames);
-      return latest == null ? null : latest + wallMinusMonotonic;
+      return latest;
     },
     async stop() {
       await session.send('Screencast.stopScreencast');
