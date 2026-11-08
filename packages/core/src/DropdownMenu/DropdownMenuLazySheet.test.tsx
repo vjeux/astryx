@@ -156,7 +156,13 @@ describe('DropdownMenu touch sheet loaded on demand', () => {
     });
     // React renders the rows when the dropdown's own loads settle. On a busy
     // machine that can be after this act, so wait for the rows themselves.
-    const action = await screen.findByRole('button', {name: 'Edit project'});
+    const found = screen.findByRole('button', {name: 'Edit project'});
+    // Evidence only: the worker stalls for 1.1 s while the rows load.
+    const end = performance.now() + 1100;
+    while (performance.now() < end) {
+      // Busy.
+    }
+    const action = await found;
 
     // The dropdown focuses the first row a frame after the rows appear. The
     // frame this awaits runs after that one.
