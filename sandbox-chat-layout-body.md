@@ -1,4 +1,5 @@
 <!-- Template: maintenance.md -->
+Stack: #10672 → #10676
 
 ## Maintainer impact
 
@@ -49,3 +50,4 @@ No product code changes. The Sandbox gains one raw page; the route list, catalog
 - `chatLayoutPage.test.tsx` (node project): each case server-renders its name, the transcript, the composer's input and its Send button. An unknown or missing case is `long`. The Mention and Attach actions render in the composer case only. The docked case renders inside a Card panel, and the others render ChatLayout's root as the page.
 - `route-manifest.test.ts`: the route is in the export list. `?case=` client-renders, and the page hydrates without a query.
 - `pnpm -F @astryxdesign/sandbox test` (70 passed), the Sandbox build (832 routes verified), ESLint and Prettier pass. The Sandbox typecheck reports the same 6 errors as main, none in this page.
+
