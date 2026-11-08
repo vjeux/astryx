@@ -3724,7 +3724,7 @@ export function createMotionEngine(
           time,
           targets,
           properties,
-          isCoarsePointer() || animateOptions.touchRelease === true,
+          false,
           animateOptions.crossfadeAs,
         );
         Object.assign(next, plan.next);
