@@ -1094,10 +1094,7 @@ export function Lightbox({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   // The current caption's toggle shows while two lines clamp it, or open.
   const hasCaptionToggle = isCaptionClamped || isCaptionOpen;
-  const captionToggleHitAreaRef = useTouchHitArea(
-    hasCaptionToggle,
-    CAPTION_TOGGLE_HIT_AREA,
-  );
+  const captionToggleHitAreaRef = useTouchHitArea(hasCaptionToggle);
   const captionToggleRefs = useMergedRefs(
     captionToggleRef,
     captionToggleHitAreaRef,
