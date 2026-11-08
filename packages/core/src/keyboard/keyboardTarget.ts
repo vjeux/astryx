@@ -767,7 +767,7 @@ function revealWithKeyboard(
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
         lastHeight = event.height;
-        if (!hasRevealed || !isTouchOnScreen(win)) {
+        if (!isTouchOnScreen(win)) {
           revealNow(event.height);
         } else if (event.height <= KEYBOARD_EPSILON) {
           hasRevealed = false;
