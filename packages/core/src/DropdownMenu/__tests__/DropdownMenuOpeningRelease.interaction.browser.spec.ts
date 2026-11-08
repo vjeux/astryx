@@ -7,9 +7,11 @@
  * @output Proof that the release of the press that opens a menu does what the
  *   press model decides. The browser's light dismiss does not undo it. A
  *   release before the settle time leaves the menu open, also off the trigger
- *   or after the trigger moved away. It does so also when the show waited for
- *   another popover operation. A settled release outside still closes the
- *   menu, and a later press outside dismisses it.
+ *   or after the trigger moved away. A settled release outside still closes
+ *   the menu, and a later press outside dismisses it. A plain click still
+ *   aims its pointerup and click at the trigger. After a show that waited
+ *   for another popover operation, a release on the trigger leaves the menu
+ *   open, and a settled release outside closes it.
  * @position Evidence for useMenuPress FR8's opening release with native light
  *   dismiss; the press model's own states are in menuPressGesture.test.ts
  */
@@ -179,15 +181,12 @@ test('a press held past the settle time and released on the page closes the menu
   );
 });
 
-test('FORCED DEFERRAL: a show that waits for another popover operation still leaves the menu open at the release', async ({
-  page,
-}) => {
-  // The condition is forced, not natural: another menu's hide is in flight as
-  // the press starts, and the browser refuses the first show. The layer
-  // runtime then replays the show once that hide ends, during the press.
+// Forces a show that waits: another menu's hide runs as the next press starts,
+// and the browser refuses the first show once. The layer runtime then replays
+// the show once that hide ends, during the press. Returns the trigger to press.
+async function forceOneWaitingShow(page: Page): Promise<Locator> {
   await openStory(page, storybook(), 'core-dropdownmenu--lab-selectable-sizes');
   const other = page.getByRole('button', {name: 'Small menu'});
-  const trigger = page.getByRole('button', {name: 'Large menu'});
   await other.click();
   await expect(other).toHaveAttribute('aria-expanded', 'true');
   await frames(page, 2);
@@ -216,9 +215,10 @@ test('FORCED DEFERRAL: a show that waits for another popover operation still lea
       show.apply(this, args);
     };
   });
-  const start = centerOf(await boxOf(trigger));
-  await page.mouse.move(start.x, start.y);
-  await page.mouse.down();
+  return page.getByRole('button', {name: 'Large menu'});
+}
+
+async function expectReplayedShow(page: Page, trigger: Locator) {
   await expect(trigger).toHaveAttribute('aria-expanded', 'true');
   expect(
     await page.evaluate(
@@ -226,7 +226,85 @@ test('FORCED DEFERRAL: a show that waits for another popover operation still lea
     ),
     'the first show was refused, so the open was a replay',
   ).toBe(1);
+}
+
+test('FORCED DEFERRAL: after a show that waited, a release on the trigger leaves the menu open', async ({
+  page,
+}) => {
+  const trigger = await forceOneWaitingShow(page);
+  const start = centerOf(await boxOf(trigger));
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await expectReplayedShow(page, trigger);
   await page.mouse.up();
   await frames(page, 2);
+  expect(await menuState(page, trigger)).toEqual({expanded: 'true', open: 1});
+});
+
+test('FORCED DEFERRAL: after a show that waited, a settled press released on the page closes the menu', async ({
+  page,
+}) => {
+  const trigger = await forceOneWaitingShow(page);
+  await installPressClock(page);
+  const start = centerOf(await boxOf(trigger));
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await expectReplayedShow(page, trigger);
+  await page.mouse.move(start.x, start.y + 300, {steps: 2});
+  // The input itself: the press lasts past the settle time.
+  await page.waitForTimeout(MENU_PRESS_SETTLE_MS + 150);
+  await page.mouse.up();
+  await frames(page, 2);
+  expect(await expectModelOutcome(page, trigger), 'the press settled').toBe(
+    true,
+  );
+});
+
+test('a plain click on the trigger still aims its pointerup and click at the trigger', async ({
+  page,
+}) => {
+  // Registered before any page script, so it sees the click before the
+  // press model's click guard swallows it, as it does on every press-open.
+  await page.addInitScript(() => {
+    const w = window as unknown as {__aimedAt: string[]};
+    w.__aimedAt = [];
+    for (const type of ['pointerup', 'click']) {
+      addEventListener(
+        type,
+        event => {
+          const target = event.target instanceof Element ? event.target : null;
+          const at =
+            target?.closest('[popover]') != null
+              ? 'layer'
+              : target?.closest('button') != null
+                ? 'trigger'
+                : 'page';
+          w.__aimedAt.push(`${type} ${at}`);
+        },
+        true,
+      );
+    }
+  });
+  await openStory(page, storybook(), 'core-dropdownmenu--default');
+  const trigger = page.getByRole('button', {name: 'Actions'});
+  // What a caller's own pointerup handler on the trigger sees.
+  await trigger.evaluate(element => {
+    const w = window as unknown as {__onTrigger: number};
+    w.__onTrigger = 0;
+    element.addEventListener('pointerup', () => {
+      w.__onTrigger += 1;
+    });
+  });
+  await page.evaluate(() => {
+    (window as unknown as {__aimedAt: string[]}).__aimedAt.length = 0;
+  });
+  await trigger.click();
+  await frames(page, 2);
+  expect(
+    await page.evaluate(() => {
+      const w = window as unknown as {__aimedAt: string[]; __onTrigger: number};
+      return {aimedAt: w.__aimedAt, onTrigger: w.__onTrigger};
+    }),
+  ).toEqual({aimedAt: ['pointerup trigger', 'click trigger'], onTrigger: 1});
   expect(await menuState(page, trigger)).toEqual({expanded: 'true', open: 1});
 });
