@@ -18,6 +18,7 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {expect, test, type Page} from '@astryxdesign/a11y-spec/playwright';
+import {pinch, touchDriver} from '@astryxdesign/interaction-harness';
 import {build, type Plugin} from 'esbuild';
 // The page's `window.__lift`.
 import type {LiftFixture} from './liftFromTrigger.fixture';
@@ -604,6 +605,36 @@ test('a tap while the row and the menu grow reaches nothing; one on the backdrop
   const settled = await page.evaluate(() => ({...window.__lift.log}));
   expect(settled.backdropTaps).toBe(1);
   expect(settled.clicks).not.toContain('page');
+  await page.evaluate(() => window.__lift.dispose());
+});
+
+test('a pinch on the backdrop while a row is lifted zooms the page, and it neither taps the backdrop nor reaches the page (spec:AST-094 FR10, FR35)', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName === 'webkit',
+    'needs pinch-zoom from injected touches (Mobile Safari on the simulator)',
+  );
+  await open(page);
+  const driver = await touchDriver(page);
+  await page.evaluate(() => window.__lift.lift('row2', 0.2));
+  await page.waitForTimeout(800);
+  const scale = async () =>
+    page.evaluate(() => window.visualViewport?.scale ?? 1);
+  expect(await scale()).toBe(1);
+  await driver.play(
+    pinch({
+      center: {x: 180, y: 700},
+      fromDistance: 60,
+      toDistance: 220,
+      durationMs: 200,
+    }),
+  );
+  await expect.poll(scale).toBeGreaterThan(1.2);
+  const log = await page.evaluate(() => ({...window.__lift.log}));
+  expect(log.backdropTaps).toBe(0);
+  expect(log.clicks).not.toContain('page');
   await page.evaluate(() => window.__lift.dispose());
 });
 
