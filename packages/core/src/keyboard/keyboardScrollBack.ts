@@ -12,7 +12,6 @@
  * SYNC: When modified, update /packages/core/src/keyboard/README.md
  */
 
-import {reducesMotion} from '../motion/reducedMotion';
 import {KEYBOARD_EPSILON, subscribeKeyboardHeight} from './keyboardHeight';
 
 interface AddedScroll {
@@ -141,18 +140,23 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
   return scrolls;
 }
 
-// The browser's own smooth scroll carries the scroll back. iOS Safari applies
-// a scripted scroll a frame late, so a scroll set each frame jitters there. A
-// touch stops that scroll, so a person's scroll stands. Under Reduce Motion, or
-// in a theme that reduces motion for everyone, the scroll lands at once.
+// Scrolls each scroller still where Core left it back to where it was before.
+// The browser's own smooth scroll carries it: iOS Safari applies a scripted
+// scroll a frame late, so a scroll set each frame jitters there. A touch stops
+// the browser's scroll where it is, so a person's scroll stands. Under Reduce
+// Motion the scroll lands at once.
 function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
+  const behavior: ScrollBehavior = win.matchMedia?.(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
+    ? 'instant'
+    : 'smooth';
   for (const [scroller, added] of scrolls) {
     if (
       added.at != null &&
       scroller.isConnected &&
       Math.abs(scrollTopOf(scroller, win) - added.at) <= KEYBOARD_EPSILON
     ) {
-      const behavior = reducesMotion(scroller) ? 'instant' : 'smooth';
       scrollTopTo(scroller, added.from, behavior, win);
     }
   }
