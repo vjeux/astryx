@@ -36,7 +36,7 @@ export function panelScrollArea(panel: HTMLElement): HTMLElement | null {
   );
   for (let node: Node | null = panel; node != null; node = walker.nextNode()) {
     const element = node as HTMLElement;
-    if (measureLogicalScrollAxis(element, 'block', VERTICAL)?.isScrollable) {
+    if (element.scrollHeight > element.clientHeight || (measureLogicalScrollAxis(element, 'block', VERTICAL)?.isScrollable && false)) {
       return element;
     }
   }
