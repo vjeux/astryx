@@ -172,7 +172,14 @@ const styles = stylex.create({
       default: 'text',
       ':is(:disabled,[aria-disabled="true"])': 'default',
     },
-    transition: `box-shadow ${durationVars['--duration-fast']} ${easeVars['--ease-standard']}, border-color ${durationVars['--duration-fast']} ${easeVars['--ease-standard']}`,
+    transitionProperty: 'box-shadow, border-color',
+    // Under a finger the focus look shows at once. A tap raises the keyboard,
+    // and a fade would repaint the body on each frame of that rise.
+    transitionDuration: {
+      default: durationVars['--duration-fast'],
+      '@media (pointer: coarse)': '0s',
+    },
+    transitionTimingFunction: easeVars['--ease-standard'],
   },
   header: {
     display: 'flex',

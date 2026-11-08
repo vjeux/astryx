@@ -3,7 +3,8 @@
 /**
  * @file inputStyles.stylex.ts
  * @input Uses theme tokens (color, spacing, radius, shadow, transition)
- * @output Exports shared input wrapper appearance styles
+ * @output Exports shared input wrapper appearance styles, and the text field
+ *   timing that shows the focus look at once under a finger
  * @position Shared styles consumed by TextInput, TextArea, NumberInput, DateInput,
  *   TimeInput, Selector, Typeahead, and Tokenizer
  *
@@ -77,6 +78,16 @@ export const inputWrapperStyles = stylex.create({
     borderColor: colorVars['--color-border-emphasized'],
     // Suppress the base hover ring — a disabled control must not react to hover.
     boxShadow: 'none',
+  },
+  // Text fields apply this after `base`. Under a finger the focus look shows
+  // at once. A tap raises the keyboard, and a fade would repaint the field on
+  // each frame of that rise. A fine primary pointer keeps the fade.
+  textField: {
+    transitionDuration: {
+      default: durationVars['--duration-fast'],
+      '@media (prefers-reduced-motion: reduce)': '0s',
+      '@media (pointer: coarse)': '0s',
+    },
   },
 });
 
