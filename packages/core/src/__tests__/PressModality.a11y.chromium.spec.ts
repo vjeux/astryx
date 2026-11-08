@@ -150,6 +150,64 @@ async function settled(page: Page): Promise<void> {
     );
 }
 
+/** The most frames the open menu's entrance may take before the wait fails. */
+const ENTRANCE_FRAME_CAP = 240;
+
+/**
+ * Resolves once every animation that ends on its own in the open menu's
+ * layer has ended. Until then the entrance, on the layer's surface, moves
+ * the menu's box and fades its paint. After ENTRANCE_FRAME_CAP frames it
+ * fails and names what still runs.
+ */
+async function menuEntranceEnded(page: Page): Promise<void> {
+  const running = await page.locator('[data-astryx-menu-press]').evaluate(
+    async (menu, cap) =>
+      new Promise<string[]>(resolve => {
+        const layer = menu.closest('[popover]') ?? menu;
+        let frames = 0;
+        const tick = () => {
+          const left = layer
+            .getAnimations({subtree: true})
+            .filter(animation => {
+              const end = animation.effect?.getComputedTiming().endTime;
+              return (
+                typeof end === 'number' &&
+                Number.isFinite(end) &&
+                animation.playState !== 'finished'
+              );
+            });
+          frames += 1;
+          if (left.length === 0) {
+            resolve([]);
+          } else if (frames > cap) {
+            resolve(
+              left.map(animation => {
+                const target = (animation.effect as KeyframeEffect | null)
+                  ?.target;
+                const name =
+                  animation instanceof CSSAnimation
+                    ? animation.animationName
+                    : animation instanceof CSSTransition
+                      ? animation.transitionProperty
+                      : 'script';
+                return `${target?.tagName ?? 'no target'} ${name} ${animation.playState}`;
+              }),
+            );
+          } else {
+            requestAnimationFrame(tick);
+          }
+        };
+        requestAnimationFrame(tick);
+      }),
+    ENTRANCE_FRAME_CAP,
+  );
+  if (running.length > 0) {
+    throw new Error(
+      `The menu's entrance still runs after ${ENTRANCE_FRAME_CAP} frames: ${running.join('; ')}`,
+    );
+  }
+}
+
 async function pressAttribute(page: Page): Promise<string | null> {
   return page.locator(SURFACE).first().getAttribute('data-astryx-press');
 }
@@ -330,6 +388,8 @@ test('a mouse press dragged across menu rows lights only the row under the point
     ).toBe(true);
     const rows = page.getByRole('menuitem');
     await rows.first().waitFor();
+    // The menu's box and its paint are read once its entrance has ended.
+    await menuEntranceEnded(page);
     const menu = await page.locator('[data-astryx-menu-press]').boundingBox();
     const first = await rows.nth(0).boundingBox();
     const second = await rows.nth(1).boundingBox();
