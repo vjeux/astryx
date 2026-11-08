@@ -1,7 +1,7 @@
 <!-- Template: bug-fix.md -->
 Stack: #10672 → this pull request
 
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/a3676be0bd28ac4abe1c0db8e7d6b092516104aa...a442cbc7cef0afb57250bc99af8c3bb7a4920cf1
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/b468198b99f61c96aa4dd20fd8465cd094dee02c...049231840d21bc55c7abf8c913d749b63d1eef37
 
 ## User impact
 
@@ -21,15 +21,15 @@ In `scrollRef` mode only, ChatLayout observes the dock's border-box height throu
 
 ## Evidence
 
-- Reproduction before the change, at the document's end on #10672's page: in `long` and `streaming` the newest message sits 102 px under the dock. Chromium and WebKit agree. In `composer` (a 178 px dock) it is 138 px on a phone and 106 px on a desktop. After three more lines it is 168 px. On the iOS 26.2 Simulator it is 102 and 138 px.
+- Reproduction before the change, at the document's end on #10672's page: in `long` and `streaming` the newest message sits 102 px under the dock. Chromium and WebKit agree. In `composer` (a 178 px dock) it is 138 px on a phone and 112 px on a desktop. After three more lines it is 168 px. On the iOS 26.2 Simulator it is 102 and 138 px.
 - Result after the change: the message rests 40 px above the dock in every case, after the composer grows, and on the iOS Simulator.
 - Representative unchanged path: `?case=docked` (self-scroll) stays 40 px above on both builds and observes nothing.
 - Regression test or other mutation-sensitive proof: two `ChatLayout.test.tsx` cases fail on main's `ChatLayout.tsx`. The dock's resize callback runs once at mount, not again in an idle second.
-- Captures, main left and the fix right (https://github.com/vjeux/astryx/tree/5f425788a10a1077c97867f30e89467a64aa4163):
+- Captures, main left and the fix right (https://github.com/vjeux/astryx/tree/6db48c909bbeab913b389a4a55f0e062d28a03ea):
 
-  ![Chromium](https://raw.githubusercontent.com/vjeux/astryx/5f425788a10a1077c97867f30e89467a64aa4163/chromium-long-main-fix.png)
-  ![WebKit](https://raw.githubusercontent.com/vjeux/astryx/5f425788a10a1077c97867f30e89467a64aa4163/webkit-long-main-fix.png)
-  ![iOS Simulator](https://raw.githubusercontent.com/vjeux/astryx/5f425788a10a1077c97867f30e89467a64aa4163/ios-long-main-fix.png)
+  ![Chromium](https://raw.githubusercontent.com/vjeux/astryx/6db48c909bbeab913b389a4a55f0e062d28a03ea/chromium-long-main-fix.png)
+  ![WebKit](https://raw.githubusercontent.com/vjeux/astryx/6db48c909bbeab913b389a4a55f0e062d28a03ea/webkit-long-main-fix.png)
+  ![iOS Simulator](https://raw.githubusercontent.com/vjeux/astryx/6db48c909bbeab913b389a4a55f0e062d28a03ea/ios-long-main-fix.png)
 
 ## Scope
 
