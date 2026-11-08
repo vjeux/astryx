@@ -1000,10 +1000,7 @@ export function touchPlayError(
   const starvedMs =
     late == null || late.index < 1 || fault.waited != null
       ? null
-      : longestFrameGap(frames, [
-          arrivals[late.index - 1],
-          arrivals[late.index],
-        ]);
+      : longestFrameGap(frames, arrivals);
   return late != null && starvedMs != null && starvedMs > FRAME_STARVATION_MS
     ? new TouchStarvationError({...fault, late, starvedMs})
     : new TouchPacingError(fault);
