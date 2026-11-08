@@ -532,7 +532,6 @@ function settleAnimation(
   });
   // A reported glide's report clears its write; any other clears at its end.
   const end = () => {
-    stop();
     settleRetimes.delete(animation);
     if (isWritten && onResolve == null) {
       clearPresentedResolve(styled);
