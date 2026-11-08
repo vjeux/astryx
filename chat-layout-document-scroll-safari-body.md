@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/4e4c12a9dd528d879b684ea7838ed2522c9cbc75...129ff7708b5954d5cad4f11438f0f317d5e3d120
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...f26e4201db337b54ad5874938946971a5cf8e431
 
 ## User impact
 
@@ -48,7 +48,7 @@ When `scrollRef` names the document's root or body, without the VirtualKeyboard 
   - A reveal pan after the wait, with no touch or wheel since the report, drops the lift once. After a touch, a wheel, or at a later show, the lift stays.
   - A busy device waits frames, not time, up to the 3 s cap.
   - Two windows learn on their own. With the VirtualKeyboard API nothing is learned and the dock lifts as before.
-  - The Firefox cases fail on fa8cf7b82c, and the Safari cases fail on main. Chat and keyboard units: 636/636.
+  - The Firefox cases fail on fa8cf7b82c, and the Safari cases fail on main. Chat, keyboard and utils units: 1815/1815.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
