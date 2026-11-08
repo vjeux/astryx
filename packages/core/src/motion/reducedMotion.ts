@@ -76,7 +76,7 @@ export interface ReducedMotionFade {
  * for everyone.
  */
 export function reducesMotion(element?: Element | null): boolean {
-  return defaultPrefersReducedMotion() || themeReducesMotion(element);
+  return defaultPrefersReducedMotion();
 }
 
 /**
