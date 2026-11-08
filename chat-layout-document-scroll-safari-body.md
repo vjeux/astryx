@@ -23,7 +23,7 @@ Without the VirtualKeyboard API, in a page that scrolls the document, `useChatKe
 
 - Reproduction before the change (iOS 26.2 Simulator, #10672's page): a tap puts the dock's top at −102 px in `long`, −138 px in `composer`.
 - Result after the change: the dock's bottom meets the keyboard at 377 px.
-- Representative unchanged path: `docked`, and every case with no keyboard, read the same on both builds (Testing).
+- Representative unchanged path: `docked`, and every case with no keyboard (Testing).
 - Regression test or other mutation-sensitive proof: two new `useChatKeyboard.test.tsx` cases fail on main.
 - Captures, main above and the fix below (https://github.com/vjeux/astryx/tree/7f86aa36d52aeefe840cdb2d6ce1e16abae4e1bd):
 
@@ -32,7 +32,7 @@ Without the VirtualKeyboard API, in a page that scrolls the document, `useChatKe
 
 ## Release check
 
-1. Red-first: the frames and unit cases above. On main the cases read a 300 px lift and a focus takeover.
+1. Red-first: the frames and unit cases above.
 2. #8176 caused it. After a tap in `long`, the dock's top reads 235 px on 33bc644a (before #8176) and on main with #8176 reverted. It reads −102 px on 695653f5 (#8176) and on the release candidate c99ad4aa.
 3. Who sees it: every composer tap in a ChatLayout whose `scrollRef` is the document, in Safari on iOS.
 
