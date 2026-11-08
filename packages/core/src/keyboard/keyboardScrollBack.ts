@@ -127,7 +127,7 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
       }
       if (event.height <= KEYBOARD_EPSILON) {
         go();
-      } else if (event.height > shown + KEYBOARD_EPSILON) {
+      } else {
         keep();
       }
       shown = event.height;
