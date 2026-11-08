@@ -424,11 +424,13 @@ export async function installInputStart(
   if (window.__harnessInputStart) return;
   const starts = new WeakMap();
   window.__harnessInputStart = {starts, first: ${first}};
+  addEventListener('DOMContentLoaded', () => {
   for (const type of ${JSON.stringify([...types])}) {
     window.addEventListener(type, event => {
       if (event.isTrusted && !starts.has(event)) starts.set(event, performance.now());
     }, {capture: true, passive: true});
   }
+  });
 })()`;
   await page.addInitScript(script(true));
   await page.evaluate(script(false));
