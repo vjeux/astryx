@@ -482,7 +482,12 @@ test('expand under a finger: the rows below glide while the group fades in, and 
   const before = (await parts(page).below.boundingBox())?.y ?? 0;
   const frames = await recordFrames(
     page,
-    async () => tapToggle(page),
+    async () => {
+      // NOT FOR LANDING: CI's stall, replayed. The main thread is blocked for
+      // 89 ms right after the tap, after the glide's first frame.
+      await tapToggle(page);
+      await blockMainThread(page, 89);
+    },
     RECORDED_GLIDE_MS + 400,
   );
   const moving = frames.filter(frame => frame.group != null);
@@ -545,7 +550,12 @@ test('collapse under a finger: the group fades out as the rows below glide up, w
   const height = (await parts(page).group.boundingBox())?.height ?? Number.NaN;
   const frames = await recordFrames(
     page,
-    async () => tapToggle(page),
+    async () => {
+      // NOT FOR LANDING: CI's stall, replayed. The main thread is blocked for
+      // 89 ms right after the tap, after the glide's first frame.
+      await tapToggle(page);
+      await blockMainThread(page, 89);
+    },
     RECORDED_GLIDE_MS + 400,
   );
   // The checks below judge at least two frames of the glide, three of the
