@@ -71,7 +71,9 @@ that times motion with it. Everything here is internal to
   under a coarse primary pointer; under a fine one it registers no touch
   listener. `watchPans(win, owns)` (`keyboardTarget.ts`) runs that loop on
   each height the module reports: the keyboard targets and ChatLayout's
-  composer watch with it.
+  composer watch with it. In a page that scrolls the document, where no guide
+  publishes the keyboard's slide, ChatLayout leaves the tap, the reveal and
+  its pan to the browser.
 - **Keyboard targets (`keyboardTarget.ts`):** a target keeps the focused field
   inside it above the keyboard, and registers so a field inside moves nothing
   itself (`registerKeyboardTarget`, `isInsideKeyboardTarget`).

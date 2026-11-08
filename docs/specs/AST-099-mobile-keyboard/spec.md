@@ -376,6 +376,13 @@ No covered field meets FR9 on `main`. Each gap below is open.
   Safari on iOS (`packages/core/src/keyboard/useMobileKeyboard.ts`). But
   Firefox reports the keyboard's hide once, at its end. The sheet's content
   moves at that report, in one frame, instead of riding from the blur (FR3).
+- **Gap 13 — ChatLayout in a page that scrolls the document, in Safari on
+  iOS.** ChatLayout leaves the composer's focus and reveal to Safari there
+  (`packages/core/src/Chat/useChatKeyboard.ts`), so FR4 is not met. Safari pans
+  the visual viewport to the fixed dock and keeps the pan, so the dock rises
+  nothing. A lift would add to that pan and put the composer under the status
+  bar. Where the browser reports the keyboard's geometry, as Chrome on Android
+  does, the dock rides the keyboard (FR3).
 
 ### Follow-up
 
