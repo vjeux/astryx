@@ -593,7 +593,7 @@ export function watchRevealPan(
         owns(focused) &&
         ((win.scrollX === atReport.x && win.scrollY === atReport.y) ||
           (documentScrollIsReveal &&
-            (isChromeReveal ??= isCentringReveal(
+            (isCentringReveal(
               win,
               viewport,
               focused,
