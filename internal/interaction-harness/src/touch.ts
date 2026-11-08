@@ -696,10 +696,7 @@ export function touchPacingFault(
     ] as const;
     for (const [from, began, to] of terms) {
       const totalMs = to - from;
-      const handlingMs =
-        began != null && Number.isFinite(began)
-          ? to - Math.max(began, from)
-          : totalMs;
+      const handlingMs = totalMs;
       if (holds(handlingMs)) {
         if (heldByPage == null || handlingMs > heldByPage.handlingMs) {
           heldByPage = {gapMs: gapsMs[k], handlingMs};
