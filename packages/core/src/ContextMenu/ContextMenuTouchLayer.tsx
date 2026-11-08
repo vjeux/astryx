@@ -85,9 +85,11 @@ export function ContextMenuTouchLayer({
       const open = () => {
         hasPressOpenedRef.current = true;
         // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the menu shows in the task that decides it, as UIKit shows it at its moment, not a scheduled task later
-        flushSync(() => {
-          onOpenRef.current(press.press ?? press.location());
-        });
+        setTimeout(() => {
+          flushSync(() => {
+            onOpenRef.current(press.press ?? press.location());
+          });
+        }, 50);
       };
       switch (press.state) {
         case 'began':
