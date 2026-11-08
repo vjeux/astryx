@@ -1,0 +1,68 @@
+{
+ "before sandbox": {
+  "file": "phone-before-sandbox-mobile-keyboard-fields.png",
+  "inner": [
+   402,
+   714
+  ],
+  "vv": [
+   0,
+   714
+  ],
+  "scrollY": 0,
+  "range": 469,
+  "els": {
+   "field: Title": [
+    25,
+    492.4,
+    352,
+    24
+   ],
+   "field: Quantity": [
+    25,
+    568.4,
+    352,
+    24
+   ],
+   "field: Notes": [
+    17,
+    641.4,
+    368,
+    80
+   ]
+  }
+ },
+ "after sandbox": {
+  "file": "phone-after-sandbox-mobile-keyboard-fields.png",
+  "inner": [
+   402,
+   714
+  ],
+  "vv": [
+   0,
+   714
+  ],
+  "scrollY": 0,
+  "range": 469,
+  "els": {
+   "field: Title": [
+    25,
+    492.4,
+    352,
+    24
+   ],
+   "field: Quantity": [
+    25,
+    568.4,
+    352,
+    24
+   ],
+   "field: Notes": [
+    17,
+    641.4,
+    368,
+    80
+   ]
+  }
+ }
+}
