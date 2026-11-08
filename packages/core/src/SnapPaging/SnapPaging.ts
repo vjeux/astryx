@@ -233,7 +233,7 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
   }
 
   function pages(): SnapPages {
-    return snapPages(element, position(), travel());
+    return snapPages(element, nativePosition(), travel(), isMoving);
   }
 
   function stops(): number[] {

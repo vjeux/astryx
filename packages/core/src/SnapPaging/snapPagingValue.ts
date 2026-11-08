@@ -177,10 +177,11 @@ export function snapPages(
   element: HTMLElement,
   shown: number,
   end: number,
+  isHeld = false,
 ): SnapPages {
   const stops: number[] = [];
   const owners: Element[][] = [];
-  for (const {item, stop} of itemStops(element, shown, end)) {
+  for (const {item, stop} of itemStops(element, shown, end, isHeld)) {
     if (stops.length === 0 || stop > stops[stops.length - 1] + 0.5) {
       stops.push(stop);
       owners.push([item]);
@@ -204,6 +205,7 @@ function itemStops(
   element: HTMLElement,
   shown: number,
   end: number,
+  isHeld: boolean,
 ): {item: Element; stop: number}[] {
   const rtl = isRtlElement(element);
   const box = element.getBoundingClientRect();
@@ -218,8 +220,14 @@ function itemStops(
     ) || 0;
   return Array.from(element.children, item => {
     const rect = item.getBoundingClientRect();
+    // A held row's children carry the paging's translate. The rect shows the
+    // translate at the time of its read, so the next read takes it off.
+    const held = isHeld
+      ? Number.parseFloat(getComputedStyle(item).translate) || 0
+      : 0;
     const fromEdge =
-      (rtl ? box.right - rect.right : rect.left - box.left) / scale;
+      (rtl ? box.right - rect.right : rect.left - box.left) / scale +
+      (rtl ? held : -held);
     return {
       item,
       stop: Math.min(Math.max(fromEdge - border + shown - padding, 0), end),
