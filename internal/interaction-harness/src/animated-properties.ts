@@ -76,7 +76,7 @@ export function defineAnimatedProperties(): void {
     ...new Set([
       ...((animation.effect as KeyframeEffect | null)?.getKeyframes() ?? [])
         .flatMap(keyframe => Object.keys(keyframe))
-        .filter(name => !timingKeys.has(name)),
+        ,
       ...(animation instanceof CSSAnimation
         ? ruleProperties(animation.animationName).map(keyframeName)
         : []),
