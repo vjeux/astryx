@@ -6,10 +6,11 @@
  * @file gestureCounter.ts
  * @input Pointer and context-menu events through the shared input stream;
  *   keydown and click on the document
- * @output Exports the gesture identity, whether its click has run, and
- *   claimContextMenuPress
+ * @output Exports the gesture identity, whether its click has run, whether a
+ *   press is down, and the press claims (claimPress, claimContextMenuPress)
  * @position Internal to Layer; used by useLayer to tell a click that belongs
- *   to a dismissing press from a fresh one
+ *   to a dismissing press from a fresh one. A layer that opens on a press
+ *   claims that press here
  *
  * A browser light-dismiss and the trigger's own click come from ONE press, and
  * which of them React sees first is a race. Comparing timestamps against a
@@ -25,6 +26,11 @@ let gesture = 0;
 let clickedGesture: number | null = null;
 let contextMenuGesture: number | null = null;
 let pressPointerId: number | null = null;
+let claimedPress: {
+  layer: HTMLElement;
+  pointerId: number;
+  gesture: number;
+} | null = null;
 let isListening = false;
 
 function advance() {
@@ -81,23 +87,39 @@ export function currentGestureHasClicked(): boolean {
   return clickedGesture === gesture;
 }
 
+/** Whether a press is down, its release not yet seen by the page. */
+export function isPressInFlight(): boolean {
+  listen();
+  return pressPointerId !== null;
+}
+
 /**
- * Keeps the release of the press in flight from dismissing `layer`, when that
- * press opened a context menu (a right click). The browser's light dismiss
- * reads a release outside every open popover as a dismissal, also the release
- * of the press that opened the popover. While the pointer is outside the
- * layer, the layer captures it, so a release there lands on the layer. Over
- * the layer the capture lets go, so hover works and a release there is inside
- * anyway. The claim ends at that press's release, or when the layer closes; a
- * later press dismisses as usual.
+ * Keeps the release of the press in flight from dismissing `layer`. The
+ * browser's light dismiss reads a release outside every open popover as a
+ * dismissal, also the release of the press that opened the popover. While the
+ * pointer is outside the layer, the layer captures it, so a release there
+ * lands on the layer. Over the layer the capture lets go, so hover works and a
+ * release there is inside anyway. The claim ends at that press's release, or
+ * when the layer closes; a later press dismisses as usual. A second claim of
+ * the same press for the same layer does nothing.
  */
-export function claimContextMenuPress(layer: HTMLElement): void {
+export function claimPress(layer: HTMLElement): void {
   listen();
   const pointerId = pressPointerId;
   const view = layer.ownerDocument.defaultView;
-  if (pointerId === null || contextMenuGesture !== gesture || view == null) {
+  if (pointerId === null || view == null) {
     return;
   }
+  if (
+    claimedPress !== null &&
+    claimedPress.layer === layer &&
+    claimedPress.pointerId === pointerId &&
+    claimedPress.gesture === gesture
+  ) {
+    return;
+  }
+  const claim = {layer, pointerId, gesture};
+  claimedPress = claim;
   const holdCapture = (isOutside: boolean) => {
     try {
       if (isOutside) {
@@ -144,6 +166,9 @@ export function claimContextMenuPress(layer: HTMLElement): void {
       unsubscribe();
     }
     unsubscribes.length = 0;
+    if (claimedPress === claim) {
+      claimedPress = null;
+    }
   };
   const endClaim = (event: PointerEvent) => {
     if (event.pointerId === pointerId) {
@@ -174,4 +199,15 @@ export function claimContextMenuPress(layer: HTMLElement): void {
     () => view.removeEventListener('scroll', invalidate, true),
     () => view.removeEventListener('resize', invalidate),
   );
+}
+
+/**
+ * Claims the press in flight for `layer` (`claimPress`) when that press opened
+ * a context menu (a right click).
+ */
+export function claimContextMenuPress(layer: HTMLElement): void {
+  listen();
+  if (contextMenuGesture === gesture) {
+    claimPress(layer);
+  }
 }
