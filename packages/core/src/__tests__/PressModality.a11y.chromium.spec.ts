@@ -378,6 +378,14 @@ test('a mouse press dragged across menu rows lights only the row under the point
   // row pressed and then left must not stay painted beside the highlight.
   const context = await browser.newContext(PHONE);
   const page = await context.newPage();
+  // NOT FOR LANDING: the menu's entrance holds its first frame for 1 s.
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style');
+      style.textContent = '[popover] > * { animation-delay: 1s !important; }';
+      document.head.append(style);
+    });
+  });
   try {
     await page.goto(
       `${storybook.origin}/iframe.html?id=core-dropdownmenu--mounted-open&viewMode=story`,
