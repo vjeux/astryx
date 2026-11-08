@@ -186,6 +186,37 @@ interface OpenSheet {
 }
 
 async function openSheet(page: Page): Promise<OpenSheet> {
+  // Red arm: the page's own pointer and touch listeners take 10 ms an event.
+  await page.addInitScript(
+    ({stallMs, types}) => {
+      for (const type of types) {
+        window.addEventListener(
+          type,
+          event => {
+            if (!event.isTrusted) {
+              return;
+            }
+            const end = performance.now() + stallMs;
+            while (performance.now() < end) {
+              // the page's own listener is busy
+            }
+          },
+          {capture: true, passive: true},
+        );
+      }
+    },
+    {
+      stallMs: 10,
+      types: [
+        'pointerdown',
+        'pointermove',
+        'pointerup',
+        'touchstart',
+        'touchmove',
+        'touchend',
+      ],
+    },
+  );
   await installLongTaskLog(page);
   await openStory(page, storybook(), 'core-bottomsheet--snap-points');
   const driver = await touchDriver(page);
