@@ -105,6 +105,8 @@ for (const c of CASES) {
     const before = await title.textContent();
     const played = await driver.play(sparseFlick(center, c.moves, c.liftGap), {
       pacing: 'spacing',
+      // The pager's release: Core's scrollVelocity blend.
+      release: 'scroll',
     });
     await waitForRest(track);
     const months = await viewport.evaluate(element => {
