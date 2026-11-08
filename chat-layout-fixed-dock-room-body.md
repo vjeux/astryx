@@ -1,7 +1,7 @@
 <!-- Template: bug-fix.md -->
 Stack: #10672 → this pull request
 
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/b468198b99f61c96aa4dd20fd8465cd094dee02c...049231840d21bc55c7abf8c913d749b63d1eef37
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/b468198b99f61c96aa4dd20fd8465cd094dee02c...e8335b619a46b52b1eaa3997ab4cc9b17e9ea214
 
 ## User impact
 
@@ -38,12 +38,12 @@ In `scrollRef` mode only, ChatLayout observes the dock's border-box height throu
 - [x] No new public API, visual representation, default, or interaction model is hidden under the bug-fix label.
 - [x] Public text and artifacts contain no internal Meta context.
 
-## Writing rubric results
-
-`component:ChatLayout` FR4, PR1 and the verification row: R1–R6 none.
-
 ## Testing
 
 - `ChatLayout.test.tsx`: room for a fixed dock (142 px), none in self-scroll mode, and the room follows a dock that grows to 166 px. Chat units 485/485.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
 - The browser matrix above runs on Sandbox builds of main with #10672 and of this head, in Chromium and in WebKit's CI container.
+
+## Writing rubric results
+
+`component:ChatLayout` FR4, PR1 and the verification row: R1–R6 none.
