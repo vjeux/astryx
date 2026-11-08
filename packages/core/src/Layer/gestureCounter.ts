@@ -8,9 +8,10 @@
  *   keydown and click on the document
  * @output Exports the gesture identity, whether its click has run, whether a
  *   press is down, and the press claims (claimPress, claimContextMenuPress)
- * @position Internal to Layer; used by useLayer to tell a click that belongs
- *   to a dismissing press from a fresh one. A layer that opens on a press
- *   claims that press here
+ * @position Internal to the package, not exported. useLayer reads it to tell
+ *   a click that belongs to a dismissing press from a fresh one. useMenuPress,
+ *   ContextMenu and DropdownMenu read the gesture too. A layer or a menu that
+ *   opens on a press claims that press here
  *
  * A browser light-dismiss and the trigger's own click come from ONE press, and
  * which of them React sees first is a race. Comparing timestamps against a
