@@ -589,12 +589,12 @@ function settleTransition(
   const stop = watchSettle(view, {
     element,
     frame: () => {
-      const now = view.performance.now();
-      if (!isWritten && now >= settleAt) {
+      const time = view.performance.now() - start;
+      if (!isWritten && time >= settleAt - start) {
         writePresentedResolve(element);
         isWritten = true;
       }
-      if (now < endAt) {
+      if (time < durationMs) {
         return false;
       }
       clear();
