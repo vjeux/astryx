@@ -15,7 +15,7 @@
 import {animatorFor, type Animator} from '../motion/animator';
 import {reducesMotion} from '../motion/reducedMotion';
 import {isCoarsePointer} from '../utils/coarsePointer';
-import {isTouchOnScreen, subscribeInput} from '../utils/inputStream';
+import {subscribeInput} from '../utils/inputStream';
 import {layoutViewportHeight} from '../utils/layoutViewport';
 import {nearestScroller, scrollingAncestor} from '../utils/scrollingAncestor';
 import {
@@ -767,11 +767,7 @@ function revealWithKeyboard(
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
         lastHeight = event.height;
-        if (!hasRevealed || !isTouchOnScreen(win)) {
-          revealNow(event.height);
-        } else if (event.height <= KEYBOARD_EPSILON) {
-          hasRevealed = false;
-        }
+        revealNow(event.height);
       }
       pans.report(event.height);
     }
