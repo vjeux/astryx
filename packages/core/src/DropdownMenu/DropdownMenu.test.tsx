@@ -39,6 +39,7 @@ import {COMPACT_TOUCH_PRESENTATION_QUERY} from '../hooks/useAdaptivePresentation
 import {MENU_PRESS_LONG_PRESS_MS} from '../hooks/useMenuPress';
 import {MENU_PRESS_SETTLE_MS} from '../hooks/menuPressGesture';
 import {isInHeldLayer} from '../Layer/inputHold';
+import {runPopoverOperation} from '../Layer/popoverOperations';
 import {TOUCH_QUERY} from '../utils/touchPresentation';
 import {UIKIT_GESTURES} from '../motion/uikit/gestures';
 
@@ -3525,6 +3526,77 @@ describe('DropdownMenu press model', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('the press that opens the menu', () => {
+    let captured: Element[] = [];
+
+    beforeEach(() => {
+      captured = [];
+      HTMLElement.prototype.setPointerCapture = function (this: HTMLElement) {
+        captured.push(this);
+      };
+      HTMLElement.prototype.hasPointerCapture = () => false;
+      HTMLElement.prototype.releasePointerCapture = () => {};
+    });
+
+    afterEach(() => {
+      fireEvent.pointerUp(document.body, mouse);
+      delete (HTMLElement.prototype as Partial<HTMLElement>).setPointerCapture;
+      delete (HTMLElement.prototype as Partial<HTMLElement>).hasPointerCapture;
+      delete (HTMLElement.prototype as Partial<HTMLElement>)
+        .releasePointerCapture;
+    });
+
+    const layerOfMenu = () =>
+      screen.getByRole('menu', {hidden: true}).closest('[popover]');
+
+    it('a mouse press on the trigger claims that press for the menu’s layer, and the trigger is the invoker until the release', () => {
+      vi.useFakeTimers();
+      try {
+        const trigger = renderMenu();
+        fireEvent.pointerDown(trigger, mouse);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(captured).toEqual([layerOfMenu()]);
+        expect(trigger).toHaveAttribute('popovertarget');
+        fireEvent.pointerUp(document.body, mouse);
+        act(() => {
+          vi.advanceTimersByTime(0);
+        });
+        expect(trigger).not.toHaveAttribute('popovertarget');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('a show that waits for another popover operation claims the press that asked for it, while that press is down', async () => {
+      const trigger = renderMenu();
+      // The press lands inside another layer's show or hide, so the show
+      // waits for that operation and replays after it.
+      runPopoverOperation(document, () => {
+        fireEvent.pointerDown(trigger, mouse);
+      });
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(captured).toEqual([layerOfMenu()]);
+      expect(trigger).toHaveAttribute('popovertarget');
+    });
+
+    it('a show replayed after the press ended claims nothing', async () => {
+      const trigger = renderMenu();
+      runPopoverOperation(document, () => {
+        fireEvent.pointerDown(trigger, mouse);
+        fireEvent.pointerUp(trigger, mouse);
+      });
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(captured).toEqual([]);
+      expect(trigger).not.toHaveAttribute('popovertarget');
+    });
   });
 
   it('a tap on the trigger still opens through its click', () => {

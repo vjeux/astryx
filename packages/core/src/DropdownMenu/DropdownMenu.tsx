@@ -49,6 +49,11 @@ import {readAccessibleName} from '../utils/accessibleName';
 import * as stylex from '@stylexjs/stylex';
 import {usePopover} from '../Popover/usePopover';
 import {holdEntranceInput} from '../Layer/holdEntranceInput';
+import {
+  claimPress,
+  currentGesture,
+  isPressInFlight,
+} from '../Layer/gestureCounter';
 import {Button, type ButtonProps} from '../Button';
 import {Heading} from '../Heading';
 import {Icon} from '../Icon';
@@ -963,6 +968,13 @@ function DropdownMenuPopover({
   // the list ref exists, and its release is kept for the close.
   const holdEntranceRef = useRef<() => void>(() => {});
   const releaseEntranceRef = useRef<(() => void) | null>(null);
+  // The trigger press that asks the menu to open. The show claims that press
+  // as it is accepted; its claim is set below, once the popover exists.
+  const openingPressRef = useRef<{
+    gesture: number;
+    pointerType: MenuPressPointerType;
+  } | null>(null);
+  const claimOpeningPressRef = useRef<() => void>(() => {});
 
   // Submenu flyouts are `popover="manual"` elements nested inside the menu's
   // `popover="auto"` element, so the browser's light dismiss of the menu never
@@ -1070,6 +1082,7 @@ function DropdownMenuPopover({
 
   const handleLayerShow = useCallback(() => {
     acceptedOpenRef.current = true;
+    claimOpeningPressRef.current();
     holdEntranceRef.current();
     resetFocusReturn();
     if (renderTrigger != null) {
@@ -1385,6 +1398,33 @@ function DropdownMenuPopover({
     ? controlledIsOpen === true
     : popover.isOpen;
 
+  // The menu is `popover="auto"`. The browser's light dismiss reads a release
+  // outside the popover as a dismissal, also the release of the press that
+  // opened it. This holds for a mouse and for a finger after the long-press
+  // delay, and also when the show waited for another popover operation. So
+  // the trigger stays the popover's invoker through that press, as
+  // useKeepLayerOpenProps does for controls beside an open layer. A mouse can
+  // also release away from the trigger, or the trigger can move away under
+  // it. So the layer claims a mouse's press, and its release lands on the
+  // layer.
+  const claimOpeningPress = useCallback(() => {
+    const press = openingPressRef.current;
+    openingPressRef.current = null;
+    if (
+      press == null ||
+      press.gesture !== currentGesture() ||
+      !isPressInFlight()
+    ) {
+      return;
+    }
+    holdInvokerThroughPress(buttonRef.current, popover.id);
+    const layer = listRef.current?.closest('[popover]');
+    if (press.pointerType === 'mouse' && layer instanceof HTMLElement) {
+      claimPress(layer);
+    }
+  }, [listRef, popover.id]);
+  claimOpeningPressRef.current = claimOpeningPress;
+
   // A mouse opens on press-down; a finger held on the trigger opens after
   // the long-press delay. Pressing the trigger of an open menu closes it, and
   // the click of that same gesture — reported by `isTriggerClickFromPress` —
@@ -1411,18 +1451,8 @@ function DropdownMenuPopover({
       // popover the state a click-open already has: the trigger is where
       // Escape or a pick returns focus (the APG menu-button pattern).
       buttonRef.current?.focus({preventScroll: true});
-      const didOpen = openAndFocus('pointer', true);
-      if (didOpen) {
-        // The menu is `popover="auto"`: the browser's light dismiss would
-        // read the release of this very press, on the trigger outside the
-        // popover, as a dismissal — a mouse's release, and as much a
-        // finger's after the long-press delay opened the menu under it.
-        // Holding the invoker relationship through the press exempts the
-        // trigger, the way useKeepLayerOpenProps does for controls beside
-        // an open layer.
-        holdInvokerThroughPress(buttonRef.current, popover.id);
-      }
-      return didOpen;
+      openingPressRef.current = {gesture: currentGesture(), pointerType};
+      return openAndFocus('pointer', true);
     },
     [isMenuOpenNow, isControlled, onClick, onOpenChange, openAndFocus, popover],
   );
