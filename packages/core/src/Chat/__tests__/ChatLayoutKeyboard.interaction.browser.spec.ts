@@ -377,6 +377,17 @@ test('the dock comes down when the composer text loses focus', async ({
   await editable.focus();
   await showKeyboard(page);
   await waitForRest(dock);
+  // MUTANT: the dock drops at the blur, behind a keyboard still up.
+  await dock.evaluate(el =>
+    el.ownerDocument.addEventListener(
+      'focusout',
+      () => {
+        (el as HTMLElement).style.setProperty('translate', '0px 0px', 'important');
+        (el as HTMLElement).style.setProperty('bottom', '0px', 'important');
+      },
+      {once: true},
+    ),
+  );
   await editable.evaluate(el => (el as HTMLElement).blur());
   // Mobile Safari reports the keyboard gone once it is down, 0.47 to 0.5 s
   // after a blur on an iOS 26.2 simulator. The ride follows Chrome's slide
