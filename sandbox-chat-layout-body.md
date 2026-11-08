@@ -24,15 +24,16 @@ No product code changes. The Sandbox gains one raw page; the route list, catalog
 ## Evidence
 
 - Failure before the change: no Sandbox page renders ChatLayout.
-- Success after the change, at a3676be0bd, in Chromium and WebKit, on a phone (390 × 844) and a desktop (1280 × 800):
+- Success after the change, at b468198b99, in Chromium and WebKit, on a phone (390 × 844) and a desktop (1280 × 800):
   - `long`, `composer` and `streaming`: the dock is fixed at the viewport's bottom. The document scrolls (phone: 3,188, 1,129 and 1,308 px over 844) from its end.
   - `streaming`: the reply streams to its 297 characters in about 2.5 s, and the document stays at its end.
   - `docked`: the dock sticks to the panel's bottom. ChatLayout scrolls (1,290 px over 589), and the document does not.
   - No page error or hydration warning in either engine. WebKit's container logs only blocked font preconnects.
-  - Captures on a phone, both engines taken at a3676be0bd, left to right long, composer, streaming and docked (https://github.com/vjeux/astryx/tree/87b68f86aff76545e0925788be2857144c4ac2b4):
+  - At 390 px no case is wider than the screen. The case name is a system message that wraps, so the docked case's name stays inside its panel (https://raw.githubusercontent.com/vjeux/astryx/6118c0fc4866e7e561656a207881047af7e8b5d5/chromium-labels-before-after.png).
+  - Captures on a phone, both engines taken at b468198b99, left to right long, composer, streaming and docked (https://github.com/vjeux/astryx/tree/6118c0fc4866e7e561656a207881047af7e8b5d5):
 
-    ![Chromium, phone](https://raw.githubusercontent.com/vjeux/astryx/87b68f86aff76545e0925788be2857144c4ac2b4/chromium-phone-cases.png)
-    ![WebKit, phone](https://raw.githubusercontent.com/vjeux/astryx/87b68f86aff76545e0925788be2857144c4ac2b4/webkit-phone-cases.png)
+    ![Chromium, phone](https://raw.githubusercontent.com/vjeux/astryx/6118c0fc4866e7e561656a207881047af7e8b5d5/chromium-phone-cases.png)
+    ![WebKit, phone](https://raw.githubusercontent.com/vjeux/astryx/6118c0fc4866e7e561656a207881047af7e8b5d5/webkit-phone-cases.png)
 
 - Product/runtime behavior verified unchanged: no package source changed.
 - CI impact: none; no workflow changes.
