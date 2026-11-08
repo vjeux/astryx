@@ -982,10 +982,18 @@ for (const [name, story, titleSelector, panelSelector, panelKey] of [
     const tokens = await toggleTokens(page);
     await page.evaluate(
       ({selector, key}) => {
+        const panels = [...document.querySelectorAll<HTMLElement>(selector)];
         const state = {
           frames: 0,
           log: [] as CommitLog,
           shielded: null as boolean | null,
+          // Each panel's pointer-events before the toggle.
+          before: Object.fromEntries(
+            panels.map(panel => [
+              panel.dataset[key] ?? '',
+              getComputedStyle(panel).pointerEvents,
+            ]),
+          ),
         };
         (window as unknown as {toggleCommit: typeof state}).toggleCommit =
           state;
@@ -994,7 +1002,6 @@ for (const [name, story, titleSelector, panelSelector, panelKey] of [
           requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
-        const panels = [...document.querySelectorAll<HTMLElement>(selector)];
         const observer = new MutationObserver(records => {
           if (state.shielded == null) {
             // One frame into the fade: a touch on the panels' middle meets
@@ -1046,21 +1053,27 @@ for (const [name, story, titleSelector, panelSelector, panelKey] of [
     await tapCenter(titleSelector);
     await waitForRest(wheels);
     await page.waitForTimeout(150);
-    const {log, shielded} = await page.evaluate(
+    const {log, shielded, before} = await page.evaluate(
       () =>
         (
           window as unknown as {
-            toggleCommit: {log: CommitLog; shielded: boolean | null};
+            toggleCommit: {
+              log: CommitLog;
+              shielded: boolean | null;
+              before: Record<string, string>;
+            };
           }
         ).toggleCommit,
     );
     expect(shielded).toBe(true);
     const commitFrame = log.find(entry => entry.attribute === 'class')?.frame;
     expect(commitFrame, JSON.stringify(log)).toBeDefined();
+    // Each panel keeps the pointer-events it had before the toggle.
     for (const change of log.filter(
       entry => entry.attribute === 'class' && entry.frame === commitFrame,
     )) {
-      expect(change.pointerEvents).toBe('auto');
+      expect(change.pointerEvents, change.panel).toBe(before[change.panel]);
+      expect(change.pointerEvents, change.panel).toBe('auto');
     }
     // The outgoing calendar leaves assistive technology with the toggle.
     const hidden = log.find(

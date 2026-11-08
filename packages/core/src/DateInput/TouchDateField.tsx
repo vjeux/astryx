@@ -657,10 +657,12 @@ const styles = stylex.create({
         reducedMotionFadeConsts.easing,
     },
   },
+  // No `pointerEvents` here either: flipping it in the toggle's commit would
+  // restyle the wheels and Done before the fade's first frame. `inert`,
+  // `visibility` and the fade's shield keep them untouchable.
   panelOverlayHidden: {
     visibility: 'hidden',
     opacity: 0,
-    pointerEvents: 'none',
     transitionTimingFunction: {
       default: 'linear',
       '@media (pointer: coarse)': TOGGLE_EXIT,
