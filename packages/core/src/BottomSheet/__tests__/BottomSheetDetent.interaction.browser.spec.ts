@@ -48,6 +48,7 @@ import {
   markElement,
   openStory,
   readLongTasks,
+  readRelease,
   releaseAnimations,
   releaseVelocity,
   sampleCurve,
@@ -66,20 +67,114 @@ import {
   waitForAnimation,
   waitForRest,
   writeEvidence,
+  type PlayedEvent,
   type TouchDriver,
+  type TouchScript,
 } from '@astryxdesign/interaction-harness';
+import {sheet as uikitSheet} from '../../motion/uikit/sheet';
 
 const storybook = withStorybook(test);
 
-// How far a flick's release, as WebKit stamps its touches on arrival, may
-// stray from the script's before the play fails by name. Each keeps the
-// release where the test's landing holds.
-// 1,200 px/s from tall: the script reads 1,225. It lands on half from the
-// flick speed, 1,008, up to 2,048, where its projection passes half.
-const HALF_FLICK_TOLERANCE = 0.17;
-// 2,000 px/s from tall, 160 px of travel: the 0.1 s projection passes half
-// above 1,409 px/s.
+// How far the dismissing flick's release, as WebKit stamps its touches on
+// arrival, may stray from the script's before the play fails by name. 2,000
+// px/s from tall, 160 px of travel: the 0.1 s projection passes half above
+// 1,409 px/s, so the sheet dismisses.
 const DISMISS_FLICK_TOLERANCE = 0.29;
+
+/** The release speeds, px/s, that land a downward release on one position. */
+interface ReleaseBand {
+  readonly fromPxPerS: number;
+  /** A release at exactly `fromPxPerS` lands there too. */
+  readonly fromIncluded: boolean;
+  readonly toPxPerS: number;
+}
+
+// Core counts a release as a flick only after the drag moved more than this,
+// px.
+// SYNC: Keep equal to `DRAG_PROMOTION_SLOP` in ../useSheetGestures.ts.
+const DRAG_PROMOTION_SLOP_PX = 8;
+
+/**
+ * The release speeds at which UIKit's sheet rule lands a downward release
+ * from tall on half. `travel` is how far below tall the finger lets go, and
+ * `half` how far below tall the half detent is, px.
+ *
+ * A release slower than `fastSpeed` settles on the position nearest its
+ * projection, `travel + speed × projectionSeconds`. Below
+ * `minProjectionSpeed` nothing is projected. So half takes it once the
+ * projection passes the midpoint. A release at `fastSpeed` or faster is a
+ * flick. It goes at least to half, and on past it once its projection passes
+ * half. The rule here holds while every slower release projects short of
+ * half.
+ */
+function halfLandingBand(travel: number, half: number): ReleaseBand {
+  const {fastSpeed, minProjectionSpeed, projectionSeconds} = uikitSheet.release;
+  if (travel <= DRAG_PROMOTION_SLOP_PX) {
+    throw new Error(
+      `halfLandingBand: a release ${travel} px below tall is no flick for Core, which this rule does not cover`,
+    );
+  }
+  if (travel + fastSpeed * projectionSeconds >= half) {
+    throw new Error(
+      `halfLandingBand: a release ${travel} px below tall can project past half (${half} px) below the flick speed, which this rule does not cover`,
+    );
+  }
+  const nearerHalf =
+    travel > half / 2
+      ? 0
+      : Math.max(minProjectionSpeed, (half / 2 - travel) / projectionSeconds);
+  return {
+    fromPxPerS: Math.min(fastSpeed, nearerHalf),
+    fromIncluded: nearerHalf >= fastSpeed,
+    toPxPerS: (half - travel) / projectionSeconds,
+  };
+}
+
+/** How far down the script's finger travels before it lifts, in whole px. */
+function travelOf(script: TouchScript): number {
+  const ys = toTouchEvents(script)
+    .filter(step => step.type === 'touchStart' || step.type === 'touchMove')
+    .map(step => Math.round(step.changed[0].y));
+  return ys[ys.length - 1] - ys[0];
+}
+
+/**
+ * The release the page read, px/s, as Core's velocity tracker reads it. In
+ * WebKit the touch driver reads it from the page's own event stamps. A page
+ * whose listeners take a few ms reads a slower flick than the script's. In
+ * Chromium the page reads the script's stamps, so the release is the
+ * script's.
+ */
+function pageRelease(
+  script: TouchScript,
+  played: ReadonlyArray<PlayedEvent>,
+): number {
+  const read = played[played.length - 1]?.release;
+  if (read != null) {
+    return read.pagePxPerS;
+  }
+  const steps = toTouchEvents(script);
+  const reading = readRelease(
+    steps,
+    steps.map(step => ({stamp: step.t, handledAt: Number.NaN})),
+  );
+  return reading?.scriptPxPerS ?? Number.NaN;
+}
+
+/**
+ * Fails by name when the release the page read lies outside `band`, where
+ * UIKit's rule lands it on the position the proof checks.
+ */
+function expectReleaseIn(release: number, band: ReleaseBand, on: string) {
+  const aboveFloor = band.fromIncluded
+    ? release >= band.fromPxPerS
+    : release > band.fromPxPerS;
+  if (!(aboveFloor && release <= band.toPxPerS)) {
+    throw new Error(
+      `the page read a release of ${release.toFixed(0)} px/s, outside ${band.fromPxPerS.toFixed(0)} to ${band.toPxPerS.toFixed(0)} px/s, where UIKit's sheet rule lands it on ${on}`,
+    );
+  }
+}
 
 // The settle's timing, from the theme the story renders in: `--ease-standard`
 // is the default cubic-bezier(0.24, 1, 0.4, 1), and `--duration-medium` is the
@@ -207,7 +302,7 @@ test('a downward flick dismisses the sheet', async ({page}) => {
 test('a softer downward flick from the tall detent lands on the half detent', async ({
   page,
 }) => {
-  const {driver, sheet, handle, halfTop} = await openSheet(page);
+  const {driver, sheet, handle, tallTop, halfTop} = await openSheet(page);
   // 1,200 px/s: a flick, whose projection stops short of the half detent, so
   // it goes one stop.
   const script = flick(handle, {
@@ -216,10 +311,14 @@ test('a softer downward flick from the tall detent lands on the half detent', as
     hz: 120,
   });
   expect(releaseVelocity(script).y).toBeCloseTo(1200, -1);
-  await driver.play(script, {
-    pacing: 'spacing',
-    releaseTolerance: HALF_FLICK_TOLERANCE,
-  });
+  const played = await driver.play(script, {pacing: 'spacing'});
+  // The release the page read decides the landing. A slower read still lands
+  // on half once its projection passes the midpoint, so the band is UIKit's.
+  expectReleaseIn(
+    pageRelease(script, played),
+    halfLandingBand(travelOf(script), halfTop - tallTop),
+    'half',
+  );
   await waitForRest(sheet);
   await expect(page.getByRole('dialog', {name: 'Nearby places'})).toBeVisible();
   expect(await sheetTop(sheet)).toBeCloseTo(halfTop, 0);
@@ -233,7 +332,7 @@ test('a softer flick with one early move 70 ms late still lands on the half dete
     browserName !== 'webkit',
     'only WebKit stamps a touch when it arrives; Chromium carries the scripted times',
   );
-  const {driver, sheet, handle, halfTop} = await openSheet(page);
+  const {driver, sheet, handle, tallTop, halfTop} = await openSheet(page);
   const script = flick(handle, {
     velocity: {x: 0, y: 1200},
     durationMs: 80,
@@ -242,18 +341,39 @@ test('a softer flick with one early move 70 ms late still lands on the half dete
   // The move after this step reaches the page 70 ms late, as a stalled
   // dispatch delivers it. The last two moves keep their spacing.
   const late = toTouchEvents(script).length - 5;
-  await driver.play(script, {
+  const played = await driver.play(script, {
     pacing: 'spacing',
-    releaseTolerance: HALF_FLICK_TOLERANCE,
     onEvent: async (_, index) => {
       if (index === late) {
         await new Promise(resolve => setTimeout(resolve, 70));
       }
     },
   });
+  expectReleaseIn(
+    pageRelease(script, played),
+    halfLandingBand(travelOf(script), halfTop - tallTop),
+    'half',
+  );
   await waitForRest(sheet);
   await expect(page.getByRole('dialog', {name: 'Nearby places'})).toBeVisible();
   expect(await sheetTop(sheet)).toBeCloseTo(halfTop, 0);
+});
+
+test("the half band follows UIKit's rule for a long and a short travel", () => {
+  // 96 px of travel: below the flick speed the projection decides, and it
+  // passes the midpoint from 540 px/s.
+  const long = halfLandingBand(96, 300);
+  expect(long.fromPxPerS).toBeCloseTo(540, 6);
+  expect(long.fromIncluded).toBe(false);
+  expect(long.toPxPerS).toBeCloseTo(2040, 6);
+  // 32 px: the projection passes the midpoint only from 1,180 px/s. A flick
+  // from the flick speed on goes to half anyway.
+  const short = halfLandingBand(32, 300);
+  expect(short.fromPxPerS).toBe(uikitSheet.release.fastSpeed);
+  expect(short.fromIncluded).toBe(true);
+  expect(short.toPxPerS).toBeCloseTo(2680, 6);
+  // Within Core's drag slop no release is a flick.
+  expect(() => halfLandingBand(8, 300)).toThrow(/no flick for Core/);
 });
 
 test('the settle lands on the detent, its curve recorded frame by frame', async ({
