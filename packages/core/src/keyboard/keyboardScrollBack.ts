@@ -196,9 +196,7 @@ function awaitFoldedReveal(
   });
   const stopTouch = subscribeInput(win, 'touchstart', () => stop());
   const stopKeyboard = subscribeKeyboardHeight(win, event => {
-    if (event.type === 'viewport' && event.height > KEYBOARD_EPSILON) {
-      stop();
-    }
+    void event;
   });
   const timer = win.setTimeout(stop, FOLD_WAIT_MS);
   foldWaitsOf.get(win)?.();
