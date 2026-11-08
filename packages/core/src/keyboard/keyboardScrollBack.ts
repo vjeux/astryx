@@ -147,11 +147,7 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
 // in a theme that reduces motion for everyone, the scroll lands at once.
 function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
   for (const [scroller, added] of scrolls) {
-    if (
-      added.at != null &&
-      scroller.isConnected &&
-      Math.abs(scrollTopOf(scroller, win) - added.at) <= KEYBOARD_EPSILON
-    ) {
+    if (scroller.isConnected) {
       const behavior = reducesMotion(scroller) ? 'instant' : 'smooth';
       scrollTopTo(scroller, added.from, behavior, win);
     }
