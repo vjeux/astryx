@@ -493,10 +493,10 @@ export interface RevealPanWatch {
 
 // One shared touch subscription per document serves every reveal-pan watch
 // in it, so no instance adds a listener. The first watch adds it, and the
-// last removes it. It also knows whether a finger is down.
+// last removes it.
 const touchStartWatches = new WeakMap<
   Document,
-  {stop: () => void; watches: Set<() => void>; isDown: boolean}
+  {stop: () => void; watches: Set<() => void>}
 >();
 
 function watchTouchStarts(doc: Document, onTouchStart: () => void): () => void {
@@ -507,24 +507,12 @@ function watchTouchStarts(doc: Document, onTouchStart: () => void): () => void {
       return () => {};
     }
     const watches = new Set<() => void>();
-    const touches = {stop: () => {}, watches, isDown: false};
-    const stopStarts = subscribeInput(view, 'touchstart', () => {
-      touches.isDown = true;
+    const stop = subscribeInput(view, 'touchstart', () => {
       for (const watch of [...watches]) {
         watch();
       }
     });
-    const onEnd = (event: TouchEvent) => {
-      touches.isDown = event.touches?.length > 0;
-    };
-    const stopEnds = subscribeInput(view, 'touchend', onEnd);
-    const stopCancels = subscribeInput(view, 'touchcancel', onEnd);
-    touches.stop = () => {
-      stopStarts();
-      stopEnds();
-      stopCancels();
-    };
-    shared = touches;
+    shared = {stop, watches};
     touchStartWatches.set(doc, shared);
   }
   shared.watches.add(onTouchStart);
@@ -587,9 +575,7 @@ export function watchRevealPan(
               top: viewport.offsetTop,
               scale: viewport.scale,
             };
-      // A report while a finger is down, as when Firefox's toolbar hides in
-      // a drag, leaves that drag's pan to the person.
-      touchedSinceReport = touchStartWatches.get(doc)?.isDown ?? false;
+      touchedSinceReport = false;
       isChromeReveal = null;
     },
     isRevealPan: height => {
