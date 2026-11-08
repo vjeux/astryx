@@ -391,7 +391,6 @@ function risesSmoothly(field: Element, win: Window): boolean {
   return (
     typeof css?.supports === 'function' &&
     css.supports('-webkit-touch-callout', 'none') &&
-    !matchesMediaQuery(win, '(prefers-reduced-motion: reduce)') &&
     !themeReducesMotion(field)
   );
 }
