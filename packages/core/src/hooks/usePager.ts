@@ -1042,7 +1042,9 @@ export function createPager(
    * integrator; any other move keeps the animated scroll.
    */
   function retargetSettle(running: PagerAnimator): void {
-    const from = presentation();
+    const model = settleHandle?.curve('x');
+    const from =
+      model == null ? presentation() : sign() * model.at(model.duration);
     const velocity = sign() * running.getVelocity('x');
     const isRelease = isReleaseSettle;
     const touchRelease = isTouchReleaseSettle;
