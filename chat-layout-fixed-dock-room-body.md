@@ -1,7 +1,7 @@
 <!-- Template: bug-fix.md -->
 Stack: #10672 → this pull request
 
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/b468198b99f61c96aa4dd20fd8465cd094dee02c...e8335b619a46b52b1eaa3997ab4cc9b17e9ea214
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/b468198b99f61c96aa4dd20fd8465cd094dee02c...c752dfd366078803c79ac4d6b16a5b46e830d11b
 
 ## User impact
 
@@ -42,7 +42,14 @@ In `scrollRef` mode only, ChatLayout observes the dock's border-box height throu
 
 - `ChatLayout.test.tsx`: room for a fixed dock (142 px), none in self-scroll mode, and the room follows a dock that grows to 166 px. Chat units 485/485.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
-- The browser matrix above runs on Sandbox builds of main with #10672 and of 049231840d (this head without its two comment lines), in Chromium and in WebKit's CI container.
+- The browser matrix above runs on Sandbox builds of main with #10672 and of c752dfd366, in Chromium and in WebKit's CI container. The captures were taken at 049231840d, the same room before the callback-ref move.
+
+## Release check
+
+1. Red-first, at the document's end with no keyboard: main reads the newest message 102 px under the dock in `long`. It reads 138 px on a phone and 112 px on a desktop in `composer`. This head reads it 40 px above. Chromium and WebKit agree, phone and desktop.
+2. With the keyboard open in Safari on the iOS Simulator, main's double lift (#10690) hides the dock. With #10690's commit applied too, this head reads 40 px above in `long`, `composer` and `docked`.
+3. #8176 did not cause it. The same 102, 138 and 112 px read on 33bc644a (before #8176) and on 695653f5 (#8176). They also read on the release candidate c99ad4aa and on main with #8176 reverted locally. Chromium and WebKit agree, phone and desktop. It predates the v0.7 releases.
+4. Who sees it: every ChatLayout whose `scrollRef` names an outer scroller, such as the document, in every browser. A self-scroll ChatLayout is not affected.
 
 ## Writing rubric results
 
