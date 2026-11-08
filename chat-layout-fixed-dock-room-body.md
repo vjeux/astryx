@@ -42,7 +42,7 @@ In `scrollRef` mode only, ChatLayout observes the dock's border-box height throu
 
 - `ChatLayout.test.tsx`: room for a fixed dock (142 px), none in self-scroll mode, and the room follows a dock that grows to 166 px. Chat units 485/485.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
-- The browser matrix above runs on Sandbox builds of main with #10672 and of this head, in Chromium and in WebKit's CI container.
+- The browser matrix above runs on Sandbox builds of main with #10672 and of 049231840d (this head without its two comment lines), in Chromium and in WebKit's CI container.
 
 ## Writing rubric results
 
