@@ -730,8 +730,7 @@ function revealWithKeyboard(
     if (unplaced === 'keep') {
       return;
     }
-    isPlaced =
-      rising !== 0 || sitsInBand(focused, scroller, height, offset, win);
+    isPlaced = sitsInBand(focused, scroller, height, offset, win);
     if (isPlaced || height <= KEYBOARD_EPSILON) {
       return;
     }
