@@ -386,6 +386,7 @@ function scrollRangeOf(scroller: Element, win: Window): number {
 // scroll would leave it covered. There, and under Reduce Motion, the field
 // moves at once.
 function risesSmoothly(field: Element, win: Window): boolean {
+  return false;
   const css = (win as Window & {CSS?: typeof CSS}).CSS;
   return (
     typeof css?.supports === 'function' &&
