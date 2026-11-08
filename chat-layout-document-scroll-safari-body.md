@@ -51,7 +51,7 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
   - With the option off, the reveal-pan watch reports and listens as before; one visual-viewport read per report stays (INV11).
   - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2416/2416.
 - Safari on the iOS 26.2 Simulator, in a scripted trace at this head: a tap, drags with the keyboard up, then typing three lines. The dock's applied lift is 0 px on every frame, and it never flips direction within 100 ms, as on 33bc644a. Safari's own slide on a slow drag toward the top stays as in earlier releases (Gap 17, #10718).
-- In Firefox, while a scroll moves the pan after input, the dock's `bottom` re-commits on each keyboard report that changes the lift by 0.5 px or more. It is a layout offset there, not a transform.
+- In Firefox, while a scroll moves the pan after input, the dock's `bottom` re-commits on each report that moves the lift. It is a layout offset there, not a transform.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
