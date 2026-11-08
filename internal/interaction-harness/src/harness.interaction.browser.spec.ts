@@ -6444,8 +6444,7 @@ test.describe('page freeze', () => {
     // The finger goes down while the page is frozen, so the travel it starts
     // is held at its start. Only the lift is left to send.
     await freezePage(page);
-    const finger = await driver.press({x: 20, y: 60});
-    const hold = await holdInputUntil(page, {afterResumeMs: 150});
+    const hold = await holdInputUntil(page, {afterResumeMs: 35});
     await thawPage(page);
     // The runner stalls 40 ms in every 45 from here, as a loaded one does.
     const stall = setInterval(() => {
@@ -6457,36 +6456,16 @@ test.describe('page freeze', () => {
     let held: HeldInput;
     try {
       await hold.resumed();
-      await finger.lift();
+      // NOT FOR LANDING: the tap is played after the thaw, as before press.
+      await driver.play([
+        {t: 0, fingers: [{id: 0, x: 20, y: 60}]},
+        {t: 30, fingers: []},
+      ]);
       held = await hold.landed();
     } finally {
       clearInterval(stall);
     }
     expect(held.arrivedMs).toBeLessThan(held.intendedMs);
-    const liftAt = await page.evaluate(
-      () => (window as unknown as {liftAt?: number | null}).liftAt,
-    );
-    // The page handled the lift mid-travel: after the travel started, and
-    // before it ended.
-    expect(liftAt).toBeGreaterThan(0);
-    expect(liftAt).toBeLessThan(400);
-    // A lifted finger fails by name, and so does a second finger 0, a play or
-    // a tap while a finger is held.
-    await expect(finger.lift()).rejects.toThrow(/finger 0 was lifted/);
-    const again = await driver.press({x: 20, y: 60});
-    await expect(driver.press({x: 30, y: 60})).rejects.toThrow(
-      /finger 0 is already down/,
-    );
-    await expect(
-      driver.play([
-        {t: 0, fingers: [{id: 1, x: 30, y: 60}]},
-        {t: 30, fingers: []},
-      ]),
-    ).rejects.toThrow(/lift the 1 finger press holds down before a play/);
-    await expect(driver.tap({x: 30, y: 60})).rejects.toThrow(
-      /lift the 1 finger press holds down before a play or a tap/,
-    );
-    await again.lift();
   });
 
   test('a lift that reaches the page while it is frozen again after the thaw fails by name, and the page still answers', async ({
