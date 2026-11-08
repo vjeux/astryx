@@ -2,7 +2,7 @@
 Stack: #9983 → #8217
 Merge group: #9983, #8217
 
-Review only this PR's change: https://github.com/vjeux/astryx/compare/86c74e8c304c69ffe8a5c2d57f591e19c35f3a1d...1fd9e0ed88a71bebaaa51876285faab06e92d09e, https://github.com/vjeux/astryx/compare/6fd4c287f900fc2e262c95da664f2aa6f0578701...680bf29d0c39692335dbde4a1322a39f1d2e82b7 and https://github.com/vjeux/astryx/compare/cc668a0e1bde4f872935b68286dcbb40a62315e1...8a7df57e539ad8bbf6686db12e24458bd7358ec1. Main merges sit between them. The last moves the bounce inside main's keyboard ride: https://github.com/vjeux/astryx/compare/52099ae9d10adc25ab68777f3f3f4aa7332df487..a56dc678209d1984bbb878c6916ad257f212e6e7. The head adds #9983's one-read fix, a sandbox page and a record fix: https://github.com/vjeux/astryx/compare/4a546c248e39c5a7ae936a0228d0e1ef6d84234e...88d25e8682d1b92df31cdcc77714198d6354c75f.
+Review only this PR's change: https://github.com/vjeux/astryx/compare/86c74e8c304c69ffe8a5c2d57f591e19c35f3a1d...1fd9e0ed88a71bebaaa51876285faab06e92d09e, https://github.com/vjeux/astryx/compare/6fd4c287f900fc2e262c95da664f2aa6f0578701...680bf29d0c39692335dbde4a1322a39f1d2e82b7 and https://github.com/vjeux/astryx/compare/cc668a0e1bde4f872935b68286dcbb40a62315e1...8a7df57e539ad8bbf6686db12e24458bd7358ec1. Main merges sit between them. The last moves the bounce inside main's keyboard ride: https://github.com/vjeux/astryx/compare/52099ae9d10adc25ab68777f3f3f4aa7332df487..a56dc678209d1984bbb878c6916ad257f212e6e7. The head adds #9983's one-read fix, a sandbox page and a record fix: https://github.com/vjeux/astryx/compare/a56dc678209d1984bbb878c6916ad257f212e6e7...88d25e8682d1b92df31cdcc77714198d6354c75f.
 
 ## User need
 
@@ -23,7 +23,7 @@ A drag down from the composer blurs it too, unless a long press began it (caret 
 
 ## Public delta and caller burden
 
-No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly shared gesture code (Testing), which an owner decision (Cindy, Nov 4 2026) loads up front.
+No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly shared gesture code (Testing), which loads up front by owner decision (Cindy, Nov 4 2026).
 
 ## Design and alternatives
 
