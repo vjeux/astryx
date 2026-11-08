@@ -430,7 +430,18 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     play(curves, options) {
       takeOver();
       const offset = sign() * heldOffset;
-      const x = curves.x;
+      const counted = curves.x;
+      const x =
+        counted == null
+          ? undefined
+          : {
+              ...counted,
+              at: (time: number) => {
+                const counter = globalThis as unknown as {__curveAt?: number};
+                counter.__curveAt = (counter.__curveAt ?? 0) + 1;
+                return counted.at(time);
+              },
+            };
       const shifted =
         x == null
           ? curves
