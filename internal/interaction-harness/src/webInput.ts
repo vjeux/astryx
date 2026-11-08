@@ -503,9 +503,6 @@ export function armInputRun(
         const markedAt = run.startsFirst ? mark?.starts.get(event) : undefined;
         // A page that reopens its document drops the mark's listener but
         // keeps the mark. Its events go unmarked, and the run reads as before.
-        if (markedAt == null) {
-          run.startsFirst = false;
-        }
         run.receivedAt.push(markedAt ?? performance.now());
         run.handledAt.push(Number.NaN);
         run.eventTypes.push(event.type);
