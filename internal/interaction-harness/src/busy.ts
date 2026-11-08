@@ -1527,7 +1527,7 @@ function readBusyWindow(
       // frame errors say it. Every frame the cast delivered counts, with the
       // component on screen or not.
       const blockFrames = tracked
-        .filter(f => f.t > window.from && f.t < window.to)
+        .filter(f => f.box != null && f.t > window.from && f.t < window.to)
         .map(f => f.t);
       const castEdges = [window.from, ...blockFrames, window.to];
       const castGapMs = Math.max(
