@@ -624,6 +624,136 @@ describe('Wheel — keys under a mouse', () => {
   });
 });
 
+describe('Wheel — a key step on a page starved of frames', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    // @ts-expect-error - deleting the shadow restores Element's own getter
+    delete HTMLElement.prototype.offsetHeight;
+  });
+
+  /**
+   * The scrolling column on hour `initial`, whose owner commits each change.
+   * jsdom has no layout, so each row gets a height, and `frame` draws one
+   * frame of a scroll at the `scrollTop` it gives.
+   */
+  function renderStepped(initial: number) {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.getAttribute('role') === 'option' ? ROW : 0;
+      },
+    });
+    const onChange = vi.fn();
+    function Owned() {
+      const [value, setValue] = useState(initial);
+      return (
+        <ScrollWheel
+          label="Hour"
+          options={HOURS}
+          value={value}
+          onChange={next => {
+            onChange(next);
+            setValue(next);
+          }}
+        />
+      );
+    }
+    render(<Owned />);
+    const listbox = screen.getByRole('listbox', {name: 'Hour'});
+    let top = initial * ROW;
+    Object.defineProperty(listbox, 'scrollTop', {
+      configurable: true,
+      get: () => top,
+      set: (next: number) => {
+        top = next;
+      },
+    });
+    const frame = (at: number) => {
+      act(() => {
+        top = at;
+        listbox.dispatchEvent(new Event('scroll'));
+      });
+    };
+    const wait = (ms: number) => {
+      act(() => {
+        vi.advanceTimersByTime(ms);
+      });
+    };
+    return {listbox, onChange, frame, wait};
+  }
+
+  it('rests on the row a key steps to when its frames stop for longer than the quiet period', () => {
+    vi.useFakeTimers();
+    const {listbox, onChange, frame, wait} = renderStepped(10);
+    fireEvent.keyDown(listbox, {key: 'ArrowDown'});
+    expect(onChange.mock.calls).toEqual([[11]]);
+    // The step's first frame, a fifth of a row along. Then no frame comes for
+    // longer than the quiet period, as on a busy page or a slow device.
+    frame(10 * ROW + 6);
+    wait(SCROLL_QUIET_MS + 80);
+    // The row the step is leaving is not a rest.
+    expect(onChange.mock.calls).toEqual([[11]]);
+    frame(11 * ROW);
+    act(() => {
+      listbox.dispatchEvent(new Event('scrollend'));
+    });
+    expect(onChange.mock.calls).toEqual([[11]]);
+  });
+
+  it('keeps the row a key steps to when the quiet period of a scroll before the key ends first', () => {
+    vi.useFakeTimers();
+    const {listbox, onChange, frame, wait} = renderStepped(10);
+    // A glide that ends on 10 just before the key: its quiet period runs on.
+    frame(10 * ROW - 5);
+    frame(10 * ROW);
+    fireEvent.keyDown(listbox, {key: 'ArrowDown'});
+    // That quiet period ends before the step draws its first frame.
+    wait(SCROLL_QUIET_MS);
+    expect(onChange.mock.calls).toEqual([[11]]);
+  });
+
+  it('rests on the row a key steps to a quiet period after the frame that reaches it, without scrollend', () => {
+    vi.useFakeTimers();
+    const {listbox, onChange, frame, wait} = renderStepped(10);
+    fireEvent.keyDown(listbox, {key: 'ArrowDown'});
+    frame(10 * ROW + 6);
+    frame(11 * ROW);
+    wait(SCROLL_QUIET_MS + 10);
+    expect(onChange.mock.calls).toEqual([[11]]);
+    // At rest, a key steps on from 11.
+    fireEvent.keyDown(listbox, {key: 'ArrowDown'});
+    expect(onChange).toHaveBeenLastCalledWith(12);
+  });
+
+  it.each([
+    [
+      'a trackpad',
+      (listbox: HTMLElement) => fireEvent.wheel(listbox, {deltaY: 60}),
+      () => {},
+    ],
+    [
+      'a finger',
+      (listbox: HTMLElement) => fireEvent.touchStart(listbox),
+      (listbox: HTMLElement) => fireEvent.touchEnd(listbox),
+    ],
+  ])(
+    'commits the row %s leaves it on when it takes the wheel during a key step',
+    (_name, take, leave) => {
+      vi.useFakeTimers();
+      const {listbox, onChange, frame, wait} = renderStepped(10);
+      fireEvent.keyDown(listbox, {key: 'ArrowDown'});
+      frame(10 * ROW + 6);
+      take(listbox);
+      frame(12 * ROW);
+      frame(13 * ROW);
+      leave(listbox);
+      // A person's scroll still rests after the quiet period.
+      wait(SCROLL_QUIET_MS + 10);
+      expect(onChange).toHaveBeenLastCalledWith(13);
+    },
+  );
+});
+
 describe('Wheel — by pointer', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
