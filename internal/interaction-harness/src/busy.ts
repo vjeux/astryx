@@ -25,7 +25,6 @@
  */
 
 import type {Locator, Page} from '@playwright/test';
-import {defineAnimatedProperties} from './animated-properties';
 import {defineCurveEnd} from './curve-end';
 import {
   frameStats,
@@ -410,9 +409,9 @@ export interface BlockedWindow extends BusyWindow {
  * With `pseudoElement`, only that pseudo-element's animations on `during`
  * itself count, as `sampleCurve` reads them. A child's animation, such as a
  * switch thumb's press, then does not start the block.
- * With `property`, only animations that set that property count, named as
- * CSS names it (`translate`, `background-color`, `--press-strength`), as a
- * hold's judged motion names it.
+ * With `property`, only animations whose keyframes set that CSS property
+ * count, named in camelCase as `getKeyframes()` names it (`translate`,
+ * `backgroundColor`).
  * A thumb's `translate` travel then starts the block, and its press `scale`
  * does not.
  *
@@ -435,8 +434,7 @@ export interface BlockedWindow extends BusyWindow {
  * that rejects with `BusyWindowTooLateError`, with the numbers.
  *
  * The window it resolves with names the animation it caught (`animation`):
- * when it started and where its curve ends. These times are on the real
- * clock, as the window's own are, after a page freeze too.
+ * when it started and where its curve ends.
  */
 /** One display frame, ms: the least progress `blockMainThread` waits for. */
 const ONE_FRAME_MS = 16;
@@ -520,12 +518,9 @@ export async function blockMainThread(
       };
     }, ms);
   }
-  // The wait reads the curve end and the property match, defined in the page
-  // first. Both are sent before the wait and not awaited: the wait starts no
-  // later than before.
-  const defined = page.evaluate(
-    `(${defineCurveEnd.toString()})();(${defineAnimatedProperties.toString()})();`,
-  );
+  // The curve end the wait reads, defined in the page first: sent before the
+  // wait and not awaited, so the wait starts no later than it did.
+  const defined = page.evaluate(defineCurveEnd);
   const waited = during.evaluate(
     (element, {duration, minProgress, prop, pseudo, wait}) =>
       new Promise<BlockedWindow>((resolve, reject) => {
@@ -554,13 +549,7 @@ export async function blockMainThread(
           );
         };
         // With a pseudo-element, only its own animations on the element; with
-        // a property, only animations that set it, matched as a hold's judged
-        // motion is.
-        const animates = (
-          window as unknown as {
-            __harnessAnimates: (a: Animation, property: string) => boolean;
-          }
-        ).__harnessAnimates;
+        // a property, only animations whose keyframes set it.
         const counts = (a: Animation) => {
           if (isControl(a)) {
             return false;
@@ -573,7 +562,10 @@ export async function blockMainThread(
           ) {
             return false;
           }
-          return prop == null || animates(a, prop);
+          return (
+            prop == null ||
+            (effect?.getKeyframes() ?? []).some(keyframe => prop in keyframe)
+          );
         };
         // Where each animation's curve ends, its held tail excluded.
         const curveEnd =
@@ -632,12 +624,7 @@ export async function blockMainThread(
           const leftover = ran.length > 0 ? numbersOf(ran[0]) : heldSeen;
           if (caught != null) {
             const startTime = caught.startTime;
-            // A start time is a page time. It trails the real clock, which the
-            // window reads, by every span a page freeze stood still.
-            const frozen =
-              (window as unknown as {__harnessFreeze?: {offset: number}})
-                .__harnessFreeze?.offset ?? 0;
-            const from = performance.timeOrigin + Number(startTime) + frozen;
+            const from = performance.timeOrigin + Number(startTime);
             const animation =
               startTime != null && caught.playbackRate > 0
                 ? {from, to: from + curveEnd(caught) / caught.playbackRate}
