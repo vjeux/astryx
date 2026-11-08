@@ -570,7 +570,10 @@ adds it before the page's scripts, so it runs first. Created after, it would
 run after the window capture listeners the page added at load, such as a
 gesture host's. So the driver then keeps the old reading: an event's time from
 its stamp counts as the page's listeners'. Create the driver before the page
-loads to tell a wait from the listeners.
+loads to tell a wait from the listeners. `openStory` adds the mark before the
+story loads, so on a story page a driver created after it tells them apart
+too. A proof that loads its own page calls `installTouchStartBeforeLoad(page)`
+before it navigates.
 
 A wheel gesture is a run of steps, and `wheel` waits for each step's round
 trip, so on a loaded runner awaited steps land as far apart as a round trip
