@@ -4,8 +4,8 @@
  * @file useWheelsWarmUp.test.tsx
  * @input useWheelsWarmUp, the motion math and the UIKit constants table
  * @output Unit tests: the hidden wheels warm once the open sheet has settled
- *   (its present spring's settling duration) and the main thread is idle, and
- *   cool when it closes
+ *   and the main thread is idle, and cool when it closes. The sheet settles
+ *   in its present spring's settling duration
  * @position Colocated test of useWheelsWarmUp.ts
  */
 

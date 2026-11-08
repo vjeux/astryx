@@ -1416,9 +1416,10 @@ export function TouchDateField({
             icon="chevronDown"
             size="sm"
             color="secondary"
-            // The transform rides on the Icon itself, not a wrapper span, so
-            // the element a theme can target is the element that moves (and,
-            // under reduced motion on a touch screen, dips: useChevronDip).
+            // The transform rides on the Icon itself, not on a wrapper span.
+            // So the element a theme can target is the element that moves.
+            // Under reduced motion on a touch screen, it dips instead
+            // (useChevronDip).
             // StyleX's types do not model the touch key's nested RTL
             // condition, so the styles are cast; they compile as written.
             xstyle={

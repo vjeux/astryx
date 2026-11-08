@@ -3973,9 +3973,9 @@ describe('DateInput — scroll CSS (definition-level)', () => {
   });
 
   /**
-   * Everything in the swap runs for the same time, so it reads as one change
-   * rather than several, the chevron included: today's token with a mouse,
-   * the toggle's token under a finger.
+   * Everything in the swap runs for the same time, the chevron included, so
+   * it reads as one change. A mouse uses today's token, and a finger uses the
+   * toggle's token.
    */
   it('runs the whole swap on one duration', () => {
     const source = read('TouchDateField.tsx');
