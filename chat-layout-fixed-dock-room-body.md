@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Stack: #10672 → this pull request
+Stack: #10672 → #10676
 
 Review only this pull request's change: https://github.com/vjeux/astryx/compare/b468198b99f61c96aa4dd20fd8465cd094dee02c...c752dfd366078803c79ac4d6b16a5b46e830d11b
 
