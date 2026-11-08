@@ -524,7 +524,7 @@ export function Lightbox({
   // The item shown, current in every respect (its page, the counter, the
   // pager, the announcement): an index past either end shows the nearest
   // item. A NaN index stays NaN (the viewed-item check below).
-  const index = Math.max(0, Math.min(requestedIndex, mediaArray.length - 1));
+  const index = Math.min(requestedIndex, mediaArray.length - 1);
   const currentItem = mediaArray.length > 0 ? mediaArray[index] : null;
   const currentType = currentItem?.type ?? 'image';
   const isVideo = currentType === 'video';
