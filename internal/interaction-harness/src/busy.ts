@@ -1721,7 +1721,7 @@ export function pooledBusyProof(
   const late: (BusyWindowTooLateError | null)[] = [];
   const proofs = runs.map(run => {
     try {
-      const {proof} = readBusyWindow(run.tracked, run.window, {
+      const proof = busyWindowProof(run.tracked, run.window, {
         ...windowOptions,
         control: run.control,
       });
