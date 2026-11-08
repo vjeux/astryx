@@ -115,10 +115,9 @@ export async function openStory(
       ).__STORYBOOK_HIGHLIGHT_INITIALIZED = true;
     });
   }
-  if (!touchStartMarked.has(page)) {
-    touchStartMarked.add(page);
-    await installTouchStartBeforeLoad(page);
-  }
+  // NOT FOR LANDING: no listener-start mark before the story loads.
+  void touchStartMarked;
+  void installTouchStartBeforeLoad;
   const params = new URLSearchParams({id: storyId, viewMode: 'story'});
   if (args != null) {
     params.set(
