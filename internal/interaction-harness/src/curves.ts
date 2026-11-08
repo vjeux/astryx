@@ -2331,7 +2331,7 @@ export async function settlesAt(
               () => {
                 if (!ended) {
                   const unwatched = Math.max(0, deadline - lastFrame);
-                  finish(false, unwatched > starvationMs, unwatched);
+                  finish(false, false, unwatched);
                 }
               },
               ms + starvationMs + 1,
@@ -2345,7 +2345,7 @@ export async function settlesAt(
                 // deadline went unwatched. A stall after the deadline does
                 // not hide the value read before it.
                 const unwatched = Math.max(0, deadline - frameBefore);
-                finish(false, unwatched > starvationMs, unwatched);
+                finish(false, false, unwatched);
               } else {
                 frame(onFrame);
               }
