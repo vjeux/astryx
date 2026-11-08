@@ -96,7 +96,6 @@ export function TabBarMoreList({
             </>
           }
           isSelected={item.value === value}
-          isDisabled={isDisabledItem(item)}
           onClick={() => onChange(item.value)}
         />
       ))}
