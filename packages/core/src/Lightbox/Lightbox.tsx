@@ -589,6 +589,7 @@ export function Lightbox({
       if (!video.paused) {
         video.pause();
       }
+      video.currentTime = 0;
     }
     const current = container.querySelector<HTMLVideoElement>(
       '[data-lightbox-page][data-current] video',
