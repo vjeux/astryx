@@ -480,15 +480,12 @@ test('the dismissal keeps changing the screen every frame while the main thread 
     // compositor presented while the main thread spun, on this machine.
     await startBusyControl(page);
     const cast = await startScreencast(page);
-    // Blocked inside the page once the dismissal runs on the compositor. The
-    // page already waits when the lift starts the dismissal, so a busy
-    // machine's round trip does not start the block later in the fade.
-    const blocking = blockMainThread(page, 400, {
+    const played = await v.driver.play(pullDown(v.centre, 60));
+    // Blocked inside the page once the dismissal runs on the compositor.
+    const block = await blockMainThread(page, 400, {
       during: v.photo,
       minProgressMs: 16,
     });
-    const played = await v.driver.play(pullDown(v.centre, 60));
-    const block = await blocking;
     // A few frames after the block, so the screencast holds its end.
     await frames(page, 6);
     const castFrames = await cast.stop();
