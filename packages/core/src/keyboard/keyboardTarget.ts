@@ -13,8 +13,8 @@
  */
 
 import {animatorFor, type Animator} from '../motion/animator';
-import {reducesMotion} from '../motion/reducedMotion';
-import {isCoarsePointer} from '../utils/coarsePointer';
+import {themeReducesMotion} from '../privateAttributes/reducedMotion.stylex';
+import {isCoarsePointer, matchesMediaQuery} from '../utils/coarsePointer';
 import {subscribeInput} from '../utils/inputStream';
 import {layoutViewportHeight} from '../utils/layoutViewport';
 import {scrollingAncestor} from '../utils/scrollingAncestor';
@@ -352,24 +352,25 @@ function liftFor(
   return animator.get('y') < 0 ? targetCovered : 0;
 }
 
+// Scrolls `scroller` by `distance` px, up or down, at once unless `behavior`
+// is 'smooth'.
 function scrollBy(
   scroller: Element,
   distance: number,
   win: Window,
   behavior: ScrollBehavior = 'instant',
 ): void {
-  // An explicit 'instant' also overrides a scroller's own smooth
-  // `scroll-behavior`.
   const doc = scroller.ownerDocument;
   if (scroller === (doc.scrollingElement ?? doc.documentElement)) {
     win.scrollBy({top: distance, behavior});
-  } else if (typeof scroller.scrollBy === 'function') {
+  } else if (behavior === 'smooth' && typeof scroller.scrollBy === 'function') {
     scroller.scrollBy({top: distance, behavior});
   } else {
     scroller.scrollTop += distance;
   }
 }
 
+// How far `scroller` can scroll down from its top.
 function scrollRangeOf(scroller: Element, win: Window): number {
   const doc = scroller.ownerDocument;
   const view =
@@ -390,7 +391,8 @@ function risesSmoothly(field: Element, win: Window): boolean {
   return (
     typeof css?.supports === 'function' &&
     css.supports('-webkit-touch-callout', 'none') &&
-    !reducesMotion(field)
+    !matchesMediaQuery(win, '(prefers-reduced-motion: reduce)') &&
+    !themeReducesMotion(field)
   );
 }
 
