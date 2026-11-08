@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/590d90164198f68d7eea1eddee4cb93e90b69372...b143b86c013388987e2233f091ff900c31712af1
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/4e4c12a9dd528d879b684ea7838ed2522c9cbc75...386ebb1501d6f4b03f743286a63da37706c1c872
 
 ## User impact
 
@@ -25,10 +25,12 @@ Without the VirtualKeyboard API, when `scrollRef` names the document's root or b
 - Result after the change: the dock's bottom meets the keyboard at 377 px.
 - Representative unchanged path: `docked`, and every case with no keyboard (Testing).
 - Regression test or other mutation-sensitive proof: two new `useChatKeyboard.test.tsx` cases fail on main.
-- Captures, main above and the fix below (https://github.com/vjeux/astryx/tree/7f86aa36d52aeefe840cdb2d6ce1e16abae4e1bd):
+- Captures, main first; the README maps each (https://github.com/vjeux/astryx/tree/62fa9ee1e0302e27c76b3cbd03d3632f6e6a6256):
 
-  ![Keyboard open](https://raw.githubusercontent.com/vjeux/astryx/7f86aa36d52aeefe840cdb2d6ce1e16abae4e1bd/ios-keyboard-open.png)
-  ![No keyboard](https://raw.githubusercontent.com/vjeux/astryx/7f86aa36d52aeefe840cdb2d6ce1e16abae4e1bd/ios-no-keyboard.png)
+  ![Keyboard open](https://raw.githubusercontent.com/vjeux/astryx/62fa9ee1e0302e27c76b3cbd03d3632f6e6a6256/ios-keyboard-open.png)
+  ![No keyboard](https://raw.githubusercontent.com/vjeux/astryx/62fa9ee1e0302e27c76b3cbd03d3632f6e6a6256/ios-no-keyboard.png)
+  ![Home-screen app, main and fix](https://raw.githubusercontent.com/vjeux/astryx/62fa9ee1e0302e27c76b3cbd03d3632f6e6a6256/ios-home-screen-main-fix.png)
+  ![Home-screen app, every entry path](https://raw.githubusercontent.com/vjeux/astryx/62fa9ee1e0302e27c76b3cbd03d3632f6e6a6256/ios-home-screen-app.png)
 
 ## Release check
 
@@ -47,7 +49,8 @@ Without the VirtualKeyboard API, when `scrollRef` names the document's root or b
 
 - `useChatKeyboard.test.tsx` adds four cases. For the document in Safari, with a kept pan, there is no lift and no room, and no focus takeover or composer group. Both fail on main. An inner scroller keeps the lift and the takeover; that fails on fa8cf7b82c. With the VirtualKeyboard API the dock still lifts. Chat and keyboard units: 620/620.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
-- Measured in Safari on iOS in the browser only. The iOS home-screen app and Firefox for Android take the same code path, unmeasured, and the docs claim neither.
+- The iOS home-screen app, on the Simulator: a tap, Done, Previous and Next from a probe field, and `focus()`. With the fix, each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
+- Firefox for Android: Code Quality's run on this head's preview, `/sandbox/pages/chat-layout/` with `?case=long` and `?case=composer`.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
 - The frames come from 8bb22d9c95 (banked on the fork) with #10672's page applied locally; its code matches fa8cf7b82c. A build of b143b86c01's code reads the same on the Simulator. The dock's top sits at 235 px in `long` and 199 px in `composer`.
 
