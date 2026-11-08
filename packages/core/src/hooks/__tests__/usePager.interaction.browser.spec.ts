@@ -50,6 +50,7 @@ import {
   type Page,
 } from '@astryxdesign/a11y-spec/playwright';
 import {build} from 'esbuild';
+import {paging} from '../../motion/uikit/paging';
 import type * as PagerBundle from './pagerBundle';
 
 declare global {
@@ -654,6 +655,118 @@ test('a drag held still for 200 ms before the lift settles from rest: the releas
   await releaseAnimations(page);
   await waitForRest(track);
   expect(await trackX(track)).toBeCloseTo(-2 * PAGE, 0);
+});
+
+/**
+ * A one-finger script from (320, 200) through each move, [ms, dx], lifted
+ * where it is `liftMs` after the last move.
+ */
+function fewMoves(
+  moves: ReadonlyArray<readonly [number, number]>,
+  liftMs: number,
+): TouchScript {
+  const x0 = 320;
+  const y = 200;
+  return [
+    {t: 0, fingers: [{id: 0, x: x0, y}]},
+    ...moves.map(([t, dx]) => ({t, fingers: [{id: 0, x: x0 + dx, y}]})),
+    {t: moves[moves.length - 1][0] + liftMs, fingers: []},
+  ];
+}
+
+/**
+ * A play whose page reads a release: paced, read as a scroll view reads it,
+ * and failing by name when the page read the release on the other side of
+ * paging's advance speed from the script.
+ */
+const READS_RELEASE = {
+  pacing: 'spacing',
+  release: 'scroll',
+  boundaries: {releasePxPerS: paging.release.advanceSpeed},
+} as const;
+
+// A loaded page delivers a quick flick as a few moves. The release filter
+// weighs each move, so this flick's slow start weighs most, and its release
+// sits near paging's advance speed. The same motion pages in either engine
+// (spec:AST-100 FR2, FR4).
+test('a flick of three moves that starts slow and ends at 2.1 px/ms pages in either engine', async ({
+  page,
+}) => {
+  const {track, driver} = await open(page);
+  await driver.play(
+    fewMoves(
+      [
+        [20, -2],
+        [40, -10],
+        [60, -52],
+      ],
+      5,
+    ),
+    READS_RELEASE,
+  );
+  const release = (await page.evaluate(() => window.liftVelocities)).at(-1);
+  expect(release).toBeLessThan(-paging.release.advanceSpeed);
+  await releaseAnimations(page);
+  await waitForRest(track);
+  expect(await page.evaluate(() => window.pager.index)).toBe(2);
+});
+
+test('the same flick lifted 45 ms after its last move settles back on its page: a still finger never flicks (spec:AST-100 FR2)', async ({
+  page,
+}) => {
+  const {track, driver} = await open(page);
+  await driver.play(
+    fewMoves(
+      [
+        [20, -2],
+        [40, -10],
+        [60, -52],
+      ],
+      45,
+    ),
+    READS_RELEASE,
+  );
+  expect((await page.evaluate(() => window.liftVelocities)).at(-1)).toBe(0);
+  await releaseAnimations(page);
+  await waitForRest(track);
+  expect(await page.evaluate(() => window.pager.index)).toBe(1);
+  expect(await trackX(track)).toBeCloseTo(-PAGE, 0);
+});
+
+for (const count of [2, 3, 4]) {
+  test(`a flick of ${count} moves at a steady 2.1 px/ms pages in either engine`, async ({
+    page,
+  }) => {
+    const {track, driver} = await open(page);
+    const moves = Array.from(
+      {length: count},
+      (_, i) => [20 * (i + 1), -42 * (i + 1)] as const,
+    );
+    await driver.play(fewMoves(moves, 5), READS_RELEASE);
+    await releaseAnimations(page);
+    await waitForRest(track);
+    expect(await page.evaluate(() => window.pager.index)).toBe(2);
+  });
+}
+
+test('a slow drag a third of a page long settles back on its page', async ({
+  page,
+}) => {
+  const {track, driver} = await open(page);
+  // A third of a page in 600 ms (223 px/s), lifted while moving: under
+  // paging's advance speed, and short of half a page.
+  await driver.play(
+    drag(
+      {x: 320, y: 200},
+      {x: 320 - PAGE / 3, y: 200},
+      {durationMs: 600, restMs: 0},
+    ),
+    READS_RELEASE,
+  );
+  await releaseAnimations(page);
+  await waitForRest(track);
+  expect(await page.evaluate(() => window.pager.index)).toBe(1);
+  expect(await trackX(track)).toBeCloseTo(-PAGE, 0);
 });
 
 test('callbacks: the new page once the settle is moving, the settle when the track rests', async ({
