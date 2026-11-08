@@ -277,7 +277,9 @@ function recordTouches(view: Window, event: Event): void {
     return;
   }
   const {touches} = event as Partial<TouchEvent>;
-  touchesOnScreen.set(view, touches?.length ?? 0);
+  if (event.type === 'touchstart') {
+    touchesOnScreen.set(view, touches?.length ?? 0);
+  }
 }
 
 function recordPress(view: Window, event: Event): void {
