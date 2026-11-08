@@ -84,5 +84,5 @@ export function defineAnimatedProperties(): void {
   ];
   w.__harnessAnimatedProperties = properties;
   w.__harnessAnimates = (animation, property) =>
-    properties(animation).includes(keyframeName(property));
+    properties(animation).includes(property);
 }
