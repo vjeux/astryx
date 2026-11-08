@@ -49,7 +49,7 @@ Without the VirtualKeyboard API, when `scrollRef` names the document's root or b
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - Measured in Safari on iOS in the browser only. The iOS home-screen app and Firefox for Android take the same code path, unmeasured, and the docs claim neither.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
-- The frames come from 8bb22d9c95 (banked on the fork) with #10672's page applied locally; its code matches fa8cf7b82c. A build of b143b86c01's code reads the same on the Simulator: the dock's top at 235 px in `long` and 199 px in `composer`, and `docked` unchanged.
+- The frames come from 8bb22d9c95 (banked on the fork) with #10672's page applied locally; its code matches fa8cf7b82c. A build of b143b86c01's code reads the same on the Simulator. The dock's top sits at 235 px in `long` and 199 px in `composer`.
 
 ## Writing rubric results
 
