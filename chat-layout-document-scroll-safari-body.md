@@ -3,7 +3,7 @@ Review only this pull request's change: https://github.com/vjeux/astryx/compare/
 
 ## User impact
 
-In Safari on iOS, tapping the composer of a ChatLayout whose `scrollRef` is the document puts it under the status bar. Self-scroll layouts and Chrome on Android are unaffected.
+In Safari on iOS, tapping the composer of a ChatLayout whose `scrollRef` is the document puts it under the status bar.
 
 ## Problem and solution fit
 
@@ -17,7 +17,7 @@ Three narrower fixes failed on the Simulator. A lift less Safari's pan made Safa
 
 ## Smallest restoration
 
-Without the VirtualKeyboard API, in a page that scrolls the document, `useChatKeyboard` lifts the fixed dock nothing. It leaves the tap, focus moves and the reveal to the browser, as before the keyboard work. Firefox for Android takes this path too, unmeasured. Chrome on Android and self-scroll mode are unchanged.
+Without the VirtualKeyboard API, in a page that scrolls the document, `useChatKeyboard` lifts the fixed dock nothing. It leaves the tap, focus moves and the reveal to the browser, as before the keyboard work. On Android, Firefox takes this path too; its own reveal pans to the field, unmeasured here. Chrome keeps its ride: it has `navigator.virtualKeyboard`. Self-scroll mode is unchanged.
 
 ## Evidence
 
