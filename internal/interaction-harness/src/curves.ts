@@ -2378,7 +2378,7 @@ export async function settlesAt(
             const deadlineTimer = later(
               () => {
                 if (!ended) {
-                  const unwatched = Math.max(0, deadline - lastFrame);
+                  const unwatched = realNow() - lastFrame;
                   finish(false, unwatched > starvationMs, unwatched);
                 }
               },
@@ -2392,7 +2392,7 @@ export async function settlesAt(
                 // Only the span from the frame before this one to the
                 // deadline went unwatched. A stall after the deadline does
                 // not hide the value read before it.
-                const unwatched = Math.max(0, deadline - frameBefore);
+                const unwatched = realNow() - frameBefore;
                 finish(false, unwatched > starvationMs, unwatched);
               } else {
                 frame(onFrame);
