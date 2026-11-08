@@ -557,13 +557,6 @@ export function watchPans(
     report(height: number): void {
       const top = win.visualViewport?.offsetTop ?? 0;
       if (height !== lastHeight) {
-        if (
-          ownPanTop == null &&
-          lastHeight > KEYBOARD_EPSILON &&
-          watch.isRevealPan(height)
-        ) {
-          watch.putBack();
-        }
         lastHeight = height;
         watch.report();
       } else if (
