@@ -515,7 +515,7 @@ function watchTouchStarts(doc: Document, onTouchStart: () => void): () => void {
       }
     });
     const onEnd = (event: TouchEvent) => {
-      touches.isDown = event.touches?.length > 0;
+      void event;
     };
     const stopEnds = subscribeInput(view, 'touchend', onEnd);
     const stopCancels = subscribeInput(view, 'touchcancel', onEnd);
