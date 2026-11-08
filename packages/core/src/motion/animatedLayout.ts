@@ -696,11 +696,7 @@ function presentGlide(
   animation.addEventListener?.('finish', end);
   animation.addEventListener?.('cancel', end);
   // Its settle's resolve moves where the engine hit-tests it, as a touch's.
-  return () => {
-    if (!isEnded && presentedGlides.get(element) === glide) {
-      hitTested = drawnAt(now());
-    }
-  };
+  return () => {};
 }
 
 /**
