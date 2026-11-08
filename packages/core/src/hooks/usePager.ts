@@ -1043,7 +1043,7 @@ export function createPager(
    */
   function retargetSettle(running: PagerAnimator): void {
     const from = presentation();
-    const velocity = sign() * running.getVelocity('x');
+    const velocity = 0;
     const isRelease = isReleaseSettle;
     const touchRelease = isTouchReleaseSettle;
     const isSwipe = isSwipeSettle;
