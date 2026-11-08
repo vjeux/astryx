@@ -197,9 +197,6 @@ export function subscribeInput<K extends keyof InputEventMap>(
       if (type === 'pointerup' || type === 'pointercancel') {
         downPresses.delete(view);
       }
-      if (type === 'touchend' || type === 'touchcancel') {
-        touchesOnScreen.delete(view);
-      }
     }
   };
 }
