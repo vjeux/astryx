@@ -23,7 +23,7 @@ A drag down from the composer blurs it too, unless a long press began it (caret 
 
 ## Public delta and caller burden
 
-No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly gesture code, which card 62c (Cindy, Nov 4 2026) loads up front.
+No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly shared gesture code (Testing), which card 62c (Cindy, Nov 4 2026) loads up front.
 
 ## Design and alternatives
 
@@ -57,7 +57,7 @@ ChatLayout's import, bytes (core build, esbuild, minified, React and StyleX exte
 | minified | 227,334 | 316,835 |
 | gzip | 77,244 | 103,815 |
 
-The gesture system's pan, host and page hold make 75 kB of the minified growth. They are the gesture system's own 15 modules, each loaded once by path, with no copies. Toast loads 14 of the same 15, so an app with both bundles them once. The dismissal's own code is 2.5 kB minified.
+The gesture system's pan, host and page hold make 75 kB of the minified growth. The gesture system comes from the shared `gestures/` and `motion/` modules, the same files Slider, Toast and the date inputs ship. ChatLayout adds two modules of its own, `transcriptDismiss.ts` and `composerBounce.ts`.
 
 - Red-first for the last merge, each arm on this head's tests, Chrome-profile crossing case in Chromium:
   - On the merge by text alone (fc4af427e8), it fails 5 of 5. The bounce hid the keyboard's ride, so the dock jumps 320.9 px in one 17 ms frame as the bounce ends.
