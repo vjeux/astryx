@@ -687,6 +687,67 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   // scale animation starts.
   await story.trigger.focus();
   await logHitAreaInsets(page);
+  // RED-FIRST ARM, not for landing. It holds the main thread from the task
+  // after the presentation's hit areas draw their insets until HOLD_TO_MS
+  // after the growth's animate() call. Work that the engine schedules in that
+  // span, such as the compositor's notice that the growth started, then runs
+  // after 400 ms, inside the window.
+  const HOLD_TO_MS = 430;
+  await page.evaluate(holdTo => {
+    const arm = {call: 0, readyAt: 0, insetAt: 0, from: 0, to: 0};
+    Object.defineProperty(window, '__ptmArm', {value: arm});
+    const now = () => performance.timeOrigin + performance.now();
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      const animation = animate.call(this, keyframes, options);
+      if (
+        arm.call === 0 &&
+        Array.isArray(keyframes) &&
+        keyframes.some(frame => frame != null && 'scale' in frame)
+      ) {
+        arm.call = now();
+        void animation.ready.then(
+          () => {
+            arm.readyAt = now();
+          },
+          () => {},
+        );
+      }
+      return animation;
+    };
+    const isInsets = (style: string | null) =>
+      style?.includes('--astryx-hit-inset-') ?? false;
+    new MutationObserver(records => {
+      if (arm.call === 0 || arm.insetAt !== 0) {
+        return;
+      }
+      if (
+        !records.some(
+          record =>
+            isInsets(record.oldValue) ||
+            isInsets((record.target as Element).getAttribute('style')),
+        )
+      ) {
+        return;
+      }
+      arm.insetAt = now();
+      requestAnimationFrame(() =>
+        setTimeout(() => {
+          arm.from = now();
+          let t = arm.from;
+          while (t < arm.call + holdTo) {
+            t = now();
+          }
+          arm.to = t;
+        }),
+      );
+    }).observe(document.body, {
+      attributes: true,
+      attributeFilter: ['style'],
+      attributeOldValue: true,
+      subtree: true,
+    });
+  }, HOLD_TO_MS);
   let opened = 0;
   let closed = 0;
   let present = 0;
@@ -703,6 +764,20 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
     ...(window as unknown as {__popoverHitAreaInsets: HitAreaInsets[]})
       .__popoverHitAreaInsets,
   ]);
+  const arm = await page.evaluate(
+    () =>
+      (
+        window as unknown as {
+          __ptmArm: {
+            call: number;
+            readyAt: number;
+            insetAt: number;
+            from: number;
+            to: number;
+          };
+        }
+      ).__ptmArm,
+  );
   // Each window starts 400 ms in, after the focus ring, and ends one frame
   // before its curve does. Each motion's start also measures the content's
   // touch hit areas: layout reads, then a style write. A stalled machine can
@@ -739,6 +814,16 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
     // animation's start.
     const detail = `${name} ${JSON.stringify({
       from: Math.round(from - base),
+      arm:
+        name === 'present'
+          ? {
+              call: Math.round(arm.call - base),
+              ready: Math.round(arm.readyAt - base),
+              insetsWritten: Math.round(arm.insetAt - base),
+              holdFrom: Math.round(arm.from - base),
+              holdTo: Math.round(arm.to - base),
+            }
+          : undefined,
       during,
       events: trace.events
         .filter(e => e.t >= from && e.t <= end)
@@ -749,7 +834,14 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
   }
   // A loaded machine stretches a task's wall time, not its thread time. So a
   // long task here is one that runs over 50 ms of thread time.
-  expect(trace.longTasks.filter(task => task.threadMs > 50)).toEqual([]);
+  // The arm's own hold is a long task by design.
+  expect(
+    trace.longTasks.filter(
+      task =>
+        task.threadMs > 50 &&
+        (task.start + task.durationMs < arm.from - 1 || task.start > arm.to + 1),
+    ),
+  ).toEqual([]);
   // Positive control: the same trace sees per-frame work in such a window.
   // A frame loop moves the trigger by a pixel in each frame the page draws.
   // Every one of those frames must show work, however few are drawn.
