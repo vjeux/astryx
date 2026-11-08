@@ -88,4 +88,4 @@ export {
 } from './springs';
 export {switchControl} from './switch';
 export {registerTimingTable, timing} from './timing';
-export {registerZoomMediaTable, zoomMedia} from './zoomMedia';
+export {zoomMedia} from './zoomMedia';
