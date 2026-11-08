@@ -595,25 +595,6 @@ export function useTabBarLens({
     const velocity = body.animator.getVelocity('x', now);
     body.animator.set({x: offset});
     const press = pressRef.current;
-    // Under Reduce Motion, set the finger's lens and its copy in place. A played
-    // curve fades the copy out and back in at the lift.
-    if (
-      (press != null || fromLift) &&
-      body.animator.reducedMotion({}) !== 'off'
-    ) {
-      body.animator.set({
-        x:
-          press == null
-            ? 0
-            : chaseTarget(press.lastX, press.centers) -
-              press.centers[selectedIndex],
-      });
-      placeCopy();
-      if (press == null) {
-        dropCopyAtRest();
-      }
-      return;
-    }
     if (press != null) {
       // A finger is down (the selection changed under it): the lens keeps
       // heading for the finger, now measured from its new resting place.
