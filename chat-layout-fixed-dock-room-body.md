@@ -48,7 +48,7 @@ In `scrollRef` mode only, ChatLayout observes the dock's border-box height throu
 
 1. Red-first, at the document's end with no keyboard: main reads the newest message 102 px under the dock in `long`. It reads 138 px on a phone and 112 px on a desktop in `composer`. This head reads it 40 px above. Chromium and WebKit agree, phone and desktop.
 2. With the keyboard open in Safari on the iOS Simulator, main's double lift (#10690) hides the dock. With #10690's commit applied too, this head reads 40 px above in `long`, `composer` and `docked`.
-3. #8176 did not cause it. The same 102, 138 and 112 px read on 33bc644a (before #8176) and on 695653f5 (#8176). They also read on the release candidate c99ad4aa and on main with #8176 reverted locally. Chromium and WebKit agree, phone and desktop. It predates the v0.7 releases.
+3. #8176 did not cause it. The same 102, 138 and 112 px read on 33bc644a (before #8176) and on 695653f5 (#8176). They also read on the release candidate c99ad4aa and on main with #8176 reverted locally. Chromium and WebKit agree, phone and desktop.
 4. Who sees it: every ChatLayout whose `scrollRef` names an outer scroller, such as the document, in every browser. A self-scroll ChatLayout is not affected.
 
 ## Writing rubric results
