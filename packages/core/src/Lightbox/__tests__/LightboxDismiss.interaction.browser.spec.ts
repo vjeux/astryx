@@ -26,7 +26,9 @@ import {
   CONTROL_RGB,
   curveOf,
   drag,
+  FRAME_STARVATION_MS,
   frames,
+  FrameStarvationError,
   holdAnimations,
   openStory,
   releaseAnimations,
@@ -409,6 +411,42 @@ test('a gallery photo dismisses with a drag down', async ({page}) => {
   await expect(v.dialog).toBeHidden();
 });
 
+/**
+ * The judged window must last more than 100 ms. It ends at the first cast
+ * frame that shows the region settled. A compositor that presents few frames
+ * can end it early, by up to a frame. A shorter window fails by name, with
+ * the window and the frame times. It fails as starved of frames when a gap
+ * between cast frames there passes `FRAME_STARVATION_MS`.
+ */
+function expectLongEnoughWindow(
+  signal: ReadonlyArray<{readonly t: number}>,
+  from: number,
+  window: {readonly from: number; readonly to: number},
+): void {
+  const windowMs = window.to - window.from;
+  if (windowMs > 100) {
+    return;
+  }
+  const around = signal.filter(c => c.t >= from && c.t <= window.to + 1);
+  const times = around.map(c => (c.t - from).toFixed(1)).join(', ');
+  const longestGapMs = Math.max(
+    0,
+    ...around.slice(1).map((c, i) => c.t - around[i].t),
+  );
+  const numbers = {
+    during: `the dismissal's judged window, ${windowMs.toFixed(1)} ms (cast frames at ${times} ms after the block began)`,
+    frames: around.length,
+    min: Math.ceil(100 / 16.7),
+    longestGapMs,
+  };
+  if (longestGapMs > FRAME_STARVATION_MS) {
+    throw new FrameStarvationError(numbers);
+  }
+  throw new Error(
+    `The dismissal's judged window lasted ${windowMs.toFixed(1)} ms, where the proof needs more than 100 ms (cast frames at ${times} ms after the block began)`,
+  );
+}
+
 test('the dismissal keeps changing the screen every frame while the main thread is blocked', async ({
   page,
 }, testInfo) => {
@@ -463,7 +501,7 @@ test('the dismissal keeps changing the screen every frame while the main thread 
     },
     testInfo,
   );
-  expect(window.to - window.from).toBeGreaterThan(100);
+  expectLongEnoughWindow(signal, block.from, window);
   // Judged against the control. A two-core runner's software compositor and
   // the screencast share the core the block spins on. So every compositor
   // animation presents fewer frames there, the control's too. The screen

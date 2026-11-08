@@ -19,6 +19,7 @@ import {
   type Page,
 } from '@astryxdesign/a11y-spec/playwright';
 import {
+  type ActiveAnimation,
   blockMainThread,
   busyWindowProof,
   compareCurve,
@@ -44,6 +45,7 @@ import {
   withStorybook,
   writeEvidence,
 } from '@astryxdesign/interaction-harness';
+import {slowViewer} from './viewerTempo';
 
 const storybook = withStorybook(test);
 
@@ -442,30 +444,56 @@ test('the cancel keeps moving every frame while the main thread is blocked', asy
   // A compositor-only control animation in the same window: what the
   // compositor presented while the main thread spun, on this machine.
   await startBusyControl(page);
-  const cast = await startScreencast(page);
-  // Pulled 300 px, so the return is long enough to judge on a loaded runner.
+  // The same return at the default tempo, to compare the slowed one with.
+  // Pulled 300 px, so the return has travel to judge.
   await v.driver.play(pullThenFlickUp(v.centre, 300, 60));
-  // Blocked inside the page once the return runs on the compositor, 16 ms in,
-  // as the dismissal's proof is. A block started from the test lands later in
-  // the return, by a varying amount, and leaves less of it to judge.
-  const block = await blockMainThread(page, 600, {
+  const atTempo1 = curvesByProperty(await waitForAnimation(v.photo));
+  await waitForRest(v.photo);
+  // With the main thread blocked, a loaded runner's compositor presents a
+  // frame every 100 to 250 ms. The return moves for about half a second,
+  // which leaves too few frames to judge. So it plays at a slow tempo.
+  await slowViewer(page, CANCEL_TEMPO);
+  const since = await page.evaluate(() => performance.now());
+  const cast = await startScreencast(page);
+  await v.driver.play(pullThenFlickUp(v.centre, 300, 60));
+  // The page must read the drag as a cancel, so the photo returns. A drag
+  // read as a dismissal sends the photo out of the dialog. Nothing then
+  // returns to block on, so that fails here, by name.
+  expectReturn(await waitForAnimation(v.photo, {since}));
+  // Blocked inside the page once the return runs on the compositor. At this
+  // tempo the return lasts seconds, so a block started a round trip late
+  // still holds most of it. A wait armed before the drag would poll the page
+  // through the drag, and a loaded runner then stalls the drag's touches.
+  const block = await blockMainThread(page, CANCEL_BLOCK_MS, {
     during: v.photo,
     minProgressMs: 16,
   });
+  // Lightbox's own return played at that tempo, and still runs after the
+  // block. The size's curve starts at rest, so it is exactly that many times
+  // as long as at tempo 1. The position's curve carries the flick, whose
+  // speed the tempo leaves as it is, so it is a little less.
+  const slowed = curvesByProperty(await waitForAnimation(v.photo, {since}));
+  expect([...slowed.keys()].sort()).toEqual([...atTempo1.keys()].sort());
+  const ratioOf = (property: string) =>
+    (slowed.get(property)?.ms ?? Number.NaN) /
+    (atTempo1.get(property)?.ms ?? Number.NaN);
+  expect(ratioOf('scale')).toBeGreaterThan(CANCEL_TEMPO - 0.1);
+  expect(ratioOf('scale')).toBeLessThan(CANCEL_TEMPO + 0.1);
+  expect(ratioOf('translate')).toBeGreaterThan(CANCEL_TEMPO - 1);
+  expect(ratioOf('translate')).toBeLessThan(CANCEL_TEMPO + 0.1);
+  for (const [property, run] of slowed) {
+    expect(run.isRunning, property).toBe(true);
+  }
   // A few frames after the block, so the screencast holds its end.
   await frames(page, 6);
   const castFrames = await cast.stop();
   const tracked = await trackMarker(page, castFrames);
   const control = await trackMarker(page, castFrames, {rgb: CONTROL_RGB});
-  // The spring slows hard at its end. Near the end each 60 Hz frame moves it
-  // about 0.18 of what remains (2π / 0.5 s, critically damped). So within
-  // about 5.6 cast steps of its end a frame moves less than one step, and
-  // the cast shows plateaus there. Judging stops six cast steps from the end.
-  const proof = busyWindowProof(
-    tracked,
-    {from: block.from, to: block.to},
-    {axis: 'y', settledWithinSteps: 6, control},
-  );
+  const proof = busyWindowProof(tracked, block, {
+    axis: 'y',
+    settledWithinSteps: CANCEL_SETTLED_STEPS,
+    control,
+  });
   await writeEvidence(
     'busy-main-thread/lightbox-dismiss-cancel',
     {
@@ -485,6 +513,61 @@ test('the cancel keeps moving every frame while the main thread is blocked', asy
   expect(proof.monotonic).toBe(true);
   await expectRestored(v);
 });
+
+/**
+ * The tempo the busy cancel proof plays the viewer at. Blocked, WebKit's
+ * software compositor on a loaded runner presents a frame only every 190 to
+ * 250 ms. At tempo 5 the return moves for over two seconds, so its judged
+ * part holds enough such frames to judge.
+ */
+const CANCEL_TEMPO = 5;
+
+/** How long the busy cancel proof blocks the main thread, ms. */
+const CANCEL_BLOCK_MS = 2500;
+
+/**
+ * Where the busy cancel proof stops judging, in cast steps from the return's
+ * end. Near the end, each 60 Hz frame moves the spring about 0.042 of what
+ * remains (2π / 2.5 s, critically damped). So within about 23.9 cast steps
+ * of its end a frame moves less than one step, and the cast shows plateaus
+ * there.
+ */
+const CANCEL_SETTLED_STEPS = 24;
+
+/**
+ * Fails by name unless the photo's animations take it back to its place. A
+ * drag read as a dismissal moves the photo off the screen instead.
+ */
+function expectReturn(runs: ReadonlyArray<ActiveAnimation>): void {
+  const away = runs
+    .flatMap(run => {
+      const value = run.keyframes.at(-1)?.translate;
+      return typeof value === 'string' ? [value] : [];
+    })
+    .find(
+      value =>
+        Math.abs(Number.parseFloat(value.trim().split(/\s+/)[1] ?? '0')) > 1,
+    );
+  if (away != null) {
+    throw new Error(
+      `The drag was read as a dismissal; the photo left the dialog (its move ends at translate ${away})`,
+    );
+  }
+}
+
+/** Each animated property's curve length, and whether it still runs. */
+function curvesByProperty(runs: ReadonlyArray<ActiveAnimation>) {
+  const meta = new Set(['offset', 'easing', 'composite', 'computedOffset']);
+  return new Map(
+    runs.map(run => [
+      Object.keys(run.keyframes[0] ?? {})
+        .filter(key => !meta.has(key))
+        .sort()
+        .join(','),
+      {ms: run.to - run.from, isRunning: run.finishedAt == null},
+    ]),
+  );
+}
 
 test(
   'storyboard: a cancelled drag',
