@@ -2,7 +2,7 @@
 Stack: #9983 → #8217
 Merge group: #9983, #8217
 
-Review only this PR's change: https://github.com/vjeux/astryx/compare/86c74e8c304c69ffe8a5c2d57f591e19c35f3a1d...1fd9e0ed88a71bebaaa51876285faab06e92d09e, https://github.com/vjeux/astryx/compare/6fd4c287f900fc2e262c95da664f2aa6f0578701...680bf29d0c39692335dbde4a1322a39f1d2e82b7 and https://github.com/vjeux/astryx/compare/cc668a0e1bde4f872935b68286dcbb40a62315e1...8a7df57e539ad8bbf6686db12e24458bd7358ec1. Main merges sit between and after; one joins two `spec:AST-094` FR36 edits. The last one moves the bounce inside main's keyboard ride: https://github.com/vjeux/astryx/compare/52099ae9d10adc25ab68777f3f3f4aa7332df487..a56dc678209d1984bbb878c6916ad257f212e6e7. The head adds #9983's one-read fix.
+Review only this PR's change: https://github.com/vjeux/astryx/compare/86c74e8c304c69ffe8a5c2d57f591e19c35f3a1d...1fd9e0ed88a71bebaaa51876285faab06e92d09e, https://github.com/vjeux/astryx/compare/6fd4c287f900fc2e262c95da664f2aa6f0578701...680bf29d0c39692335dbde4a1322a39f1d2e82b7 and https://github.com/vjeux/astryx/compare/cc668a0e1bde4f872935b68286dcbb40a62315e1...8a7df57e539ad8bbf6686db12e24458bd7358ec1. Main merges sit between them; one joins two `spec:AST-094` FR36 edits. The last moves the bounce inside main's keyboard ride: https://github.com/vjeux/astryx/compare/52099ae9d10adc25ab68777f3f3f4aa7332df487..a56dc678209d1984bbb878c6916ad257f212e6e7. The head adds #9983's one-read fix, then a sandbox page: https://github.com/vjeux/astryx/compare/4a546c248e39c5a7ae936a0228d0e1ef6d84234e...9509d0bf41c72883c9fa6deb86eb45565a451ca9.
 
 ## User need
 
@@ -33,7 +33,7 @@ No new prop or type. ChatLayout's import grows by 26.6 kB gzip, mostly shared ge
 
 ## Evidence
 
-iOS 26.2 Simulator at this head: both drags dismiss (Testing).
+iOS 26.2 Simulator, sandbox page: both drags dismiss (Testing).
 
 ## Scope
 
@@ -70,17 +70,19 @@ The gesture system's pan, host and page hold make 75 kB of the minified growth. 
 - Units: `transcriptDismiss.test.ts` 32/32, `ChatLayoutTranscriptDismiss.test.tsx` 23/23, `composerBounce.test.ts` 7/7, `useChatKeyboard.test.tsx` 31/31, `dragAxes` 2/2. The theme-mark case fails on 9d66f5f3ad's source, and two strip cases on d19cf698ec's. Two cases cover a node made in another window; each fails with `instanceof` in place of `isNode` or `isElement`.
 - On today's main, 955564d284's code fails Core's typecheck (`isNodeTarget` is gone) and its Storybook build. This head passes both.
 - Mutants, each caught. A dismissal at the lift fails 11 units and two Chromium cases. A bounce on the composer alone fails the button case. A bounce on the dock container fails the Chrome-profile case (the merge by text above). Without the page hold, 4 units and both composer drags in Chromium fail. Without the composer pan, the drag down fails. A bounce at twice the finger's speed fails 3 units. Ignoring composer scrollers fails 2 units and the strip case. Dropping the long-press exception, the zoom check or the keyboard check fails 1 unit each. Counting a drift as the strip's axis fails 2 units and the drifting case.
-- iOS 26.2 Simulator at this head, HID drags (frames traced by the page):
-  - A drag down the conversation blurred the field at the composer's top. That was 0.9 s before the lift in a quick drag, and 5.1 s before it in a slow one.
-  - A drag down from the composer blurred it 165 ms after the touch. The page held 6 of its 11 moves, and the transcript stayed still.
+- iOS 26.2 Simulator at this head, on the sandbox's Chat Layout page (no Storybook frame), HID drags, frames traced by the page:
+  - A drag down the conversation blurred the field at the composer's top, 0.6 to 1 s before the lift.
+  - The bounce layer then dipped 0.6 to 3.8 px. Each frame's translate fell back to exactly 0: 3.81, 2.53, 1.60, 1.12, 0.77, 0.52, 0.24, 0.13, 0.02, 0 px.
+  - A drag down from the composer blurred it 104 to 149 ms after the touch. The page held 8 or 9 of its 11 moves, and the transcript stayed still.
   - In every traced frame, the composer stayed 44 px below the scroll-to-bottom button.
-  - After any blur, Safari reports the keyboard only once it is down. The composer then drops to rest in one frame, about 0.5 s after the blur. A blur from script does the same on main def46d15d9, so it isn't this change.
-- No keyboard open, main def46d15d9 and this head, Chromium and WebKit, desktop (1280 × 800) and phone (390 × 844 at 3×). The composer, dock, field and scroll button sit at the same offsets (0 px each). The transcript's scroll height is equal. At rest the dock has no containment. Captures, main left and this head right (https://github.com/vjeux/astryx/tree/0602ba52c83451214af759278c596616aadd78b3):
+  - After any blur, Safari reports the keyboard only once it is down. The composer then drops to rest in one frame, about 0.46 s after the blur. A blur from script does the same on main def46d15d9 with this page, so it isn't this change.
+- No keyboard open, on the sandbox's Chat Layout page: main def46d15d9 with that page, and this head. Chromium and WebKit, desktop (1280 × 800) and phone (390 × 844 at 3×). The composer, dock, field and scroll button sit at the same offsets (0 px each). The transcript's scroll height is equal, and the document does not scroll. At rest the dock has no containment. Captures, main left and this head right (https://github.com/vjeux/astryx/tree/7ad50852d320025f6e15937ff28228741b983f8f):
 
-  ![Chromium, desktop: main and this head](https://raw.githubusercontent.com/vjeux/astryx/0602ba52c83451214af759278c596616aadd78b3/chromium-desktop.png)
-  ![Chromium, phone: main and this head](https://raw.githubusercontent.com/vjeux/astryx/0602ba52c83451214af759278c596616aadd78b3/chromium-phone.png)
-  ![WebKit, desktop: main and this head](https://raw.githubusercontent.com/vjeux/astryx/0602ba52c83451214af759278c596616aadd78b3/webkit-desktop.png)
-  ![WebKit, phone: main and this head](https://raw.githubusercontent.com/vjeux/astryx/0602ba52c83451214af759278c596616aadd78b3/webkit-phone.png)
+  ![Chromium, desktop: main and this head](https://raw.githubusercontent.com/vjeux/astryx/7ad50852d320025f6e15937ff28228741b983f8f/chromium-desktop.png)
+  ![Chromium, phone: main and this head](https://raw.githubusercontent.com/vjeux/astryx/7ad50852d320025f6e15937ff28228741b983f8f/chromium-phone.png)
+  ![WebKit, desktop: main and this head](https://raw.githubusercontent.com/vjeux/astryx/7ad50852d320025f6e15937ff28228741b983f8f/webkit-desktop.png)
+  ![WebKit, phone: main and this head](https://raw.githubusercontent.com/vjeux/astryx/7ad50852d320025f6e15937ff28228741b983f8f/webkit-phone.png)
+- The sandbox's Chat Layout page renders ChatLayout with no sandbox chrome, for phone recordings. The sandbox's tests pass 62/62 with its route, and its build verifies 829 routes. The page logs no error in Chromium or WebKit. The sandbox typecheck reports the same 6 errors as main, none in the page.
 - At this head: test:ui 22,600 and test:node 17,413 passed; Chat accessibility specs 36/36. Core tsc, ESLint, `pnpm review:pre` and the repo checks (`sync:exports:check`, `verify-exports`, `check:repo`, `check:token-docs`, `check:motion-roles`, `check:changesets`, `check:knowledge`) pass.
 - Preview at this head: {PREVIEW}
 
