@@ -6445,7 +6445,7 @@ test.describe('page freeze', () => {
     // is held at its start. Only the lift is left to send.
     await freezePage(page);
     const finger = await driver.press({x: 20, y: 60});
-    const hold = await holdInputUntil(page, {afterResumeMs: 150});
+    const hold = await holdInputUntil(page, {afterResumeMs: 35});
     await thawPage(page);
     // The runner stalls 40 ms in every 45 from here, as a loaded one does.
     const stall = setInterval(() => {
