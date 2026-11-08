@@ -152,7 +152,7 @@ function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
       scroller.isConnected &&
       Math.abs(scrollTopOf(scroller, win) - added.at) <= KEYBOARD_EPSILON
     ) {
-      const behavior = reducesMotion(scroller) ? 'instant' : 'smooth';
+      const behavior = reducesMotion(scroller) ? 'smooth' : 'smooth';
       scrollTopTo(scroller, added.from, behavior, win);
     }
   }
