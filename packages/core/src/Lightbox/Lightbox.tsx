@@ -1008,11 +1008,16 @@ export function Lightbox({
         const opacity = dismisses ? 0 : 1;
         const move = (backdropMovesRef.current += 1);
         setBackdropMoving(true);
-        const backdropMotion = backdrop?.animate(
-          {opacity},
-          {spring},
-          {touchRelease: touch},
-        );
+        // NOT FOR LANDING: a dismissal starts the backdrop's fade 100 ms late,
+        // so a block that begins sooner holds the page's own level throughout.
+        const backdropMotion = dismisses
+          ? undefined
+          : backdrop?.animate({opacity}, {spring}, {touchRelease: touch});
+        if (dismisses && backdrop != null) {
+          setTimeout(() => {
+            backdrop.animate({opacity}, {spring}, {touchRelease: touch});
+          }, 100);
+        }
         for (const animator of chrome) {
           animator.animate({opacity}, {spring}, {touchRelease: touch});
         }
