@@ -114,8 +114,7 @@ function landingOf(
     points: [0, half, closed],
     position: travel,
     velocity: speed,
-    flickThreshold:
-      travel > DRAG_PROMOTION_SLOP_PX ? fastSpeed : Number.POSITIVE_INFINITY,
+    flickThreshold: fastSpeed,
     tolerance: detentTolerance,
     flickPastProjection: true,
     projection: {seconds: projectionSeconds, minSpeed: minProjectionSpeed},
