@@ -376,11 +376,13 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
       from = Math.min(from, at);
       to = Math.max(to, at);
     }
+    const startAt = -heldSign * curve.at(0);
+    const endAt = -heldSign * curve.at(curve.duration);
     return index => {
       const span = spans[index];
-      return (
-        span == null || (span.end > from && span.start < to + heldOuterWidth)
-      );
+      const showsAt = (at: number) =>
+        span == null || (span.end > at && span.start < at + heldOuterWidth);
+      return showsAt(startAt) || showsAt(endAt);
     };
   }
 
