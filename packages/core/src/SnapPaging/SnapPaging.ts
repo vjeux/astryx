@@ -252,7 +252,6 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
     if (!isMoving) {
       return;
     }
-    alignLeftOut();
     const nextSpan = span();
     const nextWidth = element.clientWidth;
     const native = nativePosition();
@@ -285,7 +284,6 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
   }
 
   function stops(): number[] {
-    alignLeftOut();
     return snapStops(element, position(), travel());
   }
 
