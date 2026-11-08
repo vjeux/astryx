@@ -18,7 +18,7 @@
 
 import {armClickGuard} from '../utils/clickGuard';
 import {matchesMediaQuery} from '../utils/coarsePointer';
-import {isTouchOnScreen, subscribeInput} from '../utils/inputStream';
+import {subscribeInput} from '../utils/inputStream';
 import {isNode} from '../utils/nodeType';
 import {layoutViewportHeight} from '../utils/layoutViewport';
 import {PRESS_SLOP_PX} from '../utils/pressGesture';
@@ -507,22 +507,12 @@ function watchTouchStarts(doc: Document, onTouchStart: () => void): () => void {
       return () => {};
     }
     const watches = new Set<() => void>();
-    const stopStarts = subscribeInput(view, 'touchstart', () => {
+    const stop = subscribeInput(view, 'touchstart', () => {
       for (const watch of [...watches]) {
         watch();
       }
     });
-    // Heard so the stream counts the fingers on the screen (isTouchOnScreen).
-    const stopEnds = subscribeInput(view, 'touchend', () => {});
-    const stopCancels = subscribeInput(view, 'touchcancel', () => {});
-    shared = {
-      stop: () => {
-        stopStarts();
-        stopEnds();
-        stopCancels();
-      },
-      watches,
-    };
+    shared = {stop, watches};
     touchStartWatches.set(doc, shared);
   }
   shared.watches.add(onTouchStart);
@@ -585,9 +575,7 @@ export function watchRevealPan(
               top: viewport.offsetTop,
               scale: viewport.scale,
             };
-      // A report while a finger is down, as when Firefox's toolbar hides in
-      // a drag, leaves that drag's pan to the person.
-      touchedSinceReport = isTouchOnScreen(win);
+      touchedSinceReport = false;
       isChromeReveal = null;
     },
     isRevealPan: height => {
