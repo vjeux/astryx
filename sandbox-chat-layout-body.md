@@ -24,17 +24,17 @@ No product code changes. The Sandbox gains one raw page; the route list, catalog
 ## Evidence
 
 - Failure before the change: no Sandbox page renders ChatLayout.
-- Success after the change, at d92232cd35, in Chromium and WebKit, on a phone (390 × 844) and a desktop (1280 × 800):
+- Success after the change, at a3676be0bd, in Chromium and WebKit, on a phone (390 × 844) and a desktop (1280 × 800):
   - `long`, `composer` and `streaming`: the dock is fixed at the viewport's bottom. The document scrolls (phone: 3,188, 1,129 and 1,308 px over 844) from its end.
   - `streaming`: the reply streams to its 297 characters in about 2.5 s, and the document stays at its end.
   - `docked`: the dock sticks to the panel's bottom. ChatLayout scrolls (1,290 px over 589), and the document does not.
   - No page error or hydration warning in either engine. WebKit's container logs only blocked font preconnects.
-  - Captures on a phone, left to right long, composer, streaming and docked (https://github.com/vjeux/astryx/tree/5919a695d8a07e67b71af2393f75268f2c2859a9):
+  - Captures on a phone, left to right long, composer, streaming and docked (https://github.com/vjeux/astryx/tree/87b68f86aff76545e0925788be2857144c4ac2b4):
 
-    ![Chromium, phone](https://raw.githubusercontent.com/vjeux/astryx/5919a695d8a07e67b71af2393f75268f2c2859a9/chromium-phone-cases.png)
-    ![WebKit, phone](https://raw.githubusercontent.com/vjeux/astryx/5919a695d8a07e67b71af2393f75268f2c2859a9/webkit-phone-cases.png)
+    ![Chromium, phone](https://raw.githubusercontent.com/vjeux/astryx/87b68f86aff76545e0925788be2857144c4ac2b4/chromium-phone-cases.png)
+    ![WebKit, phone](https://raw.githubusercontent.com/vjeux/astryx/87b68f86aff76545e0925788be2857144c4ac2b4/webkit-phone-cases.png)
 
-- Product/runtime behavior verified unchanged: no package source changed. The page shows a ChatLayout gap main already has. In the document-scroll cases, the newest message ends 102 px under the fixed dock. The message area pads its end by 24 px, and the dock is 142 px tall. That is for a separate fix.
+- Product/runtime behavior verified unchanged: no package source changed.
 - CI impact: none; no workflow changes.
 
 ## Scope
@@ -45,6 +45,6 @@ No product code changes. The Sandbox gains one raw page; the route list, catalog
 
 ## Testing
 
-- `chatLayoutPage.test.tsx` (node project): each case server-renders its name, the transcript, the composer's input and its Send button. An unknown or missing case is `long`. The Mention and Attach actions render in the composer case only, and every case but `docked` scrolls the document.
+- `chatLayoutPage.test.tsx` (node project): each case server-renders its name, the transcript, the composer's input and its Send button. An unknown or missing case is `long`. The Mention and Attach actions render in the composer case only. The docked case renders inside a Card panel, and the others render ChatLayout's root as the page.
 - `route-manifest.test.ts`: the route is in the export list. `?case=` client-renders, and the page hydrates without a query.
 - `pnpm -F @astryxdesign/sandbox test` (70 passed), the Sandbox build (832 routes verified), ESLint and Prettier pass. The Sandbox typecheck reports the same 6 errors as main, none in this page.
