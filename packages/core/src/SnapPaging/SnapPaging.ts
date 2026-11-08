@@ -419,13 +419,6 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
       for (const child of children()) {
         animatorFor(child).stop(properties);
       }
-      // Each child's animation stops on its own clock, and a child the
-      // settle left out kept its place. Every child of a held row moves to
-      // where the lead stopped.
-      if (isMoving && (properties == null || properties.includes('x'))) {
-        place(position());
-        leftOut = [];
-      }
     },
     play(curves, options) {
       takeOver();
