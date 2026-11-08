@@ -1000,9 +1000,6 @@ export function createPager(
             target = next;
             // The same page, renumbered: the owner hears it only through a
             // release's report still waiting.
-            if (pendingReport == null) {
-              report('controlled');
-            }
           }
         }
         changed = true;
