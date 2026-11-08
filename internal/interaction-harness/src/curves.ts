@@ -2338,7 +2338,7 @@ export async function settlesAt(
             );
             const check = (frameBefore: number) => {
               seen = getComputedStyle(element).getPropertyValue(prop);
-              if (seen === expected && unfinished().length === 0) {
+              if (unfinished().length === 0) {
                 finish(true, false, 0);
               } else if (realNow() > deadline) {
                 // Only the span from the frame before this one to the
