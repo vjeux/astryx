@@ -1082,6 +1082,12 @@ async function playSteps(
         pacedDeadline(pacing, origin, steps, index, previous, keepsGaps),
       );
     }
+    if (index % 3 === 1) {
+      const end = performance.now() + 20;
+      while (performance.now() < end) {
+        // A forced 20 ms runner stall before the send.
+      }
+    }
     const timestamp = stampFor(step.t);
     const dispatchedAt = Date.now();
     const sentAt = performance.now();
