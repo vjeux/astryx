@@ -324,6 +324,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /** Waits until `performance.now()` reaches `deadline` with ~0.1 ms precision. */
 async function until(deadline: number): Promise<void> {
+  deadline += 3;
   const remaining = deadline - performance.now();
   if (remaining > 3) {
     await sleep(remaining - 2);
