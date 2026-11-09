@@ -347,6 +347,16 @@ export function useTabBarLens({
     if (isReduced && isLifted) {
       shadow.animator.set({opacity: 1});
       glass.animator.set({opacity: 1});
+    } else if (isReduced) {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const late = {at: performance.now(), touchRelease};
+            shadow.animator.animate({opacity: 0}, spring, late);
+            glass.animator.animate({opacity: 0}, spring, late);
+          }),
+        ),
+      );
     } else {
       shadow.animator.animate({opacity: isLifted ? 1 : 0}, spring, options);
       glass.animator.animate({opacity: isLifted ? 1 : 0}, spring, options);
