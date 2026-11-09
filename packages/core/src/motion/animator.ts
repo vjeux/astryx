@@ -2011,6 +2011,7 @@ export function createMotionEngine(
     };
     const keyframes = baked?.keyframes ?? bakeKeyframes();
     promote(channel);
+    target.animate([{[channel]: format(channel, finalValue)}, {[channel]: format(channel, finalValue)}], {duration: span, fill: 'both'});
     const animation =
       baked != null && isCopyable(baked.effect)
         ? copyAnimation(baked.effect, target)
