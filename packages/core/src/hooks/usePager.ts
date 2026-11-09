@@ -1118,9 +1118,6 @@ export function createPager(
     pendingReport = null;
     stopSettle();
     pendingReport = waiting;
-    // The old settle's report timer may not have fired yet. It goes stale,
-    // so only the new settle's two-frame wait sends the report.
-    reportToken += 1;
     if (isRelease) {
       settleFrom(from, velocity, touchRelease, at);
       isSwipeSettle = isSwipe && settleHandle != null;
