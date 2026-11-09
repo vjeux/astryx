@@ -83,7 +83,7 @@ export const inputWrapperStyles = stylex.create({
   // and a fade would repaint the field on each frame of that rise.
   textField: {
     transitionDuration: {
-      default: durationVars['--duration-fast'],
+      default: '0s',
       '@media (prefers-reduced-motion: reduce)': '0s',
       '@media (pointer: coarse)': '0s',
     },
