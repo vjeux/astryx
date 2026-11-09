@@ -734,6 +734,8 @@ test('a finger catching the settle holds it where it is, then pulls on from ther
   // The settle back to the top is running: catch it 100 ms in.
   await waitForSettle(content);
   await page.waitForTimeout(100);
+  // NOT FOR LANDING: a runner 400 ms late, as a loaded machine is.
+  await page.waitForTimeout(400);
   // Where the settle stood as the finger landed. A listener reads it before
   // anything handles the touch. A reading taken earlier misses how far the
   // settle moved before the touch arrived.
