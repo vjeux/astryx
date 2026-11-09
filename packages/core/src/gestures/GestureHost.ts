@@ -2290,7 +2290,7 @@ export class GestureHost {
     let gesture = this.wheel;
     if (
       gesture != null &&
-      (gesture.kind !== kind || time - gesture.last >= gesture.endMs)
+      (gesture.kind !== kind || time - gesture.last > gesture.endMs)
     ) {
       this.endWheel(time);
       gesture = null;
