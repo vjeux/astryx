@@ -724,7 +724,6 @@ export async function blockMainThread(
               start >= callBegan &&
               start < waitBegan &&
               (entry.playedMs == null || entry.playedMs >= minProgress) &&
-              entry.ancestors.includes(element) &&
               counts(entry.animation)
             ) {
               return {
