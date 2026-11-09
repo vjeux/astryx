@@ -46,6 +46,7 @@ import {
   touchDriver,
   type TouchScript,
   traceRendering,
+  trackMarker,
   trackMarkers,
   waitForRest,
   withStorybook,
@@ -1433,6 +1434,34 @@ test(
     const [tracked, control] = await trackMarkers(page, castFrames, {
       colors: [MARKER_RGB, CONTROL_RGB],
     });
+    // NOT FOR LANDING: one decode for both colours against one per
+    // colour, each on its own copy of the same cast, in alternating order.
+    {
+      const one = async () => {
+        const t = performance.now();
+        const r = await trackMarkers(page, [...castFrames], {
+          colors: [MARKER_RGB, CONTROL_RGB],
+        });
+        return {ms: performance.now() - t, r};
+      };
+      const two = async () => {
+        const t = performance.now();
+        const r = [
+          await trackMarker(page, [...castFrames]),
+          await trackMarker(page, [...castFrames], {rgb: CONTROL_RGB}),
+        ];
+        return {ms: performance.now() - t, r};
+      };
+      const oneFirst = test.info().repeatEachIndex % 2 === 0;
+      const x = oneFirst ? await one() : await two();
+      const y = oneFirst ? await two() : await one();
+      const [o, w] = oneFirst ? [x, y] : [y, x];
+      expect(o.r).toEqual(w.r);
+      expect(o.r).toEqual([tracked, control]);
+      console.log(
+        `DECODE-TIMING frames=${castFrames.length} one=${o.ms.toFixed(0)} two=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'two'}`,
+      );
+    }
     // Judged until two of the cast's own steps from rest: 2 px in
     // Chromium's PNG cast, 4 px in WebKit's JPEG cast. WebKit's tail then
     // shows the cast's 2 px plateaus, not a stall.

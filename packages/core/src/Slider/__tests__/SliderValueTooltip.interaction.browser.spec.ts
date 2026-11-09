@@ -25,6 +25,7 @@ import {
   openStory,
   startScreencast,
   touchDriver,
+  trackMarker,
   trackMarkers,
   waitForRest,
   withStorybook,
@@ -441,6 +442,34 @@ test.describe('with a finger', () => {
     const [thumbs, tooltips] = await trackMarkers(page, shot, {
       colors: [MARKER_RGB, CONTROL_RGB],
     });
+    // NOT FOR LANDING: one decode for both colours against one per
+    // colour, each on its own copy of the same cast, in alternating order.
+    {
+      const one = async () => {
+        const t = performance.now();
+        const r = await trackMarkers(page, [...shot], {
+          colors: [MARKER_RGB, CONTROL_RGB],
+        });
+        return {ms: performance.now() - t, r};
+      };
+      const two = async () => {
+        const t = performance.now();
+        const r = [
+          await trackMarker(page, [...shot]),
+          await trackMarker(page, [...shot], {rgb: CONTROL_RGB}),
+        ];
+        return {ms: performance.now() - t, r};
+      };
+      const oneFirst = test.info().repeatEachIndex % 2 === 0;
+      const x = oneFirst ? await one() : await two();
+      const y = oneFirst ? await two() : await one();
+      const [o, w] = oneFirst ? [x, y] : [y, x];
+      expect(o.r).toEqual(w.r);
+      expect(o.r).toEqual([thumbs, tooltips]);
+      console.log(
+        `DECODE-TIMING frames=${shot.length} one=${o.ms.toFixed(0)} two=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'two'}`,
+      );
+    }
     const pairs = thumbs.flatMap((frame, index) => {
       const other = tooltips[index]?.box;
       return frame.box != null && other != null
