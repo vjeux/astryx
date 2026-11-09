@@ -229,6 +229,21 @@ async function installBarReader(page: Page): Promise<void> {
           continue;
         }
         cards[key] = translateX(card);
+        // NOT FOR LANDING: once, at the covered card's first moving read, a
+        // 25 ms stall before its bar's read, as on a starved runner.
+        const flag = window as unknown as {__stalledOnce?: boolean};
+        if (
+          flag.__stalledOnce !== true &&
+          key === 'root' &&
+          cards[key] < -0.5 &&
+          cards[key] > -110
+        ) {
+          flag.__stalledOnce = true;
+          const until = performance.now() + 25;
+          while (performance.now() < until) {
+            // The stall.
+          }
+        }
         const keyBars = document.querySelectorAll(
           `[data-navigation-bar="${CSS.escape(key)}"]`,
         );
