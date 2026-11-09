@@ -471,7 +471,7 @@ function reveal(
     sitsInBand(field, scroller, height, offset, win, -distance) &&
     risesSmoothly(field);
   // A rise still on its way extends Core's own scroll.
-  const before = keyboardScrollTarget(scroller, win) ?? now;
+  const before = now;
   scrollBy(scroller, distance, win, rises ? 'smooth' : 'instant');
   if (height > KEYBOARD_EPSILON) {
     noteKeyboardScroll(scroller, before, win, rises ? target : undefined);
