@@ -138,6 +138,7 @@ const styles = stylex.create({
     // browser. The hold's selection lock stops text selection while the
     // finger is down, so a mouse keeps the page's selection. Where the
     // pointer is fine, a finger gets the browser's defaults.
+    userSelect: 'text',
     touchAction: {
       default: null,
       '@media (pointer: coarse)': 'manipulation',
