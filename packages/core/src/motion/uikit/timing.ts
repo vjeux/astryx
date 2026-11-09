@@ -106,7 +106,7 @@ export const reducedMotionCrossFade = {
    *   Cross-Fade Transitions on (opacity CABasicAnimation 0.5 s,
    *   (0.42, 0, 0.58, 1)), Oct 23 2026
    */
-  durationMs: 200,
+  durationMs: 100,
   /**
    * `easeInEaseOut`; UIKit's default curve (`UIView.AnimationCurve
    * .easeInOut`, "the default curve for most animations").
