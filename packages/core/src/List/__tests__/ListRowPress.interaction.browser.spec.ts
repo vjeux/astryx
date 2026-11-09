@@ -463,7 +463,27 @@ test('a busy first frame after the lift still plays the whole release before the
       while (performance.now() < until) {
         // Busy: the main thread is held.
       }
+      // NOT FOR LANDING: the attribute goes one frame before the release
+      // animation ends.
+      let cutSet = false;
       const sample = (time: number) => {
+        const running = el
+          .getAnimations({subtree: true})
+          .find(
+            animation =>
+              (animation.effect as KeyframeEffect | null)?.pseudoElement ===
+              '::before',
+          );
+        if (!cutSet && running?.startTime != null) {
+          cutSet = true;
+          const endsAt =
+            Number(running.startTime) +
+            Number(running.effect?.getComputedTiming().endTime);
+          setTimeout(
+            () => el.removeAttribute('data-astryx-press'),
+            endsAt - 1000 / 60 - performance.now(),
+          );
+        }
         const layer = getComputedStyle(el, '::before');
         const strength =
           layer.content === 'none' || layer.content === 'normal'
