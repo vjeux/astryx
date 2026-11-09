@@ -160,7 +160,7 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
           settle = null;
           const active = win.document.activeElement;
           if (
-            !isTouchOnScreen(win) &&
+            true &&
             (active == null ||
               (!bringsUpKeyboard(active) && !hidesField(active)))
           ) {
