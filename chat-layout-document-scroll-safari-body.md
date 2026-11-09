@@ -59,7 +59,7 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
 - Firefox for Android in the emulator, at a64d445a42, with animations at normal scale, slow and removed:
   - Scroll, fling and scroll back with the keyboard up: the composer stays on the visual viewport's bottom, worst −0.5 px, as on main.
   - First show: covered 668 to 814 ms before the lift at normal scale, and 675 ms with animations removed (main: 0 ms). In two takes Firefox's own pan revealed it at 155 and 188 ms. Each is within Gap 16's wait, which ends at 3 s at most.
-  - Second show: 0 ms at normal and slow scale, as on main. With animations removed, one of three takes was covered 599 ms.
+  - Second show: 0 ms at normal and slow scale, as on main. With animations removed, one of three takes was covered 599 ms. In that take, Firefox's own pan revealed the first show, so the page learned nothing. Its second show was the first the browser left covered, so the composer stayed covered until Gap 16's wait ended.
   - Frame times during the follow: p50 17 to 21 ms against main's 17 to 19 ms, with p95 and max overlapping. Chrome for Android, the control: p50 24 ms against main's 24.5 ms. No added long frames at any scale.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
