@@ -46,7 +46,7 @@ Only `useChatStreamScroll.ts` changes, with no new API, prop, default or visual 
 - `pnpm exec vitest run --project ui packages/core/src/Chat/`: 496/496 at 45130f992c. New: four hook cases for a page scroller and one ChatLayout case. On main, the hook case "shows the scroll button and stops following when the reader scrolls the page up" and the ChatLayout case fail.
 - `useChatStreamScrollPage.a11y.browser.spec.ts`, new, in Chromium and in WebKit: 3/3 in each of 5 runs per engine at 45130f992c. On main, 2 of 3 fail in each engine, in each of 2 runs.
 - `pnpm exec tsc` and ESLint: clean. `pnpm review:pre`: 0 findings, and the branch merges clean with main.
-- The sandbox Chat Layout page at `?case=long`, where the page scrolls its document, built at 45130f992c and with main's hook. After a 600 px wheel scroll up from the end, the button stays hidden on main and shows with the fix, in Chromium and in WebKit:
+- The sandbox Chat Layout page at `?case=long`, where the page scrolls its document, built at 45130f992c and with main's hook. After a 600 px wheel scroll up from the end, the button stays hidden on main and shows with the fix, in both engines:
 
 | Engine | main | fix |
 | --- | --- | --- |
