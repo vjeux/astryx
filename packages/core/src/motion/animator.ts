@@ -813,7 +813,6 @@ const sheetReads: SheetRead[] = [];
 interface SheetRead {
   /** Takes the promotion off the element, so a read sees its stylesheet. */
   readonly lift: () => void;
-  /** Reads the stylesheet's will-change. */
   readonly read: () => void;
   /** Writes the promotion back with the stylesheet's reasons. */
   readonly write: () => void;
