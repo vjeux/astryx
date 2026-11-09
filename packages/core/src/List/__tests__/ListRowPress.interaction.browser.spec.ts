@@ -32,6 +32,7 @@ import {
   type Page,
 } from '@astryxdesign/a11y-spec/playwright';
 import {
+  FRAME_STARVATION_MS,
   animationStoryboard,
   armHold,
   blockMainThread,
@@ -45,6 +46,7 @@ import {
   openStory,
   readLongTasks,
   releaseAnimations,
+  requireFrames,
   seekAnimations,
   startScreencast,
   tap,
@@ -489,19 +491,34 @@ test('a busy first frame after the lift still plays the whole release before the
         .__frames,
   );
   const fading = frames.filter(([, , press]) => press === 'fading');
+  const samples = frames.map(([t, strength, press]) => ({t, strength, press}));
   // WebKit can start the release at the time the busy script began, so its
   // first frame after the block can already be near rest (opacity 0.03
   // measured) and few frames remain. There, only the end and the order of
-  // the frames hold.
+  // the frames hold. A page starved of frames fails by name.
   if (browserName !== 'webkit') {
-    expect(fading.length, JSON.stringify(frames)).toBeGreaterThan(3);
+    requireFrames(samples, {
+      min: 4,
+      during: 'the release played',
+      where: frame => frame.press === 'fading',
+    });
   }
-  // The last frame still fading is at rest or within one frame of it: the
-  // attribute goes once the release has played, however late it started.
-  const oneFrameFromRest = strengthAt(exit, exit.ms - 17) + 0.01;
-  expect(fading.at(-1)?.[1], JSON.stringify(frames)).toBeLessThanOrEqual(
-    oneFrameFromRest,
-  );
+  // The attribute goes once the release has played, however late it started.
+  // So the last fading frame is no stronger than the curve as far before its
+  // end as the next frame came, one frame at least. A page that drew no frame
+  // for longer than FRAME_STARVATION_MS there fails by name.
+  const last = fading.at(-1);
+  const gone = frames.find(([, , press]) => press !== 'fading');
+  if (last != null && gone != null) {
+    requireFrames(samples, {
+      min: 2,
+      during: 'the release reached rest and the press attribute went',
+      where: frame => frame.t >= gone[0] - FRAME_STARVATION_MS,
+    });
+  }
+  const gapMs = last != null && gone != null ? gone[0] - last[0] : 0;
+  const fromRest = strengthAt(exit, exit.ms - Math.max(17, gapMs)) + 0.01;
+  expect(last?.[1], JSON.stringify(frames)).toBeLessThanOrEqual(fromRest);
   // And the release played on the way there, frame by frame.
   for (let i = 1; i < fading.length; i++) {
     expect(fading[i][1], JSON.stringify(frames)).toBeLessThanOrEqual(
