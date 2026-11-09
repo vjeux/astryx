@@ -55,6 +55,11 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
   - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2422/2422.
 - Safari on the iOS 26.2 Simulator, in scripted traces at 729784099d (browser and home-screen app): a tap, then drags with the keyboard up. The dock's applied lift is 0 px on every frame, and it never flips direction within 100 ms, as on 33bc644a. Safari's own slide on a slow drag toward the top stays as in earlier releases (Gap 17, #10718).
 - In Firefox, while a scroll moves the pan after input, each report moves only the dock's translate. The layout takes the lift when the last finger lifts. After a fling, it takes it again when the fling comes to rest.
+- Firefox for Android in the emulator, at a64d445a42, with animations at normal scale:
+  - Scroll, fling and scroll back with the keyboard up: the composer stays on the visual viewport's bottom, worst −0.4 px, as on main.
+  - First show: covered 668 to 814 ms before the lift (main: 0 ms), under the 1.5 s bar (Gap 16).
+  - Second show: 0 ms, as on main.
+  - Frame times during the follow: p50 17 to 21 ms against main's 17 to 19 ms, with p95 and max overlapping. Chrome: 24 against 24.5 ms. No added long frames.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
@@ -65,7 +70,7 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
 1. Red-first: the frames and unit cases above.
 2. #8176 caused it. After a tap in `long`, the dock's top reads 235 px on 33bc644a (before #8176) and on main with #8176 reverted. It reads −102 px on 695653f5 (#8176) and on the release candidate c99ad4aa.
 3. Who sees it: every composer tap in a ChatLayout whose `scrollRef` is the document, in Safari on iOS.
-4. The cost is in Firefox for Android. A page's first show that leaves the composer covered keeps it so for about 0.75 s on a slow device. That was 731 to 755 ms at df30dc50e0, whose wait this head keeps. Later shows lift at once. Chrome never takes this path. The follow-up is #10703.
+4. The cost is in Firefox for Android. A page's first show that leaves the composer covered keeps it so for about 0.7 s. That was 731 to 755 ms on a slow device at df30dc50e0, and 668 to 814 ms at a64d445a42. Later shows lift at once. Chrome never takes this path. The follow-up is #10703.
 5. Safari on iOS keeps its own slide on a slow scroll toward the top, as in earlier releases (Gap 17, #10718). Chrome's intermittent late pan in the `long` case predates this change (#10713).
 
 ## Writing rubric results
