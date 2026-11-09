@@ -1081,14 +1081,10 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
   const castFrames = await cast.stop();
   const tracked = await trackMarker(page, castFrames);
   const control = await trackMarker(page, castFrames, {rgb: CONTROL_RGB});
-  // Every frame the control moves on is judged by the edge's own step. A
-  // frame the cast's 1 px step cannot show the edge's move on is too little
-  // to judge, and fails by name (`BusyFrameUnjudgedError`).
   const proof = busyWindowProof(tracked, block, {
     axis: ZOOM_AXIS,
     settledWithin: ZOOM_SETTLED_PX,
     control,
-    judgeEveryFrame: true,
   });
   await writeEvidence(
     'busy-main-thread/lightbox-double-tap-zoom',
@@ -1130,9 +1126,9 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
   expect(proof.verdict.failures).toEqual([]);
   // The verdict, spelled out. The top edge takes a new position on every
   // frame the control moves, with none excused as under a cast step. The
-  // control moves on at least the verdict's floor of four frames. With
-  // `judgeEveryFrame`, an excused frame throws first, so `belowStep` stays a
-  // guard on that option.
+  // control moves on at least the verdict's floor of four frames. A frame
+  // whose predicted move is under the cast's step is named in `unjudged`,
+  // not excused.
   expect(proof.control?.movedWith).toBe(proof.control?.moved);
   expect(proof.control?.belowStep).toBe(0);
   expect(proof.control?.moved).toBeGreaterThanOrEqual(4);
