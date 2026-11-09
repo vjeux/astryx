@@ -576,6 +576,37 @@ async function recordTrackRuns(
 /** The slowed tempo the busy page-settle proofs play the viewer at. */
 const SETTLE_TEMPO = 5;
 
+/**
+ * NOT FOR LANDING: spins the main thread for 200 ms once the track's next
+ * settle has run 16 ms, as a loaded runner can. The block that settle's run
+ * starts then starts 200 ms late.
+ */
+async function spikeNextBlock(track: Locator): Promise<void> {
+  await track.evaluate(element => {
+    const before = new Set(element.getAnimations());
+    const look = () => {
+      const started = element
+        .getAnimations()
+        .some(
+          a =>
+            !before.has(a) &&
+            a.playState === 'running' &&
+            !a.pending &&
+            Number(a.currentTime ?? 0) >= 16,
+        );
+      if (!started) {
+        requestAnimationFrame(look);
+        return;
+      }
+      const start = performance.now();
+      while (performance.now() - start < 200) {
+        // Spin.
+      }
+    };
+    requestAnimationFrame(look);
+  });
+}
+
 /** The middle value, or the mean of the two middle ones. */
 function median(values: ReadonlyArray<number>): number {
   const sorted = [...values].sort((a, b) => a - b);
@@ -968,6 +999,7 @@ for (const late of ['two frames', '450 ms'] as const) {
     // from the median one. The delayed settle then stays still for that long,
     // then for two frames and a little more or for 450 ms. That is past the
     // one frame the proof skips.
+    await spikeNextBlock(g.track);
     const first = await pooledSettleProof(page, g, ['next']);
     const lags = [
       first.blocks[0].from - first.settles[0].from,
