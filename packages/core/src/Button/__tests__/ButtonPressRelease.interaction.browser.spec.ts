@@ -760,6 +760,17 @@ test('after a busy first frame, the release starts at that frame and keeps a but
               resolve(frames);
               return;
             }
+            // RED ARM, NOT FOR LANDING: the trace misses the frames around
+            // the release's end once, as a page starved of frames would.
+            const arm = window as unknown as {__armDone?: boolean};
+            if (
+              !arm.__armDone &&
+              Number(getComputedStyle(el, '::before').opacity) < 0.25
+            ) {
+              arm.__armDone = true;
+              setTimeout(() => requestAnimationFrame(sample), 90);
+              return;
+            }
             requestAnimationFrame(sample);
           };
           requestAnimationFrame(sample);
