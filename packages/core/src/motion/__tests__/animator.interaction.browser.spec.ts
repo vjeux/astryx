@@ -304,7 +304,9 @@ test('a move driven from the main thread freezes through the same block, and the
   await open(page);
   const box = page.locator('#box');
   await markElement(box, {inset: MARKER_INSET});
-  await startBusyControl(page);
+  // MUTANT (evidence, not for landing): the second control and both starts.
+  const {start: controlStart} = await startBusyControl(page);
+  const {start: secondStart} = await startBusyControl(page, {ahead: true});
   const cast = await startScreencast(page);
   // The travel is written each frame, and the page blocks itself from a task
   // queued in its eighth frame, as `blockMainThread`'s `during` does for an
@@ -349,10 +351,13 @@ test('a move driven from the main thread freezes through the same block, and the
   const frames = await cast.stop();
   const tracked = await trackMarker(page, frames);
   const control = await trackMarker(page, frames, {rgb: CONTROL_RGB});
+  const second = await trackControl(page, frames, {ahead: true});
   const proof = busyWindowProof(tracked, busy, {
     axis: 'x',
     settledWithin: 2,
     control,
+    ahead: second,
+    controlStarts: [controlStart, secondStart],
   });
   test
     .info()
