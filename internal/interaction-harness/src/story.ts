@@ -208,13 +208,12 @@ export async function frames(page: Page, count = 2): Promise<void> {
             }
             last = now();
             drawn += 1;
-            clearTimer(stall);
             if (drawn >= n) {
               isDone = true;
+              clearTimer(stall);
               resolve(null);
               return;
             }
-            stall = timeout(onStall, stallMs);
             frame(tick);
           };
           frame(tick);
