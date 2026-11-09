@@ -207,13 +207,11 @@ function attach(win: Window, store: KeyboardStore): () => void {
   let stepHeight = 0;
   let stepLimit = 0;
   const deliver = (height: number, timeStamp: number) => {
-    const wasUp =
-      store.height > KEYBOARD_EPSILON || store.room > KEYBOARD_EPSILON;
-    store.height = height;
-    store.room = measureResizedRoom(win, store, height);
-    if (wasUp && height <= KEYBOARD_EPSILON && store.room <= KEYBOARD_EPSILON) {
+    if (height <= KEYBOARD_EPSILON && store.height > KEYBOARD_EPSILON) {
       store.startsAtHide = getTouchStartCount(win);
     }
+    store.height = height;
+    store.room = measureResizedRoom(win, store, height);
     const report: KeyboardHeightEvent = {type: 'viewport', height, timeStamp};
     for (const listener of [...store.listeners]) {
       listener(report);
