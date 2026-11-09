@@ -2435,7 +2435,7 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
   // The list's own pointer listeners, on its DOM element.
   useIsomorphicLayoutEffect(
     () => controller.attachMouse(),
-    [controller, listChanges],
+    [controller],
   );
   // Syncs the handles' names with the list's rows and their label elements
   // in the DOM, through the session's observer.
