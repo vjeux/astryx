@@ -488,7 +488,7 @@ function reveal(
   // A rise still on its way extends Core's own scroll.
   const before = keyboardScrollTarget(scroller, win) ?? now;
   scrollBy(scroller, distance, win, rises ? 'smooth' : 'instant');
-  if (height > KEYBOARD_EPSILON || resized) {
+  if (height > KEYBOARD_EPSILON) {
     noteKeyboardScroll(scroller, before, win, rises ? target : undefined);
   }
   return rises ? target - scrollTopOf(scroller, win) : 0;
