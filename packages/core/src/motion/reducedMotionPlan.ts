@@ -106,6 +106,13 @@ export interface ReducedMotionPlan {
 const IDENTITY_OPACITY = 1;
 
 /**
+ * An opacity at or below this shows nothing a person can see: about one step
+ * of an 8-bit channel. Travel lands under it as under 0, so an entrance that
+ * starts there lands at once and fades in from it.
+ */
+const INVISIBLE_OPACITY = 0.004;
+
+/**
  * Plans one call under Reduce Motion: with `fade`, an opacity-only
  * cross-fade whose travel lands while the element is transparent; without,
  * everything at once. `role` gives a call that names no opacity its
@@ -206,7 +213,11 @@ export function planReducedMotion(
   // entrance that starts visible, or an exit that ends visible, dips instead
   // when it has travel or a waiting landing to carry.
   const carries = travel.length > 0 || pending;
-  if (entering && !pending && (!carries || fadeFrom <= 1e-6)) {
+  if (
+    entering &&
+    !pending &&
+    (!carries || fadeFrom <= INVISIBLE_OPACITY + 1e-6)
+  ) {
     // Lands at once (the travel is written at once) and fades in.
     return {
       atOnce,
