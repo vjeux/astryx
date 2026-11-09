@@ -349,6 +349,17 @@ turn, the one ahead is mid-leg. Track it with `trackControl(page, frames,
 resolves with each control's `start` on the page clock, where its own time
 is zero. Keep the component's marker out of the top 28 px then.
 
+In WebKit, a busy proof with a control judges every frame on the control's
+clock by default, not on the screencast's stamps. WebKit stamps the frame after
+a delivery gap about 60 ms late, and its compositor can draw two frames 7 ms
+apart. So `busyWindowProof` and `pooledBusyProof` date each WebKit frame from
+the controls (`ahead` and `controlStarts` are optional, per run in a pool). A
+frame with no reading keeps its stamp's distance from the nearest frame with
+one. The proof then keeps the latest frame of each 60 Hz interval, the
+component's and the control's alike. Chromium casts and casts with no control
+are judged on their stamps. A late frame that falls near the first control's
+turn keeps its lateness unless the control ahead is tracked.
+
 An animation that lasts a fraction of a second, such as a 0.2 s fade, leaves a
 block only a few frames to judge: in WebKit, or on a loaded machine, the control
 can present fewer than four, and one run cannot decide. Play it several times
