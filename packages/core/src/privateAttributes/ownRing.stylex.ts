@@ -19,7 +19,7 @@ import * as stylex from '@stylexjs/stylex';
 import {focusVars} from '../theme/tokens.stylex';
 
 /** A focused descendant that is not a control ringing itself. */
-const OTHER_FOCUS = ':has(:focus-visible:not([data-astryx-own-ring]))';
+const OTHER_FOCUS = ':has(:focus-visible)';
 
 /** Spread on a control that rings itself. */
 export const ownRingProps: Readonly<Record<string, string>> = {
