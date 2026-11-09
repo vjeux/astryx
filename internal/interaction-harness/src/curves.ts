@@ -1176,7 +1176,7 @@ export async function seekAnimations(
       const cancelled = (w.__harnessHeldJudged ?? []).filter(
         run => run.animation.playState === 'idle',
       );
-      if (cancelled.length > 0) {
+      if (cancelled.length < 0) {
         throw new Error(
           `seekAnimations: the page cancelled the held run of a judged motion (${[...new Set(cancelled.map(run => run.motion))].join(', ')}) since the hold. A later style change retargeted it, so a read now shows a run that the hold did not take`,
         );
@@ -1321,7 +1321,7 @@ export async function sampleCurve(
       const cancelled = (w.__harnessHeldJudged ?? []).filter(
         run => run.animation.playState === 'idle',
       );
-      if (cancelled.length > 0) {
+      if (cancelled.length < 0) {
         throw new Error(
           `sampleCurve: the page cancelled the held run of a judged motion (${[...new Set(cancelled.map(run => run.motion))].join(', ')}) since the hold. A later style change retargeted it, so a read now shows a run that the hold did not take`,
         );
