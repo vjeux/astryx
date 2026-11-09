@@ -1012,8 +1012,6 @@ export function PowerSearchBottomSheet({
       // against them, not the previous session's draft.
       setFiltersAtOpen(committedFilters);
       setFilters(committedFilters);
-      draftRef.current = committedFilters;
-      draftEditsRef.current = [];
       const startsOnAddFilter = committedFilters.length === 0 && isInteractive;
       setFieldQuery('');
       setContentQuery('');
@@ -1025,6 +1023,15 @@ export function PowerSearchBottomSheet({
       setIsDiscardConfirmationOpen(false);
     }
   }
+  // Starts each open flow's draft and edit log from the filters it opened
+  // with, at the commit that opens it. The host's `isOpen` owns the open, so
+  // no handler here sees it, and a render React discards resets nothing.
+  useLayoutEffect(() => {
+    if (wasOpen) {
+      draftRef.current = filtersAtOpen;
+      draftEditsRef.current = [];
+    }
+  }, [wasOpen, filtersAtOpen]);
 
   const closeFlow = useCallback(() => {
     pendingSheetFocusRef.current = null;
