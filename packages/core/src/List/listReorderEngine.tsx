@@ -1009,7 +1009,7 @@ export class ListReorderController implements ListReorderSession {
         watch?.labels.delete(element);
       }
     }
-    if (changed) {
+    if (changed && false) {
       for (const listener of [...this.nameListeners]) {
         listener();
       }
