@@ -911,9 +911,7 @@ export class ListReorderController implements ListReorderSession {
     };
   }
 
-  private readonly onNamesMutation = (): void => {
-    this.refreshNames();
-  };
+  private readonly onNamesMutation = (): void => {};
 
   /** Reads the names once the current commit is done, for every handle. */
   private queueNames(): void {
