@@ -158,6 +158,61 @@ async function monthsIn(viewport: Locator): Promise<number> {
   });
 }
 
+/**
+ * Records each text the open sheet's polite live region exposes, starting
+ * with what it exposes now. The returned function reads the record.
+ */
+async function recordAnnouncements(
+  page: Page,
+): Promise<() => Promise<string[]>> {
+  await page.evaluate(() => {
+    const sheet = document.querySelector('dialog[open]');
+    if (sheet == null) {
+      throw new Error('no open sheet');
+    }
+    const regionText = () =>
+      sheet.querySelector(':scope > [data-astryx-modal-live-region="polite"]')
+        ?.textContent ?? '';
+    let shown = regionText();
+    const heard: string[] = shown === '' ? [] : [shown];
+    new MutationObserver(() => {
+      const text = regionText();
+      if (text !== shown && text !== '') {
+        heard.push(text);
+      }
+      shown = text;
+    }).observe(sheet, {subtree: true, childList: true, characterData: true});
+    (window as unknown as {heardInSheet: string[]}).heardInSheet = heard;
+  });
+  return async () =>
+    page.evaluate(
+      () => (window as unknown as {heardInSheet: string[]}).heardInSheet,
+    );
+}
+
+/** Opens the DateTimeInput story's sheet calendar under a finger. */
+async function openDateTimeCalendar(
+  page: Page,
+): Promise<{driver: TouchDriver; viewport: Locator}> {
+  await openStory(page, storybook(), 'core-datetimeinput--native-picker-modes');
+  const driver = await touchDriver(page);
+  // The third field is the one whose calendar opens in the sheet.
+  const opener = page.getByRole('button', {name: 'Open calendar'}).nth(2);
+  const box = await opener.boundingBox();
+  if (box == null) {
+    throw new Error('no opener');
+  }
+  await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
+  const viewport = page.locator('[data-scroller="months"]');
+  await expect(viewport).toBeVisible();
+  await settlesAt(
+    page.getByRole('dialog').locator('.astryx-bottom-sheet').first(),
+    'transform',
+    'matrix(1, 0, 0, 1, 0, 0)',
+  );
+  return {driver, viewport};
+}
+
 /** A drag that rests before the lift, so the release velocity is 0. */
 function slowDrag(from: {x: number; y: number}, dx: number, dy = 0) {
   return drag(
@@ -324,22 +379,7 @@ test('after a flick, a screen reader reaches only the month shown', async ({
 test('DateTimeInput: after a flick, a screen reader reaches only the month shown', async ({
   page,
 }) => {
-  await openStory(page, storybook(), 'core-datetimeinput--native-picker-modes');
-  const driver = await touchDriver(page);
-  // The third field is the one whose calendar opens in the sheet.
-  const opener = page.getByRole('button', {name: 'Open calendar'}).nth(2);
-  const box = await opener.boundingBox();
-  if (box == null) {
-    throw new Error('no opener');
-  }
-  await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
-  const viewport = page.locator('[data-scroller="months"]');
-  await expect(viewport).toBeVisible();
-  await settlesAt(
-    page.getByRole('dialog').locator('.astryx-bottom-sheet').first(),
-    'transform',
-    'matrix(1, 0, 0, 1, 0, 0)',
-  );
+  const {driver, viewport} = await openDateTimeCalendar(page);
   const grids = page.getByRole('grid');
   await expect(grids).toHaveCount(1);
   await expect(grids).toHaveAccessibleName('March 2026');
@@ -356,6 +396,44 @@ test('DateTimeInput: after a flick, a screen reader reaches only the month shown
   await waitForRest(page.locator('[data-month-track]'));
   await expect(grids).toHaveCount(1);
   await expect(grids).toHaveAccessibleName('April 2026');
+});
+
+test('after a flick, the sheet announces the month it rests on, once', async ({
+  page,
+}) => {
+  const {driver, track, title, center} = await openCalendar(page);
+  const heard = await recordAnnouncements(page);
+  await driver.play(
+    flick(center, {velocity: {x: -2500, y: 0}, durationMs: 80, hz: 120}),
+  );
+  await waitForRest(track);
+  await expect(title).toHaveText('November 2026');
+  await expect.poll(heard).toEqual(['November 2026']);
+  // Nothing follows the month once the calendar rests.
+  await page.waitForTimeout(500);
+  expect(await heard()).toEqual(['November 2026']);
+});
+
+test('DateTimeInput: after a flick, the sheet announces the month it rests on, once', async ({
+  page,
+}) => {
+  const {driver, viewport} = await openDateTimeCalendar(page);
+  const heard = await recordAnnouncements(page);
+  const rect = await viewport.boundingBox();
+  if (rect == null) {
+    throw new Error('no viewport');
+  }
+  await driver.play(
+    flick(
+      {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2},
+      {velocity: {x: -2500, y: 0}, durationMs: 80, hz: 120},
+    ),
+  );
+  await waitForRest(page.locator('[data-month-track]'));
+  await expect.poll(heard).toEqual(['April 2026']);
+  // Nothing follows the month once the calendar rests.
+  await page.waitForTimeout(500);
+  expect(await heard()).toEqual(['April 2026']);
 });
 
 test('the arrow names the month at the tap and scrolls one month', async ({

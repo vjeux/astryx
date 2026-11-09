@@ -126,6 +126,7 @@ import {usePressFeedback} from '../hooks/usePressFeedback';
 import {normalizeDayOfWeek} from '../utils/dateTypes';
 import {getWeekdayHeaders} from '../Calendar/getWeekdayHeaderNames';
 import {MonthPager} from './datePickerTouch';
+import {MonthChangeAnnouncement} from './MonthChangeAnnouncement';
 import {MonthScroller, type MonthScrollerHandle} from './MonthScroller';
 import {useTouchPresentation} from '../utils/touchPresentation';
 import {MonthYearWheels} from './MonthYearWheels';
@@ -1087,6 +1088,10 @@ export function TouchDateField({
 
   const surface = (
     <div {...stylex.props(styles.surface)}>
+      <MonthChangeAnnouncement
+        label={monthYearLabel}
+        isShown={isSheetOpen && !isWheelOpen}
+      />
       <div {...stylex.props(styles.header)}>
         <button
           ref={monthYearButtonRef}

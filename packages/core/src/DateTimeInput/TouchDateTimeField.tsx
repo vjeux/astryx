@@ -103,6 +103,7 @@ import {
 import {MonthYearWheels} from '../DateInput/MonthYearWheels';
 import {Wheel, type WheelOption} from '../DateInput/Wheel';
 import {MonthPager, TimeWheels} from '../DateInput/datePickerTouch';
+import {MonthChangeAnnouncement} from '../DateInput/MonthChangeAnnouncement';
 import {
   hour12From24,
   hour24From12,
@@ -1026,6 +1027,10 @@ export function TouchDateTimeField({
             styles.touchPanel,
             activePanel !== 'date' && styles.touchPanelHidden,
           )}>
+          <MonthChangeAnnouncement
+            label={monthYearLabel}
+            isShown={isSheetOpen && activePanel === 'date' && !isWheelOpen}
+          />
           <div {...stylex.props(styles.touchHeader)}>
             <button
               type="button"

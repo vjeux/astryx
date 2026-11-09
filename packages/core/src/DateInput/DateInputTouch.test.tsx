@@ -61,6 +61,7 @@ import {WHEEL_ROW_HEIGHT} from './wheelOptions';
 import {SWIPE_DISTANCE} from './useOwnScrollGesture';
 import {DRAG_SLOP} from './usePointerDragScroll';
 import {SCROLL_QUIET_MS} from './useScrollSettle';
+import {__resetLiveRegionsForTest} from '../hooks/useAnnounce';
 import {useCalendarDays} from '../Calendar/hooks/useCalendarDays';
 import type * as CalendarDaysModule from '../Calendar/hooks/useCalendarDays';
 
@@ -288,6 +289,40 @@ function pane(label: string): HTMLElement {
     throw new Error(`no pane for ${label}`);
   }
   return grid;
+}
+
+/**
+ * Stands in for the sheet the browser presents modally: the stubbed
+ * showModal() opens the dialog, but jsdom cannot match `:modal`.
+ */
+function stubModalSheet(): {mockRestore: () => void} {
+  const matches = Element.prototype.matches;
+  return vi.spyOn(Element.prototype, 'matches').mockImplementation(function (
+    this: Element,
+    selector: string,
+  ) {
+    return selector === ':modal'
+      ? this instanceof HTMLDialogElement && this.open
+      : matches.call(this, selector);
+  });
+}
+
+/** What the open sheet's own polite live region exposes. */
+function announcedInSheet(): string {
+  return (
+    document
+      .querySelector('dialog[open]')
+      ?.querySelector(':scope > [data-astryx-modal-live-region="polite"]')
+      ?.textContent ?? ''
+  );
+}
+
+/** What the page's polite live region, behind the sheet, exposes. */
+function announcedOnPage(): string {
+  return (
+    document.querySelector('[data-astryx-live-region="polite"]')?.textContent ??
+    ''
+  );
 }
 
 /** The decorative weekday row: the only 7-cell aria-hidden block. */
@@ -977,6 +1012,28 @@ describe('DateInput — calendar surface', () => {
     expect(header()).toHaveTextContent('April 2026');
     fireEvent.click(screen.getByRole('button', {name: 'Previous month'}));
     expect(header()).toHaveTextContent('March 2026');
+  });
+
+  it('under a finger: announces the month an arrow pages to once it rests, and nothing on open', () => {
+    vi.useFakeTimers();
+    __resetLiveRegionsForTest();
+    const modalSheet = stubModalSheet();
+    try {
+      renderAndOpen();
+      act(() => {
+        vi.advanceTimersByTime(SCROLL_QUIET_MS + 50);
+      });
+      expect(announcedInSheet()).toBe('');
+      fireEvent.click(screen.getByRole('button', {name: 'Next month'}));
+      act(() => {
+        vi.advanceTimersByTime(SCROLL_QUIET_MS + 50);
+      });
+      expect(announcedInSheet()).toBe('April 2026');
+      expect(announcedOnPage()).toBe('');
+    } finally {
+      vi.useRealTimers();
+      modalSheet.mockRestore();
+    }
   });
 
   it('under a finger: names the month at the tap and steps again from it mid-scroll', () => {
@@ -1842,6 +1899,34 @@ describe('DateInput — month/year wheels', () => {
       ),
     );
     expect(title()).toHaveTextContent('September 2026');
+  });
+
+  it('under a finger: announces no month the wheels choose, since the wheels name it', () => {
+    vi.useFakeTimers();
+    __resetLiveRegionsForTest();
+    const modalSheet = stubModalSheet();
+    try {
+      renderAndOpen(<Controlled initial="2026-03-21" {...ONE_YEAR} />);
+      openWheels();
+      fireEvent.click(
+        within(screen.getByRole('listbox', {name: 'Month'})).getByText(
+          'September',
+        ),
+      );
+      act(() => {
+        vi.advanceTimersByTime(SCROLL_QUIET_MS + 50);
+      });
+      fireEvent.click(title());
+      act(() => {
+        vi.advanceTimersByTime(SCROLL_QUIET_MS + 50);
+      });
+      expect(title()).toHaveTextContent('September 2026');
+      expect(announcedInSheet()).toBe('');
+      expect(announcedOnPage()).toBe('');
+    } finally {
+      vi.useRealTimers();
+      modalSheet.mockRestore();
+    }
   });
 
   it('under a finger: moves the hidden calendar to the wheels\u2019 month without an echo', () => {

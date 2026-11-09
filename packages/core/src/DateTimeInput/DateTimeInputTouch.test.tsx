@@ -37,6 +37,8 @@ import {
   waitFor,
 } from '@testing-library/react';
 import {getOnlyButton} from '../__tests__/fastRoleQueries';
+import {__resetLiveRegionsForTest} from '../hooks/useAnnounce';
+import {SCROLL_QUIET_MS} from '../DateInput/useScrollSettle';
 import {InternationalizationProvider} from '../i18n';
 import {DateTimeInput as CoreDateTimeInput} from './DateTimeInput';
 import type {DateTimeInputProps, ISODateTimeString} from './DateTimeInput';
@@ -119,6 +121,40 @@ function trackpadScroll(el: Element, dx: number): void {
   Object.defineProperty(event, 'wheelDeltaX', {value: -3 * dx});
   Object.defineProperty(event, 'wheelDeltaY', {value: 0});
   el.dispatchEvent(event);
+}
+
+/**
+ * Stands in for the sheet the browser presents modally: the stubbed
+ * showModal() opens the dialog, but jsdom cannot match `:modal`.
+ */
+function stubModalSheet(): {mockRestore: () => void} {
+  const matches = Element.prototype.matches;
+  return vi.spyOn(Element.prototype, 'matches').mockImplementation(function (
+    this: Element,
+    selector: string,
+  ) {
+    return selector === ':modal'
+      ? this instanceof HTMLDialogElement && this.open
+      : matches.call(this, selector);
+  });
+}
+
+/** What the open sheet's own polite live region exposes. */
+function announcedInSheet(): string {
+  return (
+    document
+      .querySelector('dialog[open]')
+      ?.querySelector(':scope > [data-astryx-modal-live-region="polite"]')
+      ?.textContent ?? ''
+  );
+}
+
+/** What the page's polite live region, behind the sheet, exposes. */
+function announcedOnPage(): string {
+  return (
+    document.querySelector('[data-astryx-live-region="polite"]')?.textContent ??
+    ''
+  );
 }
 
 /** The month grids assistive technology reaches, by name. */
@@ -812,6 +848,32 @@ describe('DateTimeInput touch surface', () => {
       expect(reachableMonths()).toEqual(['May 2026']);
     } finally {
       vi.useRealTimers();
+    }
+  });
+
+  it('under a finger: announces the month an arrow pages to once it rests, and nothing on open', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 15, 9, 30, 45));
+    __resetLiveRegionsForTest();
+    const modalSheet = stubModalSheet();
+    try {
+      withMonthLayout(() => {
+        render(<DateTimeInput label="Meeting" onChange={() => {}} />);
+        openDateSheet();
+        act(() => {
+          vi.advanceTimersByTime(SCROLL_QUIET_MS + 50);
+        });
+        expect(announcedInSheet()).toBe('');
+        fireEvent.click(getOnlyButton('Next month'));
+        act(() => {
+          vi.advanceTimersByTime(SCROLL_QUIET_MS + 50);
+        });
+        expect(announcedInSheet()).toBe('April 2026');
+        expect(announcedOnPage()).toBe('');
+      });
+    } finally {
+      vi.useRealTimers();
+      modalSheet.mockRestore();
     }
   });
 
