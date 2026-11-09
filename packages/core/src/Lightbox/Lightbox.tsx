@@ -981,8 +981,8 @@ export function Lightbox({
         parseFloat(style.paddingBottom);
       const line = parseFloat(style.lineHeight);
       // A whole number of line boxes. The client height rounds to whole
-      // pixels, and a spacer read from it would lay the caption out again a
-      // fraction of a pixel shorter, inside the delivery that measured it.
+      // pixels. A spacer read from it lays the caption out again a fraction
+      // of a pixel shorter. That happens inside the delivery that measured it.
       const lineCount =
         Number.isFinite(line) && line > 0 ? Math.round(lines / line) : 0;
       setCaptionLastLineTop(lineCount > 1 ? (lineCount - 1) * line : 0);
