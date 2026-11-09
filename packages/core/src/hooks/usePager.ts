@@ -1051,7 +1051,7 @@ export function createPager(
     // read and the play then cannot leave the curve behind the track.
     const at = clock();
     const from = sign() * running.get('x', at);
-    const velocity = sign() * running.getVelocity('x', at);
+    const velocity = 0;
     const isRelease = isReleaseSettle;
     const touchRelease = isTouchReleaseSettle;
     const isSwipe = isSwipeSettle;
