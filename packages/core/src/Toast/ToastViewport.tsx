@@ -18,8 +18,10 @@
  */
 
 import {
+  Fragment,
   useCallback,
   useEffect,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -373,6 +375,21 @@ function ToastRow({
 ToastRow.displayName = 'ToastRow';
 
 /**
+ * Runs the viewport's ref sync at each commit. The viewport renders it before
+ * a fragment holding its children. React runs an earlier sibling's insertion
+ * effects before any commit-phase work in a later sibling's subtree, unmounts
+ * included. So a toast call from a descendant's effect or cleanup in that
+ * commit sees the committed list. A render React discards never runs it.
+ */
+function ToastRefSync({onCommit}: {onCommit: () => void}): null {
+  // Syncs the viewport's handler refs with the committed render.
+  useInsertionEffect(() => {
+    onCommit();
+  });
+  return null;
+}
+
+/**
  * Container that renders and manages toast notifications. Place at the root
  * of your app to enable useToast(). Toasts stack with enter/exit
  * animations and auto-promote to the CSS top layer.
@@ -395,13 +412,24 @@ export function ToastViewport({
   const t = useComponentTranslator();
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
+  // The handlers' list. addToast and removeToast move it ahead of the
+  // committed toasts within a batch, and each render resets it. It stays
+  // written during render on purpose. A reset at commit would drop a toast a
+  // handler raised while that render was in progress, as concurrent rendering
+  // allows.
   const toastsRef = useRef(toasts);
   toastsRef.current = toasts;
-  // The list as last rendered: addToast moves toastsRef ahead of it within
-  // a batch, so this tells a rendered toast from one raised since.
+  // The list as last committed, so a handler tells a rendered toast from one
+  // raised since.
   const renderedToastsRef = useRef(toasts);
-  renderedToastsRef.current = toasts;
-  // Read by removeToast, which keeps one identity across renders.
+  // It runs in `ToastRefSync`, ahead of the app's commit-phase work.
+  const syncHandlerRefs = () => {
+    renderedToastsRef.current = toasts;
+  };
+  // Read by removeToast, which keeps one identity across renders. It stays
+  // written during render on purpose. A dismissal is judged against the limit
+  // of the render in progress. So a lowering transition that commits mid-exit
+  // never cuts a dismissed toast's exit short.
   const maxVisibleRef = useRef(maxVisible);
   maxVisibleRef.current = maxVisible;
   // Rendered entries a repeat has replaced in this batch: still found by a
@@ -997,7 +1025,9 @@ export function ToastViewport({
 
   return (
     <ToastContext value={contextValue}>
-      {children}
+      <ToastRefSync onCommit={syncHandlerRefs} />
+      {/* Its own fiber, so a child it unmounts is unmounted after the sync. */}
+      <Fragment>{children}</Fragment>
       {isTopLayer ? (
         <>
           <div ref={rootOutletRef} {...stylex.props(styles.rootOutlet)} />
