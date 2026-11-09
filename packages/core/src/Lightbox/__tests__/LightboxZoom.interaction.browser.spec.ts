@@ -1043,7 +1043,9 @@ test('a tap beside the photo closes the viewer; a tap on it does not', async ({
 
 test('the double-tap zoom keeps advancing every frame while the main thread is blocked', async ({
   page,
+  browserName,
 }, testInfo) => {
+  const {tempo, blockMs} = zoomStimulus(browserName);
   const {driver, photo, state} = await openViewer(page);
   const before = await state();
   await markElement(photo, {mode: 'outline'});
@@ -1064,25 +1066,29 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
   // With the main thread blocked, a loaded runner's compositor presents a
   // frame every 100 to 250 ms. The spring moves for half a second, which
   // leaves too few frames to judge. So the zoom plays at a slow tempo.
-  await slowViewer(page, ZOOM_TEMPO);
-  const since = await page.evaluate(() => performance.now());
+  await slowViewer(page, tempo);
   const cast = await startScreencast(page);
   // The page itself waits for the zoom and blocks one frame into it. The
   // spring covers most of its travel early, and a round trip from the test
   // would start the block too late.
-  const blocking = blockMainThread(page, ZOOM_BLOCK_MS, {during: photo});
+  const blocking = blockMainThread(page, blockMs, {during: photo});
   await driver.play(doubleTap(at));
   const block = await blocking;
   // Lightbox's own zoom played at that tempo. Each curve is that many times
-  // as long as at tempo 1, and still runs after the block.
-  const slowed = curvesByProperty(await waitForAnimation(photo, {since}));
+  // as long as at tempo 1, and still runs after the block. The page read the
+  // runs when the block caught the zoom. A later read misses a run that
+  // ended since, and a loaded machine delays that read.
+  const slowed = new Map(
+    (block.animation?.runs ?? []).map(run => [run.properties, run]),
+  );
   expect([...slowed.keys()].sort()).toEqual([...atTempo1.keys()].sort());
   expect(slowed.size).toBeGreaterThan(0);
   for (const [property, run] of slowed) {
-    const ratio = run.ms / (atTempo1.get(property)?.ms ?? Number.NaN);
-    expect(ratio, property).toBeGreaterThan(ZOOM_TEMPO - 0.1);
-    expect(ratio, property).toBeLessThan(ZOOM_TEMPO + 0.1);
-    expect(run.isRunning, property).toBe(true);
+    const ratio =
+      (run.to - run.from) / (atTempo1.get(property)?.ms ?? Number.NaN);
+    expect(ratio, property).toBeGreaterThan(tempo - 0.1);
+    expect(ratio, property).toBeLessThan(tempo + 0.1);
+    expect(run.to, property).toBeGreaterThan(block.to);
   }
   // A few frames after the block, so the screencast holds its end.
   await frames(page, 6);
@@ -1181,15 +1187,25 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
 });
 
 /**
- * The tempo the busy zoom proof plays the viewer at. Blocked, WebKit's
- * software compositor on a loaded runner presents a frame only every 190 to
- * 250 ms. At tempo 5 the spring moves for over two seconds, so its judged
- * part holds about eight such frames. At tempo 3 it held three to six.
+ * The tempo the busy zoom proof plays the viewer at, and how long it blocks
+ * the main thread, ms. At tempo 5 the spring moves for over two seconds.
  */
 const ZOOM_TEMPO = 5;
-
-/** How long the busy zoom proof blocks the main thread, ms. */
 const ZOOM_BLOCK_MS = 2500;
+
+/**
+ * The busy zoom proof's stimulus in an engine. Blocked, WebKit's software
+ * compositor on a loaded runner presents a frame only every 300 to 600 ms.
+ * There the block starts up to 1.9 s into the zoom. The judged part ends where
+ * the edge comes within `ZOOM_SETTLED_PX` of its rest. At tempo 5 that left
+ * one to three such frames, and at tempo 12 four to eight. At tempo 15, with
+ * a 4.5 s block, the edge moves for about 4 s of the block.
+ */
+function zoomStimulus(browserName: string): {tempo: number; blockMs: number} {
+  return browserName === 'webkit'
+    ? {tempo: 15, blockMs: 4500}
+    : {tempo: ZOOM_TEMPO, blockMs: ZOOM_BLOCK_MS};
+}
 
 /**
  * The photo's coordinate the busy zoom proof judges: its top edge. The zoom
@@ -1220,7 +1236,7 @@ function curvesByProperty(runs: ReadonlyArray<ActiveAnimation>) {
         .filter(key => !meta.has(key))
         .sort()
         .join(','),
-      {ms: run.to - run.from, isRunning: run.finishedAt == null},
+      {ms: run.to - run.from},
     ]),
   );
 }
@@ -1264,12 +1280,14 @@ async function breakZoom(
 for (const pace of ['main-thread', 'frozen'] as const) {
   test(`the busy proof fails a slowed double-tap zoom that ${pace === 'frozen' ? 'freezes' : 'the main thread drives'}`, async ({
     page,
+    browserName,
   }) => {
+    const {tempo, blockMs} = zoomStimulus(browserName);
     const {driver, photo, state} = await openViewer(page);
     const before = await state();
     await markElement(photo, {mode: 'outline'});
     await startBusyControl(page);
-    await slowViewer(page, ZOOM_TEMPO);
+    await slowViewer(page, tempo);
     await breakZoom(page, pace);
     const cast = await startScreencast(page);
     await driver.play(
@@ -1277,7 +1295,7 @@ for (const pace of ['main-thread', 'frozen'] as const) {
     );
     // Neither runs on the compositor, so the block starts after the tap.
     await page.waitForTimeout(150);
-    const block = await blockMainThread(page, ZOOM_BLOCK_MS);
+    const block = await blockMainThread(page, blockMs);
     await frames(page, 6);
     const castFrames = await cast.stop();
     const tracked = await trackMarker(page, castFrames);
