@@ -1131,7 +1131,9 @@ export function createPager(
     if (!isDragging && !caughtSettle) {
       if (settleHandle != null && animator != null) {
         if (!isFlipped) {
-          retargetSettle(animator, remap);
+          stopSettle();
+          animator.set({x: positionToX(offsetOf(target))});
+          rest();
           return;
         }
         // A mirrored track has no settle to carry on: it stops and re-places.
