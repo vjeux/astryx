@@ -39,6 +39,7 @@ import {
   type TouchDriver,
   type TouchScript,
   touchStoryboard,
+  trackMarker,
   trackMarkers,
   waitForAnimation,
   waitForRest,
@@ -461,6 +462,14 @@ test('the cancel keeps moving every frame while the main thread is blocked', asy
   const [tracked, control] = await trackMarkers(page, castFrames, {
     colors: [MARKER_RGB, CONTROL_RGB],
   });
+  // NOT FOR LANDING: the same tracks as one decode per colour.
+  expect([tracked, control]).toEqual([
+    await trackMarker(page, [...castFrames]),
+    await trackMarker(page, [...castFrames], {rgb: CONTROL_RGB}),
+  ]);
+  console.log(
+    `IDENTITY ${castFrames.length} frames, ${tracked.filter(x => x.box != null).length}/${control.filter(x => x.box != null).length} found`,
+  );
   // The spring slows hard at its end. Near the end each 60 Hz frame moves it
   // about 0.18 of what remains (2π / 0.5 s, critically damped). So within
   // about 5.6 cast steps of its end a frame moves less than one step, and

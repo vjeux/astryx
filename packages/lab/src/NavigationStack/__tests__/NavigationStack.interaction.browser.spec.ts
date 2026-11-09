@@ -1174,6 +1174,14 @@ test('a push keeps advancing every frame while the main thread is blocked', asyn
   const [tracked, control] = await trackMarkers(page, castFrames, {
     colors: [MARKER_RGB, CONTROL_RGB],
   });
+  // NOT FOR LANDING: the same tracks as one decode per colour.
+  expect([tracked, control]).toEqual([
+    await trackMarker(page, [...castFrames]),
+    await trackMarker(page, [...castFrames], {rgb: CONTROL_RGB}),
+  ]);
+  console.log(
+    `IDENTITY ${castFrames.length} frames, ${tracked.filter(x => x.box != null).length}/${control.filter(x => x.box != null).length} found`,
+  );
   const proof = busyWindowProof(
     tracked,
     {from: block.from, to: Math.min(block.to, push.to)},
