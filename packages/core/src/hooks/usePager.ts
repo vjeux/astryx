@@ -1122,7 +1122,9 @@ export function createPager(
     // offsets.
     if (!isDragging && !caughtSettle) {
       if (settleHandle != null && animator != null) {
-        retargetSettle(animator, remap);
+        stopSettle();
+        animator.set({x: positionToX(offsetOf(target))});
+        rest();
         return;
       }
       animator?.set({x: positionToX(offsetOf(target))});
