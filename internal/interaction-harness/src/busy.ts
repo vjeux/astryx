@@ -1865,8 +1865,12 @@ function motionStepPx(values: readonly number[]): number {
  * alike. A frame with no reading keeps its stamp's distance from the nearest
  * frame whose stamp agrees with its reading. The dated frames keep the cast's
  * order. Without the control `ahead`, a late frame near the first control's
- * turn keeps its lateness. Chromium casts and casts with no control are
- * judged on their stamps.
+ * turn keeps its lateness. A Chromium cast with a control is dated the same
+ * way. Its cast stamps each frame as it arrives. Under load, the stamps
+ * trail the frames unevenly. So two frames a whole frame apart can carry
+ * stamps 2 ms apart. Without the control `ahead`, such a pair near the first
+ * control's turn keeps its stamps. A cast with no control is judged on its
+ * stamps.
  *
  * A WebKit proof keeps one dated frame per display interval, the earlier
  * one. A frame with no reading always stays. The proof judges motion on every
@@ -1939,10 +1943,12 @@ export function busyWindowProof(
 export const BUSY_PROOF_LOOKAROUND_MS = 250;
 
 /**
- * The proof `busyWindowProof` returns, and the starvation it throws. A WebKit
- * cast with a control is judged on the controls' clock
- * (`datedOnControlClock`); any other cast on its stamps. WebKit stamps the
+ * The proof `busyWindowProof` returns, and the starvation it throws. A cast
+ * with a control is judged on the controls' clock (`datedOnControlClock`),
+ * in either engine; a cast with no control on its stamps. WebKit stamps the
  * frame after a delivery gap about 60 ms late, carrying one frame of motion.
+ * Chromium stamps each frame as it arrives, unevenly behind its presentation
+ * under load.
  */
 function readBusyWindow(
   tracked: readonly TrackedFrame[],
@@ -2026,7 +2032,7 @@ function readBusyWindow(
     (predicts ? (window as BlockedWindow).controlStarts : undefined);
   const dated =
     control != null &&
-    (predicts || control.every(frame => frame.engine === 'webkit'))
+    (predicts || control.every(frame => frame.engine != null))
       ? datedOnControlClock(tracked, control, ahead, starts)
       : null;
   if (dated == null) {
