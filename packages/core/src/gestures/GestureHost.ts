@@ -425,14 +425,16 @@ const WHEEL_END_MS = 100;
 /**
  * How long after its last event a vertical trackpad scroll ends, ms (a
  * sheet's pull), whoever keeps it. A slow drag's stream pauses longer than
- * WHEEL_END_MS between events.
+ * WHEEL_END_MS between events. The interaction harness judges wheel bursts
+ * at this pause (`WHEEL_SCROLL_END_MS`); wheelEnd.harness.test.ts keeps the
+ * two equal.
  */
-const WHEEL_FOLLOW_END_V_MS = 180;
+export const WHEEL_FOLLOW_END_V_MS = 180;
 /**
  * The same horizontally, ms (a pager's or a row's swipe), whose slow
  * swipes pause longer still.
  */
-const WHEEL_FOLLOW_END_MS = 220;
+export const WHEEL_FOLLOW_END_MS = 220;
 /** A line-mode wheel's line, px, as the platforms scroll it. */
 const WHEEL_LINE_PX = 40;
 /** The span a ctrl-wheel pinch's two contacts start at, px. */
