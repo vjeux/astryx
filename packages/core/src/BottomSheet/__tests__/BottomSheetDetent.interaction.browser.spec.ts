@@ -336,6 +336,13 @@ test('a softer downward flick from the tall detent lands on the half detent', as
   const played = await driver.play(script, {
     pacing: 'spacing',
     boundaries: {releasePxPerS: halfFrom(releaseVelocity(script).y, release)},
+    // Red arm: the last two moves each reach the page 30 ms late.
+    onEvent: async (_, index) => {
+      const steps = toTouchEvents(script).length;
+      if (index === steps - 4 || index === steps - 3) {
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+    },
   });
   // The release the page read decides the landing, so the proof asks Core's
   // release rule where that release lands.
