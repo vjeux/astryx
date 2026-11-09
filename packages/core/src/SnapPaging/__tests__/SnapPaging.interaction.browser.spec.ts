@@ -878,6 +878,20 @@ test('a narrowing while the row settles toward the last view: the settle plays o
   // shows, when the read ran, and each settle's own clock. A resize observer made after the
   // pager's runs right after the pager's own resize work. It records that
   // frame, that time, and the settle the work started.
+  // Evidence only: 75 ms pass between the retarget's read and its play.
+  await scroller.evaluate(() => {
+    let isDone = false;
+    (window as unknown as {__retargetStall?: () => void}).__retargetStall = () => {
+      if (isDone) {
+        return;
+      }
+      isDone = true;
+      const end = performance.now() + 75;
+      while (performance.now() < end) {
+        // Busy.
+      }
+    };
+  });
   await scroller.evaluate(el => {
     const first = el.firstElementChild as HTMLElement;
     type Frame = {
