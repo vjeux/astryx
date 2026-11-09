@@ -128,6 +128,76 @@ export async function openStory(
         .join(';'),
     );
   }
+  // PROBE, NOT FOR LANDING: record animate()/cancel() and touches.
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    if (w.__probeSpy != null) {
+      return;
+    }
+    const spy = {
+      animates: [] as {
+        t: number;
+        el: Element;
+        target: string;
+        props: string[];
+        dur: unknown;
+        cancelledAt: number | null;
+        anim: Animation;
+      }[],
+      touches: [] as {type: string; ts: number; now: number}[],
+      waits: [] as number[],
+    };
+    w.__probeSpy = spy;
+    const desc = (el: Element) =>
+      (el.tagName + '.' + String((el as HTMLElement).className ?? '')).slice(
+        0,
+        90,
+      );
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (
+      this: Element,
+      ...args: Parameters<Element['animate']>
+    ) {
+      const a = animate.apply(this, args);
+      const kf = args[0] as unknown;
+      const keys = Array.isArray(kf)
+        ? kf.flatMap(k => Object.keys(k as object))
+        : Object.keys((kf ?? {}) as object);
+      const opts = args[1] as unknown;
+      spy.animates.push({
+        t: performance.now(),
+        el: this,
+        target: desc(this),
+        props: [...new Set(keys)].filter(
+          k => !['offset', 'easing', 'composite'].includes(k),
+        ),
+        dur:
+          typeof opts === 'number'
+            ? opts
+            : (opts as {duration?: unknown} | undefined)?.duration,
+        cancelledAt: null,
+        anim: a,
+      });
+      if (spy.animates.length > 600) spy.animates.shift();
+      return a;
+    };
+    const cancel = Animation.prototype.cancel;
+    Animation.prototype.cancel = function (this: Animation) {
+      const e = spy.animates.find(x => x.anim === this);
+      if (e != null && e.cancelledAt == null) e.cancelledAt = performance.now();
+      return cancel.call(this);
+    };
+    for (const type of ['touchstart', 'touchend']) {
+      window.addEventListener(
+        type,
+        ev => {
+          spy.touches.push({type, ts: ev.timeStamp, now: performance.now()});
+          if (spy.touches.length > 300) spy.touches.shift();
+        },
+        {capture: true, passive: true},
+      );
+    }
+  });
   await page.goto(`${origin}/iframe.html?${params.toString()}`);
   await page
     .locator('#storybook-root > *')

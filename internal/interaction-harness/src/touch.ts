@@ -1232,7 +1232,7 @@ async function playSteps(
         : {stamps, receivedAt: stamps, frames: probedTimes.frames},
       boundaries.tapIntervalMs,
     );
-    if (split != null) {
+    if (split != null && process.env.TAP_LOG_ONLY !== '1') {
       throw new TouchTapIntervalError(split);
     }
   }
@@ -1344,11 +1344,54 @@ async function chromiumDriver(page: Page): Promise<TouchDriver> {
         t => base + t,
         null,
         readTapTimes,
-      ).finally(async () => {
-        // Stopped again, as a play that threw before its read never stopped it.
-        await taps?.evaluate(run => run.stop()).catch(() => undefined);
-        await taps?.dispose();
-      });
+      )
+        .then(async (played: PlayedEvent[]) => {
+          if (
+            options.boundaries?.tapIntervalMs != null &&
+            process.env.TAP_LOG_ONLY === '1'
+          ) {
+            const times = await taps
+              ?.evaluate(run => ({
+                stamps: run.stamps.slice(),
+                receivedAt: run.receivedAt.slice(),
+                frames: run.frames.slice(),
+              }))
+              .catch(() => null);
+            const since = times?.receivedAt[0] ?? null;
+            setTimeout(() => {
+              void page
+                .evaluate(from => {
+                  const spy = (
+                    window as unknown as {
+                      __probeSpy?: {animates: {t: number; target: string}[]};
+                    }
+                  ).__probeSpy;
+                  return (spy?.animates ?? []).filter(
+                    a =>
+                      from != null && a.t > from && a.target.startsWith('IMG'),
+                  ).length;
+                }, since)
+                .then(async zooms => {
+                  (await import('node:fs')).appendFileSync(
+                    'test-results/tap-log.jsonl',
+                    JSON.stringify({times, zooms}) + '\n',
+                  );
+                })
+                .catch(async () => {
+                  (await import('node:fs')).appendFileSync(
+                    'test-results/tap-log.jsonl',
+                    JSON.stringify({times, zooms: 'closed'}) + '\n',
+                  );
+                });
+            }, 900);
+          }
+          return played;
+        })
+        .finally(async () => {
+          // Stopped again, as a play that threw before its read never stopped it.
+          await taps?.evaluate(run => run.stop()).catch(() => undefined);
+          await taps?.dispose();
+        });
     },
     async tap(at) {
       assertNoneHeld(held);
