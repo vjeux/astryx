@@ -738,7 +738,7 @@ function revealWithKeyboard(
       return;
     }
     const resized = resizedRoom() > 0;
-    hasRevealed = height > KEYBOARD_EPSILON || resized;
+    hasRevealed = height > KEYBOARD_EPSILON;
     startsAtReveal = getTouchStartCount(win);
     const rising = reveal(focused, scroller, height, offset, win, resized);
     if (unplaced === 'keep') {
