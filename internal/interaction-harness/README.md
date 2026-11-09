@@ -603,7 +603,11 @@ The error is `TouchLiftStallError` when `onEvent` alone carries the scripted
 gap past the stillness interval, however much a loaded runner stretched it.
 Record what the page did in a listener of its own, or let the script rest
 before the lift. A runner too loaded to dispatch in time stretches a
-gesture the same way, and the play fails with `TouchPacingError`. A play whose
+gesture the same way, and the play fails with `TouchPacingError`. When the
+page also drew no frame for longer than `FRAME_STARVATION_MS` across that
+gap, and no page work held the event, it fails with `TouchStarvationError`:
+the runner starved the page, so judge the proof from a run with CI's CPU
+limits. A play whose
 proof reads no release from the lift, such as a pinch's end, passes
 `releaseUnread`.
 
