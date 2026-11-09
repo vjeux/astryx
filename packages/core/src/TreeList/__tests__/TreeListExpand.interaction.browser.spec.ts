@@ -141,7 +141,9 @@ interface Frame {
 /**
  * Records every frame the page presents while `act` runs and for `ms` after.
  * The part of the group that shows is its box less its clip and the slide of
- * its rows. A blank band then reads as a gap above the row below.
+ * its rows. A blank band then reads as a gap above the row below. Every
+ * position reads on the frame's own clock: its layout box plus the computed
+ * translate of it and each ancestor up to the tree.
  */
 async function recordFrames(
   page: Page,
@@ -177,11 +179,58 @@ async function recordFrames(
         ? 0
         : Number.parseFloat(value.split(' ')[1] ?? '0');
     };
+    // The vertical offset of a computed transform, for a row that moves by
+    // `transform` rather than `translate`.
+    const transformYOf = (el: Element) => {
+      const matrix = /matrix(3d)?\(([^)]*)\)/.exec(
+        getComputedStyle(el).transform,
+      );
+      if (matrix == null) {
+        return 0;
+      }
+      const values = matrix[2].split(',').map(Number.parseFloat);
+      return matrix[1] == null ? values[5] : values[13];
+    };
+    const layoutTopOf = (el: HTMLElement) => {
+      let top = 0;
+      for (
+        let at: HTMLElement | null = el;
+        at != null;
+        at = at.offsetParent as HTMLElement | null
+      ) {
+        top += at.offsetTop;
+      }
+      return top;
+    };
+    // A transformed rect can read an accelerated glide at a later time than
+    // computed style does. WebKit does so on a frame its page drew late,
+    // while the clip still reads the frame's own time.
+    const onFrame = (el: Element, tree: HTMLElement) => {
+      const box = el as HTMLElement;
+      let shift = 0;
+      for (
+        let at: Element | null = box;
+        at != null && at !== tree;
+        at = at.parentElement
+      ) {
+        shift += translateOf(at) + transformYOf(at);
+      }
+      const top =
+        tree.getBoundingClientRect().top +
+        layoutTopOf(box) -
+        layoutTopOf(tree) +
+        shift;
+      return {top, bottom: top + box.offsetHeight};
+    };
     const tick = () => {
       const parent = item('components');
       const below = item('app');
       const last = item('index');
       if (parent == null || below == null || last == null) {
+        return;
+      }
+      const tree = parent.closest<HTMLElement>('[role="tree"]');
+      if (tree == null) {
         return;
       }
       const group = parent.querySelector<HTMLElement>(
@@ -194,7 +243,7 @@ async function recordFrames(
         const first = group.querySelector(':scope > [role="treeitem"]');
         const slide = first == null ? 0 : Math.min(0, translateOf(first));
         shownGroup = {
-          top: box.top,
+          top: onFrame(group, tree).top,
           height: box.height,
           shown: Math.max(
             0,
@@ -220,21 +269,21 @@ async function recordFrames(
         ) {
           continue;
         }
+        const lineBottom = onFrame(line, tree).bottom;
         const bottom =
           group != null && shownGroup != null && group.contains(line)
-            ? Math.min(box.bottom, shownGroup.top + shownGroup.shown)
-            : box.bottom;
+            ? Math.min(lineBottom, shownGroup.top + shownGroup.shown)
+            : lineBottom;
         guideBottom = Math.max(guideBottom, bottom);
       }
-      const tree = parent.closest<HTMLElement>('[role="tree"]');
-      const treeBox = tree?.getBoundingClientRect();
-      const treeClip = tree == null ? 'none' : getComputedStyle(tree).clipPath;
+      const treeBox = tree.getBoundingClientRect();
+      const treeClip = getComputedStyle(tree).clipPath;
       const sides = /inset\(([^)]*)\)/
         .exec(treeClip)?.[1]
         .trim()
         .split(/\s+/)
         .map(Number.parseFloat);
-      const rows = tree?.querySelectorAll('[role="treeitem"]') ?? [];
+      const rows = tree.querySelectorAll('[role="treeitem"]');
       const lowest = rows[rows.length - 1];
       // The ring is the outline of the part of the focused row that draws it.
       const focused = document.activeElement?.closest('[role="treeitem"]');
@@ -250,28 +299,27 @@ async function recordFrames(
         const reach =
           Number.parseFloat(style.outlineWidth) +
           Number.parseFloat(style.outlineOffset);
-        const box = ringOwner.getBoundingClientRect();
+        const box = onFrame(ringOwner, tree);
         ring = {top: box.top - reach, bottom: box.bottom + reach};
       }
       w.__frames.push({
         t: performance.now(),
-        parentBottom: rowBox(parent).getBoundingClientRect().bottom,
+        parentBottom: onFrame(rowBox(parent), tree).bottom,
         group: shownGroup,
-        belowTop: below.getBoundingClientRect().top,
-        lastBottom: rowBox(last).getBoundingClientRect().bottom,
+        belowTop: onFrame(below, tree).top,
+        lastBottom: onFrame(rowBox(last), tree).bottom,
         guideBottom,
-        treeTop: treeBox?.top ?? 0,
-        treeBottom: treeBox?.bottom ?? 0,
+        treeTop: treeBox.top,
+        treeBottom: treeBox.bottom,
         paint:
-          sides == null || treeBox == null
+          sides == null
             ? null
             : {
                 top: treeBox.top + sides[0],
                 bottom:
                   treeBox.bottom - (sides.length >= 3 ? sides[2] : sides[0]),
               },
-        lowestBottom:
-          lowest == null ? 0 : rowBox(lowest).getBoundingClientRect().bottom,
+        lowestBottom: lowest == null ? 0 : onFrame(rowBox(lowest), tree).bottom,
         ring,
       });
       if (w.__record) {
