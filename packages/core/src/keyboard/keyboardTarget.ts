@@ -354,7 +354,7 @@ function scrollBy(
   const doc = scroller.ownerDocument;
   if (scroller === (doc.scrollingElement ?? doc.documentElement)) {
     win.scrollBy({top: distance, behavior});
-  } else if (typeof scroller.scrollBy === 'function') {
+  } else if (behavior === 'smooth' && typeof scroller.scrollBy === 'function') {
     scroller.scrollBy({top: distance, behavior});
   } else {
     scroller.scrollTop += distance;
