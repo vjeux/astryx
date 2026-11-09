@@ -363,7 +363,8 @@ cast's by more than two steps or a tenth of the travel. Without a replay, the
 cast-step rule above judges each frame, and the proof's notes say why: no
 `during`, an element without the marker, or a run gone before the replay.
 The proof gives its `judged` part in the cast's stamps, so a spec selects
-frames by it as before. Start the `ahead` control when every frame must be
+frames by it as before. Near the first control's turns, frames have no
+reading of their own, so start the `ahead` control when every frame must be
 judged. WebKit does not predict: the element's box at the loop's end lags
 its animation's current time, so the replay cannot be aligned. Every WebKit
 window falls back by name to the controls' clock and the cast-step rule.

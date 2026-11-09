@@ -175,6 +175,43 @@ describe('busyWindowProof on recorded Lightbox zoom casts', () => {
     });
   }
 
+  for (const engine of ['chromium', 'webkit'] as const) {
+    it(`falls back to exactly the proof without a replay, in ${engine}`, () => {
+      const cast = ZOOM_CASTS[1];
+      const y0 = cast.geometry[0][1];
+      const travel = cast.geometry.at(-1)![1] - y0;
+      const off = replay(
+        {
+          ...cast,
+          geometry: cast.geometry.map(([t, y]) => [t, y + travel / 4] as const),
+        },
+        true,
+      );
+      const plain = replay(cast, false);
+      const as = (frames: readonly TrackedFrame[] | undefined) =>
+        frames?.map(frame => ({...frame, engine}));
+      const options = {
+        ...off.options,
+        control: as(off.options.control),
+        ahead: as(off.options.ahead),
+      };
+      const fellBack = busyWindowProof(as(off.tracked)!, off.window, options);
+      const without = busyWindowProof(
+        as(plain.tracked)!,
+        plain.window,
+        options,
+      );
+      const note = fellBack.notes.find(n => n.startsWith('no prediction: '));
+      expect(note).toBeDefined();
+      expect({
+        ...fellBack,
+        window: null,
+        notes: fellBack.notes.filter(n => n !== note),
+        summary: fellBack.summary.replace(`; note: ${note}`, ''),
+      }).toEqual({...without, window: null});
+    });
+  }
+
   for (const [n, cast] of ZOOM_CASTS.entries()) {
     it(`judges cast ${n + 1} on the replay: frames under a step are named, the rest move`, () => {
       const {tracked, window, options} = replay(cast, true);

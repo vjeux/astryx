@@ -2872,11 +2872,8 @@ export function pooledBusyProof(
   runs: readonly BusyRun[],
   options: Omit<
     NonNullable<Parameters<typeof busyWindowProof>[2]>,
-    | 'control'
-    | 'ahead'
-    | 'controlStarts'
-    | 'minMovedFraction'
-    | 'judgeEveryFrame'
+    // A prediction belongs to one window, never to the pool.
+    'control' | 'ahead' | 'controlStarts' | 'minMovedFraction' | 'predicted'
   > & {
     /** The fewest frames a run's control must move on for the run to count. */
     minRunFrames?: number;
