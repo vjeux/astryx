@@ -1155,10 +1155,7 @@ export function createPager(
     const isSwipe = isSwipeSettle;
     // A release's report still waiting goes out two frames after the new
     // settle starts, as after the first one.
-    const waiting = pendingReport;
-    pendingReport = null;
     stopSettle();
-    pendingReport = waiting;
     // The old settle's report timer may not have fired yet. It goes stale,
     // so only the new settle's two-frame wait sends the report.
     reportToken += 1;
