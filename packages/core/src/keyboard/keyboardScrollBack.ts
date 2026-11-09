@@ -223,7 +223,6 @@ export function stopKeyboardScrollBack(win: Window): void {
     }
     const top = scrollTopOf(scroller, win);
     scrollTopTo(scroller, top, 'instant', win);
-    added.at = top;
     added.isBack = false;
   }
 }
