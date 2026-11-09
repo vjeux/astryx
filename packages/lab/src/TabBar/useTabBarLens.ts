@@ -426,6 +426,16 @@ export function useTabBarLens({
     // UIKit's is. A travel would play as a dip, a frame with no lens.
     if (isReduced) {
       body.animator.set(travel);
+      const lensBody = document.querySelector<HTMLElement>(
+        '[data-tab-bar-lens-body]',
+      );
+      if (lensBody != null) {
+        lensBody.style.transition = 'opacity 200ms linear';
+        lensBody.style.opacity = '0.5';
+        setTimeout(() => {
+          lensBody.style.opacity = '';
+        }, 200);
+      }
     } else {
       body.animator.animate(travel, {spring: tabBar.lensTravel}, {at});
     }
