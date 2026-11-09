@@ -423,7 +423,7 @@ async function mouseDrag(
     button: 'left',
     buttons: 0,
     clickCount: 1,
-    timestamp: base + (ms + 1) / 1000,
+    timestamp: base + (ms + 61) / 1000,
   });
 }
 
