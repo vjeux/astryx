@@ -731,6 +731,8 @@ test('a finger catching the settle holds it where it is, then pulls on from ther
   await driver.play(slowPull(start, 76, 150));
   const lifted = await shownPull(content);
   await advanceFrozenPage(page, 100);
+  // NOT FOR LANDING: a runner 400 ms late, as a loaded machine is.
+  await page.waitForTimeout(400);
   // Where the content stood as the finger landed, read as the touch arrives.
   // The catch holds it there, so a read after the page's own listener finds
   // the same place.
