@@ -898,7 +898,11 @@ for (const how of ['in a task', 'in a frame callback of the page'] as const) {
       },
     );
     await page.waitForTimeout(400);
-    const frames = await cast.stop();
+    // NOT FOR LANDING: the cast loses its frames from 30 to 150 ms after the
+    // block, as a starved compositor or recorder shows it.
+    const frames = (await cast.stop()).filter(
+      f => !(f.t > run.end + 30 && f.t < run.end + 150),
+    );
     const tracked = await trackMarker(page, frames);
     const control = await trackMarker(page, frames, {rgb: CONTROL_RGB});
     const second = await trackControl(page, frames, {ahead: true});
