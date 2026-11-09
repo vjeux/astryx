@@ -1479,7 +1479,7 @@ export function useSheetGestures({
       if (state.tracker.lastSample?.y !== event.clientY) {
         state.tracker.add(0, event.clientY, event.timeStamp);
       }
-      const velocity = state.tracker.velocity(event.timeStamp).y / 1000;
+      const velocity = state.tracker.velocity(event.timeStamp).y / 3000;
       dragStateRef.current = null;
       if (!state.syntheticTouch) {
         target.releasePointerCapture?.(event.pointerId);
