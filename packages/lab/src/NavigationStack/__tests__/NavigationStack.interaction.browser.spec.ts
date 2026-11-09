@@ -1174,6 +1174,34 @@ test('a push keeps advancing every frame while the main thread is blocked', asyn
   const [tracked, control] = await trackMarkers(page, castFrames, {
     colors: [MARKER_RGB, CONTROL_RGB],
   });
+  // NOT FOR LANDING: one decode for both colours against one per
+  // colour, each on its own copy of the same cast, in alternating order.
+  {
+    const one = async () => {
+      const t = performance.now();
+      const r = await trackMarkers(page, [...castFrames], {
+        colors: [MARKER_RGB, CONTROL_RGB],
+      });
+      return {ms: performance.now() - t, r};
+    };
+    const two = async () => {
+      const t = performance.now();
+      const r = [
+        await trackMarker(page, [...castFrames]),
+        await trackMarker(page, [...castFrames], {rgb: CONTROL_RGB}),
+      ];
+      return {ms: performance.now() - t, r};
+    };
+    const oneFirst = test.info().repeatEachIndex % 2 === 0;
+    const x = oneFirst ? await one() : await two();
+    const y = oneFirst ? await two() : await one();
+    const [o, w] = oneFirst ? [x, y] : [y, x];
+    expect(o.r).toEqual(w.r);
+    expect(o.r).toEqual([tracked, control]);
+    console.log(
+      `DECODE-TIMING frames=${castFrames.length} one=${o.ms.toFixed(0)} two=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'two'}`,
+    );
+  }
   const proof = busyWindowProof(
     tracked,
     {from: block.from, to: Math.min(block.to, push.to)},

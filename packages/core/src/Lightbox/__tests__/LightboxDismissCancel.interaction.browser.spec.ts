@@ -39,6 +39,7 @@ import {
   type TouchDriver,
   type TouchScript,
   touchStoryboard,
+  trackMarker,
   trackMarkers,
   waitForAnimation,
   waitForRest,
@@ -461,6 +462,34 @@ test('the cancel keeps moving every frame while the main thread is blocked', asy
   const [tracked, control] = await trackMarkers(page, castFrames, {
     colors: [MARKER_RGB, CONTROL_RGB],
   });
+  // NOT FOR LANDING: one decode for both colours against one per
+  // colour, each on its own copy of the same cast, in alternating order.
+  {
+    const one = async () => {
+      const t = performance.now();
+      const r = await trackMarkers(page, [...castFrames], {
+        colors: [MARKER_RGB, CONTROL_RGB],
+      });
+      return {ms: performance.now() - t, r};
+    };
+    const two = async () => {
+      const t = performance.now();
+      const r = [
+        await trackMarker(page, [...castFrames]),
+        await trackMarker(page, [...castFrames], {rgb: CONTROL_RGB}),
+      ];
+      return {ms: performance.now() - t, r};
+    };
+    const oneFirst = test.info().repeatEachIndex % 2 === 0;
+    const x = oneFirst ? await one() : await two();
+    const y = oneFirst ? await two() : await one();
+    const [o, w] = oneFirst ? [x, y] : [y, x];
+    expect(o.r).toEqual(w.r);
+    expect(o.r).toEqual([tracked, control]);
+    console.log(
+      `DECODE-TIMING frames=${castFrames.length} one=${o.ms.toFixed(0)} two=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'two'}`,
+    );
+  }
   // The spring slows hard at its end. Near the end each 60 Hz frame moves it
   // about 0.18 of what remains (2π / 0.5 s, critically damped). So within
   // about 5.6 cast steps of its end a frame moves less than one step, and
