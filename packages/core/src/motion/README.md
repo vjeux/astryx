@@ -29,6 +29,7 @@ roles through `resolveMotion`.
 | `uikit/sheet.ts`                                 | UISheetPresentationController: the flick speed, how near a detent counts as on it, how far ahead a release is projected, and the speed below which it is not.        |
 | `uikit/switch.ts`                                | UISwitch on iOS 26.2: geometry, the lift, settle, travel and tracking springs, the flip distance, the track colour.                                                  |
 | `uikit/datePicker.ts`                            | UIDatePicker: the rules it adds to its wheels.                                                                                                                       |
+| `uikit/reorder.ts`                               | UITableView edit-mode reorder: the reorder control's claim and the edge autoscroll (the glides play `springs.settle`).                                               |
 | `android/keyboard.ts`                            | Android's software keyboard (Chrome with Gboard): its slides' durations and curves (no theme's) and when they start against Chrome's report and a blur.              |
 | `uikit/zoomMedia.ts`                             | UIScrollView zooming for a photo viewer: overshoot past the limits, double-tap and maximum zoom.                                                                     |
 | `roles.ts`                                       | The internal motion roles: the springs, durations and curves `spec:AST-094` FR4 names, registered by the shared tables, and a role's CSS form read back.             |
@@ -167,7 +168,8 @@ await handle.finished; // true if it ran to the end, false if interrupted
   `{crossfadeAs: 'entrance'}` or `'exit'` gives a slide that changes no
   opacity its direction. No option or theme value lengthens the fade or keeps
   travel. For motion the animator does not drive, `reducedMotionFade()`
-  answers the same policy, and `reducedMotion.stylex.ts` holds its CSS
+  answers the same policy, `reducesMotion()` answers whether motion is
+  reduced at all, and `reducedMotion.stylex.ts` holds its CSS
   constants and the two media queries a StyleX transition spells.
   A decay's momentum keeps its motion under Reduce Motion: momentum that
   continues a throw is direct movement (DR2, DEC-2). A curve marked
