@@ -12,6 +12,7 @@
  */
 
 import {useCallback, useEffect, useRef} from 'react';
+import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import type {
   PointerEvent as ReactPointerEvent,
   RefObject,
@@ -115,7 +116,11 @@ export function useToastGesture({
   const rootRef = useRef<HTMLDivElement>(null);
   const gestureRef = useRef<GestureState | null>(null);
   const shouldIgnoreTargetRef = useRef(shouldIgnoreTarget);
-  shouldIgnoreTargetRef.current = shouldIgnoreTarget;
+  // Syncs the pan's target check with the committed props. A render React
+  // discards must not leave its check for the next touch.
+  useIsomorphicLayoutEffect(() => {
+    shouldIgnoreTargetRef.current = shouldIgnoreTarget;
+  });
 
   // The gesture host's pan only claims the touch and never begins. This hook
   // draws the swipe.
