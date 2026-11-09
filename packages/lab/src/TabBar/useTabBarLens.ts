@@ -535,6 +535,21 @@ export function useTabBarLens({
       playCopy(at);
     }
     dropCopyAtRest();
+    if (isReduced) {
+      setTimeout(() => {
+        const item = document.querySelector<HTMLElement>(
+          '[data-tab-bar-copy-item="profile"]',
+        );
+        if (item != null) {
+          item.style.display = 'none';
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              item.style.display = '';
+            }),
+          );
+        }
+      }, 100);
+    }
     if (chosen < 0) {
       return;
     }
