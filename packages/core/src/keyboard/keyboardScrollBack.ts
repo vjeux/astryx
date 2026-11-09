@@ -248,7 +248,7 @@ function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
 }
 
 function scrollBackBehavior(scroller: Element): ScrollBehavior {
-  return reducesMotion(scroller) ? 'instant' : 'smooth';
+  return reducesMotion(scroller) ? 'instant' : 'instant';
 }
 
 // Firefox for Android can carry the reveal's document scroll as a visual-
