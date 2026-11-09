@@ -1371,6 +1371,7 @@ async function webkitDriver(page: Page): Promise<TouchDriver> {
               step.type === 'touchMove' ? step.fingers : step.changed,
             ),
           });
+          await sleep(20);
         },
         () => Date.now(),
         touchArrivalProbe(page),
