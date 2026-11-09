@@ -40,6 +40,7 @@ import {
   holdThenDrag,
   markElement,
   openStory,
+  requireFrames,
   startScreencast,
   toTouchEvents,
   touchDriver,
@@ -725,13 +726,17 @@ async function pitchOf(page: Page): Promise<number> {
  * Films `marked` while a drag of `travel` rows runs, released at once. The
  * page blocks its own main thread for `blockMs` once the row's glide has run
  * 50 ms on its clock. A block in its first frames would hold the start, by
- * design.
+ * design. `during` names the glide, for a cast too thin to judge.
  */
 async function busyProof(
   page: Page,
   marked: Locator,
   travel: number,
-  {blockMs, durationMs = 160}: {blockMs: number; durationMs?: number},
+  {
+    blockMs,
+    durationMs = 160,
+    during,
+  }: {blockMs: number; durationMs?: number; during: string},
 ) {
   const pitch = await pitchOf(page);
   const {at: from} = await handleOf(page, 'Inbox');
@@ -756,10 +761,21 @@ async function busyProof(
   const frames = await cast.stop();
   await unmark();
   const tracked = await trackMarker(page, frames);
-  return busyWindowProof(tracked, block, {
+  const proof = busyWindowProof(tracked, block, {
     axis: 'y',
     settledWithin: 2 * castStep(tracked, 'y'),
   });
+  // The checks count three changes of the row, which need four frames in the
+  // judged part. A cast too thin for that fails by name when it was starved.
+  requireFrames(tracked, {
+    min: 4,
+    during,
+    where: frame =>
+      frame.box != null &&
+      frame.t >= proof.judged.from &&
+      frame.t <= proof.judged.to,
+  });
+  return proof;
 }
 
 test.describe('the preview, the drop and the handle under a finger', () => {
@@ -843,6 +859,7 @@ test.describe('the preview, the drop and the handle under a finger', () => {
     const proof = await busyProof(page, rowOf(page, 'Sent'), 3.2, {
       blockMs: 200,
       durationMs: 16,
+      during: 'Sent glides up a row while the page is blocked',
     });
     await writeEvidence(
       'busy-main-thread/list-reorder-slide',
@@ -860,6 +877,7 @@ test.describe('the preview, the drop and the handle under a finger', () => {
     // into its new place.
     const proof = await busyProof(page, rowOf(page, 'Inbox'), 1.49, {
       blockMs: 150,
+      during: 'the dropped row glides into its place while the page is blocked',
     });
     await writeEvidence(
       'busy-main-thread/list-reorder-drop',
