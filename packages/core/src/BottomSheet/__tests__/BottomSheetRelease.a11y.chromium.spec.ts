@@ -394,7 +394,7 @@ test('a mouse close under reduced motion moves the sheet no further', async ({
         );
       }
       const spanMs = Math.max(0, lastEnd - firstStart);
-      if (spanMs > 2_000) {
+      if (spanMs > 100) {
         return {state: 'long', spanMs};
       }
       idleFrames = running.length > 0 ? 0 : idleFrames + 1;
@@ -410,8 +410,8 @@ test('a mouse close under reduced motion moves the sheet no further', async ({
   });
   expect(
     exit.spanMs,
-    `the reduced-motion exit runs ${Math.round(exit.spanMs)} ms, over 2,000 ms`,
-  ).toBeLessThanOrEqual(2_000);
+    `the reduced-motion exit runs ${Math.round(exit.spanMs)} ms, over 100 ms`,
+  ).toBeLessThanOrEqual(100);
   expect(exit.state, 'the exit ended, but the dialog stayed open').toBe(
     'closed',
   );
