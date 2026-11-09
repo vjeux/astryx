@@ -37,6 +37,7 @@ import {
   curveOf,
   drag,
   flick,
+  FRAME_STARVATION_MS,
   FrameStarvationError,
   frames,
   freezePageOn,
@@ -899,6 +900,11 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
   await driver.play(doubleTap(mid));
   await waitForAnimation(photo);
   await waitForRest(photo);
+  // The offset at which the photo's right side meets the stage's: the stop
+  // check below needs the landing 20 px short of it.
+  const zoomed = await state();
+  const edge =
+    zoomed.stage.width - zoomed.fit.width * zoomed.scale - zoomed.fit.x;
   // The photo's offset at the flick's lift, read in the page.
   await recordLiftOffset(photo);
   await photo.evaluate(el => el.setAttribute('data-freeze-photo', ''));
@@ -908,11 +914,19 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
   const coasting = freezePageWhen(
     page,
     () => {
-      const lift = (globalThis as unknown as {__liftOffset?: number})
-        .__liftOffset;
+      const record = globalThis as unknown as {
+        __liftOffset?: number;
+        __coastFrames?: {t: number}[];
+        __harnessFreeze: {realNow: () => number};
+      };
+      const lift = record.__liftOffset;
       const img = document.querySelector('[data-freeze-photo]') as Element;
       const translate = getComputedStyle(img).translate;
       const x = translate === 'none' ? 0 : parseFloat(translate);
+      // Every frame checked, on the real clock: the gap before the freeze's
+      // frame tells a late freeze from a fast coast.
+      record.__coastFrames ??= [];
+      record.__coastFrames.push({t: record.__harnessFreeze.realNow()});
       return (
         lift != null &&
         x < lift - 10 &&
@@ -925,6 +939,43 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
     flick(mid, {velocity: {x: -900, y: 0}, durationMs: 80, hz: 120}),
   );
   await coasting;
+  // A starved page draws its first frame past the 10 px late. The
+  // compositor coasts on meanwhile, and the scene freezes where the screen
+  // is, which can be the photo's edge. The landing then catches a photo that
+  // the edge stopped, so the run proves nothing about the finger.
+  const {x: frozenX} = await state();
+  if (frozenX <= edge + 20) {
+    const coast = await page.evaluate(
+      () =>
+        (globalThis as unknown as {__coastFrames?: {t: number}[]})
+          .__coastFrames ?? [],
+    );
+    const [previous, last] = coast.slice(-2);
+    const gap =
+      previous == null || last == null
+        ? Number.POSITIVE_INFINITY
+        : last.t - previous.t;
+    const fromEdge = frozenX - edge;
+    // Past the edge, the photo is in its bounce.
+    const place =
+      fromEdge >= 0
+        ? `${fromEdge.toFixed(1)} px from its edge`
+        : `${(-fromEdge).toFixed(1)} px past its edge`;
+    if (gap > FRAME_STARVATION_MS) {
+      throw new FrameStarvationError({
+        by: 'freezePageWhen',
+        during:
+          "the coast between 10 px past the lift and 20 px short of the photo's edge",
+        frames: 0,
+        min: 1,
+        longestGapMs: gap,
+        cause: `the scene froze with the photo ${place}, so the 10 px trigger fired late. The page was starved of frames (a loaded machine, or a long task on the page), so the run proves nothing about the landing`,
+      });
+    }
+    throw new Error(
+      `the scene froze with the photo ${place}, ${gap.toFixed(1)} ms after the frame before the freeze: the coast reached the edge by the first frame 10 px past the lift, with no starved frame`,
+    );
+  }
   // The landing must find the coast still running, or it proves nothing.
   await photo.evaluate(el => {
     // The pointer event comes first, and the photo stops on it.
