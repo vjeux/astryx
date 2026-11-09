@@ -735,9 +735,10 @@ test('after a busy first frame, the release starts at that frame and keeps a but
   // When the press controller writes the release, 150 ms of script hold the
   // main thread before the first frame, so the release animation starts
   // late. Each frame after that records whether the release is still
-  // written and the layer's strength, until the release is gone.
+  // written, the layer's strength and the frame's time, until the release
+  // is gone.
   await opened.surface.evaluate(el => {
-    type Frame = [press: string | null, strength: number];
+    type Frame = [press: string | null, strength: number, t: number];
     (window as unknown as {__release: Promise<Frame[]>}).__release =
       new Promise(resolve => {
         const frames: Frame[] = [];
@@ -750,11 +751,12 @@ test('after a busy first frame, the release starts at that frame and keeps a but
           while (performance.now() < until) {
             // Busy: the main thread is held.
           }
-          const sample = () => {
+          const sample = (t: number) => {
             const press = el.getAttribute('data-astryx-press');
             frames.push([
               press,
               Number(getComputedStyle(el, '::before').opacity),
+              t,
             ]);
             if (press !== 'fading') {
               resolve(frames);
@@ -772,27 +774,61 @@ test('after a busy first frame, the release starts at that frame and keeps a but
     async () =>
       (
         window as unknown as {
-          __release: Promise<[string | null, number][]>;
+          __release: Promise<[string | null, number, number][]>;
         }
       ).__release,
   );
-  const fading = frames.filter(([press]) => press === 'fading');
+  const samples = frames.map(([press, strength, t]) => ({press, strength, t}));
+  // It ran on frames after the block. A page starved of frames fails here by
+  // name, not on a bare count.
+  const fading = requireFrames(samples, {
+    min: 3,
+    during: 'the release ran after the busy first frame',
+    where: frame => frame.press === 'fading',
+  });
   // Chromium starts the release when it first styles it, after the block:
   // the first frame shows it at most two frames in. WebKit starts it at the
   // time the busy script began, so its first frame shows it 150 ms in; the
   // checks below still hold there.
   if (browserName !== 'webkit') {
-    expect(fading[0]?.[1], JSON.stringify(frames)).toBeGreaterThan(
+    expect(fading[0]?.strength, JSON.stringify(frames)).toBeGreaterThan(
       strengthAt((2 * 1000) / 60),
     );
   }
-  // It ran on frames after the block, and its last frame still written
-  // shows the layer at rest: the release went when its animation ended, not
-  // partway through it.
-  expect(fading.length, JSON.stringify(frames)).toBeGreaterThan(2);
-  expect(fading.at(-1)?.[1], JSON.stringify(frames)).toBeLessThanOrEqual(
-    strengthAt(releaseMs - 1000 / 60) + 0.01,
-  );
+  // Its last frame still written shows the layer at rest: the release went
+  // when its animation ended, not partway through it. That frame may come up
+  // to `allowedMs` before the end.
+  const atRest = strengthAt(releaseMs - 1000 / 60) + 0.01;
+  let allowedMs = 0;
+  let longerMs = releaseMs;
+  while (longerMs - allowedMs > 0.1) {
+    const ms = (allowedMs + longerMs) / 2;
+    if (strengthAt(releaseMs - ms) <= atRest) {
+      allowedMs = ms;
+    } else {
+      longerMs = ms;
+    }
+  }
+  // A release that ends with its animation ends inside the gap after its
+  // last frame. A gap longer than `allowedMs` hides the frames the check
+  // needs, so that run fails by name. After a shorter gap, a layer above
+  // rest means the release went early.
+  const last = fading.at(-1);
+  const gone = samples.at(-1);
+  if (last != null && gone != null && last.strength > atRest) {
+    const gapMs = gone.t - last.t;
+    if (gapMs > allowedMs) {
+      throw new FrameStarvationError({
+        by: 'the release end check',
+        during: `the release ran its last ${allowedMs.toFixed(1)} ms`,
+        frames: 0,
+        min: 1,
+        longestGapMs: gapMs,
+        cause: `the last frame that showed the release came ${gapMs.toFixed(1)} ms before the next, at a strength of ${last.strength.toFixed(3)}, so the run cannot show the layer at rest`,
+      });
+    }
+  }
+  expect(last?.strength, JSON.stringify(frames)).toBeLessThanOrEqual(atRest);
 });
 
 test('a second tap 70 ms after the first leaves nothing pressed', async ({
