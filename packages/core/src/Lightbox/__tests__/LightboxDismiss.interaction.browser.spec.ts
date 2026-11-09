@@ -515,6 +515,7 @@ test('the dismissal keeps changing the screen every frame while the main thread 
   let closest = Number.POSITIVE_INFINITY;
   for (let run = 0; run < DISMISS_RUNS; run += 1) {
     const v = await openViewer(page);
+    await slowViewer(page, 0.5);
     const box = await v.photo.boundingBox();
     if (box == null) {
       throw new Error('no photo');
