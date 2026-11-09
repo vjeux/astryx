@@ -765,7 +765,21 @@ async function busyProof(
   const block = await blocking;
   // The frames after the lift, which the proof judges.
   await page.waitForTimeout(300);
-  const frames = await cast.stop();
+  const frames = (await cast.stop()).filter(
+    // NOT FOR LANDING: a starved cast. Inside the block, a frame is kept only
+    // 70 ms or more after the last one kept, as a loaded runner delivers.
+    (frame, _, all) => {
+      const kept = all as typeof all & {last?: number};
+      if (frame.t < block.from || frame.t > block.to) {
+        return true;
+      }
+      if (kept.last != null && frame.t - kept.last < 70) {
+        return false;
+      }
+      kept.last = frame.t;
+      return true;
+    },
+  );
   await unmark();
   const tracked = await trackMarker(page, frames);
   // The frames on which the compositor presented a new position of the
