@@ -483,10 +483,16 @@ test('a busy first frame after the lift still plays the whole release before the
   });
   await driver.play(tap(center, {holdMs: 300}));
   await expect.poll(async () => pressState(row)).toBeNull();
-  const frames = await page.evaluate(
+  const recorded = await page.evaluate(
     () =>
       (window as unknown as {__frames: [number, number, string | null][]})
         .__frames,
+  );
+  // NOT FOR LANDING: the record keeps no fading frame in the last 30 ms
+  // before the attribute went, as a page starved of frames draws.
+  const goneAt = recorded.find(([, , press]) => press !== 'fading')?.[0];
+  const frames = recorded.filter(
+    ([t, , press]) => press !== 'fading' || goneAt == null || t <= goneAt - 30,
   );
   const fading = frames.filter(([, , press]) => press === 'fading');
   // WebKit can start the release at the time the busy script began, so its
