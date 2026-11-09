@@ -737,6 +737,14 @@ test('after a busy first frame, the release starts at that frame and keeps a but
   // late. Each frame after that records whether the release is still
   // written, the layer's strength and the frame's time, until the release
   // is gone.
+  // MUTANT, NOT FOR LANDING: a frozen fade of the same length keeps the
+  // layer at full strength.
+  await page.evaluate(() => {
+    const style = document.createElement('style');
+    style.textContent =
+      "@keyframes frozen-release { from { opacity: 1 } to { opacity: 1 } } [data-astryx-press='fading']::before { animation-name: frozen-release !important; }";
+    document.head.append(style);
+  });
   await opened.surface.evaluate(el => {
     type Frame = [press: string | null, strength: number, t: number];
     (window as unknown as {__release: Promise<Frame[]>}).__release =
