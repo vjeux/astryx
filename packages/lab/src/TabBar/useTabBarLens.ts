@@ -431,6 +431,21 @@ export function useTabBarLens({
     }
     lift(true, at, size);
     if (isReduced) {
+      setTimeout(() => {
+        const lensBody = document.querySelector<HTMLElement>(
+          '[data-tab-bar-lens-body]',
+        );
+        if (lensBody != null) {
+          lensBody.style.opacity = '0';
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              lensBody.style.opacity = '';
+            }),
+          );
+        }
+      }, 60);
+    }
+    if (isReduced) {
       placeCopy();
     } else {
       playCopy(at);
