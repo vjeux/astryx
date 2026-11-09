@@ -575,6 +575,9 @@ test('under Reduce Motion the dismissal fades the photo out in place', async ({
   await page.emulateMedia({reducedMotion: 'reduce'});
   const v = await openViewer(page);
   await v.driver.play(pullDown(v.centre, 110));
+  // Lag arm: the test's next call reaches the page 250 ms after the lift, as
+  // on a busy runner.
+  await new Promise(resolve => setTimeout(resolve, 250));
   await waitForAnimation(v.photo);
   const held = await holdAnimations(page, v.photo, {
     judges: {target: v.photo, property: 'opacity'},
