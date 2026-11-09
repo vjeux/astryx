@@ -23,6 +23,7 @@ import {
   armHold,
   blockMainThread,
   busyWindowProof,
+  CONTROL_RGB,
   MARKER_RGB,
   openStory,
   releaseAnimations,
@@ -33,6 +34,7 @@ import {
   touchDriver,
   trackMarker,
   withStorybook,
+  trackMarkers,
   writeEvidence,
   type HeldAnimation,
 } from '@astryxdesign/interaction-harness';
@@ -177,7 +179,31 @@ async function recordFrames(
         ? 0
         : Number.parseFloat(value.split(' ')[1] ?? '0');
     };
+    // NOT FOR LANDING: the group's rows slide two frames late.
+    let delayed = false;
     const tick = () => {
+      if (!delayed) {
+        const rows = [
+          ...document.querySelectorAll(
+            '[data-tree-id="components"] > [role="group"] > [role="treeitem"]',
+          ),
+        ];
+        const slides = rows.flatMap(row =>
+          row
+            .getAnimations()
+            .filter(animation =>
+              (animation.effect as KeyframeEffect | null)
+                ?.getKeyframes()
+                .some(frame => frame.translate != null),
+            ),
+        );
+        if (slides.length > 0 && slides.every(a => a.startTime != null)) {
+          for (const slide of slides) {
+            slide.startTime = Number(slide.startTime) + 33;
+          }
+          delayed = true;
+        }
+      }
       const parent = item('components');
       const below = item('app');
       const last = item('index');
@@ -480,10 +506,62 @@ test('expand under a finger: the rows below glide while the group fades in, and 
   await open(page);
   await lengthenGlide(page, RECORDED_GLIDE_MS);
   const before = (await parts(page).below.boundingBox())?.y ?? 0;
+  // NOT FOR LANDING: a magenta chip at the bottom of the group's last row and
+  // a cyan chip at the top of the row below, filmed through the expand.
+  await page.addStyleTag({
+    content: `
+      [data-tree-id="components"] > [role="group"] > [role="treeitem"]:last-of-type > div:first-of-type,
+      [data-tree-id="app"] > div:first-of-type { position: relative; }
+      [data-tree-id="components"] > [role="group"] > [role="treeitem"]:last-of-type > div:first-of-type::after {
+        content: ''; position: absolute; left: 60px; bottom: 0; width: 16px; height: 6px; background: rgb(255,0,255);
+      }
+      [data-tree-id="app"] > div:first-of-type::after {
+        content: ''; position: absolute; left: 60px; top: 0; width: 16px; height: 6px; background: rgb(0,255,255);
+      }`,
+  });
+  const cast = await startScreencast(page);
   const frames = await recordFrames(
     page,
     async () => tapToggle(page),
     RECORDED_GLIDE_MS + 400,
+  );
+  const castFrames = await cast.stop();
+  const [groupChip, belowChip] = await trackMarkers(page, castFrames, {
+    colors: [MARKER_RGB, CONTROL_RGB],
+    tolerance: 80,
+  });
+  const distances = castFrames.map((frame, i) => {
+    const top = belowChip[i].box;
+    const bottom = groupChip[i].box;
+    return {
+      t: +frame.t.toFixed(1),
+      d:
+        top == null || bottom == null
+          ? null
+          : +(top.y - (bottom.y + bottom.height)).toFixed(2),
+      belowY: top?.y ?? null,
+      groupY: bottom == null ? null : bottom.y + bottom.height,
+    };
+  });
+  const atRest = distances.filter(x => x.d != null).at(-1)?.d ?? 0;
+  const recorded = frames.filter(frame => frame.group != null);
+  await writeEvidence(
+    'treelist-cast-band',
+    {
+      [`${test.info().project.name}-r${test.info().repeatEachIndex}-w${test.info().workerIndex}.json`]:
+        JSON.stringify({
+          atRest,
+          castBands: distances.map(x => ({
+            ...x,
+            band: x.d == null ? null : +(x.d - atRest).toFixed(2),
+          })),
+          recorderBands: blankBands(recorded).map((band, i) => ({
+            t: +recorded[i].t.toFixed(1),
+            band: +band.toFixed(2),
+          })),
+        }),
+    },
+    test.info(),
   );
   const moving = frames.filter(frame => frame.group != null);
   expect(moving.length, 'frames with the group').toBeGreaterThan(4);
