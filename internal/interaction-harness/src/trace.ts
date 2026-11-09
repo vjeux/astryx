@@ -154,9 +154,7 @@ export interface LayoutSource {
   /**
    * Each layout or style invalidation since the previous Layout, with the
    * task it ran in. The trace names the reason and the node only when it
-   * tracks invalidations (`traceRendering`'s `invalidations`). Without that,
-   * an invalidation the engine schedules itself, which has no script stack,
-   * names nothing.
+   * tracks invalidations.
    */
   readonly invalidations: ReadonlyArray<{
     readonly t: number;
@@ -175,14 +173,6 @@ const TASK_STEPS = new Set([
   'UpdateLayoutTree',
   'Layout',
 ]);
-
-/**
- * The trace category that names what invalidated style or layout: the reason
- * and the node. It also names an invalidation the engine schedules itself (an
- * animation's frame or end), which has no script stack.
- */
-const INVALIDATION_TRACKING =
-  'disabled-by-default-devtools.timeline.invalidationTracking';
 
 const INVALIDATIONS = new Set([
   'InvalidateLayout',
@@ -290,20 +280,12 @@ export interface TraceEvent {
  * animation's style, so wait on such an animation with `waitForRest`, or
  * after the trace. Taking a watch, or calling `waitForRest` while an
  * animation already runs on the element, reads its animations once, which
- * restyles it: do either before the window a proof counts. `keepEvents`
- * keeps the window's main-thread events for `layoutSources`, and
- * `invalidations` also traces what invalidated style and layout, with its
- * reason and node. That adds an event per invalidation, so a page that writes
- * many styles grows its trace several times over. Only a proof that reads
- * `layoutSources` asks for it.
+ * restyles it: do either before the window a proof counts.
  */
 export async function traceRendering(
   page: Page,
   body: () => Promise<unknown>,
-  {
-    keepEvents = false,
-    invalidations = false,
-  }: {keepEvents?: boolean; invalidations?: boolean} = {},
+  {keepEvents = false}: {keepEvents?: boolean} = {},
 ): Promise<RenderingTrace> {
   const cdp: CDPSession = await page.context().newCDPSession(page);
   const events: TraceEvent[] = [];
@@ -321,7 +303,6 @@ export async function traceRendering(
         'disabled-by-default-devtools.timeline',
         'blink.user_timing',
         'toplevel',
-        ...(invalidations ? [INVALIDATION_TRACKING] : []),
       ],
       excludedCategories: ['*'],
     },
