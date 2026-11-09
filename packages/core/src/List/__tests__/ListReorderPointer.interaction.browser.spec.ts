@@ -248,7 +248,7 @@ test('a wheel during a drag scrolls the page, and the preview and the drop stay 
     // shows the preview and the line under the pointer again.
     await page.evaluate(target => {
       const state = {frame: 0, lastScroll: -1, settledAt: -1};
-      Object.assign(window, {c06Frames: state});
+      Object.assign(window, {scrollFrames: state});
       const check = () => {
         if (state.lastScroll < 0 || state.settledAt >= 0) {
           return;
@@ -307,9 +307,9 @@ test('a wheel during a drag scrolls the page, and the preview and the drop stay 
         () =>
           (
             window as unknown as {
-              c06Frames: {lastScroll: number; settledAt: number};
+              scrollFrames: {lastScroll: number; settledAt: number};
             }
-          ).c06Frames,
+          ).scrollFrames,
       );
     // The preview and the line come back under the pointer.
     await expect
@@ -354,7 +354,7 @@ test('a wheel during a drag forces no layout, and reads the scroll offset once a
         'scrollTop',
       );
       const counts = {reads: 0, frames: 0};
-      Object.assign(window, {c06Counts: counts});
+      Object.assign(window, {scrollCounts: counts});
       Object.defineProperty(scroller, 'scrollTop', {
         configurable: true,
         get() {
@@ -408,8 +408,8 @@ test('a wheel during a drag forces no layout, and reads the scroll offset once a
     };
     const counts = await page.evaluate(
       () =>
-        (window as unknown as {c06Counts: {reads: number; frames: number}})
-          .c06Counts,
+        (window as unknown as {scrollCounts: {reads: number; frames: number}})
+          .scrollCounts,
     );
     await page.mouse.up();
     const mainThreads = new Set(
@@ -529,6 +529,8 @@ for (const outer of [
   'the page',
   'the box around it',
   'the page under a fixed box',
+  'the page under a stuck sticky box',
+  'the page under a sticky box before it sticks',
 ] as const) {
   test(`a wheel at the end of a box the list scrolls in scrolls ${outer} during a drag, and the drop lands under the pointer`, async ({
     browser,
@@ -538,11 +540,14 @@ for (const outer of [
       const {page} = story;
       const wrapped = outer === 'the box around it';
       const fixed = outer === 'the page under a fixed box';
+      const sticky = outer.includes('sticky');
+      const spaced = outer.endsWith('before it sticks');
       // The list scrolls in a 400 px box, scrolled to its end. What is around
       // it can scroll too: the page, or a box that is the box's direct parent.
-      // A fixed box stays put while the page scrolls under it.
+      // A fixed box, or a stuck sticky one, stays put while the page scrolls
+      // under it. A sticky box below its sticking point moves with the page.
       await page.evaluate(
-        ([inBox, isFixed]) => {
+        ([inBox, isFixed, isSticky, isSpaced]) => {
           const root = document.querySelector<HTMLElement>('#storybook-root');
           if (root == null) {
             return;
@@ -555,6 +560,13 @@ for (const outer of [
             root.style.insetInlineStart = '0';
             root.style.inlineSize = '800px';
           }
+          if (isSticky) {
+            root.style.position = 'sticky';
+            root.style.insetBlockStart = '0';
+          }
+          if (isSpaced) {
+            root.style.marginBlockStart = '300px';
+          }
           if (inBox) {
             const around = document.createElement('div');
             around.id = 'reorder-around';
@@ -565,11 +577,14 @@ for (const outer of [
             root.before(around);
             around.append(root, room);
           } else {
-            document.body.style.paddingBlockEnd = '2000px';
+            // Room inside the body, so a sticky box has room to stick.
+            const room = document.createElement('div');
+            room.style.blockSize = '2000px';
+            root.after(room);
           }
           root.scrollTop = root.scrollHeight;
         },
-        [wrapped, fixed] as const,
+        [wrapped, fixed, sticky, spaced] as const,
       );
       const order = await labels(page);
       const target = order[order.length - 4];
