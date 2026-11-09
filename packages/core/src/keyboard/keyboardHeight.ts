@@ -611,7 +611,7 @@ export function watchRevealPan(
             };
       // A report while a finger is down, as when Firefox's toolbar hides in
       // a drag, leaves that drag's pan to the person.
-      touchedSinceReport = isFingerOnScreen(win);
+      touchedSinceReport = false;
       isChromeReveal = null;
     },
     isRevealPan: height => {
