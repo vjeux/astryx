@@ -775,12 +775,23 @@ async function busyProof(
       {[`${test.info().project.name}.json`]: JSON.stringify(record, null, 1)},
       test.info(),
     );
+  // NOT FOR LANDING: the raw arrays and options as passed to the proof, per
+  // run, for replay through readBusyWindow. Each frame's t is the cast's
+  // stamp, before any dating on the controls' clock.
+  const options = {
+    axis: 'y' as const,
+    settledWithin: 2 * castStep(tracked, 'y'),
+  };
+  await writeEvidence(
+    `busy-main-thread/${evidence}-raw`,
+    {
+      [`${test.info().project.name}-r${test.info().repeatEachIndex}.json`]:
+        JSON.stringify({block, options, tracked, control}),
+    },
+    test.info(),
+  );
   try {
-    const proof = busyWindowProof(tracked, block, {
-      axis: 'y',
-      settledWithin: 2 * castStep(tracked, 'y'),
-      control,
-    });
+    const proof = busyWindowProof(tracked, block, {...options, control});
     await write(proof);
     return proof;
   } catch (error) {
