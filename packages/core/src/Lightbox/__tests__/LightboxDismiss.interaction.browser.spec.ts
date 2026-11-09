@@ -531,7 +531,7 @@ test('the dismissal keeps changing the screen every frame while the main thread 
     // machine's round trip does not start the block later in the fade.
     const blocking = blockMainThread(page, 400, {
       during: v.photo,
-      minProgressMs: 16,
+      minProgressMs: 100,
     });
     const played = await v.driver.play(pullDown(v.centre, 60));
     const block = await blocking;
