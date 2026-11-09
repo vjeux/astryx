@@ -1273,7 +1273,7 @@ export class ListReorderController implements ListReorderSession {
     return clampTop(y - session.grabOffset, row.height, {
       scrollTop: scroller.top,
       scrollBottom: scroller.bottom,
-      listTop: origin + first.top,
+      listTop: Number.NEGATIVE_INFINITY,
       listBottom: origin + last.top + last.height,
     });
   }
