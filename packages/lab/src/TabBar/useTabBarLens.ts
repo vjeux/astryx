@@ -535,6 +535,15 @@ export function useTabBarLens({
       playCopy(at);
     }
     dropCopyAtRest();
+    if (isReduced) {
+      document
+        .querySelector('[data-tab-bar-lens-body]')
+        ?.animate([{scale: '1'}, {scale: '1.002'}], {
+          duration: 400,
+          iterations: Infinity,
+          direction: 'alternate',
+        });
+    }
     if (chosen < 0) {
       return;
     }
