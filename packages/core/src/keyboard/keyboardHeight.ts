@@ -317,6 +317,11 @@ export function subscribeKeyboardHeight(
 ): () => void {
   const store = storeOf(win);
   store.listeners.add(listener);
+  store.rootTallest.set(
+    win.document.documentElement.clientWidth,
+    win.document.documentElement.clientHeight,
+  );
+  store.room = 0;
   if (store.detach == null) {
     store.detach = attach(win, store);
   }
