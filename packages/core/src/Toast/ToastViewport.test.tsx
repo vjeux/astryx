@@ -32,7 +32,15 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import React, {useRef} from 'react';
+import React, {
+  Suspense,
+  startTransition,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import {createPortal} from 'react-dom';
 import {readFileSync} from 'node:fs';
 import {type AnnounceFn, __resetLiveRegionsForTest} from '../hooks/useAnnounce';
@@ -452,6 +460,116 @@ describe('ToastViewport visible limit', () => {
       within(viewport).getAllByRole('button', {name: 'Dismiss notification'}),
     ).toHaveLength(1);
     expect(within(viewport).getByText('Three')).toBeInTheDocument();
+  });
+});
+
+describe('ToastViewport after a render React discards', () => {
+  it('animates out a toast the committed limit shows, after a discarded render lowers the limit', async () => {
+    // A transition that suspends for good: React renders it, then keeps the
+    // committed tree and never commits that render.
+    const forever = new Promise<never>(() => {});
+    function Forever(): null {
+      use(forever);
+      return null;
+    }
+    function Screen({
+      maxVisible,
+      isPending = false,
+    }: {
+      maxVisible: number;
+      isPending?: boolean;
+    }) {
+      return (
+        <ToastViewport isTopLayer={false} maxVisible={maxVisible}>
+          <ShowToastButton
+            options={{body: 'One', isAutoHide: false}}
+            triggerLabel="Show one"
+          />
+          <ShowToastButton
+            options={{body: 'Two', isAutoHide: false}}
+            triggerLabel="Show two"
+          />
+          <ShowToastButton
+            options={{body: 'Three', isAutoHide: false}}
+            triggerLabel="Show three"
+          />
+          <Suspense fallback={null}>{isPending ? <Forever /> : null}</Suspense>
+        </ToastViewport>
+      );
+    }
+    const {rerender} = render(<Screen maxVisible={5} />);
+    act(() => {
+      fireEvent.click(screen.getByText('Show one'));
+      fireEvent.click(screen.getByText('Show two'));
+      fireEvent.click(screen.getByText('Show three'));
+    });
+    await act(async () => {
+      startTransition(() => {
+        rerender(<Screen maxVisible={1} isPending />);
+      });
+    });
+
+    fireEvent.click(
+      within(getVisualToastByText('One')).getByRole('button', {
+        name: 'Dismiss notification',
+      }),
+    );
+
+    // The committed limit shows it, so it leaves through its exit: its row
+    // stays until that ends.
+    expect(screen.getByText('One')).toBeInTheDocument();
+  });
+});
+
+describe('ToastViewport and a descendant committing together', () => {
+  it('keeps a toast a descendant raises in a layout effect, for a repeat in that commit', () => {
+    function Raiser({isOn}: {isOn: boolean}) {
+      const toast = useToast();
+      // Raised as the descendant commits, then repeated after the commit.
+      useLayoutEffect(() => {
+        if (isOn) {
+          toast({uniqueID: 'b', isAutoHide: false, body: 'Toast B'});
+        }
+      }, [isOn, toast]);
+      useEffect(() => {
+        if (isOn) {
+          toast({uniqueID: 'b', isAutoHide: false, body: 'Toast B'});
+        }
+      }, [isOn, toast]);
+      return null;
+    }
+    function Controls() {
+      const toast = useToast();
+      const [isOn, setIsOn] = useState(false);
+      return (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              toast({isAutoHide: false, body: 'Toast A'});
+              setIsOn(true);
+            }}>
+            Raise
+          </button>
+          <Raiser isOn={isOn} />
+        </>
+      );
+    }
+    render(
+      <ToastViewport isTopLayer={false}>
+        <Controls />
+      </ToastViewport>,
+    );
+
+    act(() => {
+      fireEvent.click(screen.getByText('Raise'));
+    });
+
+    // The repeat finds the first 'b' and does not add a second one.
+    const rows = [...document.querySelectorAll('[data-toast-id]')];
+    expect(
+      rows.filter(row => row.textContent?.includes('Toast B')),
+    ).toHaveLength(1);
   });
 });
 
@@ -3422,6 +3540,55 @@ describe('toast announcements via singleton live regions', () => {
     const rows = [...document.querySelectorAll('[data-toast-id]')];
     expect(rows).toHaveLength(1);
     expect(rows[0].textContent).toContain('Still offline');
+  });
+
+  it('reports nothing for a toast only a discarded render showed, when a repeat replaces and dismisses it', async () => {
+    // A transition that suspends for good: React renders it, then keeps the
+    // committed tree and never commits that render.
+    const forever = new Promise<never>(() => {});
+    function Forever(): null {
+      use(forever);
+      return null;
+    }
+    let toast: ReturnType<typeof useToast> | null = null;
+    function Capture(): null {
+      toast = useToast();
+      return null;
+    }
+    function Screen({isPending = false}: {isPending?: boolean}) {
+      return (
+        <ToastViewport isTopLayer={false}>
+          <Capture />
+          <Suspense fallback={null}>{isPending ? <Forever /> : null}</Suspense>
+        </ToastViewport>
+      );
+    }
+    const onHide = vi.fn();
+    let dismissFirst: (() => void) | null = null;
+    const {rerender} = render(<Screen />);
+    // Raised in a transition React renders and never commits.
+    await act(async () => {
+      startTransition(() => {
+        dismissFirst =
+          toast?.({
+            uniqueID: 'offline',
+            isAutoHide: false,
+            body: 'Offline',
+            onHide,
+          }) ?? null;
+        rerender(<Screen isPending />);
+      });
+    });
+    expect(screen.queryByText('Offline')).toBeNull();
+
+    act(() => {
+      toast?.({uniqueID: 'offline', isAutoHide: false, body: 'Still offline'});
+      dismissFirst?.();
+    });
+
+    // Toast.spec.md FR3: it never rendered, so its replacement reports no
+    // onHide for it.
+    expect(onHide).not.toHaveBeenCalled();
   });
 
   it('replaces a leaving namesake in place under overwrite and announces it again', () => {

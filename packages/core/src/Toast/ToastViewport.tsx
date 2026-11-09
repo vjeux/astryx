@@ -20,6 +20,7 @@
 import {
   useCallback,
   useEffect,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -396,20 +397,34 @@ export function ToastViewport({
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
   const toastsRef = useRef(toasts);
-  toastsRef.current = toasts;
-  // The list as last rendered: addToast moves toastsRef ahead of it within
+  // Syncs the handlers' list with the committed toasts. These syncs are
+  // insertion effects, since the viewport wraps the app. They run before any
+  // descendant's layout effect can raise or dismiss a toast in that commit.
+  useInsertionEffect(() => {
+    toastsRef.current = toasts;
+  });
+  // The list as last committed: addToast moves toastsRef ahead of it within
   // a batch, so this tells a rendered toast from one raised since.
   const renderedToastsRef = useRef(toasts);
-  renderedToastsRef.current = toasts;
+  // Syncs the committed list the handlers compare against.
+  useInsertionEffect(() => {
+    renderedToastsRef.current = toasts;
+  });
   // Read by removeToast, which keeps one identity across renders.
   const maxVisibleRef = useRef(maxVisible);
-  maxVisibleRef.current = maxVisible;
+  // Syncs removeToast's limit with the committed `maxVisible`.
+  useInsertionEffect(() => {
+    maxVisibleRef.current = maxVisible;
+  });
   // Rendered entries a repeat has replaced in this batch: still found by a
   // dismissal in the same handler, as before the swap. One replaced before it
   // rendered was never shown and reports no onHide (Toast.spec.md FR3). A
-  // render starts a new batch.
+  // commit starts a new batch.
   const replacedRef = useRef<Map<string, ToastEntry>>(new Map());
-  replacedRef.current.clear();
+  // Starts a new batch at each commit.
+  useInsertionEffect(() => {
+    replacedRef.current.clear();
+  });
 
   const viewportRef = useRef<HTMLDivElement>(null);
   // Toast ids whose exit has begun — guards onHide from double-firing (see
