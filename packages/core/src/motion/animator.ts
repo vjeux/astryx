@@ -2022,6 +2022,7 @@ export function createMotionEngine(
             // writing the end inline in that task, so that changes no pixel.
             fill: 'both',
             easing: 'linear',
+            composite: 'add',
             ...(pseudoElement != null ? {pseudoElement} : {}),
           });
     if (bakeKey != null && baked == null) {
