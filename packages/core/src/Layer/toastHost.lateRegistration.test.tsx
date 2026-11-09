@@ -17,6 +17,9 @@ import {use, useEffect} from 'react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import type {ToastEntry} from '../Toast/types';
 
+// Evidence only: each test has 2 s.
+vi.setConfig({testTimeout: 2000});
+
 beforeEach(() => {
   vi.resetModules();
 });
