@@ -758,6 +758,14 @@ test('after a busy first frame, the release starts at that frame and keeps a but
               Number(getComputedStyle(el, '::before').opacity),
               t,
             ]);
+            // MUTANT, NOT FOR LANDING: the release goes partway, with frames
+            // on pace.
+            if (
+              press === 'fading' &&
+              Number(getComputedStyle(el, '::before').opacity) < 0.4
+            ) {
+              el.removeAttribute('data-astryx-press');
+            }
             if (press !== 'fading') {
               resolve(frames);
               return;
