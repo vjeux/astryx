@@ -18,6 +18,7 @@
 
 import {armClickGuard} from '../utils/clickGuard';
 import {matchesMediaQuery} from '../utils/coarsePointer';
+import {eventTime} from '../utils/eventTime';
 import {subscribeInput} from '../utils/inputStream';
 import {isNode} from '../utils/nodeType';
 import {layoutViewportHeight} from '../utils/layoutViewport';
@@ -190,7 +191,7 @@ function attach(win: Window, store: KeyboardStore): () => void {
       clearTimeout(stepTimer);
       stepTimer = null;
     }
-    deliver(height, event.timeStamp);
+    deliver(height, eventTime(event));
   };
   viewport?.addEventListener('resize', onViewport);
   viewport?.addEventListener('scroll', onViewport);
@@ -220,7 +221,7 @@ function attachFocus(win: Window, store: KeyboardStore): () => void {
     const report: KeyboardHeightEvent = {
       type: event.type === 'focusin' ? 'focusin' : 'focusout',
       height: store.height,
-      timeStamp: event.timeStamp,
+      timeStamp: eventTime(event),
       target: event.target,
       relatedTarget: event.relatedTarget,
     };

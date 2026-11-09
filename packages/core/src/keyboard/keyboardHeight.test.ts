@@ -101,6 +101,21 @@ describe('the keyboard height (spec:AST-099 FR2)', () => {
   it('is 0 with no keyboard shown', () => {
     expect(measureKeyboardHeight(window)).toBe(0);
   });
+
+  it("dates a report on performance.now()'s clock, also where the event is stamped in epoch milliseconds", () => {
+    const times: number[] = [];
+    const stop = subscribeKeyboardHeight(window, event => {
+      times.push(event.timeStamp);
+    });
+    // The DOM emulator stamps the event with Date.now().
+    const before = performance.now();
+    report({height: window.innerHeight - 300});
+    const after = performance.now();
+    stop();
+    expect(times).toHaveLength(1);
+    expect(times[0]).toBeGreaterThanOrEqual(before - 2);
+    expect(times[0]).toBeLessThanOrEqual(after + 2);
+  });
 });
 
 describe('the layout viewport WebKit reports under a pinch zoom (FR2)', () => {

@@ -2761,6 +2761,48 @@ describe('BottomSheet', () => {
           await new Promise(resolve => setTimeout(resolve, 400));
         });
 
+      it('rides the content down on the hide\u2019s whole slide and settles at its end, with every timer within a 32-bit delay', async () => {
+        // The test clock drives every timer and frame, so no wait can
+        // overshoot the slide.
+        vi.useFakeTimers();
+        const advance = async (ms: number) =>
+          act(async () => {
+            await vi.advanceTimersByTimeAsync(ms);
+          });
+        try {
+          const warnings = vi.spyOn(process, 'emitWarning');
+          const {content, input, report} = renderChromeSheet({
+            instantScrollBy: true,
+          });
+          act(() => input.focus());
+          report(500);
+          await advance(400);
+          // Back: the content rides down 248 px on Gboard's slide.
+          report(800);
+          const {start, curve} = getKeyboardLayoutGuide(window).transition;
+          const slideMs = curve?.durationMs ?? 0;
+          // The slide ends within its own length from now, on the clock of
+          // performance.now(), which the ride's timers read.
+          const untilEnd = start + slideMs - performance.now();
+          expect(untilEnd).toBeGreaterThan(1);
+          expect(untilEnd).toBeLessThanOrEqual(slideMs);
+          // Until the slide's end, the ride holds the content.
+          await advance(untilEnd - 1);
+          expect(content.style.translate).toBe('0px 248px');
+          // At the slide's end, the ride settles and the translate clears.
+          await advance(2);
+          expect(content.style.translate).toBe('');
+          // No timer the ride set overflowed.
+          expect(
+            warnings.mock.calls.filter(
+              (call: unknown[]) => call[1] === 'TimeoutOverflowWarning',
+            ),
+          ).toEqual([]);
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+
       it('lands the body at once at the keyboard\u2019s report, and the content\u2019s ride ends with no translate left', async () => {
         const {body, content, input, report, scrollBy} = renderChromeSheet();
         act(() => input.focus());
@@ -2883,19 +2925,6 @@ describe('BottomSheet', () => {
       });
 
       describe('on a slow phone, whose reports of the hide come after Gboard\u2019s slide', () => {
-        // One clock for event times and the guide's own reads, as in a
-        // browser, so the guide's check after the slide runs on time.
-        let restoreNow: (() => void) | null = null;
-        beforeEach(() => {
-          const now = vi
-            .spyOn(window.performance, 'now')
-            .mockImplementation(() => Date.now());
-          restoreNow = () => now.mockRestore();
-        });
-        afterEach(() => {
-          restoreNow?.();
-          restoreNow = null;
-        });
         const wait = async (ms: number) =>
           act(async () => {
             await new Promise(resolve => setTimeout(resolve, ms));

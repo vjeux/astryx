@@ -14,6 +14,7 @@
 
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {keyboard as androidKeyboard} from '../motion/android';
+import {eventTime} from '../utils/eventTime';
 import {getKeyboardLayoutGuide} from './keyboardLayoutGuide';
 import type {KeyboardTransition} from './keyboardModel';
 
@@ -90,7 +91,7 @@ describe('the keyboard layout guide on Chrome', () => {
     view.addEventListener(
       'resize',
       event => {
-        reportAt = event.timeStamp;
+        reportAt = eventTime(event);
       },
       {once: true},
     );
@@ -136,7 +137,7 @@ describe('the keyboard layout guide on Chrome', () => {
     a.addEventListener(
       'focusout',
       event => {
-        blurAt = event.timeStamp;
+        blurAt = eventTime(event);
       },
       {once: true},
     );
@@ -171,8 +172,6 @@ describe('the keyboard layout guide on Chrome', () => {
   ] as const)(
     'checks a prediction Chrome never confirms 150 ms after its slide ends when focus moves into %s, whose own field the guide cannot see',
     (_, make) => {
-      // One clock for event times and the guide's own reads, as in a browser.
-      vi.spyOn(window.performance, 'now').mockImplementation(() => Date.now());
       const container = make();
       document.body.append(container);
       a.focus();
@@ -191,7 +190,7 @@ describe('the keyboard layout guide on Chrome', () => {
       // hide. Once the slide should have ended, and 150 ms more, the guide
       // believes the viewport.
       const due = (hide?.start ?? 0) + androidKeyboard.hideMs + 150;
-      vi.advanceTimersByTime(due - Date.now() - 1);
+      vi.advanceTimersByTime(due - performance.now() - 1);
       expect(seen.at(-1)).toBe(hide);
       vi.advanceTimersByTime(2);
       expect(seen.at(-1)).toMatchObject({kind: 'show', to: 312});
@@ -231,7 +230,7 @@ describe('the keyboard layout guide on Chrome', () => {
     view.addEventListener(
       'resize',
       event => {
-        reportAt = event.timeStamp;
+        reportAt = eventTime(event);
       },
       {once: true},
     );
