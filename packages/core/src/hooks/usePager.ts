@@ -1168,12 +1168,9 @@ export function createPager(
     // A release's report still waiting goes out two frames after the new
     // settle starts, as after the first one. A finger's catch still waiting
     // catches the new settle.
-    const waiting = pendingReport;
     const isCatchArmed = isCatchTimerArmed;
-    pendingReport = null;
     isCatchTimerArmed = false;
     stopSettle();
-    pendingReport = waiting;
     isCatchTimerArmed = isCatchArmed;
     // The old settle's report timer may not have fired yet. It goes stale,
     // so only the new settle's two-frame wait sends the report.
