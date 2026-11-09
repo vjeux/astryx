@@ -214,6 +214,27 @@ async function traceEntrance(
     const w = window as unknown as EntranceWindow;
     w.__entrance = {start: 0, end: 0};
     w.__events = [];
+    // RED-FIRST ARM, not for landing. The window ends live, just after the
+    // harness recorder's capture-phase `animationend` listener on the
+    // document: a listener added there later runs after it, and the recorder
+    // is installed by now. A read in that listener is then inside the window,
+    // as the event's coarse time stamp sometimes puts it.
+    const armed = window as unknown as {__liveEndArmed?: boolean};
+    if (armed.__liveEndArmed !== true) {
+      armed.__liveEndArmed = true;
+      document.addEventListener(
+        'animationend',
+        event => {
+          if (
+            event.target instanceof Element &&
+            event.target.closest('[data-layer-anchored]') != null
+          ) {
+            w.__entrance.end = performance.timeOrigin + performance.now();
+          }
+        },
+        true,
+      );
+    }
   });
   const trace = await traceRendering(
     page,
