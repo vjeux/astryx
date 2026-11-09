@@ -46,7 +46,7 @@ async function scopeElement(caller: string, scope: Locator | undefined) {
   if (scope == null) {
     return null;
   }
-  return scope.elementHandle({timeout: TARGET_WAIT_MS}).catch(error => {
+  return scope.elementHandle().catch(error => {
     if (error instanceof Error && error.name === 'TimeoutError') {
       throw new Error(
         `${caller}: the scope ${scope.toString()} is not on the page after ${TARGET_WAIT_MS} ms: it is gone, or it never came`,
