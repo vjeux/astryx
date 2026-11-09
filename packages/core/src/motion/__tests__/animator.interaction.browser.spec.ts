@@ -1004,6 +1004,12 @@ for (const how of ['in a task', 'in a frame callback of the page'] as const) {
           }
           return best;
         };
+        // NOT FOR LANDING: the retarget starts 6 px off the value on screen.
+        for (const frame of judged) {
+          if (frame.at >= times.end - 8) {
+            frame.x += 6;
+          }
+        }
         const fromScreen = bestFit(commit => {
           const next = from(commit);
           return elapsed => next.value(elapsed / 1000);
