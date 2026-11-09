@@ -39,7 +39,6 @@ import {
   claimKeyboardScrollBack,
   keyboardScrollTarget,
   noteKeyboardScroll,
-  stopKeyboardScrollBack,
   scrollTopOf,
 } from './keyboardScrollBack';
 import {distanceIntoBand} from './revealBand';
@@ -781,7 +780,6 @@ function revealWithKeyboard(
     }
   });
   const onFocusIn = () => {
-    stopKeyboardScrollBack(win);
     revealNow(getKeyboardHeight(win));
   };
   region.addEventListener('focusin', onFocusIn);
@@ -1159,7 +1157,6 @@ export function keepFieldAboveKeyboard(
     if (placement == null) {
       return;
     }
-    stopKeyboardScrollBack(win);
     stopSession =
       'ride' in placement
         ? rideWithKeyboard(placement.ride, offset, win, false)
