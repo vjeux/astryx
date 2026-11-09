@@ -2014,7 +2014,7 @@ export function createMotionEngine(
     const animation =
       baked != null && isCopyable(baked.effect)
         ? copyAnimation(baked.effect, target)
-        : target.animate(keyframes, {
+        : target.animate(keyframes.map(frame => ({...frame, marginTop: '0px'})), {
             duration: span,
             // The last keyframes hold the end state (END_HOLD_MS); filling both
             // ways also keeps it where an engine honors the fill on its compositor.
