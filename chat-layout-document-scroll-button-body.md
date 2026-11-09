@@ -29,10 +29,10 @@ Only `useChatStreamScroll.ts` changes, with no new API, prop, default or visual 
 
 ## Evidence
 
-- **Reproduction before the change**, at main fa30cff134, in Chromium and WebKit: after a wheel scroll up on a page-scrolling transcript, the button's signal stays off. New messages then pull the page back 870 to 883 px.
+- **Reproduction before the change**, at main fa30cff134, in Chromium and WebKit: a reader scrolls a page-scrolling transcript up. The button's signal stays off, and new messages pull the page back 870 to 883 px.
 - **Result after the change:** the signal turns on, follow stops, and the page stays put. All 3 cases pass 5 runs in each engine.
-- **Representative unchanged path:** an element scroller, whose existing hook units pass unchanged.
-- **Mutation-sensitive proof:** four mutants each fail a unit: no document filter, an `offsetHeight` root, a root-element listener, no `scrollend`.
+- **Representative unchanged path:** an element scroller; its existing hook units pass.
+- **Mutation-sensitive proof:** four mutants each fail a unit: no document filter (af55ea66cd), an `offsetHeight` root (38e5766160), a root-element listener (a5c58efb4d), no `scrollend` (ec5af4e7ec).
 
 ## Scope
 
@@ -43,10 +43,10 @@ Only `useChatStreamScroll.ts` changes, with no new API, prop, default or visual 
 
 ## Testing
 
-- `pnpm exec vitest run --project ui packages/core/src/Chat/`: 496/496 at 45130f992c. New: four hook cases for a page scroller and one ChatLayout case. On main, the hook case "shows the scroll button and stops following when the reader scrolls the page up" and the ChatLayout case fail.
-- `useChatStreamScrollPage.a11y.browser.spec.ts`, new, in Chromium and in WebKit: 3/3 in each of 5 runs per engine at 45130f992c. On main, 2 of 3 fail in each engine, in each of 2 runs.
+- `pnpm exec vitest run --project ui packages/core/src/Chat/`: 496/496 at 2fd138767f. New: four hook cases for a page scroller and one ChatLayout case. On main, the hook case "shows the scroll button and stops following when the reader scrolls the page up" and the ChatLayout case fail.
+- `useChatStreamScrollPage.a11y.browser.spec.ts`, new, in Chromium and in WebKit: 3/3 in each of 5 runs per engine at 2fd138767f. On main, 2 of 3 fail in each engine, in each of 2 runs.
 - `pnpm exec tsc` and ESLint: clean. `pnpm review:pre`: 0 findings, and the branch merges clean with main.
-- The sandbox Chat Layout page at `?case=long`, where the page scrolls its document, built at 45130f992c and with main's hook. After a 600 px wheel scroll up from the end, the button stays hidden on main and shows with the fix, in both engines:
+- The sandbox Chat Layout page at `?case=long`, where the page scrolls its document, built at 45130f992c and with main's hook. The head, 2fd138767f, adds only the changeset's credit line. After a 600 px wheel scroll up from the end, the button stays hidden on main and shows with the fix, in both engines:
 
 | Engine | main | fix |
 | --- | --- | --- |
