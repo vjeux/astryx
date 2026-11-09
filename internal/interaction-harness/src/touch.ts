@@ -1007,7 +1007,7 @@ export function touchPlayError(
   }
   const {late} = fault;
   const starvedMs =
-    late == null || late.index < 1 || fault.waited != null
+    late == null || late.index < 1
       ? null
       : longestFrameGap(frames, [
           arrivals[late.index - 1],
