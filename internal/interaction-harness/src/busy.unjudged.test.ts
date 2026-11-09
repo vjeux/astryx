@@ -140,6 +140,41 @@ describe('busyWindowProof on recorded Lightbox zoom casts', () => {
     );
   });
 
+  for (const [name, offset] of [
+    ['moves a quarter less', (y: number, y0: number) => y0 + 0.75 * (y - y0)],
+    [
+      'sits a quarter of its travel off',
+      (y: number, y0: number, travel: number) => y + travel / 4,
+    ],
+  ] as const) {
+    it(`never predicts with a replay that ${name}: the cast-step rule judges, and the notes say why`, () => {
+      const cast = ZOOM_CASTS[1];
+      const y0 = cast.geometry[0][1];
+      const travel = cast.geometry.at(-1)![1] - y0;
+      const {tracked, window, options} = replay(
+        {
+          ...cast,
+          geometry: cast.geometry.map(
+            ([t, y]) => [t, offset(y, y0, travel)] as const,
+          ),
+        },
+        true,
+      );
+      const proof = busyWindowProof(tracked, window, options);
+      expect(proof.notes.join(' ')).toMatch(
+        /no prediction: .* so the cast-step rule judges each frame/,
+      );
+      expect(proof.unjudged).toEqual([]);
+      expect(proof.control?.belowStep).toBe(1);
+      // A proof without a control is not dated, and falls back the same way.
+      const alone = busyWindowProof(tracked, window, {
+        axis: 'y',
+        settledWithin: 24,
+      });
+      expect(alone.notes.join(' ')).toMatch(/no prediction: /);
+    });
+  }
+
   for (const [n, cast] of ZOOM_CASTS.entries()) {
     it(`judges cast ${n + 1} on the replay: frames under a step are named, the rest move`, () => {
       const {tracked, window, options} = replay(cast, true);

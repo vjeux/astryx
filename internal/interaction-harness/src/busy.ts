@@ -225,7 +225,14 @@ export async function startBusyControl(
             Number(animation.currentTime ?? 0) >= 16 &&
             (aheadMs === 0 || ticks >= 2)
           ) {
-            resolve(performance.timeOrigin + Number(animation.startTime));
+            const start = performance.timeOrigin + Number(animation.startTime);
+            // Kept on the page for the block's window, which dates frames on
+            // the controls' clock (`BlockedWindow.controlStarts`).
+            const page = window as unknown as {
+              __harnessControlStarts?: number[];
+            };
+            (page.__harnessControlStarts ??= [])[aheadMs > 0 ? 1 : 0] = start;
+            resolve(start);
           } else if (realNow() > deadline) {
             reject(new Error('startBusyControl: the control did not start'));
           } else {
@@ -540,6 +547,12 @@ export interface BlockedWindow extends BusyWindow {
    * it started and ended on. It is never less than the time asked for.
    */
   readonly spanMs: number;
+  /**
+   * The busy controls' starts on the page clock, epoch ms, when
+   * `startBusyControl` started any: the first control, then the one ahead.
+   * A proof dates its frames from them unless its options name others.
+   */
+  readonly controlStarts?: readonly [number, number?];
   /**
    * With `during`: the animation the block caught, epoch ms on the page's
    * clock. `from` is its start, and `to` is where its curve ends, its held
@@ -976,9 +989,7 @@ export async function blockMainThread(
                   const {computedOffset, ...rest} = k as ComputedKeyframe;
                   return {...rest, offset: computedOffset};
                 }),
-                // Held at both ends: before its start the element shows the
-                // run's first keyframe, which the frame at rest checks.
-                {...(a.effect as KeyframeEffect).getTiming(), fill: 'both'},
+                (a.effect as KeyframeEffect).getTiming(),
               );
               replay.pause();
               return {
@@ -1164,10 +1175,21 @@ export async function blockMainThread(
               }
               const blockFrom = performance.timeOrigin + start;
               const blockTo = performance.timeOrigin + now;
+              const controlStarts = (
+                window as unknown as {__harnessControlStarts?: number[]}
+              ).__harnessControlStarts;
               resolve({
                 from: blockFrom,
                 to: blockTo,
                 spanMs: now - start,
+                ...(controlStarts?.[0] == null
+                  ? {}
+                  : {
+                      controlStarts: [controlStarts[0], controlStarts[1]] as [
+                        number,
+                        number?,
+                      ],
+                    }),
                 ...(animation == null
                   ? {}
                   : {
@@ -1438,7 +1460,7 @@ function predictionOf(
   judged: {from: number; to: number},
   stepPx: number,
   settledAt: number | undefined,
-): ((t: number) => number) | null {
+): ((t: number) => number) | {readonly fallback: string} | null {
   const animation = (window as BlockedWindow).animation;
   if (animation == null) {
     return null;
@@ -1466,15 +1488,28 @@ function predictionOf(
         `the replay drifted from the element: at the block's end it read ${check.predicted[column].toFixed(2)} for the ${axis}, the element ${check.actual[column].toFixed(2)}. The window is not judged.`,
       );
     }
-    // At rest before the motion, the replay and the cast read one position.
-    const rest = shown.filter(
-      f => f.t < animation.from && f.t >= geometry[0][0],
+    // Over the judged part, the replay sits and moves as the cast does, to
+    // within two steps or a tenth of the travel. A replay of another element,
+    // or of a run the element no longer follows, sits or moves another way.
+    const judgedShown = shown.filter(
+      f => f.t >= judged.from && f.t <= judged.to,
     );
-    const before = rest[rest.length - 1];
-    if (before != null && Math.abs(value(before.t) - before.value) > stepPx) {
-      throw new BusyPredictionError(
-        `the replay drifted from the cast: at rest it read ${value(before.t).toFixed(2)} for the ${axis}, the cast ${before.value.toFixed(2)}. The window is not judged.`,
-      );
+    const first = judgedShown[0];
+    const last = judgedShown.at(-1);
+    if (first != null && last != null && last !== first) {
+      const castTravel = last.value - first.value;
+      const allowed = Math.max(2 * stepPx, Math.abs(castTravel) / 10);
+      const replayTravel = value(last.t) - value(first.t);
+      if (Math.abs(replayTravel - castTravel) > allowed) {
+        return {
+          fallback: `over the judged part the replay moved ${replayTravel.toFixed(2)} for the ${axis}, the cast ${castTravel.toFixed(2)}`,
+        };
+      }
+      if (Math.abs(value(first.t) - first.value) > allowed) {
+        return {
+          fallback: `at the first judged frame the replay read ${value(first.t).toFixed(2)} for the ${axis}, the cast ${first.value.toFixed(2)}`,
+        };
+      }
     }
     return value;
   }
@@ -1733,19 +1768,62 @@ function readBusyWindow(
     predicted != null ||
     animation?.geometry != null ||
     animation?.progress != null;
+  // A prediction is on the page clock, so its frames are dated from the
+  // controls' own starts, which the window keeps when the options name none.
+  const starts =
+    controlStarts ??
+    (predicts ? (window as BlockedWindow).controlStarts : undefined);
   const dated =
     control != null &&
     (predicts || control.every(frame => frame.engine === 'webkit'))
-      ? datedOnControlClock(tracked, control, ahead, controlStarts)
+      ? datedOnControlClock(tracked, control, ahead, starts)
       : null;
-  return dated == null
-    ? judgeBusyWindow(tracked, window, options)
-    : judgeBusyWindow(
-        dated.tracked,
-        window,
-        {...options, control: dated.control},
-        dated.unread,
-      );
+  const read =
+    dated == null
+      ? judgeBusyWindow(tracked, window, options)
+      : judgeBusyWindow(
+          dated.tracked,
+          window,
+          {...options, control: dated.control},
+          dated.unread,
+        );
+  if (read.fallback != null && animation != null) {
+    // The replay moved another way than the cast: the cast-step rule judges
+    // the frames as if there were no replay, and the notes say why.
+    const {from: start, to: end, holds} = animation;
+    const plain: BlockedWindow = {
+      ...(window as BlockedWindow),
+      animation: {from: start, to: end, holds, notPredicted: read.fallback},
+    };
+    return readBusyWindow(tracked, plain, {...options, ahead, controlStarts});
+  }
+  if (dated == null) {
+    return read;
+  }
+  // The judged part in the cast's own stamps: the caller selects frames by
+  // them. The dates keep the stamps' order, so the same frames fall inside.
+  const stamps = [...tracked].sort((a, b) => a.t - b.t);
+  const {from, to} = read.proof.judged;
+  let first = -1;
+  let last = -1;
+  dated.tracked.forEach((frame, i) => {
+    if (frame.t >= from && first < 0) {
+      first = i;
+    }
+    if (frame.t <= to) {
+      last = i;
+    }
+  });
+  return {
+    ...read,
+    proof: {
+      ...read.proof,
+      judged: {
+        from: first < 0 ? from : stamps[first].t,
+        to: last < 0 ? to : stamps[last].t,
+      },
+    },
+  };
 }
 
 /** `readBusyWindow` on the frames it judges, dated. */
@@ -1842,7 +1920,12 @@ function judgeBusyWindow(
   } = {},
   /** The frames dated from another frame's reading (`datedOnControlClock`). */
   unread: ReadonlySet<TrackedFrame> = new Set(),
-): {proof: BusyProof; starvation: FrameShortfall | null} {
+): {
+  proof: BusyProof;
+  starvation: FrameShortfall | null;
+  /** Why the replay could not predict the frames: the caller judges again. */
+  fallback?: string;
+} {
   let end = window.to - marginMs;
   if (settledWithin != null && settledWithinSteps != null) {
     throw new Error(
@@ -2240,7 +2323,7 @@ function judgeBusyWindow(
     stepPx,
     tracked.some(f => f.step != null) ? castStep(tracked, axis) : 0,
   );
-  const predictedAt =
+  const prediction =
     predicted ??
     predictionOf(
       tracked.filter(f => !unread.has(f)),
@@ -2250,6 +2333,14 @@ function judgeBusyWindow(
       judgeStepPx,
       settledAt,
     );
+  if (prediction != null && typeof prediction !== 'function') {
+    return {
+      proof: null as unknown as BusyProof,
+      starvation: null,
+      fallback: prediction.fallback,
+    };
+  }
+  const predictedAt = prediction;
   const unjudged: UnjudgedFrame[] = [];
   if (control != null) {
     const controlChanges = controlChangesUpTo(control, judged.to);
