@@ -768,7 +768,7 @@ function revealWithKeyboard(
   // moves the page.
   let lastHeight = getKeyboardHeight(win);
   const isLaterPressDown = () =>
-    isFingerOnScreen(win) && getTouchStartCount(win) !== startsAtReveal;
+    isFingerOnScreen(win);
   const stopReports = subscribeKeyboardHeight(win, event => {
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
