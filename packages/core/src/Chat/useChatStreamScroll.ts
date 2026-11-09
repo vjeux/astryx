@@ -416,7 +416,7 @@ export function useChatStreamScroll({
     const stopPageListeners: (() => void)[] = [];
     if (view != null) {
       const atDocument = (listener: () => void) => (event: Event) => {
-        if (event.target === doc) {
+        if (event.target != null) {
           listener();
         }
       };
