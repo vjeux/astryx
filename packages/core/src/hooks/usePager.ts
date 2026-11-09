@@ -1054,7 +1054,9 @@ export function createPager(
     // One time for the seed and the new curve's start. A stall between the
     // read and the play then cannot leave the curve behind the track.
     const at = clock();
-    const from = sign() * running.get('x', at) * scale;
+    const model = settleHandle?.curve('x');
+    const from =
+      model == null ? sign() * running.get('x', at) * scale : sign() * model.at(model.duration);
     const velocity = sign() * running.getVelocity('x', at) * scale;
     const isRelease = isReleaseSettle;
     const touchRelease = isTouchReleaseSettle;
