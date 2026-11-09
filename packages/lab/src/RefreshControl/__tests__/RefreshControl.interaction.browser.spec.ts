@@ -40,6 +40,7 @@ import {
   type Page,
 } from '@astryxdesign/a11y-spec/playwright';
 import {
+  advanceFrozenPage,
   blockMainThread,
   busyWindowProof,
   compareCurve,
@@ -47,6 +48,9 @@ import {
   cubicBezier,
   drag,
   frames,
+  freezePageOn,
+  installPageFreeze,
+  installTimerGate,
   markElement,
   openStory,
   path,
@@ -56,12 +60,14 @@ import {
   startBusyControl,
   startCompositorTrace,
   startScreencast,
+  thawPage,
   timeline,
   trackControl,
   touchDriver,
   toTouchEvents,
   traceRendering,
   trackMarker,
+  waitForRest,
   withStorybook,
   writeEvidence,
   type TouchDriver,
@@ -242,41 +248,16 @@ async function waitForSettle(
   );
 }
 
-/** Resolves once the content itself holds still (an indicator may spin on). */
-async function waitForContentRest(
-  content: Locator,
-  timeout = 6000,
-): Promise<void> {
-  await content.evaluate(
-    (element, ms) =>
-      new Promise<void>((resolve, reject) => {
-        const deadline = performance.now() + ms;
-        let last = '';
-        let still = 0;
-        const tick = () => {
-          const translate = getComputedStyle(element).translate;
-          const moving = element
-            .getAnimations()
-            .some(a => a.playState === 'running');
-          still = !moving && translate === last ? still + 1 : 0;
-          last = translate;
-          if (still >= 2) {
-            resolve();
-            return;
-          }
-          if (performance.now() > deadline) {
-            reject(
-              new Error(`waitForContentRest: still moving (${translate})`),
-            );
-            return;
-          }
-          requestAnimationFrame(tick);
-        };
-        tick();
-      }),
+/**
+ * Resolves once the content holds still. The indicator's spinner spins on
+ * through a refresh, so the wait leaves it out. Every other animation inside
+ * the content still counts, and a page starved of frames fails by name.
+ */
+const waitForContentRest = (content: Locator, timeout = 6000) =>
+  waitForRest(content, {
+    ignore: content.locator('[data-refresh-spinner]'),
     timeout,
-  );
-}
+  });
 
 /** A slow pull that rests before the lift (release velocity 0). */
 function slowPull(from: {x: number; y: number}, dy: number, restMs = 150) {
@@ -318,20 +299,28 @@ async function sampleTranslate(
   );
 }
 
-/** Reads the shown pull after every move of a script, while the finger is down. */
+/**
+ * Reads the shown pull after every move of a script, while the finger is down.
+ * `onFirstEvent` runs once the page has the touch's first event: a thaw, for a
+ * finger that lands in a frozen scene.
+ */
 async function playReading(
   page: Page,
   driver: TouchDriver,
   content: Locator,
   script: ReturnType<typeof drag>,
   onLastMove?: () => Promise<void>,
+  onFirstEvent?: () => Promise<void>,
 ): Promise<{travel: number; shown: number}[]> {
   const startY = script[0].fingers[0].y;
   const moves = toTouchEvents(script).filter(e => e.type === 'touchMove');
   const readings: {travel: number; shown: number}[] = [];
   let index = 0;
   await driver.play(script, {
-    onEvent: async step => {
+    onEvent: async (step, eventIndex) => {
+      if (eventIndex === 0) {
+        await onFirstEvent?.();
+      }
       if (step.type !== 'touchMove') {
         return;
       }
@@ -376,7 +365,7 @@ test('past the trigger the refresh starts with the finger down, then settles ont
   page,
 }) => {
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   let busyWhileDown = false;
   await playReading(
@@ -398,7 +387,7 @@ test('the settle onto the inset follows the scroll view’s bounce spring', asyn
   page,
 }, testInfo) => {
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   await driver.play(slowPull(start, 300, 200));
   await waitForSettle(content, {hold: true});
@@ -472,7 +461,7 @@ test('the settle keeps moving every frame while the main thread is blocked', asy
     'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator rig)',
   );
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   await markElement(content);
   // The harness's busy-window control: a box the compositor moves along the
@@ -534,7 +523,7 @@ test('the settle does no Layout or Paint per frame', async ({
 }) => {
   test.skip(browserName !== 'chromium', 'rendering traces are Chromium-only');
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   // The indicator is the app's: Core's Spinner here. Its turn does style work
   // every few frames, and that paints inside the moving band. With the turn
@@ -616,7 +605,7 @@ test('a list shorter than the screen still pulls and refreshes', async ({
   const {driver, content, start} = await openRefresh(
     page,
     'lab-pull-to-refresh--short-list',
-    {refreshMs: '6000'},
+    {refreshMs: '-1'},
   );
   await driver.play(slowPull(start, 300, 200));
   await waitForContentRest(content);
@@ -683,7 +672,7 @@ test('a drag that began as a scroll pulls once the content reaches the top, in t
     'native scrolling from injected touches is Chromium-only (WebKit: the iOS simulator rig)',
   );
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   const scroller = page.locator('[data-refresh-scroller]').first();
   const scrollTop = () => scroller.evaluate(el => el.scrollTop);
@@ -704,7 +693,7 @@ test('a pull while refreshing stretches from the inset and settles back onto it'
   page,
 }) => {
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   await driver.play(slowPull(start, 300, 200));
   await waitForContentRest(content);
@@ -729,14 +718,22 @@ test('a pull while refreshing stretches from the inset and settles back onto it'
 test('a finger catching the settle holds it where it is, then pulls on from there', async ({
   page,
 }) => {
+  // The page clock that lets the scene stop at the lift, installed before
+  // the story loads; a freeze also needs the timer gate.
+  await installPageFreeze(page);
   const {driver, content, start} = await openRefresh(page);
+  await installTimerGate(page);
+  // The scene stops in the lift's own task, before the content hears the
+  // lift, and moves on 100 ms by its own clock. The settle back to the top
+  // is then 100 ms in, however late this process reacts. A wait on this
+  // process's clock can overshoot to the settle's end on a loaded machine.
+  await freezePageOn(page, 'touchend');
   await driver.play(slowPull(start, 76, 150));
-  // The settle back to the top is running: catch it 100 ms in.
-  await waitForSettle(content);
-  await page.waitForTimeout(100);
-  // Where the settle stood as the finger landed. A listener reads it before
-  // anything handles the touch. A reading taken earlier misses how far the
-  // settle moved before the touch arrived.
+  const lifted = await shownPull(content);
+  await advanceFrozenPage(page, 100);
+  // Where the content stood as the finger landed, read as the touch arrives.
+  // The catch holds it there, so a read after the page's own listener finds
+  // the same place.
   await content.evaluate(element => {
     window.addEventListener(
       'touchstart',
@@ -751,6 +748,7 @@ test('a finger catching the settle holds it where it is, then pulls on from ther
       {capture: true, once: true},
     );
   });
+  // The finger lands in the frozen scene, which runs on from there.
   const readings = await playReading(
     page,
     driver,
@@ -760,10 +758,14 @@ test('a finger catching the settle holds it where it is, then pulls on from ther
       {x: start.x, y: start.y + 30},
       {durationMs: 300, hz: 60, restMs: 100},
     ),
+    undefined,
+    () => thawPage(page),
   );
   const caught = Number(
     await content.evaluate(element => element.dataset.caughtAt),
   );
+  // The touch found the settle under way: off the lift, short of the top.
+  expect(caught).toBeLessThan(lifted - 5);
   expect(caught).toBeGreaterThan(5);
   // No jump at the catch: the first reading is where the settle stood, and
   // the pull goes on from there.
@@ -906,6 +908,44 @@ const recordedEnd = (page: Page) =>
   });
 
 /**
+ * Waits until the end makes its animation on the content, as the page's record
+ * shows it. The record keeps every animation, so a late check still finds one
+ * that already ran. Needs `recordAnimations`.
+ */
+const waitForEndStart = (page: Page, timeout = 6000) =>
+  page.evaluate(
+    ms =>
+      new Promise<void>((resolve, reject) => {
+        const record = window as unknown as {
+          __animations: RecordedAnimation[];
+          __endedAt: number | null;
+        };
+        const deadline = performance.now() + ms;
+        const tick = () => {
+          const endedAt = record.__endedAt;
+          if (
+            endedAt != null &&
+            record.__animations.some(
+              a => a.part === 'content' && a.at >= endedAt,
+            )
+          ) {
+            resolve();
+          } else if (performance.now() > deadline) {
+            reject(
+              new Error(
+                `waitForEndStart: the end made no animation on the content within ${ms} ms`,
+              ),
+            );
+          } else {
+            setTimeout(tick, 16);
+          }
+        };
+        tick();
+      }),
+    timeout,
+  );
+
+/**
  * The record's failures among recorded transitions (spins excluded): travel,
  * or values still changing after 200 ms.
  */
@@ -923,7 +963,7 @@ test('under Reduce Motion a release cross-fades onto the inset: opacity only, wi
   await page.emulateMedia({reducedMotion: 'reduce'});
   await primaryPointer(page, 'coarse');
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   await recordAnimations(page);
   await driver.play(slowPull(start, 300, 200));
@@ -958,7 +998,7 @@ test('under Reduce Motion the end cross-fades on a touch screen, and a `--motion
   await waitForContentRest(content);
   await endRefresh(page);
   await expect.poll(() => isBusy(content), {timeout: 8000}).toBe(false);
-  await page.waitForTimeout(100);
+  await waitForEndStart(page);
   await waitForContentRest(content);
   expect(await shownPull(content)).toBeCloseTo(0, 1);
   const log = await recordedEnd(page);
@@ -1017,7 +1057,7 @@ test('a theme’s duration token retimes the end, and a `--motion-…` variable 
   await waitForContentRest(content);
   await endRefresh(page);
   await expect.poll(() => isBusy(content), {timeout: 8000}).toBe(false);
-  await page.waitForTimeout(100);
+  await waitForEndStart(page);
   await waitForContentRest(content);
   const log = await recordedEnd(page);
   const slide = log.find(
@@ -1094,7 +1134,7 @@ async function desktopPage(
     storybook(),
     'lab-pull-to-refresh--in-a-scroll-container',
     {
-      refreshMs: '6000',
+      refreshMs: '-1',
     },
   );
   const pointer = await page.evaluate(() => ({
@@ -1361,7 +1401,7 @@ test('the indicator stays at the top of the scroll view while the content is pul
   page,
 }) => {
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   await recordPositions(content);
   await driver.play(slowPull(start, 300, 150));
@@ -1490,11 +1530,11 @@ test('the settle starts where its curve starts, even when the page is busy right
   page,
 }) => {
   const {driver, content, start} = await openRefresh(page, undefined, {
-    refreshMs: '6000',
+    refreshMs: '-1',
   });
   await sampleAfter(content, 'lift', 250);
   await driver.play(slowPull(start, 300, 150));
-  await page.waitForTimeout(1200);
+  await waitForContentRest(content);
   // The settle is made in the lift's own task. It starts at the next frame
   // that the main thread commits, before or after the busy task. Before it,
   // the compositor plays the settle through the block. Either way, its curve
