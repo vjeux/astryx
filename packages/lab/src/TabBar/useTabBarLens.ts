@@ -534,7 +534,11 @@ export function useTabBarLens({
     } else {
       playCopy(at);
     }
-    dropCopyAtRest();
+    if (isReduced) {
+      flushSync(() => setIsCopyShown(false));
+    } else {
+      dropCopyAtRest();
+    }
     if (chosen < 0) {
       return;
     }
@@ -590,7 +594,7 @@ export function useTabBarLens({
     onActivate: tab => {
       const run = liftRef.current;
       liftRef.current = null;
-      run?.(tab);
+      requestAnimationFrame(() => run?.(tab));
     },
   });
 
