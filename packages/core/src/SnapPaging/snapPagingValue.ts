@@ -254,8 +254,7 @@ function itemStops(
       ? Number.parseFloat(getComputedStyle(item).translate) || 0
       : 0;
     const fromEdge =
-      (rtl ? box.right - rect.right : rect.left - box.left) / scale +
-      (rtl ? held : -held);
+      (rtl ? box.right - rect.right : rect.left - box.left) / scale;
     return {
       item,
       stop: Math.min(Math.max(fromEdge - border + shown - padding, 0), end),
