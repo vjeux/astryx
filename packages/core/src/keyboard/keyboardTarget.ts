@@ -902,7 +902,7 @@ function rideWithKeyboard(
   const pans = watchPans(
     win,
     focused => target.contains(focused),
-    guide != null,
+    false,
   );
   let frame = 0;
   let pendingSlide: KeyboardTransition | null = null;
