@@ -347,6 +347,8 @@ export function useTabBarLens({
     if (isReduced && isLifted) {
       shadow.animator.set({opacity: 1});
       glass.animator.set({opacity: 1});
+    } else if (isReduced) {
+      // No lowering.
     } else {
       shadow.animator.animate({opacity: isLifted ? 1 : 0}, spring, options);
       glass.animator.animate({opacity: isLifted ? 1 : 0}, spring, options);
