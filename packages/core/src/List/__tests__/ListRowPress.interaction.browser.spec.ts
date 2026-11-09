@@ -503,6 +503,12 @@ test('a busy first frame after the lift still plays the whole release before the
             release.endsAt =
               release.startAt +
               Number(animation.effect?.getComputedTiming().endTime);
+            // NOT FOR LANDING: the attribute goes one frame before the
+            // release animation ends.
+            setTimeout(
+              () => el.removeAttribute('data-astryx-press'),
+              until + release.endsAt - 1000 / 60 - performance.now(),
+            );
           }
         }
         if ((document.timeline.currentTime as number) >= until) {
@@ -518,14 +524,29 @@ test('a busy first frame after the lift still plays the whole release before the
   });
   await driver.play(tap(center, {holdMs: 300}));
   await expect.poll(async () => pressState(row)).toBeNull();
-  const {frames, release} = await page.evaluate(() => {
+  const {frames: recorded, release} = await page.evaluate(() => {
     const w = window as unknown as {
       __frames: [number, number, string | null][];
       __release: {startAt: number; endsAt: number; leftAt: number};
     };
     return {frames: w.__frames, release: w.__release};
   });
+  // NOT FOR LANDING: the record keeps no fading frame in the last 38 ms
+  // before the attribute went, as a page starved of frames draws.
+  const goneAt = recorded.find(([, , press]) => press !== 'fading')?.[0];
+  const frames = recorded.filter(
+    ([t, , press]) => press !== 'fading' || goneAt == null || t <= goneAt - 38,
+  );
   const record = JSON.stringify({release, frames});
+  // NOT FOR LANDING: where the cut landed, whether the run passes or not.
+  await writeEvidence(
+    'list-row-press-cut',
+    {
+      [`${test.info().project.name}-r${test.info().repeatEachIndex}.json`]:
+        record,
+    },
+    test.info(),
+  );
   const fading = frames.filter(([, , press]) => press === 'fading');
   // WebKit can start the release at the time the busy script began, so its
   // first frame after the block can already be near rest (opacity 0.03
