@@ -525,7 +525,7 @@ export async function trackMarkers(
   }
   const entries = colors.map(color =>
     'rgb' in color
-      ? {rgb: color.rgb, region: color.region ?? region}
+      ? {rgb: color.rgb, region}
       : {rgb: color, region},
   );
   const isDefaultMarker = entries.map(({rgb}) =>
