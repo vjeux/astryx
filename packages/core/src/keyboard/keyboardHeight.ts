@@ -18,11 +18,7 @@
 
 import {armClickGuard} from '../utils/clickGuard';
 import {matchesMediaQuery} from '../utils/coarsePointer';
-import {
-  getTouchStartCount,
-  isTouchOnScreen,
-  subscribeInput,
-} from '../utils/inputStream';
+import {subscribeInput} from '../utils/inputStream';
 import {isNode} from '../utils/nodeType';
 import {layoutViewportHeight} from '../utils/layoutViewport';
 import {PRESS_SLOP_PX} from '../utils/pressGesture';
@@ -104,8 +100,6 @@ export type KeyboardHeightEvent =
 
 interface KeyboardStore {
   height: number;
-  /** The input stream's touch starts at the last hide, or null before one. */
-  startsAtHide: number | null;
   listeners: Set<(event: KeyboardHeightEvent) => void>;
   /** The subscribers that asked for focus moves too (the layout guide). */
   focusListeners: Set<(event: KeyboardHeightEvent) => void>;
@@ -120,7 +114,6 @@ function storeOf(win: Window): KeyboardStore {
   if (store == null) {
     store = {
       height: 0,
-      startsAtHide: null,
       listeners: new Set(),
       focusListeners: new Set(),
       detach: null,
@@ -160,9 +153,6 @@ function attach(win: Window, store: KeyboardStore): () => void {
   let stepHeight = 0;
   let stepLimit = 0;
   const deliver = (height: number, timeStamp: number) => {
-    if (height <= KEYBOARD_EPSILON && store.height > KEYBOARD_EPSILON) {
-      store.startsAtHide = getTouchStartCount(win);
-    }
     store.height = height;
     const report: KeyboardHeightEvent = {type: 'viewport', height, timeStamp};
     for (const listener of [...store.listeners]) {
@@ -290,20 +280,6 @@ export function subscribeKeyboardHeight(
       store.detach = null;
     }
   };
-}
-
-/**
- * Whether a finger is on `win`'s screen, from the input stream's count. A
- * finger that was down at the keyboard's last hide counts no more until a
- * touch starts. A touch whose target leaves the page ends at a node the
- * window never hears.
- */
-export function isFingerOnScreen(win: Window): boolean {
-  const startsAtHide = stores.get(win)?.startsAtHide;
-  return (
-    isTouchOnScreen(win) &&
-    (startsAtHide == null || getTouchStartCount(win) !== startsAtHide)
-  );
 }
 
 /**
@@ -531,22 +507,12 @@ function watchTouchStarts(doc: Document, onTouchStart: () => void): () => void {
       return () => {};
     }
     const watches = new Set<() => void>();
-    const stopStarts = subscribeInput(view, 'touchstart', () => {
+    const stop = subscribeInput(view, 'touchstart', () => {
       for (const watch of [...watches]) {
         watch();
       }
     });
-    // Heard so the stream counts the fingers on the screen (isFingerOnScreen).
-    const stopEnds = subscribeInput(view, 'touchend', () => {});
-    const stopCancels = subscribeInput(view, 'touchcancel', () => {});
-    shared = {
-      stop: () => {
-        stopStarts();
-        stopEnds();
-        stopCancels();
-      },
-      watches,
-    };
+    shared = {stop, watches};
     touchStartWatches.set(doc, shared);
   }
   shared.watches.add(onTouchStart);
@@ -609,9 +575,7 @@ export function watchRevealPan(
               top: viewport.offsetTop,
               scale: viewport.scale,
             };
-      // A report while a finger is down, as when Firefox's toolbar hides in
-      // a drag, leaves that drag's pan to the person.
-      touchedSinceReport = isFingerOnScreen(win);
+      touchedSinceReport = false;
       isChromeReveal = null;
     },
     isRevealPan: height => {
