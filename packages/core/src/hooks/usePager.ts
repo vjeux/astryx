@@ -1033,8 +1033,7 @@ export function createPager(
       if (settleHandle != null && animator != null) {
         // Uniform pages scale with the viewport, so the settle keeps its
         // fraction of a page.
-        const scale =
-          isChildPages() || oldStride <= 0 ? 1 : stride() / oldStride;
+        const scale = 1;
         retargetSettle(animator, scale);
         return;
       }
