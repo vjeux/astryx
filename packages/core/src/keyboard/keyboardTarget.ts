@@ -13,19 +13,17 @@
  */
 
 import {animatorFor, type Animator} from '../motion/animator';
-import {reducesMotion} from '../motion/reducedMotion';
-import {isCoarsePointer} from '../utils/coarsePointer';
-import {getTouchStartCount, subscribeInput} from '../utils/inputStream';
+import {themeReducesMotion} from '../privateAttributes/reducedMotion.stylex';
+import {isCoarsePointer, matchesMediaQuery} from '../utils/coarsePointer';
+import {subscribeInput} from '../utils/inputStream';
 import {layoutViewportHeight} from '../utils/layoutViewport';
-import {nearestScroller, scrollingAncestor} from '../utils/scrollingAncestor';
-import {isIosWebKit} from '../utils/touchQueries';
+import {scrollingAncestor} from '../utils/scrollingAncestor';
 import {
   KEYBOARD_EPSILON,
   claimTapFocus,
   findTextEntryControl,
   focusAtPoint,
   getKeyboardHeight,
-  isFingerOnScreen,
   isKeyboardMeasurable,
   isTextEntryControl,
   panVisualViewportTo,
@@ -39,7 +37,6 @@ import {
   claimKeyboardScrollBack,
   keyboardScrollTarget,
   noteKeyboardScroll,
-  stopKeyboardScrollBack,
   scrollTopOf,
 } from './keyboardScrollBack';
 import {distanceIntoBand} from './revealBand';
@@ -77,8 +74,6 @@ export function registerKeyboardTarget(element: Element): () => void {
   };
 }
 
-export {nearestScroller};
-
 /** Whether a registered target holds `element`. */
 export function isInsideKeyboardTarget(element: Element): boolean {
   for (
@@ -91,6 +86,20 @@ export function isInsideKeyboardTarget(element: Element): boolean {
     }
   }
   return false;
+}
+
+/**
+ * The element that scrolls `element` into view: its nearest ancestor that
+ * scrolls on the block axis, or else the document's scroller.
+ */
+export function nearestScroller(element: Element): Element {
+  const doc = element.ownerDocument;
+  const scroller = scrollingAncestor(element);
+  return scroller == null ||
+    scroller === doc.body ||
+    scroller === doc.documentElement
+    ? (doc.scrollingElement ?? doc.documentElement)
+    : scroller;
 }
 
 // The element's bottom edge where layout puts it, without the ride's move.
@@ -343,24 +352,25 @@ function liftFor(
   return animator.get('y') < 0 ? targetCovered : 0;
 }
 
+// Scrolls `scroller` by `distance` px, up or down, at once unless `behavior`
+// is 'smooth'.
 function scrollBy(
   scroller: Element,
   distance: number,
   win: Window,
   behavior: ScrollBehavior = 'instant',
 ): void {
-  // An explicit 'instant' also overrides a scroller's own smooth
-  // `scroll-behavior`.
   const doc = scroller.ownerDocument;
   if (scroller === (doc.scrollingElement ?? doc.documentElement)) {
     win.scrollBy({top: distance, behavior});
-  } else if (typeof scroller.scrollBy === 'function') {
+  } else if (behavior === 'smooth' && typeof scroller.scrollBy === 'function') {
     scroller.scrollBy({top: distance, behavior});
   } else {
     scroller.scrollTop += distance;
   }
 }
 
+// How far `scroller` can scroll down from its top.
 function scrollRangeOf(scroller: Element, win: Window): number {
   const doc = scroller.ownerDocument;
   const view =
@@ -376,8 +386,14 @@ function scrollRangeOf(scroller: Element, win: Window): number {
 // on Android checks the field in the resize's own commit, where a smooth
 // scroll would leave it covered. There, and under Reduce Motion, the field
 // moves at once.
-function risesSmoothly(field: Element): boolean {
-  return isIosWebKit(field.ownerDocument.defaultView) && !reducesMotion(field);
+function risesSmoothly(field: Element, win: Window): boolean {
+  const css = (win as Window & {CSS?: typeof CSS}).CSS;
+  return (
+    typeof css?.supports === 'function' &&
+    css.supports('-webkit-touch-callout', 'none') &&
+    !matchesMediaQuery(win, '(prefers-reduced-motion: reduce)') &&
+    !themeReducesMotion(field)
+  );
 }
 
 // The band a field must be in. It is inside its scroller's box and the
@@ -469,7 +485,7 @@ function reveal(
     height > KEYBOARD_EPSILON &&
     Math.abs(target - now - distance) <= KEYBOARD_EPSILON &&
     sitsInBand(field, scroller, height, offset, win, -distance) &&
-    risesSmoothly(field);
+    risesSmoothly(field, win);
   // A rise still on its way extends Core's own scroll.
   const before = keyboardScrollTarget(scroller, win) ?? now;
   scrollBy(scroller, distance, win, rises ? 'smooth' : 'instant');
@@ -707,21 +723,11 @@ function revealWithKeyboard(
   const doc = scroller.ownerDocument;
   const root = doc.scrollingElement ?? doc.documentElement;
   let isPlaced = true;
-  // A long press focuses with the finger still down. The show's first reveal
-  // runs all the same.
-  let hasRevealed = false;
-  // The input stream's touch-start count at the last reveal. The press that
-  // focused the field started before it, so it holds no report. Gboard can
-  // report a 48 px keyboard first, then its full height, while that press is
-  // still down.
-  let startsAtReveal = 0;
   const revealNow = (height: number) => {
     const focused = field();
     if (focused == null) {
       return;
     }
-    hasRevealed = height > KEYBOARD_EPSILON;
-    startsAtReveal = getTouchStartCount(win);
     const rising = reveal(focused, scroller, height, offset, win);
     if (unplaced === 'keep') {
       return;
@@ -762,28 +768,19 @@ function revealWithKeyboard(
     isPlaced = panIntoView(focused, offset, win, pans);
   };
   const pans = watchPans(win, focused => focused === field() && isPlaced);
-  // A report within a pixel of the last height is a pan, a scroll or a
-  // zoom's rounding, so the field stays. After the show's first reveal, a
-  // report during a press that began after that reveal moves nothing, as
-  // when Firefox's toolbar hides in a drag.
+  // A report within a pixel of the last height comes from a pan, a scroll or
+  // a zoom's rounding. The field stays where the person put it.
   let lastHeight = getKeyboardHeight(win);
-  const isLaterPressDown = () =>
-    isFingerOnScreen(win) && getTouchStartCount(win) !== startsAtReveal;
   const stopReports = subscribeKeyboardHeight(win, event => {
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
         lastHeight = event.height;
-        if (!hasRevealed || !isLaterPressDown()) {
-          revealNow(event.height);
-        }
+        revealNow(event.height);
       }
       pans.report(event.height);
     }
   });
-  const onFocusIn = () => {
-    stopKeyboardScrollBack(win);
-    revealNow(getKeyboardHeight(win));
-  };
+  const onFocusIn = () => revealNow(getKeyboardHeight(win));
   region.addEventListener('focusin', onFocusIn);
   revealNow(getKeyboardHeight(win));
   return () => {
@@ -1159,7 +1156,6 @@ export function keepFieldAboveKeyboard(
     if (placement == null) {
       return;
     }
-    stopKeyboardScrollBack(win);
     stopSession =
       'ride' in placement
         ? rideWithKeyboard(placement.ride, offset, win, false)
