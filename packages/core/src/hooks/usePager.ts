@@ -1160,7 +1160,7 @@ export function createPager(
         !isFlipped &&
         !isPastEnd
       ) {
-        retargetSettle(animator, remap, seed);
+        retargetSettle(animator, remap, readSeed(animator));
         return;
       }
       // A mirrored track has no settle to carry on, so it stops and re-places.
