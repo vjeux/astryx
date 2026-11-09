@@ -218,9 +218,6 @@ function scrollBackAtBlur(
  */
 export function stopKeyboardScrollBack(win: Window): void {
   for (const [scroller, added] of addedScrolls.get(win) ?? []) {
-    if (!added.isBack) {
-      continue;
-    }
     const top = scrollTopOf(scroller, win);
     scrollTopTo(scroller, top, 'instant', win);
     added.at = top;
