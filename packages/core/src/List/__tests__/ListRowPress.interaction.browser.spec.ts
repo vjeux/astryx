@@ -472,6 +472,11 @@ test('a busy first frame after the lift still plays the whole release before the
         const press = el.getAttribute('data-astryx-press');
         if ((document.timeline.currentTime as number) >= until) {
           frames.push([+(time - until).toFixed(1), strength, press]);
+          // NOT FOR LANDING: the attribute goes while the layer still shows
+          // 0.35: the release vanishing before it has played.
+          if (press === 'fading' && strength <= 0.35) {
+            el.removeAttribute('data-astryx-press');
+          }
         }
         if (press === 'fading' && frames.length < 120) {
           requestAnimationFrame(sample);
