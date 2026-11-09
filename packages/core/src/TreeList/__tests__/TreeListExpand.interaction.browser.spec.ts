@@ -177,7 +177,25 @@ async function recordFrames(
         ? 0
         : Number.parseFloat(value.split(' ')[1] ?? '0');
     };
+    // NOT FOR LANDING: the group's clip starts two frames late.
+    let delayed = false;
     const tick = () => {
+      if (!delayed) {
+        const clip = document
+          .querySelector(
+            '[role="treeitem"][data-tree-id="components"] > [role="group"]',
+          )
+          ?.getAnimations()
+          .find(animation =>
+            (animation.effect as KeyframeEffect | null)
+              ?.getKeyframes()
+              .some(frame => frame.clipPath != null),
+          );
+        if (clip != null && clip.startTime != null) {
+          clip.startTime = Number(clip.startTime) + 33;
+          delayed = true;
+        }
+      }
       const parent = item('components');
       const below = item('app');
       const last = item('index');
