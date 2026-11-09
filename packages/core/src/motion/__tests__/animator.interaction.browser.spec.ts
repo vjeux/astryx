@@ -1009,6 +1009,13 @@ for (const how of ['in a task', 'in a frame callback of the page'] as const) {
           }
           return best;
         };
+        // NOT FOR LANDING: the held start shows on the two frames before the
+        // first frame after the block.
+        const afterIndex = judged.findIndex(frame => frame.at >= times.end);
+        if (afterIndex >= 2) {
+          judged[afterIndex - 1].x = judged[afterIndex].x;
+          judged[afterIndex - 2].x = judged[afterIndex].x;
+        }
         const fromScreen = bestFit(commit => {
           const next = from(commit);
           return elapsed => next.value(elapsed / 1000);
