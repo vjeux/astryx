@@ -72,6 +72,9 @@ function moveKey<T extends Key>(
 
 const NONE: ReadonlyArray<string> = [];
 
+/** The mark a reorder's glide puts on the list (privateAttributes/reorderGlide). */
+const GLIDE_MARK = 'data-astryx-reorder-glide';
+
 function ReorderableRows({
   initial,
   fixed = NONE,
@@ -1556,6 +1559,90 @@ describe('List reorderable', () => {
     }
     home.mockRestore();
     spring.mockRestore();
+  });
+
+  it("marks the list while a drop's rows glide, and a drag clears the mark at once", () => {
+    stubPrimaryPointer(true);
+    render(<ReorderableRows initial={['A', 'B', 'C', 'D']} />);
+    const list = screen.getByRole('list');
+    layOut(list);
+    const handle = handleOf('A');
+    mouseDrag(handle, 322, 322 + 70);
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(false);
+    act(() => {
+      fireEvent.pointerUp(handle, {...MOUSE, clientY: 322 + 70});
+    });
+    expect(labels()).toEqual(['B', 'C', 'A', 'D']);
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(true);
+    // A drag picked up while the rows glide has the clip back.
+    layOut(list);
+    mouseDrag(handleOf('D'), 388, 388 - 30);
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(false);
+  });
+
+  it('clears the mark when a pointer lands on the list while its rows glide', () => {
+    stubPrimaryPointer(true);
+    render(<ReorderableRows initial={['A', 'B', 'C', 'D']} />);
+    const list = screen.getByRole('list');
+    layOut(list);
+    const handle = handleOf('A');
+    mouseDrag(handle, 322, 322 + 70);
+    act(() => {
+      fireEvent.pointerUp(handle, {...MOUSE, clientY: 322 + 70});
+    });
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(true);
+    // A finger on a row's body, where a swipe can start.
+    fireEvent.pointerDown(list.querySelectorAll('li')[3], {
+      pointerType: 'touch',
+      pointerId: 2,
+      button: 0,
+    });
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(false);
+  });
+
+  it("marks the list while a key move's rows slide", async () => {
+    stubPrimaryPointer(true);
+    const user = userEvent.setup();
+    render(<ReorderableRows initial={['A', 'B', 'C']} />);
+    const list = screen.getByRole('list');
+    layOut(list);
+    handleOf('A').focus();
+    await user.keyboard(' {ArrowDown}');
+    await waitFor(() => expect(labels()).toEqual(['B', 'A', 'C']));
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(true);
+  });
+
+  it("marks the list while a cancelled drag's rows glide home", async () => {
+    stubPrimaryPointer(true);
+    const user = userEvent.setup();
+    render(<ReorderableRows initial={['A', 'B', 'C']} />);
+    const list = screen.getByRole('list');
+    layOut(list);
+    handleOf('A').focus();
+    await user.keyboard(' {ArrowDown}{Escape}');
+    await waitFor(() => expect(labels()).toEqual(['B', 'A', 'C']));
+    layOut(list);
+    // Picked up again while it still glides: the mark goes for the drag.
+    const handle = handleOf('A');
+    mouseDrag(handle, 344, 344 + 30);
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(false);
+    // Cancelled: the rows still off their places glide home, marked again.
+    fireEvent.pointerCancel(handle, {...MOUSE, clientY: 344 + 30});
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(true);
+  });
+
+  it("marks nothing with a fine primary pointer, where a drop's rows take their places without a glide", () => {
+    stubPrimaryPointer(false);
+    render(<ReorderableRows initial={['A', 'B', 'C', 'D']} />);
+    const list = screen.getByRole('list');
+    layOut(list);
+    const handle = handleOf('A');
+    mouseDrag(handle, 322, 322 + 70);
+    act(() => {
+      fireEvent.pointerUp(handle, {...MOUSE, clientY: 322 + 70});
+    });
+    expect(labels()).toEqual(['B', 'C', 'A', 'D']);
+    expect(list.hasAttribute(GLIDE_MARK)).toBe(false);
   });
 
   it('puts its listeners on the list: none on a row or a handle', () => {

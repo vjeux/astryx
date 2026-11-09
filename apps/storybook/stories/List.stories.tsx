@@ -1091,3 +1091,59 @@ export const ReorderLongList: Story = {
     },
   },
 };
+
+function ReorderInACardDemo() {
+  const [rows, setRows] = useState([
+    'Inbox',
+    'Sent',
+    'Drafts',
+    'Archive',
+    'Spam',
+    'Trash',
+  ]);
+  const [archived, setArchived] = useState(0);
+  const reorderable = useMemo(
+    () =>
+      createReorderable({
+        onReorder: ({key, to}) => setRows(current => moveKey(current, key, to)),
+      }),
+    [],
+  );
+  return (
+    <VStack gap={2}>
+      <Card>
+        <List hasDividers reorderable={reorderable}>
+          {rows.map(label => (
+            <ListItem
+              key={label}
+              itemKey={label}
+              label={label}
+              swipeActions={{
+                trailing: [
+                  {
+                    label: 'Archive',
+                    onActivate: () => setArchived(count => count + 1),
+                  },
+                ],
+              }}
+            />
+          ))}
+        </List>
+      </Card>
+      <Text color="secondary">{`Archive swipes: ${archived}`}</Text>
+    </VStack>
+  );
+}
+
+export const ReorderInACard: Story = {
+  render: () => <ReorderInACardDemo />,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A reorderable List in a Card, which clips it to its rounded ' +
+          'corners. Each row also swipes to Archive.',
+      },
+    },
+  },
+};

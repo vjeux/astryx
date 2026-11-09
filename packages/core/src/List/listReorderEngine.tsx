@@ -117,6 +117,10 @@ import {
   clearReorderSource,
   markReorderSource,
 } from '../privateAttributes/reorderSource.stylex';
+import {
+  clearReorderGlide,
+  markReorderGlide,
+} from '../privateAttributes/reorderGlide.stylex';
 import {markReorderPreview} from '../privateAttributes/reorderPreview.stylex';
 import {
   hideReorderLine,
@@ -221,6 +225,22 @@ function settleAtRest(
     animatorFor(element).set({y: 0});
   }
   releaseMotion(element, 'translate');
+}
+
+/**
+ * Marks `list` while the rows of `rows` that glide go on, so the list lifts
+ * its inline clip under a finger (privateAttributes/reorderGlide.stylex.ts).
+ * It reads no layout, so a glide calls it among its writes. The mark goes
+ * once each of those glides ends.
+ */
+function markGlide(list: HTMLElement, rows: ReadonlyArray<HTMLElement>): void {
+  markReorderGlide(
+    list,
+    rows.flatMap(row => {
+      const running = motionOf(row, 'y');
+      return running == null ? [] : [running.handle.finished];
+    }),
+  );
 }
 
 /**
@@ -959,6 +979,7 @@ export class ListReorderController implements ListReorderSession {
    * list. While a press is down, its move and lift listeners sit there too.
    * The press is the handle's until it lifts, through pointer capture. It
    * drags the row once it has moved MOUSE_DRAG_SLOP from where it pressed.
+   * Any pointer that lands on the list also ends a glide's lifted clip.
    * Returns the detach.
    */
   attachMouse(): () => void {
@@ -967,6 +988,9 @@ export class ListReorderController implements ListReorderSession {
       return () => {};
     }
     const onPointerDown = (event: PointerEvent) => {
+      // Any pointer that lands on the list brings the clip back, so a swipe
+      // it starts slides no row content past the inline edge.
+      clearReorderGlide(list);
       if (!this.dragsAtOnce(event.pointerType) || event.button !== 0) {
         return;
       }
@@ -1215,6 +1239,8 @@ export class ListReorderController implements ListReorderSession {
     markReorderSource(row);
     row.style.opacity = MOVING_OPACITY;
     markReordering(list);
+    // The clip is back for the drag, even if rows still glide.
+    clearReorderGlide(list);
     const session: DragSession = {
       list,
       rows,
@@ -1592,6 +1618,7 @@ export class ListReorderController implements ListReorderSession {
       // the shared settle role from where it is shown, at the speed it has.
       touchMotion.home(element, spring, at, false);
     }
+    markGlide(list, away);
     clearReordering(list);
     this.restWhenDone(rows[dragged], restore);
   }
@@ -1748,6 +1775,7 @@ export class ListReorderController implements ListReorderSession {
         // is shown, as a drop's rows do.
         touchMotion.follow(element, shift, spring, at);
       }
+      markGlide(list, move.rows);
       clearReordering(list);
     };
   }
@@ -1807,6 +1835,7 @@ export class ListReorderController implements ListReorderSession {
         settleAtRest(element, value, moving);
       }
     }
+    markGlide(list, pending.rows);
     clearReordering(list);
     this.restWhenDone(pending.rows[pending.dragged], pending.restore);
   }
