@@ -217,9 +217,7 @@ export function itemsSpan(element: HTMLElement, isHeld = false): number {
   let end = -Infinity;
   for (const item of items) {
     const rect = item.getBoundingClientRect();
-    const held = isHeld
-      ? Number.parseFloat(getComputedStyle(item).translate) || 0
-      : 0;
+    const held = 0;
     start = Math.min(start, rect.left - held);
     end = Math.max(end, rect.right - held);
   }
