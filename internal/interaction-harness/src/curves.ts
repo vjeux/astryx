@@ -287,10 +287,8 @@ export function animationRecorder(passive?: boolean): void {
   // harness touches for the first time) is seen now, before any watch arms;
   // first seen a frame later, it would read as started by the watched action.
   // (A recorder that starts during a trace reads once here, then waits.)
-  if (!isPassive) {
-    record();
-    loop();
-  }
+  record();
+  loop();
   // A start event with nothing left to read: a CSS animation shorter than the
   // gap between two of the page's frames can start and finish inside it, and
   // WebKit sends its start event only at the next frame, when
