@@ -1,5 +1,3 @@
-Stack: #10779 → this pull request. Only the last commit is new here; the first one is #10779.
-
 ## User impact
 
 A chat that scrolls the whole page passes `useChatStreamScroll` the document's scroller. There, `scrollToMessage(el)` should put the message at the top of the viewport. On main, the message lands off by the page's own scroll. With the page scrolled 462 px, it sits 462 px above the viewport.
@@ -22,14 +20,14 @@ No record changes.
 
 ## Smallest restoration
 
-Only `useChatStreamScroll.ts` changes. A module helper, `scrollsPage(el)`, now names the page's scroller for both the scroll listener from #10779 and `scrollToMessage`. For the page, the measure starts at 0 instead of the root's box. There is no new API, prop or default.
+Only `useChatStreamScroll.ts` changes in source. A module helper, `scrollsPage(el)`, now names the page's scroller for both the scroll listener from #10779 and `scrollToMessage`. For the page, the measure starts at 0 instead of the root's box. There is no new API, prop or default. A second, test-only commit moves #10779's page-scroll ChatLayout cases above the next block's banner.
 
 ## Evidence
 
-- **Reproduction before the change**, at #10779's head 2fd138767f: the message's top lands at −462 px in Chromium and −465 px in WebKit. That is minus the page's scroll, in each of 3 runs.
+- **Reproduction before the change**, at main 376a483319, which includes #10779: the message's top lands at −462 px in Chromium and −465 px in WebKit. That is minus the page's scroll, in each of 3 runs.
 - **Result after the change:** the message's top lands at 0 px, in each of 5 runs per engine.
 - **Representative unchanged path:** a unit pins an element scroller's offset, 350 px, on both builds.
-- **Mutation-sensitive proof:** two mutants each fail a unit: the page measured from the root's box (2909b74b6f), and every scroller measured from 0 (daa886e512).
+- **Mutation-sensitive proof:** two mutants each fail a unit: the page measured from the root's box (84ee66e90a), and every scroller measured from 0 (e6c6b91f24).
 
 ## Scope
 
@@ -40,6 +38,6 @@ Only `useChatStreamScroll.ts` changes. A module helper, `scrollsPage(el)`, now n
 
 ## Testing
 
-- `pnpm exec vitest run --project ui packages/core/src/Chat/`: 498/498 at 97b0943257. New: a page-scroller case, which fails on #10779's head, and an element-scroller case, which passes on both.
-- `useChatStreamScrollPage.a11y.browser.spec.ts`, in Chromium and in WebKit: 4/4 in each of 5 runs per engine at 97b0943257. The new case scrolls the page up with the wheel, then calls `scrollToMessage`. On #10779's head it fails with −462 and −465, in each of 3 runs.
+- `pnpm exec vitest run --project ui packages/core/src/Chat/`: 498/498 at eaaf896452. New: a page-scroller case, which fails on main, and an element-scroller case, which passes on both.
+- `useChatStreamScrollPage.a11y.browser.spec.ts`, in Chromium and in WebKit: 4/4 in each of 5 runs per engine at eaaf896452. The new case scrolls the page up with the wheel, then calls `scrollToMessage`. On main it fails with −462 and −465, in each of 3 runs.
 - `pnpm exec tsc` and ESLint: clean. `pnpm review:pre`: 0 findings, and the branch merges clean with main.
