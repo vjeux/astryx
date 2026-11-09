@@ -2204,7 +2204,10 @@ async function waitForRestOf(
             // The animations that count: all inside the element, except those
             // whose target sits inside an ignored element.
             const animations = () =>
-              element.getAnimations({subtree: true}).filter(a => {
+              (skipped.length > 0
+                ? element.getAnimations()
+                : element.getAnimations({subtree: true})
+              ).filter(a => {
                 const target =
                   a.effect instanceof KeyframeEffect ? a.effect.target : null;
                 return (
