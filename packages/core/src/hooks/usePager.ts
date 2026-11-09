@@ -1050,10 +1050,7 @@ export function createPager(
     pageWidth = width;
     // Where a position on the old layout sits on the new one. The same pages
     // keep their numbers, and the track keeps its fraction of a page.
-    let remap: ((position: number) => number) | null =
-      isChildPages() || !(oldStride > 0)
-        ? null
-        : position => (position * stride()) / oldStride;
+    let remap: ((position: number) => number) | null = null;
     if (isChildPages()) {
       const offsets = measureChildOffsets();
       const before = childOffsets;
