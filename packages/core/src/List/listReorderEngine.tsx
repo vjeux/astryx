@@ -964,9 +964,6 @@ export class ListReorderController implements ListReorderSession {
     // attaches the list's listeners and watches to the new element.
     if (this.knownList != null && this.knownList !== list) {
       this.listVersion += 1;
-      for (const listener of [...this.listListeners]) {
-        listener();
-      }
     }
     this.knownList = list;
     const watch = this.namesWatch;
