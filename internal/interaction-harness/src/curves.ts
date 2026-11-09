@@ -2365,11 +2365,7 @@ export async function waitForRest(
                     spanMs: realNow() - (starvedEndAt - starvedGapMs),
                     longestGapMs: starvedGapMs,
                   });
-                } else if (
-                  !resting &&
-                  isAfterStarvedGap &&
-                  curveLeftMs() <= starvedGapMs
-                ) {
+                } else if (!resting && isAfterStarvedGap) {
                   resolve({
                     frames: drawn.length,
                     spanMs: lookedAt - (starvedEndAt - starvedGapMs),
