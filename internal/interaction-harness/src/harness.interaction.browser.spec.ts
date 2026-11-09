@@ -469,6 +469,7 @@ test.describe('touch input', () => {
     const lastMoveHeldMs = await page.evaluate(
       () => (window as unknown as {lastMoveHeldMs?: number}).lastMoveHeldMs,
     );
+    console.log(`X1HELD ${lastMoveHeldMs?.toFixed(1)} ${typeof outcome === 'string' ? outcome : String(outcome).slice(0, 300)}`);
     const held =
       lastMoveHeldMs == null
         ? 'no move reached the page'
