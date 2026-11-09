@@ -44,6 +44,7 @@
  */
 
 import type {CDPSession, JSHandle, Page} from '@playwright/test';
+import {spawn, type ChildProcess} from 'node:child_process';
 import {FRAME_STARVATION_MS} from './frame-starvation';
 import {
   toTouchEvents,
@@ -1051,6 +1052,27 @@ export function longestFrameGap(
   return longest;
 }
 
+let outsideStopper: ChildProcess | null = null;
+/** Stops the test process from outside for `ms`: a runner that deschedules it. */
+async function stopFromOutside(ms: number): Promise<void> {
+  if (outsideStopper == null) {
+    outsideStopper = spawn(
+      process.execPath,
+      [
+        '-e',
+        "process.stdin.on('data',d=>{const ms=Number(String(d).trim());process.kill(process.ppid,'SIGSTOP');setTimeout(()=>{process.kill(process.ppid,'SIGCONT');process.stdout.write('ok\\n');},ms);});process.stdin.on('end',()=>process.exit(0));",
+      ],
+      {stdio: ['pipe', 'pipe', 'inherit']},
+    );
+    outsideStopper.unref();
+  }
+  const stopper = outsideStopper;
+  await new Promise<void>(resolve => {
+    stopper.stdout?.once('data', () => resolve());
+    stopper.stdin?.write(`${ms}\n`);
+  });
+}
+
 async function playSteps(
   script: TouchScript,
   options: PlayOptions,
@@ -1088,6 +1110,10 @@ async function playSteps(
       await until(
         pacedDeadline(pacing, origin, steps, index, previous, keepsGaps),
       );
+    }
+    if (index % 3 === 1) {
+      // A runner that deschedules the test process for 20 ms before the send.
+      await stopFromOutside(20);
     }
     const timestamp = stampFor(step.t);
     const dispatchedAt = Date.now();
