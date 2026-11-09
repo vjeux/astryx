@@ -148,7 +148,6 @@ import {
   parentAcrossShadow,
   parseTouchAction,
 } from './nativeScroll';
-import {eventTime} from '../utils/eventTime';
 import {containsAlongFlatTree} from '../utils/flatTree';
 import {isIosWebKit} from '../utils/touchQueries';
 import {type WheelSegment, WheelSegmenter} from './wheelSegmenter';
@@ -660,6 +659,22 @@ function panTakesMove(
   return (
     (internals(recognizer).classify?.({x: cx, y: cy}) ?? 'begin') === 'begin'
   );
+}
+
+/**
+ * An event's time on the arena's clock (`performance.now()`). Some engines
+ * and DOM emulators stamp events in epoch milliseconds instead.
+ */
+function eventTime(event: Event): number {
+  const time = event.timeStamp;
+  if (
+    time > 1e12 &&
+    typeof performance !== 'undefined' &&
+    performance.timeOrigin > 0
+  ) {
+    return time - performance.timeOrigin;
+  }
+  return time;
 }
 
 /** A touch list as an array; a synthetic event may carry none. */
