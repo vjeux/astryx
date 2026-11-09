@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...ab435926f24160d231d30f6a3bf4ad57e89a1074
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...a64d445a4223cf0193c60cbf1f7f6daf336bf093
 
 ## User impact
 
@@ -54,7 +54,7 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
   - With the option off, the reveal-pan watch reports and listens as before; one visual-viewport read per report stays (INV11).
   - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2422/2422.
 - Safari on the iOS 26.2 Simulator, in scripted traces at 729784099d (browser and home-screen app): a tap, then drags with the keyboard up. The dock's applied lift is 0 px on every frame, and it never flips direction within 100 ms, as on 33bc644a. Safari's own slide on a slow drag toward the top stays as in earlier releases (Gap 17, #10718).
-- In Firefox, while a scroll moves the pan after input, each report moves only the dock's translate. The layout takes the lift when the last finger lifts, and again when a fling comes to rest.
+- In Firefox, while a scroll moves the pan after input, each report moves only the dock's translate. The layout takes the lift when the last finger lifts. After a fling, it takes it again when the fling comes to rest.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
