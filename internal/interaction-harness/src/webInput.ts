@@ -257,7 +257,7 @@ export function wheelGapCauses(
         : null;
     if (heldBack) {
       pageStalls.push({gapMs, handlingMs});
-    } else if (frameGap != null && frameGap.covered >= gapMs - HELD_BACK_MS) {
+    } else if (frameGap != null) {
       pageStalls.push({
         gapMs,
         handlingMs: Number.isFinite(handlingMs) ? handlingMs : 0,
