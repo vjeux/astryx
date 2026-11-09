@@ -650,7 +650,7 @@ export function createPager(
     }
     const page = pageAt(position);
     const below = Math.floor(page);
-    if (toward !== 0 && below >= 0 && below + 1 <= count() - 1) {
+    if (toward !== 0 && below >= 0 && below + 1 <= count() - 1 && false) {
       const halfway = (offsetOf(below) + offsetOf(below + 1)) / 2;
       if (Math.abs(position - halfway) <= 0.5) {
         return toward > 0 ? below + 1 : below;
