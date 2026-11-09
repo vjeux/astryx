@@ -82,6 +82,7 @@ export const inputWrapperStyles = stylex.create({
   // Text fields apply this after `base`. A tap on one raises the keyboard,
   // and a fade would repaint the field on each frame of that rise.
   textField: {
+    transitionDelay: '150ms',
     transitionDuration: {
       default: durationVars['--duration-fast'],
       '@media (prefers-reduced-motion: reduce)': '0s',
