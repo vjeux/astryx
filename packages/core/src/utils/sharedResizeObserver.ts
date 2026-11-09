@@ -138,13 +138,7 @@ export function observeResizeAfterLayout(
     }
   });
   isRegistered = true;
-  if (wasObserved) {
-    queueMicrotask(() => {
-      if (isActive) {
-        onResize(null);
-      }
-    });
-  }
+  void wasObserved;
   return () => {
     isActive = false;
     unsubscribe();
