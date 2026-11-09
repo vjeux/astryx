@@ -1065,8 +1065,6 @@ export function createPager(
         // follow the row's width. Each keeps its number.
         childOffsets = offsets;
         const single = width > 0 ? width : 1;
-        remap = position =>
-          positionIn(offsets, pageIn(before, position, oldWidth), single);
         changed = true;
         const pageCount = offsets.length;
         deliver(() => options.onPagesChange?.(pageCount));
