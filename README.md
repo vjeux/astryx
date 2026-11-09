@@ -35,21 +35,22 @@ keyboard. Top row `?case=long`, bottom row `?case=composer`.
 
 ![Home-screen app, the fix](ios-home-screen-app.png)
 
-## Safari at 714141ef23: a scripted trace
+## Safari at 729784099d: a scripted trace
 
-The frames above come from earlier builds (8bb22d9c95 in the browser,
-d0516270ff as a home-screen app). Safari at 714141ef23 is carried by a
-scripted trace on the iOS 26.2 Simulator, `?case=long`: a tap on the composer,
-then, with the keyboard up, drags toward the top, to the bottom and back to the
-top, then three lines typed. A page-side recorder logs the dock's rect, its
-applied lift and the visual viewport on every frame.
+The frames above come from earlier builds (8bb22d9c95 in the browser, d0516270ff
+as a home-screen app). Safari at 729784099d, and at the earlier 714141ef23, is
+carried by a scripted trace on the iOS 26.2 Simulator, `?case=long`: a tap on
+the composer, then, with the keyboard up, drags toward the top, to the bottom
+and back to the top, then three lines typed. A page-side recorder logs the
+dock's rect, its applied lift and the visual viewport on every frame.
 
-On every frame of every take, the dock's applied lift is 0 px at 714141ef23, as
-on 33bc644a. Neither build flips the dock's direction within 100 ms at 2 px or
-more. Each cell is the share of settled frames, with the keyboard up and the
-composer focused, where the dock's bottom sits more than 1 px off the visual
-viewport's bottom. Safari's own slide on a slow drag toward the top is the same
-on both builds, as in earlier releases.
+On every frame of every take, the dock's applied lift is 0 px, and it has no
+translate, at 729784099d and 714141ef23, as on 33bc644a. No build flips the
+dock's direction within 100 ms at 2 px or more. Each cell is the share of
+settled frames, with the keyboard up and the composer focused, where the dock's
+bottom sits more than 1 px off the visual viewport's bottom. Safari's own slide
+on a slow drag toward the top is the same on every build, as in earlier
+releases.
 
 | Build, take | Toward the top | To the bottom | Back to the top | Typing |
 | --- | --- | --- | --- | --- |
@@ -59,6 +60,8 @@ on both builds, as in earlier releases.
 | 714141ef23, browser 2 | 88% | 39% | 0% | 0% |
 | 33bc644a, home-screen app | 86% | 41% | not recorded | not recorded |
 | 714141ef23, home-screen app | 88% | 46% | not recorded | not recorded |
+| 729784099d, browser | 87% | 38% | not recorded | not recorded |
+| 729784099d, home-screen app | 88% | 40% | not recorded | not recorded |
 
-The home-screen takes stop recording at 5,400 frames, before the last two
-phases, on both builds.
+The home-screen takes, and the browser take at 729784099d, stop recording at
+5,400 frames, before the last two phases.
