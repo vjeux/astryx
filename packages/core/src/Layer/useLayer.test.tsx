@@ -20,10 +20,14 @@ import {
 import userEvent from '@testing-library/user-event';
 import {
   Profiler,
+  Suspense,
+  startTransition,
+  use,
   useCallback,
   useEffect,
   useLayoutEffect,
   useState,
+  type ReactNode,
 } from 'react';
 import {hydrateRoot} from 'react-dom/client';
 import {renderToString} from 'react-dom/server';
@@ -229,6 +233,28 @@ function KeptLazyContextHarness({
         <section data-testid="safe-host">{renderedLayer}</section>
       )}
     </>
+  );
+}
+
+// A transition that suspends for good: React renders its element, then keeps
+// the committed tree and never commits that render.
+const foreverPending = new Promise<never>(() => {});
+function ForeverPending(): null {
+  use(foreverPending);
+  return null;
+}
+function Discardable({
+  children,
+  isPending = false,
+}: {
+  children: ReactNode;
+  isPending?: boolean;
+}) {
+  return (
+    <Suspense fallback={null}>
+      {children}
+      {isPending ? <ForeverPending /> : null}
+    </Suspense>
   );
 }
 
@@ -1467,6 +1493,54 @@ describe('useLayer', () => {
       expect(popover).not.toHaveAttribute('data-open');
     });
 
+    it('replays a parked show with the committed onShow after React discards a render with another', async () => {
+      const {browserHide, runToggleTasks} = installBrowserHidePopoverApi();
+      const errors: unknown[] = [];
+      const onError = (event: ErrorEvent) => {
+        errors.push(event.error);
+        event.preventDefault();
+      };
+      window.addEventListener('error', onError);
+      const onTooltipShow = vi.fn();
+      const discardedOnTooltipShow = vi.fn();
+      const {getByRole, rerender} = render(
+        <Discardable>
+          <FocusReturnHarness onTooltipShow={onTooltipShow} />
+        </Discardable>,
+      );
+      const trigger = getByRole('button', {name: 'Trigger'});
+      const inside = getByRole('button', {name: 'Inside', hidden: true});
+      const popover = getByRole('dialog', {hidden: true});
+      act(() => trigger.focus());
+      fireEvent.click(trigger);
+      act(() => inside.focus());
+      runToggleTasks();
+      expect(onTooltipShow).toHaveBeenCalledTimes(1);
+      // The browser's own hide returns focus to the trigger, and the
+      // tooltip's show parks until that hide ends.
+      act(() => browserHide(popover));
+      window.removeEventListener('error', onError);
+      await act(async () => {});
+      expect(errors).toEqual([]);
+      expect(onTooltipShow).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        startTransition(() => {
+          rerender(
+            <Discardable isPending>
+              <FocusReturnHarness onTooltipShow={discardedOnTooltipShow} />
+            </Discardable>,
+          );
+        });
+      });
+
+      // The hide ends at its toggle, and the parked show replays.
+      act(() => runToggleTasks());
+      await act(async () => {});
+
+      expect(onTooltipShow).toHaveBeenCalledTimes(2);
+      expect(discardedOnTooltipShow).not.toHaveBeenCalled();
+    });
+
     it('lets a replay the browser refuses again reach the page, and parks nothing more', async () => {
       const {showSpy, browserHide, runToggleTasks, refuseNextShow} =
         installBrowserHidePopoverApi();
@@ -1519,6 +1593,47 @@ describe('useLayer', () => {
         'data-open',
       );
       expect(onTooltipShow).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports a close start to the committed callback after React discards a render with another', async () => {
+      const {runToggleTasks} = installBrowserHidePopoverApi();
+      function Harness({onCloseStart}: {onCloseStart: () => void}) {
+        const layer = useLayerInternal({mode: 'context', onCloseStart});
+        return (
+          <>
+            <button type="button" ref={layer.ref} onClick={layer.show}>
+              Trigger
+            </button>
+            <button type="button" onClick={layer.hide}>
+              Close
+            </button>
+            {layer.render(<span>Content</span>)}
+          </>
+        );
+      }
+      const committed = vi.fn();
+      const discarded = vi.fn();
+      const {getByRole, rerender} = render(
+        <Discardable>
+          <Harness onCloseStart={committed} />
+        </Discardable>,
+      );
+      fireEvent.click(getByRole('button', {name: 'Trigger'}));
+      act(() => runToggleTasks());
+      await act(async () => {
+        startTransition(() => {
+          rerender(
+            <Discardable isPending>
+              <Harness onCloseStart={discarded} />
+            </Discardable>,
+          );
+        });
+      });
+
+      fireEvent.click(getByRole('button', {name: 'Close'}));
+
+      expect(committed).toHaveBeenCalledOnce();
+      expect(discarded).not.toHaveBeenCalled();
     });
 
     it('reports a close start as a hide starts, before its toggle: the browser\u2019s own hide and hide() alike', () => {
@@ -2832,6 +2947,107 @@ describe('internal keep-open props (controls on the trigger, #5004)', () => {
       </>
     );
   }
+
+  it('names the control an invoker after React discards a render that says the layer is closed', async () => {
+    function KeepOpenHarness({isOpen}: {isOpen: boolean}) {
+      const keepOpenProps = useKeepLayerOpenProps('some-layer', isOpen);
+      return (
+        <button type="button" {...keepOpenProps}>
+          Clear
+        </button>
+      );
+    }
+    const {getByRole, rerender} = render(
+      <Discardable>
+        <KeepOpenHarness isOpen />
+      </Discardable>,
+    );
+    await act(async () => {
+      startTransition(() => {
+        rerender(
+          <Discardable isPending>
+            <KeepOpenHarness isOpen={false} />
+          </Discardable>,
+        );
+      });
+    });
+    const clear = getByRole('button', {name: 'Clear'});
+
+    fireEvent.pointerDown(clear);
+
+    // The committed layer is open, so the press names the control an invoker.
+    expect(clear.getAttribute('popovertarget')).toBe('some-layer');
+    fireEvent.pointerUp(clear);
+  });
+
+  it('names the control an invoker while a layer shown in a pending transition has not committed open', async () => {
+    // The browser's popover state, which jsdom lacks: shown and hidden by the
+    // element's own methods, and read through `:popover-open`.
+    const originalShow = HTMLElement.prototype.showPopover;
+    const originalHide = HTMLElement.prototype.hidePopover;
+    const originalMatches = HTMLElement.prototype.matches;
+    HTMLElement.prototype.showPopover = function (this: HTMLElement) {
+      this.setAttribute('data-test-popover-open', '');
+    };
+    HTMLElement.prototype.hidePopover = function (this: HTMLElement) {
+      this.removeAttribute('data-test-popover-open');
+    };
+    HTMLElement.prototype.matches = function (
+      this: HTMLElement,
+      selector: string,
+    ): boolean {
+      return selector === ':popover-open'
+        ? this.hasAttribute('data-test-popover-open')
+        : originalMatches.call(this, selector);
+    } as typeof originalMatches;
+    function PendingShowHarness() {
+      const layer = useLayer({mode: 'context'});
+      const keepOpenProps = useKeepLayerOpenProps(layer.id, layer.isOpen);
+      const [isPending, setIsPending] = useState(false);
+      return (
+        <>
+          <button
+            type="button"
+            ref={layer.ref}
+            onClick={() => {
+              // The show runs in a transition that never commits.
+              startTransition(() => {
+                layer.show();
+                setIsPending(true);
+              });
+            }}>
+            Trigger
+          </button>
+          <button type="button" {...keepOpenProps}>
+            Clear
+          </button>
+          {layer.render(<span>Layer content</span>, {placement: 'below'})}
+          <Suspense fallback={null}>
+            {isPending ? <ForeverPending /> : null}
+          </Suspense>
+        </>
+      );
+    }
+    try {
+      const {container, getByRole} = render(<PendingShowHarness />);
+      await act(async () => {
+        fireEvent.click(getByRole('button', {name: 'Trigger'}));
+      });
+      const popover = container.querySelector('[popover]') as HTMLElement;
+      expect(popover).toHaveAttribute('data-test-popover-open');
+      const clear = getByRole('button', {name: 'Clear'});
+
+      fireEvent.pointerDown(clear);
+
+      // The layer is shown, so the press names the control an invoker.
+      expect(clear.getAttribute('popovertarget')).toBe(popover.id);
+      fireEvent.pointerUp(clear);
+    } finally {
+      HTMLElement.prototype.showPopover = originalShow;
+      HTMLElement.prototype.hidePopover = originalHide;
+      HTMLElement.prototype.matches = originalMatches;
+    }
+  });
 
   it('names the control an invoker for the duration of the press', async () => {
     const user = userEvent.setup();
