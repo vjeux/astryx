@@ -773,9 +773,7 @@ function revealWithKeyboard(
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
         lastHeight = event.height;
-        if (!hasRevealed || !isLaterPressDown()) {
-          revealNow(event.height);
-        }
+        revealNow(event.height);
       }
       pans.report(event.height);
     }
