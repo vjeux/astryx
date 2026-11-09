@@ -16,17 +16,26 @@ import {act, render, renderHook, screen} from '@testing-library/react';
 import {Carousel, type CarouselHandle} from '../Carousel/Carousel';
 import {useSnapPaging} from './SnapPaging';
 import {
+  attachSnapPaging,
   type HeldRow,
   type HeldRowListener,
   isSnapPaging,
+  itemsSpan,
   makeSnapPaging,
+  moveSnapPaging,
   nearestStop,
   type SnapPagingAttachment,
   snapPages,
   snapStops,
 } from './snapPagingValue';
 
+/** Each resize observer callback the code under test made. */
+const resizeObserved = new Set<ResizeObserverCallback>();
+
 class MockResizeObserver {
+  constructor(callback: ResizeObserverCallback) {
+    resizeObserved.add(callback);
+  }
   observe() {}
   unobserve() {}
   disconnect() {}
@@ -342,6 +351,170 @@ describe('Carousel with hasSnap', () => {
       act(() => handle.current?.scrollTo(2));
       // The stop is the item's start less the padding, not its border edge.
       expect(moves[0](0, 500)).toBe(184);
+    });
+  });
+
+  describe("a held row's span", () => {
+    // Seven items 94.67 px wide and 8 px apart move 0.3 px a millisecond.
+    // Each rect read comes 1 ms after the one before, as WebKit reads each
+    // rect at its own time. A style read right after a rect sees that time.
+    function movingRow() {
+      const element = document.createElement('div');
+      element.getBoundingClientRect = () => new DOMRect(0, 0, 300, 100);
+      let clock = 0;
+      const translate = () => -280 - 0.3 * clock;
+      const items = new Set<Element>();
+      for (let i = 0; i < 7; i++) {
+        const item = document.createElement('div');
+        const left = i * (94.67 + 8);
+        item.getBoundingClientRect = () => {
+          clock += 1;
+          return new DOMRect(left + translate(), 0, 94.67, 100);
+        };
+        items.add(item);
+        element.append(item);
+      }
+      const readStyle = window.getComputedStyle.bind(window);
+      vi.spyOn(window, 'getComputedStyle').mockImplementation(
+        (target, pseudo) =>
+          items.has(target)
+            ? ({translate: `${translate()}px`} as CSSStyleDeclaration)
+            : readStyle(target, pseudo),
+      );
+      document.body.append(element);
+      return element;
+    }
+    const layoutSpan = 6 * (94.67 + 8) + 94.67;
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('takes each item\u2019s translate off its rect, so rects read at different times give the layout\u2019s span', () => {
+      expect(itemsSpan(movingRow(), true)).toBeCloseTo(layoutSpan, 6);
+    });
+
+    it('at rest reads the rects as they are', () => {
+      const element = movingRow();
+      // The rects alone mix the moments they were read at.
+      expect(Math.abs(itemsSpan(element) - layoutSpan)).toBeGreaterThan(1);
+    });
+  });
+
+  describe("a held row's travel after a resize", () => {
+    /** What a style declaration's property reads as. */
+    type StyleValue =
+      string | number | ((...args: never[]) => unknown) | undefined;
+
+    // Animations that keep running, so the paging keeps the row held.
+    beforeEach(() => {
+      HTMLElement.prototype.animate = function () {
+        const ready = new Promise(() => {});
+        return {
+          startTime: null,
+          currentTime: null,
+          playState: 'running',
+          ready,
+          cancel() {},
+        } as unknown as Animation;
+      };
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(HTMLElement.prototype, 'animate');
+      vi.restoreAllMocks();
+    });
+
+    it("takes each item's translate off its rect: rects read at different times give the layout's travel", async () => {
+      // Seven items 94.67 px wide and 8 px apart in a 300 px row, 711 px
+      // wide. Once held, they show a translate of -30 px that moves 0.3 px a
+      // millisecond. Each rect read comes 1 ms after the one before, as
+      // WebKit reads each rect at its own time. A style read right after a
+      // rect sees that time.
+      const element = document.createElement('div');
+      let width = 300;
+      Object.defineProperty(element, 'clientWidth', {get: () => width});
+      Object.defineProperty(element, 'scrollWidth', {get: () => 711});
+      element.getBoundingClientRect = () => new DOMRect(0, 0, width, 100);
+      element.scrollTo = () => {};
+      let isHeld = false;
+      let clock = 0;
+      const translate = () => (isHeld ? -30 - 0.3 * clock : 0);
+      const items = new Set<Element>();
+      for (let i = 0; i < 7; i++) {
+        const item = document.createElement('div');
+        const left = i * (94.67 + 8);
+        item.getBoundingClientRect = () => {
+          clock += 1;
+          return new DOMRect(left + translate(), 0, 94.67, 100);
+        };
+        items.add(item);
+        element.append(item);
+      }
+      const readStyle = window.getComputedStyle.bind(window);
+      vi.spyOn(window, 'getComputedStyle').mockImplementation(
+        (target, pseudo) => {
+          const style = readStyle(target, pseudo);
+          if (!items.has(target)) {
+            return style;
+          }
+          return new Proxy(style, {
+            get(declaration, key): StyleValue {
+              if (key === 'translate') {
+                return `${translate()}px`;
+              }
+              const value = Reflect.get(
+                declaration,
+                key,
+                declaration,
+              ) as StyleValue;
+              return typeof value === 'function'
+                ? value.bind(declaration)
+                : value;
+            },
+          });
+        },
+      );
+      document.body.append(element);
+      const {result} = renderHook(() => useSnapPaging());
+      const reports: HeldRow[] = [];
+      const detach = attachSnapPaging(result.current, element, held => {
+        if (held != null) {
+          reports.push(held);
+        }
+      });
+      const frame = async () =>
+        new Promise<void>(resolve => {
+          requestAnimationFrame(() => resolve());
+        });
+      try {
+        act(() => {
+          moveSnapPaging(element, () => 300);
+        });
+        isHeld = true;
+        await act(async () => {
+          await frame();
+        });
+        expect(reports.at(-1)?.travel, 'the paging holds the row').toBe(411);
+        width = 270;
+        act(() => {
+          resizeObserved.forEach(callback =>
+            callback(
+              [{target: element} as unknown as ResizeObserverEntry],
+              {} as ResizeObserver,
+            ),
+          );
+        });
+        await act(async () => {
+          await frame();
+        });
+        expect(
+          reports.at(-1)?.travel,
+          "the held row's travel after a 30 px narrowing (px)",
+        ).toBe(441);
+      } finally {
+        detach();
+      }
     });
   });
 
