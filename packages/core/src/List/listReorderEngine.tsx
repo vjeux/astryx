@@ -2405,11 +2405,10 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
   );
   // The handles' names follow the list's rows and their label elements in
   // the DOM, through the session's observer.
-  useAttachment(
-    controller.list,
-    list => controller.attachNames(list),
-    controller,
-  );
+  useIsomorphicLayoutEffect(() => {
+    const list = controller.list.current;
+    return list == null ? undefined : controller.attachNames(list);
+  }, [controller]);
   // The owner's options, for an object a Lab collection adapted from the
   // owner's.
   const startedBy = options.startedBy ?? options;
