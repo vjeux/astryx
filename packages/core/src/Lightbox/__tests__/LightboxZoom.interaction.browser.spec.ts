@@ -908,6 +908,20 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
   // The photo's offset at the flick's lift, read in the page.
   const liftOffset = await recordLiftOffset(photo);
   await photo.evaluate(el => el.setAttribute('data-freeze-photo', ''));
+  // NOT FOR LANDING: a 450 ms long task in the lift's own task, ahead of
+  // the coast.
+  await photo.evaluate(() => {
+    document.addEventListener(
+      'touchend',
+      () => {
+        const end = performance.now() + 450;
+        while (performance.now() < end) {
+          // busy
+        }
+      },
+      {capture: true, once: true},
+    );
+  });
   // The scene stops once the coast has carried the photo 10 px past the
   // lift, however late this process reacts. A poll from here can land the
   // finger after the coast ends.
@@ -932,7 +946,8 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
       });
       return (
         lift != null &&
-        x < lift - 10 &&
+        // NOT FOR LANDING: the trigger moved next to the edge.
+        x < lift - 260 &&
         img.getAnimations().some(a => a.playState === 'running')
       );
     },
