@@ -1157,7 +1157,9 @@ export function createPager(
     // One time for the seed and the new curve's start. A stall between the
     // read and the play then cannot leave the curve behind the track.
     const at = clock();
-    const shown = sign() * running.get('x', at);
+    const model = settleHandle?.curve('x');
+    const shown =
+      model == null ? sign() * running.get('x', at) : sign() * model.at(model.duration);
     const from = remap == null ? shown : remap(shown);
     // The velocity scales as the layout does where the track shows.
     const rate = remap == null ? 1 : remap(shown + 0.5) - remap(shown - 0.5);
