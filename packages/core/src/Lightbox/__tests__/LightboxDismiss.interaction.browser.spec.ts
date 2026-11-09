@@ -488,7 +488,13 @@ test('the dismissal keeps changing the screen every frame while the main thread 
       during: v.photo,
       minProgressMs: 16,
     });
-    const played = await v.driver.play(pullDown(v.centre, 60));
+    const played = await v.driver.play(
+      drag(
+        v.centre,
+        {x: v.centre.x, y: v.centre.y + 60},
+        {durationMs: 500, restMs: 4},
+      ),
+    );
     const block = await blocking;
     // A few frames after the block, so the screencast holds its end.
     await frames(page, 6);
