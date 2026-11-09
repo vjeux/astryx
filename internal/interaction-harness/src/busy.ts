@@ -592,7 +592,7 @@ export async function blockMainThread(
   // the page cancels it, and a wait that times out reads it for the action's
   // run.
   const defined = page.evaluate(
-    `(${defineCurveEnd.toString()})();(${defineAnimatedProperties.toString()})();(${animationRecorder.toString()})(true);`,
+    `(${defineCurveEnd.toString()})();(${defineAnimatedProperties.toString()})();(${animationRecorder.toString()})();`,
   );
   const calledFrom = Date.now() - CALL_SLACK_MS;
   // WebKit on Linux ignores `fill` on its compositor: a filled move that
