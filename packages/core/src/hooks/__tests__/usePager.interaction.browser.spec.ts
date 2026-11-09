@@ -63,6 +63,7 @@ declare global {
     settleTimes: number[];
     armFrames: () => void;
     touchTimes: [string, number][];
+    liftTimes: number[];
     wheelTimes: number[];
     pagerLog: string[];
     cancelledMoves: boolean[];
@@ -160,6 +161,11 @@ async function serve(
     addEventListener(type, event => window.touchTimes.push([type, event.timeStamp]), {capture: true, passive: true});
   }
   addEventListener('wheel', event => window.wheelTimes.push(event.timeStamp), {capture: true, passive: true});
+  // When each touch lifted, as Core's gesture host reads it: at the touch's
+  // pointerup. WebKit stamps the touchend only once the page's pointer
+  // listeners finish, so under load it comes later.
+  window.liftTimes = [];
+  addEventListener('pointerup', event => { if (event.pointerType === 'touch') window.liftTimes.push(event.timeStamp); }, {capture: true, passive: true});
   addEventListener('touchstart', e => { window.touchStart = [e.touches[0].clientX, e.touches[0].clientY]; }, {passive: true});
   addEventListener('touchmove', e => { window.cancelledMoves.push(e.defaultPrevented); window.moves.push([e.touches[0].clientX, e.touches[0].clientY]); }, {passive: true});
   // The lift velocity the pager's pan reads at each release, and where the
@@ -298,6 +304,7 @@ async function loadReport(page: Page): Promise<string> {
     frames: window.frameTimes,
     settles: window.settleTimes,
     touches: window.touchTimes,
+    lifts: window.liftTimes,
     wheels: window.wheelTimes,
     origin: performance.timeOrigin,
   }));
@@ -356,10 +363,12 @@ async function loadReport(page: Page): Promise<string> {
         : `frames on pace (longest gap ${ms(longest)})`,
     );
   }
-  const lift = drawn.touches.filter(([type]) => type === 'touchend').at(-1);
+  const lift =
+    drawn.lifts.at(-1) ??
+    drawn.touches.filter(([type]) => type === 'touchend').at(-1)?.[1];
   for (const settle of drawn.settles) {
-    if (lift != null && settle > at(lift[1])) {
-      causes.push(`a settle ended ${ms(settle - at(lift[1]))} after the lift`);
+    if (lift != null && settle > at(lift)) {
+      causes.push(`a settle ended ${ms(settle - at(lift))} after the lift`);
     }
   }
   return `Load report: ${causes.length > 0 ? causes.join('; ') : 'no input or frames recorded'}.`;
