@@ -2441,7 +2441,7 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
   // in the DOM, through the session's observer.
   useIsomorphicLayoutEffect(
     () => controller.attachNames(),
-    [controller, listChanges],
+    [controller],
   );
   // The owner's options, for an object a Lab collection adapted from the
   // owner's.
