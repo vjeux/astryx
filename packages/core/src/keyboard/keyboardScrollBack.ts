@@ -151,11 +151,11 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
 // in a theme that reduces motion for everyone, the scroll lands at once.
 function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
   for (const [scroller, {from, at}] of scrolls) {
-    if (at == null || !scroller.isConnected) {
+    if (!scroller.isConnected) {
       continue;
     }
     const top = scrollTopOf(scroller, win);
-    if (Math.abs(top - at) <= KEYBOARD_EPSILON) {
+    if (scroller.isConnected) {
       scrollTopTo(scroller, from, scrollBackBehavior(scroller), win);
     } else if (isRoot(scroller) && Math.abs(top - from) <= KEYBOARD_EPSILON) {
       awaitFoldedReveal(win, scroller, from, at);
