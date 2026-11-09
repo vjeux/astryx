@@ -18,6 +18,7 @@ import React, {
   useCallback,
   useEffect,
   useId,
+  useInsertionEffect,
   useMemo,
   useRef,
   useState,
@@ -1152,7 +1153,10 @@ export function useKeepLayerOpenProps(
   isOpen: boolean,
 ): KeepLayerOpenProps {
   const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
+  // Syncs the press handler's open state with the committed `isOpen`.
+  useIsomorphicLayoutEffect(() => {
+    isOpenRef.current = isOpen;
+  });
 
   return useMemo(
     () => ({
@@ -1213,9 +1217,13 @@ function useLayerImplementation(
       : false;
   const keepsAnchorClear =
     mode === 'context' ? (options.keepsAnchorClear ?? false) : false;
-  const onCloseStartRef = useRef<(() => void) | undefined>(undefined);
-  onCloseStartRef.current =
-    mode === 'context' ? options.onCloseStart : undefined;
+  const onCloseStart = mode === 'context' ? options.onCloseStart : undefined;
+  const onCloseStartRef = useRef(onCloseStart);
+  // Syncs the hide's close-start callback with the committed one. It runs
+  // before any layout effect in the same commit.
+  useInsertionEffect(() => {
+    onCloseStartRef.current = onCloseStart;
+  });
   const id = useId();
   const anchorId = `--astryx-layer-${id.replace(/:/g, '')}`;
 
@@ -1751,7 +1759,11 @@ function useLayerImplementation(
   // A deferred show() replays through a ref so the queued closure reaches the
   // current callback rather than the one captured when it was queued.
   const showRef = useRef(show);
-  showRef.current = show;
+  // Syncs the replayed show with the committed one. It runs before any
+  // layout effect in the same commit.
+  useInsertionEffect(() => {
+    showRef.current = show;
+  });
 
   // The open-state geometry observers of a layer that keeps its anchor clear
   // (`observeAnchorClearance`), as their teardown. The open-state layout
