@@ -1010,9 +1010,6 @@ export function createPager(
       }
       settleHandle = null;
       if (finished) {
-        // The track rests on its curve's end. A clock read a frame behind the
-        // finish would show the curve a hair short of it.
-        animator?.set({x: x.at(x.duration)});
         rest();
       }
     });
