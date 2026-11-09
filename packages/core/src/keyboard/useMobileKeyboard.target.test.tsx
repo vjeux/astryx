@@ -9,7 +9,7 @@
  * @position Keyboard module tests
  */
 
-import {useRef} from 'react';
+import {Suspense, startTransition, use, useRef, type ReactNode} from 'react';
 import {afterEach, beforeEach, expect, it, vi} from 'vitest';
 import {act, render, screen} from '@testing-library/react';
 import {__resetLayoutViewportForTest} from '../utils/layoutViewport';
@@ -114,4 +114,61 @@ it('drops the tap route when a mouse becomes the primary pointer, and takes it b
 
   pointerChanges(true);
   expect(tapIsClaimed(input)).toBe(true);
+});
+
+// A transition that suspends for good: React renders it, then keeps the
+// committed tree and never commits that render.
+const forever = new Promise<never>(() => {});
+function Forever(): null {
+  use(forever);
+  return null;
+}
+function Discardable({
+  children,
+  isPending = false,
+}: {
+  children: ReactNode;
+  isPending?: boolean;
+}) {
+  return (
+    <Suspense fallback={null}>
+      {children}
+      {isPending ? <Forever /> : null}
+    </Suspense>
+  );
+}
+
+it('dismisses by the committed options after React discards a render that disables it', async () => {
+  let dismiss: (() => void) | null = null;
+  function Panel({isEnabled}: {isEnabled: boolean}) {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const keyboard = useMobileKeyboard(ref, {isEnabled});
+    dismiss = () => keyboard.dismiss();
+    return (
+      <div ref={ref}>
+        <input aria-label="Name" />
+      </div>
+    );
+  }
+  const {rerender} = render(
+    <Discardable>
+      <Panel isEnabled />
+    </Discardable>,
+  );
+  const input = screen.getByRole('textbox');
+  act(() => input.focus());
+  await act(async () => {
+    startTransition(() => {
+      rerender(
+        <Discardable isPending>
+          <Panel isEnabled={false} />
+        </Discardable>,
+      );
+    });
+  });
+
+  act(() => dismiss?.());
+
+  // The committed keyboard is enabled, so the dismissal blurs the field.
+  expect(input).not.toHaveFocus();
 });

@@ -56,6 +56,7 @@ import {
 } from './keyboardTarget';
 import {distanceIntoBand} from './revealBand';
 import {rideKeyboard} from './rideKeyboard';
+import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 
 // Chrome on Android pans the page itself if the keyboard still covers the
 // focused field about 100 to 170 ms after the report. A field a fraction of a
@@ -182,9 +183,12 @@ export function useMobileKeyboard(
   const isEnabledRef = useRef(isEnabled);
   const isExpandedRef = useRef(isExpanded);
   const isOpenRef = useRef(isOpen);
-  isEnabledRef.current = isEnabled;
-  isExpandedRef.current = isExpanded;
-  isOpenRef.current = isOpen;
+  // Syncs the listeners' and dismissal's flags with the committed options.
+  useIsomorphicLayoutEffect(() => {
+    isEnabledRef.current = isEnabled;
+    isExpandedRef.current = isExpanded;
+    isOpenRef.current = isOpen;
+  });
   // Touch-only work, the ride and the reveal-pan watch, attaches only under a
   // coarse primary pointer (the touch query). Under a fine one, the hook
   // registers no touch listener.
