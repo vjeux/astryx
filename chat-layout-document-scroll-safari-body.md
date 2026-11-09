@@ -48,7 +48,7 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
   - A fling that pans only the visual viewport is laid out once at its scroll end, with no lifted finger.
   - A slow drag of 0.3 px per report lays out nothing until the finger lifts, then once.
   - A composer show under a pinch zoom teaches nothing.
-  - A pan to the dock after a show learned the cover, before any input, goes back, and the next show still lifts at once, with reduced motion too.
+  - After a show learns the cover, a pan to the dock before any input goes back. The next show still lifts at once, with reduced motion too.
   - Safari's model, where `innerHeight` grows as the pan unwinds through a slow drag to the page's top: the lift stays 0, with no translate.
   - A caret reveal while typing, and a show for a field outside the composer, each have a case.
   - The tap claim, `focus()`'s reveal and the put-back each have a case before and after a page learns the dock is covered. Removing any one gate fails its case.
