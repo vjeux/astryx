@@ -422,7 +422,7 @@ export function useChatStreamScroll({
       };
       stopPageListeners.push(
         subscribeInput(view, 'scroll', atDocument(onScroll)),
-        subscribeInput(view, 'scrollend', atDocument(onScrollEnd)),
+
       );
     } else {
       el.addEventListener('scroll', onScroll, {passive: true});
