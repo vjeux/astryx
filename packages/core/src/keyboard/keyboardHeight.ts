@@ -185,6 +185,9 @@ function measureResizedRoom(
   }
   const width = root.clientWidth;
   store.rootWidth = width;
+  if (!store.rootTallest.has(width)) {
+    store.rootTallest.clear();
+  }
   const tallest = store.rootTallest.get(width) ?? 0;
   if (height > tallest) {
     store.rootTallest.set(width, height);

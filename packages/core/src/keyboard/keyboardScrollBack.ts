@@ -142,10 +142,7 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
     if (event.type !== 'viewport') {
       return;
     }
-    if (getResizedRoomWidth(win) !== width) {
-      scrolls.clear();
-      end();
-    } else if (
+    if (
       event.height <= KEYBOARD_EPSILON &&
       getResizedRoom(win) <= KEYBOARD_EPSILON
     ) {
