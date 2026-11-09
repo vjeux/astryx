@@ -216,8 +216,7 @@ function awaitFoldedReveal(
   const stopKeyboard = subscribeKeyboardHeight(win, event => {
     if (
       event.type === 'viewport' &&
-      (event.height > KEYBOARD_EPSILON ||
-        getResizedRoom(win) > KEYBOARD_EPSILON)
+      event.height > KEYBOARD_EPSILON
     ) {
       stop();
     }
