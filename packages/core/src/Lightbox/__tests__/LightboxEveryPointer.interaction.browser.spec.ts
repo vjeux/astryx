@@ -381,6 +381,7 @@ test("a trackpad's scroll stops a zoomed photo at its edge, with no give, as a m
     await driver.wheelBurst({
       ...centre,
       steps: Array.from({length: 60}, () => ({dy: 12})),
+      maxGapMs: 100,
     });
     const samples = await page.evaluate(() => {
       const {edgeRecord} = window as unknown as {edgeRecord: EdgeRecord};
