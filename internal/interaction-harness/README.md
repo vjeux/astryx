@@ -342,12 +342,32 @@ to show a new position on at least four of the control's frames. The cast step (
 is read from the value's changes in the judged part, so a position the page
 commits off the grid once the block ends does not shrink it.
 A main-thread animation still fails: the control moves and it does not.
-Each such run counts in the control read's `belowStep`. A proof that claims a
-new position on every frame the control moved passes `judgeEveryFrame`. A frame
-the cast's step explains is then too little to judge: `busyWindowProof` throws
-`BusyFrameUnjudgedError` with each such frame, the component's move per frame
-there and the cast's step. A verdict that fails anyway comes back as it is, so
-a frozen or main-thread component stays a red on the component.
+Each such run counts in the control read's `belowStep`.
+
+A window that caught an animation (`blockMainThread` with `during`) predicts
+each frame instead, when the caught element carries the harness marker. Once
+the loop ends, the page replays the element's geometry animations, paused, on
+a hidden copy of its box. The copy is aligned to the element, and its box is
+read every 2 ms. A fade or a pseudo-element replays one numeric channel. The
+tracked value at rest and at the curve's end map that channel to a position.
+The proof then dates each frame on the controls' clock, in every engine, from
+the controls' starts that the window keeps. A frame predicted to move a full
+cast step must show a new position. A frame predicted to move less is too
+little to judge, and so is a frame with no control reading of its own. Each
+such frame is named in the proof's `unjudged` list and in its summary. It
+counts neither as moved nor as missed. When too few judged frames are left,
+the proof throws `FrameStarvationError`. A replay the proof cannot read throws
+`BusyPredictionError`: an ancestor moves too, or a run composites onto
+another. So does a replay whose motion over the judged part differs from the
+cast's by more than two steps or a tenth of the travel. Without a replay, the
+cast-step rule above judges each frame, and the proof's notes say why: no
+`during`, an element without the marker, or a run gone before the replay.
+The proof gives its `judged` part in the cast's stamps, so a spec selects
+frames by it as before. Near the first control's turns, frames have no
+reading of their own, so start the `ahead` control when every frame must be
+judged. WebKit does not predict: the element's box at the loop's end lags
+its animation's current time, so the replay cannot be aligned. Every WebKit
+window falls back by name to the controls' clock and the cast-step rule.
 
 `controlClock(control)` reads the compositor's own time in each frame off the
 control's position, for a proof that judges motion against time, not against
