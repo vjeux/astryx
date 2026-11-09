@@ -409,43 +409,49 @@ export async function castStoryboard(
   },
 ): Promise<Storyboard> {
   const storyboard = new Storyboard(page, options);
-  for (const frame of frames) {
-    if (options.from != null && frame.t < options.from) {
-      continue;
+  // One scratch page converts every JPEG frame. Each new page costs a page
+  // start, and on a loaded runner that takes seconds.
+  let scratch: Page | null = null;
+  try {
+    for (const frame of frames) {
+      if (options.from != null && frame.t < options.from) {
+        continue;
+      }
+      if (options.to != null && frame.t > options.to) {
+        continue;
+      }
+      let png: Buffer;
+      if (frame.format === 'png') {
+        png = Buffer.from(frame.data, 'base64');
+      } else {
+        scratch ??= await page.context().newPage();
+        png = await toPng(scratch, frame.data);
+      }
+      const t = frame.t - options.zero;
+      storyboard.frames.push({
+        label: `t=${t.toFixed(1)} ms`,
+        t,
+        data: options.data?.(frame.t) ?? {},
+        png,
+      });
     }
-    if (options.to != null && frame.t > options.to) {
-      continue;
-    }
-    const png =
-      frame.format === 'png'
-        ? Buffer.from(frame.data, 'base64')
-        : await toPng(page, frame.data);
-    const t = frame.t - options.zero;
-    storyboard.frames.push({
-      label: `t=${t.toFixed(1)} ms`,
-      t,
-      data: options.data?.(frame.t) ?? {},
-      png,
-    });
+  } finally {
+    await scratch?.close();
   }
   return storyboard;
 }
 
-async function toPng(page: Page, jpegBase64: string): Promise<Buffer> {
-  const scratch = await page.context().newPage();
-  try {
-    const url = await scratch.evaluate(async data => {
-      const bitmap = await createImageBitmap(
-        await (await fetch(`data:image/jpeg;base64,${data}`)).blob(),
-      );
-      const canvas = document.createElement('canvas');
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      canvas.getContext('2d')?.drawImage(bitmap, 0, 0);
-      return canvas.toDataURL('image/png');
-    }, jpegBase64);
-    return Buffer.from(url.slice(url.indexOf(',') + 1), 'base64');
-  } finally {
-    await scratch.close();
-  }
+/** A JPEG cast frame as PNG bytes, decoded and encoded in `scratch`. */
+async function toPng(scratch: Page, jpegBase64: string): Promise<Buffer> {
+  const url = await scratch.evaluate(async data => {
+    const bitmap = await createImageBitmap(
+      await (await fetch(`data:image/jpeg;base64,${data}`)).blob(),
+    );
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    canvas.getContext('2d')?.drawImage(bitmap, 0, 0);
+    return canvas.toDataURL('image/png');
+  }, jpegBase64);
+  return Buffer.from(url.slice(url.indexOf(',') + 1), 'base64');
 }
