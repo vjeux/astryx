@@ -23,6 +23,7 @@ import {
   armHold,
   blockMainThread,
   busyWindowProof,
+  CONTROL_RGB,
   MARKER_RGB,
   openStory,
   releaseAnimations,
@@ -33,6 +34,7 @@ import {
   touchDriver,
   trackMarker,
   withStorybook,
+  trackMarkers,
   writeEvidence,
   type HeldAnimation,
 } from '@astryxdesign/interaction-harness';
@@ -543,10 +545,49 @@ test('collapse under a finger: the group fades out as the rows below glide up, w
   await lengthenGlide(page, RECORDED_GLIDE_MS);
   const expanded = (await parts(page).below.boundingBox())?.y ?? 0;
   const height = (await parts(page).group.boundingBox())?.height ?? Number.NaN;
+  // NOT FOR LANDING: a cyan chip at the top of the row below, filmed through
+  // the collapse.
+  await page.addStyleTag({
+    content: `
+      [data-tree-id="app"] > div:first-of-type { position: relative; }
+      [data-tree-id="app"] > div:first-of-type::after {
+        content: ''; position: absolute; left: 60px; top: 0; width: 16px; height: 6px; background: rgb(0,255,255);
+      }`,
+  });
+  const cast = await startScreencast(page);
+  // NOT FOR LANDING: the main thread is held across the collapse's end.
+  const blocking = blockMainThread(page, 150, {
+    during: parts(page).below,
+    minProgressMs: RECORDED_GLIDE_MS - 60,
+    property: 'translate',
+  });
   const frames = await recordFrames(
     page,
     async () => tapToggle(page),
     RECORDED_GLIDE_MS + 400,
+  );
+  await blocking;
+  const castFrames = await cast.stop();
+  const [belowChip] = await trackMarkers(page, castFrames, {
+    colors: [CONTROL_RGB],
+  });
+  await writeEvidence(
+    'treelist-collapse-cast',
+    {
+      [`${test.info().project.name}-r${test.info().repeatEachIndex}-w${test.info().workerIndex}.json`]:
+        JSON.stringify({
+          cast: castFrames.map((frame, i) => ({
+            t: +frame.t.toFixed(1),
+            y: belowChip[i].box?.y ?? null,
+          })),
+          recorder: frames.map(frame => ({
+            t: +frame.t.toFixed(1),
+            belowTop: +frame.belowTop.toFixed(2),
+            group: frame.group == null ? null : +frame.group.shown.toFixed(2),
+          })),
+        }),
+    },
+    test.info(),
   );
   // The checks below judge at least two frames of the glide, three of the
   // fade and five of the leaving group. A page starved of frames fails by name.
