@@ -388,7 +388,7 @@ function controlPageTimes(
   control: readonly TrackedFrame[],
   ahead: readonly TrackedFrame[] | undefined,
   controlStarts: readonly [number, number?] | undefined,
-): Map<number, number> | null {
+): {times: Map<number, number>; read: ReadonlySet<number>} | null {
   const cycle = 2 * CONTROL_LEG_MS;
   const readers = [
     {...readControlClock(control), start: controlStarts?.[0]},
@@ -416,8 +416,15 @@ function controlPageTimes(
     return null;
   }
   const dated = [...read.keys()];
+  // Agreement is read against the run's usual lag: a cast whose stamps all
+  // trail their content by the same time agrees with itself.
+  const lags = dated
+    .map(stamp => stamp - (read.get(stamp) ?? stamp))
+    .sort((a, b) => a - b);
+  const lag = lags[Math.floor(lags.length / 2)] ?? 0;
   const agreeing = dated.filter(
-    stamp => Math.abs(stamp - (read.get(stamp) ?? stamp)) <= CONTROL_AGREE_MS,
+    stamp =>
+      Math.abs(stamp - (read.get(stamp) ?? stamp) - lag) <= CONTROL_AGREE_MS,
   );
   const anchors = agreeing.length > 0 ? agreeing : dated;
   const times = new Map<number, number>();
@@ -450,7 +457,11 @@ function controlPageTimes(
     floor = Math.max(times.get(stamp) ?? stamp, floor);
     times.set(stamp, floor);
   }
-  return times;
+  // A read stamp keeps its own time unless the order moved it.
+  const own = new Set(
+    [...read.keys()].filter(stamp => times.get(stamp) === read.get(stamp)),
+  );
+  return {times, read: own};
 }
 
 /**
@@ -465,20 +476,34 @@ function datedOnControlClock(
   control: readonly TrackedFrame[],
   ahead: readonly TrackedFrame[] | undefined,
   controlStarts: readonly [number, number?] | undefined,
-): {tracked: TrackedFrame[]; control: TrackedFrame[]} | null {
+): {
+  tracked: TrackedFrame[];
+  control: TrackedFrame[];
+  unread: ReadonlySet<TrackedFrame>;
+} | null {
   if (control.length === 0) {
     return null;
   }
   const stamps = [...new Set([...tracked, ...control].map(frame => frame.t))];
-  const times = controlPageTimes(stamps, control, ahead, controlStarts);
-  if (times == null) {
+  const clock = controlPageTimes(stamps, control, ahead, controlStarts);
+  if (clock == null) {
     return null;
   }
+  const {times, read} = clock;
+  // The frames whose time is not their own reading: near a control's turn,
+  // or repeating a position. A prediction has no time to read them at.
+  const unread = new Set<TrackedFrame>();
   const date = (frames: readonly TrackedFrame[]) =>
     [...frames]
       .sort((a, b) => a.t - b.t)
-      .map(frame => ({...frame, t: times.get(frame.t) ?? frame.t}));
-  return {tracked: date(tracked), control: date(control)};
+      .map(frame => {
+        const dated = {...frame, t: times.get(frame.t) ?? frame.t};
+        if (!read.has(frame.t)) {
+          unread.add(dated);
+        }
+        return dated;
+      });
+  return {tracked: date(tracked), control: date(control), unread};
 }
 
 /** What the control presented in the judged part (see `busyWindowProof`). */
@@ -530,8 +555,11 @@ export interface BlockedWindow extends BusyWindow {
    * reads the element's box (`geometry`, `[epoch ms, x, y, width, height]`,
    * of the marker chip when the element holds one), or, for a fade or a
    * pseudo-element, one numeric channel scaled from 0 to 1 (`progress`).
-   * `check` is the replayed box and the element's own at the loop's end.
-   * `unpredictable` says why neither could be read.
+   * `check` is the replayed box and the element's own at the loop's end, once
+   * the replay is aligned to it. `unpredictable` says why neither could be
+   * read, and fails the proof. `notPredicted` says why the cast-step rule
+   * judges each frame instead: the caught element carries no harness marker,
+   * or the run left the element before its replay.
    */
   readonly animation?: {
     readonly from: number;
@@ -546,6 +574,7 @@ export interface BlockedWindow extends BusyWindow {
     };
     readonly progress?: ReadonlyArray<readonly [number, number]>;
     readonly unpredictable?: string;
+    readonly notPredicted?: string;
   };
 }
 
@@ -634,6 +663,11 @@ export interface UnjudgedFrame {
   readonly predictedPx: number;
   /** The cast's step for the value, which the predicted move falls under. */
   readonly stepPx: number;
+  /**
+   * `step`: the predicted move fell under one cast step. `clock`: the frame,
+   * or the one before it, has no control reading of its own to date it.
+   */
+  readonly why: 'step' | 'clock';
 }
 
 /**
@@ -830,6 +864,13 @@ export async function blockMainThread(
             effect?.pseudoElement == null &&
             isGeometry(caught)
           ) {
+            // Only the element that carries the harness marker predicts the
+            // tracked box.
+            if (!target.hasAttribute('data-harness-marker')) {
+              return {
+                notPredicted: 'the tracked marker is not on the caught element',
+              };
+            }
             for (
               let up = target.parentElement;
               up != null;
@@ -852,6 +893,13 @@ export async function blockMainThread(
               }
             }
             const runs = target.getAnimations().filter(isGeometry);
+            // A run that already left the element shows where it stopped, so a
+            // replay of the rest cannot place it.
+            if (!runs.includes(caught)) {
+              return {
+                notPredicted: 'the caught animation ended before its replay',
+              };
+            }
             if (
               runs.some(
                 a =>
@@ -882,7 +930,29 @@ export async function blockMainThread(
             const style = getComputedStyle(target);
             const clone = document.createElement('div');
             clone.setAttribute('aria-hidden', 'true');
-            clone.style.cssText = `position:absolute;left:${target.offsetLeft}px;top:${target.offsetTop}px;width:${target.offsetWidth}px;height:${target.offsetHeight}px;box-sizing:border-box;margin:0;padding:0;border:0;visibility:hidden;pointer-events:none;transform-origin:${style.transformOrigin};transform-box:${style.transformBox}`;
+            // The layout box to the sub-pixel: the computed size with its
+            // padding and border. The offset is in whole px: it is aligned
+            // below.
+            const px = (name: string) =>
+              Number.parseFloat(style.getPropertyValue(name)) || 0;
+            const contentBox = style.boxSizing === 'content-box';
+            const width =
+              px('width') +
+              (contentBox
+                ? px('padding-left') +
+                  px('padding-right') +
+                  px('border-left-width') +
+                  px('border-right-width')
+                : 0);
+            const height =
+              px('height') +
+              (contentBox
+                ? px('padding-top') +
+                  px('padding-bottom') +
+                  px('border-top-width') +
+                  px('border-bottom-width')
+                : 0);
+            clone.style.cssText = `position:absolute;left:${target.offsetLeft}px;top:${target.offsetTop}px;width:${width}px;height:${height}px;box-sizing:border-box;margin:0;padding:0;border:0;visibility:hidden;pointer-events:none;transform-origin:${style.transformOrigin};transform-box:${style.transformBox}`;
             // A geometry property no run animates keeps the element's own value.
             for (const name of geometry) {
               if (!runs.some(a => keyframesOf(a).some(k => name in k))) {
@@ -906,7 +976,9 @@ export async function blockMainThread(
                   const {computedOffset, ...rest} = k as ComputedKeyframe;
                   return {...rest, offset: computedOffset};
                 }),
-                (a.effect as KeyframeEffect).getTiming(),
+                // Held at both ends: before its start the element shows the
+                // run's first keyframe, which the frame at rest checks.
+                {...(a.effect as KeyframeEffect).getTiming(), fill: 'both'},
               );
               replay.pause();
               return {
@@ -921,20 +993,22 @@ export async function blockMainThread(
                 replay.currentTime = (t - origin) * rate;
               }
             };
+            // Aligned once: each replay at its own animation's current time,
+            // which the element's own box is read at, then the clone moved by
+            // what remains. The cast's frame at rest checks the replay.
+            for (const {replay, source} of replays) {
+              replay.currentTime = source.currentTime;
+            }
+            const unaligned = boxOf(read);
+            const actual = boxOf(chip ?? target);
+            clone.style.left = `${target.offsetLeft + actual[0] - unaligned[0]}px`;
+            clone.style.top = `${target.offsetTop + actual[1] - unaligned[1]}px`;
+            const check = {predicted: boxOf(read), actual};
             const samples: Array<[number, number, number, number, number]> = [];
             for (let t = fromMs; t <= toMs; t += 2) {
               seek(t);
               samples.push([t, ...boxOf(read)]);
             }
-            // The check: each replay at its own animation's current time, which
-            // the element's own box is read at.
-            for (const {replay, source} of replays) {
-              replay.currentTime = source.currentTime;
-            }
-            const check = {
-              predicted: boxOf(read),
-              actual: boxOf(chip ?? target),
-            };
             for (const {replay} of replays) {
               replay.cancel();
             }
@@ -1314,9 +1388,10 @@ export function castStep(
 /** Frames too little to judge, as a summary or a failure names them. */
 function unjudgedList(frames: readonly UnjudgedFrame[]): string {
   return frames
-    .map(
-      frame =>
-        `+${frame.atMs.toFixed(0)} ms, a predicted ${frame.predictedPx.toFixed(2)} under the ${frame.stepPx} step`,
+    .map(frame =>
+      frame.why === 'clock'
+        ? `+${frame.atMs.toFixed(0)} ms, no control reading dates it`
+        : `+${frame.atMs.toFixed(0)} ms, a predicted ${frame.predictedPx.toFixed(2)} under the ${frame.stepPx} step`,
     )
     .join('; ');
 }
@@ -1649,17 +1724,28 @@ function readBusyWindow(
     controlStarts?: readonly [number, number?];
   } = {},
 ): ReturnType<typeof judgeBusyWindow> {
-  const {control} = options;
+  const {control, predicted} = options;
+  // A prediction reads each frame at its content's time. The cast's stamps
+  // trail that time, by 26 to 31 ms at rest in Chromium and unevenly under
+  // load. So a window with a prediction is dated in every engine.
+  const animation = (window as BlockedWindow).animation;
+  const predicts =
+    predicted != null ||
+    animation?.geometry != null ||
+    animation?.progress != null;
   const dated =
-    control != null && control.every(frame => frame.engine === 'webkit')
+    control != null &&
+    (predicts || control.every(frame => frame.engine === 'webkit'))
       ? datedOnControlClock(tracked, control, ahead, controlStarts)
       : null;
   return dated == null
     ? judgeBusyWindow(tracked, window, options)
-    : judgeBusyWindow(dated.tracked, window, {
-        ...options,
-        control: dated.control,
-      });
+    : judgeBusyWindow(
+        dated.tracked,
+        window,
+        {...options, control: dated.control},
+        dated.unread,
+      );
 }
 
 /** `readBusyWindow` on the frames it judges, dated. */
@@ -1754,6 +1840,8 @@ function judgeBusyWindow(
      */
     predicted?: (t: number) => number;
   } = {},
+  /** The frames dated from another frame's reading (`datedOnControlClock`). */
+  unread: ReadonlySet<TrackedFrame> = new Set(),
 ): {proof: BusyProof; starvation: FrameShortfall | null} {
   let end = window.to - marginMs;
   if (settledWithin != null && settledWithinSteps != null) {
@@ -2096,6 +2184,12 @@ function judgeBusyWindow(
       ? 0
       : Math.abs(last.value - first.value) / ((last.t - first.t) / cadence);
   const notes: string[] = [];
+  const notPredicted = (window as BlockedWindow).animation?.notPredicted;
+  if (notPredicted != null) {
+    notes.push(
+      `no prediction: ${notPredicted}, so the cast-step rule judges each frame`,
+    );
+  }
   if (presented != null && compositorFrameMs == null) {
     notes.push(
       'no compositor frames recorded around the window: judged from the screencast alone',
@@ -2148,7 +2242,14 @@ function judgeBusyWindow(
   );
   const predictedAt =
     predicted ??
-    predictionOf(tracked, axis, window, judged, judgeStepPx, settledAt);
+    predictionOf(
+      tracked.filter(f => !unread.has(f)),
+      axis,
+      window,
+      judged,
+      judgeStepPx,
+      settledAt,
+    );
   const unjudged: UnjudgedFrame[] = [];
   if (control != null) {
     const controlChanges = controlChangesUpTo(control, judged.to);
@@ -2159,7 +2260,7 @@ function judgeBusyWindow(
     // A freeze ends in a larger catch-up, and a run that no change ends stays
     // a miss.
     const series = tracked.flatMap(f =>
-      f.box == null ? [] : [{t: f.t, value: f.box[axis]}],
+      f.box == null ? [] : [{t: f.t, value: f.box[axis], frame: f}],
     );
     const seriesIndex = new Map(series.map((f, i) => [f.t, i]));
     const same = (a: number, b: number) =>
@@ -2299,12 +2400,15 @@ function judgeBusyWindow(
           continue;
         }
         const move = Math.abs(predictedAt(t) - predictedAt(series[i - 1].t));
-        if (move < judgeStepPx) {
+        const undated =
+          unread.has(series[i].frame) || unread.has(series[i - 1].frame);
+        if (undated || move < judgeStepPx) {
           excluded.add(t);
           unjudged.push({
             atMs: t - window.from,
             predictedPx: move,
             stepPx: judgeStepPx,
+            why: undated ? 'clock' : 'step',
           });
         }
       }

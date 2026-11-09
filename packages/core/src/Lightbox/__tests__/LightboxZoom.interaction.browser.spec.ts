@@ -56,6 +56,7 @@ import {
   timeline,
   touchDriver,
   traceRendering,
+  trackControl,
   trackMarker,
   waitForAnimation,
   waitForRest,
@@ -1044,7 +1045,10 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
   await markElement(photo, {mode: 'outline'});
   // A compositor-only control animation in the same window: what the
   // compositor presented while the main thread spun, on this machine.
-  await startBusyControl(page);
+  const busyControl = await startBusyControl(page);
+  // A second control half a leg ahead reads the frames near the first one's
+  // turns, so every frame has a time of its own.
+  const aheadControl = await startBusyControl(page, {ahead: true});
   const at = {x: 201, y: before.stage.y + before.stage.height / 2};
   // The same zoom at the default tempo, to compare the slowed one with.
   await driver.play(doubleTap(at));
@@ -1081,10 +1085,13 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
   const castFrames = await cast.stop();
   const tracked = await trackMarker(page, castFrames);
   const control = await trackMarker(page, castFrames, {rgb: CONTROL_RGB});
+  const ahead = await trackControl(page, castFrames, {ahead: true});
   const proof = busyWindowProof(tracked, block, {
     axis: ZOOM_AXIS,
     settledWithin: ZOOM_SETTLED_PX,
     control,
+    ahead,
+    controlStarts: [busyControl.start, aheadControl.start],
   });
   await writeEvidence(
     'busy-main-thread/lightbox-double-tap-zoom',
@@ -1092,6 +1099,7 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
       [`${testInfo.project.name}.json`]: JSON.stringify(
         {
           block,
+          controlStarts: [busyControl.start, aheadControl.start],
           proof,
           frames: tracked.map(f => ({
             t: +(f.t - block.from).toFixed(1),
@@ -1099,6 +1107,10 @@ test('the double-tap zoom keeps advancing every frame while the main thread is b
             h: f.box?.height ?? null,
           })),
           control: control.map(f => ({
+            t: +(f.t - block.from).toFixed(1),
+            x: f.box?.x ?? null,
+          })),
+          ahead: ahead.map(f => ({
             t: +(f.t - block.from).toFixed(1),
             x: f.box?.x ?? null,
           })),
