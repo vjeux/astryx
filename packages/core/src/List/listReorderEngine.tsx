@@ -454,7 +454,8 @@ function isFixedBelow(element: Element, until: Element): boolean {
     node != null && node !== until;
     node = node.parentElement
   ) {
-    if (view?.getComputedStyle(node).position === 'fixed') {
+    const position = view?.getComputedStyle(node).position;
+    if (position === 'fixed' || position === 'sticky') {
       return true;
     }
   }
