@@ -412,7 +412,7 @@ export function useChatStreamScroll({
     };
 
     // A scroll of the page fires at the document, not at its root element.
-    const view = scrollsPage ? doc.defaultView : null;
+    const view = null as Window | null;
     const stopPageListeners: (() => void)[] = [];
     if (view != null) {
       const atDocument = (listener: () => void) => (event: Event) => {
