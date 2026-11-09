@@ -17,6 +17,7 @@ import {
   test,
   type Locator,
   type Page,
+  type TestInfo,
 } from '@astryxdesign/a11y-spec/playwright';
 import {
   advanceFrozenPage,
@@ -378,14 +379,39 @@ function releaseVelocityOf(inputs: ReadonlyArray<InputSeen>): number {
   throw new Error(`no lift among the inputs: ${JSON.stringify(inputs)}`);
 }
 
-test('a flick coasts on UIKit’s curve onto the row it projects, and commits it on arrival', async ({
-  page,
-  browserName,
-}, testInfo) => {
+/**
+ * Flicks the wheel up and holds its coast. The coast's curve must follow
+ * UIKit's plan for the release the pan read from the inputs the page saw.
+ * With `holdLiftMs`, a touch pointerup listener first holds the main thread
+ * that long, as a slow app listener does.
+ */
+async function expectFlickCoastsOnPlan(
+  page: Page,
+  browserName: string,
+  testInfo: TestInfo,
+  {holdLiftMs = 0, evidence = 'curves/wheel-coast'} = {},
+): Promise<void> {
   const {driver, field, strip, start} = await openWheel(page);
   const {script, offsetAtLift} = flickUp(start);
   expect(releaseVelocity(script).y).toBeCloseTo(-FLICK_VELOCITY, -1);
   await recordFingerInputs(page);
+  if (holdLiftMs > 0) {
+    await page.evaluate(ms => {
+      window.addEventListener(
+        'pointerup',
+        event => {
+          if (event.pointerType !== 'touch') {
+            return;
+          }
+          const until = performance.now() + ms;
+          while (performance.now() < until) {
+            // The main thread stays busy until `until`.
+          }
+        },
+        {capture: true},
+      );
+    }, holdLiftMs);
+  }
   // The wheel ends a coast from a timer: gate the page's timers so the held
   // coast is not ended while it is sampled.
   await installTimerGate(page);
@@ -417,12 +443,21 @@ test('a flick coasts on UIKit’s curve onto the row it projects, and commits it
   // inputs the page saw. The whole release is UIKit's plan for that velocity:
   // the row projected, and the coast's rate re-solved to stop there.
   const inputs = await fingerInputsSeen(page);
+  if (holdLiftMs > 0 && browserName === 'webkit') {
+    // Without a late touchend, this case tests nothing.
+    const lastMove = inputs.filter(([type]) => type === 'pointermove').at(-1);
+    const touchEnd = inputs.find(([type]) => type === 'touchend');
+    expect(
+      (touchEnd?.[1] ?? 0) - (lastMove?.[1] ?? 0),
+      'the held pointerup stamps the touchend past the stillness interval',
+    ).toBeGreaterThan(UIKIT_GESTURES.velocity.stillness.value);
+  }
   const pageVelocity = releaseVelocityOf(inputs);
   const plan = planRelease(from, pageVelocity, MINUTES);
   const expected = (t: number) => plan.curve.value(t / 1000);
   const result = compareCurve(samples, expected, 0.75);
   await writeEvidence(
-    'curves/wheel-coast',
+    evidence,
     {
       [`${testInfo.project.name}.json`]: JSON.stringify(
         {
@@ -472,6 +507,28 @@ test('a flick coasts on UIKit’s curve onto the row it projects, and commits it
   await expect(field).toHaveValue(
     String(Math.round(rest / ROW)).padStart(2, '0'),
   );
+}
+
+test('a flick coasts on UIKit’s curve onto the row it projects, and commits it on arrival', async ({
+  page,
+  browserName,
+}, testInfo) => {
+  await expectFlickCoastsOnPlan(page, browserName, testInfo);
+});
+
+test('a flick whose touchend comes late still coasts on the plan for its pointerup, where the pan lifts', async ({
+  page,
+  browserName,
+}, testInfo) => {
+  // WebKit stamps a touch event once the page's pointer listeners are done.
+  // A pointerup listener that holds the main thread for 60 ms so stamps the
+  // touchend past the 40 ms stillness interval. The pan lifts at the
+  // pointerup, so it still reads the flick. Chromium stamps both events from
+  // the script, so there the hold moves no stamp.
+  await expectFlickCoastsOnPlan(page, browserName, testInfo, {
+    holdLiftMs: 60,
+    evidence: 'curves/wheel-coast-held-lift',
+  });
 });
 
 test('the coast keeps advancing every frame while the main thread is blocked', async ({
