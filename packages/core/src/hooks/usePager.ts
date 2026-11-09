@@ -1148,7 +1148,7 @@ export function createPager(
     const shown = sign() * running.get('x', at);
     const from = remap == null ? shown : remap(shown);
     // The velocity scales as the layout does where the track shows.
-    const rate = remap == null ? 1 : remap(shown + 0.5) - remap(shown - 0.5);
+    const rate = 1;
     const velocity = sign() * running.getVelocity('x', at) * rate;
     const isRelease = isReleaseSettle;
     const touchRelease = isTouchReleaseSettle;
