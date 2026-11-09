@@ -6704,6 +6704,31 @@ test.describe('storyboards', {tag: '@storyboard'}, () => {
     expect(files['sheet.png']).toMatch(/sheet\.png$/);
   });
 
+  test("a storyboard whose sheet runs past its budget writes each frame and the reason, and doesn't throw", async ({
+    page,
+  }, testInfo) => {
+    await fixture(page);
+    // A 1 ms budget ends before the scratch page that composes the sheet has
+    // opened, as a sheet the page cannot finish does on a loaded runner.
+    const storyboard = new Storyboard(page, {
+      name: 'harness-self-test-sheet-budget',
+      clip: {x: 0, y: 340, width: 402, height: 120},
+      sheetBudgetMs: 1,
+    });
+    await storyboard.capture('first', 0);
+    await storyboard.capture('second', 16.7);
+    const files = await storyboard.write(testInfo);
+    expect(Object.keys(files).sort()).toEqual([
+      'frame-00.png',
+      'frame-01.png',
+      'trace.json',
+    ]);
+    const trace = JSON.parse(fs.readFileSync(files['trace.json'], 'utf8')) as {
+      sheet?: string;
+    };
+    expect(trace.sheet).toMatch(/composition ran past 1 ms/);
+  });
+
   test('a capture Chromium returns empty is taken again two frames later', async ({
     page,
   }) => {
