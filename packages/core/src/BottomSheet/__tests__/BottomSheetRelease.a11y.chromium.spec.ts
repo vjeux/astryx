@@ -295,7 +295,7 @@ test('a mouse close under reduced motion moves the sheet no further', async ({
   page,
 }) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
-  const {dialog, sheet} = await openFilters(page);
+  const {sheet} = await openFilters(page);
   const rest = await sheet.evaluate(el => el.getBoundingClientRect());
   // Every frame's sheet top, and the time the button comes up.
   await page.evaluate(() => {
@@ -323,12 +323,10 @@ test('a mouse close under reduced motion moves the sheet no further', async ({
     };
     requestAnimationFrame(record);
   });
-  const x = rest.x + rest.width / 2;
-  const y = rest.y + 12;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x, y + 150, {steps: 5});
-  await page.mouse.up();
+  const cdp = await page.context().newCDPSession(page);
+  // 150 px in 100 ms, each event stamped, so load cannot slow the release: a
+  // release at rest would project no throw and keep the sheet open.
+  await mouseDrag(cdp, sheet, 150, 100);
   // While the dialog closes, no drag exit plays: no inline transition and no
   // animation moves the sheet.
   const exitPlayed = await page.evaluate(async () => {
@@ -354,7 +352,40 @@ test('a mouse close under reduced motion moves the sheet no further', async ({
     return played;
   });
   expect(exitPlayed).toBe(false);
-  await expect(dialog).toBeHidden({timeout: 2_000});
+  // The release asked the host to close. An open sheet is modal, and a
+  // closing one is not.
+  expect(
+    await page.evaluate(
+      () =>
+        document.querySelector('dialog[open]')?.getAttribute('aria-modal') ??
+        null,
+    ),
+    'the release kept the sheet open: the host never got a close',
+  ).toBeNull();
+  // Then the exit runs to its end, and the dialog closes with it.
+  const exitEnd = await page.evaluate(async () => {
+    const dialog = document.querySelector('dialog');
+    const shut = () => dialog == null || !dialog.isConnected || !dialog.open;
+    let idleFrames = 0;
+    while (!shut() && idleFrames < 3) {
+      const running = document.getAnimations().filter(animation => {
+        const target = (animation.effect as KeyframeEffect | null)?.target;
+        return (
+          animation.playState === 'running' &&
+          target != null &&
+          dialog?.contains(target) === true &&
+          Number.isFinite(Number(animation.effect?.getComputedTiming().endTime))
+        );
+      });
+      idleFrames = running.length > 0 ? 0 : idleFrames + 1;
+      await Promise.allSettled(
+        running.map(async animation => animation.finished),
+      );
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    return shut() ? 'closed' : 'open';
+  });
+  expect(exitEnd, 'the exit ended, but the dialog stayed open').toBe('closed');
   const read = async () =>
     page.evaluate(
       () =>
