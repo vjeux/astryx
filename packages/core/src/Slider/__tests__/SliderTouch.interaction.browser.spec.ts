@@ -46,6 +46,7 @@ import {
   touchDriver,
   type TouchScript,
   traceRendering,
+  trackMarker,
   trackMarkers,
   waitForRest,
   withStorybook,
@@ -1433,6 +1434,14 @@ test(
     const [tracked, control] = await trackMarkers(page, castFrames, {
       colors: [MARKER_RGB, CONTROL_RGB],
     });
+    // NOT FOR LANDING: the same tracks as one decode per colour.
+    expect([tracked, control]).toEqual([
+      await trackMarker(page, [...castFrames]),
+      await trackMarker(page, [...castFrames], {rgb: CONTROL_RGB}),
+    ]);
+    console.log(
+      `IDENTITY ${castFrames.length} frames, ${tracked.filter(f => f.box != null).length}/${control.filter(f => f.box != null).length} found`,
+    );
     // Judged until two of the cast's own steps from rest: 2 px in
     // Chromium's PNG cast, 4 px in WebKit's JPEG cast. WebKit's tail then
     // shows the cast's 2 px plateaus, not a stall.

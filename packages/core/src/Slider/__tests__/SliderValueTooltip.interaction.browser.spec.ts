@@ -25,6 +25,7 @@ import {
   openStory,
   startScreencast,
   touchDriver,
+  trackMarker,
   trackMarkers,
   waitForRest,
   withStorybook,
@@ -441,6 +442,14 @@ test.describe('with a finger', () => {
     const [thumbs, tooltips] = await trackMarkers(page, shot, {
       colors: [MARKER_RGB, CONTROL_RGB],
     });
+    // NOT FOR LANDING: the same tracks as one decode per colour.
+    expect([thumbs, tooltips]).toEqual([
+      await trackMarker(page, [...shot]),
+      await trackMarker(page, [...shot], {rgb: CONTROL_RGB}),
+    ]);
+    console.log(
+      `IDENTITY ${shot.length} frames, ${thumbs.filter(f => f.box != null).length}/${tooltips.filter(f => f.box != null).length} found`,
+    );
     const pairs = thumbs.flatMap((frame, index) => {
       const other = tooltips[index]?.box;
       return frame.box != null && other != null
