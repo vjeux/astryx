@@ -29,7 +29,7 @@ Only `useChatStreamScroll.ts` changes. A module helper, `scrollsPage(el)`, now n
 - **Reproduction before the change**, at #10779's head 2fd138767f: the message's top lands at −462 px in Chromium and −465 px in WebKit. That is minus the page's scroll, in each of 3 runs.
 - **Result after the change:** the message's top lands at 0 px, in each of 5 runs per engine.
 - **Representative unchanged path:** a unit pins an element scroller's offset, 350 px, on both builds.
-- **Mutation-sensitive proof:** two mutants each fail a unit: the page measured from the root's box (15e36a9898), and every scroller measured from 0 (b7d1cd7330).
+- **Mutation-sensitive proof:** two mutants each fail a unit: the page measured from the root's box (2909b74b6f), and every scroller measured from 0 (daa886e512).
 
 ## Scope
 
@@ -40,6 +40,6 @@ Only `useChatStreamScroll.ts` changes. A module helper, `scrollsPage(el)`, now n
 
 ## Testing
 
-- `pnpm exec vitest run --project ui packages/core/src/Chat/`: 498/498 at 793f61b0d8. New: a page-scroller case, which fails on #10779's head, and an element-scroller case, which passes on both.
-- `useChatStreamScrollPage.a11y.browser.spec.ts`, in Chromium and in WebKit: 4/4 in each of 5 runs per engine at 793f61b0d8. The new case scrolls the page up with the wheel, then calls `scrollToMessage`. On #10779's head it fails with −462 and −465, in each of 3 runs.
+- `pnpm exec vitest run --project ui packages/core/src/Chat/`: 498/498 at 97b0943257. New: a page-scroller case, which fails on #10779's head, and an element-scroller case, which passes on both.
+- `useChatStreamScrollPage.a11y.browser.spec.ts`, in Chromium and in WebKit: 4/4 in each of 5 runs per engine at 97b0943257. The new case scrolls the page up with the wheel, then calls `scrollToMessage`. On #10779's head it fails with −462 and −465, in each of 3 runs.
 - `pnpm exec tsc` and ESLint: clean. `pnpm review:pre`: 0 findings, and the branch merges clean with main.
