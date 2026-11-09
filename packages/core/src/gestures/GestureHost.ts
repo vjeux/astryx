@@ -3333,7 +3333,7 @@ export class GestureHost {
         id,
         x: lift?.x ?? touch.clientX,
         y: lift?.y ?? touch.clientY,
-        time: lift?.time ?? time,
+        time,
       });
       if (landed != null) {
         retargetedEnds.push({id, landed, x: touch.clientX, y: touch.clientY});
