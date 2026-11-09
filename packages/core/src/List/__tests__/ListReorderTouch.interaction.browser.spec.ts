@@ -749,6 +749,54 @@ async function busyProof(
   await startBusyControl(page);
   const cast = await startScreencast(page);
   const driver = await touchDriver(page);
+  // NOT FOR LANDING: the reorder's glides freeze through the block, as
+  // glides on the main thread would. The block's task is queued through the
+  // timer gate. As it is queued, before that frame's rendering update, every
+  // running animation in the list pauses. Setting its time completes the
+  // pause at once. Each plays again after the block.
+  await page.evaluate(() => {
+    type Later = (callback: () => void, ms?: number) => number;
+    const w = window as unknown as {__harnessTimerGate?: {timeout?: Later}};
+    const gate = w.__harnessTimerGate ?? {};
+    const later: Later =
+      gate.timeout ?? ((callback, ms) => window.setTimeout(callback, ms));
+    let armed = true;
+    w.__harnessTimerGate = {
+      ...gate,
+      timeout: (callback, ms) => {
+        const list = document.querySelector('#storybook-root ul');
+        const frozen = armed
+          ? document.getAnimations().filter(animation => {
+              const target = (animation.effect as KeyframeEffect | null)
+                ?.target;
+              return (
+                target != null &&
+                list != null &&
+                list.contains(target) &&
+                animation.playState === 'running'
+              );
+            })
+          : [];
+        if (frozen.length === 0) {
+          return later(callback, ms);
+        }
+        armed = false;
+        for (const animation of frozen) {
+          const at = animation.currentTime;
+          animation.pause();
+          animation.currentTime = at;
+        }
+        return later(() => {
+          callback();
+          later(() => {
+            for (const animation of frozen) {
+              animation.play();
+            }
+          }, 0);
+        }, ms);
+      },
+    };
+  });
   const blocking = blockMainThread(page, blockMs, {
     during: marked,
     minProgressMs: 50,
