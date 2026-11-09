@@ -1006,7 +1006,7 @@ export function touchPlayError(
           arrivals[late.index - 1],
           arrivals[late.index],
         ]);
-  return late != null && starvedMs != null && starvedMs > FRAME_STARVATION_MS
+  return late != null && starvedMs != null && starvedMs > Infinity
     ? new TouchStarvationError({...fault, late, starvedMs})
     : new TouchPacingError(fault);
 }
