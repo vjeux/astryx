@@ -27,6 +27,28 @@
  */
 
 import type {Locator, Page} from '@playwright/test';
+import {test as x1Test} from '@playwright/test';
+
+let x1Old = false;
+
+function x1Outcome(run: () => {verdict: {pass: boolean; failures: readonly string[]}}): string {
+  try {
+    const proof = run();
+    return proof.verdict.pass ? 'pass' : `fail: ${proof.verdict.failures.join(' | ')}`;
+  } catch (error) {
+    return `throw ${error instanceof Error ? `${error.name}: ${error.message.slice(0, 160)}` : String(error)}`;
+  }
+}
+
+function x1Log(kind: string, old: string, now: string): void {
+  let title = '';
+  try {
+    title = x1Test.info().titlePath.slice(1).join(' > ');
+  } catch {
+    title = '(outside a test)';
+  }
+  console.log(`X1DJ ${JSON.stringify({kind, title, old, now, differ: old !== now})}`);
+}
 import {defineAnimatedProperties} from './animated-properties';
 import {defineCurveEnd} from './curve-end';
 import {
@@ -1401,6 +1423,20 @@ function motionStepPx(values: readonly number[]): number {
 export function busyWindowProof(
   ...args: Parameters<typeof readBusyWindow>
 ): BusyProof {
+  x1Old = true;
+  let old: string;
+  try {
+    old = x1Outcome(() => x1BusyWindowProof(...args));
+  } finally {
+    x1Old = false;
+  }
+  x1Log('single', old, x1Outcome(() => x1BusyWindowProof(...args)));
+  return x1BusyWindowProof(...args);
+}
+
+function x1BusyWindowProof(
+  ...args: Parameters<typeof readBusyWindow>
+): BusyProof {
   const {proof, starvation, unjudged, componentFailed, unresolved} =
     readBusyWindow(...args);
   // Under the control's floor, a cast that kept pace still shows a missed
@@ -1937,7 +1973,7 @@ function judgeBusyWindow(
   const stepPx =
     subpixelStepPx ??
     Math.max(
-      readStepPx ?? 0,
+      x1Old ? 0 : (readStepPx ?? 0),
       motionStepPx(
         tracked.flatMap(f =>
           f.box != null && f.t >= judged.from && f.t <= judged.to
@@ -2227,6 +2263,7 @@ function judgeBusyWindow(
       };
     } else if (visible < minJudgedFrames) {
       if (
+        x1Old ||
         controlRead.movedWith < controlRead.moved ||
         controlRead.componentStallMs > controlRead.longestStallMs
       ) {
@@ -2415,6 +2452,27 @@ export interface PooledBusyProof {
  * pool whose judged runs show a component red.
  */
 export function pooledBusyProof(
+  ...args: Parameters<typeof x1PooledBusyProof>
+): PooledBusyProof {
+  x1Old = true;
+  let old: string;
+  try {
+    old = x1Outcome(() => {
+      const pooled = x1PooledBusyProof(...args);
+      return {verdict: pooled.verdict};
+    });
+  } finally {
+    x1Old = false;
+  }
+  x1Log(
+    'pooled',
+    old,
+    x1Outcome(() => ({verdict: x1PooledBusyProof(...args).verdict})),
+  );
+  return x1PooledBusyProof(...args);
+}
+
+function x1PooledBusyProof(
   runs: readonly BusyRun[],
   options: Omit<
     NonNullable<Parameters<typeof busyWindowProof>[2]>,
