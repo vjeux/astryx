@@ -606,6 +606,8 @@ export async function blockMainThread(
         const later = gate?.timeout ?? window.setTimeout.bind(window);
         const realNow = gate?.now ?? (() => performance.now());
         const deadline = realNow() + wait;
+        const probeWaitStart = realNow();
+        ((window as unknown as {__probeSpy?: {waits: number[]}}).__probeSpy?.waits ?? []).push(probeWaitStart);
         // The busy-window control animates on its own, inside a dialog with
         // `within`: it never stands for the animation under test.
         const isControl = (a: Animation) => {
@@ -750,7 +752,10 @@ export async function blockMainThread(
           } else if (timedOut && leftover != null) {
             reject(tooLate(leftover));
           } else if (timedOut) {
-            reject(new Error('blockMainThread: no animation started'));
+            const probe = (window as unknown as {__probeSpy?: {animates: {t: number; el: Element; target: string; props: string[]; dur: unknown; cancelledAt: number | null}[]; touches: {type: string; ts: number; now: number}[]}}).__probeSpy;
+            const mine = (probe?.animates ?? []).filter(a => a.el === element || element.contains(a.el)).slice(-8).map(a => ({dt: +(a.t - probeWaitStart).toFixed(1), cancelledDt: a.cancelledAt == null ? null : +(a.cancelledAt - probeWaitStart).toFixed(1), target: a.target, props: a.props, dur: a.dur}));
+            const touches = (probe?.touches ?? []).slice(-6).map(t => ({type: t.type, dt: +(t.now - probeWaitStart).toFixed(1), ts: +t.ts.toFixed(1)}));
+            reject(new Error('blockMainThread: no animation started PROBEDIAG ' + JSON.stringify({waitStart: +probeWaitStart.toFixed(1), animatesOnElement: mine, touches})));
           } else {
             frame(tick);
           }
@@ -766,10 +771,28 @@ export async function blockMainThread(
       fillHolds,
     },
   );
+  const probeLog = async (outcome: string) => {
+    try {
+      const info = await during.evaluate(element => {
+        const probe = (window as unknown as {__probeSpy?: {animates: {t: number; el: Element; props: string[]; cancelledAt: number | null}[]; touches: {type: string; now: number}[]; waits: number[]}}).__probeSpy;
+        const waitStart = probe?.waits.at(-1) ?? null;
+        return {
+          waitStart,
+          animates: (probe?.animates ?? []).filter(a => a.el === element || element.contains(a.el)).slice(-4).map(a => ({dt: waitStart == null ? null : +(a.t - waitStart).toFixed(1), cancelledDt: a.cancelledAt == null || waitStart == null ? null : +(a.cancelledAt - waitStart).toFixed(1), props: a.props})),
+          touches: (probe?.touches ?? []).slice(-4).map(t => ({type: t.type, dt: waitStart == null ? null : +(t.now - waitStart).toFixed(1)})),
+        };
+      }, undefined, {timeout: 2_000});
+      (await import('node:fs')).appendFileSync('test-results/probe-waits.jsonl', JSON.stringify({fn: 'blockMainThread', outcome, ...info}) + '\n');
+    } catch {
+      // diagnostics only
+    }
+  };
   try {
     const [, held] = await Promise.all([defined, waited]);
+    await probeLog('caught');
     return held;
   } catch (error) {
+    await probeLog(String((error as Error)?.message ?? error).slice(0, 60));
     const late = /BusyWindowTooLate (\{.*\})/.exec(
       error instanceof Error ? error.message : String(error),
     );

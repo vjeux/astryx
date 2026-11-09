@@ -1874,6 +1874,16 @@ export async function waitForAnimation(
     );
     const found = read ?? [];
     if (found.length > 0) {
+      try {
+        const touches = await locator.page().evaluate(() => {
+          const probe = (window as unknown as {__probeSpy?: {touches: {type: string; ts: number; now: number}[]}}).__probeSpy;
+          const now = performance.now();
+          return (probe?.touches ?? []).slice(-4).map(t => ({type: t.type, dtFromNow: +(t.now - now).toFixed(1), ts: +t.ts.toFixed(1)}));
+        });
+        (await import('node:fs')).appendFileSync('test-results/probe-waits.jsonl', JSON.stringify({fn: 'waitForAnimation', outcome: 'found', n: found.length, touches}) + '\n');
+      } catch {
+        // diagnostics only
+      }
       await armRecorder(locator.page());
       return found;
     }
@@ -1917,13 +1927,28 @@ export async function waitForAnimation(
           {timeout: 1_000},
         )
         .catch(() => [] as string[]);
-      throw new Error(
+      const probeDiag = await locator
+        .evaluate(element => {
+          const probe = (window as unknown as {__probeSpy?: {animates: {t: number; el: Element; target: string; props: string[]; dur: unknown; cancelledAt: number | null}[]; touches: {type: string; ts: number; now: number}[]}}).__probeSpy;
+          const rec = (window as unknown as {__harnessAnimations?: {armedAt: () => number; log: {animation: Animation; seenAt: number; startedAt: number | null; cancelledAt: number | null; playedMs: number | null; finishedAt: number | null; ancestors: Element[]}[]}}).__harnessAnimations;
+          const now = performance.now();
+          return JSON.stringify({
+            now: +now.toFixed(1),
+            armedAt: rec == null ? null : +rec.armedAt().toFixed(1),
+            spyAnimatesOnElement: (probe?.animates ?? []).filter(a => a.el === element || element.contains(a.el)).slice(-6).map(a => ({dtFromNow: +(a.t - now).toFixed(1), cancelledDt: a.cancelledAt == null ? null : +(a.cancelledAt - now).toFixed(1), target: a.target, props: a.props, dur: a.dur})),
+            recorderOnElement: (rec?.log ?? []).filter(e => e.ancestors.includes(element)).slice(-6).map(e => ({seenDt: +(e.seenAt - now).toFixed(1), playedMs: e.playedMs, finishedAt: e.finishedAt == null ? null : +(e.finishedAt - now).toFixed(1)})),
+            touches: (probe?.touches ?? []).slice(-8).map(t => ({type: t.type, dtFromNow: +(t.now - now).toFixed(1), ts: +t.ts.toFixed(1)})),
+          });
+        }, undefined, {timeout: 2_000})
+        .catch(e => 'diag failed: ' + String(e).slice(0, 120));
+      (await import('node:fs')).appendFileSync('test-results/probe-waits.jsonl', JSON.stringify({fn: 'waitForAnimation', outcome: 'NO-START', diag: probeDiag}) + '\n');
+      throw new Error('PROBEDIAG ' + probeDiag + ' :: ' + (
         missed.length > 0
           ? `waitForAnimation: the element's ${missed.join(', ')} started and finished between two of the page's frames: its start event came after it had finished, with nothing left to read (WebKit sends it at the next frame; README: engine limits). Make the animation last longer than the page's frame gaps under load.`
           : 'waitForAnimation: no animation started on the element, none running ' +
               'and none recorded since the last wait. If the action is the ' +
               "page's first contact with the harness, take " +
-              'watchAnimations(locator) before it.',
+              'watchAnimations(locator) before it.'),
       );
     }
     await new Promise(resolve => setTimeout(resolve, 4));
