@@ -575,6 +575,20 @@ test('expand under a finger: the rows below glide while the group fades in, and 
     RECORDED_GLIDE_MS + 400,
   );
   const moving = frames.filter(frame => frame.group != null);
+  // NOT FOR LANDING: a 20 px band in a mid-glide frame whose
+  // reads spanned 50 ms in the record.
+  {
+    const at = frames.indexOf(moving[Math.floor(moving.length / 3)]);
+    const hit = frames[at] as {
+      belowTop: number;
+      callbackAt: number;
+      t: number;
+    };
+    const before = frames[at - 1] as {belowTop: number; callbackAt: number};
+    const after = frames[at + 1] as {belowTop: number; callbackAt: number};
+    hit.t = hit.callbackAt + 50;
+    hit.belowTop += 20;
+  }
   expect(moving.length, 'frames with the group').toBeGreaterThan(4);
   const height = moving[0].group?.height ?? 0;
   // The checks below judge at least two frames of the glide, on time. A page
