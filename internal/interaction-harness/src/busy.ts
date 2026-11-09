@@ -1877,19 +1877,9 @@ function readBusyWindow(
     predicted != null ||
     animation?.geometry != null ||
     animation?.progress != null;
-  // A prediction is on the page clock, so its frames are dated from the
-  // controls' own starts, which the window keeps when the options name none.
-  const starts =
-    controlStarts ??
-    (predicts ? (window as BlockedWindow).controlStarts : undefined);
-  const dated =
-    control != null &&
-    (predicts || control.every(frame => frame.engine === 'webkit'))
-      ? datedOnControlClock(tracked, control, ahead, starts)
-      : null;
   const fallBack = (why: string) => {
-    // The replay moved another way than the cast: the cast-step rule judges
-    // the frames as if there were no replay, and the notes say why.
+    // The replay cannot predict the frames: the cast-step rule judges them
+    // as if there were no replay, and the notes say why.
     const {
       from: start,
       to: end,
@@ -1905,6 +1895,28 @@ function readBusyWindow(
     };
     return readBusyWindow(tracked, plain, {...options, ahead, controlStarts});
   };
+  // WebKit reads the element's box at the loop's end before its animation's
+  // current time, so the replay cannot be aligned to it there.
+  if (
+    animation != null &&
+    predicted == null &&
+    predicts &&
+    tracked.some(frame => frame.engine === 'webkit')
+  ) {
+    return fallBack(
+      "the element's box in WebKit lags its animation at the loop's end and cannot align the replay",
+    );
+  }
+  // A prediction is on the page clock, so its frames are dated from the
+  // controls' own starts, which the window keeps when the options name none.
+  const starts =
+    controlStarts ??
+    (predicts ? (window as BlockedWindow).controlStarts : undefined);
+  const dated =
+    control != null &&
+    (predicts || control.every(frame => frame.engine === 'webkit'))
+      ? datedOnControlClock(tracked, control, ahead, starts)
+      : null;
   if (dated == null) {
     const read = judgeBusyWindow(tracked, window, options);
     return read.fallback == null ? read : fallBack(read.fallback);
