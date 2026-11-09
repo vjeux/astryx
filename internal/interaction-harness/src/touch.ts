@@ -1082,6 +1082,12 @@ async function playSteps(
         pacedDeadline(pacing, origin, steps, index, previous, keepsGaps),
       );
     }
+    if (index > 0) {
+      const end = performance.now() + 20;
+      while (performance.now() < end) {
+        // The pacer's wait spins 20 ms past every deadline.
+      }
+    }
     const timestamp = stampFor(step.t);
     const dispatchedAt = Date.now();
     const sentAt = performance.now();
