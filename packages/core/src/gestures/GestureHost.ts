@@ -427,7 +427,7 @@ const WHEEL_END_MS = 100;
  * sheet's pull), whoever keeps it. A slow drag's stream pauses longer than
  * WHEEL_END_MS between events.
  */
-const WHEEL_FOLLOW_END_V_MS = 180;
+const WHEEL_FOLLOW_END_V_MS = 181;
 /**
  * The same horizontally, ms (a pager's or a row's swipe), whose slow
  * swipes pause longer still.
