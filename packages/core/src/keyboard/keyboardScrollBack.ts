@@ -233,8 +233,8 @@ export function stopKeyboardScrollBack(win: Window): void {
 // touch stops that scroll, so a person's scroll stands. Under Reduce Motion, or
 // in a theme that reduces motion for everyone, the scroll lands at once.
 function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
-  for (const [scroller, {from, at, isBack}] of scrolls) {
-    if (at == null || isBack || !scroller.isConnected) {
+  for (const [scroller, {from, at}] of scrolls) {
+    if (at == null || !scroller.isConnected) {
       continue;
     }
     const top = scrollTopOf(scroller, win);
