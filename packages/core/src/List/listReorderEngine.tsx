@@ -729,10 +729,17 @@ export class ListReorderController implements ListReorderSession {
    * mutation observer while the list is up, with each registration's release.
    */
   private namesWatch: {
-    list: HTMLElement;
     unwatchRows: () => void;
     labels: Map<Element, () => void>;
   } | null = null;
+  /** The list element the session last read its rows from. */
+  private knownList: HTMLElement | null = null;
+  /**
+   * How many times the List rendered a new list element after its first: an
+   * `ol` or a `ul`, as its numbering turns on or off.
+   */
+  private listVersion = 0;
+  private readonly listListeners = new Set<() => void>();
   private namesQueued = false;
   /** The handles already warned for being named after their place. */
   private readonly warnedNameless = new WeakSet<Element>();
@@ -879,6 +886,22 @@ export class ListReorderController implements ListReorderSession {
   };
 
   /**
+   * How many times the List rendered a new list element after its first. The
+   * host attaches the list's listeners again on each.
+   */
+  get listChanges(): number {
+    return this.listVersion;
+  }
+
+  /** Calls `listener` when the List renders a new list element. */
+  subscribeList = (listener: () => void): (() => void) => {
+    this.listListeners.add(listener);
+    return () => {
+      this.listListeners.delete(listener);
+    };
+  };
+
+  /**
    * Watches the list's rows and the handles' label elements through Core's
    * shared mutation observer. A row's place, and whether its label names it,
    * come from the DOM. Returns the release.
@@ -889,7 +912,6 @@ export class ListReorderController implements ListReorderSession {
       return () => {};
     }
     const watch = {
-      list,
       unwatchRows: observeMutations(
         list,
         {childList: true},
@@ -937,19 +959,17 @@ export class ListReorderController implements ListReorderSession {
       return;
     }
     const places = new Map(rowsOf(list).map((row, index) => [row, index + 1]));
-    const watch = this.namesWatch;
     // The List renders a new element when its numbering turns on or off (an
-    // `ol` or a `ul`). Its remounted handles refresh the names, which moves
-    // the watch onto it.
-    if (watch != null && watch.list !== list) {
-      watch.unwatchRows();
-      watch.list = list;
-      watch.unwatchRows = observeMutations(
-        list,
-        {childList: true},
-        this.onNamesMutation,
-      );
+    // `ol` or a `ul`). Its remounted handles refresh the names, and the host
+    // attaches the list's listeners and watches to the new element.
+    if (this.knownList != null && this.knownList !== list) {
+      this.listVersion += 1;
+      for (const listener of [...this.listListeners]) {
+        listener();
+      }
     }
+    this.knownList = list;
+    const watch = this.namesWatch;
     const watched = new Set<Element>();
     let changed = false;
     for (const handle of this.keys.keys()) {
@@ -2405,11 +2425,24 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
       presentation: isTouch ? 'uikit' : 'theme',
     });
   });
+  // A new list element (the List rendered as an `ol` or a `ul`) takes the
+  // list's listeners and watches again.
+  const listChanges = useSyncExternalStore(
+    controller.subscribeList,
+    () => controller.listChanges,
+    () => 0,
+  );
   // The list's own pointer listeners, on its DOM element.
-  useIsomorphicLayoutEffect(() => controller.attachMouse(), [controller]);
+  useIsomorphicLayoutEffect(
+    () => controller.attachMouse(),
+    [controller, listChanges],
+  );
   // Syncs the handles' names with the list's rows and their label elements
   // in the DOM, through the session's observer.
-  useIsomorphicLayoutEffect(() => controller.attachNames(), [controller]);
+  useIsomorphicLayoutEffect(
+    () => controller.attachNames(),
+    [controller, listChanges],
+  );
   // The owner's options, for an object a Lab collection adapted from the
   // owner's.
   const startedBy = options.startedBy ?? options;
@@ -2425,7 +2458,7 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
   // every primary pointer, and a pen where the primary pointer is coarse.
   useIsomorphicLayoutEffect(
     () => controller.attachTouch(isTouch),
-    [controller, isTouch],
+    [controller, isTouch, listChanges],
   );
   return (
     <>
