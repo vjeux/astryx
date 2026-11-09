@@ -463,7 +463,27 @@ test('a busy first frame after the lift still plays the whole release before the
       while (performance.now() < until) {
         // Busy: the main thread is held.
       }
+      // NOT FOR LANDING: the attribute goes one frame before the release
+      // animation ends.
+      let cutSet = false;
       const sample = (time: number) => {
+        const running = el
+          .getAnimations({subtree: true})
+          .find(
+            animation =>
+              (animation.effect as KeyframeEffect | null)?.pseudoElement ===
+              '::before',
+          );
+        if (!cutSet && running?.startTime != null) {
+          cutSet = true;
+          const endsAt =
+            Number(running.startTime) +
+            Number(running.effect?.getComputedTiming().endTime);
+          setTimeout(
+            () => el.removeAttribute('data-astryx-press'),
+            endsAt - 1000 / 60 - performance.now(),
+          );
+        }
         const layer = getComputedStyle(el, '::before');
         const strength =
           layer.content === 'none' || layer.content === 'normal'
@@ -483,10 +503,16 @@ test('a busy first frame after the lift still plays the whole release before the
   });
   await driver.play(tap(center, {holdMs: 300}));
   await expect.poll(async () => pressState(row)).toBeNull();
-  const frames = await page.evaluate(
+  const recorded = await page.evaluate(
     () =>
       (window as unknown as {__frames: [number, number, string | null][]})
         .__frames,
+  );
+  // NOT FOR LANDING: the record keeps no fading frame in the last 38 ms
+  // before the attribute went, as a page starved of frames draws.
+  const goneAt = recorded.find(([, , press]) => press !== 'fading')?.[0];
+  const frames = recorded.filter(
+    ([t, , press]) => press !== 'fading' || goneAt == null || t <= goneAt - 38,
   );
   const fading = frames.filter(([, , press]) => press === 'fading');
   // WebKit can start the release at the time the busy script began, so its
