@@ -16,9 +16,11 @@ export const docs = {
     'mobile navigation',
     'app sections',
     'badge',
+    'more tab',
+    'overflow tabs',
   ],
   description:
-    "The bottom tab bar of a phone app, as on iOS 26: the app's top-level sections as a floating capsule above the bottom edge, with a selection lens that slides to the chosen tab. Each tab has an icon, a label and an optional badge. Under a finger, on iOS and Android alike, it behaves like iOS 26's: the lens lifts into glass as a finger lands, follows a finger dragged across the tabs and settles on the tab nearest where it lifts, while the bar flexes; under a mouse, a press is a plain button press: a click chooses a tab and the lens follows the theme's motion. With no tab selected, a held finger highlights the tab under it. Choosing the selected tab again is reported separately, so a screen can return to its root as iOS does. Experimental: lands in lab first.",
+    "The bottom tab bar of a phone app, as on iOS 26: the app's top-level sections as a floating capsule above the bottom edge, with a selection lens that slides to the chosen tab. Each tab has an icon, a label and an optional badge. Under a finger, on iOS and Android alike, it behaves like iOS 26's: the lens lifts into glass as a finger lands, follows a finger dragged across the tabs and settles on the tab nearest where it lifts, while the bar flexes; under a mouse, a press is a plain button press: a click chooses a tab and the lens follows the theme's motion. With no tab selected, a held finger highlights the tab under it. Choosing the selected tab again is reported separately, so a screen can return to its root as iOS does. With more than five tabs the bar shows the first four and a More tab, and TabBarMoreList lists the rest. Experimental: lands in lab first.",
   components: [
     {
       name: 'TabBar',
@@ -55,8 +57,15 @@ export const docs = {
           name: 'children',
           type: 'ReactNode',
           description:
-            'The tabs: TabBarItem elements, in order, as direct children.',
+            'The tabs: TabBarItem elements, in order, as direct children. With more than five, the bar shows the first four and a More tab that holds the rest.',
           required: true,
+        },
+        {
+          name: 'moreValue',
+          type: 'string',
+          description:
+            "The More tab's value, with more than five tabs. Choosing More calls onChange with it (and onReselect while More holds a tab, to return to its list); More reads as selected while value is moreValue or any tab past the fourth. Render TabBarMoreList while value is moreValue, and a section chosen there inside More's own navigation stack.",
+          default: "'more'",
         },
       ],
     },
@@ -118,6 +127,32 @@ export const docs = {
         },
       ],
     },
+    {
+      name: 'TabBarMoreList',
+      displayName: 'Tab Bar More List',
+      description:
+        "The More tab's screen, as on iOS: one row per tab past the fourth, with its icon, its label and a disclosure chevron. Give it the same TabBarItem children as TabBar. A disabled tab's row is disabled too. Rearranging the tabs (iOS's Edit) is not available yet.",
+      props: [
+        {
+          name: 'children',
+          type: 'ReactNode',
+          description: 'The same TabBarItem elements given to TabBar.',
+          required: true,
+        },
+        {
+          name: 'onChange',
+          type: '(value: string) => void',
+          description:
+            "Called with a row's value when it is chosen: show that section inside More, which stays selected in the bar.",
+          required: true,
+        },
+        {
+          name: 'value',
+          type: 'string',
+          description: "The selected tab's value: its row reads as selected.",
+        },
+      ],
+    },
   ],
   usage: {
     description:
@@ -127,6 +162,11 @@ export const docs = {
         guidance: true,
         description:
           'Keep every tab visible and the set stable; give each a short label and an outline icon with a filled selectedIcon.',
+      },
+      {
+        guidance: true,
+        description:
+          'Keep to five tabs where you can; with more, put the sections people use most first, since the rest move into More.',
       },
       {
         guidance: true,
