@@ -796,31 +796,20 @@ test('after a busy first frame, the release starts at that frame and keeps a but
     );
   }
   // Its last frame still written shows the layer at rest: the release went
-  // when its animation ended, not partway through it. That frame may come up
-  // to `allowedMs` before the end.
+  // when its animation ended, not partway through it.
   const atRest = strengthAt(releaseMs - 1000 / 60) + 0.01;
-  let allowedMs = 0;
-  let longerMs = releaseMs;
-  while (longerMs - allowedMs > 0.1) {
-    const ms = (allowedMs + longerMs) / 2;
-    if (strengthAt(releaseMs - ms) <= atRest) {
-      allowedMs = ms;
-    } else {
-      longerMs = ms;
-    }
-  }
   // A release that ends with its animation ends inside the gap after its
-  // last frame. A gap longer than `allowedMs` hides the frames the check
-  // needs, so that run fails by name. After a shorter gap, a layer above
-  // rest means the release went early.
+  // last frame. When no frame came there for longer than
+  // `FRAME_STARVATION_MS`, the run cannot show the layer at rest, so it fails
+  // by name.
   const last = fading.at(-1);
   const gone = samples.at(-1);
   if (last != null && gone != null && last.strength > atRest) {
     const gapMs = gone.t - last.t;
-    if (gapMs > allowedMs) {
+    if (gapMs > FRAME_STARVATION_MS) {
       throw new FrameStarvationError({
         by: 'the release end check',
-        during: `the release ran its last ${allowedMs.toFixed(1)} ms`,
+        during: 'the release ended',
         frames: 0,
         min: 1,
         longestGapMs: gapMs,
