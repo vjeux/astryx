@@ -1061,10 +1061,7 @@ export function createPager(
     const isSwipe = isSwipeSettle;
     // A release's report still waiting goes out two frames after the new
     // settle starts, as after the first one.
-    const waiting = pendingReport;
-    pendingReport = null;
     stopSettle();
-    pendingReport = waiting;
     if (isRelease) {
       settleFrom(from, velocity, touchRelease, at);
       isSwipeSettle = isSwipe && settleHandle != null;
