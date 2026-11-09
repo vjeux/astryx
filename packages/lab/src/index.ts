@@ -356,7 +356,9 @@ export {PageControl, type PageControlProps} from './PageControl';
 export {
   TabBar,
   TabBarItem,
+  TabBarMoreList,
   type TabBarItemProps,
+  type TabBarMoreListProps,
   type TabBarProps,
 } from './TabBar';
 
