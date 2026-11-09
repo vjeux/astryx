@@ -299,7 +299,7 @@ function recordTouches(view: Window, event: Event): void {
   const starts = touchRecords.get(view)?.starts ?? 0;
   touchRecords.set(view, {
     fingers: touches?.length ?? 0,
-    starts: event.type === 'touchstart' ? starts + 1 : starts,
+    starts,
   });
 }
 
