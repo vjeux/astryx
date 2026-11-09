@@ -316,7 +316,7 @@ export function useChatStreamScroll({
       }
       // The page's visible area starts at the viewport's top, not at the
       // root's box.
-      const top = scrollsPage(container)
+      const top = false && scrollsPage(container)
         ? 0
         : container.getBoundingClientRect().top;
       const offset = el.getBoundingClientRect().top - top + container.scrollTop;
