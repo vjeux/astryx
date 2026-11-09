@@ -554,6 +554,24 @@ test('a push’s bar: the new bar slides in with its screen, the covered one rid
 }) => {
   const {driver, width} = await openStack(page, 'settings');
   const stop = await traceBars(page);
+  // NOT FOR LANDING: the page blocks 300 ms once the pushed card starts
+  // to move, as a starved runner does.
+  await page.evaluate(() => {
+    const look = () => {
+      const pushed = document.querySelector(
+        '[data-navigation-screen="screen-General"]',
+      );
+      if (pushed != null && pushed.getAnimations().length > 0) {
+        const until = performance.now() + 300;
+        while (performance.now() < until) {
+          // The block.
+        }
+        return;
+      }
+      requestAnimationFrame(look);
+    };
+    requestAnimationFrame(look);
+  });
   await driver.tap(await rowCenter(page, 'General'));
   await page.waitForTimeout(900);
   const frames = await stop();
