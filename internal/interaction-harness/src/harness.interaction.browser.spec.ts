@@ -2533,6 +2533,101 @@ test.describe('frame evidence', () => {
     expect(started.map(a => a.durationMs)).toEqual([600, 600]);
   });
 
+  test('a CSS animation that ends inside a trace costs no Layout at its end event: the recorder reads its run only once the trace ends, and dates its finish then', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'rendering traces are Chromium-only (README: engine limits)',
+    );
+    await page.route('http://anchored.test/', route =>
+      route.fulfill({contentType: 'text/html', body: ANCHORED}),
+    );
+    await page.goto('http://anchored.test/');
+    const pop = page.locator('#pop');
+    // The recorder runs, and its listeners are on the document by now.
+    await waitForRest(pop);
+    await page.addStyleTag({
+      content:
+        '@keyframes fade { from { opacity: 0.5 } to { opacity: 1 } } #pop.fade { animation: fade 300ms linear; }',
+    });
+    // Each end is marked twice: at the event's time stamp, and just after
+    // the recorder's capture-phase listener on the document (a listener
+    // added there later runs after it). With `layOutAtEnd`, that later
+    // listener first forces a layout of the element: the control.
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __end: {stamp: number; after: number};
+        __layOutAtEnd: boolean;
+      };
+      w.__end = {stamp: 0, after: 0};
+      w.__layOutAtEnd = false;
+      document.addEventListener(
+        'animationend',
+        event => {
+          const el = event.target as HTMLElement;
+          if (w.__layOutAtEnd) {
+            el.style.minWidth = '1px';
+            void el.offsetWidth;
+            el.style.minWidth = '';
+          }
+          w.__end = {
+            stamp: performance.timeOrigin + event.timeStamp,
+            after: performance.timeOrigin + performance.now(),
+          };
+        },
+        true,
+      );
+    });
+    const layoutsAtEnd = async (layOutAtEnd: boolean) => {
+      await page.evaluate(layOut => {
+        const w = window as unknown as {
+          __end: {stamp: number; after: number};
+          __layOutAtEnd: boolean;
+        };
+        w.__end = {stamp: 0, after: 0};
+        w.__layOutAtEnd = layOut;
+      }, layOutAtEnd);
+      const trace = await traceRendering(page, async () => {
+        await pop.evaluate(el => {
+          el.classList.add('fade');
+        });
+        await page.waitForFunction(
+          () => (window as unknown as {__end: {after: number}}).__end.after > 0,
+          undefined,
+          {polling: 50},
+        );
+      });
+      const {stamp, after} = await page.evaluate(
+        () =>
+          (window as unknown as {__end: {stamp: number; after: number}}).__end,
+      );
+      await pop.evaluate(el => {
+        el.classList.remove('fade');
+      });
+      // From a millisecond before the event's coarse time stamp to the mark
+      // after the recorder's listener: only the listeners before it ran.
+      return countBetween(trace, stamp - 1, after).Layout ?? 0;
+    };
+    expect(await layoutsAtEnd(false)).toBe(0);
+    // Control: a layout forced in that span is counted.
+    expect(await layoutsAtEnd(true)).toBeGreaterThan(0);
+    // A run that starts and ends inside a trace is dated where its start puts
+    // its end, once the trace ends.
+    await waitForRest(pop);
+    await traceRendering(page, async () => {
+      await pop.evaluate(el => {
+        el.classList.add('fade');
+      });
+      await page.waitForTimeout(450);
+    });
+    const ended = await waitForAnimation(pop);
+    expect(ended).toHaveLength(1);
+    expect(ended[0].finishedAt).not.toBeNull();
+    expect(Math.abs((ended[0].finishedAt ?? 0) - ended[0].to)).toBeLessThan(1);
+  });
+
   test('a waitForRest awaited inside a traced body stands down too, so the trace counts no Layout from it', async ({
     page,
     browserName,
