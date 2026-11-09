@@ -912,11 +912,22 @@ export async function blockMainThread(
         now = read();
         spins += 1;
       }
+      const controlStarts = (
+        window as unknown as {__harnessControlStarts?: number[]}
+      ).__harnessControlStarts;
       return {
         from: performance.timeOrigin + start,
         to: performance.timeOrigin + now,
         spanMs: now - start,
         spins,
+        ...(controlStarts?.[0] == null
+          ? {}
+          : {
+              controlStarts: [controlStarts[0], controlStarts[1]] as [
+                number,
+                number?,
+              ],
+            }),
       };
     }, ms);
   }
@@ -1962,7 +1973,8 @@ function readBusyWindow(
     ahead?: readonly TrackedFrame[];
     /**
      * When the first control started, then the one ahead (each
-     * `startBusyControl`'s `start`). Without them, each control counts from
+     * `startBusyControl`'s `start`). Without them, the window's starts serve
+     * (`BlockedWindow.controlStarts`). Without those, each control counts from
      * the origin that most of its frames' stamps agree with.
      */
     controlStarts?: readonly [number, number?];
@@ -2020,11 +2032,11 @@ function readBusyWindow(
       'the proof starts no ahead control, so a frame near a turn has no time of its own',
     );
   }
-  // A prediction is on the page clock, so its frames are dated from the
-  // controls' own starts. The window keeps them when the options name none.
-  const starts =
-    controlStarts ??
-    (predicts ? (window as BlockedWindow).controlStarts : undefined);
+  // Frames are dated from the controls' own starts, which the window keeps
+  // when the options name none. A prediction is on the page clock. And the
+  // stamps' origin carries any lag that every stamp shares: under a block,
+  // frames drawn before it would then date inside it.
+  const starts = controlStarts ?? (window as BlockedWindow).controlStarts;
   const dated =
     control != null &&
     (predicts || control.every(frame => frame.engine === 'webkit'))

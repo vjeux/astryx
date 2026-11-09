@@ -411,15 +411,15 @@ frame's own time for another check reads it with `pageTimesOnControls`, the
 readings the proof dates from. Without the control ahead, a late frame near the
 first control's turn keeps its lateness. A proof that judges every frame near a
 turn starts the control ahead too (`startBusyControl(page, {ahead: true})`). It
-passes that control's frames as `ahead`, per run in a pool. Without the
-controls' starts, a cast whose stamps all trail the content dates every frame
-that much late. Pass `controlStarts` (each `startBusyControl`'s `start`) to date
-on the content's own clock. Chromium casts and casts with no control are judged
-on their stamps. Under load, Chromium's cast also stamps frames in bursts, which
-a proof on its stamps can misread. On WebKit's stamps, a late frame inside the
-judged part changes no verdict, since the proof reads a slow curve's held frames
-as motion. At the part's start, it shows a stall the control does not have: the
-false reds came from there.
+passes that control's frames as `ahead`, per run in a pool. The controls' starts
+come from the blocked window (`blockMainThread`) unless the spec passes
+`controlStarts`. Without any, a cast whose stamps all trail the content would
+date every frame that much late. Chromium casts and casts with no control are
+judged on their stamps. Under load, Chromium's cast also stamps frames in
+bursts, which a proof on its stamps can misread. On WebKit's stamps, a late
+frame inside the judged part changes no verdict, since the proof reads a slow
+curve's held frames as motion. At the part's start, it shows a stall the control
+does not have: the false reds came from there.
 
 A WebKit proof keeps one dated frame per display interval. A frame under one
 interval after the last one kept is left out; the earlier one stays. WebKit's

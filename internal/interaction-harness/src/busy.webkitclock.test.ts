@@ -17,7 +17,12 @@
  */
 
 import {describe, expect, it} from 'vitest';
-import {busyWindowProof, pageTimesOnControls, pooledBusyProof} from './busy';
+import {
+  type BlockedWindow,
+  busyWindowProof,
+  pageTimesOnControls,
+  pooledBusyProof,
+} from './busy';
 import {FrameStarvationError, type TrackedFrame} from './frames';
 
 const FRAME = 1000 / 60;
@@ -457,6 +462,75 @@ describe('busyWindowProof on a WebKit cast with a control', () => {
       });
     expect(proof([0, -200]).summary).toBe(proof().summary);
     expect(proof([0, -200]).verdict.failures).toEqual([]);
+  });
+
+  it('dates the frames from the starts the block recorded, so a cast whose stamps all trail the content by 165 ms counts no frame drawn before the block', () => {
+    const shots = onTime().map(shot => ({...shot, stamp: shot.at + 165}));
+    const frames = cast(
+      shots,
+      (at: number) => 20 + (6 * (at - 800)) / FRAME,
+      'webkit',
+    );
+    const recorded: BlockedWindow = {
+      ...BLOCK,
+      spanMs: BLOCK.to - BLOCK.from,
+      controlStarts: [0, -200],
+    };
+    const judged = (window: BlockedWindow) => {
+      const {from, to} = busyWindowProof(frames.tracked, window, {
+        axis: 'x',
+        control: frames.control,
+      }).judged;
+      return shots.filter(shot => shot.stamp >= from && shot.stamp <= to);
+    };
+    // On the stamps' origin, the lag moves frames drawn before the block
+    // into it.
+    const {controlStarts: _, ...unrecorded} = recorded;
+    expect(judged(unrecorded).some(shot => shot.at < BLOCK.from)).toBe(true);
+    // From the starts the block recorded, every judged frame is drawn inside
+    // it.
+    expect(judged(recorded).length).toBeGreaterThan(30);
+    expect(judged(recorded).every(shot => shot.at >= BLOCK.from)).toBe(true);
+  });
+
+  it("takes the options' controlStarts over the block's", () => {
+    const shots = onTime().map(shot => ({...shot, stamp: shot.at + 165}));
+    const frames = cast(shots, fade(0.6), 'webkit');
+    const proof = (window: BlockedWindow) =>
+      busyWindowProof(frames.tracked, window, {
+        axis: 'x',
+        control: frames.control,
+        controlStarts: [0, -200],
+      });
+    const plain = {...BLOCK, spanMs: BLOCK.to - BLOCK.from};
+    expect(proof({...plain, controlStarts: [100, -100]}).summary).toBe(
+      proof(plain).summary,
+    );
+  });
+
+  it("judges a Chromium cast and a WebKit cast with no control the same with or without the block's starts", () => {
+    const shots = lateAfterGap(11);
+    const plain = {...BLOCK, spanMs: BLOCK.to - BLOCK.from};
+    const recorded: BlockedWindow = {...plain, controlStarts: [0, -200]};
+    const judgment = (
+      frames: ReturnType<typeof cast>,
+      control: boolean,
+      window: BlockedWindow,
+    ) => {
+      const {window: _, ...proof} = busyWindowProof(frames.tracked, window, {
+        axis: 'x',
+        control: control ? frames.control : undefined,
+      });
+      return JSON.stringify(proof);
+    };
+    const chromium = cast(shots, fade(0.6), 'chromium');
+    const webkit = cast(shots, fade(0.6), 'webkit');
+    expect(judgment(chromium, true, recorded)).toBe(
+      judgment(chromium, true, plain),
+    );
+    expect(judgment(webkit, false, recorded)).toBe(
+      judgment(webkit, false, plain),
+    );
   });
 
   it('judges a Chromium cast and a WebKit cast with no control on their stamps, as before', () => {
