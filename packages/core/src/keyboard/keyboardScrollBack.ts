@@ -186,9 +186,6 @@ function awaitFoldedReveal(
 ): void {
   const doc = win.document;
   const stopScroll = subscribeInput(win, 'scroll', event => {
-    if (event.target !== doc && event.target !== win) {
-      return;
-    }
     stop();
     if (Math.abs(scrollTopOf(scroller, win) - at) <= KEYBOARD_EPSILON) {
       scrollTopTo(scroller, from, scrollBackBehavior(scroller), win);
