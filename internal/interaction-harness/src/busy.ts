@@ -721,7 +721,6 @@ export async function blockMainThread(
             if (
               start != null &&
               end != null &&
-              start >= callBegan &&
               start < waitBegan &&
               (entry.playedMs == null || entry.playedMs >= minProgress) &&
               entry.ancestors.includes(element) &&
