@@ -302,7 +302,39 @@ async function recordFrames(
         const box = onFrame(ringOwner, tree);
         ring = {top: box.top - reach, bottom: box.bottom + reach};
       }
+      // NOT FOR LANDING: the transformed-rect reads beside the one-clock
+      // reads, and how late the frame's callback ran on its own clock.
+      const rectBottom = (el: Element) => el.getBoundingClientRect().bottom;
+      let rectGuide = 0;
+      for (const line of document.querySelectorAll(
+        '[role="tree"] .astryx-tree-list-guide',
+      )) {
+        const box = line.getBoundingClientRect();
+        if (
+          box.height === 0 ||
+          Math.abs(box.left + box.width / 2 - columnX) > 1
+        ) {
+          continue;
+        }
+        rectGuide = Math.max(
+          rectGuide,
+          group != null && shownGroup != null && group.contains(line)
+            ? Math.min(
+                box.bottom,
+                group.getBoundingClientRect().top + shownGroup.shown,
+              )
+            : box.bottom,
+        );
+      }
       w.__frames.push({
+        lag: performance.now() - Number(document.timeline.currentTime),
+        rect: {
+          groupTop: group?.getBoundingClientRect().top ?? null,
+          belowTop: below.getBoundingClientRect().top,
+          lastBottom: rectBottom(rowBox(last)),
+          guideBottom: rectGuide,
+          lowestBottom: lowest == null ? 0 : rectBottom(rowBox(lowest)),
+        },
         t: performance.now(),
         parentBottom: onFrame(rowBox(parent), tree).bottom,
         group: shownGroup,
@@ -330,11 +362,24 @@ async function recordFrames(
   });
   await act();
   await page.waitForTimeout(ms);
-  return page.evaluate(() => {
+  const recorded = await page.evaluate(() => {
     const w = window as unknown as {__frames: Frame[]; __record: boolean};
     w.__record = false;
     return w.__frames;
   });
+  // NOT FOR LANDING: every frame, per run and call.
+  const info = test.info();
+  const calls = (info as unknown as {__calls?: number}).__calls ?? 0;
+  (info as unknown as {__calls?: number}).__calls = calls + 1;
+  await writeEvidence(
+    'treelist-double-read',
+    {
+      [`${info.project.name}-L${info.line}-r${info.repeatEachIndex}-w${info.workerIndex}-c${calls}.json`]:
+        JSON.stringify(recorded),
+    },
+    info,
+  );
+  return recorded;
 }
 
 /** The gap above the row below that no row of the group fills, per frame. */
