@@ -1037,7 +1037,7 @@ export class ListReorderController implements ListReorderSession {
       list.addEventListener('pointerup', onUp);
       list.addEventListener('pointercancel', onCancel);
       list.addEventListener('lostpointercapture', onCancel);
-      handle.setPointerCapture?.(pointerId);
+      // no pointer capture
       this.endMouse = end;
     };
     list.addEventListener('pointerdown', onPointerDown);
