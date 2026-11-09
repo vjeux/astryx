@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...7262c34aa585d4674b3e8624efd0e8a9bd3ad496
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...729784099d46cbc0076a5b7c968ec945e42cea82
 
 ## User impact
 
@@ -46,14 +46,15 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
   - A pan decides only its own show. After a pan at 108 ms, the next show with no pan lifts at 700 ms and teaches the page. The show after lifts at once.
   - A drag unwinds Firefox's pan from 290 to 0: the dock's translate follows 90, 190 and 290, keeping the composer on the keyboard. Nothing is laid out and no scroll is read until the finger lifts; then the layout takes 290 once.
   - A fling that pans only the visual viewport is laid out once at its scroll end, with no lifted finger.
+  - A slow drag of 0.3 px per report lays out nothing until the finger lifts, then once.
   - A composer show under a pinch zoom teaches nothing.
   - Safari's model, where `innerHeight` grows as the pan unwinds through a slow drag to the page's top: the lift stays 0.
   - A caret reveal while typing, and a show for a field outside the composer, each have a case.
   - The tap claim, `focus()`'s reveal and the put-back each have a case before and after a page learns the dock is covered. Removing any one gate fails its case.
   - With the option off, the reveal-pan watch reports and listens as before; one visual-viewport read per report stays (INV11).
-  - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2420/2420.
+  - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2421/2421.
 - Safari on the iOS 26.2 Simulator, in a scripted trace at 714141ef23: a tap, drags with the keyboard up, then typing three lines. The dock's applied lift is 0 px on every frame, and it never flips direction within 100 ms, as on 33bc644a. Safari's own slide on a slow drag toward the top stays as in earlier releases (Gap 17, #10718).
-- In Firefox, while a scroll moves the pan after input, each report moves only the dock's translate. The layout takes the lift once the pan rests. A lifted finger, a scroll's end or a report with the pan unchanged marks that rest.
+- In Firefox, while a scroll moves the pan after input, each report moves only the dock's translate. The layout takes the lift once the pan rests: at the last finger's lift or at a scroll's end. A fling's momentum then follows the same way.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
