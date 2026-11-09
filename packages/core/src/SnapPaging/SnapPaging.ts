@@ -200,7 +200,7 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
   }
 
   function span(): number {
-    return itemsSpan(element, isMoving);
+    return itemsSpan(element, false);
   }
 
   // Each child's start and end along the row, in the position's terms, with
