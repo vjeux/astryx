@@ -1,5 +1,5 @@
 <!-- Template: bug-fix.md -->
-Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...a64d445a4223cf0193c60cbf1f7f6daf336bf093
+Review only this pull request's change: https://github.com/vjeux/astryx/compare/0d755730457931688c2a51408fb142593aa49306...8e190c33e06545599b04fa0cd23a2d8dc8fe4bbb
 
 ## User impact
 
@@ -48,18 +48,19 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
   - A fling that pans only the visual viewport is laid out once at its scroll end, with no lifted finger.
   - A slow drag of 0.3 px per report lays out nothing until the finger lifts, then once.
   - A composer show under a pinch zoom teaches nothing.
+  - A pan to the dock after a show learned the cover, before any input, goes back, and the next show still lifts at once, with reduced motion too.
   - Safari's model, where `innerHeight` grows as the pan unwinds through a slow drag to the page's top: the lift stays 0, with no translate.
   - A caret reveal while typing, and a show for a field outside the composer, each have a case.
   - The tap claim, `focus()`'s reveal and the put-back each have a case before and after a page learns the dock is covered. Removing any one gate fails its case.
   - With the option off, the reveal-pan watch reports and listens as before; one visual-viewport read per report stays (INV11).
-  - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2422/2422.
+  - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2423/2423.
 - Safari on the iOS 26.2 Simulator, in scripted traces at 729784099d (browser and home-screen app): a tap, then drags with the keyboard up. The dock's applied lift is 0 px on every frame, and it never flips direction within 100 ms, as on 33bc644a. Safari's own slide on a slow drag toward the top stays as in earlier releases (Gap 17, #10718).
 - In Firefox, while a scroll moves the pan after input, each report moves only the dock's translate. The layout takes the lift when the last finger lifts. After a fling, it takes it again when the fling comes to rest.
-- Firefox for Android in the emulator, at a64d445a42, with animations at normal scale:
-  - Scroll, fling and scroll back with the keyboard up: the composer stays on the visual viewport's bottom, worst −0.4 px, as on main.
-  - First show: covered 668 to 814 ms before the lift (main: 0 ms), within Gap 16's wait, which ends at 3 s at most.
-  - Second show: 0 ms, as on main.
-  - Frame times during the follow: p50 17 to 21 ms against main's 17 to 19 ms, with p95 and max overlapping. Chrome for Android, the control: p50 24 ms against main's 24.5 ms. No added long frames.
+- Firefox for Android in the emulator, at a64d445a42, with animations at normal scale, slow and removed:
+  - Scroll, fling and scroll back with the keyboard up: the composer stays on the visual viewport's bottom, worst −0.5 px, as on main.
+  - First show: covered 668 to 814 ms before the lift at normal scale, and 675 ms with animations removed (main: 0 ms). In two takes Firefox's own pan revealed it at 155 and 188 ms. Each is within Gap 16's wait, which ends at 3 s at most.
+  - Second show: 0 ms at normal and slow scale, as on main. With animations removed, one of three takes was covered 599 ms.
+  - Frame times during the follow: p50 17 to 21 ms against main's 17 to 19 ms, with p95 and max overlapping. Chrome for Android, the control: p50 24 ms against main's 24.5 ms. No added long frames at any scale.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
