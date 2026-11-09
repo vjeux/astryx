@@ -230,6 +230,13 @@ async function traceBars(page: Page): Promise<() => Promise<BarFrame[]>> {
           continue;
         }
         cards[key] = translateX(card);
+        // NOT FOR LANDING: a 30 ms stall between a card's read and its bar's.
+        {
+          const until = performance.now() + 30;
+          while (performance.now() < until) {
+            // The stall.
+          }
+        }
         const keyBars = document.querySelectorAll(
           `[data-navigation-bar="${CSS.escape(key)}"]`,
         );
