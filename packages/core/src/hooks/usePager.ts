@@ -1049,7 +1049,7 @@ export function createPager(
   function retargetSettle(running: PagerAnimator): void {
     // One time for the seed and the new curve's start. A stall between the
     // read and the play then cannot leave the curve behind the track.
-    const at = clock();
+    const at = undefined;
     const from = sign() * running.get('x', at);
     const velocity = sign() * running.getVelocity('x', at);
     const isRelease = isReleaseSettle;
