@@ -342,7 +342,7 @@ export function pacedDeadline(
   previous: {readonly sentAt: number; readonly returnedAt: number} | null,
   keepsGaps = false,
 ): number {
-  const scripted = origin + steps[index].t;
+  const scripted = origin + 2 * steps[index].t;
   if (index === 0 || previous == null) {
     return scripted;
   }
@@ -1079,6 +1079,12 @@ async function playSteps(
       await until(
         pacedDeadline(pacing, origin, steps, index, previous, keepsGaps),
       );
+    }
+    if (index % 3 === 1) {
+      const end = performance.now() + 20;
+      while (performance.now() < end) {
+        // A forced 20 ms runner stall before the send.
+      }
     }
     const timestamp = stampFor(step.t);
     const dispatchedAt = Date.now();
