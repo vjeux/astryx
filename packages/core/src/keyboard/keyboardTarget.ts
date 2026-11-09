@@ -776,7 +776,7 @@ function revealWithKeyboard(
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
         lastHeight = event.height;
-        if (!hasRevealed || !isLaterPressDown()) {
+        if (!isLaterPressDown()) {
           revealNow(event.height);
         }
       }
