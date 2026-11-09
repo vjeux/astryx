@@ -941,15 +941,6 @@ export class ListReorderController implements ListReorderSession {
     // The List renders a new element when its numbering turns on or off (an
     // `ol` or a `ul`). Its remounted handles refresh the names, which moves
     // the watch onto it.
-    if (watch != null && watch.list !== list) {
-      watch.unwatchRows();
-      watch.list = list;
-      watch.unwatchRows = observeMutations(
-        list,
-        {childList: true},
-        this.onNamesMutation,
-      );
-    }
     const watched = new Set<Element>();
     let changed = false;
     for (const handle of this.keys.keys()) {
