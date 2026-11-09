@@ -57,9 +57,9 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
 - In Firefox, while a scroll moves the pan after input, each report moves only the dock's translate. The layout takes the lift when the last finger lifts. After a fling, it takes it again when the fling comes to rest.
 - Firefox for Android in the emulator, at a64d445a42, with animations at normal scale:
   - Scroll, fling and scroll back with the keyboard up: the composer stays on the visual viewport's bottom, worst −0.4 px, as on main.
-  - First show: covered 668 to 814 ms before the lift (main: 0 ms), under the 1.5 s bar (Gap 16).
+  - First show: covered 668 to 814 ms before the lift (main: 0 ms), within Gap 16's wait, which ends at 3 s at most.
   - Second show: 0 ms, as on main.
-  - Frame times during the follow: p50 17 to 21 ms against main's 17 to 19 ms, with p95 and max overlapping. Chrome: 24 against 24.5 ms. No added long frames.
+  - Frame times during the follow: p50 17 to 21 ms against main's 17 to 19 ms, with p95 and max overlapping. Chrome for Android, the control: p50 24 ms against main's 24.5 ms. No added long frames.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
 - Core tsc, ESLint, `check:knowledge` and `check:changesets` pass.
