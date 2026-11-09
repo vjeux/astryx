@@ -142,7 +142,7 @@ export class WheelSegmenter {
     let carriedSteps: number | null = null;
     if (this.count === 0) {
       boundary = this.gesture === 0 ? 'first' : 'idle';
-    } else if (this.phase === 'finger' && gap >= idleMs) {
+    } else if (this.phase === 'finger' && gap > idleMs) {
       boundary = 'idle';
     } else if (this.phase === 'momentum') {
       // A late wheel carries the steps of its whole stall, which began at the
