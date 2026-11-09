@@ -1009,6 +1009,14 @@ for (const how of ['in a task', 'in a frame callback of the page'] as const) {
           }
           return best;
         };
+        // NOT FOR LANDING: after the block the box follows the call's own
+        // clock.
+        const own = from(times.call);
+        for (const frame of judged) {
+          if (frame.at > times.end) {
+            frame.x = Math.round(own.value((frame.at - times.call) / 1000));
+          }
+        }
         const fromScreen = bestFit(commit => {
           const next = from(commit);
           return elapsed => next.value(elapsed / 1000);
