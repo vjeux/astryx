@@ -224,7 +224,7 @@ async function traceEntrance(
         () => (window as unknown as EntranceWindow).__entrance.end > 0,
       );
     },
-    {keepEvents: true},
+    {keepEvents: true, invalidations: true},
   );
   const {
     __entrance: {start, end},

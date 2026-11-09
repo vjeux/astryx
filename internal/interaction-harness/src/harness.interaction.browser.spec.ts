@@ -85,6 +85,7 @@ import {
   holdAnimations,
   holdInputUntil,
   installInputLog,
+  layoutSources,
   type HeldInput,
   type InputRecord,
   type PlayOptions,
@@ -2579,6 +2580,73 @@ test.describe('frame evidence', () => {
           e.name !== 'UpdateLayoutTree' &&
           (e.node != null || e.elements != null),
       ),
+    ).toEqual([]);
+  });
+
+  test("with invalidation tracking, layoutSources names what the engine invalidated on its own, a CSS animation's end, by reason and node; without it, that invalidation is unattributed", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'rendering traces are Chromium-only (README: engine limits)',
+    );
+    // The run holds the box wider, so only its end changes layout, and no
+    // script runs there.
+    await page.setContent(
+      `<style>#box { width: 100px; height: 40px; } @keyframes hold { from, to { width: 200px; } } #box.hold { animation: hold 150ms linear; }</style><div id="box"></div>`,
+    );
+    await frames(page, 3);
+    const box = page.locator('#box');
+    const endLayout = async (invalidations: boolean) => {
+      const trace = await traceRendering(
+        page,
+        async () => {
+          // The listener is in place before the run starts, however long
+          // the round trip back to the test takes. A run that never ends
+          // fails by name at the deadline.
+          await box.evaluate(
+            el =>
+              new Promise((resolve, reject) => {
+                el.addEventListener('animationend', resolve, {once: true});
+                el.classList.add('hold');
+                setTimeout(() => {
+                  reject(
+                    new Error(
+                      'the 150 ms hold run sent no animationend within 2 s',
+                    ),
+                  );
+                }, 2000);
+              }),
+          );
+          await frames(page, 2);
+        },
+        {keepEvents: true, invalidations},
+      );
+      await box.evaluate(el => {
+        el.classList.remove('hold');
+      });
+      await frames(page, 2);
+      // The run's end lays out last.
+      return layoutSources(trace, trace.window.from, trace.window.to).at(-1);
+    };
+    const tracked = await endLayout(true);
+    expect(
+      tracked?.invalidations.map(i => i.what),
+      JSON.stringify(tracked),
+    ).toContainEqual(
+      expect.stringMatching(
+        /^StyleRecalcInvalidationTracking\[Animation DIV id='box'/,
+      ),
+    );
+    // Without tracking, the same layout follows invalidations that name no
+    // reason and no node.
+    const untracked = await endLayout(false);
+    const bare = untracked?.invalidations.map(i => i.what) ?? [];
+    expect(bare.length, JSON.stringify(untracked)).toBeGreaterThan(0);
+    expect(
+      bare.filter(what => what.includes('[')),
+      JSON.stringify(untracked),
     ).toEqual([]);
   });
 

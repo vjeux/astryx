@@ -702,7 +702,7 @@ test('the presentation and the dismissal do no Layout or Paint per frame', async
       await page.keyboard.press('Escape');
       dismiss = await waitPastScaleStart(page, closed, exit.ms + 150);
     },
-    {keepEvents: true},
+    {keepEvents: true, invalidations: true},
   );
   const insets = await page.evaluate(() => [
     ...(window as unknown as {__popoverHitAreaInsets: HitAreaInsets[]})
