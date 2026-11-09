@@ -1144,7 +1144,7 @@ export function createPager(
   ): void {
     // One time for the seed and the new curve's start. A stall between the
     // read and the play then cannot leave the curve behind the track.
-    const at = clock();
+    const at = undefined;
     const shown = sign() * running.get('x', at);
     const from = remap == null ? shown : remap(shown);
     // The velocity scales as the layout does where the track shows.
