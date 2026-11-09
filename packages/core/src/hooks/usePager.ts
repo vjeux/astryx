@@ -317,37 +317,29 @@ function pageIn(
 }
 
 /**
- * Every spacing between pages in `after` is its match in `before` times one
- * ratio, to half a pixel: the same pages, scaled with the row. The ratio comes
- * from the pages, so a gap or padding that keeps its size still counts.
- * Spacings also drop a shift that every offset shares. A stop clamped to the
- * row's end shares none, so the stops must come from what the row draws.
+ * Every offset in `after` is its match in `before` times one ratio, to half
+ * a pixel: the same pages, scaled with the row.
  */
 function scaledPages(
   before: ReadonlyArray<number>,
   after: ReadonlyArray<number>,
 ): boolean {
-  if (before.length !== after.length || before.length < 2) {
+  if (before.length !== after.length) {
     return false;
   }
-  const spacing = (offsets: ReadonlyArray<number>, i: number) =>
-    offsets[i] - offsets[i - 1];
   let cross = 0;
   let square = 0;
-  for (let i = 1; i < before.length; i++) {
-    cross += spacing(before, i) * spacing(after, i);
-    square += spacing(before, i) ** 2;
-  }
+  before.forEach((offset, i) => {
+    cross += offset * after[i];
+    square += offset * offset;
+  });
   if (!(square > 0)) {
     return false;
   }
   const ratio = cross / square;
-  for (let i = 1; i < before.length; i++) {
-    if (Math.abs(spacing(before, i) * ratio - spacing(after, i)) > 0.5) {
-      return false;
-    }
-  }
-  return true;
+  return before.every(
+    (offset, i) => Math.abs(offset * ratio - after[i]) <= 0.5,
+  );
 }
 
 /** The position at `page` among `offsets`: the inverse of `pageIn`. */
