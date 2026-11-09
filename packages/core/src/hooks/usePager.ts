@@ -1129,7 +1129,7 @@ export function createPager(
     // finger that holds a caught track keeps it; its lift settles on the new
     // offsets.
     if (!isDragging && !caughtSettle) {
-      if (settleHandle != null && animator != null && !isFlipped) {
+      if (settleHandle != null && animator != null) {
         retargetSettle(animator, remap);
         return;
       }
