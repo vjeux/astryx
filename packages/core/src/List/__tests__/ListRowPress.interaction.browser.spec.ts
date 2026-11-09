@@ -453,6 +453,8 @@ test('a busy first frame after the lift still plays the whole release before the
   // main thread before the first frame, so the release starts after the
   // block. Every frame after it is read until the attribute goes: the layer
   // must reach rest on the curve, not vanish while it is still painted.
+  // NOT FOR LANDING: the attribute goes while the layer still shows 0.35,
+  // on regular frames: the release vanishing before it has played.
   await row.evaluate(el => {
     const frames: [number, number, string | null][] = [];
     (window as unknown as {__frames: typeof frames}).__frames = frames;
@@ -474,6 +476,9 @@ test('a busy first frame after the lift still plays the whole release before the
         const press = el.getAttribute('data-astryx-press');
         if ((document.timeline.currentTime as number) >= until) {
           frames.push([+(time - until).toFixed(1), strength, press]);
+          if (press === 'fading' && strength <= 0.35) {
+            el.removeAttribute('data-astryx-press');
+          }
         }
         if (press === 'fading' && frames.length < 120) {
           requestAnimationFrame(sample);
