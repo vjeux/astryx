@@ -778,8 +778,6 @@ function revealWithKeyboard(
         lastHeight = event.height;
         if (!hasRevealed || !isLaterPressDown()) {
           revealNow(event.height);
-        } else if (event.height <= KEYBOARD_EPSILON) {
-          hasRevealed = false;
         }
       }
       pans.report(event.height);
