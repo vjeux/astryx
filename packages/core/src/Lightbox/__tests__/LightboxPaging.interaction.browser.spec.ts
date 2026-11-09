@@ -576,13 +576,35 @@ async function recordTrackRuns(
 /** The slowed tempo the busy page-settle proofs play the viewer at. */
 const SETTLE_TEMPO = 5;
 
-/** The middle value, or the mean of the two middle ones. */
-function median(values: ReadonlyArray<number>): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1
-    ? sorted[middle]
-    : (sorted[middle - 1] + sorted[middle]) / 2;
+/**
+ * NOT FOR LANDING: spins the main thread for 200 ms once the track's next
+ * settle has run 16 ms, as a loaded runner can. The block that settle's run
+ * starts then starts 200 ms late.
+ */
+async function spikeNextBlock(track: Locator): Promise<void> {
+  await track.evaluate(element => {
+    const before = new Set(element.getAnimations());
+    const look = () => {
+      const started = element
+        .getAnimations()
+        .some(
+          a =>
+            !before.has(a) &&
+            a.playState === 'running' &&
+            !a.pending &&
+            Number(a.currentTime ?? 0) >= 16,
+        );
+      if (!started) {
+        requestAnimationFrame(look);
+        return;
+      }
+      const start = performance.now();
+      while (performance.now() - start < 200) {
+        // Spin.
+      }
+    };
+    requestAnimationFrame(look);
+  });
 }
 
 /**
@@ -766,42 +788,6 @@ async function pooledSettleProof(
   };
 }
 
-/**
- * How long after each settle starts its block starts. Each run swipes and
- * blocks as `pooledSettleProof` does, with the screencast on, so its block
- * starts as a judged run's does. It reads no frames.
- */
-async function settleBlockLags(
-  page: Page,
-  g: Gallery,
-  toward: ReadonlyArray<'next' | 'previous'>,
-): Promise<number[]> {
-  const trackRuns = await recordTrackRuns(g.track);
-  const lags: number[] = [];
-  for (const direction of toward) {
-    await expect
-      .poll(async () =>
-        g.track.evaluate(el =>
-          el.getAnimations().some(a => a.playState === 'running'),
-        ),
-      )
-      .toBe(false);
-    const cast = await startScreencast(page);
-    const blocking = blockOnceShown(g.track, 600);
-    await g.driver.play(swipeAtRest(g, direction));
-    const block = await blocking;
-    await frames(page, 6);
-    await cast.stop();
-    const settle = (await trackRuns()).at(-1);
-    if (settle == null) {
-      throw new Error('no settle recorded');
-    }
-    lags.push(block.from - settle.from);
-    await waitForRest(g.track);
-  }
-  return lags;
-}
-
 test('the page settle keeps advancing every frame while the main thread is blocked', async ({
   page,
 }, testInfo) => {
@@ -960,52 +946,24 @@ for (const late of ['two frames', '450 ms'] as const) {
     const g = await openGallery(page);
     await startBusyControl(page);
     await slowViewer(page, SETTLE_TEMPO);
-    // Three settles first give this machine's numbers: how long after a
-    // settle starts its block starts. The first, judged in full, also gives
-    // the cast's frame interval. One settle can start its block late, such as
-    // the first in a new gallery. A delay read from it would push the motion
-    // past the block. So 450 ms counts from the earliest block, and two frames
-    // from the median one. The delayed settle then stays still for that long,
-    // then for two frames and a little more or for 450 ms. That is past the
-    // one frame the proof skips.
+    // A settle judged first gives this machine's numbers: how long after a
+    // settle starts its block starts, and the cast's frame interval. The
+    // delayed settle then stays still for that long, then for two frames and
+    // a little more or for 450 ms. That is past the one frame the proof
+    // skips.
+    await spikeNextBlock(g.track);
     const first = await pooledSettleProof(page, g, ['next']);
-    const lags = [
-      first.blocks[0].from - first.settles[0].from,
-      ...(await settleBlockLags(page, g, ['next', 'previous'])),
-    ];
-    const blockAfterMs =
-      late === 'two frames' ? median(lags) : Math.min(...lags);
+    const blockAfterMs = first.blocks[0].from - first.settles[0].from;
     // A run the pool left out has no frame interval to measure by.
     const cadenceMs = first.proof.runs[0]?.cadenceMs;
     expect(cadenceMs, first.proof.summary).toBeGreaterThan(0);
     const stillMs = late === 'two frames' ? 2.2 * (cadenceMs ?? 0) : 450;
-    const delayMs = blockAfterMs + stillMs;
-    await breakSettle(g, 'delayed', delayMs);
-    const {proof, blocks, settles} = await pooledSettleProof(page, g, [
-      'next',
-      'next',
-    ]);
-    // A run whose delayed motion began outside its block tests nothing. When
-    // the proof misses the stall, these lines name such a run.
-    const missed = settles.flatMap((settle, i) => {
-      const moves = settle.from + delayMs;
-      if (moves >= blocks[i].to) {
-        return [
-          `run ${i + 1}: calibration missed: the delayed motion began ${Math.round(moves - blocks[i].to)} ms after the block`,
-        ];
-      }
-      if (moves <= blocks[i].from) {
-        return [
-          `run ${i + 1}: calibration missed: the delayed motion began ${Math.round(blocks[i].from - moves)} ms before the block`,
-        ];
-      }
-      return [];
-    });
+    await breakSettle(g, 'delayed', blockAfterMs + stillMs);
+    const {proof} = await pooledSettleProof(page, g, ['next', 'next']);
     // The photo misses a frame the control moved on, past the in-flight one.
-    expect(
-      proof.verdict.failures.join('\n'),
-      [...missed, proof.summary].join('\n'),
-    ).toMatch(/moved on \d+ of the \d+ frames the control moved/);
+    expect(proof.verdict.failures.join('\n'), proof.summary).toMatch(
+      /moved on \d+ of the \d+ frames the control moved/,
+    );
   });
 }
 
