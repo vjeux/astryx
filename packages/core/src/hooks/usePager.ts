@@ -1031,11 +1031,9 @@ export function createPager(
     // offsets.
     if (!isDragging && !caughtSettle) {
       if (settleHandle != null && animator != null) {
-        // Uniform pages scale with the viewport, so the settle keeps its
-        // fraction of a page.
-        const scale =
-          isChildPages() || oldStride <= 0 ? 1 : stride() / oldStride;
-        retargetSettle(animator, scale);
+        stopSettle();
+        animator.set({x: positionToX(offsetOf(target))});
+        rest();
         return;
       }
       animator?.set({x: positionToX(offsetOf(target))});
