@@ -743,6 +743,76 @@ async function busyProof(
   const unmark = await markElement(marked);
   const cast = await startScreencast(page);
   const driver = await touchDriver(page);
+  // NOT FOR LANDING: the reorder's glides stand still through the block, as
+  // glides on the main thread would. Once the marked row's glide has run a
+  // frame, every running animation in the list pauses, its time set so the
+  // pause completes at once. An animation that holds the glide's element
+  // where it stands then cues the block, a frame after the pause. The first
+  // frame after the block plays them again.
+  await marked.evaluate(row => {
+    const list = row.closest('ul');
+    const inList = (animation: Animation) => {
+      const target = (animation.effect as KeyframeEffect | null)?.target;
+      return target != null && list != null && list.contains(target);
+    };
+    const glides = (animation: Animation) => {
+      const effect = animation.effect as KeyframeEffect | null;
+      return (
+        effect?.target != null &&
+        row.contains(effect.target) &&
+        effect.getKeyframes().some(frame => frame.translate != null)
+      );
+    };
+    let frozen: Animation[] | null = null;
+    let hold: Animation | null = null;
+    let last = 0;
+    const tick = (now: number) => {
+      if (frozen == null) {
+        const running = document
+          .getAnimations()
+          .filter(
+            animation => inList(animation) && animation.playState === 'running',
+          );
+        const glide = running.find(
+          animation =>
+            glides(animation) &&
+            !animation.pending &&
+            Number(animation.currentTime ?? 0) >= 16,
+        );
+        const target = (glide?.effect as KeyframeEffect | null)?.target;
+        if (target != null) {
+          frozen = running;
+          for (const animation of running) {
+            const at = animation.currentTime;
+            animation.pause();
+            animation.currentTime = at;
+          }
+          // A hold whose keyframes still differ, by 0.01 px over 5 s: a curve
+          // with no motion left counts as ended, and cues no block.
+          const {translate} = getComputedStyle(target);
+          const [x = '0px', y = '0px'] =
+            translate === 'none' ? [] : translate.split(' ');
+          hold = target.animate(
+            [
+              {translate: `${x} ${parseFloat(y)}px`},
+              {translate: `${x} ${parseFloat(y) + 0.01}px`},
+            ],
+            {duration: 5000},
+          );
+          hold.currentTime = 100;
+        }
+      } else if (now - last > 100) {
+        hold?.cancel();
+        for (const animation of frozen) {
+          animation.play();
+        }
+        return;
+      }
+      last = now;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
   const blocking = blockMainThread(page, blockMs, {
     during: marked,
     minProgressMs: 50,
