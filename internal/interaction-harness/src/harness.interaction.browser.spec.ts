@@ -2132,10 +2132,9 @@ test.describe('frame evidence', () => {
     expect(lastStarved.summary).toMatch(
       /; run 6: too little to judge, the control moved on 0 frames/,
     );
-    const oneLeft = starve(5);
-    expect(oneLeft.verdict.failures.join('\n'), oneLeft.summary).toMatch(
-      /[01] of 6 runs judged, under 3/,
-    );
+    const oneLeft = () => starve(5);
+    expect(oneLeft).toThrow(FrameStarvationError);
+    expect(oneLeft).toThrow(/[01] of 6 runs judged, under 3/);
 
     // The mutant: a main-thread animation freezes in every block.
     const raf = pooledBusyProof(await runs('raf'), {axis: 'y'});
