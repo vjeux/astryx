@@ -2458,7 +2458,7 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
   // every primary pointer, and a pen where the primary pointer is coarse.
   useIsomorphicLayoutEffect(
     () => controller.attachTouch(isTouch),
-    [controller, isTouch, listChanges],
+    [controller, isTouch],
   );
   return (
     <>
