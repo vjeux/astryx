@@ -1166,43 +1166,41 @@ async function blockFromThaw(
         const read = gate?.now ?? (() => performance.now());
         // The thawed motion reaches the compositor in the next frame's
         // rendering update. A task queued in that frame runs after it.
-        frame(() => {
-          later(() => {
-            // The animation `during` names starts in that frame, at the time
-            // the compositor takes. A run resumed by play() has no start time
-            // before it.
-            const caught = named
-              ? element
-                  .getAnimations({subtree: true})
-                  .find(
-                    a =>
-                      a.playState === 'running' &&
-                      w.__harnessCaught.counts(element, a, prop, pseudo),
-                  )
-              : undefined;
-            if (
-              caught != null &&
-              (caught.pending || caught.startTime == null)
-            ) {
-              resolve('pending');
-              return;
-            }
-            const animation =
-              caught == null
-                ? undefined
-                : w.__harnessCaught.windowOf(caught, fillHolds);
-            const start = read();
-            let now = start;
-            while (now - start < duration) {
-              now = read();
-            }
-            resolve({
-              from: performance.timeOrigin + start,
-              to: performance.timeOrigin + now,
-              spanMs: now - start,
-              ...(animation == null ? {} : {animation}),
-            });
-          }, 0);
+        void frame;
+        void later;
+        // The animation `during` names starts in that frame, at the time
+        // the compositor takes. A run resumed by play() has no start time
+        // before it.
+        const caught = named
+          ? element
+              .getAnimations({subtree: true})
+              .find(
+                a =>
+                  a.playState === 'running' &&
+                  w.__harnessCaught.counts(element, a, prop, pseudo),
+              )
+          : undefined;
+        if (
+          caught != null &&
+          (caught.pending || caught.startTime == null)
+        ) {
+          resolve('pending');
+          return;
+        }
+        const animation =
+          caught == null
+            ? undefined
+            : w.__harnessCaught.windowOf(caught, fillHolds);
+        const start = read();
+        let now = start;
+        while (now - start < duration) {
+          now = read();
+        }
+        resolve({
+          from: performance.timeOrigin + start,
+          to: performance.timeOrigin + now,
+          spanMs: now - start,
+          ...(animation == null ? {} : {animation}),
         });
       }),
     {
