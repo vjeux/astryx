@@ -820,7 +820,7 @@ export async function blockMainThread(
           } else if (timedOut && leftover != null) {
             reject(tooLate(leftover));
           } else if (timedOut) {
-            const ended = endedRun();
+            const ended = null;
             reject(
               ended == null
                 ? new Error('blockMainThread: no animation started')
