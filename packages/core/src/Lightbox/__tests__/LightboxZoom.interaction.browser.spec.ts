@@ -929,7 +929,8 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
       record.__coastFrames.push({t: record.__harnessFreeze.realNow()});
       return (
         lift != null &&
-        x < lift - 10 &&
+        // NOT FOR LANDING: the trigger moved next to the edge.
+        x < lift - 260 &&
         img.getAnimations().some(a => a.playState === 'running')
       );
     },
