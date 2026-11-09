@@ -86,6 +86,13 @@ function animationRecorder(): void {
   }[] = [];
   // Each recorded animation's entry.
   const entries = new WeakMap<Animation, (typeof log)[number]>();
+  // CSS runs whose end event came while a rendering trace ran, with the
+  // event's time (real) and how long the run had played.
+  const endedInTrace: {
+    entry: (typeof log)[number];
+    at: number;
+    elapsedMs: number;
+  }[] = [];
   // The times kept below are real: a page time plus the span a page freeze
   // stood still so far. A later freeze then leaves them where they were.
   const span = () =>
@@ -353,13 +360,22 @@ function animationRecorder(): void {
   // event came before it finished, and a cancelled run never finishes: under
   // load, a CSS exit reversed partway sent `transitionend` at current time 0,
   // still `running`, and was cancelled a frame later with no finish event.
+  // While a rendering trace runs, the run's state is not read, as in the
+  // cancel wrapper below. That read flushes style, and lays out a run's
+  // anchored layer at the end of its own window. The end is kept, and
+  // resume() dates it from what the recorder stored.
   const onEnd = (event: Event) => {
     for (const entry of log) {
-      if (
-        entry.finishedAt == null &&
-        atEnd(entry.animation) &&
-        isRunOf(entry, event)
-      ) {
+      if (entry.finishedAt != null || !isRunOf(entry, event)) {
+        continue;
+      }
+      if (tracing()) {
+        endedInTrace.push({
+          entry,
+          at: performance.now() + span(),
+          elapsedMs: 1000 * Number((event as AnimationEvent).elapsedTime || 0),
+        });
+      } else if (atEnd(entry.animation)) {
         dateFinish(entry, null);
       }
     }
@@ -436,8 +452,17 @@ function animationRecorder(): void {
         record();
       }
     },
-    // Catches up on what started during a trace, then runs its frames again.
+    // Dates the CSS runs that ended during a trace, then catches up on what
+    // started during it and runs its frames again. A run is dated from what
+    // was stored: the page may have cancelled it at its end since then.
     resume: () => {
+      for (const {entry, at, elapsedMs} of endedInTrace.splice(0)) {
+        if (entry.finishedAt == null) {
+          entry.finishStart = entry.startedAt ?? at - elapsedMs;
+          entry.startedAt ??= entry.finishStart;
+          entry.finishedAt = at;
+        }
+      }
       record();
       loop();
     },
@@ -468,6 +493,7 @@ function animationRecorder(): void {
       log.length = 0;
       unread.length = 0;
       unstarted = [];
+      endedInTrace.length = 0;
     },
   };
 }
