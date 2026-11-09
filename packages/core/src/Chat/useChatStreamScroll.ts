@@ -380,7 +380,7 @@ export function useChatStreamScroll({
       el === doc.scrollingElement || el === doc.documentElement;
     // The root's offsetHeight is the page's height. Its clientHeight is the
     // viewport's, which is what the reader sees.
-    const shownHeight = () => (scrollsPage ? el.clientHeight : el.offsetHeight);
+    const shownHeight = () => (scrollsPage ? el.offsetHeight : el.offsetHeight);
 
     const onScroll = () => {
       const {scrollTop, scrollHeight} = el;
