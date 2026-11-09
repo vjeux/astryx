@@ -505,6 +505,14 @@ interface DragSession {
   foldArmed: boolean;
   /** Stops watching the scroller's scroll events. */
   stopScrollWatch: () => void;
+  /**
+   * An inner scroller and its own `overscroll-behavior` before the drag, or
+   * null when the page itself scrolls.
+   */
+  readonly overscroll: {
+    readonly element: HTMLElement;
+    readonly value: string;
+  } | null;
 }
 
 /** The inline values a drag overrides until its rows rest. */
@@ -1206,6 +1214,21 @@ export class ListReorderController implements ListReorderSession {
     if (isStatic) {
       list.style.position = 'relative';
     }
+    // A wheel at an inner scroller's end would scroll the page around it,
+    // which the drag doesn't follow. So the wheel stays in the scroller.
+    const doc = list.ownerDocument;
+    const inner =
+      scroller.element !== (doc.scrollingElement ?? doc.documentElement) &&
+      scroller.element instanceof HTMLElement
+        ? scroller.element
+        : null;
+    const overscroll =
+      inner == null
+        ? null
+        : {element: inner, value: inner.style.overscrollBehavior};
+    if (inner != null) {
+      inner.style.overscrollBehavior = 'contain';
+    }
     const preview = previewOf(copy, tops[dragged], previewSpan, background);
     // Right before its source, the preview counts for it. So in a numbered
     // list it reads the source's number. Every other row keeps its place
@@ -1250,6 +1273,7 @@ export class ListReorderController implements ListReorderSession {
       wrote: true,
       foldArmed: false,
       stopScrollWatch: () => {},
+      overscroll,
     };
     this.session = session;
     session.stopScrollWatch = this.watchScroll(session);
@@ -1485,6 +1509,10 @@ export class ListReorderController implements ListReorderSession {
     this.session = null;
     this.stopAutoscroll(session);
     session.stopScrollWatch();
+    if (session.overscroll != null) {
+      const {element, value} = session.overscroll;
+      element.style.overscrollBehavior = value;
+    }
     const {geometry, dragged, position, rows, list} = session;
     const element = rows[dragged];
     // Where the preview is now: on the commit the dragged row glides from
@@ -1543,6 +1571,10 @@ export class ListReorderController implements ListReorderSession {
     this.session = null;
     this.stopAutoscroll(session);
     session.stopScrollWatch();
+    if (session.overscroll != null) {
+      const {element, value} = session.overscroll;
+      element.style.overscrollBehavior = value;
+    }
     // Nothing moved: the preview and the line go and the row is itself again
     // at once.
     this.clearOverlays(session);
