@@ -2427,11 +2427,10 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
     () => ({controller, isTouch}),
     [controller, isTouch],
   );
-  useAttachment(
-    controller.list,
-    list => controller.attachTouch(list, isTouch),
-    touchKey,
-  );
+  useIsomorphicLayoutEffect(() => {
+    const list = controller.list.current;
+    return list == null ? undefined : controller.attachTouch(list, isTouch);
+  }, [touchKey]);
   return (
     <>
       <span id={controller.hintId} hidden>
