@@ -298,7 +298,10 @@ function recordTouches(view: Window, event: Event): void {
   const {touches} = event as Partial<TouchEvent>;
   const starts = touchRecords.get(view)?.starts ?? 0;
   touchRecords.set(view, {
-    fingers: touches?.length ?? 0,
+    fingers:
+      event.type === 'touchstart'
+        ? (touches?.length ?? 0)
+        : (touchRecords.get(view)?.fingers ?? 0),
     starts: event.type === 'touchstart' ? starts + 1 : starts,
   });
 }
