@@ -22,6 +22,7 @@ import {findPopoverExitCopy} from '../privateAttributes/popoverExit.stylex';
 import {durationDefaults, easeDefaults} from '../theme/tokens.stylex';
 import {
   createPopoverSurfaceMotion,
+  GROWTH_OPACITY_FLOOR,
   popoverCollapsedState,
   popoverFrame,
   type PopoverSurfaceGeometry,
@@ -370,8 +371,11 @@ describe('createPopoverSurfaceMotion', () => {
     expect(endMs).toBeLessThanOrEqual(ENTRANCE.ms + 1);
     expect(endMs).toBeGreaterThan(ENTRANCE.ms * 0.8);
     expect(peak).toBeLessThanOrEqual(1);
+    // It starts at the floor, not at 0: Chromium draws the start frame.
     const [opacityAnimation] = live('opacity');
-    expect(Number(opacityAnimation.keyframes[0].opacity)).toBe(0);
+    expect(Number(opacityAnimation.keyframes[0].opacity)).toBe(
+      GROWTH_OPACITY_FLOOR,
+    );
     expect(Number(opacityAnimation.keyframes.at(-1)!.opacity)).toBe(1);
   });
 

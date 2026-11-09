@@ -54,14 +54,25 @@ export type {
 } from './popoverSurfaceFrame';
 
 /**
+ * The lowest opacity the growth shows. Chromium does not draw a layer at
+ * opacity 0. A growth that starts there rasterizes the popover again once the
+ * fade makes it visible, so its first visible frame comes a frame late,
+ * sometimes without its content. At a quarter of one step of an 8-bit
+ * channel, the start frame draws the popover and changes no pixel.
+ */
+export const GROWTH_OPACITY_FLOOR = 0.001;
+
+/**
  * The curves from `from` to `to` as `progress` moves from 0 to 1. The scale
  * and the length move together, so the scale along the axis is their product.
+ * With `opacityFloor`, the opacity never goes below it.
  */
 function surfaceCurves(
   from: SurfaceState,
   to: SurfaceState,
   axis: 'x' | 'y',
   progress: MotionCurve,
+  opacityFloor?: number,
 ): Record<'scaleX' | 'scaleY' | 'opacity', MotionCurve> {
   // Unclamped, so an easing that overshoots carries the channels with it.
   const lerp = (a: number, b: number) =>
@@ -70,10 +81,14 @@ function surfaceCurves(
   const length = lerp(from.length, to.length);
   const across = mapProgress(progress, scale);
   const along = mapProgress(progress, p => scale(p) * length(p));
+  const opacity = lerp(from.opacity, to.opacity);
   return {
     scaleX: axis === 'x' ? along : across,
     scaleY: axis === 'y' ? along : across,
-    opacity: mapProgress(progress, lerp(from.opacity, to.opacity)),
+    opacity: mapProgress(
+      progress,
+      opacityFloor == null ? opacity : p => Math.max(opacityFloor, opacity(p)),
+    ),
   };
 }
 
@@ -302,14 +317,19 @@ export function createPopoverSurfaceMotion(
     const start = from ?? {scale: next.scale, length: next.length, opacity: 0};
     // The start frame goes first. The motion engine may read the element's
     // will-change as it sets it, before any write of ours.
-    animator.set(frameOf(start, next.axis));
+    animator.set(
+      frameOf(
+        {...start, opacity: Math.max(GROWTH_OPACITY_FLOOR, start.opacity)},
+        next.axis,
+      ),
+    );
     holdEntrance();
     element.style.setProperty(
       'transform-origin',
       `${next.originX}px ${next.originY}px`,
     );
     const handle = animator.play(
-      surfaceCurves(start, PRESENTED, next.axis, timing),
+      surfaceCurves(start, PRESENTED, next.axis, timing, GROWTH_OPACITY_FLOOR),
     );
     presentHandle = handle;
     endHold();
