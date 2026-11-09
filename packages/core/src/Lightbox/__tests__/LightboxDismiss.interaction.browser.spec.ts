@@ -582,6 +582,9 @@ test('under Reduce Motion the dismissal fades the photo out in place', async ({
     judges: {target: v.photo, property: 'opacity'},
   });
   await v.driver.play(pullDown(v.centre, 110));
+  // Lag arm: the test's next call reaches the page 250 ms after the lift, as
+  // on a busy runner.
+  await new Promise(resolve => setTimeout(resolve, 250));
   const held = await hold.held();
   const samples = await sampleCurve(v.photo, [0, 50]);
   await releaseAnimations(page);
