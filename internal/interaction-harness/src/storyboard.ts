@@ -409,37 +409,71 @@ export async function castStoryboard(
   },
 ): Promise<Storyboard> {
   const storyboard = new Storyboard(page, options);
-  // One scratch page converts every JPEG frame. Each new page costs a page
-  // start, and on a loaded runner that takes seconds.
-  let scratch: Page | null = null;
-  try {
-    for (const frame of frames) {
-      if (options.from != null && frame.t < options.from) {
-        continue;
+  // NOT FOR LANDING: both conversions on the same frames, timed in
+  // alternating order, and their bytes compared frame by frame.
+  const inRange = frames.filter(
+    frame =>
+      !(options.from != null && frame.t < options.from) &&
+      !(options.to != null && frame.t > options.to),
+  );
+  const jpegs = inRange.filter(frame => frame.format !== 'png');
+  const shared = async () => {
+    const started = Date.now();
+    const scratch = await page.context().newPage();
+    try {
+      const out: Buffer[] = [];
+      for (const frame of jpegs) {
+        out.push(await toPng(scratch, frame.data));
       }
-      if (options.to != null && frame.t > options.to) {
-        continue;
-      }
-      let png: Buffer;
-      if (frame.format === 'png') {
-        png = Buffer.from(frame.data, 'base64');
-      } else {
-        scratch ??= await page.context().newPage();
-        png = await toPng(scratch, frame.data);
-      }
-      const t = frame.t - options.zero;
-      storyboard.frames.push({
-        label: `t=${t.toFixed(1)} ms`,
-        t,
-        data: options.data?.(frame.t) ?? {},
-        png,
-      });
+      return {ms: Date.now() - started, out};
+    } finally {
+      await scratch.close();
     }
-  } finally {
-    await scratch?.close();
+  };
+  const perFrame = async () => {
+    const started = Date.now();
+    const out: Buffer[] = [];
+    for (const frame of jpegs) {
+      const scratch = await page.context().newPage();
+      try {
+        out.push(await toPng(scratch, frame.data));
+      } finally {
+        await scratch.close();
+      }
+    }
+    return {ms: Date.now() - started, out};
+  };
+  const sharedFirst = stripCalls++ % 2 === 0;
+  const x = sharedFirst ? await shared() : await perFrame();
+  const y = sharedFirst ? await perFrame() : await shared();
+  const [one, each] = sharedFirst ? [x, y] : [y, x];
+  const equal =
+    one.out.length === each.out.length &&
+    one.out.every((png, k) => png.equals(each.out[k]));
+  console.log(
+    `STRIP-TIMING frames=${jpegs.length} shared=${one.ms} perFrame=${each.ms} equal=${equal} first=${sharedFirst ? 'shared' : 'perFrame'}`,
+  );
+  if (!equal) {
+    throw new Error('castStoryboard: the two conversions differ');
+  }
+  let next = 0;
+  for (const frame of inRange) {
+    const png =
+      frame.format === 'png'
+        ? Buffer.from(frame.data, 'base64')
+        : one.out[next++];
+    const t = frame.t - options.zero;
+    storyboard.frames.push({
+      label: `t=${t.toFixed(1)} ms`,
+      t,
+      data: options.data?.(frame.t) ?? {},
+      png,
+    });
   }
   return storyboard;
 }
+
+let stripCalls = 0;
 
 /** A JPEG cast frame as PNG bytes, decoded and encoded in `scratch`. */
 async function toPng(scratch: Page, jpegBase64: string): Promise<Buffer> {
