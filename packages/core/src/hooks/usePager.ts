@@ -1052,6 +1052,7 @@ export function createPager(
     const at = undefined;
     const from = sign() * running.get('x', at);
     const velocity = sign() * running.getVelocity('x', at);
+    (globalThis as unknown as {__retargetStall?: () => void}).__retargetStall?.();
     const isRelease = isReleaseSettle;
     const touchRelease = isTouchReleaseSettle;
     const isSwipe = isSwipeSettle;
