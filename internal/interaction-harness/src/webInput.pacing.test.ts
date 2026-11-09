@@ -68,6 +68,20 @@ describe('wheelGapCauses', () => {
     ).toEqual({pageStalls: [], dispatchStalls: []});
   });
 
+  it('judges a gap of exactly the bound, as Core ends a wheel gesture at a pause of its end window or more', () => {
+    // WebKit stamps whole ms, so a gap can equal the bound exactly.
+    expect(
+      wheelGapCauses('webkit', [0, 16, 116], [1, 17, 117], 100),
+    ).toEqual({pageStalls: [], dispatchStalls: [100]});
+    expect(
+      wheelGapCauses('chromium', [0, 16, 116], [1, 17, 117], 100),
+    ).toEqual({pageStalls: [], dispatchStalls: [100]});
+    // Just under the bound, the run stays one gesture.
+    expect(
+      wheelGapCauses('chromium', [0, 16, 115.9], [1, 17, 116.9], 100),
+    ).toEqual({pageStalls: [], dispatchStalls: []});
+  });
+
   it('gives a WebKit gap to the page when the step reached it within a frame of the listeners finishing the one before', () => {
     // The listeners held the main thread 150 ms on the first step; the next
     // was dispatched 2 ms after they finished.
