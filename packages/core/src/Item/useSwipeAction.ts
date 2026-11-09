@@ -220,8 +220,13 @@ export function useSwipeAction({
   /** Removes the document listener that watches for a pinch's second finger. */
   const stopPinchWatchRef = useRef<(() => void) | null>(null);
   const [state, setState] = useState<SwipeState>(IDLE_STATE);
+  // The handlers read the state they set through this ref. Each one writes
+  // it as it sets the state, so a render React discards leaves nothing.
   const stateRef = useRef(state);
-  stateRef.current = state;
+  const setSwipeState = useCallback((next: SwipeState) => {
+    stateRef.current = next;
+    setState(next);
+  }, []);
 
   // The latest callbacks, read by handlers and timers that outlive a render.
   const measurePanelRef = useRef(measurePanel);
@@ -368,7 +373,7 @@ export function useSwipeAction({
     ) => {
       cancelPendingPaint();
       const duration = reducedMotionRef.current ? 0 : SWIPE_SETTLE_MS;
-      setState({isArmed: false, phase: 'settling', side});
+      setSwipeState({isArmed: false, phase: 'settling', side});
       writeDuration(duration);
       writeTravel(travel);
       if (settleTimerRef.current != null) {
@@ -385,10 +390,18 @@ export function useSwipeAction({
         if (phase === 'idle') {
           clearInlineProperties();
         }
-        setState(phase === 'idle' ? IDLE_STATE : {isArmed: false, phase, side});
+        setSwipeState(
+          phase === 'idle' ? IDLE_STATE : {isArmed: false, phase, side},
+        );
       }, duration);
     },
-    [cancelPendingPaint, clearInlineProperties, writeDuration, writeTravel],
+    [
+      cancelPendingPaint,
+      clearInlineProperties,
+      setSwipeState,
+      writeDuration,
+      writeTravel,
+    ],
   );
 
   /**
@@ -596,7 +609,7 @@ export function useSwipeAction({
           );
         }
         writeDuration(0);
-        setState({isArmed: false, phase: 'dragging', side});
+        setSwipeState({isArmed: false, phase: 'dragging', side});
         try {
           rootRef.current?.setPointerCapture(event.pointerId);
         } catch {
@@ -613,7 +626,7 @@ export function useSwipeAction({
           : drag.commitPx + (raw - drag.commitPx) * OVERSHOOT_RESISTANCE;
       const isArmed = raw >= drag.commitPx;
       if (isArmed !== drag.travel >= drag.commitPx) {
-        setState({isArmed, phase: 'dragging', side: drag.side});
+        setSwipeState({isArmed, phase: 'dragging', side: drag.side});
       }
       drag.travel = raw;
       drag.prevX = drag.lastX;
@@ -622,7 +635,13 @@ export function useSwipeAction({
       drag.lastTime = now();
       paintOnNextFrame(sign * drag.inlineSign * offset);
     },
-    [paintOnNextFrame, rootRef, stopWatchingForPinch, writeDuration],
+    [
+      paintOnNextFrame,
+      rootRef,
+      setSwipeState,
+      stopWatchingForPinch,
+      writeDuration,
+    ],
   );
 
   const endGesture = useCallback(
