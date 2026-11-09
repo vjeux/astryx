@@ -17,6 +17,9 @@ import {use, useEffect} from 'react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import type {ToastEntry} from '../Toast/types';
 
+// Evidence only: each test has 2 s.
+vi.setConfig({testTimeout: 2000});
+
 // The modules load once while the file is collected, which no timeout bounds.
 // Each test then reloads them from code that is already transformed. So a
 // cold transform on a busy machine never runs inside a timed test.
@@ -87,6 +90,8 @@ describe('LayerProvider before Toast is imported', () => {
     );
     const app = view.getByText('App');
     expect(screen.queryByText('Saved before the viewport')).toBeNull();
+    (globalThis as {isNextViewportLoadSlow?: boolean}).isNextViewportLoadSlow =
+      true;
     await act(async () => {
       await loadViewport();
     });

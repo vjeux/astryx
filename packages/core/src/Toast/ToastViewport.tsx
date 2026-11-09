@@ -17,6 +17,7 @@
  *   behavior changes, update ToastViewport.test.tsx, Toast.doc.mjs, and Toast.stories.tsx.
  */
 
+import './slowLoadForEvidence';
 import {
   useCallback,
   useEffect,
