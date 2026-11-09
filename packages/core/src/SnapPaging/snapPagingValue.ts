@@ -223,8 +223,8 @@ export function itemsSpan(element: HTMLElement, isHeld = false): number {
     const held = isHeld
       ? Number.parseFloat(getComputedStyle(item).translate) || 0
       : 0;
-    start = Math.min(start, rect.left / scale - held);
-    end = Math.max(end, rect.right / scale - held);
+    start = Math.min(start, rect.left / scale);
+    end = Math.max(end, rect.right / scale);
   }
   return end - start;
 }
