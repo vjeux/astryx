@@ -1052,7 +1052,10 @@ export function createPager(
       if (
         before != null &&
         !sameOffsets(offsets, before) &&
-        scaledPages(before, offsets)
+        before.length === offsets.length &&
+        before.every(
+          (offset, i) => Math.abs((offset * width) / oldWidth - offsets[i]) <= 0.5,
+        )
       ) {
         // Offsets that scaled with the row are the same pages, whose items
         // follow the row's width. Each keeps its number.
