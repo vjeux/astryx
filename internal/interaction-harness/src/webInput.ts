@@ -829,7 +829,7 @@ async function webkitWebInput(page: Page): Promise<WebInputDriver> {
         await page.keyboard.down('Control');
       }
       try {
-        const armed = await armInputRun(page, ['wheel'], {frames: true});
+        const armed = await armInputRun(page, ['wheel']);
         const sentAt = await dispatchOnSchedule(
           steps,
           everyMs,
