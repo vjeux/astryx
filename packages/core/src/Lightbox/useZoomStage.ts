@@ -553,9 +553,7 @@ export function useZoomStage(
         // presentation value from the curve.
         draggedSinceCatchRef.current = false;
         caughtRef.current = true;
-        const shown = current();
-        animator.stop();
-        setTarget(shown);
+        // NOT FOR LANDING: the finger no longer stops the coast.
         return;
       }
       if (touchDown.state === 'changed') {
