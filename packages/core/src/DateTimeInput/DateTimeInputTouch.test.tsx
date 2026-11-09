@@ -105,6 +105,29 @@ function withMonthLayout<T>(fn: () => T): T {
   }
 }
 
+/**
+ * A trackpad's scroll on `el`: precise deltas, with the legacy `wheelDelta`
+ * that a trackpad's wheels carry at three times each delta.
+ */
+function trackpadScroll(el: Element, dx: number): void {
+  const event = new WheelEvent('wheel', {
+    deltaX: dx,
+    deltaMode: 0,
+    bubbles: true,
+    cancelable: true,
+  });
+  Object.defineProperty(event, 'wheelDeltaX', {value: -3 * dx});
+  Object.defineProperty(event, 'wheelDeltaY', {value: 0});
+  el.dispatchEvent(event);
+}
+
+/** The month grids assistive technology reaches, by name. */
+function reachableMonths(): (string | null)[] {
+  return screen
+    .getAllByRole('grid')
+    .map(grid => grid.getAttribute('aria-label'));
+}
+
 function dateField(label = 'Meeting'): HTMLElement {
   return screen.getByRole('combobox', {name: label});
 }
@@ -753,6 +776,43 @@ describe('DateTimeInput touch surface', () => {
       expect(screen.getByText('April 2026')).toBeInTheDocument();
       expect(document.querySelector('[data-scroller="months"]')).not.toBeNull();
     });
+  });
+
+  it('under a finger: only the month the pager shows reaches assistive technology, after a swipe and after a page', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 2, 15, 9, 30, 45));
+    const advance = (ms: number) =>
+      act(() => {
+        vi.advanceTimersByTime(ms);
+      });
+    try {
+      withMonthLayout(() => {
+        render(<DateTimeInput label="Meeting" onChange={() => {}} />);
+        openDateSheet();
+        // The months beside the shown one are mounted off-screen, and focus
+        // on one would not page there.
+        expect(reachableMonths()).toEqual(['March 2026']);
+        // A swipe past half a page, through the pager's own release. jsdom
+        // runs no touch gesture on the pager, so a trackpad's swipe stands
+        // in.
+        const scroller = document.querySelector('[data-scroller="months"]')!;
+        for (let i = 0; i < 40; i++) {
+          act(() => trackpadScroll(scroller, 6.5));
+          advance(8);
+        }
+        advance(900);
+      });
+      // The pager reports a release's page once its settle has started, on a
+      // promise.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
+      expect(reachableMonths()).toEqual(['April 2026']);
+      fireEvent.click(getOnlyButton('Next month'));
+      expect(reachableMonths()).toEqual(['May 2026']);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('bounds grid panel min-content width so MonthScroller cannot feed back through its spacer', () => {

@@ -193,11 +193,13 @@ export interface MonthPaneProps {
   onDayKeyDown: (event: React.KeyboardEvent, date: PlainDate) => void;
   onDayFocus: (date: PlainDate) => void;
   /**
-   * Whether one of this pane's days takes a tab stop. The pager gives it only
-   * to the month it shows. A neighbour is mounted off-screen, and Tab into it
-   * would scroll the clipped viewport under the track.
+   * Whether keyboard and assistive technology reach the pane: one of its days
+   * takes a Tab stop, and its grid is in the accessibility tree. The pager
+   * reaches only the month it shows. A neighbour is mounted off-screen. Tab
+   * into it would scroll the clipped viewport under the track, and a screen
+   * reader's focus there would not page to it.
    */
-  hasTabStop: boolean;
+  isReachable: boolean;
   /** The surface's own pane style: the scroller's snap or the pager's layer. */
   paneStyle?: stylex.StyleXStyles;
 }
@@ -222,7 +224,7 @@ export const MonthPane = memo(function MonthPane({
   onSelect,
   onDayKeyDown,
   onDayFocus,
-  hasTabStop,
+  isReachable,
   paneStyle,
 }: MonthPaneProps) {
   const locale = useLocale();
@@ -259,6 +261,7 @@ export const MonthPane = memo(function MonthPane({
     <div
       role="grid"
       aria-label={monthLabel}
+      aria-hidden={isReachable ? undefined : true}
       data-month={monthLabel}
       {...stylex.props(
         styles.pane,
@@ -291,7 +294,7 @@ export const MonthPane = memo(function MonthPane({
                   type="button"
                   data-date={day.iso}
                   data-outside={day.isOutside ? '' : undefined}
-                  tabIndex={hasTabStop && day.iso === tabbableISO ? 0 : -1}
+                  tabIndex={isReachable && day.iso === tabbableISO ? 0 : -1}
                   aria-label={formatCalendarDate(
                     calendar,
                     day.date,

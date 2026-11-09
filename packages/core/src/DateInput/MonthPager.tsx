@@ -279,6 +279,27 @@ function MonthPagerComponent({
     pager.goTo(row, {animated: false});
   });
 
+  // Synchronizes DOM focus with the month shown. A swipe can page away from
+  // a focused day, and that day's pane then leaves the accessibility tree.
+  // Focus moves to the shown month's Tab stop.
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    const focused = viewport?.ownerDocument.activeElement;
+    if (
+      viewport == null ||
+      focused == null ||
+      !viewport.contains(focused) ||
+      focused.closest('[role="grid"]')?.getAttribute('aria-hidden') !== 'true'
+    ) {
+      return;
+    }
+    viewport
+      .querySelector<HTMLElement>(
+        '[role="grid"]:not([aria-hidden]) [tabindex="0"]',
+      )
+      ?.focus({preventScroll: true});
+  }, [centerRow]);
+
   useImperativeHandle(handleRef, () => ({scrollToMonth}), [scrollToMonth]);
 
   // Inside a bottom sheet, the sheet's touch listener skips the drags UIKit
@@ -322,7 +343,7 @@ function MonthPagerComponent({
               onSelect={onSelect}
               onDayKeyDown={handleKeyDown}
               onDayFocus={handleDayFocus}
-              hasTabStop={row === centerRow}
+              isReachable={row === centerRow}
               paneStyle={styles.paneLayer}
             />
           ))}

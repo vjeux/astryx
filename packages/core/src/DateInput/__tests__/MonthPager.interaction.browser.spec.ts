@@ -304,6 +304,60 @@ test('a flick pages exactly one month', async ({page}) => {
   await expect(title).toHaveText('November 2026');
 });
 
+test('after a flick, a screen reader reaches only the month shown', async ({
+  page,
+}) => {
+  const {driver, track, title, center} = await openCalendar(page);
+  // A role query leaves out what assistive technology does not reach.
+  const grids = page.getByRole('grid');
+  await expect(grids).toHaveCount(1);
+  await expect(grids).toHaveAccessibleName('October 2026');
+  await driver.play(
+    flick(center, {velocity: {x: -2500, y: 0}, durationMs: 80, hz: 120}),
+  );
+  await waitForRest(track);
+  await expect(title).toHaveText('November 2026');
+  await expect(grids).toHaveCount(1);
+  await expect(grids).toHaveAccessibleName('November 2026');
+});
+
+test('DateTimeInput: after a flick, a screen reader reaches only the month shown', async ({
+  page,
+}) => {
+  await openStory(page, storybook(), 'core-datetimeinput--native-picker-modes');
+  const driver = await touchDriver(page);
+  // The third field is the one whose calendar opens in the sheet.
+  const opener = page.getByRole('button', {name: 'Open calendar'}).nth(2);
+  const box = await opener.boundingBox();
+  if (box == null) {
+    throw new Error('no opener');
+  }
+  await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
+  const viewport = page.locator('[data-scroller="months"]');
+  await expect(viewport).toBeVisible();
+  await settlesAt(
+    page.getByRole('dialog').locator('.astryx-bottom-sheet').first(),
+    'transform',
+    'matrix(1, 0, 0, 1, 0, 0)',
+  );
+  const grids = page.getByRole('grid');
+  await expect(grids).toHaveCount(1);
+  await expect(grids).toHaveAccessibleName('March 2026');
+  const rect = await viewport.boundingBox();
+  if (rect == null) {
+    throw new Error('no viewport');
+  }
+  await driver.play(
+    flick(
+      {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2},
+      {velocity: {x: -2500, y: 0}, durationMs: 80, hz: 120},
+    ),
+  );
+  await waitForRest(page.locator('[data-month-track]'));
+  await expect(grids).toHaveCount(1);
+  await expect(grids).toHaveAccessibleName('April 2026');
+});
+
 test('the arrow names the month at the tap and scrolls one month', async ({
   page,
 }) => {
@@ -606,8 +660,12 @@ test('the arrow step keeps advancing every frame through a blocked main thread',
     "WebKit's screencast clock is not the page's (frames arrive ~100 ms off), so the step's motion cannot be placed inside the block; Mobile Safari on the iOS simulator is this proof's WebKit evidence",
   );
   await openCalendar(page);
-  // The incoming month, whose chip shows as soon as its edge slides in.
-  const incoming = page.getByRole('grid', {name: 'November 2026'});
+  // The incoming month, whose chip shows as soon as its edge slides in. It is
+  // out of the accessibility tree until the pager shows it.
+  const incoming = page.getByRole('grid', {
+    name: 'November 2026',
+    includeHidden: true,
+  });
   await markElement(incoming, {inset: 8});
   const cast = await startScreencast(page);
   await page.waitForTimeout(300);

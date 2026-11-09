@@ -620,7 +620,7 @@ export function MonthScroller({
               onSelect={onSelect}
               onDayKeyDown={handleKeyDown}
               onDayFocus={handleDayFocus}
-              hasTabStop
+              isReachable
               paneStyle={styles.paneSnap}
             />
           ))}

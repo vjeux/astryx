@@ -277,11 +277,12 @@ function renderAndOpen(
 
 /**
  * One month's grid. Panes for neighbouring months are mounted too, so every
- * day query has to say which month it means.
+ * day query has to say which month it means. Under a finger they are out of
+ * the accessibility tree, so a query into one passes `hidden: true`.
  */
 function pane(label: string): HTMLElement {
   const grid = screen
-    .getAllByRole('grid')
+    .getAllByRole('grid', {hidden: true})
     .find(g => g.getAttribute('aria-label') === label);
   if (grid == null) {
     throw new Error(`no pane for ${label}`);
@@ -863,7 +864,7 @@ describe('DateInput — calendar surface', () => {
     renderAndOpen(
       <Controlled initial="2026-03-21" min={undefined} max={undefined} />,
     );
-    const grids = screen.getAllByRole('grid');
+    const grids = screen.getAllByRole('grid', {hidden: true});
     expect(grids.length).toBeGreaterThan(1);
     expect(grids.length).toBeLessThanOrEqual(7);
     expect(grids.map(g => g.getAttribute('aria-label'))).toContain(
@@ -1020,7 +1021,9 @@ describe('DateInput — calendar surface', () => {
           '[data-scroller="months"] [data-date]',
         ),
       ].filter(day => day.tabIndex === 0);
-    expect(within(pane('April 2026')).queryAllByRole('button').length).toBe(42);
+    expect(
+      within(pane('April 2026')).queryAllByRole('button', {hidden: true}),
+    ).toHaveLength(42);
     expect(tabStops().map(day => day.dataset.date)).toEqual(['2026-03-21']);
     fireEvent.click(screen.getByRole('button', {name: 'Next month'}));
     expect(tabStops().map(day => day.dataset.date)).toEqual(['2026-04-01']);
@@ -1347,7 +1350,10 @@ describe('DateInput — calendar surface', () => {
     const march = within(pane('March 2026'));
     // In range, and in its own pane it is perfectly pickable.
     expect(
-      within(pane('April 2026')).getByRole('button', {name: /April 1, 2026/}),
+      within(pane('April 2026')).getByRole('button', {
+        name: /April 1, 2026/,
+        hidden: true,
+      }),
     ).not.toHaveAttribute('aria-disabled');
     // Borrowed by March, it is not.
     expect(march.getByRole('button', {name: /April 1, 2026/})).toHaveAttribute(
@@ -1368,6 +1374,7 @@ describe('DateInput — calendar surface', () => {
     );
     const spilled = within(pane('March 2026')).getByRole('button', {
       name: /April 1, 2026/,
+      hidden: true,
     });
     const owned = within(pane('April 2026')).getByRole('button', {
       name: /April 1, 2026/,
@@ -1378,7 +1385,10 @@ describe('DateInput — calendar surface', () => {
       within(pane('April 2026')).getAllByRole('gridcell', {selected: true}),
     ).toHaveLength(1);
     expect(
-      within(pane('March 2026')).queryAllByRole('gridcell', {selected: true}),
+      within(pane('March 2026')).queryAllByRole('gridcell', {
+        selected: true,
+        hidden: true,
+      }),
     ).toHaveLength(0);
   });
 
@@ -1392,7 +1402,7 @@ describe('DateInput — calendar surface', () => {
    */
   const tabbableIn = (label: string) =>
     within(pane(label))
-      .getAllByRole('button')
+      .getAllByRole('button', {hidden: true})
       .filter(b => b.getAttribute('tabindex') === '0')
       .map(b => b.getAttribute('aria-label'));
 
@@ -2702,6 +2712,53 @@ describe('DateInput — nested scrollers keep their own touch gesture', () => {
         advance(900);
       });
       expect(title).toHaveTextContent('April 2026');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  /** The month grids assistive technology reaches, by name. */
+  const reachableMonths = () =>
+    screen.getAllByRole('grid').map(grid => grid.getAttribute('aria-label'));
+
+  it('under a finger: only the month the pager shows reaches assistive technology, after a swipe and after a page', async () => {
+    vi.useFakeTimers();
+    try {
+      renderAndOpen(
+        <Controlled initial="2026-03-21" min="2025-01-01" max="2026-12-31" />,
+      );
+      const scroller = document.querySelector('[data-scroller="months"]')!;
+      const title = document.querySelector('[data-title="month-year"]')!;
+      // The months beside the shown one are mounted off-screen, and focus on
+      // one would not page there.
+      expect(reachableMonths()).toEqual(['March 2026']);
+      within(pane('March 2026'))
+        .getByRole('button', {name: /March 21, 2026/})
+        .focus();
+      withLayout(() => {
+        // A swipe past half a page, through the pager's own release. jsdom
+        // runs no touch gesture on the pager, so a trackpad's swipe stands
+        // in.
+        for (let i = 0; i < 40; i++) {
+          act(() => trackpadScroll(scroller, 6.5));
+          advance(8);
+        }
+        advance(900);
+      });
+      // The pager reports a release's page once its settle has started, on
+      // a promise.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
+      expect(title).toHaveTextContent('April 2026');
+      expect(reachableMonths()).toEqual(['April 2026']);
+      // The focused day's month left the tree, so focus moves to the month
+      // shown.
+      const focused = document.activeElement as HTMLElement;
+      expect(focused.closest('[aria-hidden="true"]')).toBeNull();
+      expect(pane('April 2026')).toContainElement(focused);
+      fireEvent.click(screen.getByRole('button', {name: 'Next month'}));
+      expect(reachableMonths()).toEqual(['May 2026']);
     } finally {
       vi.useRealTimers();
     }

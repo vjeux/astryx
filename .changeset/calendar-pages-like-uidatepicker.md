@@ -10,6 +10,7 @@
 - In the sheet, a drag is decided once it has moved 10 px either way. It pages the calendar if it has moved 10 px sideways by then, and moves the sheet otherwise.
 - A horizontal trackpad swipe moves the calendar with it and pages at the release, like a drag.
 - With Reduce Motion on, the arrows' step and a swipe's settle cross-fade in 200 ms instead of travelling.
+- A screen reader reaches only the month shown. The months mounted beside it stay out of the accessibility tree.
 
 With a mouse, the calendar still scrolls natively. With any pointer, PageUp and PageDown now move the keyboard focus by a month, and by a year with Shift.
 
