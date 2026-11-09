@@ -18,8 +18,10 @@
  */
 
 import {
+  Fragment,
   useCallback,
   useEffect,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -373,6 +375,22 @@ function ToastRow({
 ToastRow.displayName = 'ToastRow';
 
 /**
+ * Runs the viewport's ref sync at each commit. The viewport renders it before
+ * a fragment holding its children. React runs an earlier sibling's insertion
+ * effects before any commit-phase work in a later sibling's subtree, unmounts
+ * included. So the sync comes first, and a toast a descendant raises or
+ * dismisses in that commit, even from a layout-effect cleanup, is kept. A
+ * render React discards never runs it.
+ */
+function ToastRefSync({onCommit}: {onCommit: () => void}): null {
+  // Syncs the viewport's handler refs with the committed render.
+  useInsertionEffect(() => {
+    onCommit();
+  });
+  return null;
+}
+
+/**
  * Container that renders and manages toast notifications. Place at the root
  * of your app to enable useToast(). Toasts stack with enter/exit
  * animations and auto-promote to the CSS top layer.
@@ -395,21 +413,27 @@ export function ToastViewport({
   const t = useComponentTranslator();
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
+  // The handlers' list. addToast and removeToast move it ahead of the
+  // committed toasts within a batch; each commit resets it (see the sync).
   const toastsRef = useRef(toasts);
-  toastsRef.current = toasts;
-  // The list as last rendered: addToast moves toastsRef ahead of it within
-  // a batch, so this tells a rendered toast from one raised since.
+  // The list as last committed, so a handler tells a rendered toast from one
+  // raised since.
   const renderedToastsRef = useRef(toasts);
-  renderedToastsRef.current = toasts;
   // Read by removeToast, which keeps one identity across renders.
   const maxVisibleRef = useRef(maxVisible);
-  maxVisibleRef.current = maxVisible;
   // Rendered entries a repeat has replaced in this batch: still found by a
   // dismissal in the same handler, as before the swap. One replaced before it
   // rendered was never shown and reports no onHide (Toast.spec.md FR3). A
-  // render starts a new batch.
+  // commit starts a new batch.
   const replacedRef = useRef<Map<string, ToastEntry>>(new Map());
-  replacedRef.current.clear();
+  // Syncs the handlers' refs with this commit and starts a new batch. It runs
+  // in `ToastRefSync`, ahead of the app's commit-phase work.
+  const syncHandlerRefs = () => {
+    toastsRef.current = toasts;
+    renderedToastsRef.current = toasts;
+    maxVisibleRef.current = maxVisible;
+    replacedRef.current.clear();
+  };
 
   const viewportRef = useRef<HTMLDivElement>(null);
   // Toast ids whose exit has begun — guards onHide from double-firing (see
@@ -997,7 +1021,9 @@ export function ToastViewport({
 
   return (
     <ToastContext value={contextValue}>
-      {children}
+      <ToastRefSync onCommit={syncHandlerRefs} />
+      {/* Its own fiber, so a child it unmounts is unmounted after the sync. */}
+      <Fragment>{children}</Fragment>
       {isTopLayer ? (
         <>
           <div ref={rootOutletRef} {...stylex.props(styles.rootOutlet)} />
