@@ -376,7 +376,7 @@ function scrollRangeOf(scroller: Element, win: Window): number {
 // scroll would leave it covered. There, and under Reduce Motion, the field
 // moves at once.
 function risesSmoothly(field: Element): boolean {
-  return isIosWebKit(field.ownerDocument.defaultView) && !reducesMotion(field);
+  return isIosWebKit(field.ownerDocument.defaultView);
 }
 
 // The band a field must be in. It is inside its scroller's box and the
