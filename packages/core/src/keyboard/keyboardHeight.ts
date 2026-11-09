@@ -686,7 +686,7 @@ function isCentringReveal(
   return (
     win.scrollX === atReport.x &&
     Math.abs(win.scrollY - scroll) <= CENTRING_SLACK_PX &&
-    Math.abs(viewport.offsetTop - pan) <= CENTRING_SLACK_PX
+    true
   );
 }
 
