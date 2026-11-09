@@ -383,9 +383,16 @@ export interface BlockedWindow extends BusyWindow {
    * With `during`: the animation the block caught, epoch ms on the page's
    * clock. `from` is its start, and `to` is where its curve ends, its held
    * tail excluded. It is absent when the animation's `playbackRate` is 0 or
-   * less, since its curve then has no forward end.
+   * less, since its curve then has no forward end. `holds` says whether the
+   * element keeps the curve's end value after `to`. A held tail keeps it, and
+   * so does a fill the engine's compositor honors (not WebKit on Linux). When
+   * it does not, `busyWindowProof` judges the block up to `to`.
    */
-  readonly animation?: {readonly from: number; readonly to: number};
+  readonly animation?: {
+    readonly from: number;
+    readonly to: number;
+    readonly holds: boolean;
+  };
 }
 
 /**
@@ -529,8 +536,16 @@ export async function blockMainThread(
   const defined = page.evaluate(
     `(${defineCurveEnd.toString()})();(${defineAnimatedProperties.toString()})();`,
   );
+  // WebKit on Linux ignores `fill` on its compositor: a filled move that
+  // ends during a main-thread block snaps back (motion/animator.ts,
+  // END_HOLD_MS). Elsewhere a fill holds the end value. Node's platform is
+  // the browser's: no config connects to a remote browser.
+  const fillHolds = !(
+    page.context().browser()?.browserType().name() === 'webkit' &&
+    process.platform === 'linux'
+  );
   const waited = during.evaluate(
-    (element, {duration, minProgress, prop, pseudo, wait}) =>
+    (element, {duration, minProgress, prop, pseudo, wait, fillHolds}) =>
       new Promise<BlockedWindow>((resolve, reject) => {
         // The harness's own waits run on the real timers: a frozen timer gate
         // (story.ts) holds only the page's.
@@ -641,9 +656,23 @@ export async function blockMainThread(
               (window as unknown as {__harnessFreeze?: {offset: number}})
                 .__harnessFreeze?.offset ?? 0;
             const from = performance.timeOrigin + Number(startTime) + frozen;
+            // Whether the element keeps the curve's end value once it ends. A
+            // held tail past the curve keeps it, and so does a fill the
+            // compositor honors. An end delay shows nothing.
+            const timing = caught.effect?.getComputedTiming();
+            const keyframesEnd =
+              Number(timing?.delay ?? 0) + Number(timing?.activeDuration ?? 0);
+            const holds =
+              curveEnd(caught) < keyframesEnd ||
+              (fillHolds &&
+                (timing?.fill === 'forwards' || timing?.fill === 'both'));
             const animation =
               startTime != null && caught.playbackRate > 0
-                ? {from, to: from + curveEnd(caught) / caught.playbackRate}
+                ? {
+                    from,
+                    to: from + curveEnd(caught) / caught.playbackRate,
+                    holds,
+                  }
                 : undefined;
             // The same loop as above, from a task queued in the frame that saw
             // the animation: it runs once that frame's rendering update has
@@ -690,6 +719,7 @@ export async function blockMainThread(
       prop: property ?? null,
       pseudo: pseudoElement ?? null,
       wait: timeout,
+      fillHolds,
     },
   );
   try {
@@ -904,6 +934,18 @@ function motionStepPx(values: readonly number[]): number {
  *   the block, or the block caught another animation), so there is nothing to
  *   judge, and that fails rather than passes.
  *
+ * With `window.animation` (`blockMainThread`'s `during`), the judged part
+ * can end at the held curve's end, when that comes before the block's. It
+ * does unless the element keeps the end value (`holds`), or a settle bound
+ * (`settledWithin`, `settledWithinSteps`) already ends judging. Once a
+ * compositor animation that keeps no end value ends inside a block, WebKit
+ * presents the value the main thread last committed, not the animation. If
+ * the part left gives the control fewer than `minJudgedFrames` frames, the
+ * block started late for the motion. Without a control, the part's span
+ * counts. That throws `BusyWindowTooLateError`, as a motion that settled
+ * before the block does. A stall before the curve's end is still judged, and
+ * fails.
+ *
  * A just-started animation can reach the screen after the block began (its
  * hand-off to the compositor lags under load: 50–100 ms in WebKit). The
  * tracked value may be seen at rest before the judged part: a frame there, and
@@ -922,10 +964,10 @@ function motionStepPx(values: readonly number[]): number {
  * position inside the part, as a card that enters from an edge. The cast's
  * frames before the part must show the screen without it. A main-thread
  * entrance shows no frame during the block, so it still fails.
- * The judged part still ends with the block and the `minJudgedFrames` floor
- * applies to it, so a start the block itself delays fails; any other
- * animation that was already moving is judged from the block's start, and a
- * stall there fails as before.
+ * The judged part still ends with the block, or with the held curve. The
+ * `minJudgedFrames` floor applies to it, so a start the block itself delays
+ * fails. Any other animation that was already moving is judged from the
+ * block's start, and a stall there fails as before.
  *
  * `stepPx` and `pxPerFrame` say whether a frame's motion is resolvable at
  * all: under two position steps per frame, a frame delivered early can show
@@ -1168,6 +1210,34 @@ function readBusyWindow(
         },
       );
     }
+  }
+  // A held curve that keeps no end value can end inside the block. WebKit's
+  // compositor then presents the value the main thread last committed, not
+  // the animation. So the judged part ends at the curve's end, unless a
+  // settle bound already ends it where the motion arrives.
+  const heldCurve = (window as Partial<BlockedWindow>).animation;
+  const curveEnd =
+    heldCurve?.holds === false && settledWithinPx == null
+      ? heldCurve.to
+      : undefined;
+  const endsInBlock = curveEnd != null && curveEnd < end;
+  const curveTooLate = (framesLeft: number) => {
+    const presented = tracked.filter(
+      f => f.t >= window.from && f.t <= window.to,
+    ).length;
+    const curveEndMs = (curveEnd ?? end) - window.from;
+    return new BusyWindowTooLateError(
+      `busyWindowProof: the held animation's curve ended ${curveEndMs.toFixed(0)} ms after the block began, so the part judged from ${marginMs} ms held ${framesLeft} of the frames it needs, ${minJudgedFrames} (${presented} frames presented in the block): the block started late for the motion. Start the block earlier, or play a longer curve.`,
+      {curveEndMs, judgedFromMs: marginMs, presented},
+    );
+  };
+  // Where judging would end without the curve's end.
+  const endWithoutCurve = end;
+  if (curveEnd != null && endsInBlock) {
+    if (curveEnd <= window.from + marginMs) {
+      throw curveTooLate(0);
+    }
+    end = curveEnd;
   }
   const inner = {from: window.from + marginMs, to: end};
   const values = tracked
@@ -1421,24 +1491,32 @@ function readBusyWindow(
   // The control's own new positions in the judged part, against its frame
   // before the part, and of those the frames the component moved on too:
   // both are tracked from the same screencast frames, so their times match.
-  let controlRead: BusyControlRead | null = null;
-  if (control != null) {
-    const baseline = [...control]
+  // The times of the control's new positions in the judged part, up to `to`.
+  const controlChangesUpTo = (
+    frames: readonly TrackedFrame[],
+    to: number,
+  ): number[] => {
+    const baseline = [...frames]
       .reverse()
       .find(f => f.box != null && f.t < inner.from);
     let last: number | null = baseline?.box == null ? null : baseline.box.x;
-    const controlChanges: number[] = [];
-    for (const f of control) {
-      if (f.box == null || f.t < inner.from || f.t > judged.to) {
+    const changes: number[] = [];
+    for (const f of frames) {
+      if (f.box == null || f.t < inner.from || f.t > to) {
         continue;
       }
       if (last != null && Math.abs(f.box.x - last) > 0.25) {
         if (f.t > judged.from || onScreenFrom == null) {
-          controlChanges.push(f.t);
+          changes.push(f.t);
         }
       }
       last = f.box.x;
     }
+    return changes;
+  };
+  let controlRead: BusyControlRead | null = null;
+  if (control != null) {
+    const controlChanges = controlChangesUpTo(control, judged.to);
     const controlEdges = [judged.from, ...controlChanges, judged.to];
     // A frame with no new component position, in a run of such frames whose
     // next change the cast's step or an early frame explains (`underStep`):
@@ -1586,6 +1664,21 @@ function readBusyWindow(
       ),
     };
   }
+  // The curve's end left too little to judge only when the part up to the
+  // block's end would have held enough. Otherwise the run fails as before,
+  // as starvation when the cast was starved.
+  if (endsInBlock) {
+    const framesLeft = controlRead?.moved ?? expectedFrames;
+    const framesWithoutCurve =
+      control == null
+        ? Math.floor(
+            (endWithoutCurve - judged.from) / (compositorFrameMs ?? cadence),
+          )
+        : controlChangesUpTo(control, endWithoutCurve).length;
+    if (framesLeft < minJudgedFrames && framesWithoutCurve >= minJudgedFrames) {
+      throw curveTooLate(framesLeft);
+    }
+  }
   const failures: string[] = [];
   let starvation: FrameShortfall | null = null;
   if (stats.frames === 0 && controlRead == null) {
@@ -1675,6 +1768,9 @@ function readBusyWindow(
     (onScreenFromMs == null
       ? ''
       : `, on screen from +${onScreenFromMs.toFixed(0)} ms (${entersAt == null ? 'nothing moved before the block' : 'off screen before the block'})`) +
+    (endsInBlock
+      ? `, judged to the held curve's end at +${(end - window.from).toFixed(0)} ms`
+      : '') +
     (controlRead == null
       ? ''
       : `; against the control: moved on ${controlRead.movedWith} of its ${controlRead.moved} frames${controlRead.belowStep > 0 ? ` (${controlRead.belowStep} where the cast could not show the step)` : ''}, its longest stall ${controlRead.longestStallMs.toFixed(1)} ms`) +
@@ -1830,7 +1926,7 @@ export function pooledBusyProof(
     failures.push(
       lateRuns === 0
         ? `${judgedReads.length} of ${runs.length} runs judged, under ${minJudgedRuns}: the compositor presented too little in the others to judge`
-        : `${judgedReads.length} of ${runs.length} runs judged, under ${minJudgedRuns}: ${lateRuns} began after the motion had settled, and the compositor presented too little in any other to judge`,
+        : `${judgedReads.length} of ${runs.length} runs judged, under ${minJudgedRuns}: ${lateRuns} began too late for their motion, and the compositor presented too little in any other to judge`,
     );
   }
   if (judgedReads.length > 0 && moved < minJudgedFrames) {

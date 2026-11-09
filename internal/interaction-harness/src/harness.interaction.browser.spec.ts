@@ -1954,6 +1954,33 @@ test.describe('frame evidence', () => {
     await control.remove();
   });
 
+  test('blockMainThread says a held curve keeps its end value only through a held tail or a fill the compositor honors', async ({
+    page,
+    browserName,
+  }) => {
+    await busyFixture(page);
+    const box = page.locator('#box');
+    const holds = async (timing: KeyframeAnimationOptions) => {
+      await box.evaluate((el, options) => {
+        el.getAnimations().forEach(a => a.cancel());
+        el.animate(
+          [{transform: 'translateY(0px)'}, {transform: 'translateY(200px)'}],
+          options,
+        );
+      }, timing);
+      const window = await blockMainThread(page, 50, {during: box});
+      return window.animation?.holds;
+    };
+    // WebKit on Linux ignores `fill` on its compositor (motion/animator.ts,
+    // END_HOLD_MS): there a filled move that ends inside a block snaps back.
+    expect(await holds({duration: 1000, fill: 'forwards'})).toBe(
+      browserName !== 'webkit' || process.platform !== 'linux',
+    );
+    expect(await holds({duration: 1000})).toBe(false);
+    // An end delay shows nothing with no fill: it is no held tail.
+    expect(await holds({duration: 1000, endDelay: 500})).toBe(false);
+  });
+
   test('a block too short to judge alone is judged over pooled runs: a compositor animation passes, and a rAF one fails, timed or frame-counted', async ({
     page,
   }, testInfo) => {
