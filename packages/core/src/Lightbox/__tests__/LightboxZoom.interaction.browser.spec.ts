@@ -930,9 +930,19 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
         t: record.__harnessFreeze.realNow(),
         lifted: lift != null,
       });
+      // NOT FOR LANDING: a short long task just before the trigger.
+      const planted = globalThis as unknown as {__planted?: boolean};
+      if (lift != null && x < lift - 240 && planted.__planted !== true) {
+        planted.__planted = true;
+        const end = performance.now() + 80;
+        while (performance.now() < end) {
+          // busy
+        }
+      }
       return (
         lift != null &&
-        x < lift - 10 &&
+        // NOT FOR LANDING: the trigger moved next to the edge.
+        x < lift - 260 &&
         img.getAnimations().some(a => a.playState === 'running')
       );
     },
