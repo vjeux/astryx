@@ -2398,11 +2398,10 @@ function ListReorderHost({reorder}: {reorder: ListReorderContextValue}) {
     });
   });
   // The list's own pointer listeners, on its DOM element.
-  useAttachment(
-    controller.list,
-    list => controller.attachMouse(list),
-    controller,
-  );
+  useIsomorphicLayoutEffect(() => {
+    const list = controller.list.current;
+    return list == null ? undefined : controller.attachMouse(list);
+  }, [controller]);
   // The handles' names follow the list's rows and their label elements in
   // the DOM, through the session's observer.
   useAttachment(
