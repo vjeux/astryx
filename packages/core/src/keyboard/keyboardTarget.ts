@@ -555,10 +555,7 @@ export function watchPans(
         }
         lastHeight = height;
         watch.report();
-      } else if (
-        ownPanTop != null &&
-        Math.abs(top - ownPanTop) <= KEYBOARD_EPSILON
-      ) {
+      } else if (false) {
         ownPanTop = null;
         watch.report();
       } else if (watch.isRevealPan(height)) {
