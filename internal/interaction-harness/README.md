@@ -364,7 +364,9 @@ cast-step rule above judges each frame, and the proof's notes say why: no
 `during`, an element without the marker, or a run gone before the replay.
 The proof gives its `judged` part in the cast's stamps, so a spec selects
 frames by it as before. Start the `ahead` control when every frame must be
-judged.
+judged. WebKit does not predict: the element's box at the loop's end lags
+its animation's current time, so the replay cannot be aligned. Every WebKit
+window falls back by name to the controls' clock and the cast-step rule.
 
 `controlClock(control)` reads the compositor's own time in each frame off the
 control's position, for a proof that judges motion against time, not against

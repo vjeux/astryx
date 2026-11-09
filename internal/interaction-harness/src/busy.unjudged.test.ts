@@ -188,6 +188,26 @@ describe('busyWindowProof on recorded Lightbox zoom casts', () => {
 });
 
 describe('busyWindowProof with a predicted move', () => {
+  it('falls back by name in WebKit, whose replay sits off by the travel the block covered', () => {
+    // WebKit reads the element's box at the loop's end before its animation's
+    // current time, so the replay is aligned as if the block had not moved it.
+    const at = curve(() => 3);
+    const blockTravel = at(FROM + 900) - at(FROM);
+    const shifted = window(t => at(t) + blockTravel);
+    const webkit = (frame: TrackedFrame): TrackedFrame => ({
+      ...frame,
+      engine: 'webkit',
+    });
+    const proof = busyWindowProof(frames(at).map(webkit), shifted, {
+      ...options,
+      control: control.map(webkit),
+    });
+    expect(proof.notes.join(' ')).toMatch(
+      /no prediction: at the first judged frame the replay read .*, so the cast-step rule judges each frame/,
+    );
+    expect(proof.unjudged).toEqual([]);
+  });
+
   it('names a frame predicted to move under one cast step, and judges the rest', () => {
     // Slow at first (0.4 px a frame), then 3 px a frame.
     const at = curve(t => (t < FROM + 100 ? 0.4 : 3));

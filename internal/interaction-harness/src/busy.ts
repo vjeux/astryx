@@ -1890,7 +1890,11 @@ function readBusyWindow(
   const fallBack = (why: string) => {
     // The replay moved another way than the cast: the cast-step rule judges
     // the frames as if there were no replay, and the notes say why.
-    const {from: start, to: end, holds} = animation ?? {
+    const {
+      from: start,
+      to: end,
+      holds,
+    } = animation ?? {
       from: window.from,
       to: window.to,
       holds: false,
