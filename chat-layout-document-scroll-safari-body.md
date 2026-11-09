@@ -25,12 +25,12 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
 - Result after the change: the dock's bottom meets the keyboard at 377 px.
 - Representative unchanged path: `docked`, and every case with no keyboard (Testing).
 - Regression test or other mutation-sensitive proof: new scripted-time cases fail on main, and removing any gate fails its case (Testing).
-- Captures, main first; the README maps each (https://github.com/vjeux/astryx/tree/89764c998c7cb59e5cd73c00d12fb5035144ff47):
+- Captures, main first; the README maps each (https://github.com/vjeux/astryx/tree/f2732673f1409e230ae6ee02d6a3b4740adb0264):
 
-  ![Keyboard open](https://raw.githubusercontent.com/vjeux/astryx/89764c998c7cb59e5cd73c00d12fb5035144ff47/ios-keyboard-open.png)
-  ![No keyboard](https://raw.githubusercontent.com/vjeux/astryx/89764c998c7cb59e5cd73c00d12fb5035144ff47/ios-no-keyboard.png)
-  ![Home-screen app, main and fix](https://raw.githubusercontent.com/vjeux/astryx/89764c998c7cb59e5cd73c00d12fb5035144ff47/ios-home-screen-main-fix.png)
-  ![Home-screen app, every entry path](https://raw.githubusercontent.com/vjeux/astryx/89764c998c7cb59e5cd73c00d12fb5035144ff47/ios-home-screen-app.png)
+  ![Keyboard open](https://raw.githubusercontent.com/vjeux/astryx/f2732673f1409e230ae6ee02d6a3b4740adb0264/ios-keyboard-open.png)
+  ![No keyboard](https://raw.githubusercontent.com/vjeux/astryx/f2732673f1409e230ae6ee02d6a3b4740adb0264/ios-no-keyboard.png)
+  ![Home-screen app, main and fix](https://raw.githubusercontent.com/vjeux/astryx/f2732673f1409e230ae6ee02d6a3b4740adb0264/ios-home-screen-main-fix.png)
+  ![Home-screen app, every entry path](https://raw.githubusercontent.com/vjeux/astryx/f2732673f1409e230ae6ee02d6a3b4740adb0264/ios-home-screen-app.png)
 
 ## Scope
 
@@ -53,7 +53,7 @@ Where `scrollRef` names the document's root or body, without the VirtualKeyboard
   - The tap claim, `focus()`'s reveal and the put-back each have a case before and after a page learns the dock is covered. Removing any one gate fails its case.
   - With the option off, the reveal-pan watch reports and listens as before; one visual-viewport read per report stays (INV11).
   - The cases fail on main. Chat, keyboard, utils and BottomSheet units: 2421/2421.
-- Safari on the iOS 26.2 Simulator, in a scripted trace at 714141ef23: a tap, drags with the keyboard up, then typing three lines. The dock's applied lift is 0 px on every frame, and it never flips direction within 100 ms, as on 33bc644a. Safari's own slide on a slow drag toward the top stays as in earlier releases (Gap 17, #10718).
+- Safari on the iOS 26.2 Simulator, in a scripted trace at 729784099d, in the browser and as a home-screen app: a tap, then drags with the keyboard up. The dock's applied lift is 0 px on every frame, and it never flips direction within 100 ms, as on 33bc644a. Safari's own slide on a slow drag toward the top stays as in earlier releases (Gap 17, #10718).
 - In Firefox, while a scroll moves the pan after input, each report moves only the dock's translate. The layout takes the lift once the pan rests: at the last finger's lift or at a scroll's end. A fling's momentum then follows the same way.
 - No keyboard: Chromium and WebKit's CI container, phone and desktop, read the same dock and message offsets on both builds. So does the Simulator.
 - The iOS home-screen app, on the Simulator, on a build of d0516270ff: a tap, Done, Next from a probe field, and `focus()`. Each keyboard route rests the composer on the keyboard, and Done leaves no group. On main, a tap and Next put it off screen.
