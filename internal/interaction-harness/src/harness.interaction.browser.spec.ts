@@ -469,6 +469,7 @@ test.describe('touch input', () => {
     const lastMoveHeldMs = await page.evaluate(
       () => (window as unknown as {lastMoveHeldMs: number}).lastMoveHeldMs,
     );
+    console.log(`X1HELD ${lastMoveHeldMs.toFixed(1)} ${typeof outcome === 'string' ? outcome : String(outcome).slice(0, 300)}`);
     expect(
       outcome,
       `the task held the last move ${lastMoveHeldMs.toFixed(0)} ms; past the ${TOUCH_STILLNESS_MS} ms stillness interval the lift comes late`,
