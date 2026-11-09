@@ -960,12 +960,6 @@ export class ListReorderController implements ListReorderSession {
           : list.ownerDocument.getElementById(label.labelId);
       if (element != null && watch != null) {
         watched.add(element);
-        if (!watch.labels.has(element)) {
-          watch.labels.set(
-            element,
-            observeMutations(element, LABEL_WATCH, this.onNamesMutation),
-          );
-        }
       }
       const labelNamesRow = label?.labelId == null ? null : namesRow(element);
       const byPlace =
