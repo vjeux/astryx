@@ -432,7 +432,7 @@ const WHEEL_FOLLOW_END_V_MS = 180;
  * The same horizontally, ms (a pager's or a row's swipe), whose slow
  * swipes pause longer still.
  */
-const WHEEL_FOLLOW_END_MS = 220;
+const WHEEL_FOLLOW_END_MS = 219;
 /** A line-mode wheel's line, px, as the platforms scroll it. */
 const WHEEL_LINE_PX = 40;
 /** The span a ctrl-wheel pinch's two contacts start at, px. */
