@@ -295,7 +295,7 @@ test('a mouse close under reduced motion moves the sheet no further', async ({
   page,
 }) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
-  const {dialog, sheet} = await openFilters(page);
+  const {sheet} = await openFilters(page);
   const rest = await sheet.evaluate(el => el.getBoundingClientRect());
   // Every frame's sheet top, and the time the button comes up.
   await page.evaluate(() => {
@@ -352,7 +352,69 @@ test('a mouse close under reduced motion moves the sheet no further', async ({
     return played;
   });
   expect(exitPlayed).toBe(false);
-  await expect(dialog).toBeHidden({timeout: 2_000});
+  // The release asked the host to close. An open sheet is modal, and a
+  // closing one is not.
+  expect(
+    await page.evaluate(
+      () =>
+        document.querySelector('dialog[open]')?.getAttribute('aria-modal') ??
+        null,
+    ),
+    'the release kept the sheet open: the host never got a close',
+  ).toBeNull();
+  // Then the exit runs to its end, and the dialog closes with it. The exit
+  // keeps the old 2 s bound, read from its own animations' timing: from the
+  // first one's start to the last one's end.
+  const exit = await page.evaluate(async () => {
+    const dialog = document.querySelector('dialog');
+    const shut = () => dialog == null || !dialog.isConnected || !dialog.open;
+    let firstStart = Number.POSITIVE_INFINITY;
+    let lastEnd = Number.NEGATIVE_INFINITY;
+    let idleFrames = 0;
+    while (!shut() && idleFrames < 3) {
+      const running = document.getAnimations().filter(animation => {
+        const target = (animation.effect as KeyframeEffect | null)?.target;
+        return (
+          animation.playState === 'running' &&
+          target != null &&
+          dialog?.contains(target) === true &&
+          Number.isFinite(Number(animation.effect?.getComputedTiming().endTime))
+        );
+      });
+      for (const animation of running) {
+        const start = Number(
+          animation.startTime ?? document.timeline.currentTime ?? 0,
+        );
+        firstStart = Math.min(firstStart, start);
+        lastEnd = Math.max(
+          lastEnd,
+          start +
+            Number(animation.effect?.getComputedTiming().endTime) /
+              Math.abs(animation.playbackRate || 1),
+        );
+      }
+      const spanMs = Math.max(0, lastEnd - firstStart);
+      if (spanMs > 2_000) {
+        return {state: 'long', spanMs};
+      }
+      idleFrames = running.length > 0 ? 0 : idleFrames + 1;
+      await Promise.allSettled(
+        running.map(async animation => animation.finished),
+      );
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    return {
+      state: shut() ? 'closed' : 'open',
+      spanMs: Math.max(0, lastEnd - firstStart),
+    };
+  });
+  expect(
+    exit.spanMs,
+    `the reduced-motion exit runs ${Math.round(exit.spanMs)} ms, over 2,000 ms`,
+  ).toBeLessThanOrEqual(2_000);
+  expect(exit.state, 'the exit ended, but the dialog stayed open').toBe(
+    'closed',
+  );
   const read = async () =>
     page.evaluate(
       () =>
