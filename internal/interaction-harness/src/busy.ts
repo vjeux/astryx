@@ -32,6 +32,7 @@ import {
   FrameStarvationError,
   frameStats,
   trackMarker,
+  trackMarkers,
   type CastFrame,
   type FrameShortfall,
   type FrameStats,
@@ -72,15 +73,26 @@ export async function trackControl(
   frames: readonly CastFrame[],
   {ahead = false}: {ahead?: boolean} = {},
 ): Promise<TrackedFrame[]> {
-  return trackMarker(page, frames, {
-    rgb: ahead ? AHEAD_CONTROL_RGB : CONTROL_RGB,
-    region: {
-      x: 0,
-      y: ahead ? AHEAD_TOP - 2 : 0,
-      width: CONTROL_SIDE + CONTROL_TRAVEL + 4,
-      height: CONTROL_SIDE + 4,
-    },
+  const width = CONTROL_SIDE + CONTROL_TRAVEL + 4;
+  if (ahead || !frames.every(frame => frame.engine === 'webkit')) {
+    return trackMarker(page, frames, {
+      rgb: ahead ? AHEAD_CONTROL_RGB : CONTROL_RGB,
+      region: {
+        x: 0,
+        y: ahead ? AHEAD_TOP - 2 : 0,
+        width,
+        height: CONTROL_SIDE + 4,
+      },
+    });
+  }
+  // In WebKit, each frame also carries the control ahead (`startBusyControl`).
+  const [control, second] = await trackMarkers(page, frames, {
+    colors: [CONTROL_RGB, AHEAD_CONTROL_RGB],
+    region: {x: 0, y: 0, width, height: AHEAD_TOP + CONTROL_SIDE + 2},
   });
+  return second.some(frame => frame.box != null)
+    ? control.map((frame, i) => ({...frame, controlAhead: second[i].box}))
+    : control;
 }
 
 /**
@@ -116,6 +128,12 @@ export async function trackControl(
  * the first control is there, the one ahead is mid-leg, so the two read
  * every frame. Track it with `trackControl(page, frames, {ahead: true})`, and
  * keep the marker out of its strip too (the top `2 * CONTROL_SIDE + 4` px).
+ * A second call with `ahead` resolves with the one already running.
+ *
+ * In WebKit, the first control starts the one ahead too, unless `withAhead`
+ * is false. A WebKit busy proof judges its frames on the controls' clock, and
+ * the one ahead gives the frames near the first control's turns their time.
+ * `trackControl` then reads both. Keep the marker out of both strips there.
  */
 export async function startBusyControl(
   page: Page,
@@ -123,17 +141,64 @@ export async function startBusyControl(
     ahead = false,
     rgb = ahead ? AHEAD_CONTROL_RGB : CONTROL_RGB,
     within,
+    withAhead = page.context().browser()?.browserType().name() === 'webkit',
   }: {
     ahead?: boolean;
     rgb?: readonly [number, number, number];
     within?: Locator;
+    withAhead?: boolean;
   } = {},
 ): Promise<{
   /** The control's start on the page clock, epoch ms. */
   readonly start: number;
+  /** The start of the control ahead, when this call started it too. */
+  readonly aheadStart?: number;
   readonly raise: () => Promise<void>;
   readonly remove: () => Promise<void>;
 }> {
+  const start = await startControlBox(page, {ahead, rgb, within});
+  const aheadStart =
+    !ahead && withAhead
+      ? await startControlBox(page, {
+          ahead: true,
+          rgb: AHEAD_CONTROL_RGB,
+          within,
+        })
+      : undefined;
+  return {
+    start,
+    ...(aheadStart == null ? {} : {aheadStart}),
+    raise: () =>
+      page.evaluate(() => {
+        for (const box of document.querySelectorAll<HTMLElement>(
+          '[data-harness-control][popover]',
+        )) {
+          box.hidePopover();
+          box.showPopover();
+        }
+      }),
+    remove: () =>
+      page.evaluate(() => {
+        for (const box of document.querySelectorAll('[data-harness-control]')) {
+          box.remove();
+        }
+      }),
+  };
+}
+
+/** Mounts one busy-window control and resolves with its start (see `startBusyControl`). */
+async function startControlBox(
+  page: Page,
+  {
+    ahead,
+    rgb,
+    within,
+  }: {
+    ahead: boolean;
+    rgb: readonly [number, number, number];
+    within: Locator | undefined;
+  },
+): Promise<number> {
   if (within != null) {
     await within.evaluate(host =>
       host.setAttribute('data-harness-control-host', ''),
@@ -144,6 +209,18 @@ export async function startBusyControl(
       new Promise<number>((resolve, reject) => {
         const host = document.querySelector('[data-harness-control-host]');
         host?.removeAttribute('data-harness-control-host');
+        if (aheadMs > 0) {
+          // One control ahead at most: a second start resolves with it.
+          const running = [
+            ...document.querySelectorAll('[data-harness-control="ahead"]'),
+          ]
+            .map(el => el.getAnimations()[0])
+            .find(animation => animation?.startTime != null);
+          if (running != null) {
+            resolve(performance.timeOrigin + Number(running.startTime));
+            return;
+          }
+        }
         const box = document.createElement('div');
         box.setAttribute('data-harness-control', aheadMs > 0 ? 'ahead' : '');
         box.style.cssText = `position:fixed;inset:auto;left:0;top:${top}px;margin:0;padding:0;border:0;overflow:visible;width:${side}px;height:${side}px;background:rgb(${color.join(',')});z-index:2147483647;pointer-events:none;`;
@@ -236,24 +313,7 @@ export async function startBusyControl(
       aheadMs: ahead ? AHEAD_MS : 0,
     },
   );
-  return {
-    start,
-    raise: () =>
-      page.evaluate(() => {
-        for (const box of document.querySelectorAll<HTMLElement>(
-          '[data-harness-control][popover]',
-        )) {
-          box.hidePopover();
-          box.showPopover();
-        }
-      }),
-    remove: () =>
-      page.evaluate(() => {
-        for (const box of document.querySelectorAll('[data-harness-control]')) {
-          box.remove();
-        }
-      }),
-  };
+  return start;
 }
 
 /** How far a frame's stamp may run late and still agree with the others, ms. */
@@ -286,6 +346,17 @@ const CONTROL_EDGE = 36;
 export function controlClock(
   control: readonly TrackedFrame[],
 ): Map<number, number> {
+  return readControlClock(control).readings;
+}
+
+/**
+ * `controlClock`'s readings, with the origin they count from (epoch ms, the
+ * stamps' clock), or a null origin when no frame has a reading.
+ */
+function readControlClock(control: readonly TrackedFrame[]): {
+  readonly readings: Map<number, number>;
+  readonly origin: number | null;
+} {
   const cycle = 2 * CONTROL_LEG_MS;
   const usable = control.flatMap((frame, i) => {
     const x = frame.box?.x;
@@ -303,7 +374,7 @@ export function controlClock(
   });
   const clock = new Map<number, number>();
   if (usable.length === 0) {
-    return clock;
+    return {readings: clock, origin: null};
   }
   const onCycle = (a: number, b: number) => {
     const d = Math.abs(a - b) % cycle;
@@ -342,7 +413,111 @@ export function controlClock(
       Math.abs(out - expected) <= Math.abs(back - expected) ? out : back,
     );
   }
-  return clock;
+  return {readings: clock, origin: anchored};
+}
+
+/**
+ * Each stamp's time on the page clock, read from the busy controls'
+ * positions: the first control's clock, else the one `ahead`. The stamp only
+ * picks the control's cycle, so a stamp that runs late moves no reading. Each
+ * control counts from its start (`controlStarts`), or else from the origin
+ * that most of its frames' stamps agree with (`controlClock`).
+ *
+ * A stamp with no reading keeps its stamp's distance from the nearest stamp
+ * whose reading agrees with it, within `CONTROL_AGREE_MS`. Such a stamp is
+ * near a turn, or repeats a position. A late stamp's distance would carry its
+ * lateness. Without such a stamp, the nearest stamp with a reading serves.
+ * Dropping the frame would thin both series every half cycle. Null when no
+ * stamp has a reading.
+ */
+function controlPageTimes(
+  stamps: readonly number[],
+  control: readonly TrackedFrame[],
+  ahead: readonly TrackedFrame[] | undefined,
+  controlStarts: readonly [number, number?] | undefined,
+): Map<number, number> | null {
+  const cycle = 2 * CONTROL_LEG_MS;
+  const readers = [
+    {...readControlClock(control), start: controlStarts?.[0]},
+    ...(ahead == null
+      ? []
+      : [{...readControlClock(ahead), start: controlStarts?.[1]}]),
+  ].flatMap(({readings, origin, start}) => {
+    const from = start ?? origin;
+    return from == null ? [] : [{readings, from}];
+  });
+  const read = new Map<number, number>();
+  for (const stamp of stamps) {
+    for (const {readings, from} of readers) {
+      const ms = readings.get(stamp);
+      if (ms != null) {
+        read.set(
+          stamp,
+          from + ms + Math.round((stamp - from - ms) / cycle) * cycle,
+        );
+        break;
+      }
+    }
+  }
+  if (read.size === 0) {
+    return null;
+  }
+  const dated = [...read.keys()];
+  const agreeing = dated.filter(
+    stamp => Math.abs(stamp - (read.get(stamp) ?? stamp)) <= CONTROL_AGREE_MS,
+  );
+  const anchors = agreeing.length > 0 ? agreeing : dated;
+  const times = new Map<number, number>();
+  for (const stamp of stamps) {
+    const own = read.get(stamp);
+    if (own != null) {
+      times.set(stamp, own);
+      continue;
+    }
+    let nearest = anchors[0];
+    for (const other of anchors) {
+      if (Math.abs(other - stamp) < Math.abs(nearest - stamp)) {
+        nearest = other;
+      }
+    }
+    times.set(stamp, (read.get(nearest) ?? nearest) + stamp - nearest);
+  }
+  return times;
+}
+
+/**
+ * The component's and the control's frames dated on the controls' clock
+ * (`controlPageTimes`), in the order of those times. Both series come from
+ * one screencast, so each frame takes the same time in both.
+ *
+ * Only a WebKit cast is dated this way. It stamps the frame after a delivery
+ * gap about 60 ms late, carrying one frame of motion. Null for any other
+ * cast, or when the controls give no reading: the proof then judges the
+ * cast's stamps.
+ */
+function datedOnControlClock(
+  tracked: readonly TrackedFrame[],
+  control: readonly TrackedFrame[] | undefined,
+  ahead: readonly TrackedFrame[] | undefined,
+  controlStarts: readonly [number, number?] | undefined,
+): {tracked: TrackedFrame[]; control: TrackedFrame[]} | null {
+  if (
+    control == null ||
+    control.length === 0 ||
+    !control.every(frame => frame.engine === 'webkit')
+  ) {
+    return null;
+  }
+  const stamps = [...new Set([...tracked, ...control].map(frame => frame.t))];
+  const times = controlPageTimes(stamps, control, ahead, controlStarts);
+  if (times == null) {
+    return null;
+  }
+  const date = (frames: readonly TrackedFrame[]) =>
+    frames
+      .map(frame => ({...frame, t: times.get(frame.t) ?? frame.t}))
+      .sort((a, b) => a.t - b.t);
+  return {tracked: date(tracked), control: date(control)};
 }
 
 /** What the control presented in the judged part (see `busyWindowProof`). */
@@ -977,6 +1152,15 @@ function motionStepPx(values: readonly number[]): number {
  * `maxMedianFrameMs`, when given, still applies; `minMovedFraction` and the
  * absolute stall, frame and motion limits do not.
  *
+ * A WebKit cast with a control is judged on the controls' clock, not on its
+ * stamps. WebKit stamps the frame after a delivery gap about 60 ms late,
+ * carrying one frame of motion. So each frame takes its time from the
+ * controls' positions (`controlClock`), the component's and the control's
+ * alike. The control `ahead` dates the frames near the first control's
+ * turns. A frame with no reading keeps its stamp's distance from the nearest
+ * frame with one. Chromium casts and casts with no control are judged on
+ * their stamps.
+ *
  * With a control, a run the machine starved of frames proves nothing. So it
  * throws `FrameStarvationError` with its numbers and returns no verdict. A
  * starved run has two marks. Its control moved on fewer than
@@ -1002,8 +1186,69 @@ export function busyWindowProof(
  */
 export const BUSY_PROOF_LOOKAROUND_MS = 250;
 
-/** The proof `busyWindowProof` returns, and the starvation it throws. */
+/**
+ * The proof `busyWindowProof` returns, and the starvation it throws. A WebKit
+ * cast with a control is judged on the controls' clock
+ * (`datedOnControlClock`); any other cast on its stamps.
+ */
 function readBusyWindow(
+  tracked: readonly TrackedFrame[],
+  window: BusyWindow,
+  {
+    ahead,
+    controlStarts,
+    ...options
+  }: NonNullable<Parameters<typeof judgeBusyWindow>[2]> & {
+    /**
+     * The control started `ahead` (`startBusyControl`), tracked from the same
+     * screencast (`trackControl` with `ahead`). It dates the WebKit frames
+     * that fall near the first control's turns, where that control gives no
+     * time. By default it is read from the control's frames, which carry it
+     * in WebKit (`TrackedFrame.controlAhead`).
+     */
+    ahead?: readonly TrackedFrame[];
+    /**
+     * When the first control started, then the one ahead (each
+     * `startBusyControl`'s `start`). Without them, each control counts from
+     * the origin that most of its frames' stamps agree with.
+     */
+    controlStarts?: readonly [number, number?];
+  } = {},
+): {proof: BusyProof; starvation: FrameShortfall | null} {
+  const dated = datedOnControlClock(
+    tracked,
+    options.control,
+    ahead ?? aheadOf(options.control),
+    controlStarts,
+  );
+  return dated == null
+    ? judgeBusyWindow(tracked, window, options)
+    : judgeBusyWindow(dated.tracked, window, {
+        ...options,
+        control: dated.control,
+      });
+}
+
+/**
+ * The control ahead, read from the first control's frames (`trackControl` in
+ * WebKit), or undefined when they carry none.
+ */
+function aheadOf(
+  control: readonly TrackedFrame[] | undefined,
+): TrackedFrame[] | undefined {
+  if (control == null || !control.some(frame => frame.controlAhead != null)) {
+    return undefined;
+  }
+  return control.map(frame => ({
+    t: frame.t,
+    box: frame.controlAhead ?? null,
+    pixels: frame.controlAhead == null ? 0 : CONTROL_SIDE * CONTROL_SIDE,
+    ...(frame.engine == null ? {} : {engine: frame.engine}),
+  }));
+}
+
+/** `readBusyWindow` on the frames it judges, dated. */
+function judgeBusyWindow(
   tracked: readonly TrackedFrame[],
   window: BusyWindow,
   {
@@ -1712,6 +1957,10 @@ export interface BusyRun {
   readonly control: readonly TrackedFrame[];
   /** The run's block (`blockMainThread`). */
   readonly window: BusyWindow;
+  /** The control started `ahead`, from the same screencast (see `busyWindowProof`). */
+  readonly ahead?: readonly TrackedFrame[];
+  /** When the run's controls started (see `busyWindowProof`). */
+  readonly controlStarts?: readonly [number, number?];
 }
 
 export interface PooledBusyProof {
@@ -1770,7 +2019,7 @@ export function pooledBusyProof(
   runs: readonly BusyRun[],
   options: Omit<
     NonNullable<Parameters<typeof busyWindowProof>[2]>,
-    'control' | 'minMovedFraction'
+    'control' | 'ahead' | 'controlStarts' | 'minMovedFraction'
   > & {
     /** The fewest frames a run's control must move on for the run to count. */
     minRunFrames?: number;
@@ -1798,6 +2047,8 @@ export function pooledBusyProof(
       const {proof} = readBusyWindow(run.tracked, run.window, {
         ...windowOptions,
         control: run.control,
+        ahead: run.ahead,
+        controlStarts: run.controlStarts,
       });
       late.push(null);
       return proof;

@@ -1891,6 +1891,41 @@ test.describe('frame evidence', () => {
     await first.remove();
   });
 
+  test('in WebKit the first control starts the one ahead too, and trackControl carries its box on each frame; withAhead: false keeps one control', async ({
+    page,
+    browserName,
+  }) => {
+    await busyFixture(page);
+    const webkit = browserName === 'webkit';
+    const boxes = () => page.locator('[data-harness-control]').count();
+    const control = await startBusyControl(page);
+    expect(await boxes()).toBe(webkit ? 2 : 1);
+    expect(control.aheadStart != null).toBe(webkit);
+    if (control.aheadStart != null) {
+      expect(control.start - control.aheadStart).toBeCloseTo(200, 0);
+      // Starting the one ahead again resolves with the one running.
+      const again = await startBusyControl(page, {ahead: true});
+      expect(again.start).toBe(control.aheadStart);
+      expect(await boxes()).toBe(2);
+    }
+    const cast = await startScreencast(page);
+    await page.waitForTimeout(1000);
+    const frames = await trackControl(page, await cast.stop());
+    expect(frames.length).toBeGreaterThan(0);
+    expect(
+      frames.every(frame =>
+        webkit
+          ? frame.controlAhead != null && frame.controlAhead.y >= CONTROL_SIDE
+          : frame.controlAhead === undefined,
+      ),
+    ).toBe(true);
+    await control.remove();
+    const single = await startBusyControl(page, {withAhead: false});
+    expect(await boxes()).toBe(1);
+    expect(single.aheadStart).toBeUndefined();
+    await single.remove();
+  });
+
   test('a hold that starts before the block is judged from its first presented change inside it; a single change and then a freeze still fails', async ({
     page,
   }) => {
