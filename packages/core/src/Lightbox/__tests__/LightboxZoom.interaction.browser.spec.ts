@@ -910,6 +910,26 @@ test('a finger landing on a coasting photo stops it where it shows', async ({
   // The photo's offset at the flick's lift, read in the page.
   const liftOffset = await recordLiftOffset(photo);
   await photo.evaluate(el => el.setAttribute('data-freeze-photo', ''));
+  // NOT FOR LANDING: a long task right after the flick's lift, as a starved
+  // page has, while the compositor coasts the photo on.
+  await photo.evaluate(
+    (_el, ms) => {
+      if (ms <= 0) return;
+      document.addEventListener(
+        'touchend',
+        () => {
+          setTimeout(() => {
+            const end = performance.now() + ms;
+            while (performance.now() < end) {
+              // busy
+            }
+          }, 0);
+        },
+        {capture: true, once: true},
+      );
+    },
+    Number(process.env.ZZ_BLOCK_MS ?? 450),
+  );
   // The scene stops once the coast has carried the photo 10 px past the
   // lift, however late this process reacts. A poll from here can land the
   // finger after the coast ends.
