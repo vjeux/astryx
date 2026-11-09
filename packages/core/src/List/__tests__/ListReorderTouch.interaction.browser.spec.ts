@@ -40,9 +40,11 @@ import {
   holdThenDrag,
   markElement,
   openStory,
+  startBusyControl,
   startScreencast,
   toTouchEvents,
   touchDriver,
+  trackControl,
   trackMarker,
   withStorybook,
   writeEvidence,
@@ -725,17 +727,26 @@ async function pitchOf(page: Page): Promise<number> {
  * Films `marked` while a drag of `travel` rows runs, released at once. The
  * page blocks its own main thread for `blockMs` once the row's glide has run
  * 50 ms on its clock. A block in its first frames would hold the start, by
- * design.
+ * design. The row is judged against the compositor control's frames, which
+ * keep the cast delivering while the row stands still. A starved run fails
+ * by name, and a frozen row fails the verdict. Either way the evidence is
+ * written under `evidence`.
  */
 async function busyProof(
   page: Page,
   marked: Locator,
   travel: number,
-  {blockMs, durationMs = 160}: {blockMs: number; durationMs?: number},
+  {
+    blockMs,
+    durationMs = 160,
+    evidence,
+  }: {blockMs: number; durationMs?: number; evidence: string},
 ) {
   const pitch = await pitchOf(page);
   const {at: from} = await handleOf(page, 'Inbox');
   const unmark = await markElement(marked);
+  // Before the glide, so the control is on the compositor first.
+  await startBusyControl(page);
   const cast = await startScreencast(page);
   const driver = await touchDriver(page);
   const blocking = blockMainThread(page, blockMs, {
@@ -756,10 +767,26 @@ async function busyProof(
   const frames = await cast.stop();
   await unmark();
   const tracked = await trackMarker(page, frames);
-  return busyWindowProof(tracked, block, {
-    axis: 'y',
-    settledWithin: 2 * castStep(tracked, 'y'),
-  });
+  // The control, searched for in its own strip only.
+  const control = await trackControl(page, frames);
+  const write = async (record: unknown) =>
+    writeEvidence(
+      `busy-main-thread/${evidence}`,
+      {[`${test.info().project.name}.json`]: JSON.stringify(record, null, 1)},
+      test.info(),
+    );
+  try {
+    const proof = busyWindowProof(tracked, block, {
+      axis: 'y',
+      settledWithin: 2 * castStep(tracked, 'y'),
+      control,
+    });
+    await write(proof);
+    return proof;
+  } catch (error) {
+    await write({block, error: String(error)});
+    throw error;
+  }
 }
 
 test.describe('the preview, the drop and the handle under a finger', () => {
@@ -837,35 +864,29 @@ test.describe('the preview, the drop and the handle under a finger', () => {
 
   test('the rows the drop moves keep gliding while the main thread is blocked', async ({
     page,
-  }, testInfo) => {
+  }) => {
     // Inbox passes Sent, Drafts and Archive in one move, and the finger lifts
     // below them. On the drop, Sent glides up a row while script cannot run.
     const proof = await busyProof(page, rowOf(page, 'Sent'), 3.2, {
       blockMs: 200,
       durationMs: 16,
+      evidence: 'list-reorder-slide',
     });
-    await writeEvidence(
-      'busy-main-thread/list-reorder-slide',
-      {[`${testInfo.project.name}.json`]: JSON.stringify(proof, null, 1)},
-      testInfo,
-    );
+    expect(proof.verdict.failures, proof.summary).toEqual([]);
     expect(proof.changed, JSON.stringify(proof)).toBeGreaterThanOrEqual(3);
     expect(proof.monotonic, JSON.stringify(proof)).toBe(true);
   });
 
   test('the dropped row keeps gliding while the main thread is blocked', async ({
     page,
-  }, testInfo) => {
+  }) => {
     // Released a row and a half down, Inbox glides from where its preview was
     // into its new place.
     const proof = await busyProof(page, rowOf(page, 'Inbox'), 1.49, {
       blockMs: 150,
+      evidence: 'list-reorder-drop',
     });
-    await writeEvidence(
-      'busy-main-thread/list-reorder-drop',
-      {[`${testInfo.project.name}.json`]: JSON.stringify(proof, null, 1)},
-      testInfo,
-    );
+    expect(proof.verdict.failures, proof.summary).toEqual([]);
     expect(proof.changed, JSON.stringify(proof)).toBeGreaterThanOrEqual(3);
     expect(proof.monotonic, JSON.stringify(proof)).toBe(true);
   });
