@@ -146,8 +146,7 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
       scrolls.clear();
       end();
     } else if (
-      event.height <= KEYBOARD_EPSILON &&
-      getResizedRoom(win) <= KEYBOARD_EPSILON
+      event.height <= KEYBOARD_EPSILON
     ) {
       end();
       scrollBack(win, scrolls);
