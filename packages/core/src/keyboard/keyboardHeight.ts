@@ -161,7 +161,6 @@ function attach(win: Window, store: KeyboardStore): () => void {
   let stepLimit = 0;
   const deliver = (height: number, timeStamp: number) => {
     if (height <= KEYBOARD_EPSILON && store.height > KEYBOARD_EPSILON) {
-      store.startsAtHide = getTouchStartCount(win);
     }
     store.height = height;
     const report: KeyboardHeightEvent = {type: 'viewport', height, timeStamp};
