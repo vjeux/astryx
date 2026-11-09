@@ -179,8 +179,31 @@ async function recordFrames(
         ? 0
         : Number.parseFloat(value.split(' ')[1] ?? '0');
     };
+    // NOT FOR LANDING: the group's rows slide two frames late.
+    let delayed = false;
     const tick = () => {
       const callbackAt = performance.now();
+      if (!delayed) {
+        const slides = [
+          ...document.querySelectorAll(
+            '[data-tree-id="components"] > [role="group"] > [role="treeitem"]',
+          ),
+        ].flatMap(row =>
+          row
+            .getAnimations()
+            .filter(animation =>
+              (animation.effect as KeyframeEffect | null)
+                ?.getKeyframes()
+                .some(frame => frame.translate != null),
+            ),
+        );
+        if (slides.length > 0 && slides.every(a => a.startTime != null)) {
+          for (const slide of slides) {
+            slide.startTime = Number(slide.startTime) + 33;
+          }
+          delayed = true;
+        }
+      }
       const parent = item('components');
       const below = item('app');
       const last = item('index');
