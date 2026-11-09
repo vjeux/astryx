@@ -29,7 +29,6 @@ import {
   drag,
   frames,
   markElement,
-  MARKER_RGB,
   openStory,
   pinch,
   pooledBusyProof,
@@ -39,7 +38,7 @@ import {
   type TouchDriver,
   type TouchScript,
   touchStoryboard,
-  trackMarkers,
+  trackMarker,
   waitForAnimation,
   waitForRest,
   withStorybook,
@@ -577,13 +576,6 @@ async function recordTrackRuns(
 /** The slowed tempo the busy page-settle proofs play the viewer at. */
 const SETTLE_TEMPO = 5;
 
-/**
- * The part of a busy page-settle test's time its pool leaves free, ms. It
- * covers the browser's setup before the test's own code and the work after
- * the pool. It also covers a settle a little slower than the ones before it.
- */
-const POOL_RESERVE_MS = 12_000;
-
 /** The middle value, or the mean of the two middle ones. */
 function median(values: ReadonlyArray<number>): number {
   const sorted = [...values].sort((a, b) => a - b);
@@ -691,7 +683,6 @@ async function pooledSettleProof(
   {
     start = 'shown',
     onFirst,
-    deadline,
   }: {
     start?: 'shown' | 'after-lift';
     onFirst?: (
@@ -699,35 +690,13 @@ async function pooledSettleProof(
       tracked: BusyRun['tracked'],
       block: BlockedWindow,
     ) => Promise<void>;
-    /**
-     * When the pool must be done, epoch ms. A settle that would not fit
-     * before it is not started: the pool fails by name.
-     */
-    deadline?: number;
   } = {},
 ): Promise<PooledSettles> {
   const trackRuns = await recordTrackRuns(g.track);
   const runs: BusyRun[] = [];
   const blocks: BlockedWindow[] = [];
   const settles: TrackRun[] = [];
-  // How long each settle took, its first storyboard left out.
-  const settleMs: number[] = [];
   for (const direction of toward) {
-    // A settle takes about as long as the ones before it. When the slowest
-    // so far no longer fits, the machine is too slow for the pool. The run
-    // then fails by name, and the test's timeout never ends it.
-    if (deadline != null && settleMs.length > 0) {
-      const slowest = Math.max(...settleMs);
-      const left = deadline - Date.now();
-      if (slowest > left) {
-        const seconds = (ms: number) => (ms / 1000).toFixed(1);
-        throw new Error(
-          `pooledSettleProof: too slow for the pool: ${settleMs.length} of ${toward.length} settles took ${seconds(settleMs.reduce((a, b) => a + b, 0))} s, up to ${seconds(slowest)} s each, and ${seconds(Math.max(0, left))} s of the test's time remain`,
-        );
-      }
-    }
-    const settleStarted = Date.now();
-    let storyboardMs = 0;
     // The tracked photo keeps its left edge on screen as the page settles.
     // Toward the next page it is the next photo, which slides in from the
     // right. Back, it is the current one, which slides out to the right. A box
@@ -770,13 +739,10 @@ async function pooledSettleProof(
     if (settle == null) {
       throw new Error('no settle recorded');
     }
-    // One decode of each frame finds the photo's marker and the control.
-    const [tracked, control] = await trackMarkers(page, castFrames, {
-      colors: [MARKER_RGB, CONTROL_RGB],
-    });
+    const tracked = await trackMarker(page, castFrames);
     runs.push({
       tracked,
-      control,
+      control: await trackMarker(page, castFrames, {rgb: CONTROL_RGB}),
       window: {
         from: afterInFlightFrame(tracked, block.from),
         to: Math.min(block.to, settle.from + settle.curveMs),
@@ -785,13 +751,10 @@ async function pooledSettleProof(
     blocks.push(block);
     settles.push(settle);
     if (runs.length === 1) {
-      const storyboardStarted = Date.now();
       await onFirst?.(castFrames, tracked, block);
-      storyboardMs = Date.now() - storyboardStarted;
     }
     await waitForRest(g.track);
     await unmark();
-    settleMs.push(Date.now() - settleStarted - storyboardMs);
   }
   // The settle slows at its end. Near the end a 60 Hz frame moves less than
   // one cast step, so the cast shows plateaus there. Judging stops 12 cast
@@ -842,7 +805,6 @@ async function settleBlockLags(
 test('the page settle keeps advancing every frame while the main thread is blocked', async ({
   page,
 }, testInfo) => {
-  const deadline = Date.now() + testInfo.timeout - POOL_RESERVE_MS;
   const g = await openGallery(page);
   // A compositor-only control animation in the same windows: what the
   // compositor presented while the main thread spun, on this machine.
@@ -860,7 +822,6 @@ test('the page settle keeps advancing every frame while the main thread is block
     g,
     ['next', 'next', 'next', 'previous', 'previous', 'previous'],
     {
-      deadline,
       onFirst: async (castFrames, tracked, block) => {
         const film = await castStoryboard(page, castFrames, {
           name: 'lightbox-page-settle-busy-main-thread',
