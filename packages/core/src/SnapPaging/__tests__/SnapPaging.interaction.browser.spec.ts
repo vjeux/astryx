@@ -1258,6 +1258,171 @@ test('a narrowing while the row settles toward the last view: the settle plays o
   expect(Math.max(...misses)).toBeLessThanOrEqual(resolution === 0 ? 0.5 : 1);
 });
 
+for (const rtl of [false, true]) {
+  test(`a narrowing while the row settles onto its second view: the settle ends on that view's stop${rtl ? ', right to left' : ''}`, async ({
+    page,
+    browserName,
+  }) => {
+    const {scroller} = await open(page, 'snap-paging-three-up', 'paging', {
+      rtl,
+    });
+    const stops = await stopsOf(scroller);
+    // A drag of 70% of a view and a still lift settle the row onto its second
+    // view. The page narrows the row by 30 px once two frames show the settle.
+    // A resize observer made after the pager's runs right after the pager's own
+    // resize work. It records where the settle that work started ends and the
+    // settle's speed. It also times the rect and style reads between the
+    // narrowing and that observer.
+    await scroller.evaluate(el => {
+      const first = el.firstElementChild as HTMLElement;
+      // A held child's translate runs toward the end in the row's direction.
+      const toward = getComputedStyle(el).direction === 'rtl' ? -1 : 1;
+      const flags = window as unknown as {
+        settleEnd?: number | null;
+        isLate?: boolean;
+        readSpan?: number;
+        speed?: number;
+      };
+      const startWidth = el.clientWidth;
+      const shown: {time: number; at: number}[] = [];
+      const reads: number[] = [];
+      const readRect = Element.prototype.getBoundingClientRect;
+      const readStyle = window.getComputedStyle;
+      const timeReads = (isOn: boolean) => {
+        Element.prototype.getBoundingClientRect = isOn
+          ? function (this: Element) {
+              reads.push(performance.now());
+              return readRect.call(this);
+            }
+          : readRect;
+        window.getComputedStyle = isOn
+          ? (element, pseudo) => {
+              reads.push(performance.now());
+              return readStyle.call(window, element, pseudo);
+            }
+          : readStyle;
+      };
+      new ResizeObserver(() => {
+        if (flags.settleEnd !== undefined || el.clientWidth === startWidth) {
+          return;
+        }
+        timeReads(false);
+        const keyframes = first
+          .getAnimations()
+          .map(
+            animation =>
+              (animation.effect as KeyframeEffect | null)?.getKeyframes() ?? [],
+          )
+          .filter(frames => frames.some(frame => frame.translate != null))
+          .at(-1);
+        const last = keyframes?.at(-1);
+        flags.readSpan =
+          reads.length === 0 ? 0 : Math.max(...reads) - Math.min(...reads);
+        const [before, after] = shown.slice(-2);
+        flags.speed =
+          before == null || after == null || after.time === before.time
+            ? Infinity
+            : Math.abs((after.at - before.at) / (after.time - before.time));
+        flags.settleEnd =
+          last == null
+            ? null
+            : Math.abs(el.scrollLeft) -
+              toward * (Number.parseFloat(String(last.translate)) || 0);
+      }).observe(el);
+      el.addEventListener(
+        'touchend',
+        () => {
+          let settleFrames = 0;
+          const watch = () => {
+            shown.push({
+              time: performance.now(),
+              at:
+                Math.abs(el.scrollLeft) -
+                toward *
+                  (Number.parseFloat(getComputedStyle(first).translate) || 0),
+            });
+            if (first.getAnimations().length > 0) {
+              settleFrames += 1;
+            } else if (settleFrames > 0) {
+              // A starved page can show the whole settle in one frame.
+              flags.isLate = true;
+              return;
+            }
+            if (settleFrames < 2) {
+              requestAnimationFrame(watch);
+              return;
+            }
+            timeReads(true);
+            el.style.width = `${el.clientWidth - 30}px`;
+          };
+          requestAnimationFrame(watch);
+        },
+        {once: true},
+      );
+    });
+    const view = await scroller.evaluate(el => el.clientWidth);
+    await swipe(page, scroller, {
+      px: Math.round(view * 0.7),
+      ms: 200,
+      restMs: 120,
+      rtl,
+    });
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(() => {
+            const flags = window as unknown as {
+              settleEnd?: number | null;
+              isLate?: boolean;
+            };
+            return flags.isLate === true || flags.settleEnd !== undefined;
+          }),
+        {message: 'the narrowing retargets the settle', timeout: 5000},
+      )
+      .toBe(true);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as {isLate?: boolean}).isLate,
+      ),
+      'the row still settles at the narrowing',
+    ).not.toBe(true);
+    const {end, readSpan, speed} = await page.evaluate(() => {
+      const flags = window as unknown as {
+        settleEnd?: number | null;
+        readSpan?: number;
+        speed?: number;
+      };
+      return {
+        end: flags.settleEnd,
+        readSpan: flags.readSpan ?? Infinity,
+        speed: flags.speed ?? Infinity,
+      };
+    });
+    test.info().annotations.push({
+      type: 'settle-end',
+      description: JSON.stringify({end, stop: stops[3], readSpan, speed}),
+    });
+    expect(end, 'the narrowing plays a settle').not.toBeNull();
+    // Chromium resolves every read in a frame at the frame's time. WebKit
+    // resolves each read at its own time, so the pager's translate and rect
+    // reads can see the settle that far apart.
+    let bound = 0.05;
+    if (browserName === 'webkit') {
+      expect(
+        readSpan,
+        "the pager's reads span less than a frame (ms)",
+      ).toBeLessThanOrEqual(1000 / 60);
+      bound += speed * readSpan;
+    }
+    expect(
+      Math.abs((end ?? Infinity) - stops[3]),
+      "the settle ends on the second view's stop (px)",
+    ).toBeLessThanOrEqual(bound);
+    await settled(scroller);
+    expect(await offset(scroller)).toBeCloseTo(stops[3], 0);
+  });
+}
+
 test('an edge button steps about one view: the viewport less half an item, on the nearest stop', async ({
   page,
 }) => {
