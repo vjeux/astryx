@@ -251,7 +251,7 @@ export function wheelGapCauses(
   const dispatchStalls: number[] = [];
   for (let i = 1; i < stamps.length; i++) {
     const gapMs = stamps[i] - stamps[i - 1];
-    if (gapMs < maxGapMs) {
+    if (gapMs <= maxGapMs) {
       continue;
     }
     const sendGapMs = sendGapsMs[i - 1];
