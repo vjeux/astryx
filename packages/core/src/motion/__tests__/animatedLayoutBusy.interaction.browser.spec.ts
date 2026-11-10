@@ -206,11 +206,19 @@ async function clickThenBlock(
                   Number(document.timeline.currentTime ?? performance.now()),
               };
             });
+            // NOT FOR LANDING: the glides freeze through the block, and run
+            // on after it.
+            for (const [animation] of found) {
+              animation.pause();
+            }
             setTimeout(() => {
               const from = performance.now();
               let now = from;
               while (now - from < duration) {
                 now = performance.now();
+              }
+              for (const [animation] of found) {
+                animation.play();
               }
               (window as unknown as {busy: unknown}).busy = {
                 busy: {
