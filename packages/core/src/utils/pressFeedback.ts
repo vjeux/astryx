@@ -404,9 +404,6 @@ function surfaceAt(target: EventTarget | null): HTMLElement | null {
   if (!(found instanceof HTMLElement) || found.matches(DISABLED)) {
     return null;
   }
-  if (paintsFinePointerPress(found) && nestedControlTakesPress(target, found)) {
-    return null;
-  }
   return found;
 }
 
