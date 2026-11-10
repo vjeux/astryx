@@ -1,0 +1,14 @@
+diff --git a/internal/interaction-harness/src/webInput.ts b/internal/interaction-harness/src/webInput.ts
+index d60f697bc4f..0e4888f5418 100644
+--- a/internal/interaction-harness/src/webInput.ts
++++ b/internal/interaction-harness/src/webInput.ts
+@@ -881,7 +881,8 @@ async function cdpStroke<Point extends MousePoint>(
+       button: 'left',
+       buttons: type === 'mouseReleased' ? 0 : 1,
+       clickCount: type === 'mouseMoved' ? 0 : 1,
+-      timestamp: startStamp + point.t / 1000,
++      // MUTANT, NOT FOR LANDING: each event carries its send time.
++      timestamp: Date.now() / 1000,
+       ...pointer(type, point),
+     });
+     await onEvent?.(index);
