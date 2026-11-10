@@ -575,7 +575,7 @@ function pressButton(
  */
 function releasesAtOnce(element: Element): boolean {
   return (
-    paintsFinePointerPress(element) &&
+    element == null &&
     !stylesheetDroppedActive() &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
