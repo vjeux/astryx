@@ -24,6 +24,7 @@ import {
   type WheelOption,
 } from './Wheel';
 import {SCROLL_QUIET_MS} from './useScrollSettle';
+import {loopedStep, loopStep, restingStep, wrapIndex} from './wheelOptions';
 
 const ROW = 28;
 
@@ -64,6 +65,69 @@ describe('nearestEnabledIndex', () => {
   it('stays on the committed row when no row is enabled', () => {
     const none = HOURS.map(option => ({...option, isDisabled: true}));
     expect(nearestEnabledIndex(none, 3, 10)).toBe(10);
+  });
+});
+
+const MINUTE_ROWS: WheelOption[] = Array.from({length: 60}, (_, minute) => ({
+  value: minute,
+  label: String(minute).padStart(2, '0'),
+}));
+
+describe('the looping wheel’s rules', () => {
+  it('shows the row a position folds onto', () => {
+    expect(wrapIndex(61, 60)).toBe(1);
+    expect(wrapIndex(-1, 60)).toBe(59);
+    expect(wrapIndex(5, 0)).toBe(0);
+  });
+
+  it('measures the shorter way round the seam, forward on a tie', () => {
+    expect(loopStep(59, 0, 60)).toBe(1);
+    expect(loopStep(0, 59, 60)).toBe(-1);
+    expect(loopStep(0, 2, 4)).toBe(2);
+  });
+
+  it('rests beside the seam by turning the shorter way round', () => {
+    const months = Array.from({length: 12}, (_, index) => ({
+      value: index + 1,
+      label: String(index + 1),
+      isDisabled: index > 1,
+    }));
+    // December: January is one row on, February two back.
+    expect(restingStep(months, 11, 1, true)).toBe(1);
+    expect(restingStep(months, 11, 1, false)).toBe(-10);
+    expect(restingStep(months, 0, 1, true)).toBe(0);
+  });
+
+  it('steps a key in its own direction across the seam, never a whole turn', () => {
+    expect(loopedStep(MINUTE_ROWS, 59, 1)).toBe(1);
+    expect(loopedStep(MINUTE_ROWS, 0, -1)).toBe(-1);
+    const onlyOne = MINUTE_ROWS.map(option => ({
+      ...option,
+      isDisabled: option.value !== 30,
+    }));
+    expect(loopedStep(onlyOne, 30, 1)).toBeNull();
+  });
+
+  it('skips disabled rows across the seam', () => {
+    // 00-05 and 55-58 enabled, 59 disabled.
+    const bounded = MINUTE_ROWS.map(option => ({
+      ...option,
+      isDisabled: option.value > 5 && (option.value < 55 || option.value > 58),
+    }));
+    expect(loopedStep(bounded, 58, 1)).toBe(2);
+    expect(loopedStep(bounded, 0, -1)).toBe(-2);
+  });
+
+  it('never turns a key the long way round, nor against its direction', () => {
+    // Only 00-05 enabled: past :05 the next enabled row in either key's
+    // direction lies more than half a turn away, so the key stays put.
+    const early = MINUTE_ROWS.map(option => ({
+      ...option,
+      isDisabled: option.value > 5,
+    }));
+    expect(loopedStep(early, 5, 1)).toBeNull();
+    expect(loopedStep(early, 0, -1)).toBeNull();
+    expect(loopedStep(early, 4, 1)).toBe(1);
   });
 });
 

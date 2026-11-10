@@ -233,6 +233,71 @@ describe('TimeWheels — minutes', () => {
   });
 });
 
+describe('TimeWheels — the minute column loops, and its seam carries the hour', () => {
+  it('turns 11:59 AM into 12:00 PM for ArrowDown on the minutes, the hour and the AM/PM column turning with it', () => {
+    const {onCommit} = renderWheels({initial: at(11, 59)});
+    fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
+    expect(onCommit).toHaveBeenLastCalledWith(at(12, 0));
+    advance(550);
+    expect(restingLabel('Minute')).toBe('00');
+    expect(restingLabel('Hour')).toBe('12');
+    expect(restingLabel('AM/PM')).toBe('PM');
+  });
+
+  it('turns 11:55 AM into 12:05 PM for PageDown on the minutes, ten rows on across the seam', () => {
+    const {onCommit} = renderWheels({initial: at(11, 55)});
+    fireEvent.keyDown(column('Minute'), {key: 'PageDown'});
+    expect(onCommit).toHaveBeenLastCalledWith(at(12, 5));
+    advance(550);
+    expect(restingLabel('Minute')).toBe('05');
+    expect(restingLabel('Hour')).toBe('12');
+    expect(restingLabel('AM/PM')).toBe('PM');
+  });
+
+  it('turns 1:00 PM back into 12:59 PM for ArrowUp on the minutes', () => {
+    const {onCommit} = renderWheels({initial: at(13, 0)});
+    fireEvent.keyDown(column('Minute'), {key: 'ArrowUp'});
+    expect(onCommit).toHaveBeenLastCalledWith(at(12, 59));
+    advance(550);
+    expect(restingLabel('Hour')).toBe('12');
+  });
+
+  it('turns 12:58 PM into 1:02 PM four minute rows on, as UIDatePicker does', () => {
+    const {onCommit} = renderWheels({initial: at(12, 58)});
+    for (let i = 0; i < 4; i++) {
+      fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
+    }
+    expect(onCommit).toHaveBeenLastCalledWith(at(13, 2));
+    advance(550);
+    expect(restingLabel('Minute')).toBe('02');
+    expect(restingLabel('Hour')).toBe('1');
+    expect(restingLabel('AM/PM')).toBe('PM');
+  });
+
+  it('keeps the hour for Home and End on the minutes: 10:03 AM to 10:59 AM', () => {
+    const {onCommit} = renderWheels({initial: at(10, 3)});
+    fireEvent.keyDown(column('Minute'), {key: 'End'});
+    expect(onCommit).toHaveBeenLastCalledWith(at(10, 59));
+    advance(550);
+    expect(restingLabel('Hour')).toBe('10');
+  });
+
+  it('brings a carry past the maximum back onto it', () => {
+    const {onCommit} = renderWheels({
+      initial: at(11, 58),
+      max: '11:59' as ISOTimeString,
+    });
+    fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
+    expect(onCommit).toHaveBeenLastCalledWith(at(11, 59));
+    // :00 of 12 is past the maximum, so the key finds no row past 59.
+    fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
+    expect(onCommit).toHaveBeenCalledTimes(1);
+    advance(550);
+    expect(restingLabel('Hour')).toBe('11');
+    expect(restingLabel('Minute')).toBe('59');
+  });
+});
+
 describe('TimeWheels — bounds', () => {
   it('commit a time past a bound as the bound, turning the other columns onto it', () => {
     const {onCommit} = renderWheels({

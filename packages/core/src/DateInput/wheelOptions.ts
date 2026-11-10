@@ -4,7 +4,8 @@
  * @file wheelOptions.ts
  * @input Nothing; types, the row height and pure functions
  * @output WheelOption, WheelProps, WheelHandle, WHEEL_ROW_HEIGHT, canSpinTo,
- *   nearestEnabledIndex, steppedIndex and endIndex: what both wheels share
+ *   nearestEnabledIndex, steppedIndex, endIndex, and the looping wheel's
+ *   wrapIndex, loopStep, restingStep and loopedStep: what both wheels share
  * @position Internal; read by Wheel.tsx (which re-exports all of it) and
  *   PickerWheel.tsx
  *
@@ -59,8 +60,12 @@ export interface WheelProps {
   options: ReadonlyArray<WheelOption>;
   /** Committed value; must match one option's `value`. */
   value: number;
-  /** Fired when the wheel comes to rest on a different, enabled row. */
-  onChange: (value: number) => void;
+  /**
+   * Fired when the wheel comes to rest on a different, enabled row. On a
+   * looping wheel, `wraps` counts the laps a person's move passed the seam,
+   * forward positive, when it passed it at all.
+   */
+  onChange: (value: number, wraps?: number) => void;
   /**
    * False while the wheel is hidden. The scrolling column then waits to listen
    * and scroll, because a hidden scroller's offsets mean nothing. The touch
@@ -70,6 +75,30 @@ export interface WheelProps {
   isActive?: boolean;
   /** Programmatic turns: `spinTo(index)`. */
   ref?: Ref<WheelHandle>;
+  /**
+   * Under a finger the rows repeat without end, as UIDatePicker's minutes and
+   * hours do: the last row is followed by the first. A list shorter than the
+   * column repeats down all of it. A single row never loops. The scrolling
+   * column does not loop.
+   */
+  isLooping?: boolean;
+}
+
+/** The row that a looping wheel of `count` rows shows at `position`. */
+export function wrapIndex(position: number, count: number): number {
+  if (count <= 0) {
+    return 0;
+  }
+  return ((position % count) + count) % count;
+}
+
+/**
+ * The shorter signed number of rows from row `from` to row `to` around a loop
+ * of `count` rows. Exactly half a turn goes forward.
+ */
+export function loopStep(from: number, to: number, count: number): number {
+  const ahead = wrapIndex(to - from, count);
+  return ahead <= count / 2 ? ahead : ahead - count;
 }
 
 /**
@@ -124,6 +153,51 @@ export function nearestEnabledIndex(
   return towardIndex;
 }
 
+/**
+ * How many rows, signed, a wheel resting on row `index` travels to the nearest
+ * enabled row: 0 when `index` is enabled. A tie goes toward `towardIndex` (the
+ * committed row). On a looping wheel the distance runs around the seam. So a
+ * rest beside the seam turns the shorter way round, never the long way across
+ * the list. A wheel with no enabled row travels to `towardIndex`.
+ *
+ * @example
+ * ```
+ * // Months, looping, with only January and February enabled: a rest on
+ * // December turns one row on to January, not ten back to February.
+ * restingStep(monthOptions, 11, 0, true); // 1
+ * ```
+ */
+export function restingStep(
+  options: ReadonlyArray<WheelOption>,
+  index: number,
+  towardIndex: number,
+  isLooping: boolean = false,
+): number {
+  const count = options.length;
+  if (!isLooping || count === 0) {
+    return nearestEnabledIndex(options, index, towardIndex) - index;
+  }
+  const isEnabled = (i: number) => !options[wrapIndex(i, count)].isDisabled;
+  if (isEnabled(index)) {
+    return 0;
+  }
+  const toward = loopStep(index, towardIndex, count);
+  for (let distance = 1; distance <= count / 2; distance++) {
+    const isBelowEnabled = isEnabled(index - distance);
+    const isAboveEnabled = isEnabled(index + distance);
+    if (isBelowEnabled && isAboveEnabled) {
+      return toward < 0 ? -distance : distance;
+    }
+    if (isBelowEnabled) {
+      return -distance;
+    }
+    if (isAboveEnabled) {
+      return distance;
+    }
+  }
+  return toward;
+}
+
 /** The rows' indices in the order keys step them: by `order`, else list order. */
 function inKeyOrder(options: ReadonlyArray<WheelOption>): number[] {
   const indices = options.map((_, index) => index);
@@ -170,6 +244,63 @@ export function steppedIndex(
     }
   }
   return null;
+}
+
+/**
+ * How many rows, signed, a key moves a looping wheel from row `from` by `delta`
+ * rows in key order. The key takes the next enabled row from its target in its
+ * own direction, across the seam. The search stops half a turn from `from`:
+ * past it a row is nearer the other way round. Failing that, the key takes the
+ * enabled row nearest its target on the way back. The wheel travels in the
+ * key's own direction, always less than one turn. Null when the key finds no
+ * other row, so it commits nothing.
+ *
+ * @example
+ * ```
+ * // Minutes 00-59, looping: ArrowDown on :59 moves one row on, to :00.
+ * loopedStep(minuteOptions, 59, 1); // 1
+ * ```
+ */
+export function loopedStep(
+  options: ReadonlyArray<WheelOption>,
+  from: number,
+  delta: number,
+): number | null {
+  const count = options.length;
+  if (count < 2 || delta === 0) {
+    return null;
+  }
+  const rows = inKeyOrder(options);
+  const start = Math.max(0, rows.indexOf(from));
+  const isEnabled = (position: number) =>
+    !options[rows[wrapIndex(position, count)]].isDisabled;
+  const step = Math.sign(delta);
+  const reach = Math.max(Math.abs(delta), Math.floor(count / 2));
+  let found: number | null = null;
+  for (
+    let position = start + delta;
+    Math.abs(position - start) <= reach;
+    position += step
+  ) {
+    if (isEnabled(position)) {
+      found = position;
+      break;
+    }
+  }
+  for (
+    let position = start + delta - step;
+    found == null && position !== start;
+    position -= step
+  ) {
+    if (isEnabled(position)) {
+      found = position;
+    }
+  }
+  if (found == null) {
+    return null;
+  }
+  const ahead = wrapIndex((rows[wrapIndex(found, count)] - from) * step, count);
+  return ahead === 0 ? null : ahead * step;
 }
 
 /** The first or the last enabled row in key order: where Home or End moves a wheel. */
