@@ -189,6 +189,9 @@ async function glideMs(page: Page, row: string): Promise<number> {
   const after = section.locator('[data-after-collapsible]');
   const watch = await watchAnimations(after);
   await section.getByRole('button', {name: 'Shipping details'}).click();
+  // NOT FOR LANDING: the read comes 700 ms after the action, as on a
+  // loaded machine.
+  await page.waitForTimeout(700);
   const glide = (await watch.started()).find(run =>
     run.keyframes.some(frame => typeof frame.translate === 'string'),
   );
