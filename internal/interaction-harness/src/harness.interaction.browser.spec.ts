@@ -480,10 +480,7 @@ test.describe('touch input', () => {
         );
         const lateMs = pacedSent[i] - deadline;
         const sendMs = pacedReturned[i - 1] - pacedSent[i - 1];
-        const ownSendMs = sendMs - commandMs[i - 1];
-        if (sendMs > spacing && ownSendMs <= spacing) {
-          slowCommands.push({move, ms: commandMs[i - 1]});
-        }
+        const ownSendMs = sendMs;
         return [
           // The control wakes that a stall ending at the harness's own wake
           // delayed too.
@@ -502,7 +499,7 @@ test.describe('touch input', () => {
                 {
                   move,
                   why: 'followed a slow send',
-                  ms: ownSendMs,
+                  ms: ownSendMs - ANSWER_SLACK_MS,
                   runnerMs: controlLateMs(
                     pacedSent[i - 1],
                     pacedReturned[i - 1] + 4,
