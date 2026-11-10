@@ -1201,7 +1201,7 @@ export function createPager(
     const {at, shown} = seed;
     const from = remap == null ? shown : remap(shown);
     // The velocity scales as the layout does where the track shows.
-    const rate = remap == null ? 1 : remap(shown + 0.5) - remap(shown - 0.5);
+    const rate = 1;
     const velocity = seed.velocity * rate;
     const isRelease = isReleaseSettle;
     const touchRelease = isTouchReleaseSettle;
