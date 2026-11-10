@@ -1286,6 +1286,13 @@ test('the rows below keep moving on every frame while the main thread is blocked
   await page.waitForTimeout(200);
   const presented = await compositor.stop();
   const frames = await cast.stop();
+  // NOT FOR LANDING: a starved machine, every fourth frame presented.
+  presented.splice(
+    0,
+    presented.length,
+    ...presented.filter((_, i) => i % 4 === 0),
+  );
+  frames.splice(0, frames.length, ...frames.filter((_, i) => i % 4 === 0));
   const tracked = await trackMarker(page, frames);
   const proof = busyWindowProof(tracked, block, {
     axis: 'y',
