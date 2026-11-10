@@ -423,7 +423,7 @@ export function CheckboxInput({
   // overlay below paints that row's press.
   const isRowPressSurface = use(CheckboxRowPressContext);
   // A read-only checkbox paints no press, for any pointer.
-  const paintsPress = !isDisabled && !isReadOnly;
+  const paintsPress = !isDisabled;
   const ownsPress = paintsPress && !isRowPressSurface;
   const generatedId = useId();
   const id = idProp || generatedId;
