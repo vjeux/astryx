@@ -106,6 +106,8 @@ export interface UseTableSortableStateConfig<
    * comparison (`{numeric: true}`) on the stringified values, bound to the
    * active `InternationalizationProvider` locale.
    *
+   * A new comparator applies on the next change to the data or the sort.
+   *
    * @example
    * ```
    * const collator = useCollator({numeric: true});
@@ -283,12 +285,16 @@ export function useTableSortableState<
     ? (controlledOnSortChange ?? (() => {}))
     : setInternalSort;
 
-  // Stable ref for comparators to avoid re-sorting on inline object identity changes
   const comparatorsRef = useRef(comparators);
+  // Render writes this on purpose, an accepted exception to the ref rule. A
+  // new comparators object does not re-sort the rows. A new comparator applies
+  // on the next data or sort change.
   comparatorsRef.current = comparators;
 
   // Stable ref for onSortChange to avoid recreating sortConfig on inline callback identity changes
   const onSortChangeRef = useRef(onSortChange);
+  // Written during render on purpose, an accepted exception to the ref rule:
+  // an inline callback keeps the sort config stable.
   onSortChangeRef.current = onSortChange;
 
   // Sorted data — memoized on sort state + data identity

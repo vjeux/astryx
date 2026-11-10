@@ -496,6 +496,9 @@ export function useTableStickyColumns<T extends Record<string, unknown>>(
   // reading stale config — consumers typically pass fresh array literals each
   // render, so we never want array identity in the deps.
   const stateRef = useRef({start, end, hasStart, hasEnd});
+  // Render writes this on purpose, an accepted exception to the ref rule.
+  // Fresh arrays of the same keys re-render no row. Changed keys reach a body
+  // cell when its row renders.
   stateRef.current = {start, end, hasStart, hasEnd};
 
   // Scroll-aware shadows: toggle CSS variables on the scroll container so each
