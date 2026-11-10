@@ -169,7 +169,9 @@ async function clickThenBlock(
                 });
               }
             }
-            setTimeout(() => {
+            // NOT FOR LANDING: the block starts in this frame's callback, while
+            // a new glide is still pending.
+            (() => {
               const from = performance.now();
               let now = from;
               while (now - from < duration) {
@@ -183,7 +185,7 @@ async function clickThenBlock(
                 },
                 glides,
               };
-            }, 0);
+            })();
           });
         },
         {capture: true, once: true},
