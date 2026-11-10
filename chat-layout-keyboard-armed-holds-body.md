@@ -10,7 +10,7 @@ Gboard's ride runs about 300 ms. After the report or the blur, each test read th
 
 ## Intended invariant
 
-The interaction harness's hold rule (`internal/interaction-harness/README.md`, "Curve sampling"): for a short animation that an action starts, the page arms the hold before the action (`armHold`). The proofs' checks stay as they are:
+The interaction harness states the hold rule in `internal/interaction-harness/README.md` ("Curve sampling"). For a short animation that an action starts, the page arms the hold before the action (`armHold`). The proofs' checks stay as they are:
 
 - the rise starts within 2 ms of the report, less `showReportLagMs`;
 - the fall starts within 8 ms of the blur, plus `hideAfterBlurMs`;
@@ -26,7 +26,7 @@ The interaction harness's hold rule (`internal/interaction-harness/README.md`, "
 
 - Failure before the change: under the load profile below, main fails each of the three proofs 3 of 3.
 - Success after the change: the same profile passes each of them 5 of 5.
-- The start checks still bite: with the keyboard model's two time offsets removed (vjeux/astryx@7c0b8f3e55f6538c19b2bb0de842ba173fb466bd), the rise fails by 25 ms and the fall by 16 ms. Those are the removed offsets.
+- The start checks still bite. With the keyboard model's two time offsets removed (vjeux/astryx@7c0b8f3e55f6538c19b2bb0de842ba173fb466bd), the rise fails by 25 ms and the fall by 16 ms: the removed offsets.
 - Product/runtime behavior verified unchanged: one test file changes.
 - CI impact (for a change to workflows, actions or CI scripts): none.
 
