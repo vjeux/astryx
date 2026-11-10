@@ -213,13 +213,17 @@ those contracts.
   change as one transition: a start time, a resting value, and a curve. Every
   Core consumer that rides the keyboard rides that transition with compositor
   animations, a translate to the resting value, never JavaScript per frame, and
-  the hook makes at most one layout read per keyboard change. A component
-  outside Core does not ride; it commits the resting value once. Packages
-  outside Core cannot import the hook; a component there that responds to the
-  keyboard keeps one listener that measures as `spec:AST-099` FR2 defines, keeps
-  focus from panning as FR4 does, blurs as FR5 does, applies the height through
-  a functional style on its own elements, and follows INV3 and INV5. The hook
-  follows INV3 and INV5.
+  the hook makes at most one layout read per keyboard change. In a page that
+  scrolls the document, ChatLayout's fixed dock also follows the cover that the
+  visual viewport's pan leaves (`spec:AST-099` FR3). That follow is a
+  `translate` on the dock's animator, like the ride, set at each pan report with
+  no layout read. The layout takes the lift once the dock comes to rest. A
+  component outside Core does not ride; it commits the resting value once.
+  Packages outside Core cannot import the hook; a component there that responds
+  to the keyboard keeps one listener that measures as `spec:AST-099` FR2
+  defines, keeps focus from panning as FR4 does, blurs as FR5 does, applies the
+  height through a functional style on its own elements, and follows INV3 and
+  INV5. The hook follows INV3 and INV5.
 - **INV12 — Size changes inside a container have one module.** In
   `@astryxdesign/core`, one internal module produces the size-change glide
   `spec:AST-105` defines. It measures the layout before and after a reported

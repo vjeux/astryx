@@ -406,7 +406,8 @@ No covered field meets FR9 on `main`. Each gap below is open.
   to the dock decides only that show: Firefox for Android pans at some shows and
   not at others. In Firefox for Android, the first show the browser leaves
   covered keeps the composer covered until the wait ends. With a slow-device
-  profile, that is about 0.75 s (731 to 755 ms). Only a pan of the visual
+  profile, that is about 0.75 s (731 to 755 ms). At normal speed, it is 668 to
+  814 ms. The cover stays under 1.5 s. Only a pan of the visual
   viewport restarts the wait, and the wait ends at 3 s at most. Every later show
   lifts the dock at once. A show with a touch or a wheel in the wait, or under a
   pinch zoom, teaches nothing. When its wait ends, its dock follows the part of

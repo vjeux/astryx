@@ -924,9 +924,8 @@ export function watchRevealPan(
   const doc = win.document;
   let atReport: {x: number; y: number; top: number; scale: number} | null =
     null;
-  // Pans the visual viewport back to `top`, without scrolling the document. It
-  // scrolls `anchor` into view, or a probe fixed at `top` in the layout
-  // viewport, which the pan does not move.
+  // A fixed probe sits in the layout viewport, which the pan does not move.
+  // Scrolling it into view pans the visual viewport back.
   const putBackTo = (top: number, anchor?: Element | null) => {
     const options: ScrollIntoViewOptions = {
       block: 'start',
