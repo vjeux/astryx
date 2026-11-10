@@ -47,6 +47,8 @@ import {
   startScreencast,
   toTouchEvents,
   touchDriver,
+  trackControl,
+  trackMarker,
   trackMarkers,
   withStorybook,
   writeEvidence,
@@ -774,6 +776,33 @@ async function busyProof(
   const [tracked, control] = await trackMarkers(page, frames, {
     colors: [MARKER_RGB, controlColor()],
   });
+  // NOT FOR LANDING: one decode for every colour against one per
+  // colour, on copies of the same cast, in alternating order.
+  {
+    const one = async () => {
+      const t = performance.now();
+      const r = await trackMarkers(page, [...frames], {
+        colors: [MARKER_RGB, controlColor()],
+      });
+      return {ms: performance.now() - t, r};
+    };
+    const each = async () => {
+      const t = performance.now();
+      const r = [
+        await trackMarker(page, [...frames]),
+        await trackControl(page, [...frames]),
+      ];
+      return {ms: performance.now() - t, r};
+    };
+    const oneFirst = test.info().repeatEachIndex % 2 === 0;
+    const x = oneFirst ? await one() : await each();
+    const y = oneFirst ? await each() : await one();
+    const [o, w] = oneFirst ? [x, y] : [y, x];
+    expect(o.r).toEqual(w.r);
+    console.log(
+      `DECODE-TIMING reorder ${evidence} frames=${frames.length} one=${o.ms.toFixed(0)} each=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'each'}`,
+    );
+  }
   const presented = control.filter((frame, i) => {
     const before = control[i - 1]?.box;
     return frame.box != null && before != null && frame.box.x !== before.x;
