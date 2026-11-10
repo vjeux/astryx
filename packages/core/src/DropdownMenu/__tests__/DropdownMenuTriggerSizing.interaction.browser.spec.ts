@@ -7,12 +7,18 @@
  *   box that the menu anchors to. A trigger with `width: '100%'` fills its
  *   container. A long label truncates in a narrow container. In a narrow row,
  *   the trigger stays inside the row and leaves its sibling the room a plain
- *   Button would.
+ *   Button would. In a stack, a tall row and a grid cell, the trigger fills
+ *   its anchor box and takes the place a plain Button takes.
  * @position A browser proof that DropdownMenu's default trigger sizes as a
  *   Button does
  */
 
-import {expect, test, type Locator} from '@astryxdesign/a11y-spec/playwright';
+import {
+  expect,
+  test,
+  type Locator,
+  type Page,
+} from '@astryxdesign/a11y-spec/playwright';
 import {openStory, withStorybook} from '@astryxdesign/interaction-harness';
 
 const storybook = withStorybook(test);
@@ -96,4 +102,72 @@ test('in a narrow row, the trigger stays inside the row and leaves its sibling t
     save + EDGE_PX,
     `"Save" is ${save} px wide beside the trigger and ${saveAsButtons} px beside a Button`,
   ).toBeGreaterThanOrEqual(saveAsButtons);
+});
+
+/**
+ * The trigger fills the box that the menu anchors to, and it takes the place
+ * that a plain Button takes in the same parent.
+ */
+async function expectFillsItsBox(
+  page: Page,
+  testId: string,
+  name: string,
+  reference: string,
+  side: 'width' | 'height',
+) {
+  await openStory(page, storybook(), 'core-dropdownmenu--trigger-sizing');
+  const scope = page.getByTestId(testId);
+  const trigger = scope.getByRole('button', {name});
+  const triggerBox = await boxOf(trigger);
+  const anchorBox = await trigger.evaluate(element => {
+    const r = (element.parentElement as HTMLElement).getBoundingClientRect();
+    return {x: r.x, y: r.y, width: r.width, height: r.height};
+  });
+  for (const edge of ['x', 'y', 'width', 'height'] as const) {
+    expect(
+      Math.abs(anchorBox[edge] - triggerBox[edge]),
+      `the anchor box's ${edge} is ${anchorBox[edge]}, the trigger's ${triggerBox[edge]}`,
+    ).toBeLessThanOrEqual(EDGE_PX);
+  }
+  const plain = await boxOf(scope.getByRole('button', {name: reference}));
+  expect(
+    Math.abs(triggerBox[side] - plain[side]),
+    `the trigger's ${side} is ${triggerBox[side]}, a plain Button's ${plain[side]}`,
+  ).toBeLessThanOrEqual(EDGE_PX);
+}
+
+test('in a stack, the trigger fills its anchor box and the stack’s width, as a Button does', async ({
+  page,
+}) => {
+  await expectFillsItsBox(
+    page,
+    'stack',
+    'In a stack',
+    'Stack reference',
+    'width',
+  );
+});
+
+test('in a tall row, the anchor box keeps the trigger’s height, as a Button keeps its own', async ({
+  page,
+}) => {
+  await expectFillsItsBox(
+    page,
+    'tall-row',
+    'In a tall row',
+    'Row reference',
+    'height',
+  );
+});
+
+test('in a grid cell, the trigger fills its anchor box and the cell’s width, as a Button does', async ({
+  page,
+}) => {
+  await expectFillsItsBox(
+    page,
+    'grid',
+    'In a grid cell',
+    'Grid reference',
+    'width',
+  );
 });

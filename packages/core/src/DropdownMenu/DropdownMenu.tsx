@@ -158,16 +158,25 @@ const styles = stylex.create({
   // The menu anchors to this box, not to the Button inside it. A press scales
   // the Button and leaves the box as it is, so the open menu stays in place.
   // The box takes the Button's caps, so the Button still shrinks in a row and
-  // truncates its label inside its container.
+  // truncates its label inside its container. A parent that stretches its
+  // children stretches the box, so the box keeps the Button's height.
   anchorBox: {
     display: 'inline-flex',
     minWidth: 0,
     maxWidth: '100%',
+    blockSize: 'fit-content',
   },
-  // An icon-only Button keeps its square size, so its box does not shrink.
+  // An icon-only Button keeps its square size, so its box neither shrinks
+  // nor stretches.
   anchorBoxIconOnly: {
     flexShrink: 0,
     maxWidth: 'none',
+    inlineSize: 'fit-content',
+  },
+  // A labelled Button fills a box that its parent stretches, as it fills the
+  // parent itself.
+  triggerFillsBox: {
+    flexGrow: 1,
   },
   dropdown: {
     boxSizing: 'border-box',
@@ -1758,6 +1767,7 @@ function DropdownMenuPopover({
       ref={buttonTriggerRef}
       xstyle={[
         styles.triggerPressable,
+        isBoxed && button.isIconOnly !== true && styles.triggerFillsBox,
         isOpen && styles.triggerOpen,
         button.xstyle,
         isFocusRingSuppressed && focusOutlineStyles.suppressed,

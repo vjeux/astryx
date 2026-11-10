@@ -5115,6 +5115,8 @@ describe('DropdownMenu trigger refs across renders', () => {
     // The Button fills the box, and the box keeps it inside its container.
     expect(sized.getAttribute('style')).toContain('100%');
     expect(sized.getAttribute('style')).not.toContain('240');
+    // A parent that stretches the box stretches the Button with it.
+    expect(getComputedStyle(sized).flexGrow).toBe('1');
     unmount();
 
     render(
@@ -5128,6 +5130,9 @@ describe('DropdownMenu trigger refs across renders', () => {
       .parentElement as HTMLElement;
     expect(getComputedStyle(iconBox).flexShrink).toBe('0');
     expect(getComputedStyle(iconBox).maxWidth).toBe('none');
+    expect(
+      getComputedStyle(iconBox.firstElementChild as HTMLElement).flexGrow,
+    ).not.toBe('1');
   });
 
   it('still hands the default trigger to a ref the caller passes', () => {

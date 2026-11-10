@@ -17,6 +17,9 @@ import {
   type DropdownMenuProps,
 } from '@astryxdesign/core/DropdownMenu';
 import {Button} from '@astryxdesign/core/Button';
+import {Grid} from '@astryxdesign/core/Grid';
+import {HStack} from '@astryxdesign/core/HStack';
+import {VStack} from '@astryxdesign/core/VStack';
 import {RadioList, RadioListItem} from '@astryxdesign/core/RadioList';
 import {TextInput} from '@astryxdesign/core/TextInput';
 import {spacingVars} from '@astryxdesign/core/theme/tokens.stylex';
@@ -374,7 +377,8 @@ export const CustomWidth: Story = {
 };
 
 // The default trigger in a sized container, a narrow one and a narrow row,
-// beside the same row of two plain Buttons.
+// beside the same row of two plain Buttons. Then in parents that stretch
+// their children: a stack, a tall row and a grid, each beside a plain Button.
 const triggerSizingStyles = stylex.create({
   column: {
     display: 'flex',
@@ -384,6 +388,9 @@ const triggerSizingStyles = stylex.create({
   sized: {width: 360},
   narrow: {width: 140},
   row: {display: 'flex', width: 200, gap: spacingVars['--spacing-2']},
+  stack: {width: 236},
+  tallItem: {width: 40, height: 96},
+  grid: {width: 480},
 });
 
 export const TriggerSizing: Story = {
@@ -414,6 +421,34 @@ export const TriggerSizing: Story = {
         {...stylex.props(triggerSizingStyles.row)}>
         <Button label="Save" />
         <Button label="More actions for this draft" />
+      </div>
+      <div data-testid="stack" {...stylex.props(triggerSizingStyles.stack)}>
+        <VStack gap={2}>
+          <DropdownMenu
+            button={{label: 'In a stack'}}
+            items={[{label: 'Edit'}]}
+          />
+          <Button label="Stack reference" />
+        </VStack>
+      </div>
+      <div data-testid="tall-row">
+        <HStack gap={2}>
+          <div {...stylex.props(triggerSizingStyles.tallItem)} />
+          <DropdownMenu
+            button={{label: 'In a tall row'}}
+            items={[{label: 'Edit'}]}
+          />
+          <Button label="Row reference" />
+        </HStack>
+      </div>
+      <div data-testid="grid" {...stylex.props(triggerSizingStyles.grid)}>
+        <Grid columns={2} gap={2}>
+          <DropdownMenu
+            button={{label: 'In a grid cell'}}
+            items={[{label: 'Edit'}]}
+          />
+          <Button label="Grid reference" />
+        </Grid>
       </div>
     </div>
   ),
