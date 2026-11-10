@@ -248,6 +248,12 @@ function itemStops(
     ) || 0;
   return Array.from(element.children, item => {
     const rect = item.getBoundingClientRect();
+    if (isHeld && item === element.children[1]) {
+      // A tick of the running animation between the rect and its translate.
+      for (const animation of item.getAnimations()) {
+        animation.currentTime = Number(animation.currentTime) + 16;
+      }
+    }
     // A held row's children carry the paging's translate. The rect shows the
     // translate at the time of its read, so the next read takes it off.
     const held = isHeld
