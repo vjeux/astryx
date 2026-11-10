@@ -878,6 +878,9 @@ test('the rows below, the group and the chevron move on one timing: the theme’
   await open(page);
   const ms = await glideMs(page);
   await tapToggle(page);
+  // NOT FOR LANDING: the read comes 700 ms after the action, as on a
+  // loaded machine.
+  await page.waitForTimeout(700);
   const started = await startedDurations(page);
   expect(started.group, JSON.stringify(started)).toContain(ms);
   expect(started.below, JSON.stringify(started)).toContain(ms);
@@ -984,6 +987,9 @@ test('Android: a tap expands with the same motion (one touch model)', async ({
   const {child, below} = parts(page);
   await tapToggle(page);
   await expect(child).toBeVisible();
+  // NOT FOR LANDING: the read comes 700 ms after the action, as on a
+  // loaded machine.
+  await page.waitForTimeout(700);
   expect(await below.evaluate(el => el.getAnimations().length)).toBeGreaterThan(
     0,
   );
@@ -1128,6 +1134,8 @@ test("right to left: the chevron's quarter turn mirrors", async ({page}) => {
   );
   await tapToggle(page);
   await expect(child).toBeVisible();
+  // NOT FOR LANDING: the read comes once the turn rests.
+  await expect.poll(async () => rotation(chevron)).toBeCloseTo(90, 1);
   // The mirror lives in the chevron's transform: its horizontal scale is
   // negative, while its angle turns as it does left to right.
   expect(
@@ -1251,6 +1259,9 @@ test(
     await open(page);
     const ms = await glideMs(page);
     await tapToggle(page);
+    // NOT FOR LANDING: the read comes 700 ms after the action, as on a
+    // loaded machine.
+    await page.waitForTimeout(700);
     const {storyboard} = await animationStoryboard(page, {
       name: 'tree-list-expand',
       clip: {x: 0, y: 0, width: 402, height: 340},

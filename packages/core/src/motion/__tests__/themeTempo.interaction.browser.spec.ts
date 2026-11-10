@@ -182,6 +182,9 @@ async function openStory(page: Page, story: string, rowCount: number) {
 async function glideMs(page: Page, row: string): Promise<number> {
   const section = page.locator(row);
   await section.getByRole('button', {name: 'Shipping details'}).click();
+  // NOT FOR LANDING: the read comes 700 ms after the action, as on a
+  // loaded machine.
+  await page.waitForTimeout(700);
   const after = section.locator('[data-after-collapsible]');
   await expect
     .poll(async () => after.evaluate(element => element.getAnimations().length))
