@@ -1168,7 +1168,7 @@ export function createPager(
       const wasSettling = settleHandle != null;
       stopSettle();
       animator?.set({x: positionToX(offsetOf(target))});
-      if (settled !== target || wasSettling) {
+      if (settled !== target) {
         rest();
       }
     }
