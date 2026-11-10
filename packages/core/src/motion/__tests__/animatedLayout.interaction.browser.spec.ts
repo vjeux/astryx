@@ -1032,7 +1032,7 @@ test.describe('spec:AST-105 Coverage', () => {
       requestAnimationFrame(record);
     });
     await change(page);
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(500);
     const run = await page.evaluate(async mutate => {
       const row = document.querySelector('#after') as HTMLElement;
       const frame = async () =>
