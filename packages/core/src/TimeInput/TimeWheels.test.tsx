@@ -262,45 +262,66 @@ describe('TimeWheels — minutes', () => {
   });
 });
 
-describe('TimeWheels — the minute column loops, and its seam carries the hour', () => {
-  it('turns 11:59 AM into 12:00 PM for ArrowDown on the minutes, the hour and the AM/PM column turning with it', () => {
+describe('TimeWheels — the minute column loops, and its seam keeps the hour, as UIDatePicker’s does', () => {
+  it('turns 11:59 AM into 11:00 AM for ArrowDown on the minutes: the hour and AM/PM stay', () => {
     const {onCommit} = renderWheels({initial: at(11, 59)});
     fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
-    expect(onCommit).toHaveBeenLastCalledWith(at(12, 0));
+    expect(onCommit).toHaveBeenLastCalledWith(at(11, 0));
     advance(550);
-    expect(restingLabel('Minute')).toBe('00');
-    expect(restingLabel('Hour')).toBe('12');
-    expect(restingLabel('AM/PM')).toBe('PM');
+    expect(drawnLabel('Minute')).toBe('00');
+    expect(drawnLabel('Hour')).toBe('11');
+    expect(drawnLabel('AM/PM')).toBe('AM');
   });
 
-  it('turns 11:55 AM into 12:05 PM for PageDown on the minutes, ten rows on across the seam', () => {
-    const {onCommit} = renderWheels({initial: at(11, 55)});
-    fireEvent.keyDown(column('Minute'), {key: 'PageDown'});
-    expect(onCommit).toHaveBeenLastCalledWith(at(12, 5));
-    advance(550);
-    expect(restingLabel('Minute')).toBe('05');
-    expect(restingLabel('Hour')).toBe('12');
-    expect(restingLabel('AM/PM')).toBe('PM');
-  });
-
-  it('turns 1:00 PM back into 12:59 PM for ArrowUp on the minutes', () => {
+  it('turns 1:00 PM into 1:59 PM for ArrowUp on the minutes: the hour and PM stay', () => {
     const {onCommit} = renderWheels({initial: at(13, 0)});
+    fireEvent.keyDown(column('Minute'), {key: 'ArrowUp'});
+    expect(onCommit).toHaveBeenLastCalledWith(at(13, 59));
+    advance(550);
+    expect(drawnLabel('Minute')).toBe('59');
+    expect(drawnLabel('Hour')).toBe('1');
+    expect(drawnLabel('AM/PM')).toBe('PM');
+  });
+
+  it('turns 12:00 PM into 12:59 PM for ArrowUp on the minutes: the hour and PM stay', () => {
+    const {onCommit} = renderWheels({initial: at(12, 0)});
     fireEvent.keyDown(column('Minute'), {key: 'ArrowUp'});
     expect(onCommit).toHaveBeenLastCalledWith(at(12, 59));
     advance(550);
-    expect(restingLabel('Hour')).toBe('12');
+    expect(drawnLabel('Minute')).toBe('59');
+    expect(drawnLabel('Hour')).toBe('12');
+    expect(drawnLabel('AM/PM')).toBe('PM');
   });
 
-  it('turns 12:58 PM into 1:02 PM four minute rows on, as UIDatePicker does', () => {
+  it('turns 11:59 PM into 11:00 PM for ArrowDown on the minutes: the hour and PM stay', () => {
+    const {onCommit} = renderWheels({initial: at(23, 59)});
+    fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
+    expect(onCommit).toHaveBeenLastCalledWith(at(23, 0));
+    advance(550);
+    expect(drawnLabel('Minute')).toBe('00');
+    expect(drawnLabel('Hour')).toBe('11');
+    expect(drawnLabel('AM/PM')).toBe('PM');
+  });
+
+  it('turns 11:55 AM into 11:05 AM for PageDown on the minutes, ten rows on across the seam', () => {
+    const {onCommit} = renderWheels({initial: at(11, 55)});
+    fireEvent.keyDown(column('Minute'), {key: 'PageDown'});
+    expect(onCommit).toHaveBeenLastCalledWith(at(11, 5));
+    advance(550);
+    expect(drawnLabel('Minute')).toBe('05');
+    expect(drawnLabel('Hour')).toBe('11');
+  });
+
+  it('keeps 12:58 PM’s hour four minute rows on: 12:02 PM, as UIDatePicker does', () => {
     const {onCommit} = renderWheels({initial: at(12, 58)});
     for (let i = 0; i < 4; i++) {
       fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
     }
-    expect(onCommit).toHaveBeenLastCalledWith(at(13, 2));
+    expect(onCommit).toHaveBeenLastCalledWith(at(12, 2));
     advance(550);
-    expect(restingLabel('Minute')).toBe('02');
-    expect(restingLabel('Hour')).toBe('1');
-    expect(restingLabel('AM/PM')).toBe('PM');
+    expect(drawnLabel('Minute')).toBe('02');
+    expect(drawnLabel('Hour')).toBe('12');
+    expect(drawnLabel('AM/PM')).toBe('PM');
   });
 
   it('keeps the hour for Home and End on the minutes: 10:03 AM to 10:59 AM', () => {
@@ -311,59 +332,18 @@ describe('TimeWheels — the minute column loops, and its seam carries the hour'
     expect(restingLabel('Hour')).toBe('10');
   });
 
-  it('stops a key at the maximum when no minute of the next hour is enabled', () => {
-    const {onCommit} = renderWheels({
-      initial: at(11, 58),
-      max: '11:59' as ISOTimeString,
-    });
-    fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
-    expect(onCommit).toHaveBeenLastCalledWith(at(11, 59));
-    // Noon's minutes all lie past the maximum, so the key finds no row.
-    fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
-    expect(onCommit).toHaveBeenCalledTimes(1);
-    advance(550);
-    expect(restingLabel('Hour')).toBe('11');
-    expect(drawnLabel('Minute')).toBe('59');
-  });
-});
-
-describe('TimeWheels — the minutes past the seam keep their own hour’s bounds', () => {
-  it('steps ArrowUp from 1:00 PM onto 12:59 PM under a 1:30 PM maximum', () => {
+  it('skips the minutes past a 1:30 PM maximum when ArrowUp passes the seam from 1:00 PM', () => {
     const {onCommit} = renderWheels({
       initial: at(13, 0),
       max: '13:30' as ISOTimeString,
     });
     fireEvent.keyDown(column('Minute'), {key: 'ArrowUp'});
-    expect(onCommit).toHaveBeenLastCalledWith(at(12, 59));
+    expect(onCommit).toHaveBeenLastCalledWith(at(13, 30));
     advance(550);
-    expect(drawnLabel('Minute')).toBe('59');
-    expect(restingLabel('Hour')).toBe('12');
+    expect(drawnLabel('Minute')).toBe('30');
   });
 
-  it('steps ArrowDown from 10:59 AM onto 11:00 AM under a 10:30 AM minimum', () => {
-    const {onCommit} = renderWheels({
-      initial: at(10, 59),
-      min: '10:30' as ISOTimeString,
-    });
-    fireEvent.keyDown(column('Minute'), {key: 'ArrowDown'});
-    expect(onCommit).toHaveBeenLastCalledWith(at(11, 0));
-    advance(550);
-    expect(drawnLabel('Minute')).toBe('00');
-  });
-
-  it('turns PageDown from 4:55 PM onto 5:00 PM under a 5 PM maximum, the wheel resting on :00', () => {
-    const {onCommit} = renderWheels({
-      initial: at(16, 55),
-      max: '17:00' as ISOTimeString,
-    });
-    fireEvent.keyDown(column('Minute'), {key: 'PageDown'});
-    expect(onCommit).toHaveBeenLastCalledWith(at(17, 0));
-    advance(550);
-    expect(drawnLabel('Minute')).toBe('00');
-    expect(restingLabel('Hour')).toBe('5');
-  });
-
-  it('leaves 4:56 to 4:59 PM enabled above :00 at a 5 PM maximum', () => {
+  it('greys the minutes drawn above :00 at a 5 PM maximum: they are 5 PM’s own', () => {
     renderWheels({initial: at(17, 0), max: '17:00' as ISOTimeString});
     const above = drawnRows('Minute').filter(
       ({place}) => place >= -4 && place <= -1,
@@ -375,7 +355,7 @@ describe('TimeWheels — the minutes past the seam keep their own hour’s bound
       '59',
     ]);
     for (const {row} of above) {
-      expect(row.className.includes('rowDisabled')).toBe(false);
+      expect(row.className.includes('rowDisabled')).toBe(true);
     }
   });
 });

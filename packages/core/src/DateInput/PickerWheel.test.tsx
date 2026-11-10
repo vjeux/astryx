@@ -1587,7 +1587,7 @@ describe('PickerWheel — looping', () => {
     expect(labelDrawnAt(column, 1)).toBeNull();
   });
 
-  it('steps a key one row on across the seam: ArrowDown on :59 commits :00, one lap on', () => {
+  it('steps a key one row on across the seam: ArrowDown on :59 commits :00', () => {
     const {column, onChange} = renderWheel({
       options: MINUTES,
       value: 59,
@@ -1595,12 +1595,12 @@ describe('PickerWheel — looping', () => {
       isLooping: true,
     });
     fireEvent.keyDown(column, {key: 'ArrowDown'});
-    expect(onChange).toHaveBeenLastCalledWith(0, 1);
+    expect(onChange).toHaveBeenLastCalledWith(0);
     advance(turnMs(1) + 10);
     expect(labelDrawnAt(column, 0)).toBe('00');
   });
 
-  it('steps a key one row back across the seam: ArrowUp on :00 commits :59, one lap back', () => {
+  it('steps a key one row back across the seam: ArrowUp on :00 commits :59', () => {
     const {column, onChange} = renderWheel({
       options: MINUTES,
       value: 0,
@@ -1608,7 +1608,7 @@ describe('PickerWheel — looping', () => {
       isLooping: true,
     });
     fireEvent.keyDown(column, {key: 'ArrowUp'});
-    expect(onChange).toHaveBeenLastCalledWith(59, -1);
+    expect(onChange).toHaveBeenLastCalledWith(59);
     advance(turnMs(1) + 10);
     expect(labelDrawnAt(column, 0)).toBe('59');
   });
@@ -1641,14 +1641,13 @@ describe('PickerWheel — looping', () => {
     advance(60);
     touch('touchend', column, tap);
     advance(turnMs(2) + 10);
-    // 45 · 00 · 15: the turn passed the seam once.
-    expect(onChange).toHaveBeenCalledWith(15, 1);
+    expect(onChange).toHaveBeenCalledWith(15);
     // At rest the wheel shows its own row, not the copy it turned onto.
     expect(labelDrawnAt(column, 0)).toBe('15');
     expect(distanceOf(option('15'))).toBeCloseTo(0, 4);
   });
 
-  it('turns onto a tapped copy of the committed row a lap on, and commits that lap', () => {
+  it('turns onto a tapped copy of the committed row and commits nothing', () => {
     const {column, option, onChange} = renderWheel({
       options: THIRDS,
       value: 40,
@@ -1663,8 +1662,7 @@ describe('PickerWheel — looping', () => {
     advance(turnMs(3) / 2);
     expect(isMarked(option('40'))).toBe(false);
     advance(turnMs(3) + 10);
-    expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith(40, 1);
+    expect(onChange).not.toHaveBeenCalled();
     expect(distanceOf(option('40'))).toBeCloseTo(0, 4);
     expect(isMarked(option('40'))).toBe(true);
   });
@@ -1680,7 +1678,7 @@ describe('PickerWheel — looping', () => {
     drag(column, 180, 180 - 10 - 3 * ROW, {steps: 30, interval: 40, hold: 300});
     advance(2000);
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith(1, 1);
+    expect(onChange).toHaveBeenCalledWith(1);
     expect(distanceOf(option('01'))).toBeCloseTo(0, 4);
   });
 
@@ -1694,9 +1692,8 @@ describe('PickerWheel — looping', () => {
     drag(column, 180, 60, {steps: 6, interval: 16});
     advance(4000);
     expect(onChange).toHaveBeenCalledTimes(1);
-    const [rested, wraps] = onChange.mock.calls[0] as [number, number];
+    const rested = onChange.mock.calls[0][0] as number;
     expect(rested).toBeLessThan(55);
-    expect(wraps).toBe(1);
     const label = String(rested).padStart(2, '0');
     expect(labelDrawnAt(column, 0)).toBe(label);
     expect(distanceOf(option(label))).toBeCloseTo(0, 4);
@@ -1714,7 +1711,7 @@ describe('PickerWheel — looping', () => {
     drag(column, 60, 60 + 10 + 2 * ROW, {steps: 30, interval: 40, hold: 300});
     advance(3000);
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith(11, -1);
+    expect(onChange).toHaveBeenCalledWith(11);
     expect(labelDrawnAt(column, 0)).toBe('11');
   });
 
@@ -1764,7 +1761,7 @@ describe('PickerWheel — looping', () => {
     expect(onChange).toHaveBeenLastCalledWith(0);
   });
 
-  it('moves its strip onto the next hour’s own rows as quick keys carry past the seam', () => {
+  it('moves its strip onto its own rows as quick keys run on past the seam', () => {
     const {ends, restore} = recordStripEnds();
     try {
       const {column, onChange} = renderWheel({
@@ -1777,10 +1774,10 @@ describe('PickerWheel — looping', () => {
       for (let i = 0; i < 12; i++) {
         fireEvent.keyDown(column, {key: 'ArrowDown'});
       }
-      expect(onChange).toHaveBeenNthCalledWith(1, 0, 1);
+      expect(onChange).toHaveBeenNthCalledWith(1, 0);
       expect(onChange).toHaveBeenLastCalledWith(11);
-      // The carry moved the strip a lap back, so the last turn ends on :11
-      // among the wheel's own rows.
+      // Passing the seam moved the strip a lap back, so the last turn ends on
+      // :11 among the wheel's own rows.
       expect(ends.at(-1)).toBeCloseTo(-11 * ROW, 0);
     } finally {
       restore();
@@ -1817,7 +1814,7 @@ describe('PickerWheel — looping', () => {
     }
   });
 
-  it('commits a spin across the seam as its own row, carrying no lap', async () => {
+  it('commits a spin across the seam as its own row', async () => {
     const ref = createRef<WheelHandle>();
     const {column, onChange} = renderWheel({
       options: MINUTES,
@@ -1838,46 +1835,8 @@ describe('PickerWheel — looping', () => {
     expect(labelDrawnAt(column, 0)).toBe('02');
   });
 
-  it('takes End to the committed hour’s last row even while a fling heads into the next', () => {
-    const {column, onChange} = renderWheel({
-      options: MINUTES,
-      value: 50,
-      label: 'Minute',
-      isLooping: true,
-    });
-    drag(column, 210, 0, {steps: 4, interval: 8});
-    advance(16);
-    fireEvent.keyDown(column, {key: 'End'});
-    // End names :59 of the committed lap: it carries nothing.
-    expect(onChange).toHaveBeenLastCalledWith(59);
-  });
-
-  it('draws each lap’s copies by that lap’s rows: an hour’s allowed minutes are never greyed by the next hour’s bound', () => {
-    // A 1:00 PM maximum: the shown hour allows only :00, the hour before all.
-    const atMaximum = MINUTES.map(option => ({
-      ...option,
-      isDisabled: option.value > 0,
-    }));
-    const {column} = renderWheel({
-      options: atMaximum,
-      value: 0,
-      label: 'Minute',
-      isLooping: true,
-      lapOptions: lap => (lap < 0 ? MINUTES : atMaximum),
-    });
-    const greyed = (place: number) =>
-      copiesOf(column)
-        .find(
-          row => Number.parseFloat(row.style.insetBlockStart) === place * ROW,
-        )
-        ?.className.includes('rowDisabled');
-    expect(greyed(-1)).toBe(false);
-    expect(greyed(-4)).toBe(false);
-    expect(greyed(61)).toBe(true);
-  });
-
   /**
-   * An owner that clamps every carry onto :00, turning the wheel there first,
+   * An owner that clamps :01 to :09 onto :00, turning the wheel there first,
    * as TimeWheels does. `onSpun` hears whether that turn arrived.
    */
   function ClampingWheel({
@@ -1896,8 +1855,9 @@ describe('PickerWheel — looping', () => {
         options={MINUTES}
         value={value}
         isLooping
-        onChange={(next, wraps) => {
-          const clamped = wraps == null ? next : 0;
+        onChange={next => {
+          // Every minute from :01 to :09 clamps onto :00.
+          const clamped = next > 0 && next < 10 ? 0 : next;
           if (clamped !== next) {
             void wheelRef.current?.spinTo(clamped).then(onSpun);
           }
@@ -1908,7 +1868,7 @@ describe('PickerWheel — looping', () => {
     );
   }
 
-  it('turns on from a value its owner clamps, as a key carries past it', () => {
+  it('turns on from a value its owner clamps, as a key passes the seam into it', () => {
     const onCommit = vi.fn();
     render(<ClampingWheel onCommit={onCommit} onSpun={vi.fn()} />);
     const column = screen.getByRole('listbox', {name: 'Minute'});
@@ -1919,7 +1879,7 @@ describe('PickerWheel — looping', () => {
     expect(labelDrawnAt(column, 0)).toBe('00');
   });
 
-  it('turns on from a value its owner clamps, as a rest carries past it', async () => {
+  it('turns on from a value its owner clamps, as a rest past the seam lands in it', async () => {
     const onCommit = vi.fn();
     const onSpun = vi.fn();
     render(<ClampingWheel onCommit={onCommit} onSpun={onSpun} />);

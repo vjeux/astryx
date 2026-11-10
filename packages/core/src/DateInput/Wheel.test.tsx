@@ -83,14 +83,6 @@ describe('the looping wheel’s rules', () => {
     expect(restingLoopStep(early, 0, 1, 12)).toBe(0);
   });
 
-  it('judges each lap by its own rows', () => {
-    // At a 1:30 PM maximum the shown hour's 31-59 are disabled. The hour
-    // before allows them all, so a rest on 12:45 PM (position -15) stays.
-    const atMax = (position: number) => position < 0 || position <= 30;
-    expect(restingLoopStep(atMax, -15, 0, 60)).toBe(0);
-    expect(restingLoopStep(atMax, 45, 0, 60)).toBe(-15);
-  });
-
   it('steps a key in its own direction across the seam, never a whole turn', () => {
     const every = () => true;
     expect(loopedStep(every, 59, 1, 60)).toBe(1);
@@ -114,12 +106,6 @@ describe('the looping wheel’s rules', () => {
     expect(loopedStep(early, 5, 1, 60)).toBeNull();
     expect(loopedStep(early, 0, -1, 60)).toBeNull();
     expect(loopedStep(early, 4, 1, 60)).toBe(1);
-  });
-
-  it('judges a key’s step past the seam by that lap’s rows', () => {
-    // At 1:00 PM with a 1:30 PM maximum, the hour before allows 12:59 PM.
-    const atMax = (position: number) => position < 0 || position <= 30;
-    expect(loopedStep(atMax, 0, -1, 60)).toBe(-1);
   });
 });
 
