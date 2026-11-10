@@ -1,0 +1,763 @@
+{
+ "casts": 97,
+ "moves": [
+  {
+   "file": "p-callers.log",
+   "engine": "webkit",
+   "title": "a mouse wheel and a trackpad (component:DateInput FR15) > a trackpad > a trackpad flick drives the touch column as a finger does: it follows, coasts on at the lift, and commits the row it rests on",
+   "repeat": 0,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPageStallError(frame)",
+   "reason": "measured on stamps, the page drew no frame across nearly all of the 339 ms gap",
+   "oldDetail": "arrival gaps 262",
+   "newDetail": "{\"gapMs\":133,\"handlingMs\":25,\"frameGapMs\":143}"
+  },
+  {
+   "file": "p-callers.log",
+   "engine": "webkit",
+   "title": "where the primary pointer is fine and a trackpad scrolls > {pages: \"item\"}: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "WheelPacingError(gap)",
+   "new": "ok",
+   "reason": "arrival gap 269 ms \u2265 220 but stamps peak at 200: the host reads one gesture",
+   "oldDetail": "arrival gaps 269",
+   "newDetail": ""
+  },
+  {
+   "file": "p-tp.log",
+   "engine": "webkit",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 3,
+   "old": "ok",
+   "new": "WheelPacingError(release)",
+   "reason": "release: merge 1-2 inside 2-7",
+   "oldDetail": "",
+   "newDetail": "merge 1-2 inside 2-7"
+  },
+  {
+   "file": "p-tp.log",
+   "engine": "webkit",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 2,
+   "old": "ok",
+   "new": "WheelPacingError(release)",
+   "reason": "release: merge 3-4 inside 2-5",
+   "oldDetail": "",
+   "newDetail": "merge 3-4 inside 2-5"
+  },
+  {
+   "file": "p-tp.log",
+   "engine": "webkit",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 6,
+   "old": "ok",
+   "new": "WheelPacingError(release)",
+   "reason": "release: merge 3-5 inside 2-7",
+   "oldDetail": "",
+   "newDetail": "merge 3-5 inside 2-7"
+  },
+  {
+   "file": "p-tp.log",
+   "engine": "webkit",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 12,
+   "old": "ok",
+   "new": "WheelPageStallError(release, listeners)",
+   "reason": "release: {\"gapMs\":69,\"handlingMs\":30} (the page held a step the release reads)",
+   "oldDetail": "",
+   "newDetail": "{\"gapMs\":69,\"handlingMs\":30}"
+  },
+  {
+   "file": "p-tp.log",
+   "engine": "webkit",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 14,
+   "old": "ok",
+   "new": "WheelPacingError(release)",
+   "reason": "release: merge 6-8 inside 2-7",
+   "oldDetail": "",
+   "newDetail": "merge 6-8 inside 2-7"
+  }
+ ],
+ "verdicts": [
+  {
+   "file": "cr-gest.log",
+   "title": "where the primary pointer is fine > a pan that takes a trackpad's scroll follows a real trackpad scroll along its axis and keeps the page still, never a mouse wheel's notches, which scroll the page; a wheel across it scrolls the page, and a pinch follows a ctrl-wheel (spec:AST-094 FR43, DEC-24)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a wheel burst reaches the page as one run with its whole delta and no gap past the 100 ms a proof allows within a wheel gesture",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a wheel burst sent slower than its maxGapMs throws WheelPacingError, in both engines",
+   "repeat": 0,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a burst whose steps the dispatch spaces past maxGapMs throws WheelPacingError over a page whose listener takes 30 ms, in both engines",
+   "repeat": 0,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a page whose wheel listener holds its main thread splits a burst itself: never a runner stall",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a page whose wheel listener stops the step and holds its main thread still splits a burst itself",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a wheel burst reaches the page as one run with its whole delta and no gap past the 100 ms a proof allows within a wheel gesture",
+   "repeat": 1,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a wheel burst sent slower than its maxGapMs throws WheelPacingError, in both engines",
+   "repeat": 1,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a burst whose steps the dispatch spaces past maxGapMs throws WheelPacingError over a page whose listener takes 30 ms, in both engines",
+   "repeat": 1,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a page whose wheel listener holds its main thread splits a burst itself: never a runner stall",
+   "repeat": 1,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a page whose wheel listener stops the step and holds its main thread still splits a burst itself",
+   "repeat": 1,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a wheel burst reaches the page as one run with its whole delta and no gap past the 100 ms a proof allows within a wheel gesture",
+   "repeat": 2,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a wheel burst sent slower than its maxGapMs throws WheelPacingError, in both engines",
+   "repeat": 2,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a burst whose steps the dispatch spaces past maxGapMs throws WheelPacingError over a page whose listener takes 30 ms, in both engines",
+   "repeat": 2,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a page whose wheel listener holds its main thread splits a burst itself: never a runner stall",
+   "repeat": 2,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "cr-self.log",
+   "title": "wheel and pen input > a page whose wheel listener stops the step and holds its main thread still splits a burst itself",
+   "repeat": 2,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-callers.log",
+   "title": "a mouse wheel and a trackpad (component:DateInput FR15) > a trackpad > a trackpad flick drives the touch column as a finger does: it follows, coasts on at the lift, and commits the row it rests on",
+   "repeat": 0,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPageStallError(frame)"
+  },
+  {
+   "file": "p-callers.log",
+   "title": "a mouse wheel and a trackpad (component:DateInput FR15) > a trackpad > a slow trackpad drag that stops rests on the nearest row, without coasting",
+   "repeat": 0,
+   "old": "WheelPageStallError(frame)",
+   "new": "WheelPageStallError(frame)"
+  },
+  {
+   "file": "p-callers.log",
+   "title": "with a trackpad, a two-finger scroll at the top pulls and refreshes as a finger does (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-callers.log",
+   "title": "where the primary pointer is coarse and a trackpad scrolls > the default: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-callers.log",
+   "title": "where the primary pointer is coarse and a trackpad scrolls > {pages: \"item\"}: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-callers.log",
+   "title": "where the primary pointer is fine and a trackpad scrolls > the default: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-callers.log",
+   "title": "where the primary pointer is fine and a trackpad scrolls > {pages: \"item\"}: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "WheelPacingError(gap)",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 3,
+   "old": "ok",
+   "new": "WheelPacingError(release)"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 2,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 1,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 2,
+   "old": "ok",
+   "new": "WheelPacingError(release)"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 1,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 3,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 6,
+   "old": "ok",
+   "new": "WheelPacingError(release)"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 4,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 5,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 6,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 4,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 5,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 7,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 7,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 8,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 9,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 10,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 8,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 9,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 10,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 11,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 11,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 12,
+   "old": "ok",
+   "new": "WheelPageStallError(release, listeners)"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 13,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 14,
+   "old": "ok",
+   "new": "WheelPacingError(release)"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 13,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 15,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 12,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 15,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "p-tp.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 14,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-callers.log",
+   "title": "a mouse wheel and a trackpad (component:DateInput FR15) > a trackpad > a trackpad flick drives the touch column as a finger does: it follows, coasts on at the lift, and commits the row it rests on",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-callers.log",
+   "title": "a mouse wheel and a trackpad (component:DateInput FR15) > a trackpad > a slow trackpad drag that stops rests on the nearest row, without coasting",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-callers.log",
+   "title": "a trackpad's scroll stops a zoomed photo at its edge, with no give, as a mouse drag does",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-callers.log",
+   "title": "where the primary pointer is coarse and a trackpad scrolls > the default: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-callers.log",
+   "title": "where the primary pointer is coarse and a trackpad scrolls > {pages: \"item\"}: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-callers.log",
+   "title": "where the primary pointer is fine and a trackpad scrolls > the default: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-callers.log",
+   "title": "where the primary pointer is fine and a trackpad scrolls > {pages: \"item\"}: a trackpad swipe pages",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-callers.log",
+   "title": "with a trackpad, a two-finger scroll at the top pulls and refreshes as a finger does (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-gest.log",
+   "title": "where the primary pointer is fine > a wheel gesture stays with the pan that took it when the pan moves its element from under a still cursor, as a browser latches a scroller (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-gest.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-gest.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-gest.log",
+   "title": "where the primary pointer is fine > a pan that takes a trackpad's scroll follows a real trackpad scroll along its axis and keeps the page still, never a mouse wheel's notches, which scroll the page; a wheel across it scrolls the page, and a pinch follows a ctrl-wheel (spec:AST-094 FR43, DEC-24)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a wheel burst reaches the page as one run with its whole delta and no gap past the 100 ms a proof allows within a wheel gesture",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a wheel burst sent slower than its maxGapMs throws WheelPacingError, in both engines",
+   "repeat": 0,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a burst whose steps the dispatch spaces past maxGapMs throws WheelPacingError over a page whose listener takes 30 ms, in both engines",
+   "repeat": 0,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page whose wheel listener holds its main thread splits a burst itself: never a runner stall",
+   "repeat": 0,
+   "old": "WheelPageStallError(listeners)",
+   "new": "WheelPageStallError(listeners)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page that draws no frame across a burst's gap splits it itself, with its listeners idle: WheelPageStallError names the frame gap",
+   "repeat": 0,
+   "old": "WheelPageStallError(frame)",
+   "new": "WheelPageStallError(frame)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page whose wheel listener stops the step and holds its main thread still splits a burst itself",
+   "repeat": 0,
+   "old": "WheelPageStallError(listeners)",
+   "new": "WheelPageStallError(listeners)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a wheel burst reaches the page as one run with its whole delta and no gap past the 100 ms a proof allows within a wheel gesture",
+   "repeat": 1,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a wheel burst sent slower than its maxGapMs throws WheelPacingError, in both engines",
+   "repeat": 1,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a burst whose steps the dispatch spaces past maxGapMs throws WheelPacingError over a page whose listener takes 30 ms, in both engines",
+   "repeat": 1,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page whose wheel listener holds its main thread splits a burst itself: never a runner stall",
+   "repeat": 1,
+   "old": "WheelPageStallError(listeners)",
+   "new": "WheelPageStallError(listeners)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page that draws no frame across a burst's gap splits it itself, with its listeners idle: WheelPageStallError names the frame gap",
+   "repeat": 1,
+   "old": "WheelPageStallError(frame)",
+   "new": "WheelPageStallError(frame)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page whose wheel listener stops the step and holds its main thread still splits a burst itself",
+   "repeat": 1,
+   "old": "WheelPageStallError(listeners)",
+   "new": "WheelPageStallError(listeners)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a wheel burst reaches the page as one run with its whole delta and no gap past the 100 ms a proof allows within a wheel gesture",
+   "repeat": 2,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a wheel burst sent slower than its maxGapMs throws WheelPacingError, in both engines",
+   "repeat": 2,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a burst whose steps the dispatch spaces past maxGapMs throws WheelPacingError over a page whose listener takes 30 ms, in both engines",
+   "repeat": 2,
+   "old": "WheelPacingError(gap)",
+   "new": "WheelPacingError(gap)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page whose wheel listener holds its main thread splits a burst itself: never a runner stall",
+   "repeat": 2,
+   "old": "WheelPageStallError(listeners)",
+   "new": "WheelPageStallError(listeners)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page that draws no frame across a burst's gap splits it itself, with its listeners idle: WheelPageStallError names the frame gap",
+   "repeat": 2,
+   "old": "WheelPageStallError(frame)",
+   "new": "WheelPageStallError(frame)"
+  },
+  {
+   "file": "wk-self.log",
+   "title": "wheel and pen input > a page whose wheel listener stops the step and holds its main thread still splits a burst itself",
+   "repeat": 2,
+   "old": "WheelPageStallError(listeners)",
+   "new": "WheelPageStallError(listeners)"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 0,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 1,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 1,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 2,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 2,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 3,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 3,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 4,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 4,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
+   "repeat": 5,
+   "old": "ok",
+   "new": "ok"
+  },
+  {
+   "file": "wk-tp-ci.log",
+   "title": "where the primary pointer is fine > absorbs what the undecided stretch showed when the fingers carry on: never a step back, and the pan ends on their travel (spec:AST-094 FR43)",
+   "repeat": 5,
+   "old": "ok",
+   "new": "ok"
+  }
+ ]
+}
