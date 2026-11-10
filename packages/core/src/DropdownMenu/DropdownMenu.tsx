@@ -157,8 +157,17 @@ const styles = stylex.create({
   },
   // The menu anchors to this box, not to the Button inside it. A press scales
   // the Button and leaves the box as it is, so the open menu stays in place.
+  // The box takes the Button's caps, so the Button still shrinks in a row and
+  // truncates its label inside its container.
   anchorBox: {
     display: 'inline-flex',
+    minWidth: 0,
+    maxWidth: '100%',
+  },
+  // An icon-only Button keeps its square size, so its box does not shrink.
+  anchorBoxIconOnly: {
+    flexShrink: 0,
+    maxWidth: 'none',
   },
   dropdown: {
     boxSizing: 'border-box',
@@ -266,6 +275,8 @@ const styles = stylex.create({
 // `menuMaxHeight` lifts the 300px cap for a menu that must fit its rows; the
 // viewport still bounds it.
 const dynamicStyles = stylex.create({
+  // The caller's trigger width, on the box the Button fills.
+  anchorBoxWidth: (width: NonNullable<ButtonProps['width']>) => ({width}),
   menuMaxHeight: (maxHeight: string) => ({
     maxHeight: `min(${maxHeight}, ${layerViewportInset.maxBlockSize})`,
   }),
@@ -1704,7 +1715,6 @@ function DropdownMenuPopover({
   // A ButtonGroup's corner rules read each Button's place among the group's
   // children. So a member Button gets no box, and it is the anchor itself.
   const isGroupMember = useButtonGroup() != null;
-  // Elsewhere the Button is not the anchor: the box around it is (`anchorBox`).
   const buttonTriggerRef = useCallback(
     (el: HTMLButtonElement | null) => {
       buttonRef.current = el;
@@ -1740,9 +1750,11 @@ function DropdownMenuPopover({
     'aria-controls': hasRegions ? popover.id : menuId,
   };
 
+  const isBoxed = !isGroupMember;
   const triggerButton = (
     <Button
       {...button}
+      width={isBoxed && button.width != null ? '100%' : button.width}
       ref={buttonTriggerRef}
       xstyle={[
         styles.triggerPressable,
@@ -1784,7 +1796,13 @@ function DropdownMenuPopover({
       ) : isGroupMember ? (
         triggerButton
       ) : (
-        <div ref={popoverTriggerRef} {...stylex.props(styles.anchorBox)}>
+        <div
+          ref={popoverTriggerRef}
+          {...stylex.props(
+            styles.anchorBox,
+            button.isIconOnly === true && styles.anchorBoxIconOnly,
+            button.width != null && dynamicStyles.anchorBoxWidth(button.width),
+          )}>
           {triggerButton}
         </div>
       )}

@@ -5099,6 +5099,37 @@ describe('DropdownMenu trigger refs across renders', () => {
     expect(anchorNames(anchorBox)).toBe(before);
   });
 
+  it('gives the box around the default trigger a Button’s caps, and moves the caller’s width onto it', () => {
+    // jsdom has no layout: these check the declarations that size the box.
+    // The rendered widths are in DropdownMenuTriggerSizing's browser case.
+    const {unmount} = render(
+      <DropdownMenu button={{label: 'Sign in', width: 240}}>
+        <DropdownMenuItem label="Profile" onClick={() => {}} />
+      </DropdownMenu>,
+    );
+    const sized = screen.getByRole('button', {name: 'Sign in'});
+    const sizedBox = sized.parentElement as HTMLElement;
+    expect(getComputedStyle(sizedBox).minWidth).toBe('0');
+    expect(getComputedStyle(sizedBox).maxWidth).toBe('100%');
+    expect(sizedBox.getAttribute('style')).toContain('240');
+    // The Button fills the box, and the box keeps it inside its container.
+    expect(sized.getAttribute('style')).toContain('100%');
+    expect(sized.getAttribute('style')).not.toContain('240');
+    unmount();
+
+    render(
+      <DropdownMenu
+        button={{label: 'More', icon: <span>⋯</span>, isIconOnly: true}}>
+        <DropdownMenuItem label="Profile" onClick={() => {}} />
+      </DropdownMenu>,
+    );
+    // An icon-only trigger keeps its square size, so its box does not shrink.
+    const iconBox = screen.getByRole('button', {name: 'More'})
+      .parentElement as HTMLElement;
+    expect(getComputedStyle(iconBox).flexShrink).toBe('0');
+    expect(getComputedStyle(iconBox).maxWidth).toBe('none');
+  });
+
   it('still hands the default trigger to a ref the caller passes', () => {
     const buttonRef = createRef<HTMLButtonElement>();
     render(

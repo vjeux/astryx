@@ -373,6 +373,52 @@ export const CustomWidth: Story = {
   ),
 };
 
+// The default trigger in a sized container, a narrow one and a narrow row,
+// beside the same row of two plain Buttons.
+const triggerSizingStyles = stylex.create({
+  column: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacingVars['--spacing-6'],
+  },
+  sized: {width: 360},
+  narrow: {width: 140},
+  row: {display: 'flex', width: 200, gap: spacingVars['--spacing-2']},
+});
+
+export const TriggerSizing: Story = {
+  render: () => (
+    <div {...stylex.props(triggerSizingStyles.column)}>
+      <div data-testid="sized" {...stylex.props(triggerSizingStyles.sized)}>
+        <DropdownMenu
+          button={{label: 'Full width', width: '100%'}}
+          items={[{label: 'Edit'}]}
+        />
+      </div>
+      <div data-testid="narrow" {...stylex.props(triggerSizingStyles.narrow)}>
+        <DropdownMenu
+          button={{label: 'A long label that has to truncate'}}
+          items={[{label: 'Edit'}]}
+        />
+      </div>
+      <div data-testid="row" {...stylex.props(triggerSizingStyles.row)}>
+        <Button label="Save" />
+        <DropdownMenu
+          button={{label: 'More actions for this draft'}}
+          hasChevron={false}
+          items={[{label: 'Edit'}]}
+        />
+      </div>
+      <div
+        data-testid="reference-row"
+        {...stylex.props(triggerSizingStyles.row)}>
+        <Button label="Save" />
+        <Button label="More actions for this draft" />
+      </div>
+    </div>
+  ),
+};
+
 // Button variants
 export const ButtonVariants: Story = {
   render: () => (
