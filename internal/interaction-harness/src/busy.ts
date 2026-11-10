@@ -810,6 +810,32 @@ export class BusyWindowTooLateError extends Error {
   }
 }
 
+// NOT FOR LANDING: the class alone, so the pins load on main's wait.
+/**
+ * A run of `blockMainThread`'s `during` came short of `minProgressMs` by the
+ * deadline while frames kept coming. The run is paused or slow, or the page
+ * started it late. A page starved of frames throws `FrameStarvationError`
+ * instead. Always a red, with the numbers; never a pass.
+ */
+export class BusyRunShortError extends Error {
+  constructor(
+    message: string,
+    /** The run's numbers, ms where timed. */
+    readonly numbers: Readonly<{
+      progressMs: number;
+      minProgressMs: number;
+      firstSeenMs: number;
+      waitedMs: number;
+      playState: string;
+      playbackRate: number;
+      longestGapMs: number;
+    }>,
+  ) {
+    super(message);
+    this.name = 'BusyRunShortError';
+  }
+}
+
 /** A frame a busy proof could not judge (see `BusyFrameUnjudgedError`). */
 export interface UnjudgedFrame {
   /** When the frame was presented, ms after the window began. */
