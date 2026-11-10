@@ -5,9 +5,9 @@
  * @input BottomSheet, with the shared animator replaced by a recorder
  * @output Unit tests for the exit a drag's close plays. It starts the close
  *   spring from where the finger left the sheet, and a reopen takes it back.
- *   Under reduced motion no spring plays, and the sheet stays where the
- *   finger left it while it fades out. The scrim fades for as long as that
- *   close plays, decided before the scrim starts to clear. That holds on a
+ *   The scrim fades for as long as that close plays, decided before the
+ *   scrim starts to clear. Under reduced motion no spring plays, and the
+ *   sheet stays where the finger left it while it fades out. Each holds on a
  *   standalone sheet and on a switcher flow
  * @position The jsdom side of the drag exit; the Chromium release spec reads
  *   the curve the browser plays.
@@ -257,11 +257,12 @@ function preferReducedMotion() {
   }));
 }
 
-it('holds the sheet where the finger left it while a reduced-motion close fades it out', () => {
-  preferReducedMotion();
-  render(<Host />);
-  layOutSheet();
-  const handle = getHandle();
+/**
+ * A touch flick on the handle, which closes the sheet. Returns the sheet and
+ * the transform the drag left on it at the lift.
+ */
+function flickDownFromHeld(label = 'Sheet') {
+  const handle = getHandle(label);
   const sheet = handle.closest<HTMLElement>('.astryx-bottom-sheet');
   firePointer(handle, 'pointerdown', {
     pointerId: 1,
@@ -272,16 +273,52 @@ it('holds the sheet where the finger left it while a reduced-motion close fades 
   firePointer(handle, 'pointermove', {pointerId: 1, clientY: 120});
   const released = sheet?.style.transform;
   firePointer(handle, 'pointerup', {pointerId: 1, clientY: 120});
+  return {sheet, released};
+}
+
+/**
+ * Expects a reduced-motion close: no spring, and the sheet held where the
+ * finger left it while it fades. Once the fade ends, the hidden sheet holds
+ * no offset, so it opens again from rest.
+ */
+function expectFadesInPlace(
+  {sheet, released}: ReturnType<typeof flickDownFromHeld>,
+  label = 'Sheet',
+) {
+  const dialog = document.querySelector(`dialog[aria-label="${label}"]`);
   // The release asked the sheet to close: a closing sheet is not modal.
-  expect(
-    document
-      .querySelector('dialog[aria-label="Sheet"]')
-      ?.getAttribute('aria-modal') ?? null,
-  ).toBeNull();
-  // No close spring plays under reduced motion. The sheet fades out in place.
+  expect(dialog?.getAttribute('aria-modal') ?? null).toBeNull();
   expect(exits).toHaveLength(0);
   expect(released).toMatch(/^translateY\([1-9]/);
   expect(sheet?.style.transform).toBe(released);
+  // The cross-fade waits on the opacity transition.
+  const fadeEnd = new Event('transitionend', {bubbles: true});
+  Object.defineProperty(fadeEnd, 'propertyName', {value: 'opacity'});
+  act(() => {
+    sheet?.dispatchEvent(fadeEnd);
+  });
+  expect(dialog?.hasAttribute('open')).toBe(false);
+  expect(sheet?.style.transform).toBe('');
+}
+
+it('holds the sheet where the finger left it while a reduced-motion close fades it out', () => {
+  preferReducedMotion();
+  render(<Host />);
+  layOutSheet();
+  expectFadesInPlace(flickDownFromHeld());
+});
+
+it('leaves the hidden sheet no drag offset once a drag exit ends', async () => {
+  render(<Host />);
+  layOutSheet();
+  const {sheet, released} = flickDownFromHeld();
+  expect(exits).toHaveLength(1);
+  expect(sheet?.style.transform).toBe(released);
+  await act(async () => {
+    exits[0].finish();
+  });
+  // The next open rises from below the screen, not from the old offset.
+  expect(sheet?.style.transform).toBe('');
 });
 
 /** The inline fade duration on the sheet's dialog, '' when none. */
@@ -373,6 +410,13 @@ it("fades a switcher flow's scrim for as long as the close plays when a drag clo
     `${close.settleTime(SETTLE_THRESHOLD.y) * 1000}ms`,
   );
   expectFadeBeforeClear(writes);
+});
+
+it("holds a switcher flow's sheet where the finger left it while a reduced-motion close fades it out", () => {
+  preferReducedMotion();
+  render(<Flow />);
+  layOutSheet('Steps');
+  expectFadesInPlace(flickDownFromHeld('Steps'), 'Steps');
 });
 
 it("clears the scrim's fade duration when the drag exit ends", async () => {
