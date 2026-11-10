@@ -174,9 +174,14 @@ const styles = stylex.create({
       // the controller writes the attribute only for a press it paints.
       backgroundImage: {
         default: null,
-        [stylex.when.ancestor(PRESSED_ON, indicatorScope)]: pressedOverlayImage,
-        [stylex.when.ancestor(PRESSED_FADING, indicatorScope)]:
-          pressedOverlayImage,
+        [stylex.when.ancestor(PRESSED_ON, indicatorScope)]: {
+          default: null,
+          '@media (pointer: coarse)': pressedOverlayImage,
+        },
+        [stylex.when.ancestor(PRESSED_FADING, indicatorScope)]: {
+          default: null,
+          '@media (pointer: coarse)': pressedOverlayImage,
+        },
       },
     },
   },
