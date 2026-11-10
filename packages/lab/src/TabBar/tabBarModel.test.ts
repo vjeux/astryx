@@ -19,6 +19,7 @@ import {
   itemWidthCss,
   lensTarget,
   liftScale,
+  minimizedCenter,
   naturalWidth,
   nearestIndex,
 } from './tabBarModel';
@@ -193,5 +194,16 @@ describe('copyTransform', () => {
         expect(onScreen.y).toBeCloseTo(p.y, 9);
       }
     }
+  });
+});
+
+describe('minimizedCenter', () => {
+  it('is concentric with the leading cap: the 48 pt circle at x 28 in a bar at x 21', () => {
+    expect(minimizedCenter(290) - tabBar.minimizedSize / 2 + 21).toBe(28);
+    expect(minimizedCenter(360)).toBe(31);
+  });
+
+  it('sits at the right end in a right-to-left bar', () => {
+    expect(minimizedCenter(360, true)).toBe(329);
   });
 });
