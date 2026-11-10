@@ -53,7 +53,43 @@ beforeEach(() => {
   };
 });
 
+/** A primary mouse press, as the press controller and React both read it. */
+const MOUSE_PRESS = {pointerType: 'mouse', button: 0, pointerId: 1};
+
 describe('RadioList', () => {
+  it('paints no row press for a mouse press on a control nested in the label, and one for a press on the label text', () => {
+    render(
+      <RadioList label="Plan" value="free" onChange={() => {}}>
+        <RadioListItem label="Free" value="free" />
+        <RadioListItem
+          label={
+            <>
+              Pro <a href="#pricing">pricing</a>{' '}
+              <span role="switch" aria-checked="false" tabIndex={0}>
+                Yearly
+              </span>
+            </>
+          }
+          value="pro"
+        />
+      </RadioList>,
+    );
+    const link = screen.getByRole('link', {name: 'pricing'});
+    const label = link.parentElement;
+    const row = link.closest('[data-astryx-pressable]');
+    if (label == null || row == null) {
+      throw new Error('the row has no label or no press surface');
+    }
+    for (const nested of [link, screen.getByRole('switch')]) {
+      fireEvent.pointerDown(nested, MOUSE_PRESS);
+      expect(row).not.toHaveAttribute('data-astryx-press');
+      fireEvent.pointerUp(nested, MOUSE_PRESS);
+    }
+    fireEvent.pointerDown(label, MOUSE_PRESS);
+    expect(row).toHaveAttribute('data-astryx-press', 'on');
+    fireEvent.pointerUp(label, MOUSE_PRESS);
+  });
+
   it('renders with label', () => {
     render(
       <RadioList label="Preference" value="" onChange={() => {}}>
@@ -1076,7 +1112,7 @@ function declaresRowPress(el: Element): boolean {
     rule =>
       rule.includes('--_radio-row-press:') &&
       rule.includes('var(--color-overlay-pressed)') &&
-      /:not\(:has\(a:active, ?button:active/.test(rule),
+      rule.includes(':not(:has(button:not([aria-readonly="true"]):active'),
   );
 }
 

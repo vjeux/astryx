@@ -15,6 +15,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {useRef} from 'react';
 import {fireEvent, render, screen} from '@testing-library/react';
 import {useClickableContainer} from './useClickableContainer';
+import {pressFinePointerProps} from '../privateAttributes/pressFinePointer.stylex';
 
 const {cancelPress} = vi.hoisted(() => ({cancelPress: vi.fn()}));
 vi.mock('../utils/pressFeedback', async importOriginal => ({
@@ -242,7 +243,13 @@ describe('useClickableContainer navigation — blocked href keeps the rest', () 
 });
 
 describe('onPointerDown', () => {
-  function Harness({disabled = false}: {disabled?: boolean}) {
+  function Harness({
+    disabled = false,
+    paintsFinePress = false,
+  }: {
+    disabled?: boolean;
+    paintsFinePress?: boolean;
+  }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const {onClick, onPointerDown} = useClickableContainer({
       containerRef,
@@ -253,6 +260,7 @@ describe('onPointerDown', () => {
       <div
         data-testid="container"
         ref={containerRef}
+        {...pressFinePointerProps(paintsFinePress)}
         onClick={onClick}
         onPointerDown={onPointerDown}>
         <span>Surface</span>
@@ -273,11 +281,23 @@ describe('onPointerDown', () => {
     expect(cancelPress).toHaveBeenCalledWith(screen.getByTestId('container'));
   });
 
-  it('leaves a mouse or pen press to the paint it has today', () => {
+  it('leaves a mouse or pen press to its `:active` paint where the controller does not paint it', () => {
     render(<Harness />);
     const nested = screen.getByRole('button', {name: 'Nested'});
     fireEvent.pointerDown(nested, {pointerType: 'mouse'});
     fireEvent.pointerDown(nested, {pointerType: 'pen'});
+    expect(cancelPress).not.toHaveBeenCalled();
+  });
+
+  it('cancels a mouse or pen press on a nested control where the controller paints it, and leaves one on the surface alone', () => {
+    render(<Harness paintsFinePress />);
+    const nested = screen.getByRole('button', {name: 'Nested'});
+    fireEvent.pointerDown(nested, {pointerType: 'mouse'});
+    fireEvent.pointerDown(nested, {pointerType: 'pen'});
+    expect(cancelPress).toHaveBeenCalledTimes(2);
+    expect(cancelPress).toHaveBeenCalledWith(screen.getByTestId('container'));
+    cancelPress.mockClear();
+    fireEvent.pointerDown(screen.getByText('Surface'), {pointerType: 'mouse'});
     expect(cancelPress).not.toHaveBeenCalled();
   });
 
