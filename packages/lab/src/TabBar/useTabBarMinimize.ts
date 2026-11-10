@@ -397,7 +397,7 @@ export function useTabBarMinimize({
     // glass already holds the narrower content: no window then.
     const clip = sign * Math.min(0, sign * end);
     const clipVelocity = clip === 0 ? 0 : velocity.end;
-    accessory.animator.set(moved);
+    accessory.animator.set({x: 0, y: 0});
     accessoryEnd.animator.set({x: end});
     accessoryMiddle.animator.set({scaleX: middle});
     accessoryClip.animator.set({x: clip});
