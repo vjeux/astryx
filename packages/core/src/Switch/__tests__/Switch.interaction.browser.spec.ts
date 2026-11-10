@@ -2365,6 +2365,15 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const [control, ahead, tracked] = await trackMarkers(page, castFrames, {
       colors: [controlColor(), controlColor({ahead: true}), MARKER_RGB],
     });
+    // NOT FOR LANDING: the same tracks as one decode per colour.
+    expect([control, ahead, tracked]).toEqual([
+      await trackControl(page, [...castFrames]),
+      await trackControl(page, [...castFrames], {ahead: true}),
+      await trackMarker(page, [...castFrames]),
+    ]);
+    console.log(
+      `IDENTITY switch-clock frames=${castFrames.length} found=${control.filter(f => f.box != null).length}/${ahead.filter(f => f.box != null).length}/${tracked.filter(f => f.box != null).length}`,
+    );
     const pageTime = pageTimesOnControls(control, {
       ahead,
       controlStarts: starts,
@@ -3313,6 +3322,14 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       const [control, ahead] = await trackMarkers(page, read, {
         colors: [controlColor(), controlColor({ahead: true})],
       });
+      // NOT FOR LANDING: the same tracks as one decode per colour.
+      expect([control, ahead]).toEqual([
+        await trackControl(page, [...read]),
+        await trackControl(page, [...read], {ahead: true}),
+      ]);
+      console.log(
+        `IDENTITY switch-colour frames=${read.length} found=${control.filter(f => f.box != null).length}/${ahead.filter(f => f.box != null).length}`,
+      );
       const colour = await trackBrightness(page, read, {...probe, size: 8});
       runs.push({
         tracked: colour,

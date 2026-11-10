@@ -27,6 +27,8 @@ import {
   openStory,
   startBusyControl,
   startScreencast,
+  trackControl,
+  trackMarker,
   trackMarkers,
   withStorybook,
 } from '@astryxdesign/interaction-harness';
@@ -93,6 +95,14 @@ test('a surface around a closed tooltip trigger keeps moving through a 500 ms ma
   const [tracked, control] = await trackMarkers(page, frames, {
     colors: [MARKER_RGB, controlColor()],
   });
+  // NOT FOR LANDING: the same tracks as one decode per colour.
+  expect([tracked, control]).toEqual([
+    await trackMarker(page, [...frames]),
+    await trackControl(page, [...frames]),
+  ]);
+  console.log(
+    `IDENTITY tooltip frames=${frames.length} found=${tracked.filter(f => f.box != null).length}/${control.filter(f => f.box != null).length}`,
+  );
   // Judged against the compositor control in the same frames: the surface
   // moves on every frame the control does.
   const proof = busyWindowProof(tracked, block, {settledWithin: 2, control});
