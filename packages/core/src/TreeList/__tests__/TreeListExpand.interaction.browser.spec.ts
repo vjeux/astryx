@@ -570,30 +570,84 @@ const glideMs = async (page: Page) =>
   });
 
 /** The durations of the motion a toggle starts, read on its first frame. */
-async function startedDurations(page: Page) {
-  return page.evaluate(async () => {
-    await new Promise(requestAnimationFrame);
-    const parent = document.querySelector(
-      '[role="treeitem"][data-tree-id="components"]',
+/** Where each part of the expand is, for a read inside the page. */
+const PART_SELECTORS = {
+  group: '[role="treeitem"][data-tree-id="components"] > [role="group"]',
+  below: '[role="treeitem"][data-tree-id="app"]',
+  chevron:
+    '[role="treeitem"][data-tree-id="components"] > :not([role="group"]) [data-tree-toggle] .astryx-icon',
+} as const;
+
+type Part = keyof typeof PART_SELECTORS;
+
+/**
+ * Arms the page to read the durations of the animations on `names`, once
+ * each of them runs one. The page looks on every frame and every 4 ms
+ * between them, as an armed hold does. A read the test sends after the tap
+ * comes later the busier the machine is, and a glide can end first. Await it
+ * before the tap, and await what it returns after. Within 5 s of arming,
+ * a part with no animation fails by name.
+ */
+async function armStartedDurations(
+  page: Page,
+  names: ReadonlyArray<Part> = ['group', 'below', 'chevron'],
+) {
+  await page.evaluate(
+    selectors => {
+      const read = new Promise<Record<string, number[]>>((resolve, reject) => {
+        const deadline = performance.now() + 5000;
+        let round = 0;
+        const look = () => {
+          const now: Record<string, number[]> = {};
+          for (const [part, selector] of Object.entries(selectors)) {
+            now[part] = (
+              document.querySelector(selector)?.getAnimations() ?? []
+            ).map(animation =>
+              Number(animation.effect?.getComputedTiming().duration),
+            );
+          }
+          const missing = Object.keys(now).filter(
+            part => now[part].length === 0,
+          );
+          if (missing.length === 0) {
+            resolve(now);
+            return;
+          }
+          if (performance.now() > deadline) {
+            reject(
+              new Error(
+                `armStartedDurations: within 5 s of arming, no animation ran on ${missing.join(', ')}`,
+              ),
+            );
+            return;
+          }
+          // Of the frame and the timer a round schedules, the first runs.
+          const mine = ++round;
+          const run = () => {
+            if (mine === round) {
+              look();
+            }
+          };
+          requestAnimationFrame(run);
+          setTimeout(run, 4);
+        };
+        look();
+      });
+      // Read later: a rejection before then is not unhandled.
+      read.catch(() => {});
+      (window as unknown as {__treeStarted?: unknown}).__treeStarted = read;
+    },
+    Object.fromEntries(names.map(name => [name, PART_SELECTORS[name]])),
+  );
+  return async () =>
+    page.evaluate(
+      async () =>
+        (
+          window as unknown as {
+            __treeStarted: Promise<Partial<Record<Part, number[]>>>;
+          }
+        ).__treeStarted,
     );
-    const durationOf = (el: Element | null | undefined) =>
-      el
-        ?.getAnimations()
-        .map(animation =>
-          Number(animation.effect?.getComputedTiming().duration),
-        ) ?? [];
-    return {
-      group: durationOf(parent?.querySelector(':scope > [role="group"]')),
-      below: durationOf(
-        document.querySelector('[role="treeitem"][data-tree-id="app"]'),
-      ),
-      chevron: durationOf(
-        parent?.querySelector(
-          ':scope > :not([role="group"]) [data-tree-toggle] .astryx-icon',
-        ),
-      ),
-    };
-  });
 }
 
 test('expand under a finger: the rows below glide while the group fades in, and no frame shows a blank band', async ({
@@ -877,8 +931,9 @@ test('the rows below, the group and the chevron move on one timing: the theme’
 }) => {
   await open(page);
   const ms = await glideMs(page);
+  const durations = await armStartedDurations(page);
   await tapToggle(page);
-  const started = await startedDurations(page);
+  const started = await durations();
   expect(started.group, JSON.stringify(started)).toContain(ms);
   expect(started.below, JSON.stringify(started)).toContain(ms);
   expect(started.chevron, JSON.stringify(started)).toContain(ms);
@@ -904,8 +959,9 @@ for (const [written, value] of [
         value,
       );
     expect(await glideMs(page)).toBe(600);
+    const durations = await armStartedDurations(page, ['group', 'below']);
     await tapToggle(page);
-    const started = await startedDurations(page);
+    const started = await durations();
     expect(started.group, JSON.stringify(started)).toContain(600);
     expect(started.below, JSON.stringify(started)).toContain(600);
   });
@@ -982,11 +1038,10 @@ test('Android: a tap expands with the same motion (one touch model)', async ({
   test.skip(browserName !== 'chromium', 'Android is Chromium');
   await open(page);
   const {child, below} = parts(page);
+  const durations = await armStartedDurations(page, ['below']);
   await tapToggle(page);
   await expect(child).toBeVisible();
-  expect(await below.evaluate(el => el.getAnimations().length)).toBeGreaterThan(
-    0,
-  );
+  expect((await durations()).below?.length).toBeGreaterThan(0);
   await expect.poll(async () => translateY(below)).toBe(0);
 });
 
@@ -1129,11 +1184,15 @@ test("right to left: the chevron's quarter turn mirrors", async ({page}) => {
   await tapToggle(page);
   await expect(child).toBeVisible();
   // The mirror lives in the chevron's transform: its horizontal scale is
-  // negative, while its angle turns as it does left to right.
+  // negative, while its angle turns as it does left to right. The sign of
+  // the matrix's determinant shows the mirror at every angle, at rest too.
   expect(
-    await chevron.evaluate(el =>
-      Number(/matrix\(([^,]+)/.exec(getComputedStyle(el).transform)?.[1]),
-    ),
+    await chevron.evaluate(el => {
+      const {a, b, c, d} = new DOMMatrixReadOnly(
+        getComputedStyle(el).transform,
+      );
+      return a * d - b * c;
+    }),
   ).toBeLessThan(0);
   await expect.poll(async () => rotation(chevron)).toBeCloseTo(90, 1);
 });
@@ -1250,6 +1309,13 @@ test(
   async ({page}, testInfo) => {
     await open(page);
     const ms = await glideMs(page);
+    // The page holds the expand as it starts: a hold sent after the tap can
+    // come too late on a busy machine. It waits for three motions: the
+    // group's fade, the rows below and the chevron.
+    const hold = await armHold(page, page.locator('[role="tree"]'), {
+      count: 3,
+      judges: {target: parts(page).below, property: 'translate'},
+    });
     await tapToggle(page);
     const {storyboard} = await animationStoryboard(page, {
       name: 'tree-list-expand',
@@ -1257,7 +1323,7 @@ test(
       times: [0, 1, 2, 3, 4, 5, 6, 7].map(k => Math.round((k * ms) / 7)),
       columns: 8,
       cellScale: 0.45,
-      judges: {target: parts(page).below, property: 'translate'},
+      held: await hold.held(),
     });
     await releaseAnimations(page, {finish: true});
     await storyboard.write(testInfo);
