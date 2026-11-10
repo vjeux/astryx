@@ -708,6 +708,13 @@ for (const pointer of ['a mouse', 'a finger'] as const) {
 test('a theme\u2019s tempo leaves the reduced-motion pulse unscaled', async ({
   page,
 }) => {
+  // NOT FOR LANDING: the story's module arrives 6 s late, as under a load spike.
+  if (process.env.ARM_DELAY_STORY === '1') {
+    await page.route('**/assets/ProgressBar.stories-*.js', async route => {
+      await new Promise(resolve => setTimeout(resolve, 6000));
+      await route.continue();
+    });
+  }
   // A busy loop: the pulse keeps its role's 2000 ms at a slower tempo.
   await page.emulateMedia({reducedMotion: 'reduce'});
   await page.goto(
