@@ -1530,10 +1530,6 @@ function DropdownMenuPopover({
       // activation): treat it as keyboard so those users still land on the
       // first item. Real pointer clicks report detail >= 1.
       const modality = e.detail === 0 ? 'keyboard' : 'pointer';
-      isTouchOpenRef.current =
-        modality === 'pointer' &&
-        (triggerPointerTypeRef.current === 'touch' ||
-          triggerPointerTypeRef.current === 'pen');
       if (isControlled) {
         if (controlledIsOpen) {
           onClick?.();
