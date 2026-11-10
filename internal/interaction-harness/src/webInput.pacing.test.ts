@@ -238,6 +238,57 @@ describe('wheelGapCauses with the send spacing', () => {
   });
 });
 
+describe('wheelGapCauses with arrivals', () => {
+  it('gives the page a gap its main thread held without its listeners, by the frames it did not draw', () => {
+    // The first step queued a 150 ms task. WebKit stamped the second step at
+    // 96 but delivered it at 247, and stamped the third once the page was
+    // free. The listeners took 1 ms; no frame ran from 94 to 247.
+    expect(
+      wheelGapCauses(
+        'webkit',
+        [95, 96, 253, 253],
+        [97, 247, 253, 254],
+        100,
+        [16, 16, 16],
+        [94, 247, 252],
+        [96, 247, 253, 253],
+      ),
+    ).toEqual({
+      pageStalls: [{gapMs: 157, handlingMs: 1, frameGapMs: 153}],
+      dispatchStalls: [],
+    });
+  });
+});
+
+describe('wheelGapCauses with a send spacing past the bound', () => {
+  it('gives a gap the harness sent past the bound to the dispatch, though the page held the step back', () => {
+    expect(wheelGapCauses('webkit', [0, 300], [290, 301], 100, [180])).toEqual({
+      pageStalls: [],
+      dispatchStalls: [300],
+    });
+  });
+
+  it('gives it to the dispatch though the page drew no frame across it', () => {
+    expect(
+      wheelGapCauses(
+        'webkit',
+        [0, 300],
+        [Number.NaN, 301],
+        100,
+        [180],
+        [0, 300],
+      ),
+    ).toEqual({pageStalls: [], dispatchStalls: [300]});
+  });
+
+  it('still gives the page a held-back gap the harness sent within the bound', () => {
+    expect(wheelGapCauses('webkit', [0, 300], [290, 301], 100, [60])).toEqual({
+      pageStalls: [{gapMs: 300, handlingMs: 290}],
+      dispatchStalls: [],
+    });
+  });
+});
+
 describe('WheelPageStallError', () => {
   it("names the page's handling, the gap and the bound, and is not a pacing error", () => {
     const error = new WheelPageStallError(100, {gapMs: 152, handlingMs: 150});
