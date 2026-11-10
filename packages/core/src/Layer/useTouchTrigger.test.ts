@@ -150,6 +150,26 @@ describe('useTapStop', () => {
       expect(fireEvent.mouseDown(trigger)).toBe(true);
     });
 
+    it('takes as taps only the pointer types it names', () => {
+      let read: () => boolean = () => false;
+      function FingerOnlyTrigger() {
+        const {isTap: reader, ...handlers} = useTapStop('mousedown', {
+          shouldStop: () => true,
+          pointerTypes: new Set(['touch']),
+        });
+        read = reader;
+        return createElement('span', handlers, 'finger');
+      }
+      render(createElement(FingerOnlyTrigger));
+      const trigger = screen.getByText('finger');
+      fireEvent.pointerDown(trigger, {pointerType: 'pen'});
+      expect(fireEvent.mouseDown(trigger)).toBe(true);
+      expect(read()).toBe(false);
+      fireEvent.pointerDown(trigger, {pointerType: 'touch'});
+      expect(fireEvent.mouseDown(trigger)).toBe(false);
+      expect(read()).toBe(true);
+    });
+
     it('gives the reader only to a caller that passes a condition', () => {
       function Probe() {
         expect(Object.keys(useTapStop('mousedown')).sort()).toEqual([

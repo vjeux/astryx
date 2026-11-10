@@ -620,6 +620,10 @@ const layerPlaceholderSizeStyles = stylex.create({
 // "Create: X" suggestions from real search results.
 const CREATABLE_ID_PREFIX = '__xds_create__';
 
+// Only a finger's tap on a token's remove button keeps the keyboard down. A
+// pen's press keeps the focus rules a mouse has.
+const FINGER_POINTER_TYPES: ReadonlySet<string> = new Set(['touch']);
+
 // The touch sheet (BottomSheet, its gestures, the confirmation dialog, and
 // the empty state) only renders for the bottom-sheet presentation. Loading it
 // on demand keeps it out of pages whose tokenizers stay inline combobox fields
@@ -861,19 +865,13 @@ export function Tokenizer<T extends SearchableItem>({
   const {ref: modalityRef, readModality} = useInteractionModalityTracking();
   const lastPressRef = useRef<{
     inputHadFocus: boolean;
-    isFinger: boolean;
     pressedTokenRemove: Element | null;
   } | null>(null);
-  // The touch keyboard is down while the input is unfocused. Only a finger's
-  // press counts: a pen's press keeps the default focus rules, as a mouse's
-  // does.
+  // The touch keyboard is down while the input is unfocused.
   const wasKeyboardDown = useCallback(() => {
     const press = lastPressRef.current;
     return (
-      press != null &&
-      press.isFinger &&
-      !press.inputHadFocus &&
-      readModality() === 'pointer'
+      press != null && !press.inputHadFocus && readModality() === 'pointer'
     );
   }, [readModality]);
   // A finger's tap on a token's remove button with the keyboard down keeps
@@ -892,7 +890,10 @@ export function Tokenizer<T extends SearchableItem>({
     onPointerDown: recordTap,
     onMouseDown: handleMouseDownCapture,
     isTap,
-  } = useTapStop('mousedown', {shouldStop: stopsTap});
+  } = useTapStop('mousedown', {
+    shouldStop: stopsTap,
+    pointerTypes: FINGER_POINTER_TYPES,
+  });
   const handlePointerDownCapture = useCallback(
     (e: React.PointerEvent) => {
       recordTap(e);
@@ -900,7 +901,6 @@ export function Tokenizer<T extends SearchableItem>({
         inputHadFocus:
           inputRef.current != null &&
           inputRef.current.ownerDocument.activeElement === inputRef.current,
-        isFinger: e.pointerType === 'touch',
         pressedTokenRemove: removeControlOf(e.target),
       };
     },
@@ -1445,13 +1445,12 @@ export function Tokenizer<T extends SearchableItem>({
         inputRef.current?.focus();
         return true;
       }
-      // Chrome focuses the pressed × on a tap, and that × unmounts with its
-      // token. A focused element that unmounts drops focus without a blur, so
-      // the field would stay focused-within. Let go of that button first.
-      // Focus anywhere else stays where it is.
+      // A remove button that held focus, as after Shift+Tab from the input,
+      // unmounts with its token. Focus then moves to the input, as for every
+      // other removal. Focus anywhere else stays where it is.
       const active = pressed.ownerDocument.activeElement;
-      if (active != null && pressed.contains(active) && 'blur' in active) {
-        (active as HTMLElement).blur();
+      if (active != null && pressed.contains(active)) {
+        inputRef.current?.focus();
       }
       return true;
     },
