@@ -10,8 +10,4 @@
  */
 
 export {TabBar, TabBarItem} from './TabBar';
-export type {
-  TabBarAccessoryPlacement,
-  TabBarItemProps,
-  TabBarProps,
-} from './TabBar';
+export type {TabBarItemProps, TabBarProps} from './TabBar';
