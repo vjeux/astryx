@@ -1603,8 +1603,8 @@ async function blockFromThaw(
           // thaw and the block in one frame, the box held still through the
           // whole block in 20 of 20 runs. So in WebKit the block waits for
           // that next frame.
-          if (!nextFrame) {
-            block();
+          if (nextFrame || !nextFrame) {
+            block(nextFrame ? 0 : undefined);
             return;
           }
           frame(() => {
