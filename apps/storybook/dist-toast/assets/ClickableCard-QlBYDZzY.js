@@ -1,0 +1,44 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{t as n}from"./jsx-runtime-MKhVqBIO.js";import{n as r}from"./mergeProps-DHkqklmt.js";import{i,t as a}from"./themeProps-BVy3p_gf.js";import{n as o,t as s}from"./useMergedRefs-D6axeCXB.js";import{a as c,r as l}from"./focusOutline.stylex-DWroqGen.js";import{i as u,n as d,r as f,t as p}from"./usePressFeedback-KAUIHUDJ.js";import{l as m,o as h}from"./useClickableContainer-Ci91y5XB.js";import{n as g,t as _}from"./useLinkComponent-DVILVvhE.js";import{t as v}from"./chainEventHandlers-j72JYJri.js";import{n as y,t as b}from"./Card-DA0ZfoAz.js";import{t as x}from"./disabledInteraction-DFuTdo2M.js";function S({label:e,onClick:t,onMouseUp:n,onPointerDown:a,href:s,target:c,isDisabled:f=!1,children:p,padding:h,variant:_=`default`,elevation:y=`none`,width:S,height:E,maxWidth:D,ref:O,xstyle:k,className:A,style:j,...M}){let N=d(),P=(0,C.useRef)(null),F=(0,C.useRef)(null),I=(0,C.useRef)(!1),L=(0,C.useRef)(null),R=(0,C.useCallback)(e=>{if(e==null){let e=F.current;I.current=e!=null&&e===e.ownerDocument.activeElement,L.current=f,F.current=null;return}F.current=e;let t=L.current!=null&&L.current!==f,n=e.ownerDocument.activeElement,r=n==null||n===e.ownerDocument.body;I.current&&t&&r&&e.focus({preventScroll:!0}),I.current=!1,L.current=null},[f]),z=g(),{onClick:B,onMouseUp:V,onPointerDown:H}=m({containerRef:P,interactiveRef:F,onClick:t,href:s,target:c,disabled:f}),U=n?e=>{V(e),n(e)}:V,W=s!=null,G=f?`a`:z,K=_==="default";return(0,w.jsxs)(b,{ref:o(O,P),...f?void 0:N,width:S,height:E,maxWidth:D,padding:h,variant:_,elevation:y,...r(i(`clickable-card`,{variant:_}),l.focusWithin(),A,j),xstyle:[T.interactive,K?T.bordered:T.borderless,!f&&T.overlay,!f&&u.pressedAlpha,!f&&K&&T.borderedHoverOnPointer,f&&T.disabled,k],onClick:f?void 0:B,onMouseUp:f?void 0:U,onPointerDown:f?a:v(H,a),...M,children:[W?(0,w.jsx)(G,{ref:R,href:f?void 0:s,target:f?void 0:c,role:f?`link`:void 0,...f?x():null,"aria-label":e,"aria-disabled":f||void 0,tabIndex:0,className:`astryx10l6tqk astryx1i1rx1s astryxjm9jq1 astryx1717udv astryxkdpibf astryxb3r6kr astryxzpqnlu astryxuxw1ft astryxc342km`}):(0,w.jsx)(`button`,{ref:R,type:`button`,"aria-label":e,"aria-disabled":f||void 0,onClick:t,...f?x():null,className:`astryx10l6tqk astryx1i1rx1s astryxjm9jq1 astryx1717udv astryxkdpibf astryxb3r6kr astryxzpqnlu astryxuxw1ft astryxc342km`}),p]})}var C,w,T;function E(){return(E=e((()=>{C=t(),y(),h(),_(),a(),c(),f(),p(),s(),w=n(),T={interactive:{kVAEAm:`astryx1n2onr6`,kkrTdU:`astryx1ypdohk astryx16khyan`,kybGjl:`astryx1hl2dhg`,k1TLXF:null,kMnn75:null,kmVMDM:null,kNySMw:null,kMwMTN:`astryx1heor9g`,$$css:!0},overlay:{"--_press-overlay":`astryx1s9pv7w astryxb8awce astryx1a5qima astryxmfmiv1 astryx1hn5ov8`,k5JduY:`astryx1s928wv`,kwXMNM:`astryx1j6awrg`,kv0HGH:`astryxarstr8`,kcktkL:null,kc1e00:null,kH8aOt:null,kH8cDV:null,kLxBhq:null,kSy8m5:null,k3foIR:null,k8Iv0R:null,kloYau:`astryx2q1x1w`,kRicXK:`astryx1ywzrc5 astryx1xg7wox astryx15tr235 astryx1l4pwez`,kPNhGg:`astryx97pup0 astryx12t15ek astryx1ntmb8i`,kA8PQs:`astryx1dlmc9c astryxszhkds`,ks3ayO:`astryx1l0fnur astryx1l0866b astryx7bosnz`,kNctxI:`astryx1rd1oi2 astryxlif165`,$$css:!0},borderless:{kMzoRj:`astryxc342km`,kjGldf:null,k2ei4v:null,kZ1KPB:null,ke9TFa:null,kWqL5O:null,kLoX6v:null,kEafiO:null,kt9PQ7:null,$$css:!0},bordered:{kVAM5u:`astryx14i3s5s`,kzOINU:null,kGJrpR:null,kaZRDh:null,kBCPoo:null,k26BEO:null,k5QoK5:null,kLZC3w:null,kL6WhQ:null,kZCmMZ:`astryxs19ii7`,kwRFfy:`astryx12frdag`,kE3dHu:null,kpe85a:null,kLKAdn:`astryx1nex4ik`,kGO01o:`astryxbv1mwh`,k1ekBW:`astryxshfolx astryx1xcegdw`,kIyJzY:`astryxuedmi6 astryxo2sced astryx18etpvv`,kAMwcw:`astryxlr8y92 astryxro0fum`,$$css:!0},borderedHoverOnPointer:{kpsWHe:`astryx1xwh4np`,knI2L8:null,k5e8XW:null,kRmBty:null,k2eSRm:null,kHQjef:null,kGSl04:null,kNb4fV:null,kiTKoU:null,$$css:!0},disabled:{kkrTdU:`astryxt0e3qv`,kSiTet:`astryxbyyjgo`,$$css:!0}},S.displayName=`ClickableCard`,S.__docgenInfo={description:`An interactive card that acts as a single navigation or action target.
+
+Composes Card for visual styling and adds an interactive layer
+with useClickableContainer. Nested interactive elements (buttons,
+links, inputs) work independently — clicking them does NOT trigger
+the card's onClick or navigation.
+
+A visually-hidden <button> or <a> inside the card provides the
+accessible role and label. The card surface is a plain <div> —
+no role or tabIndex on the container.
+
+@compositionHint Use for cards that navigate to a detail page or trigger an action.
+For toggle selection cards, use SelectableCard instead.
+Nest Button or other interactive elements freely inside — they won't conflict.
+
+@example
+\`\`\`
+<ClickableCard label="Settings" href="/settings">
+  <Text type="body" weight="bold">Settings</Text>
+  <Text type="supporting" color="secondary">Manage your preferences</Text>
+</ClickableCard>
+\`\`\`
+
+@example
+\`\`\`
+<ClickableCard label="Open modal" onClick={() => setShowModal(true)}>
+  <Text type="body">Click anywhere to open</Text>
+  <Button label="Other action" onClick={handleOther} />
+</ClickableCard>
+\`\`\``,methods:[],displayName:`ClickableCard`,props:{xstyle:{required:!1,tsType:{name:`StyleXStyles`},description:"StyleX styles created via `stylex.create()`. Merged with the component's\nbase styles inside a single `stylex.props()` call for optimal deduplication.\n\n@example\n```\nconst overrides = stylex.create({ root: { marginBottom: 8 } });\n<Component xstyle={overrides.root} />\n```"},ref:{required:!1,tsType:{name:`Ref`,elements:[{name:`HTMLDivElement`}],raw:`Ref<HTMLDivElement>`},description:`Ref forwarded to the root element.`},label:{required:!0,tsType:{name:`string`},description:`Accessibility label for the card.
+Used as \`aria-label\` — provides the accessible name for screen readers.
+When the card has visible text that serves as its label, prefer
+passing that text here so the screen reader announcement matches.`},onClick:{required:!1,tsType:{name:`signature`,type:`function`,raw:`(event: MouseEvent<HTMLElement>) => void`,signature:{arguments:[{type:{name:`MouseEvent`,elements:[{name:`HTMLElement`}],raw:`MouseEvent<HTMLElement>`},name:`event`}],return:{name:`void`}}},description:`Click handler. Fires when the card surface is clicked
+(not when nested interactive elements are clicked).`},href:{required:!1,tsType:{name:`string`},description:`Navigation URL. When provided, clicking the card navigates to this URL.
+Ctrl/Cmd+click opens in a new tab.`},target:{required:!1,tsType:{name:`string`},description:`Link target for href navigation.
+@default '_self'`},isDisabled:{required:!1,tsType:{name:`boolean`},description:`Set to true to disable the card.
+Disabled cards keep their tab stop and expose aria-disabled; activation is
+blocked, and disabled link cards render no live destination.`,defaultValue:{value:`false`,computed:!1}},children:{required:!1,tsType:{name:`ReactNode`},description:`Content to render inside the card.
+Can include nested interactive elements (buttons, links) — they will
+work independently from the card's click/navigation behavior.`},padding:{required:!1,tsType:{name:`union`,raw:`0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10`,elements:[{name:`literal`,value:`0`},{name:`literal`,value:`0.5`},{name:`literal`,value:`1`},{name:`literal`,value:`1.5`},{name:`literal`,value:`2`},{name:`literal`,value:`3`},{name:`literal`,value:`4`},{name:`literal`,value:`5`},{name:`literal`,value:`6`},{name:`literal`,value:`8`},{name:`literal`,value:`10`}]},description:`Internal padding of the card using the spacing scale.
+@default 4 (16px)`},variant:{required:!1,tsType:{name:`CardVariantMap`},description:`Background color variant.
+@default 'default'`,defaultValue:{value:`'default'`,computed:!1}},elevation:{required:!1,tsType:{name:`union`,raw:`'none' | 'low' | 'med' | 'high'`,elements:[{name:`literal`,value:`'none'`},{name:`literal`,value:`'low'`},{name:`literal`,value:`'med'`},{name:`literal`,value:`'high'`}]},description:`Resting elevation — the shadow depth the card sits at. Often raised to
+signal that the whole card is clickable.
+@default 'none'`,defaultValue:{value:`'none'`,computed:!1}},width:{required:!1,tsType:{name:`union`,raw:`number | string`,elements:[{name:`number`},{name:`string`}]},description:`Width of the card.`},height:{required:!1,tsType:{name:`union`,raw:`number | string`,elements:[{name:`number`},{name:`string`}]},description:`Height of the card.`},maxWidth:{required:!1,tsType:{name:`union`,raw:`number | string`,elements:[{name:`number`},{name:`string`}]},description:`Maximum width of the card.`}},composes:[`Omit`]}})))()}export{E as n,S as t};

@@ -1,0 +1,11 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./jsx-runtime-MKhVqBIO.js";import{n,t as r}from"./Text-C5BHw0wv.js";import{n as i,t as a}from"./Icon-BmO5FtDV.js";import{n as o,t as s}from"./Button-DoGM0DEN.js";import{n as c,t as l}from"./IconButton-BONXg2Kw.js";import{n as u,t as d}from"./useClipboard-ByHw8FQO.js";import{n as f,t as p}from"./VStack-SWtDePqc.js";function m({value:e,announce:t,resetAfterMs:n}){let{copy:i,isCopied:o}=u({announce:t,resetAfterMs:n});return(0,g.jsxs)(p,{gap:3,children:[(0,g.jsxs)(`div`,{style:{display:`flex`,gap:8,alignItems:`center`},children:[(0,g.jsx)(l,{variant:`ghost`,size:`sm`,tooltip:`Copy`,label:o?`Copied`:`Copy`,icon:(0,g.jsx)(a,{icon:o?`check`:`copy`,size:`sm`}),onClick:()=>void i(e)}),(0,g.jsx)(r,{type:`supporting`,children:e})]}),(0,g.jsxs)(r,{type:`supporting`,children:[`isCopied: `,String(o)]})]})}function h({value:e,announce:t,resetAfterMs:n}){let{copy:r,isCopied:i}=u({announce:t,resetAfterMs:n});return(0,g.jsx)(s,{variant:`secondary`,size:`sm`,icon:(0,g.jsx)(a,{icon:i?`check`:`copy`,size:`sm`}),label:i?`Copied`:`Copy link`,onClick:()=>void r(e)})}var g,_,v,y,b,x;function S(){return(S=e((()=>{d(),c(),o(),i(),n(),f(),g=t(),_={title:`Core/Hooks/useClipboard`,component:m,tags:[`autodocs`],argTypes:{value:{control:`text`},announce:{control:`text`},resetAfterMs:{control:{type:`range`,min:500,max:4e3,step:100}}},args:{value:`npm install @astryxdesign/core`,announce:`Copied`,resetAfterMs:2e3}},v={name:`Copy icon button (common case)`},y={name:`Labeled copy button`,render:e=>(0,g.jsx)(h,{...e})},b={name:`Without announcement`,args:{announce:``}},v.parameters={...v.parameters,docs:{...v.parameters?.docs,source:{originalSource:`{
+  name: 'Copy icon button (common case)'
+}`,...v.parameters?.docs?.source}}},y.parameters={...y.parameters,docs:{...y.parameters?.docs,source:{originalSource:`{
+  name: 'Labeled copy button',
+  render: args => <TextButtonDemo {...args} />
+}`,...y.parameters?.docs?.source}}},b.parameters={...b.parameters,docs:{...b.parameters?.docs,source:{originalSource:`{
+  name: 'Without announcement',
+  args: {
+    announce: ''
+  }
+}`,...b.parameters?.docs?.source}}},x=[`CopyIconButton`,`CopyTextButton`,`NoAnnounce`]})))()}S();export{v as CopyIconButton,y as CopyTextButton,b as NoAnnounce,x as __namedExportsOrder,_ as default};

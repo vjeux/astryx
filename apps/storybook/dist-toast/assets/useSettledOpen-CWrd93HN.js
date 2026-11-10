@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{n,t as r}from"./useIsHydrating-BD37vgNd.js";function i(e,t,r){let i=n(),[o,s]=(0,a.useState)(()=>i?e:r);return o!==r&&!i&&t!==o&&s(r),[o,(0,a.useCallback)(()=>s(r),[r])]}var a;function o(){return(o=e((()=>{a=t(),r()})))()}export{i as n,o as t};

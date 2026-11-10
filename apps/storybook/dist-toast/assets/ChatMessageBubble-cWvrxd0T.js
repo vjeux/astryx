@@ -1,0 +1,35 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t,t as n}from"./stylex-BSlGVhGe.js";import{t as r}from"./jsx-runtime-MKhVqBIO.js";import{n as i}from"./mergeProps-DHkqklmt.js";import{n as a}from"./isRenderable-C2vVZKI4.js";import{i as o,t as s}from"./themeProps-BVy3p_gf.js";import{a as c,l}from"./ChatContext-DfLYOrUP.js";function u({children:e,variant:n=`filled`,name:r,metadata:s,group:c,width:u,xstyle:p,className:h,style:g,"data-testid":_,ref:v,...y}){let b=l(),x=b?.sender??`assistant`,S=b?.density??`balanced`,C=S===`compact`?f.paddingCompact:S===`spacious`?f.paddingSpacious:f.paddingBalanced,w=x===`user`,T=n===`ghost`?f.ghost:w?f.user:f.assistant,E=c===`first`?w?f.groupFirstUser:f.groupFirstAssistant:c===`middle`?w?f.groupMiddleUser:f.groupMiddleAssistant:c===`last`?w?f.groupLastUser:f.groupLastAssistant:null,D=S===`compact`?f.metadataPaddingCompact:S===`spacious`?f.metadataPaddingSpacious:f.metadataPaddingBalanced,O=a(r),k=a(s);return(0,d.jsxs)(d.Fragment,{children:[O&&(0,d.jsx)(`div`,{"data-chat-name":!0,...t(D,f.nameRow,f.headerReducedGap,w&&f.alignEnd),children:r}),(0,d.jsx)(`div`,{...y,ref:v,"data-testid":_,...i(o(`chat-message-bubble`,{sender:x,variant:n,density:S}),t(f.content,S===`compact`&&f.radiusCompact,T,C,n===`ghost`&&f.paddingBlockNone,E,u!=null&&m.sizing(u),p),h,g),children:e}),k&&(0,d.jsx)(`div`,{...t(D,f.metadataReducedGap,w&&f.alignEnd),children:s})]})}var d,f,p,m;function h(){return(h=e((()=>{n(),c(),s(),d=r(),f={content:{k1xSpc:`astryx78zum5`,kXwgrk:`astryxdt5ytf`,ks0D6T:`astryxl6temz`,kaIpWk:`astryxashgol`,kMv6JI:`astryx9ynric`,kGuDYH:`astryxjm74w1`,kLWn49:`astryxw6l6zx`,kHjlTd:`astryx1mzt3pk`,kTgw9:`astryx13faqbe`,$$css:!0},radiusCompact:{kaIpWk:`astryx1hviunn`,$$css:!0},paddingCompact:{k8WAf4:`astryx8o8v82`,kLKAdn:null,kGO01o:null,kg3NbH:`astryx1pzlopt`,kuDDbn:null,kE3dHu:null,kP0aTx:null,kpe85a:null,$$css:!0},paddingBalanced:{k8WAf4:`astryx8o8v82`,kLKAdn:null,kGO01o:null,kg3NbH:`astryx1pzlopt`,kuDDbn:null,kE3dHu:null,kP0aTx:null,kpe85a:null,$$css:!0},paddingSpacious:{k8WAf4:`astryx1na6nto`,kLKAdn:null,kGO01o:null,kg3NbH:`astryxzz68wx`,kuDDbn:null,kE3dHu:null,kP0aTx:null,kpe85a:null,$$css:!0},paddingBlockNone:{k8WAf4:`astryxt970qd`,kLKAdn:null,kGO01o:null,$$css:!0},metadataPaddingCompact:{kg3NbH:`astryx1pzlopt`,kuDDbn:null,kE3dHu:null,kP0aTx:null,kpe85a:null,$$css:!0},metadataPaddingBalanced:{kg3NbH:`astryx1pzlopt`,kuDDbn:null,kE3dHu:null,kP0aTx:null,kpe85a:null,$$css:!0},metadataPaddingSpacious:{kg3NbH:`astryxzz68wx`,kuDDbn:null,kE3dHu:null,kP0aTx:null,kpe85a:null,$$css:!0},metadataReducedGap:{keoZOQ:`astryx1c40v9y`,$$css:!0},headerReducedGap:{k1K539:`astryxdrfirk`,$$css:!0},nameRow:{kZKoxP:`astryx1grt7ep`,k1xSpc:`astryx78zum5`,kGNEyG:`astryx6s0dn4`,$$css:!0},alignEnd:{k9WMMc:`astryxp4054r`,$$css:!0},assistant:{kWkggS:`astryx17x4s8c`,kMwMTN:`astryx1tgivj0`,$$css:!0},user:{kWkggS:`astryx17x4s8c`,kMwMTN:`astryx1tgivj0`,$$css:!0},ghost:{kWkggS:`astryxjbqb8w`,kMwMTN:`astryx1tgivj0`,$$css:!0},groupFirstAssistant:{kVL7Gh:`astryxrfs2vl`,kqGeR4:null,kYm2EN:null,$$css:!0},groupMiddleAssistant:{krdFHd:`astryx3qb8m`,kIxVMA:null,ksF3WI:null,kVL7Gh:`astryxrfs2vl`,kqGeR4:null,kYm2EN:null,$$css:!0},groupLastAssistant:{krdFHd:`astryx3qb8m`,kIxVMA:null,ksF3WI:null,$$css:!0},groupFirstUser:{kT0f0o:`astryx1whkvtz`,kqGeR4:null,kYm2EN:null,$$css:!0},groupMiddleUser:{kfmiAY:`astryx126per9`,kIxVMA:null,ksF3WI:null,kT0f0o:`astryx1whkvtz`,kqGeR4:null,kYm2EN:null,$$css:!0},groupLastUser:{kfmiAY:`astryx126per9`,kIxVMA:null,ksF3WI:null,$$css:!0}},p={ks0D6T:`astryx1x1rfll`,$$css:!0},m={sizing:e=>[p,{kzqmXN:e==null?e:`astryx5lhr3w`,$$css:!0},{"--x-width":(e=>typeof e==`number`?e+`px`:e??void 0)(e)}]},u.displayName=`ChatMessageBubble`,u.__docgenInfo={description:`Styled content container — the chat "bubble."
+
+Reads sender from parent ChatMessage context to auto-style background.
+Use \`group\` prop for multi-bubble corner grouping.
+
+@example
+\`\`\`
+<ChatMessage sender="user">
+  <ChatMessageBubble
+    name="Cindy"
+    metadata={<ChatMessageMetadata timestamp="2:30 PM" status="read" />}>
+    Hey, how's it going?
+  </ChatMessageBubble>
+</ChatMessage>
+\`\`\``,methods:[],displayName:`ChatMessageBubble`,props:{xstyle:{required:!1,tsType:{name:`StyleXStyles`},description:"StyleX styles created via `stylex.create()`. Merged with the component's\nbase styles inside a single `stylex.props()` call for optimal deduplication.\n\n@example\n```\nconst overrides = stylex.create({ root: { marginBottom: 8 } });\n<Component xstyle={overrides.root} />\n```"},ref:{required:!1,tsType:{name:`ReactRef`,raw:`React.Ref<HTMLDivElement>`,elements:[{name:`HTMLDivElement`}]},description:`Ref forwarded to the root element`},children:{required:!0,tsType:{name:`ReactNode`},description:`Bubble content — text, Markdown, or any ReactNode.`},variant:{required:!1,tsType:{name:`union`,raw:`'filled' | 'ghost'`,elements:[{name:`literal`,value:`'filled'`},{name:`literal`,value:`'ghost'`}]},description:`Visual variant.
+- 'filled': background color based on sender (default)
+- 'ghost': no background, but keeps padding for consistent alignment
+@default 'filled'`,defaultValue:{value:`'filled'`,computed:!1}},name:{required:!1,tsType:{name:`ReactNode`},description:`Sender name rendered above the bubble, aligned with bubble text padding.
+Non-rendering scalar values omit the aligned wrapper; numeric zero remains.
+Use when the first content in a message is a bubble.
+If the first content is raw (no bubble), use ChatMessage's \`name\`
+prop instead.`},metadata:{required:!1,tsType:{name:`ReactNode`},description:`Metadata content rendered below the bubble, aligned with bubble text padding.
+Non-rendering scalar values omit the aligned wrapper; numeric zero remains.
+Use when the last content in a message is a bubble.
+If the last content is raw (no bubble), use ChatMessage's \`metadata\`
+prop instead.`},group:{required:!1,tsType:{name:`union`,raw:`'first' | 'middle' | 'last'`,elements:[{name:`literal`,value:`'first'`},{name:`literal`,value:`'middle'`},{name:`literal`,value:`'last'`}]},description:`Position within a multi-bubble group.
+Controls corner radius reduction on the sender side.
+- 'first': bottom sender-side corner tightened
+- 'middle': both sender-side corners tightened
+- 'last': top sender-side corner tightened
+Leave unset for standalone bubbles (full radius).`},width:{required:!1,tsType:{name:`union`,raw:`number | string`,elements:[{name:`number`},{name:`string`}]},description:`Width of the bubble.
+Numbers are treated as pixels, strings are used as-is (e.g. "100%").
+When set, replaces the default \`max(80%, 280px)\` width cap; leave unset
+to keep the cap. Combine with \`variant="ghost"\` to let custom content
+(an artifact card, attachments) span the full message column.`}},composes:[`Omit`]}})))()}export{h as n,u as t};

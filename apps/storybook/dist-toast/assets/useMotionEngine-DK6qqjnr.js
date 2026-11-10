@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{o as n,r}from"./animator-_25gFM0H.js";function i(e){let[t]=(0,a.useState)(()=>{let t=r(null,e);return{animator:t,ref:e=>t.attach(e)}});return t}var a;function o(){return(o=e((()=>{a=t(),n()})))()}export{i as n,o as t};

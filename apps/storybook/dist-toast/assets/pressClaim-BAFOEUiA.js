@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{a as t}from"./sharedRealm-DZMM-xS-.js";function n(){for(let e of[...i.watchers])e()}function r(e){return i.watchers.add(e),()=>{i.watchers.delete(e)}}var i;function a(){return(a=e((()=>{i=t(`utils/press-claim/state`,1,()=>({watchers:new Set}))})))()}export{a as n,r,n as t};

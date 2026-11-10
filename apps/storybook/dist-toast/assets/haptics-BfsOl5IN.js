@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{d as t,t as n}from"./gestures-Bqd4wlWz.js";function r(){return typeof navigator<`u`&&typeof navigator.vibrate==`function`}function i(e){return r()?navigator.vibrate([...n[e].value]):!1}function a(){return(a=e((()=>{t()})))()}export{a as n,i as r,r as t};

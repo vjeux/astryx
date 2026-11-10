@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";function t(e,t){return`${e}: ${t}`}function n(e,t,...n){}function r(){return(e,t,n=t)=>{}}function i(e,n,...r){console.error(t(e,n),...r)}function a(e,t,n,...r){}function o(){return(o=e((()=>{})))()}export{a,o as i,i as n,n as r,r as t};

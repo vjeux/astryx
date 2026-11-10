@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";function t(e,t){if(t){for(let t=e.length-1;t>=0;t--)if(e[t].disabled!==!0)return t;return-1}return e.findIndex(e=>e.disabled!==!0)}function n(){return(n=e((()=>{})))()}export{n,t};

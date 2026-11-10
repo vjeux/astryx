@@ -1,0 +1,35 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{n,t as r}from"./stylex-BSlGVhGe.js";import{t as i}from"./jsx-runtime-MKhVqBIO.js";import{n as a}from"./mergeProps-DHkqklmt.js";import{i as o,t as s}from"./themeProps-BVy3p_gf.js";import{t as c}from"./composeEventHandlers-CceNiKXL.js";import{a as l,i as u}from"./focusOutline.stylex-DWroqGen.js";import{n as d,r as f}from"./Icon-BmO5FtDV.js";import{o as p,s as m}from"./useMenuPress-q1UHdjWB.js";import{n as h,t as g}from"./Item-1P46XrPN.js";import{b as _,g as v,m as y,p as b,x,y as S}from"./renderDropdownItems-hNxj8lO0.js";import{c as C,o as w}from"./menuItemRoles-B9F29fZ1.js";import{n as T,t as E}from"./useIndicator-Be-PSbYo.js";function D({value:e,onChange:t,label:r,hasCloseOnSelect:i=!0,children:o,ref:s,xstyle:c,className:l,style:u,...d}){let f=(0,O.useMemo)(()=>({value:e,onChange:t,hasCloseOnSelect:i}),[e,t,i]);return(0,k.jsx)(`div`,{...d,ref:s,role:`group`,"aria-label":r,...a(n(A.group,c),{className:l,style:u}),children:(0,k.jsx)(v,{value:f,children:o})})}var O,k,A;function j(){return(j=e((()=>{O=t(),r(),S(),k=i(),A={group:{k1xSpc:`astryx78zum5`,kXwgrk:`astryxdt5ytf`,kOIVth:`astryx1lsbc85`,$$css:!0}},D.displayName=`DropdownMenuRadioGroup`,D.__docgenInfo={description:`A single-select group of radio menu items (role="group" of menuitemradio).
+
+@example
+\`\`\`
+import {
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from '@astryxdesign/core/DropdownMenu';
+<DropdownMenu button={{label: 'Sort'}}>
+  <DropdownMenuRadioGroup value={sort} onChange={setSort} label="Sort by">
+    <DropdownMenuRadioItem value="newest" label="Newest" />
+    <DropdownMenuRadioItem value="oldest" label="Oldest" />
+  </DropdownMenuRadioGroup>
+</DropdownMenu>
+\`\`\``,methods:[],displayName:`DropdownMenuRadioGroup`,props:{value:{required:!0,tsType:{name:`union`,raw:`string | undefined`,elements:[{name:`string`},{name:`undefined`}]},description:"The currently selected value in the group. Pass `undefined` when nothing\nis selected yet."},onChange:{required:!0,tsType:{name:`signature`,type:`function`,raw:`(value: string) => void`,signature:{arguments:[{type:{name:`string`},name:`value`}],return:{name:`void`}}},description:`Callback fired when the selected value changes.`},label:{required:!0,tsType:{name:`string`},description:'Accessible name for the group, announced by screen readers so the radios\nread as a named set (e.g. "Sort by"). Applied as the group\'s `aria-label`.\nRequired even when `aria-labelledby` (via base props) points to visible\ntext; that visible reference becomes the computed name while `label`\nremains the fallback.'},hasCloseOnSelect:{required:!1,tsType:{name:`boolean`},description:`Whether selecting a value closes the menu. Radio items default to closing
+on selection (a single-choice commit), unlike checkbox items which stay
+open.
+@default true`,defaultValue:{value:`true`,computed:!1}},ref:{required:!1,tsType:{name:`Ref`,elements:[{name:`HTMLDivElement`}],raw:`Ref<HTMLDivElement>`},description:`Ref forwarded to the role="group" root.`},children:{required:!0,tsType:{name:`ReactNode`},description:"The `DropdownMenuRadioItem`s that make up the group."}},composes:[`Omit`]}})))()}function M({value:e,label:t,description:n,icon:r,isDisabled:i=!1,endContent:s,xstyle:l,className:d,style:p,onClick:h,onPointerMove:v,...y}){let S=_(),w=x();if(!w)throw Error(`DropdownMenuRadioItem must be used within a DropdownMenuRadioGroup`);let E=S?.menuSize??`md`,D=E===`sm`?`sm`:`md`,O=w.value===e,k=T(`radio`),A=(0,N.useCallback)(t=>{i||(w.onChange(e),w.hasCloseOnSelect&&S?.closeMenu(),h?.(t))},[i,w,e,S,h]),j=(0,N.useCallback)(e=>b(e,i),[i]);return(0,P.jsx)(g,{...y,onMouseDown:c(y.onMouseDown,i?C:void 0),role:`menuitemradio`,"aria-checked":O,tabIndex:-1,onPointerMove:c(j,v),marker:(0,P.jsx)(k,{state:O?`checked`:`unchecked`,size:D,isDisabled:i,xstyle:F.marker,...o(`dropdown-menu-radio`,{size:D,checked:O?`checked`:null,disabled:i?`disabled`:null})}),startContent:r?f(r,{size:`sm`,color:`secondary`}):void 0,label:t,description:n,endContent:s,onClick:A,isDisabled:i,xstyle:[u.focusVisible,F.root,m,i&&F.disabled,l],...a(o(`dropdown-menu-item`,{size:E}),{className:d,style:p})})}var N,P,F;function I(){return(I=e((()=>{N=t(),d(),E(),h(),S(),l(),p(),y(),s(),w(),P=i(),F={root:{kzqmXN:`astryxh8yej3`,kaIpWk:`astryx1ws5lxm`,krdFHd:null,kfmiAY:null,kVL7Gh:null,kT0f0o:null,kIxVMA:null,ksF3WI:null,kqGeR4:null,kYm2EN:null,kMwMTN:`astryx1tgivj0`,kWkggS:`astryxjbqb8w astryx1p2z2pi`,kkrTdU:`astryx1ypdohk astryx16khyan`,kInvED:`astryx1c097ug`,$$css:!0},disabled:{kSiTet:`astryxbyyjgo`,kkrTdU:`astryxt0e3qv`,$$css:!0},marker:{kfzvcC:`astryx47corl`,kayTVb:`astryx1g77sc7 astryxozvky`,keTefX:`astryx1lziwak astryx1jymrmb`,koQZXg:null,km5ZXQ:null,$$css:!0}},M.displayName=`DropdownMenuRadioItem`,M.__docgenInfo={description:`A single option in a DropdownMenuRadioGroup (role="menuitemradio").
+
+Consumer click and pointer-move handlers compose after the row's own
+selection and hover-focus behavior; disabled activation stops before the
+consumer click handler.
+
+@example
+\`\`\`
+<DropdownMenuRadioGroup value={sort} onChange={setSort} label="Sort by">
+  <DropdownMenuRadioItem value="newest" label="Newest" />
+  <DropdownMenuRadioItem value="oldest" label="Oldest" icon="clock" />
+</DropdownMenuRadioGroup>
+\`\`\``,methods:[],displayName:`DropdownMenuRadioItem`,props:{value:{required:!0,tsType:{name:`string`},description:"The value this item represents within its group. The group's `value`\nmatches against this to determine the checked state."},label:{required:!0,tsType:{name:`ReactNode`},description:`Primary label text identifying the option.`},description:{required:!1,tsType:{name:`ReactNode`},description:`Secondary description text displayed below the label.`},icon:{required:!1,tsType:{name:`union`,raw:`ReactNode | IconType`,elements:[{name:`ReactNode`},{name:`ComponentType`,elements:[{name:`SVGProps`,elements:[{name:`SVGSVGElement`}],raw:`SVGProps<SVGSVGElement>`}],raw:`ComponentType<SVGProps<SVGSVGElement>>`}]},description:"Icon to display before the label. Accepts a semantic icon name (see\n`astryx docs icons`) or a rendered node."},isDisabled:{required:!1,tsType:{name:`boolean`},description:`Whether this individual radio item is disabled. A disabled item stays in
+the accessibility tree as disabled (\`aria-disabled\`), and the arrow keys
+and typeahead reach it so keyboard users find it. The pointer highlight
+skips it, and selection is blocked.
+@default false`,defaultValue:{value:`false`,computed:!1}},endContent:{required:!1,tsType:{name:`ReactNode`},description:`Content to render after the label and description, such as a badge or
+metadata.`},ref:{required:!1,tsType:{name:`ReactRef`,raw:`React.Ref<HTMLElement>`,elements:[{name:`HTMLElement`}]},description:'Ref forwarded to the row root — the element carrying `role="menuitemradio"`.'}},composes:[`Omit`]}})))()}export{j as i,I as n,D as r,M as t};

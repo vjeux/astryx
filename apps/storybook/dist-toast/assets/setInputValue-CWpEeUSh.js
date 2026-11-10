@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";function t(e,t){(Object.getOwnPropertyDescriptor(e.ownerDocument.defaultView?.HTMLInputElement.prototype??HTMLInputElement.prototype,`value`)?.set)?.call(e,t),e.dispatchEvent(new Event(`input`,{bubbles:!0}))}function n(){return(n=e((()=>{})))()}export{t as n,n as t};

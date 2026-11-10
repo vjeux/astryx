@@ -1,0 +1,10 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{n,t as r}from"./stylex-BSlGVhGe.js";import{t as i}from"./jsx-runtime-MKhVqBIO.js";import{n as a}from"./mergeProps-DHkqklmt.js";import{i as o,t as s}from"./themeProps-BVy3p_gf.js";import{c,s as l}from"./Button-DoGM0DEN.js";function u({ref:e,children:t,xstyle:r,className:i,style:s,...l}){return(0,d.jsx)(`div`,{ref:e,...l,...c,...a(o(`input-group-text`),n(f.text,r),i,s),children:t})}var d,f;function p(){return(p=e((()=>{t(),r(),s(),l(),d=i(),f={text:{k1xSpc:`astryx78zum5`,kGNEyG:`astryx6s0dn4`,kg3NbH:`astryxf314gf`,kWkggS:`astryxwmxj5m`,kMv6JI:`astryx9ynric`,kGuDYH:`astryxjm74w1`,kLWn49:`astryxw6l6zx`,kMwMTN:`astryxv1l7n4`,khDVqt:`astryxuxw1ft`,kmuXW:`astryx2lah0s`,kMzoRj:`astryx1litavf`,ksu8eU:`astryx1y0btm7`,kVAM5u:`astryxvy26l8`,keTefX:`astryxd10s4z astryx1pwwqoy`,krdFHd:`astryx15mokao astryx8eehn2`,kVL7Gh:`astryxbiv7yw astryx1xrp5p4`,kfmiAY:`astryx1ga7v0g astryx11xp8u1`,kT0f0o:`astryx16uus16 astryx747jw7`,$$css:!0}},u.displayName=`InputGroupText`,u.__docgenInfo={description:`A prefix or suffix text element for use inside InputGroup.
+
+@example
+\`\`\`
+<InputGroup label="Website">
+  <InputGroupText>https://</InputGroupText>
+  <TextInput label="URL" isLabelHidden value={url} onChange={setUrl} />
+</InputGroup>
+\`\`\``,methods:[],displayName:`InputGroupText`,props:{xstyle:{required:!1,tsType:{name:`StyleXStyles`},description:"StyleX styles created via `stylex.create()`. Merged with the component's\nbase styles inside a single `stylex.props()` call for optimal deduplication.\n\n@example\n```\nconst overrides = stylex.create({ root: { marginBottom: 8 } });\n<Component xstyle={overrides.root} />\n```"},ref:{required:!1,tsType:{name:`ReactRef`,raw:`React.Ref<HTMLDivElement>`,elements:[{name:`HTMLDivElement`}]},description:``},children:{required:!0,tsType:{name:`ReactNode`},description:`Content to render in the text slot.
+Can be text or an icon.`}},composes:[`Omit`]}})))()}export{p as n,u as t};

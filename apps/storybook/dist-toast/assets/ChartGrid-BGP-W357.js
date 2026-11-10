@@ -1,0 +1,10 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{t as n}from"./jsx-runtime-MKhVqBIO.js";import{c as r,f as i,p as a}from"./ChartAxis-BWrZPxJe.js";function o({horizontal:e=!0,vertical:t=!1,tickCount:n=5}){let{width:i,height:o,xScale:l,yScale:u}=a(),d=Number.isFinite(n)&&n>=0?Math.min(Math.floor(n),1e3):5,f=(0,s.useMemo)(()=>e?u.ticks(d).filter(e=>e!==0).map(e=>({value:e,pos:u(e)})):[],[e,u,d]),p=(0,s.useMemo)(()=>{if(!t)return[];if(r(l))return l.domain().map(e=>({value:e,pos:(l(e)??0)+l.bandwidth()/2}));let e=l;return e.ticks(d).map(t=>({value:String(t),pos:e(t)}))},[t,l,d]);return(0,c.jsxs)(`g`,{children:[f.map(({value:e,pos:t})=>(0,c.jsx)(`line`,{x1:0,x2:i,y1:t,y2:t,className:`x113i6qz xnpr05h`},`h-${e}`)),p.map(({value:e,pos:t})=>(0,c.jsx)(`line`,{x1:t,x2:t,y1:0,y2:o,className:`x113i6qz xnpr05h`},`v-${e}`))]})}var s,c;function l(){return(l=e((()=>{s=t(),i(),c=n(),o.__docgenInfo={description:`Grid lines behind chart marks.
+
+Pair with \`<ChartAxis>\` so users always see an axis line beside the
+grid — the components are designed to be used together.
+
+@example
+\`\`\`
+<ChartGrid />                 // horizontal grid lines (default)
+<ChartGrid horizontal vertical />
+\`\`\``,methods:[],displayName:`ChartGrid`,props:{horizontal:{required:!1,tsType:{name:`boolean`},description:"Show horizontal grid lines. Default: `true`.",defaultValue:{value:`true`,computed:!1}},vertical:{required:!1,tsType:{name:`boolean`},description:"Show vertical grid lines. Default: `false`.",defaultValue:{value:`false`,computed:!1}},tickCount:{required:!1,tsType:{name:`number`},description:"Approximate number of grid lines per axis. Match your `<ChartAxis>`\n`tickCount` so grid lines and tick labels land on the same values.\nDefault: `5`.",defaultValue:{value:`5`,computed:!1}}}}})))()}export{l as n,o as t};

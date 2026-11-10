@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";var t;function n(){return(n=e((()=>{t={fits:{kFalU9:`astryx1j4r261`,$$css:!0},scrolls:{kFalU9:`astryxge0x1e`,kZeWKH:`astryxish69e`,$$css:!0}}})))()}export{t as n,n as t};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t,t as n}from"./sharedContext-BVffqy7N.js";var r,i;function a(){return(a=e((()=>{t(),r=n(`ItemLabelContext`,1,null),r.displayName=`ItemLabelContext`,i=n(`ItemLabelNeededContext`,1,!1),i.displayName=`ItemLabelNeededContext`})))()}export{i as n,a as r,r as t};

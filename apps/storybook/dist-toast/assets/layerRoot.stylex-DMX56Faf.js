@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";function t(e){return e.closest(`[${r}]`)}function n(e){return e.hasAttribute(r)}var r,i;function a(){return(a=e((()=>{r=`data-astryx-layer-root`,i={[r]:``}})))()}export{i,a as n,n as r,t};

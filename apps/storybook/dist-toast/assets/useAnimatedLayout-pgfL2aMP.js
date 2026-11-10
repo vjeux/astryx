@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{c as n,n as r}from"./animatedLayout-Bkaa4rq8.js";function i({containerRef:e}){return(0,a.useMemo)(()=>r(()=>e.current),[e])}var a;function o(){return(o=e((()=>{a=t(),n()})))()}export{i as n,o as t};

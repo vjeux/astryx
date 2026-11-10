@@ -1,0 +1,12 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./jsx-runtime-MKhVqBIO.js";import{i as n,n as r,r as i,t as a}from"./ChartAxis-BWrZPxJe.js";import{n as o,t as s}from"./ChartGrid-BGP-W357.js";import{n as c,t as l}from"./bar-BlJJsAlE.js";import{n as u,t as d}from"./line-CYVOawK-.js";import{i as f,o as p,r as m}from"./_data-BZjSE72W.js";var h,g,_,v,y,b;function x(){return(x=e((()=>{n(),c(),d(),o(),r(),m(),h=t(),g={title:`Charts/Color`,component:i},_=(0,h.jsxs)(h.Fragment,{children:[(0,h.jsx)(a,{position:`bottom`}),(0,h.jsx)(a,{position:`left`})]}),v={render:()=>(0,h.jsx)(i,{data:f,xKey:`month`,title:`Auto palette`,subtitle:`No colors passed — assigned from the theme's categorical palette`,series:[l(`revenue`,{group:`g`}),l(`costs`,{group:`g`}),u(`trend`)],legend:!0,grid:(0,h.jsx)(s,{}),axes:_,height:320})},y={render:()=>(0,h.jsx)(i,{data:p,xKey:`month`,title:`Green when positive, red when negative`,series:[l(`profit`,{label:`Profit`,color:e=>e.profit>=0?`var(--color-success)`:`var(--color-error)`})],legend:!0,grid:(0,h.jsx)(s,{}),axes:_,height:320})},v.parameters={...v.parameters,docs:{...v.parameters?.docs,source:{originalSource:`{
+  render: () => <Chart data={monthlyData} xKey="month" title="Auto palette" subtitle="No colors passed — assigned from the theme's categorical palette" series={[bar('revenue', {
+    group: 'g'
+  }), bar('costs', {
+    group: 'g'
+  }), line('trend')]} legend grid={<ChartGrid />} axes={axes} height={320} />
+}`,...v.parameters?.docs?.source},description:{story:`No colors passed — the chart assigns distinct colors from the theme palette.`,...v.parameters?.docs?.description}}},y.parameters={...y.parameters,docs:{...y.parameters?.docs,source:{originalSource:`{
+  render: () => <Chart data={profitLossData} xKey="month" title="Green when positive, red when negative" series={[bar('profit', {
+    label: 'Profit',
+    color: d => d.profit as number >= 0 ? 'var(--color-success)' : 'var(--color-error)'
+  })]} legend grid={<ChartGrid />} axes={axes} height={320} />
+}`,...y.parameters?.docs?.source},description:{story:`Per-datum color via an accessor; the series still shows in the legend.`,...y.parameters?.docs?.description}}},b=[`AutoPalette`,`AccessorColor`]})))()}x();export{y as AccessorColor,v as AutoPalette,b as __namedExportsOrder,g as default};

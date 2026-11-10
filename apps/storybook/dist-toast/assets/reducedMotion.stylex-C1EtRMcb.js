@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";function t(e){return e?{[i]:``}:{}}function n(e,t){t?e.setAttribute(i,``):e.removeAttribute(i)}function r(e){return e?.closest?.(`[${i}]`)!=null}var i;function a(){return(a=e((()=>{i=`data-astryx-reduced-motion`})))()}export{r as i,t as n,n as r,a as t};

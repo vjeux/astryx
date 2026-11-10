@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";function t(e,t=Date.now()/1e3){switch(e.type){case`NOW`:return Math.floor(t);case`ABSOLUTE`:return e.unixSeconds;case`RELATIVE`:return Math.floor(t-e.backValue*n[e.unit])}}var n;function r(){return(r=e((()=>{n={second:1,minute:60,hour:3600,day:86400,week:604800,month:2592e3,year:31536e3}})))()}export{t as n,r as t};

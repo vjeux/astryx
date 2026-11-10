@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{n as t,r as n}from"./layerScopedContext-CqwdhY_A.js";var r;function i(){return(i=e((()=>{n(),r=t(`LayoutDividerContext`,1,null),r.displayName=`LayoutDividerContext`})))()}export{i as n,r as t};

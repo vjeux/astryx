@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";function t(e,t){return n=>{let r=n.target;if(!(r instanceof Element)||r.closest(t)==null)return;let i=n.pointerType===`mouse`&&(n.ctrlKey||n.metaKey||n.shiftKey)&&r.closest(`a[href]`)!=null;n.button!==0||i||e(n)}}function n(){return(n=e((()=>{})))()}export{t as n,n as t};

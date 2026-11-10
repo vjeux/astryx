@@ -1,0 +1,15 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{t as n}from"./jsx-runtime-MKhVqBIO.js";import{n as r,t as i}from"./Button-DoGM0DEN.js";import{n as a,t as o}from"./Popover-CgJiFJLM.js";import{r as s,t as c}from"./Tooltip-CmQs04jO.js";import{n as l,t as u}from"./Dialog-ohVvtWtq.js";import{n as d,t as f}from"./TextInput-LGxpinPt.js";function p(){let[e,t]=(0,m.useState)(!1),[n,r]=(0,m.useState)(`report.pdf`);return(0,h.jsxs)(h.Fragment,{children:[(0,h.jsx)(c,{content:`Rename this file`,children:(0,h.jsx)(i,{label:`Rename`,onClick:()=>t(!0)})}),(0,h.jsx)(u,{isOpen:e,onOpenChange:t,"aria-label":`Rename`,children:(0,h.jsx)(`form`,{onSubmit:e=>{e.preventDefault(),t(!1)},children:(0,h.jsx)(f,{label:`File name`,value:n,onChange:r})})})]})}var m,h,g,_,v,y;function b(){return(b=e((()=>{m=t(),r(),l(),a(),d(),s(),h=n(),g={title:`a11y/Tooltip focus return`,tags:[`no-visual`],parameters:{docs:{description:{component:`A popover whose trigger carries a tooltip. Tab to the trigger, open the popover with Enter, then close it with Escape: focus returns to the trigger and the tooltip shows again, with no error.`}}}},_={name:`popover trigger that carries a tooltip`,render:()=>(0,h.jsx)(o,{label:`Options`,content:(0,h.jsx)(i,{label:`Inside action`,onClick:()=>{}}),children:(0,h.jsx)(c,{content:`More options`,children:(0,h.jsx)(i,{label:`Options`})})})},v={name:`dialog trigger that carries a tooltip, with a text field`,render:()=>(0,h.jsx)(p,{})},_.parameters={..._.parameters,docs:{..._.parameters?.docs,source:{originalSource:`{
+  name: 'popover trigger that carries a tooltip',
+  render: () => <Popover label="Options" content={<Button label="Inside action" onClick={() => {}} />}>
+      <Tooltip content="More options">
+        <Button label="Options" />
+      </Tooltip>
+    </Popover>
+}`,..._.parameters?.docs?.source},description:{story:`A popover trigger that also carries a tooltip — the shape of any toolbar
+button with a hint that opens a menu or a settings surface.`,..._.parameters?.docs?.description}}},v.parameters={...v.parameters,docs:{...v.parameters?.docs,source:{originalSource:`{
+  name: 'dialog trigger that carries a tooltip, with a text field',
+  render: () => <DialogTriggerWithTooltipExample />
+}`,...v.parameters?.docs?.source},description:{story:`A dialog trigger that carries a tooltip, with a text field in the dialog.
+On a touch screen, keys typed into the field are text entry: the focus the
+dialog returns after Enter submits the form shows no tooltip. Escape is
+keyboard navigation, so the focus it returns shows the tooltip.`,...v.parameters?.docs?.description}}},y=[`PopoverTriggerWithTooltip`,`DialogTriggerWithTooltip`]})))()}b();export{v as DialogTriggerWithTooltip,_ as PopoverTriggerWithTooltip,y as __namedExportsOrder,g as default};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./react-DlPsW1c0.js";import{n,t as r}from"./sharedContext-BVffqy7N.js";function i(){return(0,a.use)(o)}var a,o;function s(){return(s=e((()=>{a=t(),n(),o=r(`DialogContext`,1,null),o.displayName=`DialogContext`})))()}export{s as n,i as r,o as t};

@@ -1,0 +1,11 @@
+import{n as e}from"./rolldown-runtime-sJBDdmOt.js";import{t}from"./jsx-runtime-MKhVqBIO.js";import{i as n,n as r,r as i,t as a}from"./ChartAxis-BWrZPxJe.js";import{n as o,t as s}from"./ChartGrid-BGP-W357.js";import{n as c,t as l}from"./bar-BlJJsAlE.js";var u,d,f,p,m,h,g;function _(){return(_=e((()=>{n(),r(),o(),c(),u=t(),d=[{month:`January`,value:18},{month:`February`,value:31},{month:`March`,value:24},{month:`April`,value:42}],f=[{x:0,value:18},{x:5,value:31},{x:10,value:24}],p={title:`Charts/Chrome/ChartGrid`,component:s,tags:[`autodocs`],args:{horizontal:!0,vertical:!1,tickCount:5},argTypes:{tickCount:{control:{type:`range`,min:0,max:10,step:1}}},render:e=>(0,u.jsx)(i,{data:d,xKey:`month`,series:[l(`value`)],title:`Monthly value`,grid:(0,u.jsx)(s,{...e}),axes:(0,u.jsxs)(u.Fragment,{children:[(0,u.jsx)(a,{position:`bottom`}),(0,u.jsx)(a,{position:`left`})]}),height:300})},m={},h={args:{horizontal:!1,vertical:!0,tickCount:5},render:e=>(0,u.jsx)(i,{data:f,xKey:`x`,series:[l(`value`)],title:`Continuous x values`,grid:(0,u.jsx)(s,{...e}),axes:(0,u.jsxs)(u.Fragment,{children:[(0,u.jsx)(a,{position:`bottom`}),(0,u.jsx)(a,{position:`left`})]}),height:300})},m.parameters={...m.parameters,docs:{...m.parameters?.docs,source:{originalSource:`{}`,...m.parameters?.docs?.source},description:{story:`Drive horizontal, vertical, combined, empty, and density states.`,...m.parameters?.docs?.description}}},h.parameters={...h.parameters,docs:{...h.parameters?.docs,source:{originalSource:`{
+  args: {
+    horizontal: false,
+    vertical: true,
+    tickCount: 5
+  },
+  render: args => <Chart data={CONTINUOUS_DATA} xKey="x" series={[bar('value')]} title="Continuous x values" grid={<ChartGrid {...args} />} axes={<>
+          <ChartAxis position="bottom" />
+          <ChartAxis position="left" />
+        </>} height={300} />
+}`,...h.parameters?.docs?.source},description:{story:`Continuous x values use d3 ticks rather than categorical band centers.`,...h.parameters?.docs?.description}}},g=[`Playground`,`ContinuousX`]})))()}_();export{h as ContinuousX,m as Playground,g as __namedExportsOrder,p as default};
