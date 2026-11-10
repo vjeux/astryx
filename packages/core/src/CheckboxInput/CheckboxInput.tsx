@@ -116,6 +116,13 @@ const styles = stylex.create({
       [PRESSED_ON]: 'var(--_press-paint-image)',
       [PRESSED_FADING]: 'var(--_press-paint-image)',
     },
+    // While the controller paints the press, the indicator's `:active` fill
+    // stays off, so a mouse's press paints once.
+    '--_indicator-active-press': {
+      default: null,
+      [PRESSED_ON]: 'transparent',
+      [PRESSED_FADING]: 'transparent',
+    },
   },
   // Under a row that owns the press (CheckboxRowPressContext), this row is
   // never pressed. So it hands down that row's press paint, which the

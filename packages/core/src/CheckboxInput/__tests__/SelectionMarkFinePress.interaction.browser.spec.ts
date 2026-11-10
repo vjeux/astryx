@@ -2,11 +2,11 @@
 
 /**
  * @file SelectionMarkFinePress.interaction.browser.spec.ts
- * @input The CheckboxInput and RadioList stories, and a mouse where the
- *   primary pointer is fine
- * @output Browser proofs: a mouse press on a checkbox or a radio option
- *   paints once, at `pointerdown`, through the press controller. It fades on
- *   release. A right click paints nothing
+ * @input The CheckboxInput, RadioList and lab CircleCheckIndicator stories,
+ *   and a mouse where the primary pointer is fine
+ * @output Browser proofs: a mouse press on a checkbox, a radio option or a
+ *   mapped circle paints once, at `pointerdown`, through the press
+ *   controller. It fades on release. A right click paints nothing
  * @position Fine-pointer half of the selection marks' press; the finger half
  *   is in CheckboxListPress.a11y.chromium.spec.ts and the indicator specs
  */
@@ -42,6 +42,11 @@ const MARKS: Readonly<Record<string, Mark>> = {
     story: 'core-radiolist--default',
     target: 'input[type="radio"]:not(:disabled)',
     layer: 'wrapper',
+  },
+  'mapped circle': {
+    story: 'lab-circlecheckindicator--mapped-checkbox-input',
+    target: 'input[type="checkbox"]:not(:disabled)',
+    layer: 'circle',
   },
 };
 
