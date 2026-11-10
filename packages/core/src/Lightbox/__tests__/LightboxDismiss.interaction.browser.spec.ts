@@ -164,6 +164,9 @@ async function photoInView(
           after.x + after.width < viewport.width + 0.5 &&
           after.y + after.height < viewport.height + 0.5;
         landed = after;
+        console.log(
+          `POLL x=${after.x.toFixed(1)} inside=${isInside} still=${isStill}`,
+        );
         return isStill && isInside;
       },
       {message: 'the opened photo lands in the viewport'},
@@ -201,7 +204,21 @@ async function openViewer(
       photo.evaluate(el => (el as HTMLImageElement).naturalWidth),
     )
     .toBe(3000);
+  await frames(page, 2);
+  const oldRect = await photo.boundingBox();
+  const oldVp = page.viewportSize();
+  const oldIn =
+    oldRect != null &&
+    oldVp != null &&
+    oldRect.x > -0.5 &&
+    oldRect.y > -0.5 &&
+    oldRect.x + oldRect.width < oldVp.width + 0.5 &&
+    oldRect.y + oldRect.height < oldVp.height + 0.5;
+  const waitStart = Date.now();
   const rect = await photoInView(page, photo);
+  console.log(
+    `DJP open old=${oldIn ? 'in' : 'OUT'} oldX=${oldRect?.x.toFixed(1)} newX=${rect.x.toFixed(1)} waited=${Date.now() - waitStart}ms`,
+  );
   const close = dialog.getByRole('button', {name: 'Close'});
   return {
     driver,
@@ -512,9 +529,13 @@ test('the dismissal keeps changing the screen every frame while the main thread 
   // The backdrop's level on the cast while the finger rests before each lift:
   // the value the page itself set at the drag's end.
   const beforeLift: (number | null)[] = [];
+  const restErrors: unknown[] = [];
   let closest = Number.POSITIVE_INFINITY;
   for (let run = 0; run < DISMISS_RUNS; run += 1) {
     const v = await openViewer(page);
+    if (process.env.ARM_TEMPO) {
+      await slowViewer(page, Number(process.env.ARM_TEMPO));
+    }
     const box = await v.photo.boundingBox();
     if (box == null) {
       throw new Error('no photo');
@@ -531,9 +552,18 @@ test('the dismissal keeps changing the screen every frame while the main thread 
     // machine's round trip does not start the block later in the fade.
     const blocking = blockMainThread(page, 400, {
       during: v.photo,
-      minProgressMs: 16,
+      minProgressMs: Number(process.env.ARM_MIN_PROGRESS_MS ?? '16'),
     });
-    const played = await v.driver.play(pullDown(v.centre, 60));
+    const restMs = Number(process.env.ARM_REST_MS ?? 'NaN');
+    const played = await v.driver.play(
+      Number.isFinite(restMs)
+        ? drag(
+            v.centre,
+            {x: v.centre.x, y: v.centre.y + 60},
+            {durationMs: 500, restMs},
+          )
+        : pullDown(v.centre, 60),
+    );
     const block = await blocking;
     // A few frames after the block, so the screencast holds its end.
     await frames(page, 6);
@@ -567,12 +597,20 @@ test('the dismissal keeps changing the screen every frame while the main thread 
           ? stamp
           : (dating?.times.get(stamp) ?? null);
     // The rest's last frame. A starved cast that shows none fails by name.
-    const rest = requireFrames(tracked, {
-      min: 1,
-      during: `run ${run + 1}: the finger rested before the lift`,
-      where: f => f.box != null && f.t >= lastMove && f.t < lift,
-    });
-    const level = rest.at(-1)?.box?.x ?? null;
+    let restError: unknown = null;
+    try {
+      requireFrames(tracked, {
+        min: 1,
+        during: `run ${run + 1}: the finger rested before the lift`,
+        where: f => f.box != null && f.t >= lastMove && f.t < lift,
+      });
+    } catch (error) {
+      restError = error;
+    }
+    restErrors.push(restError);
+    const level =
+      tracked.filter(f => f.box != null && f.t >= lastMove && f.t < lift).at(-1)
+        ?.box?.x ?? null;
     beforeLift.push(level);
     const final = tracked.at(-1)?.box?.x ?? 0;
     const settled =
@@ -619,97 +657,128 @@ test('the dismissal keeps changing the screen every frame while the main thread 
       ),
     );
   }
-  // Every drag ends at the same travel, so the page sets one backdrop level
-  // before each lift.
+  // DOUBLE JUDGE (not for landing): main's judge (A), the naming change's
+  // (B) and the floor scope's (C), each on the same runs.
   const setBeforeBlock = beforeLift[0];
-  expect(
-    setBeforeBlock,
-    'a frame shows the rest before the lift',
-  ).not.toBeNull();
-  beforeLift.forEach((level, i) => {
-    expect(level, `run ${i + 1}: the backdrop's level before the lift`).toBe(
+  const restChecks = () => {
+    expect(
       setBeforeBlock,
-    );
-  });
-  // A change of the backdrop's brightness counts, in 8-bit levels. So
-  // judging stops where the fade's step between the closest two frames shown
-  // falls below one level. A shown level is rounded, so half a level is added.
-  const proof = pooledBusyProof(runs, {
-    axis: 'x',
-    settledWithin: wholeStepsUntil(closest) + 0.5,
-    // WebKit presents a just-started compositor fade late, so the backdrop can
-    // hold the page's own last level into the block. A hold at any other
-    // level is a freeze.
-    setBeforeBlock: setBeforeBlock ?? undefined,
-    // A run whose control moved on fewer than two frames is too little to
-    // judge. At least half the runs must be judged, since the floor below
-    // reads only judged runs.
-    minRunFrames: 2,
-    minJudgedRuns: Math.ceil(DISMISS_RUNS / 2),
-  });
-  await writeEvidence(
-    'busy-main-thread/lightbox-dismiss',
-    {
-      [`${testInfo.project.name}.json`]: JSON.stringify(
-        {windows, beforeLift, proof},
-        null,
-        1,
-      ),
-    },
-    testInfo,
-  );
-  // Judged against the control. A two-core runner's software compositor and
-  // the screencast share the core the block spins on. So every compositor
-  // animation presents fewer frames there, the control's too. The screen
-  // keeps changing with the control, and a main-thread fade would not.
-  expect(proof.verdict.failures).toEqual([]);
-  // Each judged run shows the backdrop at a new level on at least one of its
-  // own frames, not an excused one. So runs of one frame cannot add up to the
-  // floor.
-  proof.judged.forEach((judged, i) => {
-    const read = proof.runs[i]?.control;
-    if (judged) {
-      expect(
-        (read?.movedWith ?? 0) - (read?.belowStep ?? 0),
-        `run ${i + 1} shows a new backdrop level`,
-      ).toBeGreaterThanOrEqual(1);
-    }
-  });
-  // The cutoff above comes from two frames a run showed, not a default.
-  expect(closest, 'a run shows two frames in its window').toBeLessThan(
-    Number.POSITIVE_INFINITY,
-  );
-  // The verdict reads only the runs the pool judged, so each of those must
-  // hold more than 100 ms of the fade. A judged run holds less when its block
-  // began late in the fade. Then the fade, counted from its own start, lasted
-  // longer than the window needs, and the run fails by that name.
-  for (const [i, window] of windows.entries()) {
-    if (!proof.judged[i]) {
-      continue;
-    }
-    const windowMs = window.to - window.from;
-    const start = fadeStarts[i];
-    const last = fadeLasts[i];
-    // A fade with no time on the proof's clock is not named late: the plain
-    // floor judges it.
-    const fadeMs = start != null && last != null ? last - start : 0;
-    const neededMs = 100 + (window.from - blockFroms[i]);
-    if (windowMs <= 100 && fadeMs > neededMs) {
-      throw new BusyWindowTooLateError(
-        `run ${i + 1}: the block began ${(blockFroms[i] - (start ?? 0)).toFixed(0)} ms into a fade that ran at least ${fadeMs.toFixed(0)} ms, so its window holds ${windowMs.toFixed(1)} ms, under 100`,
-        {
-          run: i + 1,
-          windowMs,
-          fadeMs,
-          blockFrom: blockFroms[i],
-          fadeStart: start ?? Number.NaN,
-          fadeLast: last ?? Number.NaN,
-        },
+      'a frame shows the rest before the lift',
+    ).not.toBeNull();
+    beforeLift.forEach((level, i) => {
+      expect(level, `run ${i + 1}: the backdrop's level before the lift`).toBe(
+        setBeforeBlock,
       );
-    }
-    expect(windowMs, `run ${i + 1}'s window`).toBeGreaterThan(100);
+    });
+  };
+  let proof: ReturnType<typeof pooledBusyProof> | null = null;
+  let poolError: unknown = null;
+  try {
+    proof = pooledBusyProof(runs, {
+      axis: 'x',
+      settledWithin: wholeStepsUntil(closest) + 0.5,
+      setBeforeBlock: setBeforeBlock ?? undefined,
+      minRunFrames: 2,
+      minJudgedRuns: Math.ceil(DISMISS_RUNS / 2),
+    });
+  } catch (error) {
+    poolError = error;
   }
-  expect(closed).toEqual(windows.map(() => true));
+  const shared = () => {
+    if (poolError != null) {
+      throw poolError;
+    }
+    const p = proof as NonNullable<typeof proof>;
+    expect(p.verdict.failures).toEqual([]);
+    p.judged.forEach((judged, i) => {
+      const read = p.runs[i]?.control;
+      if (judged) {
+        expect(
+          (read?.movedWith ?? 0) - (read?.belowStep ?? 0),
+          `run ${i + 1} shows a new backdrop level`,
+        ).toBeGreaterThanOrEqual(1);
+      }
+    });
+    expect(closest, 'a run shows two frames in its window').toBeLessThan(
+      Number.POSITIVE_INFINITY,
+    );
+  };
+  const floor = (isNamed: boolean, isJudgedOnly: boolean) => {
+    for (const [i, window] of windows.entries()) {
+      if (isJudgedOnly && !(proof as NonNullable<typeof proof>).judged[i]) {
+        continue;
+      }
+      const windowMs = window.to - window.from;
+      if (isNamed) {
+        const start = fadeStarts[i];
+        const last = fadeLasts[i];
+        const fadeMs = start != null && last != null ? last - start : 0;
+        const neededMs = 100 + (window.from - blockFroms[i]);
+        if (windowMs <= 100 && fadeMs > neededMs) {
+          throw new BusyWindowTooLateError(
+            `run ${i + 1}: the block began ${(blockFroms[i] - (start ?? 0)).toFixed(0)} ms into a fade that ran at least ${fadeMs.toFixed(0)} ms, so its window holds ${windowMs.toFixed(1)} ms, under 100`,
+            {run: i + 1, windowMs, fadeMs, blockFrom: blockFroms[i]},
+          );
+        }
+      }
+      expect(windowMs, `run ${i + 1}'s window`).toBeGreaterThan(100);
+    }
+  };
+  const closedCheck = () => {
+    expect(closed).toEqual(windows.map(() => true));
+  };
+  const restThrown = restErrors.find(error => error != null);
+  const judges: Record<'A' | 'B' | 'C', () => void> = {
+    A: () => {
+      restChecks();
+      shared();
+      floor(false, false);
+      closedCheck();
+    },
+    B: () => {
+      if (restThrown != null) {
+        throw restThrown;
+      }
+      restChecks();
+      shared();
+      floor(true, false);
+      closedCheck();
+    },
+    C: () => {
+      if (restThrown != null) {
+        throw restThrown;
+      }
+      restChecks();
+      shared();
+      floor(true, true);
+      closedCheck();
+    },
+  };
+  const verdictOf = (judge: () => void): string => {
+    try {
+      judge();
+      return 'pass';
+    } catch (error) {
+      return `fail[${(error as object).constructor.name}] ${String(
+        (error as Error).message,
+      )
+        .split('\n')[0]
+        .slice(0, 110)}`;
+    }
+  };
+  const judgedCount =
+    proof == null
+      ? 'pool-threw'
+      : `${proof.judged.filter(Boolean).length}of${windows.length}`;
+  const perRun = windows
+    .map(
+      (w, i) =>
+        `${i + 1}:${(w.to - w.from).toFixed(1)}${proof?.judged[i] ? 'J' : 'u'}${restErrors[i] != null ? 'R' : ''}`,
+    )
+    .join(' ');
+  console.log(
+    `DJ judged=${judgedCount} | ${perRun} | A=${verdictOf(judges.A)} | B=${verdictOf(judges.B)} | C=${verdictOf(judges.C)}`,
+  );
 });
 
 /** How many dismissals the busy proof plays and judges pooled. */
@@ -782,6 +851,25 @@ test("reopening at the dismissed photo's neighbour shows that photo", async ({
   await page.route('https://picsum.photos/**', async route =>
     route.fulfill({contentType: 'image/svg+xml', body: photoSvg(3000, 2000)}),
   );
+  const roDelay = Number(process.env.ARM_OBSERVER_DELAY_MS ?? '0');
+  if (roDelay > 0) {
+    await page.addInitScript(ms => {
+      const Native = window.ResizeObserver;
+      window.ResizeObserver = class extends Native {
+        constructor(cb: ResizeObserverCallback) {
+          super((entries, observer) => {
+            if (
+              (window as unknown as {delayObserver?: boolean}).delayObserver
+            ) {
+              setTimeout(() => cb(entries, observer), ms);
+            } else {
+              cb(entries, observer);
+            }
+          });
+        }
+      };
+    }, roDelay);
+  }
   await openStory(page, storybook(), 'core-lightbox--gallery');
   const driver = await touchDriver(page);
   const thumbnails = page.locator('#storybook-root img[style*="cover"]');
@@ -794,12 +882,37 @@ test("reopening at the dismissed photo's neighbour shows that photo", async ({
   };
   const dialog = page.getByRole('dialog');
   const current = dialog.locator('[data-current]');
+  await page.evaluate(() => {
+    (window as unknown as {delayObserver?: boolean}).delayObserver = true;
+  });
   await tapThumbnail(1);
   await expect(dialog).toBeVisible();
+  if (process.env.ARM_FROZEN_PHOTO === '1') {
+    await page.addStyleTag({
+      content: '[data-current] img { translate: 5000px 0 !important; }',
+    });
+  }
   // A plain image opener zooms the photo out of it. The gallery places the
   // opened page after it lays out, so wait for the photo to land.
   await waitForRest(current.locator('img'));
+  await frames(page, 4);
+  const reOld = await current.locator('img').boundingBox();
+  const reVp = page.viewportSize();
+  const reOldIn =
+    reOld != null &&
+    reVp != null &&
+    reOld.x > -0.5 &&
+    reOld.y > -0.5 &&
+    reOld.x + reOld.width < reVp.width + 0.5 &&
+    reOld.y + reOld.height < reVp.height + 0.5;
+  const reStart = Date.now();
+  console.log(
+    `DJP reopen old=${reOldIn ? 'in' : 'OUT'} oldX=${reOld?.x.toFixed(1)}`,
+  );
   const rect = await photoInView(page, current.locator('img'));
+  console.log(
+    `DJP reopen newX=${rect.x.toFixed(1)} waited=${Date.now() - reStart}ms`,
+  );
   await driver.play(
     pullDown({x: rect.x + rect.width / 2, y: rect.y + rect.height / 2}, 110),
   );
