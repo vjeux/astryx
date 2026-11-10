@@ -162,7 +162,7 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
           if (
             !isTouchOnScreen(win) &&
             (active == null ||
-              (!bringsUpKeyboard(active) && !hidesField(active)))
+              !hidesField(active))
           ) {
             scrollBackAtBlur(win, scrolls);
           }
