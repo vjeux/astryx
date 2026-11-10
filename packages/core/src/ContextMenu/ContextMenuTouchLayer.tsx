@@ -18,6 +18,8 @@ import {flushSync} from 'react-dom';
 import {getGestureHost} from '../gestures/GestureHost';
 import {isTerminal} from '../gestures/GestureRecognizer';
 import {playHaptic} from '../gestures/haptics';
+import {useAttachment} from '../hooks/useAttachment';
+import {subscribeInput} from '../utils/inputStream';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {contextMenu} from '../motion/uikit/contextMenu';
 import {isElement} from '../utils/nodeType';
@@ -80,6 +82,23 @@ function heldPointerOf(
   }
   const pointerId = getGestureHost(doc).pointerIdOf(touch);
   return pointerId == null ? null : {pointerId, pointerType: touch.pointerType};
+}
+
+/**
+ * An event's time on the gesture arena's clock, as the gesture host reads it.
+ * That is its `timeStamp`, which some engines and DOM emulators give from the
+ * epoch instead of from the page's time origin.
+ */
+function clockTime(event: Event): number {
+  const time = event.timeStamp;
+  if (
+    time > 1e12 &&
+    typeof performance !== 'undefined' &&
+    performance.timeOrigin > 0
+  ) {
+    return time - performance.timeOrigin;
+  }
+  return time;
 }
 
 /**
@@ -200,6 +219,50 @@ export function ContextMenuTouchLayer({
   followsFingerRef.current = () =>
     isFollowedRef.current() &&
     recognizer.trackedTouches[0]?.pointerType === 'touch';
+
+  // Under load, the held finger's moves can reach the page after the menu's
+  // moment, though they came before it. The recognizer reads each move's own
+  // time here, so the menu waits for them, and a drift in them still ends the
+  // hold.
+  useAttachment(
+    triggerRef,
+    element => {
+      const view = element.ownerDocument.defaultView;
+      if (view == null) {
+        return () => {};
+      }
+      let pointerId: number | null = null;
+      const onDown = (event: PointerEvent) => {
+        if (event.pointerType === 'touch' && event.isPrimary) {
+          pointerId = event.pointerId;
+        }
+      };
+      const onMove = (event: PointerEvent) => {
+        if (event.pointerId !== pointerId) {
+          return;
+        }
+        recognizer.followMove(clockTime(event));
+      };
+      const onEnd = (event: PointerEvent) => {
+        if (event.pointerId === pointerId) {
+          pointerId = null;
+        }
+      };
+      element.addEventListener('pointerdown', onDown, {capture: true});
+      const unsubscribes = [
+        subscribeInput(view, 'pointermove', onMove),
+        subscribeInput(view, 'pointerup', onEnd),
+        subscribeInput(view, 'pointercancel', onEnd),
+      ];
+      return () => {
+        element.removeEventListener('pointerdown', onDown, {capture: true});
+        for (const unsubscribe of unsubscribes) {
+          unsubscribe();
+        }
+      };
+    },
+    recognizer,
+  );
 
   useImperativeHandle(
     ref,
