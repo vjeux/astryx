@@ -361,7 +361,7 @@ export function CheckboxListItem({
       {...themeDataAttributes({selected: isCheckedRow ? 'selected' : null})}
       // A mouse's or a pen's press on the row paints through the press
       // controller too, so the row and its box fade on release together.
-      {...pressFinePointerProps(rowOwnsPress)}
+      {...pressFinePointerProps(false)}
       ref={ref}
       label={namesFromVisibleLabel ? <span id={labelID}>{label}</span> : label}
       description={description}
