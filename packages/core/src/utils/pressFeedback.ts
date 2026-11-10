@@ -628,7 +628,6 @@ function onPointerDown(event: PointerEvent): void {
   // pointer is coarse, a pen scrolls the page like a finger, so it waits too.
   const presentsAtOnce =
     event.pointerType === 'pen' &&
-    !stylesheetDroppedActive() &&
     element != null &&
     paintsFinePointerPress(element);
   // The touch clock is stamped AFTER the brake reads it, deliberately: the
