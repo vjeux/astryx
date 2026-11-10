@@ -646,6 +646,20 @@ test('collapse under a finger: the group fades out as the rows below glide up, w
   );
   // The checks below judge at least two frames of the glide, three of the
   // fade and five of the leaving group. A page starved of frames fails by name.
+  // NOT FOR LANDING: a band in a mid-collapse frame whose reads spanned
+  // 40 ms in the record, half the travel the old allowance gave it.
+  {
+    const leaving = frames.filter(frame => frame.group != null);
+    const at = frames.indexOf(leaving[Math.floor(leaving.length / 3)]);
+    const hit = frames[at] as {belowTop: number; callbackAt: number; t: number};
+    const before = frames[at - 1];
+    const after = frames[at + 1];
+    hit.t = hit.callbackAt + 40;
+    const oldAllowance =
+      (Math.abs(after.belowTop - before.belowTop) * 40) /
+      (after.callbackAt - before.callbackAt);
+    hit.belowTop += 1.5 + oldAllowance / 2 - blankBands([frames[at]])[0];
+  }
   const late = lateReads(frames, browserName);
   const travel = insideTravel(expanded, expanded - height);
   requireFrames(frames, {
