@@ -368,6 +368,17 @@ test.describe('with a finger', () => {
     await expect(page.locator(OPEN_LAYER)).toHaveCount(1);
     await settle(page);
     const open = await layerBox(page);
+    // While the menu grows, an element above the trigger takes touches.
+    // The press must land on the trigger.
+    await expect
+      .poll(async () =>
+        trigger.evaluate(
+          (element, point) =>
+            element.contains(document.elementFromPoint(point.x, point.y)),
+          at,
+        ),
+      )
+      .toBe(true);
 
     const finger = await touch.press(at);
     await expectPressed(trigger);
