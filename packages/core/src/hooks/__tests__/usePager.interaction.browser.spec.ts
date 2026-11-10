@@ -35,6 +35,7 @@ import {
   trackMarker,
   waitForRest,
   webInputDriver,
+  WHEEL_SCROLL_END_MS,
   withFinger,
   writeEvidence,
   type ArmedHold,
@@ -1426,11 +1427,16 @@ test.describe('under a fine primary pointer (spec:AST-094 FR43)', () => {
   }) => {
     test.skip(browserName === 'chromium', TRACKPAD_IN_CHROMIUM);
     const {track, input} = await openFine(page);
-    // 40 steps of 6.5 px (a trackpad's continuous scroll): 260 px toward the
-    // next page, past half of it whatever the release speed.
-    for (let i = 0; i < 40; i++) {
-      await input.wheel({x: 200, y: TOP + HEIGHT / 2, dx: 6.5});
-    }
+    // 40 steps, 7 and 6 px in turn: a trackpad's continuous scroll, in the
+    // whole px WebKit delivers. That is 260 px toward the next page, past half
+    // of it whatever the release speed. A step that reaches the page after the
+    // scroll ended starts a second swipe, so that gap fails here, by name.
+    await input.wheelBurst({
+      x: 200,
+      y: TOP + HEIGHT / 2,
+      steps: Array.from({length: 40}, (_, i) => ({dx: i % 2 === 0 ? 7 : 6})),
+      maxGapMs: WHEEL_SCROLL_END_MS.horizontal,
+    });
     // A trackpad scroll ends 220 ms after its last wheel.
     await page.waitForTimeout(300);
     await waitForRest(track);
@@ -1459,12 +1465,16 @@ test.describe('under a fine primary pointer (spec:AST-094 FR43)', () => {
       };
       requestAnimationFrame(sample);
     });
-    // 30 steps of 17.5 px: 525 px, more than a page. The cursor stays put
-    // while the next page slides under it; the track stops there, one page
-    // from where the scroll began.
-    for (let i = 0; i < 30; i++) {
-      await input.wheel({x: 200, y: TOP + HEIGHT / 2, dx: 17.5});
-    }
+    // 30 steps, 18 and 17 px in turn: 525 px, more than a page. The cursor
+    // stays put while the next page slides under it; the track stops there,
+    // one page from where the scroll began. A gap that ends the scroll fails
+    // by name.
+    await input.wheelBurst({
+      x: 200,
+      y: TOP + HEIGHT / 2,
+      steps: Array.from({length: 30}, (_, i) => ({dx: i % 2 === 0 ? 18 : 17})),
+      maxGapMs: WHEEL_SCROLL_END_MS.horizontal,
+    });
     // A trackpad scroll ends 220 ms after its last wheel.
     await page.waitForTimeout(300);
     await waitForRest(track);
