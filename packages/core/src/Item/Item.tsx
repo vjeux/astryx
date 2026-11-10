@@ -133,10 +133,12 @@ export interface ItemSwipeActions {
 }
 
 /**
- * `reveal`: past half the panel the row rests open with every entry a real
- * button; a long drag or a fling fires the outermost. `commit`: a release
- * past the commit point slides the row out and fires the outermost entry;
- * nothing rests, and the panel is presentational.
+ * `reveal`: past half the panel, or after a fling, the row rests open with
+ * every entry a real button; a long drag fires the outermost. On a side with
+ * two or more entries, only a drag that starts on the open row fires it.
+ * `commit`: a release past the commit point slides the row out and fires the
+ * outermost entry; nothing rests, and the panel is presentational. A fling
+ * never fires an entry.
  */
 export type ItemSwipeBehavior = 'reveal' | 'commit';
 
