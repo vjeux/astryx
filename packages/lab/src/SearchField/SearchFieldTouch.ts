@@ -141,7 +141,7 @@ export function useSearchFieldMotion({
     // clock. So the turn keeps its velocity however late WebKit applies it.
     // Under reduced motion the animator plays its cross-fade for these.
     const options = continuesMotion
-      ? {additive: true}
+      ? {start: 'presented' as const}
       : {start: 'presented' as const};
     const handles = [
       play(
