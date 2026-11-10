@@ -898,7 +898,7 @@ test('with the row open, a drag that starts on Delete itself and drags on past t
   page,
 }) => {
   const opened = await openRow(page);
-  const {driver, row, rest, panel} = opened;
+  const {driver, rest, panel} = opened;
   const openWidth = await restOpen(opened);
   const rows = page.locator('.astryx-item');
   const before = await rows.count();

@@ -1069,9 +1069,10 @@ export function useSwipeAction({
   // no shared state. It also closes when anything scrolling it moves (the list,
   // the page), as a UIKit row closes when its table scrolls. A scroll that
   // starts on the row itself lands no pointer outside it.
+  const isRowOpen = isSwipeOpen(state);
   useEffect(() => {
     const view = rootRef.current?.ownerDocument.defaultView;
-    if (!isOpen() || view == null) {
+    if (!isRowOpen || view == null) {
       return undefined;
     }
     const onOutside = (event: PointerEvent) => {
@@ -1117,7 +1118,7 @@ export function useSwipeAction({
         stop();
       }
     };
-  }, [close, isOpen, state.phase]);
+  }, [close, isRowOpen]);
 
   // A tap on an open row's own content closes it and activates nothing, as
   // UIKit's dismissal does. The tap recognizes at the lift. The host keeps the

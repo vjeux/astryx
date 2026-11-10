@@ -129,3 +129,18 @@ describe('createSwipe', () => {
     );
   });
 });
+
+describe('a swizzled copy of the swipe module', () => {
+  it('finds the host of a Swipe value the package made, and the package finds its own', async () => {
+    const swipe = createSwipe({
+      trailing: [{label: 'Archive', onActivate: () => {}}],
+    });
+    vi.resetModules();
+    const copy = await import('./swipeHost');
+    expect(copy.swipeHostOf).not.toBe(swipeHostOf);
+    expect(copy.swipeHostOf(swipe)).toBe(swipeHostOf(swipe));
+    expect(copy.swipeHostOf(swipe)).not.toBeNull();
+    // A value built by hand has no host in any copy.
+    expect(copy.swipeHostOf(Object.freeze({}) as Swipe)).toBeNull();
+  });
+});

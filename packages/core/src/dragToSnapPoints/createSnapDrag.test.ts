@@ -745,6 +745,30 @@ describe('createSnapDrag on the compositor (compositorParts)', () => {
     expect(child.animation.startTime).toBe(root.animation.startTime);
   });
 
+  it("plays a role spring at the theme's tempo, as the animator does", () => {
+    const durationAt = (tempo: string) => {
+      const node = element();
+      node.style.setProperty('--_astryx-motion-tempo', tempo);
+      const {parts, played} = partsOf(node);
+      const snap = createSnapDrag(node, {
+        axis: 'x',
+        snapPoints: [-100, 0],
+        onSettle: () => {},
+        customProperty: PROPERTY,
+        compositorParts: () => parts,
+      });
+      pan('began', 0);
+      pan('changed', -40);
+      snap.settleTo(1);
+      const duration = Number(played[0]?.options.duration);
+      snap.destroy();
+      return duration;
+    };
+    const atOne = durationAt('1');
+    // Twice the tempo: the same spring takes about twice as long.
+    expect(durationAt('2')).toBeGreaterThan(atOne * 1.6);
+  });
+
   it('finishSettle ends a compositor settle at its end now: the parts stop, onSettle runs once, and the curve reports nothing later', () => {
     const node = element();
     const {parts, played} = partsOf(node);

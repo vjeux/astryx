@@ -16,9 +16,7 @@
 
 import type {KeyboardEvent, ReactNode} from 'react';
 import type {StyleXStyles} from '@stylexjs/stylex';
-
-// Not a registered symbol: only createSwipe makes a Swipe value.
-const SWIPE = Symbol('astryx.swipe');
+import {realmValue, sharedKey} from '../utils/sharedRealm';
 
 /**
  * How the action looks: ordinary, the one you mean, the dangerous one. Not a
@@ -104,7 +102,13 @@ export interface CreateSwipeOptions {
  * The configured swipe actions. Callers create it only through `createSwipe`
  * and pass it only to `swipe`; its contents are not public.
  */
-export type Swipe = {readonly [SWIPE]: true};
+export interface Swipe {
+  /**
+   * A brand that is never present, so the swipe types of the package and a
+   * swizzled copy match.
+   */
+  readonly '@astryxdesign/core/swipe/v1'?: never;
+}
 
 /**
  * What a row knows about itself that decides whether swipe actions serve it,
@@ -170,13 +174,18 @@ export interface SwipeLayerProps {
   behavior: SwipeBehavior;
 }
 
-// The host of every Swipe value: the value itself carries nothing a
-// caller can read, and a value built by hand has none.
-const hosts = new WeakMap<Swipe, SwipeHost>();
+// The host of every Swipe value: the value itself carries nothing a caller
+// can read, and a value built by hand has none. Registered, so a swizzled
+// Item finds the host of the package's Swipe value.
+const hosts = realmValue(
+  sharedKey('swipe/hosts', 1),
+  () => new WeakMap<Swipe, SwipeHost>(),
+  value => value instanceof WeakMap,
+);
 
 /** Makes a Swipe value for a host (createSwipe.ts). */
 export function makeSwipe(host: SwipeHost): Swipe {
-  const swipe: Swipe = Object.freeze({[SWIPE]: true as const});
+  const swipe: Swipe = Object.freeze({});
   hosts.set(swipe, host);
   return swipe;
 }

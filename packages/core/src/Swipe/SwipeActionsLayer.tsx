@@ -55,22 +55,12 @@ import type {SwipeAction, SwipeLayerProps} from './swipeHost';
 import {registerSwipeRoot} from './swipeRoots';
 
 // =============================================================================
-// Types
-// =============================================================================
-
-/**
- * What the root needs from the gesture: the key handler it forwards its key
- * events into (Escape closes a resting row). The layer writes it on every
- * render; the root reads it on every event.
- */
-
-// =============================================================================
 // Styles
 // =============================================================================
 
-/** The travel the gesture writes on the root, physical px (swipeMotion.ts). */
+/** The travel the gesture writes on the root, physical px (useSwipeAction.ts). */
 const SWIPE_TRAVEL = 'var(--_item-swipe-travel, 0px)';
-/** How far a full swipe has confirmed, 0 to 1 (swipeMotion.ts). */
+/** How far a full swipe has confirmed, 0 to 1 (useSwipeAction.ts). */
 const SWIPE_CONFIRM = 'var(--_item-swipe-confirm, 0)';
 // The side's geometry the gesture writes on its window (useSwipeAction.ts):
 // the pin, its physical sign, its open width and the outermost entry's slide.
@@ -292,20 +282,21 @@ export default function SwipeActionsLayer({
   });
   // The root's key events reach this layer's key handler. A row given `swipe`
   // routes them through the runtime's registry. On the deprecated path, they
-  // come through the bridge Item forwards into. The Effect publishes it for the
-  // root, which lives outside the layer, and releases it when the layer leaves.
-  // React flushes effects before it delivers a discrete event, so a key never
-  // meets a stale handler.
+  // come through the bridge Item forwards into. The Effect syncs the registry
+  // and the bridge with the root, which lives outside the layer. It publishes
+  // the handler once the root is known and releases it when the layer leaves.
+  // The handler and the bridge are stable, so it runs once per layer.
+  const {onKeyDown, rootRef} = swipe;
   useEffect(() => {
-    const root = swipe.rootRef.current;
+    const root = rootRef.current;
     const unregister =
-      root == null ? undefined : registerSwipeRoot(root, swipe.onKeyDown);
-    onBridge?.({onKeyDown: swipe.onKeyDown});
+      root == null ? undefined : registerSwipeRoot(root, onKeyDown);
+    onBridge?.({onKeyDown});
     return () => {
       unregister?.();
       onBridge?.(null);
     };
-  });
+  }, [onBridge, onKeyDown, rootRef]);
   // Open from the release that opens it (`isSwipeOpen`), as UIKit counts it:
   // an entry the finger can see while the row springs open is tappable.
   const isOpen = isSwipeOpen(swipe.state);

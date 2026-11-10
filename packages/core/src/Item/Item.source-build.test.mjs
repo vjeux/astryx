@@ -90,11 +90,11 @@ describe('the shipped Item module and the swipe gesture', () => {
     expect(dynamics).toEqual(['../Swipe/DeprecatedSwipeLayer.js']);
   });
 
-  it('keeps the reader of a swipe value free of imports', async () => {
+  it('keeps the reader of a swipe value free of swipe code: it imports only the realm registry its host map is shared through', async () => {
     const {statics, dynamics} = await compiledImportsOf(
       '../Swipe/swipeHost.ts',
     );
-    expect(statics).toEqual([]);
+    expect(statics).toEqual(['../utils/sharedRealm.js']);
     expect(dynamics).toEqual([]);
   });
 

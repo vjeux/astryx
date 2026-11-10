@@ -20,6 +20,7 @@ import {
   type AnimatorOptions,
   type MotionHandle,
 } from '../motion/animator';
+import {resolveMotion} from '../motion/resolveMotion';
 import {resolveSnapPoint} from '../motion/resolveSnapPoint';
 import {solveSpring, toSpring, type SpringDescription} from '../motion/spring';
 import {registerSpringsTable, springs} from '../motion/uikit/springs';
@@ -335,7 +336,8 @@ export function createSnapDrag(
       const from = position();
       holdCompositor();
       const to = points[target];
-      const curve = solveSpring(toSpring(spring), {
+      // At the theme's tempo, as the animator plays a role spring.
+      const curve = solveSpring(toSpring(resolveMotion(element, spring)), {
         from,
         to,
         velocity: startVelocity,

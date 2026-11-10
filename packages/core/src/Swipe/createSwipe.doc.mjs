@@ -68,7 +68,7 @@ export const docs = {
       {
         guidance: false,
         description:
-          'Give a `commit` side more than one entry: only the outermost fires, so the others have no touch path.',
+          'Give a `commit` side more than one entry: it fires none of them.',
       },
     ],
     accessibility: [
