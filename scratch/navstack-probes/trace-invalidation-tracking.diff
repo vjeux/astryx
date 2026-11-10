@@ -1,0 +1,12 @@
+diff --git a/internal/interaction-harness/src/trace.ts b/internal/interaction-harness/src/trace.ts
+index a343ece4b26..b322f58e4fe 100644
+--- a/internal/interaction-harness/src/trace.ts
++++ b/internal/interaction-harness/src/trace.ts
+@@ -301,6 +301,7 @@ export async function traceRendering(
+       includedCategories: [
+         'devtools.timeline',
+         'disabled-by-default-devtools.timeline',
++        'disabled-by-default-devtools.timeline.invalidationTracking',
+         'blink.user_timing',
+         'toplevel',
+       ],
