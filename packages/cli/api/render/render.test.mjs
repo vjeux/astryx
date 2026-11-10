@@ -1508,12 +1508,18 @@ export default function Page() {
 }
 `;
 
+  /** @param {string} value */
+  const decodeAttribute = value =>
+    value.replace(/&(amp|quot|#x27|lt|gt);/g, (_, entity) => ({amp: '&', quot: '"', '#x27': "'", lt: '<', gt: '>'})[entity]);
+
   /** @param {string} name */
   async function initialsOf(name) {
     await render(`initials/${name}.tsx`, {cwd: dir});
     const html = fs.readFileSync(path.join(dir, 'initials', `${name}.html`), 'utf8');
-    // Generated content draws the initials from this attribute, not a text node.
-    return [...html.matchAll(/<div data-name="\d+">([\s\S]*?)(?=<div data-name=|<\/main>)/g)].map(m => /\bdata-initials="([^"]*)"/.exec(m[1])?.[1] ?? '');
+    // The avatar draws its initials from `data-initials`, not from its text.
+    return [...html.matchAll(/<div data-name="\d+">([\s\S]*?)(?=<div data-name=|<\/main>)/g)].map(m =>
+      decodeAttribute(/data-initials="([^"]*)"/.exec(m[1])?.[1] ?? ''),
+    );
   }
 
   // On a Node build that crashes in Intl.Segmenter, both renders run without it.
