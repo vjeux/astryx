@@ -782,6 +782,34 @@ export function touchPacingFault(
 }
 
 /**
+ * One pointer's stroke as a touch play's steps. The first point is the
+ * press, each point after it a move, and the last point also the lift. The
+ * touch path's judgment then reads a mouse stroke as it reads a finger's.
+ */
+export function strokeSteps(
+  points: readonly (Point & {readonly t: number})[],
+): TouchEventStep[] {
+  const at = (point: Point): Finger => ({id: 0, x: point.x, y: point.y});
+  const first = points[0];
+  const last = points[points.length - 1];
+  return [
+    {
+      t: first.t,
+      type: 'touchStart',
+      fingers: [at(first)],
+      changed: [at(first)],
+    },
+    ...points.slice(1).map(point => ({
+      t: point.t,
+      type: 'touchMove' as const,
+      fingers: [at(point)],
+      changed: [at(point)],
+    })),
+    {t: last.t, type: 'touchEnd', fingers: [], changed: [at(last)]},
+  ];
+}
+
+/**
  * The first finger's hold from touch-down to the lift that ends the play, ms.
  * It gives the page's reading and the script's: a tap's hold, or a drag's
  * whole span.
@@ -805,15 +833,25 @@ export function readHold(
   };
 }
 
-function describeFault(fault: TouchPacingFault): string {
+/**
+ * The fault as the pacing errors name it. `contact` is what the page reads
+ * resting: a touch play's finger, or a mouse stroke's pointer.
+ */
+export function describeFault(
+  fault: TouchPacingFault,
+  contact: 'finger' | 'pointer' = 'finger',
+): string {
   const frames =
     fault.frameGapMs == null
       ? ''
       : `; the page drew no frame for ${fault.frameGapMs.toFixed(0)} ms during the gesture`;
-  return `${describeReading(fault)}${frames}`;
+  return `${describeReading(fault, contact)}${frames}`;
 }
 
-function describeReading(fault: TouchPacingFault): string {
+function describeReading(
+  fault: TouchPacingFault,
+  contact: 'finger' | 'pointer',
+): string {
   const gaps = `gaps ${fault.gapsMs.map(g => g.toFixed(0)).join(', ')} ms where the script spaces ${fault.scriptedGapsMs.map(g => g.toFixed(0)).join(', ')} ms`;
   if (fault.kind === 'hold' && fault.holdMs != null) {
     return `the page read a hold of ${fault.holdMs.page.toFixed(0)} ms where the script holds ${fault.holdMs.script.toFixed(0)} ms, on the other side of the ${fault.threshold} ms the component decides on`;
@@ -822,7 +860,7 @@ function describeReading(fault: TouchPacingFault): string {
     return `the page read a release of ${fault.pageReleasePxPerS.toFixed(0)} px/s where the script throws ${fault.scriptReleasePxPerS.toFixed(0)} px/s, on the other side of the ${fault.threshold} px/s the component decides on (${gaps})`;
   }
   if (fault.kind === 'rest') {
-    return `the page read a resting finger: the lift reached it more than ${TOUCH_STILLNESS_MS} ms after the last move (${gaps})`;
+    return `the page read a resting ${contact}: the lift reached it more than ${TOUCH_STILLNESS_MS} ms after the last move (${gaps})`;
   }
   if (fault.kind === 'throw') {
     return `the page read a throw of ${fault.pageReleasePxPerS.toFixed(0)} px/s where the script rests more than ${TOUCH_STILLNESS_MS} ms before the lift (${gaps})`;

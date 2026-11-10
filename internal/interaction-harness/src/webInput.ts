@@ -44,16 +44,32 @@
  * wheel input, and Playwright has no pen for WebKit: both throw, naming the
  * reason, so a proof skips on the driver's flags instead.
  *
- * A WebKit mouse stroke is `page.mouse`, each event sent at its scripted
- * time on the wall clock. WebKit stamps an event when it arrives, so a late
- * send reaches the page late.
+ * A WebKit mouse stroke is `page.mouse`, each event sent on the wall clock
+ * with a touch play's `'spacing'` pacing. WebKit stamps an event when it
+ * arrives, so a late send reaches the page late. The driver reads each
+ * event's arrival and judges the release with the touch path's rule. A
+ * release the page read otherwise fails by name (`MousePacingError`).
  *
  * SYNC: Keep the engine limits above equal to the README's table and to the
  *   harness self-test (../src/harness.interaction.browser.spec.ts).
  */
 
 import type {CDPSession, JSHandle, Page} from '@playwright/test';
-import type {Engine} from './touch';
+import {
+  describeFault,
+  longestFrameGap,
+  pacedDeadline,
+  strokeSteps,
+  touchPacingFault,
+  touchPlayError,
+  TouchLiftStallError,
+  TouchPageStallError,
+  TouchStarvationError,
+  type Engine,
+  type TouchArrival,
+  type TouchPacingFault,
+} from './touch';
+import type {TouchEventStep} from './scripts';
 
 /** One wheel step: the page receives exactly `dx`, `dy` CSS px. */
 export interface WheelInput {
@@ -951,29 +967,167 @@ async function webkitWebInput(page: Page): Promise<WebInputDriver> {
       if (points.length === 0) {
         return;
       }
-      const startWall = Date.now();
-      const strokeEvents: (() => Promise<void>)[] = [
-        async () => {
-          await page.mouse.move(points[0].x, points[0].y);
-          await page.mouse.down();
-        },
-        ...points.slice(1).map(point => async () => {
-          const wait = startWall + point.t - Date.now();
-          if (wait > 0) {
-            await sleep(wait);
-          }
-          await page.mouse.move(point.x, point.y);
-        }),
-        async () => {
-          await page.mouse.up();
-        },
+      const steps = strokeSteps(points);
+      await page.mouse.move(points[0].x, points[0].y);
+      const armed = await armInputRun(page, MOUSE_TYPES, {frames: true});
+      await untilFirstFrame(armed);
+      const sends: (() => Promise<void>)[] = [
+        () => page.mouse.down(),
+        ...points
+          .slice(1)
+          .map(point => () => page.mouse.move(point.x, point.y)),
+        () => page.mouse.up(),
       ];
-      for (const [index, send] of strokeEvents.entries()) {
+      const origin = performance.now();
+      const onEventMs: number[] = [];
+      let previous: {sentAt: number; returnedAt: number} | null = null;
+      for (const [index, send] of sends.entries()) {
+        const wait =
+          pacedDeadline('spacing', origin, steps, index, previous) -
+          performance.now();
+        if (wait > 0) {
+          await sleep(wait);
+        }
+        const sentAt = performance.now();
         await send();
+        previous = {sentAt, returnedAt: performance.now()};
+        const ranFrom = performance.now();
         await onEvent?.(index);
+        onEventMs.push(performance.now() - ranFrom);
+      }
+      const run = await armed.evaluate(record => {
+        record.stop();
+        return {
+          eventTypes: record.eventTypes,
+          pointerTypes: record.pointerTypes,
+          stamps: record.stamps,
+          handledAt: record.handledAt,
+          receivedAt: record.receivedAt,
+          frames: record.frames,
+        };
+      });
+      await armed.dispose();
+      const arrivals = mouseArrivals(run);
+      if (arrivals.length !== steps.length) {
+        throw new Error(
+          `webInputDriver: the page received ${arrivals.length} of a mouse stroke's ${steps.length} pointer events`,
+        );
+      }
+      const found = touchPacingFault(steps, arrivals);
+      if (found != null) {
+        const fault = {
+          ...found,
+          frameGapMs: longestFrameGap(run.frames, arrivals),
+        };
+        throw mouseStrokeError(steps, arrivals, fault, onEventMs, run.frames);
       }
     },
   };
+}
+
+/** The pointer events a WebKit mouse stroke's run records. */
+const MOUSE_TYPES = ['pointerdown', 'pointermove', 'pointerup'];
+
+/**
+ * Waits for the run's first frame, so its frames start before the stroke. The
+ * harness's own frames run on the real timers: a frozen timer gate
+ * (story.ts) holds only the page's.
+ */
+async function untilFirstFrame(armed: JSHandle<InputRun>): Promise<void> {
+  await armed.evaluate(
+    run =>
+      new Promise<void>(resolve => {
+        const gate = (
+          window as unknown as {
+            __harnessTimerGate?: {frame?: typeof requestAnimationFrame};
+          }
+        ).__harnessTimerGate;
+        const frame = gate?.frame ?? window.requestAnimationFrame.bind(window);
+        const check = () => (run.frames.length > 0 ? resolve() : frame(check));
+        check();
+      }),
+  );
+}
+
+/** Each mouse pointer event of a run, as the touch path reads an arrival. */
+function mouseArrivals(run: {
+  readonly eventTypes: readonly string[];
+  readonly pointerTypes: readonly string[];
+  readonly stamps: readonly number[];
+  readonly handledAt: readonly number[];
+  readonly receivedAt: readonly number[];
+}): TouchArrival[] {
+  const arrivals: TouchArrival[] = [];
+  run.eventTypes.forEach((_, i) => {
+    if (run.pointerTypes[i] === 'mouse') {
+      arrivals.push({
+        stamp: run.stamps[i],
+        firstStamp: run.stamps[i],
+        handledAt: run.handledAt[i],
+        startedAt: run.receivedAt[i],
+      });
+    }
+  });
+  return arrivals;
+}
+
+/**
+ * A WebKit mouse stroke's page read a release that is not the stroke's.
+ * WebKit stamps each event when it arrives, so an event sent late reaches the
+ * page late. `heldBy` names what held it, as the touch path's errors do. It
+ * is the stroke's own `onEvent`, the page's own listeners, a page starved of
+ * frames, or a dispatch that stalled before the page.
+ */
+export class MousePacingError extends Error {
+  constructor(
+    readonly fault: TouchPacingFault,
+    readonly heldBy: 'onEvent' | 'page' | 'starvation' | 'dispatch',
+    detail: string,
+  ) {
+    super(
+      `webInputDriver: in a mouse stroke, ${describeFault(fault, 'pointer')}. ${detail}`,
+    );
+    this.name = 'MousePacingError';
+  }
+}
+
+/** The `MousePacingError` for a stroke's fault, held as the touch path decides. */
+function mouseStrokeError(
+  steps: readonly TouchEventStep[],
+  arrivals: readonly TouchArrival[],
+  fault: TouchPacingFault,
+  onEventMs: readonly number[],
+  frames: readonly number[],
+): MousePacingError {
+  const held = touchPlayError(steps, arrivals, fault, onEventMs, frames);
+  if (held instanceof TouchLiftStallError) {
+    return new MousePacingError(
+      fault,
+      'onEvent',
+      `onEvent ran ${held.numbers.onEventMs.toFixed(0)} ms before the next event: page work there holds that event back`,
+    );
+  }
+  if (held instanceof TouchPageStallError) {
+    return new MousePacingError(
+      fault,
+      'page',
+      `The page's own pointer listeners took ${held.fault.heldByPage.handlingMs.toFixed(0)} ms of page wall time to handle an event, so the next reached it ${held.fault.heldByPage.gapMs.toFixed(0)} ms later`,
+    );
+  }
+  if (held instanceof TouchStarvationError) {
+    return new MousePacingError(
+      fault,
+      'starvation',
+      `The page drew no frame for ${held.fault.starvedMs.toFixed(0)} ms across that gap: the runner starved the page. Judge the proof from a run with CI's CPU limits`,
+    );
+  }
+  return new MousePacingError(
+    fault,
+    'dispatch',
+    fault.waited == null
+      ? 'A dispatch stalled before the page'
+      : `An event waited ${fault.waited.waitMs.toFixed(0)} ms for the main thread before the page's listeners began`,
+  );
 }
 
 /** Wheel and pen input for the page's engine. Firefox is not supported (no project). */

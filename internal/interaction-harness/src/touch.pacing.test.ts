@@ -32,6 +32,7 @@ import {describe, expect, it} from 'vitest';
 import {pinch, toTouchEvents, type TouchEventStep} from './scripts';
 import {
   ANSWER_SLACK_MS,
+  describeFault,
   pacedDeadline,
   readRelease,
   touchArrivalsFrom,
@@ -45,6 +46,7 @@ import {
   liftStallError,
   longestFrameGap,
   readHold,
+  strokeSteps,
   type TouchArrival,
   type TouchPacing,
 } from './touch';
@@ -817,5 +819,42 @@ describe('boundaries, the scroll release and frame evidence', () => {
       /back; the page drew no frame for 176 ms during the gesture\. /,
     );
     expect(new TouchLiftStallError(lift).message).not.toMatch(/drew no frame/);
+  });
+});
+
+describe('strokeSteps', () => {
+  it("reads a mouse stroke as one finger's steps: a press, its moves and a lift at the last point", () => {
+    const steps = strokeSteps([
+      {x: 0, y: 0, t: 0},
+      {x: 30, y: 0, t: 16},
+      {x: 60, y: 0, t: 32},
+    ]);
+    expect(steps.map(step => [step.type, step.t])).toEqual([
+      ['touchStart', 0],
+      ['touchMove', 16],
+      ['touchMove', 32],
+      ['touchEnd', 32],
+    ]);
+    expect(steps.at(-1)?.changed).toEqual([{id: 0, x: 60, y: 0}]);
+  });
+
+  it("names a stroke's lift that reached the page 100 ms after its last move a resting pointer", () => {
+    const steps = strokeSteps([
+      {x: 0, y: 0, t: 0},
+      {x: 30, y: 0, t: 16},
+      {x: 60, y: 0, t: 32},
+    ]);
+    const arrivals = [0, 16, 32, 132].map(stamp => ({
+      stamp,
+      handledAt: stamp + 1,
+    }));
+    const fault = touchPacingFault(steps, arrivals);
+    if (fault == null) {
+      throw new Error('the late lift read as no fault');
+    }
+    expect(fault.kind).toBe('rest');
+    expect(describeFault(fault, 'pointer')).toMatch(
+      /^the page read a resting pointer: the lift reached it more than 40 ms after the last move/,
+    );
   });
 });

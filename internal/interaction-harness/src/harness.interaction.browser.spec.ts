@@ -4012,17 +4012,13 @@ test.describe('wheel and pen input', () => {
     }
   });
 
-  test('in Chromium a mouse release sent 100 ms late still carries its scripted time', async ({
+  test("a mouse release sent 100 ms late reads the stroke's speed in Chromium, and fails by name in WebKit", async ({
     page,
   }) => {
     await fixture(page);
     const driver = await webInputDriver(page);
-    test.skip(
-      driver.engine !== 'chromium',
-      'WebKit stamps a mouse event when it arrives',
-    );
     const sentAt: number[] = [];
-    await driver.mouse(
+    const stroke = driver.mouse(
       [
         {x: 100, y: 100, t: 0},
         {x: 100, y: 130, t: 16},
@@ -4039,6 +4035,16 @@ test.describe('wheel and pen input', () => {
         },
       },
     );
+    if (driver.engine === 'webkit') {
+      // WebKit stamps the release when it arrives, so the page reads a rest.
+      await expect(stroke).rejects.toMatchObject({
+        name: 'MousePacingError',
+        heldBy: 'onEvent',
+        fault: {kind: 'rest'},
+      });
+      return;
+    }
+    await stroke;
     expect(sentAt[3] - sentAt[2]).toBeGreaterThanOrEqual(100);
     const log = await readInputLog(page);
     const moves = log.filter(r => r.type === 'pointermove');
