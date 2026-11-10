@@ -549,7 +549,11 @@ test('the scroll offset holds through a swipe, and the settle hands it on', asyn
     });
   });
   const driver = await touchDriver(page);
-  await driver.play(drag(from, to, {durationMs: 80, restMs: 0}));
+  // The row pages from the release the page reads. A release it reads at
+  // rest, from a lift a loaded runner sent late, fails by name.
+  await driver.play(drag(from, to, {durationMs: 80, restMs: 0}), {
+    pacing: 'spacing',
+  });
   const seen = await page.evaluate(
     () => (window as unknown as {__seen: number[]}).__seen,
   );
