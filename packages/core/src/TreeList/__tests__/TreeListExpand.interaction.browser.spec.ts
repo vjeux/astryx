@@ -1235,6 +1235,15 @@ test('the rows below keep moving on every frame while the main thread is blocked
   const presented = await compositor.stop();
   const frames = await cast.stop();
   const tracked = await trackMarker(page, frames);
+  // NOT FOR LANDING: the row below stands still through the block, at
+  // where the last frame before it showed it.
+  const held = tracked.filter(frame => frame.t < block.from && frame.box);
+  const still = held[held.length - 1]?.box;
+  for (const frame of tracked) {
+    if (frame.t >= block.from && frame.t <= block.to && still != null) {
+      frame.box = {...still};
+    }
+  }
   const proof = busyWindowProof(tracked, block, {
     axis: 'y',
     settledWithin: 1,
