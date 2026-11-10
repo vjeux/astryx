@@ -407,7 +407,7 @@ export function useTabBarMinimize({
       : tabBar.accessoryExpand;
     accessory.animator.animate(
       {x: 0, y: 0},
-      {spring, velocity: {x: velocity.x, y: velocity.y}},
+      {spring, velocity: {x: 0, y: 0}},
       options,
     );
     accessoryEnd.animator.animate(
