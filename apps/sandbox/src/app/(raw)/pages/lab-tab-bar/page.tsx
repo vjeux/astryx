@@ -6,8 +6,9 @@
  *   document itself scrolls under the floating bar, as an app's page does.
  *   Six sections, so the bar shows four and More, whose list holds the rest.
  * @input ?disabled=<value>[,<value>] disables those sections, ?dir=rtl lays
- *   the page out right to left, and ?minimize=1 lets the bar minimize as the
- *   page scrolls down (all read on mount).
+ *   the page out right to left, ?minimize=1 lets the bar minimize as the page
+ *   scrolls down, and ?accessory=1 adds a now-playing accessory (all read on
+ *   mount).
  * @output A scrolling screen per section, the More list, and the bar.
  */
 
@@ -35,6 +36,7 @@ import {Button} from '@astryxdesign/core/Button';
 import {Icon, type IconType} from '@astryxdesign/core/Icon';
 import {LayerProvider} from '@astryxdesign/core/Layer';
 import {Heading, Text} from '@astryxdesign/core/Text';
+import {HStack} from '@astryxdesign/core/HStack';
 import {VStack} from '@astryxdesign/core/VStack';
 
 interface Section {
@@ -95,6 +97,7 @@ export default function LabTabBarPage() {
   const [value, setValue] = useState('home');
   const [disabled, setDisabled] = useState<string[]>([]);
   const [minimizes, setMinimizes] = useState(false);
+  const [hasAccessory, setHasAccessory] = useState(false);
   // Syncs with the URL's query, read after mount so the static HTML hydrates
   // as it is. The direction lives on the document element, restored on unmount.
   useEffect(() => {
@@ -102,6 +105,7 @@ export default function LabTabBarPage() {
     const list = params.get('disabled');
     setDisabled(list == null ? [] : list.split(','));
     setMinimizes(params.get('minimize') === '1');
+    setHasAccessory(params.get('accessory') === '1');
     if (params.get('dir') !== 'rtl') {
       return;
     }
@@ -158,7 +162,19 @@ export default function LabTabBarPage() {
           }
         }}
         label="Sections"
-        minimizeBehavior={minimizes ? 'onScrollDown' : 'never'}>
+        minimizeBehavior={minimizes ? 'onScrollDown' : 'never'}
+        bottomAccessory={
+          hasAccessory
+            ? placement => (
+                <HStack gap={2} padding={2} width="100%" vAlign="center">
+                  <Text>Midnight City</Text>
+                  {placement === 'expanded' ? (
+                    <Button label="Next" variant="ghost" />
+                  ) : null}
+                </HStack>
+              )
+            : undefined
+        }>
         {tabs}
       </TabBar>
     </LayerProvider>
