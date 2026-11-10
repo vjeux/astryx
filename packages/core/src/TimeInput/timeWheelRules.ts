@@ -8,8 +8,8 @@
  * @position Internal helper of the TimeInput and DateTimeInput sheets: the
  *   rows of both their finger and their mouse wheels
  *
- * The columns do not loop. Each rule follows a leaf of motion/uikit/
- * datePicker.ts `wheels`. Pure functions keep the rules testable without a
+ * Only the minute column loops, and its seam carries the hour. Each rule
+ * follows a leaf of motion/uikit/datePicker.ts `wheels`. Pure functions keep the rules testable without a
  * layout engine.
  *
  * SYNC: When modified, update timeWheelRules.test.ts and TimeWheels.tsx.
@@ -280,19 +280,33 @@ export function meridiemRows(
 /**
  * The time made by turning `column` to `value` (its row's value) from `from`
  * (the time the wheels show). Only that column changes, and the AM/PM column
- * moves the hour by twelve.
+ * moves the hour by twelve. A minute column that passed its seam `wraps`
+ * times carries the hour by as many, forward positive. UIDatePicker's minute
+ * wheel does so: the recording under `wheels.meridiemFollowsHour` turned
+ * 12:58 PM into 1:02 PM.
+ *
+ * @example
+ * ```
+ * turnColumn({hour: 12, minute: 58, second: 0}, 'minute', 2, '12h', 1);
+ * // {hour: 13, minute: 2, second: 0}
+ * ```
  */
 export function turnColumn(
   from: TimeParts,
   column: TimeColumn,
   value: number,
   hourFormat: '12h' | '24h',
+  wraps: number = 0,
 ): TimeParts {
   switch (column) {
     case 'hour':
       return {...from, hour: hourAfterTurn(from.hour, value, hourFormat)};
     case 'minute':
-      return {...from, minute: value};
+      return {
+        ...from,
+        hour: (((from.hour + wraps) % 24) + 24) % 24,
+        minute: value,
+      };
     case 'second':
       return {...from, second: value};
     case 'meridiem':

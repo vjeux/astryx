@@ -11,13 +11,16 @@
  *
  * A column that moves by itself turns on the Wheel's own spin (`spinTo`). The
  * spin starts before the commit, so the new value finds the column moving.
+ * The minute column loops, as UIDatePicker's does, and its seam carries the
+ * hour.
  *
  * SYNC: When modified, update TimeWheels.test.tsx, timeWheelRules.ts,
  * TimeInput.doc.mjs and DateTimeInput.doc.mjs.
  */
 
-import {useMemo, useRef} from 'react';
+import {useCallback, useMemo, useRef} from 'react';
 import {Wheel, type WheelHandle} from '../DateInput/Wheel';
+import {mod} from '../utils/loopIndex';
 import type {ISOTimeString} from '../utils/timeParser';
 import {
   columnValue,
@@ -94,6 +97,12 @@ export function TimeWheels({
     () => minuteRows(shown.hour, hasSeconds, bounds),
     [shown.hour, hasSeconds, bounds],
   );
+  // The minutes drawn past the seam belong to the hour before or after, so
+  // that hour's bounds enable them.
+  const minuteLaps = useCallback(
+    (lap: number) => minuteRows(mod(shown.hour + lap, 24), hasSeconds, bounds),
+    [shown.hour, hasSeconds, bounds],
+  );
   const secondOptions = useMemo(
     () => secondRows(shown.hour, shown.minute, bounds),
     [shown.hour, shown.minute, bounds],
@@ -129,7 +138,7 @@ export function TimeWheels({
   >({});
   const nextSpinIdRef = useRef(0);
 
-  const restOn = (column: TimeColumn) => (value: number) => {
+  const restOn = (column: TimeColumn) => (value: number, wraps?: number) => {
     if (spinsRef.current[column]?.value === value) {
       return;
     }
@@ -137,7 +146,7 @@ export function TimeWheels({
     // What commits is the row the wheels come to rest on: past a bound, the
     // nearest time inside it that has a row (datePicker.wheels.restPastBound).
     const next = restingTime(
-      turnColumn(from, column, value, hourFormat),
+      turnColumn(from, column, value, hourFormat, wraps),
       hasSeconds,
       bounds,
     );
@@ -190,6 +199,8 @@ export function TimeWheels({
         value={shown.minute}
         isActive={isActive}
         onChange={restOn('minute')}
+        isLooping
+        lapOptions={minuteLaps}
       />
       {hasSeconds && (
         <Wheel
