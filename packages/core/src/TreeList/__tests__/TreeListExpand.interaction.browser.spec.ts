@@ -23,6 +23,7 @@ import {
   armHold,
   blockMainThread,
   busyWindowProof,
+  CONTROL_RGB,
   MARKER_RGB,
   openStory,
   releaseAnimations,
@@ -32,7 +33,7 @@ import {
   startCompositorTrace,
   startScreencast,
   touchDriver,
-  trackMarker,
+  trackMarkers,
   withStorybook,
   writeEvidence,
   type Box,
@@ -1237,6 +1238,9 @@ test('the rows below keep moving on every frame while the main thread is blocked
     },
     [...MARKER_RGB],
   );
+  // The compositor's own box, started before the glide. The rows are judged
+  // on the frames it moves, never on a gap in wall-clock time.
+  await startBusyControl(page);
   const cast = await startScreencast(page);
   // The compositor's own record of the frames it presents, so a frame the
   // screencast skips under load is not read as a stall.
@@ -1251,34 +1255,44 @@ test('the rows below keep moving on every frame while the main thread is blocked
   await page.waitForTimeout(200);
   const presented = await compositor.stop();
   const frames = await cast.stop();
-  const tracked = await trackMarker(page, frames);
-  const proof = busyWindowProof(tracked, block, {
-    axis: 'y',
-    settledWithin: 1,
-    presented,
+  const [tracked, control] = await trackMarkers(page, frames, {
+    colors: [MARKER_RGB, CONTROL_RGB],
   });
+  // A control that moved on too few frames of the block fails by name: the
+  // compositor was starved, so the run proves nothing about the rows. The
+  // evidence is written either way.
+  let proof: ReturnType<typeof busyWindowProof>;
+  try {
+    proof = busyWindowProof(tracked, block, {
+      axis: 'y',
+      settledWithin: 1,
+      presented,
+      control,
+    });
+  } catch (error) {
+    await writeEvidence(
+      'busy-main-thread/tree-list-expand',
+      {
+        [`${testInfo.project.name}.json`]: JSON.stringify(
+          {block, error: String(error)},
+          null,
+          1,
+        ),
+      },
+      testInfo,
+    );
+    throw error;
+  }
   await writeEvidence(
     'busy-main-thread/tree-list-expand',
     {[`${testInfo.project.name}.json`]: JSON.stringify(proof, null, 1)},
     testInfo,
   );
-  // The frames the compositor presented in the judged part. A machine that
-  // starves the compositor of frames fails here by name, not on the stall
-  // bound below.
-  requireFrames(
-    (presented.length > 0 ? presented : tracked.map(frame => frame.t)).map(
-      t => ({t}),
-    ),
-    {
-      min: 8,
-      during: 'the block, in its judged part',
-      where: ({t}) => t >= proof.judged.from && t <= proof.judged.to,
-    },
-  );
-  // Frames kept coming through the block, each one further down.
+  // The rows moved on every frame the control moved, each one further down,
+  // and stalled no longer than the control.
+  expect(proof.verdict.failures, proof.summary).toEqual([]);
   expect(proof.changed, JSON.stringify(proof)).toBeGreaterThanOrEqual(3);
   expect(proof.monotonic, JSON.stringify(proof)).toBe(true);
-  expect(proof.longestStallMs, JSON.stringify(proof)).toBeLessThan(40);
 });
 
 test(
