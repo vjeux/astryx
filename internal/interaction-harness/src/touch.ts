@@ -1417,15 +1417,17 @@ async function webkitDriver(page: Page): Promise<TouchDriver> {
       return playSteps(
         script,
         options,
-        step =>
-          timeCommand(() =>
+        async step => {
+          await new Promise(resolve => setTimeout(resolve, 20));
+          return timeCommand(() =>
             session.send('Input.dispatchTouchEvent', {
               type: step.type,
               touchPoints: points(
                 step.type === 'touchMove' ? step.fingers : step.changed,
               ),
             }),
-          ),
+          );
+        },
         () => Date.now(),
         touchArrivalProbe(page),
       ).then(played => played.map(p => ({...p, timestamp: null})));
