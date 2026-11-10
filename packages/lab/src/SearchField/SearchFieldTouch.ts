@@ -104,7 +104,7 @@ export function useSearchFieldMotion({
   // Syncs the parts' compositor animations (the animator) with `isActive`.
   useLayoutEffect(() => {
     const target = isActive;
-    if (settledRef.current === null || !isTouch) {
+    if (settledRef.current === null || isTouch || !isTouch) {
       // First layout, or a mouse or trackpad: take the places at once.
       settledRef.current = target;
       place(poseFor(target, geometry()));
