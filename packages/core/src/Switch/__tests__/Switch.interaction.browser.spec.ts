@@ -59,6 +59,7 @@ import {
   pageTimesOnControls,
   pooledBusyProof,
   FrameStarvationError,
+  FRAME_STARVATION_MS,
   trackBrightness,
   type BusyRun,
   type CastFrame,
@@ -3263,6 +3264,18 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const runs: BusyRun[] = [];
     const evidence: unknown[] = [];
     const landings: {inBlock: boolean; gap: number}[] = [];
+    // The page's own frames up to each block, on its clock. A late block on
+    // a page that drew no frame is named below.
+    const catches: {fadeFrom: number; frames: {t: number}[]}[] = [];
+    await page.evaluate(() => {
+      const w = window as unknown as {__trackFrames: number[]};
+      w.__trackFrames = [];
+      const frame = () => {
+        w.__trackFrames.push(performance.timeOrigin + performance.now());
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
     for (const on of [true, false]) {
       const cast = await startScreencast(page);
       // The page waits for the track's own fade one frame into its curve, and
@@ -3283,6 +3296,16 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       if (fade == null) {
         throw new Error('the block caught no forward fade');
       }
+      catches.push({
+        fadeFrom: fade.from,
+        frames: await page.evaluate(
+          ({from, to}) =>
+            (window as unknown as {__trackFrames: number[]}).__trackFrames
+              .filter(t => t >= from && t <= to)
+              .map(t => ({t})),
+          {from: fade.from - 100, to: block.from},
+        ),
+      });
       // The landing compares the block's last frame with one after it. The
       // busy control keeps the cast drawing. Frames reach the test late under
       // load, so wait 150 ms and two more frames, for a second at most.
@@ -3362,6 +3385,27 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     // damped over the track's 166-level red span, that is 16 levels from rest
     // for wellOn and 9 for wellOff. The pool takes one bound, the larger.
     const proof = pooledBusyProof(runs, FADE_PROOF);
+    // A run whose block began after its fade had settled is a red. The
+    // block begins at a frame, once the fade has run on two. A late run is
+    // named when the page drew under one frame per FRAME_STARVATION_MS from
+    // the fade's start until its judged part had to begin. With a frame that
+    // often, the late run keeps its red.
+    proof.late.forEach((late, i) => {
+      if (late == null) {
+        return;
+      }
+      const {settledAtMs, judgedFromMs} = late.numbers;
+      if (!Number.isFinite(settledAtMs) || !Number.isFinite(judgedFromMs)) {
+        return;
+      }
+      const {fadeFrom, frames} = catches[i];
+      const judgedBy = runs[i].window.from + settledAtMs - judgedFromMs;
+      requireFrames(frames, {
+        min: Math.ceil((judgedBy - fadeFrom) / FRAME_STARVATION_MS),
+        during: `run ${i + 1}'s fade ran, before its judged part had to begin`,
+        where: f => f.t >= fadeFrom && f.t <= judgedBy,
+      });
+    });
     await writeEvidence(
       'busy-main-thread/switch-track-colour',
       {
