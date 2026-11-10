@@ -2601,9 +2601,20 @@ test.describe('frame evidence', () => {
         }
       }, 100);
     });
-    await expect(waitForRest(box, {timeout: 900})).rejects.toThrow(
-      /waitForRest: still moving \(/,
+    const moving = await waitForRest(box, {timeout: 900}).then(
+      () => null,
+      (error: unknown) => error,
     );
+    // On a starved runner the still frames between the moves come further
+    // apart than `FRAME_STARVATION_MS`, so the wait fails by name. Its
+    // starved span starts after the long task, which ends 220 ms in: a span
+    // that holds the task would read an early gap as starvation.
+    if (moving instanceof FrameStarvationError) {
+      const spanMs = Number(/waited (\d+) ms/.exec(moving.numbers.during)?.[1]);
+      expect(spanMs, String(moving)).toBeLessThan(900 - 220);
+      throw moving;
+    }
+    expect(String(moving)).toMatch(/waitForRest: still moving \(/);
     // Stops the script motion: the element rests again.
     await box.evaluate(el => {
       el.id = 'rested';
