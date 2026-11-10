@@ -178,24 +178,60 @@ async function openStory(page: Page, story: string, rowCount: number) {
   }
 }
 
-/** The glide's length for the content after the Collapsible in `row`. */
+/**
+ * The glide's length for the content after the Collapsible in `row`. The page
+ * reads it as the glide starts, looking on every frame and every 4 ms between
+ * them, as an armed hold does. A read the test sends after the click comes
+ * later the busier the machine is, and the glide can end first. Within 5 s of
+ * the click, no glide fails by name.
+ */
 async function glideMs(page: Page, row: string): Promise<number> {
   const section = page.locator(row);
-  await section.getByRole('button', {name: 'Shipping details'}).click();
   const after = section.locator('[data-after-collapsible]');
-  await expect
-    .poll(async () => after.evaluate(element => element.getAnimations().length))
-    .toBeGreaterThan(0);
-  return after.evaluate(element => {
-    const glide = element
-      .getAnimations()
-      .find(animation =>
-        (animation.effect as KeyframeEffect)
-          .getKeyframes()
-          .some(frame => typeof frame.translate === 'string'),
-      );
-    return Number(glide?.effect?.getTiming().duration);
+  await after.evaluate(element => {
+    const read = new Promise<number>((resolve, reject) => {
+      const deadline = performance.now() + 5000;
+      let round = 0;
+      const look = () => {
+        const glide = element
+          .getAnimations()
+          .find(animation =>
+            (animation.effect as KeyframeEffect)
+              .getKeyframes()
+              .some(frame => typeof frame.translate === 'string'),
+          );
+        if (glide != null) {
+          resolve(Number(glide.effect?.getTiming().duration));
+          return;
+        }
+        if (performance.now() > deadline) {
+          reject(
+            new Error(
+              'glideMs: within 5 s of arming, no glide ran on the content after the Collapsible',
+            ),
+          );
+          return;
+        }
+        // Of the frame and the timer a round schedules, the first runs.
+        const mine = ++round;
+        const run = () => {
+          if (mine === round) {
+            look();
+          }
+        };
+        requestAnimationFrame(run);
+        setTimeout(run, 4);
+      };
+      look();
+    });
+    // Read later: a rejection before then is not unhandled.
+    read.catch(() => {});
+    (window as unknown as {__glideMs?: Promise<number>}).__glideMs = read;
   });
+  await section.getByRole('button', {name: 'Shipping details'}).click();
+  return page.evaluate(
+    async () => (window as unknown as {__glideMs: Promise<number>}).__glideMs,
+  );
 }
 
 /** The glide's length in each tempo row, against the tempo 1 row. */
