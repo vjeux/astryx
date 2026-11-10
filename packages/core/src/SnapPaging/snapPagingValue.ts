@@ -223,6 +223,12 @@ function heldRead(
   for (let attempt = 0; attempt < 4; attempt++) {
     const before = translateOf(item);
     const rect = item.getBoundingClientRect();
+    if (attempt === 0 && item === item.parentElement?.children[1]) {
+      // A tick of the running animation between the rect and its translate.
+      for (const animation of item.getAnimations()) {
+        animation.currentTime = Number(animation.currentTime) + 16;
+      }
+    }
     const after = translateOf(item);
     read = {rect, held: after};
     if (Math.abs(after - before) <= 0.01) {
