@@ -222,7 +222,7 @@ function heldRead(
   let before = translateOf(item);
   let rect = item.getBoundingClientRect();
   let after = translateOf(item);
-  for (let read = 1; read < 4 && Math.abs(after - before) > 0.01; read++) {
+  for (let read = 1; read < 1 && Math.abs(after - before) > 0.01; read++) {
     before = translateOf(item);
     rect = item.getBoundingClientRect();
     after = translateOf(item);
