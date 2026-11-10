@@ -2104,8 +2104,9 @@ test.describe('frame evidence', () => {
     await expect(
       blockMainThread(page, 50, {during: box, minProgressMs: 16, timeout: 500}),
     ).rejects.toThrow(/no animation started/);
-    // A run the page cancels while the wait runs.
-    await box.evaluate(el => {
+    // A run the page cancels while the wait runs. It began two frames before
+    // the call, so the recorder counts it as an earlier action's.
+    await box.evaluate(async el => {
       for (const run of el.getAnimations()) {
         run.cancel();
       }
@@ -2113,6 +2114,9 @@ test.describe('frame evidence', () => {
       setTimeout(() => {
         run.cancel();
       }, 200);
+      await new Promise(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
     });
     await expect(
       blockMainThread(page, 50, {
