@@ -106,6 +106,12 @@ export const categories: SandboxCategory[] = [
           'An alert over a toast and a dialog closed after a save, on a page that scrolls with the document, to check on a phone',
       },
       {
+        name: 'Menu Grow Cases',
+        href: '/pages/menu-grow-cases/',
+        description:
+          'Large DropdownMenus and a Popover that grow out of their trigger: tall, wide, many rows, nested, at the edges and flipped, on a page that scrolls with the document',
+      },
+      {
         name: 'List Reorder Cases',
         href: '/pages/list-reorder-cases/',
         description:
