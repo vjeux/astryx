@@ -1445,9 +1445,7 @@ function DropdownMenuPopover({
       // popover the state a click-open already has: the trigger is where
       // Escape or a pick returns focus (the APG menu-button pattern). A
       // finger's press shows no ring here.
-      if (buttonRef.current != null) {
-        focusForLastInput(buttonRef.current, {preventScroll: true});
-      }
+      buttonRef.current?.focus({preventScroll: true});
       openingPressRef.current = {gesture: currentGesture()};
       const didOpen = openAndFocus('pointer', true);
       // A mouse can release away from the trigger, or the trigger can move
