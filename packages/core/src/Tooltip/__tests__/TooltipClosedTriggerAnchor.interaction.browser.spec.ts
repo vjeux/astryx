@@ -27,6 +27,8 @@ import {
   openStory,
   startBusyControl,
   startScreencast,
+  trackControl,
+  trackMarker,
   trackMarkers,
   withStorybook,
 } from '@astryxdesign/interaction-harness';
@@ -93,6 +95,33 @@ test('a surface around a closed tooltip trigger keeps moving through a 500 ms ma
   const [tracked, control] = await trackMarkers(page, frames, {
     colors: [MARKER_RGB, controlColor()],
   });
+  // NOT FOR LANDING: one decode for every colour against one per
+  // colour, on copies of the same cast, in alternating order.
+  {
+    const one = async () => {
+      const t = performance.now();
+      const r = await trackMarkers(page, [...frames], {
+        colors: [MARKER_RGB, controlColor()],
+      });
+      return {ms: performance.now() - t, r};
+    };
+    const each = async () => {
+      const t = performance.now();
+      const r = [
+        await trackMarker(page, [...frames]),
+        await trackControl(page, [...frames]),
+      ];
+      return {ms: performance.now() - t, r};
+    };
+    const oneFirst = test.info().repeatEachIndex % 2 === 0;
+    const x = oneFirst ? await one() : await each();
+    const y = oneFirst ? await each() : await one();
+    const [o, w] = oneFirst ? [x, y] : [y, x];
+    expect(o.r).toEqual(w.r);
+    console.log(
+      `DECODE-TIMING tooltip frames=${frames.length} one=${o.ms.toFixed(0)} each=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'each'}`,
+    );
+  }
   // Judged against the compositor control in the same frames: the surface
   // moves on every frame the control does.
   const proof = busyWindowProof(tracked, block, {settledWithin: 2, control});

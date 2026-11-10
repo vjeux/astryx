@@ -2365,6 +2365,34 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
     const [control, ahead, tracked] = await trackMarkers(page, castFrames, {
       colors: [controlColor(), controlColor({ahead: true}), MARKER_RGB],
     });
+    // NOT FOR LANDING: one decode for every colour against one per
+    // colour, on copies of the same cast, in alternating order.
+    {
+      const one = async () => {
+        const t = performance.now();
+        const r = await trackMarkers(page, [...castFrames], {
+          colors: [controlColor(), controlColor({ahead: true}), MARKER_RGB],
+        });
+        return {ms: performance.now() - t, r};
+      };
+      const each = async () => {
+        const t = performance.now();
+        const r = [
+          await trackControl(page, [...castFrames]),
+          await trackControl(page, [...castFrames], {ahead: true}),
+          await trackMarker(page, [...castFrames]),
+        ];
+        return {ms: performance.now() - t, r};
+      };
+      const oneFirst = test.info().repeatEachIndex % 2 === 0;
+      const x = oneFirst ? await one() : await each();
+      const y = oneFirst ? await each() : await one();
+      const [o, w] = oneFirst ? [x, y] : [y, x];
+      expect(o.r).toEqual(w.r);
+      console.log(
+        `DECODE-TIMING switch-clock frames=${castFrames.length} one=${o.ms.toFixed(0)} each=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'each'}`,
+      );
+    }
     const pageTime = pageTimesOnControls(control, {
       ahead,
       controlStarts: starts,
@@ -3313,6 +3341,33 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       const [control, ahead] = await trackMarkers(page, read, {
         colors: [controlColor(), controlColor({ahead: true})],
       });
+      // NOT FOR LANDING: one decode for every colour against one per
+      // colour, on copies of the same cast, in alternating order.
+      {
+        const one = async () => {
+          const t = performance.now();
+          const r = await trackMarkers(page, [...read], {
+            colors: [controlColor(), controlColor({ahead: true})],
+          });
+          return {ms: performance.now() - t, r};
+        };
+        const each = async () => {
+          const t = performance.now();
+          const r = [
+            await trackControl(page, [...read]),
+            await trackControl(page, [...read], {ahead: true}),
+          ];
+          return {ms: performance.now() - t, r};
+        };
+        const oneFirst = test.info().repeatEachIndex % 2 === 0;
+        const x = oneFirst ? await one() : await each();
+        const y = oneFirst ? await each() : await one();
+        const [o, w] = oneFirst ? [x, y] : [y, x];
+        expect(o.r).toEqual(w.r);
+        console.log(
+          `DECODE-TIMING switch-colour frames=${read.length} one=${o.ms.toFixed(0)} each=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'each'}`,
+        );
+      }
       const colour = await trackBrightness(page, read, {...probe, size: 8});
       runs.push({
         tracked: colour,
