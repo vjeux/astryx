@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "component": "core/Item",
+  "build": "c7f4696a9e786f453c5ec936e9de33ff10ec8277",
+  "frames": [
+    {
+      "key": "states-neutral-light",
+      "image": "states-neutral-light.png",
+      "receipt": "states-neutral-light.sensors.json"
+    },
+    {
+      "key": "states-neutral-dark",
+      "image": "states-neutral-dark.png",
+      "receipt": "states-neutral-dark.sensors.json"
+    },
+    {
+      "key": "states-butter-light",
+      "image": "states-butter-light.png",
+      "receipt": "states-butter-light.sensors.json"
+    },
+    {
+      "key": "states-neutral-rtl-light",
+      "image": "states-neutral-rtl-light.png",
+      "receipt": "states-neutral-rtl-light.sensors.json"
+    },
+    {
+      "key": "states-neutral-tab-light",
+      "image": "states-neutral-tab-light.png",
+      "receipt": "states-neutral-tab-light.sensors.json"
+    },
+    {
+      "key": "states-neutral-tab-dark",
+      "image": "states-neutral-tab-dark.png",
+      "receipt": "states-neutral-tab-dark.sensors.json"
+    },
+    {
+      "key": "states-neutral-hover-rest-light",
+      "image": "states-neutral-hover-rest-light.png",
+      "receipt": "states-neutral-hover-rest-light.sensors.json"
+    },
+    {
+      "key": "states-neutral-hover-disabled-light",
+      "image": "states-neutral-hover-disabled-light.png",
+      "receipt": "states-neutral-hover-disabled-light.sensors.json"
+    },
+    {
+      "key": "compact-menu-neutral-light",
+      "image": "compact-menu-neutral-light.png",
+      "receipt": "compact-menu-neutral-light.sensors.json"
+    },
+    {
+      "key": "spacious-rows-neutral-light",
+      "image": "spacious-rows-neutral-light.png",
+      "receipt": "spacious-rows-neutral-light.sensors.json"
+    },
+    {
+      "key": "align-first-line-neutral-light",
+      "image": "align-first-line-neutral-light.png",
+      "receipt": "align-first-line-neutral-light.sensors.json"
+    },
+    {
+      "key": "align-first-line-neutral-dark",
+      "image": "align-first-line-neutral-dark.png",
+      "receipt": "align-first-line-neutral-dark.sensors.json"
+    },
+    {
+      "key": "contact-list-narrow-neutral-light",
+      "image": "contact-list-narrow-neutral-light.png",
+      "receipt": "contact-list-narrow-neutral-light.sensors.json"
+    }
+  ]
+}

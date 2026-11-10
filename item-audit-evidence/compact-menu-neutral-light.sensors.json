@@ -1,0 +1,376 @@
+{
+  "schemaVersion": 1,
+  "expected": {
+    "build": "c7f4696a9e786f453c5ec936e9de33ff10ec8277",
+    "storyId": "core-item--compact-menu",
+    "mode": "light",
+    "theme": "neutral",
+    "direction": "ltr",
+    "viewport": {
+      "width": 640,
+      "height": 480
+    },
+    "interaction": "none",
+    "rows": null,
+    "density": "compact",
+    "states": "states: data-highlighted, data-selected and data-disabled on the astryx-item root match each row; a selected role-less row has aria-current=\"true\"; selected rows paint accent-muted and highlighted rows overlay-hover at rest, resolved in the row scope",
+    "disabled": "disabled rows: a native disabled button, aria-disabled on the root, content at half opacity, pointer-events none; enabled interactive rows answer with a pointer cursor",
+    "padding": "block padding spacing-1 (compact), spacing-2 (balanced), spacing-3 (spacious); inline padding spacing-2, spacing-3 when spacious",
+    "focus": "tab: the first Tab stop is the first row's button, focus-visible, and the row root draws an outline of the theme focus outline width",
+    "hover": "hover-rest: the rest row paints a hover background; hover-disabled: the disabled row paints nothing new",
+    "layout": "no sideways document scroll; at 320px every row stays inside the viewport; align-first-line: the labelLines={2} label shows two lines and clips the rest"
+  },
+  "observed": {
+    "build": "c7f4696a9e786f453c5ec936e9de33ff10ec8277",
+    "rest": {
+      "theme": "neutral",
+      "mode": "light",
+      "viewport": {
+        "width": 640,
+        "height": 480
+      },
+      "dpr": 2,
+      "reducedMotion": true,
+      "fonts": "loaded",
+      "storybookError": false,
+      "documentDirection": "ltr",
+      "documentOverflow": 0,
+      "active": {
+        "tag": "BODY",
+        "rowIndex": -1,
+        "focusVisible": false
+      },
+      "rows": [
+        {
+          "text": "Edit",
+          "caseName": null,
+          "labelHeight": 20,
+          "labelLineHeight": 20.0004,
+          "labelOverflows": false,
+          "labelNaturalLines": 1,
+          "direction": "ltr",
+          "expectedDirection": "ltr",
+          "box": {
+            "left": 16,
+            "top": 16,
+            "right": 624,
+            "bottom": 44,
+            "width": 608,
+            "height": 28
+          },
+          "data": {
+            "density": "compact",
+            "align": "center",
+            "highlighted": null,
+            "selected": null,
+            "disabled": null
+          },
+          "ariaCurrent": null,
+          "ariaSelected": null,
+          "ariaDisabled": null,
+          "actionTag": "BUTTON",
+          "actionDisabled": false,
+          "background": "rgba(0, 0, 0, 0)",
+          "contentOpacity": "1",
+          "cursor": "pointer",
+          "pointerEvents": "auto",
+          "outlineStyle": "none",
+          "outlineWidth": 0,
+          "padding": {
+            "blockStart": 4,
+            "blockEnd": 4,
+            "inlineStart": 8,
+            "inlineEnd": 8
+          },
+          "tokens": {
+            "selected": "rgb(212, 212, 212)",
+            "highlighted": "rgba(0, 0, 0, 0.05)",
+            "spacing1": 4,
+            "spacing2": 8,
+            "spacing3": 12,
+            "focusOutlineWidth": 2
+          }
+        },
+        {
+          "text": "Settings",
+          "caseName": null,
+          "labelHeight": 20,
+          "labelLineHeight": 20.0004,
+          "labelOverflows": false,
+          "labelNaturalLines": 1,
+          "direction": "ltr",
+          "expectedDirection": "ltr",
+          "box": {
+            "left": 16,
+            "top": 44,
+            "right": 624,
+            "bottom": 92,
+            "width": 608,
+            "height": 48
+          },
+          "data": {
+            "density": "compact",
+            "align": "center",
+            "highlighted": null,
+            "selected": null,
+            "disabled": null
+          },
+          "ariaCurrent": null,
+          "ariaSelected": null,
+          "ariaDisabled": null,
+          "actionTag": "BUTTON",
+          "actionDisabled": false,
+          "background": "rgba(0, 0, 0, 0)",
+          "contentOpacity": "1",
+          "cursor": "pointer",
+          "pointerEvents": "auto",
+          "outlineStyle": "none",
+          "outlineWidth": 0,
+          "padding": {
+            "blockStart": 4,
+            "blockEnd": 4,
+            "inlineStart": 8,
+            "inlineEnd": 8
+          },
+          "tokens": {
+            "selected": "rgb(212, 212, 212)",
+            "highlighted": "rgba(0, 0, 0, 0.05)",
+            "spacing1": 4,
+            "spacing2": 8,
+            "spacing3": 12,
+            "focusOutlineWidth": 2
+          }
+        },
+        {
+          "text": "Messages",
+          "caseName": null,
+          "labelHeight": 20,
+          "labelLineHeight": 20.0004,
+          "labelOverflows": false,
+          "labelNaturalLines": 1,
+          "direction": "ltr",
+          "expectedDirection": "ltr",
+          "box": {
+            "left": 16,
+            "top": 92,
+            "right": 624,
+            "bottom": 120,
+            "width": 608,
+            "height": 28
+          },
+          "data": {
+            "density": "compact",
+            "align": "center",
+            "highlighted": null,
+            "selected": null,
+            "disabled": null
+          },
+          "ariaCurrent": null,
+          "ariaSelected": null,
+          "ariaDisabled": null,
+          "actionTag": "BUTTON",
+          "actionDisabled": false,
+          "background": "rgba(0, 0, 0, 0)",
+          "contentOpacity": "1",
+          "cursor": "pointer",
+          "pointerEvents": "auto",
+          "outlineStyle": "none",
+          "outlineWidth": 0,
+          "padding": {
+            "blockStart": 4,
+            "blockEnd": 4,
+            "inlineStart": 8,
+            "inlineEnd": 8
+          },
+          "tokens": {
+            "selected": "rgb(212, 212, 212)",
+            "highlighted": "rgba(0, 0, 0, 0.05)",
+            "spacing1": 4,
+            "spacing2": 8,
+            "spacing3": 12,
+            "focusOutlineWidth": 2
+          }
+        }
+      ]
+    },
+    "theme": "neutral",
+    "mode": "light",
+    "viewport": {
+      "width": 640,
+      "height": 480
+    },
+    "dpr": 2,
+    "reducedMotion": true,
+    "fonts": "loaded",
+    "storybookError": false,
+    "documentDirection": "ltr",
+    "documentOverflow": 0,
+    "active": {
+      "tag": "BODY",
+      "rowIndex": -1,
+      "focusVisible": false
+    },
+    "rows": [
+      {
+        "text": "Edit",
+        "caseName": null,
+        "labelHeight": 20,
+        "labelLineHeight": 20.0004,
+        "labelOverflows": false,
+        "labelNaturalLines": 1,
+        "direction": "ltr",
+        "expectedDirection": "ltr",
+        "box": {
+          "left": 16,
+          "top": 16,
+          "right": 624,
+          "bottom": 44,
+          "width": 608,
+          "height": 28
+        },
+        "data": {
+          "density": "compact",
+          "align": "center",
+          "highlighted": null,
+          "selected": null,
+          "disabled": null
+        },
+        "ariaCurrent": null,
+        "ariaSelected": null,
+        "ariaDisabled": null,
+        "actionTag": "BUTTON",
+        "actionDisabled": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "contentOpacity": "1",
+        "cursor": "pointer",
+        "pointerEvents": "auto",
+        "outlineStyle": "none",
+        "outlineWidth": 0,
+        "padding": {
+          "blockStart": 4,
+          "blockEnd": 4,
+          "inlineStart": 8,
+          "inlineEnd": 8
+        },
+        "tokens": {
+          "selected": "rgb(212, 212, 212)",
+          "highlighted": "rgba(0, 0, 0, 0.05)",
+          "spacing1": 4,
+          "spacing2": 8,
+          "spacing3": 12,
+          "focusOutlineWidth": 2
+        }
+      },
+      {
+        "text": "Settings",
+        "caseName": null,
+        "labelHeight": 20,
+        "labelLineHeight": 20.0004,
+        "labelOverflows": false,
+        "labelNaturalLines": 1,
+        "direction": "ltr",
+        "expectedDirection": "ltr",
+        "box": {
+          "left": 16,
+          "top": 44,
+          "right": 624,
+          "bottom": 92,
+          "width": 608,
+          "height": 48
+        },
+        "data": {
+          "density": "compact",
+          "align": "center",
+          "highlighted": null,
+          "selected": null,
+          "disabled": null
+        },
+        "ariaCurrent": null,
+        "ariaSelected": null,
+        "ariaDisabled": null,
+        "actionTag": "BUTTON",
+        "actionDisabled": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "contentOpacity": "1",
+        "cursor": "pointer",
+        "pointerEvents": "auto",
+        "outlineStyle": "none",
+        "outlineWidth": 0,
+        "padding": {
+          "blockStart": 4,
+          "blockEnd": 4,
+          "inlineStart": 8,
+          "inlineEnd": 8
+        },
+        "tokens": {
+          "selected": "rgb(212, 212, 212)",
+          "highlighted": "rgba(0, 0, 0, 0.05)",
+          "spacing1": 4,
+          "spacing2": 8,
+          "spacing3": 12,
+          "focusOutlineWidth": 2
+        }
+      },
+      {
+        "text": "Messages",
+        "caseName": null,
+        "labelHeight": 20,
+        "labelLineHeight": 20.0004,
+        "labelOverflows": false,
+        "labelNaturalLines": 1,
+        "direction": "ltr",
+        "expectedDirection": "ltr",
+        "box": {
+          "left": 16,
+          "top": 92,
+          "right": 624,
+          "bottom": 120,
+          "width": 608,
+          "height": 28
+        },
+        "data": {
+          "density": "compact",
+          "align": "center",
+          "highlighted": null,
+          "selected": null,
+          "disabled": null
+        },
+        "ariaCurrent": null,
+        "ariaSelected": null,
+        "ariaDisabled": null,
+        "actionTag": "BUTTON",
+        "actionDisabled": false,
+        "background": "rgba(0, 0, 0, 0)",
+        "contentOpacity": "1",
+        "cursor": "pointer",
+        "pointerEvents": "auto",
+        "outlineStyle": "none",
+        "outlineWidth": 0,
+        "padding": {
+          "blockStart": 4,
+          "blockEnd": 4,
+          "inlineStart": 8,
+          "inlineEnd": 8
+        },
+        "tokens": {
+          "selected": "rgb(212, 212, 212)",
+          "highlighted": "rgba(0, 0, 0, 0.05)",
+          "spacing1": 4,
+          "spacing2": 8,
+          "spacing3": 12,
+          "focusOutlineWidth": 2
+        }
+      }
+    ],
+    "geometryStable": true,
+    "pageErrors": []
+  },
+  "image": {
+    "file": "compact-menu-neutral-light.png",
+    "sha256": "caa4b3814ec9f0eb6932915816c506d07b1f76c8c77f48a368cd56bb0b17bd76",
+    "width": 1280,
+    "height": 960
+  },
+  "failures": [],
+  "passed": true
+}
