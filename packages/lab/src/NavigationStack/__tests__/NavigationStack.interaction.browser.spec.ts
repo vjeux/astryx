@@ -43,6 +43,7 @@ import {
   MARKER_RGB,
   openStory,
   releaseAnimations,
+  requireFrames,
   sampleCurve,
   sampleRects,
   seekAnimations,
@@ -2135,14 +2136,83 @@ test('a push does no Layout or Paint per frame', async ({
     // every animation of the push runs on the compositor. The one-off work
     // that creates their layers comes before it. `landing` is the last frame
     // before the first of them ends. A loaded machine moves both.
+    //
+    // The page also notes the animator's promotion lift. An element promoted
+    // before its stylesheet's will-change was read has its will-change taken
+    // off, read and written back in one microtask. That style read lays out
+    // and paints once, in the frame it runs in. On a loaded machine that
+    // frame comes after the window's 80 ms margin. So the window starts two
+    // frames after a lift, once that frame has rendered. A lift belongs to
+    // the push's start: one after its second frame fails by name.
     await page.evaluate(() => {
       const stack = document.querySelector('[data-testid="navigation-stack"]');
       const epoch = (t: number) => performance.timeOrigin + t;
+      const shown: {t: number}[] = [];
+      const lifts: {frame: number; rendered: number | null}[] = [];
+      const willChangeOf = (style: string | null) =>
+        /will-change:\s*([^;]*)/.exec(style ?? '')?.[1]?.trim() ?? '';
+      const observer = new MutationObserver(records => {
+        // Each element's will-change before each write, then as it is now.
+        const values = new Map<HTMLElement, string[]>();
+        for (const record of records) {
+          const element = record.target as HTMLElement;
+          values.set(element, [
+            ...(values.get(element) ?? []),
+            willChangeOf(record.oldValue),
+          ]);
+        }
+        const lifted = [...values].some(([element, list]) => {
+          const all = [...list, element.style.willChange];
+          return all.some(
+            (value, k) =>
+              k > 0 &&
+              value === '' &&
+              all[k - 1] !== '' &&
+              all.slice(k + 1).some(later => later !== ''),
+          );
+        });
+        if (lifted) {
+          const lift = {frame: shown.length, rendered: null as number | null};
+          lifts.push(lift);
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              lift.rendered = epoch(performance.now());
+            }),
+          );
+        }
+      });
+      if (stack != null) {
+        observer.observe(stack, {
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style'],
+          attributeOldValue: true,
+        });
+      }
       (
         window as unknown as {
-          pushMotion?: Promise<{started: number; landing: number}>;
+          pushMotion?: Promise<{
+            started: number;
+            landing: number;
+            shown: {t: number}[];
+            lifts: {frame: number; rendered: number | null}[];
+          }>;
         }
       ).pushMotion = new Promise(resolve => {
+        let done = false;
+        // Every frame from the first that shows the push's animations.
+        const count = (now: number) => {
+          const running = (stack?.getAnimations({subtree: true}) ?? []).some(
+            animation => animation.playState === 'running',
+          );
+          if (shown.length > 0 || running) {
+            shown.push({t: epoch(now)});
+          }
+          if (!done) {
+            requestAnimationFrame(count);
+          }
+        };
+        requestAnimationFrame(count);
         const waitForStart = () => {
           const running = (stack?.getAnimations({subtree: true}) ?? []).filter(
             animation => animation.playState === 'running',
@@ -2165,7 +2235,9 @@ test('a push does no Layout or Paint per frame', async ({
               });
               const step = (now: number) => {
                 if (ended) {
-                  resolve({started, landing});
+                  done = true;
+                  observer.disconnect();
+                  resolve({started, landing, shown, lifts});
                   return;
                 }
                 landing = epoch(now);
@@ -2187,21 +2259,60 @@ test('a push does no Layout or Paint per frame', async ({
     () =>
       (
         window as unknown as {
-          pushMotion: Promise<{started: number; landing: number}>;
+          pushMotion: Promise<{
+            started: number;
+            landing: number;
+            shown: {t: number}[];
+            lifts: {frame: number; rendered: number | null}[];
+          }>;
         }
       ).pushMotion,
   );
+  const lateLift = motion.lifts.find(lift => lift.frame > 2);
+  if (lateLift != null) {
+    throw new Error(
+      `the animator's promotion lift came ${lateLift.frame} frames after the push started, where it belongs to its first two: a lift every frame is per-frame work`,
+    );
+  }
   // The motion itself, from its running frames to its landing (focus moves
   // to the new title after it, and may paint).
-  const from = Math.max(push.from + 80, motion.started);
+  const from = Math.max(
+    push.from + 80,
+    motion.started,
+    ...motion.lifts.map(lift => lift.rendered ?? Infinity),
+  );
   const to = motion.landing;
   const during = countBetween(trace, from, to);
   const when = trace.events
     .filter(e => e.name === 'Layout' || e.name === 'Paint')
     .map(e => `${e.name}@${Math.round(e.t - push.from)}`);
-  const detail = JSON.stringify({push, motion, during, when});
+  const detail = JSON.stringify({
+    push,
+    started: motion.started,
+    landing: motion.landing,
+    lifts: motion.lifts,
+    during,
+    when,
+  });
+  console.log(
+    'ZZWIN ' +
+      JSON.stringify({
+        from: Math.round(from - push.from),
+        to: Math.round(to - push.from),
+        frames: motion.shown.filter(f => f.t >= from && f.t <= to).length,
+        lifts: motion.lifts.map(l => [
+          l.frame,
+          l.rendered == null ? null : Math.round(l.rendered - push.from),
+        ]),
+      }),
+  );
   // Present: a window of frames the page rendered.
   expect(to - from, detail).toBeGreaterThanOrEqual(100);
+  requireFrames(motion.shown, {
+    min: 4,
+    during: 'the push slid, past its start',
+    where: frame => frame.t >= from && frame.t <= to,
+  });
   expect(during.PrePaint ?? 0, detail).toBeGreaterThan(0);
   expect(during.Layout ?? 0, detail).toBe(0);
   expect(during.Paint ?? 0, detail).toBe(0);
