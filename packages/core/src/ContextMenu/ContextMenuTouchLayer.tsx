@@ -48,6 +48,8 @@ export interface ContextMenuTouchHandle {
   lift(): LiftFromTriggerResult | null;
   /** The menu's entrance beside the lifted trigger. */
   enterMenu(menu: HTMLElement): void;
+  /** The menu's exit beside the lifted trigger, while the menu still shows. */
+  dismissMenu(menu: HTMLElement): void;
   /** The lifted trigger returns to its place. */
   drop(): void;
 }
@@ -242,6 +244,7 @@ export function ContextMenuTouchLayer({
         return lifted;
       },
       enterMenu: menu => lift.enterMenu(menu),
+      dismissMenu: menu => lift.dismissMenu(menu),
       drop: () => lift.drop(),
     }),
     [lift, recognizer, triggerRef],

@@ -53,6 +53,11 @@ export interface ContextMenuLift {
   lift(from: MorphRect, release: () => void): LiftFromTriggerResult | null;
   /** The menu's entrance beside the lifted trigger: it fades in. */
   enterMenu(menu: HTMLElement): void;
+  /**
+   * The menu is closing: it fades out where it stands, on the layer
+   * runtime's exit copy. Call it while the menu still shows.
+   */
+  dismissMenu(menu: HTMLElement): void;
   /** Returns the trigger to its place. */
   drop(): void;
 }
@@ -88,6 +93,9 @@ export function useContextMenuLift(
       },
       enterMenu(menu) {
         lift.presentSurface(menu, null);
+      },
+      dismissMenu(menu) {
+        lift.dismissSurface(menu);
       },
       drop() {
         lift.drop();

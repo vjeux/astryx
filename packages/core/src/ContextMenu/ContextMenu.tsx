@@ -857,6 +857,16 @@ export function ContextMenu({
       const menu = listRef.current?.closest<HTMLElement>('[popover]');
       if (menu != null) {
         touchHandleRef.current?.enterMenu(menu);
+        // The menu fades out as it closes, by any path. The lift takes its
+        // exit copy while the menu still shows.
+        const onClose = (event: Event) => {
+          if ((event as ToggleEvent).newState !== 'closed') {
+            return;
+          }
+          menu.removeEventListener('beforetoggle', onClose);
+          touchHandleRef.current?.dismissMenu(menu);
+        };
+        menu.addEventListener('beforetoggle', onClose);
       }
     },
     [layer, listRef],

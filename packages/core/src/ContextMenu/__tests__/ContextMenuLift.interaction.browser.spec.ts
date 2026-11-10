@@ -652,6 +652,49 @@ test('the menu fades in on springs.contextMenuMorph, opacity only: no blur, trav
   }
 });
 
+test('closing fades the menu out where it stands, on the lift’s exit copy, by any path', async ({
+  page,
+}) => {
+  const story = await openLiftStory(page);
+  const lifted = await liftAndSettle(page, story);
+  const menu = lifted.menu;
+  if (menu == null) {
+    throw new Error(JSON.stringify(lifted));
+  }
+  const exitCopy = page.locator('[data-astryx-context-menu-lift-exit]');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeHidden();
+  // The exit copy, held at two times of its fade.
+  await holdAnimations(page, exitCopy, {
+    judges: {target: exitCopy, property: 'opacity'},
+  });
+  const read = async (t: number) => {
+    await seekAnimations(page, t);
+    return exitCopy.evaluate(el => {
+      const r = el.getBoundingClientRect();
+      return {
+        x: r.x,
+        y: r.y,
+        width: r.width,
+        opacity: Number(getComputedStyle(el).opacity),
+      };
+    });
+  };
+  const early = await read(20);
+  const later = await read(150);
+  await releaseAnimations(page);
+  await expect(exitCopy).toHaveCount(0, {timeout: 3000});
+  const detail = JSON.stringify({menu, early, later});
+  // It fades, from near opaque, in the menu's own box.
+  expect(early.opacity, detail).toBeGreaterThan(later.opacity);
+  expect(early.opacity, detail).toBeGreaterThan(0.5);
+  for (const sample of [early, later]) {
+    expect(sample.x, detail).toBeCloseTo(menu.x, 0);
+    expect(sample.y, detail).toBeCloseTo(menu.y, 0);
+    expect(sample.width, detail).toBeCloseTo(menu.width, 0);
+  }
+});
+
 test('closing returns the card to its place and clears the backdrop', async ({
   page,
 }) => {
