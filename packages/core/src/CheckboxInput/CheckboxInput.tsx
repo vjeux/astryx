@@ -557,7 +557,7 @@ export function CheckboxInput({
         {...(ownsPress ? pressable : undefined)}
         // A mouse's press paints through the controller too, so it fades on
         // release as a finger's does.
-        {...pressFinePointerProps(ownsPress)}
+        {...pressFinePointerProps(false)}
         {...stylex.props(
           styles.container,
           isLabelHidden && styles.containerLabelHidden,

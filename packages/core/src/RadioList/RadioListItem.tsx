@@ -413,7 +413,7 @@ export function RadioListItem({
       {...(isDisabled ? undefined : pressable)}
       // A mouse's press paints through the controller too, so it fades on
       // release as a finger's does.
-      {...pressFinePointerProps(!isDisabled)}
+      {...pressFinePointerProps(false)}
       startContent={mediaContent}
       // Delegate row-surface clicks (label text, description, and the empty
       // hover area) to the radio input. The input stays the option's sole
