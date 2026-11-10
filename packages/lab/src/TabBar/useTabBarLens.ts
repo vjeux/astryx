@@ -655,9 +655,7 @@ export function useTabBarLens({
     if (was === isMinimized || element == null || selected < 0) {
       return;
     }
-    const target = isMinimized
-      ? collapsed(element, selected)
-      : {x: 0, scaleX: 1, scaleY: 1};
+    const target = {x: 0, scaleX: 1, scaleY: 1};
     const horizon = isMinimized ? COPY_FADE_S : COPY_HORIZON_S;
     const now = performance.now();
     const isMoving =
