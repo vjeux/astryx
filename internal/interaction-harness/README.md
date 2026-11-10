@@ -229,8 +229,19 @@ animations, the page looked too late, and the wait rejects with
 `BusyWindowTooLateError`. A run that came short of `minProgressMs` by the
 deadline rejects with `FrameStarvationError` when no frame came for longer
 than `FRAME_STARVATION_MS` during the wait. Otherwise it rejects with
-`BusyRunShortError`. With no run at all, it rejects with "no animation
-started". With `pseudoElement` (`'::before'` or
+`BusyRunShortError`. A wait that times out with no run reads the
+page's animation recorder too. A run that counts, began after the call and
+before the wait, and has ended is the action's run: the page received the
+action before the wait, as a late runner can deliver it. That also rejects
+with `BusyWindowTooLateError`, with `startedBeforeWaitMs` and
+`endedBeforeWaitMs`. A run that began before the call is an earlier action's,
+and the wait still finds no start. The call's time maps onto the page's clock
+through its time origin, with 5 ms of slack. A clock that slews further moves
+that line, and only the error's name changes. `blockMainThread` starts the
+recorder passive: the `animate()` wrapper and the CSS events log what starts,
+with no frame loop and no document-wide read. The first call of `curves.ts`
+adopts it as if it started then. With no run in either, the wait rejects with
+"no animation started". With `pseudoElement` (`'::before'` or
 `'::after'`), only that pseudo-element's animations on `during` itself count,
 as `sampleCurve` reads them: a child's animation, such as a switch thumb's
 press, does not start the block. With `property`, only animations that set
