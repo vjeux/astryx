@@ -5,7 +5,8 @@
  * @input Each scroll Core makes to keep a focused field above the keyboard,
  *   the keyboard module's reports, and the document's scroll after the hide
  *   report. In Safari on iOS, also the blur that closes the keyboard.
- * @output noteKeyboardScroll, which records such a scroll; scrollTopOf;
+ * @output noteKeyboardScroll, which records such a scroll, and
+ *   keyboardScrollTarget, where that scroll is headed. Also scrollTopOf;
  *   stopKeyboardScrollBack, for a field that gains focus again; and
  *   claimKeyboardScrollBack, which counts the fields that keep themselves up
  * @position Keyboard module, internal to core. keyboardTarget.ts records each

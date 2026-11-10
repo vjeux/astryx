@@ -5,8 +5,9 @@
  * @input TextInput, the keyboard module's test double, stubbed boxes
  * @output Proves the focused input stays above the on-screen keyboard with no
  *   prop. Its scroller reveals it in the keyboard's report, and a fixed bar at
- *   the viewport's bottom rides with it. A scroll area that cannot bring it up
- *   leaves the browser's reveal. Nothing attaches under a mouse
+ *   the viewport's bottom rides with it. Where its scroll area cannot bring it
+ *   up, the document reveals it and the visual viewport pans for the rest.
+ *   Nothing attaches under a mouse
  * @position Keyboard tests of TextInput.tsx
  */
 
