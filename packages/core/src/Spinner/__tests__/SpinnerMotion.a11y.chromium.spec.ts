@@ -258,6 +258,23 @@ test('the ring keeps turning while a script holds the main thread', async ({
   for (const box of boxes) {
     expect(box.y).toBeGreaterThan(CONTROL_SIDE);
   }
+  // NOT FOR LANDING: the rotors turn from the main thread, so a block
+  // freezes them.
+  await page.evaluate(() => {
+    const rotors = document.getAnimations().map(animation => {
+      const target = (animation.effect as KeyframeEffect).target as HTMLElement;
+      animation.cancel();
+      return target;
+    });
+    const start = performance.now();
+    const turn = (now: number) => {
+      for (const rotor of rotors) {
+        rotor.style.transform = `rotate(${((now - start) / 1000) * 360}deg)`;
+      }
+      requestAnimationFrame(turn);
+    };
+    requestAnimationFrame(turn);
+  });
   await startBusyControl(page);
   const cast = await startScreencast(page);
   await page.waitForTimeout(300);
