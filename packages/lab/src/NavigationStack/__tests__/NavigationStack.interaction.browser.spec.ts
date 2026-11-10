@@ -1267,6 +1267,8 @@ test('with a mouse, the incoming bar covers the old title while the main thread 
  * frame by the block's start shows the title gone, or the block's first frame
  * does, within `FRAME_STARVATION_MS`. A push that froze presents no frame that
  * early, so it fails on the assertion. The numbers come from the frames.
+ * A cast with no frame in the block's first `FRAME_STARVATION_MS` cannot show
+ * the title there either. That run fails by name too, as starved.
  */
 function titleFramesInBlock(
   tracked: readonly TrackedFrame[],
@@ -1301,8 +1303,44 @@ function titleFramesInBlock(
       {pushBeforeBlockMs, lastSeenBeforeBlockMs},
     );
   }
+  if (
+    firstInBlock == null ||
+    firstInBlock.t - block.from > FRAME_STARVATION_MS
+  ) {
+    const lastBefore = tracked.filter(f => f.t <= block.from).at(-1);
+    throw new FrameStarvationError({
+      by: 'titleFramesInBlock',
+      during: `the block's first ${FRAME_STARVATION_MS} ms, where the title shows`,
+      frames: 0,
+      min: 1,
+      longestGapMs:
+        firstInBlock == null || lastBefore == null
+          ? Number.POSITIVE_INFINITY
+          : firstInBlock.t - lastBefore.t,
+    });
+  }
   return during;
 }
+
+test('a cast with no frame across the block’s start fails as starved, not on the title', () => {
+  const block = {from: 1000, to: 1900, spanMs: 900} as BlockedWindow;
+  const at = (t: number, x: number | null) =>
+    ({
+      t,
+      box: x == null ? null : {x, y: 0, width: 10, height: 10},
+    }) as unknown as TrackedFrame;
+  // The title shows, then no frame comes from 320 ms before the block to
+  // 208 ms into it, where the push has covered the title.
+  const gap = [at(300, 225), at(320, 225), at(1208, null), at(1250, null)];
+  expect(() => titleFramesInBlock(gap, block)).toThrow(FrameStarvationError);
+  // A frame early in the block shows the title, and the cast passes the floor.
+  const early = [at(300, 225), at(1012, 225), at(1208, null), at(1250, null)];
+  expect(titleFramesInBlock(early, block).map(f => f.box?.x ?? null)).toEqual([
+    225,
+    null,
+    null,
+  ]);
+});
 
 /**
  * How much of bar `key` its clip box shows inside the stack. It is a
