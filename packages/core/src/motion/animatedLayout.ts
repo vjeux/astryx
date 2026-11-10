@@ -1763,10 +1763,7 @@ function flush(batch: Batch): void {
       // The new glide starts at the change's start. After a block, the
       // compositor kept this glide moving past the held frame until then.
       const {startTime} = running.animation;
-      const shownAt =
-        change != null && startTime != null
-          ? Math.max(elapsed, change.at - Number(startTime))
-          : elapsed;
+      const shownAt = startTime == null ? elapsed : elapsed;
       if (shownAt < running.durationMs) {
         carried = t => running.offsetAt(shownAt + t);
         carriedMs = running.durationMs - shownAt;
