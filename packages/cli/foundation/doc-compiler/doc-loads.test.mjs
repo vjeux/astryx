@@ -342,12 +342,14 @@ const RUNNERS = {
     sites: ['require(@babel/parser)', 'require(jscodeshift)'],
   },
   'foundation/doc-compiler/import.mjs': {
-    runs: 'authored doc files, for the doc reader and discovery, and again after an edit',
+    runs: 'authored doc files, for the doc reader and discovery, and again after an edit, without the cache entry of a CommonJS doc',
     sites: [
       '.import() ×2',
       'createJiti ×2',
-      'importUrl ×4',
+      'importUrl ×2',
       'importUserModule ×2',
+      'readFreshInTurn',
+      'readInTurn',
     ],
   },
   'foundation/doc-compiler/read.mjs': {
@@ -373,12 +375,11 @@ const RUNNERS = {
     sites: ['import(<computed>)'],
   },
   'foundation/fs/module-loader.mjs': {
-    runs: 'user modules (config, manifests, handlers, codemods): natively, through jiti, or by require for a fresh CommonJS read',
+    runs: 'user modules (config, manifests, handlers, codemods): natively or through jiti, and a fresh read again after dropping a CommonJS module from the require cache',
     sites: [
       '.import() ×3',
       'createJiti ×3',
-      'import(<computed>)',
-      'require(<computed>)',
+      'import(<computed>) ×2',
       'require.cache',
     ],
   },
