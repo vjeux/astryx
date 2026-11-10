@@ -27,7 +27,8 @@
  * SYNC: Keep the README's busy-main-thread section equal to this contract.
  */
 
-import type {Locator, Page} from '@playwright/test';
+import {appendFileSync} from 'node:fs';
+import {test, type Locator, type Page} from '@playwright/test';
 import {defineAnimatedProperties} from './animated-properties';
 import {defineCurveEnd} from './curve-end';
 import {animationRecorder} from './curves';
@@ -1410,8 +1411,17 @@ export async function blockMainThread(
         };
         // The animations that counted at the frame before, pending ones too.
         let seen = new Set<Animation>();
+        // NOT FOR LANDING: both verdicts at each end of the wait.
+        const judged = (branch: string, old: string, now: string) => {
+          (window as unknown as {__c11bDJ?: unknown}).__c11bDJ = {
+            branch,
+            old,
+            now,
+          };
+        };
         const tick = () => {
           if (!element.isConnected) {
+            judged('gone', 'gone', 'gone');
             reject(
               new Error(
                 `BusyDuringGone ${JSON.stringify({leftAtMs: realNow() - (deadline - wait)})}`,
@@ -1497,6 +1507,7 @@ export async function blockMainThread(
             // The same loop as above, from a task queued in the frame that saw
             // the animation: it runs once that frame's rendering update has
             // handed the animation to the compositor.
+            judged('block', 'block', 'block');
             later(() => {
               const read = realNow;
               const start = read();
@@ -1537,6 +1548,7 @@ export async function blockMainThread(
             }, 0);
           } else if (running) {
             if (timedOut) {
+              judged('two-frames', 'two-frames', 'two-frames');
               reject(
                 new Error(
                   'blockMainThread: no animation of `during` ran on two frames in a row',
@@ -1546,17 +1558,29 @@ export async function blockMainThread(
               frame(tick);
             }
           } else if (late != null) {
+            judged('late', 'too-late', 'too-late');
             reject(tooLate(numbersOf(late)));
           } else if (timedOut && leftover != null) {
+            judged('leftover', 'too-late', 'too-late');
             reject(tooLate(leftover));
           } else if (timedOut && lastRun == null) {
             const ended = endedRun();
+            judged(
+              'no-run',
+              ended == null ? 'no-animation' : 'too-late-ended',
+              ended == null ? 'no-animation' : 'too-late-ended',
+            );
             reject(
               ended == null
                 ? new Error('blockMainThread: no animation started')
                 : tooLate(ended),
             );
           } else if (timedOut) {
+            judged(
+              'short-run',
+              endedRun() == null ? 'no-animation' : 'too-late-ended',
+              longestGap > starvedMs ? 'starvation' : 'run-short',
+            );
             // A run of `during` came short of `minProgress`. A frame gap past
             // the starvation limit means the page drew too few frames.
             // Otherwise the run itself is paused, slow, or started late.
@@ -1591,10 +1615,40 @@ export async function blockMainThread(
     },
     {timeout: TARGET_WAIT_MS},
   );
+  const record = async (outcome: string) => {
+    const log = process.env.C11B_DJ_LOG;
+    if (log == null) {
+      return;
+    }
+    let pair: unknown = null;
+    try {
+      pair = await page.evaluate(
+        () => (window as unknown as {__c11bDJ?: unknown}).__c11bDJ ?? null,
+      );
+      await page.evaluate(() => {
+        delete (window as unknown as {__c11bDJ?: unknown}).__c11bDJ;
+      });
+    } catch {
+      pair = 'unreadable';
+    }
+    let title = '';
+    try {
+      title = test.info().titlePath.join(' > ');
+    } catch {
+      title = '?';
+    }
+    appendFileSync(log, `${JSON.stringify({title, outcome, pair})}\n`);
+  };
   try {
     const [, held] = await Promise.all([defined, waited]);
+    await record('resolved');
     return held;
   } catch (error) {
+    await record(
+      error instanceof Error
+        ? `${error.name}: ${error.message.slice(0, 80)}`
+        : 'thrown',
+    );
     // `during.evaluate` waits TARGET_WAIT_MS for the element.
     if (error instanceof Error && error.name === 'TimeoutError') {
       throw new Error(
