@@ -9,7 +9,9 @@
  *   RadioList row or a mapped circle paints at `pointerdown`. The press
  *   controller paints it, and it fades on release. It paints once. Under Reduce
  *   Motion the release ends at once. A right click paints nothing, and a
- *   read-only row paints no row press. A pen presses a checkbox the same way
+ *   read-only row paints no row press. A press on a control nested in a
+ *   RadioList row leaves its circle at rest. A pen presses a checkbox the
+ *   same way
  * @position Fine-pointer half of the selection marks' press; the finger half
  *   is in CheckboxListPress.a11y.chromium.spec.ts and the indicator specs
  */
@@ -236,6 +238,56 @@ test.describe('with a mouse', () => {
       expect(await seen()).toEqual(['on', '']);
     });
   }
+
+  test('a mouse press on a custom switch nested in a RadioList row leaves its circle at rest', async ({
+    page,
+  }) => {
+    await openStory(page, storybook(), 'core-radiolist--default');
+    await stopClicks(page);
+    const row = optionRow(page, 'SMS');
+    const label = row.getByText('SMS', {exact: true});
+    // A custom control in the row's label, as a caller's rich label holds.
+    await label.evaluate(text => {
+      const control = document.createElement('span');
+      control.setAttribute('role', 'switch');
+      control.setAttribute('aria-checked', 'false');
+      control.tabIndex = 0;
+      control.textContent = 'Snooze';
+      text.after(' ', control);
+    });
+    const layer = markWrapper(page, '.astryx-radio-indicator', 'SMS');
+    const paint = async () =>
+      layer.evaluate(el => {
+        const after = getComputedStyle(el, '::after');
+        return `${after.backgroundColor} ${after.backgroundImage}`;
+      });
+    const atRest = await paint();
+    const centre = async (target: Locator) => {
+      const box = await target.boundingBox();
+      if (box == null) {
+        throw new Error('nothing to press');
+      }
+      return {x: box.x + box.width / 2, y: box.y + box.height / 2};
+    };
+    const nested = await centre(row.getByRole('switch'));
+    await page.mouse.move(nested.x, nested.y);
+    await page.mouse.down();
+    await page.evaluate(
+      async () =>
+        new Promise(resolve =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+    expect(await row.getAttribute('data-astryx-press')).toBeNull();
+    expect(await paint()).toBe(atRest);
+    await page.mouse.up();
+    // The probe sees a press: one on the row's own label paints the circle.
+    const own = await centre(label);
+    await page.mouse.move(own.x, own.y);
+    await page.mouse.down();
+    await expect.poll(paint).not.toBe(atRest);
+    await page.mouse.up();
+  });
 
   test('a pen press on a checkbox paints through the same press model', async ({
     page,

@@ -287,7 +287,7 @@ describe('the press reaches the surface the finger landed on', () => {
     expect(rows[1].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
   });
 
-  it('leaves a right click to CSS on a fine-pointer surface, and a link nested in it takes its own press for every pointer', () => {
+  it('leaves a right click to CSS on a fine-pointer surface', () => {
     for (const [name, value] of Object.entries(pressFinePointerProps(true))) {
       rows[0].setAttribute(name, value);
     }
@@ -303,19 +303,6 @@ describe('the press reaches the surface the finger landed on', () => {
       pointerType: 'mouse',
     });
     rows[0].dispatchEvent(rightClick);
-    expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
-    // The surface's activator comes first, as a RadioList row's radio does.
-    rows[0].appendChild(document.createElement('input'));
-    const link = document.createElement('a');
-    link.href = '#more';
-    const text = document.createElement('span');
-    link.appendChild(text);
-    rows[0].appendChild(link);
-    press(text, 'pointerdown', 10, 10, 'mouse');
-    expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
-    // A finger on that link leaves the surface at rest too.
-    press(text, 'pointerdown', 10, 10);
-    vi.advanceTimersByTime(PRESS_ONSET_MS * 2);
     expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
   });
 
