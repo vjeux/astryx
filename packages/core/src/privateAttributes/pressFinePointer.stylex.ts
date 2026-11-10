@@ -17,8 +17,9 @@ const PRESS_FINE_POINTER = 'data-astryx-press-fine-pointer';
 /**
  * Spread on a pressable surface whose press paint reads the press controller
  * for every pointer. The controller then paints a mouse's or a pen's press at
- * once and fades it on release, in place of `:active`. A link or a button
- * nested in the surface takes its own press.
+ * once and fades it on release, in place of `:active`. A press on a control
+ * nested in a row is that control's. The row's container rule ends the row's
+ * paint (cancelNestedTouchPress in hooks/useClickableContainer.ts).
  */
 export function pressFinePointerProps(
   paintsFinePress: boolean,

@@ -26,7 +26,8 @@
 // fine-pointer press (pressFinePointer.stylex.ts) is the exception. There
 // the controller paints a mouse's or a pen's press at once and fades it on
 // release, as it does a finger's. The surface's `:active` arm yields while
-// it does, and a link or a button nested in it takes its own press.
+// it does. A press on a control nested in the surface is that control's, and
+// the surface's container rule ends its paint (cancelNestedTouchPress).
 // Under a coarse primary pointer the CSS drops `:active`, so the controller
 // paints every press. A mouse, trackpad or Space press paints at once. The
 // controller reads the same query as the stylesheet, so they agree.
@@ -404,36 +405,7 @@ function surfaceAt(target: EventTarget | null): HTMLElement | null {
   if (!(found instanceof HTMLElement) || found.matches(DISABLED)) {
     return null;
   }
-  if (paintsFinePointerPress(found) && nestedControlTakesPress(target, found)) {
-    return null;
-  }
   return found;
-}
-
-/** A link or a button: a nested one takes its own press. */
-const NESTED_CONTROL = 'a[href], button, [role="button"], [role="link"]';
-/**
- * A surface's activator is its first control in tree order, such as the radio
- * a RadioList row delegates to. Its press is the surface's.
- */
-const ACTIVATOR = `input, select, textarea, ${NESTED_CONTROL}`;
-
-/**
- * Whether a link or a button nested in `surface` takes the press on `target`
- * for every pointer. The surface's activator does not: its press is the
- * surface's.
- */
-function nestedControlTakesPress(
-  target: Element,
-  surface: HTMLElement,
-): boolean {
-  const control = target.closest(NESTED_CONTROL);
-  return (
-    control != null &&
-    control !== surface &&
-    surface.contains(control) &&
-    control !== surface.querySelector(ACTIVATOR)
-  );
 }
 
 /**

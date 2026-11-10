@@ -69,6 +69,9 @@ beforeEach(() => {
   };
 });
 
+/** A primary mouse press, as the press controller and React both read it. */
+const MOUSE_PRESS = {pointerType: 'mouse', button: 0, pointerId: 1};
+
 describe('CheckboxList', () => {
   it('forwards CheckboxListItem align to its Item row unchanged', () => {
     render(
@@ -534,6 +537,37 @@ describe('CheckboxList', () => {
     expect(
       screen.getByRole('link', {name: 'pricing page'}),
     ).toBeInTheDocument();
+  });
+
+  it('paints no row press for a mouse press on a control nested in the label, and one for a press on the label text', () => {
+    render(
+      <CheckboxList label="Alerts" value={[]} onChange={() => {}}>
+        <CheckboxListItem
+          label={
+            <>
+              Weekly digest{' '}
+              <span role="switch" aria-checked="false" tabIndex={0}>
+                Snooze
+              </span>
+            </>
+          }
+          aria-label="Weekly digest"
+          value="digest"
+        />
+      </CheckboxList>,
+    );
+    const nested = screen.getByRole('switch');
+    const label = nested.parentElement;
+    const row = nested.closest('[data-astryx-pressable]');
+    if (label == null || row == null) {
+      throw new Error('the row has no label or no press surface');
+    }
+    fireEvent.pointerDown(nested, MOUSE_PRESS);
+    expect(row).not.toHaveAttribute('data-astryx-press');
+    fireEvent.pointerUp(nested, MOUSE_PRESS);
+    fireEvent.pointerDown(label, MOUSE_PRESS);
+    expect(row).toHaveAttribute('data-astryx-press', 'on');
+    fireEvent.pointerUp(label, MOUSE_PRESS);
   });
 
   it('keeps a link in a ReactNode label independent from selection', async () => {
