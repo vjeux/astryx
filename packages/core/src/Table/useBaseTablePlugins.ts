@@ -37,6 +37,7 @@
  */
 
 import {useRef} from 'react';
+import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import type {TablePlugin} from './types';
 import {devWarn} from '../utils/devWarning';
 
@@ -182,33 +183,38 @@ export function useBaseTablePlugins<T extends Record<string, unknown>>(
   basePlugins: TablePlugin<T>[],
   userPlugins: Record<string, TablePlugin<T>> | undefined,
 ): TablePlugin<T>[] {
+  // The last committed plugins and their array. It is written only at
+  // commit, so a render React discards cannot replace it.
   const prevRef = useRef<{
     basePlugins: TablePlugin<T>[];
     userPlugins: Record<string, TablePlugin<T>> | undefined;
     result: TablePlugin<T>[];
   } | null>(null);
+  const prev = prevRef.current;
 
-  // Check if we can reuse the previous result
-  if (prevRef.current != null) {
-    const prev = prevRef.current;
+  // Reuse the committed array while every plugin value is the same instance.
+  const result =
+    prev != null &&
+    prev.basePlugins === basePlugins &&
+    arePluginRecordsEqual(prev.userPlugins, userPlugins)
+      ? prev.result
+      : mergePlugins(basePlugins, userPlugins);
 
-    // Fast path: same references
-    if (prev.basePlugins === basePlugins && prev.userPlugins === userPlugins) {
-      return prev.result;
-    }
+  // Syncs the plugin cache with the committed plugins.
+  useIsomorphicLayoutEffect(() => {
+    prevRef.current = {basePlugins, userPlugins, result};
+  });
+  return result;
+}
 
-    // Deep identity comparison: check if all plugin values are the same
-    if (
-      prev.basePlugins === basePlugins &&
-      arePluginRecordsEqual(prev.userPlugins, userPlugins)
-    ) {
-      // Update stored reference but return same result array
-      prev.userPlugins = userPlugins;
-      return prev.result;
-    }
-  }
-
-  // Sort user plugins into canonical order
+/**
+ * Sorts user plugins into canonical order after the base plugins, and
+ * validates them in dev mode.
+ */
+function mergePlugins<T extends Record<string, unknown>>(
+  basePlugins: TablePlugin<T>[],
+  userPlugins: Record<string, TablePlugin<T>> | undefined,
+): TablePlugin<T>[] {
   const sortedUserPlugins = userPlugins
     ? sortPluginEntries(Object.entries(userPlugins)).map(([, plugin]) => plugin)
     : [];
@@ -221,8 +227,6 @@ export function useBaseTablePlugins<T extends Record<string, unknown>>(
       validatePlugin(name, plugin);
     }
   }
-
-  prevRef.current = {basePlugins, userPlugins, result};
   return result;
 }
 
