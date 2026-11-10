@@ -5,9 +5,10 @@
  * @input BottomSheet, with the shared animator replaced by a recorder
  * @output Unit tests for the exit a drag's close plays. It starts the close
  *   spring from where the finger left the sheet, and a reopen takes it back.
- *   The scrim fades for as long as that close plays, decided before the
- *   scrim starts to clear. That holds on a standalone sheet and on a
- *   switcher flow
+ *   Under reduced motion no spring plays, and the sheet stays where the
+ *   finger left it while it fades out. The scrim fades for as long as that
+ *   close plays, decided before the scrim starts to clear. That holds on a
+ *   standalone sheet and on a switcher flow
  * @position The jsdom side of the drag exit; the Chromium release spec reads
  *   the curve the browser plays.
  */
@@ -240,6 +241,47 @@ it('leaves a finished exit where it ended', async () => {
     exits[0].finish();
   });
   expect(exits[0].retarget).not.toHaveBeenCalled();
+});
+
+/** Matches only the reduced-motion query: a fine pointer that asks for less motion. */
+function preferReducedMotion() {
+  vi.mocked(window.matchMedia).mockImplementation((query: string) => ({
+    matches: query === '(prefers-reduced-motion: reduce)',
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+}
+
+it('holds the sheet where the finger left it while a reduced-motion close fades it out', () => {
+  preferReducedMotion();
+  render(<Host />);
+  layOutSheet();
+  const handle = getHandle();
+  const sheet = handle.closest<HTMLElement>('.astryx-bottom-sheet');
+  firePointer(handle, 'pointerdown', {
+    pointerId: 1,
+    pointerType: 'touch',
+    clientY: 0,
+  });
+  firePointer(handle, 'pointermove', {pointerId: 1, clientY: 40});
+  firePointer(handle, 'pointermove', {pointerId: 1, clientY: 120});
+  const released = sheet?.style.transform;
+  firePointer(handle, 'pointerup', {pointerId: 1, clientY: 120});
+  // The release asked the sheet to close: a closing sheet is not modal.
+  expect(
+    document
+      .querySelector('dialog[aria-label="Sheet"]')
+      ?.getAttribute('aria-modal') ?? null,
+  ).toBeNull();
+  // No close spring plays under reduced motion. The sheet fades out in place.
+  expect(exits).toHaveLength(0);
+  expect(released).toMatch(/^translateY\([1-9]/);
+  expect(sheet?.style.transform).toBe(released);
 });
 
 /** The inline fade duration on the sheet's dialog, '' when none. */
