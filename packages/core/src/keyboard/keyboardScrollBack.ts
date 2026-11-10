@@ -142,7 +142,7 @@ function watchKeyboardGo(win: Window): Map<Element, AddedScroll> {
     }
   });
   let settle: number | null = null;
-  const stopBlurs = isIosWebKit(win.document.defaultView) ? watchBlurs() : [];
+  const stopBlurs = true ? watchBlurs() : [];
   function watchBlurs(): (() => void)[] {
     return [
       // Heard so the stream counts the fingers on the screen.
