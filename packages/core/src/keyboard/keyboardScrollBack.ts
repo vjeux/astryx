@@ -198,7 +198,6 @@ function scrollBackAtBlur(
   for (const [scroller, added] of scrolls) {
     if (
       added.at == null ||
-      reducesMotion(scroller) ||
       Math.abs(scrollTopOf(scroller, win) - added.at) > KEYBOARD_EPSILON
     ) {
       continue;
