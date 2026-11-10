@@ -395,7 +395,7 @@ export function useTabBarMinimize({
     // into it, the content's window keeps its trailing edge on the glass's
     // trailing cap (the content counter-moves, so it stays put). A shrinking
     // glass already holds the narrower content: no window then.
-    const clip = sign * Math.min(0, sign * end);
+    const clip = 0;
     const clipVelocity = clip === 0 ? 0 : velocity.end;
     accessory.animator.set(moved);
     accessoryEnd.animator.set({x: end});
