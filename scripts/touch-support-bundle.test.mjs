@@ -255,6 +255,13 @@ const GESTURE_USERS = new Set([
   // Snap paging: the pager, under a finger and on a trackpad swipe. Carousel
   // imports none of it.
   'SnapPaging',
+  // The menu press model's touch scroll-view probe. The public useMenuPress
+  // passes it too: with no `longPressDelayMs` it takes the touch model. The
+  // nav, breadcrumb and tab menus take that hook, as a customer would.
+  'hooks: useMenuPress',
+  'Breadcrumbs',
+  'NavMenu',
+  'TabList',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
