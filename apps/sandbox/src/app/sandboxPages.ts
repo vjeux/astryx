@@ -88,6 +88,12 @@ export const categories: SandboxCategory[] = [
       'Component demos, composition patterns, and interactive examples.',
     pages: [
       {
+        name: 'Lab SearchField',
+        href: '/pages/lab-search-field/',
+        description:
+          'The lab SearchField on its own phone page: a large title, the field and the results its query keeps',
+      },
+      {
         name: 'Mobile Prototypes',
         href: '/pages/mobile-prototypes/',
         description:
