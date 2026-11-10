@@ -652,9 +652,11 @@ function onPointerDown(event: PointerEvent): void {
   }
   const element = surfaceAt(event.target);
   // A pen on a fine-pointer surface presses at once, in a scroll view too:
-  // the delay and the brake wait out a finger's scroll.
+  // the delay and the brake wait out a finger's scroll. Where the primary
+  // pointer is coarse, a pen scrolls the page like a finger, so it waits too.
   const presentsAtOnce =
     event.pointerType === 'pen' &&
+    !stylesheetDroppedActive() &&
     element != null &&
     paintsFinePointerPress(element);
   // The touch clock is stamped AFTER the brake reads it, deliberately: the
