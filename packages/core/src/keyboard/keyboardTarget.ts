@@ -15,7 +15,7 @@
 import {animatorFor, type Animator} from '../motion/animator';
 import {reducesMotion} from '../motion/reducedMotion';
 import {isCoarsePointer} from '../utils/coarsePointer';
-import {getTouchStartCount, subscribeInput} from '../utils/inputStream';
+import {subscribeInput} from '../utils/inputStream';
 import {layoutViewportHeight} from '../utils/layoutViewport';
 import {nearestScroller, scrollingAncestor} from '../utils/scrollingAncestor';
 import {isIosWebKit} from '../utils/touchQueries';
@@ -25,7 +25,6 @@ import {
   findTextEntryControl,
   focusAtPoint,
   getKeyboardHeight,
-  isFingerOnScreen,
   isKeyboardMeasurable,
   isTextEntryControl,
   panVisualViewportTo,
@@ -39,7 +38,6 @@ import {
   claimKeyboardScrollBack,
   keyboardScrollTarget,
   noteKeyboardScroll,
-  stopKeyboardScrollBack,
   scrollTopOf,
 } from './keyboardScrollBack';
 import {distanceIntoBand} from './revealBand';
@@ -721,7 +719,6 @@ function revealWithKeyboard(
       return;
     }
     hasRevealed = height > KEYBOARD_EPSILON;
-    startsAtReveal = getTouchStartCount(win);
     const rising = reveal(focused, scroller, height, offset, win);
     if (unplaced === 'keep') {
       return;
@@ -762,28 +759,22 @@ function revealWithKeyboard(
     isPlaced = panIntoView(focused, offset, win, pans);
   };
   const pans = watchPans(win, focused => focused === field() && isPlaced);
-  // A report within a pixel of the last height is a pan, a scroll or a
-  // zoom's rounding, so the field stays. After the show's first reveal, a
-  // report during a press that began after that reveal moves nothing, as
-  // when Firefox's toolbar hides in a drag.
+  // A report within a pixel of the last height comes from a pan, a scroll or
+  // a zoom's rounding. The field stays where the person put it. After the
+  // show's first reveal, it also stays while a press that started after the
+  // last reveal is down. Firefox's toolbar hides in a drag, while the person
+  // moves the page.
   let lastHeight = getKeyboardHeight(win);
-  const isLaterPressDown = () =>
-    isFingerOnScreen(win) && getTouchStartCount(win) !== startsAtReveal;
   const stopReports = subscribeKeyboardHeight(win, event => {
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
         lastHeight = event.height;
-        if (!hasRevealed || !isLaterPressDown()) {
-          revealNow(event.height);
-        }
+        revealNow(event.height);
       }
       pans.report(event.height);
     }
   });
-  const onFocusIn = () => {
-    stopKeyboardScrollBack(win);
-    revealNow(getKeyboardHeight(win));
-  };
+  const onFocusIn = () => revealNow(getKeyboardHeight(win));
   region.addEventListener('focusin', onFocusIn);
   revealNow(getKeyboardHeight(win));
   return () => {
@@ -1159,7 +1150,6 @@ export function keepFieldAboveKeyboard(
     if (placement == null) {
       return;
     }
-    stopKeyboardScrollBack(win);
     stopSession =
       'ride' in placement
         ? rideWithKeyboard(placement.ride, offset, win, false)
