@@ -208,7 +208,7 @@ function watchScroll(
       }
     } else if (y < run.lastY) {
       run.downFrom = null;
-      if (y <= 0) {
+      if (y < 0) {
         setIsMinimized(false);
       }
     }
