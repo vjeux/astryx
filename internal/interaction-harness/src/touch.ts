@@ -948,7 +948,7 @@ export class TouchTapIntervalError extends Error {
   constructor(readonly fault: TapIntervalFault) {
     const after = fault.frameAfterCloseMs.toFixed(0);
     const cause =
-      fault.closeFrameGapMs > FRAME_STARVATION_MS
+      fault.closeFrameGapMs >= FRAME_STARVATION_MS
         ? `The page drew no frame for ${fault.closeFrameGapMs.toFixed(0)} ms across that window's close, then a frame ${after} ms after it, before the touch-down. Its main thread was held across the close, by a task of its own or a starved machine. So the page read separate taps: the touch-down waited for that main thread.`
         : `The page kept drawing across that window's close, and drew a frame ${after} ms after it, before the touch-down (${fault.framesAfterClose} in all). So the page read separate taps: a dispatch stalled before the page, as on a starved runner.`;
     super(
