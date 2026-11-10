@@ -28,6 +28,7 @@ import {
   serveStorybook,
   type StaticServer,
 } from '@astryxdesign/a11y-spec/storybook';
+import {FrameStarvationError} from '@astryxdesign/interaction-harness';
 
 // The frame evidence is Chromium's: CI's interaction proofs run the chromium
 // project, and these cases have not been run in WebKit.
@@ -403,7 +404,7 @@ interface MotionPart {
  * One press feedback animation `recordMotion` keeps apart: the toggle's own,
  * or on a copy of it the old state holds (`onCopy`). `name` is a CSS
  * animation's; `startTime` is read while it runs, since a cancelled animation
- * drops it.
+ * drops it. It stays null for an animation cancelled before it started.
  */
 interface PressPart {
   readonly onCopy: boolean;
@@ -460,6 +461,18 @@ async function recordMotion(page: Page): Promise<void> {
             startTime:
               animation.startTime == null ? null : Number(animation.startTime),
           });
+          // The start resolves on the frame that first draws the animation.
+          // On a busy page, that frame's callbacks can run after the copy
+          // is gone, so the start is also read as the animation turns ready.
+          animation.ready.then(
+            ready => {
+              const part = press.get(ready);
+              if (part != null && ready.startTime != null) {
+                part.startTime = Number(ready.startTime);
+              }
+            },
+            () => undefined,
+          );
           continue;
         }
         const properties = new Set<string>();
@@ -727,6 +740,18 @@ test.describe('component:SideNav FR6 and component:AppShell FR17 under a finger'
         other => !other.onCopy && other.name === fade.name,
       );
       expect(own, JSON.stringify(press)).toBeDefined();
+      // A copy the motion removed before any frame drew it never started
+      // its fade, so there is nothing to judge.
+      if (Number.isNaN(fade.startTime)) {
+        throw new FrameStarvationError({
+          during: `the old state's copy held the toggle's press fade (${JSON.stringify(press)})`,
+          frames: 0,
+          min: 1,
+          longestGapMs: Number.POSITIVE_INFINITY,
+          cause:
+            'the motion removed the copy before the page drew a frame of it, so its press fade never started',
+        });
+      }
       expect(
         Math.abs(fade.startTime - (own?.startTime ?? Number.NaN)),
         JSON.stringify(press),
@@ -801,9 +826,33 @@ test.describe('component:SideNav FR6 and component:AppShell FR17 under a mouse',
           new Promise<void>(resolve => {
             requestAnimationFrame(() => resolve());
           });
+        const beforeCollapse = new Set(document.getAnimations());
         toggle().click();
         const collapsed = performance.now();
-        while (performance.now() - collapsed < 1150 - blockMs) {
+        await new Promise<void>(resolve => {
+          setTimeout(resolve, 0);
+        });
+        const collapse = document
+          .getAnimations()
+          .filter(animation => !beforeCollapse.has(animation));
+        if (collapse.length === 0) {
+          throw new Error('the collapse made no animation');
+        }
+        // The block comes after the page draws the collapse running: a frame
+        // later than the one it starts on. A starved page can draw only that
+        // first frame by then. The timeline the block holds would then read
+        // the collapse as not yet moved, though it carries on to its end.
+        const isDrawnRunning = () =>
+          collapse.some(
+            animation =>
+              animation.startTime != null &&
+              Number(document.timeline.currentTime) >
+                Number(animation.startTime),
+          );
+        while (
+          performance.now() - collapsed < 1150 - blockMs ||
+          !isDrawnRunning()
+        ) {
           await frame();
         }
         await new Promise<void>(resolve => {
