@@ -686,7 +686,13 @@ describe('touchPlayError on a starved runner', () => {
     const heldLift = lateLift.map((a, i) =>
       i === 5 ? {...a, handledAt: a.stamp + 110} : a,
     );
-    expect(errorFor(heldLift, starved)).toBeInstanceOf(TouchPageStallError);
+    const error = errorFor(heldLift, starved);
+    expect(error).toBeInstanceOf(TouchPageStallError);
+    // Explained in full, so no stall is left to name.
+    expect((error as TouchPageStallError).fault.heldByPage).toEqual({
+      gapMs: 120,
+      handlingMs: 110,
+    });
   });
 
   it('keeps a wait for the main thread a TouchPacingError that names the wait, though the page drew nothing', () => {
@@ -698,6 +704,75 @@ describe('touchPlayError on a starved runner', () => {
     expect(error).toBeInstanceOf(TouchPacingError);
     expect(error.message).toMatch(
       /an event waited 100 ms for the main thread before the page's listeners began/,
+    );
+  });
+
+  it("names both causes when the page's listeners explain most of a gap's delay but not all of it", () => {
+    // The last move's listeners ran 80 ms of the lift's 104 ms delay.
+    const mostlyHeld = lateLift.map((a, i) =>
+      i === 5 ? {...a, handledAt: a.stamp + 80} : a,
+    );
+    const error = errorFor(mostlyHeld, starved);
+    expect(error).toBeInstanceOf(TouchPageStallError);
+    expect((error as TouchPageStallError).fault.heldByPage).toEqual({
+      gapMs: 120,
+      handlingMs: 80,
+      stalledMs: 24,
+    });
+    expect(error.message).toMatch(
+      /took 80 ms of page wall time to handle an event, so the next reached it 120 ms later, after a further 24 ms stall before the page/,
+    );
+  });
+
+  it("names both causes when a wait for the main thread explains most of a gap's delay", () => {
+    // A page task held the thread 70 ms before the last move's listeners,
+    // which ran 4 ms: 74 ms of the lift's 104 ms delay.
+    const mostlyWaited = lateLift.map((a, i) =>
+      i === 5 ? {...a, startedAt: a.stamp + 70, handledAt: a.stamp + 74} : a,
+    );
+    const error = errorFor(mostlyWaited, starved);
+    expect(error).toBeInstanceOf(TouchPacingError);
+    expect(error.message).toMatch(
+      /an event waited 70 ms for the main thread before the page's listeners began, so the next reached it 120 ms later, after a further 30 ms stall before the page/,
+    );
+  });
+
+  it("keeps the starved runner's error when the page's time is under half of the delay, and names that time", () => {
+    // The last move's listeners ran 40 ms of the lift's 104 ms delay.
+    const partlyHeld = lateLift.map((a, i) =>
+      i === 5 ? {...a, handledAt: a.stamp + 40} : a,
+    );
+    const error = errorFor(partlyHeld, starved);
+    expect(error).toBeInstanceOf(TouchStarvationError);
+    expect(error.message).toMatch(
+      /The page's listeners and a wait for the main thread took 40 ms of that gap, under half of its delay: the runner starved the page for the rest/,
+    );
+    expect(error.message).not.toMatch(/Neither the page's listeners/);
+  });
+
+  it("keeps the starved runner's plain sentence when the page's time ended inside the scripted gap", () => {
+    // A press scripted to hold 300 ms reached the page 400 ms late. Its
+    // touch-down's listeners ran 250 ms, inside the scripted 300 ms, so they
+    // delayed nothing.
+    const finger = {id: 0, x: 100, y: 50};
+    const press: TouchEventStep[] = [
+      {t: 0, type: 'touchStart', fingers: [finger], changed: [finger]},
+      {t: 300, type: 'touchEnd', fingers: [], changed: [finger]},
+    ];
+    const arrivals: TouchArrival[] = [
+      {stamp: 0, handledAt: 250},
+      {stamp: 700, handledAt: 700},
+    ];
+    const fault = touchPacingFault(press, arrivals, undefined, {
+      boundaries: {holdMs: 500},
+    });
+    if (fault?.kind !== 'hold') {
+      throw new Error('expected the page to read a hold past the boundary');
+    }
+    const error = touchPlayError(press, arrivals, fault, [], [0, 10, 690]);
+    expect(error).toBeInstanceOf(TouchStarvationError);
+    expect(error.message).toMatch(
+      /Neither the page's listeners nor a page task held the event/,
     );
   });
 
