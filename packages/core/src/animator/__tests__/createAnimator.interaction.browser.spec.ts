@@ -78,7 +78,17 @@ test('animate plays the springs.stateChange curve on screen, seeked frame by fra
   const rows = await page.evaluate(async travel => {
     void window.card.animate({x: travel});
     // Let the browser commit the motion, then hold it to seek.
-    await new Promise(requestAnimationFrame);
+    // NOT FOR LANDING: a starved runner's main thread, held 1.2 s in the
+    // first frame after the call.
+    await new Promise(resolve =>
+      requestAnimationFrame(() => {
+        const end = performance.now() + 1200;
+        while (performance.now() < end) {
+          // Hold the main thread.
+        }
+        resolve(undefined);
+      }),
+    );
     await new Promise(requestAnimationFrame);
     const animations = document.getAnimations();
     for (const animation of animations) {
