@@ -20,6 +20,7 @@ import {createMotionEngine, type MotionCurve} from '../motion/animator';
 import {reducedMotionFade} from '../motion/reducedMotion';
 import {picker} from '../motion/uikit/picker';
 import {
+  lapTimes,
   nearestIndex,
   reachesRow,
   tickTimes,
@@ -60,6 +61,12 @@ export interface WheelStrip {
    * painting a mark per row.
    */
   onNearestChange(listener: ((position: number) => void) | null): void;
+  /**
+   * On a looping layout, tell `listener` the position of the row nearest the
+   * band whenever that row's lap changes. That is on a drag frame, as a motion
+   * passes a seam (at the time its curve does), and where a motion stops.
+   */
+  onLapChange(listener: ((position: number) => void) | null): void;
   /** Whether a motion is playing. */
   isMoving(): boolean;
   /**
@@ -137,6 +144,8 @@ export function createWheelStrip(initialLayout: WheelLayout): WheelStrip {
   let running: Running | null = null;
   let nearestListener: ((position: number) => void) | null = null;
   let lastNearest: number | null = null;
+  let lapListener: ((position: number) => void) | null = null;
+  let lastLap: number | null = null;
   let lastTick = -Infinity;
   /** Last offset a drag frame showed, for its ticks. */
   let dragPrevious: number | null = null;
@@ -152,6 +161,19 @@ export function createWheelStrip(initialLayout: WheelLayout): WheelStrip {
     }
     lastNearest = position;
     nearestListener?.(position);
+  };
+
+  const reportLap = (offset: number): void => {
+    if (!layout.looping || layout.rowCount === 0) {
+      return;
+    }
+    const position = nearestIndex(offset, layout);
+    const lap = Math.floor(position / layout.rowCount);
+    if (lap === lastLap) {
+      return;
+    }
+    lastLap = lap;
+    lapListener?.(position);
   };
 
   const tick = (time: number): void => {
@@ -204,12 +226,26 @@ export function createWheelStrip(initialLayout: WheelLayout): WheelStrip {
         );
       }
     }
-    if (landingMs != null) {
+    if (landingMs == null) {
+      for (const t of lapTimes(motion.curve, layout)) {
+        motion.timers.push(
+          setTimeout(
+            () => {
+              if (running === motion) {
+                reportLap(motion.curve.value(t));
+              }
+            },
+            Math.max(0, t * 1000 - elapsed),
+          ),
+        );
+      }
+    } else {
       motion.timers.push(
         setTimeout(
           () => {
             if (running === motion) {
               reportNearest(motion.curve.to);
+              reportLap(motion.curve.to);
             }
           },
           Math.max(0, landingMs - elapsed),
@@ -224,6 +260,7 @@ export function createWheelStrip(initialLayout: WheelLayout): WheelStrip {
           }
           clear(motion);
           reportNearest(motion.curve.to);
+          reportLap(motion.curve.to);
           motion.onEnd?.('arrived', motion.curve.to);
         },
         Math.max(0, endMs - elapsed),
@@ -241,6 +278,7 @@ export function createWheelStrip(initialLayout: WheelLayout): WheelStrip {
     // `set` ends the strip's animation and puts it where it was shown.
     animator.set({y: -offset});
     reportNearest(offset);
+    reportLap(offset);
     motion.onEnd?.('stopped', offset);
     return offset;
   };
@@ -255,6 +293,10 @@ export function createWheelStrip(initialLayout: WheelLayout): WheelStrip {
     onNearestChange(listener) {
       nearestListener = listener;
       lastNearest = null;
+    },
+    onLapChange(listener) {
+      lapListener = listener;
+      lastLap = null;
     },
     isMoving() {
       return running != null;
@@ -281,6 +323,7 @@ export function createWheelStrip(initialLayout: WheelLayout): WheelStrip {
       // A park is a one-off write: no layer for a strip at rest.
       animator.set({y: -offset}, {promote: ticks});
       reportNearest(offset);
+      reportLap(offset);
     },
     resetDrag() {
       dragPrevious = null;

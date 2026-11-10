@@ -272,6 +272,7 @@ export function PickerWheel({
   ref,
   isLooping = false,
   lapOptions,
+  onLap,
 }: WheelProps) {
   const columnRef = useRef<HTMLDivElement | null>(null);
   const rowsRef = useRef<HTMLDivElement | null>(null);
@@ -303,10 +304,21 @@ export function PickerWheel({
 
   // The latest props, for the motion's and the gesture listeners' callbacks,
   // which are attached once and outlive a render.
-  const latestRef = useRef({options, value, onChange, layout, lapOptions});
-  useIsomorphicLayoutEffect(() => {
-    latestRef.current = {options, value, onChange, layout, lapOptions};
+  const latestRef = useRef({
+    options,
+    value,
+    onChange,
+    layout,
+    lapOptions,
+    onLap,
   });
+  useIsomorphicLayoutEffect(() => {
+    latestRef.current = {options, value, onChange, layout, lapOptions, onLap};
+  });
+  // A person's drag, and the motion it starts, tells the owner each lap it
+  // passes the seam at once (`onLap`). It commits only at rest.
+  const liveRef = useRef(false);
+  const liveLapsRef = useRef(0);
 
   // Reads the option a looping wheel shows at any position. Each lap has its
   // own rows (`lapOptions`), built once per read.
@@ -567,6 +579,8 @@ export function PickerWheel({
       }
       const option = optionAt(position);
       const wraps = lapsPast(position);
+      liveRef.current = false;
+      liveLapsRef.current = 0;
       // The offset moves onto the wheel's own rows before the commit, so a
       // value the owner clamps turns the wheel on from there.
       committedRef.current = nearestIndex(settle(offset), current.layout);
@@ -608,6 +622,20 @@ export function PickerWheel({
     motion.onNearestChange(paintRow);
     return () => motion.onNearestChange(null);
   }, [motion, paintRow]);
+  // The laps a person's move lies past the committed row's lap, live.
+  useIsomorphicLayoutEffect(() => {
+    motion.onLapChange(position => {
+      if (!liveRef.current) {
+        return;
+      }
+      const laps = lapsPast(position);
+      if (laps !== liveLapsRef.current) {
+        liveLapsRef.current = laps;
+        latestRef.current.onLap?.(laps);
+      }
+    });
+    return () => motion.onLapChange(null);
+  }, [motion, lapsPast]);
   // At rest on the committed row, render's own mark takes over again.
   useIsomorphicLayoutEffect(() => {
     if (
@@ -658,6 +686,8 @@ export function PickerWheel({
       // The turn's own end paints the band's row.
       const turn = {};
       parkTurnRef.current = turn;
+      liveRef.current = false;
+      liveLapsRef.current = 0;
       cover(nearestIndex(shown, layout), position);
       move(turnCurve(columnRef.current, shown, target), {
         onEnd: (outcome, end) => {
@@ -685,6 +715,8 @@ export function PickerWheel({
   useEffect(() => {
     if (!isActive) {
       dragRef.current = null;
+      liveRef.current = false;
+      liveLapsRef.current = 0;
       motion.stop();
     }
   }, [isActive, motion]);
@@ -709,6 +741,7 @@ export function PickerWheel({
   const release = useCallback(
     (velocity: number) => {
       registerWheelTables();
+      liveRef.current = true;
       const currentLayout = latestRef.current.layout;
       const plan = planRelease(
         motion.offset(),
@@ -749,6 +782,7 @@ export function PickerWheel({
       const {layout: currentLayout} = latestRef.current;
       switch (recognizer.state) {
         case 'began': {
+          liveRef.current = true;
           const shown = motion.isMoving() ? motion.stop() : motion.offset();
           dragRef.current = {start: fingerOffset(shown, currentLayout)};
           motion.resetDrag();
@@ -838,6 +872,7 @@ export function PickerWheel({
       }
       // On a loop the tapped row can be a copy: the wheel turns onto it, as
       // UIKit's does.
+      liveRef.current = true;
       cover(nearestIndex(offset, currentLayout), target);
       move(turnCurve(columnRef.current, offset, target * ROW_HEIGHT), {
         onEnd,
@@ -869,6 +904,8 @@ export function PickerWheel({
         const currentLayout = latestRef.current.layout;
         const target = nearestPosition(index, offset, currentLayout);
         // The owner commits this row, so on a loop the turn carries no lap.
+        liveRef.current = false;
+        liveLapsRef.current = 0;
         committedRef.current = target;
         cover(nearestIndex(offset, currentLayout), target);
         move(turnCurve(columnRef.current, offset, target * ROW_HEIGHT), {
@@ -901,10 +938,13 @@ export function PickerWheel({
           : 0;
       const from = offset - shift * ROW_HEIGHT;
       const to = position - shift;
+      // The commit carries the laps at once, so the turn reports none.
+      liveRef.current = false;
+      liveLapsRef.current = 0;
+      committedRef.current = to;
       if (shift !== 0) {
         motion.setOffset(from);
       }
-      committedRef.current = to;
       cover(nearestIndex(from, current.layout), to);
       move(turnCurve(columnRef.current, from, to * ROW_HEIGHT));
       commit(option, wraps);

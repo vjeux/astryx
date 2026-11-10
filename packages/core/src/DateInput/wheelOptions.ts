@@ -89,6 +89,13 @@ export interface WheelProps {
    * under a bound. Without it, every lap has the wheel's own rows.
    */
   lapOptions?: (lap: number) => ReadonlyArray<WheelOption>;
+  /**
+   * On a looping wheel, called at once as a person's drag, or the motion it
+   * starts, passes the seam. `laps` is how many laps the band then lies past
+   * the committed row's lap. The wheel still commits only at rest. A key or a
+   * click commits its laps at once, so it calls nothing.
+   */
+  onLap?: (laps: number) => void;
 }
 
 /**

@@ -370,6 +370,36 @@ export function tickTimes(
 }
 
 /**
+ * The times (seconds, ascending) at which the row nearest the band passes a
+ * seam of a looping layout during `curve`: where that row's lap changes.
+ */
+export function lapTimes(
+  curve: WheelCurve,
+  layout: WheelLayout,
+  step = 1 / 240,
+): number[] {
+  if (!layout.looping || layout.rowCount === 0) {
+    return [];
+  }
+  const lapAt = (t: number) =>
+    Math.floor(nearestIndex(curve.value(t), layout) / layout.rowCount);
+  const times: number[] = [];
+  let previous = lapAt(0);
+  for (let t = step; t < curve.duration + step; t += step) {
+    const time = Math.min(t, curve.duration);
+    const lap = lapAt(time);
+    if (lap !== previous) {
+      times.push(time);
+      previous = lap;
+    }
+    if (time === curve.duration) {
+      break;
+    }
+  }
+  return times;
+}
+
+/**
  * Whether moving from offset `from` to `to` brings a row's centre onto the
  * band's. That is a multiple of `rowHeight` in (from, to] moving up, or in [to,
  * from) moving down.
