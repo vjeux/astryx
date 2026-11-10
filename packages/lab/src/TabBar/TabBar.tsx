@@ -876,9 +876,7 @@ export function TabBar({
   const circleRef = useRef<HTMLButtonElement | null>(null);
   const mergedCircleRef = useMergedRefs(minimize.circleIcon, circleRef);
   const selectedItem = selectedIndex >= 0 ? items[selectedIndex] : null;
-  const placement: TabBarAccessoryPlacement = isMinimized
-    ? 'inline'
-    : 'expanded';
+  const placement: TabBarAccessoryPlacement = 'expanded';
   // What the accessory shows where it is: drawn only when that renders
   // something (`false`, `''` or a function returning `null` draw no capsule).
   const accessoryContent =
