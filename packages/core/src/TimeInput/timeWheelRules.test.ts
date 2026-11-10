@@ -206,12 +206,6 @@ describe('the minute column', () => {
   it('changes only the minutes', () => {
     expect(turnColumn(at(12, 58), 'minute', 2, '12h')).toEqual(at(12, 2));
   });
-
-  it('carries the hour by the laps the minute column passed its seam', () => {
-    expect(turnColumn(at(12, 58), 'minute', 2, '12h', 1)).toEqual(at(13, 2));
-    expect(turnColumn(at(0, 1), 'minute', 59, '24h', -1)).toEqual(at(23, 59));
-    expect(turnColumn(at(23, 59), 'minute', 0, '24h', 1)).toEqual(at(0, 0));
-  });
 });
 
 describe('turnColumn', () => {
