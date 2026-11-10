@@ -219,15 +219,23 @@ function heldRead(
   if (!isHeld) {
     return {rect: item.getBoundingClientRect(), held: 0};
   }
-  let before = translateOf(item);
-  let rect = item.getBoundingClientRect();
-  let after = translateOf(item);
-  for (let read = 1; read < 4 && Math.abs(after - before) > 0.01; read++) {
-    before = translateOf(item);
-    rect = item.getBoundingClientRect();
-    after = translateOf(item);
+  // The sampled read of the glide clock in motion/animatedLayout.ts, as is:
+  // a box read between readings that match, or paired with the reading
+  // before it when three more reads find none that match.
+  let applied = getComputedStyle(item).translate;
+  if (applied === '') {
+    return {rect: item.getBoundingClientRect(), held: 0};
   }
-  return {rect, held: after};
+  let rect = item.getBoundingClientRect();
+  for (let read = 0; read < 3; read++) {
+    const again = getComputedStyle(item).translate;
+    if (again === applied) {
+      break;
+    }
+    applied = again;
+    rect = item.getBoundingClientRect();
+  }
+  return {rect, held: Number.parseFloat(applied) || 0};
 }
 
 /**
