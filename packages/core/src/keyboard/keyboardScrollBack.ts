@@ -50,7 +50,6 @@ export function claimKeyboardScrollBack(win: Window): () => void {
     claimants.set(win, left);
     if (left === 0) {
       stopsOf.get(win)?.();
-      foldWaitsOf.get(win)?.();
     }
   };
 }
