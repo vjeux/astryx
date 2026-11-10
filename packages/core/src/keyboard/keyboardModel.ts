@@ -258,7 +258,7 @@ export function createKeyboardModel(initialInset = 0): KeyboardModel {
         return begin(
           'show',
           predicted ? shownInset : inset,
-          time - androidKeyboard.showReportLagMs,
+          time,
           {predicted},
         );
       }
@@ -270,7 +270,7 @@ export function createKeyboardModel(initialInset = 0): KeyboardModel {
       if (transition.to <= EPSILON) {
         return null;
       }
-      return begin('hide', 0, time + androidKeyboard.hideAfterBlurMs, {
+      return begin('hide', 0, time, {
         predicted: true,
       });
     },
