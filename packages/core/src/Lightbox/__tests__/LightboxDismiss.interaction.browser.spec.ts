@@ -668,6 +668,20 @@ test("reopening at the dismissed photo's neighbour shows that photo", async ({
   await page.route('https://picsum.photos/**', async route =>
     route.fulfill({contentType: 'image/svg+xml', body: photoSvg(3000, 2000)}),
   );
+  await page.addInitScript(() => {
+    const Native = window.ResizeObserver;
+    window.ResizeObserver = class extends Native {
+      constructor(cb: ResizeObserverCallback) {
+        super((entries, observer) => {
+          if ((window as unknown as {delayObserver?: boolean}).delayObserver) {
+            setTimeout(() => cb(entries, observer), 400);
+          } else {
+            cb(entries, observer);
+          }
+        });
+      }
+    };
+  });
   await openStory(page, storybook(), 'core-lightbox--gallery');
   const driver = await touchDriver(page);
   const thumbnails = page.locator('#storybook-root img[style*="cover"]');
@@ -680,6 +694,9 @@ test("reopening at the dismissed photo's neighbour shows that photo", async ({
   };
   const dialog = page.getByRole('dialog');
   const current = dialog.locator('[data-current]');
+  await page.evaluate(() => {
+    (window as unknown as {delayObserver?: boolean}).delayObserver = true;
+  });
   await tapThumbnail(1);
   await expect(dialog).toBeVisible();
   // A plain image opener zooms the photo out of it: wait for it to land.
