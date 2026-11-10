@@ -1198,7 +1198,8 @@ export function createPager(
     remap: ((position: number) => number) | null,
     seed: Seed,
   ): void {
-    const {at, shown} = seed;
+    const {shown} = seed;
+    const at = undefined;
     const from = remap == null ? shown : remap(shown);
     // The velocity scales as the layout does where the track shows.
     const rate = remap == null ? 1 : remap(shown + 0.5) - remap(shown - 0.5);
