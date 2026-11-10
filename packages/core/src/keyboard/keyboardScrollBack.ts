@@ -277,7 +277,7 @@ function awaitFoldedReveal(
       scrollTopTo(scroller, from, scrollBackBehavior(scroller), win);
     }
   });
-  const stopTouch = subscribeInput(win, 'touchstart', () => stop());
+  const stopTouch = () => {};
   const stopKeyboard = subscribeKeyboardHeight(win, event => {
     if (event.type === 'viewport' && event.height > KEYBOARD_EPSILON) {
       stop();
