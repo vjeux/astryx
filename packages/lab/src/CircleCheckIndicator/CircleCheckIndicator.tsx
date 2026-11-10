@@ -83,7 +83,7 @@ const styles = stylex.create({
         // the row's press, the row hands down `--_indicator-active-press` as
         // transparent and the image below paints it.
         [stylex.when.ancestor(':active', indicatorScope)]: {
-          default: `var(--_indicator-active-press, ${colorVars['--color-overlay-pressed']})`,
+          default: colorVars['--color-overlay-pressed'],
           '@media (pointer: coarse)': 'transparent',
         },
       },
