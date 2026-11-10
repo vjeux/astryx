@@ -887,13 +887,17 @@ describe('the browser\u2019s own reveal pan (FR4)', () => {
     Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
   });
 
+  // A touch's start, and its end or cancel, which tell whether a finger is
+  // down.
+  const TOUCH_TYPES = ['touchstart', 'touchend', 'touchcancel'];
+
   it('listens for touches only while it watches', () => {
     const add = vi.spyOn(window, 'addEventListener');
     const remove = vi.spyOn(window, 'removeEventListener');
     const watch = watchRevealPan(window, {owns: () => true});
-    expect(add.mock.calls.map(([type]) => type)).toEqual(['touchstart']);
+    expect(add.mock.calls.map(([type]) => type)).toEqual(TOUCH_TYPES);
     watch.stop();
-    expect(remove.mock.calls.map(([type]) => type)).toEqual(['touchstart']);
+    expect(remove.mock.calls.map(([type]) => type)).toEqual(TOUCH_TYPES);
   });
 
   it('shares one touch subscription among its watches (architecture INV13, spec:AST-094 FR24)', () => {
@@ -908,7 +912,7 @@ describe('the browser\u2019s own reveal pan (FR4)', () => {
       owns: () => true,
       onTouch: () => touched.push('second'),
     });
-    expect(add.mock.calls.map(([type]) => type)).toEqual(['touchstart']);
+    expect(add.mock.calls.map(([type]) => type)).toEqual(TOUCH_TYPES);
     document.dispatchEvent(new Event('touchstart'));
     expect(touched).toEqual(['first', 'second']);
     first.stop();
@@ -916,7 +920,7 @@ describe('the browser\u2019s own reveal pan (FR4)', () => {
     document.dispatchEvent(new Event('touchstart'));
     expect(touched).toEqual(['first', 'second', 'second']);
     second.stop();
-    expect(remove.mock.calls.map(([type]) => type)).toEqual(['touchstart']);
+    expect(remove.mock.calls.map(([type]) => type)).toEqual(TOUCH_TYPES);
   });
 
   it('with the dock option off, reports and listens exactly as without it', () => {
@@ -941,10 +945,12 @@ describe('the browser\u2019s own reveal pan (FR4)', () => {
       document.dispatchEvent(new Event('touchstart'));
       seen.push(watch.isRevealPan(300));
       runs.push(seen);
-      expect(add.mock.calls.map(([type]) => type)).toEqual(['touchstart']);
+      const types = add.mock.calls.map(([type]) => type).sort();
       watch.stop();
       add.mockRestore();
       document.body.replaceChildren();
+      // The input stream counts the fingers on the screen for every watch.
+      expect(types).toEqual(['touchcancel', 'touchend', 'touchstart']);
     }
     expect(runs[1]).toEqual(runs[0]);
     expect(runs[0]).toEqual([false, false, true, false, false]);
@@ -956,6 +962,8 @@ describe('the browser\u2019s own reveal pan (FR4)', () => {
     const first = watchRevealPan(window, {owns: () => true, dock: true});
     const second = watchRevealPan(window, {owns: () => true, dock: true});
     expect(add.mock.calls.map(([type]) => type).sort()).toEqual([
+      'touchcancel',
+      'touchend',
       'touchstart',
       'wheel',
     ]);
@@ -963,6 +971,8 @@ describe('the browser\u2019s own reveal pan (FR4)', () => {
     expect(remove).not.toHaveBeenCalled();
     second.stop();
     expect(remove.mock.calls.map(([type]) => type).sort()).toEqual([
+      'touchcancel',
+      'touchend',
       'touchstart',
       'wheel',
     ]);

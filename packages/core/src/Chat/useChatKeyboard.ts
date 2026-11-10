@@ -6,7 +6,8 @@
  * @file useChatKeyboard.ts
  * @input React refs, the keyboard module's reports, focus routes and layout
  *   guide, the stream scroll's lock, the motion engine, the touch query and
- *   layout viewport height. Also the input stream's touch ends and scroll ends
+ *   layout viewport height. Also the keyboard module's finger state, and the
+ *   input stream's touch ends and scroll ends
  * @output Exports useChatKeyboard: the lift for ChatLayout's dock and message
  *   area, and the refs for its dock, message area and composer region. It
  *   also tells whether a focus call in the composer skips the browser's reveal
@@ -34,6 +35,7 @@ import {
   getKeyboardHeight,
   getKeyboardPan,
   isDockLeftCovered,
+  isFingerOnScreen,
   isTextEntryControl,
   refuseFocusReveal,
   subscribeDockReveal,
@@ -234,11 +236,6 @@ export function useChatKeyboard({
   // Set while the dock's translate carries a change of the pan's cover that
   // the layout has not taken yet.
   const panPendingRef = useRef(false);
-  // Fingers on the screen: while one is down, the reader still moves the pan,
-  // however slowly. The input stream's getDownPresses cannot serve. The
-  // browser cancels a finger's pointer once its touch starts to scroll, and
-  // the stream drops the press then.
-  const fingersRef = useRef(0);
   // Whether the transcript followed its newest message, and where it was
   // scrolled, just before the layout's last change.
   const atEndRef = useRef(false);
@@ -406,19 +403,16 @@ export function useChatKeyboard({
       const changed = event.height !== reportedHeight;
       const pan = getKeyboardPan(win);
       reportedHeight = event.height;
-      // A keyboard hide ends any touch this effect may not have heard end.
-      if (event.height <= 0) {
-        fingersRef.current = 0;
-      }
       const isPanStill = pan === reportedPan;
       reportedPan = pan;
       if (leavesReveal && event.height > 0 && followsDockDeficit(win)) {
         // A report that finds the pan where it was, with no finger down: the
-        // pan is at rest.
+        // pan is at rest. While a finger is down, the reader still moves the
+        // pan, however slowly.
         if (
           !changed &&
           isPanStill &&
-          fingersRef.current === 0 &&
+          !isFingerOnScreen(win) &&
           panPendingRef.current
         ) {
           commit();
@@ -436,18 +430,15 @@ export function useChatKeyboard({
         commit();
       }
     };
-    const onTouchStart = (event: Event) => {
-      fingersRef.current = (event as Partial<TouchEvent>).touches?.length ?? 1;
-    };
-    const onTouchEnd = (event: Event) => {
-      fingersRef.current = (event as Partial<TouchEvent>).touches?.length ?? 0;
-      if (fingersRef.current === 0) {
+    const onTouchEnd = () => {
+      if (!isFingerOnScreen(win)) {
         rest();
       }
     };
     const stopRest = leavesReveal
       ? [
-          subscribeInput(win, 'touchstart', onTouchStart),
+          // Heard so the input stream counts the fingers (isFingerOnScreen).
+          subscribeInput(win, 'touchstart', () => {}),
           subscribeInput(win, 'touchend', onTouchEnd),
           subscribeInput(win, 'touchcancel', onTouchEnd),
           subscribeInput(win, 'scrollend', rest),

@@ -1101,6 +1101,37 @@ describe('ChatLayout in a page that scrolls the document', () => {
     expect(dockOf(container).style.translate).toBe('');
   });
 
+  it('waits for the last of two fingers to lift before the layout takes a followed lift', () => {
+    const {container} = renderDocumentLayout();
+    report(window.innerHeight - 290);
+    wait(108);
+    pan(290);
+    act(() => {
+      document.dispatchEvent(
+        touch('touchstart', [
+          {x: 5, y: 300},
+          {x: 50, y: 300},
+        ]),
+      );
+    });
+    pan(287);
+    // One finger lifts. The other still moves the pan.
+    const firstLift = new Event('touchend', {bubbles: true, cancelable: true});
+    Object.assign(firstLift, {
+      touches: [{identifier: 1, clientX: 50, clientY: 303}],
+      changedTouches: [{identifier: 0, clientX: 5, clientY: 303}],
+    });
+    act(() => {
+      document.dispatchEvent(firstLift);
+    });
+    expect(layoutLift(dockOf(container))).toBe(0);
+    act(() => {
+      document.dispatchEvent(touch('touchend', [{x: 50, y: 303}]));
+    });
+    expect(layoutLift(dockOf(container))).toBeCloseTo(3, 5);
+    expect(dockOf(container).style.translate).toBe('');
+  });
+
   it('learns nothing from a composer show under a pinch zoom, whose pan is the reader\u2019s, and lifts the dock by the cover', () => {
     const {container} = renderDocumentLayout();
     viewport.scale = 2;
