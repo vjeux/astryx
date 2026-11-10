@@ -898,6 +898,15 @@ test('the rows below, the group and the chevron move on one timing: the theme’
   const ms = await glideMs(page);
   const durations = await watchStartedDurations(page);
   await tapToggle(page);
+  // NOT FOR LANDING: the group's own fade runs on 125 ms.
+  await parts(page).group.evaluate(el => {
+    for (const run of el.getAnimations()) {
+      const frames = (run.effect as KeyframeEffect).getKeyframes();
+      if (frames.some(frame => 'opacity' in frame)) {
+        run.effect?.updateTiming({duration: 125});
+      }
+    }
+  });
   const started = await durations();
   expect(started.group, JSON.stringify(started)).toContain(ms);
   expect(started.below, JSON.stringify(started)).toContain(ms);
