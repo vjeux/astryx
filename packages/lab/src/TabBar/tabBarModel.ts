@@ -4,7 +4,7 @@
  * @file tabBarModel.ts
  * @input TabBar's UIKit values (uikitTabBar.ts)
  * @output TabBar's pure geometry: the items' widths and centres, the item
- *   nearest a finger, and the lens's target and scale.
+ *   nearest a finger, the lens's target and scale, and the minimized circle.
  * @position Math of the lab TabBar; no DOM, no React. Coordinates are the
  *   capsule's own, in px, before its flex scale. x runs from its left edge,
  *   and items go in logical order.
@@ -135,4 +135,13 @@ export function copyTransform(
   scaleY: number,
 ): {x: number; scaleX: number; scaleY: number} {
   return {x: -x / scaleX, scaleX: 1 / scaleX, scaleY: 1 / scaleY};
+}
+
+/**
+ * The minimized circle's centre in a capsule `width` px wide: concentric with
+ * the capsule's leading cap.
+ */
+export function minimizedCenter(width: number, isRtl = false): number {
+  const half = tabBar.barHeight / 2;
+  return isRtl ? width - half : half;
 }
