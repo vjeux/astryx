@@ -227,7 +227,7 @@ function heldRead(
     rect = item.getBoundingClientRect();
     after = translateOf(item);
   }
-  return {rect, held: after};
+  return {rect, held: (before + after) / 2};
 }
 
 /**
