@@ -223,6 +223,12 @@ function heldRead(
   for (let attempt = 0; attempt < 4; attempt++) {
     const before = translateOf(item);
     const rect = item.getBoundingClientRect();
+    if (attempt === 0 && item === item.parentElement?.lastElementChild) {
+      const until = performance.now() + 20;
+      while (performance.now() < until) {
+        // A stall between the rect and its translate.
+      }
+    }
     const after = translateOf(item);
     read = {rect, held: after};
     if (Math.abs(after - before) <= 0.01) {
