@@ -682,6 +682,9 @@ test("reopening at the dismissed photo's neighbour shows that photo", async ({
   const current = dialog.locator('[data-current]');
   await tapThumbnail(1);
   await expect(dialog).toBeVisible();
+  await page.addStyleTag({
+    content: '[data-current] img { translate: 5000px 0 !important; }',
+  });
   // A plain image opener zooms the photo out of it: wait for it to land.
   await waitForRest(current.locator('img'));
   await frames(page, 4);
