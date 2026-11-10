@@ -6730,6 +6730,38 @@ test.describe('storyboards', {tag: '@storyboard'}, () => {
     expect(trace.sheet).toMatch(/composition ran past 1 ms/);
   });
 
+  test('a scratch page that opens after the sheet budget closes, so nothing composes after write returns', async ({
+    page,
+  }, testInfo) => {
+    await fixture(page);
+    const storyboard = new Storyboard(page, {
+      name: 'harness-self-test-sheet-budget-late-page',
+      clip: {x: 0, y: 340, width: 402, height: 120},
+      sheetBudgetMs: 50,
+    });
+    await storyboard.capture('first', 0);
+    // The scratch page opens 300 ms after `write` asks for it, past the
+    // 50 ms budget, as on a loaded runner. Its composition never finishes,
+    // so only the budget's close can close it.
+    const context = page.context();
+    const newPage = context.newPage.bind(context);
+    let opened: Page | undefined;
+    context.newPage = async () => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      opened = await newPage();
+      opened.evaluate = (() =>
+        new Promise(() => undefined)) as Page['evaluate'];
+      return opened;
+    };
+    try {
+      const files = await storyboard.write(testInfo);
+      expect(Object.keys(files).sort()).toEqual(['frame-00.png', 'trace.json']);
+      await expect.poll(() => opened?.isClosed() ?? false).toBe(true);
+    } finally {
+      context.newPage = newPage;
+    }
+  });
+
   test('a capture the engine fails throws its error and records no frame', async ({
     page,
   }) => {
