@@ -577,6 +577,26 @@ test('expand under a finger: the rows below glide while the group fades in, and 
     RECORDED_GLIDE_MS + 400,
   );
   const moving = frames.filter(frame => frame.group != null);
+  // NOT FOR LANDING: a band of the bound plus half a frame's travel, injected
+  // into a mid-glide frame made late.
+  {
+    const at = frames.indexOf(moving[Math.floor(moving.length / 3)]);
+    const hit = frames[at] as {belowTop: number; callbackAt: number};
+    const before = frames[at - 1] as {belowTop: number; callbackAt: number};
+    const after = frames[at + 1] as {belowTop: number; callbackAt: number};
+    // The frame is made late in the record: 30 ms after the one before,
+    // with the next 1 ms after it.
+    const hitSpan = (hit as unknown as {t: number}).t - hit.callbackAt;
+    const afterSpan = (after as unknown as {t: number}).t - after.callbackAt;
+    hit.callbackAt = before.callbackAt + 30;
+    after.callbackAt = hit.callbackAt + 1;
+    (hit as unknown as {t: number}).t = hit.callbackAt + hitSpan;
+    (after as unknown as {t: number}).t = after.callbackAt + afterSpan;
+    const travel =
+      (Math.abs(after.belowTop - before.belowTop) * FRAME_MS) /
+      (after.callbackAt - before.callbackAt);
+    hit.belowTop += BAND_ALLOWANCE + travel / 2 - blankBands([frames[at]])[0];
+  }
   expect(moving.length, 'frames with the group').toBeGreaterThan(4);
   const height = moving[0].group?.height ?? 0;
   // The checks below judge at least two frames of the glide, on time. A page
