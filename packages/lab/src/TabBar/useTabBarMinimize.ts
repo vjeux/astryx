@@ -202,7 +202,7 @@ function watchScroll(
     if (y > run.lastY) {
       run.downFrom ??= run.lastY;
       if (y - run.downFrom >= tabBar.minimizeDistance) {
-        setIsMinimized(true);
+        setIsMinimized(false);
       }
     } else if (y < run.lastY) {
       run.downFrom = null;
