@@ -68,12 +68,12 @@ Components: TabBar, TabBarMoreList
 
 ## Testing
 
-Gates at f9ed7896133f3fc7749ae686e301517ca441dbeb, on main a257f86642. The browser and route-lock lines ran at 4b09a37f8a95aca72628ccc318428ee664ec8946, which differs by two unit cases and one comment.
+Gates at 8900e2bb7b9492053579c434102800985d857b7d, rebased onto main b04c4143e6 after #9966. The one conflict, in TabBar's choose handler, keeps both behaviors: the selected tab scrolls its panel, and More again returns to its list without scrolling.
 
 - `pnpm -F @astryxdesign/lab run typecheck`: 0 errors, docs included.
-- `pnpm vitest run --project node --project ui packages/lab/src/TabBar packages/lab/src/TabBarMoreList`: 76 passed.
+- `pnpm vitest run --project node --project ui packages/lab/src/TabBar packages/lab/src/TabBarMoreList`: 82 passed.
 - Storybook typecheck: 0 errors. `pnpm storybook:build`: the index lists `lab-tabbarmorelist--more-tab` and `lab-tabbarmorelist--more-disabled-row`.
-- The whole TabBar interaction spec, 1 worker: Chromium 69 passed. WebKit 59 passed and 10 skipped.
+- The whole TabBar interaction spec, 1 worker: Chromium 74 passed. WebKit 64 passed and 10 skipped.
 - The route-lock check (`node apps/docsite/scripts/generate-data.mjs`) and `node scripts/generate-cli-official-packages.mjs --check`: pass.
 - `pnpm check:repo`, ESLint and Prettier: clean. The route lock keeps its generator's format.
 - `pnpm review:pre`: no findings.
