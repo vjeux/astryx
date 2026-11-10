@@ -129,8 +129,6 @@ const styles = stylex.create({
   // built-in box reads too.
   indicatorRowPressImage: {
     '--_indicator-press-image': 'var(--_checkbox-row-press-paint, none)',
-    // The row paints every press, so the indicator draws no `:active` fill.
-    '--_indicator-active-press': 'transparent',
   },
   checkboxWrapper: {
     position: 'relative',
@@ -184,11 +182,10 @@ const styles = stylex.create({
   },
   // The row's own checkbox when its row owns the press
   // (CheckboxRowPressContext). It paints only the paint that row declares
-  // (`--_checkbox-row-press-paint`), so it draws no `:active` fill. No outer
-  // row or card reaches it.
+  // (`--_checkbox-row-press-paint`). No outer row, card or fine pointer
+  // reaches it.
   indicatorRowPressOverlay: {
     '::after': {
-      backgroundColor: 'transparent',
       backgroundImage: 'var(--_checkbox-row-press-paint, none)',
     },
   },

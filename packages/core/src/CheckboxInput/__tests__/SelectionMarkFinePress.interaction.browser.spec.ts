@@ -5,7 +5,7 @@
  * @input The CheckboxInput, CheckboxList, RadioList and lab
  *   CircleCheckIndicator stories, and a mouse or a pen where the primary
  *   pointer is fine
- * @output Browser proofs: a mouse press on a checkbox, a CheckboxList row, a
+ * @output Browser proofs: a mouse press on a checkbox, a CheckboxList box, a
  *   RadioList row or a mapped circle paints at `pointerdown`. The press
  *   controller paints it, and it fades on release. It paints once. Under Reduce
  *   Motion the release ends at once. A right click paints nothing, and a
@@ -73,8 +73,11 @@ const SURFACES: ReadonlyArray<Surface> = [
     name: 'a CheckboxList row’s box',
     story: 'core-checkboxlist--default',
     layer: page => markWrapper(page, '.astryx-checkbox-indicator', 'SMS'),
-    target: page => optionRow(page, 'SMS'),
-    owner: page => optionRow(page, 'SMS'),
+    target: page => markWrapper(page, '.astryx-checkbox-indicator', 'SMS'),
+    owner: page =>
+      markWrapper(page, '.astryx-checkbox-indicator', 'SMS').locator(
+        'xpath=ancestor::*[@data-astryx-pressable][1]',
+      ),
   },
   {
     name: 'a RadioList row’s circle',
