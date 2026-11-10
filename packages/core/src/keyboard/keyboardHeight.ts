@@ -537,8 +537,8 @@ function watchTouchStarts(doc: Document, onTouchStart: () => void): () => void {
       }
     });
     // Heard so the stream counts the fingers on the screen (isFingerOnScreen).
-    const stopEnds = subscribeInput(view, 'touchend', () => {});
-    const stopCancels = subscribeInput(view, 'touchcancel', () => {});
+    const stopEnds = () => {};
+    const stopCancels = () => {};
     shared = {
       stop: () => {
         stopStarts();
