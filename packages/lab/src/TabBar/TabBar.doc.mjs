@@ -16,11 +16,12 @@ export const docs = {
     'mobile navigation',
     'app sections',
     'badge',
+    'minimize on scroll',
     'more tab',
     'overflow tabs',
   ],
   description:
-    "The bottom tab bar of a phone app, as on iOS 26: the app's top-level sections as a floating capsule above the bottom edge, with a selection lens that slides to the chosen tab. Each tab has an icon, a label and an optional badge. Under a finger, on iOS and Android alike, it behaves like iOS 26's: the lens lifts into glass as a finger lands, follows a finger dragged across the tabs and settles on the tab nearest where it lifts, while the bar flexes; under a mouse, a press is a plain button press: a click chooses a tab and the lens follows the theme's motion. With no tab selected, a held finger highlights the tab under it. Choosing the selected tab again scrolls its panel to the top and is reported separately, so a screen can also return to its root as iOS does. With more than five tabs the bar shows the first four and a More tab, and TabBarMoreList lists the rest. Experimental: lands in lab first.",
+    "The bottom tab bar of a phone app, as on iOS 26: the app's top-level sections as a floating capsule above the bottom edge, with a selection lens that slides to the chosen tab. Each tab has an icon, a label and an optional badge. Under a finger, on iOS and Android alike, it behaves like iOS 26's: the lens lifts into glass as a finger lands, follows a finger dragged across the tabs and settles on the tab nearest where it lifts, while the bar flexes; under a mouse, a press is a plain button press: a click chooses a tab and the lens follows the theme's motion. With no tab selected, a held finger highlights the tab under it. Choosing the selected tab again scrolls its panel to the top and is reported separately, so a screen can also return to its root as iOS does. With more than five tabs the bar shows the first four and a More tab, and TabBarMoreList lists the rest. It can minimize as the page scrolls down, into a circle holding the selected tab's icon. Experimental: lands in lab first.",
   components: [
     {
       name: 'TabBar',
@@ -66,6 +67,13 @@ export const docs = {
           description:
             "The More tab's value, with more than five tabs. Choosing More calls onChange with it (and onReselect while More holds a tab, to return to its list); More reads as selected while value is moreValue or any tab past the fourth. Render TabBarMoreList while value is moreValue, and a section chosen there inside More's own navigation stack.",
           default: "'more'",
+        },
+        {
+          name: 'minimizeBehavior',
+          type: "'never' | 'onScrollDown'",
+          description:
+            "With 'onScrollDown', scrolling the page down collapses the bar into a small circle at its leading end that holds the selected tab's icon, keeping the content in view, as iOS's tab bar does. Scrolling back up leaves it collapsed; reaching the top of the page or activating the circle expands it. Collapsed, the circle is the bar's one element for assistive technology, named after the selected tab and collapsed, as on iOS. Only under a finger: a mouse-driven bar stays expanded.",
+          default: "'never'",
         },
       ],
     },
@@ -146,6 +154,11 @@ export const docs = {
         guidance: true,
         description:
           'Use a badge for something that needs attention in that section, such as unread items, and say what it counts in badgeLabel.',
+      },
+      {
+        guidance: true,
+        description:
+          'Use minimizeBehavior="onScrollDown" on screens people read or scroll through at length, such as feeds and articles, so the content gets the space.',
       },
       {
         guidance: true,
