@@ -22,11 +22,9 @@ import {
   useCallback,
   useId,
   useRef,
-  type ComponentPropsWithRef,
   type ReactElement,
   type ReactNode,
 } from 'react';
-import {flushSync} from 'react-dom';
 import * as stylex from '@stylexjs/stylex';
 import type {BaseProps} from '@astryxdesign/core';
 import {useListFocus, useMergedRefs} from '@astryxdesign/core/hooks';
@@ -46,7 +44,7 @@ import {Icon} from '@astryxdesign/core/Icon';
 import {mergeProps, themeProps} from '@astryxdesign/core/utils';
 import {tabBarItemMarker} from './tabBar.stylex';
 import {tabBar} from './uikitTabBar';
-import {useTabBarLens, useTabBarMinimize} from './TabBarTouch';
+import {useTabBarLens} from './TabBarTouch';
 import {itemWidthCss, naturalWidth} from './tabBarModel';
 import {scrollPanelToTop} from './panelScroll';
 
@@ -121,14 +119,6 @@ export interface TabBarProps extends Omit<
    * @default 'more'
    */
   moreValue?: string;
-  /**
-   * Whether scrolling the page down collapses the bar into a circle holding the
-   * selected tab's icon (UIKit's `tabBarMinimizeBehavior`). Reaching the top of
-   * the page or activating the circle (a tap, or the keys) expands it. Under a
-   * finger only; under a mouse the bar stays expanded.
-   * @default 'never'
-   */
-  minimizeBehavior?: 'never' | 'onScrollDown';
   /** The tabs: `TabBarItem` elements, in order. */
   children: ReactNode;
 }
@@ -264,126 +254,18 @@ const styles = stylex.create({
   }),
   capsule: {
     position: 'relative',
+    flexGrow: 1,
     minWidth: 0,
     containerType: 'inline-size',
     pointerEvents: 'auto',
     borderRadius: radiusVars['--radius-full'],
+    backgroundColor: `color-mix(in srgb, ${colorVars['--color-background-popover']} 78%, transparent)`,
+    backdropFilter: 'blur(16px) saturate(180%)',
+    boxShadow: shadowVars['--shadow-med'],
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',
   },
   capsuleSize: (height: string, maxWidth: string) => ({height, maxWidth}),
-  // The tab list standing alone (no bar box): it takes the root's flex.
-  capsuleAlone: {
-    flexGrow: 1,
-  },
-  // The tab list draws its own glass when the bar never collapses.
-  capsuleGlass: {
-    backgroundColor: `color-mix(in srgb, ${colorVars['--color-background-popover']} 78%, transparent)`,
-    backdropFilter: 'blur(16px) saturate(180%)',
-    boxShadow: shadowVars['--shadow-med'],
-  },
-  // Inside the bar's box: the tab list fills it.
-  capsuleFill: {
-    width: '100%',
-    height: '100%',
-  },
-  // Minimized, only the circle takes touches; the page gets the rest.
-  capsuleMinimized: {
-    pointerEvents: 'none',
-  },
-  // The bar's box, while it can collapse: the tab list and the circle share it.
-  bar: {
-    position: 'relative',
-    flexGrow: 1,
-    minWidth: 0,
-    pointerEvents: 'none',
-  },
-  // The tab buttons' layer: it fades as one when the bar minimizes.
-  items: {
-    position: 'absolute',
-    inset: 0,
-  },
-  // The capsule's glass, in three pieces that can contract into a circle
-  // without distorting its round ends (useTabBarMinimize.ts).
-  platter: (half: string) => ({
-    position: 'absolute',
-    inset: 0,
-    // Below the resting lens (z-index -1), which sits on the glass under the
-    // tabs. The tab list is no stacking context once the glass is here.
-    zIndex: -2,
-    pointerEvents: 'none',
-    transformOrigin: {
-      default: `${half} ${half}`,
-      ':is([dir="rtl"] *)': `calc(100% - ${half}) ${half}`,
-    },
-  }),
-  glass: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    backgroundColor: `color-mix(in srgb, ${colorVars['--color-background-popover']} 78%, transparent)`,
-    backdropFilter: 'blur(16px) saturate(180%)',
-    boxShadow: shadowVars['--shadow-med'],
-  },
-  // Each piece keeps its shadow off the pieces it meets.
-  platterStart: (half: string) => ({
-    insetInlineStart: 0,
-    width: half,
-    borderStartStartRadius: half,
-    borderEndStartRadius: half,
-    clipPath: {
-      default: 'inset(-32px 0 -32px -32px)',
-      ':is([dir="rtl"] *)': 'inset(-32px -32px -32px 0)',
-    },
-  }),
-  platterMiddle: (half: string) => ({
-    insetInlineStart: half,
-    insetInlineEnd: half,
-    clipPath: 'inset(-32px 0)',
-    transformOrigin: {
-      default: 'left center',
-      ':is([dir="rtl"] *)': 'right center',
-    },
-  }),
-  platterEnd: (half: string) => ({
-    insetInlineEnd: 0,
-    width: half,
-    borderStartEndRadius: half,
-    borderEndEndRadius: half,
-    clipPath: {
-      default: 'inset(-32px -32px -32px 0)',
-      ':is([dir="rtl"] *)': 'inset(-32px 0 -32px -32px)',
-    },
-  }),
-  circle: {
-    position: 'absolute',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 0,
-    padding: 0,
-    borderWidth: 0,
-    borderRadius: radiusVars['--radius-full'],
-    backgroundColor: 'transparent',
-    color: colorVars['--color-accent'],
-    font: 'inherit',
-    pointerEvents: 'none',
-    outlineStyle: {
-      default: 'none',
-      ':focus-visible': focusVars['--focus-outline-style'],
-    },
-    outlineWidth: focusVars['--focus-outline-width'],
-    outlineColor: focusVars['--focus-outline-color'],
-    outlineOffset: focusVars['--focus-outline-offset'],
-    WebkitTapHighlightColor: 'transparent',
-  },
-  circleActive: {
-    pointerEvents: 'auto',
-    cursor: {
-      default: 'pointer',
-      ':is(:disabled,[aria-disabled="true"])': 'default',
-    },
-  },
   item: {
     position: 'absolute',
     top: 0,
@@ -617,10 +499,6 @@ const ITEM_HEIGHT = px(tabBar.itemHeight);
 const ICON_START = `calc(50% - ${px(tabBar.iconSize / 2)})`;
 const ICON_TOP = px(tabBar.iconCenterY - tabBar.iconSize / 2);
 const ICON_SIZE = px(tabBar.iconSize);
-const HALF_BAR = px(tabBar.barHeight / 2);
-const CIRCLE_INSET = px((tabBar.barHeight - tabBar.minimizedSize) / 2);
-const CIRCLE_SIZE = px(tabBar.minimizedSize);
-const CIRCLE_ICON_INSET = px((tabBar.minimizedSize - tabBar.iconSize) / 2);
 const LABEL_TOP = px(tabBar.labelTop);
 const LABEL_HEIGHT = px(tabBar.labelSize * 1.2);
 const LABEL_SIZE = px(tabBar.labelSize);
@@ -665,18 +543,6 @@ function ItemFace({
 // TabBar
 // =============================================================================
 
-/**
- * A wrapper the bar mounts only `when` something needs it. Otherwise its
- * children render in its place, so the DOM holds only the wrappers in use.
- */
-function Layer({
-  when,
-  children,
-  ...props
-}: ComponentPropsWithRef<'div'> & {when: boolean}) {
-  return when ? <div {...props}>{children}</div> : children;
-}
-
 /*
  * Layout is CSS, so the bar is right before hydration and through a resize.
  * Each button spans to halfway to its neighbours, so a press goes to the
@@ -685,11 +551,6 @@ function Layer({
  *
  * Past five tabs, More takes the fifth slot at the five-tab layout, as
  * UITabBarController does.
- *
- * While the bar can minimize, it draws its glass in three pieces, its tabs
- * in one layer, and the circle. It can minimize under a finger with
- * `minimizeBehavior="onScrollDown"`. Otherwise the tab list draws its own
- * glass and holds the tabs.
  */
 /**
  * The iOS 26 tab bar: the app's top-level sections as a floating capsule at
@@ -711,7 +572,6 @@ export function TabBar({
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
   moreValue = 'more',
-  minimizeBehavior = 'never',
   children,
   xstyle,
   className,
@@ -783,40 +643,15 @@ export function TabBar({
     },
     [value, onChange, onReselect, moreValue, isMoreSelected],
   );
-  // The bar collapses only under a finger, as UIKit's does.
-  const canCollapse = isTouch && minimizeBehavior === 'onScrollDown';
-  const minimize = useTabBarMinimize({capsuleRef, isEnabled: canCollapse});
-  const {isMinimized} = minimize;
   const lens = useTabBarLens({
     capsuleRef,
     count,
     selectedIndex,
     isTouch,
-    isMinimized,
     onLift: index => choose(items[index]),
     isDisabled: index => isDisabledItem(items[index]),
   });
-  const mergedCapsuleRef = useMergedRefs(
-    capsuleRef,
-    listRef,
-    lens.capsule,
-    minimize.capsule,
-  );
-  const circleRef = useRef<HTMLButtonElement | null>(null);
-  const mergedCircleRef = useMergedRefs(minimize.circleIcon, circleRef);
-  const selectedItem = selectedIndex >= 0 ? items[selectedIndex] : null;
-  // The circle expands the bar. Expanded, the circle is hidden and holds no
-  // tab stop, so focus on it moves on to the tab that holds the tab stop.
-  const expandFromCircle = () => {
-    const doc = capsuleRef.current?.ownerDocument;
-    const hadFocus = doc != null && doc.activeElement === circleRef.current;
-    flushSync(minimize.expand);
-    if (hadFocus) {
-      capsuleRef.current
-        ?.querySelector<HTMLElement>('[role="tab"][tabindex="0"]')
-        ?.focus({preventScroll: true});
-    }
-  };
+  const mergedCapsuleRef = useMergedRefs(capsuleRef, listRef, lens.capsule);
 
   const restIndex = Math.max(selectedIndex, 0);
   const capsuleInset = px(tabBar.itemInset);
@@ -836,251 +671,150 @@ export function TabBar({
         style,
       )}
       {...props}>
-      <Layer
-        when={canCollapse}
+      <div
+        ref={mergedCapsuleRef}
+        role="tablist"
+        aria-label={tabListLabel}
+        aria-labelledby={ariaLabelledBy}
+        aria-orientation="horizontal"
+        onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
         {...stylex.props(
-          styles.bar,
+          styles.capsule,
           styles.capsuleSize(px(tabBar.barHeight), px(naturalWidth(count))),
         )}>
-        <div
-          ref={mergedCapsuleRef}
-          role="tablist"
-          aria-label={tabListLabel}
-          aria-labelledby={ariaLabelledBy}
-          aria-orientation="horizontal"
-          // Minimized, the circle stands for the bar, as UIKit exposes it alone
-          // to VoiceOver; the tabs return as it expands.
-          inert={isMinimized}
-          data-tab-bar-minimized={isMinimized ? '' : undefined}
-          onKeyDown={handleKeyDown}
-          onFocus={event => {
-            handleFocus(event);
-            // Where inert is not enforced, a tab can still take focus: the
-            // bar expands for it.
-            if (isMinimized) {
-              minimize.expand();
-            }
-          }}
-          {...stylex.props(
-            styles.capsule,
-            canCollapse
-              ? styles.capsuleFill
-              : [
-                  styles.capsuleAlone,
-                  styles.capsuleGlass,
-                  styles.capsuleSize(
-                    px(tabBar.barHeight),
-                    px(naturalWidth(count)),
-                  ),
-                ],
-            isMinimized && styles.capsuleMinimized,
-          )}>
-          {canCollapse ? (
-            <div
-              ref={minimize.platter}
-              aria-hidden
-              data-tab-bar-platter=""
-              {...stylex.props(styles.platter(HALF_BAR))}>
-              <div
-                {...stylex.props(styles.glass, styles.platterStart(HALF_BAR))}
-              />
-              <div
-                ref={minimize.platterMiddle}
-                {...stylex.props(styles.glass, styles.platterMiddle(HALF_BAR))}
-              />
-              <div
-                ref={minimize.platterEnd}
-                data-tab-bar-platter-end=""
-                {...stylex.props(styles.glass, styles.platterEnd(HALF_BAR))}
-              />
-            </div>
-          ) : null}
-          <Layer
-            when={canCollapse}
-            ref={minimize.items}
-            role="presentation"
-            data-tab-bar-items=""
-            {...stylex.props(styles.items)}>
-            {items.map((item, index) => {
-              const isSelected = index === selectedIndex;
-              const isDisabled = isDisabledItem(item);
-              const {start, width, itemStart} = column(index, count);
-              return (
-                <button
-                  key={item.value}
-                  type="button"
-                  role="tab"
-                  id={`${baseId}-tab-${index}`}
-                  aria-selected={isSelected}
-                  aria-disabled={isDisabled || undefined}
-                  aria-controls={item.panelId}
-                  tabIndex={
-                    isSelected || (selectedIndex < 0 && index === 0) ? 0 : -1
-                  }
-                  // A badge is part of the name: one message with both.
-                  aria-label={badgedName(item, t)}
-                  data-tab-bar-value={item.value}
-                  onClick={() => choose(item)}
-                  {...mergeProps(
-                    themeProps('tab-bar-item', {
-                      selected: isSelected ? 'selected' : null,
-                    }),
-                    stylex.props(
-                      tabBarItemMarker,
-                      styles.item,
-                      styles.column(start, width),
-                    ),
-                  )}>
-                  <span
-                    {...stylex.props(
-                      styles.itemBox,
-                      // At rest the tab draws its selected look; while the lens
-                      // slides, the copy inside it does.
-                      isSelected &&
-                        !lens.isCopyShown &&
-                        styles.itemSelectedLook,
-                      isDisabled && styles.itemDisabled,
-                      styles.box(itemStart, ITEM_TOP, itemSize, ITEM_HEIGHT),
-                    )}>
-                    <ItemFace
-                      item={item}
-                      isSelectedLook={
-                        isSelected && !isDisabled && !lens.isCopyShown
-                      }
-                    />
-                  </span>
-                </button>
-              );
-            })}
-          </Layer>
-          {selectedIndex >= 0 ? (
-            <div
-              aria-hidden
-              data-tab-bar-lens=""
-              {...stylex.props(
-                styles.lens,
-                !lens.isCopyShown && styles.lensUnder,
-                styles.box(capsuleInset, capsuleInset, itemSize, ITEM_HEIGHT),
-                styles.lensRest(lensOffset(restIndex, count)),
+        {items.map((item, index) => {
+          const isSelected = index === selectedIndex;
+          const isDisabled = isDisabledItem(item);
+          const {start, width, itemStart} = column(index, count);
+          return (
+            <button
+              key={item.value}
+              type="button"
+              role="tab"
+              id={`${baseId}-tab-${index}`}
+              aria-selected={isSelected}
+              aria-disabled={isDisabled || undefined}
+              aria-controls={item.panelId}
+              tabIndex={
+                isSelected || (selectedIndex < 0 && index === 0) ? 0 : -1
+              }
+              // A badge is part of the name: one message with both.
+              aria-label={badgedName(item, t)}
+              data-tab-bar-value={item.value}
+              onClick={() => choose(item)}
+              {...mergeProps(
+                themeProps('tab-bar-item', {
+                  selected: isSelected ? 'selected' : null,
+                }),
+                stylex.props(
+                  tabBarItemMarker,
+                  styles.item,
+                  styles.column(start, width),
+                ),
               )}>
+              <span
+                {...stylex.props(
+                  styles.itemBox,
+                  // At rest the tab draws its selected look; while the lens
+                  // slides, the copy inside it does.
+                  isSelected && !lens.isCopyShown && styles.itemSelectedLook,
+                  isDisabled && styles.itemDisabled,
+                  styles.box(itemStart, ITEM_TOP, itemSize, ITEM_HEIGHT),
+                )}>
+                <ItemFace
+                  item={item}
+                  isSelectedLook={
+                    isSelected && !isDisabled && !lens.isCopyShown
+                  }
+                />
+              </span>
+            </button>
+          );
+        })}
+        {selectedIndex >= 0 ? (
+          <div
+            aria-hidden
+            data-tab-bar-lens=""
+            {...stylex.props(
+              styles.lens,
+              !lens.isCopyShown && styles.lensUnder,
+              styles.box(capsuleInset, capsuleInset, itemSize, ITEM_HEIGHT),
+              styles.lensRest(lensOffset(restIndex, count)),
+            )}>
+            <div
+              ref={lens.body}
+              data-tab-bar-lens-body=""
+              {...stylex.props(styles.lensBody)}>
               <div
-                ref={lens.body}
-                data-tab-bar-lens-body=""
-                {...stylex.props(styles.lensBody)}>
-                <div
-                  ref={lens.clip}
-                  data-tab-bar-lens-clip=""
-                  {...stylex.props(styles.lensClip)}>
-                  {lens.isCopyShown ? (
+                ref={lens.clip}
+                data-tab-bar-lens-clip=""
+                {...stylex.props(styles.lensClip)}>
+                {lens.isCopyShown ? (
+                  <div
+                    ref={lens.copy}
+                    data-tab-bar-copy=""
+                    {...stylex.props(styles.copyInner)}>
                     <div
-                      ref={lens.copy}
-                      data-tab-bar-copy=""
-                      {...stylex.props(styles.copyInner)}>
-                      <div
-                        {...stylex.props(
-                          styles.copyOuter,
-                          styles.copyOuterGeometry(
-                            capsuleInset,
-                            px(tabBar.barHeight),
-                          ),
-                          styles.copyRest(lensOffset(restIndex, count)),
-                        )}>
-                        {items.map((item, index) => (
-                          <span
-                            key={item.value}
-                            ref={lens.copyItem(index)}
-                            data-tab-bar-copy-item={item.value}
-                            {...stylex.props(
-                              styles.copyItem,
-                              styles.box(
-                                `calc(${center(index, count)} - ${itemWidthCss(count)} / 2)`,
-                                ITEM_TOP,
-                                itemSize,
-                                ITEM_HEIGHT,
-                              ),
-                              isDisabledItem(item) && styles.itemDisabled,
-                            )}>
-                            <ItemFace
-                              item={item}
-                              isSelectedLook={!isDisabledItem(item)}
-                              isCopy
-                            />
-                          </span>
-                        ))}
-                      </div>
+                      {...stylex.props(
+                        styles.copyOuter,
+                        styles.copyOuterGeometry(
+                          capsuleInset,
+                          px(tabBar.barHeight),
+                        ),
+                        styles.copyRest(lensOffset(restIndex, count)),
+                      )}>
+                      {items.map((item, index) => (
+                        <span
+                          key={item.value}
+                          ref={lens.copyItem(index)}
+                          data-tab-bar-copy-item={item.value}
+                          {...stylex.props(
+                            styles.copyItem,
+                            styles.box(
+                              `calc(${center(index, count)} - ${itemWidthCss(count)} / 2)`,
+                              ITEM_TOP,
+                              itemSize,
+                              ITEM_HEIGHT,
+                            ),
+                            isDisabledItem(item) && styles.itemDisabled,
+                          )}>
+                          <ItemFace
+                            item={item}
+                            isSelectedLook={!isDisabledItem(item)}
+                            isCopy
+                          />
+                        </span>
+                      ))}
                     </div>
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
               </div>
             </div>
-          ) : null}
-          <div
-            ref={minimize.badges}
-            aria-hidden
-            {...stylex.props(styles.badges)}>
-            {items.map((item, index) =>
-              hasBadge(item.badge) ? (
-                <span
-                  key={item.value}
-                  data-tab-bar-badge={item.value}
-                  {...stylex.props(
-                    styles.badge,
-                    styles.badgeGeometry(
-                      `calc(${center(index, count)} + ${px(tabBar.badge.offsetX)})`,
-                      px(tabBar.itemInset + tabBar.badge.offsetY),
-                      px(tabBar.badge.height),
-                      px(tabBar.badge.paddingInline),
-                      px(tabBar.badge.fontSize),
-                    ),
-                  )}>
-                  {item.badge}
-                </span>
-              ) : null,
-            )}
           </div>
-        </div>
-        {canCollapse ? (
-          <button
-            ref={mergedCircleRef}
-            type="button"
-            data-tab-bar-circle=""
-            // Minimized, the circle is the bar's one element for assistive
-            // technology, as on iOS: the selected tab, collapsed. Expanded,
-            // it is hidden.
-            aria-label={
-              isMinimized
-                ? (selectedItem?.label ??
-                  tabListLabel ??
-                  t('@astryx.tabList.label'))
-                : undefined
-            }
-            aria-expanded={isMinimized ? false : undefined}
-            aria-hidden={isMinimized ? undefined : true}
-            tabIndex={isMinimized ? 0 : -1}
-            onClick={expandFromCircle}
-            {...stylex.props(
-              styles.circle,
-              styles.box(CIRCLE_INSET, CIRCLE_INSET, CIRCLE_SIZE, CIRCLE_SIZE),
-              isMinimized && styles.circleActive,
-            )}>
-            {selectedItem != null ? (
+        ) : null}
+        <div aria-hidden {...stylex.props(styles.badges)}>
+          {items.map((item, index) =>
+            hasBadge(item.badge) ? (
               <span
-                aria-hidden
+                key={item.value}
+                data-tab-bar-badge={item.value}
                 {...stylex.props(
-                  styles.icon,
-                  styles.box(
-                    CIRCLE_ICON_INSET,
-                    CIRCLE_ICON_INSET,
-                    ICON_SIZE,
-                    ICON_SIZE,
+                  styles.badge,
+                  styles.badgeGeometry(
+                    `calc(${center(index, count)} + ${px(tabBar.badge.offsetX)})`,
+                    px(tabBar.itemInset + tabBar.badge.offsetY),
+                    px(tabBar.badge.height),
+                    px(tabBar.badge.paddingInline),
+                    px(tabBar.badge.fontSize),
                   ),
                 )}>
-                {selectedItem.selectedIcon ?? selectedItem.icon}
+                {item.badge}
               </span>
-            ) : null}
-          </button>
-        ) : null}
-      </Layer>
+            ) : null,
+          )}
+        </div>
+      </div>
     </div>
   );
 }
