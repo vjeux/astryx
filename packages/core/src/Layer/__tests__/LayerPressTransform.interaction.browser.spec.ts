@@ -211,12 +211,7 @@ test.describe('with a mouse', () => {
 
   test('the press that opens a DropdownMenu places the menu from the unpressed trigger', async ({
     page,
-    browserName,
   }) => {
-    test.fixme(
-      browserName === 'webkit',
-      'INV22: a mouse press scales the DropdownMenu trigger in WebKit',
-    );
     await openStory(page, storybook(), 'core-dropdownmenu--default');
     const trigger = page.getByRole('button', {name: 'Actions'});
     const at = await centerOf(trigger);
@@ -345,7 +340,7 @@ test.describe('with a finger', () => {
     await finger.lift();
   });
 
-  test.fixme('INV22: a finger held on a DropdownMenu trigger opens and keeps the menu at its unpressed place', async ({
+  test('a finger held on a DropdownMenu trigger opens and keeps the menu at its unpressed place', async ({
     page,
   }) => {
     await openStory(page, storybook(), 'core-dropdownmenu--default');
@@ -360,6 +355,25 @@ test.describe('with a finger', () => {
     await finger.lift();
     await settle(page);
     expectSameBox(held, await layerBox(page), 'while the finger is down');
+  });
+
+  test('a finger held on an open DropdownMenu trigger leaves the menu in place', async ({
+    page,
+  }) => {
+    await openStory(page, storybook(), 'core-dropdownmenu--default');
+    const trigger = page.getByRole('button', {name: 'Actions'});
+    const at = await centerOf(trigger);
+    const touch = await touchDriver(page);
+    await touch.tap(at);
+    await expect(page.locator(OPEN_LAYER)).toHaveCount(1);
+    await settle(page);
+    const open = await layerBox(page);
+
+    const finger = await touch.press(at);
+    await expectPressed(trigger);
+    await settle(page);
+    expectSameBox(await layerBox(page), open, 'while the finger is down');
+    await finger.lift();
   });
 
   test.fixme('INV22: a finger press and lift that opens a ghost Selector places the list as an unpressed open does', async ({

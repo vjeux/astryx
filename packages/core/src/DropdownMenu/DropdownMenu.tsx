@@ -55,6 +55,7 @@ import {
   isPressInFlight,
 } from '../Layer/gestureCounter';
 import {Button, type ButtonProps} from '../Button';
+import {useButtonGroup} from '../ButtonGroup/ButtonGroupContext';
 import {Heading} from '../Heading';
 import {Icon} from '../Icon';
 
@@ -153,6 +154,11 @@ const styles = stylex.create({
   triggerPressable: {
     WebkitTouchCallout: 'none',
     userSelect: 'none',
+  },
+  // The menu anchors to this box, not to the Button inside it. A press scales
+  // the Button and leaves the box as it is, so the open menu stays in place.
+  anchorBox: {
+    display: 'inline-flex',
   },
   dropdown: {
     boxSizing: 'border-box',
@@ -1695,9 +1701,17 @@ function DropdownMenuPopover({
     [popoverTriggerRef, modalityRef],
   );
   const consumerButtonRef = button.ref;
+  // A ButtonGroup's corner rules read each Button's place among the group's
+  // children. So a member Button gets no box, and it is the anchor itself.
+  const isGroupMember = useButtonGroup() != null;
+  // Elsewhere the Button is not the anchor: the box around it is (`anchorBox`).
   const buttonTriggerRef = useCallback(
     (el: HTMLButtonElement | null) => {
-      triggerRef(el);
+      buttonRef.current = el;
+      if (isGroupMember) {
+        popoverTriggerRef(el);
+      }
+      modalityRef(el);
       if (typeof consumerButtonRef === 'function') {
         consumerButtonRef(el);
       } else if (consumerButtonRef) {
@@ -1706,7 +1720,7 @@ function DropdownMenuPopover({
         /* eslint-enable react-compiler/react-compiler */
       }
     },
-    [triggerRef, consumerButtonRef],
+    [isGroupMember, popoverTriggerRef, modalityRef, consumerButtonRef],
   );
 
   const triggerProps: DropdownMenuTriggerProps = {
@@ -1726,45 +1740,53 @@ function DropdownMenuPopover({
     'aria-controls': hasRegions ? popover.id : menuId,
   };
 
+  const triggerButton = (
+    <Button
+      {...button}
+      ref={buttonTriggerRef}
+      xstyle={[
+        styles.triggerPressable,
+        isOpen && styles.triggerOpen,
+        button.xstyle,
+        isFocusRingSuppressed && focusOutlineStyles.suppressed,
+      ]}
+      tooltip={isOpen ? undefined : button.tooltip}
+      endContent={resolvedEndContent}
+      onClick={handleButtonClick}
+      onClickCapture={event => {
+        button.onClickCapture?.(event);
+        handleTriggerClickCapture(event);
+      }}
+      onKeyDown={handleButtonKeyDown}
+      onPointerDown={event => {
+        button.onPointerDown?.(event);
+        menuPress.triggerProps.onPointerDown(event);
+      }}
+      onContextMenu={event => {
+        button.onContextMenu?.(event);
+        menuPress.triggerProps.onContextMenu(event);
+      }}
+      onFocus={event => {
+        button.onFocus?.(event);
+        onFocusReturnTargetFocus();
+      }}
+      aria-haspopup={hasRegions ? 'dialog' : 'menu'}
+      aria-expanded={isOpen}
+      aria-controls={hasRegions ? popover.id : menuId}
+      data-testid={testId}
+    />
+  );
+
   return (
     <>
       {renderTrigger != null ? (
         renderTrigger(triggerProps)
+      ) : isGroupMember ? (
+        triggerButton
       ) : (
-        <Button
-          {...button}
-          ref={buttonTriggerRef}
-          xstyle={[
-            styles.triggerPressable,
-            isOpen && styles.triggerOpen,
-            button.xstyle,
-            isFocusRingSuppressed && focusOutlineStyles.suppressed,
-          ]}
-          tooltip={isOpen ? undefined : button.tooltip}
-          endContent={resolvedEndContent}
-          onClick={handleButtonClick}
-          onClickCapture={event => {
-            button.onClickCapture?.(event);
-            handleTriggerClickCapture(event);
-          }}
-          onKeyDown={handleButtonKeyDown}
-          onPointerDown={event => {
-            button.onPointerDown?.(event);
-            menuPress.triggerProps.onPointerDown(event);
-          }}
-          onContextMenu={event => {
-            button.onContextMenu?.(event);
-            menuPress.triggerProps.onContextMenu(event);
-          }}
-          onFocus={event => {
-            button.onFocus?.(event);
-            onFocusReturnTargetFocus();
-          }}
-          aria-haspopup={hasRegions ? 'dialog' : 'menu'}
-          aria-expanded={isOpen}
-          aria-controls={hasRegions ? popover.id : menuId}
-          data-testid={testId}
-        />
+        <div ref={popoverTriggerRef} {...stylex.props(styles.anchorBox)}>
+          {triggerButton}
+        </div>
       )}
       {popover.render(
         renderWithRegions(
