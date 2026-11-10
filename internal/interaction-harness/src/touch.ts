@@ -1015,7 +1015,7 @@ export function tapIntervalFault(
     if (scriptedGapMs <= tapIntervalMs && drawn.length > 0) {
       // Without a frame before the close, the page last ran at the lift.
       const lastBefore =
-        frames.filter(time => time <= closesAt).at(-1) ?? page.receivedAt[lift];
+        page.receivedAt[lift];
       return {
         step: index,
         gapMs: receivedAt - page.stamps[lift],
