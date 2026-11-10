@@ -188,7 +188,6 @@ const styles = stylex.create({
   // row or card reaches it.
   indicatorRowPressOverlay: {
     '::after': {
-      backgroundColor: 'transparent',
       backgroundImage: 'var(--_checkbox-row-press-paint, none)',
     },
   },
