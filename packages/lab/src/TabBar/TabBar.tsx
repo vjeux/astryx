@@ -591,7 +591,7 @@ export function TabBar({
         ...allItems.slice(0, MAX_TABS - 1),
         {
           value: moreValue,
-          label: t('@astryx.tabBar.more'),
+          label: 'More',
           icon: <Icon icon="moreHorizontal" size="lg" />,
         },
       ]
