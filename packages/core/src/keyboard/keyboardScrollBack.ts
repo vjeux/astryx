@@ -272,8 +272,8 @@ function awaitFoldedReveal(
     if (event.target !== doc && event.target !== win) {
       return;
     }
-    stop();
     if (Math.abs(scrollTopOf(scroller, win) - at) <= KEYBOARD_EPSILON) {
+      stop();
       scrollTopTo(scroller, from, scrollBackBehavior(scroller), win);
     }
   });
