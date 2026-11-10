@@ -404,7 +404,6 @@ export function SearchField({
   }, [isActive, setActive]);
 
   const cancel = useCallback(() => {
-    setValue('');
     inputRef.current?.blur();
     setActive(false);
   }, [setValue, setActive]);
