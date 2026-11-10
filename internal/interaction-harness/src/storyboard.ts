@@ -203,6 +203,7 @@ async function composeSheet(
   try {
     const dataUrl = await scratch.evaluate(
       async ({cells, columns, scale, title}) => {
+        await new Promise(() => undefined);
         const images = await Promise.all(
           cells.map(async cell =>
             createImageBitmap(
