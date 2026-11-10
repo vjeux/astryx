@@ -243,7 +243,6 @@ function watchScroll(
   // arrived yet.
   const finish = () => {
     onScroll();
-    stop();
   };
   view.addEventListener('scroll', onScroll, {passive: true});
   view.addEventListener('scrollend', onScrollEnd, {passive: true});
