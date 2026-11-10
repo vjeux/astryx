@@ -1544,8 +1544,9 @@ async function blockFromThaw(
           // That frame's time on the real clock, where the held runs start.
           const thawedAt =
             Number(document.timeline.currentTime) + freeze.offset;
+          void later;
           const block = (handoverWaitMs?: number) =>
-            later(() => {
+            (() => {
               // The animation `during` names starts in that frame, at the time
               // the compositor takes. A run resumed by play() has no start time
               // before it.
@@ -1596,7 +1597,7 @@ async function blockFromThaw(
                       },
                     }),
               });
-            }, 0);
+            })();
           // Chromium hands a run started in a frame callback to its compositor
           // in that frame's rendering update. A task queued in that frame runs
           // after it. WebKit hands it over only at the next frame. With the
