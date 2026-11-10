@@ -429,6 +429,44 @@ test.describe('spec:AST-094 FR5: the shared glide keeps advancing through a bloc
   }) => {
     await openStory(page, 'core-animated-layout--animated-layout');
     const follower = await markAppDiv(page, 'A plain app div');
+    // NOT FOR LANDING: each glide that carries the follower is rebuilt on every frame.
+    await follower.evaluate((carried, stopAfter) => {
+      document.addEventListener(
+        'click',
+        () => {
+          const began = performance.now();
+          const rebuild = () => {
+            const over =
+              stopAfter != null && performance.now() - began > stopAfter;
+            for (
+              let node: Element | null = carried;
+              node != null;
+              node = node.parentElement
+            ) {
+              for (const animation of node.getAnimations()) {
+                const effect = animation.effect as KeyframeEffect | null;
+                const frames = effect?.getKeyframes() ?? [];
+                if (
+                  !frames.some(frame => typeof frame.translate === 'string')
+                ) {
+                  continue;
+                }
+                const timing = effect?.getTiming() ?? {};
+                animation.cancel();
+                if (!over) {
+                  node.animate(frames, timing);
+                }
+              }
+            }
+            if (!over) {
+              requestAnimationFrame(rebuild);
+            }
+          };
+          requestAnimationFrame(rebuild);
+        },
+        {capture: true, once: true},
+      );
+    }, null);
     expectKeptAdvancing(
       await busyGlide(page, 'collapsible', {
         trigger: page.getByRole('button', {name: 'Shipping details'}),
