@@ -1017,7 +1017,7 @@ test.describe('spec:AST-105 Coverage', () => {
       page,
       `<div id="area" class="area"><div id="grow" class="grow"></div>
         <div id="second" class="grow"></div><div id="after" class="row"></div></div>`,
-      '#area { --duration-medium: 1000ms; }',
+      '#area { --duration-medium: 300ms; }',
     );
     // The page's frames from before the change until the glide is read.
     await page.evaluate(() => {
