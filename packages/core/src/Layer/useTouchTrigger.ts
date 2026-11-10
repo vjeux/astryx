@@ -155,6 +155,8 @@ function createTapRecognizer(): TapRecognizer {
 export interface TapStopOptions {
   /** Whether this tap's mouse event is cancelled. */
   shouldStop: (mouse: ReactMouseEvent<Element>) => boolean;
+  /** The pointer types whose press is a tap. Default: a finger's and a pen's. */
+  pointerTypes?: ReadonlySet<string>;
 }
 
 export function useTapStop(event: 'click'): {
@@ -171,7 +173,7 @@ export function useTapStop(
 ): {
   onPointerDown: (event: ReactPointerEvent<Element>) => void;
   onMouseDown: (event: ReactMouseEvent<Element>) => void;
-  /** Whether the latest press was a finger's or a pen's, until the next one. */
+  /** Whether the latest press was a tap, until the next one. */
   isTap: () => boolean;
 };
 export function useTapStop(
@@ -181,10 +183,14 @@ export function useTapStop(
   const pressIsTapRef = useRef(false);
   const lastPressIsTapRef = useRef(false);
   const shouldStop = options?.shouldStop;
-  const onPointerDown = useCallback((pointer: ReactPointerEvent<Element>) => {
-    pressIsTapRef.current = TOUCH_POINTER_TYPES.has(pointer.pointerType);
-    lastPressIsTapRef.current = pressIsTapRef.current;
-  }, []);
+  const pointerTypes = options?.pointerTypes ?? TOUCH_POINTER_TYPES;
+  const onPointerDown = useCallback(
+    (pointer: ReactPointerEvent<Element>) => {
+      pressIsTapRef.current = pointerTypes.has(pointer.pointerType);
+      lastPressIsTapRef.current = pressIsTapRef.current;
+    },
+    [pointerTypes],
+  );
   const cancel = useCallback(
     (mouse: ReactMouseEvent<Element>) => {
       if (pressIsTapRef.current && (shouldStop?.(mouse) ?? true)) {

@@ -509,7 +509,8 @@ describe('Tokenizer', () => {
       expect(fireEvent.mouseDown(remove)).toBe(true);
     });
 
-    it('lets go of the tapped × before it unmounts, so the field blurs', () => {
+    it('moves focus to the input when the tapped × already held focus, as after Shift+Tab', async () => {
+      const user = userEvent.setup();
       const onBlur = vi.fn();
       render(
         <Tokenizer
@@ -520,13 +521,15 @@ describe('Tokenizer', () => {
           onBlur={onBlur}
         />,
       );
-      const remove = screen.getByRole('button', {name: 'Remove Alice'});
+      const input = screen.getByRole('combobox');
+      act(() => input.focus());
+      await user.tab({shift: true});
+      const remove = screen.getByRole('button', {name: 'Remove Bob'});
+      expect(remove).toHaveFocus();
       fireEvent.pointerDown(remove, {pointerType: 'touch'});
-      // Chrome focuses the tapped button before the click.
-      act(() => remove.focus());
       fireEvent.click(remove);
-      expect(onBlur).toHaveBeenCalled();
-      expect(document.activeElement).toBe(document.body);
+      expect(input).toHaveFocus();
+      expect(onBlur).not.toHaveBeenCalled();
     });
 
     it('keeps the old refocus for a custom renderToken remove button: the input keeps focus, with no blur', () => {
