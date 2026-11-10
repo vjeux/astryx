@@ -2472,6 +2472,11 @@ export function Markdown<
     return Math.min(Math.ceil(duration / tickMs), 12);
   }, [token]);
 
+  // The fade-in refs below are written during render on purpose. They are an
+  // accepted exception to the runtime's ref rule. Text always comes from
+  // `smoothedText`, never from them. A render React discards can only move
+  // where the next fade starts, by the text it added. The "streamed text after
+  // a render React discards" tests pin why it is harmless.
   const prevBlocksRef = useRef<ReadonlyArray<RenderBlockNode>>([]);
   const prevInlineNodesRef = useRef<ReadonlyArray<RenderInlineNode>>([]);
   const boundariesRef = useRef<number[]>([]);
@@ -2483,6 +2488,7 @@ export function Markdown<
         ? countInlineTextLength(prevInlineNodesRef.current)
         : countBlockTextLength(prevBlocksRef.current);
     const next = computeBoundaries(boundariesRef.current, prevLen, maxSpans);
+    // Written during render on purpose: see the fade-in refs' note above.
     boundariesRef.current = next;
     return next;
   }, [display, smoothedLen, maxSpans]);
@@ -2596,6 +2602,7 @@ export function Markdown<
     );
 
     // Store current inline nodes for next render's boundary calculation.
+    // Written during render on purpose: see the fade-in refs' note above.
     prevInlineNodesRef.current = inlineNodes;
     prevBlocksRef.current = [];
 
@@ -2624,6 +2631,7 @@ export function Markdown<
   // Store current blocks for next render's boundary calculation.
   // This ref write is safe under StrictMode: both invocations produce the same
   // blocks (same smoothedText → same useMemo result), so both write the same value.
+  // Written during render on purpose: see the fade-in refs' note above.
   prevBlocksRef.current = blocks;
   prevInlineNodesRef.current = [];
 

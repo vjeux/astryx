@@ -10,11 +10,13 @@
  *   re-render that changed nothing it reads.
  */
 
-import {useState} from 'react';
+import {Suspense, startTransition, use, useState} from 'react';
+import type {ReactNode} from 'react';
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {Markdown} from './Markdown';
 import type {MarkdownComponents} from './Markdown';
+import {stubMatchMedia} from '../__tests__/stubMatchMedia';
 
 afterEach(() => {
   cleanup();
@@ -139,5 +141,77 @@ describe('Markdown re-render reuse', () => {
     rerender(<Markdown>{'[go](/next)'}</Markdown>);
     fireEvent.click(container.querySelector('a') as HTMLAnchorElement);
     expect(handler).toHaveBeenCalledTimes(1);
+  });
+});
+
+// The fade-in refs are written during render on purpose, an accepted exception
+// to the runtime's ref rule. This pins why it is harmless: the text always
+// matches the committed children, and a render React discards only moves where
+// the next fade starts.
+describe('streamed text after a render React discards', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const forever = new Promise<never>(() => {});
+  function Forever(): null {
+    use(forever);
+    return null;
+  }
+  function Stream({
+    text,
+    isPending = false,
+  }: {
+    text: string;
+    isPending?: boolean;
+  }): ReactNode {
+    return (
+      <Suspense fallback={null}>
+        <Markdown isStreaming>{text}</Markdown>
+        {isPending ? <Forever /> : null}
+      </Suspense>
+    );
+  }
+  /** The text of each span the stream splits the paragraph into. */
+  function spanTexts(container: HTMLElement): string[] {
+    const wrapper = container.querySelector('[role="paragraph"] > span');
+    return Array.from(wrapper?.children ?? []).map(
+      span => span.textContent ?? '',
+    );
+  }
+
+  it('keeps the text exact and moves the newest fade start by at most one letter', async () => {
+    // Reduced motion reveals each prefix at once, one render per prefix.
+    stubMatchMedia({reduceMotion: true});
+    const {container, rerender} = render(<Stream text="Hello" />);
+    rerender(<Stream text="Hello w" />);
+    // A transition renders one more letter, then never commits.
+    await act(async () => {
+      startTransition(() => {
+        rerender(<Stream text="Hello wo" isPending />);
+      });
+    });
+
+    rerender(<Stream text="Hello wor" />);
+
+    expect(container.querySelector('[role="paragraph"]')?.textContent).toBe(
+      'Hello wor',
+    );
+    // Without the discarded render the newest fade covers "or". With it, the
+    // fade starts one letter later.
+    expect(spanTexts(container)).toEqual(['Hello', ' w', 'o', 'r']);
+  });
+
+  it('splits the same stream with the newest fade at the last committed text when nothing is discarded', () => {
+    stubMatchMedia({reduceMotion: true});
+    const {container, rerender} = render(<Stream text="Hello" />);
+    rerender(<Stream text="Hello w" />);
+
+    rerender(<Stream text="Hello wor" />);
+
+    expect(container.querySelector('[role="paragraph"]')?.textContent).toBe(
+      'Hello wor',
+    );
+    expect(spanTexts(container)).toEqual(['Hello', ' w', 'or']);
   });
 });
