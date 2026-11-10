@@ -46,6 +46,7 @@ import {
   requireFrames,
   sampleCurve,
   sampleRects,
+  seekAnimations,
   springStep,
   startBusyControl,
   startScreencast,
@@ -4060,6 +4061,474 @@ test(
       clip,
       times,
       judges,
+      columns: 5,
+      cellScale: 0.6,
+    });
+    await expand.write(testInfo);
+    await releaseAnimations(page, {finish: true});
+  },
+);
+
+// =============================================================================
+// Bottom accessory
+// =============================================================================
+
+/** uikitTabBar.ts: the accessory's springs. */
+const ACCESSORY_COLLAPSE = {response: 0.405, dampingFraction: 0.745};
+const ACCESSORY_EXPAND = {response: 0.329, dampingFraction: 0.731};
+/** A spring step's rate of change at `t` ms, per second. */
+function stepRate(
+  spring: {response: number; dampingFraction: number},
+  t: number,
+): number {
+  return (springStep(spring, t + 0.5) - springStep(spring, t - 0.5)) * 1000;
+}
+
+const accessory = (page: Page) => page.locator('[data-tab-bar-accessory]');
+
+/**
+ * On the page: whether the accessory runs an animation that started at or
+ * after `since` (timeline ms), or is about to start one.
+ */
+const accessoryMovesSince = (since: number) =>
+  (
+    document.querySelector('[data-tab-bar-accessory]')?.getAnimations() ?? []
+  ).some(
+    animation =>
+      animation.playState === 'running' &&
+      (animation.startTime == null || Number(animation.startTime) >= since),
+  );
+
+test.describe('bottom accessory', () => {
+  test('moves down inline beside the circle on UIKit’s spring, and back up when the bar expands', async ({
+    page,
+  }, testInfo) => {
+    const {driver, bar} = await openFreezableBar(page, 'bottom-accessory');
+    const barBox = await bar.boundingBox();
+    const above = await accessory(page).boundingBox();
+    if (barBox == null || above == null) {
+      throw new Error('no bar or accessory');
+    }
+    // Above the bar, as wide as it, 8 px over it.
+    expect(above.x).toBeCloseTo(barBox.x, 0);
+    expect(above.width).toBeCloseTo(barBox.width, 0);
+    expect(barBox.y - (above.y + above.height)).toBeCloseTo(8, 0);
+    expect(above.height).toBeCloseTo(48, 0);
+
+    // The scene freezes on the first frame the accessory moves, however slowly
+    // the test process reads it. Its short spring is held at its start, not
+    // after it has run its course.
+    const collapsing = freezePageWhen(
+      page,
+      accessoryMovesSince,
+      await timelineNow(page),
+      {timeout: 10_000},
+    );
+    await scrollByFinger(page, driver, 100, {settle: false});
+    await collapsing;
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'inline',
+    );
+    await waitForAnimation(accessory(page), {minProgressMs: 0});
+    // Only the accessory's own animations. A hold counts every curve from the
+    // earliest start it holds. The bar's morph can start a millisecond before
+    // the accessory's, and would make this spring read that much early.
+    await holdAnimations(page, accessory(page), {
+      judges: {target: accessory(page), property: 'translate'},
+    });
+    const times = Array.from({length: 46}, (_, i) => i * 16.667);
+    const collapse = await sampleCurve(accessory(page), times);
+    await releaseAnimations(page, {finish: true});
+    await thawPage(page);
+    const inline = await accessory(page).boundingBox();
+    if (inline == null) {
+      throw new Error('no accessory');
+    }
+    // Inline: 8 px after the 48 px circle, 7 px from the bar's trailing end.
+    expect(inline.x - barBox.x).toBeCloseTo(63, 0);
+    expect(inline.x + inline.width).toBeCloseTo(barBox.x + barBox.width - 7, 0);
+    // It started where it was above the bar and sprang into place.
+    const dx = above.x - inline.x;
+    const dy = above.y - inline.y;
+    const samples = times.map((t, i) => ({
+      t: +t.toFixed(1),
+      x: collapse[i].transform.translateX,
+      y: collapse[i].transform.translateY,
+      analyticX: dx * (1 - springStep(ACCESSORY_COLLAPSE, t)),
+      analyticY: dy * (1 - springStep(ACCESSORY_COLLAPSE, t)),
+    }));
+    await writeEvidence(
+      'curves/tabbar-accessory',
+      {
+        [`${testInfo.project.name}.json`]: JSON.stringify(
+          {dx, dy, samples},
+          null,
+          1,
+        ),
+      },
+      testInfo,
+    );
+    for (const sample of samples) {
+      expect(
+        Math.abs(sample.x - sample.analyticX),
+        JSON.stringify(sample),
+      ).toBeLessThan(0.5);
+      expect(
+        Math.abs(sample.y - sample.analyticY),
+        JSON.stringify(sample),
+      ).toBeLessThan(0.5);
+    }
+
+    // Back up on the expand spring (a tap on the circle expands at once), once
+    // the collapse would have ended on its own. Finish() above skipped the
+    // page's animations to their end, not the animator's clock.
+    await page.waitForTimeout(1000);
+    const target = await circle(page).boundingBox();
+    if (target == null) {
+      throw new Error('no circle');
+    }
+    // Frozen on the expand's first frame, as the collapse was.
+    const expanding = freezePageWhen(
+      page,
+      accessoryMovesSince,
+      await timelineNow(page),
+      {timeout: 10_000},
+    );
+    await driver.tap({
+      x: target.x + target.width / 2,
+      y: target.y + target.height / 2,
+    });
+    await expanding;
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'expanded',
+    );
+    await waitForAnimation(accessory(page), {minProgressMs: 0});
+    await holdAnimations(page, accessory(page), {
+      judges: {target: accessory(page), property: 'translate'},
+    });
+    const expand = await sampleCurve(accessory(page), times);
+    await releaseAnimations(page, {finish: true});
+    await thawPage(page);
+    times.forEach((t, i) => {
+      expect(
+        Math.abs(
+          expand[i].transform.translateX +
+            dx * (1 - springStep(ACCESSORY_EXPAND, t)),
+        ),
+        JSON.stringify({t, x: expand[i].transform.translateX}),
+      ).toBeLessThan(0.5);
+    });
+    const back = await accessory(page).boundingBox();
+    expect(back?.x ?? 0).toBeCloseTo(above.x, 0);
+    expect(back?.y ?? 0).toBeCloseTo(above.y, 0);
+  });
+
+  test('expanding, its content stays inside its glass', async ({page}) => {
+    const {driver} = await openBar(page, 'bottom-accessory');
+    await scrollByFinger(page, driver, 100);
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'inline',
+    );
+    await page.waitForTimeout(1000);
+    const target = await circle(page).boundingBox();
+    if (target == null) {
+      throw new Error('no circle');
+    }
+    await driver.tap({
+      x: target.x + target.width / 2,
+      y: target.y + target.height / 2,
+    });
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'expanded',
+    );
+    await waitForAnimation(accessory(page));
+    await holdAnimations(page, accessory(page), {
+      judges: {target: accessory(page), property: 'translate'},
+    });
+    const overhangs: {t: number; overhang: number; visible: number}[] = [];
+    for (const t of [0, 16.667, 50, 100, 140, 200, 300]) {
+      await seekAnimations(page, t);
+      const {overhang, visible} = await accessory(page).evaluate(element => {
+        // The glass's trailing cap, and "Next" as it shows: its box cut by
+        // every clipping box between it and the accessory.
+        const glass = element.firstElementChild as HTMLElement;
+        const cap = (
+          glass.lastElementChild as HTMLElement
+        ).getBoundingClientRect();
+        const next = [...element.querySelectorAll('button')].find(
+          button =>
+            button.getAttribute('aria-label') === 'Next' ||
+            button.textContent === 'Next',
+        );
+        if (next == null) {
+          throw new Error('no Next');
+        }
+        let right = next.getBoundingClientRect().right;
+        let left = next.getBoundingClientRect().left;
+        for (
+          let node = next.parentElement;
+          node != null && node !== element.parentElement;
+          node = node.parentElement
+        ) {
+          if (getComputedStyle(node).overflow !== 'visible') {
+            right = Math.min(right, node.getBoundingClientRect().right);
+            left = Math.max(left, node.getBoundingClientRect().left);
+          }
+        }
+        return {overhang: right - cap.right, visible: right - left};
+      });
+      overhangs.push({t, overhang, visible});
+    }
+    await releaseAnimations(page, {finish: true});
+    // On screen first: "Next" shows through the window while it is measured
+    // (a window closed to nothing would keep it inside the glass too).
+    await expectPainted(
+      accessory(page).getByRole('button', {name: 'Next', exact: true}),
+    );
+    for (const {t, visible} of overhangs.filter(sample => sample.t >= 200)) {
+      expect(visible, JSON.stringify({t, overhangs})).toBeGreaterThan(0);
+    }
+    for (const {t, overhang} of overhangs) {
+      expect(overhang, JSON.stringify({t, overhangs})).toBeLessThanOrEqual(0.5);
+    }
+  });
+
+  test('turned around mid-move, it keeps its speed (spec:AST-094 FR6)', async ({
+    page,
+  }) => {
+    const {driver} = await openBar(page, 'bottom-accessory');
+    // The latest start among the accessory's running animations, on the
+    // document timeline: the animator sets each one.
+    const startOf = () =>
+      accessory(page).evaluate(element => {
+        const starts = element
+          .getAnimations()
+          .filter(
+            animation =>
+              animation.playState === 'running' && animation.startTime != null,
+          )
+          .map(animation => Number(animation.startTime));
+        return starts.length === 0 ? null : Math.max(...starts);
+      });
+    // Just past the trigger, the finger rests long enough that the page doesn't
+    // fling, since a tap on a flinging page only stops it. Then the circle is
+    // tapped at once: the turn comes while the accessory still moves. The
+    // person scrolls most of the way first, and a second drag crosses the 66 px
+    // trigger near its end. A finger's own scroll keeps a few pixels as slop,
+    // so how far the first got is read rather than assumed.
+    await scrollByFinger(page, driver, 50);
+    const scrolled = await page.evaluate(() => window.scrollY);
+    expect(scrolled).toBeLessThan(66);
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'expanded',
+    );
+    await scrollByFinger(page, driver, 66 - scrolled + 30, {
+      settle: false,
+      restMs: 100,
+    });
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'inline',
+    );
+    await expect.poll(startOf).not.toBeNull();
+    const collapseStart = Number(await startOf());
+    const target = await circle(page).boundingBox();
+    if (target == null) {
+      throw new Error('no circle');
+    }
+    await driver.tap({
+      x: target.x + target.width / 2,
+      y: target.y + target.height / 2,
+    });
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'expanded',
+    );
+    await expect.poll(startOf).toBeGreaterThan(collapseStart);
+    const turnedAt = Number(await startOf()) - collapseStart;
+    await holdAnimations(page, accessory(page), {
+      judges: {target: accessory(page), property: 'translate'},
+    });
+    const [first, second] = await sampleCurve(accessory(page), [0, 16.667]);
+    await releaseAnimations(page, {finish: true});
+    // The collapse ran from rest. At the turn it had covered this share of its
+    // distance. So the offset it turns from gives the distance, and its rate
+    // there gives its speed.
+    const share = springStep(ACCESSORY_COLLAPSE, turnedAt);
+    const collapseSpeed =
+      (first.transform.translateY / share) *
+      stepRate(ACCESSORY_COLLAPSE, turnedAt);
+    // The expand spring from that offset with that speed (a spring's answer
+    // to a starting speed is its step's rate over its natural rate squared).
+    const naturalRate = (2 * Math.PI) / ACCESSORY_EXPAND.response;
+    const predicted =
+      first.transform.translateY * (1 - springStep(ACCESSORY_EXPAND, 16.667)) +
+      (collapseSpeed * stepRate(ACCESSORY_EXPAND, 16.667)) / naturalRate ** 2;
+    expect(
+      Math.abs(second.transform.translateY - predicted),
+      JSON.stringify({first, second, turnedAt, collapseSpeed, predicted}),
+    ).toBeLessThan(0.5);
+  });
+
+  test('its content takes taps above the bar and inline, never choosing a tab', async ({
+    page,
+  }) => {
+    const {driver} = await openBar(page, 'bottom-accessory');
+    const play = () => page.getByRole('button', {name: /^(Play|Pause)$/});
+    const tapPlay = async () => {
+      const box = await play().boundingBox();
+      if (box == null) {
+        throw new Error('no play button');
+      }
+      await driver.tap({x: box.x + box.width / 2, y: box.y + box.height / 2});
+    };
+    await tapPlay();
+    await expect(page.getByRole('button', {name: 'Pause'})).toBeVisible();
+    await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
+    await minimizeBar(page, driver);
+    // Inline, the content drops its secondary control.
+    await expect(page.getByRole('button', {name: 'Next'})).toHaveCount(0);
+    await waitForRest(accessory(page));
+    await tapPlay();
+    await expect(page.getByRole('button', {name: 'Play'})).toBeVisible();
+    expect(await isMinimized(page)).toBe(true);
+    await expect(tab(page, 'Library')).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('it keeps moving inline every frame while the main thread is blocked', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== 'chromium',
+      'screencast frame evidence is Chromium-only in Playwright (WebKit: the iOS simulator)',
+    );
+    const {driver} = await openBar(page, 'bottom-accessory');
+    const moving = accessory(page);
+    await markElement(moving);
+    // The compositor's own control rides in the same cast. A stall the
+    // compositor itself makes on a loaded runner stalls it too. So the move is
+    // judged against what the compositor presented, not against a fixed bound.
+    await startBusyControl(page);
+    const cast = await startScreencast(page);
+    // Armed before the scroll, the page blocks itself in the frame that sees
+    // the move running. One evaluate sees it and blocks, so no runner latency
+    // between the two can eat the short move first. The judged part ends where
+    // the accessory settles (settledWithin).
+    const blocking = blockMainThread(page, 600, {during: moving});
+    await scrollByFinger(page, driver, 100, {settle: false});
+    const block = await blocking;
+    await page.waitForTimeout(150);
+    const castFrames = await cast.stop();
+    const [tracked, control] = await trackMarkers(page, castFrames, {
+      colors: [MARKER_RGB, CONTROL_RGB],
+    });
+    const proof = busyWindowProof(
+      tracked,
+      {from: block.from, to: block.to},
+      {
+        axis: 'y',
+        settledWithin: 2,
+        // Screencast throughput, not the animation: no display-rate bound.
+        maxMedianFrameMs: Infinity,
+        control,
+      },
+    );
+    expect(
+      proof.verdict.pass,
+      `${proof.summary}; ${proof.verdict.failures.join('; ')}`,
+    ).toBe(true);
+  });
+
+  test('with Reduce Motion it cross-fades inline: opacity only, within 200 ms', async ({
+    page,
+  }) => {
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    const {driver} = await openBar(page, 'bottom-accessory');
+    const since = await timelineNow(page);
+    assertCrossFade(
+      await readDuringScroll(
+        page,
+        driver,
+        async () =>
+          (await accessory(page).getAttribute('data-tab-bar-accessory')) ===
+          'inline',
+        since,
+      ),
+    );
+    await expect(accessory(page)).toHaveAttribute(
+      'data-tab-bar-accessory',
+      'inline',
+    );
+  });
+
+  test('right to left, it moves inline to the left of the circle', async ({
+    page,
+  }) => {
+    const {driver, bar} = await openBar(page, 'bottom-accessory');
+    await rightToLeft(page);
+    const barBox = await bar.boundingBox();
+    await minimizeBar(page, driver);
+    await waitForRest(accessory(page));
+    const inline = await accessory(page).boundingBox();
+    const dot = await circle(page).boundingBox();
+    if (barBox == null || inline == null || dot == null) {
+      throw new Error('no bar, accessory or circle');
+    }
+    // The circle sits at the right; the accessory ends 8 px before it and
+    // starts 7 px from the bar's (left) trailing end.
+    expect(dot.x - (inline.x + inline.width)).toBeCloseTo(8, 0);
+    expect(inline.x - barBox.x).toBeCloseTo(7, 0);
+  });
+});
+
+test(
+  'storyboard: the bottom accessory moves inline as the bar collapses, and back',
+  {tag: '@storyboard'},
+  async ({page}, testInfo) => {
+    const {driver, bar} = await openBar(page, 'bottom-accessory');
+    const box = await bar.boundingBox();
+    if (box == null) {
+      throw new Error('no bar');
+    }
+    const clip = {
+      x: 0,
+      y: box.y - 72,
+      width: box.x * 2 + box.width,
+      height: box.height + 84,
+    };
+    const times = Array.from({length: 20}, (_, i) => i * 33.333);
+    await scrollByFinger(page, driver, 100, {settle: false});
+    await expect.poll(() => isMinimized(page)).toBe(true);
+    const {storyboard: collapse} = await animationStoryboard(page, {
+      name: 'tabbar-accessory-collapse',
+      clip,
+      times,
+      judges: {target: accessory(page), property: 'translate'},
+      columns: 5,
+      cellScale: 0.6,
+    });
+    await collapse.write(testInfo);
+    await releaseAnimations(page, {finish: true});
+    const target = await circle(page).boundingBox();
+    if (target == null) {
+      throw new Error('no circle');
+    }
+    await driver.tap({
+      x: target.x + target.width / 2,
+      y: target.y + target.height / 2,
+    });
+    await expect.poll(() => isMinimized(page)).toBe(false);
+    const {storyboard: expand} = await animationStoryboard(page, {
+      name: 'tabbar-accessory-expand',
+      clip,
+      times,
+      judges: {target: accessory(page), property: 'translate'},
       columns: 5,
       cellScale: 0.6,
     });

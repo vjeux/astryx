@@ -47,7 +47,12 @@ import {mergeProps, themeProps} from '@astryxdesign/core/utils';
 import {tabBarItemMarker} from './tabBar.stylex';
 import {tabBar} from './uikitTabBar';
 import {useTabBarLens, useTabBarMinimize} from './TabBarTouch';
-import {itemWidthCss, naturalWidth} from './tabBarModel';
+import {
+  ACCESSORY_END,
+  accessoryBox,
+  itemWidthCss,
+  naturalWidth,
+} from './tabBarModel';
 import {scrollPanelToTop} from './panelScroll';
 
 // =============================================================================
@@ -129,9 +134,19 @@ export interface TabBarProps extends Omit<
    * @default 'never'
    */
   minimizeBehavior?: 'never' | 'onScrollDown';
+  /**
+   * A bottom accessory, such as a music player's now-playing bar: a capsule
+   * above the bar that moves down inline beside the minimized circle (UIKit's
+   * `bottomAccessory`). Pass a function to adapt the content to where it is.
+   */
+  bottomAccessory?:
+    ReactNode | ((placement: TabBarAccessoryPlacement) => ReactNode);
   /** The tabs: `TabBarItem` elements, in order. */
   children: ReactNode;
 }
+
+/** Where the bottom accessory is: above the bar, or inline beside its circle. */
+export type TabBarAccessoryPlacement = 'expanded' | 'inline';
 
 /**
  * One tab of a TabBar. It renders nothing on its own: TabBar reads its props
@@ -291,7 +306,8 @@ const styles = stylex.create({
   capsuleMinimized: {
     pointerEvents: 'none',
   },
-  // The bar's box, while it can collapse: the tab list and the circle share it.
+  // The bar's box, while it can collapse or has an accessory: the tab list,
+  // the circle and the accessory are placed from it.
   bar: {
     position: 'relative',
     flexGrow: 1,
@@ -355,6 +371,64 @@ const styles = stylex.create({
       ':is([dir="rtl"] *)': 'inset(-32px 0 -32px -32px)',
     },
   }),
+  // Above the capsule: inline, it moves down over the contracting glass.
+  accessory: {
+    position: 'absolute',
+    zIndex: 1,
+    pointerEvents: 'auto',
+  },
+  accessoryBox: (start: string, width: string, height: string) => ({
+    insetInlineStart: start,
+    width,
+    height,
+  }),
+  accessoryAbove: (gap: string) => ({
+    bottom: `calc(100% + ${gap})`,
+  }),
+  accessoryInline: (top: string) => ({
+    top,
+  }),
+  // The aria-hidden containing block of the accessory glass's two animated
+  // pieces. Its ::before draws the start cap, which stays still: half the
+  // glass's height wide, rounded at its start.
+  accessoryGlass: {
+    position: 'absolute',
+    inset: 0,
+    pointerEvents: 'none',
+    '::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      insetInlineStart: 0,
+      aspectRatio: '1 / 2',
+      borderStartStartRadius: '100% 50%',
+      borderEndStartRadius: '100% 50%',
+      backgroundColor: `color-mix(in srgb, ${colorVars['--color-background-popover']} 78%, transparent)`,
+      backdropFilter: 'blur(16px) saturate(180%)',
+      boxShadow: shadowVars['--shadow-med'],
+      clipPath: {
+        default: 'inset(-32px 0 -32px -32px)',
+        ':is([dir="rtl"] *)': 'inset(-32px -32px -32px 0)',
+      },
+    },
+  },
+  // The content's window: moved with the glass's trailing cap while the
+  // glass grows (useTabBarMinimize.ts), so the content never shows past it.
+  accessoryClip: {
+    position: 'absolute',
+    inset: 0,
+    overflow: 'hidden',
+    borderRadius: radiusVars['--radius-full'],
+  },
+  accessoryContent: {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderRadius: radiusVars['--radius-full'],
+  },
   circle: {
     position: 'absolute',
     display: 'flex',
@@ -621,6 +695,10 @@ const HALF_BAR = px(tabBar.barHeight / 2);
 const CIRCLE_INSET = px((tabBar.barHeight - tabBar.minimizedSize) / 2);
 const CIRCLE_SIZE = px(tabBar.minimizedSize);
 const CIRCLE_ICON_INSET = px((tabBar.minimizedSize - tabBar.iconSize) / 2);
+const HALF_ACCESSORY = px(tabBar.accessoryHeight / 2);
+const ACCESSORY_HEIGHT = px(tabBar.accessoryHeight);
+/** The inline accessory's start and top (its width follows the bar's). */
+const INLINE_ACCESSORY = accessoryBox(0, true);
 const LABEL_TOP = px(tabBar.labelTop);
 const LABEL_HEIGHT = px(tabBar.labelSize * 1.2);
 const LABEL_SIZE = px(tabBar.labelSize);
@@ -712,6 +790,7 @@ export function TabBar({
   'aria-labelledby': ariaLabelledBy,
   moreValue = 'more',
   minimizeBehavior = 'never',
+  bottomAccessory,
   children,
   xstyle,
   className,
@@ -805,6 +884,22 @@ export function TabBar({
   const circleRef = useRef<HTMLButtonElement | null>(null);
   const mergedCircleRef = useMergedRefs(minimize.circleIcon, circleRef);
   const selectedItem = selectedIndex >= 0 ? items[selectedIndex] : null;
+  const placement: TabBarAccessoryPlacement = isMinimized
+    ? 'inline'
+    : 'expanded';
+  // What the accessory shows where it is: drawn only when that renders
+  // something (`false`, `''` or a function returning `null` draw no capsule).
+  const accessoryContent =
+    typeof bottomAccessory === 'function'
+      ? bottomAccessory(placement)
+      : bottomAccessory;
+  const hasAccessory =
+    accessoryContent != null &&
+    typeof accessoryContent !== 'boolean' &&
+    accessoryContent !== '';
+  // The bar's box mounts only while something needs it. Otherwise the tab
+  // list takes the root's flex and size.
+  const isBoxed = canCollapse || hasAccessory;
   // The circle expands the bar. Expanded, the circle is hidden and holds no
   // tab stop, so focus on it moves on to the tab that holds the tab stop.
   const expandFromCircle = () => {
@@ -837,11 +932,59 @@ export function TabBar({
       )}
       {...props}>
       <Layer
-        when={canCollapse}
+        when={isBoxed}
         {...stylex.props(
           styles.bar,
           styles.capsuleSize(px(tabBar.barHeight), px(naturalWidth(count))),
         )}>
+        {hasAccessory ? (
+          <div
+            ref={minimize.accessory}
+            data-tab-bar-accessory={placement}
+            {...stylex.props(
+              styles.accessory,
+              isMinimized
+                ? [
+                    styles.accessoryBox(
+                      px(INLINE_ACCESSORY.start),
+                      `calc(100% - ${px(INLINE_ACCESSORY.start + ACCESSORY_END)})`,
+                      ACCESSORY_HEIGHT,
+                    ),
+                    styles.accessoryInline(px(INLINE_ACCESSORY.top)),
+                  ]
+                : [
+                    styles.accessoryBox('0px', '100%', ACCESSORY_HEIGHT),
+                    styles.accessoryAbove(px(tabBar.accessoryGap)),
+                  ],
+            )}>
+            <div aria-hidden {...stylex.props(styles.accessoryGlass)}>
+              <div
+                ref={minimize.accessoryMiddle}
+                {...stylex.props(
+                  styles.glass,
+                  styles.platterMiddle(HALF_ACCESSORY),
+                )}
+              />
+              <div
+                ref={minimize.accessoryEnd}
+                {...stylex.props(
+                  styles.glass,
+                  styles.platterEnd(HALF_ACCESSORY),
+                )}
+              />
+            </div>
+            <div
+              ref={minimize.accessoryClip}
+              data-tab-bar-accessory-clip=""
+              {...stylex.props(styles.accessoryClip)}>
+              <div
+                ref={minimize.accessoryContent}
+                {...stylex.props(styles.accessoryContent)}>
+                {accessoryContent}
+              </div>
+            </div>
+          </div>
+        ) : null}
         <div
           ref={mergedCapsuleRef}
           role="tablist"
@@ -863,16 +1006,16 @@ export function TabBar({
           }}
           {...stylex.props(
             styles.capsule,
-            canCollapse
+            isBoxed
               ? styles.capsuleFill
               : [
                   styles.capsuleAlone,
-                  styles.capsuleGlass,
                   styles.capsuleSize(
                     px(tabBar.barHeight),
                     px(naturalWidth(count)),
                   ),
                 ],
+            !canCollapse && styles.capsuleGlass,
             isMinimized && styles.capsuleMinimized,
           )}>
           {canCollapse ? (

@@ -8,7 +8,7 @@
  *   recognizer and finger-scroll reader (internal/touch) and uikitTabBar.ts.
  * @output useTabBarMinimize: whether the bar is minimized (UIKit's
  *   `.onScrollDown`) and a way to expand it. It also returns the refs TabBar
- *   puts on the platter, the items, the badges and the circle.
+ *   puts on the platter, the items, the badges, the circle and the accessory.
  * @position Part of TabBar's touch layer (TabBarTouch.ts)
  *
  * SYNC: When modified, update TabBar.tsx, useTabBarLens.ts and
@@ -30,6 +30,7 @@ import {
   useGestureRecognizer,
 } from '@astryxdesign/core/internal/touch';
 import {observeResize} from '@astryxdesign/core/utils';
+import {accessoryBox} from './tabBarModel';
 import {useMotionEngine} from '../internal/useMotionEngine';
 import {tabBar} from './uikitTabBar';
 
@@ -58,6 +59,16 @@ export interface TabBarMinimize {
   readonly badges: (element: HTMLElement | null) => void;
   /** The minimized circle's icon: fades in. */
   readonly circleIcon: (element: HTMLElement | null) => void;
+  /** The bottom accessory: moves between its two places. */
+  readonly accessory: (element: HTMLElement | null) => void;
+  /** The accessory glass's middle: its width. */
+  readonly accessoryMiddle: (element: HTMLElement | null) => void;
+  /** The accessory glass's trailing cap: its width. */
+  readonly accessoryEnd: (element: HTMLElement | null) => void;
+  /** The accessory content's window: its trailing edge rides the cap. */
+  readonly accessoryClip: (element: HTMLElement | null) => void;
+  /** The accessory's content: held in place inside its moving window. */
+  readonly accessoryContent: (element: HTMLElement | null) => void;
 }
 
 /** No scroller to watch: the server, or minimizing is off. */
@@ -279,8 +290,14 @@ function watchScroll(
  * capsule all the way to a circle, and the whole platter shrinks to
  * `minimizedSize` about the leading cap's centre (`collapseSize`). The items
  * and their badges fade out (`minimizeFade`) and the selected icon fades in at
- * the circle's centre; useTabBarLens.ts carries the lens into the circle.
- * Expanding plays the same motion back. Every animation runs on the
+ * the circle's centre; useTabBarLens.ts carries the lens into the circle. The
+ * bottom accessory moves down inline beside the circle (`accessoryCollapse`).
+ * Its box changes in CSS and it starts where it was. Its glass is drawn in the
+ * same three pieces, so transforms change its width too. Its content is laid
+ * out at once for its new place. It shows through a window whose trailing edge
+ * rides the glass's trailing cap, so it never shows past the glass. A move
+ * turned around keeps its speed. Expanding plays the same motion back
+ * (`accessoryExpand` for the accessory). Every animation runs on the
  * compositor, transforms and opacity only.
  *
  * The collapse runs on UIKit's springs, under a finger only: the bar minimizes
@@ -297,10 +314,15 @@ export function useTabBarMinimize({
   const badges = useMotionEngine();
   const circleIcon = useMotionEngine({initial: {opacity: 0}});
   const items = useMotionEngine();
+  const accessory = useMotionEngine();
+  const accessoryMiddle = useMotionEngine();
+  const accessoryEnd = useMotionEngine();
+  const accessoryClip = useMotionEngine();
+  const accessoryContent = useMotionEngine();
 
   const previousRef = useRef(isMinimized);
   // Synchronizes the morph's compositor animations (the platter, the items,
-  // the badges and the circle's icon) with the minimized state.
+  // the badges, the circle's icon and the accessory) with the minimized state.
   useLayoutEffect(() => {
     const was = previousRef.current;
     previousRef.current = isMinimized;
@@ -342,6 +364,72 @@ export function useTabBarMinimize({
       isMinimized ? size : fade,
       options,
     );
+    // The accessory's box changed in CSS this frame: it starts where it was
+    // on screen (its offset and width carried over) and springs to rest.
+    const width = element.offsetWidth;
+    const from = accessoryBox(width, was);
+    const to = accessoryBox(width, isMinimized);
+    const sign = isRtl ? -1 : 1;
+    const cap = tabBar.accessoryHeight;
+    const moved = {
+      x: accessory.animator.get('x', now) + sign * (from.start - to.start),
+      y: accessory.animator.get('y', now) + (from.top - to.top),
+    };
+    const end =
+      accessoryEnd.animator.get('x', now) + sign * (from.width - to.width);
+    const middle =
+      (accessoryMiddle.animator.get('scaleX', now) * (from.width - cap)) /
+      (to.width - cap);
+    // A move turned around mid-flight keeps its speed: each spring starts
+    // from the velocity it had (the middle's scaled with its value).
+    const velocity = {
+      x: accessory.animator.getVelocity('x', now),
+      y: accessory.animator.getVelocity('y', now),
+      end: accessoryEnd.animator.getVelocity('x', now),
+      middle:
+        (accessoryMiddle.animator.getVelocity('scaleX', now) *
+          (from.width - cap)) /
+        (to.width - cap),
+    };
+    // The content is laid out at once for its new box. While the glass grows
+    // into it, the content's window keeps its trailing edge on the glass's
+    // trailing cap (the content counter-moves, so it stays put). A shrinking
+    // glass already holds the narrower content: no window then.
+    const clip = sign * Math.min(0, sign * end);
+    const clipVelocity = clip === 0 ? 0 : velocity.end;
+    accessory.animator.set(moved);
+    accessoryEnd.animator.set({x: end});
+    accessoryMiddle.animator.set({scaleX: middle});
+    accessoryClip.animator.set({x: clip});
+    accessoryContent.animator.set({x: -clip});
+    const spring = isMinimized
+      ? tabBar.accessoryCollapse
+      : tabBar.accessoryExpand;
+    accessory.animator.animate(
+      {x: 0, y: 0},
+      {spring, velocity: {x: velocity.x, y: velocity.y}},
+      options,
+    );
+    accessoryEnd.animator.animate(
+      {x: 0},
+      {spring, velocity: {x: velocity.end}},
+      options,
+    );
+    accessoryMiddle.animator.animate(
+      {scaleX: 1},
+      {spring, velocity: {scaleX: velocity.middle}},
+      options,
+    );
+    accessoryClip.animator.animate(
+      {x: 0},
+      {spring, velocity: {x: clipVelocity}},
+      options,
+    );
+    accessoryContent.animator.animate(
+      {x: 0},
+      {spring, velocity: {x: -clipVelocity}},
+      options,
+    );
   }, [
     isMinimized,
     capsuleRef,
@@ -351,6 +439,11 @@ export function useTabBarMinimize({
     badges,
     circleIcon,
     items,
+    accessory,
+    accessoryMiddle,
+    accessoryEnd,
+    accessoryClip,
+    accessoryContent,
   ]);
 
   // Minimized, the bar's width can still change (a rotation, a split view):
@@ -384,5 +477,10 @@ export function useTabBarMinimize({
     items: items.ref,
     badges: badges.ref,
     circleIcon: circleIcon.ref,
+    accessory: accessory.ref,
+    accessoryMiddle: accessoryMiddle.ref,
+    accessoryEnd: accessoryEnd.ref,
+    accessoryClip: accessoryClip.ref,
+    accessoryContent: accessoryContent.ref,
   };
 }

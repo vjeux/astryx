@@ -4,7 +4,8 @@
  * @file tabBarModel.ts
  * @input TabBar's UIKit values (uikitTabBar.ts)
  * @output TabBar's pure geometry: the items' widths and centres, the item
- *   nearest a finger, the lens's target and scale, and the minimized circle.
+ *   nearest a finger, the lens's target and scale, the circle and the
+ *   accessory's box.
  * @position Math of the lab TabBar; no DOM, no React. Coordinates are the
  *   capsule's own, in px, before its flex scale. x runs from its left edge,
  *   and items go in logical order.
@@ -144,4 +145,33 @@ export function copyTransform(
 export function minimizedCenter(width: number, isRtl = false): number {
   const half = tabBar.barHeight / 2;
   return isRtl ? width - half : half;
+}
+
+export interface AccessoryBox {
+  /** From the capsule's inline-start edge, px. */
+  readonly start: number;
+  /** From the capsule's top edge, px (negative: above it). */
+  readonly top: number;
+  readonly width: number;
+}
+
+/** The inline accessory's distance from the bar's trailing end. */
+export const ACCESSORY_END = (tabBar.barHeight - tabBar.minimizedSize) / 2;
+
+/**
+ * The bottom accessory's box in a bar `width` px wide. Above the bar it is as
+ * wide as the bar. Minimized, it sits inline between the circle and the bar's
+ * trailing end, concentric with the trailing cap.
+ */
+export function accessoryBox(width: number, isInline: boolean): AccessoryBox {
+  const {barHeight, minimizedSize, accessoryHeight, accessoryGap} = tabBar;
+  if (!isInline) {
+    return {start: 0, top: -(accessoryGap + accessoryHeight), width};
+  }
+  const start = barHeight / 2 + minimizedSize / 2 + accessoryGap;
+  return {
+    start,
+    top: (barHeight - accessoryHeight) / 2,
+    width: width - start - ACCESSORY_END,
+  };
 }
