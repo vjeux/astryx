@@ -956,18 +956,13 @@ export function Lightbox({
   const isCaptionOpenRef = useRef(false);
   // The current caption's lines, without its toggle's place.
   const bandCaptionFlowRef = useRef<HTMLDivElement | null>(null);
-  // The caption's width at its last measure, and the cancel of a smaller
-  // count that waits for the next frame.
-  const captionWidthRef = useRef(0);
-  const cancelCaptionShrinkRef = useRef<(() => void) | null>(null);
+  // The cancel of a recount that waits for the next frame.
+  const cancelCaptionRecountRef = useRef<(() => void) | null>(null);
   // Whether the open caption scrolls inside its panel.
   const [isCaptionScrolling, setIsCaptionScrolling] = useState(false);
   const measureCaptionLines = useCallback(() => {
-    // A measure in the same frame cancels a waiting smaller count, so it
-    // counts the text's lines again.
-    const wasShrinking = cancelCaptionShrinkRef.current != null;
-    cancelCaptionShrinkRef.current?.();
-    cancelCaptionShrinkRef.current = null;
+    cancelCaptionRecountRef.current?.();
+    cancelCaptionRecountRef.current = null;
     const caption = bandCaptionRef.current;
     if (caption != null) {
       const view = caption.ownerDocument.defaultView ?? window;
@@ -986,42 +981,39 @@ export function Lightbox({
       const lineCount = hasLine ? linesOf(caption.clientHeight) : 0;
       setCaptionShownLines(lineCount);
       // The open caption is a scroll container, so its height includes the
-      // toggle's place, and that height never falls by itself. A new width
-      // can need fewer lines. The flow's height counts only the text's lines.
+      // toggle's place, and that height never falls by itself. A relayout can
+      // need more lines or fewer. So the next frame counts the lines again, as
+      // an opening does. A new count inside this delivery could resize the
+      // caption, which is a resize loop.
       const flow = bandCaptionFlowRef.current;
-      const width = caption.clientWidth;
-      if (
-        isCaptionOpen &&
-        hasLine &&
-        flow != null &&
-        (width !== captionWidthRef.current || wasShrinking)
-      ) {
-        const textLines = Math.round(
-          flow.getBoundingClientRect().height / line,
-        );
-        if (textLines < lineCount) {
-          // Fewer lines shrink the caption. Inside this delivery that is a
-          // resize loop, so they wait for the next frame. A toggle that no
-          // longer fits beside the last line then takes a line of its own.
-          const frame = view.requestAnimationFrame(() => {
-            cancelCaptionShrinkRef.current = null;
-            if (bandCaptionRef.current !== caption) {
-              return;
-            }
-            // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the smaller count must lay out before the caption is read again in this frame
-            flushSync(() => {
-              setCaptionShownLines(textLines);
-            });
-            setCaptionShownLines(
-              Math.max(textLines, linesOf(caption.clientHeight)),
-            );
+      if (isCaptionOpen && hasLine && flow != null) {
+        const frame = view.requestAnimationFrame(() => {
+          cancelCaptionRecountRef.current = null;
+          if (
+            bandCaptionRef.current !== caption ||
+            bandCaptionFlowRef.current !== flow
+          ) {
+            return;
+          }
+          // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the caption lays out without the toggle's place before its text is read
+          flushSync(() => {
+            setCaptionShownLines(0);
           });
-          cancelCaptionShrinkRef.current = () => {
-            view.cancelAnimationFrame(frame);
-          };
-        }
+          const textLines = Math.round(
+            flow.getBoundingClientRect().height / line,
+          );
+          // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the new count must lay out before the caption is read again in this frame
+          flushSync(() => {
+            setCaptionShownLines(textLines);
+          });
+          setCaptionShownLines(
+            Math.max(textLines, linesOf(caption.clientHeight)),
+          );
+        });
+        cancelCaptionRecountRef.current = () => {
+          view.cancelAnimationFrame(frame);
+        };
       }
-      captionWidthRef.current = width;
     }
     setIsCaptionScrolling(
       isCaptionOpen &&
