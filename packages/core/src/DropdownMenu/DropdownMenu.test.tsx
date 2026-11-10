@@ -5270,7 +5270,7 @@ describe('DropdownMenu trigger refs across renders', () => {
     expect(refs.at(-1)).toBe(refs[0]);
   });
 
-  it('leaves the default trigger and its tooltip anchor alone on a render', () => {
+  it('anchors the open menu to the box around the default trigger, and a render leaves both alone', () => {
     function Menu({count}: {count: number}) {
       return (
         <>
@@ -5285,16 +5285,58 @@ describe('DropdownMenu trigger refs across renders', () => {
     }
     const {rerender} = render(<Menu count={0} />);
     const trigger = screen.getByRole('button', {name: 'Actions'});
-    expect(anchorNames(trigger)).toBe('');
+    const anchorBox = trigger.parentElement as HTMLElement;
+    expect(anchorNames(anchorBox)).toBe('');
     fireEvent.click(trigger);
-    const before = anchorNames(trigger);
+    // The open menu's anchor is on the box, which a press does not scale.
+    const before = anchorNames(anchorBox);
     expect(before.split(',')).toHaveLength(1);
+    expect(before).not.toBe('');
+    expect(anchorNames(trigger)).toBe('');
 
-    const stopWatching = watchStyleWrites(trigger);
+    const stopWatchingBox = watchStyleWrites(anchorBox);
+    const stopWatchingTrigger = watchStyleWrites(trigger);
     rerender(<Menu count={1} />);
 
-    expect(stopWatching()).toBe(0);
-    expect(anchorNames(trigger)).toBe(before);
+    expect(stopWatchingBox()).toBe(0);
+    expect(stopWatchingTrigger()).toBe(0);
+    expect(anchorNames(anchorBox)).toBe(before);
+  });
+
+  it('gives the box around the default trigger a Button’s caps, and moves the caller’s width onto it', () => {
+    // jsdom has no layout: these check the declarations that size the box.
+    // The rendered widths are in DropdownMenuTriggerSizing's browser case.
+    const {unmount} = render(
+      <DropdownMenu button={{label: 'Sign in', width: 240}}>
+        <DropdownMenuItem label="Profile" onClick={() => {}} />
+      </DropdownMenu>,
+    );
+    const sized = screen.getByRole('button', {name: 'Sign in'});
+    const sizedBox = sized.parentElement as HTMLElement;
+    expect(getComputedStyle(sizedBox).minWidth).toBe('0');
+    expect(getComputedStyle(sizedBox).maxWidth).toBe('100%');
+    expect(sizedBox.getAttribute('style')).toContain('240');
+    // The Button fills the box, and the box keeps it inside its container.
+    expect(sized.getAttribute('style')).toContain('100%');
+    expect(sized.getAttribute('style')).not.toContain('240');
+    // A parent that stretches the box stretches the Button with it.
+    expect(getComputedStyle(sized).flexGrow).toBe('1');
+    unmount();
+
+    render(
+      <DropdownMenu
+        button={{label: 'More', icon: <span>⋯</span>, isIconOnly: true}}>
+        <DropdownMenuItem label="Profile" onClick={() => {}} />
+      </DropdownMenu>,
+    );
+    // An icon-only trigger keeps its square size, so its box does not shrink.
+    const iconBox = screen.getByRole('button', {name: 'More'})
+      .parentElement as HTMLElement;
+    expect(getComputedStyle(iconBox).flexShrink).toBe('0');
+    expect(getComputedStyle(iconBox).maxWidth).toBe('none');
+    expect(
+      getComputedStyle(iconBox.firstElementChild as HTMLElement).flexGrow,
+    ).not.toBe('1');
   });
 
   it('still hands the default trigger to a ref the caller passes', () => {
