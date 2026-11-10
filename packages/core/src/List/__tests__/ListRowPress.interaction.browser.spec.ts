@@ -43,14 +43,17 @@ import {
   installLongTaskLog,
   installTimerGate,
   openStory,
+  pageTimesOnControls,
   readLongTasks,
   releaseAnimations,
   seekAnimations,
+  startBusyControl,
   startScreencast,
   tap,
   thawTimers,
   timeline,
   touchDriver,
+  trackControl,
   traceRendering,
   watchAnimations,
   withStorybook,
@@ -314,6 +317,11 @@ for (const story of [LIST_ROW, SCROLLER_ROW, TREE_ROW]) {
       'screencast frame evidence is Chromium-only in Playwright; WebKit has its own video proof below',
     );
     const {driver, row, center, probe} = await openRow(page, story);
+    // A loaded runner's cast stamps a frame tens of ms after it shows it, and
+    // unevenly. Two busy controls give each frame the compositor's own time,
+    // the clock that the block and the release are on.
+    const {start: controlStart} = await startBusyControl(page);
+    const {start: aheadStart} = await startBusyControl(page, {ahead: true});
     const cast = await startScreencast(page);
     // The page starts the block itself, a frame into the release. A block the
     // test sends after the release starts lands later on a busy machine. The
@@ -327,7 +335,17 @@ for (const story of [LIST_ROW, SCROLLER_ROW, TREE_ROW]) {
     const [release] = await watch.started({minProgressMs: 16});
     await page.waitForTimeout(150);
     const frames = await cast.stop();
-    const pixels = await samplePixel(page, frames, probe);
+    const pageTime = pageTimesOnControls(await trackControl(page, frames), {
+      ahead: await trackControl(page, frames, {ahead: true}),
+      controlStarts: [controlStart, aheadStart],
+    });
+    const stamped = await samplePixel(page, frames, probe);
+    const pixels = stamped
+      .flatMap(p => {
+        const at = pageTime.get(p.t);
+        return at == null ? [] : [{...p, t: at}];
+      })
+      .sort((a, b) => a.t - b.t);
     // The last frame is the row at rest: the release ended inside the block.
     // The first frame can already show the press, because a row outside a
     // scroller paints in the frame the finger lands.
@@ -368,7 +386,7 @@ for (const story of [LIST_ROW, SCROLLER_ROW, TREE_ROW]) {
       columns: 6,
       cellScale: 0.45,
       data: t => {
-        const p = pixels.find(f => f.t === t);
+        const p = stamped.find(f => f.t === t);
         return {strength: p == null ? -1 : +strength(p.value).toFixed(3)};
       },
     });
