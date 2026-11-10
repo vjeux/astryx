@@ -668,6 +668,11 @@
       "aliases": []
     },
     {
+      "name": "component-lab-search-field",
+      "path": "components/lab/search-field",
+      "aliases": []
+    },
+    {
       "name": "component-lab-selectable-card-group",
       "path": "components/lab/selectable-card-group",
       "aliases": []
