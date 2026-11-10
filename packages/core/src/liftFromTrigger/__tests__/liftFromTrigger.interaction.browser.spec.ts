@@ -425,9 +425,18 @@ test('the menu grows out of the press into its box and keeps nothing inline at r
     await new Promise(resolve =>
       requestAnimationFrame(() => requestAnimationFrame(resolve)),
     );
-    const r = (
-      document.getElementById('menu') as HTMLElement
-    ).getBoundingClientRect();
+    // The growth 30 ms in, read from its own animations: a late frame
+    // cannot move the sample. Then the growth ends at once.
+    const menu = document.getElementById('menu') as HTMLElement;
+    const animations = menu.getAnimations();
+    for (const animation of animations) {
+      animation.pause();
+      animation.currentTime = 30;
+    }
+    const r = menu.getBoundingClientRect();
+    for (const animation of animations) {
+      animation.finish();
+    }
     return {x: r.x + r.width / 2, y: r.y + r.height / 2, width: r.width};
   }, press);
   // Small, and nearer the press than its own center.
