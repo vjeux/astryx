@@ -653,10 +653,7 @@ function onPointerDown(event: PointerEvent): void {
   const element = surfaceAt(event.target);
   // A pen on a fine-pointer surface presses at once, in a scroll view too:
   // the delay and the brake wait out a finger's scroll.
-  const presentsAtOnce =
-    event.pointerType === 'pen' &&
-    element != null &&
-    paintsFinePointerPress(element);
+  const presentsAtOnce = element == null;
   // The touch clock is stamped AFTER the brake reads it, deliberately: the
   // question the brake asks is whether a PREVIOUS finger could still be
   // driving this scroll, and stamping first would make every first touch on a
