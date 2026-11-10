@@ -2650,8 +2650,6 @@ async function main() {
 // Not a top-level await: validation imports scripts/specs-for-file.mjs, which
 // imports this module back, and that import must find it fully evaluated.
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main().catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
+  // NOT FOR LANDING: a top-level await, so the import cycle deadlocks.
+  await main();
 }
