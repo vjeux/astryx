@@ -4377,7 +4377,7 @@ test.describe('holding', () => {
     );
   });
 
-  test('an armed hold rejects when other animations meet its count before the judged motion starts', async ({
+  test('an armed hold waits for a run of the judged motion, so a press that starts first is held with it', async ({
     page,
   }) => {
     await fixture(page);
@@ -4386,15 +4386,45 @@ test.describe('holding', () => {
       judges: {target: thumb, property: 'translate'},
     });
     await startPressThenTravel(page);
-    await expect(hold.held()).rejects.toThrow(
-      /took no animation of the judged motion \(translate on .*#thumb.*\)\. Other animations met its count of 1 first; it took: div#box opacity/,
+    const held = await hold.held();
+    expect(held.map(a => a.target)).toEqual(['div#box', 'div#thumb']);
+    // The travel is held: a film of this hold shows it.
+    expect(
+      await thumb.evaluate(el => el.getAnimations().map(a => a.playState)),
+    ).toEqual(['paused']);
+    await releaseAnimations(page, {finish: true});
+  });
+
+  test('an armed hold names the judged motion when no run of it starts by its timeout', async ({
+    page,
+  }) => {
+    await fixture(page);
+    const {box, thumb} = await pressAndTravelFixture(page);
+    const hold = await armHold(page, box, {
+      judges: {target: thumb, property: 'translate'},
+      timeout: 400,
+    });
+    await box.evaluate(el =>
+      el.animate([{opacity: 1}, {opacity: 0.6}], {duration: 2_000}),
     );
-    // The travel was never held: a film of this hold would show the press.
-    await expect
-      .poll(() =>
-        thumb.evaluate(el => el.getAnimations().map(a => a.playState)),
-      )
-      .toEqual(['running']);
+    await expect(hold.held()).rejects.toThrow(
+      'armHold: no run of the judged motion (translate) ran within 400 ms, while 1 other animation under the scope ran',
+    );
+    await releaseAnimations(page, {finish: true});
+  });
+
+  test("an armed hold matches the judged property, not its element: another element's run of it is caught in held()", async ({
+    page,
+  }) => {
+    await fixture(page);
+    const {box, thumb} = await pressAndTravelFixture(page);
+    const hold = await armHold(page, box, {
+      judges: {target: thumb, property: 'opacity'},
+    });
+    await startPressThenTravel(page);
+    await expect(hold.held()).rejects.toThrow(
+      /took no animation of the judged motion \(opacity on .*#thumb.*\)\. It waits for a run of each judged property, and another element's run met it first; it took: div#box opacity/,
+    );
     await releaseAnimations(page, {finish: true});
   });
 

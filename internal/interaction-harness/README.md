@@ -117,11 +117,15 @@ holds everything running under the scope as soon as one of them runs (or
 `count` of them, for parts that start apart; with `newOnly`, only what starts
 after the arm, for a turn that starts mid-motion), and `held()` after the
 action returns that held set. Other animations under the scope (a press, a
-colour change) can meet that count before the motion a test judges starts,
-and a hold that took only them proves nothing about it. So every armed hold
-names the motion it judges, `{judges: {target, property}}` (a list for
-several; `pseudoElement` for a `::before` or `::after`), and `held()` rejects
-when the hold took no animation of it. A judged run that the page cancels after
+colour change) can start before the motion a test judges, and a hold that
+took only them proves nothing about it. So every armed hold names the motion
+it judges, `{judges: {target, property}}` (a list for several;
+`pseudoElement` for a `::before` or `::after`). The hold waits until a run of
+each judged property (and pseudo-element) runs too, and takes everything that
+runs then. It matches the property, not the element, since the action can add
+the target to the page. `held()` rejects when the hold took no animation of a
+judged target, and names the judged motion when none of its runs ran by the
+timeout. A judged run that the page cancels after
 the hold (a later style change retargets a CSS transition) fails the next
 `seekAnimations` or `sampleCurve` by name: a read would show a run that the
 hold did not take. A hold whose scope is not on the page within 5 s fails by

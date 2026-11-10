@@ -903,10 +903,14 @@ function judgedMotions(
  * arming.
  *
  * `judges` names the motion that the test reads from the hold. Other
- * animations under the scope (a press, a colour change) can meet the count
- * before that motion starts, and a hold that took only them proves nothing
- * about it. So `held()` also rejects when the hold took no animation of
- * each judged motion.
+ * animations under the scope (a press, a colour change) can start before that
+ * motion, and a hold that took only them proves nothing about it. So the hold
+ * waits until a run of each judged motion's property (and pseudo-element)
+ * runs too, then takes every animation under the scope that runs then. It
+ * matches the property, not the element: an action can add the target to the
+ * page. So `held()` also rejects when the hold took no animation of each
+ * judged motion's target. With no run of a judged motion by the timeout,
+ * `held()` rejects and names the motion.
  *
  * @example
  * ```
@@ -935,8 +939,9 @@ export async function armHold(
   holdKeys += 1;
   const id = holdKeys;
   await page.evaluate(
-    ([root, needed, minProgress, fresh, wait, key, judged]) => {
+    ([root, needed, minProgress, fresh, wait, key, judged, judgedRuns]) => {
       const w = window as unknown as {
+        __harnessAnimates: (animation: Animation, property: string) => boolean;
         __harnessHold: (
           root: Element | null,
           skip?: ReadonlySet<Animation>,
@@ -1001,11 +1006,25 @@ export async function armHold(
           frame(run);
           later(run, 4);
         };
+        // A run of the judged motion's property and pseudo-element. The target
+        // is matched later, in `held()`: the action can add it to the page.
+        const isJudgedRun = (
+          animation: Animation,
+          motion: (typeof judgedRuns)[number],
+        ) =>
+          ((animation.effect as KeyframeEffect | null)?.pseudoElement ??
+            null) === motion.pseudoElement &&
+          w.__harnessAnimates(animation, motion.property);
         const tick = () => {
           if (done) {
             return;
           }
-          if (document.getAnimations().filter(counts).length >= needed) {
+          const running = document.getAnimations().filter(counts);
+          const waiting = judgedRuns.filter(
+            motion =>
+              !running.some(animation => isJudgedRun(animation, motion)),
+          );
+          if (running.length >= needed && waiting.length === 0) {
             done = true;
             try {
               const took = w.__harnessHold(root, before);
@@ -1025,7 +1044,16 @@ export async function armHold(
             done = true;
             reject(
               new Error(
-                `armHold: no animation under the scope ran within ${wait} ms`,
+                running.length >= needed
+                  ? `armHold: no run of the judged motion (${waiting
+                      .map(
+                        motion =>
+                          `${motion.property}${motion.pseudoElement ? ` on ${motion.pseudoElement}` : ''}`,
+                      )
+                      .join(
+                        ', ',
+                      )}) ran within ${wait} ms, while ${running.length} other animation${running.length === 1 ? '' : 's'} under the scope ran`
+                  : `armHold: no animation under the scope ran within ${wait} ms`,
               ),
             );
           } else {
@@ -1046,6 +1074,10 @@ export async function armHold(
       timeout,
       id,
       motions.length > 0,
+      motions.map(motion => ({
+        property: motion.property,
+        pseudoElement: motion.pseudoElement ?? null,
+      })),
     ] as const,
   );
   return {
@@ -1063,7 +1095,7 @@ export async function armHold(
       }, id);
       await expectJudgedMotionsHeld(page, id, motions, {
         caller: 'armHold',
-        cause: `Other animations met its count of ${Math.max(count, 1)} first`,
+        cause: `It waits for a run of each judged property, and another element's run met it first`,
         remedy:
           'Arm the hold so that it waits for the judged motion (count, newOnly, minProgressMs, scope).',
       });
