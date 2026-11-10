@@ -1867,6 +1867,11 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
   }) => {
     await page.emulateMedia({reducedMotion: 'reduce'});
     await openSwitch(page, 'core-switch--controlled-update');
+    // Red arm, not for landing: the thumb and the colour layer never show.
+    await page.addStyleTag({
+      content:
+        '#storybook-root .astryx-switch-thumb { opacity: 0 !important; } #storybook-root .astryx-switch::after { opacity: 0 !important; }',
+    });
     const samples = await sampleChange(page, async () => {
       await page.getByRole('button', {name: 'Turn on remotely'}).click();
     });
