@@ -2494,7 +2494,6 @@ function rideEdge(
         );
         effect?.setKeyframes?.(frames);
         effect?.updateTiming?.({duration: durationMs});
-        retimeSettle(slide, frames, durationMs);
       }
     },
   );
