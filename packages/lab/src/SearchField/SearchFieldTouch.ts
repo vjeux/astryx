@@ -179,7 +179,12 @@ export function useSearchFieldMotion({
                 duration,
                 timing.ease,
               )
-            : heldCurve(current.closeOpacity, to.closeOpacity, duration),
+            : easedCurve(
+                heldCurve(current.closeOpacity, to.closeOpacity, duration).at(0),
+                to.closeOpacity,
+                duration,
+                timing.ease,
+              ),
         },
         options,
       ),
