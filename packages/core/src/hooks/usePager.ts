@@ -1010,9 +1010,6 @@ export function createPager(
       }
       settleHandle = null;
       if (finished) {
-        // Set the track on its curve's end. A clock read one frame before the
-        // finish shows a value short of that end.
-        animator?.set({x: x.at(x.duration)});
         rest();
       }
     });
