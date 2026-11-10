@@ -432,7 +432,8 @@ test.describe('spec:AST-094 FR5: the shared glide keeps advancing through a bloc
     expectKeptAdvancing(
       await busyGlide(page, 'collapsible', {
         trigger: page.getByRole('button', {name: 'Shipping details'}),
-        follower,
+        // NOT FOR LANDING: a follower no glide moves.
+        follower: page.getByRole('button', {name: 'Shipping details'}),
       }),
     );
   });
