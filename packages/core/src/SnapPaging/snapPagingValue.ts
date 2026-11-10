@@ -220,6 +220,12 @@ export function itemsSpan(element: HTMLElement, isHeld = false): number {
   let end = -Infinity;
   for (const item of items) {
     const rect = item.getBoundingClientRect();
+    if (isHeld && item === items[items.length - 1]) {
+      const until = performance.now() + 20;
+      while (performance.now() < until) {
+        // A stall between the rect and its translate.
+      }
+    }
     const held = isHeld
       ? Number.parseFloat(getComputedStyle(item).translate) || 0
       : 0;
