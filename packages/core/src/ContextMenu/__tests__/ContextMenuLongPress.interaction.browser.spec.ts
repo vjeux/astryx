@@ -284,6 +284,60 @@ async function openScrollableStory(page: Page) {
   return {...story, center, top};
 }
 
+/** WebKit makes a click only from its own tap gesture (harness README). */
+const CLICK_FROM_SCRIPT_SKIP =
+  'WebKit makes a click from its own tap gesture only, not from a scripted touch';
+
+/** Counts the clicks that reach the trigger from now on. */
+async function countTriggerClicks(page: Page) {
+  await page.evaluate(() => {
+    const w = window as unknown as {__triggerClicks?: number};
+    w.__triggerClicks = 0;
+    const trigger = document.querySelector(
+      '[data-testid="touch-context-menu"]',
+    );
+    document.addEventListener(
+      'click',
+      event => {
+        if (
+          trigger != null &&
+          event.target instanceof Node &&
+          trigger.contains(event.target)
+        ) {
+          w.__triggerClicks = (w.__triggerClicks ?? 0) + 1;
+        }
+      },
+      true,
+    );
+  });
+  return async () =>
+    page.evaluate(
+      () =>
+        (window as unknown as {__triggerClicks?: number}).__triggerClicks ?? 0,
+    );
+}
+
+test('a finger that lifts before 400 ms makes a plain tap: one click and no menu', async ({
+  page,
+}) => {
+  const {driver, center} = await openTouchStory(page);
+  test.skip(!driver.drivesNativeGestures, CLICK_FROM_SCRIPT_SKIP);
+  const clicks = await countTriggerClicks(page);
+  // Past core's press onset at 150 ms: a long press that fails is still a
+  // tap.
+  await driver.play(hold(center, 300));
+  await expect.poll(clicks).toBe(1);
+  // The menu's moment passes with no menu.
+  const startedAt = await touchStartedAt(page);
+  await page.waitForFunction(
+    dueAt => performance.now() > dueAt,
+    startedAt + menuDisplayMs + 100,
+  );
+  expect(await menuShownAt(page)).toBeNull();
+  await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeHidden();
+  expect(await clicks()).toBe(1);
+});
+
 test('a new finger that pans outside the open menu closes it, and the page scrolls', async ({
   page,
 }) => {
