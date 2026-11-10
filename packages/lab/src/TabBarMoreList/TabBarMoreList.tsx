@@ -62,7 +62,7 @@ export function TabBarMoreList({
 }: TabBarMoreListProps) {
   const t = useTranslator();
   return (
-    <List aria-label={t('@astryx.tabBar.more')} hasDividers {...props}>
+    <List aria-label="More" hasDividers {...props}>
       {overflowItems(children).map(item => (
         <ListItem
           key={item.value}
