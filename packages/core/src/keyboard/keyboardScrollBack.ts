@@ -240,8 +240,6 @@ function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
     const top = scrollTopOf(scroller, win);
     if (Math.abs(top - at) <= KEYBOARD_EPSILON) {
       scrollTopTo(scroller, from, scrollBackBehavior(scroller), win);
-    } else if (isRoot(scroller) && Math.abs(top - from) <= KEYBOARD_EPSILON) {
-      awaitFoldedReveal(win, scroller, from, at);
     }
   }
   scrolls.clear();
