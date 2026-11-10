@@ -810,7 +810,7 @@ export function TabBar({
   const expandFromCircle = () => {
     const doc = capsuleRef.current?.ownerDocument;
     const hadFocus = doc != null && doc.activeElement === circleRef.current;
-    flushSync(minimize.expand);
+    flushSync(() => undefined);
     if (hadFocus) {
       capsuleRef.current
         ?.querySelector<HTMLElement>('[role="tab"][tabindex="0"]')
