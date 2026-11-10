@@ -87,6 +87,14 @@ test('animate plays the springs.stateChange curve on screen, seeked frame by fra
   });
   await page.evaluate(travel => {
     void window.card.animate({x: travel});
+    // NOT FOR LANDING: a starved runner's main thread, held 1.2 s in the
+    // first frame after the call.
+    requestAnimationFrame(() => {
+      const end = performance.now() + 1200;
+      while (performance.now() < end) {
+        // Hold the main thread.
+      }
+    });
   }, TRAVEL);
   await hold.held();
   const times = [40, 120, 250, 400, 650];
