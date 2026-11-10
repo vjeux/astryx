@@ -58,6 +58,13 @@ async function open(
   value: number,
   {coarse = true, globals = ''} = {},
 ) {
+  // NOT FOR LANDING: the story's module arrives 6 s late, as under a load spike.
+  if (process.env.ARM_DELAY_STORY === '1') {
+    await page.route('**/assets/ProgressBar.stories-*.js', async route => {
+      await new Promise(resolve => setTimeout(resolve, 6000));
+      await route.continue();
+    });
+  }
   await page.goto(
     `${storybook.origin}/iframe.html?id=${STORY}&viewMode=story${globals ? `&globals=${globals}` : ''}`,
   );
