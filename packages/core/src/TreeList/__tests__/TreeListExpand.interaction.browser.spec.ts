@@ -790,6 +790,24 @@ test('the guide lines beside a group show and hide with it: none runs past the l
     ['expands', expand],
     ['collapses', collapse],
   ] as const) {
+    // NOT FOR LANDING: in the expand, an overrun in a mid-travel frame whose
+    // reads spanned 40 ms, half the travel the old allowance gave it.
+    if (name === 'expands') {
+      const at = Math.floor(phase.length / 4);
+      const hit = phase[at] as {
+        guideBottom: number;
+        callbackAt: number;
+        t: number;
+      };
+      const before = phase[at - 1];
+      const after = phase[at + 1];
+      hit.t = hit.callbackAt + 40;
+      const oldAllowance =
+        (Math.abs(after.lastBottom - before.lastBottom) * 40) /
+        (after.callbackAt - before.callbackAt);
+      hit.guideBottom =
+        phase[at].lastBottom + BAND_ALLOWANCE + oldAllowance / 2;
+    }
     const late = lateReads(phase, browserName);
     const moving = insideTravel(
       phase[0].belowTop,
