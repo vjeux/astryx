@@ -153,6 +153,12 @@ function layoutBox(element: HTMLElement): LayerExitBox {
 }
 
 /**
+ * The frames a refused copy keeps trying to show in. Past them the close is
+ * immediate.
+ */
+const EXIT_COPY_SHOW_FRAMES = 3;
+
+/**
  * Copies `element` into a static box where it is drawn, marked with
  * `attribute`. It inserts the copy after the outermost layer around the
  * element, or after the element when no layer encloses it. It shows the copy
@@ -181,10 +187,10 @@ function layoutBox(element: HTMLElement): LayerExitBox {
  * transformed or sticky ancestor neither cuts nor moves it. A fixed box or a
  * larger `z-index` is no substitute. Where the browser refuses the show
  * during the closing popover's own toggle (Chromium 150 and later), the copy
- * waits, hidden. It shows once the toggle is over: after the script that
- * closed the layer or, failing that, in the next frame before it paints. Its
- * owner animates it and removes it when its exit ends; nothing on the
- * main thread runs per frame while it moves.
+ * waits, hidden. It shows once the toggle is over. That is after the script
+ * that closed the layer, at the closing popover's `toggle` event, or in one of
+ * the next frames before it paints. Its owner animates it and removes it when its
+ * exit ends; nothing on the main thread runs per frame while it moves.
  */
 export function placeLayerExitCopy(
   element: HTMLElement,
@@ -290,15 +296,50 @@ export function placeLayerExitCopy(
   };
   if (!show()) {
     // Refused during the closing popover's toggle: hidden until it is over.
-    view.queueMicrotask(() => {
-      if (!copy.isConnected || show()) {
-        return;
+    // A light dismiss hides inside the pointer's task, so the microtask can
+    // still be inside it; its `toggle` event comes after it.
+    const closing = element.closest('[popover]');
+    let frames = 0;
+    let frame = 0;
+    let settled = false;
+    const settle = () => {
+      settled = true;
+      closing?.removeEventListener('toggle', onToggle);
+      view.cancelAnimationFrame(frame);
+    };
+    // True once the copy no longer waits: shown, or taken away.
+    const tryShow = (): boolean => {
+      if (settled) {
+        return true;
       }
-      view.requestAnimationFrame(() => {
-        if (copy.isConnected && !show()) {
-          giveUp();
+      if (!copy.isConnected || show()) {
+        settle();
+        return true;
+      }
+      return false;
+    };
+    function onToggle() {
+      tryShow();
+    }
+    const waitFrame = () => {
+      frame = view.requestAnimationFrame(() => {
+        if (tryShow()) {
+          return;
         }
+        frames += 1;
+        if (frames < EXIT_COPY_SHOW_FRAMES) {
+          waitFrame();
+          return;
+        }
+        settle();
+        giveUp();
       });
+    };
+    closing?.addEventListener('toggle', onToggle);
+    view.queueMicrotask(() => {
+      if (!tryShow()) {
+        waitFrame();
+      }
     });
   }
   return copy;

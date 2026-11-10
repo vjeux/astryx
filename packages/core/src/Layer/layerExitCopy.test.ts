@@ -5,8 +5,9 @@
  * @input vitest (jsdom), layerExitCopy
  * @output Checks the static copy a closing layer leaves for its close to
  *   play on. It is out of reach and out of the accessibility tree, with no
- *   ids or form names. It is only in the top layer: hidden until a refused
- *   show succeeds, and none without the popover API or past the copy cap. It
+ *   ids or form names. It is only in the top layer. It stays hidden until a
+ *   refused show succeeds, at the closing popover's toggle or within three
+ *   frames. There is none without the popover API or past the copy cap. It
  *   sits on the layer's layout box with fractions, and with the transform and
  *   opacity it was drawn with. No keyframes or transitions replay, there is
  *   one copy per layer, and it is scrolled where the layer was.
@@ -391,7 +392,7 @@ describe('placeLayerExitCopy', () => {
     expect(copy!.isConnected).toBe(true);
   });
 
-  it('tries again in the next frame, and takes the copy away if the browser still refuses', async () => {
+  it('tries again for three frames, and takes the copy away if the browser still refuses', async () => {
     const show = popoverApi(true)!;
     show.mockImplementation(() => {
       throw new DOMException('refused', 'InvalidStateError');
@@ -404,10 +405,66 @@ describe('placeLayerExitCopy', () => {
     const element = layer();
     const copy = place(element);
     await Promise.resolve();
-    expect(frames).toHaveLength(1);
-    frames[0](0);
-    expect(show).toHaveBeenCalledTimes(3);
+    for (let index = 0; index < 2; index++) {
+      frames[index](0);
+      expect(copy.isConnected).toBe(true);
+    }
+    frames[2](0);
+    expect(show).toHaveBeenCalledTimes(5);
     expect(copy.isConnected).toBe(false);
+    expect(frames).toHaveLength(3);
+  });
+
+  it("shows at the closing popover's toggle when the browser refuses through the first frame", async () => {
+    const show = popoverApi(true)!;
+    // A light dismiss hides inside the pointer's task. The try in its toggle
+    // and the microtask after it fall inside it; here the first frame does too.
+    let refusals = 3;
+    show.mockImplementation(() => {
+      if (refusals > 0) {
+        refusals -= 1;
+        throw new DOMException('refused', 'InvalidStateError');
+      }
+    });
+    const frames: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      frames.push(callback);
+      return frames.length;
+    });
+    const element = layer();
+    const copy = place(element);
+    await Promise.resolve();
+    frames[0](0);
+    expect(copy.isConnected).toBe(true);
+    element.dispatchEvent(new Event('toggle'));
+    expect(show).toHaveBeenCalledTimes(4);
+    expect(copy.isConnected).toBe(true);
+    // Shown: the frame already asked for tries nothing more.
+    frames[1]?.(0);
+    expect(show).toHaveBeenCalledTimes(4);
+  });
+
+  it('shows in a later frame when the browser refuses through the first two', async () => {
+    const show = popoverApi(true)!;
+    let refusals = 4;
+    show.mockImplementation(() => {
+      if (refusals > 0) {
+        refusals -= 1;
+        throw new DOMException('refused', 'InvalidStateError');
+      }
+    });
+    const frames: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      frames.push(callback);
+      return frames.length;
+    });
+    const copy = place(layer());
+    await Promise.resolve();
+    frames[0](0);
+    frames[1](0);
+    frames[2](0);
+    expect(show).toHaveBeenCalledTimes(5);
+    expect(copy.isConnected).toBe(true);
   });
 
   it('does not reach for the top layer for a copy already taken away', async () => {

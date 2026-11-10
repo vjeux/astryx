@@ -339,9 +339,10 @@ as a manual popover, so a clipping, transformed, or sticky ancestor neither cuts
 nor moves it; a fixed box or a larger `z-index` is no substitute
 (`spec:AST-027` FR8). Where the browser refuses that show during the closing
 popover's own toggle, the copy waits, hidden, and enters the top layer once the
-toggle is over: after the script that closed the layer, or in the next frame
-before it paints. Where there is no top layer (no popover API), or the browser
-still refuses, there is no copy and the close is immediate. The presentation
+toggle is over: after the script that closed the layer, at the closing
+popover's `toggle` event, or in one of the next three frames before they
+paint. Where there is no top layer (no popover API), or the browser still
+refuses after those frames, there is no copy and the close is immediate. The presentation
 that placed the copy plays its exit on it (`spec:AST-094` FR7) and removes it
 when its close settles.
 
