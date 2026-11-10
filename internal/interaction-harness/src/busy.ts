@@ -1564,11 +1564,6 @@ async function blockFromThaw(
                 : {
                     animation: {
                       ...animation,
-                      ...w.__harnessCaught.replayOf(
-                        caught,
-                        blockFrom - look,
-                        Math.min(blockTo, animation.to) + look,
-                      ),
                     },
                   }),
             });
