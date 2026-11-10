@@ -790,6 +790,19 @@ test('the guide lines beside a group show and hide with it: none runs past the l
     ['expands', expand],
     ['collapses', collapse],
   ] as const) {
+    // NOT FOR LANDING: every frame inside the travel reads late, its reads
+    // spanning 20 ms in the record.
+    for (const frame of phase) {
+      const from = phase[0].belowTop;
+      const to = phase[phase.length - 1].belowTop;
+      const margin = Math.abs(to - from) / 10;
+      if (
+        frame.belowTop > Math.min(from, to) + margin &&
+        frame.belowTop < Math.max(from, to) - margin
+      ) {
+        (frame as {t: number}).t = frame.callbackAt + 20;
+      }
+    }
     const late = lateReads(phase, browserName);
     const moving = insideTravel(
       phase[0].belowTop,
