@@ -53,7 +53,9 @@
  * the scroller is at rest, so a caller can refuse to reposition one that is
  * still moving.
  *
- * A person's input on the scroller ends the caller's steer (useScrollSteer).
+ * A person's touch, wheel, pointer or scrolling key on the scroller ends the
+ * caller's steer (useScrollSteer). A key that scrolls nothing, as Tab, does
+ * not.
  *
  * SYNC: When modified, update DateInputTouch.test.tsx.
  */
@@ -69,10 +71,27 @@ import {useEffect, useMemo, useRef} from 'react';
 export const SCROLL_QUIET_MS = 220;
 
 /**
+ * The keys that can scroll a focused scroller by themselves. Another key, as
+ * Tab, moves focus or acts, and leaves the caller's steer running.
+ */
+const SCROLL_KEYS: ReadonlySet<string> = new Set([
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'PageUp',
+  'PageDown',
+  'Home',
+  'End',
+  ' ',
+]);
+
+/**
  * The caller's own scroll toward a row it names (a `scrollTo` it makes), so
  * its settle can finish that scroll rather than round it back. The steer ends
- * when the scroll arrives, by the caller's measure, when a person's input
- * reaches the scroller, or when the settle detaches ({@link useScrollSettle}).
+ * when the scroll arrives, by the caller's measure. It also ends when a
+ * person's input that can scroll reaches the scroller, or when the settle
+ * detaches ({@link useScrollSettle}).
  */
 export interface ScrollSteer {
   /** Records the row the caller's own scroll heads for. */
@@ -216,6 +235,12 @@ export function useScrollSettle(
       steer?.end();
     };
 
+    const endSteerOnScrollKey = (event: KeyboardEvent) => {
+      if (SCROLL_KEYS.has(event.key)) {
+        steer?.end();
+      }
+    };
+
     const onPointerEnd = () => {
       // The drag's release: its glide to the nearest row re-arms this on its
       // own, and the timer covers a release already on a row, which scrolls
@@ -236,7 +261,7 @@ export function useScrollSettle(
     element.addEventListener('touchstart', endSteer, {passive: true});
     element.addEventListener('wheel', endSteer, {passive: true});
     element.addEventListener('pointerdown', endSteer, {passive: true});
-    element.addEventListener('keydown', endSteer, {passive: true});
+    element.addEventListener('keydown', endSteerOnScrollKey, {passive: true});
 
     return () => {
       clearTimeout(timer);
@@ -253,7 +278,7 @@ export function useScrollSettle(
       element.removeEventListener('touchstart', endSteer);
       element.removeEventListener('wheel', endSteer);
       element.removeEventListener('pointerdown', endSteer);
-      element.removeEventListener('keydown', endSteer);
+      element.removeEventListener('keydown', endSteerOnScrollKey);
     };
   }, [ref, isEnabled, isHeldRef, steer]);
 

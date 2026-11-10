@@ -214,6 +214,44 @@ describe('MonthScroller settle', () => {
     ).toEqual([10 * PANE]);
   });
 
+  it('keeps a steer through a key that scrolls nothing, as Tab: the settle still finishes it', () => {
+    const {handleRef, scroller} = renderScroller();
+    act(() => handleRef.current?.scrollToMonth(10));
+    act(() => scrollBy(scroller, 9 * PANE + 0.3 * PANE));
+    act(() => {
+      scroller.dispatchEvent(
+        new KeyboardEvent('keydown', {key: 'Tab', bubbles: true}),
+      );
+    });
+    scrollTo.mockClear();
+    act(() => {
+      vi.advanceTimersByTime(SCROLL_QUIET_MS + 50);
+    });
+    // On to the steered month 10, not the nearest pane (9).
+    expect(
+      scrollTo.mock.calls.map(([options]) => (options as ScrollToOptions).left),
+    ).toEqual([10 * PANE]);
+  });
+
+  it('ends a steer on a key that scrolls the scroller, so the settle rounds to the nearest month', () => {
+    const {handleRef, scroller} = renderScroller();
+    act(() => handleRef.current?.scrollToMonth(10));
+    act(() => scrollBy(scroller, 9 * PANE + 0.3 * PANE));
+    act(() => {
+      scroller.dispatchEvent(
+        new KeyboardEvent('keydown', {key: 'ArrowLeft', bubbles: true}),
+      );
+    });
+    scrollTo.mockClear();
+    act(() => scrollBy(scroller, 9 * PANE + 0.2 * PANE));
+    act(() => {
+      vi.advanceTimersByTime(SCROLL_QUIET_MS + 50);
+    });
+    expect(
+      scrollTo.mock.calls.map(([options]) => (options as ScrollToOptions).left),
+    ).toEqual([9 * PANE]);
+  });
+
   it('ends a steer on a person’s input, so the settle rounds their scroll to the nearest month', () => {
     const {handleRef, scroller} = renderScroller();
     act(() => handleRef.current?.scrollToMonth(10));
