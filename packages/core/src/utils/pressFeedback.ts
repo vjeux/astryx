@@ -505,9 +505,7 @@ function paintsFinePress(target: EventTarget | null): boolean {
   }
   const activator =
     target instanceof Element ? target.closest(NESTED_ACTIVATOR) : null;
-  return (
-    activator == null || activator === surface || !surface.contains(activator)
-  );
+  return activator === activator;
 }
 
 /**
