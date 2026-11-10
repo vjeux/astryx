@@ -65,6 +65,11 @@ import {
 } from 'react';
 
 import {VelocityTracker} from '../gestures/VelocityTracker';
+import {reducedMotionFade} from '../motion/reducedMotion';
+import {
+  playReducedMotionCrossFade,
+  type ReducedMotionCrossFade,
+} from '../motion/reducedMotionCrossFade';
 import {resolveSnapPoint} from '../motion/resolveSnapPoint';
 import {rubberBand} from '../motion/rubberBand';
 import {scroll} from '../motion/uikit/scroll';
@@ -814,6 +819,31 @@ export function useSheetGestures({
       previousHeight === renderedHeight ? previousHeight : renderedHeight,
     );
   }, []);
+  // Under Reduce Motion a release that settles on a detent cross-fades the
+  // sheet there. `isSettlingReleaseRef` marks that the release settled.
+  const settleCrossFadeRef = useRef<ReducedMotionCrossFade | null>(null);
+  const isSettlingReleaseRef = useRef(false);
+  /**
+   * Cross-fades a release's settle under Reduce Motion: a copy of the sheet
+   * fades out where the finger left it, as the sheet fades in at its detent.
+   * The release's state commits before the next frame, while the sheet is
+   * still transparent, so the change itself is never drawn.
+   */
+  const crossFadeSettle = useCallback((touchRelease: boolean) => {
+    const element = sheetElRef.current;
+    const fade =
+      element == null ? null : reducedMotionFade(element, {touchRelease});
+    if (element == null || fade == null || fade.duration <= 0) {
+      return;
+    }
+    settleCrossFadeRef.current?.cancel();
+    settleCrossFadeRef.current = playReducedMotionCrossFade(
+      element,
+      fade,
+      () => {},
+    );
+  }, []);
+  useEffect(() => () => settleCrossFadeRef.current?.cancel(), []);
   const sheetRef = useCallback(
     (node: HTMLElement | null) => {
       observerRef.current?.disconnect();
@@ -1165,6 +1195,7 @@ export function useSheetGestures({
           ? offset + velocity * PROJECTION_FACTOR
           : offset;
       const settleAt = (target: number) => {
+        isSettlingReleaseRef.current = true;
         // A peek keeps the full layout height and slides below the viewport;
         // every taller detent resizes the scrolling area to what it shows.
         const targetLayoutOffset = target === peekOffset ? 0 : target;
@@ -1277,6 +1308,9 @@ export function useSheetGestures({
 
   const beginDrag = useCallback(
     (event: ReactPointerEvent, sheetHeight: number, startCoord?: number) => {
+      // A new drag ends a release's cross-fade, with the sheet at its detent.
+      settleCrossFadeRef.current?.cancel();
+      settleCrossFadeRef.current = null;
       const target = event.currentTarget as HTMLElement;
       const syntheticTouch = isSyntheticTouch(event);
       // Never capture for a touch drag. The id came from `Touch.identifier`,
@@ -1491,6 +1525,7 @@ export function useSheetGestures({
       }
       setIsDragging(false);
       setIsTraveling(false);
+      isSettlingReleaseRef.current = false;
       settleFromDrag(
         offset,
         velocity,
@@ -1504,8 +1539,11 @@ export function useSheetGestures({
         state.naturalEndGap,
         state.pointerType === 'touch',
       );
+      if (isSettlingReleaseRef.current) {
+        crossFadeSettle(state.pointerType === 'touch');
+      }
     },
-    [settleFromDrag],
+    [crossFadeSettle, settleFromDrag],
   );
 
   // Pointer path for the body at-top pull-down (desktop / mouse). Touch uses
