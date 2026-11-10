@@ -64,7 +64,7 @@ function newVerdict(c: Cast): {verdict: string; detail: string} {
   if (c.release != null) {
     const read = head.wheelReleaseRead(c.steps, c.sentAt, stamps, c.got.deltas, c.release, c.everyMs);
     if (read != null && head.wheelReleaseStrays(read)) {
-      const hold = head.wheelReleaseHold(c.engine, read, c.steps, c.sentAt, stamps, c.got);
+      const hold = head.wheelReleaseHold(c.engine, c.release, c.steps, c.sentAt, stamps, c.got, c.everyMs);
       if (hold != null) {
         return {verdict: hold.frameGapMs != null ? 'WheelPageStallError(release, frame)' : 'WheelPageStallError(release, listeners)', detail: JSON.stringify(hold)};
       }

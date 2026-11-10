@@ -4,6 +4,8 @@ Each recorded burst (its sends, stamps, arrivals, handling, frames and deltas) i
 
 97 casts, 7 verdicts move. None moves in CI's profile or in the harness self-tests, in either engine.
 
+A page hold inside the steps a release reads names the page only when the release, read again without that hold's excess, stops straying. One recorded run had a page hold before a merge the read names; the merge strays without the hold, so that run stays the runner's.
+
 The glide proof's own assertions were judged twice too, on the 23 recorded page logs. One moves: main reads wheels by index and fails a run whose two steps WebKit merged (10 wheels where it counts 12). This head maps each sent step to the wheel that carried it. The release check names that run as a merge in the steps the release reads.
 
 ## Verdicts that move
@@ -15,7 +17,7 @@ The glide proof's own assertions were judged twice too, on the 23 recorded page 
 | webkit-pressure-trackpad-proofs-x16 | keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch | ok | WheelPacingError(release) | release: merge 1-2 inside 2-7 |
 | webkit-pressure-trackpad-proofs-x16 | absorbs what the undecided stretch showed when the fingers carry on: never a step back, an | ok | WheelPacingError(release) | release: merge 3-4 inside 2-5 |
 | webkit-pressure-trackpad-proofs-x16 | keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch | ok | WheelPacingError(release) | release: merge 3-5 inside 2-7 |
-| webkit-pressure-trackpad-proofs-x16 | keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch | ok | WheelPageStallError(release, listeners) | release: {"gapMs":69,"handlingMs":30} (the page held a step the release reads) |
+| webkit-pressure-trackpad-proofs-x16 | keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch | ok | WheelPacingError(release) | release: merge 3-4 inside 2-7 |
 | webkit-pressure-trackpad-proofs-x16 | keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch | ok | WheelPacingError(release) | release: merge 6-8 inside 2-7 |
 
 ## Casts per test

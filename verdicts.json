@@ -62,10 +62,10 @@
    "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
    "repeat": 12,
    "old": "ok",
-   "new": "WheelPageStallError(release, listeners)",
-   "reason": "release: {\"gapMs\":69,\"handlingMs\":30} (the page held a step the release reads)",
+   "new": "WheelPacingError(release)",
+   "reason": "release: merge 3-4 inside 2-7",
    "oldDetail": "",
-   "newDetail": "{\"gapMs\":69,\"handlingMs\":30}"
+   "newDetail": "merge 3-4 inside 2-7"
   },
   {
    "file": "p-tp.log",
@@ -414,7 +414,7 @@
    "title": "where the primary pointer is fine > keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)",
    "repeat": 12,
    "old": "ok",
-   "new": "WheelPageStallError(release, listeners)"
+   "new": "WheelPacingError(release)"
   },
   {
    "file": "p-tp.log",
