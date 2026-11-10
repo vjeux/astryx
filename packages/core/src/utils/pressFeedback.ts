@@ -616,7 +616,7 @@ function onPointerDown(event: PointerEvent): void {
     if (
       stylesheetDroppedActive()
         ? event.button === 0
-        : isPrimaryClick(event) && paintsFinePress(event.target)
+        : false
     ) {
       pressButton(event.target, event.pointerId);
     }
