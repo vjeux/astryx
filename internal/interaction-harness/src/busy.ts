@@ -771,7 +771,12 @@ export interface BlockedWindow extends BusyWindow {
  * reads it). A block in that tail would judge an animation that has stopped.
  * When the only animation running there started while the page waited, or
  * the wait times out with only such animations, the page looked too late:
- * that rejects with `BusyWindowTooLateError`, with the numbers.
+ * that rejects with `BusyWindowTooLateError`, with the numbers. A run that
+ * came short of `minProgressMs` by the deadline rejects with
+ * `FrameStarvationError` when no frame came for longer than
+ * `FRAME_STARVATION_MS` during the wait. Otherwise it rejects with
+ * `BusyRunShortError`. With no run at all, it rejects with "no animation
+ * started".
  *
  * The window it resolves with names the animation it caught (`animation`):
  * when it started and where its curve ends. `holds` says whether the element
@@ -801,6 +806,31 @@ export class BusyWindowTooLateError extends Error {
   ) {
     super(message);
     this.name = 'BusyWindowTooLateError';
+  }
+}
+
+/**
+ * A run of `blockMainThread`'s `during` came short of `minProgressMs` by the
+ * deadline while frames kept coming. The run is paused or slow, or the page
+ * started it late. A page starved of frames throws `FrameStarvationError`
+ * instead. Always a red, with the numbers; never a pass.
+ */
+export class BusyRunShortError extends Error {
+  constructor(
+    message: string,
+    /** The run's numbers, ms where timed. */
+    readonly numbers: Readonly<{
+      progressMs: number;
+      minProgressMs: number;
+      firstSeenMs: number;
+      waitedMs: number;
+      playState: string;
+      playbackRate: number;
+      longestGapMs: number;
+    }>,
+  ) {
+    super(message);
+    this.name = 'BusyRunShortError';
   }
 }
 
@@ -937,7 +967,10 @@ export async function blockMainThread(
     process.platform === 'linux'
   );
   const waited = during.evaluate(
-    (element, {duration, minProgress, prop, pseudo, wait, fillHolds, look}) =>
+    (
+      element,
+      {duration, minProgress, prop, pseudo, wait, fillHolds, look, starvedMs},
+    ) =>
       new Promise<BlockedWindow>((resolve, reject) => {
         // The harness's own waits run on the real timers: a frozen timer gate
         // (story.ts) holds only the page's.
@@ -954,6 +987,19 @@ export async function blockMainThread(
         const later = gate?.timeout ?? window.setTimeout.bind(window);
         const realNow = gate?.now ?? (() => performance.now());
         const deadline = realNow() + wait;
+        // The wait's own frames, for its verdict at the deadline: the longest
+        // gap between them, and when the page first saw each run of `during`.
+        const waitFrom = realNow();
+        let lastLook = waitFrom;
+        let looks = 0;
+        let longestGap = 0;
+        const firstSeen = new Map<Animation, number>();
+        let lastRun: {
+          progressMs: number;
+          firstSeenMs: number;
+          playState: string;
+          playbackRate: number;
+        } | null = null;
         // The busy-window control animates on its own, inside a dialog with
         // `within`: it never stands for the animation under test.
         const isControl = (a: Animation) => {
@@ -1281,7 +1327,29 @@ export async function blockMainThread(
         // The animations that counted at the frame before, pending ones too.
         let seen = new Set<Animation>();
         const tick = () => {
+          const lookAt = realNow();
+          longestGap = Math.max(longestGap, lookAt - lastLook);
+          lastLook = lookAt;
+          looks += 1;
           const present = element.getAnimations({subtree: true}).filter(counts);
+          for (const a of present) {
+            if (!firstSeen.has(a)) {
+              firstSeen.set(a, lookAt - waitFrom);
+            }
+          }
+          const furthest = present
+            .filter(a => a.playState !== 'idle')
+            .sort(
+              (a, b) => Number(b.currentTime ?? 0) - Number(a.currentTime ?? 0),
+            )[0];
+          if (furthest != null) {
+            lastRun = {
+              progressMs: Number(furthest.currentTime ?? 0),
+              firstSeenMs: firstSeen.get(furthest) ?? 0,
+              playState: furthest.playState,
+              playbackRate: furthest.playbackRate,
+            };
+          }
           const ran = present.filter(
             a =>
               a.playState === 'running' &&
@@ -1386,8 +1454,24 @@ export async function blockMainThread(
             reject(tooLate(numbersOf(late)));
           } else if (timedOut && leftover != null) {
             reject(tooLate(leftover));
-          } else if (timedOut) {
+          } else if (timedOut && lastRun == null) {
             reject(new Error('blockMainThread: no animation started'));
+          } else if (timedOut) {
+            // A run of `during` came short of `minProgress`. A frame gap past
+            // the starvation limit means the page drew too few frames.
+            // Otherwise the run itself is paused, slow, or started late.
+            const numbers = {
+              ...lastRun,
+              frames: looks,
+              longestGapMs: longestGap,
+              waitedMs: lookAt - waitFrom,
+              minProgressMs: minProgress,
+            };
+            reject(
+              new Error(
+                `${longestGap > starvedMs ? 'BusyWindowStarved' : 'BusyWindowShort'} ${JSON.stringify(numbers)}`,
+              ),
+            );
           } else {
             frame(tick);
           }
@@ -1402,15 +1486,50 @@ export async function blockMainThread(
       wait: timeout,
       fillHolds,
       look: BUSY_PROOF_LOOKAROUND_MS,
+      starvedMs: FRAME_STARVATION_MS,
     },
   );
   try {
     const [, held] = await Promise.all([defined, waited]);
     return held;
   } catch (error) {
-    const late = /BusyWindowTooLate (\{.*\})/.exec(
-      error instanceof Error ? error.message : String(error),
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    const short = /BusyWindow(Starved|Short) (\{.*\})/.exec(message);
+    if (short != null) {
+      const run = JSON.parse(short[2]) as {
+        progressMs: number;
+        firstSeenMs: number;
+        playState: string;
+        playbackRate: number;
+        frames: number;
+        longestGapMs: number;
+        waitedMs: number;
+        minProgressMs: number;
+      };
+      const reached = `reached ${run.progressMs.toFixed(0)} of its minProgressMs ${run.minProgressMs.toFixed(0)} ms by the deadline, first seen ${run.firstSeenMs.toFixed(0)} ms into the ${run.waitedMs.toFixed(0)} ms wait (${run.playState}, rate ${run.playbackRate})`;
+      if (short[1] === 'Starved') {
+        throw new FrameStarvationError({
+          by: 'blockMainThread',
+          frames: run.frames,
+          during: `it waited for a run of \`during\` to reach minProgressMs, and the run ${reached}`,
+          min: Math.ceil(run.minProgressMs / ONE_FRAME_MS),
+          longestGapMs: run.longestGapMs,
+        });
+      }
+      throw new BusyRunShortError(
+        `blockMainThread: the run of \`during\` ${reached}. Frames kept coming, so the page was not starved: the run is paused, slow, or started late.`,
+        {
+          progressMs: run.progressMs,
+          minProgressMs: run.minProgressMs,
+          firstSeenMs: run.firstSeenMs,
+          waitedMs: run.waitedMs,
+          playState: run.playState,
+          playbackRate: run.playbackRate,
+          longestGapMs: run.longestGapMs,
+        },
+      );
+    }
+    const late = /BusyWindowTooLate (\{.*\})/.exec(message);
     if (late == null) {
       throw error;
     }
