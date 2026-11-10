@@ -76,7 +76,6 @@ const NESTED_CONTROL_ACTIVE =
   '[role="link"]:not([aria-readonly="true"]):active,' +
   '[role="checkbox"]:not([aria-readonly="true"]):active,' +
   '[role="radio"]:not([aria-readonly="true"]):active,' +
-  '[role="switch"]:not([aria-readonly="true"]):active,' +
   '[role="tab"]:not([aria-readonly="true"]):active,' +
   '[role="menuitem"]:not([aria-readonly="true"]):active,' +
   '[role="option"]:not([aria-readonly="true"]):active,' +
