@@ -22,10 +22,13 @@
 // costs one attribute write and no React render.
 //
 // Where the primary pointer is fine, the controller ignores the mouse and the
-// keyboard, and CSS `:active` keeps their press. Under a coarse primary
-// pointer the CSS drops `:active`, so the controller paints every press. A
-// mouse, trackpad or Space press paints at once. The controller reads the
-// same query as the stylesheet, so they agree.
+// keyboard, and CSS `:active` keeps their press. A surface that declares the
+// fine-pointer press (pressFinePointer.stylex.ts) is the exception. There
+// the controller paints a mouse's press at once and fades it on release, as
+// it does a finger's. The surface's `:active` arm yields while it does.
+// Under a coarse primary pointer the CSS drops `:active`, so the controller
+// paints every press. A mouse, trackpad or Space press paints at once. The
+// controller reads the same query as the stylesheet, so they agree.
 //
 // A finger waits only inside a scroller. Outside one, a surface highlights in
 // the frame the finger lands, as a UIControl does. Inside one, it waits the
@@ -56,6 +59,7 @@ import {subscribeInput} from './inputStream';
 import {isInsideScrollView} from './scrollView';
 import {msSinceInput} from './inputAge';
 import {TOUCH_QUERY} from './touchPresentation';
+import {paintsFinePointerPress} from '../privateAttributes/pressFinePointer.stylex';
 import {holdsPressThroughDrag} from '../privateAttributes/pressHoldsDrag.stylex';
 import {isTrackedByGroup} from '../privateAttributes/pressGroupItem.stylex';
 
@@ -483,6 +487,30 @@ function stylesheetDroppedActive(): boolean {
 }
 
 /**
+ * A link or a button nested in a surface: its press is its own, so the
+ * surface does not paint it.
+ */
+const NESTED_ACTIVATOR = 'a[href],button,[role="button"],[role="link"]';
+
+/**
+ * Whether a mouse press on `target` is the controller's to paint where the
+ * primary pointer is fine. Its surface declares the fine-pointer press, and no
+ * link or button nested in that surface takes the press. That nested control
+ * keeps its own `:active`.
+ */
+function paintsFinePress(target: EventTarget | null): boolean {
+  const surface = surfaceAt(target);
+  if (surface == null || !paintsFinePointerPress(surface)) {
+    return false;
+  }
+  const activator =
+    target instanceof Element ? target.closest(NESTED_ACTIVATOR) : null;
+  return (
+    activator == null || activator === surface || !surface.contains(activator)
+  );
+}
+
+/**
  * The surface a mouse button's or the Space key's press paints, if any: the
  * innermost marked surface, outside a menu and off a tracked action. A key's
  * press paints only a focused element that is itself the surface, as
@@ -547,8 +575,12 @@ function onPointerDown(event: PointerEvent): void {
     // A mouse already has hover and keeps `:active` where the primary pointer
     // is fine; the touch treatment's CSS is inside `@media (pointer: coarse)`.
     // Not tracking it there keeps desktop identical and costs the mouse path
-    // nothing. Only the primary button: that is the press `:active` paints.
-    if (event.button === 0 && stylesheetDroppedActive()) {
+    // nothing, except on a surface that declares the fine-pointer press. Only
+    // the primary button: that is the press `:active` paints.
+    if (
+      event.button === 0 &&
+      (stylesheetDroppedActive() || paintsFinePress(event.target))
+    ) {
       pressButton(event.target, event.pointerId);
     }
     return;

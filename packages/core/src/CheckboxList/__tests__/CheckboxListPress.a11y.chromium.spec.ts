@@ -292,7 +292,7 @@ test.describe('CheckboxList row press', () => {
     expect(onBox.box).toEqual(onLabel.box);
   });
 
-  test('a mouse press runs no touch press, and the label and the box keep their own :active paint', async ({
+  test('a mouse press on the box paints through the press controller, and on the label the row keeps its :active paint', async ({
     browser,
   }) => {
     const reads = new Map<'label' | 'box', PressRead>();
@@ -334,11 +334,13 @@ test.describe('CheckboxList row press', () => {
     if (rest == null || onLabel == null || onBox == null) {
       throw new Error('the presses were not read');
     }
-    // The touch press never runs for a mouse.
+    // On the label the list row takes the press and keeps `:active`. On the
+    // box the press controller paints the box's own row (a div, not the
+    // list row's li) at once, as it does a finger's.
     expect(onLabel.surface).toBeNull();
-    expect(onBox.surface).toBeNull();
-    // Mouse hover and `:active`: on the label the row paints and the box
-    // stays blank; on the box the box paints too.
+    expect(onBox.surface).toBe('div');
+    // On the label the row paints and the box stays blank; on the box the
+    // box paints, and the row keeps its `:active` paint.
     expect(darker(onLabel.row, rest.row)).toBe(true);
     expect(onLabel.box).toEqual(rest.box);
     expect(darker(onBox.box, rest.box)).toBe(true);

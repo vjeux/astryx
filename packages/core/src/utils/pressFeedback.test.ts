@@ -43,6 +43,7 @@ import {
   PRESS_SLOP_PX,
 } from './pressGesture';
 import {pointerQuery} from '../gestures/__tests__/pointerQuery';
+import {pressFinePointerProps} from '../privateAttributes/pressFinePointer.stylex';
 
 let release: () => void = () => undefined;
 let scroller: HTMLElement;
@@ -268,6 +269,48 @@ describe('the press reaches the surface the finger landed on', () => {
     press(rows[0], 'pointerdown', 10, 10, 'mouse');
     vi.advanceTimersByTime(PRESS_ONSET_MS * 2);
     expect(pressedRow()).toBe(-1);
+  });
+
+  it('paints a mouse press at once on a surface that declares the fine-pointer press, and fades it on release', () => {
+    expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
+    for (const [name, value] of Object.entries(pressFinePointerProps(true))) {
+      rows[0].setAttribute(name, value);
+    }
+    // No delay, though the row sits in a scroller: a mouse press is not a
+    // scroll.
+    press(rows[0], 'pointerdown', 10, 10, 'mouse');
+    expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(rows[0], 'pointerup', 10, 10, 'mouse');
+    expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    // A surface that declares nothing keeps `:active`.
+    press(rows[1], 'pointerdown', 10, 10, 'mouse');
+    expect(rows[1].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+  });
+
+  it('leaves a right click, and a mouse press on a link nested in the surface, to CSS on a fine-pointer surface', () => {
+    for (const [name, value] of Object.entries(pressFinePointerProps(true))) {
+      rows[0].setAttribute(name, value);
+    }
+    const rightClick = new Event('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.assign(rightClick, {
+      button: 2,
+      clientX: 10,
+      clientY: 10,
+      pointerId: 1,
+      pointerType: 'mouse',
+    });
+    rows[0].dispatchEvent(rightClick);
+    expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    const link = document.createElement('a');
+    link.href = '#more';
+    const text = document.createElement('span');
+    link.appendChild(text);
+    rows[0].appendChild(link);
+    press(text, 'pointerdown', 10, 10, 'mouse');
+    expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
   });
 
   it('paints a Space press on a tracked action where the primary pointer is fine: a tracked action takes no `:active` paint', () => {
