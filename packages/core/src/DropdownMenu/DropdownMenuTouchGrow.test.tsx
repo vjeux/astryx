@@ -12,6 +12,7 @@
 
 import {act, fireEvent, render, screen} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {ButtonGroup} from '../ButtonGroup/ButtonGroup';
 import {__resetMenuPressForTest} from '../hooks/useMenuPress';
 import {scroll} from '../motion/uikit/scroll';
 import {DropdownMenu, type DropdownMenuOption} from './DropdownMenu';
@@ -160,6 +161,55 @@ describe('DropdownMenu touch grow', () => {
     });
     await settleLoad();
     expect(motion.exit).toHaveBeenCalledTimes(1);
+  });
+
+  it('the grow measures the box around the default trigger, which a press does not scale', async () => {
+    render(<DropdownMenu button={{label: 'Actions'}} items={ITEMS} />);
+    const trigger = screen.getByRole('button', {name: 'Actions'});
+    const box = trigger.parentElement as HTMLElement;
+    vi.spyOn(box, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(100, 200, 120, 40),
+    );
+    // The press scales the Button inside the box to 0.98.
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(101.2, 200.4, 117.6, 39.2),
+    );
+    fireEvent.pointerDown(trigger, touch);
+    await settleLoad();
+    expect(motion.enter).toHaveBeenCalledTimes(1);
+    const [measure] = motion.enter.mock.calls[0] as unknown as [
+      () => {source: unknown},
+    ];
+    expect(measure().source).toEqual({
+      left: 100,
+      top: 200,
+      width: 120,
+      height: 40,
+    });
+  });
+
+  it('the grow measures a ButtonGroup member itself, as the menu anchors to it', async () => {
+    render(
+      <ButtonGroup label="Draft">
+        <DropdownMenu button={{label: 'Actions'}} items={ITEMS} />
+      </ButtonGroup>,
+    );
+    const trigger = screen.getByRole('button', {name: 'Actions'});
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(10, 20, 90, 32),
+    );
+    fireEvent.pointerDown(trigger, touch);
+    await settleLoad();
+    expect(motion.enter).toHaveBeenCalledTimes(1);
+    const [measure] = motion.enter.mock.calls[0] as unknown as [
+      () => {source: unknown},
+    ];
+    expect(measure().source).toEqual({
+      left: 10,
+      top: 20,
+      width: 90,
+      height: 32,
+    });
   });
 
   it("a pen's press grows it", async () => {

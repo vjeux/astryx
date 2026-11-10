@@ -961,6 +961,8 @@ function DropdownMenuPopover({
   const triggerId = useId();
   const menuSize = button.size ?? 'md';
   const buttonRef = useRef<HTMLElement>(null);
+  // The box around the default trigger, while it renders one.
+  const anchorBoxRef = useRef<HTMLDivElement | null>(null);
 
   // The name a custom trigger gives the menu, read off it as the menu opens.
   const [triggerName, setTriggerName] = useState<string | undefined>(undefined);
@@ -1183,7 +1185,9 @@ function DropdownMenuPopover({
   presentSurfaceRef.current = () => {
     surfaceMotion.present(
       popover.contentRef.current,
-      buttonRef.current,
+      // The grow starts from the element that holds the menu's anchor. A
+      // press scales the Button inside the box, never the box.
+      anchorBoxRef.current ?? buttonRef.current,
       pressTouchModel === 'uikit' && isTouchOpenRef.current,
       () => holdEntranceRef.current(),
     );
@@ -1760,6 +1764,13 @@ function DropdownMenuPopover({
     },
     [popoverTriggerRef, modalityRef],
   );
+  const anchorBoxElementRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      anchorBoxRef.current = el;
+      popoverTriggerRef(el);
+    },
+    [popoverTriggerRef],
+  );
   const consumerButtonRef = button.ref;
   // A ButtonGroup's corner rules read each Button's place among the group's
   // children. So a member Button gets no box, and it is the anchor itself.
@@ -1855,7 +1866,7 @@ function DropdownMenuPopover({
         triggerButton
       ) : (
         <div
-          ref={popoverTriggerRef}
+          ref={anchorBoxElementRef}
           {...stylex.props(
             styles.anchorBox,
             button.isIconOnly === true && styles.anchorBoxIconOnly,
