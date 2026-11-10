@@ -276,10 +276,10 @@ anchor is positioning infrastructure rather than consumer anatomy.
   owns its invocation, open state, and outside-press listener itself, against
   `spec:AST-107` FR8.
 - **Touch grow (FR5).** A touch-opened menu fades in beside the lifted trigger
-  instead of growing from the finger, and it closes on the layer's own exit; a
-  pen press outside closes it at the press. Both are against `spec:AST-094`
-  FR31 and FR32. A menu opened by mouse or keyboard already keeps its released
-  appearance and motion.
+  instead of growing from the finger, and it closes at once instead of
+  shrinking back into it; a pen press outside closes it at the press. Both are
+  against `spec:AST-094` FR31 and FR32. A menu opened by mouse or
+  keyboard already keeps its released appearance and motion.
 - **Touch-open focus indicator.** A touch open focuses the menu itself, and
   the menu draws no focus outline in any color mode, forced colors included.
   `architecture:interaction-modality` INV1 hides the focus indicator after
