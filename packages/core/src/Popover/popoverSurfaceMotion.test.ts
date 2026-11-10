@@ -127,6 +127,22 @@ describe('popoverCollapsedState', () => {
     expect([left.originX, left.originY, left.axis]).toEqual([180, 70, 'x']);
   });
 
+  it('grows a popover that overlaps its source by a few pixels from that side, as the mouse entrance does', () => {
+    const state = popoverCollapsedState({
+      surface: {left: 396, top: 400, width: 160, height: 200},
+      source: {left: 300, top: 400, width: 100, height: 32},
+    });
+    expect([state.originX, state.originY, state.axis]).toEqual([0, 16, 'x']);
+  });
+
+  it('grows a popover over its source\u2019s centre from that centre, as the mouse entrance scales about it', () => {
+    const state = popoverCollapsedState({
+      surface: {left: 275, top: 386, width: 250, height: 168},
+      source: {left: 300, top: 400, width: 100, height: 32},
+    });
+    expect([state.originX, state.originY, state.axis]).toEqual([75, 30, 'y']);
+  });
+
   it('keeps the point on the popover when its source is wider than it, and never grows a short popover', () => {
     const state = popoverCollapsedState({
       surface: {left: 300, top: 60, width: 90, height: 80},
