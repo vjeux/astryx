@@ -285,10 +285,14 @@ export function useTableSortableState<
 
   // Stable ref for comparators to avoid re-sorting on inline object identity changes
   const comparatorsRef = useRef(comparators);
+  // Written during render on purpose, an accepted exception to the ref rule:
+  // an inline comparators object does not re-sort the data.
   comparatorsRef.current = comparators;
 
   // Stable ref for onSortChange to avoid recreating sortConfig on inline callback identity changes
   const onSortChangeRef = useRef(onSortChange);
+  // Written during render on purpose, an accepted exception to the ref rule:
+  // an inline callback keeps the sort config stable.
   onSortChangeRef.current = onSortChange;
 
   // Sorted data — memoized on sort state + data identity

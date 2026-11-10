@@ -17,6 +17,7 @@ verified_by:
   ]
 deciding_specs:
   [
+    component:Table/DEC-6,
     spec:AST-086/DEC-2,
     spec:AST-099/DEC-1,
     spec:AST-099/DEC-5,
@@ -130,7 +131,11 @@ those contracts.
   work.
 - **INV4 — Mutable refs do not become hidden rendered state.** Refs MAY hold general
   non-rendering mutable data. A ref mutation MUST NOT be the sole source for a value
-  later read to produce React-rendered output. A callback ref MAY synchronously
+  later read to produce React-rendered output.
+  The owner's decision of 2026-11-09 (`component:Table/DEC-6`) makes an
+  exception for Table's plugin hooks: they MAY keep their latest config in refs
+  written during render, so a config change re-renders only the rows it changes.
+  A callback ref MAY synchronously
   update an owned DOM node when that DOM update is itself the observable operation
   and attach, detach, replacement, and consumer override behavior preserve the
   current contract. Ref-backed coordination MUST preserve the current component,
@@ -507,6 +512,8 @@ contracts.
 
 ## Deciding specs
 
+- `component:Table/DEC-6` — Table's plugin hooks may keep their latest config
+  in refs written during render (INV4).
 - `spec:AST-086/DEC-2` — own-content announcements behave the same in every
   component that announces its own rendered content (INV10).
 - `spec:AST-099/DEC-1` — one keyboard height for every component, kept
