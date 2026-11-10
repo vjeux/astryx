@@ -579,7 +579,7 @@ function onPointerDown(event: PointerEvent): void {
     // the primary button: that is the press `:active` paints.
     if (
       event.button === 0 &&
-      (stylesheetDroppedActive() || paintsFinePress(event.target))
+      stylesheetDroppedActive()
     ) {
       pressButton(event.target, event.pointerId);
     }
