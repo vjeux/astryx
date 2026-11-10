@@ -47,6 +47,8 @@ import {
   startScreencast,
   toTouchEvents,
   touchDriver,
+  trackControl,
+  trackMarker,
   trackMarkers,
   withStorybook,
   writeEvidence,
@@ -774,6 +776,14 @@ async function busyProof(
   const [tracked, control] = await trackMarkers(page, frames, {
     colors: [MARKER_RGB, controlColor()],
   });
+  // NOT FOR LANDING: the same tracks as one decode per colour.
+  expect([tracked, control]).toEqual([
+    await trackMarker(page, [...frames]),
+    await trackControl(page, [...frames]),
+  ]);
+  console.log(
+    `IDENTITY reorder ${evidence} frames=${frames.length} found=${tracked.filter(f => f.box != null).length}/${control.filter(f => f.box != null).length}`,
+  );
   const presented = control.filter((frame, i) => {
     const before = control[i - 1]?.box;
     return frame.box != null && before != null && frame.box.x !== before.x;
