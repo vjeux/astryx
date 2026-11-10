@@ -694,6 +694,7 @@ async function untilRunReceived(
       throw new WheelPacingError(maxGapMs, receivedGapsMs);
     }
   }
+  (globalThis as unknown as {__probeSent?: unknown}).__probeSent = {sentAt, stamps: got.stamps, receivedAt: got.receivedAt, deltas: got.deltas};
   return {receivedSteps: got.stamps.length, receivedGapsMs};
 }
 

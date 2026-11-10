@@ -26,7 +26,11 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {build} from 'esbuild';
-import {webInputDriver, WHEEL_SKIP} from '@astryxdesign/interaction-harness';
+import {
+  webInputDriver,
+  WHEEL_SCROLL_END_MS,
+  WHEEL_SKIP,
+} from '@astryxdesign/interaction-harness';
 
 /**
  * Chromium's driver sends each wheel as one notch, `wheelDeltaY` -120
@@ -2144,17 +2148,27 @@ test.describe('where the primary pointer is fine', () => {
     const driver = await webInputDriver(page);
     test.skip(!driver.wheels, WHEEL_SKIP);
     const card = await center(page, 'card');
-    // Six 16 px steps at a still cursor: the card leaves it after two.
-    for (let step = 0; step < 6; step += 1) {
-      await driver.wheel({...card, dx: 16});
-    }
+    // Six 16 px steps at a still cursor, a frame apart, as one trackpad
+    // scroll: the card leaves the cursor after two. Awaited steps land a round
+    // trip apart, which a loaded runner stretches past the scroll's end. The
+    // burst keeps them a frame apart and fails a split by name.
+    const {receivedSteps} = await driver.wheelBurst({
+      ...card,
+      steps: Array.from({length: 6}, () => ({dx: 16})),
+      maxGapMs: WHEEL_SCROLL_END_MS.horizontal,
+    });
     await page.waitForTimeout(250);
     const pan = await page.evaluate(() =>
       window.__wheelLog.filter(entry => entry.startsWith('pan:')),
     );
     const moved = pan.filter(entry => entry.startsWith('pan:changed:'));
     // Every step after the first moved the card, and none scrolled the page.
-    expect(moved).toHaveLength(5);
+    // WebKit merges the steps it holds while the page is busy, as it does a
+    // trackpad's. So the count is of the steps the page received. The card
+    // took all 96 px past the 10 px hysteresis.
+    expect(moved).toHaveLength(receivedSteps - 1);
+    const shown = pan.filter(entry => /^pan:(began|changed):/.test(entry));
+    expect(shown.at(-1)?.split(':')[2]).toBe('-86');
     expect(pan.slice(-2).map(entry => entry.split(':')[1])).toEqual([
       'ended',
       'possible',
@@ -2193,34 +2207,60 @@ test.describe('where the primary pointer is fine', () => {
   }
 
   /**
-   * The page's log after `deltas`, one wheel each, and a quiet 300 ms, with
-   * each wheel's time as the page received it.
+   * The page's log after `deltas`, a wheel a frame as one trackpad scroll,
+   * and a quiet 300 ms. `wheels` holds each wheel the page received: when it
+   * arrived and its deltaX. WebKit merges the wheels it holds while the page
+   * is busy, as it does a trackpad's, and stamps a merged one like the wheel
+   * before it, so the arrival is read as the page received it.
    */
   async function trackpadRun(page: Page, deltas: number[]) {
     const driver = await webInputDriver(page);
     test.skip(!driver.wheels, WHEEL_SKIP);
     const at = await center(page, 'card');
     await page.evaluate(() => {
-      const times: number[] = [];
-      (window as unknown as {__wheelTimes: number[]}).__wheelTimes = times;
-      window.addEventListener('wheel', event => times.push(event.timeStamp), {
-        capture: true,
-        passive: true,
-      });
+      const wheels: [number, number][] = [];
+      (window as unknown as {__wheels: [number, number][]}).__wheels = wheels;
+      window.addEventListener(
+        'wheel',
+        event => wheels.push([performance.now(), event.deltaX]),
+        {capture: true, passive: true},
+      );
     });
-    for (const dx of deltas) {
-      await driver.wheel({...at, dx});
-    }
+    // Awaited wheels land a round trip apart, which a loaded runner stretches
+    // past the scroll's end. The burst keeps them a frame apart and fails a
+    // split by name.
+    await driver.wheelBurst({
+      ...at,
+      steps: deltas.map(dx => ({dx})),
+      maxGapMs: WHEEL_SCROLL_END_MS.horizontal,
+    });
     await page.waitForTimeout(300);
     const entries = await page.evaluate(() => window.__wheelLog);
-    const times = await page.evaluate(
-      () => (window as unknown as {__wheelTimes: number[]}).__wheelTimes,
+    const wheels = await page.evaluate(
+      () => (window as unknown as {__wheels: [number, number][]}).__wheels,
     );
     const log = entries.filter(entry => entry.startsWith('pan:'));
     const moves = log
       .filter(entry => /^pan:(changed|ended):/.test(entry))
       .map(entry => Number(entry.split(':')[2]));
-    return {entries, log, moves, times};
+    return {entries, log, moves, wheels};
+  }
+
+  /**
+   * The index of the received wheel that carried sent wheel `k`: the first
+   * whose running deltaX reaches the sent wheels' sum through `k`.
+   */
+  function carrierOf(
+    wheels: ReadonlyArray<readonly [number, number]>,
+    deltas: ReadonlyArray<number>,
+    k: number,
+  ): number {
+    const sent = deltas.slice(0, k + 1).reduce((sum, dx) => sum + dx, 0);
+    let received = 0;
+    return wheels.findIndex(([, dx]) => {
+      received += dx;
+      return received >= sent - 0.01;
+    });
   }
 
   test("keeps a trackpad pan moving at the fingers' speed through the splitter's undecided stretch and lets it go at the lift still moving: no stall (spec:AST-094 FR43)", async ({
@@ -2232,17 +2272,18 @@ test.describe('where the primary pointer is fine', () => {
     // Four steady wheels, four shrinking ones (the lift is read at the
     // fourth, wheel 7), then momentum.
     const lift = 7;
-    const {entries, times} = await trackpadRun(
-      page,
-      [12, 12, 12, 12, 11, 10, 9, 8, 7, 6, 5, 4],
-    );
+    const deltas = [12, 12, 12, 12, 11, 10, 9, 8, 7, 6, 5, 4];
+    const {entries, wheels} = await trackpadRun(page, deltas);
+    const times = wheels.map(([time]) => time);
+    // The received wheels that carried wheel 7 and wheel 3: the same one
+    // when WebKit merged the stretch between them.
+    const liftAt = carrierOf(wheels, deltas, lift);
+    const fromAt = carrierOf(wheels, deltas, lift - 4);
     // A loaded page can deliver the momentum after a pause of 50 ms or more,
     // and the proof then judges the wheels before it. Each wheel logs itself
-    // after the host handled it. WebKit's injected wheels carry only real
-    // dispatch time, so a harness that cannot keep pace can still stall the
-    // finger phase and fail this proof.
+    // after the host handled it.
     const pause = times.findIndex(
-      (time, i) => i > lift && time - times[i - 1] >= 50,
+      (time, i) => i > liftAt && time - times[i - 1] >= 50,
     );
     const wheelAt = entries.flatMap((entry, i) =>
       entry.startsWith('wheel:') ? [i] : [],
@@ -2254,7 +2295,11 @@ test.describe('where the primary pointer is fine', () => {
       .filter(entry => /^pan:(changed|ended):/.test(entry))
       .map(entry => Number(entry.split(':')[2]));
     const ended = log.filter(entry => entry.startsWith('pan:ended:'));
-    expect(ended).toHaveLength(1);
+    const sent = (globalThis as unknown as {__probeSent: {sentAt: number[]; stamps: number[]; receivedAt: number[]; deltas: [number, number][]}}).__probeSent;
+    const gaps = (xs: number[]) => xs.slice(1).map((x, i) => Math.round(x - xs[i])).join(',');
+    const probe = `PROBE sent ${gaps(sent.sentAt)} | stamp ${gaps(sent.stamps)} | arrive ${gaps(sent.receivedAt)} | dx ${sent.deltas.map(([x]) => x).join(',')} | ${log.join(' ')}`;
+    console.log(probe);
+    expect(ended, probe).toHaveLength(1);
     // The fingers' travel at their last steady wheel is -38 (48 px past the
     // 10 px hysteresis); the pan moved on past it through the shrinking
     // wheels, at least a wheel and a half's worth, never stepping back.
@@ -2263,13 +2308,13 @@ test.describe('where the primary pointer is fine', () => {
         expect(x).toBeLessThanOrEqual(moves[i - 1]);
       }
     }
-    expect(moves.at(-1)).toBeLessThan(-38 - 18);
+    expect(moves.at(-1), probe).toBeLessThan(-38 - 18);
     // Let go still moving, and the momentum after it moved nothing. A stall
     // lets go near 0. The floor is a quarter of the fingers' speed as the page
     // delivered their shrinking wheels, and at most 100 px/s.
     const fingers =
-      ((11 + 10 + 9 + 8) / (times[lift] - times[lift - 4])) * 1000;
-    expect(Math.abs(Number(ended[0].split(':')[3]))).toBeGreaterThan(
+      ((11 + 10 + 9 + 8) / (times[liftAt] - times[fromAt])) * 1000;
+    expect(Math.abs(Number(ended[0].split(':')[3])), probe).toBeGreaterThan(
       Math.min(100, fingers / 4),
     );
     const after = log
@@ -2283,7 +2328,10 @@ test.describe('where the primary pointer is fine', () => {
     // No wheel reached the page, the momentum after the lift included
     // (spec:AST-094 FR43).
     expect(stream.filter(entry => entry.startsWith('wheel:'))).toEqual(
-      Array.from({length: pause < 0 ? 12 : pause}, () => 'wheel:true'),
+      Array.from(
+        {length: pause < 0 ? wheels.length : pause},
+        () => 'wheel:true',
+      ),
     );
   });
 
@@ -2334,9 +2382,15 @@ test.describe('where the primary pointer is fine', () => {
     const driver = await webInputDriver(page);
     test.skip(!driver.wheels, WHEEL_SKIP);
     const strip = await center(page, 'strip');
-    for (let step = 0; step < 6; step += 1) {
-      await driver.wheel({...strip, dx: 8});
-    }
+    // Six 8 px steps a frame apart. WebKit reads them as one trackpad scroll,
+    // whose first step stays under the pan's 10 px hysteresis, so a split
+    // fails the burst by name. Chromium's notches are no trackpad scroll.
+    await driver.wheelBurst({
+      ...strip,
+      steps: Array.from({length: 6}, () => ({dx: 8})),
+      maxGapMs:
+        browserName === 'webkit' ? WHEEL_SCROLL_END_MS.horizontal : undefined,
+    });
     await page.waitForTimeout(250);
     const pan = await page.evaluate(() =>
       window.__wheelLog.filter(entry => entry.startsWith('pan:')),
@@ -2352,9 +2406,10 @@ test.describe('where the primary pointer is fine', () => {
       // WebKit's sends a trackpad's precise deltas, which the pan follows.
       expect(pan[0]).toMatch(/^pan:began:/);
       expect(pan.some(entry => entry.startsWith('pan:ended:'))).toBe(true);
-      // The content moves the way the fingers do: a scroll right drags it left.
-      const moved = pan.filter(entry => entry.startsWith('pan:changed:'));
-      expect(Number(moved.at(-1)?.split(':')[2])).toBeLessThan(0);
+      // The content moves the way the fingers do: a scroll right drags it
+      // left. WebKit may merge the steps into the pan's first move.
+      const shown = pan.filter(entry => /^pan:(began|changed):/.test(entry));
+      expect(Number(shown.at(-1)?.split(':')[2])).toBeLessThan(0);
       expect(await page.evaluate(() => window.scrollX)).toBe(0);
     }
     // Across the pan's axis the wheel is the page's.
