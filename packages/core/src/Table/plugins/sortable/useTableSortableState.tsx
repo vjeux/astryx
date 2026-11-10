@@ -18,6 +18,7 @@
  */
 
 import {useState, useMemo, useCallback, useRef} from 'react';
+import {useIsomorphicLayoutEffect} from '../../../hooks/useIsomorphicLayoutEffect';
 import type {TableSortState, UseTableSortableConfig} from './useTableSortable';
 import {useCollator} from '../../../i18n/useCollator';
 
@@ -233,6 +234,10 @@ function sortData<
 // Hook
 // =============================================================================
 
+// One options object, so the collator, and the sorted data with it, survive
+// a render that changes neither the locale nor the sort.
+const COLLATOR_OPTIONS: Intl.CollatorOptions = {numeric: true};
+
 /**
  * useTableSortableState — manages sort state and applies local sort to data.
  *
@@ -266,7 +271,7 @@ export function useTableSortableState<
     allowUnsortedState,
     isMultiSortEnabled,
   } = config;
-  const collator = useCollator({numeric: true});
+  const collator = useCollator(COLLATOR_OPTIONS);
 
   // Internal state (used in uncontrolled mode)
   const [internalSort, setInternalSort] =
@@ -279,9 +284,20 @@ export function useTableSortableState<
     ? (controlledOnSortChange ?? (() => {}))
     : setInternalSort;
 
-  // Stable ref for comparators to avoid re-sorting on inline object identity changes
-  const comparatorsRef = useRef(comparators);
-  comparatorsRef.current = comparators;
+  // The committed comparators, kept while every comparator is the same
+  // function. A new object of the same functions does not re-sort; a changed
+  // comparator does. Only a committed render writes this cache.
+  const committedComparatorsRef = useRef(comparators);
+  const stableComparators = areComparatorsEqual(
+    committedComparatorsRef.current,
+    comparators,
+  )
+    ? committedComparatorsRef.current
+    : comparators;
+  // Syncs the comparator cache with the committed comparators.
+  useIsomorphicLayoutEffect(() => {
+    committedComparatorsRef.current = stableComparators;
+  });
 
   // Stable ref for onSortChange to avoid recreating sortConfig on inline callback identity changes
   const onSortChangeRef = useRef(onSortChange);
@@ -289,15 +305,15 @@ export function useTableSortableState<
 
   // Sorted data — memoized on sort state + data identity
   const sortedData = useMemo(
-    () => sortData(data, sort, comparatorsRef.current, collator),
-    [data, sort, collator],
+    () => sortData(data, sort, stableComparators, collator),
+    [data, sort, stableComparators, collator],
   );
 
   // applySort — lets consumers sort arbitrary data with the current state
   const applySort = useCallback(
     (inputData: T[]): T[] =>
-      sortData(inputData, sort, comparatorsRef.current, collator),
-    [sort, collator],
+      sortData(inputData, sort, stableComparators, collator),
+    [sort, stableComparators, collator],
   );
 
   // Config ready for useTableSortable
@@ -312,4 +328,22 @@ export function useTableSortableState<
   );
 
   return {sortedData, sort, sortConfig, applySort};
+}
+
+/** Whether two comparator records hold the same function for every key. */
+function areComparatorsEqual<T>(
+  a: Partial<Record<string, TableSortComparator<T>>> | undefined,
+  b: Partial<Record<string, TableSortComparator<T>>> | undefined,
+): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (a == null || b == null) {
+    return false;
+  }
+  const keys = Object.keys(a);
+  return (
+    keys.length === Object.keys(b).length &&
+    keys.every(key => a[key] === b[key])
+  );
 }

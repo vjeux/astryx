@@ -8,7 +8,14 @@
  */
 
 import {describe, it, expect, vi} from 'vitest';
-import {render, renderHook, screen, within} from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {useState} from 'react';
 import {Table} from '../../Table';
@@ -305,6 +312,72 @@ describe('useTableSortableState', () => {
         'Bob',
         'Charlie',
         'Diana',
+      ]);
+    });
+  });
+
+  describe('render cost', () => {
+    it('does not re-sort when its parent re-renders with a new object of the same comparators', () => {
+      let comparisons = 0;
+      const bySalary = (a: Employee, b: Employee) => {
+        comparisons++;
+        return a.salary - b.salary;
+      };
+      function Parent() {
+        const [count, setCount] = useState(0);
+        return (
+          <>
+            <button type="button" onClick={() => setCount(count + 1)}>
+              Bump {count}
+            </button>
+            <SortableStateTable
+              defaultSort={[{sortKey: 'salary', direction: 'ascending'}]}
+              comparators={{salary: bySalary}}
+            />
+          </>
+        );
+      }
+      render(<Parent />);
+      expect(comparisons).toBeGreaterThan(0);
+      comparisons = 0;
+
+      act(() => {
+        fireEvent.click(screen.getByRole('button', {name: 'Bump 0'}));
+      });
+
+      expect(screen.getByRole('button', {name: 'Bump 1'})).toBeInTheDocument();
+      expect(comparisons).toBe(0);
+    });
+
+    it('re-sorts when a comparator changes while the data and the sort stay the same', () => {
+      const ascending = (a: Employee, b: Employee) => a.salary - b.salary;
+      const descending = (a: Employee, b: Employee) => b.salary - a.salary;
+      const sort = [{sortKey: 'salary', direction: 'ascending' as const}];
+      const {rerender} = render(
+        <SortableStateTable
+          defaultSort={sort}
+          comparators={{salary: ascending}}
+        />,
+      );
+      expect(getNameColumnValues()).toEqual([
+        'Alice',
+        'Diana',
+        'Charlie',
+        'Bob',
+      ]);
+
+      rerender(
+        <SortableStateTable
+          defaultSort={sort}
+          comparators={{salary: descending}}
+        />,
+      );
+
+      expect(getNameColumnValues()).toEqual([
+        'Bob',
+        'Charlie',
+        'Diana',
+        'Alice',
       ]);
     });
   });
