@@ -1073,6 +1073,39 @@ export function touchPlayError(
   | TouchStarvationError
   | TouchPacingError {
   const lift = liftStallError(steps, arrivals, fault, onEventMs);
+  const x1Late = fault.late;
+  if (x1Late != null && x1Late.index >= 1) {
+    const i = x1Late.index;
+    const excess = x1Late.gapMs - x1Late.scriptedGapMs;
+    const terms = [
+      [
+        arrivals[i - 1].stamp,
+        arrivals[i - 1].startedAt,
+        arrivals[i - 1].handledAt,
+      ],
+      [
+        arrivals[i].firstStamp ?? arrivals[i].stamp,
+        arrivals[i].startedAt,
+        arrivals[i].stamp,
+      ],
+    ] as const;
+    const parts = terms.map(([from, began, to]) => {
+      const totalMs = to - from;
+      const handlingMs =
+        began != null && Number.isFinite(began)
+          ? to - Math.max(began, from)
+          : totalMs;
+      return {
+        totalMs: +totalMs.toFixed(1),
+        handlingMs: +handlingMs.toFixed(1),
+        waitMs: +(totalMs - handlingMs).toFixed(1),
+      };
+    });
+    // eslint-disable-next-line no-console
+    console.log(
+      `X1PARTS ${JSON.stringify({lift: lift?.name ?? null, heldByPage: fault.heldByPage, waited: fault.waited ?? null, late: x1Late, excess: +excess.toFixed(1), parts, frameGap: longestFrameGap(frames, [arrivals[i - 1], arrivals[i]])})}`,
+    );
+  }
   if (lift != null) {
     return lift;
   }
