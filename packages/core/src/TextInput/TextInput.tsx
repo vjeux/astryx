@@ -131,7 +131,6 @@ import {useMergedRefs} from '../hooks/useMergedRefs';
 import {useBusyAnnouncement} from '../hooks/useBusyAnnouncement';
 import {setInputValue} from '../utils/setInputValue';
 import type {FieldStatusPlacement} from '../Field/fieldStatusPlacement';
-import {useMobileKeyboard} from '../keyboard/useMobileKeyboard';
 import {
   registerEnglishFallback,
   useComponentTranslator,
@@ -387,7 +386,6 @@ export function TextInput({
   const descriptionID = useId();
   const statusMessageID = useId();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  useMobileKeyboard(inputRef);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [, startTransition] = useTransition();
