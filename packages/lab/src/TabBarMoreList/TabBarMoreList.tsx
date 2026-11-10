@@ -87,7 +87,6 @@ export function TabBarMoreList({
               <Icon icon="chevronRight" xstyle={rtlStyles.mirror} />
             </>
           }
-          isSelected={item.value === value}
           isDisabled={isDisabledItem(item)}
           onClick={() => onChange(item.value)}
         />
