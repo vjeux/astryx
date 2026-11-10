@@ -1072,21 +1072,7 @@ export function createPager(
     if (isChildPages()) {
       const offsets = measureChildOffsets();
       const before = childOffsets;
-      if (
-        before != null &&
-        !sameOffsets(offsets, before) &&
-        scaledPages(before, offsets)
-      ) {
-        // Pages whose spacings scaled with the row are the same pages, whose
-        // items follow the row's width. Each keeps its number.
-        childOffsets = offsets;
-        const single = width > 0 ? width : 1;
-        remap = position =>
-          positionIn(offsets, pageIn(before, position, oldWidth), single);
-        changed = true;
-        const pageCount = offsets.length;
-        deliver(() => options.onPagesChange?.(pageCount));
-      } else if (!sameOffsets(offsets, childOffsets)) {
+      if (!sameOffsets(offsets, childOffsets)) {
         // A drag's release moves at most one page from where the drag began.
         // New pages renumber, so the drag keeps the page nearest that offset.
         const dragFrom = isDragging ? offsetOf(dragStartIndex) : null;
