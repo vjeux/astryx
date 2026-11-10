@@ -165,6 +165,12 @@ export const categories: SandboxCategory[] = [
         description: 'General component composition examples',
       },
       {
+        name: 'Lab TabBar',
+        href: '/pages/lab-tab-bar/',
+        description:
+          'The lab TabBar on its own phone page, the document scrolling under the bar; six sections, so More holds two',
+      },
+      {
         name: 'Tap Targets (AA)',
         href: '/pages/tap-targets/',
         description:
