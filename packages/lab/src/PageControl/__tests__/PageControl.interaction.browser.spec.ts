@@ -1282,6 +1282,42 @@ test('busy main thread: a window slide finishes on time through a 600 ms block',
   );
   // Before the slides, so the control is on the compositor first.
   await startBusyControl(page);
+  // NOT FOR LANDING: the same slide on the compositor, its curve 8 times
+  // slower. Offsets are fractions of a duration a 60 s hold dominates, so
+  // each keyframe's time is scaled, not the duration alone.
+  await strip.evaluate(el => {
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      const frames = (Array.isArray(keyframes) ? keyframes : []) as Keyframe[];
+      if (this !== el || !frames.some(frame => 'translate' in frame)) {
+        return original.call(this, keyframes, options);
+      }
+      const timing = options as KeyframeAnimationOptions;
+      const total = Number(timing.duration);
+      const curve = total - 60_000;
+      const slowed = curve * 8 + 60_000;
+      const computed = new KeyframeEffect(
+        null,
+        keyframes,
+        timing,
+      ).getKeyframes();
+      const rescaled = computed.map(frame => {
+        const at = Number(frame.computedOffset) * total;
+        const moved = at <= curve + 0.5 ? at * 8 : slowed - (total - at);
+        const {computedOffset: _c, offset: _o, ...rest} = frame;
+        return {...rest, offset: Math.min(1, moved / slowed)};
+      });
+      (window as unknown as {slowed: unknown}).slowed = {
+        total,
+        curve,
+        slowed,
+        n: rescaled.length,
+        first: rescaled.slice(0, 3).map(f => f.offset),
+        last: rescaled.slice(-2).map(f => f.offset),
+      };
+      return original.call(this, rescaled, {...timing, duration: slowed});
+    };
+  });
   const runs: BusyRun[] = [];
   const restsAt: number[] = [];
   // Each tap on the current indicator's trailing side moves one page and
