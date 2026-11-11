@@ -751,6 +751,18 @@ export interface BlockedWindow extends BusyWindow {
     readonly progress?: ReadonlyArray<readonly [number, number]>;
     readonly unpredictable?: string;
     readonly notPredicted?: string;
+    /**
+     * Each animation the window counts, as the page read them when the block
+     * began. A run gives the properties it animates, sorted and comma-joined
+     * as its first keyframe names them. It also gives its curve's start and
+     * end, epoch ms, dated as `from` and `to` are. A later read misses a run
+     * that ended since, and a loaded machine delays that read.
+     */
+    readonly runs?: ReadonlyArray<{
+      readonly properties: string;
+      readonly from: number;
+      readonly to: number;
+    }>;
   };
 }
 
@@ -1148,6 +1160,13 @@ export async function blockMainThread(
             later(() => {
               const read = realNow;
               const start = read();
+              // Read inside the block, so the read never delays its start.
+              const runs = caughtAnimation.runsOf(
+                element,
+                prop,
+                pseudo,
+                fillHolds,
+              );
               let now = start;
               while (now - start < duration) {
                 now = read();
@@ -1167,6 +1186,7 @@ export async function blockMainThread(
                   : {
                       animation: {
                         ...animation,
+                        runs,
                         ...caughtAnimation.replayOf(
                           caught,
                           blockFrom - look,
@@ -1300,6 +1320,12 @@ interface CaughtAnimation {
   ): Record<string, unknown>;
   /** The busy controls' starts on the page clock, when any started. */
   controlStarts(): [number, number?] | undefined;
+  runsOf(
+    element: Element,
+    property: string | null,
+    pseudoElement: string | null,
+    fillHolds: boolean,
+  ): NonNullable<BlockedWindow['animation']>['runs'];
 }
 
 /**
@@ -1628,6 +1654,25 @@ function defineCaughtAnimation(): void {
         (fillHolds && (timing?.fill === 'forwards' || timing?.fill === 'both'));
       return {from, to: from + curveEnd(a) / a.playbackRate, holds};
     },
+    runsOf(element, prop, pseudo, fillHolds) {
+      const meta = new Set(['offset', 'easing', 'composite', 'computedOffset']);
+      return element
+        .getAnimations({subtree: true})
+        .filter(a => this.counts(element, a, prop, pseudo))
+        .flatMap(a => {
+          const window = this.windowOf(a, fillHolds);
+          if (window == null) {
+            return [];
+          }
+          const first =
+            (a.effect as KeyframeEffect | null)?.getKeyframes()[0] ?? {};
+          const properties = Object.keys(first)
+            .filter(key => !meta.has(key))
+            .sort()
+            .join(',');
+          return [{properties, from: window.from, to: window.to}];
+        });
+    },
   };
 }
 
@@ -1707,11 +1752,24 @@ async function blockFromThaw(
                 resolve('pending');
                 return;
               }
-              const animation =
+              const caughtWindow =
                 caught == null
                   ? undefined
                   : w.__harnessCaught.windowOf(caught, fillHolds);
               const start = read();
+              // Read inside the block, so the read never delays its start.
+              const animation =
+                caughtWindow == null
+                  ? undefined
+                  : {
+                      ...caughtWindow,
+                      runs: w.__harnessCaught.runsOf(
+                        element,
+                        prop,
+                        pseudo,
+                        fillHolds,
+                      ),
+                    };
               let now = start;
               while (now - start < duration) {
                 now = read();
