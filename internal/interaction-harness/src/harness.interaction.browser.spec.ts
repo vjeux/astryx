@@ -1619,6 +1619,15 @@ test.describe('frame evidence', () => {
           ],
         },
       );
+      // NOT FOR LANDING: the same tracks as one decode per read.
+      expect([fineFrames, wholeFrames, controlFrames]).toEqual([
+        await trackMarker(page, [...shown], {subpixel: true}),
+        await trackMarker(page, [...shown]),
+        await trackControl(page, [...shown]),
+      ]);
+      console.log(
+        `IDENTITY harness-subpixel frames=${shown.length} found=${fineFrames.filter(f => f.box != null).length}/${wholeFrames.filter(f => f.box != null).length}/${controlFrames.filter(f => f.box != null).length}`,
+      );
       const judge = (tracked: typeof fineFrames) =>
         busyWindowProof(tracked, window, {axis: 'y', control: controlFrames});
       return {fine: judge(fineFrames), whole: judge(wholeFrames), shown};

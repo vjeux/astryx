@@ -53,6 +53,7 @@ import {
   touchDriver,
   touchStoryboard,
   traceRendering,
+  trackControl,
   trackMarker,
   trackMarkers,
   waitForRest,
@@ -2989,6 +2990,14 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       const [marker, controlFrames] = await trackMarkers(page, read, {
         colors: [{rgb: MARKER_RGB, subpixel: true}, controlColor()],
       });
+      // NOT FOR LANDING: the same tracks as one decode per read.
+      expect([marker, controlFrames]).toEqual([
+        await trackMarker(page, [...read], {subpixel: true}),
+        await trackControl(page, [...read]),
+      ]);
+      console.log(
+        `IDENTITY switch-toggle frames=${read.length} found=${marker.filter(f => f.box != null).length}/${controlFrames.filter(f => f.box != null).length}`,
+      );
       const tracked = marker.map(f =>
         f.box == null
           ? f
