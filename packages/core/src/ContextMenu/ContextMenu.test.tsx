@@ -870,32 +870,29 @@ describe.each([
       press.up();
     });
 
-    it('mounts the menu, closed, at the commit, and shows that element at 735 ms', () => {
+    it('mounts no menu before 735 ms, and mounts and shows it then', () => {
       const trigger = renderMenu();
       const press = finger(trigger);
       press.down();
-      advance(contextMenu.press.commitMs - 1);
+      advance(contextMenu.press.menuDisplayMs - 1);
       expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
       advance(1);
-      const menu = screen.getByRole('menu', {hidden: true});
-      expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
-      advance(contextMenu.press.menuDisplayMs - contextMenu.press.commitMs);
+      expect(screen.getByRole('menu', {hidden: true})).toBeInTheDocument();
       expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
-      expect(screen.getByRole('menu', {hidden: true})).toBe(menu);
       press.up();
     });
 
-    it('shows the menu mounted at the commit at the lift that comes before 735 ms', () => {
+    it('mounts and shows the menu at the lift that comes before 735 ms', () => {
       const trigger = renderMenu();
       const press = finger(trigger);
       press.down();
       advance(529);
-      const menu = screen.getByRole('menu', {hidden: true});
+      expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
       act(() => {
         press.up();
       });
       expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
-      expect(screen.getByRole('menu', {hidden: true})).toBe(menu);
+      expect(screen.getByRole('menu', {hidden: true})).toBeInTheDocument();
     });
 
     it('mounts no menu for a press lifted before the commit', () => {
@@ -922,22 +919,19 @@ describe.each([
           dispatchTouch('touchcancel', trigger, [{id: 1, x: 20, y: 20}], []);
         },
       ],
-    ])(
-      'unmounts the menu mounted at the commit after %s, before 735 ms',
-      (_, end) => {
-        const trigger = renderMenu();
-        const press = finger(trigger);
-        press.down();
-        advance(contextMenu.press.commitMs + 50);
-        expect(screen.getByRole('menu', {hidden: true})).toBeInTheDocument();
-        act(() => {
-          end(trigger);
-        });
-        advance(contextMenu.press.menuDisplayMs);
-        expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
-        expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
-      },
-    );
+    ])('mounts no menu after %s, before 735 ms', (_, end) => {
+      const trigger = renderMenu();
+      const press = finger(trigger);
+      press.down();
+      advance(contextMenu.press.commitMs + 50);
+      expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
+      act(() => {
+        end(trigger);
+      });
+      advance(contextMenu.press.menuDisplayMs);
+      expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
+      expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    });
 
     it('leaves a disabled trigger out of the press machine (spec:AST-094 FR24)', () => {
       const trigger = renderMenu({isDisabled: true});
@@ -2551,6 +2545,78 @@ describe('ContextMenu outside dismissal', () => {
       fireEvent.pointerDown(outside, {pointerType: 'mouse', pointerId: 1});
       fireEvent.mouseDown(outside);
       expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    });
+
+    it('times a finger on the second document’s own clock: a short tap opens no menu and keeps its click', () => {
+      vi.useFakeTimers({
+        toFake: ['setTimeout', 'clearTimeout', 'performance', 'Date'],
+      });
+      clockEpoch += 100_000;
+      vi.advanceTimersByTime(clockEpoch);
+      const view = secondDocument.defaultView as Window & typeof globalThis;
+      // The frame opened after the page, so its clock reads 5 s less. Its
+      // events come stamped on that clock.
+      const frameNow = vi
+        .spyOn(view.performance, 'now')
+        .mockImplementation(() => performance.now() - 5000);
+      const coarse = vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(pointer: coarse)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }));
+      vi.stubGlobal('matchMedia', coarse);
+      Object.defineProperty(view, 'matchMedia', {
+        value: coarse,
+        configurable: true,
+      });
+      try {
+        const onOpenChange = vi.fn<(isOpen: boolean) => void>();
+        render(
+          createPortal(
+            <ContextMenu
+              items={[{label: 'Cut'}]}
+              data-testid="ctx"
+              onOpenChange={onOpenChange}>
+              <div>Long-press me</div>
+            </ContextMenu>,
+            secondDocument.body,
+          ),
+        );
+        const trigger = within(secondDocument.body).getByTestId('ctx');
+        const send = (type: 'touchstart' | 'touchend') => {
+          const event = new view.Event(type, {bubbles: true, cancelable: true});
+          const contact = {
+            identifier: 1,
+            clientX: 20,
+            clientY: 20,
+            target: trigger,
+          };
+          Object.defineProperty(event, 'changedTouches', {value: [contact]});
+          Object.defineProperty(event, 'touches', {
+            value: type === 'touchstart' ? [contact] : [],
+          });
+          Object.defineProperty(event, 'timeStamp', {
+            value: view.performance.now(),
+          });
+          trigger.dispatchEvent(event);
+          return event;
+        };
+        send('touchstart');
+        act(() => {
+          vi.advanceTimersByTime(120);
+        });
+        const lift = send('touchend');
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+        expect(onOpenChange).not.toHaveBeenCalledWith(true);
+        expect(lift.defaultPrevented).toBe(false);
+      } finally {
+        frameNow.mockRestore();
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+      }
     });
   });
 });
