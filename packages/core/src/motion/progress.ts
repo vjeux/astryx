@@ -4,8 +4,10 @@
  * @file progress.ts
  * @input A spring, a normalized progress, an animator's presented velocities
  * @output Exports `progressCurve` (a spring's progress from 0 to 1 as a
- *   MotionCurve), `mapProgress` (one curve as a function of another),
- *   `mapRange` (the clamped linear map most companions use) and
+ *   MotionCurve), `easedProgress` (the eased progress for a length and an
+ *   easing already read), `timedCurve` (a timed move on a curve that keeps
+ *   a retargeted velocity), `mapProgress` (one curve as a function of
+ *   another), `mapRange` (the clamped linear map most companions use) and
  *   `presentedProgressVelocity` (the progress velocity that continues what
  *   an animator shows)
  * @position Shared by the motion building blocks that move several channels
@@ -39,6 +41,7 @@
  */
 
 import type {Animator, MotionCurve, MotionProperty} from './animator';
+import {cubicBezier, type BezierPoints} from './bezier';
 import {
   SETTLING_EPSILON,
   solveSpring,
@@ -113,6 +116,100 @@ export function mapRange(
     }
     // Exact at both ends.
     return t === 0 ? c : t === 1 ? d : c + (d - c) * t;
+  };
+}
+
+/**
+ * The eased progress from 0 to 1 over `seconds`, as a MotionCurve whose
+ * velocity is in progress per second. A curve of no length is at its end.
+ * With `jumps`, a jump in the easing, as in `steps()`, carries no speed. The
+ * gentler of the slopes just before and just after counts.
+ */
+export function easedProgress(
+  seconds: number,
+  ease: (x: number) => number,
+  {jumps = false}: {readonly jumps?: boolean} = {},
+): MotionCurve {
+  const at = (t: number) =>
+    seconds <= 0 || t >= seconds ? 1 : ease(Math.max(0, t) / seconds);
+  // A central difference, one step inside the curve at either end.
+  const step = Math.min(1e-3, seconds / 100);
+  return {
+    duration: seconds,
+    at,
+    velocity: t => {
+      if (seconds <= 0 || t >= seconds) {
+        return 0;
+      }
+      const before = Math.max(0, t - step);
+      const after = Math.min(seconds, t + step);
+      if (!jumps) {
+        return (at(after) - at(before)) / (after - before);
+      }
+      const here = at(t);
+      const slopes: number[] = [];
+      if (t > before) {
+        slopes.push((here - at(before)) / (t - before));
+      }
+      if (after > t) {
+        slopes.push((at(after) - here) / (after - t));
+      }
+      return slopes.reduce((a, b) => (Math.abs(b) < Math.abs(a) ? b : a));
+    },
+  };
+}
+
+/**
+ * A move from `from` to `to` (px) over `durationMs` on `curve`. `velocity`
+ * (px/s) is the velocity of a move that this one retargets. The new curve
+ * starts at it and still ends on `to`, at rest and on time. The carry is a
+ * Hermite term, v × duration × u(1 − u)², less the curve's own starting
+ * slope. So a move from rest is the curve itself, and its velocity at the
+ * start is that slope.
+ */
+export function timedCurve({
+  from,
+  to,
+  durationMs,
+  curve,
+  velocity,
+}: {
+  from: number;
+  to: number;
+  durationMs: number;
+  curve: BezierPoints;
+  velocity?: number;
+}): MotionCurve {
+  const duration = durationMs / 1000;
+  const distance = to - from;
+  const ease = cubicBezier(curve);
+  const progress = (u: number) => ease(Math.min(1, Math.max(0, u)));
+  // The carry, in px: the retargeted velocity over the whole duration, less
+  // what the curve's own starting slope already gives.
+  const startSlope = progress(1e-4) / 1e-4;
+  const carry =
+    velocity == null ? 0 : velocity * duration - distance * startSlope;
+  const at = (t: number) => {
+    const u = Math.min(1, Math.max(0, t / duration));
+    return from + distance * progress(u) + carry * u * (1 - u) * (1 - u);
+  };
+  return {
+    duration,
+    at,
+    velocity: t => {
+      if (t <= 0) {
+        // From rest, the slope that the carry reads: a retarget at the first
+        // instant goes on at it.
+        return (
+          velocity ?? (duration > 0 ? (distance * startSlope) / duration : 0)
+        );
+      }
+      if (t >= duration) {
+        return 0;
+      }
+      const h = Math.min(1e-4, t / 2, (duration - t) / 2);
+      return (at(t + h) - at(t - h)) / (2 * h);
+    },
   };
 }
 

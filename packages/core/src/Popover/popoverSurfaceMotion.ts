@@ -28,12 +28,8 @@ import {
 } from '../motion/animator';
 import {holdInput} from '../Layer/inputHold';
 import {ENTRANCE_OPACITY_FLOOR} from '../motion/opacityFloor';
-import {mapProgress, mapRange} from '../motion/progress';
-import {
-  easedProgress,
-  readThemeTiming,
-  type ThemeTimingTokens,
-} from '../motion/themeTiming';
+import {easedProgress, mapProgress, mapRange} from '../motion/progress';
+import {readThemeTiming, type ThemeTimingTokens} from '../motion/themeTiming';
 import {placePopoverExitCopy} from '../privateAttributes/popoverExit.stylex';
 import {
   frameOf,
