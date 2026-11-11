@@ -870,32 +870,29 @@ describe.each([
       press.up();
     });
 
-    it('mounts the menu, closed, at the commit, and shows that element at 735 ms', () => {
+    it('mounts no menu before 735 ms, and mounts and shows it then', () => {
       const trigger = renderMenu();
       const press = finger(trigger);
       press.down();
-      advance(contextMenu.press.commitMs - 1);
+      advance(contextMenu.press.menuDisplayMs - 1);
       expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
       advance(1);
-      const menu = screen.getByRole('menu', {hidden: true});
-      expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
-      advance(contextMenu.press.menuDisplayMs - contextMenu.press.commitMs);
+      expect(screen.getByRole('menu', {hidden: true})).toBeInTheDocument();
       expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
-      expect(screen.getByRole('menu', {hidden: true})).toBe(menu);
       press.up();
     });
 
-    it('shows the menu mounted at the commit at the lift that comes before 735 ms', () => {
+    it('mounts and shows the menu at the lift that comes before 735 ms', () => {
       const trigger = renderMenu();
       const press = finger(trigger);
       press.down();
       advance(529);
-      const menu = screen.getByRole('menu', {hidden: true});
+      expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
       act(() => {
         press.up();
       });
       expect(HTMLElement.prototype.showPopover).toHaveBeenCalledTimes(1);
-      expect(screen.getByRole('menu', {hidden: true})).toBe(menu);
+      expect(screen.getByRole('menu', {hidden: true})).toBeInTheDocument();
     });
 
     it('mounts no menu for a press lifted before the commit', () => {
@@ -922,22 +919,19 @@ describe.each([
           dispatchTouch('touchcancel', trigger, [{id: 1, x: 20, y: 20}], []);
         },
       ],
-    ])(
-      'unmounts the menu mounted at the commit after %s, before 735 ms',
-      (_, end) => {
-        const trigger = renderMenu();
-        const press = finger(trigger);
-        press.down();
-        advance(contextMenu.press.commitMs + 50);
-        expect(screen.getByRole('menu', {hidden: true})).toBeInTheDocument();
-        act(() => {
-          end(trigger);
-        });
-        advance(contextMenu.press.menuDisplayMs);
-        expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
-        expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
-      },
-    );
+    ])('mounts no menu after %s, before 735 ms', (_, end) => {
+      const trigger = renderMenu();
+      const press = finger(trigger);
+      press.down();
+      advance(contextMenu.press.commitMs + 50);
+      expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
+      act(() => {
+        end(trigger);
+      });
+      advance(contextMenu.press.menuDisplayMs);
+      expect(screen.queryByRole('menu', {hidden: true})).toBeNull();
+      expect(HTMLElement.prototype.showPopover).not.toHaveBeenCalled();
+    });
 
     it('lights no row when a touch opens it: focus goes to the menu itself, not its first item', () => {
       const trigger = renderMenu();
