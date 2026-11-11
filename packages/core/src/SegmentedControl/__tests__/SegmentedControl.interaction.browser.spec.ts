@@ -3341,3 +3341,64 @@ test(
     }
   },
 );
+
+/**
+ * A finger held still on `from`, then drifting straight down to `down`, then
+ * along to `along`, then lifted. The hold comes first, so the press is the
+ * control's before the finger moves.
+ */
+function heldThenDownThenAlong(
+  from: {x: number; y: number},
+  down: {x: number; y: number},
+  along: {x: number; y: number},
+) {
+  const frames: {t: number; fingers: {id: number; x: number; y: number}[]}[] = [
+    {t: 0, fingers: [{id: 0, ...from}]},
+    {t: 450, fingers: [{id: 0, x: from.x, y: from.y + 1}]},
+  ];
+  for (let step = 1; step <= 10; step++) {
+    frames.push({
+      t: 450 + step * 25,
+      fingers: [
+        {id: 0, x: from.x, y: from.y + ((down.y - from.y) * step) / 10},
+      ],
+    });
+  }
+  for (let step = 1; step <= 12; step++) {
+    frames.push({
+      t: 700 + step * 25,
+      fingers: [
+        {id: 0, x: down.x + ((along.x - down.x) * step) / 12, y: down.y},
+      ],
+    });
+  }
+  frames.push({t: 1200, fingers: [{id: 0, ...along}]});
+  frames.push({t: 1220, fingers: []});
+  return frames;
+}
+
+test.describe('a held press that drifts straight down, then along, keeps choosing by its horizontal position', () => {
+  for (const below of [30, 110]) {
+    test(`held on the selected segment, straight down ${below} px below the control, then along to List, the release selects List`, async ({
+      page,
+    }) => {
+      const control = await openControl(page);
+      // The page scrolls, as a phone's page does.
+      await makePageScroll(page);
+      const selections = await recordSelections(control.group);
+      const from = await clientCenter(control, 'grid');
+      const list = await clientCenter(control, 'list');
+      const y = (await bottomOf(control)) + below;
+      await control.driver.play(
+        heldThenDownThenAlong(from, {x: from.x, y}, {x: list.x, y}),
+      );
+      expect((await selections()).map(change => change.value)).toEqual([
+        'list',
+      ]);
+      await expect(control.segment('list')).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+    });
+  }
+});
