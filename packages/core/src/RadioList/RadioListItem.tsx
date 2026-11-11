@@ -69,7 +69,6 @@ const NESTED_CONTROL_ACTIVE =
   'button:not([aria-readonly="true"]):active,' +
   'a:not([aria-readonly="true"]):active,' +
   'input:not([type="radio"],[aria-readonly="true"]):active,' +
-  'select:not([aria-readonly="true"]):active,' +
   'textarea:not([aria-readonly="true"]):active,' +
   '[role="button"]:not([aria-readonly="true"]):active,' +
   '[role="link"]:not([aria-readonly="true"]):active,' +
