@@ -3,6 +3,7 @@
 import {describe, expect, it} from 'vitest';
 import type {MotionProperty} from './animator';
 import {
+  easedProgress,
   mapProgress,
   mapRange,
   presentedProgressVelocity,
@@ -168,5 +169,33 @@ describe('presentedProgressVelocity', () => {
     };
     presentedProgressVelocity(animator, line({x: 0, y: 0}, {x: 1, y: 1}), 1234);
     expect(times).toEqual([1234, 1234]);
+  });
+});
+
+describe('easedProgress', () => {
+  it('eases from 0 to 1 over its length, and a curve of no length is at its end', () => {
+    const curve = easedProgress(0.2, x => x * x);
+    expect(curve.duration).toBe(0.2);
+    expect(curve.at(0)).toBe(0);
+    expect(curve.at(0.1)).toBeCloseTo(0.25, 6);
+    expect(curve.at(0.2)).toBe(1);
+    expect(curve.velocity(0.1)).toBeCloseTo(5, 3);
+    expect(curve.velocity(0.2)).toBe(0);
+    const none = easedProgress(0, x => x);
+    expect(none.at(0)).toBe(1);
+    expect(none.velocity(0)).toBe(0);
+  });
+
+  it('with jumps, a jump carries no speed and a smooth stretch keeps its slope', () => {
+    const steps = (x: number) => Math.floor(4 * x) / 4;
+    // Without the option, the jump at a quarter of 300 ms reads as a spike.
+    expect(easedProgress(0.3, steps).velocity(0.075)).toBeGreaterThan(100);
+    const jumping = easedProgress(0.3, steps, {jumps: true});
+    for (const t of [0, 0.0749, 0.075, 0.0751, 0.15, 0.225, 0.2995]) {
+      expect(jumping.velocity(t), `${t} s`).toBe(0);
+    }
+    expect(
+      easedProgress(0.2, x => x * x, {jumps: true}).velocity(0.1),
+    ).toBeCloseTo(5, 1);
   });
 });

@@ -16,6 +16,7 @@ import {
   solveAnimatedPageScroll,
   solvePaging,
 } from './paging';
+import type {BezierPoints} from './bezier';
 import {paging} from './uikit/paging';
 
 /**
@@ -414,7 +415,11 @@ describe('solveAnimatedPageScroll: setContentOffset(_:animated:)', () => {
       expect(curve.duration).toBe(0.3);
       expect(curve.at(0.3)).toBe(distance);
       expect(curve.velocity(0.3)).toBe(0);
-      expect(curve.velocity(0)).toBe(0);
+      // From rest it starts on its curve's own slope, over its first 30 µs.
+      expect(curve.velocity(0)).toBeCloseTo(
+        (curve.at(3e-5) - curve.at(0)) / 3e-5,
+        6,
+      );
     }
   });
 
@@ -430,6 +435,20 @@ describe('solveAnimatedPageScroll: setContentOffset(_:animated:)', () => {
       expect(curve.velocity(0.3)).toBe(0);
       expect(curve.velocity(0.2999)).toBeCloseTo(0, -1);
     }
+  });
+
+  it('a retarget at the first instant keeps the speed the curve starts at', () => {
+    const linear: BezierPoints = [0, 0, 1, 1];
+    const first = solveAnimatedPageScroll({from: 0, to: 300, curve: linear});
+    // A linear move of 300 px in 0.3 s runs at 1000 px/s from its start.
+    expect(first.velocity(0)).toBeCloseTo(1000, -1);
+    const retarget = solveAnimatedPageScroll({
+      from: first.at(0),
+      to: 600,
+      curve: linear,
+      velocity: first.velocity(0),
+    });
+    expect(retarget.velocity(1e-4)).toBeCloseTo(first.velocity(1e-4), -1);
   });
 
   it('peaks at π/2 times the average speed halfway (the sinusoid, to 0.2 %)', () => {
