@@ -1270,7 +1270,7 @@ async function playSteps(
         : {stamps, receivedAt: stamps, frames: probedTimes.frames},
       boundaries.tapIntervalMs,
     );
-    if (split != null) {
+    if (split != null && split.step < 0) {
       throw new TouchTapIntervalError(split);
     }
   }
