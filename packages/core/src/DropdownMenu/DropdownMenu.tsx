@@ -49,7 +49,8 @@ import {readAccessibleName} from '../utils/accessibleName';
 import * as stylex from '@stylexjs/stylex';
 import {usePopoverInternal} from '../Popover/usePopover';
 import {holdEntranceInput} from '../Layer/holdEntranceInput';
-import {useMenuSurfaceMotion} from './useMenuSurfaceMotion';
+import {reducedMotionFade} from '../motion/reducedMotion';
+import {usePopoverSurfaceMotion} from '../Popover/usePopoverSurfaceMotion';
 import {
   claimPress,
   currentGesture,
@@ -1016,8 +1017,8 @@ function DropdownMenuPopover({
   }, []);
 
   // The touch presentation's grow out of the trigger and shrink back into
-  // it (useMenuSurfaceMotion.ts).
-  const surfaceMotion = useMenuSurfaceMotion();
+  // it, on the shared rect morph (Popover/usePopoverSurfaceMotion.ts).
+  const surfaceMotion = usePopoverSurfaceMotion({rectMorph: true});
   // Whether a finger or a pen opened the menu, a tap's open at its lift
   // included, until the layer shows.
   const isTouchOpenRef = useRef(false);
@@ -1156,11 +1157,16 @@ function DropdownMenuPopover({
   // The layer's show handler calls this as the menu opens. It reads the
   // surface and the trigger when it runs, so a render-time store is safe.
   presentSurfaceRef.current = () => {
+    const surface = popover.contentRef.current;
+    // A finger's or a pen's open grows the menu. Under Reduce Motion the
+    // layer's own entrance plays: it only fades in, where the menu rests.
     surfaceMotion.present(
-      popover.contentRef.current,
+      surface,
       buttonRef.current,
-      pressTouchModel === 'uikit' && isTouchOpenRef.current,
-      () => holdEntranceRef.current(),
+      null,
+      pressTouchModel === 'uikit' &&
+        isTouchOpenRef.current &&
+        reducedMotionFade(surface) == null,
     );
   };
 
@@ -1754,9 +1760,6 @@ function DropdownMenuPopover({
 
   const handleTriggerPointerDown = (event: React.PointerEvent<HTMLElement>) => {
     triggerPointerTypeRef.current = event.pointerType;
-    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
-      surfaceMotion.preload();
-    }
     menuPress.triggerProps.onPointerDown(event);
   };
 
