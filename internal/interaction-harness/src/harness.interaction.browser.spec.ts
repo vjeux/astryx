@@ -1574,8 +1574,15 @@ test.describe('frame evidence', () => {
         el.getAnimations().forEach(a => a.cancel());
         el.style.transform = 'none';
         if (how === 'compositor') {
+          // NOT FOR LANDING, MUTANT (frozen): the compositor slide holds its
+          // 50 ms value from 50 ms to 1500 ms, through the block.
           el.animate(
-            [{transform: 'translateY(0px)'}, {transform: 'translateY(36px)'}],
+            [
+              {transform: 'translateY(0px)', offset: 0},
+              {transform: 'translateY(0.9px)', offset: 0.025},
+              {transform: 'translateY(0.9px)', offset: 0.75},
+              {transform: 'translateY(36px)', offset: 1},
+            ],
             {duration: 2000, easing: 'linear'},
           );
         } else {
