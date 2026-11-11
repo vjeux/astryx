@@ -2923,6 +2923,37 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
       browserName !== 'chromium',
       "WebKit's JPEG cast holds color in 2 by 2 pixel blocks, so it cannot read the thumb's sub-pixel travel",
     );
+    // NOT FOR LANDING, MUTANT (frozen): the thumb's travel stops on the
+    // compositor: its keyframes after 50 ms hold the value at 50 ms until the
+    // last one.
+    await page.addInitScript(() => {
+      const native = Element.prototype.animate;
+      Element.prototype.animate = function (
+        this: Element,
+        keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+        options?: number | KeyframeAnimationOptions,
+      ) {
+        const o = typeof options === 'object' ? options : null;
+        if (
+          this.classList.contains('astryx-switch-thumb') &&
+          Array.isArray(keyframes) &&
+          keyframes.length > 2 &&
+          keyframes.some(k => 'translate' in k) &&
+          typeof o?.duration === 'number'
+        ) {
+          const span = o.duration;
+          const at = (k: Keyframe, i: number) =>
+            Number(k.offset ?? i / (keyframes.length - 1)) * span;
+          const hold = keyframes.filter((k, i) => at(k, i) <= 50).at(-1);
+          keyframes = keyframes.map((k, i) =>
+            i < keyframes.length - 1 && at(k, i) > 50 && hold != null
+              ? {...k, translate: hold.translate}
+              : k,
+          );
+        }
+        return native.call(this, keyframes, options);
+      };
+    });
     const {driver, input, thumb, center} = await openSwitch(page, undefined, {
       belowControls: true,
     });
