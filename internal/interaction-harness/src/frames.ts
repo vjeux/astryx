@@ -529,7 +529,7 @@ export async function trackMarkers(
       ? {
           rgb: color.rgb,
           region: color.region ?? region,
-          subpixel: color.subpixel ?? subpixel,
+          subpixel,
         }
       : {rgb: color, region, subpixel},
   );
