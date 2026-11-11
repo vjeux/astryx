@@ -130,6 +130,33 @@ export function parseColor(value: string): RGBA | null {
   return null;
 }
 
+/** The color functions whose last argument may be a `/ alpha`. */
+const COLOR_FUNCTION =
+  /^(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\((.*)\)$/i;
+
+/**
+ * The alpha of a CSS color, from 0 to 1. Hex, `rgb()`/`rgba()` and the named
+ * colors read as `parseColor` reads them. Another color function, such as
+ * `oklch()` or `color()`, gives its `/ alpha`, or 1 with none. Returns null
+ * for anything else, such as `var()`.
+ */
+export function colorAlpha(value: string): number | null {
+  const color = parseColor(value);
+  if (color != null) {
+    return color.a;
+  }
+  const args = COLOR_FUNCTION.exec(value.trim())?.[1];
+  if (args == null) {
+    return null;
+  }
+  const slash = /\/\s*([\d.]+)(%?)\s*$/.exec(args);
+  if (slash == null) {
+    return 1;
+  }
+  const alpha = Number(slash[1]) / (slash[2] === '%' ? 100 : 1);
+  return Number.isNaN(alpha) ? null : clamp(alpha, 0, 1);
+}
+
 /** Format RGB channels (0-255) as an uppercase `#RRGGBB` string. */
 export function formatHex(r: number, g: number, b: number): string {
   const channel = (c: number): string =>

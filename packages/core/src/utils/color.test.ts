@@ -2,6 +2,7 @@
 
 import {describe, expect, it} from 'vitest';
 import {
+  colorAlpha,
   parseHex,
   parseRgb,
   parseColor,
@@ -122,6 +123,28 @@ describe('parseColor', () => {
     // it as undefined channels.
     const rgba = parseColor('constructor') ?? parseHex('constructor');
     expect(rgba).toBeNull();
+  });
+});
+
+describe('colorAlpha', () => {
+  it('reads the alpha parseColor reads', () => {
+    expect(colorAlpha('transparent')).toBe(0);
+    expect(colorAlpha('#ffffff80')).toBeCloseTo(128 / 255);
+    expect(colorAlpha('rgba(1, 2, 3, 0.25)')).toBe(0.25);
+    expect(colorAlpha('rgb(1 2 3 / 40%)')).toBe(0.4);
+    expect(colorAlpha('rgb(1, 2, 3)')).toBe(1);
+  });
+
+  it('reads the slash alpha of any other color function, or 1 with none', () => {
+    expect(colorAlpha('oklch(0.5 0.1 200 / 0.3)')).toBe(0.3);
+    expect(colorAlpha('color(srgb 1 0 0 / 25%)')).toBe(0.25);
+    expect(colorAlpha('hsl(120 50% 50%)')).toBe(1);
+  });
+
+  it('returns null for what it cannot read', () => {
+    expect(colorAlpha('var(--color-accent)')).toBeNull();
+    expect(colorAlpha('rebeccapurple')).toBeNull();
+    expect(colorAlpha('')).toBeNull();
   });
 });
 

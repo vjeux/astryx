@@ -33,18 +33,11 @@ import {
 } from '../motion/uikit/springs';
 import {liftContextMenuTrigger} from '../privateAttributes/contextMenuLift.stylex';
 import {colorVars, radiusVars, spacingVars} from '../theme/tokens.stylex';
+import {colorAlpha} from '../utils/color';
 
-/** A computed color's alpha: 0 when it paints nothing, 1 when it names none. */
-function alphaOf(color: string): number {
-  if (color === '' || color === 'transparent') {
-    return 0;
-  }
-  const slash = /\/\s*([\d.]+)(%?)\s*\)$/.exec(color);
-  if (slash != null) {
-    return Number(slash[1]) / (slash[2] === '%' ? 100 : 1);
-  }
-  const comma = /rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/.exec(color);
-  return comma == null ? 1 : Number(comma[1]);
+/** A computed background's alpha: 0 when it is unset, 1 when it names none. */
+function backgroundAlpha(color: string): number {
+  return color === '' ? 0 : (colorAlpha(color) ?? 1);
 }
 
 /** A fill this opaque hides the tint behind it. */
@@ -56,7 +49,7 @@ const SURFACE_ELEMENTS = 'img, picture, video, canvas, svg, iframe';
 function fills(style: CSSStyleDeclaration): boolean {
   return (
     (style.backgroundImage !== 'none' && style.backgroundImage !== '') ||
-    alphaOf(style.backgroundColor) >= OPAQUE_ALPHA
+    backgroundAlpha(style.backgroundColor) >= OPAQUE_ALPHA
   );
 }
 
