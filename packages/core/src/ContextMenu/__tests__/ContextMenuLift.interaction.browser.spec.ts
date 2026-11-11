@@ -23,6 +23,7 @@ import {
   animationStoryboard,
   busyWindowProof,
   castStoryboard,
+  countBetween,
   FRAME_STARVATION_MS,
   FrameStarvationError,
   holdAnimations,
@@ -36,6 +37,7 @@ import {
   touchDriver,
   trackControl,
   trackMarker,
+  traceRendering,
   withStorybook,
   writeEvidence,
   type BusyWindow,
@@ -405,6 +407,75 @@ test('a held card lifts itself to UIKit’s size about its center over the theme
     preview.x + preview.width / 2,
     0,
   );
+});
+
+test('the lifted menu’s entrance reads its box in the layout its placement made, after the menu shows (architecture:react-component-runtime INV18)', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'tracing is a Chromium protocol');
+  const story = await openLiftStory(page);
+  // The menu's first height read is its placement's; its first box read is
+  // its entrance's.
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __menuReads: {kind: string; t: number; isOpen: boolean}[];
+    };
+    w.__menuReads = [];
+    const isMenu = (el: Element) =>
+      el.matches('[popover]') && el.querySelector('[role="menu"]') != null;
+    const note = (el: Element, kind: string) => {
+      if (isMenu(el) && !w.__menuReads.some(read => read.kind === kind)) {
+        w.__menuReads.push({
+          kind,
+          t: performance.timeOrigin + performance.now(),
+          isOpen: el.matches(':popover-open'),
+        });
+      }
+    };
+    const height = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'offsetHeight',
+    );
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get(this: HTMLElement) {
+        note(this, 'placement');
+        return height?.get?.call(this) as number;
+      },
+    });
+    const box = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      note(this, 'entrance');
+      return box.call(this);
+    };
+  });
+  const trace = await traceRendering(page, async () => {
+    await story.driver.play(tap(story.center, {holdMs: menuDisplayMs + 100}));
+    await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeVisible();
+  });
+  const reads = await page.evaluate(
+    () =>
+      (
+        window as unknown as {
+          __menuReads: {kind: string; t: number; isOpen: boolean}[];
+        }
+      ).__menuReads,
+  );
+  const placement = reads.find(read => read.kind === 'placement');
+  const entrance = reads.find(read => read.kind === 'entrance');
+  const detail = JSON.stringify(reads);
+  expect(placement, detail).toBeDefined();
+  expect(entrance, detail).toBeDefined();
+  if (placement == null || entrance == null) {
+    return;
+  }
+  // The entrance reads the shown menu, after its placement's read.
+  expect(entrance.isOpen, detail).toBe(true);
+  expect(entrance.t, detail).toBeGreaterThanOrEqual(placement.t);
+  // No layout runs between the two reads.
+  const between = countBetween(trace, placement.t, entrance.t);
+  expect(between.Layout ?? 0, JSON.stringify({between, reads})).toBe(0);
 });
 
 test('a card near the bottom gets its menu above, and stays inside the layer runtime’s gutter', async ({

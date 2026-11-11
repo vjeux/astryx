@@ -484,6 +484,8 @@ export function ContextMenu({
   const [liftPlacement, setLiftPlacement] = useState<SurfacePlacement | null>(
     null,
   );
+  // Whether a lifted menu still owes its entrance.
+  const isEntrancePendingRef = useRef(false);
   // The menu closed: a finger's menu is over, and the trigger returns with
   // the close itself (run by every close handler below).
   const endTouchOpen = useCallback(() => {
@@ -845,7 +847,9 @@ export function ContextMenu({
     [layer],
   );
   // Syncs the menu's side with the browser's layout of the shown menu: its
-  // height picks below or above the lift, before the frame paints.
+  // height picks below or above the lift, before the frame paints. Once the
+  // side holds, the menu's entrance starts and reads its box in this same
+  // layout.
   useIsomorphicLayoutEffect(() => {
     const lifted = liftRef.current;
     const menu = listRef.current?.closest<HTMLElement>('[popover]');
@@ -863,6 +867,11 @@ export function ContextMenu({
       placement.alignment !== liftPlacement.alignment
     ) {
       setLiftPlacement(placement);
+      return;
+    }
+    if (isEntrancePendingRef.current) {
+      isEntrancePendingRef.current = false;
+      touchHandleRef.current?.enterMenu(menu);
     }
   }, [liftPlacement, listRef]);
 
@@ -877,17 +886,15 @@ export function ContextMenu({
       // UIKit's presentation under a finger: a block trigger lifts above a
       // tinted page, and the menu sits beside it. An inline trigger and the
       // sheet keep the menu where the finger landed.
-      const lifted =
-        triggerAs !== 'span' && !usesBottomSheet
-          ? (touchHandleRef.current?.lift(showLifted) ?? null)
-          : null;
-      if (lifted != null) {
-        // The menu fades in once the lift holds the trigger.
-        const menu = listRef.current?.closest<HTMLElement>('[popover]');
-        if (menu != null) {
-          touchHandleRef.current?.enterMenu(menu);
-        }
-      } else {
+      // The menu fades in once the lift holds the trigger. Its entrance
+      // starts from the placement's layout effect, after the menu shows.
+      const canLift = triggerAs !== 'span' && !usesBottomSheet;
+      isEntrancePendingRef.current = canLift;
+      const lifted = canLift
+        ? (touchHandleRef.current?.lift(showLifted) ?? null)
+        : null;
+      if (lifted == null) {
+        isEntrancePendingRef.current = false;
         const local = toTriggerLocal(point);
         openAtLocalPoint(local.x, local.y, triggerRef.current, 'menu');
       }
@@ -900,7 +907,6 @@ export function ContextMenu({
     },
     [
       continueGesture,
-      listRef,
       openAtLocalPoint,
       showLifted,
       toTriggerLocal,
