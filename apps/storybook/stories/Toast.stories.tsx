@@ -575,6 +575,43 @@ export const MobileSwipeToDismiss: StoryObj = {
   },
 };
 
+export const MobileTimedToast: StoryObj = {
+  name: 'Mobile situations / Timed toast',
+  render: () => (
+    <MobileCanvas
+      title="Timed dismissal"
+      description="A toast that leaves on its own after three seconds. Under a finger it slides past its edge, as iOS notification banners leave; with a mouse it fades.">
+      <ToastViewport position="topEnd" isTopLayer={false} maxVisible={2}>
+        <MockCard>
+          <Text type="supporting" color="secondary">
+            Show the toast and wait: it dismisses itself after three seconds,
+            the way any timed toast leaves.
+          </Text>
+          <ToastReplayControls
+            items={[
+              {
+                key: 'mobile-timed',
+                body: 'I leave after three seconds',
+                autoHideDuration: 3000,
+              },
+            ]}
+          />
+        </MockCard>
+      </ToastViewport>
+    </MobileCanvas>
+  ),
+  parameters: {
+    ...mobileStoryParameters,
+    docs: {
+      story: {
+        ...mobileStoryParameters.docs.story,
+        description:
+          'A timed toast at the top that dismisses itself after three seconds. Under a finger it slides past its edge, as iOS notification banners leave; with a mouse it fades.',
+      },
+    },
+  },
+};
+
 export const MobileMotionEdgeAwareEntrance: StoryObj = {
   name: 'Mobile situations / Motion edge-aware entrance',
   render: () => (
