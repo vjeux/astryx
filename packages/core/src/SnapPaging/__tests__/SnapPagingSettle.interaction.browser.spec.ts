@@ -25,6 +25,7 @@ import {
 import {
   drag,
   FRAME_STARVATION_MS,
+  FrameStarvationError,
   openStory,
   requireFrames,
   tap,
@@ -265,12 +266,12 @@ function expectInStep(log: Watch) {
  * for the first frame where the settle runs and the lead shows `moved` px of
  * it. That frame may come before the read: a loaded runner can start the read
  * after the settle ends. Else the read resolves false 2 s after it starts. A
- * settle that started while too few frames showed the lead held was starved
- * of frames, so that read fails by name.
+ * frame gap over the starvation gap between the settle's start and its
+ * hand-back hides its run, so that read fails by name.
  */
 async function watchSettleRuns(scroller: Locator, moved = 0) {
   type Watch = {
-    frames: {t: number; held: boolean}[];
+    frames: {t: number; held: boolean; runs: boolean}[];
     runs: boolean;
     startedAt: number | null;
     from: number;
@@ -298,16 +299,17 @@ async function watchSettleRuns(scroller: Locator, moved = 0) {
     };
     const check = (time: number) => {
       const animations = lead.getAnimations();
-      watch.frames.push({
-        t: time,
-        held: animations.length > 0 || lead.style.translate !== '',
-      });
       watch.runs =
         watch.startedAt != null &&
         animations.some(
           a => a.playState === 'running' && a.startTime != null,
         ) &&
         Math.abs(xOf() - watch.from) >= distance;
+      watch.frames.push({
+        t: time,
+        held: animations.length > 0 || lead.style.translate !== '',
+        runs: watch.runs,
+      });
       if (!watch.runs && !watch.done) {
         requestAnimationFrame(check);
       }
@@ -329,14 +331,31 @@ async function watchSettleRuns(scroller: Locator, moved = 0) {
         frames: watch.frames,
       };
     });
-    // The paging started a settle, but no frame showed it run: the proof
-    // needs two frames of the settle to see it move.
+    // The paging started a settle, but no frame showed it run `moved` px.
+    // A frame gap over the starvation gap between the settle's start and its
+    // hand-back hid it, which fails by name.
     if (!runs && startedAt != null) {
-      requireFrames(frames, {
-        min: 2,
-        during: 'the settle',
-        where: frame => frame.held && frame.t >= startedAt,
-      });
+      const first = frames.findIndex(frame => frame.t >= startedAt);
+      const from = first < 0 ? frames.length : first;
+      const released = frames.findIndex((frame, i) => i >= from && !frame.held);
+      const settle = frames.slice(
+        Math.max(0, from - 1),
+        released < 0 ? frames.length : released + 1,
+      );
+      try {
+        requireFrames(settle, {
+          min: 1,
+          during:
+            moved > 0
+              ? `the settle showed ${moved} px of its move`
+              : 'the settle ran',
+          where: frame => frame.runs,
+        });
+      } catch (shortfall) {
+        if (shortfall instanceof FrameStarvationError) {
+          throw shortfall;
+        }
+      }
     }
     return runs;
   };
