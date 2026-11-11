@@ -710,14 +710,10 @@ export function useSheetGestures({
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
 
-  // Syncs the resolver for the drag's callbacks. It is a layout effect
-  // declared before the re-anchor effect, so the re-anchor reads the new
-  // stops; a passive effect would run after it. A write during render would
-  // keep a resolver from a render React discards.
+  // The resolver the drag's callbacks read. The re-anchor effect below writes
+  // it at commit, just before it reads the new stops. A write during render
+  // would keep a resolver from a render React discards.
   const snapHeightsRef = useRef(snapHeights);
-  useLayoutEffect(() => {
-    snapHeightsRef.current = snapHeights;
-  }, [snapHeights]);
   const onTravelStartRef = useRef(onTravelStart);
   onTravelStartRef.current = onTravelStart;
 
@@ -1015,6 +1011,8 @@ export function useSheetGestures({
   // first run — the sheet is already anchored to the detents it opened with.
   const hasAnchoredSnapHeightsRef = useRef(false);
   useLayoutEffect(() => {
+    // The drag's callbacks and this re-anchor read the committed resolver.
+    snapHeightsRef.current = snapHeights;
     if (!hasAnchoredSnapHeightsRef.current) {
       hasAnchoredSnapHeightsRef.current = true;
       return;
