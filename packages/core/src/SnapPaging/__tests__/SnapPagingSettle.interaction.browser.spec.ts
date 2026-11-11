@@ -24,6 +24,7 @@ import {
 } from '@astryxdesign/a11y-spec/playwright';
 import {
   drag,
+  FRAME_STARVATION_MS,
   openStory,
   requireFrames,
   tap,
@@ -257,30 +258,41 @@ function expectInStep(log: Watch) {
 /**
  * Starts reading the lead item on every frame, before an action. Each frame
  * reads whether the paging holds the lead, whether its settle runs from the
- * start the browser gave it, and its translate. A settle created in the action's task has no start
- * until a frame commits it. The returned read resolves true for the first
- * frame where the settle runs and the lead shows `moved` px of it. That
- * frame may come before the read: a loaded runner can start the read after
- * the settle ends. Else the read resolves false 2 s after it starts. A settle
- * that started while too few frames showed the lead held was starved of
- * frames, so that read fails by name.
+ * start the browser gave it, and its translate. The settle starts at the
+ * paging's first `animate` call on the lead. A drag before it holds the lead
+ * too, and its travel is not the settle's. A settle created in the action's
+ * task has no start until a frame commits it. The returned read resolves true
+ * for the first frame where the settle runs and the lead shows `moved` px of
+ * it. That frame may come before the read: a loaded runner can start the read
+ * after the settle ends. Else the read resolves false 2 s after it starts. A
+ * settle that started while too few frames showed the lead held was starved
+ * of frames, so that read fails by name.
  */
 async function watchSettleRuns(scroller: Locator, moved = 0) {
+  type Watch = {
+    frames: {t: number; held: boolean}[];
+    runs: boolean;
+    startedAt: number | null;
+    from: number;
+    done: boolean;
+    animate: typeof Element.prototype.animate;
+  };
   await scroller.evaluate((el, distance) => {
     const lead = el.firstElementChild as HTMLElement;
     const xOf = () => Number.parseFloat(getComputedStyle(lead).translate) || 0;
-    const from = xOf();
-    const watch = {
-      frames: [] as {t: number; held: boolean}[],
+    const watch: Watch = {
+      frames: [],
       runs: false,
-      started: false,
+      startedAt: null,
+      from: 0,
       done: false,
       animate: Element.prototype.animate,
     };
-    (window as unknown as {__settleRuns: typeof watch}).__settleRuns = watch;
+    (window as unknown as {__settleRuns: Watch}).__settleRuns = watch;
     Element.prototype.animate = function (this: Element, ...args) {
-      if (this === lead) {
-        watch.started = true;
+      if (this === lead && watch.startedAt == null) {
+        watch.startedAt = performance.now();
+        watch.from = xOf();
       }
       return watch.animate.apply(this, args);
     };
@@ -291,9 +303,11 @@ async function watchSettleRuns(scroller: Locator, moved = 0) {
         held: animations.length > 0 || lead.style.translate !== '',
       });
       watch.runs =
+        watch.startedAt != null &&
         animations.some(
           a => a.playState === 'running' && a.startTime != null,
-        ) && Math.abs(xOf() - from) >= distance;
+        ) &&
+        Math.abs(xOf() - watch.from) >= distance;
       if (!watch.runs && !watch.done) {
         requestAnimationFrame(check);
       }
@@ -301,33 +315,27 @@ async function watchSettleRuns(scroller: Locator, moved = 0) {
     requestAnimationFrame(check);
   }, moved);
   return async () => {
-    const {runs, started, frames} = await scroller.evaluate(async () => {
-      const watch = (
-        window as unknown as {
-          __settleRuns: {
-            frames: {t: number; held: boolean}[];
-            runs: boolean;
-            started: boolean;
-            done: boolean;
-            animate: typeof Element.prototype.animate;
-          };
-        }
-      ).__settleRuns;
+    const {runs, startedAt, frames} = await scroller.evaluate(async () => {
+      const watch = (window as unknown as {__settleRuns: Watch}).__settleRuns;
       const until = performance.now() + 2000;
       while (!watch.runs && performance.now() < until) {
         await new Promise(resolve => requestAnimationFrame(resolve));
       }
       watch.done = true;
       Element.prototype.animate = watch.animate;
-      return {runs: watch.runs, started: watch.started, frames: watch.frames};
+      return {
+        runs: watch.runs,
+        startedAt: watch.startedAt,
+        frames: watch.frames,
+      };
     });
     // The paging started a settle, but no frame showed it run: the proof
-    // needs two frames of the lead held to see a settle move.
-    if (!runs && started) {
+    // needs two frames of the settle to see it move.
+    if (!runs && startedAt != null) {
       requireFrames(frames, {
         min: 2,
         during: 'the settle',
-        where: frame => frame.held,
+        where: frame => frame.held && frame.t >= startedAt,
       });
     }
     return runs;
@@ -336,13 +344,14 @@ async function watchSettleRuns(scroller: Locator, moved = 0) {
 
 /**
  * The touch reached the page too late to judge the catch: the row showed
- * less than a pixel of the settle left. A loaded runner delivers a touch
- * late, so the run proves nothing about where the catch stops.
+ * less than a pixel of the settle left, after a frame gap longer than the
+ * starvation gap. The runner held the touch back, so the run proves nothing
+ * about where the catch stops.
  */
 class LateTouchError extends Error {
-  constructor(shown: number, end: number) {
+  constructor(shown: number, end: number, gapMs: number) {
     super(
-      `the touch reached the page with the row at ${shown.toFixed(2)} px, within a pixel of the settle's end at ${end.toFixed(2)} px: a loaded runner delivered it late, so the run proves nothing about where the catch stops`,
+      `the touch reached the page with the row at ${shown.toFixed(2)} px, within a pixel of the settle's end at ${end.toFixed(2)} px, after a ${gapMs.toFixed(0)} ms frame gap: the runner held the touch back, so the run proves nothing about where the catch stops`,
     );
     this.name = 'LateTouchError';
   }
@@ -504,7 +513,16 @@ test('a touch that catches the settle stops every item where the lead shows it',
   const before = log.frames.filter(frame => frame.t < start).at(-1);
   expect(before?.running, 'the touch lands while the settle runs').toBe(true);
   if (before != null && before.position >= end - 1) {
-    throw new LateTouchError(before.position, end);
+    // Only a frame gap before the touch shows the runner held it back. With
+    // none, the checks below judge the catch.
+    const shownBefore = log.frames.filter(frame => frame.t < start);
+    const gapMs = Math.max(
+      0,
+      ...shownBefore.slice(1).map((frame, i) => frame.t - shownBefore[i].t),
+    );
+    if (gapMs > FRAME_STARVATION_MS) {
+      throw new LateTouchError(before.position, end, gapMs);
+    }
   }
   const held = requireFrames(log.frames, {
     min: 2,
