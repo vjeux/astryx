@@ -47,7 +47,6 @@ import {rowPressLayerStyles} from '../privateAttributes/press.stylex';
 // Registered here, not in the press controller, so a page with no box carries
 // none of its code.
 registerBoxHold();
-registerFinePress();
 
 // The touch press's paint, declared by the shared overlay styles on the
 // element the controller writes to (`pressedAlpha`) at the press's strength,
