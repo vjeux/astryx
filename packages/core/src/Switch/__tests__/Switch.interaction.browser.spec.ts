@@ -2956,6 +2956,50 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
         during: thumb,
         property: 'translate',
       });
+      // NOT FOR LANDING, MUTANT (main): from its first running frame, the
+      // thumb's travel plays from requestAnimationFrame on the wall clock, so
+      // a block freezes it.
+      await page.evaluate(
+        ({selector, property}) => {
+          const host = document.querySelector(selector) as Element;
+          const hooked = new WeakSet<Animation>();
+          const find = () =>
+            host.getAnimations().find(a => {
+              const effect = a.effect as KeyframeEffect | null;
+              return (
+                !hooked.has(a) &&
+                effect?.target === host &&
+                a.playState === 'running' &&
+                !a.pending &&
+                effect.getKeyframes().some(k => property in k)
+              );
+            });
+          const started = performance.now();
+          const look = () => {
+            const animation = find();
+            if (performance.now() - started < 3000) {
+              requestAnimationFrame(look);
+            }
+            if (animation == null) {
+              return;
+            }
+            hooked.add(animation);
+            const c0 = Number(animation.currentTime ?? 0);
+            const t0 = performance.now();
+            animation.playbackRate = 1e-6;
+            const step = () => {
+              const c = c0 + (performance.now() - t0);
+              animation.currentTime = c;
+              if (c < c0 + 3000) {
+                requestAnimationFrame(step);
+              }
+            };
+            requestAnimationFrame(step);
+          };
+          requestAnimationFrame(look);
+        },
+        {selector: '#storybook-root .astryx-switch-thumb', property: 'translate'},
+      );
       await driver.play(tap(center, {holdMs: 50}));
       if (on) {
         await expect(input).toBeChecked();
