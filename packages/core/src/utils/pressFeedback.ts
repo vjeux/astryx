@@ -533,9 +533,7 @@ function paintsFinePress(target: EventTarget | null): boolean {
  * control's box, with no other pressable surface between the two.
  */
 function paintsFinePointerPress(surface: Element): boolean {
-  return pressBoxesIn(surface).some(
-    box => box.closest(`[${PRESSABLE_ATTRIBUTE}]`) === surface,
-  );
+  return pressBoxesIn(surface).length > 0;
 }
 
 /**
