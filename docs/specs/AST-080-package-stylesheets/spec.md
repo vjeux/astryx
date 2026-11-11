@@ -386,7 +386,11 @@ breaks the one-import setup DEC-3 keeps.
 Touch primitives over the budget come from the shared internal touch modules
 components import (`architecture:react-component-runtime` INV13), which a
 page carries once, or the cost is justified; a component does not lazy-load
-its own. There is no install step: the modules are always present. This
+its own. A touch presentation's motion (`spec:AST-094`), such as a menu's
+grow, is a surface module (`architecture:component-import-boundaries`
+INV8). It loads behind the shared module loader at the moment its component
+record names, and it imports the shared touch modules statically. There is
+no install step: the modules are always present. This
 supersedes DEC-4's lazy-load remedy; its reporting and budget stand.
 
 Rejected: lazy loading inside each component, and an app-installed module.

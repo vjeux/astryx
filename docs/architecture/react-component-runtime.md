@@ -307,9 +307,12 @@ those contracts.
   keeps one copy per page however many components use them. A surface
   revealed by interaction that a component loads with `import()` under
   `architecture:component-import-boundaries` INV1 imports these modules
-  statically too; the bundler still keeps one copy per page. That `import()`
-  targets the surface module, never one of these modules, and it is not a
-  component lazy-loading its own touch code (`spec:AST-080` DEC-5). A touch
+  statically too; the bundler still keeps one copy per page. A touch
+  presentation's motion that loads at the moment its component record names
+  is such a surface (`architecture:component-import-boundaries` INV8). That
+  `import()` targets the surface module, never one of these modules, and it
+  is not a component lazy-loading its own touch code (`spec:AST-080` DEC-5).
+  A touch
   behavior that a caller opts into and that carries a large resource cost
   comes through a public constructor whose module statically imports the
   modules that behavior runs on; the component imports none of those, so

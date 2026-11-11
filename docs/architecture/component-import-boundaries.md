@@ -161,7 +161,11 @@ one pending load per module, caches a success, and resets after a failure.
   internal touch modules statically (`architecture:react-component-runtime`
   INV13). The bundler keeps one copy per page, whether a base import or a
   loaded surface brings them. `import()` targets a surface module, never a
-  touch module. INV2's listeners recognize no gesture, so a base import that
+  touch module. A touch presentation's motion (`spec:AST-094`), such as a
+  menu's grow, is a surface module. It loads behind the shared module loader
+  at the moment its component record names (INV2). It imports the rectangle
+  morph and the presentation hold statically. INV2's listeners recognize no
+  gesture, so a base import that
   defers its surface carries no touch code for it. Telling a tap from a
   scroll belongs to the loaded surface, which reads the `click` that follows
   a tap.
