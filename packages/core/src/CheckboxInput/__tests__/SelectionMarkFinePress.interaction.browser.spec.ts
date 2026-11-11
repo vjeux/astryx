@@ -7,8 +7,8 @@
  *   pointer is fine
  * @output Browser proofs: a mouse press on a checkbox, a CheckboxList row, a
  *   RadioList row or a mapped circle paints at `pointerdown`. The press
- *   controller paints it, and it fades on release. It paints once. Under Reduce
- *   Motion the release ends at once. A right click paints nothing, and a
+ *   controller paints it, and the release ends it at once, so a hovered row
+ *   eases to its hover tint. It paints once. A right click paints nothing, and a
  *   read-only row paints no row press. A press on a select in a RadioList row
  *   leaves its circle at rest. A pen presses a checkbox the same way
  * @position Fine-pointer half of the selection marks' press; the finger half
@@ -143,7 +143,7 @@ test.describe('with a mouse', () => {
   });
 
   for (const surface of SURFACES) {
-    test(`a mouse press on ${surface.name} paints at once through the press model and fades on release`, async ({
+    test(`a mouse press on ${surface.name} paints at once through the press model and ends at once on release`, async ({
       page,
     }) => {
       await openStory(page, storybook(), surface.story);
@@ -171,11 +171,10 @@ test.describe('with a mouse', () => {
         ),
       ).toContain('gradient');
       await page.mouse.up();
-      // The same release fade as a finger's.
-      await expect
-        .poll(async () => owner.getAttribute('data-astryx-press'))
-        .toBe('fading');
-      expect(await seen()).toEqual(expect.arrayContaining(['on', 'fading']));
+      // A mouse release skips the touch fade: the press ends at once, and the
+      // surface's hover shows.
+      expect(await owner.getAttribute('data-astryx-press')).toBeNull();
+      expect(await seen()).toEqual(['on', '']);
     });
 
     test(`a mouse press on ${surface.name} paints once`, async ({page}) => {
@@ -277,7 +276,8 @@ test.describe('with a mouse', () => {
     );
     const on = seen.find(entry => entry.state === 'on');
     expect(on?.image ?? '', JSON.stringify(seen)).toContain('gradient');
-    expect(seen.map(entry => entry.state)).toContain('fading');
+    // A pen's lift ends the press at once, as a mouse's release does.
+    expect(seen.map(entry => entry.state)).toEqual(['on', '']);
   });
 
   test('a mouse press on a select in a RadioList row leaves the row and its circle at rest', async ({
@@ -326,6 +326,97 @@ test.describe('with a mouse', () => {
     await page.mouse.down();
     await expect.poll(paint).not.toBe(atRest);
     await page.mouse.up();
+  });
+
+  test('a mouse release on a hovered CheckboxList row skips the touch fade and reaches its hover tint within 100 ms', async ({
+    page,
+  }) => {
+    await openStory(page, storybook(), 'core-checkboxlist--default');
+    await stopClicks(page);
+    const row = optionRow(page, 'Email');
+    await expect(row.getByRole('checkbox')).not.toBeChecked();
+    const box = await row.boundingBox();
+    if (box == null) {
+      throw new Error('core-checkboxlist--default: nothing to press');
+    }
+    await page.mouse.move(box.x + box.width * 0.6, box.y + box.height / 2);
+    // The row's overlay alpha each frame: its colour under its press image.
+    await row.evaluate(el => {
+      const alphaOf = (color: string): number => {
+        const slash = /\/\s*([\d.]+)\s*\)/.exec(color);
+        if (slash != null) {
+          return Number(slash[1]);
+        }
+        const rgba = /rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/.exec(color);
+        if (rgba != null) {
+          return Number(rgba[1]);
+        }
+        return /^(rgb|color)\(/.test(color) ? 1 : 0;
+      };
+      const imageAlpha = (image: string): number => {
+        const first = /(rgba?\([^)]*\)|color\([^)]*\))/.exec(image);
+        return first == null ? 0 : alphaOf(first[1]);
+      };
+      const seen: {press: string; total: number; t: number}[] = [];
+      (window as unknown as {__rowPaint: typeof seen}).__rowPaint = seen;
+      const start = performance.now();
+      const sample = () => {
+        const style = getComputedStyle(el);
+        const colour = alphaOf(style.backgroundColor);
+        const image = imageAlpha(style.backgroundImage);
+        seen.push({
+          press: el.getAttribute('data-astryx-press') ?? '',
+          total: 1 - (1 - colour) * (1 - image),
+          t: performance.now(),
+        });
+        if (performance.now() - start < 1500) {
+          requestAnimationFrame(sample);
+        }
+      };
+      requestAnimationFrame(sample);
+    });
+    // The hover tint settles before the press.
+    await page.waitForTimeout(300);
+    await page.mouse.down();
+    await page.waitForTimeout(300);
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+    const seen = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __rowPaint: {press: string; total: number; t: number}[];
+          }
+        ).__rowPaint,
+    );
+    const firstOn = seen.findIndex(frame => frame.press === 'on');
+    const lastOn =
+      seen.length - 1 - [...seen].reverse().findIndex(f => f.press === 'on');
+    // The probe sees the controller's press, and its release skips the
+    // touch fade.
+    expect(firstOn, JSON.stringify(seen)).toBeGreaterThan(0);
+    expect(lastOn).toBeLessThan(seen.length - 1);
+    expect(seen.some(frame => frame.press === 'fading')).toBe(false);
+    const hover = seen[firstOn - 1].total;
+    const pressed = seen[lastOn].total;
+    expect(hover).toBeGreaterThan(0);
+    expect(pressed).toBeGreaterThan(hover);
+    // The release reaches the hover tint within 100 ms and stays there. The
+    // row's colour transition starts from clear, so at most one frame is.
+    const release = seen.slice(lastOn + 1);
+    const atHover = (total: number) => Math.abs(total - hover) <= 0.005;
+    const reached = release.findIndex(frame => atHover(frame.total));
+    const trace = JSON.stringify(release.map(f => Number(f.total.toFixed(3))));
+    expect(reached, trace).toBeGreaterThanOrEqual(0);
+    expect(release[reached].t - release[0].t, trace).toBeLessThanOrEqual(100);
+    expect(
+      release.slice(reached).every(f => atHover(f.total)),
+      trace,
+    ).toBe(true);
+    expect(
+      release.filter(frame => frame.total < hover / 2).length,
+      trace,
+    ).toBeLessThanOrEqual(1);
   });
 
   test('a mouse press on a read-only CheckboxList row paints no row press, and its box keeps its own', async ({

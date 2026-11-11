@@ -25,7 +25,8 @@
 // keyboard, and CSS `:active` keeps their press. A surface that owns a
 // control's box (pressBox.stylex.ts), as a checkbox or a radio row does, is
 // the exception. There the controller paints a mouse's or a pen's press at
-// once and fades it on release, as it does a finger's. The surface's `:active`
+// once and ends it at once on release, so the surface's `:hover` shows. A
+// finger's release fades, as a finger has no hover. The surface's `:active`
 // arm yields while it does. On a row, a press on a nested control is that
 // control's: the row's container rule ends the row's paint
 // (hooks/useClickableContainer.ts).
@@ -550,20 +551,20 @@ function pressButton(
 }
 
 /**
- * Whether a release on `element` ends at once. Under Reduce Motion a fine
- * pointer's release changes at once, with no fade. This holds on a surface
- * that takes the fine-pointer press, where the primary pointer is fine.
+ * Whether a release on `element` ends at once, with no fade. A mouse's or a
+ * pen's release does so on a surface that takes the fine-pointer press, where
+ * the primary pointer is fine. The surface's `:hover` then shows, as a
+ * finger's release has no hover to end at.
  */
 function releasesAtOnce(element: Element): boolean {
-  return (
-    paintsFinePointerPress(element) &&
-    !stylesheetDroppedActive() &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
+  return paintsFinePointerPress(element) && !stylesheetDroppedActive();
 }
 
-/** The mouse button or the key came up: the press fades like a finger's. */
+/**
+ * The mouse button or the key came up. On a surface that takes the
+ * fine-pointer press, the press ends at once. Elsewhere it fades like a
+ * finger's.
+ */
 function releaseButton(): void {
   holdKey(false);
   if (button.live == null) {

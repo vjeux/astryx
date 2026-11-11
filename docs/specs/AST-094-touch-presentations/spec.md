@@ -420,8 +420,9 @@ a measured, sourced difference exists.
   CheckboxListItem) may also complete on a lift after the finger slid off; and a Switch completes its own toggle at the lift of a finger hold or a flipping drag, rather than through the browser's click (`component:Switch` FR15); and a SegmentedControl drag commits at the lift on the segment nearest the pointer, wherever it began (`component:SegmentedControl` FR13). Where the engine hit-tests an element a compositor animation moves at the motion's start (iOS WebKit), a touch on moving content goes to what was drawn under the finger at touch-down, and a tap there (no recognizer claimed it, the browser did not take it, and it stayed within 45 pt) MUST activate it: the browser's own click for that touch is cancelled or swallowed, and that element receives one click, an editable focused first. A pager's settle after a release is the exception: a finger or a pen that lands on it never reaches the content (FR6).
   Under a fine pointer a control uses a third profile with no delay: its
   press paint starts at once on `pointerdown`, through the same press
-  controller and release fade as a finger's, in place of CSS `:active`; the
-  scroll brake stays touch-only (DEC-21).
+  controller as a finger's, in place of CSS `:active`. Its release ends the
+  paint at once, so the control's hover shows; a finger's release fades, as a
+  finger has no hover. The scroll brake stays touch-only (DEC-21).
   A cell (a table or collection cell) highlights 150 ms after touch-down inside
   a scroll view, drops the highlight when the scroll wins (FR20), and activates on a
   lift inside it with no scroll taking the touch (FR20). A control is inside a scroll view when it sits in a scrollable container,

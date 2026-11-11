@@ -280,7 +280,7 @@ describe('the press reaches the surface the finger landed on', () => {
     expect(pressedRow()).toBe(-1);
   });
 
-  it("paints a mouse press at once on a surface that owns a control's box, and fades it on release", () => {
+  it("paints a mouse press at once on a surface that owns a control's box, and ends it at once on release", () => {
     expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
     ownBox(rows[0]);
     // No delay, though the row sits in a scroller: a mouse press is not a
@@ -288,7 +288,7 @@ describe('the press reaches the surface the finger landed on', () => {
     press(rows[0], 'pointerdown', 10, 10, 'mouse');
     expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
     press(rows[0], 'pointerup', 10, 10, 'mouse');
-    expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
     // A surface that declares nothing keeps `:active`.
     press(rows[1], 'pointerdown', 10, 10, 'mouse');
     expect(rows[1].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
@@ -325,23 +325,20 @@ describe('the press reaches the surface the finger landed on', () => {
     expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
   });
 
-  it('ends a mouse press on a fine-pointer surface at once on release under Reduce Motion', () => {
+  it('ends a mouse or a pen press at once on release on a surface that owns a control’s box, and a finger’s release still fades', () => {
     ownBox(rows[0]);
-    const matchMedia = window.matchMedia;
-    window.matchMedia = (query: string) => ({
-      ...matchMedia(query),
-      matches:
-        query.includes('prefers-reduced-motion: reduce') ||
-        matchMedia(query).matches,
-    });
-    try {
-      press(rows[0], 'pointerdown', 10, 10, 'mouse');
+    for (const pointerType of ['mouse', 'pen']) {
+      press(rows[0], 'pointerdown', 10, 10, pointerType);
       expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
-      press(rows[0], 'pointerup', 10, 10, 'mouse');
+      press(rows[0], 'pointerup', 10, 10, pointerType);
       expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
-    } finally {
-      window.matchMedia = matchMedia;
     }
+    // A finger has no hover to end at, so its release keeps the fade.
+    press(rows[0], 'pointerdown', 10, 10);
+    vi.advanceTimersByTime(PRESS_ONSET_MS * 2);
+    expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(rows[0], 'pointerup', 10, 10);
+    expect(rows[0].getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
   });
 
   it('presses at once for a pen on a fine-pointer surface, in a scroller too, and not for its barrel button', () => {
