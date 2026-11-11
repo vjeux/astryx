@@ -943,8 +943,9 @@ export function Lightbox({
     captionTruncation.ref,
   );
   const [captionShownLines, setCaptionShownLines] = useState(0);
-  // Whether the current caption is open, for the content observer's callback.
-  const isCaptionOpenRef = useRef(false);
+  // The current caption's toggle. Its `aria-expanded` is the open state that
+  // the last render committed.
+  const captionToggleRef = useRef<HTMLButtonElement | null>(null);
   // The current caption's lines, without its toggle's place.
   const bandCaptionFlowRef = useRef<HTMLDivElement | null>(null);
   // The caption's width at its last measure, and the cancel of a smaller
@@ -1093,7 +1094,11 @@ export function Lightbox({
       // caption first counts its new text's lines, as an opening does.
       const stopContent = observeContent(element, () => {
         stopResize?.();
-        if (isCaptionOpenRef.current) {
+        // A parent's new index closes the caption during render, with no
+        // handler here. So the toggle's committed state says if it is open.
+        if (
+          captionToggleRef.current?.getAttribute('aria-expanded') === 'true'
+        ) {
           // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the caption lays out without the toggle's place before its lines are counted
           flushSync(() => {
             setCaptionShownLines(0);
@@ -1112,14 +1117,13 @@ export function Lightbox({
     },
     isOpen,
   );
-  // The caption's toggle. Under a coarse pointer it takes taps out toward
-  // 44 px. A finger's tap on it is its own, as UIKit gives a control's tap
-  // precedence over the single tap of the photo around it.
-  const captionToggleRef = useRef<HTMLButtonElement | null>(null);
   // Close, where focus goes off a paged-away toggle when the stage takes none.
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   // The current caption's toggle shows while two lines clamp it, or open.
   const hasCaptionToggle = isCaptionClamped || isCaptionOpen;
+  // Under a coarse pointer the caption's toggle takes taps out toward 44 px.
+  // A finger's tap on it is its own, as UIKit gives a control's tap
+  // precedence over the single tap of the photo around it.
   const captionToggleHitAreaRef = useTouchHitArea(
     hasCaptionToggle,
     CAPTION_TOGGLE_HIT_AREA,
@@ -1155,10 +1159,6 @@ export function Lightbox({
       Math.round(flow.getBoundingClientRect().height / line),
     );
   }, []);
-  // Syncs the content observer's callback with this render's open caption.
-  useIsomorphicLayoutEffect(() => {
-    isCaptionOpenRef.current = isCaptionOpen;
-  }, [isCaptionOpen]);
   // Syncs the toggle's place in the caption's last line with its width. The
   // width is the delivery's own size, measured in the layout the delivery
   // follows, so nothing reads the toggle there. A hidden toggle's size is
