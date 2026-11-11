@@ -43,6 +43,6 @@ export function pressBoxAt(
  */
 export function pressBoxesIn(surface: Element): Element[] {
   return Array.from(surface.querySelectorAll(`[${PRESS_BOX}]`)).filter(
-    box => box.closest(PRESSABLE) === surface,
+    box => box.closest(PRESSABLE) != null,
   );
 }
