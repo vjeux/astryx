@@ -24,5 +24,5 @@ export function isPrimaryClick(event: {
   readonly button: number;
   readonly ctrlKey: boolean;
 }): boolean {
-  return event.button === 0 && !(event.ctrlKey && isApplePlatform());
+  return event.button === 0;
 }
