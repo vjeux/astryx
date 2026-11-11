@@ -72,7 +72,8 @@ const AHEAD_MS = CONTROL_LEG_MS / 2;
  * The control's colour and the strip its box crosses (`startBusyControl`),
  * for `trackMarkers`. A proof then finds its marker and the control in one
  * decode of each frame. With `ahead`, the control ahead, with
- * `AHEAD_CONTROL_RGB` in its own strip.
+ * `AHEAD_CONTROL_RGB` in its own strip. It fits a top-layer control: one
+ * mounted `within` a dialog moves with the dialog, out of the strip.
  */
 export function controlColor({
   ahead = false,
@@ -112,9 +113,11 @@ export async function trackControl(
  * runs. It shows what the compositor presented in a busy window on this
  * machine. A proof can then judge a component against it rather than against
  * a frame rate. Track it from the same screencast and pass it to
- * `busyWindowProof` as `control`. `trackMarkers` with the marker's colour and
- * `controlColor()` finds both in one decode of each frame; `trackControl`
- * reads the control alone.
+ * `busyWindowProof` as `control`. For a top-layer control, `trackMarkers`
+ * with the marker's colour and `controlColor()` finds both in one decode of
+ * each frame. `trackControl` reads the control alone. A control mounted
+ * `within` a dialog moves with it, so track that one over the whole frame
+ * (`CONTROL_RGB`).
  *
  * The box is a manual popover, so it shows in the top layer, above a modal
  * dialog the page opened before it; `raise()` shows it again on top of one

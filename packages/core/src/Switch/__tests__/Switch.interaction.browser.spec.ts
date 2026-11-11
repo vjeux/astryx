@@ -53,7 +53,6 @@ import {
   touchDriver,
   touchStoryboard,
   traceRendering,
-  trackControl,
   trackMarker,
   trackMarkers,
   waitForRest,
@@ -2987,15 +2986,17 @@ test.describe('Switch touch presentation (UISwitch, iOS 26.2), under a finger', 
           f.t >= block.from - BUSY_PROOF_LOOKAROUND_MS &&
           f.t <= block.to + BUSY_PROOF_LOOKAROUND_MS,
       );
-      const tracked = (await trackMarker(page, read, {subpixel: true})).map(
-        f =>
-          f.box == null
-            ? f
-            : {...f, box: {...f.box, x: f.box.x + f.box.width / 2}},
+      const [marker, controlFrames] = await trackMarkers(page, read, {
+        colors: [{rgb: MARKER_RGB, subpixel: true}, controlColor()],
+      });
+      const tracked = marker.map(f =>
+        f.box == null
+          ? f
+          : {...f, box: {...f.box, x: f.box.x + f.box.width / 2}},
       );
       runs.push({
         tracked,
-        control: await trackControl(page, read),
+        control: controlFrames,
         window: {from: block.from, to: Math.min(block.to, travel.to)},
       });
       evidence.push({

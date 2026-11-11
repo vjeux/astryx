@@ -489,13 +489,16 @@ export async function trackMarker(
 }
 
 /**
- * A color for `trackMarkers` with its own search area. With `region` (CSS
- * px), only that part of each frame is searched for this color, as
- * `trackMarker`'s `region` searches. Without it, the call's `region` applies.
+ * A color for `trackMarkers` with its own search area and read. With `region`
+ * (CSS px), only that part of each frame is searched for this color, as
+ * `trackMarker`'s `region` searches. With `subpixel`, this color's box comes
+ * from its anti-aliased edges, as `trackMarker`'s `subpixel` reads. Without
+ * them, the call's own options apply.
  */
 export interface MarkerColor {
   readonly rgb: readonly [number, number, number];
   readonly region?: Box;
+  readonly subpixel?: boolean;
 }
 
 /**
@@ -521,16 +524,23 @@ export async function trackMarkers(
     subpixel?: boolean;
   },
 ): Promise<TrackedFrame[][]> {
-  if (subpixel && frames.some(f => f.format !== 'png')) {
+  const entries = colors.map(color =>
+    'rgb' in color
+      ? {
+          rgb: color.rgb,
+          region: color.region ?? region,
+          subpixel: color.subpixel ?? subpixel,
+        }
+      : {rgb: color, region, subpixel},
+  );
+  if (
+    entries.some(entry => entry.subpixel) &&
+    frames.some(f => f.format !== 'png')
+  ) {
     throw new Error(
       "trackMarkers: subpixel needs a PNG cast; a JPEG frame's chroma blocks hide the marker's edges",
     );
   }
-  const entries = colors.map(color =>
-    'rgb' in color
-      ? {rgb: color.rgb, region: color.region ?? region}
-      : {rgb: color, region},
-  );
   const isDefaultMarker = entries.map(({rgb}) =>
     rgb.every((value, i) => value === MARKER_RGB[i]),
   );
@@ -541,7 +551,7 @@ export async function trackMarkers(
     for (let i = 0; i < frames.length; i += 12) {
       const batch = frames.slice(i, i + 12);
       const results = await scratch.evaluate(
-        async ({batch: items, palette, areas, tol, sub}) => {
+        async ({batch: items, palette, areas, subs, tol}) => {
           const found: {
             boxes: ({
               x: number;
@@ -711,7 +721,7 @@ export async function trackMarkers(
                 boxes[c] =
                   pixels[c] === 0
                     ? null
-                    : sub
+                    : subs[c]
                       ? fine(c)
                       : {
                           x: (left + minX[c]) / scale,
@@ -733,8 +743,8 @@ export async function trackMarkers(
           })),
           palette: entries.map(({rgb}) => [...rgb]),
           areas: entries.map(entry => entry.region ?? null),
+          subs: entries.map(entry => entry.subpixel),
           tol: tolerance,
-          sub: subpixel,
         },
       );
       results.forEach((result, k) => {
@@ -744,7 +754,7 @@ export async function trackMarkers(
         const {engine} = batch[k];
         colors.forEach((_, c) => {
           out[c].push({
-            ...(subpixel
+            ...(entries[c].subpixel
               ? {
                   t: batch[k].t,
                   box: result.boxes[c],

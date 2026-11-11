@@ -66,6 +66,7 @@ import {
   BusyWindowTooLateError,
   castStep,
   compareCurve,
+  controlColor,
   countBetween,
   cubicBezier,
   CONTROL_RGB,
@@ -87,6 +88,7 @@ import {
   installInputLog,
   type HeldInput,
   type InputRecord,
+  MARKER_RGB,
   type PlayOptions,
   installLongTaskLog,
   installPageFreeze,
@@ -126,6 +128,7 @@ import {
   traceRendering,
   trackControl,
   trackMarker,
+  trackMarkers,
   waitForAnimation,
   waitForCastFrame,
   releaseAnimationLog,
@@ -1603,13 +1606,22 @@ test.describe('frame evidence', () => {
       const shown = (await cast.stop()).filter(
         f => f.t <= window.to + BUSY_PROOF_LOOKAROUND_MS,
       );
-      const controlFrames = await trackControl(page, shown);
-      const judge = async (subpixel: boolean) =>
-        busyWindowProof(await trackMarker(page, shown, {subpixel}), window, {
-          axis: 'y',
-          control: controlFrames,
-        });
-      return {fine: await judge(true), whole: await judge(false), shown};
+      // One decode reads the marker under a pixel and in whole pixels, and
+      // the control in its strip.
+      const [fineFrames, wholeFrames, controlFrames] = await trackMarkers(
+        page,
+        shown,
+        {
+          colors: [
+            {rgb: MARKER_RGB, subpixel: true},
+            MARKER_RGB,
+            controlColor(),
+          ],
+        },
+      );
+      const judge = (tracked: typeof fineFrames) =>
+        busyWindowProof(tracked, window, {axis: 'y', control: controlFrames});
+      return {fine: judge(fineFrames), whole: judge(wholeFrames), shown};
     };
 
     const {fine, whole, shown} = await run('compositor');

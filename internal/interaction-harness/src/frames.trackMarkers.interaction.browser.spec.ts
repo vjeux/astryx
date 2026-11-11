@@ -5,7 +5,8 @@
  * @input Real Chromium/WebKit in the interaction projects
  * @output Proof that one `trackMarkers` decode for a marker and a control
  *   finds, frame by frame, what one `trackMarker` decode per color finds. A
- *   color with its own region is searched only there.
+ *   color with its own region is searched only there, and a color with its
+ *   own sub-pixel read is the only one read so.
  * @position Why a busy proof may track its subject and its controls in one
  *   decode of each frame.
  */
@@ -15,10 +16,12 @@ import {
   CONTROL_RGB,
   CONTROL_SIDE,
   controlColor,
+  frames,
   markElement,
   MARKER_RGB,
   startBusyControl,
   startScreencast,
+  SUBPIXEL_STEP_PX,
   trackControl,
   trackMarker,
   trackMarkers,
@@ -233,6 +236,137 @@ test('one decode for a marker and both controls in a recorded cast finds what on
   for (const track of [marker, control, controlAhead]) {
     expect(track.filter(f => f.box != null).length).toBeGreaterThan(
       frames.length / 2,
+    );
+  }
+});
+
+test("a color's own sub-pixel read applies to that color alone, in the same decode", async ({
+  page,
+}) => {
+  // Frames drawn in the page: each box starts half a pixel in, so its edge
+  // columns are anti-aliased. A sub-pixel read places it at the half pixel.
+  const width = 300;
+  const height = 90;
+  const scenes: {
+    marker: [number, number, number, number];
+    control: [number, number, number, number];
+  }[] = [
+    {marker: [20.5, 50, 16, 16], control: [10.5, 0, 12, 12]},
+    {marker: [40.5, 52, 16, 16], control: [60.5, 0, 12, 12]},
+    {marker: [60.5, 54, 16, 16], control: [110.5, 0, 12, 12]},
+  ];
+  const drawn = await page.evaluate(
+    ({size, all, marker, control}) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size.width;
+      canvas.height = size.height;
+      const context = canvas.getContext('2d');
+      if (context == null) {
+        throw new Error('no 2d context');
+      }
+      return all.map(scene => {
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, size.width, size.height);
+        context.fillStyle = `rgb(${marker.join(',')})`;
+        context.fillRect(...scene.marker);
+        context.fillStyle = `rgb(${control.join(',')})`;
+        context.fillRect(...scene.control);
+        return canvas
+          .toDataURL('image/png')
+          .slice('data:image/png;base64,'.length);
+      });
+    },
+    {
+      size: {width, height},
+      all: scenes,
+      marker: [...MARKER_RGB],
+      control: [...CONTROL_RGB],
+    },
+  );
+  const frames: CastFrame[] = drawn.map((data, index) => ({
+    t: 1_000 + index * 16,
+    data,
+    format: 'png',
+    viewportWidth: width,
+    viewportHeight: height,
+  }));
+  // Each call gets its own copy of the frames.
+  const [marker, control] = await trackMarkers(page, [...frames], {
+    colors: [{rgb: MARKER_RGB, subpixel: true}, controlColor()],
+  });
+  expect(marker).toEqual(
+    await trackMarker(page, [...frames], {subpixel: true}),
+  );
+  expect(control).toEqual(await trackControl(page, [...frames]));
+  // The marker reads at its half pixel and carries the sub-pixel step. The
+  // control keeps whole pixels: its half-covered edge columns are left out.
+  expect(marker.map(f => f.box?.x ?? null)).toEqual(
+    scenes.map(scene => expect.closeTo(scene.marker[0], 1)),
+  );
+  expect(marker[0].step).toEqual({x: SUBPIXEL_STEP_PX, y: SUBPIXEL_STEP_PX});
+  expect(control.map(f => f.box)).toEqual(
+    scenes.map(scene => ({
+      x: Math.ceil(scene.control[0]),
+      y: scene.control[1],
+      width: scene.control[2] - 1,
+      height: scene.control[3],
+    })),
+  );
+  expect(control.map(f => f.step ?? null)).toEqual(scenes.map(() => null));
+});
+
+test('one decode for a sub-pixel marker and both controls in a recorded cast finds what one decode each finds', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== 'chromium',
+    "a sub-pixel read needs Chromium's PNG cast; WebKit's JPEG cast holds color in 2 by 2 pixel blocks",
+  );
+  // A viewport meta, or the mobile viewport lays the page out wider and
+  // shrinks it, and the controls leave their strips.
+  await page.setContent(
+    '<meta name=viewport content="width=device-width,initial-scale=1"><style>body{margin:0;background:#fff}</style><div id="subject" style="position:fixed;left:20px;top:60px;width:200px;height:60px;background:#fff"></div>',
+  );
+  const subject = page.locator('#subject');
+  await markElement(subject);
+  const first = await startBusyControl(page);
+  const ahead = await startBusyControl(page, {ahead: true});
+  await subject.evaluate(element => {
+    element.animate(
+      [{transform: 'translateX(0)'}, {transform: 'translateX(37px)'}],
+      {duration: 900, iterations: Infinity, direction: 'alternate'},
+    );
+  });
+  const cast = await startScreencast(page);
+  // About 800 ms at 60 Hz, counted in presented frames: a starved page
+  // still gives the cast its frames.
+  await frames(page, 48);
+  const castFrames = await cast.stop();
+  await first.remove();
+  await ahead.remove();
+  // Each call gets its own copy of the frames.
+  const [marker, control, controlAhead] = await trackMarkers(
+    page,
+    [...castFrames],
+    {
+      colors: [
+        {rgb: MARKER_RGB, subpixel: true},
+        controlColor(),
+        controlColor({ahead: true}),
+      ],
+    },
+  );
+  expect(marker).toEqual(
+    await trackMarker(page, [...castFrames], {subpixel: true}),
+  );
+  expect(control).toEqual(await trackControl(page, [...castFrames]));
+  expect(controlAhead).toEqual(
+    await trackControl(page, [...castFrames], {ahead: true}),
+  );
+  for (const track of [marker, control, controlAhead]) {
+    expect(track.filter(f => f.box != null).length).toBeGreaterThan(
+      castFrames.length / 2,
     );
   }
 });
