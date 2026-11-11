@@ -508,7 +508,11 @@ contracts.
 - `packages/lab/src/` — experimental component runtimes using the same lifecycle
   correctness boundary without receiving stable public API status.
 - `packages/core/src/utils/sharedResizeObserver.ts` — current shared Core resize
-  observation mechanism; tooling and utility tests own its concrete API.
+  observation mechanism; tooling and utility tests own its concrete API. Its
+  internal `observeResizeAfterLayout` observes an element without the call
+  that `observeResize` makes on registration, inside React's commit. So the
+  first measurement comes after the browser lays the element out (INV18).
+  `useTruncation` and Lightbox's caption use it.
 
 ## Deciding specs
 
