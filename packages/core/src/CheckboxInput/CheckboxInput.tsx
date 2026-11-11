@@ -77,7 +77,6 @@ registerEnglishFallback(english);
 // Registered here, not in the press controller, so a page with no box carries
 // none of its code.
 registerBoxHold();
-registerFinePress();
 
 /** Written by the press controller while the row is pressed. */
 const PRESSED_ON = '[data-astryx-press="on"]';
