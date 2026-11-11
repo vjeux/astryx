@@ -1619,6 +1619,38 @@ test.describe('frame evidence', () => {
           ],
         },
       );
+      // NOT FOR LANDING: one decode for every read against one per
+      // read, on copies of the same cast, in alternating order.
+      {
+        const one = async () => {
+          const t = performance.now();
+          const r = await trackMarkers(page, [...shown], {
+            colors: [
+              {rgb: MARKER_RGB, subpixel: true},
+              MARKER_RGB,
+              controlColor(),
+            ],
+          });
+          return {ms: performance.now() - t, r};
+        };
+        const each = async () => {
+          const t = performance.now();
+          const r = [
+            await trackMarker(page, [...shown], {subpixel: true}),
+            await trackMarker(page, [...shown]),
+            await trackControl(page, [...shown]),
+          ];
+          return {ms: performance.now() - t, r};
+        };
+        const oneFirst = test.info().repeatEachIndex % 2 === 0;
+        const x = oneFirst ? await one() : await each();
+        const y = oneFirst ? await each() : await one();
+        const [o, w] = oneFirst ? [x, y] : [y, x];
+        expect(o.r).toEqual(w.r);
+        console.log(
+          `DECODE-TIMING harness-subpixel frames=${shown.length} one=${o.ms.toFixed(0)} each=${w.ms.toFixed(0)} first=${oneFirst ? 'one' : 'each'}`,
+        );
+      }
       const judge = (tracked: typeof fineFrames) =>
         busyWindowProof(tracked, window, {axis: 'y', control: controlFrames});
       return {fine: judge(fineFrames), whole: judge(wholeFrames), shown};
