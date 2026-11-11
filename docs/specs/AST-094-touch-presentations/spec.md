@@ -36,7 +36,8 @@ verified_by:
     "packages/core/src/Layer/inputHold.ts",
     "packages/core/src/hooks/usePager.ts",
     "packages/core/src/motion/uikit/segmented.ts",
-    "packages/core/src/motion/uikit/slider.ts"
+    "packages/core/src/motion/uikit/slider.ts",
+    "packages/core/src/privateAttributes/pressBox.stylex.ts"
   ]
 }
 ```
@@ -422,6 +423,10 @@ a measured, sourced difference exists.
   press paint starts at once on `pointerdown`, through the same press
   controller and release fade as a finger's, in place of CSS `:active`; the
   scroll brake stays touch-only (DEC-21).
+  A surface that owns a control's box takes this profile, with no other
+  pressable surface between the two. The press controller finds those boxes
+  with `pressBoxesIn`, in the box mark's owner module
+  (`privateAttributes/pressBox.stylex.ts`).
   A cell (a table or collection cell) highlights 150 ms after touch-down inside
   a scroll view, drops the highlight when the scroll wins (FR20), and activates on a
   lift inside it with no scroll taking the touch (FR20). A control is inside a scroll view when it sits in a scrollable container,
