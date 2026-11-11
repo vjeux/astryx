@@ -165,9 +165,7 @@ Consumer props, content modes, and presentation policy remain documented in
   also to the compact query. A menu never opened mounts no pointer menu surface, only its layer's
   inert marker: the surface mounts at the first open and stays mounted after
   it, so a page with many context menus (a table with one per cell) carries no
-  closed menu surfaces. A finger's hold mounts the surface, closed, at its
-  commit, so the menu at 735 ms only shows it; a hold that ends with no menu
-  unmounts it again.
+  closed menu surfaces.
 
 ## Accessibility contract
 
