@@ -49,13 +49,13 @@ describe('ContextMenuPressRecognizer', () => {
     const {harness, press, states} = setup();
     harness.finger(1).down(0, 0, 0, {recognizers: [press]});
     // Nothing ran until 900 ms (a blocked main thread): the press still
-    // began at 400. The menu's timer ran late, so it waits 50 ms for moves
-    // queued behind the block, and none came.
+    // began at 400. The menu's timer ran late, so the menu waits one task,
+    // the arena's yield, for moves queued behind the block. None came.
     harness.advance(900);
     expect(states).toEqual([`began@${COMMIT}`]);
     expect(press.beganAt).toBe(COMMIT);
-    harness.advance(950);
-    expect(states).toEqual([`began@${COMMIT}`, 'changed@950']);
+    harness.clock.runDue(900);
+    expect(states).toEqual([`began@${COMMIT}`, 'changed@900']);
   });
 
   it('claims the finger at the commit and drops the lift’s click', () => {
@@ -208,28 +208,25 @@ describe('ContextMenuPressRecognizer', () => {
     });
   }
 
-  it('shows a still finger’s menu after a block, once no move comes from behind it', () => {
+  it('shows a still finger’s menu one task after a block, when no move comes from behind it', () => {
     const {harness, press} = setup();
     const finger = harness.finger(1).down(0, 0, 0, {recognizers: [press]});
     // The moment's timer runs 65 ms late behind a block.
     harness.advance(DISPLAY, DISPLAY + 65);
     expect(press.isMenuDue).toBe(false);
-    harness.advance(DISPLAY + 115);
+    harness.clock.runDue(DISPLAY + 65);
     expect(press.isMenuDue).toBe(true);
     finger.up(DISPLAY + 300);
   });
 
-  it('shows the menu once the late moves pause for 50 ms', () => {
+  it('shows the menu one task after a late move, when no later one comes', () => {
     const {harness, press} = setup();
     const finger = harness.finger(1).down(0, 0, 0, {recognizers: [press]});
     harness.advance(COMMIT);
     finger.move(3, 0, 450, undefined, 700);
     harness.advance(DISPLAY);
     expect(press.isMenuDue).toBe(false);
-    // The wait runs on the arena's clock.
-    harness.advance(DISPLAY + 49);
-    expect(press.isMenuDue).toBe(false);
-    harness.advance(DISPLAY + 50);
+    harness.clock.runDue(DISPLAY);
     expect(press.isMenuDue).toBe(true);
     finger.up(DISPLAY + 300);
   });
@@ -258,8 +255,8 @@ describe('ContextMenuPressRecognizer', () => {
     // may still be queued.
     harness.advance(DISPLAY, DISPLAY + 40);
     expect(press.isMenuDue).toBe(false);
-    // No more moves came: the wait ends 50 ms after the late timer ran.
-    harness.advance(DISPLAY + 90);
+    // No more moves came: the wait ends one task after the late timer ran.
+    harness.clock.runDue(DISPLAY + 40);
     expect(press.isMenuDue).toBe(true);
     finger.up(DISPLAY + 300);
   });

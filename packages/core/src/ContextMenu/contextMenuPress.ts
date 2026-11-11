@@ -24,8 +24,8 @@ import {contextMenu} from '../motion/uikit/contextMenu';
 const {commitMs, menuDisplayMs, allowableMovement} = contextMenu.press;
 
 /**
- * How long the finger's moves may pause before the menu stops waiting for
- * late ones, in ms: three frames at 60 Hz.
+ * How recently a late move must have come for the page to count as behind
+ * its input still, in ms: three frames at 60 Hz.
  */
 const LATE_MOVE_GAP_MS = 50;
 
@@ -108,6 +108,8 @@ export class ContextMenuPressRecognizer extends LongPressGestureRecognizer {
   private holdStart = 0;
   /** The menu's moment passed while the finger's moves still came late. */
   private isMenuWaiting = false;
+  /** Cancels the menu's wait for queued moves. */
+  private cancelMoveWait: (() => void) | null = null;
 
   constructor(options: ContextMenuPressRecognizerOptions = {}) {
     super({
@@ -202,10 +204,9 @@ export class ContextMenuPressRecognizer extends LongPressGestureRecognizer {
   }
 
   private stopMoveWait(): void {
-    if (this.isMenuWaiting) {
-      this.isMenuWaiting = false;
-      this.clearTimer();
-    }
+    this.isMenuWaiting = false;
+    this.cancelMoveWait?.();
+    this.cancelMoveWait = null;
   }
 
   /** The hold's commit claims the finger, then waits for the menu's moment. */
@@ -245,30 +246,34 @@ export class ContextMenuPressRecognizer extends LongPressGestureRecognizer {
     this.presentMenu();
   }
 
-  /** The wait's end: moves that still come late keep the menu waiting. */
-  private endMoveWait(): void {
-    this.stopMoveWait();
-    if (!this.isMenuPending()) {
-      return;
-    }
-    if (this.hasLateMove()) {
-      this.waitForMoves();
-      return;
-    }
-    this.presentMenu();
-  }
-
   private isMenuPending(): boolean {
     return this.holdFrom != null && isActive(this.state) && !this.isMenuDue;
   }
 
+  /**
+   * Waits through the arena's yield for moves queued behind a block. A move
+   * from before the moment that still comes late during it starts another
+   * wait; otherwise the menu shows.
+   */
   private waitForMoves(): void {
+    const arena = this.arena;
+    if (arena == null) {
+      this.presentMenu();
+      return;
+    }
     this.isMenuWaiting = true;
-    // On the arena's clock, like the hold's own deadlines. It counts from when
-    // the page runs again. Behind a block, the event clock still reads the
-    // moment, and moves stamped after it are still queued.
-    const from = Math.max(this.now(), this.pageTime());
-    this.setTimer(from + LATE_MOVE_GAP_MS, () => this.endMoveWait());
+    const seen = this.latestMove;
+    this.cancelMoveWait = arena.yieldToInput(() => {
+      this.cancelMoveWait = null;
+      if (!this.isMenuPending()) {
+        return;
+      }
+      if (this.latestMove !== seen && this.hasLateMove()) {
+        this.waitForMoves();
+        return;
+      }
+      this.presentMenu();
+    });
   }
 
   /** When the page runs now, on the arena's injected clock. */

@@ -156,7 +156,8 @@ export class GestureArena {
   /** Recognizers involved in the current interaction, in resolution order. */
   private active: GestureRecognizer[] = [];
   private readonly timers = new Map<GestureRecognizer, Timer>();
-  private realTimer: unknown = null;
+  /** Cancels the pending real timer, or its one wait for queued input. */
+  private realTimer: (() => void) | null = null;
   private realTimerDeadline = Number.POSITIVE_INFINITY;
   /** The time of the event or timer being processed; null between them. */
   private currentTime: number | null = null;
@@ -179,6 +180,17 @@ export class GestureArena {
   /** The current time on the event clock. */
   now(): number {
     return this.currentTime ?? Math.max(this.latestTime, this.clock.now());
+  }
+
+  /**
+   * Runs `run` once input queued behind a long task has reached the arena:
+   * the same one-task wait a late timer takes. `run` runs at the last
+   * event's time. Returns the call that cancels it.
+   */
+  yieldToInput(run: () => void): () => void {
+    return this.afterQueuedInput(() => {
+      this.run(this.lastEventTime(), run);
+    });
   }
 
   /**
@@ -1150,7 +1162,7 @@ export class GestureArena {
       return;
     }
     if (this.realTimer != null) {
-      this.clock.clearTimeout(this.realTimer);
+      this.realTimer();
       this.realTimer = null;
     }
     this.realTimerDeadline = earliest;
@@ -1166,14 +1178,24 @@ export class GestureArena {
         // input queued behind it may come before the deadline (a lift that
         // fails a long press). Let that input dispatch first, once.
         this.realTimerDeadline = earliest;
-        this.realTimer = this.clock.setTimeout(() => fire(false), 0);
+        this.realTimer = this.afterQueuedInput(() => fire(false));
         return;
       }
       // The event clock moves to the deadline only, so input still queued
       // keeps its own timestamps.
       this.advanceTime(earliest);
     };
-    this.realTimer = this.clock.setTimeout(() => fire(true), delay);
+    const timer = this.clock.setTimeout(() => fire(true), delay);
+    this.realTimer = () => this.clock.clearTimeout(timer);
+  }
+
+  /**
+   * Runs `run` one task later, so input queued behind a long task reaches the
+   * arena first. Returns the call that cancels it.
+   */
+  private afterQueuedInput(run: () => void): () => void {
+    const timer = this.clock.setTimeout(run, 0);
+    return () => this.clock.clearTimeout(timer);
   }
 }
 
