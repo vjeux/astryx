@@ -3297,6 +3297,60 @@ describe('GestureHost', () => {
     expect(states).toEqual(['began', 'cancelled']);
   });
 
+  it('times a second document’s touches on that document’s own clock: a short tap starts no long press', () => {
+    vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout', 'performance']});
+    vi.advanceTimersByTime(6000);
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const frameDocument = frame.contentDocument as Document;
+    const frameWindow = frameDocument.defaultView as Window & typeof globalThis;
+    // The frame opened after the page, so its clock reads 5 s less. Its
+    // events come stamped on that clock.
+    const frameNow = vi
+      .spyOn(frameWindow.performance, 'now')
+      .mockImplementation(() => performance.now() - 5000);
+    frameDocument.body.innerHTML = '<div id="box"></div>';
+    const box = frameDocument.getElementById('box') as HTMLElement;
+    const frameHost = new GestureHost(frameDocument, {
+      isPrimaryPointerCoarse: () => true,
+    });
+    const press = new LongPressGestureRecognizer({minimumPressDuration: 500});
+    const states: string[] = [];
+    press.addListener(r => states.push(r.state));
+    const detach = frameHost.attach(box, press);
+    const send = (type: 'touchstart' | 'touchend') => {
+      const event = new frameWindow.Event(type, {
+        bubbles: true,
+        cancelable: true,
+      });
+      const contact = {identifier: 1, clientX: 10, clientY: 10, target: box};
+      Object.defineProperty(event, 'changedTouches', {value: [contact]});
+      Object.defineProperty(event, 'touches', {
+        value: type === 'touchstart' ? [contact] : [],
+      });
+      Object.defineProperty(event, 'timeStamp', {
+        value: frameWindow.performance.now(),
+      });
+      box.dispatchEvent(event);
+    };
+    try {
+      send('touchstart');
+      vi.advanceTimersByTime(120);
+      send('touchend');
+      vi.advanceTimersByTime(1000);
+      expect(states).not.toContain('began');
+    } finally {
+      detach();
+      frameNow.mockRestore();
+      frame.remove();
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps the page’s own clock for the page’s document', () => {
+    expect(document.defaultView?.performance).toBe(globalThis.performance);
+  });
+
   it('reads epoch-stamped events on the arena clock', () => {
     const {box} = mount('<div id="box"></div>');
     const pan = new PanGestureRecognizer({name: 'pan'});
