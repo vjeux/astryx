@@ -259,32 +259,22 @@ test.describe('under a finger', () => {
     ).toBe(true);
     const more = dialog.getByRole('button', {name: 'more'});
     await expect(more).toBeVisible();
-    // The shared hit area writes the toggle's insets once it measures it.
-    await expect
-      .poll(async () =>
-        more.evaluate(
-          element =>
-            parseFloat(
-              element.style.getPropertyValue('--astryx-hit-inset-bottom'),
-            ) || 0,
-        ),
-      )
-      .toBeGreaterThan(0);
+    // The band is the toggle's `::after` under a coarse pointer. Its offsets
+    // past the toggle's box are the room it takes on each side.
     const facts = await more.evaluate(element => {
       const box = element.getBoundingClientRect();
-      const inset = (side: string) =>
-        parseFloat(
-          element.style.getPropertyValue(`--astryx-hit-inset-${side}`) || '0',
-        );
+      const band = getComputedStyle(element, '::after');
+      const grown = (side: 'top' | 'right' | 'bottom' | 'left') =>
+        Math.max(0, -(parseFloat(band[side]) || 0));
       const middle = box.left + box.width / 2;
       const takes = (x: number, y: number) => {
         const hit = element.ownerDocument.elementFromPoint(x, y);
         return hit != null && element.contains(hit);
       };
-      const right = inset('right');
-      const bottom = inset('bottom');
+      const right = grown('right');
+      const bottom = grown('bottom');
       return {
-        top: inset('top'),
+        top: grown('top'),
         right,
         bottom,
         above: takes(middle, box.top - 4),
