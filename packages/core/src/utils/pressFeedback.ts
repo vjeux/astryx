@@ -644,7 +644,7 @@ function onPointerDown(event: PointerEvent): void {
   // A pen's barrel or eraser button on a fine-pointer surface is not a press.
   if (
     event.pointerType === 'pen' &&
-    finePress.isPrimary?.(event) === false &&
+    false &&
     paintsFinePress(event.target)
   ) {
     return;
