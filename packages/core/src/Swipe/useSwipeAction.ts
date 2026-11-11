@@ -84,9 +84,7 @@ import {
   type SnapDragTarget,
 } from '../dragToSnapPoints/createDragToSnapPoints';
 import {getGestureHost} from '../gestures/GestureHost';
-import {TapGestureRecognizer} from '../gestures/TapGestureRecognizer';
 import type {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
-import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {isRtlElement} from '../hooks/isRtlElement';
 import type {MotionHandle} from '../motion/animator';
@@ -1332,25 +1330,47 @@ export function useSwipeAction({
   // primary pointer is fine, its click guard swallows the click. Any pointer's
   // press dismisses, since a trackpad opens a row too. The panel's entries keep
   // their own taps, and a closed row never offers this recognizer a touch.
-  useGestureRecognizer(
-    rootRef,
-    () =>
-      new TapGestureRecognizer({
-        name: 'item-swipe-dismiss',
-        shouldReceiveTouch: (_tap, touch) =>
-          isOpen() &&
-          !(
-            touch.target instanceof Element &&
-            touch.target.closest('[data-swipe-panel]') != null
-          ),
-      }),
-    tap => {
-      // Recognized at the lift, in its pointer event's own task.
-      if (tap.state === 'ended') {
-        close('next-frame');
+  useIsomorphicLayoutEffect(() => {
+    const root = rootRef.current;
+    if (root == null) {
+      return undefined;
+    }
+    let press: {id: number; x: number; y: number} | null = null;
+    const onDown = (event: PointerEvent) => {
+      const onPanel =
+        event.target instanceof Element &&
+        event.target.closest('[data-swipe-panel]') != null;
+      press =
+        isOpen() && !onPanel
+          ? {id: event.pointerId, x: event.clientX, y: event.clientY}
+          : null;
+    };
+    const onUp = (event: PointerEvent) => {
+      if (
+        press == null ||
+        event.pointerId !== press.id ||
+        Math.hypot(event.clientX - press.x, event.clientY - press.y) > 10
+      ) {
+        press = null;
+        return;
       }
-    },
-  );
+      press = null;
+      // The tap activates nothing: the row's click is swallowed.
+      const guard = (click: Event) => {
+        click.stopPropagation();
+        click.preventDefault();
+      };
+      root.addEventListener('click', guard, {capture: true, once: true});
+      setTimeout(() => root.removeEventListener('click', guard, true), 400);
+      close('next-frame');
+    };
+    root.addEventListener('pointerdown', onDown);
+    root.addEventListener('pointerup', onUp);
+    return () => {
+      root.removeEventListener('pointerdown', onDown);
+      root.removeEventListener('pointerup', onUp);
+    };
+  }, [close, isOpen]);
 
   const onKeyDown = useCallback(
     (event: ReactKeyboardEvent) => {
