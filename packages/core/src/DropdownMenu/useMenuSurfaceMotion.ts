@@ -5,7 +5,7 @@
 /**
  * @file useMenuSurfaceMotion.ts
  * @input React, the layer runtime's presentation hold, and
- *   menuSurfaceMotion.ts, loaded on demand
+ *   menuSurfaceMotion.ts, imported statically
  * @output Exports `useMenuSurfaceMotion`: the calls DropdownMenu makes as a
  *   trigger is touched, as the menu opens and as it starts to close
  * @position Internal to DropdownMenu; glue between the component and
@@ -14,11 +14,8 @@
  * A finger's or a pen's open grows the menu out of its trigger, a tap's open
  * included. The menu shrinks back into it as it starts to close. A mouse,
  * the keyboard and Reduce Motion keep the layer's own entrance. The grow's
- * code loads at the first touch on the page or on a trigger. A page no finger
- * touches never loads it. When the menu opens before that code arrives, the
- * surface stays clear until it does, then grows. A load that fails, or takes
- * longer than an entrance, shows the menu with the layer's own entrance
- * instead. A failed load is tried again at the next open.
+ * code ships with DropdownMenu: this variant imports it statically, so every
+ * open can grow. The loader stays as a shell that resolves at once.
  *
  * SYNC: When modified, update:
  * - /packages/core/src/DropdownMenu/DropdownMenu.tsx
@@ -34,13 +31,13 @@ import {devWarn} from '../utils/devWarning';
 import {subscribeInput} from '../utils/inputStream';
 import {createModuleLoader} from '../utils/moduleLoader';
 import {sharedState} from '../utils/sharedRealm';
-import type * as MenuSurfaceMotionModule from './menuSurfaceMotion';
+import * as ownMotion from './menuSurfaceMotion';
 import type {MenuSurfaceGeometry, MenuSurfaceMotion} from './menuSurfaceMotion';
 
-type MotionModule = typeof MenuSurfaceMotionModule;
+type MotionModule = typeof ownMotion;
 
-async function importOwnMotion(): Promise<MotionModule> {
-  return import('./menuSurfaceMotion');
+function importOwnMotion(): Promise<MotionModule> {
+  return Promise.resolve(ownMotion);
 }
 
 /**
