@@ -278,7 +278,7 @@ function itemStops(
     const {rect, held} = heldRead(item, isHeld);
     const fromEdge =
       (rtl ? box.right - rect.right : rect.left - box.left) / scale +
-      (rtl ? held : -held);
+      -held;
     return {
       item,
       stop: Math.min(Math.max(fromEdge - border + shown - padding, 0), end),
