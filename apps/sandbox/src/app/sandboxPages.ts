@@ -112,6 +112,12 @@ export const categories: SandboxCategory[] = [
           'A BottomSheet of rows over a page that scrolls with the document, to check a slow pull and a tap on a phone',
       },
       {
+        name: 'ContextMenu Touch Set',
+        href: '/pages/context-menu-set/',
+        description:
+          'A themed page that scrolls with the document, with one place each for a hold, a slide to pick, a still lift, an early drift and a short tap on a phone',
+      },
+      {
         name: 'List Reorder Cases',
         href: '/pages/list-reorder-cases/',
         description:
