@@ -54,6 +54,7 @@ describe('UIKIT_GESTURES', () => {
     expect(UIKIT_GESTURES.tap.allowableMovement.value).toBe(45);
     expect(UIKIT_GESTURES.tap.maximumIntervalBetweenTaps.value).toBe(350);
     expect(UIKIT_GESTURES.pan.hysteresis.value).toBe(10);
+    expect(UIKIT_GESTURES.pan.tapWobble.value).toBe(5);
     expect(UIKIT_GESTURES.pinch.hysteresis.value).toBe(8);
     expect(UIKIT_GESTURES.control.trackingExpansion.value).toBe(70);
     expect(UIKIT_GESTURES.velocity.currentWeight.value).toBe(0.2);

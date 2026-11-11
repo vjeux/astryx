@@ -46,7 +46,6 @@ import {
   type GestureRecognizerOptions,
   type NativeTouchBehavior,
 } from './GestureRecognizer';
-import {TAP_WOBBLE} from './tapWobble';
 import type {GestureEventContext, GestureTouch, Point} from './types';
 import {VelocityTracker} from './VelocityTracker';
 
@@ -451,7 +450,7 @@ export class PanGestureRecognizer extends GestureRecognizer {
     }
     const moved = this.raw;
     return (
-      this.travelAlongAxis(moved) >= TAP_WOBBLE &&
+      this.travelAlongAxis(moved) >= UIKIT_PAN.tapWobble.value &&
       this.classify(moved) === 'begin' &&
       !this.nativeCanScroll(moved.x, moved.y)
     );

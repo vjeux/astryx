@@ -64,10 +64,10 @@ import {
   type UIEvent as ReactUIEvent,
 } from 'react';
 
-import {TAP_WOBBLE} from '../gestures/tapWobble';
 import {VelocityTracker} from '../gestures/VelocityTracker';
 import {resolveSnapPoint} from '../motion/resolveSnapPoint';
 import {rubberBand} from '../motion/rubberBand';
+import {UIKIT_PAN} from '../motion/uikit/gestures';
 import {scroll} from '../motion/uikit/scroll';
 import {sheet} from '../motion/uikit/sheet';
 import {
@@ -1753,7 +1753,7 @@ export function useSheetGestures({
         armed.bottom && delta < 0 && chainAtBottom(armed.scrollers);
       if (
         (opposesTop || opposesBottom) &&
-        Math.abs(delta) >= TAP_WOBBLE &&
+        Math.abs(delta) >= UIKIT_PAN.tapWobble.value &&
         Math.abs(delta) > Math.abs(t.clientX - armed.startX) &&
         event.cancelable
       ) {

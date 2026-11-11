@@ -124,6 +124,17 @@ export const UIKIT_PAN = {
    *   0 at .began
    */
   hysteresis: {value: 10, unit: 'px'},
+  /**
+   * A tap's wobble. WebKit ends a touch's click when one of its moves is
+   * cancelled. So a pan or a pull leaves moves inside this distance to the
+   * browser. Mobile Safari commits its native pan on a kept move this long,
+   * so the hold starts at it.
+   * @source measured: Mobile Safari, iOS 26.2 simulator (iPhone 17 Pro), HID
+   *   swipes down a BottomSheet's list at its top, Nov 9 2026. A kept first
+   *   move of 4 px, its later moves cancelled, commits no native pan (3 of 3).
+   *   A kept first move of 5 px commits it (4 of 5).
+   */
+  tapWobble: {value: 5, unit: 'px'},
 } as const satisfies Record<string, GestureConstant>;
 
 export const UIKIT_SWIPE = {
