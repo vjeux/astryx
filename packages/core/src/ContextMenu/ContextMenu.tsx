@@ -83,7 +83,7 @@ import {useMenuDrillIn} from '../DropdownMenu/useMenuDrillIn';
 import {useInternalListFocus} from '../hooks/useListFocus';
 import {useLongPress} from '../hooks/useLongPress';
 import {pressableProps} from '../utils/pressFeedback';
-import {useDropdownMenuPress} from '../hooks/useMenuPress';
+import {useMenuPress} from '../hooks/useMenuPress';
 import {useTypeahead} from '../hooks/useTypeahead';
 import {shadowHostOf} from '../utils/flatTree';
 import {usePresentation} from '../utils/presentation';
@@ -768,7 +768,7 @@ export function ContextMenu({
     [isDisabled, openAtLocalPoint, getAnchorBaseRect],
   );
 
-  const menuPress = useDropdownMenuPress({
+  const menuPress = useMenuPress({
     menuRef: listRef,
     itemSelector: MENU_ITEM_SELECTOR,
     onDismiss: closeMenu,
