@@ -356,6 +356,10 @@ app to turn on.
   `keyboardTarget.ts` uses both.
 - `keyboardTarget.ts` exports `FIELD_CLEARANCE_AT_REPORT`, the 4 CSS px that a
   field's reveal and BottomSheet's hook both set at Chrome's first report.
+- `keyboardHeight.ts` exports `getResizedRoom`, the room a browser makes by
+  shrinking the page for the keyboard (FR8), and `getResizedRoomWidth`, the
+  width it measured that room at. `keyboardTarget.ts` reads both, and
+  `useMobileKeyboard.ts` reads the room.
 - The consumer documentation gains the Android viewport setting (FR8).
 
 ### Implementation gaps
