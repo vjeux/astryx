@@ -146,7 +146,7 @@ export function cancelNestedTouchPress(
   const target = event.target;
   if (
     container == null ||
-    (event.pointerType !== 'touch' && pressBoxesIn(container).length === 0) ||
+    (event.pointerType !== 'touch') ||
     !(target instanceof Element) ||
     target === event.currentTarget ||
     !hasInteractiveAncestor(target, container) ||
