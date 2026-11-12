@@ -2950,6 +2950,64 @@ describe("Lightbox gallery caption's toggle", () => {
     }
   });
 
+  it('opens again with its caption closed after closing with it open', async () => {
+    const long =
+      'A winding path through the forest, past the old mill and down to the river';
+    const media = [
+      {src: '/a.jpg', alt: 'A', caption: long},
+      {src: '/b.jpg', alt: 'B', caption: 'Golden hour'},
+    ];
+    // Two lines clamp the first caption: its text runs past them.
+    const inLongCaption = (element: Element) =>
+      element.classList.contains('astryx-text') && element.textContent === long;
+    const scrollHeight = vi
+      .spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+      .mockImplementation(function (this: HTMLElement) {
+        return inLongCaption(this) ? 120 : 0;
+      });
+    const clientHeight = vi
+      .spyOn(HTMLElement.prototype, 'clientHeight', 'get')
+      .mockImplementation(function (this: HTMLElement) {
+        return inLongCaption(this) ? 48 : 0;
+      });
+    try {
+      const {rerender} = render(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          index={0}
+          media={media}
+        />,
+      );
+      fireEvent.click(await screen.findByRole('button', {name: 'more'}));
+      await screen.findByRole('button', {name: 'less'});
+      rerender(
+        <Lightbox
+          isOpen={false}
+          onOpenChange={() => {}}
+          index={0}
+          media={media}
+        />,
+      );
+      rerender(
+        <Lightbox
+          isOpen={true}
+          onOpenChange={() => {}}
+          index={0}
+          media={media}
+        />,
+      );
+      expect(await screen.findByRole('button', {name: 'more'})).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      expect(screen.queryByRole('button', {name: 'less'})).toBeNull();
+    } finally {
+      scrollHeight.mockRestore();
+      clientHeight.mockRestore();
+    }
+  });
+
   it('renders the same caption elements with or without its toggle, clamped or open', async () => {
     const long =
       'A winding path through the forest, past the old mill and down to the river';
