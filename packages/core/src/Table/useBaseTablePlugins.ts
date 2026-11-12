@@ -36,8 +36,8 @@
  * - /packages/core/src/Table/Table.tsx (primary consumer)
  */
 
-import {useRef} from 'react';
-import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
+import {useEffect, useMemo, useRef} from 'react';
+import {identityKey} from './identityKey';
 import type {TablePlugin} from './types';
 import {devWarn} from '../utils/devWarning';
 
@@ -183,31 +183,32 @@ export function useBaseTablePlugins<T extends Record<string, unknown>>(
   basePlugins: TablePlugin<T>[],
   userPlugins: Record<string, TablePlugin<T>> | undefined,
 ): TablePlugin<T>[] {
-  // Only a committed render writes this cache. A render React discards cannot
-  // replace it.
-  const prevRef = useRef<{
-    basePlugins: TablePlugin<T>[];
-    userPlugins: Record<string, TablePlugin<T>> | undefined;
-    result: TablePlugin<T>[];
-  } | null>(null);
-  const prev = prevRef.current;
-  const result =
-    prev != null &&
-    prev.basePlugins === basePlugins &&
-    arePluginRecordsEqual(prev.userPlugins, userPlugins)
-      ? prev.result
-      : mergePlugins(basePlugins, userPlugins);
+  // The memo is keyed on the plugins' identities: the base plugins in order,
+  // and each named plugin whatever the record's own identity or key order. A
+  // render React discards cannot replace the committed array, and nothing is
+  // written during render.
+  const pluginsKey = pluginsIdentityKey(basePlugins, userPlugins);
+  const result = useMemo(
+    () => mergePlugins(basePlugins, userPlugins),
+    // eslint-disable-next-line @eslint-react/exhaustive-deps -- keyed by the plugins' identities, not the array's or the record's
+    [pluginsKey],
+  );
 
-  // Syncs the plugin cache with the committed plugins. It validates them only
-  // when the committed array changes, so each warning prints once.
-  useIsomorphicLayoutEffect(() => {
-    if (prevRef.current?.result !== result && userPlugins) {
+  // The array the dev console last validated.
+  const validatedRef = useRef<TablePlugin<T>[] | null>(null);
+  // Syncs the dev console's plugin warnings with the committed plugins. Each
+  // array is validated once, so a StrictMode replay prints nothing more.
+  useEffect(() => {
+    if (validatedRef.current === result) {
+      return;
+    }
+    validatedRef.current = result;
+    if (userPlugins) {
       for (const [name, plugin] of Object.entries(userPlugins)) {
         validatePlugin(name, plugin);
       }
     }
-    prevRef.current = {basePlugins, userPlugins, result};
-  });
+  }, [result, userPlugins]);
   return result;
 }
 
@@ -226,32 +227,15 @@ function mergePlugins<T extends Record<string, unknown>>(
 }
 
 /**
- * Compares two plugin records by checking that they have the same keys
- * and each key maps to the same plugin instance (by reference).
+ * A memo key for the plugins: the base plugins in order, then each named
+ * plugin by name, in name order, each plugin by identity.
  */
-function arePluginRecordsEqual<T extends Record<string, unknown>>(
-  a: Record<string, TablePlugin<T>> | undefined,
-  b: Record<string, TablePlugin<T>> | undefined,
-): boolean {
-  if (a === b) {
-    return true;
-  }
-  if (a == null || b == null) {
-    return false;
-  }
-
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-
-  for (const key of keysA) {
-    if (a[key] !== b[key]) {
-      return false;
-    }
-  }
-
-  return true;
+function pluginsIdentityKey<T extends Record<string, unknown>>(
+  basePlugins: ReadonlyArray<TablePlugin<T>>,
+  userPlugins: Record<string, TablePlugin<T>> | undefined,
+): string {
+  const named = Object.keys(userPlugins ?? {})
+    .sort()
+    .flatMap(name => [name, userPlugins?.[name]]);
+  return `${identityKey(basePlugins)}|${identityKey(named)}`;
 }
