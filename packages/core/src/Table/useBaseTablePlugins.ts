@@ -36,8 +36,7 @@
  * - /packages/core/src/Table/Table.tsx (primary consumer)
  */
 
-import {useRef} from 'react';
-import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
+import {useEffect, useRef, useState} from 'react';
 import type {TablePlugin} from './types';
 import {devWarn} from '../utils/devWarning';
 
@@ -183,31 +182,39 @@ export function useBaseTablePlugins<T extends Record<string, unknown>>(
   basePlugins: TablePlugin<T>[],
   userPlugins: Record<string, TablePlugin<T>> | undefined,
 ): TablePlugin<T>[] {
-  // Only a committed render writes this cache. A render React discards cannot
+  // The previous array, with the plugins that made it. It is state, adjusted
+  // during render when a plugin changes, so a render React discards cannot
   // replace it.
-  const prevRef = useRef<{
-    basePlugins: TablePlugin<T>[];
-    userPlugins: Record<string, TablePlugin<T>> | undefined;
-    result: TablePlugin<T>[];
-  } | null>(null);
-  const prev = prevRef.current;
-  const result =
-    prev != null &&
-    prev.basePlugins === basePlugins &&
-    arePluginRecordsEqual(prev.userPlugins, userPlugins)
-      ? prev.result
-      : mergePlugins(basePlugins, userPlugins);
+  const [cache, setCache] = useState(() => ({
+    basePlugins,
+    userPlugins,
+    result: mergePlugins(basePlugins, userPlugins),
+  }));
+  const isSamePlugins =
+    cache.basePlugins === basePlugins &&
+    arePluginRecordsEqual(cache.userPlugins, userPlugins);
+  const result = isSamePlugins
+    ? cache.result
+    : mergePlugins(basePlugins, userPlugins);
+  if (!isSamePlugins) {
+    setCache({basePlugins, userPlugins, result});
+  }
 
-  // Syncs the plugin cache with the committed plugins. It validates them only
-  // when the committed array changes, so each warning prints once.
-  useIsomorphicLayoutEffect(() => {
-    if (prevRef.current?.result !== result && userPlugins) {
+  // The array the dev console last validated.
+  const validatedRef = useRef<TablePlugin<T>[] | null>(null);
+  // Syncs the dev console's plugin warnings with the committed plugins. Each
+  // array is validated once, so a StrictMode replay prints nothing more.
+  useEffect(() => {
+    if (validatedRef.current === result) {
+      return;
+    }
+    validatedRef.current = result;
+    if (userPlugins) {
       for (const [name, plugin] of Object.entries(userPlugins)) {
         validatePlugin(name, plugin);
       }
     }
-    prevRef.current = {basePlugins, userPlugins, result};
-  });
+  }, [result, userPlugins]);
   return result;
 }
 

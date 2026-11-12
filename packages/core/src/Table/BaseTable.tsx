@@ -18,7 +18,7 @@ import {
   memo,
   useId,
   useMemo,
-  useRef,
+  useState,
   type ReactElement,
   type ReactNode,
   type Ref,
@@ -72,7 +72,6 @@ import {TableHeader} from './TableHeader';
 import {TableBody} from './TableBody';
 import {mergeProps} from '../utils';
 import {useMergedRefs} from '../hooks/useMergedRefs';
-import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {
   readsRowCount,
   readsRowIndex,
@@ -609,19 +608,28 @@ function BaseTableInner<T extends Record<string, unknown>>({
   // new array on every call, but if the contents haven't changed, we
   // reuse the previous reference. This prevents MemoizedTableRow from
   // re-rendering all rows when the column array is structurally identical.
-  // Only a committed render writes this cache. A render React discards cannot
-  // replace it.
-  const resolvedColumnsRef = useRef(transformedColumns);
+  // The previous array is state, kept with the inputs that made it and
+  // adjusted during render when those inputs change. A render React discards
+  // cannot replace it. Keyed on the inputs, the adjustment settles in one
+  // pass even when a plugin returns new column objects on every call.
+  const [columnsCache, setColumnsCache] = useState(() => ({
+    baseColumns,
+    plugins,
+    resolved: transformedColumns,
+  }));
   const resolvedColumns = areArraysShallowEqual(
-    resolvedColumnsRef.current,
+    columnsCache.resolved,
     transformedColumns,
   )
-    ? resolvedColumnsRef.current
+    ? columnsCache.resolved
     : transformedColumns;
-  // Syncs the column identity cache with the committed columns.
-  useIsomorphicLayoutEffect(() => {
-    resolvedColumnsRef.current = resolvedColumns;
-  });
+  if (
+    resolvedColumns !== columnsCache.resolved &&
+    (columnsCache.baseColumns !== baseColumns ||
+      columnsCache.plugins !== plugins)
+  ) {
+    setColumnsCache({baseColumns, plugins, resolved: resolvedColumns});
+  }
   const headerRowCount = mode === 'data' && resolvedColumns.length > 0 ? 1 : 0;
   const config = getTableVirtualizationConfig(virtualization);
   const windowFallbackReason = useMemo(() => {
