@@ -148,11 +148,10 @@ those contracts.
 - **INV4 — Mutable refs do not become hidden rendered state.** Refs MAY hold general
   non-rendering mutable data. A ref mutation MUST NOT be the sole source for a value
   later read to produce React-rendered output.
-  The owner's decision of 2026-11-09 (`component:Table/DEC-6`) makes an
-  exception for Table's plugin hooks: they MAY keep their latest config in refs
-  written during render. A new config object with the same values re-renders no
-  row. A changed value reaches a memoized row only when that row renders for
-  another reason.
+  Table's plugin hooks MAY keep their latest config in refs written during
+  render, as INV17's exception for them says (`component:Table/DEC-6`). A
+  changed value reaches a memoized row only when that row renders for another
+  reason.
   A callback ref MAY synchronously
   update an owned DOM node when that DOM update is itself the observable operation
   and attach, detach, replacement, and consumer override behavior preserve the
@@ -407,7 +406,10 @@ those contracts.
   render, except a lazy one-time initialization. A render React discards would
   otherwise leave an uncommitted value. A latest-value ref uses
   `useCommittedRef` (INV3, DEC-3). Exception: Markdown's streaming fade-in refs
-  (`component:Markdown` DEC-7, INV4) stay render-time writes. INV17 gap: three
+  (`component:Markdown` DEC-7, INV4) stay render-time writes. Exception: Table's
+  plugin hooks keep their latest config in refs written during render
+  (`component:Table` DEC-6), so a new config object with the same values
+  re-renders no row. INV17 gap: three
   sites read a latest-value ref during render or in `useMemo` instead of the
   value. INV17 gap: `useTableSortable`'s header reads the current sort from a
   ref, because its plugin is documented and tested as referentially stable;
