@@ -7,7 +7,8 @@
  *   input clock (inputAge.ts) and the document's pointer, keyboard, scroll
  *   and visibility events
  * @output PRESSABLE_ATTRIBUTE, PRESSED_ATTRIBUTE, pressableProps,
- *   pressFadeMs, installPressFeedback, cancelPress and installBoxHold
+ *   pressFadeMs, installPressFeedback, cancelPress, cancelPressWithin and
+ *   installBoxHold
  * @position The DOM half of the touch press model. usePressFeedback installs
  *   it, and the CSS arms live in interactionOverlay.stylex.ts.
  *
@@ -33,11 +34,13 @@
 // paints every press. A mouse, trackpad or Space press paints at once. The
 // controller reads the same query as the stylesheet, so they agree.
 //
-// A finger waits only inside a scroller. Outside one, a surface highlights in
-// the frame the finger lands, as a UIControl does. Inside one, it waits the
-// content-touch delay, because the touch can become a scroll. The delay counts
-// from the touch's own timestamp, so a late listener does not add to it. Rows
-// follow the same rule.
+// A finger waits only inside a scroller, or on a row that can swipe. Outside
+// them, a surface highlights in the frame the finger lands, as a UIControl
+// does. Inside them, it waits the content-touch delay, because the touch can
+// become a scroll or a swipe. The delay counts from the touch's own
+// timestamp, so a late listener does not add to it. Rows follow the same rule.
+// A swipe that takes the touch ends its press at once, before the finger
+// leaves the press's slop.
 //
 // A surface's hold does nothing, so it keeps the browser's long-press text
 // selection (AST-094). Only an element whose hold does something suppresses
@@ -58,7 +61,10 @@ import {isCoarsePointer, watchCoarsePointer} from './coarsePointer';
 import {reducedMotionFadeConsts} from '../motion/reducedMotion.stylex';
 import {parseMotionRoleValue} from '../motion/roles';
 import {readThemeTokens} from '../motion/themeTiming';
-import {isPressHeld} from '../privateAttributes/pressHeld.stylex';
+import {
+  isPressHeld,
+  pressWaitsForDrag,
+} from '../privateAttributes/pressHeld.stylex';
 import {subscribeInput} from './inputStream';
 import {isInsideScrollView} from './scrollView';
 import {msSinceInput} from './inputAge';
@@ -476,6 +482,18 @@ export function cancelPress(element: Element): void {
   }
 }
 
+/**
+ * Ends the finger's press on `container` or inside it, and its paint, at
+ * once. A drag calls it when it takes the touch, so nothing it moves shows a
+ * press, even a press whose finger is still inside the slop.
+ */
+export function cancelPressWithin(container: Element): void {
+  const element = finger.live?.element;
+  if (element != null && container.contains(element)) {
+    finish(finger);
+  }
+}
+
 /** A new press on an element owns its paint: the other slot's gesture there ends. */
 function takeOver(other: Slot, element: HTMLElement): void {
   if (other.live?.element === element) {
@@ -685,7 +703,9 @@ function onPointerDown(event: PointerEvent): void {
       kind: 'down',
       x: event.clientX,
       y: event.clientY,
-      delayed: !presentsAtOnce && isInsideScrollView(element),
+      delayed:
+        !presentsAtOnce &&
+        (isInsideScrollView(element) || pressWaitsForDrag(element)),
     }),
     msSinceInput(event.timeStamp, event),
   );

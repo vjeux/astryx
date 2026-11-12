@@ -2325,22 +2325,33 @@ describe('swipe', () => {
     it('takes no press while open: the root holds its press from the release that opens it until it closes', async () => {
       const {row} = renderRow();
       expect(row).toHaveAttribute('data-astryx-pressable');
-      expect(row).not.toHaveAttribute('data-astryx-press-held');
+      expect(row).toHaveAttribute('data-astryx-press-held', 'waits');
       dragLeading(row, 45);
       // Settling open already counts as open. The root stays a pressable
       // surface; the press controller paints nothing on a held one.
-      expect(row).toHaveAttribute('data-astryx-press-held');
+      expect(row).toHaveAttribute('data-astryx-press-held', 'held');
       expect(row).toHaveAttribute('data-astryx-pressable');
       await settled();
       expect(xOf(row)).toBe(72);
-      expect(row).toHaveAttribute('data-astryx-press-held');
+      expect(row).toHaveAttribute('data-astryx-press-held', 'held');
       const f = finger(screen.getByRole('button', {name: 'Conversation'}), 2);
       f.down(150);
       f.up();
-      // Closing: the press is free again, for the next tap.
-      expect(row).not.toHaveAttribute('data-astryx-press-held');
+      // Closing frees the press for the next tap, which waits again.
+      expect(row).toHaveAttribute('data-astryx-press-held', 'waits');
       await settled();
       expect(xOf(row)).toBe(0);
+    });
+
+    it("makes a finger's press wait while the row can swipe, as in a scroll view: the root carries the mark until the swipe goes", () => {
+      const {row, unmount} = renderRow();
+      expect(row).toHaveAttribute('data-astryx-press-held', 'waits');
+      unmount();
+      expect(row).not.toHaveAttribute('data-astryx-press-held');
+      render(<Item label="Plain" onClick={vi.fn()} data-testid="plain" />);
+      expect(screen.getByTestId('plain')).not.toHaveAttribute(
+        'data-astryx-press-held',
+      );
     });
 
     it('leaves a tap on a resting entry to the entry, and a tap on a closed row to the row', async () => {
@@ -3116,7 +3127,7 @@ describe('swipe', () => {
     dragLeading(open, 45);
     await settled();
     expect(xOf(open)).toBe(72);
-    expect(open).toHaveAttribute('data-astryx-press-held');
+    expect(open).toHaveAttribute('data-astryx-press-held', 'held');
     rerender(<Item label="Open" onClick={vi.fn()} data-testid="open" />);
     expect(screen.getByTestId('open')).toBe(open);
     expect(open).not.toHaveAttribute('data-astryx-press-held');
