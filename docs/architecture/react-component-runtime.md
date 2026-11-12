@@ -358,7 +358,8 @@ those contracts.
   subpath: it reports whether a scroller's scroll is a finger's, now or at a
   past time, and, through `onEnd`, when that scroll ends. `timing`, UIKit's
   measured timing table, is on that subpath for Lab components that play the
-  same measured motion.
+  same measured motion. The motion engine's `AnimateOptions` and
+  `MotionHandle` types are on that subpath too, for the same components.
 - **INV15 — The animator animates a number.** The animator has a value mode:
   it plays a number, such as a count or a chart value, on the same timing as its property channels: theme motion tokens for a program-started change, and measured springs only where `spec:AST-094` FR45 keeps them, and hands the value to an `onUpdate`
   callback each frame for the component to format and write. The component owns
