@@ -18,6 +18,7 @@ import {flushSync} from 'react-dom';
 import {playHaptic} from '../gestures/haptics';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
 import {contextMenu} from '../motion/uikit/contextMenu';
+import {useCommittedRef} from '../hooks/useCommittedRef';
 import {ContextMenuPressRecognizer} from './contextMenuPress';
 
 /** What ContextMenu reaches of a mounted touch layer. */
@@ -58,12 +59,9 @@ export function ContextMenuTouchLayer({
   onCommit,
   onCancel,
 }: ContextMenuTouchLayerProps): null {
-  const onOpenRef = useRef(onOpen);
-  onOpenRef.current = onOpen;
-  const onCommitRef = useRef(onCommit);
-  onCommitRef.current = onCommit;
-  const onCancelRef = useRef(onCancel);
-  onCancelRef.current = onCancel;
+  const onOpenRef = useCommittedRef(onOpen);
+  const onCommitRef = useCommittedRef(onCommit);
+  const onCancelRef = useCommittedRef(onCancel);
   const hasPressOpenedRef = useRef(false);
 
   // The gesture hook follows the element behind the ref, so a `triggerAs`

@@ -119,6 +119,7 @@ import {
   useComponentTranslator,
 } from '../i18n/useComponentTranslator';
 import english from '../i18n/generated-english/ContextMenu/ContextMenu.generated';
+import {useCommittedRef} from '../hooks/useCommittedRef';
 
 registerEnglishFallback(english);
 
@@ -421,7 +422,6 @@ export function ContextMenu({
   // touch open focuses the menu itself; other opens focus its first row.
   const focusOnShowRef = useRef<'first' | 'menu' | null>(null);
   const focusFirstRef = useRef<() => void>(() => {});
-  const focusMenuRef = useRef<() => void>(() => {});
   const [submenuPath, setSubmenuPath] = useState<ContextMenuItemData[]>([]);
   const currentSubmenu = submenuPath.at(-1);
   const currentItems = currentSubmenu?.items ?? items;
@@ -443,9 +443,40 @@ export function ContextMenu({
   );
 
   const outsidePress = useOutsidePress();
-  // Starts the outside-press watch as the menu shows. It is set below, where
-  // the menu's list and its close exist.
-  const watchOutsideRef = useRef<() => void>(() => {});
+  // The menu is a manual popover: native light dismiss would read the mouseup
+  // of the opening right-click as a press outside. So one watch closes it. A
+  // mouse or a pen closes it at the press. Under the touch model, a touch
+  // closes it as it begins to pan, or at its lift, and the page stays free to
+  // scroll. Otherwise a touch closes it at its compatibility mousedown. The
+  // press that opened the menu keeps it open. The layer's onShow starts it as
+  // the menu shows; the menu's list and its close exist by then.
+  const watchOutsideRef = useCommittedRef(() => {
+    const trigger = triggerRef.current;
+    if (trigger == null) {
+      return;
+    }
+    // The menu mounts after its first show, so each press reads it then. It
+    // renders in the trigger's own root, which may be another window's.
+    const root = trigger.getRootNode();
+    outsidePress.start(
+      trigger,
+      path => listRef.current != null && path.includes(listRef.current),
+      () => {
+        if (currentGesture() !== openingGestureRef.current) {
+          closeMenu();
+        }
+      },
+      {
+        pointerTypes: touchModes ? ['touch'] : [],
+        closesOnPan: touchModes,
+        pressTypes: touchModes ? ['mouse', 'pen'] : ['mouse', 'pen', 'touch'],
+        root: shadowHostOf(root) != null ? root : null,
+      },
+    );
+  });
+  const focusMenuRef = useCommittedRef(() =>
+    listRef.current?.focus({preventScroll: true}),
+  );
   const layer = useLayerInternal({
     mode: 'context',
     // Mounted at the first open and kept (see the file header).
@@ -475,7 +506,7 @@ export function ContextMenu({
             : focusFirstRef.current(),
         );
       }
-    }, [onOpenChange]),
+    }, [onOpenChange, watchOutsideRef, focusMenuRef]),
     lightDismiss: false,
   });
 
@@ -528,7 +559,6 @@ export function ContextMenu({
     focusFollowsLastInput: true,
   });
   focusFirstRef.current = focusFirst;
-  focusMenuRef.current = () => listRef.current?.focus({preventScroll: true});
 
   // Join the shared stack so an Escape press dismisses exactly one top-most
   // surface. BottomSheet owns its own dismissal path.
@@ -551,37 +581,6 @@ export function ContextMenu({
           el === document.activeElement || el.contains(document.activeElement),
       ),
   });
-
-  // The menu is a manual popover: native light dismiss would read the mouseup
-  // of the opening right-click as a press outside. So one watch closes it. A
-  // mouse or a pen closes it at the press. Under the touch model, a touch
-  // closes it as it begins to pan, or at its lift, and the page stays free to
-  // scroll. Otherwise a touch closes it at its compatibility mousedown. The
-  // press that opened the menu keeps it open.
-  watchOutsideRef.current = () => {
-    const trigger = triggerRef.current;
-    if (trigger == null) {
-      return;
-    }
-    // The menu mounts after its first show, so each press reads it then. It
-    // renders in the trigger's own root, which may be another window's.
-    const root = trigger.getRootNode();
-    outsidePress.start(
-      trigger,
-      path => listRef.current != null && path.includes(listRef.current),
-      () => {
-        if (currentGesture() !== openingGestureRef.current) {
-          closeMenu();
-        }
-      },
-      {
-        pointerTypes: touchModes ? ['touch'] : [],
-        closesOnPan: touchModes,
-        pressTypes: touchModes ? ['mouse', 'pen'] : ['mouse', 'pen', 'touch'],
-        root: shadowHostOf(root) != null ? root : null,
-      },
-    );
-  };
 
   const listKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
