@@ -24,6 +24,7 @@ import {
 } from 'react';
 import type {ReactNode} from 'react';
 import {Table} from './Table';
+import {useBaseTablePlugins} from './useBaseTablePlugins';
 import {useTableRowStatus} from './plugins/rowStatus';
 import {useTableRowIndex} from './plugins/rowIndex';
 import type {UseTableRowStatusConfig} from './index';
@@ -724,6 +725,60 @@ describe('identity caches after a render React discards', () => {
     } finally {
       warn.mockRestore();
     }
+  });
+
+  it('re-renders a table with no columns prop when its data array is new', () => {
+    const data = createTestData(2);
+    const {rerender} = render(<Table data={data} />);
+
+    // Generated columns are new objects on every render.
+    rerender(<Table data={[...data]} />);
+
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+  });
+
+  it('keeps one plugin array for an inline array of the same base plugins', () => {
+    const basePlugin: TablePlugin<TestRow> = {transformBodyRow: props => props};
+    const arrays: TablePlugin<TestRow>[][] = [];
+    function Probe({count}: {count: number}) {
+      // The hook's own example: a base array written inline.
+      arrays.push(useBaseTablePlugins([basePlugin], undefined));
+      return <span>{count}</span>;
+    }
+    const {rerender} = render(<Probe count={0} />);
+
+    rerender(<Probe count={1} />);
+
+    expect(arrays.at(-1)).toBe(arrays[0]);
+  });
+
+  it('settles when a caller writes its plugin objects inline', () => {
+    function Probe({count}: {count: number}) {
+      const plugins = useBaseTablePlugins<TestRow>(
+        [{transformBodyRow: props => props}],
+        {custom: {transformColumns: columns => columns}},
+      );
+      return <span>{`${count}:${plugins.length}`}</span>;
+    }
+    const {rerender} = render(<Probe count={0} />);
+
+    rerender(<Probe count={1} />);
+
+    expect(screen.getByText('1:2')).toBeInTheDocument();
+  });
+
+  it('keeps another table unaffected when a caller edits its columns array after rendering', () => {
+    const data = createTestData(2);
+    const idColumn: TableColumn<TestRow> = {key: 'id', header: 'ID'};
+    const nameColumn: TableColumn<TestRow> = {key: 'name', header: 'Name'};
+    const columns = [idColumn, nameColumn];
+    render(<Table data={data} columns={columns} idKey="id" />);
+
+    // An edit in place, after the first table rendered.
+    columns.push({key: 'value', header: 'Value'});
+    render(<Table data={data} columns={[idColumn, nameColumn]} idKey="id" />);
+
+    expect(screen.getAllByRole('table').at(-1)).not.toHaveTextContent('Value');
   });
 
   it('renders a custom plugin whose transformColumns returns a new column each call', () => {
