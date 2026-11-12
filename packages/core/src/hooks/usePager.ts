@@ -1165,7 +1165,7 @@ export function createPager(
         seed != null &&
         wasLaidOut &&
         !isFlipped &&
-        !isPastEnd
+        isPastEnd === isPastEnd
       ) {
         retargetSettle(animator, remap, seed);
         return;
