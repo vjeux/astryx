@@ -28,9 +28,11 @@
  * them all, then ride the row. Past the open width the outermost entry's
  * colour, painted beside it, fills the rest out to that edge. On a confirmed
  * full swipe it slides to the row's edge. While an entry covers the panel, its
- * colour fills the track and the others hide. So no entry's colour shows behind
- * or between other entries. No wrapper holds the entries, and the colours are
- * pseudo-elements.
+ * colour fills the track and the others hide. The drag's cover reads the
+ * confirm custom property, which the gesture writes in the same event as the
+ * travel, so the cover cannot paint a frame later. A tapped entry's cover is
+ * the React state. So no entry's colour shows behind or between other entries.
+ * No wrapper holds the entries, and the colours are pseudo-elements.
  *
  * SYNC: the property names are useSwipeAction.ts's.
  */
@@ -93,8 +95,9 @@ const styles = stylex.create({
   // edge until the row has uncovered them all. Then they ride the row. They sit
   // on the surface the track paints: the neutral variant is translucent and
   // shows what is under it. Its `::before` is the cover fill: the covering
-  // entry's colour, shown only while that entry covers the panel
-  // (swipeTrackFillStyles).
+  // entry's colour. The drag shows it from the confirm custom property, in
+  // the same write as the travel. A value above 0 shows the fill. A tapped
+  // entry's cover (swipeTrackCovered) shows it too.
   swipeTrack: {
     position: 'absolute',
     insetBlock: 0,
@@ -110,7 +113,7 @@ const styles = stylex.create({
       position: 'absolute',
       inset: 0,
       zIndex: -1,
-      opacity: 0,
+      opacity: `clamp(0, calc(${SWIPE_CONFIRM} * 1000), 1)`,
       pointerEvents: 'none',
     },
   },
@@ -158,6 +161,12 @@ const styles = stylex.create({
   // its colour never mixes with the covering entry's.
   swipeEntryCovered: {
     opacity: 0,
+  },
+  // The same hide, from the confirm custom property, for every entry the
+  // outermost one covers during a drag. It updates in the write that moves
+  // that entry, so no frame shows both.
+  swipeEntryFollowConfirm: {
+    opacity: `clamp(0, calc(1 - ${SWIPE_CONFIRM} * 1000), 1)`,
   },
   // Half strength as a filter, so the entry's own opacity stays free for the
   // cover.
@@ -352,6 +361,7 @@ export default function SwipeActionsLayer({
         styles.swipeEntry,
         swipeVariantStyles[variant],
         entry.isDisabled === true && styles.swipeEntryDisabled,
+        !isOuter && styles.swipeEntryFollowConfirm,
         coverIndex != null && index !== coverIndex && styles.swipeEntryCovered,
         isOuter && styles.swipeOuterEntry,
         isOuter &&

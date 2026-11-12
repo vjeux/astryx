@@ -1595,8 +1595,9 @@ describe('swipe', () => {
     // resting box. The track moves with the row. Every entry stays pinned at
     // the outer edge until the row has uncovered them all, as one block with no
     // wrapper. The gesture wrote that geometry on the window: 144 px of
-    // entries. The outermost adds its slide by the full swipe's confirm. No
-    // entry's opacity reads the confirm: a cover hides the others at once.
+    // entries. The outermost adds its slide by the full swipe's confirm. The
+    // other entries' opacity reads that same confirm, so the cover hides them
+    // in the write that slides the outermost entry.
     const travel = 'var(--_item-swipe-travel,0px)';
     const confirm = 'var(--_item-swipe-confirm,0)';
     const declared = (element: Element | null, property: string) =>
@@ -1620,7 +1621,9 @@ describe('swipe', () => {
     expect(declared(other, 'transform')).toEqual([
       `transform:translate3d(${pinned},0,0)`,
     ]);
-    expect(declared(other, 'opacity')).toEqual([]);
+    expect(declared(other, 'opacity')).toEqual([
+      `opacity:clamp(0,calc(1-${confirm}*1000),1)`,
+    ]);
     expect(declared(outermost, 'transform')).toEqual([
       `transform:translate3d(calc(${pinned}+var(--_item-swipe-slide,0px)*${confirm}),0,0)`,
     ]);
@@ -2636,6 +2639,50 @@ describe('swipe', () => {
         expect(xOf(row)).toBe(225);
         expect(confirmOf(row)).toBe(0);
         expect(isHidden(other)).toBe(false);
+        f.up();
+      });
+
+      it('keeps the confirm in step with the row while a full swipe backs out, with no step down to 0', () => {
+        const {row} = twoEntries();
+        openRow(row);
+        const [other] = entriesOf(row, 'leading');
+        // The cover reads the confirm the gesture writes with the travel, so
+        // the two paint in one write. The React class arrives later.
+        expect(
+          rulesDeclaredFor(other).some(
+            rule =>
+              rule.includes('opacity') &&
+              rule.includes('--_item-swipe-confirm'),
+          ),
+        ).toBe(true);
+        expect(
+          rulesDeclaredFor(trackOf(row, 'leading')).some(
+            rule =>
+              rule.includes('::before') &&
+              rule.includes('--_item-swipe-confirm'),
+          ),
+        ).toBe(true);
+        const f = finger(row);
+        f.down(10);
+        f.move(20);
+        f.move(35);
+        f.move(35 + 96);
+        // The arming frame starts the confirm at 0. The run-ahead carries it
+        // to 1. It does not step to the slope of the travel already drawn.
+        expect(confirmOf(row)).toBeLessThan(0.2);
+        caughtUp();
+        expect(confirmOf(row)).toBe(1);
+        const samples: number[] = [];
+        for (let dx = 95; dx >= 56; dx -= 1) {
+          f.move(35 + dx);
+          samples.push(confirmOf(row));
+        }
+        const drops = samples.slice(1).map((value, i) => samples[i] - value);
+        // One pixel of the finger moves the confirm a little. A step to 0
+        // while the row is still ahead is the flicker.
+        expect(Math.max(...drops)).toBeLessThan(0.35);
+        expect(samples[0]).toBeGreaterThan(0.5);
+        expect(samples[samples.length - 1]).toBeLessThan(0.05);
         f.up();
       });
 

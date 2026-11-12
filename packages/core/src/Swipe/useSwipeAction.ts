@@ -493,6 +493,12 @@ interface Drag {
   /** The full swipe confirmed at some point in this swipe. */
   wasConfirmed: boolean;
   /**
+   * The drawn travel (logical px) where this drag's confirm is 0. Set once,
+   * when the full swipe first arms, and kept while the finger backs out.
+   * Null before that.
+   */
+  confirmShownFrom: number | null;
+  /**
    * Under Reduce Motion, when the cross-fade a confirm or a back-out started
    * ends (performance.now() ms): until then the moves leave it alone.
    */
@@ -692,25 +698,44 @@ export function useSwipeAction({
    * The full swipe's confirm for a travel (physical px). It is 0 short of the
    * confirm point, 1 at UIKit's confirmation offset, and in step with the row
    * between them. So the outermost entry covers the space as the row runs
-   * ahead, and gives it back as the row backs out. It is 0 while the side's
-   * outermost entry does not cover the panel. Drawn from the travel in the same
-   * animation (the shared drag's companion), it cannot drift from the row.
+   * ahead, and gives it back as the row backs out. A drag that can confirm
+   * keeps that slope for the whole press, including the way back, so the value
+   * does not step to 0 when the cover state changes. After the lift, the slope
+   * holds only while the outermost entry covers the panel. Drawn from the
+   * travel in the same animation (the shared drag's companion), it cannot
+   * drift from the row.
    */
   const confirmOf = (x: number): number => {
     const layout = layoutRef.current;
+    if (layout == null) {
+      return 0;
+    }
     const state = stateRef.current;
-    // Only the outermost entry's cover moves it. A drag that cannot confirm
-    // leaves every entry where it is.
-    if (
-      layout == null ||
-      state.side !== layout.side ||
-      state.cover !== latestRef.current.sides[layout.side] - 1 ||
-      !latestRef.current.canConfirm(layout.side)
-    ) {
+    const drag = dragRef.current;
+    const outermost = latestRef.current.sides[layout.side] - 1;
+    // The drag's own flag, not the React cover. The cover paints a frame
+    // later, and reading it here steps the confirm between 0 and the slope.
+    const dragFollows =
+      drag != null &&
+      drag.started &&
+      drag.canConfirm &&
+      drag.layout.side === layout.side &&
+      (drag.isArmed || drag.wasConfirmed);
+    const coverFollows =
+      state.side === layout.side &&
+      state.cover === outermost &&
+      latestRef.current.canConfirm(layout.side);
+    if (!dragFollows && !coverFollows) {
       return 0;
     }
     const travel = x * physicalSign(layout.side, layout.inlineSign);
-    const from = confirmPoint(layout.openWidth, layout.rowWidth);
+    // While the finger is down the slope starts where the swipe armed, so the
+    // first confirmed frame is 0 and the run-ahead carries it to 1. After the
+    // lift it starts at the confirm point, with the settle.
+    const from =
+      dragFollows && drag != null && drag.confirmShownFrom != null
+        ? drag.confirmShownFrom
+        : confirmPoint(layout.openWidth, layout.rowWidth);
     const to = confirmedOffset(layout.rowWidth);
     if (to <= from) {
       return travel >= to ? 1 : 0;
@@ -1039,6 +1064,7 @@ export function useSwipeAction({
         (latestRef.current.sides[side] < 2 || isDeliberate),
       confirmAt: confirmPoint(layout.openWidth, layout.rowWidth),
       isArmed: false,
+      confirmShownFrom: null,
       isScroll: move.input === 'scroll',
       raw: 0,
       held: 0,
@@ -1107,6 +1133,11 @@ export function useSwipeAction({
       // once, inside the cross-fade below.
       const from = leadNow(drag, now);
       const velocity = leadVelocity(drag, now);
+      // The confirm's 0 is the travel drawn at this arming, before the lead
+      // grows. Later frames move it with the row. Backing out keeps the same 0.
+      if (isArmed && drag.confirmShownFrom == null) {
+        drag.confirmShownFrom = held + from;
+      }
       drag.lead = isArmed
         ? Math.max(0, confirmedOffset(layout.rowWidth) - held)
         : 0;

@@ -16,7 +16,9 @@
  *   row's own content closes it and clicks nothing, and a scroll that starts on
  *   it closes it. A full swipe confirms on the finger and fires: the row runs
  *   ahead, and the outermost entry covers the space. One that backs out closes,
- *   with the entries pinned or riding at every frame. Storyboards. Under Reduce
+ *   with the entries pinned or riding at every frame. Crossing the confirm
+ *   point, the outermost entry's slide and its cover change together on every
+ *   frame. Storyboards. Under Reduce
  *   Motion a release, that tap, a confirm and a back-out land with no travel,
  *   at the bottom of an opacity dip.
  * @position Interaction proofs of Item's swipeActions, in the shape of
@@ -176,7 +178,17 @@ interface Frame {
   /** The row's opacity then (Reduce Motion's dip). */
   opacity: number;
   /** Where the row and each part of the trailing panel were drawn then. */
-  parts: {root: number; panel: number; track: number; entries: number};
+  parts: {
+    root: number;
+    panel: number;
+    track: number;
+    entries: number;
+    /** The full swipe's confirm, 0 to 1, as written on the root. */
+    confirm: number;
+    /** The inner entry's opacity, and the track cover fill's. */
+    inner: number;
+    fill: number;
+  };
 }
 
 /**
@@ -226,6 +238,7 @@ async function recordFrames(row: Locator): Promise<void> {
           animated(el);
     const panel = node.querySelector('[data-swipe-panel="trailing"]');
     const track = panel?.firstElementChild ?? null;
+    const inner = track?.firstElementChild ?? null;
     // Every frame the page draws, travel or not: what a judgment per frame
     // counts against.
     const drawn: number[] = [];
@@ -249,7 +262,18 @@ async function recordFrames(row: Locator): Promise<void> {
             root: x(node),
             panel: x(panel),
             track: x(track),
-            entries: x(track?.firstElementChild ?? null),
+            entries: x(inner),
+            confirm: parseFloat(
+              style.getPropertyValue('--_item-swipe-confirm') || '0',
+            ),
+            inner:
+              inner == null || track?.childElementCount === 1
+                ? 1
+                : Number(getComputedStyle(inner).opacity),
+            fill:
+              track == null
+                ? 0
+                : Number(getComputedStyle(track, '::before').opacity),
           },
         });
       }
@@ -1494,6 +1518,54 @@ test('a full swipe from the open row confirms on the finger: the row runs ahead 
   expect(past?.fill).toBeCloseTo(1, 2);
   // Lifted there: Delete fires and the story removes the row.
   await expect(rows).toHaveCount(before - 1);
+});
+
+test('crossing the confirm point, the outermost entry and its cover change together on every frame', async ({
+  page,
+}) => {
+  const opened = await openRow(page);
+  const {driver, row, rest} = opened;
+  const openWidth = await restOpen(opened);
+  const start = {x: opened.start.x - openWidth, y: opened.start.y};
+  const confirmAt = confirmPointOf(openWidth, rest.width);
+  const h = swipeActions.hysteresis;
+  await recordFrames(row);
+  await recordLift(page);
+  // Out past the confirm point, then back to 200 px of swipe. Slow, so a step
+  // in the confirm is not one frame of the finger.
+  const out = drag(
+    start,
+    {x: start.x - (confirmAt + 40 + h - openWidth), y: start.y},
+    {durationMs: 1400, hz: 60},
+  ).slice(0, -1);
+  const last = out[out.length - 1];
+  const back = drag(
+    last.fingers[0],
+    {x: start.x - (200 + h - openWidth), y: start.y},
+    {durationMs: 1400, hz: 60, restMs: 200},
+  ).map(frame => ({...frame, t: frame.t + last.t + 16}));
+  await driver.play([...out, ...back.slice(1)]);
+  const lift = await liftOf(page);
+  const frames = (await framesOf(page)).filter(frame => frame.at < lift);
+  expect(frames.length).toBeGreaterThan(20);
+  const confirms = frames.map(frame => frame.parts.confirm);
+  expect(Math.max(...confirms)).toBeGreaterThan(0.8);
+  expect(confirms[confirms.length - 1]).toBeLessThan(0.05);
+  for (let i = 1; i < frames.length; i += 1) {
+    const jump = Math.abs(
+      frames[i].parts.confirm - frames[i - 1].parts.confirm,
+    );
+    expect(jump, `frame ${i} stepped the confirm`).toBeLessThan(0.35);
+  }
+  for (const frame of frames) {
+    if (frame.parts.confirm > 0.001) {
+      expect(frame.parts.inner).toBeLessThan(0.05);
+      expect(frame.parts.fill).toBeGreaterThan(0.95);
+    } else {
+      expect(frame.parts.inner).toBeGreaterThan(0.95);
+      expect(frame.parts.fill).toBeLessThan(0.05);
+    }
+  }
 });
 
 test('backing out of a full swipe confirmed from the open row closes the row and fires nothing; the entries stay pinned below the open width and ride the row above it, frame by frame', async ({
