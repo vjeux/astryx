@@ -11,12 +11,12 @@
 
 import {
   useCallback,
-  useInsertionEffect,
   useRef,
   useState,
   type FocusEvent,
   type RefObject,
 } from 'react';
+import {useCommittedRef} from '../hooks/useCommittedRef';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {
   usePopoverInternal,
@@ -92,8 +92,10 @@ export function useSelectorPresentation({
   const {isHeld: isSheetPresented, release: releaseSheet} = usePresentationHold(
     {isOpen: isSheetOpen, presentation: true},
   );
-  const onHideRef = useRef(onHide);
-  const onShowRef = useRef(onShow);
+  // The committed show and hide reports. They are current ahead of any layout
+  // effect that shows or hides the popover in the same commit.
+  const onHideRef = useCommittedRef(onHide);
+  const onShowRef = useCommittedRef(onShow);
   const didShowPopoverRef = useRef(false);
   // The open list's container, read when the popover hides to tell focus that
   // is still inside the list from focus that moved to another element.
@@ -104,12 +106,6 @@ export function useSelectorPresentation({
     prepareFocusReturn,
     resetFocusReturn,
   } = useFocusReturnVisibility(triggerModality);
-  // Syncs the popover's show and hide reports with the committed callbacks,
-  // ahead of any layout effect that shows or hides it in the same commit.
-  useInsertionEffect(() => {
-    onHideRef.current = onHide;
-    onShowRef.current = onShow;
-  });
 
   const handlePopoverHide = useCallback(() => {
     onHideRef.current();
@@ -131,12 +127,12 @@ export function useSelectorPresentation({
     }
     prepareFocusReturn();
     trigger?.focus();
-  }, [isFocusReturnAlways, prepareFocusReturn, triggerRef]);
+  }, [isFocusReturnAlways, onHideRef, prepareFocusReturn, triggerRef]);
   const handlePopoverShow = useCallback(() => {
     didShowPopoverRef.current = true;
     resetFocusReturn();
     onShowRef.current();
-  }, [resetFocusReturn]);
+  }, [onShowRef, resetFocusReturn]);
   const popover = usePopoverInternal({
     ...popoverOptions,
     onHide: handlePopoverHide,
@@ -163,6 +159,7 @@ export function useSelectorPresentation({
     return didShowPopoverRef.current;
   }, [
     activePresentationHold,
+    onShowRef,
     releaseSheet,
     resetFocusReturn,
     resolvedPresentation,
@@ -178,7 +175,7 @@ export function useSelectorPresentation({
     } else {
       hidePopover();
     }
-  }, [hidePopover, prepareFocusReturn]);
+  }, [hidePopover, onHideRef, prepareFocusReturn]);
 
   const handleTriggerFocus = useCallback(
     (_event: FocusEvent<HTMLElement>) => {
