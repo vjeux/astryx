@@ -861,8 +861,8 @@ it on the surface inside the layer and run no layout while it plays.
 - `Layer/outsidePress.ts` owns the outside-press watch for a text field's
   manual layer, used by BaseTypeahead, DateInput, DateTimeInput and
   ChatComposerInput's trigger menu, and for ContextMenu's menu, which judges
-  a mouse's or a pen's press as it goes down, and a touch's too under a fine
-  pointer (`pressTypes`). It also owns the per-document count of outside
+  a mouse's or a pen's press as it goes down, and a touch's too outside the
+  touch model (a fine pointer, or `presentation="popover"`) (`pressTypes`). It also owns the per-document count of outside
   closes that a modal backdrop press reads
   (`family:overlay-dismissal` FR11).
 - `DropdownMenuContext` and `DropdownMenuSubMenu` own the current local

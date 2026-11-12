@@ -21,11 +21,18 @@ import {ContextMenuPressRecognizer} from './contextMenuPress';
 const COMMIT = contextMenu.press.commitMs;
 const DISPLAY = contextMenu.press.menuDisplayMs;
 
+/** The press, with the event clock its transitions run at. */
+class TimedPress extends ContextMenuPressRecognizer {
+  get clockTime(): number {
+    return this.now();
+  }
+}
+
 function setup(
   options: ConstructorParameters<typeof ContextMenuPressRecognizer>[0] = {},
 ) {
   const harness = createHarness();
-  const press = new ContextMenuPressRecognizer({name: 'press', ...options});
+  const press = new TimedPress({name: 'press', ...options});
   const states: string[] = [];
   press.addTransitionListener((recognizer, _from, to) => {
     states.push(`${to}@${recognizer.clockTime}`);

@@ -1215,7 +1215,7 @@ describe.each([
       expect(onTouchEnd).toHaveBeenCalledTimes(1);
     });
 
-    it('keeps today’s menu with presentation="popover": a held finger opens it at 500 ms through today’s long press, with no growth and no scroll lock', () => {
+    it('keeps today’s menu with presentation="popover": a held finger opens it at 500 ms through today’s long press, with no scroll lock', () => {
       const trigger = renderMenu({presentation: 'popover'});
       const shows = () =>
         vi.mocked(HTMLElement.prototype.showPopover).mock.calls.length;
@@ -1288,7 +1288,7 @@ describe('ContextMenu under a fine pointer: the touch model costs nothing', () =
     vi.unstubAllGlobals();
   });
 
-  it('opens today’s menu for a finger held 500 ms (today’s long press), with no touch model: no growth, no scroll lock, the first row focused', () => {
+  it('opens today’s menu for a finger held 500 ms (today’s long press), with no touch model: no scroll lock, the first row focused', () => {
     // A fine pointer in this context, before any check.
     expect(window.matchMedia('(pointer: coarse)').matches).toBe(false);
     const onTouchStart = vi.fn();
