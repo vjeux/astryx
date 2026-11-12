@@ -101,7 +101,9 @@ import {
 } from '../motion/spring';
 import {swipeActions as SWIPE} from '../motion/uikit/swipeActions';
 import {setPressHeld} from '../privateAttributes/pressHeld.stylex';
+import {setPressWaits} from '../privateAttributes/pressWaits.stylex';
 import {subscribeInput} from '../utils/inputStream';
+import {cancelPressWithin} from '../utils/pressFeedback';
 import {lockSelection} from '../utils/selectionLock';
 import type {CompositorPart} from '../dragToSnapPoints/compositorSettle';
 
@@ -1049,6 +1051,9 @@ export function useSwipeAction({
       wasConfirmed: false,
       layout,
     };
+    // The touch is the swipe's from here. The row and its contents show no
+    // press, even before the finger leaves the press's slop.
+    cancelPressWithin(root);
     return true;
   };
 
@@ -1348,6 +1353,20 @@ export function useSwipeAction({
     // The model reads the latest state and options through refs, and the
     // callbacks it reaches are stable: one shared drag for the root's life.
   }, [landed]);
+
+  // A finger's press on a row that can swipe waits the content-touch delay, as
+  // it does in a scroll view. So a touch that becomes a swipe paints no press.
+  const canSwipe = sides.leading > 0 || sides.trailing > 0;
+  useIsomorphicLayoutEffect(() => {
+    const root = rootRef.current;
+    if (root == null || !canSwipe) {
+      return undefined;
+    }
+    setPressWaits(root, true);
+    return () => {
+      setPressWaits(root, false);
+    };
+  }, [canSwipe]);
 
   // A touch tap on an open row's own content closes it and activates nothing,
   // as UIKit's dismissal does. The tap recognizes at the lift. The host keeps

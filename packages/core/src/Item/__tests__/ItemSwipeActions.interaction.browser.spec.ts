@@ -1311,6 +1311,58 @@ test('a tap on the resting row’s own content closes it, with no press paint, a
   await expect.poll(presses).toBeGreaterThan(0);
 });
 
+/**
+ * Records, at each animation frame from now on, whether `row` or anything in
+ * it carries a press paint; returns those frames' times.
+ */
+async function recordPressFrames(row: Locator) {
+  await row.evaluate(node => {
+    const frames: number[] = [];
+    Object.assign(window, {__rowPressFrames: frames});
+    const sample = (time: number) => {
+      if (
+        node.hasAttribute('data-astryx-press') ||
+        node.querySelector('[data-astryx-press]') != null
+      ) {
+        frames.push(time);
+      }
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+  return async () =>
+    row
+      .page()
+      .evaluate(
+        () =>
+          (window as unknown as {__rowPressFrames: number[]}).__rowPressFrames,
+      );
+}
+
+for (const [pace, durationMs] of [
+  ['slow', 1200],
+  ['quick', 120],
+] as const) {
+  test(`a ${pace} reveal swipe on a closed row paints no press in any frame`, async ({
+    page,
+  }) => {
+    const {driver, row, entries, start} = await openRow(page);
+    expect(await openWidthOf(entries)).toBeGreaterThan(0);
+    const presses = await recordPresses(row);
+    const pressFrames = await recordPressFrames(row);
+    // 200 px toward the row's start. A slow swipe stays inside the pan's
+    // claim distance for about 50 ms.
+    await driver.play(
+      drag(start, {x: start.x - 200, y: start.y}, {durationMs, hz: 60}),
+    );
+    await waitForRest(row);
+    // The swipe took the touch, and the row rests open.
+    expect(await xOf(row)).toBeLessThan(0);
+    expect(await pressFrames()).toEqual([]);
+    expect(await presses()).toBe(0);
+  });
+}
+
 test('Enter on the open row’s focused content activates the row and leaves it open, as a screen reader’s activation does (spec:AST-057 AR3)', async ({
   page,
 }) => {
