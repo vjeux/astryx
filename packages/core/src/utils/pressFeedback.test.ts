@@ -26,6 +26,7 @@ import {
 import {reducedMotionFadeConsts} from '../motion/reducedMotion.stylex';
 import {interactionOverlayStyles} from './interactionOverlay.stylex';
 import {
+  cancelPressWithin,
   installPressFeedback,
   PRESSABLE_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
@@ -429,7 +430,7 @@ describe('the press reaches the surface the finger landed on', () => {
     if (label == null) {
       throw new Error('the row has no label to press');
     }
-    setPressHeld(rows[1], true);
+    setPressHeld(rows[1], 'held');
     press(label, 'pointerdown', 10, 10);
     vi.advanceTimersByTime(PRESS_ONSET_MS);
     press(label, 'pointerup', 10, 10);
@@ -445,7 +446,7 @@ describe('the press reaches the surface the finger landed on', () => {
     press(action, 'pointerup', 10, 10);
     vi.advanceTimersByTime(PRESS_FADE_MS * 2);
     // The hold gone, the row presses again.
-    setPressHeld(rows[1], false);
+    setPressHeld(rows[1], null);
     press(label, 'pointerdown', 10, 10);
     vi.advanceTimersByTime(PRESS_ONSET_MS);
     expect(pressedRow()).toBe(1);
@@ -678,6 +679,48 @@ describe('a finger waits only inside a scroller (spec:AST-094 FR11)', () => {
     expect(control.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
     vi.advanceTimersByTime(PRESS_ONSET_MS);
     expect(control.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+  });
+
+  it('ends a waiting press inside a container that a drag takes, so its onset never paints (spec:AST-057 FR4)', () => {
+    const label = rows[1].firstElementChild;
+    if (label == null) {
+      throw new Error('the row has no label to press');
+    }
+    press(label, 'pointerdown', 10, 100);
+    // The drag claims inside the press's slop: no move has ended the press.
+    press(label, 'pointermove', 10 + PRESS_SLOP_PX - 2, 100);
+    cancelPressWithin(scroller);
+    vi.advanceTimersByTime(PRESS_ONSET_MS * 2);
+    expect(pressedRow()).toBe(-1);
+    press(label, 'pointerup', 10 + PRESS_SLOP_PX - 2, 100);
+    // A press outside the container is not touched, and the next press paints.
+    press(rows[2], 'pointerdown', 10, 100);
+    cancelPressWithin(rows[1]);
+    vi.advanceTimersByTime(PRESS_ONSET_MS);
+    expect(pressedRow()).toBe(2);
+    press(rows[2], 'pointerup', 10, 100);
+  });
+
+  it('on a row that can swipe, outside any scroller, waits the content-touch delay, so a touch the swipe takes paints nothing (spec:AST-057 FR4)', () => {
+    const row = pressable();
+    const action = pressable('button');
+    row.appendChild(action);
+    document.body.appendChild(row);
+    setPressHeld(row, 'waits');
+    press(row, 'pointerdown', 10, 10);
+    expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    // The swipe takes the touch inside the delay, so nothing ever paints.
+    vi.advanceTimersByTime(PRESS_ONSET_MS / 3);
+    press(row, 'pointermove', 10 + PRESS_SLOP_PX + 1, 10);
+    vi.advanceTimersByTime(PRESS_ONSET_MS * 2);
+    expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    press(row, 'pointerup', 10 + PRESS_SLOP_PX + 1, 10);
+    // A control inside the row waits too: a touch on it can become the swipe.
+    press(action, 'pointerdown', 10, 10);
+    expect(action.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    vi.advanceTimersByTime(PRESS_ONSET_MS);
+    expect(action.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(action, 'pointerup', 10, 10);
   });
 
   it("counts the content-touch delay from the touch's own timestamp, so a listener that runs late still paints on time", () => {
@@ -1323,12 +1366,12 @@ describe('a phone or tablet paints a mouse or Space press itself', () => {
   });
 
   it('paints nothing for a mouse press on a held surface (spec:AST-057 FR7)', () => {
-    setPressHeld(rows[1], true);
+    setPressHeld(rows[1], 'held');
     press(rows[1], 'pointerdown', 10, 100, 'mouse');
     expect(rows[1].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
     press(rows[1], 'pointerup', 10, 100, 'mouse');
     expect(document.querySelectorAll(`[${PRESSED_ATTRIBUTE}]`)).toHaveLength(0);
-    setPressHeld(rows[1], false);
+    setPressHeld(rows[1], null);
     press(rows[1], 'pointerdown', 10, 100, 'mouse');
     expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
   });
@@ -1338,14 +1381,14 @@ describe('a phone or tablet paints a mouse or Space press itself', () => {
     if (label == null) {
       throw new Error('the row has no label to press');
     }
-    setPressHeld(rows[1], true);
+    setPressHeld(rows[1], 'held');
     press(label, 'pointerdown', 10, 100, 'pen');
     vi.advanceTimersByTime(PRESS_ONSET_MS);
     expect(rows[1].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
     press(label, 'pointerup', 10, 100, 'pen');
     vi.advanceTimersByTime(PRESS_FADE_MS * 2);
     expect(document.querySelectorAll(`[${PRESSED_ATTRIBUTE}]`)).toHaveLength(0);
-    setPressHeld(rows[1], false);
+    setPressHeld(rows[1], null);
     press(label, 'pointerdown', 10, 100, 'pen');
     vi.advanceTimersByTime(PRESS_ONSET_MS);
     expect(rows[1].getAttribute(PRESSED_ATTRIBUTE)).toBe('on');

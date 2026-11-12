@@ -101,8 +101,12 @@ import {
   type SpringDescription,
 } from '../motion/spring';
 import {swipeActions as SWIPE} from '../motion/uikit/swipeActions';
-import {setPressHeld} from '../privateAttributes/pressHeld.stylex';
+import {
+  setPressHeld,
+  type PressHold,
+} from '../privateAttributes/pressHeld.stylex';
 import {subscribeInput} from '../utils/inputStream';
+import {cancelPressWithin} from '../utils/pressFeedback';
 import {lockSelection} from '../utils/selectionLock';
 import type {CompositorPart} from '../dragToSnapPoints/compositorSettle';
 
@@ -313,6 +317,14 @@ export interface SwipeLayout {
 }
 
 /** The side a drag from a closed row uncovers: toward the inline end is leading. */
+/**
+ * How a row holds its root's press. An open row takes no press, and a finger's
+ * press on a row that can swipe waits, as in a scroll view.
+ */
+function pressHoldOf(isOpen: boolean, canSwipe: boolean): PressHold {
+  return isOpen ? 'held' : canSwipe ? 'waits' : null;
+}
+
 function sideFor(dx: number, inlineSign: 1 | -1): SwipeSide {
   return dx * inlineSign > 0 ? 'leading' : 'trailing';
 }
@@ -600,6 +612,8 @@ export function useSwipeAction({
   // `close`, for the open row's closes. It is set once: `close` never changes.
   const closeRef = useRef<((start?: 'next-frame') => void) | null>(null);
   const stopClosesRef = useRef<(() => void) | null>(null);
+  // Whether the row can swipe, for the transitions that write its press hold.
+  const canSwipeRef = useRef(false);
   // Every transition goes through here. So the one that opens or closes the row
   // holds or frees its root's press at once, from the handler that caused it.
   // An open row's root takes no press, so a tap on its content only closes it.
@@ -616,7 +630,7 @@ export function useSwipeAction({
       stopClosesRef.current?.();
       stopClosesRef.current = null;
       if (root != null) {
-        setPressHeld(root, isOpen);
+        setPressHeld(root, pressHoldOf(isOpen, canSwipeRef.current));
         if (isOpen) {
           stopClosesRef.current = subscribeOpenRowCloses(
             root,
@@ -1038,6 +1052,9 @@ export function useSwipeAction({
       wasConfirmed: false,
       layout,
     };
+    // The touch is the swipe's from here. The row and its contents show no
+    // press, even before the finger leaves the press's slop.
+    cancelPressWithin(root);
     return true;
   };
 
@@ -1354,6 +1371,17 @@ export function useSwipeAction({
     // shared drag for the root's life.
   }, [landed, modelRef, panels, presentedX]);
 
+  // A finger's press on a row that can swipe waits the content-touch delay, as
+  // it does in a scroll view. So a touch that becomes a swipe paints no press.
+  const canSwipe = sides.leading > 0 || sides.trailing > 0;
+  useIsomorphicLayoutEffect(() => {
+    canSwipeRef.current = canSwipe;
+    const root = rootRef.current;
+    if (root != null) {
+      setPressHeld(root, pressHoldOf(isSwipeOpen(stateRef.current), canSwipe));
+    }
+  }, [canSwipe]);
+
   // A touch tap on an open row's own content closes it and activates nothing,
   // as UIKit's dismissal does. The tap recognizes at the lift. The host keeps
   // the click it would have made from the row. It cancels the touch, or, where
@@ -1403,7 +1431,7 @@ export function useSwipeAction({
       }
       const root = rootRef.current;
       if (root != null) {
-        setPressHeld(root, false);
+        setPressHeld(root, null);
       }
     },
     [],

@@ -453,7 +453,7 @@ a measured, sourced difference exists.
   a scroll view, drops the highlight when the scroll wins (FR20), and activates on a
   lift inside it with no scroll taking the touch (FR20). A control is inside a scroll view when it sits in a scrollable container,
   or in scrolling page content with no fixed ancestor; a control in a fixed
-  bar (a top bar, a tab bar, a toolbar) is not. A control inside a scroll view
+  bar (a top bar, a tab bar, a toolbar) is not. A row with swipe actions counts as inside a scroll view wherever it sits, because a touch on it can become its swipe (`spec:AST-057` FR4). A control inside a scroll view
   takes the same 150 ms delay before its highlight and then follows its
   control profile; the 150 ms delay applies only inside scroll views. A control whose own record keeps its press through a drag
   keeps it: Slider's overlay stays on the dragged thumb (`design:user-states`
