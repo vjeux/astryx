@@ -1235,6 +1235,9 @@ function DropdownMenuPopover({
       pendingControlledOpenRef.current = false;
       if (!popover.isOpen) {
         shouldFocusOnOpenRef.current = !isMountedOpenRef.current;
+        // A trigger's open has already shown the menu, so this show is an
+        // open from code, with no accepted press.
+        touchOpenRef.current = null;
         popover.show();
       }
     } else {
