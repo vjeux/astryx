@@ -73,22 +73,6 @@ export function ContextMenuTouchLayer({
   onCommit,
   onCancel,
 }: ContextMenuTouchLayerProps): null {
-  // Whether the recognizer follows a finger or a pen now. It is set below,
-  // where the recognizer exists.
-  const isFollowedRef = useRef<() => boolean>(() => false);
-  // When the finger the recognizer follows landed, for the growth's onset.
-  const landedAtRef = useRef<() => number | null>(() => null);
-  const followsFingerRef = useRef<() => boolean>(() => false);
-  const feedback = useContextMenuPressFeedback(
-    triggerRef,
-    visualRef,
-    isShown,
-    isFollowedRef,
-    landedAtRef,
-    followsFingerRef,
-  );
-  const feedbackRef = useRef(feedback);
-  feedbackRef.current = feedback;
   const onOpenRef = useCommittedRef(onOpen);
   const onCommitRef = useCommittedRef(onCommit);
   const onCancelRef = useCommittedRef(onCancel);
@@ -160,12 +144,26 @@ export function ContextMenuTouchLayer({
     },
   );
 
-  isFollowedRef.current = () =>
-    recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state);
-  landedAtRef.current = () => recognizer.press?.time ?? null;
-  followsFingerRef.current = () =>
-    isFollowedRef.current() &&
-    recognizer.trackedTouches[0]?.pointerType === 'touch';
+  // Whether the recognizer follows a finger or a pen now.
+  const isFollowedRef = useCommittedRef(
+    () => recognizer.numberOfTouches > 0 && !isTerminal(recognizer.state),
+  );
+  // When the finger the recognizer follows landed, for the growth's onset.
+  const landedAtRef = useCommittedRef(() => recognizer.press?.time ?? null);
+  const followsFingerRef = useCommittedRef(
+    () =>
+      isFollowedRef.current() &&
+      recognizer.trackedTouches[0]?.pointerType === 'touch',
+  );
+  const feedback = useContextMenuPressFeedback(
+    triggerRef,
+    visualRef,
+    isShown,
+    isFollowedRef,
+    landedAtRef,
+    followsFingerRef,
+  );
+  const feedbackRef = useCommittedRef(feedback);
 
   useImperativeHandle(
     ref,
@@ -173,7 +171,7 @@ export function ContextMenuTouchLayer({
       release: () => feedbackRef.current.release(),
       isTracking: () => recognizer.numberOfTouches > 0,
     }),
-    [recognizer],
+    [recognizer, feedbackRef],
   );
 
   return null;
