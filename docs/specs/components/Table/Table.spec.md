@@ -560,8 +560,9 @@ Rejected: wrapper-only slicing, caller-spread data/offset bundles or a parallel 
 Table's plugin hooks keep their latest config in refs written during render.
 These are the filtering, pagination, selection, sortable and tree data configs,
 the sticky columns' resolved keys, and the sort state's comparators and change
-callback. `architecture:react-component-runtime` INV4 records this
-exception, and INV1 records the comparators' part.
+callback. `architecture:react-component-runtime` INV4 and INV17 record this
+exception, INV3 defers to INV17's exceptions, and INV1 records the comparators'
+part.
 
 The refs keep each plugin object, the sorted data and the sort config stable.
 A new config object with the same values re-renders no row. A changed value

@@ -137,9 +137,10 @@ those contracts.
   one-time work. A latest-value ref, which event or gesture callbacks read for
   the latest committed prop or callback, goes only through Core's internal
   `useCommittedRef` (DEC-3), which writes it in a commit-phase insertion Effect:
-  no per-site Effect copy and no render-time `ref.current =` write. Such a ref
-  is read only in event and gesture callbacks, never during render or in
-  `useMemo`; render reads the value directly. One hook decides the timing once,
+  no per-site Effect copy and no render-time `ref.current =` write. INV17 names
+  the owner exceptions to this rule. Such a ref is read only in event and
+  gesture callbacks, never during render or in `useMemo`; render reads the value
+  directly. One hook decides the timing once,
   and React has no built-in for it at Core's React floor. Where only an Effect
   calls the callback, `useEffectEvent` replaces it once that floor reaches 19.2.
   INV3 gap: about 45 Core and Lab hooks and components keep a latest-value ref
@@ -148,11 +149,10 @@ those contracts.
 - **INV4 — Mutable refs do not become hidden rendered state.** Refs MAY hold general
   non-rendering mutable data. A ref mutation MUST NOT be the sole source for a value
   later read to produce React-rendered output.
-  The owner's decision of 2026-11-09 (`component:Table/DEC-6`) makes an
-  exception for Table's plugin hooks: they MAY keep their latest config in refs
-  written during render. A new config object with the same values re-renders no
-  row. A changed value reaches a memoized row only when that row renders for
-  another reason.
+  Table's plugin hooks MAY keep their latest config in refs written during
+  render, as INV17's exception for them says (`component:Table/DEC-6`). A
+  changed value reaches a memoized row only when that row renders for another
+  reason.
   A callback ref MAY synchronously
   update an owned DOM node when that DOM update is itself the observable operation
   and attach, detach, replacement, and consumer override behavior preserve the
@@ -407,7 +407,10 @@ those contracts.
   render, except a lazy one-time initialization. A render React discards would
   otherwise leave an uncommitted value. A latest-value ref uses
   `useCommittedRef` (INV3, DEC-3). Exception: Markdown's streaming fade-in refs
-  (`component:Markdown` DEC-7, INV4) stay render-time writes. INV17 gap: three
+  (`component:Markdown` DEC-7, INV4) stay render-time writes. Exception: Table's
+  plugin hooks keep their latest config in refs written during render
+  (`component:Table` DEC-6), so a new config object with the same values
+  re-renders no row. INV17 gap: three
   sites read a latest-value ref during render or in `useMemo` instead of the
   value. INV17 gap: `useTableSortable`'s header reads the current sort from a
   ref, because its plugin is documented and tested as referentially stable;
