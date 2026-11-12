@@ -348,6 +348,9 @@ function childTrack(element: HTMLElement, onHeld?: HeldRowListener) {
       child.style.removeProperty('translate');
     }
     leftOut = [];
+    if (leftOut.length === 0) {
+      return;
+    }
     isMoving = false;
     beforeSnap?.();
     if (ownSnapType === '') {
