@@ -15,10 +15,7 @@
  * holds it equal to the marked set:
  *
  *  - A file paints a press when its StyleX carries an `':active` key, a
- *    `[data-astryx-press` arm, or composes `interactionOverlayStyles`. It
- *    also paints one when its script follows the pressed state that a
- *    controller writes, as ContextMenu's growth does. A script that also
- *    writes that state is a press controller, so it is part of the model.
+ *    `[data-astryx-press` arm, or composes `interactionOverlayStyles`.
  *  - A file is marked when it calls `usePressFeedback(`.
  *  - A file whose press arms are read off an ancestor scope marker
  *    (`stylex.when.ancestor(':active', someScope)`, the way an indicator
@@ -76,13 +73,6 @@ const source = new Map(
 // a bare attribute selector or inside `:is(…)`.
 const PRESS_ARM =
   /':active|'(?::is\()?\[data-astryx-press=|interactionOverlayStyles\./;
-function paintsPress(text: string): boolean {
-  return (
-    PRESS_ARM.test(text) ||
-    (text.includes('getAttribute(PRESSED_ATTRIBUTE)') &&
-      !text.includes('setAttribute(PRESSED_ATTRIBUTE'))
-  );
-}
 const ANCESTOR_ARM =
   /stylex\.when\.ancestor\(\s*'(?::active|\[data-astryx-press=[^)]*)',\s*(\w+)\s*,?\s*\)/g;
 
@@ -155,7 +145,7 @@ function importers(file: string): string[] {
 }
 
 const pressArmFiles = [...source.entries()]
-  .filter(([file, text]) => !MODEL_FILES.has(file) && paintsPress(text))
+  .filter(([file, text]) => !MODEL_FILES.has(file) && PRESS_ARM.test(text))
   .map(([file]) => file)
   .sort();
 
@@ -239,7 +229,7 @@ describe('every surface that paints a press is reachable by the touch press cont
     );
     const unexplained = marked.filter(file => {
       const text = source.get(file) ?? '';
-      if (paintsPress(text)) {
+      if (PRESS_ARM.test(text)) {
         return false;
       }
       return ![...scopeNames].some(scope =>
