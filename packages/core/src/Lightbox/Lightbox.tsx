@@ -970,9 +970,10 @@ export function Lightbox({
   // The current item's caption, which is the viewer's accessible description.
   const captionId = useId();
   const fullCaptionId = useId();
-  // The item whose full caption is open over its photo. Paging closes it.
+  // The item whose full caption is open over its photo. Paging or closing the
+  // viewer closes it.
   const [openCaptionIndex, setOpenCaptionIndex] = useState<number | null>(null);
-  if (openCaptionIndex != null && openCaptionIndex !== index) {
+  if (openCaptionIndex != null && (openCaptionIndex !== index || !isOpen)) {
     setOpenCaptionIndex(null);
   }
   const isCaptionOpen = openCaptionIndex === index;
