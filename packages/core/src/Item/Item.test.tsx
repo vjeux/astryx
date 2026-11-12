@@ -2343,6 +2343,17 @@ describe('swipe', () => {
       expect(xOf(row)).toBe(0);
     });
 
+    it("makes a finger's press wait while the row can swipe, as in a scroll view: the root carries the mark until the swipe goes", () => {
+      const {row, unmount} = renderRow();
+      expect(row).toHaveAttribute('data-astryx-press-waits');
+      unmount();
+      expect(row).not.toHaveAttribute('data-astryx-press-waits');
+      render(<Item label="Plain" onClick={vi.fn()} data-testid="plain" />);
+      expect(screen.getByTestId('plain')).not.toHaveAttribute(
+        'data-astryx-press-waits',
+      );
+    });
+
     it('leaves a tap on a resting entry to the entry, and a tap on a closed row to the row', async () => {
       const {row} = renderRow();
       let f = finger(screen.getByRole('button', {name: 'Conversation'}), 2);
