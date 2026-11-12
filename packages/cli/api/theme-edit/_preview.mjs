@@ -35,6 +35,7 @@ import {importPathOf, installLine} from './_project.mjs';
 import {COLOR_PROP_PARTS, DIRECT, P} from './_tables.mjs';
 import {extractImportedPackages} from '../../foundation/discovery/template-needs.mjs';
 import {findNodeModulesPackage} from '../../foundation/fs/paths.mjs';
+import {withListingCache} from '../../foundation/fs/listing-cache.mjs';
 
 const TEMPLATES_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -650,7 +651,19 @@ const PAGE_SKIP = new Set([
  * @param {{theme?: string | null, C?: import('./_compiler.mjs').Compiler}} [options]
  * @returns {{source: string, components: number}}
  */
-export function componentsPageSource(project, {theme = null, C} = {}) {
+export function componentsPageSource(project, options = {}) {
+  // A name that Core's docs lack resolves by walking Core's source tree. One
+  // listing cache reads each folder once for the page, not once per name.
+  return withListingCache(() => componentsPage(project, options));
+}
+
+/**
+ * {@link componentsPageSource}'s work, inside its listing cache.
+ * @param {import('./_project.mjs').ThemeProject} project
+ * @param {{theme?: string | null, C?: import('./_compiler.mjs').Compiler}} options
+ * @returns {{source: string, components: number}}
+ */
+function componentsPage(project, {theme = null, C}) {
   const items = showcaseItems(project, undefined)
     .items.filter(
       it =>
@@ -730,7 +743,18 @@ export function componentsPageSource(project, {theme = null, C} = {}) {
  * @param {{theme?: string | null}} [options]
  * @returns {string}
  */
-export function overviewPageSource(project, {theme = null} = {}) {
+export function overviewPageSource(project, options = {}) {
+  // One listing cache for the page's names, as componentsPageSource holds.
+  return withListingCache(() => overviewPage(project, options));
+}
+
+/**
+ * {@link overviewPageSource}'s work, inside its listing cache.
+ * @param {import('./_project.mjs').ThemeProject} project
+ * @param {{theme?: string | null}} options
+ * @returns {string}
+ */
+function overviewPage(project, {theme = null}) {
   const sections = OVERVIEW_SECTIONS.map(x => ({
     title: x.title,
     tree: /** @type {import('./_catalog.mjs').Tree | undefined} */ (
