@@ -240,6 +240,7 @@ test('a finger still down gets the menu at 735 ms (iOS 26.2), not before', async
   expect((decided as number) - start).toBeGreaterThanOrEqual(menuDisplayMs - 1);
   expectDecidedOnTime(frames, start + menuDisplayMs, decided as number);
   const after = (shown as number) - start;
+  console.log('ABLOG ' + JSON.stringify({after: Math.round(after*10)/10, gap: Math.round(((shown as number) - (decided as number))*10)/10}));
   // The timer runs at its deadline, give or take a task.
   expect(after).toBeGreaterThanOrEqual(menuDisplayMs);
   expect(after).toBeLessThan(menuDisplayMs + 20);
@@ -273,6 +274,25 @@ test('a finger that shifts slightly just before 735 ms gets the menu at 735 ms w
   const after = (shown as number) - start;
   expect(after).toBeGreaterThanOrEqual(menuDisplayMs);
   expect(after).toBeLessThan(menuDisplayMs + 20);
+});
+
+test('the menu mounts at the commit, closed and out of the accessibility tree, and shows at 735 ms', async ({
+  page,
+}) => {
+  const {driver, center} = await openTouchStory(page);
+  const playing = driver.play(hold(center, menuDisplayMs + 200));
+  const prepared = page
+    .locator('[popover]')
+    .filter({has: page.locator('[role="menu"]')});
+  // Mounted at the commit (400 ms), well before the menu's moment (735 ms).
+  await expect(prepared).toHaveCount(1, {timeout: 700});
+  expect(await menuShownAt(page), 'the menu showed before 735 ms').toBeNull();
+  expect(await prepared.evaluate(el => el.matches(':popover-open'))).toBe(
+    false,
+  );
+  await expect(page.getByRole('menu', {name: 'Photo actions'})).toHaveCount(0);
+  await playing;
+  await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeVisible();
 });
 
 /** The story with somewhere to scroll below it, and its trigger's center. */
