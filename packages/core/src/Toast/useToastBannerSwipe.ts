@@ -195,17 +195,24 @@ function panDirection(direction: ToastGestureDirection): 'down' | 'up' {
 /**
  * Turns the card's stylesheet transitions off before a Reduce Motion fade:
  * WebKit restarts the opacity transition when the fade hands the opacity back.
- * Otherwise the transitions stay, so an entrance runs on under a finger. The
- * layer moves the card by `translate`, which they do not animate.
+ * The fade starts from the opacity on screen, which an entrance may still be
+ * raising. Otherwise the transitions stay, so an entrance runs on under a
+ * finger. The layer moves the card by `translate`, which they do not animate.
  */
 function stillTransitionsBeforeFade(
   animator: Animator,
   touchRelease: boolean,
 ): void {
   const root = animator.element;
-  if (root != null && animator.reducedMotion({touchRelease}) !== 'off') {
-    root.style.setProperty('transition-property', 'none');
+  if (root == null || animator.reducedMotion({touchRelease}) === 'off') {
+    return;
   }
+  const view = root.ownerDocument.defaultView;
+  const shown = Number.parseFloat(view?.getComputedStyle(root).opacity ?? '');
+  if (shown < 1) {
+    animator.set({opacity: shown});
+  }
+  root.style.setProperty('transition-property', 'none');
 }
 
 export function useToastBannerSwipe(

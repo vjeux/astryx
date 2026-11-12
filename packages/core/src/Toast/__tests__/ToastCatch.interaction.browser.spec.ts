@@ -8,8 +8,8 @@
  *   out, or dismissed during a drag, leaves at the lift. Under reduced motion
  *   a spring-back fades once. A dragging or catching finger starts no text
  *   selection; a still hold on a resting card can. A tap, a drag or a
- *   dismissal during the entrance leaves it running. A lost lift ends at the
- *   next touch
+ *   dismissal during the entrance leaves it running; under reduced motion
+ *   the dismissal fades from there. A lost lift ends at the next touch
  * @position Toast's interaction proofs that its motion is interruptible
  */
 
@@ -810,4 +810,27 @@ test('a dismissal during the entrance slides the card out from where it shows', 
     Math.max(...leaving.map(frame => frame.opacity)),
     'the card still fades in',
   ).toBeLessThan(0.9);
+});
+
+test('under reduced motion, a dismissal during the entrance fades the card out from where it shows', async ({
+  page,
+}) => {
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  const card = await showEnteringToast(page);
+  await recordOpacity(page);
+  const before = await card.evaluate(element =>
+    Number.parseFloat(getComputedStyle(element).opacity),
+  );
+  expect(before, 'the card still fades in').toBeLessThan(0.9);
+  const t0 = await page.evaluate(() => performance.now());
+  await page
+    .getByRole('button', {name: 'Dismiss notification'})
+    .evaluate(element => (element as HTMLElement).click());
+  await expect(page.locator('.astryx-toast')).toHaveCount(0, {timeout: 3000});
+  const leaving = (await readOpacity(page)).filter(frame => frame.t >= t0);
+  expect(leaving.length, 'frames while it fades out').toBeGreaterThan(2);
+  // The fade starts from the opacity on screen, with no step up first.
+  expect(Math.max(...leaving.map(frame => frame.opacity))).toBeLessThan(
+    before + 0.1,
+  );
 });
