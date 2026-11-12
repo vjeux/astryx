@@ -318,8 +318,8 @@ export function useTooltip(options: TooltipOptions = {}): TooltipReturn {
   const triggerRef = useRef<HTMLElement | null>(null);
   // Set only by a Core component that mounts the tooltip on interaction.
   const presentInterest = use(TooltipPresentInterestContext);
-  // The tooltip's enabled and controlled state now. A show that runs after a
-  // render (a pending hover show) and the trigger ref callback read it. A
+  // The trigger's ref callback reads these flags. Its cleanup runs before this
+  // commit's insertion Effects, so it needs this render's values. A
   // render-purity gap: render-written until the detach check can read this
   // commit's isOpen.
   const renderFlagsRef = useRef({isEnabled, isOpen});
