@@ -18,7 +18,6 @@ import {
   memo,
   useId,
   useMemo,
-  useRef,
   type ReactElement,
   type ReactNode,
   type Ref,
@@ -72,7 +71,7 @@ import {TableHeader} from './TableHeader';
 import {TableBody} from './TableBody';
 import {mergeProps} from '../utils';
 import {useMergedRefs} from '../hooks/useMergedRefs';
-import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
+import {useIdentityMemo} from './useIdentityMemo';
 import {
   readsRowCount,
   readsRowIndex,
@@ -187,25 +186,6 @@ function applyRowPlugins<
 
 // Stable empty array to avoid creating new reference on each render
 const EMPTY_PLUGINS: TablePlugin<Record<string, unknown>>[] = [];
-
-/**
- * Shallow-compare two arrays by element identity.
- * Used to stabilize the resolved columns array across renders.
- */
-function areArraysShallowEqual<T>(a: T[], b: T[]): boolean {
-  if (a === b) {
-    return true;
-  }
-  if (a.length !== b.length) {
-    return false;
-  }
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) {
-      return false;
-    }
-  }
-  return true;
-}
 
 interface TableRowProps<T extends Record<string, unknown>> {
   item: T;
@@ -609,19 +589,13 @@ function BaseTableInner<T extends Record<string, unknown>>({
   // new array on every call, but if the contents haven't changed, we
   // reuse the previous reference. This prevents MemoizedTableRow from
   // re-rendering all rows when the column array is structurally identical.
-  // Only a committed render writes this cache. A render React discards cannot
-  // replace it.
-  const resolvedColumnsRef = useRef(transformedColumns);
-  const resolvedColumns = areArraysShallowEqual(
-    resolvedColumnsRef.current,
+  // The memo keeps the array of the last committed render that had the same
+  // columns. A render React discards cannot replace it, and no state or ref
+  // is written during render.
+  const resolvedColumns = useIdentityMemo(
     transformedColumns,
-  )
-    ? resolvedColumnsRef.current
-    : transformedColumns;
-  // Syncs the column identity cache with the committed columns.
-  useIsomorphicLayoutEffect(() => {
-    resolvedColumnsRef.current = resolvedColumns;
-  });
+    () => transformedColumns,
+  );
   const headerRowCount = mode === 'data' && resolvedColumns.length > 0 ? 1 : 0;
   const config = getTableVirtualizationConfig(virtualization);
   const windowFallbackReason = useMemo(() => {
