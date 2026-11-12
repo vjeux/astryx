@@ -64,9 +64,9 @@ const styles = stylex.create({
     touchAction: 'pinch-zoom',
   },
   // The touch motion drives the dialog, so the theme's entrance keyframes do
-  // not play. The animator promotes the dimming through this custom property
-  // on the dialog, because Mobile Safari keeps an unlayered backdrop's
-  // animation on the main thread at its first commit.
+  // not play. The animator promotes the dimming through this custom property.
+  // Without it, Mobile Safari runs an unlayered backdrop's first animation on
+  // the main thread.
   touchMotion: {
     animationName: 'none',
     '::backdrop': {
