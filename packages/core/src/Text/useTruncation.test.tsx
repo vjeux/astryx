@@ -8,7 +8,18 @@
 import {act, render, screen, waitFor} from '@testing-library/react';
 import {afterEach, describe, it, expect, vi} from 'vitest';
 import {useCallback} from 'react';
+import type * as layoutEffects from '../hooks/useIsomorphicLayoutEffect';
+import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useTruncation} from './useTruncation';
+
+// The shipped layout effect, observable: a test counts who runs one.
+vi.mock('../hooks/useIsomorphicLayoutEffect', async importOriginal => {
+  const actual = await importOriginal<typeof layoutEffects>();
+  return {
+    ...actual,
+    useIsomorphicLayoutEffect: vi.fn(actual.useIsomorphicLayoutEffect),
+  };
+});
 
 function Probe({text}: {text: string}) {
   const truncation = useTruncation({maxLines: 1});
@@ -184,6 +195,103 @@ describe('useTruncation', () => {
         'already watched',
       );
       unmount();
+    });
+  });
+
+  describe('isExpanded', () => {
+    function ExpandingProbe({
+      isExpanded,
+      height,
+      hasText = true,
+    }: {
+      isExpanded?: boolean;
+      height: number;
+      hasText?: boolean;
+    }) {
+      const truncation = useTruncation({maxLines: 2, isExpanded});
+      return (
+        <>
+          {hasText && (
+            <span ref={truncation.ref} data-height={height}>
+              text
+            </span>
+          )}
+          <output data-testid="truncated">
+            {String(truncation.isTruncated)}
+          </output>
+        </>
+      );
+    }
+
+    // jsdom lays nothing out: the text's content height is its scrollHeight,
+    // which each case sets through the element's data-height.
+    function stubHeights() {
+      const scrollHeight = vi
+        .spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+        .mockImplementation(function (this: HTMLElement) {
+          return Number(this.dataset.height ?? 0);
+        });
+      const offsetHeight = vi
+        .spyOn(HTMLElement.prototype, 'offsetHeight', 'get')
+        .mockImplementation(function (this: HTMLElement) {
+          return this.dataset.height == null ? 0 : 48;
+        });
+      return () => {
+        scrollHeight.mockRestore();
+        offsetHeight.mockRestore();
+      };
+    }
+
+    // Text and Heading run useTruncation in every instance, so the option
+    // adds no step to each render.
+    it('adds no layout effect, expanded or not', () => {
+      const layoutEffect = vi.mocked(useIsomorphicLayoutEffect);
+      layoutEffect.mockClear();
+      render(<Probe text="a status line" />);
+      render(<ExpandingProbe isExpanded={false} height={40} />);
+      render(<ExpandingProbe isExpanded={true} height={40} />);
+      expect(layoutEffect).not.toHaveBeenCalled();
+    });
+
+    it('drops its answer when its element goes, as it does without the option', async () => {
+      const restore = stubHeights();
+      try {
+        const {rerender} = render(<ExpandingProbe height={120} />);
+        await waitFor(() =>
+          expect(screen.getByTestId('truncated')).toHaveTextContent('true'),
+        );
+        rerender(<ExpandingProbe height={120} hasText={false} />);
+        await waitFor(() =>
+          expect(screen.getByTestId('truncated')).toHaveTextContent('false'),
+        );
+      } finally {
+        restore();
+      }
+    });
+
+    it('keeps its clamped answer while the text is shown in full, and measures again after', async () => {
+      const restore = stubHeights();
+      try {
+        const {rerender} = render(
+          <ExpandingProbe isExpanded={false} height={120} />,
+        );
+        await waitFor(() =>
+          expect(screen.getByTestId('truncated')).toHaveTextContent('true'),
+        );
+        // Shown in full, the text fits: the answer stays the clamped one.
+        rerender(<ExpandingProbe isExpanded={true} height={48} />);
+        await act(async () => {
+          await Promise.resolve();
+        });
+        expect(screen.getByTestId('truncated')).toHaveTextContent('true');
+        // Clamped again over text that now fits, it measures again.
+        rerender(<ExpandingProbe isExpanded={false} height={40} />);
+        await waitFor(() =>
+          expect(screen.getByTestId('truncated')).toHaveTextContent('false'),
+        );
+      } finally {
+        restore();
+      }
     });
   });
 
