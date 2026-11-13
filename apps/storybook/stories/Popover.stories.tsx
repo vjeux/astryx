@@ -365,11 +365,6 @@ function ResizablePanel() {
   );
 }
 
-/**
- * An open Popover above page controls that take a finger's drag: a resize
- * handle and rows with swipe actions. On a touch screen each follows the
- * finger while the Popover is open.
- */
 /** The message rows' swipe actions, defined once at module scope. */
 const messageSwipe = createSwipe({
   trailing: [
@@ -383,6 +378,11 @@ const messageSwipe = createSwipe({
   ],
 });
 
+/**
+ * An open Popover above page controls that take a finger's drag: a resize
+ * handle and rows with swipe actions. On a touch screen each follows the
+ * finger while the Popover is open.
+ */
 export const OverPageControls: Story = {
   tags: ['!autodocs'],
   render: () => (
