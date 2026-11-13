@@ -2152,13 +2152,19 @@ for (const {name, story} of CAPTION_STORIES) {
 }
 
 // The plain caption again, in a same-origin iframe's document, whose elements
-// are not this window's, as in a Picture-in-Picture window.
+// are not this window's, as in a Picture-in-Picture window. Last, a caption
+// whose last line can be an image alone.
 const FIT_CASES = [
   ...CAPTION_STORIES.map(caption => ({...caption, isInFrame: false})),
   {
     name: 'a plain caption in a second document',
     story: 'core-lightbox--gallery-with-captions-in-frame-fixture',
     isInFrame: true,
+  },
+  {
+    name: 'a caption ending in an image',
+    story: 'core-lightbox--gallery-with-image-caption-fixture',
+    isInFrame: false,
   },
 ];
 
@@ -2194,7 +2200,8 @@ for (const {name, story, isInFrame} of FIT_CASES) {
         const place = flow.firstElementChild as HTMLElement;
         const toggle = caption.querySelector('button') as HTMLElement;
         const lineHeight = parseFloat(getComputedStyle(text).lineHeight);
-        // The text's own lines, from its text nodes only.
+        // The flow's lines, from its text and its images: a block's box spans
+        // the caption.
         const words: DOMRect[] = [];
         const walker = document.createTreeWalker(flow, NodeFilter.SHOW_TEXT);
         for (
@@ -2206,6 +2213,12 @@ for (const {name, story, isInFrame} of FIT_CASES) {
           range.selectNodeContents(node);
           words.push(...[...range.getClientRects()].filter(r => r.width > 0));
         }
+        for (const image of flow.querySelectorAll('img, svg, video, canvas')) {
+          const box = image.getBoundingClientRect();
+          if (box.width > 0) {
+            words.push(box);
+          }
+        }
         const textBottom = Math.max(...words.map(rect => rect.bottom));
         const lastLine = words.filter(
           rect => rect.bottom > textBottom - lineHeight / 2,
@@ -2213,7 +2226,7 @@ for (const {name, story, isInFrame} of FIT_CASES) {
         const toggleBox = toggle.getBoundingClientRect();
         const placeStyle = getComputedStyle(place);
         return {
-          lines: new Set(words.map(rect => Math.round(rect.top))).size,
+          lines: Math.round(flow.getBoundingClientRect().height / lineHeight),
           isBeside:
             Math.abs(
               (toggleBox.top + toggleBox.bottom) / 2 -
