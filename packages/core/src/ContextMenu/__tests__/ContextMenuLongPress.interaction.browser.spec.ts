@@ -241,6 +241,36 @@ test('a finger still down gets the menu at 735 ms (iOS 26.2), not before', async
   await expect(page.getByRole('menu', {name: 'Photo actions'})).toBeVisible();
 });
 
+test('a finger held on a Table’s sortable header gets the menu where it landed', async ({
+  page,
+}) => {
+  // The header leaves its trigger unpositioned, so the cell holds the cursor
+  // anchor. A finger's point is measured from that cell, as a pointer's is.
+  await openStory(
+    page,
+    storybook(),
+    'core-tablecolumnresize--with-sortable-columns',
+  );
+  const driver = await touchDriver(page);
+  const header = page.getByRole('columnheader', {name: /Name/});
+  const box = await header.boundingBox();
+  if (box == null) {
+    throw new Error('no Name header');
+  }
+  const point = {
+    x: Math.round(box.x + box.width / 2),
+    y: Math.round(box.y + box.height / 2),
+  };
+  await driver.play(hold(point, menuDisplayMs + 200));
+  await expect(page.getByRole('menu')).toBeVisible();
+  const anchor = await page
+    .locator('span[aria-hidden="true"][style*="anchor-name"]')
+    .boundingBox();
+  // The menu hangs from a 1px anchor placed at the finger.
+  expect(anchor?.x).toBeCloseTo(point.x, 0);
+  expect(anchor?.y).toBeCloseTo(point.y, 0);
+});
+
 /** The press counts a move as late when it reaches the page this long after its own time. */
 const LATE_INPUT_MS = 33;
 /** How long the press waits after a late move that reached the page just before the menu's moment. */
