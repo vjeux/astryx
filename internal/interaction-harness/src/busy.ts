@@ -2120,10 +2120,11 @@ function motionStepPx(values: readonly number[]): number {
  * no end check and is placed from the cast, so it predicts in WebKit too. A
  * move of one cast step or more always changes the cast's reading, whatever
  * the pixel phase. So such a frame must show a new position, with no run
- * excused. A frame interval counts as a miss only when the animation's own
- * curve moves at least one capture step across it. A predicted move under one
- * step may show none: that frame is too little to judge. It is listed in
- * `unjudged` and in the summary, and counts neither as moved nor as missed.
+ * excused. A frame counts as a miss only when the curve moves at least one
+ * capture step since the last frame that showed a new position. A predicted
+ * move under one step may show none: that frame is too little to judge. It is
+ * listed in `unjudged` and in the summary, and counts neither as moved nor as
+ * missed.
  * When too few judged frames remain, the proof throws `FrameStarvationError`
  * naming them. Where a replay predicts, one it cannot read throws
  * `BusyPredictionError`. Every other window falls back by name to the cast-step
