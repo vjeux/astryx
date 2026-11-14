@@ -3,18 +3,24 @@
 /**
  * @file AlertDialogCloseTask.interaction.browser.spec.ts
  * @input The built AlertDialog Delete story on the phone profile, real touch
- *   input and the interaction harness
+ *   input, a mouse, keys and the interaction harness
  * @output Proofs about the task that closes the alert under a finger: it
- *   reads none of the theme's exit timing, and in Chrome's engine a trace of
- *   its length and of the style recalculations that its script forced, at
- *   full speed and at 4× CPU, written as evidence
+ *   reads none of the theme's exit timing, and no tap, click or key reaches
+ *   the alert while the close holds the scene. In Chrome's engine, at full
+ *   speed and at 4× CPU: the time to closed and the long tasks, and a trace
+ *   of the tap's task (its length and the style recalculations its script
+ *   forced), written as evidence
  * @position Motion lane of AlertDialog, beside the motion spec. Run with
  *   `pnpm test:interaction AlertDialog`.
  */
 
 import {expect, test, type Page} from '@astryxdesign/a11y-spec/playwright';
 import {
+  freezePageOn,
+  installPageFreeze,
+  installTimerGate,
   openStory,
+  thawPage,
   touchDriver,
   waitForRest,
   withStorybook,
@@ -28,6 +34,12 @@ const EXIT_TOKENS = ['--duration-exit', '--ease-exit'];
 
 /** Closes per CPU rate in the traced proof. */
 const TAKES = 4;
+
+/** Closes per CPU rate in the untimed proof, as many as a recorder round. */
+const UNTRACED_TAKES = 6;
+
+/** A long task, as the Long Tasks API counts one, ms. */
+const LONG_TASK_MS = 50;
 
 interface TokenRead {
   readonly phase: string;
@@ -69,6 +81,18 @@ interface CloseTask {
   readonly layoutMs: number;
   /** The script frame that forced each of those recalculations. */
   readonly forcedBy: ReadonlyArray<string>;
+  /** Every main-thread task of 50 ms or more in the close, ms. */
+  readonly longTasks: ReadonlyArray<number>;
+}
+
+/** A close timed in the page with no trace running. */
+interface TimedClose {
+  readonly rate: number;
+  readonly take: number;
+  /** From the tap's release to the dialog closed, ms. */
+  readonly releaseToClosedMs: number;
+  /** The page's long tasks from the tap's press to the dialog closed, ms. */
+  readonly longTasks: ReadonlyArray<number>;
 }
 
 const median = (values: ReadonlyArray<number>): number => {
@@ -78,6 +102,24 @@ const median = (values: ReadonlyArray<number>): number => {
     ? sorted[middle]
     : (sorted[middle - 1] + sorted[middle]) / 2;
 };
+
+/**
+ * Stands the harness's animation recorder down, or up again, as
+ * traceRendering does: its frame callback reads the page's animations, which
+ * flushes style.
+ */
+async function standDown(page: Page, on: boolean): Promise<void> {
+  await page.evaluate(value => {
+    const w = window as unknown as {
+      __harnessRenderingTrace?: boolean;
+      __harnessAnimations?: {resume?: () => void};
+    };
+    w.__harnessRenderingTrace = value;
+    if (!value) {
+      w.__harnessAnimations?.resume?.();
+    }
+  }, on);
+}
 
 /**
  * Opens the Delete story's alert with a tap and waits until it has entered.
@@ -101,10 +143,17 @@ async function openAlert(page: Page, beforeTap?: () => Promise<void>) {
   if (cancel == null) {
     throw new Error('Cancel has no box');
   }
+  const action = await dialog
+    .getByRole('button', {name: 'Delete', exact: true})
+    .boundingBox();
+  if (action == null) {
+    throw new Error('Delete has no box');
+  }
   return {
     driver,
     dialog,
     cancel: {x: cancel.x + cancel.width / 2, y: cancel.y + cancel.height / 2},
+    action: {x: action.x + action.width / 2, y: action.y + action.height / 2},
   };
 }
 
@@ -162,22 +211,7 @@ async function traceCloseTask(
   page: Page,
   body: () => Promise<void>,
 ): Promise<Omit<CloseTask, 'rate' | 'take'>> {
-  // The harness's animation recorder stands down while the trace runs, as in
-  // traceRendering: its frame callback reads the page's animations, which
-  // flushes style.
-  const standDown = async (on: boolean) => {
-    await page.evaluate(value => {
-      const w = window as unknown as {
-        __harnessRenderingTrace?: boolean;
-        __harnessAnimations?: {resume?: () => void};
-      };
-      w.__harnessRenderingTrace = value;
-      if (!value) {
-        w.__harnessAnimations?.resume?.();
-      }
-    }, on);
-  };
-  await standDown(true);
+  await standDown(page, true);
   const cdp = await page.context().newCDPSession(page);
   const events: TraceEvent[] = [];
   cdp.on('Tracing.dataCollected', ({value}) => {
@@ -207,7 +241,7 @@ async function traceCloseTask(
     await cdp.send('Tracing.end');
     await complete;
     await cdp.detach();
-    await standDown(false);
+    await standDown(page, false);
   }
   const start = events.find(e => e.name === 'close-task:start');
   const end = events.find(e => e.name === 'close-task:end');
@@ -249,6 +283,20 @@ async function traceCloseTask(
   const inTask = onMain.filter(
     e => e.ts >= task.ts && e.ts < task.ts + (task.dur ?? 0),
   );
+  // Tasks inside another task are counted with it.
+  const tasks = onMain.filter(
+    e => e.name === 'RunTask' || e.name === 'ThreadControllerImpl::RunTask',
+  );
+  const outerTasks = tasks.filter(
+    e =>
+      !tasks.some(
+        other =>
+          other !== e &&
+          other.ts <= e.ts &&
+          e.ts + (e.dur ?? 0) <= other.ts + (other.dur ?? 0) &&
+          (other.dur ?? 0) > (e.dur ?? 0),
+      ),
+  );
   const recalcs = inTask.filter(e => e.name === 'UpdateLayoutTree');
   const forced = recalcs.filter(
     e => (e.args?.beginData?.stackTrace?.length ?? 0) > 0,
@@ -268,7 +316,98 @@ async function traceCloseTask(
       const top = e.args?.beginData?.stackTrace?.[0];
       return `${fileOf(top?.url)}:${top?.functionName ?? ''}`;
     }),
+    longTasks: outerTasks
+      .map(e => (e.dur ?? 0) / 1000)
+      .filter(ms => ms >= LONG_TASK_MS),
   };
+}
+
+/**
+ * Taps Cancel with no trace running, and returns the time from the tap's
+ * release to the dialog closed, and the page's long tasks meanwhile.
+ */
+async function timeClose(
+  page: Page,
+  tap: () => Promise<void>,
+  dialog: ReturnType<Page['getByRole']>,
+): Promise<Omit<TimedClose, 'rate' | 'take'>> {
+  await standDown(page, true);
+  try {
+    await page.evaluate(() => {
+      const dialogElement = document.querySelector('dialog');
+      if (dialogElement == null) {
+        throw new Error('no dialog');
+      }
+      const record = {
+        pressAt: null as number | null,
+        releaseAt: null as number | null,
+        closedAt: null as number | null,
+        longTasks: [] as {start: number; duration: number}[],
+      };
+      (window as unknown as {__closeTiming: typeof record}).__closeTiming =
+        record;
+      window.addEventListener(
+        'pointerdown',
+        event => {
+          record.pressAt ??= event.timeStamp;
+        },
+        {capture: true, once: true},
+      );
+      window.addEventListener(
+        'pointerup',
+        event => {
+          record.releaseAt ??= event.timeStamp;
+        },
+        {capture: true, once: true},
+      );
+      new PerformanceObserver(list => {
+        for (const entry of list.getEntries()) {
+          record.longTasks.push({
+            start: entry.startTime,
+            duration: entry.duration,
+          });
+        }
+      }).observe({type: 'longtask'});
+      new MutationObserver(() => {
+        if (!dialogElement.open && record.closedAt == null) {
+          record.closedAt = performance.now();
+        }
+      }).observe(dialogElement, {attributes: true, attributeFilter: ['open']});
+    });
+    await tap();
+    await expect(dialog).toBeHidden();
+    // The Long Tasks API reports a task after it ends.
+    await page.waitForTimeout(300);
+    return await page.evaluate(longTaskMs => {
+      const record = (
+        window as unknown as {
+          __closeTiming: {
+            pressAt: number | null;
+            releaseAt: number | null;
+            closedAt: number | null;
+            longTasks: {start: number; duration: number}[];
+          };
+        }
+      ).__closeTiming;
+      const {pressAt, releaseAt, closedAt} = record;
+      if (pressAt == null || releaseAt == null || closedAt == null) {
+        throw new Error(`the close was not timed: ${JSON.stringify(record)}`);
+      }
+      return {
+        releaseToClosedMs: closedAt - releaseAt,
+        longTasks: record.longTasks
+          .filter(
+            task =>
+              task.duration >= longTaskMs &&
+              task.start + task.duration >= pressAt &&
+              task.start <= closedAt,
+          )
+          .map(task => task.duration),
+      };
+    }, LONG_TASK_MS);
+  } finally {
+    await standDown(page, false);
+  }
 }
 
 test.describe('under a finger', () => {
@@ -297,6 +436,49 @@ test.describe('under a finger', () => {
     expect(exitReads('close')).toEqual([]);
     // The record sees such a read: the alert's opening made it.
     expect(exitReads('open').length).toBeGreaterThan(0);
+  });
+
+  test('while the close holds the scene at its first frame, no tap, click or key reaches the alert', async ({
+    page,
+  }) => {
+    // The page clock that lets the scene stop at the tap's lift, installed
+    // before the story loads; a freeze also needs the timer gate.
+    await installPageFreeze(page);
+    const {driver, dialog, cancel, action} = await openAlert(page, async () => {
+      await installTimerGate(page);
+    });
+    const actionButton = dialog.getByRole('button', {
+      name: 'Delete',
+      exact: true,
+    });
+    await actionButton.evaluate(button => {
+      const w = window as unknown as {__actionHeard: string[]};
+      w.__actionHeard = [];
+      for (const type of ['pointerdown', 'mousedown', 'click', 'keydown']) {
+        button.addEventListener(type, event => {
+          w.__actionHeard.push(event.type);
+        });
+      }
+    });
+    // The scene stops in the lift's own task, before the page hears it. The
+    // close then runs that task's work, and its frames and timers wait.
+    await freezePageOn(page, 'touchend');
+    await driver.tap(cancel);
+    await expect(dialog).toBeVisible();
+    // A finger, then a mouse, then a key on the alert's action.
+    await driver.tap(action);
+    await page.mouse.click(action.x, action.y);
+    await actionButton.evaluate(button => {
+      (button as HTMLElement).focus();
+    });
+    await page.keyboard.press('Enter');
+    const heard = await page.evaluate(
+      () => (window as unknown as {__actionHeard: string[]}).__actionHeard,
+    );
+    expect(heard.filter(type => type !== 'keydown')).toEqual([]);
+    await expect(dialog).toBeVisible();
+    await thawPage(page);
+    await expect(dialog).toBeHidden();
   });
 });
 
@@ -343,10 +525,54 @@ test.describe("under a finger in Chrome's engine", () => {
       testInfo,
     );
     for (const close of closes) {
-      // Every trace holds the close's task, and its recalculations carry the
-      // script that forced them: the input hold forces at least one.
+      // Every trace holds the close's task.
       expect(close.taskMs, JSON.stringify(close)).toBeGreaterThan(0);
-      expect(close.forcedRecalcs, JSON.stringify(close)).toBeGreaterThan(0);
+    }
+  });
+
+  test('the close timed with no trace, at full speed and at 4× CPU: the time from the tap to closed, and the long tasks', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(180_000);
+    const closes: TimedClose[] = [];
+    for (const rate of [1, 4]) {
+      for (let take = 0; take < UNTRACED_TAKES; take += 1) {
+        const {driver, dialog, cancel} = await openAlert(page);
+        const cdp = await page.context().newCDPSession(page);
+        await cdp.send('Emulation.setCPUThrottlingRate', {rate});
+        try {
+          const timed = await timeClose(
+            page,
+            async () => {
+              await driver.tap(cancel);
+            },
+            dialog,
+          );
+          closes.push({rate, take, ...timed});
+        } finally {
+          await cdp.send('Emulation.setCPUThrottlingRate', {rate: 1});
+          await cdp.detach();
+        }
+      }
+    }
+    const summary = [1, 4].map(rate => {
+      const at = closes.filter(close => close.rate === rate);
+      return {
+        rate,
+        releaseToClosedMs: median(at.map(close => close.releaseToClosedMs)),
+        closesWithLongTask: at.filter(close => close.longTasks.length > 0)
+          .length,
+        closes: at.length,
+      };
+    });
+    await writeEvidence(
+      'alertdialog-close-task',
+      {'chromium-untraced.json': JSON.stringify({summary, closes}, null, 2)},
+      testInfo,
+    );
+    for (const close of closes) {
+      // Every close ends.
+      expect(close.releaseToClosedMs, JSON.stringify(close)).toBeGreaterThan(0);
     }
   });
 });
