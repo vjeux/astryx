@@ -15,8 +15,9 @@
 import {createHash} from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import {spawnSync} from 'node:child_process';
-import {fileURLToPath, pathToFileURL} from 'node:url';
+import {spawn} from 'node:child_process';
+import * as os from 'node:os';
+import {fileURLToPath} from 'node:url';
 import {
   SAMPLE_PAGE,
   SHEET_ORDER,
@@ -31,7 +32,14 @@ import {
   renderGenerated,
 } from './_parts.mjs';
 import {OVERVIEW_SECTIONS} from './_overview.mjs';
-import {camel, fontPackages, modesOf, themeFiles, shown} from './_settings.mjs';
+import {
+  camel,
+  folderIsEmpty,
+  fontPackages,
+  modesOf,
+  shown,
+  themeFiles,
+} from './_settings.mjs';
 import {writeWhole} from './_palette.mjs';
 import {cliVersion} from '../../foundation/release/run-context.mjs';
 import {importPathOf, installLine} from './_project.mjs';
@@ -39,6 +47,7 @@ import {COLOR_PROP_PARTS, DIRECT, P, wordTable} from './_tables.mjs';
 import {extractImportedPackages} from '../../foundation/discovery/template-needs.mjs';
 import {findNodeModulesPackage} from '../../foundation/fs/paths.mjs';
 import {withListingCache} from '../../foundation/fs/listing-cache.mjs';
+import {compareText} from '../../foundation/text/compare-text.mjs';
 
 const TEMPLATES_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -155,7 +164,7 @@ export function showcaseItems(project, group) {
   };
   const chosen = items
     .filter(it => !group || it.group === group)
-    .sort((a, b) => order(a) - order(b) || a.name.localeCompare(b.name));
+    .sort((a, b) => order(a) - order(b) || compareText(a.name, b.name));
   /** @type {Record<string, string>} */
   const imports = {};
   for (const n of elementNames(chosen.map(i => i.tree))) {
@@ -466,13 +475,13 @@ const withRenderKey = (html, key) => {
 };
 
 /**
- * Render the sample app page with the theme to themes/<slug>/preview.html.
+ * The sample page source of a theme's preview.html, its file, and the key
+ * of the inputs it is rendered from.
  * @param {import('./_settings.mjs').Ctx} ctx
  * @param {string} slug
  * @param {import('./_settings.mjs').ThemeData} data
- * @returns {Promise<string>} the file written, as shown
  */
-export async function renderPreview(ctx, slug, data) {
+function previewInputs(ctx, slug, data) {
   const {project} = ctx;
   const imports = /** @type {Record<string, string>} */ ({});
   for (const n of elementNames(SAMPLE_PAGE)) {
@@ -487,8 +496,36 @@ export async function renderPreview(ctx, slug, data) {
     title: `${slug}: sample page`,
   });
   const out = themeFiles(project.cwd, slug).preview;
+  return {source, out, key: renderKey(project, slug, source, data.like)};
+}
+
+/**
+ * Whether themes/<slug>/preview.html was rendered from the theme as it is
+ * now (the same check renderPreview makes before it renders again).
+ * @param {import('./_settings.mjs').Ctx} ctx
+ * @param {string} slug
+ * @param {import('./_settings.mjs').ThemeData} data
+ */
+export function previewIsCurrent(ctx, slug, data) {
+  try {
+    const {out, key} = previewInputs(ctx, slug, data);
+    return renderedFrom(out, key);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Render the sample app page with the theme to themes/<slug>/preview.html.
+ * @param {import('./_settings.mjs').Ctx} ctx
+ * @param {string} slug
+ * @param {import('./_settings.mjs').ThemeData} data
+ * @returns {Promise<string>} the file written, as shown
+ */
+export async function renderPreview(ctx, slug, data) {
+  const {project} = ctx;
+  const {source, out, key} = previewInputs(ctx, slug, data);
   // Rendered from the same inputs before: the page is as it would be.
-  const key = renderKey(project, slug, source, data.like);
   if (renderedFrom(out, key)) return shown(project.cwd, out);
   const {html} = await renderGenerated(project, `preview-${slug}.mjs`, source);
   // Written whole and renamed in, never through a link.
@@ -1274,7 +1311,9 @@ export function previewRouteSource({
     '        sideNav={',
     '          <SideNav>',
     '            {PAGES.map(p => (',
-    '              <SideNavItem key={p.id} label={p.label} isSelected={p.id === current.id} onClick={() => setPage(p.id)} />',
+    // Only a plain left click switches the page in place; a modified or
+    // middle click opens the page's URL as a link does (a new tab).
+    '              <SideNavItem key={p.id} label={p.label} isSelected={p.id === current.id} href={`?page=${p.id}`} onClick={e => { if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); go(p.id); }} />',
     '            ))}',
     '          </SideNav>',
     '        }>',
@@ -1328,6 +1367,22 @@ export function previewRouteSource({
     '',
     'export default function ThemePreviewPage() {',
     '  const [page, setPage] = React.useState(PAGES[0]?.id);',
+    // Each page has its own URL (?page=<id>), so a link, a reload, the back
+    // button or a screenshot reaches any page; the page renders after mount.
+    "  const fromUrl = () => new URLSearchParams(window.location.search).get('page');",
+    '  React.useEffect(() => {',
+    // A URL with no (or an unknown) ?page shows the first page, as a reload does.
+    '    const sync = () => { const id = fromUrl(); setPage(id && PAGES.some(p => p.id === id) ? id : PAGES[0]?.id); };',
+    '    sync();',
+    "    window.addEventListener('popstate', sync);",
+    "    return () => window.removeEventListener('popstate', sync);",
+    '  }, []);',
+    '  const go = (id: string) => {',
+    '    setPage(id);',
+    '    const url = new URL(window.location.href);',
+    "    url.searchParams.set('page', id);",
+    "    window.history.pushState(null, '', url);",
+    '  };',
     // Pages render only in the browser: some components crash a server
     // render, and Next prerenders a client page's first state.
     '  const [ready, setReady] = React.useState(false);',
@@ -1354,91 +1409,163 @@ export function previewRouteSource({
 /** @param {string} slug */
 const camelName = camel;
 
+/** The script that takes one picture through the project's Playwright. */
+const PLAYWRIGHT_PICTURE = fileURLToPath(
+  new URL('../../foundation/render/picture-playwright.mjs', import.meta.url),
+);
+
+/** The script that takes one picture through a Chrome or Chromium. */
+const CHROME_PICTURE = fileURLToPath(
+  new URL('../../foundation/render/picture-chrome.mjs', import.meta.url),
+);
+
+/** How long a stopped browser may take to close before it is killed. */
+const STOP_GRACE_MS = 5_000;
+
+/** The signals that stop a picture run, the terminal closing among them. */
+const STOP_SIGNALS = /** @type {const} */ (['SIGINT', 'SIGTERM', 'SIGHUP']);
+
+/** How long a browser may take for one picture before it is stopped. */
+const BROWSER_BOUND_MS = 60_000;
+
 /**
- * A PNG of an HTML file, with a Playwright the project has installed, else
- * a Chrome or Chromium found on the machine. Not ok with a reason when
- * neither is there, or when one is there and fails: the reason then names
- * its error.
+ * What the pictures of one run share: the browsers that failed or hung,
+ * each with its reason, so a later picture does not wait on them again.
+ * @typedef {{failed: Map<string, string>}} PictureRun
+ */
+
+/** A new picture run. @returns {PictureRun} */
+export function newPictureRun() {
+  return {failed: new Map()};
+}
+
+/**
+ * A whole-page PNG of an HTML file, with a Playwright the project has
+ * installed, else a Chrome or Chromium found on the machine. Each browser
+ * gets its own time bound, and the next one its turn when one fails or
+ * hangs. Not ok with a reason when none is there or every one failed: the
+ * reason then names each one's real error. When a later browser took the
+ * picture, `note` says why an earlier one did not.
  * @param {import('./_project.mjs').ThemeProject} project
  * @param {string} html absolute
  * @param {string} png absolute
  * @param {'light' | 'dark'} mode
- * @returns {Promise<{ok: true, file: string, cut?: boolean} | {ok: false, reason: string}>} `cut` when the picture is of the window, not the whole page
+ * @param {PictureRun} [run] what earlier pictures of the same run learned:
+ *   a browser that failed or hung there is not tried again
+ * @returns {Promise<{ok: true, file: string, note?: string} | {ok: false, reason: string, stopped?: string}>}
  */
-export async function screenshot(project, html, png, mode) {
-  /** What was found and why it could not take the picture. @type {string[]} */
-  const failed = [];
-  /** The first line of an error, with no path of this machine. @param {unknown} e */
-  const firstLine = e =>
-    String(/** @type {any} */ (e)?.message ?? e ?? '')
+export async function screenshot(
+  project,
+  html,
+  png,
+  mode,
+  run = newPictureRun(),
+) {
+  /** What was tried and why it could not take the picture. @type {string[]} */
+  const failed = [...run.failed.values()];
+  /** Whether a Playwright was found without its own browser installed. */
+  let pwMissing = false;
+  /** Whether a Playwright was found at all. */
+  let pwFound = false;
+  /** A line with no path of this machine. @param {string} line */
+  const local = line => line.split(project.cwd).join('.');
+  /**
+   * Why a browser did not take the picture: Playwright's first line names
+   * only the call ("browserType.launch: Target … closed"); the cause, such
+   * as a missing library, is in a later line, so that line comes too.
+   * Chrome's startup warnings (dbus, GPU) are not a cause.
+   * @param {string} text
+   */
+  const causeOf = text => {
+    const lines = String(text ?? '')
       .split('\n')
-      .map(l => l.trim())
-      .find(Boolean)
-      ?.split(project.cwd)
-      .join('.') ?? 'it stopped with no message';
-  for (const pkg of ['playwright', 'playwright-core']) {
-    /** @type {string} */
-    let entry;
-    try {
-      entry = project.req.resolve(pkg);
-    } catch {
-      continue;
-    }
-    try {
-      const pw = await import(pathToFileURL(entry).href);
-      const chromium = pw.chromium ?? pw.default?.chromium;
-      const browser = await chromium.launch(
-        chromeBinary() ? {executablePath: chromeBinary()} : {},
+      .map(l => l.replace(/^[\s=<>-]+/, '').trim())
+      .filter(Boolean);
+    const head =
+      meaningfulLine(lines.join('\n')) || 'it stopped with no message';
+    const rest = lines
+      .slice(lines.indexOf(head) + 1)
+      .find(l =>
+        /error|cannot|can't|missing|not found|while loading|no such|failed|denied/i.test(
+          l,
+        ),
       );
-      try {
-        const page = await browser.newPage({
-          viewport: {width: 1280, height: 900},
-          colorScheme: mode,
-        });
-        await page.goto(pathToFileURL(html).href, {waitUntil: 'load'});
-        await page.screenshot({path: png, fullPage: true});
-      } finally {
-        await browser.close();
-      }
-      return {ok: true, file: shown(project.cwd, png)};
-    } catch (e) {
-      // This Playwright could not launch its browser: try Chrome directly.
-      failed.push(`${pkg}: ${firstLine(e)}`);
+    return local(rest ? `${head} (${rest})` : head);
+  };
+  /** The browsers to try, in order: each a picture script and its args. */
+  /** @type {Array<{who: string, script: string, args: string[]}>} */
+  const tries = [];
+  for (const pkg of ['playwright', 'playwright-core']) {
+    try {
+      const entry = project.req.resolve(pkg);
+      pwFound = true;
+      tries.push({
+        who: `${pkg}'s own browser`,
+        script: PLAYWRIGHT_PICTURE,
+        args: [entry, html, png, mode],
+      });
+      break;
+    } catch {
+      // Not installed here.
     }
   }
   const chrome = chromeBinary();
-  if (chrome) {
-    const r = spawnSync(
-      chrome,
-      [
-        '--headless=new',
-        '--disable-gpu',
-        '--no-sandbox',
-        '--hide-scrollbars',
-        `--screenshot=${png}`,
-        '--window-size=1280,2400',
-        ...(mode === 'dark' ? ['--force-dark-mode'] : []),
-        pathToFileURL(html).href,
-      ],
-      {encoding: 'utf8', timeout: 60_000},
-    );
-    // Chrome alone takes the window, not the whole page.
+  if (chrome)
+    tries.push({
+      who: chrome,
+      script: CHROME_PICTURE,
+      args: [chrome, html, png, mode],
+    });
+  for (const t of tries) {
+    if (run.failed.has(t.who)) continue;
+    const r = await runBrowser(t.script, t.args, BROWSER_BOUND_MS, {
+      drop: [png],
+    });
+    if (r.stoppedBy)
+      return {
+        ok: false,
+        stopped: r.stoppedBy,
+        reason: `the pictures were stopped (${r.stoppedBy}) before the browser finished`,
+      };
+    if (r.noTemp)
+      return {
+        ok: false,
+        reason: `no browser was started: the system temp folder cannot be written (${r.noTemp}), and a browser needs a profile folder of its own there; fix the temp folder (TMPDIR), then run the command again`,
+      };
     if (r.status === 0 && fs.existsSync(png))
-      return {ok: true, file: shown(project.cwd, png), cut: true};
-    failed.push(
-      `${chrome}: ${firstLine(
-        r.error ??
-          (r.stderr ||
-            (r.signal
-              ? `stopped by ${r.signal}`
-              : `exit ${r.status}, and no picture was written`)),
-      )}`,
-    );
+      return {
+        ok: true,
+        file: shown(project.cwd, png),
+        ...(failed.length
+          ? {
+              note: `the picture was taken with ${t.who}; ${failed.join('; ')}`,
+            }
+          : {}),
+      };
+    const text = r.error ? String(r.error.message) : r.stderr;
+    if (
+      t.script === PLAYWRIGHT_PICTURE &&
+      /Executable doesn't exist|playwright install/i.test(text)
+    )
+      pwMissing = true;
+    const why = r.timedOut
+      ? `${t.who} did not finish within ${BROWSER_BOUND_MS / 1000} seconds, so it was stopped`
+      : `${t.who} could not take it: ${causeOf(text)}`;
+    run.failed.set(t.who, why);
+    failed.push(why);
   }
   if (failed.length)
     return {
       ok: false,
-      reason: `A browser was found, but it could not take the picture (${failed.join('; ')}). Give Playwright its browser (npx playwright install chromium), or check that ${chrome ?? 'Google Chrome or Chromium'} starts on this machine. The HTML preview needs neither.`,
+      // Advice that can change the result: Playwright's browser only when
+      // it is missing; a Chrome to check only when there is one.
+      reason: `No picture was taken (${failed.join('; ')}). ${
+        !pwFound
+          ? `Install Playwright with its browser (${installLine(project.cwd, ['playwright'])}, then npx playwright install chromium), or`
+          : pwMissing
+            ? 'Give Playwright its browser (npx playwright install chromium), or'
+            : "Fix what Playwright's browser needs (the reason is above), or"
+      } ${chrome ? `check that ${chrome} starts on this machine` : 'install Google Chrome or Chromium'}. The HTML preview needs neither.`,
     };
   return {
     ok: false,
@@ -1461,12 +1588,522 @@ function chromeBinary() {
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
   ];
-  for (const f of fixed) if (fs.existsSync(f)) return f;
+  // Only a file that runs: a folder or a file with no execute permission
+  // by a browser's name is passed over, and the search goes on.
+  /** @param {string} f */
+  const runs = f => {
+    try {
+      if (!fs.statSync(f).isFile()) return false;
+      if (process.platform !== 'win32') fs.accessSync(f, fs.constants.X_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  for (const f of fixed) if (runs(f)) return f;
   for (const dir of (process.env.PATH ?? '').split(path.delimiter)) {
     for (const n of names) {
       const f = path.join(dir, n);
-      if (dir && fs.existsSync(f)) return f;
+      if (dir && runs(f)) return f;
     }
   }
   return null;
+}
+
+/** The first line of every file the editor writes into a theme's app copy. */
+export {APP_COPY_MARK} from './_marks.mjs';
+import {APP_COPY_MARK, appCopyMark} from './_marks.mjs';
+import {builtColorMode} from '../../foundation/discovery/theme-imports.mjs';
+
+/**
+ * The font stylesheets a theme's app copy imports, from the fonts the theme
+ * loads now (an installed font package, the base theme's fonts).
+ * @param {import('./_settings.mjs').Ctx} ctx
+ * @param {string} slug
+ * @param {import('./_settings.mjs').ThemeData} data
+ * @returns {string[]}
+ */
+export function copyFontsCss(ctx, slug, data) {
+  return themeImports(
+    ctx,
+    slug,
+    data,
+    path.join(ctx.project.cwd, 'src', 'themes', slug),
+  ).css.slice(1);
+}
+
+/**
+ * The app's copy of an editor theme: a standard local theme in
+ * src/themes/<theme>/ (a descriptor, a source that re-exports the built
+ * module, the built module, its stylesheet and font stylesheet), the shape
+ * `astryx theme add <theme>` reads, so the theme goes into the app with the
+ * stable theme commands. It is written again after every build of the
+ * theme, never edited by hand. A folder there that is not the editor's own
+ * copy is left alone: returns null then, else the folder.
+ * The built module and stylesheet are written whole: a local theme's source
+ * may import only files inside its own folder.
+ * @param {import('./_settings.mjs').Ctx} ctx
+ * @param {string} slug
+ * @param {import('./_settings.mjs').ThemeData} data
+ * @returns {string | null}
+ */
+export function writeAppCopy(ctx, slug, data) {
+  return writeAppCopyAt(ctx.project.cwd, slug, copyFontsCss(ctx, slug, data));
+}
+
+/**
+ * The files of a theme's app copy as the editor would write them now, by
+ * name; null with no build to copy. Font stylesheets as given, or null for
+ * the copy's own.
+ * @param {string} cwd
+ * @param {string} slug
+ * @param {string[] | null} fontsCss
+ * @returns {Record<string, string> | null}
+ */
+function appCopyFiles(cwd, slug, fontsCss) {
+  const f = themeFiles(cwd, slug);
+  const dir = path.join(cwd, 'src', 'themes', slug);
+  const name = `${camel(slug)}Theme`;
+  if (!fs.existsSync(f.js) || !fs.existsSync(f.css)) return null;
+  const source = `src/themes/${slug}/${name}.ts`;
+  const head = (/** @type {string} */ open, /** @type {string} */ close) =>
+    `${open} ${appCopyMark(slug)} after every build of themes/${slug}/; do not edit it here. Change the theme with the editor. ${close}\n`;
+  const keptFonts = path.join(dir, `${slug}.fonts.css`);
+  const fonts =
+    fontsCss ??
+    (fs.existsSync(keptFonts)
+      ? [
+          ...fs.readFileSync(keptFonts, 'utf8').matchAll(/@import "([^"]+)";/g),
+        ].map(m => m[1])
+      : []);
+  // A built file as `theme build` of the copy's source writes it: the
+  // editor's build of the same theme, with the header naming that source.
+  const asBuilt = (/** @type {string} */ text) =>
+    text
+      .replace(/^( \* Source: ).*$/m, `$1${source}`)
+      .replace(/^( \* Command: ).*$/m, `$1astryx theme build ${source}`);
+  /** @type {Record<string, string>} */
+  const built = {};
+  for (const ext of APP_COPY_BUILT) {
+    const from = path.join(f.dir, `${slug}${ext}`);
+    if (fs.existsSync(from))
+      built[`${slug}${ext}`] = asBuilt(fs.readFileSync(from, 'utf8'));
+  }
+  // A light-only or dark-only theme's build exports its one color mode
+  // (`colorModes`); the copy's source re-exports it, so a build of the copy
+  // writes it too and `theme add` reads it.
+  const oneMode = builtColorMode(f.js).mode;
+  const files = {
+    [`${name}.doc.mjs`]: `${head('//', '')}\n/** @type {import('@astryxdesign/cli/authoring').ThemeDoc} */\nexport default {\n  type: 'theme',\n  name: ${JSON.stringify(slug)},\n  displayName: ${JSON.stringify(slug)},\n  description: ${JSON.stringify(`The ${slug} theme, made with the theme editor (themes/${slug}/).`)},\n  maintained: false,\n};\n`,
+    [`${name}.ts`]: `${head('//', '')}export {${name}${oneMode ? ', colorModes' : ''}} from './${slug}';\n`,
+    ...built,
+    // Always there, so the app theme module's import of it holds when the
+    // theme's fonts change (none: a comment only).
+    [`${slug}.fonts.css`]: fonts.length
+      ? `${head('/*', '*/')}${fonts.map(c => `@import ${JSON.stringify(c)};`).join('\n')}\n`
+      : `${head('/*', '*/')}/* No font stylesheets: no installed package loads the theme's fonts. A font the system does not have shows only once its package is installed (experimental theme editor show ${slug} names it). */\n`,
+  };
+  return files;
+}
+
+/**
+ * Why a theme's app copy is behind its build, or null when it is current:
+ * something in its way (appCopyStale), a copy file missing, or a file
+ * whose content is not what the editor would write now.
+ * @param {string} cwd
+ * @param {string} slug
+ * @param {string[] | null} [fontsCss] the font stylesheets the copy should
+ *   import now (null: the copy's own)
+ * @returns {string | null}
+ */
+export function appCopyBehind(cwd, slug, fontsCss = null) {
+  const stale = appCopyStale(cwd, slug).appCopyStale;
+  if (stale) return stale;
+  const files = appCopyFiles(cwd, slug, fontsCss);
+  if (!files) return null;
+  const dir = path.join(cwd, 'src', 'themes', slug);
+  if (!fs.existsSync(dir))
+    return `the app copy in src/themes/${slug}/ is gone; the editor writes it again`;
+  for (const [n, text] of Object.entries(files)) {
+    /** @type {string} */
+    let now;
+    try {
+      now = fs.readFileSync(path.join(dir, n), 'utf8');
+    } catch {
+      return `src/themes/${slug}/${n} is missing from the app copy`;
+    }
+    // Line endings as a checkout writes them (CRLF on Windows) are the
+    // same content, as the outputs check reads them.
+    const lf = (/** @type {string} */ x) => x.replace(/\r\n/g, '\n');
+    if (lf(now) !== lf(text))
+      return `src/themes/${slug}/${n} is not the current build of themes/${slug}/`;
+  }
+  return null;
+}
+
+/**
+ * {@link writeAppCopy} with the font stylesheets given, or null to keep the
+ * copy's own (a compile, which changes no setting).
+ * @param {string} cwd
+ * @param {string} slug
+ * @param {string[] | null} fontsCss
+ * @returns {string | null}
+ */
+export function writeAppCopyAt(cwd, slug, fontsCss) {
+  const f = themeFiles(cwd, slug);
+  const dir = path.join(cwd, 'src', 'themes', slug);
+  const name = `${camel(slug)}Theme`;
+  const first = !fs.existsSync(path.join(dir, `${name}.doc.mjs`));
+  if (!fs.existsSync(f.js) || !fs.existsSync(f.css)) return null;
+  // Only the editor's own copy is written over.
+  if (appCopyBlocker(cwd, slug) !== null) return null;
+  const files = appCopyFiles(cwd, slug, fontsCss);
+  if (!files) return null;
+  const failKey = `${path.resolve(cwd)}\0${slug}`;
+  try {
+    fs.mkdirSync(dir, {recursive: true});
+    for (const [n, text] of Object.entries(files)) {
+      const file = path.join(dir, n);
+      if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === text)
+        continue;
+      writeWhole(file, text);
+    }
+    // A copy's own file this build no longer writes goes; anything else in
+    // the folder (yours, or the system's) stays as it is.
+    for (const n of fs.readdirSync(dir))
+      if (appCopyNames(slug).has(n) && !(n in files))
+        fs.rmSync(path.join(dir, n), {force: true});
+  } catch (e) {
+    // A copy that cannot be written is said, with the system's reason;
+    // the change itself stands.
+    const code = /** @type {any} */ (e)?.code ?? 'error';
+    // The folder that failed: the copy's, or a parent it could not be
+    // made in.
+    const failed = /** @type {any} */ (e)?.path
+      ? path.resolve(String(/** @type {any} */ (e).path))
+      : dir;
+    const at = fs.existsSync(failed) ? failed : path.dirname(failed);
+    const rel = path.relative(cwd, at).split(path.sep).join('/');
+    COPY_FAILED.set(
+      failKey,
+      code === 'EACCES' || code === 'EPERM' || code === 'EROFS'
+        ? `${rel} is not writable (${code})`
+        : code === 'ENOSPC'
+          ? `the disk is full (${code})`
+          : `${rel} could not be written (${code})`,
+    );
+    return null;
+  }
+  COPY_FAILED.delete(failKey);
+  // The first write is named in the command's result; later ones are not.
+  if (first)
+    FIRST_COPIES.set(
+      `${path.resolve(cwd)}\0${slug}`,
+      Object.keys(files)
+        .sort()
+        .map(n =>
+          path.relative(cwd, path.join(dir, n)).split(path.sep).join('/'),
+        ),
+    );
+  return dir;
+}
+
+/**
+ * The note for a copy a file of yours keeps from being written, as a
+ * result field: `{appCopyStale}` when one does, else nothing.
+ * @param {string} cwd
+ * @param {string} slug
+ * @returns {{appCopyStale?: string}}
+ */
+export function appCopyStale(cwd, slug) {
+  const blocker =
+    appCopyBlocker(cwd, slug) ??
+    COPY_FAILED.get(`${path.resolve(cwd)}\0${slug}`) ??
+    null;
+  return blocker
+    ? {
+        appCopyStale: `the app copy in src/themes/${slug}/ was not updated: ${blocker}. The app keeps the theme as it was until that is out of the way; then any set or show writes it.`,
+      }
+    : {};
+}
+
+/**
+ * The names of a theme's app copy files.
+ * @param {string} slug
+ * @returns {Set<string>}
+ */
+function appCopyNames(slug) {
+  const name = `${camel(slug)}Theme`;
+  return new Set([
+    `${name}.doc.mjs`,
+    `${name}.ts`,
+    `${slug}.fonts.css`,
+    ...APP_COPY_BUILT.map(ext => `${slug}${ext}`),
+  ]);
+}
+
+/**
+ * Why the editor will not write a theme's app copy, or null when it will.
+ * Only a file of yours AT one of the copy's names stops it: a descriptor,
+ * source or font stylesheet without the editor's mark, or any copy file
+ * while the descriptor is not the editor's. Other files there (a note, a
+ * swap file, desktop.ini) are left as they are and the copy is written
+ * around them. Built bytes are not compared, so a stable rebuild of the
+ * copy leaves it the editor's. The one test the copy's writer, the change
+ * results and `wiring` use. Returns the file in the way.
+ * @param {string} cwd
+ * @param {string} slug
+ * @returns {string | null}
+ */
+export function appCopyBlocker(cwd, slug) {
+  const dir = path.join(cwd, 'src', 'themes', slug);
+  const name = `${camel(slug)}Theme`;
+  const rel = path.relative(cwd, dir).split(path.sep).join('/');
+  // Nothing is written through a link on the way from the app to the copy
+  // (src/, src/themes/, the copy's folder), as for themes/.
+  for (const part of ['src', 'src/themes', rel]) {
+    try {
+      const st = fs.lstatSync(path.join(cwd, part));
+      if (st.isSymbolicLink())
+        return `${part} is a link (to ${fs.readlinkSync(path.join(cwd, part))}), and the editor writes nothing through a link`;
+      // A file where a folder on the way goes: nothing is half-written.
+      if (!st.isDirectory())
+        return part === rel
+          ? `${rel} is a file, where the copy's folder goes`
+          : `${part} is a file, where a folder on the way to the copy goes`;
+    } catch {
+      break;
+    }
+  }
+  try {
+    if (!fs.lstatSync(dir).isDirectory())
+      return `${rel} is a file, where the copy's folder goes`;
+  } catch {
+    // Not there yet: the copy makes it.
+  }
+  if (folderIsEmpty(dir)) return null;
+  /** @type {string[]} */
+  let names;
+  try {
+    names = fs.readdirSync(dir);
+  } catch (e) {
+    return `${rel} cannot be read (${/** @type {any} */ (e)?.code ?? 'error'})`;
+  }
+  /** @param {string} n */
+  const marked = n => {
+    try {
+      return fs.readFileSync(path.join(dir, n), 'utf8').includes(APP_COPY_MARK);
+    } catch {
+      return false;
+    }
+  };
+  const own = appCopyNames(slug);
+  const present = names.filter(n => own.has(n));
+  // A link at a copy name is never written through or replaced.
+  for (const n of present)
+    try {
+      const st = fs.lstatSync(path.join(dir, n));
+      if (st.isSymbolicLink())
+        return `${rel}/${n} is a link (to ${fs.readlinkSync(path.join(dir, n))}), at a name the copy uses, and the editor writes nothing through a link`;
+      if (st.isDirectory())
+        return `${rel}/${n} is a folder, at a name the copy uses for a file`;
+    } catch {
+      // Gone since it was listed.
+    }
+  // The copy is the editor's when any of its marked files carries the
+  // mark (one of them deleted is written back); then only a marked name
+  // without the mark is yours.
+  const markedNames = [`${name}.doc.mjs`, `${name}.ts`, `${slug}.fonts.css`];
+  // A build output of the copy's source carries the build's own header.
+  const generated = (/** @type {string} */ n) => {
+    try {
+      return /@generated by `astryx theme build`/.test(
+        fs.readFileSync(path.join(dir, n), 'utf8').slice(0, 600),
+      );
+    } catch {
+      return false;
+    }
+  };
+  const ours =
+    markedNames.some(n => present.includes(n) && marked(n)) ||
+    (present.length > 0 &&
+      present.every(n => !markedNames.includes(n) && generated(n)));
+  const foreign = ours
+    ? present.find(n => markedNames.includes(n) && !marked(n))
+    : present[0];
+  return foreign
+    ? `${rel}/${foreign} is yours, at a name the copy uses, and the editor never writes over your files`
+    : null;
+}
+
+/** The build outputs of a theme, by their ending after `<theme>`. */
+const APP_COPY_BUILT = ['.css', '.css.d.ts', '.js', '.d.ts', '.variants.d.ts'];
+
+/** Why the last write of a theme's app copy failed, by app and theme. @type {Map<string, string>} */
+const COPY_FAILED = new Map();
+
+/** App copies written for the first time in this process, by app and theme. @type {Map<string, string[]>} */
+const FIRST_COPIES = new Map();
+
+/**
+ * The files of a theme's app copy when this command wrote it for the first
+ * time (then forgotten, so one result names them), else null.
+ * @param {string} cwd
+ * @param {string} slug
+ * @returns {string[] | null}
+ */
+export function takeFirstAppCopy(cwd, slug) {
+  const key = `${path.resolve(cwd)}\0${slug}`;
+  const wrote = FIRST_COPIES.get(key) ?? null;
+  FIRST_COPIES.delete(key);
+  return wrote;
+}
+
+/**
+ * Run a picture script (one browser, one picture) as its own process group,
+ * without blocking this process. The one owner of every browser run:
+ * - a temp folder of its own (TMPDIR, TMP, TEMP), where the browser keeps
+ *   its profile; with none to make, nothing runs (`noTemp`);
+ * - a time bound (`timedOut`);
+ * - a stop (SIGINT, SIGTERM, SIGHUP) that reaches the run stops it
+ *   (`stoppedBy`), then ends this process as the stop would have.
+ * A stop or the bound asks the whole group to close, waits for it (killing
+ * it past a short grace), then removes the temp folder and the `drop` files
+ * (a picture part a stopped run leaves); a run that ends on its own removes
+ * the temp folder only.
+ * @param {string} script a picture script
+ * @param {string[]} args
+ * @param {number} [bound] milliseconds before the run is stopped
+ * @param {{drop?: string[]}} [opts]
+ * @returns {Promise<{status: number | null, signal: string | null, stderr: string, error?: Error, stoppedBy?: string, timedOut?: boolean, noTemp?: string}>}
+ */
+export function runBrowser(script, args, bound = BROWSER_BOUND_MS, opts = {}) {
+  const drop = opts.drop ?? [];
+  /** @type {string} */
+  let temp;
+  try {
+    temp = fs.mkdtempSync(path.join(os.tmpdir(), 'astryx-browser-'));
+  } catch (e) {
+    return Promise.resolve({
+      status: null,
+      signal: null,
+      stderr: '',
+      noTemp: String(/** @type {any} */ (e)?.code ?? e),
+    });
+  }
+  return new Promise(resolve => {
+    let stderr = '';
+    const posix = process.platform !== 'win32';
+    const child = spawn(process.execPath, [script, ...args], {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      env: {...process.env, TMPDIR: temp, TMP: temp, TEMP: temp},
+      // A group of its own, so a stop reaches the browser it starts too.
+      detached: posix,
+    });
+    /** @param {NodeJS.Signals} sig */
+    const signalAll = sig => {
+      try {
+        if (posix && child.pid) process.kill(-child.pid, sig);
+        else child.kill(sig);
+      } catch {
+        // Gone already.
+      }
+    };
+    const closed = new Promise(done => child.once('close', done));
+    /** @param {string[]} files */
+    const remove = files => {
+      for (const f of files)
+        try {
+          fs.rmSync(f, {recursive: true, force: true});
+        } catch {
+          // Gone already.
+        }
+    };
+    /** The temp folder goes on every way out; `drop` only with a stop. */
+    const clean = () => remove([temp]);
+    /** Close the group (killed past the grace), then clean up. */
+    const finish = async () => {
+      signalAll('SIGTERM');
+      const grace = new Promise(done =>
+        setTimeout(done, STOP_GRACE_MS).unref(),
+      );
+      if ((await Promise.race([closed.then(() => true), grace])) !== true) {
+        signalAll('SIGKILL');
+        await closed;
+      }
+      remove([temp, ...drop]);
+    };
+    // This process ending some other way: the group is killed, and the temp
+    // folder and the unfinished files removed, as far as an exit allows.
+    const onExit = () => {
+      signalAll('SIGKILL');
+      remove([temp, ...drop]);
+    };
+    process.once('exit', onExit);
+    child.stderr?.setEncoding('utf8');
+    child.stderr?.on('data', d => {
+      if (stderr.length < 8000) stderr += d;
+    });
+    /** Set once the run is being stopped (bound, signal): it ends there. */
+    let stopping = false;
+    let settled = false;
+    /** @param {Awaited<ReturnType<typeof runBrowser>>} out */
+    const settle = out => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      process.removeListener('exit', onExit);
+      for (const sig of STOP_SIGNALS) process.removeListener(sig, onStop);
+      resolve(out);
+    };
+    const timer = setTimeout(() => {
+      stopping = true;
+      void finish().then(() =>
+        settle({status: null, signal: null, stderr, timedOut: true}),
+      );
+    }, bound);
+    /** @param {NodeJS.Signals} sig */
+    const onStop = async sig => {
+      stopping = true;
+      for (const s of STOP_SIGNALS) process.removeListener(s, onStop);
+      await finish();
+      settle({status: null, signal: null, stderr, stoppedBy: sig});
+      // Nothing else listening: the stop ends this process, as it would
+      // have without this listener.
+      if (process.listenerCount(sig) === 0) process.kill(process.pid, sig);
+    };
+    for (const sig of STOP_SIGNALS) process.once(sig, onStop);
+    child.once('error', error => {
+      clean();
+      settle({status: null, signal: null, stderr, error});
+    });
+    child.once('close', (status, signal) => {
+      if (stopping) return;
+      clean();
+      settle({status, signal, stderr});
+    });
+  });
+}
+
+/**
+ * The first stderr line that says something about the picture: Chrome's
+ * startup warnings (dbus, GPU, sandbox notices) come first on Linux and
+ * say nothing about why no picture was written.
+ * @param {string} text
+ */
+export function meaningfulLine(text) {
+  const lines = String(text ?? '')
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
+  return (
+    lines.find(
+      l =>
+        !/dbus|bus\.cc|gpu_|gl_|sandbox|fontconfig|crashpad|DevTools listening|WARNING:/i.test(
+          l,
+        ),
+    ) ??
+    lines[0] ??
+    ''
+  );
 }

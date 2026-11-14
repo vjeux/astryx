@@ -143,7 +143,8 @@ const QUESTIONS = [
   [
     'make the error red darker',
     {
-      top: /^set q danger '#[0-9a-f]{6}'$/,
+      // The seed, then the dark half stepped darker from its own value.
+      top: /^set q danger '#[0-9a-f]{6}' && set q --color-error '#[0-9a-f]{6}' --mode dark$/,
       adds: /--color-error(\.0)?=#[0-9a-f]{6}/,
     },
   ],
@@ -193,8 +194,9 @@ const QUESTIONS = [
     {
       parts: ['app-shell-header'],
       aspects: ['text'],
-      top: /^set q color '#ffffff' --on app-shell-header$/,
-      adds: /app-shell-header\.base\.color=#ffffff/,
+      // The title and items inside read the text tokens themselves.
+      top: /^set q --color-text-primary '#ffffff' --on app-shell-header/,
+      adds: /app-shell-header\.base\.--color-text-primary=#ffffff/,
     },
   ],
   [
@@ -267,8 +269,9 @@ const QUESTIONS = [
     'in dark mode make cards slightly lighter',
     {
       parts: ['card'],
-      top: /--on card --mode dark$/,
-      adds: /card\.base\.background=light-dark\(/,
+      // Each card variant from its own fill, dark mode only.
+      top: /--on card( --when variant:default)? --mode dark( && |$)/,
+      adds: /card\.variant:default\.background(Color)?=/,
     },
   ],
   [
@@ -391,8 +394,10 @@ const QUESTIONS = [
   [
     'stronger shadow on dialogs',
     {
-      top: /^set q box-shadow 'var\(--shadow-high\)' --on dialog$/,
-      adds: /dialog\.base\.boxShadow=var\(--shadow-high\)/,
+      // The dialog already reads the strongest shared shadow: that shadow,
+      // its colors stronger (never the same shadow again).
+      top: /^set q box-shadow '(?!var\(--shadow-high\)).+' --on dialog$/,
+      adds: /dialog\.base\.boxShadow=/,
     },
   ],
   [
@@ -495,8 +500,10 @@ const QUESTIONS = [
   [
     'rounder corners but not on inputs',
     {
-      top: /^set q corners more && set q border-radius \S+ --on inputs$/,
-      adds: /text-input\.base\.borderRadius=/,
+      // Each member that shows a radius of its own keeps the corner token
+      // it reads; a member that takes its corners from a part inside it
+      // gets no invented one.
+      top: /^set q corners more( && set q --radius-[a-z]+ \S+ --on [a-z-]+ --only)+$/,
     },
   ],
   [
@@ -594,13 +601,8 @@ const QUESTIONS = [
       adds: /heading\.level:1\.fontSize=/,
     },
   ],
-  [
-    "don't make the buttons bold",
-    {
-      top: /^set q font-weight 400 --on button$/,
-      adds: /button\.base\.fontWeight=400/,
-    },
-  ],
+  // A prohibition changes nothing (it says what stays).
+  ["don't make the buttons bold", {top: null}],
   [
     'font size 18px for body',
     {top: /^set q text-size 18$/, adds: /scale\.base=18/},
@@ -620,7 +622,15 @@ const QUESTIONS = [
       adds: /:active\.transform=scale/,
     },
   ],
-  ['selected table row light blue', {parts: ['table-row'], top: null}],
+  [
+    'selected table row light blue',
+    {
+      parts: ['table-row'],
+      // Core paints the selected wash inline from this token.
+      top: /^set q --color-accent-muted '#[0-9a-f]{6}' --on table-row --state selected$/,
+      adds: /table-row\.selected\.--color-accent-muted=#/,
+    },
+  ],
   ['dark mode only', {top: /^set q mode dark-only$/, adds: /mode=dark-only/}],
   [
     'make dark mode text less bright',
@@ -636,13 +646,9 @@ const QUESTIONS = [
       adds: /--color-accent\.1=/,
     },
   ],
-  [
-    'dialog wider',
-    {
-      top: /^set q width 'min\(720px, 100%\)' --on dialog$/,
-      adds: /dialog\.base\.width=/,
-    },
-  ],
+  // Wider scales the part's own width; a part with none says so, never a
+  // made-up 720px width.
+  ['dialog wider', {top: null}],
   [
     'make the tabs underline thicker',
     {
@@ -661,7 +667,7 @@ const QUESTIONS = [
   [
     'make the header dark with white text and a bottom border',
     {
-      top: /background '#1f2937' --on app-shell-header && set q color '#ffffff'/,
+      top: /background '#1f2937' --on app-shell-header && set q --color-text-primary '#ffffff'/,
       adds: /borderBottom=/,
     },
   ],
@@ -1039,8 +1045,10 @@ const QUESTIONS_2 = [
   [
     'all buttons blue except the danger one',
     {
-      top: /--on button && set q background 'var\(--color-error\)' --on button --when variant:destructive$/,
-      adds: /variant:destructive\.background=var\(--color-error\)/,
+      // The danger variant keeps the fill (and the text on it) the base
+      // theme gives it.
+      top: /--on button && set q background 'var\(--color-error(-muted)?\)' --on button --when variant:destructive( && set q color 'var\(--color-on-error(-muted)?\)' --on button --when variant:destructive)?$/,
+      adds: /variant:destructive\.background=var\(--color-error(-muted)?\)/,
     },
   ],
   [
@@ -1100,7 +1108,13 @@ const QUESTIONS_2 = [
       adds: /--radius-element=8px/,
     },
   ],
-  ['radius -4px on cards', {top: null, text: /cannot be negative/}],
+  // A signed length after a property is a change by it: 4px less radius.
+  [
+    'radius -4px on cards',
+    {
+      top: /^set q border-radius .*- 4px.* --on card$|^set q border-radius \d+(\.\d+)?px --on card$/,
+    },
+  ],
   [
     'headings are 600 weight and -0.02em tracking',
     {
@@ -1148,7 +1162,7 @@ const QUESTIONS_2 = [
     'in dark mode, cards should be #1c1c1e',
     {
       top: /^set q background '#1c1c1e' --on card --mode dark$/,
-      adds: /card\.base\.background=light-dark\(/,
+      adds: /card\.variant:default\.backgroundColor=light-dark\(/,
     },
   ],
   [
@@ -1310,7 +1324,7 @@ const QUESTIONS_2 = [
   [
     'dialgo shadow stronger',
     {
-      top: /^set q box-shadow 'var\(--shadow-high\)' --on dialog$/,
+      top: /^set q box-shadow '(?!var\(--shadow-high\)).+' --on dialog$/,
       adds: /dialog\.base\.boxShadow/,
     },
   ],
@@ -1461,7 +1475,7 @@ describe('how answers pass-2 questions', () => {
       ],
       [
         'in dark mode, cards should be #1c1c1e',
-        /card[^{]*\{[^}]*background:\s*light-dark\(.*#1c1c1e/,
+        /card[^{]*\{[^}]*background-color:\s*light-dark\(.*#1c1c1e/,
       ],
       ['button padding 12px 20px', /button[^{]*\{[^}]*padding:\s*12px 20px/],
       [
@@ -1884,11 +1898,14 @@ const QUESTIONS_F = [
   ['buttons are not rounded enough', {top: /^set q corners more --on button$/}],
   [
     'nothing should be rounded except avatars',
-    {top: /^set q corners square && set q border-radius 9999px --on avatar$/},
+    // The avatar keeps the corner token it reads, so its own corners stay.
+    {top: /^set q corners square && set q --radius-full 9999px --on avatar$/},
   ],
   [
     'the shadows are too strong',
-    {top: /^set q --shadow-low '0 1px 2px rgb\(0 0 0 \/ 0\.05\)'/},
+    // Each shared shadow from its own layers, its colors fainter (both
+    // modes kept), never a stock light-mode set.
+    {top: /^set q --shadow-low '.*light-dark\(/},
   ],
   [
     'card shadows too strong',
@@ -2030,13 +2047,9 @@ const QUESTIONS_F = [
     {top: /^set q font-size [\d.]+rem --on tooltip$/},
   ],
   // values
-  [
-    'card radius 50%',
-    {
-      top: /^set q border-radius '50%' --on card$/,
-      adds: /card\.base\.borderRadius=50%/,
-    },
-  ],
+  // A bare percent radius is an oval in CSS, not a share of the radius
+  // now: refused with the command that scales the radius.
+  ['card radius 50%', {top: null, text: /how 'card radius 50% of now'/}],
   ['button padding 8', {top: /^set q padding 8px --on button$/}],
   [
     'in light mode the accent is #2563eb, in dark mode #60a5fa',
@@ -2186,7 +2199,6 @@ describe('how answers final-pass questions', () => {
         [/badge[^{]*success[^{]*\{[^}]*background(-color)?:\s*#dcfce7/i],
       ],
       ['the borders are too dark', [/--color-border:\s*light-dark\(/]],
-      ['card radius 50%', [/card[^{]*\{[^}]*border-radius:\s*50%/]],
     ])) {
       fs.rmSync(dir, {recursive: true, force: true});
       fs.cpSync(keep, dir, {recursive: true});
@@ -2343,7 +2355,11 @@ const QUESTIONS_G = [
     'Times New Roman for headings, lol',
     {top: /^set q font 'Times New Roman' --on heading$/},
   ],
-  ['code blocks should use Menlo', {top: /^set q font Menlo --on code$/}],
+  // Code blocks are Core's code-block part (hunt68).
+  [
+    'code blocks should use Menlo',
+    {top: /^set q font-family Menlo --on code-block$/},
+  ],
   ['Fira Code for monospace', {top: /^set q font 'Fira Code' --on code$/}],
   // part words: a catalog part, or say there is none
   ['menu rounder', {top: /^set q corners more --on dropdown-menu$/}],
@@ -2618,7 +2634,8 @@ const QUESTIONS_H = [
   ['halve the spacing', {top: /^set q spacing less$/}],
   [
     'cut the border radius in half on inputs',
-    {top: /^set q corners less --on inputs$/},
+    // Half the radius inputs have now (hunt61), not a dial step.
+    {top: /^set q border-radius \d*\.?\d+(px|rem) --on inputs$/},
   ],
   [
     'corners: 0.5 rem',
@@ -2686,7 +2703,7 @@ const QUESTIONS_H = [
   ],
   [
     'heading color red',
-    {top: /^set q --color-text-primary '#dc2626' --on heading$/},
+    {top: /^set q (?:--color-text-primary|color) '#dc2626' --on heading$/},
   ],
   // CSS named colors
   ['accent tomato', {top: /^set q accent '#ff6347'$/}],
@@ -2891,13 +2908,13 @@ const QUESTIONS_I = [
   [
     'heading color red',
     {
-      top: /^set q --color-text-primary '#dc2626' --on heading$/,
+      top: /^set q (?:--color-text-primary|color) '#dc2626' --on heading$/,
       adds: /heading\.base\.--color-text-primary=#dc2626/,
     },
   ],
   [
     'headings red',
-    {top: /^set q --color-text-primary '#dc2626' --on heading$/},
+    {top: /^set q (?:--color-text-primary|color) '#dc2626' --on heading$/},
   ],
   // the divider
   ['divider thicker', {top: /^set q --border-width 2px --on divider$/}],
@@ -3116,7 +3133,8 @@ const QUESTIONS_J = [
   ],
   [
     'buttons twice as round as inputs',
-    {top: /^set q corners more --on button$/},
+    // Twice the inputs' radius, on buttons only (hunt68).
+    {top: /^set q border-radius \d*\.?\d+(px|rem) --on button$/},
   ],
   [
     'focus ring the same color as the danger color',
@@ -3204,7 +3222,9 @@ const QUESTIONS_K = [
   ],
   [
     'only in dark mode and only on cards, darker background',
-    {top: /^set q background '#[0-9a-f]{6}' --on card --mode dark$/},
+    {
+      top: /^set q background '#[0-9a-f]{6}' --on card( --when variant:default)? --mode dark( && .*)?$/,
+    },
   ],
   [
     'in daytime mode use a cream background',
@@ -3358,11 +3378,16 @@ const QUESTIONS_M = [
     /^set q --color-background-body '#000000' --mode dark$/,
   ],
   ['badges rounder', null, /already at the roundest rung/],
-  ['how round are the cards now?', null, /show lists what q sets now/],
+  // A question about a value answers with the value now.
+  ['how round are the cards now?', null, /card has border-radius \S+ now/],
   ['remove the focus outline', /^set q --focus-outline-width 0px$/],
   ['outline offset 3px on focus', /^set q --focus-outline-offset 3px$/],
   ['decrease corner radius by 2 pixels', /^set q corners \d+(\.\d+)?px$/],
-  ['add 8px to the button padding', null, /not a change by 8px/],
+  // A length added to the padding is the padding now plus it, each side.
+  [
+    'add 8px to the button padding',
+    /^set q padding '?\d+(\.\d+)?px( \d+(\.\d+)?px)?'? --on button$/,
+  ],
   [
     'caret color accent in inputs',
     /^set q caret-color 'var\(--color-accent\)' --on inputs$/,
@@ -3380,7 +3405,7 @@ const QUESTIONS_M = [
   ],
   [
     'headings 32px bold, body 16px regular, captions 12px',
-    /^set q headings bold && set q font-size 32px --on heading && set q --text-body-weight 400 && set q text-size 16$/,
+    /^set q headings bold && set q font-size 32px --on heading && set q --text-body-weight 400 && set q text-size 16 && set q --text-supporting-size 12px$/,
   ],
 ];
 
@@ -3567,7 +3592,10 @@ const QUESTIONS_P = [
     'translateY(-2px) on hover for buttons',
     /^set q transform 'translatey\(-2px\)' --on button --state hover$/,
   ],
-  ['shrink headings by 20%', null, /not a change by 20%/],
+  [
+    'shrink headings by 20%',
+    /^set q --text-heading-1-size [\d.]+rem && .*--text-heading-6-size [\d.]+rem$/,
+  ],
   ['fade in tooltips', null, /no motion of its own/],
   ['why are my buttons black', null, /how button says/],
   ['radius lg', /^set q corners 12px$/],
@@ -3635,9 +3663,21 @@ describe('how reads rem and em amounts and more comparatives as a change', () =>
       'make buttons 0.5rem rounder',
       /^set q border-radius 'max\(0px, calc\(var\(--radius-element\) \+ 8px\)\)' --on button$/,
     ],
-    ['card padding 8px roomier', null, /not a change by 8px; .* plus 8px/],
-    ['card padding 4px tighter', null, /not a change by 4px; .* minus 4px/],
-    ['card padding 0.5rem roomier', null, /not a change by 8px/],
+    [
+      'card padding 8px roomier',
+      /^set q padding '?[\d. px]+'? --on card$/,
+      /up by 8px: from /,
+    ],
+    [
+      'card padding 4px tighter',
+      /^set q padding '?[\d. px]+'? --on card$/,
+      /down by 4px: from /,
+    ],
+    [
+      'card padding 0.5rem roomier',
+      /^set q padding '?[\d. px]+'? --on card$/,
+      /up by 8px: from /,
+    ],
     ['headings 100 bolder', null, /new weight, not a change by 100/],
   ]))
     it(question, async () => {
@@ -4266,7 +4306,9 @@ describe('how lookups', () => {
     const {data} = await themeEditHow('make it look like Apple', {cwd});
     expect(data.results).toEqual([]);
     expect(data.hint).toMatch(/No match/);
-    expect(data.run[0]).toContain('--list parts');
+    // The help that lists the asks it understands comes first.
+    expect(data.run[0]).toMatch(/ how --help$/);
+    expect(data.run[1]).toContain('--list parts');
   });
 });
 

@@ -201,6 +201,10 @@ const ONE_SYSTEM_FAMILIES = new Map(
       'segoe ui',
       'segoe ui emoji',
       'segoe ui symbol',
+      'segoe ui light',
+      'segoe ui semilight',
+      'segoe ui semibold',
+      'segoe ui black',
       'consolas',
       'cambria',
       'calibri',
@@ -429,7 +433,7 @@ export const DIALS = wordTable({
     help:
       'How much room there is: padding, gaps and control heights together. Rungs: ' +
       SPACING.map(([n, f]) => `${n} (x${f})`).join(', ') +
-      '. Whole theme: scales every spacing token and control height. With --on <part or group>: only inside it.',
+      '. Whole theme: scales every spacing token and control height (a denser theme has shorter controls; the small, medium and large sizes stay apart and in order, none under 24px). With --on <part or group>: only inside it.',
     values: 'tight|compact|medium|roomy|spacious|more|less',
     examples: [
       'set my spacing compact',
@@ -607,6 +611,14 @@ export const GROUPS = wordTable(
       'margin',
       'margin-block',
       'margin-inline',
+      'margin-top',
+      'margin-bottom',
+      'margin-left',
+      'margin-right',
+      'margin-block-start',
+      'margin-block-end',
+      'margin-inline-start',
+      'margin-inline-end',
     ],
     font: [
       'font-family',
@@ -712,7 +724,23 @@ export const THING_HINTS = wordTable({
     `${P} set <theme> spacing roomy${on ? ` --on ${on}` : ''}`,
     `${P} set <theme> padding 12px --on ${on ?? '<part>'}`,
   ],
-  density: () => [`${P} set <theme> spacing compact`],
+  // The density named carries over: a spacing rung as it is, a word for
+  // more or less room as the rung that way; else how spacing.
+  density: (v, on) => {
+    const w = v.trim().toLowerCase();
+    const rung = SPACING.some(([n]) => n === w)
+      ? w
+      : /^(airy|loose|relaxed|comfortable|open|sparse|generous)$/.test(w)
+        ? 'roomy'
+        : /^(dense|cramped|condensed|packed|small|less)$/.test(w)
+          ? 'compact'
+          : null;
+    return [
+      rung
+        ? `${P} set <theme> spacing ${rung}${on ? ` --on ${on}` : ''}`
+        : `${HOW} spacing`,
+    ];
+  },
   bold: (v, on) => [
     `${P} set <theme> font-weight ${/^(none|false|off|no|normal)$/i.test(v.trim()) ? 'normal' : 'bold'} --on ${on ?? '<part>'}`,
   ],
@@ -758,6 +786,20 @@ export const COMMON_STATES = [
   'disabled',
 ];
 
+/**
+ * Mode words a value or a saved entry may be labeled with, and the mode
+ * each means: `set` reads a typed label by it, and loading reads a saved
+ * entry's mode by it.
+ */
+export const MODE_WORDS = /** @type {Record<string, 'light' | 'dark'>} */ ({
+  light: 'light',
+  'light-mode': 'light',
+  day: 'light',
+  dark: 'dark',
+  'dark-mode': 'dark',
+  night: 'dark',
+});
+
 // These tables are looked up by words people type: with no prototype,
 // `constructor` or `__proto__` is never found in them.
 for (const table of [
@@ -774,5 +816,6 @@ for (const table of [
   DIRECT,
   THING_HINTS,
   DESIGN,
+  MODE_WORDS,
 ])
   Object.setPrototypeOf(table, null);
