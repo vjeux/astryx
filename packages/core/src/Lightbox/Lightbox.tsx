@@ -224,24 +224,67 @@ function lineHolder(node: Node, flow: HTMLElement, view: Window): Element {
 }
 
 /**
- * Walks the flow's elements and text. It skips out-of-flow subtrees, since
- * they take no room on the flow's lines.
+ * Walks the flow's elements and text that take room on its lines. It skips
+ * out-of-flow and undisplayed subtrees, and the place, which holds no text.
  */
 function inFlowWalker(flow: HTMLElement, view: Window): TreeWalker {
+  const place = flow.firstElementChild;
   return flow.ownerDocument.createTreeWalker(
     flow,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
     {
-      acceptNode: node =>
-        isElement(node) &&
-        /^(absolute|fixed)$/.test(view.getComputedStyle(node).position)
+      acceptNode: node => {
+        if (!isElement(node)) {
+          return NodeFilter.FILTER_ACCEPT;
+        }
+        const {display, position} = view.getComputedStyle(node);
+        return node === place ||
+          display === 'none' ||
+          /^(absolute|fixed)$/.test(position)
           ? NodeFilter.FILTER_REJECT
-          : NodeFilter.FILTER_ACCEPT,
+          : NodeFilter.FILTER_ACCEPT;
+      },
     },
   );
 }
 
+/** Moves a walker to its node's last descendant, so it goes on after them. */
+function skipDescendants(walker: TreeWalker): void {
+  let descendant = walker.lastChild();
+  while (descendant != null) {
+    descendant = walker.lastChild();
+  }
+}
+
+/**
+ * Whether an element lays out as one box on its line, as a replaced element
+ * or an inline-block does. That box holds all of the element's content.
+ */
+function isOneBox(element: Element, view: Window): boolean {
+  return (
+    REPLACED_ELEMENTS.has(element.localName) ||
+    view.getComputedStyle(element).display.startsWith('inline-')
+  );
+}
+
 const NO_CONTENT = new Set(['', 'none', 'normal']);
+
+/**
+ * The style of an element's own generated content, or null when that content
+ * takes no room on the flow's lines.
+ */
+function generatedStyle(
+  element: Element,
+  pseudo: '::before' | '::after',
+  view: Window,
+): CSSStyleDeclaration | null {
+  const style = view.getComputedStyle(element, pseudo);
+  return NO_CONTENT.has(style.content) ||
+    style.display === 'none' ||
+    /^(absolute|fixed)$/.test(style.position)
+    ? null
+    : style;
+}
 
 /**
  * Whether a block-level element has its own `::before` or `::after` content.
@@ -255,15 +298,28 @@ function hasBlockGeneratedContent(element: Element, view: Window): boolean {
   ) {
     return false;
   }
-  return ['::before', '::after'].some(
-    pseudo => !NO_CONTENT.has(view.getComputedStyle(element, pseudo).content),
+  return (
+    generatedStyle(element, '::before', view) != null ||
+    generatedStyle(element, '::after', view) != null
+  );
+}
+
+/** Whether a list item draws a marker, which is part of no node. */
+function hasMarker(element: Element, view: Window): boolean {
+  const style = view.getComputedStyle(element);
+  return (
+    style.display.includes('list-item') &&
+    (style.listStyleType !== 'none' ||
+      style.listStyleImage !== 'none' ||
+      !NO_CONTENT.has(view.getComputedStyle(element, '::marker').content))
   );
 }
 
 /**
  * The current layout has the place below the text, so the text's lines are its
- * own. Null means the last line's block, one of its ancestors or a block after
- * its text has its own generated content, which has no node to measure.
+ * own. Null means that content no node measures can take room on the last
+ * line: a float, a list marker, a text indent, a `display: contents`
+ * element's generated content, or a block's on the last line or below it.
  */
 function placeFitsBesideLastLine(flow: HTMLElement): boolean | null {
   const place = flow.firstElementChild;
@@ -280,9 +336,10 @@ function placeFitsBesideLastLine(flow: HTMLElement): boolean | null {
   if (typeof range.getClientRects !== 'function') {
     return true;
   }
-  // Inline boxes widen the line they are on. Only text and one-box elements
-  // decide which line is last. An inline-level element's start margin comes
-  // before its first box, and its end margin after its last.
+  // Inline boxes widen the line they are on. Text, one-box elements and the
+  // generated content of inline elements decide which line is last. An
+  // inline-level element's start margin comes before its first box, and its
+  // end margin after its last.
   const lineBoxes: LineBox[] = [];
   const inlineBoxes: LineBox[] = [];
   const keep = (
@@ -290,18 +347,19 @@ function placeFitsBesideLastLine(flow: HTMLElement): boolean | null {
     rects: DOMRectList,
     node: Node,
     margins?: CSSStyleDeclaration,
-  ) => {
+  ): LineBox[] => {
     const isRtl = margins?.direction === 'rtl';
     const marginLeft = margins == null ? 0 : parseFloat(margins.marginLeft);
     const marginRight = margins == null ? 0 : parseFloat(margins.marginRight);
     const list = Array.from(rects);
+    const kept: LineBox[] = [];
     list.forEach(({left, right, top, bottom, width, height}, index) => {
       if (width <= 0 || height <= 0) {
         return;
       }
       const isFirst = index === 0;
       const isLast = index === list.length - 1;
-      boxes.push({
+      kept.push({
         left: (isRtl ? isLast : isFirst) ? left - marginLeft : left,
         right: (isRtl ? isFirst : isLast) ? right + marginRight : right,
         top,
@@ -309,52 +367,126 @@ function placeFitsBesideLastLine(flow: HTMLElement): boolean | null {
         node,
       });
     });
+    boxes.push(...kept);
+    return kept;
   };
   const walker = inFlowWalker(flow, view);
   for (let node = walker.nextNode(); node != null; node = walker.nextNode()) {
-    if (isElement(node)) {
-      const style = view.getComputedStyle(node);
-      const margins = style.display.startsWith('inline') ? style : undefined;
-      if (
-        REPLACED_ELEMENTS.has(node.localName) ||
-        style.display.startsWith('inline-')
-      ) {
-        keep(lineBoxes, node.getClientRects(), node, margins);
-      } else if (style.display === 'inline') {
-        keep(inlineBoxes, node.getClientRects(), node, margins);
-      }
-    } else {
+    if (!isElement(node)) {
       range.selectNodeContents(node);
       keep(lineBoxes, range.getClientRects(), node);
+      continue;
+    }
+    const style = view.getComputedStyle(node);
+    // A float shortens the lines beside it.
+    if (style.float !== 'none') {
+      return null;
+    }
+    const margins = style.display.startsWith('inline') ? style : undefined;
+    if (isOneBox(node, view)) {
+      keep(lineBoxes, node.getClientRects(), node, margins);
+      skipDescendants(walker);
+      continue;
+    }
+    const before = generatedStyle(node, '::before', view);
+    const after = generatedStyle(node, '::after', view);
+    const generated = [before, after].filter(
+      (item): item is CSSStyleDeclaration => item != null,
+    );
+    // A `display: contents` element has no box for its generated content. A
+    // floated one shortens lines, and a block-level one is a block of its own.
+    if (
+      generated.length > 0 &&
+      (style.display === 'contents' ||
+        generated.some(
+          item =>
+            item.float !== 'none' ||
+            (style.display === 'inline' && !item.display.startsWith('inline')),
+        ))
+    ) {
+      return null;
+    }
+    if (style.display !== 'inline') {
+      continue;
+    }
+    const boxes = keep(inlineBoxes, node.getClientRects(), node, margins);
+    // The element's generated content is on its first box or its last, as
+    // text is, at the height of the element's content.
+    const content = (box: LineBox): LineBox => ({
+      ...box,
+      top:
+        box.top +
+        parseFloat(style.borderTopWidth) +
+        parseFloat(style.paddingTop),
+      bottom:
+        box.bottom -
+        parseFloat(style.borderBottomWidth) -
+        parseFloat(style.paddingBottom),
+    });
+    const first = boxes[0];
+    const last = boxes[boxes.length - 1];
+    if (before != null && first != null) {
+      lineBoxes.push(content(first));
+    }
+    if (after != null && last != null) {
+      lineBoxes.push(content(last));
     }
   }
   if (lineBoxes.length === 0) {
     return true;
   }
   const lowest = lineBoxes.reduce((a, b) => (b.bottom > a.bottom ? b : a));
-  const holder = lineHolder(lowest.node, flow, view);
-  // The last line's block, its ancestors, and any block after its text can
-  // put their own generated content on that line or below it.
+  const boxes = [...lineBoxes, ...inlineBoxes];
+  // No box inside the element is on a line above the last one.
+  const isFirstLineOf = (element: Element) =>
+    !boxes.some(
+      box =>
+        element.contains(box.node) && (box.top + box.bottom) / 2 <= lowest.top,
+    );
+  // The last line's blocks can put their own generated content on it or below
+  // it. A list item's marker inside it takes room on the item's first line.
   for (
-    let element: Element | null = holder;
+    let element = lowest.node.parentElement;
     element != null && element !== flow;
     element = element.parentElement
   ) {
-    if (hasBlockGeneratedContent(element, view)) {
+    if (
+      hasBlockGeneratedContent(element, view) ||
+      (hasMarker(element, view) &&
+        view.getComputedStyle(element).listStylePosition === 'inside' &&
+        isFirstLineOf(element))
+    ) {
       return null;
     }
   }
+  // Any element after its text can put either below it.
   walker.currentNode = lowest.node;
+  if (isElement(lowest.node) && isOneBox(lowest.node, view)) {
+    skipDescendants(walker);
+  }
   for (let node = walker.nextNode(); node != null; node = walker.nextNode()) {
-    if (isElement(node) && hasBlockGeneratedContent(node, view)) {
+    if (!isElement(node)) {
+      continue;
+    }
+    if (isOneBox(node, view)) {
+      skipDescendants(walker);
+    } else if (hasBlockGeneratedContent(node, view) || hasMarker(node, view)) {
       return null;
     }
   }
-  const lastLine = [...lineBoxes, ...inlineBoxes].filter(
-    box => (box.top + box.bottom) / 2 > lowest.top,
-  );
-  const holderBox = holder.getBoundingClientRect();
+  const holder = lineHolder(lowest.node, flow, view);
   const holderStyle = view.getComputedStyle(holder);
+  // A text indent takes room on its block's first line. Its hanging and
+  // each-line forms take room on other lines too.
+  const indent = holderStyle.textIndent;
+  if (
+    indent !== '0px' &&
+    (/hanging|each-line/.test(indent) || isFirstLineOf(holder))
+  ) {
+    return null;
+  }
+  const lastLine = boxes.filter(box => (box.top + box.bottom) / 2 > lowest.top);
+  const holderBox = holder.getBoundingClientRect();
   const contentLeft =
     holderBox.left +
     parseFloat(holderStyle.borderLeftWidth) +
@@ -1187,8 +1319,8 @@ export function Lightbox({
         const textLines = Math.round(
           flow.getBoundingClientRect().height / line,
         );
-        // The fit check cannot measure a line with a block's own generated
-        // content. For that caption the frame reads the result after it
+        // Some content takes room that the fit check cannot measure. For a
+        // caption with such content the frame reads the result after it
         // commits the text's lines, a forced layout.
         const fit =
           textLines < lineCount ? placeFitsBesideLastLine(flow) : true;
