@@ -130,7 +130,7 @@ describe('preview add', () => {
     );
     expect(made.message).toContain('has no root layout');
     expect(fs.existsSync(path.join(cwd, 'app'))).toBe(false);
-    // A workspace root names the Next app below it, with a --path into it.
+    // A workspace root names the Next app below it, run from its folder.
     const web = path.join(cwd, 'apps/web');
     fs.mkdirSync(path.join(web, 'src/app'), {recursive: true});
     fs.writeFileSync(
@@ -145,7 +145,7 @@ describe('preview add', () => {
       const ws = await refusal(() => themeEditPreviewAdd(undefined, {cwd}));
       expect(ws.message).toContain('the Next app below is apps/web/');
       expect(ws.run[0]).toBe(
-        'astryx experimental theme preview add --path apps/web/src/app/theme-preview',
+        'cd apps/web && astryx experimental theme preview add',
       );
     } finally {
       fs.rmSync(path.join(cwd, 'apps'), {recursive: true, force: true});
@@ -726,6 +726,16 @@ describe('preview app', () => {
       'half\n',
     );
     const r = await themeEditPreviewApp('themed', {cwd, theme: 'brand'});
+    // The copied build was made on this project's base theme (the fixture's
+    // is 0.0.0): the new app installs that version, and says so.
+    expect(
+      JSON.parse(read('themed/package.json')).dependencies[
+        '@astryxdesign/theme-neutral'
+      ],
+    ).toBe('0.0.0');
+    expect(r.data.notes.join(' ')).toContain(
+      "the new app installs @astryxdesign/theme-neutral 0.0.0, the versions this project has and brand's build was made on",
+    );
     expect(read('themed/themes/brand/tokens/brand.palette.ts')).toBe(
       read('themes/brand/tokens/brand.palette.ts'),
     );
