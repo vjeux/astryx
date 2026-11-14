@@ -2193,6 +2193,11 @@ function readBusyWindow(
      */
     controlStarts?: readonly [number, number?];
   } = {},
+  /**
+   * A pooled run's window. A settle bound that ends judging soon throws
+   * nothing there: the run adds its frames to the pool.
+   */
+  pooled = false,
 ): ReturnType<typeof judgeBusyWindow> {
   const {control, predicted} = options;
   // A prediction reads each frame at its content's time. The cast's stamps
@@ -2220,7 +2225,12 @@ function readBusyWindow(
       ...(window as BlockedWindow),
       animation: {from: start, to: end, holds, notPredicted: why},
     };
-    return readBusyWindow(tracked, plain, {...options, ahead, controlStarts});
+    return readBusyWindow(
+      tracked,
+      plain,
+      {...options, ahead, controlStarts},
+      pooled,
+    );
   };
   // WebKit reads the element's box at the loop's end before its animation's
   // current time, so the replay cannot be aligned to it there. A rider's
@@ -2259,7 +2269,14 @@ function readBusyWindow(
       ? datedOnControlClock(tracked, control, ahead, starts)
       : null;
   if (dated == null) {
-    const read = judgeBusyWindow(tracked, window, options);
+    const read = judgeBusyWindow(
+      tracked,
+      window,
+      options,
+      undefined,
+      undefined,
+      pooled,
+    );
     return read.fallback == null ? read : fallBack(read.fallback);
   }
   const webkit = control?.every(frame => frame.engine === 'webkit') === true;
@@ -2273,6 +2290,7 @@ function readBusyWindow(
     {...options, control: shown.control},
     dated.tracked,
     unread,
+    pooled,
   );
   if (read.fallback != null) {
     return fallBack(read.fallback);
@@ -2415,6 +2433,11 @@ function judgeBusyWindow(
   drawn: readonly TrackedFrame[] = tracked,
   /** The frames dated from another frame's reading (`datedOnControlClock`). */
   unread: ReadonlySet<TrackedFrame> = new Set(),
+  /**
+   * A pooled run's window. A settle bound that ends judging soon throws
+   * nothing there: the run adds its frames to the pool.
+   */
+  pooled = false,
 ): {
   proof: BusyProof;
   starvation: FrameShortfall | null;
@@ -3109,8 +3132,14 @@ function judgeBusyWindow(
   }
   // The same holds for a settle bound. A motion that comes within it so soon
   // after the block began leaves too few frames. That is only because the
-  // block started late for it, when judging on would have held enough.
-  if (endWithoutSettle != null && control != null && controlRead != null) {
+  // block started late for it, when judging on would have held enough. A
+  // pooled run adds its few frames to the pool instead, so it throws nothing.
+  if (
+    !pooled &&
+    endWithoutSettle != null &&
+    control != null &&
+    controlRead != null
+  ) {
     const framesLeft = controlRead.moved + named.length;
     const framesWithoutSettle = controlChangesUpTo(
       control,
@@ -3411,6 +3440,7 @@ export function pooledBusyProof(
           ahead: run.ahead,
           controlStarts: run.controlStarts,
         },
+        true,
       );
       late.push(null);
       failedRuns.push(componentFailed);
