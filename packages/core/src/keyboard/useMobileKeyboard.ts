@@ -985,9 +985,10 @@ export function useMobileKeyboard(
         // finds it in view.
         const room = resizedRoom();
         if (Math.abs(room - lastRoom) > KEYBOARD_EPSILON) {
+          const grown = room - lastRoom;
           lastRoom = room;
           cancelAnimationFrame(animationFrame);
-          revealFocusedControl();
+          scrollBodyBy(grown, false);
           return;
         }
         if (revealPan?.isRevealPan(event.height) === true) {
