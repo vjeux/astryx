@@ -1080,6 +1080,9 @@ test('a release settles on the compositor: the row keeps moving through a 1 s ma
   // A second control half a leg ahead reads the frames near the first one's
   // turns. So every frame has a time of its own, and the proof predicts.
   await startBusyControl(page, {ahead: true});
+  // The vernier, at the viewport's foot clear of the row, dates each frame to
+  // a quarter of the slow controls' error.
+  await startBusyControl(page, {vernier: true});
   const cast = await startScreencast(page);
   // A held release past the middle of the open width settles from rest, on
   // the same curve every run. A flick's settle starts at the release
@@ -1101,6 +1104,7 @@ test('a release settles on the compositor: the row keeps moving through a 1 s ma
   const tracked = await trackMarker(page, frames);
   const control = await trackMarker(page, frames, {rgb: CONTROL_RGB});
   const ahead = await trackControl(page, frames, {ahead: true});
+  const vernier = await trackControl(page, frames, {vernier: true});
   // It is judged against what the compositor presented in the same window.
   // The row moved on every frame the control moved, until it was within two of
   // the cast's steps of its end. The marker rides the row, whose settle the
@@ -1111,6 +1115,7 @@ test('a release settles on the compositor: the row keeps moving through a 1 s ma
     settledWithinSteps: 2,
     control,
     ahead,
+    vernier,
   });
   test
     .info()
@@ -1121,6 +1126,11 @@ test('a release settles on the compositor: the row keeps moving through a 1 s ma
     type: 'busy prediction',
     description:
       proof.notes.find(note => note.startsWith('no prediction')) ?? 'predicted',
+  });
+  // How many judged frames the vernier dated, and how each miss was dated.
+  test.info().annotations.push({
+    type: 'busy vernier',
+    description: JSON.stringify(proof.vernier ?? null),
   });
   expect(busy.spanMs).toBeGreaterThanOrEqual(1000);
   expect(proof.verdict.failures, proof.summary).toEqual([]);
