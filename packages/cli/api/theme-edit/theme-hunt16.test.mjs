@@ -199,7 +199,8 @@ describe('corrected new commands keep every option', () => {
     ],
     [
       ['new', 'z', '--accent', '#ggg', '--mode', 'light-only', '--png'],
-      / new z .*--accent '#7c3aed'.* --png$/,
+      // Never a stock color the user did not type: the same new without it.
+      / new z --mode light-only --png$/,
     ],
   ])(
     '%j',
@@ -304,7 +305,9 @@ describe('corrected new commands keep every option (r78e)', () => {
         '--headings',
         'tight',
         '--headings',
-        'BOLD',
+        // A dial word in capitals is that word (no refusal), so the bad
+        // value here is a misspelt one in capitals.
+        'BOLDD',
         '--accent',
         'red',
       ],

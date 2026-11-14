@@ -40,17 +40,24 @@ import {partData} from './_parts.mjs';
 import {writeWhole} from './_palette.mjs';
 import {
   fontOf,
+  builtFontFamilies,
   fontPackages,
+  fontsourcePackageOf,
   modesOf,
   nearest,
   refuse,
-  adoptOlderPicture,
   editorWrote,
   recordWritten,
   themeFiles,
   refuseThemesNotFolder,
+  shown,
 } from './_settings.mjs';
-import {SHOWCASE_GROUPS, renderPreview, screenshot} from './_preview.mjs';
+import {
+  SHOWCASE_GROUPS,
+  newPictureRun,
+  renderPreview,
+  screenshot,
+} from './_preview.mjs';
 import {ERROR_CODES} from '../../foundation/response/error-codes.mjs';
 
 const E = ERROR_CODES;
@@ -384,8 +391,10 @@ const notChecked = cause =>
 export async function pictures(project, shots, modes) {
   /** @type {string[]} */
   const files = [];
-  /** @type {string[]} */
-  const cut = [];
+  /** What a later browser's success says of an earlier one. @type {string[]} */
+  const notes = [];
+  /** One run for every picture: a browser that failed is not tried again. */
+  const run = newPictureRun();
   /** @param {string} png @param {'light' | 'dark'} m */
   const outOf = (png, m) =>
     modes.length > 1 && m === 'dark' ? png.replace(/\.png$/, '-dark.png') : png;
@@ -398,21 +407,17 @@ export async function pictures(project, shots, modes) {
       : null;
   };
   // A picture is written only over a picture the editor took, unchanged
-  // since: a file of the user's by that name blocks every picture, and is
-  // named.
-  /** Pictures an older editor took, now recorded. @type {string[]} */
-  const adopted = [];
+  // since: a file of the user's by that name (a screenshot of the same
+  // size included) blocks every picture, and is named.
   const blocked = shots
     .flatMap(({png}) => modes.map(m => outOf(png, m)))
     .filter(out => {
       const slug = themeOf(out);
-      if (!slug || !fs.existsSync(out) || editorWrote(project.cwd, slug, out))
-        return false;
-      if (adoptOlderPicture(project.cwd, slug, out)) {
-        adopted.push(path.relative(project.cwd, out));
-        return false;
-      }
-      return true;
+      return (
+        Boolean(slug) &&
+        fs.existsSync(out) &&
+        !editorWrote(project.cwd, /** @type {string} */ (slug), out)
+      );
     });
   if (blocked.length)
     return {
@@ -422,8 +427,58 @@ export async function pictures(project, shots, modes) {
   for (const {html, png} of shots) {
     for (const m of modes) {
       const out = outOf(png, m);
-      const r = await screenshot(project, html, out, m);
-      if (!r.ok) return {files, problem: r.reason};
+      // Taken under a name of its own and moved into place once whole: a
+      // run stopped while the browser runs leaves no picture at the real
+      // name (one the next run would read as a file of yours). A part left
+      // by a run stopped before is cleared.
+      const part = path.join(
+        path.dirname(out),
+        `.${path.basename(out, '.png')}.part-${process.pid}.png`,
+      );
+      for (const n of fs.existsSync(path.dirname(out))
+        ? fs.readdirSync(path.dirname(out))
+        : [])
+        if (n.startsWith(`.${path.basename(out, '.png')}.part-`)) {
+          // Only a file is a part: a folder by that name is left alone.
+          const p = path.join(path.dirname(out), n);
+          try {
+            if (fs.lstatSync(p).isFile()) fs.rmSync(p, {force: true});
+          } catch {
+            // Gone already.
+          }
+        }
+      // A folder (or anything else) where this run's part goes: no
+      // picture, the path named, never a crash after a saved change.
+      if (fs.existsSync(part) && !fs.lstatSync(part).isFile())
+        return {
+          files,
+          problem: `${path.relative(project.cwd, part)} is a folder, where --png writes a picture before moving it into place, so no picture was taken; move it out of ${path.relative(project.cwd, path.dirname(out))}/`,
+        };
+      // A folder it cannot write gets no picture: named before the browser
+      // starts, never read as a browser that failed.
+      try {
+        fs.accessSync(path.dirname(out), fs.constants.W_OK);
+      } catch (e) {
+        return {
+          files,
+          problem: `${path.relative(project.cwd, path.dirname(out))}/ cannot be written (${/** @type {any} */ (e)?.code ?? 'no access'}), so no picture was taken; fix its permissions, then run the command again`,
+        };
+      }
+      const r = await screenshot(project, html, part, m, run);
+      if (!r.ok) {
+        fs.rmSync(part, {force: true});
+        return {files, problem: r.reason};
+      }
+      try {
+        fs.renameSync(part, out);
+      } catch (e) {
+        fs.rmSync(part, {force: true});
+        return {
+          files,
+          problem: `the picture could not be moved into ${path.relative(project.cwd, out)} (${/** @type {any} */ (e)?.code ?? e})`,
+        };
+      }
+      r.file = path.relative(project.cwd, out).split(path.sep).join('/');
       files.push(r.file);
       // A picture in a theme folder is recorded as the editor's, so a later
       // change removes it and never a picture of the user's.
@@ -440,31 +495,20 @@ export async function pictures(project, shots, modes) {
         }
         recordWritten(project.cwd, slug, [out]);
       }
-      if (r.cut) cut.push(r.file);
+      if (r.note && !notes.includes(r.note)) notes.push(r.note);
     }
   }
-  const adoptedNote = adopted.length
-    ? `${adopted.join(', ')} ${adopted.length === 1 ? 'was' : 'were'} taken by an earlier version of the editor and ${adopted.length === 1 ? 'is' : 'are'} now recorded as its own`
-    : null;
   return {
     files,
-    // A picture of the window shows the top of a longer page only.
-    problem:
-      [
-        adoptedNote,
-        cut.length
-          ? `${cut.join(', ')} show${cut.length === 1 ? 's' : ''} the top 2400 pixels of the page only (Chrome takes the window, not the whole page); open the .html beside ${cut.length === 1 ? 'it' : 'them'} to see all of it, or install Playwright (${installLine(project.cwd, ['playwright'])}) for whole-page pictures`
-          : null,
-      ]
-        .filter(Boolean)
-        .join('; ') || null,
+    // Pictures were taken; a note says why an earlier browser did not.
+    problem: notes.join('; ') || null,
   };
 }
 
 /**
- * Font notes for the settings: the import line for an open font, the
- * install line when its package is missing, and a warning for a family no
- * package loads, naming the closest open font.
+ * Font notes for the families the theme builds: the import line for an
+ * open font, the install line when its package is missing, and a warning
+ * for a family no package loads, naming the closest open font.
  * @param {import('./_settings.mjs').Ctx} ctx
  * @param {import('./_settings.mjs').ThemeData} data
  * @returns {string[]}
@@ -499,9 +543,16 @@ export function fontNotes(ctx, data) {
         first.replace(/["']/g, '').trim().toLowerCase() === f,
     );
   };
+  // A font setting whose family the build no longer uses (the theme's own
+  // source sets every place it went) gets no note: nothing shows it.
+  const built = builtFontFamilies(ctx, data.name);
   for (const s of data.settings) {
     if (
       s.thing !== 'font' ||
+      (built &&
+        !built.has(
+          fontOf(s.value).family.replace(/["']/g, '').trim().toLowerCase(),
+        )) ||
       SYSTEM_FONTS.includes(s.value) ||
       isDesktopFamily(fontOf(s.value).family.replace(/["']/g, '')) ||
       OPEN_FONTS[s.value] ||
@@ -529,7 +580,7 @@ export function fontNotes(ctx, data) {
       continue;
     }
     notes.push(
-      `"${fontOf(s.value).family.replace(/^["']|["']$/g, '')}" is not a system font and no package loads it: the app must load it, or it falls back.${near ? ` The closest open font is ${near}: ${P} set ${data.name} font ${near}${s.on ? ` --on ${s.on}` : ''}` : ''}`,
+      `"${named}" is not a system font and no package loads it: the app must load it, or it falls back. If Fontsource publishes it, ${installLine(ctx.project.cwd, [fontsourcePackageOf(named)])} installs its package, which the previews and the app copy then load.${near ? ` The closest open font is ${near}: ${P} set ${data.name} font ${near}${s.on ? ` --on ${s.on}` : ''}` : ''}`,
     );
   }
   return notes;
@@ -539,11 +590,21 @@ export function fontNotes(ctx, data) {
  * What a change did to part styles (component settings), one line each.
  * @param {any} before
  * @param {any} after
+ * @param {any} [base] the base theme, whose own values a write that repeats them does not change
  * @returns {string[]}
  */
-export function styledChanges(before, after) {
+export function styledChanges(before, after, base) {
   /** @type {string[]} */
   const out = [];
+  /** A value as CSS reads it, for comparing. @param {any} v */
+  const plain = v =>
+    (Array.isArray(v) && v.length === 2
+      ? `light-dark(${v[0]}, ${v[1]})`
+      : String(v ?? '')
+    )
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
   const a = before?.components ?? {};
   const b = after?.components ?? {};
   for (const target of new Set([...Object.keys(a), ...Object.keys(b)])) {
@@ -560,22 +621,36 @@ export function styledChanges(before, after) {
           : p.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`);
       for (const prop of new Set([...Object.keys(x), ...Object.keys(y)])) {
         if (JSON.stringify(x[prop]) === JSON.stringify(y[prop])) continue;
+        const shown = base?.components?.[target]?.[key]?.[prop];
+        /**
+         * Whether a write only repeats what the base theme already shows
+         * there, which changes nothing.
+         * @param {any} was @param {any} now @param {any} baseValue
+         */
+        const repeatsBase = (was, now, baseValue) =>
+          was === undefined &&
+          baseValue !== undefined &&
+          typeof baseValue !== 'object' &&
+          plain(baseValue) === plain(now);
         const where = `${target}${key === 'base' ? '' : ` ${key}`}`;
-        // A state block (`:hover`) lists each property it changes.
+        // A block (a state, `:hover`) lists each property it changes.
         if (
-          prop.startsWith(':') &&
-          ((y[prop] && typeof y[prop] === 'object') ||
-            (x[prop] && typeof x[prop] === 'object'))
+          (y[prop] && typeof y[prop] === 'object') ||
+          (x[prop] && typeof x[prop] === 'object')
         ) {
           const xs = x[prop] ?? {};
           const ys = y[prop] ?? {};
           for (const p of new Set([...Object.keys(xs), ...Object.keys(ys)]))
-            if (JSON.stringify(xs[p]) !== JSON.stringify(ys[p]))
+            if (
+              JSON.stringify(xs[p]) !== JSON.stringify(ys[p]) &&
+              !repeatsBase(xs[p], ys[p], shown?.[p])
+            )
               out.push(
                 `${where} ${prop}: ${cssName(p)} ${ys[p] === undefined ? '(removed)' : String(ys[p])}`,
               );
           continue;
         }
+        if (repeatsBase(x[prop], y[prop], shown)) continue;
         out.push(
           `${where}: ${cssName(prop)} ${y[prop] === undefined ? '(removed)' : typeof y[prop] === 'string' ? y[prop] : JSON.stringify(y[prop])}`,
         );
@@ -632,6 +707,7 @@ export async function previewAfter(ctx, slug, data, png) {
   /** @type {string | null} */
   let preview = null;
   let cause = ctx.unchecked ?? null;
+  const f0 = themeFiles(ctx.project.cwd, slug);
   try {
     preview = await renderPreview(ctx, slug, data);
   } catch (e) {
@@ -641,7 +717,12 @@ export async function previewAfter(ctx, slug, data, png) {
       ? renderCause(ctx.project, /** @type {Error} */ (e).message)
       : ['ENOSPC', 'EACCES', 'EPERM', 'EROFS', 'EIO'].includes(code)
         ? `preview.html could not be written (${code === 'ENOSPC' ? 'the disk is full' : code}), so it still shows the theme as it was`
-        : `checking it failed: ${e instanceof Error ? e.message : String(e)}`;
+        : // A folder (or another thing) where preview.html goes: the page
+          // was rendered, and could not be written there.
+          code === ERROR_CODES.ERR_WRITE_FAILED ||
+            (fs.existsSync(f0.preview) && !fs.statSync(f0.preview).isFile())
+          ? `preview.html could not be written (${shown(ctx.project.cwd, f0.preview)} is ${fs.existsSync(f0.preview) && fs.statSync(f0.preview).isDirectory() ? 'a folder' : 'in the way'}; move it, then run ${P} show ${slug}), so it still shows the theme as it was`
+          : `checking it failed: ${e instanceof Error ? e.message : String(e)}`;
   }
   const f = themeFiles(ctx.project.cwd, slug);
   // The sheet of every component is made by show only: after a change it
