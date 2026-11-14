@@ -93,6 +93,17 @@ async function focusField(page: Page, which: 'first' | 'last') {
   // Let the sheet settle fully expanded, where it reveals fields.
   await page.waitForTimeout(800);
   const fields = dialog.getByRole('textbox');
+  // The sheet's content starts 20 px lower.
+  await fields.first().evaluate(element => {
+    let body = element.parentElement;
+    while (body != null && getComputedStyle(body).overflowY !== 'auto') {
+      body = body.parentElement;
+    }
+    if (body != null) {
+      body.style.paddingTop = '20px';
+    }
+  });
+  await frames(page, 5);
   const field = which === 'first' ? fields.first() : fields.last();
   await field.focus();
   await frames(page, 10);
