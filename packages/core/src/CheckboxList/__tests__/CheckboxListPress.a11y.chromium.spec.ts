@@ -132,23 +132,41 @@ async function openRow(
   const geometry = await checkbox.evaluate(input => {
     const row = input.closest('li');
     const box = row?.querySelector('.astryx-checkbox-indicator');
-    const label = Array.from(row?.querySelectorAll('span') ?? []).find(
-      span => span.children.length === 0 && span.textContent !== '',
-    );
-    if (row == null || box == null || label == null) {
+    if (row == null || box == null) {
       return null;
     }
     const rect = (element: Element) => {
       const r = element.getBoundingClientRect();
       return {x: r.x, y: r.y, width: r.width, height: r.height};
     };
-    return {row: rect(row), box: rect(box), label: rect(label)};
+    return {row: rect(row), box: rect(box)};
   });
-  if (geometry == null) {
-    throw new Error(`${story} has no row for ${name}`);
+  // The checkbox's own label has the same text as the row's label, but it is
+  // visually hidden. It is clipped to nothing, so no point hits it. The label a
+  // person sees is the text that a point at its centre hits.
+  const labels = await page
+    .locator('li')
+    .filter({has: checkbox})
+    .last()
+    .getByText(name, {exact: true})
+    .evaluateAll(elements =>
+      elements.flatMap(element => {
+        const r = element.getBoundingClientRect();
+        const hits = element.ownerDocument.elementsFromPoint(
+          r.x + r.width / 2,
+          r.y + r.height / 2,
+        );
+        return hits.includes(element)
+          ? [{x: r.x, y: r.y, width: r.width, height: r.height}]
+          : [];
+      }),
+    );
+  if (geometry == null || labels.length !== 1) {
+    throw new Error(`${story} has no row with one visible label for ${name}`);
   }
   const cdp = await context.newCDPSession(page);
-  const {row, box, label} = geometry;
+  const {row, box} = geometry;
+  const [label] = labels;
   return {
     page,
     close: async () => context.close(),
