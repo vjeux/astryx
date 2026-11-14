@@ -963,9 +963,19 @@ function placementOf(j, root, rowPath, objectPath, created) {
     return null;
   }
   // A binding written after its declaration can hold another value at each
-  // row, or by the time the row renders, where a definition keeps one.
-  if (outer.some(r => reassigned(j, r.scope, r.name))) {
-    return null;
+  // row, or by the time the row renders, where a definition keeps one. So can
+  // one written through, such as `labels.remove = 'Remove'`, where the options
+  // read it at render. A handler reads its bindings when its action fires.
+  const changes = new Map();
+  for (const r of outer) {
+    const through = !r.inHandler;
+    const key = `${r.name}\u0000${through}`;
+    if (!changes.has(key)) {
+      changes.set(key, reassigned(j, r.scope, r.name, through));
+    }
+    if (changes.get(key)) {
+      return null;
+    }
   }
   const local = outer.filter(r => r.scope.path.node.type !== 'Program');
   if (local.length === 0) {
@@ -1112,12 +1122,12 @@ function reachedAbove(j, body, index, row) {
 }
 
 /**
- * Whether a binding takes another value after its declaration. An
- * assignment, an update or a `for…in` or `for…of` loop writes it, or it is
- * declared more than once.
- * @param {any} j @param {any} scope @param {string} name
+ * Whether a binding takes another value after its declaration. Something
+ * writes it (`written`), or it is declared more than once. With `through`, a
+ * write through it counts too.
+ * @param {any} j @param {any} scope @param {string} name @param {boolean} through
  */
-function reassigned(j, scope, name) {
+function reassigned(j, scope, name, through) {
   if ((scope.getBindings()[name] ?? []).length > 1) {
     return true;
   }
@@ -1126,20 +1136,60 @@ function reassigned(j, scope, name) {
       .find(j.Identifier, {name})
       .filter(
         (/** @type {any} */ p) =>
-          p.scope?.lookup(name)?.path.node === scope.path.node && written(p),
+          p.scope?.lookup(name)?.path.node === scope.path.node &&
+          written(p, through),
       )
       .size() > 0
   );
 }
 
 /**
- * Whether an identifier is the target of an assignment, an update, or a
- * `for…in` or `for…of` loop, directly or inside a destructuring pattern.
- * @param {any} path
+ * Whether an identifier is written. A write is the target of an assignment,
+ * an update, or a `for…in` or `for…of` loop, directly or inside a
+ * destructuring pattern. With `through`, a write through it counts too. It
+ * assigns, updates or deletes a property read from it, or calls a method read
+ * from it.
+ * @param {any} path @param {boolean} through
  */
-function written(path) {
+function written(path, through) {
   let child = path;
   let parent = path.parent;
+  // A property read from it, such as `labels.remove` or `words.push`, through
+  // any TypeScript wrapper.
+  let member = false;
+  while (parent != null) {
+    const node = parent.node;
+    const reads =
+      through &&
+      (node.type === 'MemberExpression' ||
+        node.type === 'OptionalMemberExpression') &&
+      node.object === child.node;
+    const wraps =
+      (node.type === 'TSNonNullExpression' ||
+        node.type === 'TSAsExpression' ||
+        node.type === 'TSSatisfiesExpression' ||
+        node.type === 'TSTypeAssertion' ||
+        node.type === 'ParenthesizedExpression') &&
+      node.expression === child.node;
+    if (!reads && !wraps) {
+      break;
+    }
+    member = member || reads;
+    child = parent;
+    parent = parent.parent;
+  }
+  const called = parent?.node;
+  if (
+    member &&
+    (((called?.type === 'CallExpression' ||
+      called?.type === 'OptionalCallExpression') &&
+      called.callee === child.node) ||
+      (called?.type === 'UnaryExpression' &&
+        called.operator === 'delete' &&
+        called.argument === child.node))
+  ) {
+    return true;
+  }
   while (parent != null) {
     const node = parent.node;
     const nests =
