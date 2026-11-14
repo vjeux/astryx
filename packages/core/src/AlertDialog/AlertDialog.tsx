@@ -229,9 +229,17 @@ export function AlertDialog({
   );
   const mergedRef = useMergedRefs(ref, motion.ref);
 
+  // Under a finger, Cancel starts the fade in its own tap, and the caller's
+  // close commits after the fade's first frame.
+  const {leave} = motion;
   const handleCancel = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
+    const close = () => {
+      onOpenChange(false);
+    };
+    if (!leave(close)) {
+      onOpenChange(false);
+    }
+  }, [leave, onOpenChange]);
 
   // Through the group's context, each action's Button writes the press-group
   // marker from its first render. So the tracker is its only painter.

@@ -123,6 +123,14 @@ export interface AlertMotion {
   readonly isDriving: boolean;
   /** Callback ref for the dialog element. */
   readonly ref: (element: HTMLElement | null) => void;
+  /**
+   * Starts the dismissal in the task of the tap that asks for it, and runs
+   * `close` after the fade's first frame: the caller's state commit, such as
+   * its `onOpenChange(false)`. When the caller keeps the alert open, it turns
+   * back. False when the motion does not drive an open alert: then `close`
+   * has not run.
+   */
+  readonly leave: (close: () => void) => boolean;
 }
 
 export function useAlertMotion({
@@ -133,6 +141,9 @@ export function useAlertMotion({
   // the Dialog never commits a close before the exit ends.
   const [isLeaving, setIsLeaving] = useState(false);
   const [lastIsOpen, setLastIsOpen] = useState(isOpen);
+  // Counts the closes `leave` ran. Each one renders with the caller's own
+  // update from that close, so its effect sees whether the caller closed.
+  const [closesRun, setClosesRun] = useState(0);
   if (lastIsOpen !== isOpen) {
     setLastIsOpen(isOpen);
     setIsLeaving(!isOpen && isEnabled);
@@ -194,12 +205,125 @@ export function useAlertMotion({
   // The action that the dismissal's hold took focus from. A reopen during the
   // exit gives focus back to it.
   const blurredByDismissalRef = useRef<HTMLElement | null>(null);
+  // The caller's close that a dismissal started by `leave` still waits to run.
+  const pendingCloseRef = useRef<(() => void) | null>(null);
+
+  // One hold at a time on the alert: a new transition replaces the last.
+  const hold = useCallback(
+    (
+      element: HTMLElement | null,
+      until: PromiseLike<unknown>,
+      scope: 'viewport' | 'layer',
+      place: 'now' | 'after-frame' = 'now',
+    ): void => {
+      releaseHoldRef.current?.();
+      releaseHoldRef.current =
+        element == null ? null : holdInput(element, {until, scope, place});
+    },
+    [],
+  );
+
+  // The dismissal: the fade starts first, in the task of the tap that closes
+  // the alert. The hold takes input at once, and writes its shield, the inert
+  // content and the focus move after the fade's first frame.
+  const startExit = useCallback(
+    (element: HTMLElement | null): void => {
+      const {panel, backdrop} = animators;
+      const progress =
+        exitTimingRef.current ??
+        readThemeTimingOrInstant(element, ALERT_EXIT_TOKENS);
+      exitMsRef.current = progress.duration * 1000;
+      const handle = fadeFromHere(panel, backdrop, 0, progress);
+      const focused = element?.ownerDocument.activeElement;
+      blurredByDismissalRef.current =
+        focused instanceof HTMLElement &&
+        focused !== element &&
+        element?.contains(focused) === true
+          ? focused
+          : null;
+      hold(element, handle.finished, 'layer', 'after-frame');
+      exitRef.current = handle;
+      void handle.finished.then(isDone => {
+        if (isDone && exitRef.current === handle) {
+          exitRef.current = null;
+          setIsLeaving(false);
+        }
+      });
+    },
+    [animators, hold],
+  );
+
+  // Reopened during the exit: it fades back from where it is.
+  const turnBack = useCallback(
+    (element: HTMLElement | null): void => {
+      const {panel, backdrop} = animators;
+      exitRef.current = null;
+      const handle = fadeFromHere(
+        panel,
+        backdrop,
+        1,
+        readThemeTimingOrInstant(element, ALERT_ENTRANCE_TOKENS),
+      );
+      hold(element, handle.finished, 'viewport');
+      // The dismissal's hold is released and the content is live again. The
+      // action it took focus from gets focus back, unless focus went somewhere
+      // else meanwhile.
+      const blurred = blurredByDismissalRef.current;
+      blurredByDismissalRef.current = null;
+      const doc = element?.ownerDocument;
+      if (
+        blurred?.isConnected === true &&
+        doc != null &&
+        (doc.activeElement == null || doc.activeElement === doc.body)
+      ) {
+        blurred.focus({preventScroll: true});
+      }
+    },
+    [animators, hold],
+  );
+
+  const leave = useCallback(
+    (close: () => void): boolean => {
+      const element = elementRef.current;
+      const view = element?.ownerDocument.defaultView;
+      if (
+        !isEnabledRef.current ||
+        element == null ||
+        view == null ||
+        statusRef.current !== 'open'
+      ) {
+        return false;
+      }
+      statusRef.current = 'leaving';
+      startExit(element);
+      let timer: number | undefined;
+      const frame = view.requestAnimationFrame(() => {
+        timer = view.setTimeout(() => {
+          pendingCloseRef.current = null;
+          close();
+          // Batched with the caller's update: if the caller keeps the alert
+          // open, the effect sees it open while it leaves, and it turns back.
+          setClosesRun(count => count + 1);
+        }, 0);
+      });
+      pendingCloseRef.current = () => {
+        view.cancelAnimationFrame(frame);
+        if (timer !== undefined) {
+          view.clearTimeout(timer);
+        }
+      };
+      return true;
+    },
+    [isEnabledRef, startExit],
+  );
   // Effect: releases the input hold on the dialog at unmount, so the alert
   // goes at once. The alert then counts as hidden again. StrictMode runs
   // every cleanup once and then every effect, and the replay must present it
   // again and place its hold.
   useEffect(
     () => () => {
+      pendingCloseRef.current?.();
+      pendingCloseRef.current = null;
       releaseHoldRef.current?.();
       releaseHoldRef.current = null;
       statusRef.current = 'hidden';
@@ -221,16 +345,6 @@ export function useAlertMotion({
     }
     const {panel, backdrop} = animators;
     const element = elementRef.current;
-    // One hold at a time on the alert: a new transition replaces the last.
-    const hold = (
-      until: PromiseLike<unknown>,
-      scope: 'viewport' | 'layer',
-      place: 'now' | 'after-frame' = 'now',
-    ) => {
-      releaseHoldRef.current?.();
-      releaseHoldRef.current =
-        element == null ? null : holdInput(element, {until, scope, place});
-    };
     if (now === 'open' && was === 'hidden') {
       // The Dialog opened its modal in this flush, before this effect, and
       // nothing has painted it yet. A finger's or a pen's input waits until
@@ -246,69 +360,39 @@ export function useAlertMotion({
       panel.set({opacity: 0, scale: scaleFrom});
       backdrop.set({opacity: 0});
       const handle = present(panel, backdrop, scaleFrom, entrance);
-      hold(handle.finished, 'viewport');
+      hold(element, handle.finished, 'viewport');
       return;
     }
     if (now === 'open' && was === 'leaving') {
-      // Reopened during the exit: it fades back from where it is.
-      exitRef.current = null;
-      const handle = fadeFromHere(
-        panel,
-        backdrop,
-        1,
-        readThemeTimingOrInstant(element, ALERT_ENTRANCE_TOKENS),
-      );
-      hold(handle.finished, 'viewport');
-      // The dismissal's hold is released and the content is live again. The
-      // action it took focus from gets focus back, unless focus went
-      // somewhere else meanwhile.
-      const blurred = blurredByDismissalRef.current;
-      blurredByDismissalRef.current = null;
-      const doc = element?.ownerDocument;
-      if (
-        blurred?.isConnected === true &&
-        doc != null &&
-        (doc.activeElement == null || doc.activeElement === doc.body)
-      ) {
-        blurred.focus({preventScroll: true});
-      }
+      pendingCloseRef.current?.();
+      pendingCloseRef.current = null;
+      turnBack(element);
       return;
     }
     if (now === 'leaving') {
       // During the dismissal no input reaches the alert: its content is inert
-      // and the hold's shield catches every touch. The fade starts first, in
-      // the task of the tap that closes the alert. The hold takes input at
-      // once, and writes its shield, the inert content and the focus move
-      // after the fade's first frame.
-      const progress =
-        exitTimingRef.current ??
-        readThemeTimingOrInstant(element, ALERT_EXIT_TOKENS);
-      exitMsRef.current = progress.duration * 1000;
-      const handle = fadeFromHere(panel, backdrop, 0, progress);
-      const focused = element?.ownerDocument.activeElement;
-      blurredByDismissalRef.current =
-        focused instanceof HTMLElement &&
-        focused !== element &&
-        element?.contains(focused) === true
-          ? focused
-          : null;
-      hold(handle.finished, 'layer', 'after-frame');
-      exitRef.current = handle;
-      void handle.finished.then(isDone => {
-        if (isDone && exitRef.current === handle) {
-          exitRef.current = null;
-          setIsLeaving(false);
-        }
-      });
+      // and the hold's shield catches every touch.
+      startExit(element);
       return;
     }
     // Hidden: the exit ended and the Dialog closed its modal.
+    pendingCloseRef.current?.();
+    pendingCloseRef.current = null;
     exitRef.current = null;
     exitTimingRef.current = null;
     blurredByDismissalRef.current = null;
     releaseHoldRef.current?.();
     releaseHoldRef.current = null;
-  }, [animators, isEnabled, isOpen, isPresented]);
+  }, [
+    animators,
+    closesRun,
+    hold,
+    isEnabled,
+    isOpen,
+    isPresented,
+    startExit,
+    turnBack,
+  ]);
 
   // Effect: a timer that hides the dialog once the exit has had its time. It
   // covers an exit whose end is never reported (animations off, a detached
@@ -325,5 +409,5 @@ export function useAlertMotion({
     return () => clearTimeout(backstop);
   }, [isLeaving]);
 
-  return {isPresented, isDriving: isEnabled, ref};
+  return {isPresented, isDriving: isEnabled, ref, leave};
 }
