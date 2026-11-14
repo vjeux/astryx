@@ -513,6 +513,136 @@ export const GalleryWithEndAlignedParagraphCaptionFixture: Story = {
   render: GalleryWithCaptions.render,
 };
 
+/**
+ * The long caption ending in a clipped chip: an inline-block element whose
+ * text is wider than its box and ends in an ellipsis.
+ */
+export const GalleryWithClippedChipCaptionFixture: Story = {
+  tags: ['!autodocs', 'no-visual'],
+  args: longCaptionArgs(
+    <>
+      {LONG_CAPTION_HEAD}{' '}
+      <span
+        style={{
+          display: 'inline-block',
+          maxInlineSize: 48,
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          verticalAlign: 'bottom',
+        }}>
+        home again.
+      </span>
+    </>,
+  ),
+  render: GalleryWithCaptions.render,
+};
+
+/**
+ * The long caption ending in an inline element with generated words after its
+ * text, from the element's own `::after`. The words can wrap onto a line of
+ * their own.
+ */
+export const GalleryWithInlineWordsCaptionFixture: Story = {
+  tags: ['!autodocs', 'no-visual'],
+  args: longCaptionArgs(
+    <>
+      <style>
+        {'.lightbox-caption-fixture-note::after { content: " (see map)"; }'}
+      </style>
+      {LONG_CAPTION_HEAD}{' '}
+      <span className="lightbox-caption-fixture-note">home.</span>
+    </>,
+  ),
+  render: GalleryWithCaptions.render,
+};
+
+/**
+ * The long caption inside an element laid out as `display: contents`, with
+ * generated words after its text from the element's own `::after`.
+ */
+export const GalleryWithContentsWordsCaptionFixture: Story = {
+  tags: ['!autodocs', 'no-visual'],
+  args: longCaptionArgs(
+    <>
+      <style>
+        {
+          '.lightbox-caption-fixture-contents { display: contents; } .lightbox-caption-fixture-contents::after { content: " (see map)"; }'
+        }
+      </style>
+      <span className="lightbox-caption-fixture-contents">
+        {LONG_CAPTION_HEAD} home.
+      </span>
+    </>,
+  ),
+  render: GalleryWithCaptions.render,
+};
+
+// A paragraph that takes one line from 470 px or so, and a last block that
+// takes one line some 70 px narrower, with the room its first line loses.
+// So the sweep checks the widths where only the last block's lines change.
+const FIRST_PARAGRAPH =
+  'A winding path through the forest and past the mill to the river.';
+const LAST_BLOCK = 'In autumn the beeches along it turn to copper.';
+
+/** A caption of a first paragraph and a last block. */
+function lastBlockArgs(lastBlock: ReactNode): Story['args'] {
+  return longCaptionArgs(
+    <>
+      <p style={{margin: 0}}>{FIRST_PARAGRAPH}</p>
+      {lastBlock}
+    </>,
+  );
+}
+
+/**
+ * The caption's last paragraph starts with a float, which shortens the
+ * paragraph's first line.
+ */
+export const GalleryWithFloatCaptionFixture: Story = {
+  tags: ['!autodocs', 'no-visual'],
+  args: lastBlockArgs(
+    <p style={{margin: 0}}>
+      <span
+        aria-hidden="true"
+        style={{float: 'inline-start', inlineSize: 64, blockSize: '1em'}}
+      />
+      {LAST_BLOCK}
+    </p>,
+  ),
+  render: GalleryWithCaptions.render,
+};
+
+/**
+ * The caption's last block is a list item with its marker inside, which takes
+ * room on the item's first line.
+ */
+export const GalleryWithInsideMarkerCaptionFixture: Story = {
+  tags: ['!autodocs', 'no-visual'],
+  args: lastBlockArgs(
+    <ul
+      style={{
+        margin: 0,
+        paddingInlineStart: 0,
+        listStylePosition: 'inside',
+        listStyleType: '"Next: "',
+      }}>
+      <li>{LAST_BLOCK}</li>
+    </ul>,
+  ),
+  render: GalleryWithCaptions.render,
+};
+
+/**
+ * The caption's last paragraph has a text indent, which takes room on the
+ * paragraph's first line.
+ */
+export const GalleryWithIndentedParagraphCaptionFixture: Story = {
+  tags: ['!autodocs', 'no-visual'],
+  args: lastBlockArgs(<p style={{margin: 0, textIndent: 64}}>{LAST_BLOCK}</p>),
+  render: GalleryWithCaptions.render,
+};
+
 const FRAME_DOCUMENT = '<!doctype html><html><head></head><body></body></html>';
 
 /** Copy the page's style sheets into the frame, as an app does. */
