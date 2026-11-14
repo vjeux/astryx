@@ -588,6 +588,48 @@ export const Confirmation: Story = {
 };
 
 // =============================================================================
+// Controlled with a focused row
+// =============================================================================
+
+// A controlled popover whose rows show which one has focus: a focus inside
+// renders the popover again while it opens.
+export const ControlledFocusedRow: Story = {
+  render: function ControlledFocusedRowStory() {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [focusedRow, setFocusedRow] = React.useState<string | null>(null);
+    const rows = ['Rename', 'Duplicate', 'Archive'];
+    return (
+      <Popover
+        placement="below"
+        label="Row actions"
+        width={200}
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+        content={
+          <div
+            onFocus={event =>
+              setFocusedRow((event.target as HTMLElement).textContent)
+            }>
+            <VStack gap={1}>
+              {rows.map(row => (
+                <Button
+                  key={row}
+                  label={row}
+                  variant={focusedRow === row ? 'primary' : 'ghost'}
+                  onClick={() => setIsOpen(false)}>
+                  {row}
+                </Button>
+              ))}
+            </VStack>
+          </div>
+        }>
+        <Button label="Row actions">Row actions</Button>
+      </Popover>
+    );
+  },
+};
+
+// =============================================================================
 // Sibling Mode (anchorRef)
 // =============================================================================
 
