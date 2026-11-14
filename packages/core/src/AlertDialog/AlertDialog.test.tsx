@@ -19,6 +19,7 @@ import {
   afterEach,
 } from 'vitest';
 import {
+  act,
   cleanup,
   render,
   screen,
@@ -887,6 +888,14 @@ describe('AlertDialog touch motion', () => {
       [...dialog.children].filter(child => !child.hasAttribute('popover'));
     expect(content().some(child => child.hasAttribute('inert'))).toBe(false);
     close();
+    // The hold writes the page after the fade's first frame.
+    await act(async () => {
+      await new Promise<void>(resolve => {
+        requestAnimationFrame(() => {
+          setTimeout(resolve, 0);
+        });
+      });
+    });
     expect(dialog).toHaveAttribute('open');
     expect(content().length).toBeGreaterThan(0);
     expect(content().every(child => child.hasAttribute('inert'))).toBe(true);

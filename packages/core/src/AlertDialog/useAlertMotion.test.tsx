@@ -125,6 +125,17 @@ const motion = (): AlertMotion => {
   return latest;
 };
 
+/** Waits until a task after the next frame has run. */
+async function afterNextFrame(): Promise<void> {
+  await act(async () => {
+    await new Promise<void>(resolve => {
+      requestAnimationFrame(() => {
+        setTimeout(resolve, 0);
+      });
+    });
+  });
+}
+
 /** Whether the input hold keeps a finger's input from the alert. */
 const isHeld = (): boolean =>
   isInHeldLayer(document.querySelector('[data-testid="alert"]'));
@@ -342,7 +353,7 @@ describe('useAlertMotion', () => {
     expect(motion().isPresented).toBe(true);
   });
 
-  it('gives focus back to the action the dismissal took it from when reopened during the exit', () => {
+  it('gives focus back to the action the dismissal took it from when reopened during the exit', async () => {
     const view = render(<Alert isOpen isEnabled />);
     const action = document.querySelector<HTMLButtonElement>(
       '[data-testid="alert"] > button',
@@ -350,6 +361,7 @@ describe('useAlertMotion', () => {
     act(() => action?.focus());
     expect(document.activeElement).toBe(action);
     view.rerender(<Alert isOpen={false} isEnabled />);
+    await afterNextFrame();
     expect(document.activeElement).toBe(document.body);
     view.rerender(<Alert isOpen isEnabled />);
     expect(action?.hasAttribute('inert')).toBe(false);
@@ -377,10 +389,15 @@ describe('useAlertMotion', () => {
     expect(document.querySelector('[popover="manual"]')).toBeNull();
   });
 
-  it('makes its content inert while it leaves', () => {
+  it('holds input at once when it leaves, and makes its content inert after the fade has started, past the next frame', async () => {
     const view = render(<Alert isOpen isEnabled />);
     view.rerender(<Alert isOpen={false} isEnabled />);
     expect(isHeld()).toBe(true);
+    expect(lastCurves(animators().panel).opacity).toBeDefined();
+    expect(
+      document.querySelector('[data-testid="alert"] > button[inert]'),
+    ).toBeNull();
+    await afterNextFrame();
     expect(
       document.querySelector('[data-testid="alert"] > button[inert]'),
     ).not.toBeNull();

@@ -62,7 +62,7 @@ export interface InputHoldOptions {
   scope: InputHoldScope;
   /**
    * What a `'layer'` hold does with focus inside the layer. `'blur'` (the
-   * default) makes the content inert at once and moves focus out.
+   * default) makes the content inert and moves focus out, when `place` says.
    * `'kept-inside'` keeps the page live: no shield and no press hold, and
    * the layer lets every pointer through. While focus stays inside, the
    * content stays exposed, and no click and no key but Tab reaches it. When
@@ -70,6 +70,16 @@ export interface InputHoldOptions {
    * `inert` and `aria-hidden` until the hold ends.
    */
   focus?: 'blur' | 'kept-inside';
+  /**
+   * When a `'layer'` hold that blurs writes the page: its shield, the inert
+   * content and the focus move. `'now'` (the default) writes them in the
+   * calling task. `'after-frame'` writes them in a task after the next frame.
+   * Then the calling task forces no style recalculation for them, and the
+   * frame shows what it started. Until then the press hold holds every
+   * press, a mouse's included, and swallows every click on the layer, a key's
+   * included. None of that writes the page.
+   */
+  place?: 'now' | 'after-frame';
 }
 
 interface HeldLayer {
@@ -87,6 +97,8 @@ interface HeldLayer {
    * last heard it, until its press ends.
    */
   pressOpenings: Set<number>;
+  /** The dismissal holds whose page writes wait for the next frame. */
+  pending: number;
 }
 
 /** A document while any of its layers is held. */
@@ -165,6 +177,57 @@ function isInNestedLayer(target: Node, layer: Node): boolean {
     }
   }
   return false;
+}
+
+/**
+ * Whether a dismissal hold over `target`'s layer still waits for its frame to
+ * write the page, and `target` is that layer's own content.
+ */
+function isPlacementPendingAt(target: EventTarget | null): boolean {
+  if (!isNode(target)) {
+    return false;
+  }
+  for (
+    let node: Node | null = target;
+    node != null;
+    node = parentAcrossShadow(node)
+  ) {
+    const state = isElement(node) ? held.get(node) : undefined;
+    if (state != null && state.pending > 0) {
+      return !isInNestedLayer(target, node);
+    }
+  }
+  return false;
+}
+
+/** Whether a dismissal hold in `doc` still waits for its frame. */
+function isPlacementPendingIn(doc: Document): boolean {
+  return liveLayers(doc).some(layer => (held.get(layer)?.pending ?? 0) > 0);
+}
+
+/**
+ * Runs `callback` in a task after the next frame of `doc`'s window, so the
+ * frame shows what the calling task started first. Returns its cancel, or null
+ * with no window.
+ */
+function afterNextFrame(
+  doc: Document,
+  callback: () => void,
+): (() => void) | null {
+  const view = doc.defaultView;
+  if (view == null) {
+    return null;
+  }
+  let timer: number | undefined;
+  const frame = view.requestAnimationFrame(() => {
+    timer = view.setTimeout(callback, 0);
+  });
+  return () => {
+    view.cancelAnimationFrame(frame);
+    if (timer !== undefined) {
+      view.clearTimeout(timer);
+    }
+  };
 }
 
 /**
@@ -451,33 +514,15 @@ function openToEarlierPresses(state: HeldLayer, doc: Document): void {
 }
 
 /**
- * Holds input away from `layer` until `until` settles. Returns the release
- * (idempotent), for a hold that ends early. Holds on one layer stack, and
- * the layer comes back when the last one ends. Each event is judged by its
- * own pointer, never by the primary pointer. So a mouse on a touch screen
- * keeps its clicks during a presentation.
+ * Writes a hold to the page: its shield. A dismissal also writes the inert
+ * content and the focus move, and returns nested layers above the shield.
+ * The hold's count is already taken.
  */
-export function holdInput(
+function placeHold(
   layer: Element,
-  {until, scope, focus = 'blur'}: InputHoldOptions,
-): () => void {
-  if (scope === 'layer' && focus === 'kept-inside') {
-    return holdKeptInside(layer, until);
-  }
-  let state = held.get(layer);
-  if (state == null) {
-    state = {
-      viewport: 0,
-      layer: 0,
-      surface: 0,
-      shield: null,
-      isShieldFull: false,
-      inertContent: null,
-      pressOpenings: new Set(),
-    };
-    held.set(layer, state);
-  }
-  startHolding(layer);
+  state: HeldLayer,
+  scope: InputHoldScope,
+): void {
   const isFull = scope !== 'surface';
   const raisesFullShield =
     isFull && (state.shield == null || !state.isShieldFull);
@@ -496,15 +541,10 @@ export function holdInput(
       state.shield.style.pointerEvents = 'none';
     }
   }
-  if (scope === 'viewport') {
-    state.viewport += 1;
-  } else if (scope === 'surface') {
-    state.surface += 1;
-  } else {
-    state.layer += 1;
+  if (scope === 'layer') {
     // A dismissal's shield takes every hit, a mouse's included.
     state.shield.style.pointerEvents = 'auto';
-    if (state.layer === 1) {
+    if (state.inertContent == null) {
       state.inertContent = makeContentInert(layer, state.shield);
       // A layer inside this one goes back into the top layer, above the
       // shield.
@@ -515,12 +555,74 @@ export function holdInput(
     openToEarlierPresses(state, layer.ownerDocument);
   }
   openToMouse(state, layer.ownerDocument);
+}
+
+/**
+ * Holds input away from `layer` until `until` settles. Returns the release
+ * (idempotent), for a hold that ends early. Holds on one layer stack, and
+ * the layer comes back when the last one ends. Each event is judged by its
+ * own pointer, never by the primary pointer. So a mouse on a touch screen
+ * keeps its clicks during a presentation.
+ */
+export function holdInput(
+  layer: Element,
+  {until, scope, focus = 'blur', place = 'now'}: InputHoldOptions,
+): () => void {
+  if (scope === 'layer' && focus === 'kept-inside') {
+    return holdKeptInside(layer, until);
+  }
+  let state = held.get(layer);
+  if (state == null) {
+    state = {
+      viewport: 0,
+      layer: 0,
+      surface: 0,
+      shield: null,
+      isShieldFull: false,
+      inertContent: null,
+      pressOpenings: new Set(),
+      pending: 0,
+    };
+    held.set(layer, state);
+  }
+  startHolding(layer);
+  if (scope === 'viewport') {
+    state.viewport += 1;
+  } else if (scope === 'surface') {
+    state.surface += 1;
+  } else {
+    state.layer += 1;
+  }
+  const holdState = state;
+  let cancelPlacement: (() => void) | null = null;
+  if (scope === 'layer' && place === 'after-frame') {
+    const waiting = holdState;
+    waiting.pending += 1;
+    cancelPlacement = afterNextFrame(layer.ownerDocument, () => {
+      cancelPlacement = null;
+      waiting.pending -= 1;
+      if (held.get(layer) === waiting) {
+        placeHold(layer, waiting, scope);
+      }
+    });
+    if (cancelPlacement == null) {
+      waiting.pending -= 1;
+      placeHold(layer, waiting, scope);
+    }
+  } else {
+    placeHold(layer, state, scope);
+  }
   let isReleased = false;
   const release = () => {
     if (isReleased) {
       return;
     }
     isReleased = true;
+    if (cancelPlacement != null) {
+      cancelPlacement();
+      cancelPlacement = null;
+      holdState.pending -= 1;
+    }
     const current = held.get(layer);
     if (current == null) {
       return;
@@ -896,7 +998,11 @@ function createPressHold(doc: Document): PressHold | null {
       followPointer(pointerType);
     }
     if (type === 'pointerdown') {
-      if (!HELD_POINTERS.has(pointerType) || !holdsPressAt(event.target)) {
+      // Before a dismissal's shield is up, a mouse's press is held too: the
+      // shield would take it.
+      const isHeldPointer =
+        HELD_POINTERS.has(pointerType) || isPlacementPendingIn(doc);
+      if (!isHeldPointer || !holdsPressAt(event.target)) {
         // A mouse's press, or one after the hold: its click is its own, and a
         // held press with its id ended unheard.
         pointers.delete(pointerId);
@@ -976,6 +1082,12 @@ function createPressHold(doc: Document): PressHold | null {
   };
 
   const onPress = (event: Event): boolean => {
+    // Before a dismissal makes its content inert and raises its shield, every
+    // press event on that content is swallowed, a key's click included.
+    if (isPlacementPendingAt(event.target)) {
+      swallow(event);
+      return true;
+    }
     // A click a key or assistive technology sends counts no press.
     if ((event as MouseEvent).detail === 0) {
       return false;

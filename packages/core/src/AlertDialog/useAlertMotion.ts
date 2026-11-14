@@ -218,10 +218,14 @@ export function useAlertMotion({
     const {panel, backdrop} = animators;
     const element = elementRef.current;
     // One hold at a time on the alert: a new transition replaces the last.
-    const hold = (until: PromiseLike<unknown>, scope: 'viewport' | 'layer') => {
+    const hold = (
+      until: PromiseLike<unknown>,
+      scope: 'viewport' | 'layer',
+      place: 'now' | 'after-frame' = 'now',
+    ) => {
       releaseHoldRef.current?.();
       releaseHoldRef.current =
-        element == null ? null : holdInput(element, {until, scope});
+        element == null ? null : holdInput(element, {until, scope, place});
     };
     if (now === 'open' && was === 'hidden') {
       // The Dialog opened its modal in this flush, before this effect, and
@@ -266,7 +270,10 @@ export function useAlertMotion({
     }
     if (now === 'leaving') {
       // During the dismissal no input reaches the alert: its content is inert
-      // and the hold's shield catches every touch.
+      // and the hold's shield catches every touch. The fade starts first, in
+      // the task of the tap that closes the alert. The hold takes input at
+      // once, and writes its shield, the inert content and the focus move
+      // after the fade's first frame.
       const progress = readThemeTimingOrInstant(element, ALERT_EXIT_TOKENS);
       exitMsRef.current = progress.duration * 1000;
       const handle = fadeFromHere(panel, backdrop, 0, progress);
@@ -277,7 +284,7 @@ export function useAlertMotion({
         element?.contains(focused) === true
           ? focused
           : null;
-      hold(handle.finished, 'layer');
+      hold(handle.finished, 'layer', 'after-frame');
       exitRef.current = handle;
       void handle.finished.then(isDone => {
         if (isDone && exitRef.current === handle) {
