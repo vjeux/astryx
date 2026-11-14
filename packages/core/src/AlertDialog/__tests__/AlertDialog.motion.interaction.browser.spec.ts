@@ -973,6 +973,11 @@ test.describe('under a finger', () => {
     await cancel.focus();
     await expect(cancel).toBeFocused();
     await driver.tap(await centerOf(cancel));
+    // The dismissal's hold makes the content inert after the fade's first
+    // frame.
+    await page.waitForFunction(
+      () => document.querySelector('dialog > [inert]') != null,
+    );
     const isOpen = async () =>
       dialog.evaluate(el => (el as HTMLDialogElement).open).catch(() => false);
     // The element with focus, unless it is the page or the dialog itself,
