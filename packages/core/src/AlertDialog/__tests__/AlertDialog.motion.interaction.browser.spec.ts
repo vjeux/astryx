@@ -1059,13 +1059,13 @@ test.describe('under a finger', () => {
     // A long exit, so the words are written while the alert fades.
     await setToken(page, '--duration-exit', '2000ms');
     // Records each write of the words into a live region: whether the alert
-    // still fades (its dismissal hold is up), and whether assistive
+    // still fades (it is open, its fade running), and whether assistive
     // technology can read that region.
     await page.evaluate(() => {
-      const writes: {isHeld: boolean; isExposed: boolean}[] = [];
+      const writes: {isFading: boolean; isExposed: boolean}[] = [];
       (
         window as unknown as {
-          __writes: {isHeld: boolean; isExposed: boolean}[];
+          __writes: {isFading: boolean; isExposed: boolean}[];
         }
       ).__writes = writes;
       const isLive = (element: Element) =>
@@ -1085,9 +1085,17 @@ test.describe('under a finger', () => {
           }
           const alert = document.querySelector('dialog');
           writes.push({
-            isHeld:
+            isFading:
               alert?.open === true &&
-              alert.querySelector(':scope > [inert]') != null,
+              alert
+                .getAnimations()
+                .some(
+                  animation =>
+                    animation.playState === 'running' &&
+                    (animation.effect as KeyframeEffect | null)
+                      ?.getKeyframes()
+                      .some(keyframe => 'opacity' in keyframe) === true,
+                ),
             isExposed:
               region.closest(
                 '[inert], [aria-hidden="true"], dialog:not([open])',
@@ -1105,7 +1113,7 @@ test.describe('under a finger', () => {
         () =>
           (
             window as unknown as {
-              __writes: {isHeld: boolean; isExposed: boolean}[];
+              __writes: {isFading: boolean; isExposed: boolean}[];
             }
           ).__writes,
       );
@@ -1115,7 +1123,7 @@ test.describe('under a finger', () => {
     // Each write lands while the alert fades, in a region assistive
     // technology can read.
     expect(written).toEqual(
-      written.map(() => ({isHeld: true, isExposed: true})),
+      written.map(() => ({isFading: true, isExposed: true})),
     );
     await expect(dialog).toBeHidden({timeout: 5000});
   });
