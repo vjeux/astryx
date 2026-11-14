@@ -187,6 +187,9 @@ export function useAlertMotion({
   // Only the exit in flight may hide the dialog when it ends.
   const exitRef = useRef<MotionHandle | null>(null);
   const exitMsRef = useRef(0);
+  // The alert reads its exit's timing when it opens. A read in the task that
+  // closes it would force a style recalculation there.
+  const exitTimingRef = useRef<MotionCurve | null>(null);
   const releaseHoldRef = useRef<(() => void) | null>(null);
   // The action that the dismissal's hold took focus from. A reopen during the
   // exit gives focus back to it.
@@ -201,6 +204,7 @@ export function useAlertMotion({
       releaseHoldRef.current = null;
       statusRef.current = 'hidden';
       exitRef.current = null;
+      exitTimingRef.current = null;
       blurredByDismissalRef.current = null;
     },
     [],
@@ -227,15 +231,17 @@ export function useAlertMotion({
       // The Dialog opened its modal in this flush, before this effect, and
       // nothing has painted it yet. A finger's or a pen's input waits until
       // the alert has entered. Keys and assistive technology stay live.
+      // Every style read comes before the first write: the scale's layout
+      // read, then both timings.
       const scaleFrom = presentScaleFrom(element);
+      const entrance = readThemeTimingOrInstant(element, ALERT_ENTRANCE_TOKENS);
+      exitTimingRef.current = readThemeTimingOrInstant(
+        element,
+        ALERT_EXIT_TOKENS,
+      );
       panel.set({opacity: 0, scale: scaleFrom});
       backdrop.set({opacity: 0});
-      const handle = present(
-        panel,
-        backdrop,
-        scaleFrom,
-        readThemeTimingOrInstant(element, ALERT_ENTRANCE_TOKENS),
-      );
+      const handle = present(panel, backdrop, scaleFrom, entrance);
       hold(handle.finished, 'viewport');
       return;
     }
@@ -267,7 +273,9 @@ export function useAlertMotion({
     if (now === 'leaving') {
       // During the dismissal no input reaches the alert: its content is inert
       // and the hold's shield catches every touch.
-      const progress = readThemeTimingOrInstant(element, ALERT_EXIT_TOKENS);
+      const progress =
+        exitTimingRef.current ??
+        readThemeTimingOrInstant(element, ALERT_EXIT_TOKENS);
       exitMsRef.current = progress.duration * 1000;
       const handle = fadeFromHere(panel, backdrop, 0, progress);
       const focused = element?.ownerDocument.activeElement;
@@ -289,6 +297,7 @@ export function useAlertMotion({
     }
     // Hidden: the exit ended and the Dialog closed its modal.
     exitRef.current = null;
+    exitTimingRef.current = null;
     blurredByDismissalRef.current = null;
     releaseHoldRef.current?.();
     releaseHoldRef.current = null;

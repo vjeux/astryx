@@ -237,6 +237,19 @@ describe('useAlertMotion', () => {
     );
   });
 
+  it('reads the exit timing when it opens: the close reads no style of the alert', () => {
+    const view = render(<Alert isOpen isEnabled />);
+    const alert = document.querySelector('[data-testid="alert"]');
+    const {panel} = animators();
+    panel.presented = {opacity: 1, scale: 1};
+    const reads = vi.spyOn(window, 'getComputedStyle');
+    view.rerender(<Alert isOpen={false} isEnabled />);
+    expect(reads.mock.calls.filter(([element]) => element === alert)).toEqual(
+      [],
+    );
+    expectTimed(lastCurves(panel).opacity, 1, 0, EXIT_S, EXIT_EASE);
+  });
+
   it('plays no spring: every motion is a timed curve', () => {
     const view = render(<Alert isOpen isEnabled />);
     view.rerender(<Alert isOpen={false} isEnabled />);
