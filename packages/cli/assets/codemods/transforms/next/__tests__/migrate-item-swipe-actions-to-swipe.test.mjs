@@ -499,15 +499,16 @@ function Reffed({remove}) {
   const labelRef = useRef('Delete');
   return <ListItem label="B" swipeActions={{trailing: [{label: labelRef.current, onActivate: remove}]}} />;
 }
-function Mapped({tags, remove}) {
-  return <ListItem label="C" swipeActions={{trailing: [{label: tags.map(tag => tag.toUpperCase()).join(', '), onActivate: remove}]}} />;
+function Mapped({format, remove}) {
+  return <ListItem label="C" swipeActions={{trailing: [{label: format(tag => tag.toUpperCase()), onActivate: remove}]}} />;
 }`);
     const output = flat(raw);
     // The imported t and the ref's current run or read at render.
     expect(output.match(/swipe=\{createSwipe\(/g)).toHaveLength(2);
-    // A callback's own parameter is part of the value; tags is a dependency.
+    // A callback's own parameter is part of the value; format is a
+    // dependency.
     expect(output).toMatch(
-      /function Mapped\(\{ ?tags, remove ?\}\) \{ const removeSwipe = useMemo\(\(\) => createSwipe\([^;]*\), \[tags, remove\]\);/,
+      /function Mapped\(\{ ?format, remove ?\}\) \{ const removeSwipe = useMemo\(\(\) => createSwipe\([^;]*\), \[format, remove\]\);/,
     );
     await expectStable(raw);
   });
@@ -589,6 +590,156 @@ function Rows({label, remove}) {
   return <>{first}{second}</>;
 }`);
     expectInlineWithTodo(flat(raw), 2);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on the row with a TODO when a property of a local its options read is set above a hoisted function', async () => {
+    const raw =
+      await applyTransform(`import {List, ListItem} from '@astryxdesign/core/List';
+function Rows({rows, isAlt, remove}) {
+  const labels = {remove: 'Delete'};
+  if (isAlt) labels.remove = 'Remove';
+  function renderRow(row) {
+    return <ListItem key={row.id} label={row.label} swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  }
+  return <List>{rows.map(renderRow)}</List>;
+}`);
+    expectInlineWithTodo(flat(raw), 1);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on the row with a TODO when a method is called on a local its options read after an arrow helper', async () => {
+    const raw =
+      await applyTransform(`import {List, ListItem} from '@astryxdesign/core/List';
+function Rows({rows, remove}) {
+  const words = ['Delete'];
+  const renderRow = row => <ListItem key={row.id} label={row.label} swipeActions={{trailing: [{label: words.join(' '), onActivate: remove}]}} />;
+  words.push('all');
+  return <List>{rows.map(renderRow)}</List>;
+}`);
+    expectInlineWithTodo(flat(raw), 1);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on the row with a TODO when a property of a local its options read is set in a loop before each row', async () => {
+    const raw =
+      await applyTransform(`import {List, ListItem} from '@astryxdesign/core/List';
+function Rows({items, remove}) {
+  const rows = [];
+  const labels = {remove: 'Delete'};
+  for (const item of items) {
+    labels.remove = item.name;
+    rows.push(<ListItem key={item.id} label={item.name} swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />);
+  }
+  return <List>{rows}</List>;
+}`);
+    expectInlineWithTodo(flat(raw), 1);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on each row with a TODO when a property of a local their options read is set between two rows', async () => {
+    const raw =
+      await applyTransform(`import {ListItem} from '@astryxdesign/core/List';
+function Rows({remove}) {
+  const labels = {remove: 'Delete'};
+  const first = <ListItem label="A" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  labels.remove = 'Remove';
+  const second = <ListItem label="B" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  return <>{first}{second}</>;
+}`);
+    expectInlineWithTodo(flat(raw), 2);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on the row with a TODO when a local its options read is passed to Object.assign above a hoisted function', async () => {
+    const raw =
+      await applyTransform(`import {List, ListItem} from '@astryxdesign/core/List';
+function Rows({rows, isAlt, remove}) {
+  const labels = {remove: 'Delete'};
+  if (isAlt) Object.assign(labels, {remove: 'Remove'});
+  function renderRow(row) {
+    return <ListItem key={row.id} label={row.label} swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  }
+  return <List>{rows.map(renderRow)}</List>;
+}`);
+    expectInlineWithTodo(flat(raw), 1);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on each row with a TODO when a local their options read is passed to a helper between two rows', async () => {
+    const raw =
+      await applyTransform(`import {ListItem} from '@astryxdesign/core/List';
+import {setRemove} from './labels';
+function Rows({remove}) {
+  const labels = {remove: 'Delete'};
+  const first = <ListItem label="A" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  setRemove(labels, 'Remove');
+  const second = <ListItem label="B" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  return <>{first}{second}</>;
+}`);
+    expectInlineWithTodo(flat(raw), 2);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on each row with a TODO when an alias of a local their options read is written between two rows', async () => {
+    const raw =
+      await applyTransform(`import {ListItem} from '@astryxdesign/core/List';
+function Rows({remove}) {
+  const labels = {remove: 'Delete'};
+  const alias = labels;
+  const first = <ListItem label="A" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  alias.remove = 'Remove';
+  const second = <ListItem label="B" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  return <>{first}{second}</>;
+}`);
+    expectInlineWithTodo(flat(raw), 2);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on each row with a TODO when an object stores a local their options read and is written through between two rows', async () => {
+    const raw =
+      await applyTransform(`import {ListItem} from '@astryxdesign/core/List';
+function Rows({remove}) {
+  const labels = {remove: 'Delete'};
+  const box = {labels};
+  const first = <ListItem label="A" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  box.labels.remove = 'Remove';
+  const second = <ListItem label="B" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  return <>{first}{second}</>;
+}`);
+    expectInlineWithTodo(flat(raw), 2);
+    await expectStable(raw);
+  });
+
+  it('keeps createSwipe on each row with a TODO when a function returns a local their options read and its result is written through between two rows', async () => {
+    const raw =
+      await applyTransform(`import {ListItem} from '@astryxdesign/core/List';
+function Rows({remove}) {
+  const labels = {remove: 'Delete'};
+  const get = () => labels;
+  const first = <ListItem label="A" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  get().remove = 'Remove';
+  const second = <ListItem label="B" swipeActions={{trailing: [{label: labels.remove, onActivate: remove}]}} />;
+  return <>{first}{second}</>;
+}`);
+    expectInlineWithTodo(flat(raw), 2);
+    await expectStable(raw);
+  });
+
+  it('defines a swipe whose handler alone reads a local that is written through: the handler reads it when its action fires', async () => {
+    const raw =
+      await applyTransform(`import {ListItem} from '@astryxdesign/core/List';
+import {makeStore} from './store';
+const store = makeStore();
+store.reset();
+export function Rows({rows}) {
+  return rows.map(row => <ListItem key={row.id} label={row.label} swipeActions={{trailing: [{label: 'Delete', onActivate: () => store.remove()}]}} />);
+}`);
+    const output = flat(raw);
+    expect(output).toContain(
+      "const deleteSwipe = createSwipe({trailing: [{ id: 'delete', label: 'Delete', onActivate: () => store.remove() }]});",
+    );
+    expect(output).not.toContain('TODO');
     await expectStable(raw);
   });
 
