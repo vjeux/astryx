@@ -46,6 +46,16 @@ const flush = async () => {
   await Promise.resolve();
 };
 
+/** Waits until a task after the next frame has run. */
+const afterNextFrame = async () => {
+  await new Promise<void>(resolve => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve, 0);
+    });
+  });
+  await flush();
+};
+
 /**
  * Another layer inside `layer`, as the toast viewport sits in an open modal:
  * a host, with a sibling, around a marked layer root that holds a button.
@@ -187,6 +197,43 @@ describe('holdInput', () => {
     expect(child.hasAttribute('inert')).toBe(false);
     expect(already.hasAttribute('inert')).toBe(true);
     expect(shield.isConnected).toBe(false);
+    expect(isInHeldLayer(child)).toBe(false);
+  });
+
+  it("holds a dismissing layer at once with 'after-frame', and writes its shield, the inert content and the focus move only after the next frame", async () => {
+    const {layer, child} = mountLayer();
+    child.focus();
+    const end = deferred();
+    holdInput(layer, {
+      until: end.promise,
+      scope: 'layer',
+      place: 'after-frame',
+    });
+    expect(isInHeldLayer(child)).toBe(true);
+    expect(layer.querySelector('[popover]')).toBeNull();
+    expect(child.hasAttribute('inert')).toBe(false);
+    expect(document.activeElement).toBe(child);
+    await afterNextFrame();
+    expect(layer.lastElementChild?.getAttribute('popover')).toBe('manual');
+    expect(child.hasAttribute('inert')).toBe(true);
+    expect(document.activeElement).not.toBe(child);
+    end.resolve();
+    await flush();
+    expect(child.hasAttribute('inert')).toBe(false);
+    expect(isInHeldLayer(child)).toBe(false);
+  });
+
+  it("writes nothing for an 'after-frame' dismissal that ends before its frame", async () => {
+    const {layer, child} = mountLayer();
+    const release = holdInput(layer, {
+      until: new Promise(() => {}),
+      scope: 'layer',
+      place: 'after-frame',
+    });
+    release();
+    await afterNextFrame();
+    expect(layer.querySelector('[popover]')).toBeNull();
+    expect(child.hasAttribute('inert')).toBe(false);
     expect(isInHeldLayer(child)).toBe(false);
   });
 
@@ -922,6 +969,26 @@ describe("holdInput decides by each event's pointer (spec:AST-094 FR35)", () => 
     click(button, 'touch');
     expect(setPointerCapture).not.toHaveBeenCalled();
     expect(down.defaultPrevented).toBe(true);
+    expect(reached).toEqual([]);
+  });
+
+  it("holds every press on a dismissing layer before its 'after-frame' shield is up: a mouse's, a finger's and a key's click", () => {
+    const {layer} = mountLayer();
+    const {button, reached} = recorder(layer);
+    releases.push(
+      holdInput(layer, {
+        until: new Promise(() => {}),
+        scope: 'layer',
+        place: 'after-frame',
+      }),
+    );
+    pointer(button, 'pointerdown', 'mouse');
+    mouse(button, 'mousedown');
+    pointer(button, 'pointerup', 'mouse');
+    mouse(button, 'mouseup');
+    click(button, 'mouse');
+    tap(button, 'touch', 2);
+    click(button, '', 0);
     expect(reached).toEqual([]);
   });
 
