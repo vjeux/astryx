@@ -401,6 +401,92 @@ function Sized({id, remove}) {
     await expectStable(raw);
   });
 
+  it("defines a swipe before a hoisted function's first possible call: after the last binding it reads, so code above that calls the function finds it", async () => {
+    const raw =
+      await applyTransform(`import {List, ListItem} from '@astryxdesign/core/List';
+import {remove} from './actions';
+const items = rows.map(renderRow);
+function renderRow(row) {
+  return <ListItem key={row.id} label={row.label} swipeActions={{trailing: [{label: 'Delete', onActivate: remove}]}} />;
+}
+export function Rows({rows, archive}) {
+  const list = rows.map(renderItem);
+  function renderItem(row) {
+    return <ListItem key={row.id} label={row.label} swipeActions={{trailing: [{label: 'Archive', onActivate: archive}]}} />;
+  }
+  return <List>{list}</List>;
+}`);
+    const output = flat(raw);
+    expect(output).not.toContain('TODO');
+    // At module scope, after the imports and before the call above renderRow.
+    expect(output.indexOf('const deleteSwipe = createSwipe(')).toBeGreaterThan(
+      output.indexOf("from './actions';"),
+    );
+    expect(output.indexOf('const deleteSwipe = createSwipe(')).toBeLessThan(
+      output.indexOf('const items = rows.map(renderRow)'),
+    );
+    // In the component, at the top of its body, before the call above renderItem.
+    expect(output).toMatch(
+      /export function Rows\(\{ ?rows, archive ?\}\) \{ const archiveSwipe = useMemo\(\(\) => createSwipe\([^;]*\), \[archive\]\); const list = rows\.map\(renderItem\);/,
+    );
+    await expectStable(raw);
+  });
+
+  it("checks every function in the options but an entry's onActivate: a render-time callback that calls an imported t, or a ref's current, keeps createSwipe on the row", async () => {
+    const raw = await applyTransform(`import {useRef} from 'react';
+import {ListItem} from '@astryxdesign/core/List';
+import {t} from './i18n';
+function Tagged({tags, remove}) {
+  return <ListItem label="A" swipeActions={{trailing: [{label: tags.map(tag => t(tag)).join(', '), onActivate: remove}]}} />;
+}
+function Reffed({remove}) {
+  const labelRef = useRef('Delete');
+  return <ListItem label="B" swipeActions={{trailing: [{label: labelRef.current, onActivate: remove}]}} />;
+}
+function Mapped({tags, remove}) {
+  return <ListItem label="C" swipeActions={{trailing: [{label: tags.map(tag => tag.toUpperCase()).join(', '), onActivate: remove}]}} />;
+}`);
+    const output = flat(raw);
+    // The imported t and the ref's current run or read at render.
+    expect(output.match(/swipe=\{createSwipe\(/g)).toHaveLength(2);
+    // A callback's own parameter is part of the value; tags is a dependency.
+    expect(output).toMatch(
+      /function Mapped\(\{ ?tags, remove ?\}\) \{ const removeSwipe = useMemo\(\(\) => createSwipe\([^;]*\), \[tags, remove\]\);/,
+    );
+    await expectStable(raw);
+  });
+
+  it('shares one definition between rows only when every local their options read keeps one value: a let reassigned between them gets one each', async () => {
+    const raw =
+      await applyTransform(`import {ListItem} from '@astryxdesign/core/List';
+function Reassigned({remove}) {
+  let label = 'Delete';
+  const first = <ListItem label="A" swipeActions={{trailing: [{label, onActivate: remove}]}} />;
+  label = 'Remove';
+  const second = <ListItem label="B" swipeActions={{trailing: [{label, onActivate: remove}]}} />;
+  return <>{first}{second}</>;
+}
+function Constant({remove}) {
+  const label = 'Delete';
+  const first = <ListItem label="A" swipeActions={{trailing: [{label, onActivate: remove}]}} />;
+  const second = <ListItem label="B" swipeActions={{trailing: [{label, onActivate: remove}]}} />;
+  return <>{first}{second}</>;
+}`);
+    const output = flat(raw);
+    const reassigned = output.slice(
+      output.indexOf('function Reassigned'),
+      output.indexOf('function Constant'),
+    );
+    const constant = output.slice(output.indexOf('function Constant'));
+    expect(reassigned.match(/= useMemo\(/g)).toHaveLength(2);
+    // The second definition reads the value the reassignment set.
+    expect(reassigned.indexOf("label = 'Remove'")).toBeLessThan(
+      reassigned.lastIndexOf('= useMemo('),
+    );
+    expect(constant.match(/= useMemo\(/g)).toHaveLength(1);
+    await expectStable(raw);
+  });
+
   it('gives an Item row its own TODO: an Item passes no itemKey to onActivate', async () => {
     const raw =
       await applyTransform(`import {Item} from '@astryxdesign/core/Item';
