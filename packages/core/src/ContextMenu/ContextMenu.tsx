@@ -709,11 +709,12 @@ export function ContextMenu({
     }
   }, [layer, usesBottomSheet]);
 
-  // A client point in the trigger's own coordinates, where the cursor anchor
-  // lives. It stays inside the trigger's box.
+  // A client point in the cursor anchor's coordinates: measured from its
+  // containing block, as `openAtLocalPoint` reads them. It stays inside that
+  // box.
   const toTriggerLocal = useCallback(
     (point: {x: number; y: number}): {x: number; y: number} => {
-      const rect = triggerRef.current?.getBoundingClientRect();
+      const rect = getAnchorBaseRect();
       if (rect == null) {
         return point;
       }
@@ -722,7 +723,7 @@ export function ContextMenu({
         y: Math.min(Math.max(point.y - rect.top, 0), rect.height),
       };
     },
-    [],
+    [getAnchorBaseRect],
   );
 
   const handleContextMenu = useCallback(
