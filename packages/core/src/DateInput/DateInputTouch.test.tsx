@@ -2883,6 +2883,33 @@ describe('DateInput — nested scrollers keep their own touch gesture', () => {
     }
   });
 
+  it('under a finger: a trackpad swipe that settles on the last month moves focus off the arrow that hides', () => {
+    vi.useFakeTimers();
+    try {
+      renderAndOpen();
+      const next = screen.getByRole('button', {name: 'Next month'});
+      act(() => next.focus());
+      const scroller = document.querySelector('[data-scroller="months"]')!;
+      const title = document.querySelector('[data-title="month-year"]')!;
+      withLayout(() => {
+        // 40 steps of 6.5 px: 260 px toward April, the range's last month.
+        for (let i = 0; i < 40; i++) {
+          act(() => trackpadScroll(scroller, 6.5));
+          advance(8);
+        }
+        advance(900);
+      });
+      expect(title).toHaveTextContent('April 2026');
+      // Next month hides at the range end. Focus stays in the sheet, on the
+      // other arrow.
+      expect(
+        screen.getByRole('button', {name: 'Previous month'}),
+      ).toHaveFocus();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps a diagonal drag, because a thumb arcs as it swipes', () => {
     stubTouchscreenLaptop();
     expect(matchMedia('(pointer: coarse)').matches).toBe(false);
