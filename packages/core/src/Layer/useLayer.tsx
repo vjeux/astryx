@@ -73,7 +73,12 @@ import {overlayPaddingReset} from '../Layout/overlayPaddingReset.stylex';
 import {observeResize} from '../utils/sharedResizeObserver';
 import {observeMutations} from '../utils/sharedMutationObserver';
 import {containsAlongFlatTree, parentAcrossShadow} from '../utils/flatTree';
-import {isDialogShown, isShadowRoot, isShownAsPopover} from '../utils/nodeType';
+import {
+  isDialogShown,
+  isNode,
+  isShadowRoot,
+  isShownAsPopover,
+} from '../utils/nodeType';
 import {subscribeInput} from '../utils/inputStream';
 
 const styles = stylex.create({
@@ -912,29 +917,31 @@ function waitForAncestorAnimations(
   anchor: HTMLElement,
   onReady: () => void,
 ): () => void {
-  if (typeof document.getAnimations !== 'function') {
+  // The anchor's own document and window: a trigger can sit in a frame or a
+  // pop-out window, whose animations and frames are its own.
+  const doc = anchor.ownerDocument;
+  const view = doc.defaultView;
+  if (typeof doc.getAnimations !== 'function' || view == null) {
     onReady();
     return () => {};
   }
   let cancelled = false;
-  const handle = requestAnimationFrame(() => {
+  const handle = view.requestAnimationFrame(() => {
     if (cancelled) {
       return;
     }
-    const running = document.getAnimations().filter(animation => {
+    const running = doc.getAnimations().filter(animation => {
+      const effect = animation.effect;
       const target =
-        animation.effect instanceof KeyframeEffect
-          ? animation.effect.target
+        effect != null && 'target' in effect
+          ? (effect as KeyframeEffect).target
           : null;
-      if (
-        !(target instanceof Node) ||
-        !(target === anchor || target.contains(anchor))
-      ) {
+      if (!isNode(target) || !(target === anchor || target.contains(anchor))) {
         return false;
       }
       // A scroll- or view-driven animation finishes only when the person
       // scrolls to the end of its range, so it is not a settle to wait on.
-      if (animation.timeline !== document.timeline) {
+      if (animation.timeline !== doc.timeline) {
         return false;
       }
       return endsOnItsOwn(animation);
@@ -953,7 +960,7 @@ function waitForAncestorAnimations(
   });
   return () => {
     cancelled = true;
-    cancelAnimationFrame(handle);
+    view.cancelAnimationFrame(handle);
   };
 }
 
