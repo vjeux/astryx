@@ -800,10 +800,8 @@ export function ContextMenu({
     }
   }, [layer, usesBottomSheet]);
 
-  // A client point in the cursor anchor's coordinates: measured from its
-  // containing block, as `openAtLocalPoint` reads them. The press feedback
-  // grows only the trigger's visual, so that box is as laid out. The point
-  // stays inside that box.
+  // The press feedback grows only the trigger's visual, so this box keeps its
+  // laid-out size.
   const toTriggerLocal = useCallback(
     (point: {x: number; y: number}): {x: number; y: number} => {
       const rect = getAnchorBaseRect();
