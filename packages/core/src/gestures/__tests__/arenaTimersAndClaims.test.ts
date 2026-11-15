@@ -45,13 +45,35 @@ class TaskClock implements GestureClock {
   }
 }
 
-function pressArena(pointerType: PointerKind = 'touch'): {
+/**
+ * A clock that also runs frames. A frame's input comes first, as Chromium
+ * dispatches the touch moves it held for the frame; then its callbacks run.
+ */
+class FrameClock extends TaskClock {
+  private frames: (() => void)[] = [];
+  requestFrame(callback: () => void): void {
+    this.frames.push(callback);
+  }
+  /** Run the callbacks of a frame at `time`, after its input. */
+  runFrame(time: number): void {
+    this.time = time;
+    const frames = this.frames;
+    this.frames = [];
+    for (const callback of frames) {
+      callback();
+    }
+  }
+}
+
+function pressArena(
+  pointerType: PointerKind = 'touch',
+  clock: TaskClock = new TaskClock(),
+): {
   clock: TaskClock;
   arena: GestureArena;
   press: LongPressGestureRecognizer;
   log: string[];
 } {
-  const clock = new TaskClock();
   const log: string[] = [];
   const arena: GestureArena = new GestureArena({
     clock,
@@ -170,6 +192,47 @@ describe('a timer that fires late', () => {
     clock.runTask(800);
     clock.runTask(800);
     expect(log.some(entry => entry.startsWith('press:began'))).toBe(false);
+    clock.runTask(850);
+    expect(log).toContain('press:began@500');
+    arena.ended([{id: 1, x: 0, y: 0, time: 870}]);
+  });
+
+  it('waits for the next frame after a late deadline: a drift that frame brings still fails the press', () => {
+    const {clock, arena, log} = pressArena('touch', new FrameClock());
+    clock.runTask(800);
+    // The drift from 300 ms comes with the next frame, at 816.
+    clock.time = 816;
+    arena.moved([{id: 1, x: 40, y: 0, time: 300}]);
+    (clock as FrameClock).runFrame(816);
+    expect(log.some(entry => entry.startsWith('press:began'))).toBe(false);
+    expect(log).toContain('press:failed@300');
+    arena.ended([{id: 1, x: 40, y: 0, time: 830}]);
+  });
+
+  it('runs a late deadline at the next frame when that frame brings no input, not 50 ms later', () => {
+    const {clock, arena, log} = pressArena('touch', new FrameClock());
+    clock.runTask(800);
+    (clock as FrameClock).runFrame(816);
+    expect(log).toContain('press:began@500');
+    arena.ended([{id: 1, x: 0, y: 0, time: 830}]);
+  });
+
+  it('waits one more frame when a frame brings late input from before the deadline', () => {
+    const {clock, arena, log} = pressArena('touch', new FrameClock());
+    clock.runTask(800);
+    // A move from 300 ms, inside the tolerance, comes with the frame at 816.
+    clock.time = 816;
+    arena.moved([{id: 1, x: 2, y: 0, time: 300}]);
+    (clock as FrameClock).runFrame(816);
+    expect(log.some(entry => entry.startsWith('press:began'))).toBe(false);
+    (clock as FrameClock).runFrame(833);
+    expect(log).toContain('press:began@500');
+    arena.ended([{id: 1, x: 2, y: 0, time: 850}]);
+  });
+
+  it('ends the wait after 50 ms when no frame comes, as on a hidden page', () => {
+    const {clock, arena, log} = pressArena('touch', new FrameClock());
+    clock.runTask(800);
     clock.runTask(850);
     expect(log).toContain('press:began@500');
     arena.ended([{id: 1, x: 0, y: 0, time: 870}]);
