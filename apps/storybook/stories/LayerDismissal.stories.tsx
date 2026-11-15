@@ -3,7 +3,7 @@
 /**
  * @file LayerDismissal.stories.tsx
  * @input Uses Dialog, Popover, Tooltip, InfoTip, Lightbox, MobileNav,
- *   BottomSheet, Button, Layout from @astryxdesign/core
+ *   BottomSheet, Button, Layout, SegmentedControl from @astryxdesign/core
  * @output Storybook stories demonstrating shared layer dismissal
  * @position Storybook; the visual contract for the layer dismissal stack
  *
@@ -28,6 +28,8 @@ import {
   MobileNav,
   MoreMenu,
   Popover,
+  SegmentedControl,
+  SegmentedControlItem,
   Text,
   Tooltip,
   VStack,
@@ -1222,4 +1224,61 @@ function ContinuouslyAnimatingTriggerExample() {
 
 export const ContinuouslyAnimatingTrigger: Story = {
   render: () => <ContinuouslyAnimatingTriggerExample />,
+};
+
+/**
+ * A popover whose first control is a SegmentedControl, with a popover inside
+ * it whose first control is another, and a SegmentedControl on the page.
+ * Opened from the keyboard, focus lands on a segment and the arrow-key hint
+ * shows.
+ */
+function KeyboardHintInPopoverExample() {
+  const [pageView, setPageView] = useState('day');
+  const [view, setView] = useState('day');
+  const [density, setDensity] = useState('compact');
+
+  return (
+    <HStack gap={3}>
+      <SegmentedControl
+        value={pageView}
+        onChange={setPageView}
+        label="Page view">
+        <SegmentedControlItem value="day" label="Day" />
+        <SegmentedControlItem value="week" label="Week" />
+      </SegmentedControl>
+      <Popover
+        label="View options"
+        content={
+          <VStack gap={2}>
+            <SegmentedControl
+              value={view}
+              onChange={setView}
+              label="Calendar view">
+              <SegmentedControlItem value="day" label="Day" />
+              <SegmentedControlItem value="week" label="Week" />
+              <SegmentedControlItem value="month" label="Month" />
+            </SegmentedControl>
+            <Popover
+              label="Density options"
+              content={
+                <SegmentedControl
+                  value={density}
+                  onChange={setDensity}
+                  label="Density">
+                  <SegmentedControlItem value="compact" label="Compact" />
+                  <SegmentedControlItem value="cozy" label="Cozy" />
+                </SegmentedControl>
+              }>
+              <Button label="More" variant="secondary" />
+            </Popover>
+          </VStack>
+        }>
+        <Button label="Open popover" variant="primary" />
+      </Popover>
+    </HStack>
+  );
+}
+
+export const KeyboardHintInPopover: Story = {
+  render: () => <KeyboardHintInPopoverExample />,
 };
