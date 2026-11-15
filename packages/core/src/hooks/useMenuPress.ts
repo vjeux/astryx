@@ -285,23 +285,23 @@ function normalizePointerType(type: string): MenuPressPointerType | null {
 }
 
 /**
- * The touch that a pointer's touchstart started. WebKit gives the touch the
- * pointer's id. Chromium gives it its own id, so a lone changed touch is the
- * pointer's. Several changed touches, none with the pointer's id, name no
- * touch.
+ * The identifier of the touch that a pointer's touchstart started. WebKit
+ * gives the touch the pointer's id. Chromium gives it its own id, so a lone
+ * changed touch is the pointer's. Several changed touches, none with the
+ * pointer's id, name no touch.
  */
 function touchOfPointer(
   changed: TouchList | undefined,
   pointerId: number,
-): Touch | null {
+): number | null {
   if (changed == null) {
     return null;
   }
   const touches = Array.from(changed);
-  return (
-    touches.find(touch => touch.identifier === pointerId) ??
-    (touches.length === 1 ? touches[0] : null)
-  );
+  if (touches.some(touch => touch.identifier === pointerId)) {
+    return pointerId;
+  }
+  return touches.length === 1 ? touches[0].identifier : null;
 }
 
 function isRowFocusable(row: HTMLElement): boolean {
@@ -413,7 +413,6 @@ export function useMenuPress(input: UseMenuPressOptions): UseMenuPressReturn {
   const gestureRef = useRef<MenuPressState<HTMLElement>>(IDLE_MENU_PRESS);
   const pointerIdRef = useRef<number | null>(null);
   const touchIdentifierRef = useRef<number | null>(null);
-  const touchTargetRef = useRef<EventTarget | null>(null);
   const detachRef = useRef<(() => void) | null>(null);
   // `useLongPress` detects the held finger, as in ContextMenu, so the hold
   // time and the movement tolerance have one home. A ref holds the handle,
@@ -670,7 +669,6 @@ export function useMenuPress(input: UseMenuPressOptions): UseMenuPressReturn {
             staysInstalled: true,
             cancelsTouchEnd: native?.pointerType === 'touch',
             touchIdentifier: touchIdentifierRef.current ?? undefined,
-            touchTarget: touchTargetRef.current ?? undefined,
           });
           if (native != null) {
             activate(effect.row, native);
@@ -703,7 +701,6 @@ export function useMenuPress(input: UseMenuPressOptions): UseMenuPressReturn {
               staysInstalled: true,
               cancelsTouchEnd: native?.pointerType === 'touch',
               touchIdentifier: touchIdentifierRef.current ?? undefined,
-              touchTarget: touchTargetRef.current ?? undefined,
             });
           }
           if (effect.dismiss) {
@@ -801,19 +798,18 @@ export function useMenuPress(input: UseMenuPressOptions): UseMenuPressReturn {
       const view = doc.defaultView;
       pointerIdRef.current = pointerId;
       touchIdentifierRef.current = null;
-      touchTargetRef.current = null;
 
-      // The touchstart after this pointerdown names the touch. So the guard
-      // at the lift cancels only that touch's touchend, also on the node the
-      // touch began on.
+      // The touchstart after this pointerdown names the touch, so the guard
+      // at the lift cancels only that touch's touchend.
       let stopTouchStart: (() => void) | null = null;
       if (view != null) {
         stopTouchStart = subscribeInput(view, 'touchstart', event => {
           stopTouchStart?.();
           stopTouchStart = null;
-          const named = touchOfPointer(event.changedTouches, pointerId);
-          touchIdentifierRef.current = named?.identifier ?? null;
-          touchTargetRef.current = named?.target ?? null;
+          touchIdentifierRef.current = touchOfPointer(
+            event.changedTouches,
+            pointerId,
+          );
         });
       }
       const onMove = (event: PointerEvent) => {
