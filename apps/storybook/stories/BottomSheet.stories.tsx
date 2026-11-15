@@ -928,6 +928,30 @@ export const NestedPopover: Story = {
 };
 
 /**
+ * A Popover trigger and a Button in the sheet's body. After the Popover
+ * closes, a press on the Button runs its handler, and the sheet stays open.
+ */
+export const NestedPopoverThenButton: Story = {
+  tags: ['!autodocs'],
+  render: () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [count, setCount] = useState(0);
+    return (
+      <>
+        <Button label="Open sheet" onClick={() => setIsOpen(true)} />
+        <BottomSheet label="Reference" isOpen={isOpen} onOpenChange={setIsOpen}>
+          <Popover label="Details" content={<p>Nested information</p>}>
+            <Button label="About" />
+          </Popover>
+          <Button label="Count" onClick={() => setCount(c => c + 1)} />
+          <p>Pressed {count} times</p>
+        </BottomSheet>
+      </>
+    );
+  },
+};
+
+/**
  * A no-scrim sheet with a `data-autofocus` field: the field is focused when
  * the sheet opens, in every browser.
  */
