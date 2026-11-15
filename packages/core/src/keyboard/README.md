@@ -48,6 +48,12 @@ that times motion with it. Everything here is internal to
   one-finger tap the browser would turn into focus, cancels the tap's
   default, lets the click guard (utils/clickGuard.ts) take the mouse events
   Safari may still send, and lets `deliver` focus the field.
+  `findTextEntryControl(target, region)` names the field a tap reaches: the
+  control the target is or labels, or the control of the input container
+  whose own surface the target is on, such as its padding or an icon.
+  `useInputContainer` registers each container with its control
+  (`utils/inputContainers.ts`). A target on another control in the
+  container, such as a clear button, names none.
   `focusAtPoint(field, x, y)` focuses it with `preventScroll` and puts the
   caret under the finger. `deliverTap` (`keyboardTarget.ts`) does that and
   raises the tap's click once, since the cancelled tap raises none; the
@@ -157,7 +163,9 @@ that times motion with it. Everything here is internal to
   its own element and keeps its focused field `offset` above the keyboard. A
   target lifts only while a field inside it has focus, and rides back down once
   focus leaves; one ride moves a target at a time. Where the path places the
-  field, focus moves and first taps arrive without the browser's reveal; a
+  field, focus moves and first taps arrive without the browser's reveal. A tap
+  on the field's label or on its input container's own surface counts as a tap
+  on the field, and the page's covered fields share one document tap route; a
   claimed tap raises the tap's click on the field afterwards, a synthetic touch
   `PointerEvent` (a `MouseEvent` where none exists), so a caller's `onClick`
   still runs once. A pan the browser makes on its own after a report, as after a

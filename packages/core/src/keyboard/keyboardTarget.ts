@@ -1120,11 +1120,56 @@ function revealWithin(
     : {reveal: scroller, unplaced: 'fixed'};
 }
 
+// The page's one tap route for its covered fields: one document listener
+// names the field a tap reaches once, then asks that field's path.
+const pageFieldTaps = sharedWeakMap<
+  Document,
+  {stop: () => void; fields: Map<HTMLElement, () => boolean>}
+>('keyboard/keyboard-target/page-field-taps', 1);
+
+// Claims a tap that reaches `field`, while `canClaim` says so, until the
+// returned call.
+function claimPageFieldTaps(
+  field: HTMLElement,
+  canClaim: () => boolean,
+): () => void {
+  const doc = field.ownerDocument;
+  let shared = pageFieldTaps.get(doc);
+  if (shared == null) {
+    const root = doc.documentElement;
+    const fields = new Map<HTMLElement, () => boolean>();
+    const stop = claimTapFocus(root, {
+      claim: touched => {
+        const control = findTextEntryControl(touched, root);
+        return control != null && fields.get(control)?.() === true
+          ? control
+          : null;
+      },
+      deliver: deliverTap,
+    });
+    shared = {stop, fields};
+    pageFieldTaps.set(doc, shared);
+  }
+  shared.fields.set(field, canClaim);
+  return () => {
+    const current = pageFieldTaps.get(doc);
+    if (current == null || current.fields.get(field) !== canClaim) {
+      return;
+    }
+    current.fields.delete(field);
+    if (current.fields.size === 0) {
+      current.stop();
+      pageFieldTaps.delete(doc);
+    }
+  };
+}
+
 /**
  * Keeps `field` above the on-screen keyboard until the returned call. On focus,
  * `placementOf` decides who moves it. A claimed focus move or tap arrives
- * without the browser's reveal. Where no placement fits, the browser's own
- * reveal stays.
+ * without the browser's reveal. A tap on the field's label or on its input
+ * container's own surface counts as a tap on the field. Where no placement
+ * fits, the browser's own reveal stays.
  *
  * @example
  * ```
@@ -1147,14 +1192,14 @@ export function keepFieldAboveKeyboard(
         ? field
         : null,
   });
-  // A first tap moves focus from nothing, so no blur claims it.
-  const stopTaps = claimTapFocus(field, {
-    claim: () =>
-      doc.activeElement !== field && placementOf(field, offset, win) != null
-        ? field
-        : null,
-    deliver: deliverTap,
-  });
+  // A first tap moves focus from nothing, so no blur claims it. The page's
+  // one tap route also hears a tap on the field's label or on its input
+  // container's own surface.
+  const stopTaps = claimPageFieldTaps(
+    field,
+    () =>
+      doc.activeElement !== field && placementOf(field, offset, win) != null,
+  );
   let stopSession: ((isFinal?: boolean) => void) | null = null;
   // A ride a blur stopped can still wait for the keyboard to go; a detach
   // ends it at once.

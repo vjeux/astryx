@@ -6,7 +6,9 @@
  * @output Proves the focused input stays above the on-screen keyboard with no
  *   prop. Its scroller reveals it in the keyboard's report, and a fixed bar at
  *   the viewport's bottom rides with it. A scroll area that cannot bring it up
- *   leaves the browser's reveal. Nothing attaches under a mouse
+ *   leaves the browser's reveal. A tap on its padding counts as a tap on it,
+ *   and a tap on its clear button stays the button's. Nothing attaches under a
+ *   mouse
  * @position Keyboard tests of TextInput.tsx
  */
 
@@ -27,6 +29,22 @@ afterEach(() => {
   keyboard = null;
   vi.restoreAllMocks();
 });
+
+// A one-finger tap's touch event on `target`. Returns whether the browser
+// would still carry out the event's default.
+function touch(target: Element, type: 'touchstart' | 'touchend'): boolean {
+  const event = new Event(type, {bubbles: true, cancelable: true});
+  const point = {identifier: 0, clientX: 280, clientY: 680};
+  Object.assign(event, {
+    touches: type === 'touchend' ? [] : [point],
+    changedTouches: [point],
+  });
+  let delivered = true;
+  act(() => {
+    delivered = target.dispatchEvent(event);
+  });
+  return delivered;
+}
 
 // A box at `top`, moved by the bar's ride as a browser draws it.
 function boxAt(element: Element, top: number, height: number) {
@@ -185,6 +203,36 @@ it('reveals through the document an input in a floating panel the keyboard cover
     top: bottom - 176 + FIELD_OFFSET - (bottom - 300),
     behavior: 'instant',
   });
+});
+
+it("claims a tap on the input's padding, outside the input, and focuses it without the browser's reveal", () => {
+  keyboard = installKeyboardTestDouble();
+  render(<TextInput label="Notes" value="" onChange={() => {}} />);
+  const field = screen.getByRole('textbox');
+  boxAt(field, 660, 40);
+  const container = field.closest('[data-pressable-container]')!;
+  expect(container).not.toBe(field);
+  const focus = vi.spyOn(field, 'focus');
+  touch(container, 'touchstart');
+  // The tap's default is cancelled, so the browser neither focuses the input
+  // nor reveals it by scrolling the page.
+  expect(touch(container, 'touchend')).toBe(false);
+  expect(focus).toHaveBeenCalledWith({preventScroll: true});
+  expect(field).toHaveFocus();
+});
+
+it('leaves a tap on the clear button to the button', () => {
+  keyboard = installKeyboardTestDouble();
+  render(
+    <TextInput label="Notes" value="Draft" onChange={() => {}} hasClear />,
+  );
+  const field = screen.getByRole('textbox');
+  boxAt(field, 660, 40);
+  const focus = vi.spyOn(field, 'focus');
+  const clear = screen.getByRole('button');
+  touch(clear, 'touchstart');
+  expect(touch(clear, 'touchend')).toBe(true);
+  expect(focus).not.toHaveBeenCalled();
 });
 
 it('attaches nothing under a mouse or a trackpad', () => {

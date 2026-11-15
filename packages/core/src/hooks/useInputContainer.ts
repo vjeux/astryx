@@ -5,7 +5,8 @@
 /**
  * @file useInputContainer.ts
  * @input Container ref, input ref
- * @output onClick and onMouseUp handlers for the input container wrapper
+ * @output onClick and onMouseUp handlers for the input container wrapper; the
+ *   container's registration as the input's container while both are mounted
  * @position Hook for input wrapper containers that delegate focus to the inner input/textarea
  *
  * Uses useClickableContainer to safely handle nested interactive elements
@@ -13,8 +14,9 @@
  * clicking non-interactive areas (icons, padding, status indicators).
  */
 
-import {useCallback, type RefObject} from 'react';
+import {useCallback, useEffect, type RefObject} from 'react';
 import {useClickableContainer} from './useClickableContainer';
+import {registerInputContainer} from '../utils/inputContainers';
 
 /**
  * Input types that should receive `.focus()` when the container is clicked.
@@ -131,6 +133,17 @@ export function useInputContainer({
       (input as unknown as {focus: () => void}).focus();
     }
   }, [inputRef]);
+
+  // Synchronizes the input-container registry that the keyboard module reads:
+  // a tap on the container's own surface counts as a tap on the input. It runs
+  // at every commit, since either node can be replaced.
+  useEffect(() => {
+    const container = containerRef.current;
+    const input = inputRef.current;
+    return container != null && input instanceof HTMLElement
+      ? registerInputContainer(container, input)
+      : undefined;
+  });
 
   return useClickableContainer({
     containerRef,

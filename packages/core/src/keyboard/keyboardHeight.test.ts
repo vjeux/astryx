@@ -24,6 +24,7 @@ import {
   layoutViewportHeight,
 } from '../utils/layoutViewport';
 import {sharedWeakMap} from '../utils/sharedRealm';
+import {registerInputContainer} from '../utils/inputContainers';
 import {
   claimTapFocus,
   findTextEntryControl,
@@ -965,6 +966,31 @@ describe('the browser\u2019s own reveal pan (FR4)', () => {
 });
 
 describe('the text-entry predicate', () => {
+  it("gives an input container's control for a target on the container's own surface, and none for another control in it", () => {
+    const container = document.createElement('div');
+    const icon = document.createElement('span');
+    const input = document.createElement('input');
+    const clear = document.createElement('button');
+    const clearIcon = document.createElement('span');
+    clear.append(clearIcon);
+    container.append(icon, input, clear);
+    document.body.append(container);
+    const stop = registerInputContainer(container, input);
+    try {
+      expect(findTextEntryControl(container, document.body)).toBe(input);
+      expect(findTextEntryControl(icon, document.body)).toBe(input);
+      expect(findTextEntryControl(clear, document.body)).toBeNull();
+      expect(findTextEntryControl(clearIcon, document.body)).toBeNull();
+      // A region that does not hold the target gives nothing.
+      expect(findTextEntryControl(icon, clear)).toBeNull();
+      stop();
+      expect(findTextEntryControl(icon, document.body)).toBeNull();
+    } finally {
+      stop();
+      container.remove();
+    }
+  });
+
   it('reads an inputmode="none" field as no text entry, as the keyboard layout guide does', () => {
     const input = document.createElement('input');
     input.setAttribute('inputmode', 'none');

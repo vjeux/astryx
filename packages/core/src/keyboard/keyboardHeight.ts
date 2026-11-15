@@ -18,6 +18,8 @@
 
 import {armClickGuard} from '../utils/clickGuard';
 import {matchesMediaQuery} from '../utils/coarsePointer';
+import {hasInteractiveAncestor} from '../hooks/useClickableContainer';
+import {inputContainerControl} from '../utils/inputContainers';
 import {getTouches, subscribeInput} from '../utils/inputStream';
 import {isElement, isHTMLElement, isNode} from '../utils/nodeType';
 import {layoutViewportHeight} from '../utils/layoutViewport';
@@ -351,7 +353,12 @@ export function isTextEntryControl(
   return element.matches('[contenteditable]:not([contenteditable="false"])');
 }
 
-/** The text-entry control inside `container` that `target` is or labels. */
+/**
+ * The text-entry control inside `container` that `target` is or labels. A
+ * target on an input container's own surface, such as its padding or an
+ * icon, gives that container's control. A target on another control in it,
+ * such as a clear button, gives none.
+ */
 export function findTextEntryControl(
   target: EventTarget | null,
   container: HTMLElement,
@@ -368,10 +375,26 @@ export function findTextEntryControl(
   }
 
   const label = target.closest('label');
-  const control = isHTMLElement(label) ? label.control : null;
-  return container.contains(control) && isTextEntryControl(control)
-    ? control
-    : null;
+  const labelled = isHTMLElement(label) ? label.control : null;
+  if (container.contains(labelled) && isTextEntryControl(labelled)) {
+    return labelled;
+  }
+
+  for (
+    let node: Element | null = target;
+    node != null && container.contains(node);
+    node = node.parentElement
+  ) {
+    const control = inputContainerControl(node);
+    if (control != null) {
+      return container.contains(control) &&
+        isTextEntryControl(control) &&
+        !hasInteractiveAncestor(target, node)
+        ? control
+        : null;
+    }
+  }
+  return null;
 }
 
 /** The caller's rules for refuseFocusReveal. */
@@ -774,10 +797,11 @@ export function claimTapFocus(
     region.removeEventListener('touchcancel', stopFollowing);
   };
   function onMove(event: TouchEvent) {
-    const touch = event.touches[0];
+    const touches: TouchList | undefined = event.touches;
+    const touch = touches?.[0];
     if (
       start == null ||
-      event.touches.length !== 1 ||
+      touches?.length !== 1 ||
       touch == null ||
       // Past the press slop, the touch is the browser's to scroll, not a tap
       // on a field.
@@ -788,7 +812,8 @@ export function claimTapFocus(
     }
   }
   function onEnd(event: TouchEvent) {
-    const touch = event.changedTouches[0];
+    const changed: TouchList | undefined = event.changedTouches;
+    const touch = changed?.[0];
     const tap = start;
     stopFollowing();
     // Still the same field, still without focus.
@@ -810,9 +835,11 @@ export function claimTapFocus(
       stopFollowing();
       return;
     }
-    const touch = event.touches[0];
+    // A script's own touch event can come without a touch list. It is no tap.
+    const touches: TouchList | undefined = event.touches;
+    const touch = touches?.[0];
     const control =
-      event.touches.length === 1 && touch != null ? claim(event.target) : null;
+      touches?.length === 1 && touch != null ? claim(event.target) : null;
     if (control == null || touch == null) {
       return;
     }

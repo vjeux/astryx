@@ -6,7 +6,8 @@
  * @output Proves the focused number input stays above the on-screen keyboard
  *   with no prop. Its scroller reveals it in the keyboard's report, and a fixed
  *   bar at the viewport's bottom rides with it. A scroll area that cannot bring
- *   it up leaves the browser's reveal. Nothing attaches under a mouse
+ *   it up leaves the browser's reveal. A tap on its padding counts as a tap on
+ *   it. Nothing attaches under a mouse
  * @position Keyboard tests of NumberInput.tsx
  */
 
@@ -187,6 +188,33 @@ it('reveals through the document a number input in a floating panel the keyboard
     top: bottom - 176 + FIELD_OFFSET - (bottom - 300),
     behavior: 'instant',
   });
+});
+
+it("claims a tap on the number input's padding, outside it, and focuses it without the browser's reveal", () => {
+  keyboard = installKeyboardTestDouble();
+  render(<NumberInput label="Count" value={null} onChange={() => {}} />);
+  const field = screen.getByRole('spinbutton');
+  boxAt(field, 660, 40);
+  const container = field.closest('[data-pressable-container]')!;
+  expect(container).not.toBe(field);
+  const focus = vi.spyOn(field, 'focus');
+  const tap = (type: 'touchstart' | 'touchend') => {
+    const event = new Event(type, {bubbles: true, cancelable: true});
+    const point = {identifier: 0, clientX: 280, clientY: 680};
+    Object.assign(event, {
+      touches: type === 'touchend' ? [] : [point],
+      changedTouches: [point],
+    });
+    let delivered = true;
+    act(() => {
+      delivered = container.dispatchEvent(event);
+    });
+    return delivered;
+  };
+  tap('touchstart');
+  expect(tap('touchend')).toBe(false);
+  expect(focus).toHaveBeenCalledWith({preventScroll: true});
+  expect(field).toHaveFocus();
 });
 
 it('attaches nothing under a mouse or a trackpad', () => {

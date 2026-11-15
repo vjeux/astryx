@@ -24,6 +24,24 @@ import {
   nearestScroller,
   registerKeyboardTarget,
 } from './keyboardTarget';
+import {registerInputContainer} from '../utils/inputContainers';
+
+// A one-finger touch event at one point, as a tap raises it.
+function tapEvent(type: string): Event {
+  const event = new Event(type, {bubbles: true, cancelable: true});
+  const point = {
+    identifier: 0,
+    clientX: 40,
+    clientY: 680,
+    screenX: 41,
+    screenY: 742,
+  };
+  Object.assign(event, {
+    touches: type === 'touchend' ? [] : [point],
+    changedTouches: [point],
+  });
+  return event;
+}
 
 type FakeViewport = EventTarget & {
   height: number;
@@ -1811,6 +1829,103 @@ describe('keepFieldAboveKeyboard', () => {
       click.screenY,
       click.detail,
     ]).toEqual([40, 680, 41, 742, 1]);
+  });
+
+  it("claims a tap on the field's input container outside the field, and focuses the field without the browser's reveal", () => {
+    const wrapper = element('div', {top: 650, height: 60});
+    const icon = element('span', {top: 660, height: 40});
+    const input = element('input', {top: 660, height: 40});
+    wrapper.append(icon, input);
+    document.body.append(wrapper);
+    track(registerInputContainer(wrapper, input));
+    track(keepFieldAboveKeyboard(input));
+    const onField = vi.fn();
+    input.addEventListener('click', onField);
+    const focus = vi.spyOn(input, 'focus');
+    act(() => {
+      icon.dispatchEvent(tapEvent('touchstart'));
+    });
+    let delivered = true;
+    act(() => {
+      delivered = icon.dispatchEvent(tapEvent('touchend'));
+    });
+    // The tap's default is cancelled, so the browser neither focuses the
+    // field nor reveals it.
+    expect(delivered).toBe(false);
+    expect(focus).toHaveBeenCalledWith({preventScroll: true});
+    expect(document.activeElement).toBe(input);
+    expect(onField).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a tap on another control in the input container, such as a clear button, to that control', () => {
+    const wrapper = element('div', {top: 650, height: 60});
+    const input = element('input', {top: 660, height: 40});
+    const clear = element('button', {top: 660, height: 40});
+    wrapper.append(input, clear);
+    document.body.append(wrapper);
+    track(registerInputContainer(wrapper, input));
+    track(keepFieldAboveKeyboard(input));
+    const focus = vi.spyOn(input, 'focus');
+    act(() => {
+      clear.dispatchEvent(tapEvent('touchstart'));
+    });
+    let delivered = false;
+    act(() => {
+      delivered = clear.dispatchEvent(tapEvent('touchend'));
+    });
+    expect(delivered).toBe(true);
+    expect(focus).not.toHaveBeenCalled();
+    expect(document.activeElement).not.toBe(input);
+  });
+
+  it("claims a tap on a page field's label and focuses the field without the browser's reveal", () => {
+    const label = element('label', {top: 620, height: 30});
+    const input = element('input', {top: 660, height: 40});
+    input.id = 'notes';
+    label.setAttribute('for', 'notes');
+    label.textContent = 'Notes';
+    document.body.append(label, input);
+    track(keepFieldAboveKeyboard(input));
+    const focus = vi.spyOn(input, 'focus');
+    act(() => {
+      label.dispatchEvent(tapEvent('touchstart'));
+    });
+    let delivered = true;
+    act(() => {
+      delivered = label.dispatchEvent(tapEvent('touchend'));
+    });
+    expect(delivered).toBe(false);
+    expect(focus).toHaveBeenCalledWith({preventScroll: true});
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('shares one document tap route among its page fields', () => {
+    const add = vi.spyOn(document.documentElement, 'addEventListener');
+    const remove = vi.spyOn(document.documentElement, 'removeEventListener');
+    const first = element('input', {top: 600, height: 40});
+    const second = element('input', {top: 660, height: 40});
+    document.body.append(first, second);
+    const stopFirst = keepFieldAboveKeyboard(first);
+    const stopSecond = keepFieldAboveKeyboard(second);
+    const starts = (spy: typeof add) =>
+      spy.mock.calls.filter(([type]) => type === 'touchstart').length;
+    let stopped = 0;
+    try {
+      expect(starts(add)).toBe(1);
+      stopFirst();
+      stopped = 1;
+      expect(starts(remove)).toBe(0);
+      stopSecond();
+      stopped = 2;
+      expect(starts(remove)).toBe(1);
+    } finally {
+      if (stopped < 1) {
+        stopFirst();
+      }
+      if (stopped < 2) {
+        stopSecond();
+      }
+    }
   });
 
   it("leaves a document scroll the app makes while a docked bar's field has focus, which Safari carries out as a visual-viewport offset", () => {
