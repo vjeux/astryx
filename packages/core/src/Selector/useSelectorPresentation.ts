@@ -11,7 +11,6 @@
 
 import {
   useCallback,
-  useEffect,
   useRef,
   useState,
   type FocusEvent,
@@ -30,6 +29,8 @@ import {
 } from '../hooks/useAdaptivePresentation';
 import type {InteractionModalityTracking} from '../utils/interactionModality';
 import {useFocusReturnVisibility} from '../hooks/useFocusReturnVisibility';
+import {useOutsidePress} from '../Layer/outsidePress';
+import {isShadowRoot} from '../utils/nodeType';
 import {
   createPresentationHold,
   usePresentationHold,
@@ -67,6 +68,9 @@ interface SelectorPresentationController {
   popover: UsePopoverReturn;
   show: () => boolean;
 }
+
+/** The browser light-dismisses the list; the press watch only reports. */
+function closesNothing(): void {}
 
 export function useSelectorPresentation({
   presentation,
@@ -108,19 +112,16 @@ export function useSelectorPresentation({
     prepareFocusReturn,
     resetFocusReturn,
   } = useFocusReturnVisibility(triggerModality);
-  // Whether the last press while the list is open landed inside the list. A
-  // press inside the list, such as a pick, moves focus to the list's nearest
-  // focusable container, such as a dialog's content box. That focus is no
-  // choice of the person.
+  // A press inside the list, such as a pick, can focus a container around it,
+  // such as a dialog's content box. The person did not choose that focus.
   const isLastPressInListRef = useRef(false);
-  const stopPressWatchRef = useRef<(() => void) | null>(null);
+  const pressWatch = useOutsidePress();
 
   const handlePopoverHide = useCallback(() => {
     onHideRef.current();
     const trigger = triggerRef.current;
     const isPressInList = isLastPressInListRef.current;
-    stopPressWatchRef.current?.();
-    stopPressWatchRef.current = null;
+    pressWatch.stop();
     // A light dismiss by a press on another control has already moved focus
     // there. Taking it back would send the next key to this closed Selector.
     // Escape, a press inside the list, or a press on nothing focusable returns
@@ -141,34 +142,37 @@ export function useSelectorPresentation({
     }
     prepareFocusReturn();
     trigger?.focus();
-  }, [isFocusReturnAlways, onHideRef, prepareFocusReturn, triggerRef]);
+  }, [
+    isFocusReturnAlways,
+    onHideRef,
+    prepareFocusReturn,
+    pressWatch,
+    triggerRef,
+  ]);
   const handlePopoverShow = useCallback(() => {
     didShowPopoverRef.current = true;
     resetFocusReturn();
     isLastPressInListRef.current = false;
-    stopPressWatchRef.current?.();
-    const doc = triggerRef.current?.ownerDocument ?? document;
-    const onPress = (event: PointerEvent) => {
-      isLastPressInListRef.current =
-        popoverContentRef.current?.current?.contains(event.target as Node) ===
-        true;
-    };
-    doc.addEventListener('pointerdown', onPress, {
-      capture: true,
-      passive: true,
-    });
-    stopPressWatchRef.current = () => {
-      doc.removeEventListener('pointerdown', onPress, {capture: true});
-    };
+    const trigger = triggerRef.current;
+    if (trigger != null) {
+      const root = trigger.getRootNode();
+      pressWatch.start(
+        trigger,
+        path => {
+          const list = popoverContentRef.current?.current;
+          return list != null && path.includes(list);
+        },
+        closesNothing,
+        {
+          root: isShadowRoot(root) ? root : null,
+          onPress: isInside => {
+            isLastPressInListRef.current = isInside;
+          },
+        },
+      );
+    }
     onShowRef.current();
-  }, [onShowRef, resetFocusReturn, triggerRef]);
-  // Effect: removes the press watch's document listener on unmount.
-  useEffect(
-    () => () => {
-      stopPressWatchRef.current?.();
-    },
-    [],
-  );
+  }, [onShowRef, pressWatch, resetFocusReturn, triggerRef]);
   const popover = usePopoverInternal({
     ...popoverOptions,
     onHide: handlePopoverHide,
