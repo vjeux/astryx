@@ -62,6 +62,7 @@ import type {
   TouchSample,
 } from './types';
 import {DEFAULT_ENVIRONMENT} from './types';
+import {internals} from './recognizerInternals';
 
 /**
  * A deadline's timer counts as late when it runs this long after it was due.
@@ -80,7 +81,6 @@ const LATE_INPUT_MS = 33;
  * three frames at 60 Hz.
  */
 const LATE_INPUT_WAIT_MS = 50;
-import {internals} from './recognizerInternals';
 
 export interface GestureClock {
   now(): number;
