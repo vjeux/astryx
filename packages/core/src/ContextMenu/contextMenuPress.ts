@@ -101,8 +101,8 @@ export class ContextMenuPressRecognizer extends LongPressGestureRecognizer {
 
   /**
    * The event clock at this moment: the timestamp of the input (or the
-   * deadline of the timer) being processed. Read it from a listener to
-   * place what the transition starts at the time it happened.
+   * deadline of the timer) being processed. The press feedback reads it from
+   * a transition listener, so its spring-back starts at the press's own time.
    */
   get clockTime(): number {
     return this.now();
