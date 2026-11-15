@@ -7,7 +7,7 @@
  * @output Interaction and animation proofs for a context menu that a held
  *   finger opens on UIKit's timeline. They cover the menu's moments, on
  *   time and behind a blocked main thread. They also cover the page under
- *   the finger, a pan outside and a storyboard of the press
+ *   the finger and a pan outside
  * @position Interaction specs of packages/core/src/ContextMenu; Chromium's
  *   finger stands for Android's engine, and WebKit's for iOS
  */
