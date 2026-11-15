@@ -86,6 +86,30 @@ export interface GestureClock {
   now(): number;
   setTimeout(callback: () => void, ms: number): unknown;
   clearTimeout(handle: unknown): void;
+  /**
+   * Whether the browser holds input it has not dispatched yet. Null when the
+   * browser cannot tell.
+   */
+  isInputPending?(): boolean | null;
+}
+
+interface InputScheduling {
+  isInputPending?: (options?: {includeContinuous?: boolean}) => boolean;
+}
+
+/**
+ * Whether the browser behind `navigator` holds input it has not dispatched,
+ * moves included. Null where it cannot tell: only Chromium can.
+ */
+export function inputPendingIn(
+  navigator: Navigator | undefined,
+): boolean | null {
+  const scheduling = (navigator as {scheduling?: InputScheduling} | undefined)
+    ?.scheduling;
+  if (scheduling?.isInputPending == null) {
+    return null;
+  }
+  return scheduling.isInputPending({includeContinuous: true});
 }
 
 /** The browser's clock: `performance.now()`, the base of `event.timeStamp`. */
@@ -94,6 +118,8 @@ export const browserClock: GestureClock = {
     typeof performance === 'undefined' ? Date.now() : performance.now(),
   setTimeout: (callback, ms) => setTimeout(callback, ms),
   clearTimeout: handle => clearTimeout(handle as ReturnType<typeof setTimeout>),
+  isInputPending: () =>
+    inputPendingIn(typeof navigator === 'undefined' ? undefined : navigator),
 };
 
 /**
@@ -1142,6 +1168,15 @@ export class GestureArena {
   }
 
   /**
+   * Whether input can still wait behind the page's work. A late timer alone
+   * does not show it: a phone's timers run late on an idle page too. Where
+   * the browser cannot tell, assume it can.
+   */
+  private mayHoldQueuedInput(): boolean {
+    return this.clock.isInputPending?.() ?? true;
+  }
+
+  /**
    * One external entry: run the timers due by `time`, then `body`, then
    * settle (release held deliveries, reset finished recognizers, forget
    * finished touches). Re-entrant calls (a listener feeding input) run
@@ -1289,7 +1324,8 @@ export class GestureArena {
       if (
         this.isLatestContactFingerOrPen &&
         after !== 'yield' &&
-        (isLateTimer || this.hasLateInputBefore(earliest, now))
+        ((isLateTimer && this.mayHoldQueuedInput()) ||
+          this.hasLateInputBefore(earliest, now))
       ) {
         // Behind a blocked page, input from before the deadline can still be
         // queued. A touch move can also reach the page a frame after other

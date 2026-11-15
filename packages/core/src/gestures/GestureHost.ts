@@ -138,6 +138,7 @@ import {
 import {
   browserClock,
   GestureArena,
+  inputPendingIn,
   type ArenaBeganInput,
   type ClickDisposition,
   type GestureArenaOptions,
@@ -693,6 +694,7 @@ function documentClock(doc: Document): GestureClock {
   return {
     ...browserClock,
     now: () => clockOf(doc)?.now() ?? browserClock.now(),
+    isInputPending: () => inputPendingIn(view.navigator),
   };
 }
 
