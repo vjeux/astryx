@@ -175,6 +175,25 @@ describe('a timer that fires late', () => {
     arena.ended([{id: 1, x: 0, y: 0, time: 870}]);
   });
 
+  it('runs a deadline whose timer runs 120 ms late after one task, with no wait', () => {
+    const {clock, arena, log} = pressArena();
+    // A phone's timers run this late on an idle page, with nothing queued.
+    clock.runTask(620);
+    clock.runTask(620);
+    expect(log).toContain('press:began@500');
+    arena.ended([{id: 1, x: 0, y: 0, time: 640}]);
+  });
+
+  it('waits for a deadline whose timer runs more than 150 ms late', () => {
+    const {clock, arena, log} = pressArena();
+    clock.runTask(651);
+    clock.runTask(651);
+    expect(log.some(entry => entry.startsWith('press:began'))).toBe(false);
+    clock.runTask(701);
+    expect(log).toContain('press:began@500');
+    arena.ended([{id: 1, x: 0, y: 0, time: 720}]);
+  });
+
   it('runs a deadline that came due during a wait just after it, with no second wait', () => {
     const clock = new TaskClock();
     const log: string[] = [];
