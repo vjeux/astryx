@@ -63,10 +63,10 @@ const styles = stylex.create({
     insetInlineStart: 0,
     inlineSize: '100%',
     // No native pan on either axis: horizontal drags are the pager's and
-    // vertical ones the sheet's, both in JavaScript, as on the sheet's own
-    // surface. The pager leaves the viewport `pan-y`. In a sheet that lets the
-    // browser start a vertical scroll and throttle the sheet's drag moves.
-    // Pinch-zoom stays the browser's.
+    // vertical drags are the sheet's, both in JavaScript, as on the sheet's
+    // own surface. The pager's horizontal pan sets the viewport to `pan-y`.
+    // In a sheet, `pan-y` lets the browser start a vertical scroll and
+    // throttle the sheet's drag moves. Pinch-zoom stays the browser's.
     touchAction: 'pinch-zoom',
   },
   /** Each pane on its own layer. */

@@ -756,7 +756,7 @@ test('in the sheet, a drag is decided once it has moved 10 px either way: slow 3
 
   // 35°, slow (4 px steps): the sideways travel reaches 10 px first. The
   // grid follows the finger, the sheet stays, and the slow release settles
-  // back on September.
+  // back on October.
   const shallow = await play(
     drag(center, along(35, 145), {durationMs: 500, restMs: 150}),
   );

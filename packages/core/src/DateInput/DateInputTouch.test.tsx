@@ -225,7 +225,6 @@ function withLayout<T>(fn: () => T): T {
   }
 }
 
-/** As `withLayout`, around work that waits on timers. */
 beforeAll(() => {
   Element.prototype.scrollTo = vi.fn();
   // jsdom's <dialog> implements none of these.

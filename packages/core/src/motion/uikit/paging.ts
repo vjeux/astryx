@@ -127,12 +127,16 @@ export const paging = {
   /**
    * In a sheet, a horizontal pager's pan begins only for a drag within atan(1 ÷
    * this) of horizontal (26.6° for 2). A steeper drag goes to the sheet.
-   * Between 26.6° and 45°, neither moves.
+   * Between 26.6° and 45°, neither moves. The date picker's calendar pager
+   * does not use this ratio. It takes the split M-DP01 measured
+   * (MEASUREMENTS.md): the first axis to travel 10 pt decides the drag.
    * @source measured: UIKit lab, iOS 26.2 simulator, Oct 23 2026. A scroll
    *   view's directional lock holds the major axis up to 25° and frees it from
    *   30°. An inline calendar pager in a sheet pages at 20° from horizontal. At
    *   35° and 45°, it moves neither itself nor the sheet, and it leaves 55° to
-   *   the sheet.
+   *   the sheet. M-DP01 (Oct 25 2026) replaces these calendar readings: logged
+   *   per touch sample, the calendar takes a drag whose horizontal travel
+   *   reaches the pan's hysteresis first.
    */
   panAxisRatio: 2,
   /**
