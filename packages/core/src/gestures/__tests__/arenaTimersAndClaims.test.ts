@@ -19,10 +19,15 @@ import {createHarness} from './harness';
 /** A clock whose timers run one task at a time, as an event loop does. */
 class TaskClock implements GestureClock {
   time = 0;
+  /** What the browser reports about input it holds; null when it cannot tell. */
+  inputPending: boolean | null = null;
   private nextId = 1;
   private readonly tasks = new Map<number, {at: number; run: () => void}>();
   now(): number {
     return this.time;
+  }
+  isInputPending(): boolean | null {
+    return this.inputPending;
   }
   setTimeout(run: () => void, delay: number): number {
     const id = this.nextId++;
@@ -167,6 +172,40 @@ describe('a timer that fires late', () => {
 
   it('waits for a pen’s late deadline as for a finger’s', () => {
     const {clock, arena, log} = pressArena('pen');
+    clock.runTask(800);
+    clock.runTask(800);
+    expect(log.some(entry => entry.startsWith('press:began'))).toBe(false);
+    clock.runTask(850);
+    expect(log).toContain('press:began@500');
+    arena.ended([{id: 1, x: 0, y: 0, time: 870}]);
+  });
+
+  it('runs a late deadline after one task, with no wait, when the browser holds no input', () => {
+    const {clock, arena, log} = pressArena();
+    // The timer ran 300 ms late, but no input waits behind it.
+    clock.inputPending = false;
+    clock.runTask(800);
+    clock.runTask(800);
+    expect(log).toContain('press:began@500');
+    arena.ended([{id: 1, x: 0, y: 0, time: 820}]);
+  });
+
+  it('waits for a late deadline while the browser holds input: a drift queued behind the block still fails the press', () => {
+    const {clock, arena, log} = pressArena();
+    clock.inputPending = true;
+    clock.runTask(800);
+    clock.runTask(800);
+    clock.time = 816;
+    arena.moved([{id: 1, x: 40, y: 0, time: 300}]);
+    clock.runTask(850);
+    expect(log.some(entry => entry.startsWith('press:began'))).toBe(false);
+    expect(log).toContain('press:failed@300');
+    arena.ended([{id: 1, x: 40, y: 0, time: 870}]);
+  });
+
+  it('keeps the wait for a late deadline where the browser cannot tell whether it holds input', () => {
+    const {clock, arena, log} = pressArena();
+    clock.inputPending = null;
     clock.runTask(800);
     clock.runTask(800);
     expect(log.some(entry => entry.startsWith('press:began'))).toBe(false);
