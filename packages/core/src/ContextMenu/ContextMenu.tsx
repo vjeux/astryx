@@ -759,9 +759,6 @@ export function ContextMenu({
     }
   }, [layer, usesBottomSheet]);
 
-  // A client point in the cursor anchor's coordinates: measured from its
-  // containing block, as `openAtLocalPoint` reads them. It stays inside that
-  // box.
   const toAnchorLocal = useCallback(
     (point: {x: number; y: number}): {x: number; y: number} => {
       const rect = getAnchorBaseRect();
