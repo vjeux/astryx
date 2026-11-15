@@ -188,7 +188,8 @@ export class GestureArena {
   private lateInput: {time: number; arrivedAt: number} | null = null;
   /**
    * Whether the latest contact is a finger or a pen. Only then does a late
-   * deadline wait for queued input; a mouse keeps the one-task yield.
+   * deadline wait for queued input. While a mouse is the latest contact, every
+   * late deadline keeps the one-task yield.
    */
   private isLatestContactFingerOrPen = false;
   /**
