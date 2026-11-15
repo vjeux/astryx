@@ -4393,6 +4393,18 @@ describe('contextRef anchor-name churn (#5398)', () => {
   });
 });
 
+/** The fields of a React fiber that the hook-count case reads. */
+interface FiberProbe {
+  readonly type: unknown;
+  readonly return: FiberProbe | null;
+  readonly memoizedState: HookProbe | null;
+}
+
+/** One hook in a fiber's list. */
+interface HookProbe {
+  readonly next: HookProbe | null;
+}
+
 describe('show() anchor readiness (#5398)', () => {
   // jsdom reports every box as 0x0 and has no layout engine, so each piece of
   // one is stubbed: per-element boxes, a manual frame queue, a ResizeObserver
@@ -4541,6 +4553,42 @@ describe('show() anchor readiness (#5398)', () => {
       </>
     );
   }
+
+  it('adds no hook to a layer that never waits in a closed dialog', () => {
+    // Every Button carries a layer for its tooltip, so each hook of an idle
+    // layer costs every Button. The closed-dialog wait mounts its probe only
+    // while it decides, so an idle layer keeps the count it has without it.
+    function IdleHarness() {
+      const layer = useLayerInternal({mode: 'context'});
+      return (
+        <>
+          <button type="button" data-testid="a" ref={layer.ref}>
+            A
+          </button>
+          {layer.render(<span>Layer content</span>)}
+        </>
+      );
+    }
+    const {getByTestId} = render(<IdleHarness />);
+    const trigger = getByTestId('a');
+    const fiberKey = Object.keys(trigger).find(key =>
+      key.startsWith('__reactFiber$'),
+    );
+    let fiber: FiberProbe | null =
+      (trigger as unknown as Record<string, FiberProbe | undefined>)[
+        fiberKey ?? ''
+      ] ?? null;
+    while (fiber != null && fiber.type !== IdleHarness) {
+      fiber = fiber.return;
+    }
+    let hook = fiber?.memoizedState ?? null;
+    let hookCount = 0;
+    while (hook != null) {
+      hookCount += 1;
+      hook = hook.next;
+    }
+    expect(hookCount).toBe(70);
+  });
 
   it('opens in the same task when the trigger already has a box', () => {
     const {getByTestId} = render(<Harness target="a" />);
@@ -4893,10 +4941,11 @@ describe('show() anchor readiness (#5398)', () => {
     const rendersBefore = renders;
 
     rerender(<ControlledInFlowHarness isOpen />);
-    // One render for the new prop, one for the commit the wait asked for, and
-    // one for the open that commit decided. No frame runs before it.
+    // One render for the new prop, and one for the open that the next commit
+    // decided. That commit renders the layer's slot alone. No frame runs
+    // before the open.
     expect(getByTestId('state')).toHaveTextContent('open');
-    expect(renders - rendersBefore).toBe(3);
+    expect(renders - rendersBefore).toBe(2);
     expect(frames).toHaveLength(0);
   });
 

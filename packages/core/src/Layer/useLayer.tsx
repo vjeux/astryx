@@ -989,21 +989,52 @@ interface ContextLayerMount {
 interface ContextLayerMountStore {
   readonly get: () => ContextLayerMount | null;
   readonly set: (mount: ContextLayerMount | null) => void;
+  /** The slot's snapshot: the mount, and a decision that waits for a commit. */
+  readonly getSlot: () => ContextLayerSlotState;
+  /**
+   * Asks the slot for a commit that runs `probe`. It is false when no slot
+   * renders this layer.
+   */
+  readonly requestProbe: (probe: () => void) => boolean;
+  readonly clearProbe: (probe: () => void) => void;
   readonly subscribe: (onChange: () => void) => () => void;
 }
 
+interface ContextLayerSlotState {
+  readonly mount: ContextLayerMount | null;
+  readonly probe: (() => void) | null;
+}
+
 function createContextLayerMountStore(): ContextLayerMountStore {
-  let mount: ContextLayerMount | null = null;
+  let slot: ContextLayerSlotState = NO_SLOT;
   const listeners = new Set<() => void>();
+  const publish = (next: ContextLayerSlotState) => {
+    slot = next;
+    for (const listener of listeners) {
+      listener();
+    }
+  };
   return {
-    get: () => mount,
+    get: () => slot.mount,
     set: next => {
-      if (next === mount) {
+      if (next === slot.mount) {
         return;
       }
-      mount = next;
-      for (const listener of listeners) {
-        listener();
+      publish({mount: next, probe: slot.probe});
+    },
+    getSlot: () => slot,
+    requestProbe: probe => {
+      if (listeners.size === 0) {
+        return false;
+      }
+      if (probe !== slot.probe) {
+        publish({mount: slot.mount, probe});
+      }
+      return true;
+    },
+    clearProbe: probe => {
+      if (probe === slot.probe) {
+        publish({mount: slot.mount, probe: null});
       }
     },
     subscribe: onChange => {
@@ -1015,7 +1046,20 @@ function createContextLayerMountStore(): ContextLayerMountStore {
   };
 }
 
-const readNoMount = (): ContextLayerMount | null => null;
+const NO_SLOT: ContextLayerSlotState = {mount: null, probe: null};
+const readNoSlot = (): ContextLayerSlotState => NO_SLOT;
+
+/**
+ * Runs a decision of the anchor wait in the commit that mounts it. React runs
+ * the Effects of the commit before it renders this one.
+ */
+function CommitProbe({run}: {readonly run: () => void}) {
+  // Syncs the anchor wait with the dialog's top-layer state.
+  useIsomorphicLayoutEffect(() => {
+    run();
+  }, [run]);
+  return null;
+}
 
 /**
  * The marker and, once the hook has resolved where it goes, the layer. The
@@ -1033,22 +1077,31 @@ function ContextLayerSlot({
   readonly renderLayer: (mount: ContextLayerMount) => ReactNode;
   readonly sentinelRef: RefCallback<HTMLTemplateElement>;
 }) {
-  const mount = useSyncExternalStore(
+  const {mount, probe} = useSyncExternalStore(
     mountStore.subscribe,
-    mountStore.get,
-    readNoMount,
+    mountStore.getSlot,
+    readNoSlot,
   );
   // Keep the marker mounted after resolving the layer. Apart from giving
   // us the real JSX parent on first show, this lets its ref report when a
   // persistent hook's render call moves to a different host.
   const sentinel = <template ref={sentinelRef} />;
+  // Mounted only while a closed-dialog decision waits, so an idle layer pays
+  // nothing for it.
+  const commitProbe = probe === null ? null : <CommitProbe run={probe} />;
   if (mount === null) {
-    return <>{sentinel}</>;
+    return (
+      <>
+        {sentinel}
+        {commitProbe}
+      </>
+    );
   }
   const layer = renderLayer(mount);
   return (
     <>
       {sentinel}
+      {commitProbe}
       {mount.portalTarget ? createPortal(layer, mount.portalTarget) : layer}
     </>
   );
@@ -1724,19 +1777,6 @@ function useLayerImplementation(
   // the same commit never reopens by itself.
   const pendingRestartRef = useRef<{cancelled: boolean} | null>(null);
 
-  // A wait whose trigger sits in a closed `<dialog>` that renders decides in
-  // the next commit (see show()). The state update asks React for that commit,
-  // and the ref holds the decision.
-  const closedDialogDecisionRef = useRef<(() => void) | null>(null);
-  const [closedDialogCommit, requestClosedDialogCommit] = useState(0);
-  // Syncs that wait with the dialog's top-layer state, after the Effects of
-  // the commit before have run.
-  useIsomorphicLayoutEffect(() => {
-    const decide = closedDialogDecisionRef.current;
-    closedDialogDecisionRef.current = null;
-    decide?.();
-  }, [closedDialogCommit]);
-
   const cancelPendingAnchorWait = useCallback(() => {
     pendingAnchorWaitRef.current?.();
     pendingAnchorWaitRef.current = null;
@@ -1840,6 +1880,7 @@ function useLayerImplementation(
       intersection?.disconnect();
       stopMutations();
       dialog?.removeEventListener('toggle', check);
+      mountStore.clearProbe(decide);
     };
     const resolve = () => {
       resolved = true;
@@ -1861,21 +1902,29 @@ function useLayerImplementation(
     // focus lands within the press. A trigger that got its box later, as the
     // page displayed its dialog, takes the settle wait: the dialog can still
     // be animating in.
+    function decide() {
+      if (resolved || !isInClosedDialog(anchorElement)) {
+        return;
+      }
+      if (hadBoxAtShow) {
+        resolved = true;
+        release();
+        finishAnchorWait();
+        openNow();
+      } else {
+        resolve();
+      }
+    }
+    // The layer's slot asks React for that commit. With no slot rendered, the
+    // layer has no element to show yet. Its show replays when that element
+    // attaches, and the wait starts again then.
     const decideInNextCommit = () => {
-      closedDialogDecisionRef.current = () => {
-        if (resolved || !isInClosedDialog(anchorElement)) {
-          return;
-        }
-        if (hadBoxAtShow) {
-          resolved = true;
-          release();
-          finishAnchorWait();
-          openNow();
-        } else {
-          resolve();
-        }
-      };
-      requestClosedDialogCommit(count => count + 1);
+      if (!mountStore.requestProbe(decide)) {
+        resolved = true;
+        release();
+        finishAnchorWait();
+        openNow();
+      }
     };
     function check() {
       if (resolved) {
@@ -1913,7 +1962,7 @@ function useLayerImplementation(
       cancelSettleWait();
     };
     pendingAnchorElementRef.current = anchor;
-  }, [mode, openNow, cancelPendingAnchorWait, finishAnchorWait]);
+  }, [mode, openNow, cancelPendingAnchorWait, finishAnchorWait, mountStore]);
 
   const hide = useCallback(() => {
     cancelAfterReleaseRef.current?.();
