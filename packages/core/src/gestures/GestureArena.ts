@@ -65,9 +65,9 @@ import {DEFAULT_ENVIRONMENT} from './types';
 
 /**
  * A deadline's timer counts as late when it runs this long after it was due.
- * In ms: one frame at 60 Hz.
+ * In ms: past what an idle phone's timers run late, short of a page that froze.
  */
-const LATE_TIMER_MS = 17;
+const LATE_TIMER_MS = 150;
 
 /**
  * An input counts as late when it reaches the page this long after its own
