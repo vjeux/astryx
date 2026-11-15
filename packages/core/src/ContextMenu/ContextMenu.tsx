@@ -762,7 +762,7 @@ export function ContextMenu({
   // A client point in the cursor anchor's coordinates: measured from its
   // containing block, as `openAtLocalPoint` reads them. It stays inside that
   // box.
-  const toTriggerLocal = useCallback(
+  const toAnchorLocal = useCallback(
     (point: {x: number; y: number}): {x: number; y: number} => {
       const rect = getAnchorBaseRect();
       if (rect == null) {
@@ -819,13 +819,13 @@ export function ContextMenu({
   // landed.
   const openFromFinger = useCallback(
     (point: {x: number; y: number}) => {
-      const local = toTriggerLocal(point);
+      const local = toAnchorLocal(point);
       // The finger is still down: its lift belongs to the press that opened
       // the menu, so it does not close it.
       openingGestureRef.current = currentGesture();
       openAtLocalPoint(local.x, local.y, triggerRef.current, 'menu');
     },
-    [openAtLocalPoint, toTriggerLocal],
+    [openAtLocalPoint, toAnchorLocal],
   );
 
   // Today's long press for a finger outside the touch model: under a fine
