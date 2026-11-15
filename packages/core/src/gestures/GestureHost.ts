@@ -693,6 +693,9 @@ function documentClock(doc: Document): GestureClock {
   return {
     ...browserClock,
     now: () => clockOf(doc)?.now() ?? browserClock.now(),
+    requestFrame: callback => {
+      view.requestAnimationFrame(() => callback());
+    },
   };
 }
 

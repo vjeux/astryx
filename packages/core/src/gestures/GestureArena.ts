@@ -86,6 +86,12 @@ export interface GestureClock {
   now(): number;
   setTimeout(callback: () => void, ms: number): unknown;
   clearTimeout(handle: unknown): void;
+  /**
+   * Runs `callback` at the next frame. The browser dispatches the input it
+   * held for that frame first. Without it, a wait for queued input runs on
+   * a timer only.
+   */
+  requestFrame?(callback: () => void): void;
 }
 
 /** The browser's clock: `performance.now()`, the base of `event.timeStamp`. */
@@ -94,6 +100,11 @@ export const browserClock: GestureClock = {
     typeof performance === 'undefined' ? Date.now() : performance.now(),
   setTimeout: (callback, ms) => setTimeout(callback, ms),
   clearTimeout: handle => clearTimeout(handle as ReturnType<typeof setTimeout>),
+  requestFrame: callback => {
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => callback());
+    }
+  },
 };
 
 /**
@@ -196,6 +207,8 @@ export class GestureArena {
    * A deadline that came due during that wait is not late on its own.
    */
   private quietSince = Number.NEGATIVE_INFINITY;
+  /** When the current wait for queued input began. */
+  private waitStartedAt = Number.NEGATIVE_INFINITY;
   private depth = 0;
   /** Open `deferResolution` calls: what their stops unblock waits. */
   private deferDepth = 0;
@@ -1142,6 +1155,15 @@ export class GestureArena {
   }
 
   /**
+   * Whether input from before `deadline` reached the page late after `since`:
+   * the wait's frame brought some, so the next frame may bring more.
+   */
+  private hasLateInputSince(deadline: number, since: number): boolean {
+    const input = this.lateInput;
+    return input != null && input.time < deadline && input.arrivedAt > since;
+  }
+
+  /**
    * One external entry: run the timers due by `time`, then `body`, then
    * settle (release held deliveries, reset finished recognizers, forget
    * finished touches). Re-entrant calls (a listener feeding input) run
@@ -1286,21 +1308,31 @@ export class GestureArena {
       // Only the deadline's own timer counts as late. Only input from before
       // the deadline extends a wait, so a wait ends.
       const isLateTimer = after === 'deadline' && lateBy > LATE_TIMER_MS;
-      if (
-        this.isLatestContactFingerOrPen &&
-        after !== 'yield' &&
-        (isLateTimer || this.hasLateInputBefore(earliest, now))
-      ) {
+      const shouldWait =
+        after === 'wait'
+          ? this.hasLateInputSince(earliest, this.waitStartedAt)
+          : isLateTimer || this.hasLateInputBefore(earliest, now);
+      if (this.isLatestContactFingerOrPen && after !== 'yield' && shouldWait) {
         // Behind a blocked page, input from before the deadline can still be
-        // queued. A touch move can also reach the page a frame after other
-        // input. Wait while that input still comes. An input stamped at or
-        // past the deadline runs the deadline first, which ends the wait.
+        // queued, and Chromium holds touch moves for the next frame. Wait for
+        // that frame's input, then run. A frame that brings late input from
+        // before the deadline buys one more. With no frame, as on a hidden
+        // page, the timer ends the wait. An input stamped at or past the
+        // deadline runs the deadline first, which also ends it.
         this.realTimerDeadline = earliest;
+        this.waitStartedAt = now;
         const waitUntil = now + LATE_INPUT_WAIT_MS;
-        this.realTimer = this.clock.setTimeout(
+        const timer = this.clock.setTimeout(
           () => fire('wait', waitUntil),
           LATE_INPUT_WAIT_MS,
         );
+        this.realTimer = timer;
+        this.clock.requestFrame?.(() => {
+          if (this.realTimer === timer) {
+            this.clock.clearTimeout(timer);
+            fire('wait', waitUntil);
+          }
+        });
         return;
       }
       if (after === 'wait') {
