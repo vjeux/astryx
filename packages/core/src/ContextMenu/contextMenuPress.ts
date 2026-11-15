@@ -107,7 +107,6 @@ export class ContextMenuPressRecognizer extends LongPressGestureRecognizer {
   get clockTime(): number {
     return this.now();
   }
-
   protected override touchesBegan(
     touches: ReadonlyArray<GestureTouch>,
     event: GestureEventContext,

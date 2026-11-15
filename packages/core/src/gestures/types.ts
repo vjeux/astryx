@@ -83,9 +83,8 @@ export interface GestureTouch {
   time: number;
   /**
    * The latest event's positions at the times they came with, oldest first,
-   * ending with the current one. The arena's clock never runs back, so it
-   * holds a late input's `time` and filters `samples`; it does not change
-   * these.
+   * ending with the current one. The arena may hold `time` back for a late
+   * input. These samples keep the times the input came with.
    */
   inputSamples: TouchSample[];
   readonly startX: number;

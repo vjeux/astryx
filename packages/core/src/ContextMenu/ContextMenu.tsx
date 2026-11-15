@@ -802,7 +802,7 @@ export function ContextMenu({
 
   // The press feedback grows only the trigger's visual, so this box keeps its
   // laid-out size.
-  const toTriggerLocal = useCallback(
+  const toAnchorLocal = useCallback(
     (point: {x: number; y: number}): {x: number; y: number} => {
       const rect = getAnchorBaseRect();
       if (rect == null) {
@@ -859,13 +859,13 @@ export function ContextMenu({
   // landed.
   const openFromFinger = useCallback(
     (point: {x: number; y: number}) => {
-      const local = toTriggerLocal(point);
+      const local = toAnchorLocal(point);
       // The finger is still down: its lift belongs to the press that opened
       // the menu, so it does not close it.
       openingGestureRef.current = currentGesture();
       openAtLocalPoint(local.x, local.y, triggerRef.current, 'menu');
     },
-    [openAtLocalPoint, toTriggerLocal],
+    [openAtLocalPoint, toAnchorLocal],
   );
 
   // Today's long press for a finger outside the touch model: under a fine
@@ -902,7 +902,7 @@ export function ContextMenu({
       handleLongPressTouchStart(event);
       if (touchModes && !isDisabled && TouchLayer == null) {
         if (hasTouchLayerFailed) {
-          // After a failed load, a touch is the intent that loads it again.
+          // After a failed load, a touch is the intent that asks for it again.
           // The trigger keeps no late touch, so the long press and the
           // browser's own menu open the menu meanwhile.
           lateTouchRef.current = null;
@@ -1005,10 +1005,9 @@ export function ContextMenu({
         touchHandleRef.current?.isTracking() === true ||
         (lateTouchRef.current != null && !hasTouchLayerFailed)
       ) {
-        // The browser's own long-press menu (Android Chrome) for a finger the
-        // recognizer is timing, or will time once the touch layer loads: the
-        // recognizer decides, not this event. After a failed load, a finger
-        // kept during that load gets the browser's menu.
+        // Android Chrome opens its own long-press menu. The recognizer decides
+        // for a finger it times, or will time after the layer loads. After a
+        // failed load, a finger kept during that load gets the browser's menu.
         event.preventDefault();
       } else {
         handleContextMenu(event);
