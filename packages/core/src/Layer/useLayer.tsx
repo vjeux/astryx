@@ -1710,10 +1710,9 @@ function useLayerImplementation(
     wasJustDismissed,
   ]);
 
-  // A wait for the trigger to get a layout box, started by a show() that
-  // found none. Cancelled by hide(), by a show() for another trigger, or by
-  // unmount, so a stale wait from a closed-then-reopened layer never fires
-  // openNow() after the fact.
+  // A wait for the trigger to become a valid anchor, started by a show() that
+  // found it not ready. hide(), a show() for another trigger, or unmount
+  // cancels it. So a stale wait never fires openNow() after the fact.
   const pendingAnchorWaitRef = useRef<(() => void) | null>(null);
   // The element that wait is observing, so a trigger swapped out underneath it
   // can restart the wait on the new element (see `contextRef`).
