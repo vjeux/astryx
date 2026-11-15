@@ -220,6 +220,26 @@ export const Searchable: Story = {
   decorators: [Story => <Story />],
 };
 
+const LONG_LIST = Array.from({length: 120}, (_, i) => `Team ${i + 1}`);
+
+/** A long option list with a search field. */
+export const SearchableLongList: Story = {
+  tags: ['!autodocs'],
+  render: () => {
+    const [value, setValue] = useState<string[]>([]);
+    return (
+      <MultiSelector
+        label="Teams"
+        options={LONG_LIST}
+        value={value}
+        onChange={setValue}
+        hasSearch
+        presentation="popover"
+      />
+    );
+  },
+};
+
 // Empty states
 export const EmptyStates: Story = {
   render: () => {

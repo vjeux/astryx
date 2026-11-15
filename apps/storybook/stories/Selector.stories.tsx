@@ -168,6 +168,24 @@ export const LongList: Story = {
   },
 };
 
+/** A long option list with a search field. */
+export const SearchableLongList: Story = {
+  tags: ['!autodocs'],
+  render: () => {
+    const [value, setValue] = useState<string | undefined>(undefined);
+    return (
+      <Selector
+        label="Team"
+        options={LONG_LIST}
+        value={value}
+        onChange={v => setValue(v)}
+        hasSearch
+        presentation="popover"
+      />
+    );
+  },
+};
+
 export const ReadOnly: Story = {
   args: {
     label: 'Assigned owner',
