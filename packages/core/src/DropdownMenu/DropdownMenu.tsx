@@ -54,7 +54,9 @@ import {
   claimPress,
   currentGesture,
   isPressInFlight,
+  listenForGestures,
 } from '../Layer/gestureCounter';
+import {isHTMLElement} from '../utils/nodeType';
 import {Button, type ButtonProps} from '../Button';
 import {Heading} from '../Heading';
 import {Icon} from '../Icon';
@@ -992,6 +994,12 @@ function DropdownMenuPopover({
   // popover exists.
   const openingPressRef = useRef<{gesture: number} | null>(null);
   const holdOpeningPressRef = useRef<() => void>(() => {});
+  // Synchronizes the gesture count with the trigger's document, an external
+  // system. A trigger in a frame or a pop-out window has its presses counted
+  // there, before its first press.
+  useIsomorphicLayoutEffect(() => {
+    listenForGestures(buttonRef.current?.ownerDocument);
+  }, []);
 
   // Submenu flyouts are `popover="manual"` elements nested inside the menu's
   // `popover="auto"` element, so the browser's light dismiss of the menu never
@@ -1056,10 +1064,10 @@ function DropdownMenuPopover({
     if (!trigger) {
       return;
     }
-    const active = document.activeElement;
+    const active = trigger.ownerDocument.activeElement;
     const focusLandedElsewhere =
-      active instanceof HTMLElement &&
-      active !== document.body &&
+      isHTMLElement(active) &&
+      active !== trigger.ownerDocument.body &&
       active !== trigger &&
       !contentRef.current?.contains(active);
     if (focusLandedElsewhere) {
@@ -1507,7 +1515,7 @@ function DropdownMenuPopover({
       // model no longer tracks the press, and a settled release outside must
       // still close the menu.
       const layer = listRef.current?.closest('[popover]');
-      if (didOpen && pointerType === 'mouse' && layer instanceof HTMLElement) {
+      if (didOpen && pointerType === 'mouse' && isHTMLElement(layer)) {
         claimPress(layer, {releaseTarget: buttonRef.current});
       }
       return didOpen;
