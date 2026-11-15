@@ -27,8 +27,8 @@ function setup(
   const harness = createHarness();
   const press = new ContextMenuPressRecognizer({name: 'press', ...options});
   const states: string[] = [];
-  press.addTransitionListener((recognizer, _from, to) => {
-    states.push(`${to}@${recognizer.clockTime}`);
+  press.addTransitionListener((_recognizer, _from, to) => {
+    states.push(`${to}@${harness.arena.now()}`);
   });
   return {harness, press, states};
 }
