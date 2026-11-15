@@ -188,6 +188,13 @@ const INTERACTIONS: Readonly<
     await page.getByRole('button', {name: 'Expand all', exact: true}).click();
     await waitForRest(page.getByRole('tree'));
   },
+  // Re-render all 500 Buttons: each label changes, so each one renders.
+  buttons: async page => {
+    await page
+      .getByRole('button', {name: 'Re-render all', exact: true})
+      .click();
+    await frames(page, 2);
+  },
   // Append a section to the long document.
   markdown: async page => {
     await page

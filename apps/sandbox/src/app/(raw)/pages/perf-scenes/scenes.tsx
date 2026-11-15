@@ -17,7 +17,14 @@
  * input, then unmounts it and checks what stayed behind.
  */
 
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import * as stylex from '@stylexjs/stylex';
 import {Avatar} from '@astryxdesign/core/Avatar';
 import {Button} from '@astryxdesign/core/Button';
@@ -272,12 +279,55 @@ function OverlayChurnScene() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Buttons
+// ---------------------------------------------------------------------------
+
+const BUTTON_COUNT = 500;
+
+function ButtonsScene() {
+  useSceneReady();
+  const [round, setRound] = useState(0);
+  // A measure from this render to its layout Effect times the render and
+  // commit of all 500 Buttons, for the mount and for each re-render.
+  performance.mark(`buttons-render-${round}`);
+  useLayoutEffect(() => {
+    performance.mark(`buttons-commit-${round}`);
+    performance.measure(
+      `buttons-${round}`,
+      `buttons-render-${round}`,
+      `buttons-commit-${round}`,
+    );
+  }, [round]);
+  return (
+    <VStack gap={2}>
+      <Button
+        label="Re-render all"
+        variant="secondary"
+        onClick={() => setRound(count => count + 1)}
+      />
+      <HStack gap={1} wrap="wrap">
+        {Array.from({length: BUTTON_COUNT}, (_, index) => (
+          <Button
+            key={index}
+            label={`Item ${index} ${round % 2 === 0 ? 'a' : 'b'}`}
+            tooltip={`Tip ${index}`}
+            variant="ghost"
+            size="sm"
+          />
+        ))}
+      </HStack>
+    </VStack>
+  );
+}
+
 const SCENES: Readonly<Record<PerfSceneId, () => React.ReactNode>> = {
   'comments-panel': CommentsPanelScene,
   table: TableScene,
   'tree-list': TreeListScene,
   markdown: MarkdownScene,
   'overlay-churn-settled': OverlayChurnScene,
+  buttons: ButtonsScene,
 };
 
 export function PerfScene({scene}: {scene: PerfSceneId}) {

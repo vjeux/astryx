@@ -17,6 +17,7 @@ export const PERF_SCENES = [
   'tree-list',
   'markdown',
   'overlay-churn-settled',
+  'buttons',
 ] as const;
 
 export type PerfSceneId = (typeof PERF_SCENES)[number];
@@ -29,6 +30,8 @@ export const PERF_SCENE_LABELS: Readonly<Record<PerfSceneId, string>> = {
   markdown: 'Markdown: a long document with tables and code blocks',
   'overlay-churn-settled':
     'Overlay churn: Popover, DropdownMenu and Dialog, each anchored entrance played out',
+  buttons:
+    'Buttons: 500 Buttons with tooltips, then a re-render of all of them',
 };
 
 export function parsePerfScene(value: string | null): PerfSceneId {
