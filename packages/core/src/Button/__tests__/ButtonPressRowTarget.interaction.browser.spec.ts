@@ -6,11 +6,12 @@
  *   its row, real touch input (Chromium CDP / WebKit's input command), and
  *   the interaction harness
  * @output Interaction proofs that a finger's press leaves a caller's
- *   row-wide `::after` where the caller put it: points on the row outside the
- *   Button hit the Button at rest, while the press is on and while it fades
- *   (both engines); a tap on the line under the Button activates it once
- *   (both engines, through the engine's own tap path), and so does a held
- *   press there (Chromium, which also clicks from a raw touch sequence)
+ *   row-wide `::after` where the caller put it. Points on the row outside
+ *   the Button hit the Button at rest, while the press is on and while it
+ *   fades (both engines). The press layer covers the row (both engines). A
+ *   tap on the line under the Button activates it once, through the
+ *   engine's own tap path (both engines). A held press there does too
+ *   (Chromium, which also clicks from a raw touch sequence).
  * @position Interaction evidence for privateAttributes/press.stylex.ts
  *   (`control`) as Button composes it
  */
@@ -39,6 +40,9 @@ interface HitState {
   press: string | null;
   hits: boolean[];
   layer: string;
+  /** The box a press layer placed as the Button's `::before` takes. */
+  layerBox: number[];
+  rowBox: number[];
 }
 
 async function openRow(page: Page) {
@@ -95,6 +99,15 @@ test('while a press is on and while it fades, points on the row outside the Butt
   await button.evaluate((el, points) => {
     const states: HitState[] = [];
     const read = () => {
+      // A pseudo-element has no box a script can read. A stand-in placed as
+      // the press layer is, absolute at inset 0 in the Button, has its
+      // containing block, so its box is the layer's.
+      const standIn = document.createElement('span');
+      standIn.style.cssText = 'position:absolute;inset:0;visibility:hidden';
+      el.prepend(standIn);
+      const layerRect = standIn.getBoundingClientRect();
+      standIn.remove();
+      const rowRect = el.parentElement?.getBoundingClientRect();
       states.push({
         press: el.getAttribute('data-astryx-press'),
         hits: points.map(
@@ -103,6 +116,11 @@ test('while a press is on and while it fades, points on the row outside the Butt
             el,
         ),
         layer: getComputedStyle(el, '::before').content,
+        layerBox: [Math.round(layerRect.width), Math.round(layerRect.height)],
+        rowBox:
+          rowRect == null
+            ? []
+            : [Math.round(rowRect.width), Math.round(rowRect.height)],
       });
     };
     read();
@@ -128,9 +146,11 @@ test('while a press is on and while it fades, points on the row outside the Butt
     expect(state.hits, log).toEqual(probes.map(() => true));
   }
   // The press still paints: the Button's press layer is there while it is on
-  // and while it fades.
+  // and while it fades. The row is its containing block too, so it covers
+  // the row, and a finger's press tints the whole row.
   for (const state of states.filter(entry => entry.press != null)) {
     expect(state.layer, log).toBe('""');
+    expect(state.layerBox, log).toEqual(state.rowBox);
   }
 });
 
