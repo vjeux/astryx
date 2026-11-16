@@ -3,9 +3,10 @@
 /**
  * @file coarsePointer.ts
  * @input A window
- * @output Exports isCoarsePointer, matchesMediaQuery, watchCoarsePointer and
- *   watchMediaQuery: whether the primary pointer is coarse (TOUCH_QUERY) or
- *   any media query matches, and when either changes
+ * @output Exports isCoarsePointer, defaultIsCoarsePointer, matchesMediaQuery,
+ *   watchCoarsePointer and watchMediaQuery: whether the primary pointer is
+ *   coarse (TOUCH_QUERY, or `(pointer: coarse)` in the current window) or any
+ *   media query matches, and when either changes
  * @position The coarse-pointer gate of packages/core/src/gestures and of
  *   the press controller (pressFeedback.ts): touch-only work registers only
  *   while it holds. useMediaQuery and the presentation resolvers read and
@@ -25,6 +26,15 @@ import {TOUCH_QUERY} from './touchQueries';
 /** Whether the primary pointer of `view` is coarse now. */
 export function isCoarsePointer(view: Window | null | undefined): boolean {
   return matchesMediaQuery(view, TOUCH_QUERY);
+}
+
+/** Whether the primary pointer is coarse: `(pointer: coarse)`. */
+export function defaultIsCoarsePointer(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(pointer: coarse)').matches
+  );
 }
 
 /**
