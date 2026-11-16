@@ -5447,6 +5447,11 @@
       "aliases": []
     },
     {
+      "name": "template-access-denied",
+      "path": "templates/access-denied",
+      "aliases": []
+    },
+    {
       "name": "template-ai-chat",
       "path": "templates/ai-chat",
       "aliases": []
@@ -5547,6 +5552,11 @@
       "aliases": []
     },
     {
+      "name": "template-error-page",
+      "path": "templates/error-page",
+      "aliases": []
+    },
+    {
       "name": "template-file-explorer",
       "path": "templates/file-explorer",
       "aliases": []
@@ -5632,6 +5642,11 @@
       "aliases": []
     },
     {
+      "name": "template-not-found",
+      "path": "templates/not-found",
+      "aliases": []
+    },
+    {
       "name": "template-payment-form",
       "path": "templates/payment-form",
       "aliases": []
@@ -5644,6 +5659,11 @@
     {
       "name": "template-product-gallery",
       "path": "templates/product-gallery",
+      "aliases": []
+    },
+    {
+      "name": "template-review-workspace",
+      "path": "templates/review-workspace",
       "aliases": []
     },
     {
@@ -5729,6 +5749,11 @@
     {
       "name": "template-theme-showcase",
       "path": "templates/theme-showcase",
+      "aliases": []
+    },
+    {
+      "name": "template-welcome-portal",
+      "path": "templates/welcome-portal",
       "aliases": []
     },
     {
