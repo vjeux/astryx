@@ -354,10 +354,16 @@ const GESTURE_USERS = new Set([
   // Swipe actions: createSwipe brings a row's swipe on that drag
   // (`spec:AST-057` FR10).
   'Swipe',
+  // TextInput, TextArea and NumberInput: the keyboard ride. A field in an
+  // app's docked bar rides the keyboard on the touch runtime's animator,
+  // which the field loads after first paint (`spec:AST-099` FR9).
+  'NumberInput',
+  'TextArea',
+  'TextInput',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
-const NEVER_GESTURE_USERS = ['Button', 'TextInput'];
+const NEVER_GESTURE_USERS = ['Button'];
 
 /**
  * Each public import of Core, built alone as the size report builds one:
