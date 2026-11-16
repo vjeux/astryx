@@ -4,7 +4,8 @@
  * @file reducedMotion.ts
  * @input The Reduced Motion preference, the primary pointer, the motion tables
  * @output reducedMotionFade (the fade the animator would play, for motion it
- *   does not drive), playReducedMotionDip, and the queries a transition spells
+ *   does not drive), playReducedMotionDip, defaultPrefersReducedMotion (the
+ *   setting, which the animator reads too), and the queries a transition spells
  * @position The one Reduced Motion policy (design:reduced-motion) for code
  *   beside the animator: a raw Web Animations fade, a CSS transition
  *
@@ -44,7 +45,7 @@
  * - /packages/core/src/motion/animator.ts (its Reduced Motion path)
  */
 
-import {defaultIsCoarsePointer, defaultPrefersReducedMotion} from './animator';
+import {defaultIsCoarsePointer} from '../utils/coarsePointer';
 import {resolveMotion} from './resolveMotion';
 import {themeReducesMotion} from '../privateAttributes/reducedMotion.stylex';
 import {
@@ -59,6 +60,22 @@ export const REDUCED_MOTION_FADE_QUERY =
 /** Reduce Motion on any other primary pointer: the change completes at once. */
 export const REDUCED_MOTION_INSTANT_QUERY =
   '(prefers-reduced-motion: reduce) and (not (pointer: coarse))';
+
+/**
+ * Whether the user asked for reduced motion (`prefers-reduced-motion:
+ * reduce`), read at the moment of the call: the preference the animator uses
+ * by default for its Reduce Motion substitution. A component never reads it
+ * to pick a curve of its own, so its motion settings cannot override the
+ * policy: `animator.reducedMotion()` or `reducedMotionFade()` gives the
+ * policy's answer. False without a window (server rendering).
+ */
+export function defaultPrefersReducedMotion(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
 
 /**
  * The fade to play under Reduce Motion. `duration` 0 means the change
