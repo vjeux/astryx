@@ -273,6 +273,17 @@ export function useChatKeyboard({
       // from the keyboard's start, relative to the layout it rests in now.
       const target = liftRef.current - liftFor(transition.to);
       const atEnd = isAtEnd();
+      // A keyboard whose top steps mid-slide moves the dock by the same step:
+      // where it started, plus the change in where it ends.
+      const stepFrom = (animator: Animator, previous: number | null) =>
+        transition.steps === true && previous != null
+          ? {from: {y: animator.get('y', transition.start) + target - previous}}
+          : undefined;
+      const dockStep = stepFrom(dock.animator, dockTargetRef.current);
+      const messagesStep = stepFrom(
+        messages.animator,
+        messagesTargetRef.current,
+      );
       dockTargetRef.current = target;
       messagesTargetRef.current = atEnd ? target : null;
       if (!transition.animated) {
@@ -293,13 +304,13 @@ export function useChatKeyboard({
       const ride = rideRef.current;
       // On the keyboard's own motion: Gboard's slide.
       const rides = [
-        rideKeyboard(dock.animator, shown, transition)?.finished ??
+        rideKeyboard(dock.animator, shown, transition, dockStep)?.finished ??
           Promise.resolve(true),
       ];
       if (atEnd) {
         rides.push(
-          rideKeyboard(messages.animator, shown, transition)?.finished ??
-            Promise.resolve(true),
+          rideKeyboard(messages.animator, shown, transition, messagesStep)
+            ?.finished ?? Promise.resolve(true),
         );
       }
       void Promise.all(rides)

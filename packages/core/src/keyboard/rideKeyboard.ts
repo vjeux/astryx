@@ -28,6 +28,11 @@ export interface RideOptions {
    * it, the animator's own Reduce Motion plan applies.
    */
   readonly entrance?: boolean;
+  /**
+   * Where the element starts at `transition.start`, for a transition that
+   * steps (`steps`); by default, where the element was drawn then.
+   */
+  readonly from?: MotionValues;
 }
 
 /**
@@ -54,7 +59,7 @@ export function rideKeyboard(
   animator: Animator,
   to: MotionValues,
   transition: KeyboardTransition,
-  {entrance = false}: RideOptions = {},
+  {entrance = false, from: startAt}: RideOptions = {},
 ): MotionHandle | null {
   // A frame after a busy task still draws an animation at that task's
   // start. The ride sets a slide that has already ended, so no frame shows the
@@ -80,7 +85,8 @@ export function rideKeyboard(
     MotionProperty,
     number,
   ][]) {
-    const from = animator.get(property, transition.start);
+    const from =
+      startAt?.[property] ?? animator.get(property, transition.start);
     const at = (t: number) => from + (target - from) * progress(t);
     curves[property] = {
       duration: span,

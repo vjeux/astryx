@@ -81,6 +81,13 @@ export interface KeyboardTransition {
   /** True until the visual viewport confirms a transition the guide inferred. */
   readonly predicted: boolean;
   /**
+   * True when the keyboard's top stepped by `to`'s change while its slide went
+   * on, as UIKit's does when it adds or removes the bar above its keys. The
+   * transition keeps `start` and `curve`, and a surface riding it steps with
+   * the keyboard's top in the same frame.
+   */
+  readonly steps?: boolean;
+  /**
    * The curve the keyboard moves on, or null when the inset jumps. It is
    * Gboard's slide in Chrome on Android, and UIKit's keyboard spring in Safari
    * on iOS. A surface riding the keyboard plays it from `start`, as
@@ -332,6 +339,29 @@ export function createKeyboardModel(
           time - schedule.showReportLagMs,
           {predicted},
         );
+      }
+      // UIKit adds or removes the bar above its keys in one frame while the
+      // keys go on sliding, and Safari reports the new height a frame or more
+      // later. The ride steps by the difference and lands with the keys.
+      if (
+        'curve' in schedule &&
+        curve != null &&
+        transition.kind === 'show' &&
+        time < transition.start + lengthOf()
+      ) {
+        const step = inset - target;
+        // Before the keys show, the bar's change folds into the slide.
+        const steps = presentation(time) + step > EPSILON;
+        transition = {
+          ...transition,
+          from: steps ? transition.from + step : transition.from,
+          to: inset,
+          predicted: false,
+          steps,
+        };
+        curve = easedCurve(transition.from, inset, transition.curve!);
+        shownInset = inset;
+        return transition;
       }
       // The keyboard changed while up (another keyboard, or the keyboard's
       // report after the accessory bar's): Chrome lays the page out at once.

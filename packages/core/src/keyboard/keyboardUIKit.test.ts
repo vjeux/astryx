@@ -8,8 +8,8 @@
  *   Safari's one report on UIKit's keyboard spring. A hide rides down from
  *   the blur, as a prediction that Safari's later report confirms. Focus that
  *   moves between fields, to a picker in the keyboard's place, or to a field
- *   the page cannot see, moves nothing. Two pending cases hold a second
- *   report that comes while the keyboard still moves.
+ *   the page cannot see, moves nothing. A second report while the keyboard
+ *   still moves steps the ride with the keyboard's top.
  * @position Unit tests for the iOS part of keyboard/keyboardLayoutGuide.ts
  */
 
@@ -226,10 +226,58 @@ describe('the keyboard layout guide in Safari on iOS', () => {
   // Safari reports a second height while the keyboard still comes up. It is
   // shorter when focus moves to a field without QuickType, and taller for the
   // emoji keyboard.
-  it.todo(
-    're-aims the show when Safari reports a shorter keyboard mid-show: 347 px, then 320 px 126 ms or 233 ms in',
+  // The keyboard's top as UIKit draws it: the first height's slide, moved by
+  // the bar's change once the bar changes.
+  const keyboardTop = (
+    first: number,
+    change: number,
+    start: number,
+    time: number,
+  ) => first * uikitSpring.progress((time - start) / 1000) + change;
+
+  it.each([
+    ['shorter', 320, 126],
+    ['shorter', 320, 233],
+    ['taller', 401, 126],
+  ] as const)(
+    'steps a %s keyboard with its top mid-show and lands with the keys: 347 px, then %i px %i ms in',
+    (_, second, after) => {
+      a.focus();
+      report(347);
+      const start = seen[0]!.start;
+      vi.advanceTimersByTime(after);
+      report(second);
+      const guide = getKeyboardLayoutGuide(window);
+      expect(guide.transition).toMatchObject({
+        kind: 'show',
+        to: second,
+        start,
+        steps: true,
+        curve: uikitSpring,
+      });
+      const now = start + after;
+      for (
+        let time = now;
+        time <= start + uikitSpring.durationMs;
+        time += 1000 / 60
+      ) {
+        expect(guide.presentation(time)).toBeCloseTo(
+          keyboardTop(347, second - 347, start, time),
+          6,
+        );
+      }
+      expect(guide.presentation(start + uikitSpring.durationMs)).toBe(second);
+    },
   );
-  it.todo(
-    're-aims the show when Safari reports a taller keyboard mid-show: 347 px, then 401 px',
-  );
+
+  it('folds a bar change into the slide before the keys show', () => {
+    a.focus();
+    report(347);
+    const start = seen[0]!.start;
+    vi.advanceTimersByTime(2);
+    report(320);
+    const guide = getKeyboardLayoutGuide(window);
+    expect(guide.transition).toMatchObject({to: 320, start, steps: false});
+    expect(guide.transition.from).toBe(seen[0]!.from);
+  });
 });
