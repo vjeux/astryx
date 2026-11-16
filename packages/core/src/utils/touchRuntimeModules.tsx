@@ -4,8 +4,9 @@
 
 /**
  * @file touchRuntimeModules.tsx
- * @input The shared touch modules: the animator, and the touch parts of
- *   SegmentedControl and Switch, which use the gesture host
+ * @input The shared touch modules: the animator, the touch parts of
+ *   SegmentedControl and Switch, which use the gesture host, and Safari on
+ *   iOS's keyboard schedule (keyboard/uikitKeyboardSchedule.ts)
  * @output `touchRuntime`, the one object the touch loader publishes
  * @position Loaded only through `import()` in utils/touchRuntime.ts. No
  *   other module imports this file
@@ -15,6 +16,8 @@ import type {RefObject} from 'react';
 import {animatorFor} from '../motion/animator';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useCommittedRefInto} from '../hooks/useCommittedRef';
+import {registerUIKitKeyboardSchedule} from '../keyboard/keyboardLayoutGuide';
+import {uikitKeyboardSchedule} from '../keyboard/uikitKeyboardSchedule';
 import {
   useSegmentedSelectionMotion,
   type SegmentedSelection,
@@ -74,6 +77,10 @@ function SwitchTouch({parts, options}: SwitchTouchProps): null {
   useSwitchTouch(parts, options);
   return null;
 }
+
+// The keyboard layout guide reads Safari on iOS's keyboard schedule from here,
+// so a page that never loads the runtime carries none of it.
+registerUIKitKeyboardSchedule(uikitKeyboardSchedule);
 
 /** What the touch loader publishes once the page has loaded it. */
 export const touchRuntime = {

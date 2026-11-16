@@ -354,6 +354,10 @@ const GESTURE_USERS = new Set([
   // Swipe actions: createSwipe brings a row's swipe on that drag
   // (`spec:AST-057` FR10).
   'Swipe',
+  // Chat: under a finger, ChatLayout uses the touch runtime for UIKit's
+  // keyboard schedule, so it schedules the runtime's one load, whose chunk
+  // carries the gesture code.
+  'Chat',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
