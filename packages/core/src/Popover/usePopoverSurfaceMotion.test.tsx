@@ -22,16 +22,16 @@ import {
 } from 'vitest';
 import {TOUCH_QUERY} from '../utils/touchPresentation';
 import {createPopoverSurfaceMotion} from './popoverSurfaceMotion';
-import {usePopoverSurfaceMotion} from './usePopoverSurfaceMotion';
 import {
-  __loadTouchRuntimeForTest,
-  __resetTouchRuntimeForTest,
-} from '../utils/touchRuntime';
+  __loadPopoverSurfaceMotionForTest,
+  __resetPopoverSurfaceMotionForTest,
+  usePopoverSurfaceMotion,
+} from './usePopoverSurfaceMotion';
 
-// These cases drive touch motion, which comes with the shared touch runtime
-// once the page has loaded it.
+// These cases drive the touch motion, which loads after first paint where the
+// primary pointer is coarse (usePopoverSurfaceMotion.load.test.tsx).
 beforeAll(async () => {
-  await __loadTouchRuntimeForTest();
+  await __loadPopoverSurfaceMotionForTest();
 });
 
 vi.mock('./popoverSurfaceMotion', () => ({
@@ -90,8 +90,8 @@ describe('usePopoverSurfaceMotion', () => {
     expect(layer.getAttribute('style')).toBeNull();
   });
 
-  it('before the touch runtime loads, presents a coarse open as a fine-pointer one', async () => {
-    __resetTouchRuntimeForTest();
+  it('before its touch motion loads, presents a coarse open as a fine-pointer one', async () => {
+    __resetPopoverSurfaceMotionForTest();
     try {
       isTouch = true;
       const {layer, trigger} = layerAndTrigger();
@@ -101,7 +101,7 @@ describe('usePopoverSurfaceMotion', () => {
       expect(createPopoverSurfaceMotion).not.toHaveBeenCalled();
       expect(layer.getAttribute('style')).toBeNull();
     } finally {
-      await __loadTouchRuntimeForTest();
+      await __loadPopoverSurfaceMotionForTest();
     }
   });
 

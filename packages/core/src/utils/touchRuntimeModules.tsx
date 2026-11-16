@@ -5,8 +5,8 @@
 /**
  * @file touchRuntimeModules.tsx
  * @input The shared touch modules: the animator, and the touch parts of
- *   SegmentedControl, Switch, Toast and Popover, which use the animator and
- *   the gesture host
+ *   SegmentedControl, Switch and Toast, which use the animator and the
+ *   gesture host
  * @output `touchRuntime`, the one object the touch loader publishes
  * @position Loaded only through `import()` in utils/touchRuntime.ts. No
  *   other module imports this file
@@ -27,7 +27,6 @@ import {
 } from '../Switch/useSwitchTouch';
 import {PanGestureRecognizer} from '../gestures/PanGestureRecognizer';
 import {useGestureRecognizer} from '../gestures/useGestureRecognizer';
-import {createPopoverSurfaceMotion} from '../Popover/popoverSurfaceMotion';
 import type {ToastSwipeClaimProps} from '../Toast/useToastGesture';
 
 interface SegmentedMotionProps {
@@ -130,7 +129,6 @@ function ToastSwipeClaim({
 /** What the touch loader publishes once the page has loaded it. */
 export const touchRuntime = {
   animatorFor,
-  createPopoverSurfaceMotion,
   SegmentedMotion,
   SwitchTouch,
   ToastSwipeClaim,

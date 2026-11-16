@@ -7,7 +7,9 @@
  * @input Nothing from the caller: a component that uses the shared touch
  *   modules calls `useTouchRuntime`, or reads `getTouchRuntime` at use time
  * @output The shared touch runtime (the animator, the gesture code and the
- *   touch parts built on them) once the page has loaded it, else `null`
+ *   touch parts built on them) once the page has loaded it, else `null`; and
+ *   `scheduleAfterPaint`, the wait it loads on, which Popover's touch motion
+ *   shares
  * @position Core's one touch loader. No component imports the touch modules
  *   statically; this file loads them once per page after first paint, at
  *   idle within a time cap, whatever the input
@@ -84,6 +86,19 @@ function whenIdle(view: Window, start: () => void): void {
 }
 
 /**
+ * Runs `start` once after `view`'s next paint, when its main thread is idle
+ * and no later than LOAD_CAP_MS after that paint. Internal to Core: the touch
+ * runtime and Popover's touch motion load on it.
+ */
+export function scheduleAfterPaint(view: Window, start: () => void): void {
+  // A frame callback runs before the frame paints. The task it queues runs
+  // after that paint.
+  view.requestAnimationFrame(() => {
+    view.setTimeout(() => whenIdle(view, start), 0);
+  });
+}
+
+/**
  * Schedules the page's one load of the touch runtime. The first call starts
  * the wait for first paint; every later call does nothing.
  */
@@ -93,12 +108,7 @@ export function scheduleTouchRuntimeLoad(): void {
   }
   isScheduled = true;
   // The timers belong to this window, so they end with its document.
-  const view = window;
-  // A frame callback runs before the frame paints. The task it queues runs
-  // after that paint.
-  view.requestAnimationFrame(() => {
-    view.setTimeout(() => whenIdle(view, () => void load()), 0);
-  });
+  scheduleAfterPaint(window, () => void load());
 }
 
 /**

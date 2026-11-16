@@ -343,11 +343,14 @@ those contracts.
   idle within a time cap, whatever the input (`spec:AST-080` DEC-5). It exists
   so that no component's static graph carries the touch runtime, while every
   page still has it once the page settles. Nothing loads them on demand or on
-  an interaction. Until the shared touch runtime has loaded, SegmentedControl
+  an interaction. Popover's touch motion loads apart, on the same wait, and
+  only where the primary pointer is or turns coarse (`component:Popover`
+  FR9). Its chunk imports the animator, which the bundler shares with the
+  runtime's chunk. Until the shared touch runtime has loaded, SegmentedControl
   and Switch work by taps, clicks and keys, with no drag tracking and no slide or spring, and a tap under a finger or under Reduce Motion changes them at once, with no cross-fade; a bottom sheet still drags, and a drag that closes it takes the
-  stylesheet exit instead of the spring; a toast does not swipe (its close
-  button and timer still dismiss it), and a popover presents as under a fine
-  pointer. A gesture in that window does not start the load. The bundler keeps
+  stylesheet exit instead of the spring; and a toast does not swipe (its
+  close button and timer still dismiss it). A gesture in that window does not
+  start the load. The bundler keeps
   one copy per page however many components use them. If the runtime's chunk
   fails to load, the page stays as it is before the load: components work by
   taps, clicks and keys, and no gesture retries the load.
