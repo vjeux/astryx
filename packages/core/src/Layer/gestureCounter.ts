@@ -7,8 +7,8 @@
  * @input Pointer and context-menu events through the shared input stream;
  *   keydown and click on the document
  * @output Exports the gesture identity, whether its click has run, whether a
- *   press is down or being released (afterRelease runs a callback once that
- *   release is handled), the press claims (claimPress,
+ *   press is down, awaits its click or is being released (afterRelease runs
+ *   a callback once that release is handled), the press claims (claimPress,
  *   claimContextMenuPress), and the touch tap recognizer (useTapRecognizer,
  *   TOUCH_POINTER_TYPES)
  * @position Internal to the package, not exported. useLayer reads it to tell
@@ -34,6 +34,7 @@ import {clearTouchEndMark, isTouchEndCancelled} from '../utils/touchEndMark';
 const state = sharedState('layer/gesture-counter/state', 1, () => ({
   gesture: 0,
   clickedGesture: null as number | null,
+  pressGesture: null as number | null,
   contextMenuGesture: null as number | null,
   pressPointerId: null as number | null,
   // The gesture whose release is being handled: from its pointerup until
@@ -67,6 +68,9 @@ function ensureFields(): void {
   if (state.releasingPointerType === undefined) {
     state.releasingPointerType = '';
   }
+  if (state.pressGesture === undefined) {
+    state.pressGesture = null;
+  }
 }
 
 function advance() {
@@ -83,6 +87,7 @@ function startPress(event: PointerEvent) {
   clearTouchEndMark();
   advance();
   state.pressPointerId = event.pointerId;
+  state.pressGesture = state.gesture;
   const view = event.view ?? document.defaultView;
   if (state.unsubscribePress != null || view == null) {
     return;
@@ -247,6 +252,21 @@ export function afterRelease(doc: Document, callback: () => void): () => void {
 export function isPressInFlight(): boolean {
   listen();
   return state.pressPointerId !== null;
+}
+
+/**
+ * Whether the current gesture is a press whose click has not run yet: the
+ * press is down, or it was lifted and its click is still to come. A finger
+ * moves focus after its lift and before its click. A press the browser
+ * cancels has no click, so this stays true until the next press or
+ * keystroke.
+ */
+export function isPressAwaitingClick(): boolean {
+  listen();
+  return (
+    state.pressGesture === state.gesture &&
+    state.clickedGesture !== state.gesture
+  );
 }
 
 /**
