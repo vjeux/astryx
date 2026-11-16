@@ -881,6 +881,52 @@ describe('app-theme doctor checks', () => {
     expect(result.message).toContain('fonts.css');
   });
 
+  it("warns on theme-owners when the theme's stylesheet imports a file its package does not ship", async () => {
+    const {dir, packageDir} = await fixture([
+      {
+        slug: 'ocean',
+        css: '@import \'./ocean-base.css\';\n[data-astryx-theme="ocean"] { --color-text: black; background: url(./waves.svg); }\n',
+      },
+    ]);
+
+    const checks = await checkAppThemes(dir);
+    const result = check(checks, 'theme-owners');
+
+    // A warning: the module itself loads.
+    expect(result).toMatchObject({id: 'theme-owners', status: 'warn'});
+    expect(checks.some(item => item.status === 'fail')).toBe(false);
+    expect(result.message).toContain(
+      'Theme "ocean" from @acme/themes: its built module loads, but it or its stylesheet names a file the package does not ship',
+    );
+    expect(result.message).toContain(
+      'dist/ocean.css:1: imports "./ocean-base.css", which is not a file in the package',
+    );
+    expect(result.message).toContain('imports "./waves.svg"');
+    expect(result.message).not.toContain('every built module loads');
+
+    write(path.join(packageDir, 'dist/ocean-base.css'), ':root {}\n');
+    write(path.join(packageDir, 'dist/waves.svg'), '<svg/>\n');
+    expect(check(await checkAppThemes(dir), 'theme-owners').status).toBe(
+      'pass',
+    );
+  });
+
+  it('passes theme-owners when a built module imports a folder by its index file', async () => {
+    const {dir, packageDir} = await fixture();
+    write(
+      path.join(packageDir, 'dist/icons/index.js'),
+      'export const icons = {};\n',
+    );
+    write(
+      path.join(packageDir, 'dist/ocean.js'),
+      "import {icons} from './icons';\nexport const oceanTheme = {name: 'ocean', tokens: {}, icons};\n",
+    );
+
+    expect(check(await checkAppThemes(dir), 'theme-owners').status).toBe(
+      'pass',
+    );
+  });
+
   it('fails theme-owners for an ambiguous multi-theme record', async () => {
     const {dir, packageDir} = await fixture([{slug: 'ocean'}, {slug: 'reef'}]);
     const packageFile = path.join(packageDir, 'package.json');
@@ -1349,6 +1395,74 @@ describe('app-theme doctor checks', () => {
     expect(result.message).toContain('--_button-radius');
   });
 
+  it("check 6 reads a bundled theme's input from the package the project installs", async () => {
+    const dir = fs.mkdtempSync(
+      path.join(REPO_ROOT, '.astryx-doctor-bundled-input-'),
+    );
+    dirs.push(dir);
+    write(path.join(dir, 'tsconfig.json'), '{}\n');
+    write(
+      path.join(dir, 'package.json'),
+      JSON.stringify({
+        name: 'doctor-app',
+        private: true,
+        dependencies: {
+          '@astryxdesign/core': CLI_VERSION,
+          '@astryxdesign/theme-neutral': CLI_VERSION,
+        },
+      }),
+    );
+    write(
+      path.join(dir, 'node_modules/@astryxdesign/core/package.json'),
+      JSON.stringify({name: '@astryxdesign/core', version: CLI_VERSION}),
+    );
+    const packageDir = path.join(
+      dir,
+      'node_modules/@astryxdesign/theme-neutral',
+    );
+    write(
+      path.join(packageDir, 'package.json'),
+      JSON.stringify({
+        name: '@astryxdesign/theme-neutral',
+        version: CLI_VERSION,
+        type: 'module',
+        exports: {
+          './built': './dist/neutral.js',
+          './theme.css': './dist/theme.css',
+          './fonts.css': './fonts.css',
+        },
+      }),
+    );
+    write(
+      path.join(packageDir, 'dist/neutral.js'),
+      "export const neutralTheme = {name: 'neutral', tokens: {}};\n",
+    );
+    write(
+      path.join(packageDir, 'dist/theme.css'),
+      '[data-astryx-theme="neutral"] { --color-text: black; }\n',
+    );
+    write(path.join(packageDir, 'fonts.css'), '');
+    await themeAdd('neutral', {cwd: dir, import: true});
+    write(
+      path.join(dir, 'src/index.tsx'),
+      "import {themes, defaultThemeSlug} from './astryx-themes';\nvoid themes[defaultThemeSlug];\n",
+    );
+
+    // A package that ships no source of its own: the CLI's copy is read.
+    expect(
+      check(await checkAppThemes(dir), 'theme-private-variables'),
+    ).toMatchObject({status: 'pass'});
+
+    // The package's own copy is the one the app uses.
+    write(
+      path.join(packageDir, 'src/neutralTheme.ts'),
+      "export const neutralTheme = {name: 'neutral', tokens: {}, components: {button: {base: {'--_button-radius': '2px'}}}};\n",
+    );
+    const result = check(await checkAppThemes(dir), 'theme-private-variables');
+    expect(result).toMatchObject({status: 'fail'});
+    expect(result.message).toContain('--_button-radius');
+  });
+
   it('check 7 fails when a theme peer range rejects installed Core', async () => {
     const {dir} = await fixture([{slug: 'ocean'}], {peerRange: '^9.0.0'});
 
@@ -1421,7 +1535,7 @@ describe('app-theme doctor checks', () => {
   });
 
   it('check 9 passes when a local @font-face proves the named family', async () => {
-    const {dir} = await fixture([
+    const {dir, packageDir} = await fixture([
       {
         slug: 'ocean',
         fontFamily: 'Ocean Sans',
@@ -1429,6 +1543,7 @@ describe('app-theme doctor checks', () => {
           '@font-face { font-family: "Ocean Sans"; src: url("./ocean.woff2"); }\n',
       },
     ]);
+    write(path.join(packageDir, 'dist/ocean.woff2'), 'font');
 
     expect(check(await checkAppThemes(dir), 'theme-fonts')).toMatchObject({
       status: 'pass',
@@ -1468,9 +1583,10 @@ describe('app-theme doctor checks', () => {
       ]);
       const faces =
         '@font-face { font-family: "Ocean Sans"; src: url("./ocean.woff2"); }\n';
-      if (!spec.startsWith('@'))
+      if (!spec.startsWith('@')) {
         write(path.join(packageDir, 'dist/ocean-faces.css'), faces);
-      else {
+        write(path.join(packageDir, 'dist/ocean.woff2'), 'font');
+      } else {
         write(
           path.join(dir, 'node_modules/@fontsource/ocean-sans/package.json'),
           JSON.stringify({name: '@fontsource/ocean-sans', version: '1.0.0'}),
@@ -1516,6 +1632,7 @@ describe('app-theme doctor checks', () => {
           ? `@import "./f${i + 1}.css";\n`
           : '@font-face { font-family: "Ocean Sans"; src: url("./o.woff2"); }\n',
       );
+    write(path.join(packageDir, 'dist/o.woff2'), 'font');
     expect(check(await checkAppThemes(dir), 'theme-fonts')).toMatchObject({
       status: 'warn',
       message: expect.stringContaining('could not follow'),
