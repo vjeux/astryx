@@ -427,6 +427,10 @@ gap below is open.
   Safari on iOS (`packages/core/src/keyboard/useMobileKeyboard.ts`). But
   Firefox reports the keyboard's hide once, at its end. The sheet's content
   moves at that report, in one frame, instead of riding from the blur (FR3).
+- **Gap 13 — A field focused before the touch runtime loads.** Until the shared
+  loader has run (after first paint, at idle within its cap; `spec:AST-080`
+  DEC-5), a focused field keeps the browser's own reveal and does not ride the
+  keyboard.
 - **Gap 13 — The rise in Chrome on Android.** When the keyboard opens, a field
   in scrolling content moves into place in one frame, with no rise beside
   Gboard's slide. Chrome checks the focused field in the resize's own commit
