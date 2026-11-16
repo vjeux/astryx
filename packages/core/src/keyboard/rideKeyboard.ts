@@ -19,8 +19,7 @@ import type {
   MotionProperty,
   MotionValues,
 } from '../motion/animator';
-import {cubicBezier} from '../motion/bezier';
-import type {KeyboardTransition} from './keyboardModel';
+import {keyboardProgress, type KeyboardTransition} from './keyboardModel';
 
 /** How a ride treats Reduce Motion. */
 export interface RideOptions {
@@ -36,8 +35,9 @@ export interface RideOptions {
  * `transition.start`, or at once when the keyboard jumps.
  *
  * Android's keyboard moves on Gboard's slides up and down
- * (motion/android/keyboard.ts). The transition publishes the slide
- * (`curve`), and the ride plays it. Every ride starts at the transition's
+ * (motion/android/keyboard.ts), and iOS's on UIKit's keyboard spring
+ * (motion/uikit/keyboard.ts). The transition publishes the curve (`curve`),
+ * and the ride plays it. Every ride starts at the transition's
  * start, so content that joins a slide late lands where the keyboard is. A
  * transition that is not animated lands at once, such as a keyboard changing
  * while up. So does a slide that has ended by the call. These values are the
@@ -74,15 +74,14 @@ export function rideKeyboard(
     ? {at: transition.start, crossfadeAs: 'entrance' as const}
     : {at: transition.start};
   const span = transition.curve.durationMs / 1000;
-  const ease = cubicBezier(transition.curve.points);
+  const progress = keyboardProgress(transition.curve);
   const curves: Partial<Record<MotionProperty, MotionCurve>> = {};
   for (const [property, target] of Object.entries(to) as [
     MotionProperty,
     number,
   ][]) {
     const from = animator.get(property, transition.start);
-    const at = (t: number) =>
-      from + (target - from) * ease(Math.min(1, Math.max(0, t / span)));
+    const at = (t: number) => from + (target - from) * progress(t);
     curves[property] = {
       duration: span,
       at,

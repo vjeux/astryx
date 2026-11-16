@@ -4,14 +4,23 @@
  * @file rideKeyboard.test.ts
  * @input vitest, rideKeyboard, a stand-in animator
  * @output Tests that a ride plays its transition's curve from the
- *   transition's start and asks for an entrance. A jump or an ended slide
- *   lands at once.
+ *   transition's start, Gboard's slide or UIKit's keyboard spring, and asks
+ *   for an entrance. A jump or an ended slide lands at once.
  * @position Unit tests for keyboard/rideKeyboard.ts
  */
 
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import type {Animator} from '../motion/animator';
 import {keyboard as androidKeyboard} from '../motion/android';
+import {KEYBOARD_SPRING} from '../motion/uikit/springs';
+import {timing as uikitTiming} from '../motion/uikit/timing';
+import {deepActiveElement} from '../utils/flatTree';
+import {createUIKitKeyboardSchedule} from './uikitKeyboardSchedule';
+
+const uikitKeyboardSchedule = createUIKitKeyboardSchedule({
+  notificationMs: uikitTiming.keyboardNotificationMs,
+  deepActiveElement,
+});
 import type {KeyboardTransition} from './keyboardModel';
 import {rideKeyboard} from './rideKeyboard';
 
@@ -73,6 +82,33 @@ describe('rideKeyboard', () => {
     expect(options).toEqual({at: 1000});
     expect(curves.y.duration).toBeCloseTo(androidKeyboard.showMs / 1000, 9);
     expect(curves.y.at(curves.y.duration)).toBe(-300);
+  });
+
+  it('plays UIKit’s keyboard spring where the transition publishes it, landing at the notification’s duration (iOS)', () => {
+    const animator = standInAnimator();
+
+    rideKeyboard(
+      animator as unknown as Animator,
+      {y: -336},
+      transition({
+        to: 336,
+        curve: uikitKeyboardSchedule.curve,
+      }),
+    );
+
+    expect(animator.play).toHaveBeenCalledTimes(1);
+    const [curves, options] = animator.play.mock.calls[0] as unknown as [
+      Record<string, {duration: number; at: (t: number) => number}>,
+      {at: number},
+    ];
+    expect(options).toEqual({at: 1000});
+    const span = uikitTiming.keyboardNotificationMs / 1000;
+    expect(curves.y.duration).toBeCloseTo(span, 9);
+    // Critically damped: 1 − (1 + ω₀t)·e^(−ω₀t) of the way at t.
+    const omega = Math.sqrt(KEYBOARD_SPRING.stiffness / KEYBOARD_SPRING.mass);
+    const along = (s: number) => 1 - (1 + omega * s) * Math.exp(-omega * s);
+    expect(curves.y.at(0.1)).toBeCloseTo(-336 * along(0.1), 6);
+    expect(curves.y.at(span)).toBe(-336);
   });
 
   it("plays the transition's own curve, even a show published with the hide slide", () => {
