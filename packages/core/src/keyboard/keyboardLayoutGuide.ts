@@ -26,17 +26,32 @@ import {
   type KeyboardProfile,
   type KeyboardTransition,
 } from './keyboardModel';
+import {deepActiveElement} from '../utils/flatTree';
 import {sharedWeakMap} from '../utils/sharedRealm';
 
 /**
  * Whose keyboard schedule the guide reads: `chromium` where the browser has
- * the VirtualKeyboard API, else null. Without the profile, no surface rides
- * the guide. Chrome reports the keyboard as each slide starts. The profile is
- * a capability, never the user agent. motion/android/keyboard.ts holds the
- * measured timing.
+ * the VirtualKeyboard API, `uikit` in Safari on iOS and iPadOS, else null.
+ * Without the profile, no surface rides the guide. Chrome reports the
+ * keyboard as each slide starts, and Safari reports its show as UIKit's
+ * keyboard starts up. The profile is a capability, never the user agent.
+ * motion/android/keyboard.ts and motion/uikit hold the measured timing.
  */
 export function keyboardProfileOf(win: Window): KeyboardProfile | null {
-  return hasVirtualKeyboard(win) ? 'chromium' : null;
+  if (hasVirtualKeyboard(win)) {
+    return 'chromium';
+  }
+  return hasUIKitKeyboard(win) ? 'uikit' : null;
+}
+
+// Only WebKit on iOS and iPadOS supports `-webkit-touch-callout`, and its
+// keyboard is UIKit's.
+function hasUIKitKeyboard(win: Window): boolean {
+  const css = (win as Window & {readonly CSS?: Partial<typeof CSS>}).CSS;
+  return (
+    typeof css?.supports === 'function' &&
+    css.supports('-webkit-touch-callout', 'none')
+  );
 }
 
 /** A window's keyboard layout guide. */
@@ -103,6 +118,10 @@ function opensPickerOverPage(target: EventTarget | null): boolean {
  * shadow host or a custom element. Focus on a field inside one leaves
  * `document.activeElement` on it.
  */
+function isElement(target: EventTarget | null): target is Element {
+  return target != null && (target as Node).nodeType === 1;
+}
+
 export function hidesField(target: Element): boolean {
   return (
     target.tagName === 'IFRAME' ||
@@ -166,7 +185,10 @@ export function getKeyboardLayoutGuide(win: Window): KeyboardLayoutGuide {
 function createGuide(win: Window): KeyboardLayoutGuide {
   const listeners = new Set<(transition: KeyboardTransition) => void>();
   let profile = keyboardProfileOf(win);
-  let model: KeyboardModel = createKeyboardModel(getKeyboardHeight(win));
+  let model: KeyboardModel = createKeyboardModel(
+    getKeyboardHeight(win),
+    profile,
+  );
   let verifyTimer: ReturnType<typeof setTimeout> | null = null;
   let detach: (() => void) | null = null;
   // Whether focusing `target` keeps an input view where the keyboard is. On
@@ -187,6 +209,14 @@ function createGuide(win: Window): KeyboardLayoutGuide {
       !keepsInputView(active) &&
       !(active != null && hidesField(active))
     );
+  };
+
+  // Whether the focused element, read inside open shadow roots, may keep a
+  // keyboard up. A frame or a custom element can hold a field the page cannot
+  // see.
+  const mayKeepKeyboard = (): boolean => {
+    const target = deepActiveElement(win.document);
+    return target != null && (keepsInputView(target) || hidesField(target));
   };
 
   const publish = (transition: KeyboardTransition | null) => {
@@ -221,7 +251,7 @@ function createGuide(win: Window): KeyboardLayoutGuide {
 
   const attach = () => {
     profile = keyboardProfileOf(win);
-    model = createKeyboardModel(getKeyboardHeight(win));
+    model = createKeyboardModel(getKeyboardHeight(win), profile);
     // When a field that brings up a keyboard last gained focus.
     let keyboardFocusAt = -Infinity;
     let handoffTimer: ReturnType<typeof setTimeout> | null = null;
@@ -255,24 +285,54 @@ function createGuide(win: Window): KeyboardLayoutGuide {
       }
       return model.report(height, time);
     };
+    // Safari on iOS keeps the keyboard up for a field inside a frame, a custom
+    // element or an open shadow root. When focus moves to one of these, the
+    // guide waits for focus to settle there. It decides about the hide at the
+    // focus event, or on the next task.
+    let pendingBlurAt: number | null = null;
+    let pendingBlurTimer: ReturnType<typeof setTimeout> | null = null;
+    const settlePendingBlur = () => {
+      if (pendingBlurTimer != null) {
+        clearTimeout(pendingBlurTimer);
+        pendingBlurTimer = null;
+      }
+      const blurAt = pendingBlurAt;
+      pendingBlurAt = null;
+      if (blurAt != null && !mayKeepKeyboard()) {
+        publish(model.blurred(blurAt));
+      }
+    };
     const onReport = (event: KeyboardHeightEvent) => {
       if (event.type === 'viewport') {
         publish(report(event.height, event.timeStamp));
       } else if (event.type === 'focusin') {
+        settlePendingBlur();
         if (keepsInputView(event.target)) {
           keyboardFocusAt = event.timeStamp;
+          publish(model.focused(event.timeStamp));
+        } else if (profile === 'uikit' && mayKeepKeyboard()) {
           publish(model.focused(event.timeStamp));
         }
       } else if (
         keepsInputView(event.target) &&
         !keepsInputView(event.relatedTarget)
       ) {
+        const next = event.relatedTarget;
+        if (profile === 'uikit' && isElement(next) && hidesField(next)) {
+          pendingBlurAt = event.timeStamp;
+          pendingBlurTimer = setTimeout(settlePendingBlur, 0);
+          return;
+        }
         publish(model.blurred(event.timeStamp));
       }
     };
     const unsubscribe = subscribeKeyboardHeight(win, onReport, {focus: true});
     return () => {
       unsubscribe();
+      if (pendingBlurTimer != null) {
+        clearTimeout(pendingBlurTimer);
+        pendingBlurTimer = null;
+      }
       if (handoffTimer != null) {
         clearTimeout(handoffTimer);
         handoffTimer = null;

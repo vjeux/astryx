@@ -15,6 +15,7 @@ roles through `resolveMotion`.
 | File                                             | What it is                                                                                                                                                           |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `uikit/`                                         | THE constants table: every spring, duration, deceleration rate, rubber-band constant and curve, with its source.                                                     |
+| `uikit/keyboard.ts`                              | The software keyboard's frame spring and notification duration, which the keyboard module reads with no other table.                                                 |
 | `uikit/springs.ts`                               | Interaction springs (navigation, sheets, alerts, menus, controls, keyboard, banners) and the SwiftUI / UIKit presets.                                                |
 | `uikit/scroll.ts`                                | UIScrollView: deceleration rates, rubber band, bounce-back spring, `delaysContentTouches`, scroll to top.                                                            |
 | `uikit/timing.ts`                                | Non-spring clocks and curves: press highlight, Core Animation's named curves, keyboard, Reduced Motion cross-fade.                                                   |

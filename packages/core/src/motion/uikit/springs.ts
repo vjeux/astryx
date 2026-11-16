@@ -27,6 +27,7 @@
  * - /packages/core/src/motion/MEASUREMENTS.md (measurement tasks)
  */
 
+import {KEYBOARD_SPRING} from './keyboard';
 import {registerMotionTable, registerSpringRole} from '../roles';
 import type {SpringDescription} from '../spring';
 
@@ -455,19 +456,9 @@ export const SWITCH_THUMB_MOVE_SPRING = {
 // System
 // ---------------------------------------------------------------------
 
-/**
- * Keyboard frame animation, show and hide alike: critically damped,
- * response 0.2667 s. The notification reports curve 7 and 0.3833 s
- * (`timing.keyboardNotificationMs`); Core Animation cuts the spring there.
- * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
- *   iPhone 17 Pro, CAAnimation read on the keyboard host and a
- *   keyboardLayoutGuide-pinned view, Oct 23 2026
- */
-export const KEYBOARD_SPRING = {
-  mass: 1,
-  stiffness: 555.0265,
-  damping: 47.118,
-} as const;
+// The keyboard frame's spring lives in keyboard.ts, which the keyboard module
+// reads with no other table.
+export {KEYBOARD_SPRING};
 
 /**
  * Banner / toast sliding in from the top edge (system notification
@@ -549,6 +540,12 @@ export const springs = {
   contextMenuMorph: CONTEXT_MENU_MORPH_SPRING,
   menuReducedMotion: MENU_REDUCED_MOTION_SPRING,
   switchThumbMove: SWITCH_THUMB_MOVE_SPRING,
+  /**
+   * The keyboard frame's spring (keyboard.ts).
+   * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
+   *   iPhone 17 Pro, CAAnimation read on the keyboard host and a
+   *   keyboardLayoutGuide-pinned view, Oct 23 2026
+   */
   keyboard: KEYBOARD_SPRING,
   banner: BANNER_SPRING,
   sliderRelease: SLIDER_RELEASE_SPRING,

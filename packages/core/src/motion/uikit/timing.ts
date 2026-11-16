@@ -24,6 +24,7 @@
  *   there and must agree; uikit/uikit.test.ts checks it)
  */
 
+import {KEYBOARD_NOTIFICATION_MS} from './keyboard';
 import {registerMotionTable} from '../roles';
 
 /**
@@ -170,7 +171,7 @@ export const timing = {
    *   iPhone 17 Pro, UIKeyboardWillShow / WillHide / WillChangeFrame read,
    *   Oct 23 2026
    */
-  keyboardNotificationMs: 383.3,
+  keyboardNotificationMs: KEYBOARD_NOTIFICATION_MS,
   /**
    * Core Animation's implicit animation duration
    * (`CATransaction.animationDuration()`), in ms.

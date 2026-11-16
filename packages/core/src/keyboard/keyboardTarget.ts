@@ -649,7 +649,7 @@ function rideWithKeyboard(
   const animator = animatorFor(target);
   riddenAnimators.set(target, animator);
   const guide =
-    keyboardProfileOf(win) === 'chromium' ? getKeyboardLayoutGuide(win) : null;
+    keyboardProfileOf(win) != null ? getKeyboardLayoutGuide(win) : null;
   // A ride moves the target while it rides or waits for the keyboard to go.
   // Once it ends, by itself or by a takeover, it never moves the target.
   let state: 'riding' | 'waiting' | 'ended' = 'riding';

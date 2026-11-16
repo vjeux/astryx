@@ -7,7 +7,7 @@
  *   with Gboard, as the page sees it. It holds the slides' durations and
  *   curves, and when they start against Chrome's report and a blur.
  * @position The keyboard domain of the Android constants table, read by
- *   keyboard/keyboardModel.ts. The UIKit table holds iOS's keyboard.
+ *   keyboard/keyboardModel.ts. motion/uikit/keyboard.ts holds iOS's keyboard.
  *
  * SYNC: When modified, update /packages/core/src/keyboard/README.md
  */

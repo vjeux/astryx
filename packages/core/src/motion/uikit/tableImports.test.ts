@@ -22,6 +22,8 @@ import {describe, expect, it} from 'vitest';
  */
 const SHARED_TABLES = new Set([
   'motion/uikit/gestures.ts',
+  // The keyboard's own motion: the keyboard module rides it.
+  'motion/uikit/keyboard.ts',
   // The long-press values: useLongPress and the menus' press model read them.
   'motion/uikit/longPress.ts',
   'motion/uikit/navigation.ts',

@@ -318,10 +318,11 @@ export function useChatKeyboard({
         .catch(() => undefined);
     };
     // The ride attaches only under a coarse primary pointer, where the guide
-    // publishes the keyboard's own slide: Gboard's, in Chrome on Android.
-    // Elsewhere the layout follows the height alone.
+    // publishes the keyboard's own motion. That is Gboard's slide in Chrome on
+    // Android, and UIKit's keyboard spring in Safari on iOS. Elsewhere the
+    // layout follows the height alone.
     const unsubscribe =
-      isTouch && keyboardProfileOf(win) === 'chromium'
+      isTouch && keyboardProfileOf(win) != null
         ? getKeyboardLayoutGuide(win).subscribe(follow)
         : undefined;
     // A height change the guide has no ride for, as for a resize or a
