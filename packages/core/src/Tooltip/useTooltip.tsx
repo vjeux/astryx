@@ -19,10 +19,13 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
   type RefCallback,
 } from 'react';
+import {createPortal} from 'react-dom';
 import {useCommittedRef} from '../hooks/useCommittedRef';
+import {useIsHydrating} from '../hooks/useIsHydrating';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {TooltipPresentInterestContext} from './tooltipPresentInterest';
 import {createTriggerFocusGate, isFocusOnTrigger} from '../utils/triggerFocus';
@@ -212,7 +215,9 @@ export interface TooltipReturn {
 
   /**
    * ID for aria-describedby on the trigger element.
-   * Caller should compose with other IDs using mergeIds utility.
+   * Caller should compose with other IDs using mergeIds utility. It is empty
+   * in a server render and the render that hydrates it; leave the attribute
+   * off then.
    */
   describedBy: string;
 
@@ -269,12 +274,25 @@ export interface TooltipReturn {
  * @example
  * ```
  * const tooltip = useTooltip({ placement: 'above' });
- * <Button ref={tooltip.ref} aria-describedby={tooltip.describedBy}>
+ * <Button ref={tooltip.ref} aria-describedby={tooltip.describedBy || undefined}>
  *   Hover me
  * </Button>
  * {tooltip.renderTooltip('Helpful tooltip text')}
  * ```
  */
+
+const isNotMounted = () => false;
+
+/** Where a trigger's `aria-describedby` can name an element: its shadow root, or its document's body. */
+function descriptionRootOf(
+  trigger: HTMLElement,
+): DocumentFragment | HTMLElement {
+  const root = trigger.getRootNode();
+  const ShadowRootOfWindow = trigger.ownerDocument.defaultView?.ShadowRoot;
+  return ShadowRootOfWindow != null && root instanceof ShadowRootOfWindow
+    ? root
+    : trigger.ownerDocument.body;
+}
 
 export function useTooltip(options: TooltipOptions = {}): TooltipReturn {
   const {
@@ -295,11 +313,15 @@ export function useTooltip(options: TooltipOptions = {}): TooltipReturn {
   // over the trigger: content taller than the room above and below opens
   // beside it, or on the roomier side sized to that room, and scrolls what does not
   // fit inside the surface, which stays hoverable (spec:AST-059 FR4).
+  // The layer mounts at its first show and then stays, so a page with a
+  // tooltip on every row pays for no closed layers (`useLayer`'s `lazyMount`).
   const layer = useLayerInternal({
     mode: 'context',
     onShow,
     onHide,
     keepsAnchorClear: true,
+    lazyMount: true,
+    keepsMountAfterShow: true,
   });
   const {
     ref: layerRef,
@@ -309,7 +331,29 @@ export function useTooltip(options: TooltipOptions = {}): TooltipReturn {
     isOpen: isLayerOpen,
     id: layerId,
     render: renderLayer,
+    mount: layerMount,
   } = layer;
+  // Until the layer mounts, `aria-describedby` names a hidden copy of the
+  // description, so a screen reader reads it before the tooltip opens.
+  // The layer's mount store decides the swap. The copy leaves in the commit
+  // that mounts the layer. A show that waits for its trigger keeps the copy.
+  const isLayerMounted = useSyncExternalStore(
+    layerMount.subscribe,
+    layerMount.isMounted,
+    isNotMounted,
+  );
+  const descriptionId = `${layerId}-description`;
+  // A server render cannot portal. Server and hydrating markup carry no copy
+  // and no reference to it.
+  const isHydrating = useIsHydrating();
+  // A trigger in a shadow root or another document keeps the copy where its
+  // `aria-describedby` can name it.
+  const [triggerDescriptionRoot, setTriggerDescriptionRoot] = useState<
+    DocumentFragment | HTMLElement | null
+  >(null);
+  const descriptionHost = isHydrating
+    ? null
+    : (triggerDescriptionRoot ?? document.body);
 
   const popoverXstyle = styles.container;
 
@@ -776,6 +820,12 @@ export function useTooltip(options: TooltipOptions = {}): TooltipReturn {
       el.addEventListener('focusout', onFocusOut);
       el.addEventListener('focusout', onHeldFocusOut);
       triggerRef.current = el;
+      // A trigger in a shadow root or another document keeps the hidden
+      // copy there.
+      const descriptionRoot = descriptionRootOf(el);
+      if (descriptionRoot !== document.body) {
+        setTriggerDescriptionRoot(descriptionRoot);
+      }
 
       // A trigger that attaches again after its wiring was removed
       // (DropdownMenu's Button as its menu closes) missed the focus that
@@ -967,20 +1017,38 @@ export function useTooltip(options: TooltipOptions = {}): TooltipReturn {
         onMouseLeave: scheduleHide,
       };
 
-      return renderLayer(
-        // FR11: React bubbles a press on the surface to the trigger's
-        // ancestors, portaled or not. A registered surface counts as
-        // something else in the shared interactive-ancestor walk, so a
-        // clickable container around the trigger leaves the press alone while
-        // document listeners still see it.
-        // The hold's announcement reads this element's text.
-        <div ref={contentRefs} {...stylex.props(styles.content)}>
-          {children}
-        </div>,
-        renderProps,
+      return (
+        <>
+          {renderLayer(
+            // FR11: React bubbles a press on the surface to the trigger's
+            // ancestors, portaled or not. A registered surface counts as
+            // something else in the shared interactive-ancestor walk, so a
+            // clickable container around the trigger leaves the press alone
+            // while document listeners still see it.
+            // The hold's announcement reads this element's text.
+            <div ref={contentRefs} {...stylex.props(styles.content)}>
+              {children}
+            </div>,
+            renderProps,
+          )}
+          {!isLayerMounted &&
+            descriptionHost != null &&
+            // In the document's body, the copy changes no layout and no
+            // sibling rule (such as ButtonGroup's last-member radius) where
+            // the trigger sits.
+            createPortal(
+              <span id={descriptionId} hidden>
+                {children}
+              </span>,
+              descriptionHost,
+            )}
+        </>
       );
     },
     [
+      isLayerMounted,
+      descriptionHost,
+      descriptionId,
       renderLayer,
       placement,
       alignment,
@@ -1028,7 +1096,11 @@ export function useTooltip(options: TooltipOptions = {}): TooltipReturn {
     positionRef: layerRef,
     interactionRef,
     anchorId: layerAnchorId,
-    describedBy: layerId,
+    describedBy: isLayerMounted
+      ? layerId
+      : descriptionHost != null
+        ? descriptionId
+        : '',
     renderTooltip,
     show,
     hide,
