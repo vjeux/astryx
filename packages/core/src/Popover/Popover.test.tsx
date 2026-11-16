@@ -42,11 +42,13 @@ import {Dialog} from '../Dialog';
 import {SegmentedControl, SegmentedControlItem} from '../SegmentedControl';
 import {focusOutlineStyles} from '../utils/focusOutline.stylex';
 import {__loadTouchRuntimeForTest} from '../utils/touchRuntime';
+import {__loadPopoverSurfaceMotionForTest} from './usePopoverSurfaceMotion';
 
-// These cases drive touch motion, which comes with the shared touch runtime
-// once the page has loaded it.
+// These cases drive touch motion: Popover's own, which loads after first
+// paint where the primary pointer is coarse, and the shared touch runtime's.
 beforeAll(async () => {
   await __loadTouchRuntimeForTest();
+  await __loadPopoverSurfaceMotionForTest();
 });
 
 // Store original matches to restore later

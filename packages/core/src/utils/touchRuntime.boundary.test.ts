@@ -6,7 +6,8 @@
  *   BottomSheet entries, and every core source file
  * @output The source boundary check for `architecture:react-component-runtime`
  *   INV13's shared touch loader: no entry's static graph reaches the animator
- *   or the gesture host, and only the loader imports the runtime module
+ *   or the gesture host, only the loader imports the runtime module, and the
+ *   runtime gathers no Popover code
  * @position Testing; the loader's timing is in touchRuntime.test.tsx
  */
 
@@ -120,5 +121,25 @@ describe('architecture:react-component-runtime INV13 shared touch loader', () =>
     expect(loader).not.toMatch(
       /^\s*import\s+(?!type\b)[^;]*['"]\.\/touchRuntimeModules['"]/m,
     );
+  });
+
+  it('gathers no Popover code into the runtime: Popover loads its touch motion only through import()', () => {
+    const runtime = staticImports(join(here, 'touchRuntimeModules.tsx'))
+      .map(file => relative(coreSrc, file))
+      .filter(name => name.startsWith('Popover/'));
+    expect(runtime).toEqual([]);
+    const importers = sourceFiles(coreSrc)
+      .filter(file =>
+        staticImports(file).some(
+          found =>
+            relative(coreSrc, found) === 'Popover/popoverSurfaceMotion.ts',
+        ),
+      )
+      .map(file => relative(coreSrc, file));
+    expect(importers).toEqual([]);
+    const hook = code(
+      readFileSync(join(coreSrc, 'Popover/usePopoverSurfaceMotion.ts'), 'utf8'),
+    );
+    expect(hook).toMatch(/import\(\s*'\.\/popoverSurfaceMotion'\s*\)/);
   });
 });
