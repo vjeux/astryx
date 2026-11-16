@@ -814,7 +814,7 @@ export default function EditorPage() {
     <LayoutPanel
       hasDivider={!isMobile}
       padding={0}
-      style={{width: isMobile ? '100%' : 320, flexShrink: 0}}>
+      width={isMobile ? '100%' : 320}>
       <VStack gap={4}>
         {/* Panel Header */}
         <Section variant="transparent" padding={4}>
@@ -888,6 +888,13 @@ export default function EditorPage() {
                       icon={<Icon icon={EyeIcon} size="sm" />}
                       variant="ghost"
                       isIconOnly
+                      onClick={() =>
+                        // Demo only: replace this toast with the call that performs the action.
+                        showToast({
+                          body: 'Demo: a preview of the page would open here',
+                          uniqueID: 'preview',
+                        })
+                      }
                     />
                     <Button
                       label="Publish"

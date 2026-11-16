@@ -21,6 +21,7 @@ import {
   doctorRendersElement,
   doctorStylesheetImports,
   findDoctorInstalledPackage,
+  fontServiceFamilies,
   realDoctorFile,
   isLocalThemeOwner,
   listDoctorThemePackages,
@@ -39,6 +40,7 @@ import {
   generatedSourceCommand,
   isPrivateVarRefusal,
   missingThemePackage,
+  dependencyInstallFor,
   packageInstallCommand,
   themeBuild,
   themeRecordOwner,
@@ -115,6 +117,13 @@ function refreshThemeCommand(projectDir, run, available, slug, owner) {
       candidate.slug === slug && themeRecordOwner(candidate) === owner,
   );
   if (!isLocalThemeOwner(owner)) {
+    // A theme package the project lists but has not installed, as in a fresh
+    // clone, comes from installing the project's dependencies, at the version
+    // it lists; its theme is added already.
+    const install = findDoctorInstalledPackage(projectDir, owner)
+      ? null
+      : dependencyInstallFor(projectDir, owner);
+    if (install) return install;
     const selector = theme?.package ?? owner;
     return `npm install ${owner}@latest; ${run} theme add ${slug} --package ${selector}`;
   }
@@ -456,8 +465,9 @@ function namedThemeFonts(files) {
 /**
  * The families a font stylesheet loads with `@font-face`, following its
  * local `@import`s (a relative file, or a package's stylesheet such as
- * `@fontsource/inter/index.css`); `external` when it imports a URL
- * (http, https, `//`), whose families doctor cannot read.
+ * `@fontsource/inter/index.css`), and the families the `family` parameters
+ * of a font service URL it imports name; `external` when it imports a URL
+ * (http, https, `//`), which may load families doctor cannot read.
  * @param {string} css
  * @param {string} [file] the stylesheet's path, to resolve local imports
  * @param {Set<string>} [seen]
@@ -471,6 +481,11 @@ function fontStylesheetEvidence(css, file, seen = new Set()) {
     if (atRule.name.toLowerCase() === 'import') {
       const spec = [...doctorStylesheetImports(`@import ${atRule.params};`)][0];
       if (!spec || /^(?:https?:)?\/\//i.test(spec)) {
+        // A family the request names counts as loaded, as an @font-face rule
+        // does: the stylesheet asks the service for it.
+        for (const family of fontServiceFamilies(spec ?? '')) {
+          loaded.add(family);
+        }
         external = true;
         return;
       }
@@ -1174,6 +1189,30 @@ export function withProviderWiring(appChecks, wiring) {
 }
 
 /**
+ * The theme input the private-variable check reads. A bundled theme is a copy
+ * of its package's source. When the project installs that package, the check
+ * reads the package's own copy: the app uses that package, and the copy's
+ * imports, such as the theme's icon library, resolve from the package in every
+ * install layout. Yarn Plug'n'Play refuses the CLI's copy an import of a
+ * package the CLI does not depend on.
+ * @param {DiscoveredTheme} theme the discovered theme
+ * @param {string} owner the package that the app's theme record names
+ * @param {string} projectDir
+ * @returns {string}
+ */
+function privateInputFile(theme, owner, projectDir) {
+  const own = path.join(theme.sourceDir, theme.entry);
+  if (theme.source !== 'bundled') return own;
+  const packageDir = findDoctorInstalledPackage(projectDir, owner);
+  const installed = packageDir
+    ? path.join(packageDir, 'src', theme.entry)
+    : null;
+  // The path as found, not its real path: Yarn gives a package with peer
+  // dependencies a path of its own, and resolves its imports only from there.
+  return installed && realDoctorFile(installed) ? installed : own;
+}
+
+/**
  * Run all ten app-theme checks.
  * @param {string} cwd
  * @returns {Promise<DoctorCheck[]>}
@@ -1381,34 +1420,40 @@ export async function checkAppThemes(cwd) {
       id: 'theme-owners',
       label: 'Theme owners and built imports',
       status: 'fail',
-      message: resolutionProblems
-        .map(problem =>
-          // A theme another command generates is not rebuilt with `theme
-          // build`: its fix names that command, so its message does not.
-          refreshThemeCommand(
-            state.projectDir,
-            run,
-            available,
-            problem.slug,
-            problem.owner,
-          ).includes(' theme build ')
-            ? problem.message
-            : problem.message
-                .replace(/\s*Run `[^`]*theme build[^`]*` and try again\./, '')
-                .replace(/\s*Rebuild it with `[^`]*theme build[^`]*`\.?/, ''),
-        )
-        .join(' '),
-      fix: resolutionProblems
-        .map(problem =>
-          refreshThemeCommand(
-            state.projectDir,
-            run,
-            available,
-            problem.slug,
-            problem.owner,
+      // Themes that one step fixes, such as installing the project's
+      // dependencies, say it once.
+      message: [
+        ...new Set(
+          resolutionProblems.map(problem =>
+            // A theme another command generates is not rebuilt with `theme
+            // build`: its fix names that command, so its message does not.
+            refreshThemeCommand(
+              state.projectDir,
+              run,
+              available,
+              problem.slug,
+              problem.owner,
+            ).includes(' theme build ')
+              ? problem.message
+              : problem.message
+                  .replace(/\s*Run `[^`]*theme build[^`]*` and try again\./, '')
+                  .replace(/\s*Rebuild it with `[^`]*theme build[^`]*`\.?/, ''),
           ),
-        )
-        .join(' '),
+        ),
+      ].join(' '),
+      fix: [
+        ...new Set(
+          resolutionProblems.map(problem =>
+            refreshThemeCommand(
+              state.projectDir,
+              run,
+              available,
+              problem.slug,
+              problem.owner,
+            ),
+          ),
+        ),
+      ].join('; '),
     });
   } else if (unshippedImports.length > 0) {
     checks.push({
@@ -1663,8 +1708,14 @@ export async function checkAppThemes(cwd) {
     );
   }
 
+  // The inputs load with Core, and doctor reads only the Core the project
+  // installed, never the one the answering copy carries.
+  const privateCoreMissing =
+    !incompleteResolution &&
+    resolved.length > 0 &&
+    !findDoctorCoreDir(state.projectDir);
   const privateProblems = [];
-  for (const theme of resolved) {
+  for (const theme of privateCoreMissing ? [] : resolved) {
     const availableTheme = available.find(
       candidate =>
         candidate.slug === theme.slug &&
@@ -1673,7 +1724,7 @@ export async function checkAppThemes(cwd) {
     if (!availableTheme) continue;
     try {
       const errors = await validateThemePrivateInputs(
-        path.join(availableTheme.sourceDir, availableTheme.entry),
+        privateInputFile(availableTheme, theme.owner, state.projectDir),
         {cwd: state.projectDir},
       );
       if (errors.length > 0) {
@@ -1695,33 +1746,41 @@ export async function checkAppThemes(cwd) {
           message:
             'Could not inspect every theme input until built imports resolve.',
         }
-      : privateProblems.length > 0
+      : privateCoreMissing
         ? {
             id: 'theme-private-variables',
             label: 'Private theme variables',
-            status: 'fail',
-            message: `Added theme inputs set private --_* variables directly (${privateProblems
-              .map(problem => `${problem.theme.slug}: ${problem.message}`)
-              .join('; ')}).`,
-            fix: `Remove the direct private input keys, then ${privateProblems
-              .map(problem =>
-                refreshThemeCommand(
-                  state.projectDir,
-                  run,
-                  available,
-                  problem.theme.slug,
-                  problem.theme.owner,
-                ),
-              )
-              .join(' ')}`,
-          }
-        : {
-            id: 'theme-private-variables',
-            label: 'Private theme variables',
-            status: 'pass',
+            status: 'info',
             message:
-              'No added theme input sets a private --_* variable directly.',
-          },
+              "The project's Core isn't installed, so theme inputs were not checked for private variables. Install the project's dependencies, then run doctor again.",
+          }
+        : privateProblems.length > 0
+          ? {
+              id: 'theme-private-variables',
+              label: 'Private theme variables',
+              status: 'fail',
+              message: `Added theme inputs set private --_* variables directly (${privateProblems
+                .map(problem => `${problem.theme.slug}: ${problem.message}`)
+                .join('; ')}).`,
+              fix: `Remove the direct private input keys, then ${privateProblems
+                .map(problem =>
+                  refreshThemeCommand(
+                    state.projectDir,
+                    run,
+                    available,
+                    problem.theme.slug,
+                    problem.theme.owner,
+                  ),
+                )
+                .join(' ')}`,
+            }
+          : {
+              id: 'theme-private-variables',
+              label: 'Private theme variables',
+              status: 'pass',
+              message:
+                'No added theme input sets a private --_* variable directly.',
+            },
   );
 
   const coreDir = findDoctorCoreDir(state.projectDir);
@@ -1951,7 +2010,7 @@ export async function checkAppThemes(cwd) {
               label: 'Theme font loading',
               status: 'pass',
               message:
-                'Every named non-system font has a local @font-face loader.',
+                'Every named non-system font is loaded by an @font-face rule or a font service URL that names it.',
             },
   );
 

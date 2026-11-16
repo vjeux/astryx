@@ -13,6 +13,7 @@ import {
   alignCliAndCore,
   cliInstallAdvice,
   installFolder,
+  listedPackageInstall,
   projectAddCommand,
   globalBehind,
   globalUpgradeCommand,
@@ -93,6 +94,7 @@ export {
   validateThemePrivateInputs,
 } from '../theme/build/build.mjs';
 export {installCommandFor as packageInstallCommand} from '../../foundation/discovery/template-needs.mjs';
+export {fontServiceFamilies} from '../../foundation/fonts/font-stylesheet.mjs';
 export {resolveRecordedTheme} from '../theme/theme.mjs';
 export {themeIdentifier} from '../theme/_fork.mjs';
 export {collectUnloadedFonts} from '../theme/build/font-warning.mjs';
@@ -697,14 +699,17 @@ export function projectHasOwnCli(cwd) {
  * The command that adds the CLI at `version` with the project's package
  * manager, and the Core it matches: from a folder whose package.json declares
  * no Astryx package, in the Astryx project above at that project's Core; null
- * when there is none (see `cliInstallAdvice`).
+ * when there is none (see `cliInstallAdvice`). For a project that declares
+ * the CLI already, the command installs its dependencies (`declared`).
  * @param {string} cwd
  * @param {string} version
- * @returns {{command: string, core: string} | null}
+ * @returns {{command: string, core: string, declared: boolean} | null}
  */
 export function addCliCommandFor(cwd, version) {
   const advice = cliInstallAdvice({cwd, core: version});
-  return advice?.command ? {command: advice.command, core: advice.core} : null;
+  return advice?.command
+    ? {command: advice.command, core: advice.core, declared: advice.declared}
+    : null;
 }
 
 /**
@@ -716,6 +721,18 @@ export function addCliCommandFor(cwd, version) {
  */
 export function installCommandFor(cwd) {
   return projectAddCommand(cwd);
+}
+
+/**
+ * The command that installs the project's dependencies, when the project
+ * `cwd` belongs to lists `name`, so a `name` that is not installed comes from
+ * installing them; null otherwise (see `listedPackageInstall`).
+ * @param {string} cwd
+ * @param {string} name
+ * @returns {string | null}
+ */
+export function dependencyInstallFor(cwd, name) {
+  return listedPackageInstall(cwd, name);
 }
 
 /**
