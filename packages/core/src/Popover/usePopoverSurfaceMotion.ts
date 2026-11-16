@@ -5,7 +5,7 @@
 /**
  * @file usePopoverSurfaceMotion.ts
  * @input React, the shared touch resolver, the layer runtime's presentation
- *   hold and popoverSurfaceMotion
+ *   hold, the shared module loader and popoverSurfaceMotion, which it loads
  * @output Exports `usePopoverSurfaceMotion`, the calls Popover makes as it
  *   opens and as it starts to close. Under a finger they present and dismiss
  *   the popover the UIKit way; a mouse keeps the layer's own entrance.
@@ -22,6 +22,12 @@
  * motion is created for the surface the first time the popover opens and
  * follows it if the surface is replaced.
  *
+ * The motion loads with the input hold and the exit copy it uses. It loads
+ * after first paint where the primary pointer is coarse, or after the next
+ * paint once it turns coarse. A fine primary pointer never presents this way,
+ * so it loads none of it, and the shared touch runtime does not carry it.
+ * Until the motion has loaded, a popover presents as under a fine pointer.
+ *
  * SYNC: When modified, update:
  * - /packages/core/src/Popover/Popover.tsx
  * - /packages/core/src/Popover/usePopoverSurfaceMotion.test.tsx
@@ -29,12 +35,47 @@
 
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {createPresentationHold} from '../Layer/presentationHold';
-import {isCoarsePointer} from '../utils/coarsePointer';
+import {isCoarsePointer, watchCoarsePointer} from '../utils/coarsePointer';
+import {createModuleLoader} from '../utils/moduleLoader';
+import {scheduleAfterPaint} from '../utils/touchRuntime';
 import type {
   PopoverSurfaceMotion,
   PopoverSurfaceRect,
 } from './popoverSurfaceMotion';
-import {getTouchRuntime, useTouchRuntime} from '../utils/touchRuntime';
+
+const surfaceMotionModule = createModuleLoader(
+  async () => import('./popoverSurfaceMotion'),
+);
+
+type SurfaceMotionModule = Awaited<ReturnType<typeof surfaceMotionModule.load>>;
+
+/** The touch motion once the page has loaded it, else null. */
+let surfaceMotion: SurfaceMotionModule | null = null;
+let isLoadScheduled = false;
+
+/**
+ * Schedules the page's one load of the touch motion, on the touch runtime's
+ * wait: after `view`'s next paint, at idle. Later calls do nothing.
+ */
+function scheduleSurfaceMotionLoad(view: Window): void {
+  if (isLoadScheduled || surfaceMotion != null) {
+    return;
+  }
+  isLoadScheduled = true;
+  scheduleAfterPaint(view, () => {
+    surfaceMotionModule.load().then(
+      loaded => {
+        surfaceMotion = loaded;
+      },
+      () => {
+        // A chunk that fails to load leaves popovers on the fine-pointer
+        // presentation. The next mount, or the pointer turning coarse,
+        // asks the loader again.
+        isLoadScheduled = false;
+      },
+    );
+  });
+}
 
 // The growth needs where the surface ends and where its source is. Both
 // boxes are read once, in the frame that starts it, before that frame writes.
@@ -79,17 +120,27 @@ export function usePopoverSurfaceMotion(): PopoverSurfaceMotionCalls {
     motionRef.current = null;
   }, []);
 
-  // The touch presentation's motion comes with the shared touch runtime,
-  // which loads after first paint. Until then a popover presents as under a
-  // fine pointer.
-  useTouchRuntime();
+  // Syncs the touch motion's load with the primary pointer: scheduled at
+  // mount where it is coarse, else once it turns coarse.
+  useEffect(() => {
+    const view = window;
+    if (isCoarsePointer(view)) {
+      scheduleSurfaceMotionLoad(view);
+      return undefined;
+    }
+    return watchCoarsePointer(view, isCoarse => {
+      if (isCoarse) {
+        scheduleSurfaceMotionLoad(view);
+      }
+    });
+  }, []);
   const motionFor = useCallback(
     (element: HTMLElement, entrance: HTMLElement | null) => {
       const current = motionRef.current;
       if (current?.element === element && current.entrance === entrance) {
         return current.motion;
       }
-      const createMotion = getTouchRuntime()?.createPopoverSurfaceMotion;
+      const createMotion = surfaceMotion?.createPopoverSurfaceMotion;
       if (createMotion == null) {
         return null;
       }
@@ -117,7 +168,7 @@ export function usePopoverSurfaceMotion(): PopoverSurfaceMotionCalls {
       const isTouch =
         source != null &&
         isCoarsePointer(layer.ownerDocument.defaultView) &&
-        getTouchRuntime() != null;
+        surfaceMotion != null;
       touchHold.take(isTouch);
       if (!isTouch || source == null) {
         // A fine pointer animates nothing here, so nothing is created for
@@ -144,4 +195,16 @@ export function usePopoverSurfaceMotion(): PopoverSurfaceMotionCalls {
   }, [touchHold]);
 
   return useMemo(() => ({present, closeStart}), [present, closeStart]);
+}
+
+/** Test only: loads the touch motion now, as a coarse page does after paint. */
+export async function __loadPopoverSurfaceMotionForTest(): Promise<void> {
+  surfaceMotion = await surfaceMotionModule.load();
+  isLoadScheduled = true;
+}
+
+/** Test only: forgets the loaded touch motion and any scheduled load. */
+export function __resetPopoverSurfaceMotionForTest(): void {
+  surfaceMotion = null;
+  isLoadScheduled = false;
 }
