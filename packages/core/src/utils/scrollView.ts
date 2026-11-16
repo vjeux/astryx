@@ -106,6 +106,22 @@ function overflows(element: Element, axis: 'x' | 'y'): boolean {
 }
 
 /**
+ * Whether a scroll can take a touch on `axis` in a box whose overflow lets it
+ * scroll: it has room to scroll, or a drag past its content can still
+ * overscroll it or pull to refresh. With `overscroll-behavior: none` on that
+ * axis and no room, no scroll can take the touch.
+ */
+function canTakeTouch(
+  element: Element,
+  style: CSSStyleDeclaration,
+  axis: 'x' | 'y',
+): boolean {
+  const behavior =
+    axis === 'y' ? style.overscrollBehaviorY : style.overscrollBehaviorX;
+  return behavior !== 'none' || overflows(element, axis);
+}
+
+/**
  * Whether a touch on `element` lands inside a scroll view, UIKit's question
  * for a touch: a box above it, the page included, overflows on an axis it
  * scrolls, and `touch-action` on the way up leaves that axis to the browser.
@@ -139,10 +155,10 @@ export function isInsideScrollView(
       if (
         (panY &&
           SCROLLABLE_OVERFLOW.has(style.overflowY) &&
-          overflows(node, 'y')) ||
+          canTakeTouch(node, style, 'y')) ||
         (panX &&
           SCROLLABLE_OVERFLOW.has(style.overflowX) &&
-          overflows(node, 'x'))
+          canTakeTouch(node, style, 'x'))
       ) {
         return true;
       }
@@ -152,12 +168,13 @@ export function isInsideScrollView(
     }
     node = parentAcrossShadow(node);
   }
+  const rootStyle = view.getComputedStyle(doc.documentElement);
   return (
     (panY &&
       SCROLLABLE_OVERFLOW.has(rootOverflow(doc, 'y')) &&
-      overflows(root, 'y')) ||
+      canTakeTouch(root, rootStyle, 'y')) ||
     (panX &&
       SCROLLABLE_OVERFLOW.has(rootOverflow(doc, 'x')) &&
-      overflows(root, 'x'))
+      canTakeTouch(root, rootStyle, 'x'))
   );
 }
