@@ -10,10 +10,11 @@
  * @position Keyboard tests of TextInput.tsx
  */
 
-import {afterEach, expect, it, vi} from 'vitest';
+import {afterEach, beforeAll, expect, it, vi} from 'vitest';
 import {act, render, screen} from '@testing-library/react';
 import {TextInput} from './TextInput';
 import {animatorFor} from '../motion/animator';
+import {__loadTouchRuntimeForTest} from '../utils/touchRuntime';
 import {FIELD_OFFSET} from '../keyboard/keyboardTarget';
 import {
   installKeyboardTestDouble,
@@ -21,6 +22,11 @@ import {
 } from '../keyboard/__tests__/keyboardTestDouble';
 
 let keyboard: KeyboardTestDouble | null = null;
+
+// A ride moves the bar with the animator, which comes with the touch runtime.
+beforeAll(async () => {
+  await __loadTouchRuntimeForTest();
+});
 
 afterEach(() => {
   keyboard?.restore();
