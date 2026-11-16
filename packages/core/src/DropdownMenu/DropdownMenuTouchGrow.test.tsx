@@ -3,17 +3,26 @@
 /**
  * @file DropdownMenuTouchGrow.test.tsx
  * @input DropdownMenu, with the grow replaced by a recorder
- * @output Which opens grow the menu out of its trigger. A finger's or a
- *   pen's open grows it, a tap's open at its lift included, and under Reduce
- *   Motion its open and close still play the surface motion. A mouse's open,
- *   the keyboard's and a menu pinned to the pointer presentation do not.
+ * @output Which opens grow the menu out of its trigger. Once the touch
+ *   runtime has loaded, a finger's or a pen's open grows it, a tap's open at
+ *   its lift included. Under Reduce Motion its open and close still play the
+ *   surface motion. A finger's open before the load, a mouse's open, the
+ *   keyboard's and a menu pinned to the pointer presentation do not.
  * @position Unit coverage of DropdownMenu's touch grow decision
  *   (Popover/usePopoverSurfaceMotion.ts). The browser spec
  *   covers the frames.
  */
 
 import {act, fireEvent, render, screen} from '@testing-library/react';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import {__resetMenuPressForTest} from '../hooks/useMenuPress';
 import type * as InputHold from '../Layer/inputHold';
 import type * as PopoverSurfaceMotion from '../Popover/popoverSurfaceMotion';
@@ -21,6 +30,10 @@ import {scroll} from '../motion/uikit/scroll';
 import {DropdownMenu, type DropdownMenuOption} from './DropdownMenu';
 import {reducedMotionMarkProps} from '../privateAttributes/reducedMotion.stylex';
 import {TOUCH_QUERY} from '../utils/touchQueries';
+import {
+  __loadTouchRuntimeForTest,
+  __resetTouchRuntimeForTest,
+} from '../utils/touchRuntime';
 
 const motion = vi.hoisted(() => ({
   enter: vi.fn(),
@@ -158,6 +171,11 @@ function stubFrames(): () => Promise<void> {
 }
 
 // jsdom has no popover API: show and hide fire the toggle the layer reads.
+// The grow comes with the shared touch runtime once the page has loaded it.
+beforeAll(async () => {
+  await __loadTouchRuntimeForTest();
+});
+
 beforeEach(() => {
   __resetMenuPressForTest();
   vi.clearAllMocks();
@@ -239,7 +257,7 @@ describe('DropdownMenu touch grow', () => {
     expect(motion.exit).toHaveBeenCalledTimes(1);
   });
 
-  it("a finger's first open on a page grows at once, with nothing to wait for", () => {
+  it("once the touch runtime has loaded, a finger's first open on a page grows at once", () => {
     render(<DropdownMenu button={{label: 'Actions'}} items={ITEMS} />);
     fireEvent.pointerDown(screen.getByRole('button', {name: 'Actions'}), touch);
     expect(motion.enter).toHaveBeenCalledTimes(1);
@@ -247,6 +265,22 @@ describe('DropdownMenu touch grow', () => {
       .getByRole('menu', {hidden: true})
       .closest<HTMLElement>('[popover] > *');
     expect(surface?.style.getPropertyValue('opacity')).toBe('');
+  });
+
+  it("before the touch runtime loads, a finger's open keeps the layer's own entrance", async () => {
+    __resetTouchRuntimeForTest();
+    try {
+      render(<DropdownMenu button={{label: 'Actions'}} items={ITEMS} />);
+      fireEvent.pointerDown(
+        screen.getByRole('button', {name: 'Actions'}),
+        touch,
+      );
+      await settle();
+      expect(screen.getByRole('menu', {hidden: true})).toBeTruthy();
+      expect(motion.enter).not.toHaveBeenCalled();
+    } finally {
+      await __loadTouchRuntimeForTest();
+    }
   });
 
   it("grows from the trigger's box without its press transform (architecture:layer-runtime INV22)", async () => {

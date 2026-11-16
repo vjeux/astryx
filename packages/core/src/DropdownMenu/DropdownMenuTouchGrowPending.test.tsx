@@ -15,9 +15,18 @@
  */
 
 import {act, fireEvent, render, screen} from '@testing-library/react';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import {__resetMenuPressForTest} from '../hooks/useMenuPress';
 import type * as PopoverSurfaceMotion from '../Popover/popoverSurfaceMotion';
+import {__loadTouchRuntimeForTest} from '../utils/touchRuntime';
 import {DropdownMenu, type DropdownMenuOption} from './DropdownMenu';
 
 const motion = vi.hoisted(() => ({
@@ -55,6 +64,11 @@ describe("DropdownMenu: a finger's open that waits for its trigger", () => {
       return {iterations: 1, endTime: 300};
     }
   }
+
+  // The grow comes with the shared touch runtime once the page has loaded it.
+  beforeAll(async () => {
+    await __loadTouchRuntimeForTest();
+  });
 
   beforeEach(() => {
     __resetMenuPressForTest();

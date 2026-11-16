@@ -5,10 +5,11 @@
  * @input The built Default, InClosedInFlowDialog and Popover stories, real
  *   touch input (Chromium CDP / WebKit's input command), the interaction
  *   harness, and UIKit's popover values
- * @output Interaction proofs for the touch grow. A finger's first tap after
- *   the page loads grows the menu out of its trigger, also in a closed
- *   dialog that the page displays. In Chromium its first painted frame is
- *   the grow's collapsed start. A tap in scrolling
+ * @output Interaction proofs for the touch grow. Once the page has loaded
+ *   the touch runtime, a finger's first tap grows the menu out of its
+ *   trigger. That holds in a closed dialog that the page displays too. A tap
+ *   before the load keeps the layer's own entrance. In Chromium the first painted
+ *   frame is the grow's collapsed start. A tap in scrolling
  *   page content, which opens the menu at its lift, grows it too, and so does
  *   a held finger. The grow follows Popover's path and timing, frame by
  *   frame. Under Reduce Motion a finger's close fades the menu out where it
@@ -25,6 +26,7 @@ import {
   test,
   type Locator,
   type Page,
+  type Route,
 } from '@astryxdesign/a11y-spec/playwright';
 import {
   armHold,
@@ -146,8 +148,38 @@ async function paintedFrames(page: Page): Promise<Frame[]> {
   });
 }
 
-async function openOnPhone(page: Page, storyId: string, name: string) {
+// The shared touch runtime's chunk. The page requests it once, after first
+// paint, and the grow comes with it.
+const TOUCH_RUNTIME_CHUNK = /\/touchRuntimeModules-[^/]*\.js(\?.*)?$/;
+
+/**
+ * Waits until the page has run the touch runtime's chunk. The import of the
+ * chunk's URL resolves once its module has run, and the page publishes the
+ * runtime in the same task.
+ */
+async function untilTouchRuntime(page: Page, url: string) {
+  await page.evaluate(async chunk => {
+    await import(chunk);
+  }, url);
+  await frames(page, 1);
+}
+
+async function openOnPhone(
+  page: Page,
+  storyId: string,
+  name: string,
+  {runtime = 'loaded'}: {runtime?: 'loaded' | 'pending'} = {},
+) {
+  const chunk =
+    runtime === 'loaded'
+      ? page.waitForResponse(response =>
+          TOUCH_RUNTIME_CHUNK.test(response.url()),
+        )
+      : null;
   await openStory(page, storybook(), storyId);
+  if (chunk != null) {
+    await untilTouchRuntime(page, (await chunk).url());
+  }
   const driver = await touchDriver(page);
   const trigger = page.getByRole('button', {name});
   const box = await trigger.boundingBox();
@@ -214,6 +246,42 @@ test("a finger's tap on a trigger in a closed dialog that the page displays grow
     'core-dropdownmenu--in-closed-in-flow-dialog',
     'Actions',
   );
+  const surface = page.locator(MENU_SURFACE).first();
+  expectGrow(
+    await heldGrow(page, surface, async () => story.driver.tap(story.center)),
+  );
+});
+
+test("a finger's tap before the touch runtime loads keeps the layer's own entrance, and a tap after the load grows the menu", async ({
+  page,
+}) => {
+  const held: Route[] = [];
+  await page.route(TOUCH_RUNTIME_CHUNK, route => {
+    held.push(route);
+  });
+  const story = await openOnPhone(
+    page,
+    'core-dropdownmenu--default',
+    'Actions',
+    {runtime: 'pending'},
+  );
+  await expect.poll(() => held.length).toBeGreaterThan(0);
+  await recordSurface(page, MENU_SURFACE);
+  await story.driver.tap(story.center);
+  const painted = await paintedFrames(page);
+  expect(painted.length).toBeGreaterThan(0);
+  expect(painted[0].scaleX).toBeGreaterThan(0.9);
+  await story.driver.tap({x: story.box.x + story.box.width + 40, y: 8});
+  await expect(page.getByRole('menu')).toHaveCount(0);
+
+  const chunk = page.waitForResponse(response =>
+    TOUCH_RUNTIME_CHUNK.test(response.url()),
+  );
+  for (const route of held) {
+    await route.continue();
+  }
+  await page.unroute(TOUCH_RUNTIME_CHUNK);
+  await untilTouchRuntime(page, (await chunk).url());
   const surface = page.locator(MENU_SURFACE).first();
   expectGrow(
     await heldGrow(page, surface, async () => story.driver.tap(story.center)),

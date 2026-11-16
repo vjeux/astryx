@@ -679,7 +679,9 @@ under a finger, and a mouse follows `module:DropdownMenu/useMenuPress` FR3 and
   MoreMenu) grow on Popover's surface motion. A menu opened without an
   accepted press uses the layer's own entrance. That covers a keyboard or
   programmatic open and a press the menu's press model ignores, such as a
-  second finger.
+  second finger. Until the shared touch runtime has loaded
+  (`architecture:react-component-runtime` INV13), a tap-opened layer uses
+  the layer's own entrance too.
 - **FR32 — A pan outside dismisses.** Under a finger, an open anchored menu MUST close as a touch outside it
   begins to pan, and at the lift of a tap or hold outside it. A Popover's
   dismissal is unchanged. A pinch stays available over it: its surface

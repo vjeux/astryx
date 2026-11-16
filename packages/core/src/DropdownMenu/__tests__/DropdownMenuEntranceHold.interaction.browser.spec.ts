@@ -5,10 +5,10 @@
  * @input The built Default DropdownMenu story under the harness's phone
  *   profile, with real touch input (Chromium CDP / WebKit's input command),
  *   and a mouse on a desktop profile. The menu's entrance is lengthened to
- *   10 s, so input lands inside it on any box.
- * @output Proof that a menu that enters under a finger takes no new input. A
- *   tap that lands then neither closes it nor reaches the page nor moves
- *   focus. Once the entrance ends, a tap outside dismisses it. The finger
+ *   seconds, so input lands inside it on any box.
+ * @output Proof that a menu that enters under a finger takes no new input,
+ *   before the touch runtime loads and after it. A tap that lands then
+ *   neither closes it nor reaches the page nor moves focus. Once the entrance ends, a tap outside dismisses it. The finger
  *   that opened the menu still picks the row it lifts on. A mouse is not
  *   held: after a finger opens the menu, a mouse resting on a row picks it.
  * @position Evidence for DropdownMenu's entrance hold; the layer runtime's
@@ -20,6 +20,7 @@ import {
   test,
   type Locator,
   type Page,
+  type Route,
 } from '@astryxdesign/a11y-spec/playwright';
 import {
   frames,
@@ -32,6 +33,27 @@ import {
 import {UIKIT_GESTURES} from '../../motion/uikit/gestures';
 
 const storybook = withStorybook(test);
+
+// The shared touch runtime's chunk. The page requests it once, after first
+// paint, and the grow comes with it.
+const TOUCH_RUNTIME_CHUNK = /\/touchRuntimeModules-[^/]*\.js(\?.*)?$/;
+
+/**
+ * Opens the story once the page has run the touch runtime's chunk. The import
+ * of the chunk's URL resolves once its module has run, and the page publishes
+ * the runtime in the same task.
+ */
+async function openWithTouchRuntime(page: Page, storyId: string) {
+  const chunk = page.waitForResponse(response =>
+    TOUCH_RUNTIME_CHUNK.test(response.url()),
+  );
+  await openStory(page, storybook(), storyId);
+  const url = (await chunk).url();
+  await page.evaluate(async source => {
+    await import(source);
+  }, url);
+  await frames(page, 1);
+}
 
 const HANDOFF_PX = UIKIT_GESTURES.menuPress.handoff.value;
 
@@ -116,9 +138,9 @@ const menuLayer = (page: Page) =>
  * Makes every popover's entrance last 10 s, so input lands inside it. The
  * entrance runs on the surface, the layer's child.
  */
-async function lengthenEntrance(page: Page) {
+async function lengthenEntrance(page: Page, seconds = 10) {
   await page.addStyleTag({
-    content: '[popover], [popover] > * { animation-duration: 10s !important; }',
+    content: `[popover], [popover] > * { animation-duration: ${seconds}s !important; }`,
   });
 }
 
@@ -174,7 +196,7 @@ async function untilEntered(page: Page, layer: Locator) {
 test('a tap that lands while the menu enters is ignored: it finishes, stays open and keeps focus; once it is in, a tap outside dismisses it (spec:AST-094 FR35)', async ({
   page,
 }) => {
-  await openStory(page, storybook(), 'core-dropdownmenu--default');
+  await openWithTouchRuntime(page, 'core-dropdownmenu--default');
   await installClickLog(page);
   await lengthenEntrance(page);
   await lengthenGrow(page);
@@ -212,6 +234,54 @@ test('a tap that lands while the menu enters is ignored: it finishes, stays open
   await untilEntered(page, layer);
   await driver.tap(outside);
   await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('before the touch runtime loads, a tap that lands while the menu enters its own way is ignored too (spec:AST-094 FR35)', async ({
+  page,
+}) => {
+  const held: Route[] = [];
+  await page.route(TOUCH_RUNTIME_CHUNK, route => {
+    held.push(route);
+  });
+  await openStory(page, storybook(), 'core-dropdownmenu--default');
+  await expect.poll(() => held.length).toBeGreaterThan(0);
+  await installClickLog(page);
+  // The layer's own entrance plays in full before the tap outside, so it
+  // lasts 3 s here, not 10 s.
+  await lengthenEntrance(page, 3);
+  const driver = await touchDriver(page);
+  const trigger = page.getByRole('button', {name: 'Actions'});
+  const box = await boxOf(trigger);
+  await driver.tap({
+    x: Math.round(box.x + box.width / 2),
+    y: Math.round(box.y + box.height / 2),
+  });
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  const layer = menuLayer(page);
+  await expect(page.getByRole('menuitem', {name: 'Edit'})).toBeVisible();
+  await untilEntering(page, layer);
+  await frames(page, 2);
+  const focused = await activeDescription(page);
+  const viewport = page.viewportSize() ?? {width: 402, height: 714};
+  const outside = {x: 20, y: viewport.height - 20};
+
+  await driver.tap(outside);
+  await frames(page, 2);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  expect(
+    (await readClicks(page)).filter(
+      click => !click.insideLayer && !click.onTrigger,
+    ),
+  ).toEqual([]);
+  expect(await activeDescription(page)).toBe(focused);
+
+  await untilEntered(page, layer);
+  await driver.tap(outside);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  for (const route of held) {
+    await route.continue();
+  }
+  await page.unroute(TOUCH_RUNTIME_CHUNK);
 });
 
 test('the finger that opened the menu still picks the row it lifts on while the menu enters (spec:AST-094 FR29, FR35)', async ({
