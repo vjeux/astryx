@@ -354,6 +354,10 @@ const GESTURE_USERS = new Set([
   // Swipe actions: createSwipe brings a row's swipe on that drag
   // (`spec:AST-057` FR10).
   'Swipe',
+  // Chat: ChatLayout loads the touch runtime after first paint under a coarse
+  // pointer, for the keyboard ride; it adds no gesture. The runtime's chunk
+  // carries the gesture code.
+  'Chat',
 ]);
 
 /** Public imports that carry no gesture code, whatever the list above says. */
