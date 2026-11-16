@@ -370,7 +370,7 @@ gap below is open.
 - **Gap 2 — TextInput, TextArea, and NumberInput.** Met: each passes its input
   to the keyboard module, which keeps the focused field above the keyboard as
   FR9 describes, apart from the missing scroll range (Gap 11), the rise in
-  Chrome on Android (Gap 13), and a modal BottomSheet shorter than `tall`
+  Chrome on Android (Gap 18), and a modal BottomSheet shorter than `tall`
   (Gap 19).
 - **Gap 3 — The typed fields of DateInput, DateTimeInput, and TimeInput.** No
   keyboard handling. Their touch picker fields are read-only with no
@@ -429,9 +429,10 @@ gap below is open.
   moves at that report, in one frame, instead of riding from the blur (FR3).
 - **Gap 13 — A field focused before the touch runtime loads.** Until the shared
   loader has run (after first paint, at idle within its cap; `spec:AST-080`
-  DEC-5), a focused field keeps the browser's own reveal and does not ride the
-  keyboard.
-- **Gap 13 — The rise in Chrome on Android.** When the keyboard opens, a field
+  DEC-5), a field in a docked container keeps the browser's own reveal and does
+  not ride the keyboard. A field in scrolling content is revealed as FR9 sets
+  out, since that reveal is a scroll and needs no animator.
+- **Gap 18 — The rise in Chrome on Android.** When the keyboard opens, a field
   in scrolling content moves into place in one frame, with no rise beside
   Gboard's slide. Chrome checks the focused field in the resize's own commit
   and pans to a field it finds covered, so the reveal finishes in that frame.

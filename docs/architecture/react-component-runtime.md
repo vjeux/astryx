@@ -347,7 +347,9 @@ those contracts.
   and Switch work by taps, clicks and keys, with no drag tracking and no slide
   or spring, and a tap under a finger or under Reduce Motion changes them at
   once, with no cross-fade; a bottom sheet still drags, and a drag that closes
-  it takes the stylesheet exit instead of the spring. A gesture in that window
+  it takes the stylesheet exit instead of the spring. TextInput, TextArea and
+  NumberInput load the touch runtime after first paint, for the keyboard ride
+  under a coarse pointer (`keyboard/keyboardTarget`). A gesture in that window
   does not start the load. The bundler keeps one copy per page however many
   components use them. If the runtime's chunk fails to load, the page stays as
   it is before the load: components work by taps, clicks and keys, and no
@@ -361,7 +363,8 @@ those contracts.
   (`popoverSurfaceMotion`), `hooks/useActionGroupTracking`, `hooks/usePager`,
   Lightbox (`useZoomCore`, `useZoomStage`), Resizable (`resizablePane`),
   Slider (`sliderTouchController`), SnapPaging, Chat (`useChatKeyboard`), and
-  the date and time fields' wheels (`motion/reducedMotion`). A surface
+  the date and time fields' wheels (`DateInput/wheelStrip` and `PickerWheel`,
+  through `motion/animator`, `gestures/GestureHost` and `hooks/usePager`). A surface
   revealed by interaction that a component loads with `import()` under
   `architecture:component-import-boundaries` INV1 imports these modules
   statically too; the bundler still keeps one copy per page. That `import()`
