@@ -1,7 +1,7 @@
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 
 /**
- * @file utils/pressLayerBox.ts
+ * @file Button/pressLayerBox.ts
  * @input A pressable control, the point where a press on it starts, and the
  *   press's pointer type
  * @output setPressLayerBox, which makes a press on a static control tint the
@@ -10,7 +10,7 @@
  *   (privateAttributes/press.stylex.ts) reads the custom properties it sets.
  */
 
-import {PRESSED_ATTRIBUTE} from './pressFeedback';
+import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 
 /** Under a coarse primary pointer: the press layer's box. */
 const LAYER_INSET = '--_press-layer-inset';

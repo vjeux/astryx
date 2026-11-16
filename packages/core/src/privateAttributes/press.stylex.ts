@@ -391,7 +391,7 @@ export const controlPressLayerStyles = stylex.create({
    * hint names opacity, which keeps the layer and makes no containing block.
    * The layer then has the containing block's box, unless a press began on a
    * static control's own box. Then the control holds that box as the layer's
-   * inset (utils/pressLayerBox.ts). The layer reads it only while a press is
+   * inset (Button/pressLayerBox.ts). The layer reads it only while a press is
    * on or fading, so a caller's own `::before` keeps its styles at rest.
    * With any other pointer nothing here applies.
    */
@@ -431,7 +431,7 @@ export const controlPressLayerStyles = stylex.create({
   /**
    * The row's tint under any pointer but a coarse primary one, on the
    * control's content wrapper. It shows while a press that began on the row
-   * outside a static control is held (utils/pressLayerBox.ts). The wrapper is
+   * outside a static control is held (Button/pressLayerBox.ts). The wrapper is
    * static too, so its `::before` has the row's box. Without that press, its
    * content makes no box.
    */

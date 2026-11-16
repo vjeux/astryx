@@ -16,7 +16,7 @@
  *   clicks from a raw touch sequence), and so does a mouse click (both
  *   engines)
  * @position Interaction evidence for privateAttributes/press.stylex.ts
- *   (`control`) and utils/pressLayerBox.ts as Button uses them
+ *   (`control`) and Button/pressLayerBox.ts as Button uses them
  */
 
 import {

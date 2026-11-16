@@ -80,7 +80,7 @@ import {
   rowPressLayerStyles,
 } from '../privateAttributes/press.stylex';
 import {usePressFeedback} from '../hooks/usePressFeedback';
-import {setPressLayerBox} from '../utils/pressLayerBox';
+import {setPressLayerBox} from './pressLayerBox';
 import type {ButtonVariantMap} from './index';
 import {
   registerEnglishFallback,
@@ -943,7 +943,7 @@ export function Button({
   };
 
   // Where a press starts decides the box its layer takes when a caller makes
-  // the Button static (utils/pressLayerBox.ts). A caller's handler still runs.
+  // the Button static (pressLayerBox.ts). A caller's handler still runs.
   const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
     setPressLayerBox(e.currentTarget, e.clientX, e.clientY, e.pointerType);
     props.onPointerDown?.(e);
