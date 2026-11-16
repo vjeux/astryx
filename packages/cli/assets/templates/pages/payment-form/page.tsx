@@ -13,6 +13,7 @@ import {
 } from '@astryxdesign/core/Layout';
 import {Grid} from '@astryxdesign/core/Grid';
 import {Button} from '@astryxdesign/core/Button';
+import {useToast} from '@astryxdesign/core/Toast';
 import {Text} from '@astryxdesign/core/Text';
 import {TextInput} from '@astryxdesign/core/TextInput';
 import {Selector} from '@astryxdesign/core/Selector';
@@ -198,6 +199,7 @@ const cardLogo: CSSProperties = {
 };
 
 export default function PaymentFormPage() {
+  const showToast = useToast();
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -233,41 +235,35 @@ export default function PaymentFormPage() {
   });
   const [submitted, setSubmitted] = useState(false);
 
-  const errors = submitted
-    ? {
-        firstName: !firstName.trim() ? 'Required' : undefined,
-        lastName: !lastName.trim() ? 'Required' : undefined,
-        address: !address.trim() ? 'Required' : undefined,
-        city: !city.trim() ? 'Required' : undefined,
-        zip: !zip.trim() ? 'Required' : undefined,
-        state: !state ? 'Required' : undefined,
-        email: !email.trim() ? 'Required' : undefined,
-        phone: !phone.trim() ? 'Required' : undefined,
-        expiry: !expiry ? 'Required' : undefined,
-        expYear: !expYear ? 'Required' : undefined,
-        cvc: !cvc.trim() ? 'Required' : undefined,
-        cardNumber:
-          paymentMethod === 'card' && !cardNumber.trim()
-            ? 'Required'
-            : undefined,
-        cardName:
-          paymentMethod === 'card' && !cardName.trim() ? 'Required' : undefined,
-        billingAddress:
-          !billingMatchesShipping && !billingAddress.trim()
-            ? 'Required'
-            : undefined,
-        billingCity:
-          !billingMatchesShipping && !billingCity.trim()
-            ? 'Required'
-            : undefined,
-        billingZip:
-          !billingMatchesShipping && !billingZip.trim()
-            ? 'Required'
-            : undefined,
-        billingState:
-          !billingMatchesShipping && !billingState ? 'Required' : undefined,
-      }
-    : {};
+  // What is missing, checked on every render; shown only after Place Order.
+  const problems = {
+    firstName: !firstName.trim() ? 'Required' : undefined,
+    lastName: !lastName.trim() ? 'Required' : undefined,
+    address: !address.trim() ? 'Required' : undefined,
+    city: !city.trim() ? 'Required' : undefined,
+    zip: !zip.trim() ? 'Required' : undefined,
+    state: !state ? 'Required' : undefined,
+    email: !email.trim() ? 'Required' : undefined,
+    phone: !phone.trim() ? 'Required' : undefined,
+    expiry: !expiry ? 'Required' : undefined,
+    expYear: !expYear ? 'Required' : undefined,
+    cvc: !cvc.trim() ? 'Required' : undefined,
+    cardNumber:
+      paymentMethod === 'card' && !cardNumber.trim() ? 'Required' : undefined,
+    cardName:
+      paymentMethod === 'card' && !cardName.trim() ? 'Required' : undefined,
+    billingAddress:
+      !billingMatchesShipping && !billingAddress.trim()
+        ? 'Required'
+        : undefined,
+    billingCity:
+      !billingMatchesShipping && !billingCity.trim() ? 'Required' : undefined,
+    billingZip:
+      !billingMatchesShipping && !billingZip.trim() ? 'Required' : undefined,
+    billingState:
+      !billingMatchesShipping && !billingState ? 'Required' : undefined,
+  };
+  const errors: Partial<typeof problems> = submitted ? problems : {};
 
   return (
     <Layout
@@ -313,7 +309,13 @@ export default function PaymentFormPage() {
                             label="Sign In"
                             variant="secondary"
                             size="sm"
-                            onClick={() => {}}
+                            onClick={() =>
+                              // Demo only: replace this toast with the call that signs the shopper in.
+                              showToast({
+                                body: 'Demo: sign-in would start here',
+                                uniqueID: 'sign-in',
+                              })
+                            }
                           />
                         </HStack>
                         <Text type="supporting" color="secondary">
@@ -503,7 +505,13 @@ export default function PaymentFormPage() {
                               label="PayPal"
                               variant="primary"
                               size="lg"
-                              onClick={() => {}}
+                              onClick={() =>
+                                // Demo only: replace this toast with the call that starts PayPal.
+                                showToast({
+                                  body: 'Demo: PayPal checkout would start here',
+                                  uniqueID: 'paypal',
+                                })
+                              }
                               style={paypalButton}>
                               <img
                                 src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png"
@@ -516,7 +524,13 @@ export default function PaymentFormPage() {
                               label="Google Pay"
                               variant="primary"
                               size="lg"
-                              onClick={() => {}}
+                              onClick={() =>
+                                // Demo only: replace this toast with the call that starts Google Pay.
+                                showToast({
+                                  body: 'Demo: Google Pay checkout would start here',
+                                  uniqueID: 'google-pay',
+                                })
+                              }
                               style={gpayButton}>
                               <img
                                 src="https://pay.google.com/about/static_kcs/images/logos/google-pay-logo.svg"
@@ -721,7 +735,13 @@ export default function PaymentFormPage() {
                             label="Apply"
                             variant="secondary"
                             size="lg"
-                            onClick={() => {}}
+                            onClick={() =>
+                              // Demo only: replace this toast with the call that applies the promo code.
+                              showToast({
+                                body: 'Demo: the promo code would be applied here',
+                                uniqueID: 'apply-promo',
+                              })
+                            }
                           />
                         </HStack>
                       </VStack>
@@ -807,14 +827,30 @@ export default function PaymentFormPage() {
                             variant="primary"
                             size="lg"
                             style={fullWidth}
-                            onClick={() => setSubmitted(true)}
+                            onClick={() => {
+                              setSubmitted(true);
+                              if (Object.values(problems).some(Boolean)) {
+                                return;
+                              }
+                              // Demo only: replace this toast with the call that performs the action.
+                              showToast({
+                                body: 'Demo: your order would be placed here',
+                                uniqueID: 'place-order',
+                              });
+                            }}
                           />
                           <Button
                             label="Continue Shopping"
                             variant="secondary"
                             size="lg"
                             style={fullWidth}
-                            onClick={() => {}}
+                            onClick={() =>
+                              // Demo only: replace this toast with the call that performs the action.
+                              showToast({
+                                body: 'Demo: the store would open here',
+                                uniqueID: 'continue-shopping',
+                              })
+                            }
                           />
                         </VStack>
                         <Divider />
@@ -898,7 +934,15 @@ export default function PaymentFormPage() {
                                         <Link href="#" type="supporting">
                                           Remove
                                         </Link>
-                                        <Link href="#" type="supporting">
+                                        <Link
+                                          type="supporting"
+                                          onClick={() =>
+                                            // Demo only: replace this toast with the call that performs the action.
+                                            showToast({
+                                              body: 'Demo: this item would be saved for later here',
+                                              uniqueID: 'save-for-later',
+                                            })
+                                          }>
                                           Save
                                         </Link>
                                       </HStack>
