@@ -11,7 +11,8 @@
  * @output Exports useSwipeAction — the stops, the actions and the finger's
  *   model behind a row's swipe actions (where each part sits for the travel
  *   is SwipeActionsLayer's styles). Also the release rules: resolveRelease,
- *   confirmPoint and confirmedOffset
+ *   confirmPoint and confirmedOffset. As it loads, it installs the press
+ *   controller's drag-claim profile
  * @position Internal to swipe actions, through SwipeActionsLayer (the only
  *   module that imports it); tested through Item.test.tsx, the interaction
  *   proofs, and swipeRelease.test.ts for the release rules
@@ -47,16 +48,75 @@ import {
 } from '../motion/spring';
 import {swipeActions as SWIPE} from '../motion/uikit/swipeActions';
 import {setPressHeld} from '../privateAttributes/pressHeld.stylex';
-import {setPressDragHold} from '../privateAttributes/pressHoldsDrag.stylex';
-import {registerDragClaimWait} from '../utils/dragClaimWait';
-import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
+import {
+  awaitsDragClaim,
+  installDragClaimWait,
+  setPressDragHold,
+} from '../privateAttributes/pressHoldsDrag.stylex';
 import {subscribeInput} from '../utils/inputStream';
 import {lockSelection} from '../utils/selectionLock';
 import type {CompositorPart} from '../dragToSnapPoints/compositorSettle';
 
-// The module registers the drag-claim wait as it loads, so a page with no
-// swipe carries none of it.
-registerDragClaimWait();
+// The swipe's drag-claim profile. The pan claims the touch from the touch event
+// that follows each pointer event. So a travelled press on a waiting row holds
+// back one frame for the claim. The module installs the profile as it loads, so
+// a page with no swipe carries none of it.
+
+/** The travel a waiting row holds back, and whether its press showed. */
+let held: {element: Element; painted: boolean; travel: () => void} | null =
+  null;
+let heldFrame = 0;
+/** The row whose swipe claimed the touch. */
+let claimed: Element | null = null;
+
+function settleHeldTravel(): void {
+  cancelAnimationFrame(heldFrame);
+  const travel = held?.travel;
+  held = null;
+  travel?.();
+}
+
+installDragClaimWait({
+  hold(element, travel, painted) {
+    if (!awaitsDragClaim(element)) {
+      return false;
+    }
+    // The swipe claimed the touch before this travel: a press that shows
+    // stays, and one that does not ends here.
+    if (element === claimed) {
+      if (painted) {
+        setPressDragHold(element, 'held');
+      }
+      return painted;
+    }
+    if (held == null) {
+      heldFrame = requestAnimationFrame(settleHeldTravel);
+    }
+    held = {element, painted, travel};
+    return true;
+  },
+  settle: settleHeldTravel,
+});
+
+/**
+ * The swipe on `root` claims the touch. A press that shows by then stays
+ * through the drag. One that does not ends at its travel, so a flick paints no
+ * tint.
+ */
+function claimPressDrag(root: Element): void {
+  claimed = root;
+  if (held?.element === root && held.painted) {
+    setPressDragHold(root, 'held');
+  }
+}
+
+/** The swipe on `root` lets the touch go, or detaches with `hold` `none`. */
+function releasePressDrag(root: Element, hold: 'claim' | 'none'): void {
+  if (claimed === root) {
+    claimed = null;
+  }
+  setPressDragHold(root, hold);
+}
 
 // A UIKit list row fires its outermost action only from a confirmed full swipe.
 // The finger dragged past the confirm point, and is still past it when it
@@ -1046,14 +1106,9 @@ export function useSwipeAction({
       wasConfirmed: false,
       layout,
     };
-    // A finger's or a pen's swipe keeps the row's press through its drag. A
-    // press that has not painted by the claim ends at its travel, so a flick
-    // paints no tint.
-    if (
-      move.input !== 'scroll' &&
-      root.getAttribute(PRESSED_ATTRIBUTE) === 'on'
-    ) {
-      setPressDragHold(root, 'held');
+    // A finger's or a pen's swipe keeps the row's press through its drag.
+    if (move.input !== 'scroll') {
+      claimPressDrag(root);
     }
     return true;
   };
@@ -1173,7 +1228,7 @@ export function useSwipeAction({
   const awaitNextClaim = () => {
     const root = rootRef.current;
     if (root != null) {
-      setPressDragHold(root, 'claim');
+      releasePressDrag(root, 'claim');
     }
   };
 
@@ -1376,7 +1431,7 @@ export function useSwipeAction({
     return () => {
       snapRef.current = null;
       snap.destroy();
-      setPressDragHold(root, 'none');
+      releasePressDrag(root, 'none');
       // The root outlives the swipe: it gets its own styles back.
       root.style.removeProperty(SWIPE_TRAVEL_PROPERTY);
       root.style.removeProperty(SWIPE_CONFIRM_PROPERTY);
