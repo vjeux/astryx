@@ -246,14 +246,11 @@ export function useToastBannerSwipe(
     return root == null ? null : animatorFor(root);
   }, [rootRef]);
   // Gives the card's stylesheet transitions back a frame after a Reduce Motion
-  // fade or a return to rest, so the opacity the fade hands back starts none.
-  // A fade that starts in that frame keeps them off.
+  // fade or a return to rest. The wait means the opacity the fade hands back
+  // starts no transition. A fade that starts in that frame keeps them off.
   const resumeTransitions = useCallback(() => {
     const root = rootRef.current;
-    if (root == null) {
-      return;
-    }
-    requestAnimationFrame(() => {
+    root?.ownerDocument.defaultView?.requestAnimationFrame(() => {
       if (settlingRef.current == null && exitHandleRef.current == null) {
         root.style.removeProperty('transition-property');
       }
@@ -457,6 +454,10 @@ export function useToastBannerSwipe(
               }
             });
           }
+        } else {
+          // No settle and no exit follow, as when a still finger caught a
+          // fade.
+          resumeTransitions();
         }
         if (session.pausedTimer) {
           resumeTimer();
