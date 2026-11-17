@@ -7,7 +7,8 @@
  *   input clock (inputAge.ts) and the document's pointer, keyboard, scroll
  *   and visibility events
  * @output PRESSABLE_ATTRIBUTE, PRESSED_ATTRIBUTE, pressableProps,
- *   pressFadeMs, installPressFeedback, cancelPress and installBoxHold
+ *   pressFadeMs, installPressFeedback, cancelPress, installBoxHold and
+ *   installPlaceMeasure
  * @position The DOM half of the touch press model. usePressFeedback installs
  *   it, and the CSS arms live in interactionOverlay.stylex.ts.
  *
@@ -186,6 +187,24 @@ let boxHold: BoxHold | null = null;
  */
 export function installBoxHold(hold: BoxHold): void {
   boxHold = hold;
+}
+
+/**
+ * Measures a static control's box in its press layers' containing block, as
+ * a CSS inset, or answers null to leave the press unplaced. A table installs
+ * one (Table/tablePressPlace.ts) that measures every layout.
+ */
+export type PlaceMeasure = (
+  element: HTMLElement,
+  parent: HTMLElement,
+) => string | null;
+
+/** The measurement a table installs. */
+let placeMeasure: PlaceMeasure | null = null;
+
+/** Installs a table's measurement into the shared controller. */
+export function installPlaceMeasure(measure: PlaceMeasure): void {
+  placeMeasure = measure;
 }
 const button: Slot = {live: null};
 /** How many callers hold the controller installed; listeners exist while > 0. */
@@ -693,6 +712,9 @@ function onPointerDown(event: PointerEvent): void {
   }
   takeOver(button, element);
   finger.live = live;
+  // Read before the press is placed: a probe that places it changes the tree,
+  // and a read after it would lay the page out again.
+  const delayed = !presentsAtOnce && isInsideScrollView(element);
   placePress(element, {x: event.clientX, y: event.clientY});
   apply(
     finger,
@@ -700,7 +722,7 @@ function onPointerDown(event: PointerEvent): void {
       kind: 'down',
       x: event.clientX,
       y: event.clientY,
-      delayed: !presentsAtOnce && isInsideScrollView(element),
+      delayed,
     }),
     msSinceInput(event.timeStamp, event),
   );
@@ -1079,8 +1101,9 @@ const PLACE = {
  * ancestor. A press that starts on the row presses the row, so the row tints
  * as one surface. The control then shows no tint of its own. A press that
  * starts on the control's own box presses the control, so only that box
- * tints. The box is measured once, at the press's start, against the row's
- * padding box. Script places the layer because CSS anchor positioning ran
+ * tints. The box is measured once, at the press's start, in the row's padding
+ * box. A table's measurement measures it when one is installed, else the
+ * offsets do. Script places the layer because CSS anchor positioning ran
  * Layout during the release. The reads change no layout and no hit-testing. A
  * positioned surface, or one that holds its own layers, is its own layers'
  * containing block, so it is not placed. A key's press (`at` null) is on the
@@ -1090,7 +1113,6 @@ function placePress(
   element: HTMLElement,
   at: {x: number; y: number} | null,
 ): boolean {
-  unplacePress(element);
   const style = getComputedStyle(element);
   const row =
     style.getPropertyValue(PLACE_OPT_IN).trim() === 'control' &&
@@ -1098,27 +1120,46 @@ function placePress(
     !holdsItsLayers(element)
       ? element.offsetParent
       : null;
-  if (!(row instanceof HTMLElement)) {
-    return false;
-  }
-  const box = at == null ? null : element.getBoundingClientRect();
-  if (
+  const placed = row instanceof HTMLElement;
+  const box = placed && at != null ? element.getBoundingClientRect() : null;
+  const onRow =
     at != null &&
     box != null &&
-    (at.x < box.left || at.x > box.right || at.y < box.top || at.y > box.bottom)
-  ) {
+    (at.x < box.left ||
+      at.x > box.right ||
+      at.y < box.top ||
+      at.y > box.bottom);
+  const inset =
+    placed && !onRow ? (placeMeasure ?? offsetsInset)(element, row) : null;
+  // The place an earlier press left goes after the reads, so it forces no
+  // style recalculation here.
+  unplacePress(element);
+  if (onRow) {
     element.style.setProperty(PLACE.ownTint, 'none');
-    return true;
+  } else if (inset != null) {
+    element.style.setProperty(PLACE.inset, inset);
+  }
+  return onRow;
+}
+
+/**
+ * The control's box in its offset parent, as a CSS inset. CSSOM View stops a
+ * static element's offset parent at a table cell or a table that holds
+ * nothing. It counts offsets from the body from the initial containing block.
+ * Those leave the press unplaced.
+ */
+function offsetsInset(
+  element: HTMLElement,
+  parent: HTMLElement,
+): string | null {
+  if (/^(?:td|th|table|body)$/.test(parent.localName)) {
+    return null;
   }
   const top = element.offsetTop;
   const left = element.offsetLeft;
-  const bottom = row.clientHeight - top - element.offsetHeight;
-  const right = row.clientWidth - left - element.offsetWidth;
-  element.style.setProperty(
-    PLACE.inset,
-    `${top}px ${right}px ${bottom}px ${left}px`,
-  );
-  return false;
+  const bottom = parent.clientHeight - top - element.offsetHeight;
+  const right = parent.clientWidth - left - element.offsetWidth;
+  return `${top}px ${right}px ${bottom}px ${left}px`;
 }
 
 /**
