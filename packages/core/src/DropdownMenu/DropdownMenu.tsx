@@ -134,7 +134,7 @@ import english from '../i18n/generated-english/DropdownMenu/DropdownMenu.generat
 registerEnglishFallback(english);
 
 /** Taps stay held from the open until the touch grow shows. */
-const MENU_SURFACE_MOTION = {holdUntilFirstFrame: true};
+const MENU_SURFACE_MOTION = {holdUntilFirstFrame: false};
 
 // The menu's own lower cap on the placement axis; the viewport cap underneath
 // it is the layer runtime's (spec:AST-059 FR3).
