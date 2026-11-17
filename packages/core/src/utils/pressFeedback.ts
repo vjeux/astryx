@@ -1090,7 +1090,6 @@ function placePress(
   element: HTMLElement,
   at: {x: number; y: number} | null,
 ): boolean {
-  unplacePress(element);
   const style = getComputedStyle(element);
   const row =
     style.getPropertyValue(PLACE_OPT_IN).trim() === 'control' &&
@@ -1098,27 +1097,34 @@ function placePress(
     !holdsItsLayers(element)
       ? element.offsetParent
       : null;
-  if (!(row instanceof HTMLElement)) {
-    return false;
+  let onRow = false;
+  let inset: string | null = null;
+  if (row instanceof HTMLElement) {
+    const box = at == null ? null : element.getBoundingClientRect();
+    onRow =
+      at != null &&
+      box != null &&
+      (at.x < box.left ||
+        at.x > box.right ||
+        at.y < box.top ||
+        at.y > box.bottom);
+    if (!onRow) {
+      const top = element.offsetTop;
+      const left = element.offsetLeft;
+      const bottom = row.clientHeight - top - element.offsetHeight;
+      const right = row.clientWidth - left - element.offsetWidth;
+      inset = `${top}px ${right}px ${bottom}px ${left}px`;
+    }
   }
-  const box = at == null ? null : element.getBoundingClientRect();
-  if (
-    at != null &&
-    box != null &&
-    (at.x < box.left || at.x > box.right || at.y < box.top || at.y > box.bottom)
-  ) {
+  // Every read comes before the first write, so a place an earlier press left
+  // forces no style recalculation here.
+  unplacePress(element);
+  if (onRow) {
     element.style.setProperty(PLACE.ownTint, 'none');
-    return true;
+  } else if (inset != null) {
+    element.style.setProperty(PLACE.inset, inset);
   }
-  const top = element.offsetTop;
-  const left = element.offsetLeft;
-  const bottom = row.clientHeight - top - element.offsetHeight;
-  const right = row.clientWidth - left - element.offsetWidth;
-  element.style.setProperty(
-    PLACE.inset,
-    `${top}px ${right}px ${bottom}px ${left}px`,
-  );
-  return false;
+  return onRow;
 }
 
 /**
