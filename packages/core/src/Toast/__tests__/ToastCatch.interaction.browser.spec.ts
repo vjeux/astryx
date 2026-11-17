@@ -449,6 +449,23 @@ test('under reduced motion, a drag that turns back fades the card back to rest o
   }
   expect(fades, 'the spring-back fades once').toBe(1);
   expect(opacity[opacity.length - 1]).toBe(1);
+  // The fade over, the card's own transitions are the stylesheet's again.
+  expect(
+    await card.evaluate(element =>
+      (element as HTMLElement).style.getPropertyValue('transition-property'),
+    ),
+  ).toBe('');
+});
+
+test('under a finger the card keeps its own layer from the stylesheet, with no inline will-change', async ({
+  page,
+}) => {
+  const card = await showToast(page);
+  const layer = await card.evaluate(element => ({
+    computed: getComputedStyle(element).willChange,
+    inline: (element as HTMLElement).style.getPropertyValue('will-change'),
+  }));
+  expect(layer).toEqual({computed: 'translate', inline: ''});
 });
 
 test('a finger on the card starts no text selection: a still hold, a drag or a catch', async ({

@@ -98,6 +98,12 @@ const styles = stylex.create({
     lineHeight: typeScaleDefaults['--text-body-leading'],
     transform:
       'translateY(var(--_toast-swipe-y, 0px)) scale(var(--_toast-swipe-scale, 1))',
+    // Under a finger the card moves by `translate` on every frame of a drag,
+    // so it keeps its own layer and no move repaints it.
+    willChange: {
+      default: null,
+      '@media (pointer: coarse)': 'translate',
+    },
     // Under reduced motion, under a finger (a coarse primary pointer) the
     // toast cross-fades in place (opacity only). Any other pointer changes it
     // at once.
@@ -493,8 +499,6 @@ export function ToastSurface({
       // leaving by then.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          // Still in the document (React detaches the ref on unmount) and
-          // not leaving.
           if (rootRef.current?.isConnected === true && !isExitingRef.current) {
             isDismissingRef.current = false;
             restCard();

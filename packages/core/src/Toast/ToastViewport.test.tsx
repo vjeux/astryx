@@ -45,7 +45,7 @@ import {createPortal} from 'react-dom';
 import {readFileSync} from 'node:fs';
 import {type AnnounceFn, __resetLiveRegionsForTest} from '../hooks/useAnnounce';
 import {Button} from '../Button';
-import type {ToastProps} from './Toast';
+import {Toast, type ToastProps} from './Toast';
 import {getGestureHost} from '../gestures/GestureHost';
 import {toast as toastMotion} from '../motion/uikit/toast';
 import {ToastViewport} from './ToastViewport';
@@ -3278,6 +3278,121 @@ describe('Toast swipe dismissal under a finger', () => {
     expect(visualToast.style.getPropertyValue('transition-property')).toBe(
       'none',
     );
+  });
+
+  it('under a finger leaves no inline will-change on the card at rest: its layer comes from the stylesheet', async () => {
+    const {visualToast} = await renderSwipeToast();
+    expect(visualToast.style.getPropertyValue('will-change')).toBe('');
+    const start = strokeStart();
+    act(() => {
+      pen(visualToast, 'pointerDown', 23, start, 0);
+      pen(visualToast, 'pointerMove', 23, start + 200, 20);
+      pen(visualToast, 'pointerMove', 23, start + 400, 30);
+      pen(visualToast, 'pointerUp', 23, start + 900, 30);
+    });
+    // While the card moves, the shared animator promotes what it animates.
+    // Once the card has settled, it leaves nothing inline.
+    await act(async () => {
+      await vi.waitFor(
+        () => {
+          expect(cardY(visualToast)).toBe(0);
+          expect(visualToast.style.getPropertyValue('will-change')).toBe('');
+        },
+        {timeout: 6000, interval: 50},
+      );
+    });
+  });
+
+  it("under Reduce Motion gives the card's own transitions back once the fade back to rest ends", async () => {
+    vi.stubGlobal('matchMedia', (query: string): MediaQueryList => ({
+      matches:
+        query === '(pointer: coarse)' ||
+        query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }));
+    const {visualToast, onHide} = await renderSwipeToast();
+    const start = strokeStart();
+    act(() => {
+      pen(visualToast, 'pointerDown', 25, start, 0);
+      pen(visualToast, 'pointerMove', 25, start + 200, 20);
+      pen(visualToast, 'pointerMove', 25, start + 400, 30);
+      pen(visualToast, 'pointerUp', 25, start + 900, 30);
+    });
+    expect(visualToast.style.getPropertyValue('transition-property')).toBe(
+      'none',
+    );
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    });
+    expect(onHide).not.toHaveBeenCalled();
+    expect(visualToast.style.getPropertyValue('transition-property')).toBe('');
+  });
+
+  it('under Reduce Motion gives a standalone card its own transitions back when its owner keeps it on screen', async () => {
+    vi.stubGlobal('matchMedia', (query: string): MediaQueryList => ({
+      matches:
+        query === '(pointer: coarse)' ||
+        query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }));
+    const onDismiss = vi.fn();
+    render(
+      <Toast
+        type="info"
+        body="Kept toast"
+        isAutoHide={false}
+        autoHideDuration={5000}
+        onDismiss={onDismiss}
+      />,
+    );
+    const card = screen
+      .getByText('Kept toast')
+      .closest('[data-type]') as HTMLElement;
+    const box = {
+      x: 0,
+      y: 0,
+      width: 400,
+      height: 80,
+      top: 0,
+      right: 400,
+      bottom: 80,
+      left: 0,
+      toJSON: () => ({}),
+    };
+    vi.spyOn(card, 'getBoundingClientRect').mockReturnValue(box);
+    vi.spyOn(
+      card.parentElement as HTMLElement,
+      'getBoundingClientRect',
+    ).mockReturnValue(box);
+    const start = strokeStart();
+    act(() => {
+      pen(card, 'pointerDown', 26, start, 0);
+      pen(card, 'pointerMove', 26, start + 200, 50);
+      pen(card, 'pointerMove', 26, start + 400, 100);
+      pen(card, 'pointerMove', 26, start + 600, 150);
+      pen(card, 'pointerUp', 26, start + 610, 150);
+    });
+    expect(card.style.getPropertyValue('transition-property')).toBe('none');
+    await afterRetract();
+    expect(onDismiss).toHaveBeenCalledWith('manual');
+    // Two frames later the kept card comes back to rest.
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    });
+    expect(cardY(card)).toBe(0);
+    expect(card.style.getPropertyValue('transition-property')).toBe('');
   });
 
   it('opens a new row for a uniqueID update raised while the card retracts, and reports the dismissed toast once', async () => {
