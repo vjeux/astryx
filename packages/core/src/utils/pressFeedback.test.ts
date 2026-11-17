@@ -262,6 +262,54 @@ describe('the press reaches the surface the finger landed on', () => {
     row.removeAttribute('data-astryx-press-holds-drag');
   });
 
+  it("keeps the press of a surface whose drag claims the touch in the move's own frame", () => {
+    // A swipe row's pan reads the touch events that follow each pointer event,
+    // so its claim can land after the move that passes the press's travel.
+    const row = rows[0];
+    row.setAttribute('data-astryx-press-holds-drag', 'claim');
+    press(row, 'pointerdown', 10, 10);
+    vi.advanceTimersByTime(PRESS_ONSET_MS);
+    expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(row, 'pointermove', 30, 10);
+    expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    // The claim, before the frame.
+    row.setAttribute('data-astryx-press-holds-drag', '');
+    vi.advanceTimersByTime(32);
+    expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(row, 'pointermove', 90, 10);
+    vi.advanceTimersByTime(32);
+    expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(row, 'pointerup', 90, 10);
+    expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('fading');
+    row.removeAttribute('data-astryx-press-holds-drag');
+  });
+
+  it('ends the press of a surface whose drag might claim the touch at the next frame when no claim comes', () => {
+    const row = rows[0];
+    row.setAttribute('data-astryx-press-holds-drag', 'claim');
+    press(row, 'pointerdown', 10, 10);
+    vi.advanceTimersByTime(PRESS_ONSET_MS);
+    expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+    press(row, 'pointermove', 30, 10);
+    vi.advanceTimersByTime(32);
+    expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    press(row, 'pointerup', 30, 10);
+    expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    row.removeAttribute('data-astryx-press-holds-drag');
+  });
+
+  it('ends the travelled press of a surface awaiting a claim before a lift in the same frame', () => {
+    const row = rows[0];
+    row.setAttribute('data-astryx-press-holds-drag', 'claim');
+    press(row, 'pointerdown', 10, 10);
+    vi.advanceTimersByTime(PRESS_ONSET_MS);
+    press(row, 'pointermove', 30, 10);
+    press(row, 'pointerup', 30, 10);
+    // A drag, not a tap: the lift plays no release fade.
+    expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+    row.removeAttribute('data-astryx-press-holds-drag');
+  });
+
   it('paints the innermost surface when they nest', () => {
     const bubble = pressable('button');
     rows[2].appendChild(bubble);
