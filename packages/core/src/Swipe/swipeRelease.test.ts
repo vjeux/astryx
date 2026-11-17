@@ -16,7 +16,12 @@ import {
   toSpring,
 } from '../motion/spring';
 import {swipeActions} from '../motion/uikit/swipeActions';
-import {confirmedOffset, confirmPoint, resolveRelease} from './useSwipeAction';
+import {
+  confirmedOffset,
+  confirmPoint,
+  resistedOvershoot,
+  resolveRelease,
+} from './useSwipeAction';
 
 describe('resolveRelease', () => {
   // The UIKit lab's releases, as the swipe pan reported them when the finger
@@ -288,6 +293,26 @@ describe('the swipe spring', () => {
       // UIKit's settlingDuration for it, within the 0.02 % the solver's
       // critically damped branch is documented to land.
       expect(settlingDuration(spring)).toBeCloseTo(0.9235, 3);
+    }
+  });
+});
+
+describe('past the confirm point the row resists the finger (spec:AST-057 FR5)', () => {
+  it("follows at about half the finger's speed, then at about a fifth", () => {
+    expect(resistedOvershoot(0)).toBe(0);
+    expect(resistedOvershoot(8)).toBeCloseTo(4, 6);
+    expect(resistedOvershoot(16)).toBeCloseTo(8, 6);
+    expect(resistedOvershoot(26)).toBeCloseTo(10, 6);
+    expect(resistedOvershoot(116)).toBeCloseTo(28, 6);
+  });
+
+  it('never runs ahead of the finger and never moves back', () => {
+    let last = 0;
+    for (let overshoot = 0; overshoot <= 200; overshoot += 0.5) {
+      const resisted = resistedOvershoot(overshoot);
+      expect(resisted).toBeLessThanOrEqual(overshoot);
+      expect(resisted).toBeGreaterThanOrEqual(last);
+      last = resisted;
     }
   });
 });

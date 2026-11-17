@@ -2596,7 +2596,7 @@ describe('swipe', () => {
         f.up();
       });
 
-      it("confirms on the finger's travel from the open row: the row runs ahead to the confirmation offset, the outermost entry covers the space, and the other hides at once", () => {
+      it("confirms on the finger's travel from the open row: the row resists past the confirm point, the outermost entry covers the space, and the other hides at once (spec:AST-057 FR5)", () => {
         const {row} = twoEntries();
         openRow(row);
         const [other] = entriesOf(row, 'leading');
@@ -2617,20 +2617,27 @@ describe('swipe', () => {
         expect(isHidden(other)).toBe(false);
         f.move(35 + 96);
         caughtUp();
-        // Confirmed: the finger's travel puts the row at 265 px, and its lead
-        // grows to 271 px, the 300 px row less 29. The outermost entry slid by
-        // its full slide past the other, to the row's edge (72 px, the side's
-        // geometry). The other hides behind its cover.
-        expect(xOf(row)).toBe(271);
-        expect(confirmOf(row)).toBe(1);
+        // Confirmed: the finger's travel puts its base at 265 px. On UIKit's
+        // measure the swipe is 240 px. The confirm point sits at about 231.6 px:
+        // the open width plus 0.69 of the way to the 300 px row less 29. Past
+        // it the row resists, at half the finger's speed so far. The outermost
+        // entry slides toward the row's edge with the row (its full slide is
+        // 72 px, the side's geometry). The other hides behind its cover.
+        const confirmAt = 144 + (271 - 144) * 0.69;
+        const overshoot = 240 - confirmAt;
+        const travel = 265 - overshoot + overshoot / 2;
+        expect(xOf(row)).toBeCloseTo(travel, 6);
+        expect(confirmOf(row)).toBeCloseTo(
+          (travel - confirmAt) / (271 - confirmAt),
+          6,
+        );
         expect(isHidden(other)).toBe(true);
         expect(
           (panelOf(row, 'leading') as HTMLElement).style.getPropertyValue(
             '--_item-swipe-slide',
           ),
         ).toBe('72px');
-        // Backed out: the look undone, the lead gone, the row at the finger's
-        // travel again.
+        // Backed out: the look undone, the row at the finger's travel again.
         f.move(35 + 56);
         caughtUp();
         expect(xOf(row)).toBe(225);
@@ -2856,7 +2863,8 @@ describe('swipe', () => {
         f.move(20);
         f.move(35);
         f.move(35 + 16);
-        f.move(35 + 186);
+        // Far past the confirm point: even resisting, the row passes its edge.
+        f.move(35 + 300);
         f.rest(1200);
         expect(xOf(row)).toBeGreaterThan(300);
         f.up({afterMs: 0});
@@ -2891,10 +2899,15 @@ describe('swipe', () => {
         caughtUp();
         expect(xOf(row)).toBeLessThan(232);
         expect(outer).not.toHaveBeenCalled();
-        // Past the confirm point again, short of the run-ahead's 271 px.
+        // Past the confirm point again on UIKit's measure: the outermost entry
+        // covers the panel, and the row resists, short of its edge.
         f.move(120);
         caughtUp();
-        expect(xOf(row)).toBe(271);
+        const [other] = entriesOf(row, 'leading');
+        expect(
+          rulesDeclaredFor(other).some(rule => rule.includes('opacity: 0')),
+        ).toBe(true);
+        expect(xOf(row)).toBeLessThan(271);
         f.up({afterMs: 0});
         // The row leaves before the second slide-out carries it past its
         // edge.
