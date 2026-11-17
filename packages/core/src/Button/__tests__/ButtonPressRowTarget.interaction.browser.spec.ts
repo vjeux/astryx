@@ -2,9 +2,9 @@
 
 /**
  * @file ButtonPressRowTarget.interaction.browser.spec.ts
- * @input The built press feedback story of a Button whose `::after` covers
- *   its row, real touch and mouse input (Chromium CDP / WebKit's input
- *   command), and the interaction harness
+ * @input The built press feedback stories of a Button whose `::after` covers
+ *   its row, in a list and in a table. Real touch and mouse input (Chromium
+ *   CDP / WebKit's input command), and the interaction harness
  * @output Interaction proofs that a press leaves a caller's row-wide
  *   `::after` where the caller put it. Points on the row outside the Button
  *   hit the Button at rest, while the press is on and while it fades (both
@@ -14,7 +14,8 @@
  *   on the line under the Button activates it once, through the engine's own
  *   tap path (both engines). A held press there does too (Chromium, which also
  *   clicks from a raw touch sequence), and so does a mouse click (both
- *   engines)
+ *   engines). In a table, the Button's press tints only the Button from a row
+ *   header, a data cell and a row inside a cell (both engines)
  * @position Interaction evidence for privateAttributes/press.stylex.ts
  *   (`control`, `rowTint`) and the press controller (utils/pressFeedback.ts)
  *   as Button uses them
@@ -37,6 +38,8 @@ import {
 const storybook = withStorybook(test);
 
 const ROW_TARGET = 'core-press-feedback-touch--button-covering-its-row';
+const TABLE_ROW_TARGET =
+  'core-press-feedback-touch--button-covering-its-table-row';
 /** Long enough that the press is on before the lift. */
 const HOLD_MS = 400;
 
@@ -296,8 +299,9 @@ for (const [property, declarations, holds] of [
   // Inline-size containment is not layout containment: the row still holds
   // the layers.
   ['container-type', 'container-type: inline-size', false],
+  ['container-type', 'container-type: inline-size; width: 185px', false],
 ] as const) {
-  test(`a finger on a static Button with ${property} set tints only the Button`, async ({
+  test(`a finger on a static Button with ${declarations} tints only the Button`, async ({
     page,
   }) => {
     const {driver, button, probes} = await openRow(page);
@@ -500,4 +504,298 @@ test.describe('under a fine primary pointer, with a finger', () => {
     }
     expect(states[0].ownTint, log).toContain('gradient');
   });
+});
+
+/** A box in the viewport: left, top, width and height. */
+type Box = number[];
+
+/** The press and the boxes of one state, in the table. */
+interface TableState {
+  press: string | null;
+  layer: string;
+  layerBox: Box;
+  buttonBox: Box;
+  rowBox: Box;
+  blockBox: Box;
+}
+
+/**
+ * Runs `press` on `button` and returns each state the press passed through. The boxes read in the viewport. A hidden child at no
+ * inset has the press layer's containing block, and the layer's own inset
+ * places the layer in that block.
+ */
+async function pressAndReadBoxes(
+  page: Page,
+  button: Locator,
+  press: () => Promise<void>,
+): Promise<{states: TableState[]; log: string}> {
+  await button.evaluate(el => {
+    const states: TableState[] = [];
+    const box = (rect: DOMRect) => [
+      rect.left,
+      rect.top,
+      rect.width,
+      rect.height,
+    ];
+    const read = (press: string | null) => {
+      const probe = document.createElement('span');
+      probe.style.cssText = 'position:absolute;inset:0;visibility:hidden';
+      el.append(probe);
+      const block = probe.getBoundingClientRect();
+      // Boxes include a transform and a zoom; the layer's computed inset is
+      // in its own pixels.
+      const size = getComputedStyle(probe);
+      const scaleX = block.width / parseFloat(size.width);
+      const scaleY = block.height / parseFloat(size.height);
+      probe.remove();
+      const layer = getComputedStyle(el, '::before');
+      // The row the story positions: the Button's own row inside a cell,
+      // else the table row.
+      const parent = el.parentElement as HTMLElement;
+      const row = parent.localName === 'div' ? parent : el.closest('tr');
+      states.push({
+        press,
+        layer: layer.content,
+        layerBox: [
+          block.left + parseFloat(layer.left) * scaleX,
+          block.top + parseFloat(layer.top) * scaleY,
+          parseFloat(layer.width) * scaleX,
+          parseFloat(layer.height) * scaleY,
+        ],
+        buttonBox: box(el.getBoundingClientRect()),
+        rowBox: row == null ? [] : box(row.getBoundingClientRect()),
+        blockBox: box(block),
+      });
+    };
+    read(el.getAttribute('data-astryx-press'));
+    new MutationObserver(() => {
+      const press = el.getAttribute('data-astryx-press');
+      requestAnimationFrame(() => read(press));
+    }).observe(el, {
+      attributes: true,
+      attributeFilter: ['data-astryx-press'],
+    });
+    (window as unknown as {__tableRow: TableState[]}).__tableRow = states;
+  });
+  await press();
+  await expect
+    .poll(async () => button.getAttribute('data-astryx-press'))
+    .toBeNull();
+  await page.evaluate(async () => {
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  });
+  const states = await page.evaluate(
+    () => (window as unknown as {__tableRow: TableState[]}).__tableRow,
+  );
+  const log = JSON.stringify(states);
+  expect(
+    states.filter(state => state.press != null).map(state => state.press),
+    log,
+  ).toEqual(['on', 'fading']);
+  return {states: states.filter(state => state.press != null), log};
+}
+
+/** The largest distance between two boxes' edges. */
+function edgeDistance(a: Box, b: Box): number {
+  return Math.max(
+    Math.abs(a[0] - b[0]),
+    Math.abs(a[1] - b[1]),
+    Math.abs(a[0] + a[2] - (b[0] + b[2])),
+    Math.abs(a[1] + a[3] - (b[1] + b[3])),
+  );
+}
+
+test.describe('in a table', () => {
+  for (const [name, where, line] of [
+    ['Open Ada', 'a row header cell', 'Last message a minute ago'],
+    ['Open Grace', 'a data cell', 'Last message an hour ago'],
+    ['Open Alan', 'a row of its own inside a cell', 'Last message yesterday'],
+  ] as const) {
+    const openButton = async (page: Page) => {
+      await openStory(page, storybook(), TABLE_ROW_TARGET);
+      const button = page.getByRole('button', {name});
+      await expect(button).toBeVisible();
+      return {button, driver: await touchDriver(page)};
+    };
+
+    for (const pointer of ['finger', 'mouse'] as const) {
+      test(`a ${pointer} press on the Button's own box, in ${where}, tints only the Button`, async ({
+        page,
+      }) => {
+        const {button, driver} = await openButton(page);
+        const at = await buttonCenter(button);
+        const press =
+          pointer === 'finger' ? fingerHold(driver, at) : mouseHold(page, at);
+        const {states, log} = await pressAndReadBoxes(page, button, press);
+        for (const state of states) {
+          // The story positions the row, so the row holds the layer.
+          expect(
+            edgeDistance(state.blockBox, state.rowBox),
+            log,
+          ).toBeLessThanOrEqual(1);
+          expect(state.layer, log).toBe('""');
+          expect(
+            edgeDistance(state.layerBox, state.buttonBox),
+            log,
+          ).toBeLessThanOrEqual(1);
+        }
+      });
+    }
+
+    test(`a finger press on the row outside the Button, in ${where}, tints the row as one surface`, async ({
+      page,
+    }) => {
+      const {button, driver} = await openButton(page);
+      const lineBox = await page.getByText(line, {exact: true}).boundingBox();
+      if (lineBox == null) {
+        throw new Error(`${TABLE_ROW_TARGET}: "${line}" has no box`);
+      }
+      const at = {
+        x: Math.round(lineBox.x + lineBox.width / 2),
+        y: Math.round(lineBox.y + lineBox.height / 2),
+      };
+      const {states, log} = await pressAndReadBoxes(
+        page,
+        button,
+        fingerHold(driver, at),
+      );
+      for (const state of states) {
+        expect(state.layer, log).toBe('""');
+        expect(
+          edgeDistance(state.layerBox, state.rowBox),
+          log,
+        ).toBeLessThanOrEqual(1);
+      }
+    });
+  }
+});
+
+/**
+ * Layouts where the offset parent is not the layer's containing block, or
+ * where offsets do not measure the Button in that block. Each moves the
+ * story's Button or restyles its ancestors.
+ */
+const LAYOUTS: [string, (button: HTMLElement) => void][] = [
+  [
+    'in a positioned body with a margin and a border',
+    button => {
+      (button.parentElement as HTMLElement).style.position = 'static';
+      document.body.style.cssText +=
+        ';position:relative;margin:13px;border:3px solid;padding:5px';
+    },
+  ],
+  [
+    'with no positioned ancestor',
+    button => {
+      (button.parentElement as HTMLElement).style.position = 'static';
+    },
+  ],
+  [
+    'in a positioned wrapper that has no box',
+    button => {
+      const wrapper = document.createElement('span');
+      wrapper.style.cssText = 'display:contents;position:relative';
+      button.before(wrapper);
+      wrapper.append(button);
+    },
+  ],
+  [
+    'in a fixed ancestor',
+    button => {
+      const row = button.parentElement as HTMLElement;
+      row.style.position = 'static';
+      (row.parentElement as HTMLElement).style.cssText +=
+        ';position:fixed;top:40px;left:20px;right:20px';
+    },
+  ],
+  [
+    'in a scrolled box',
+    button => {
+      const box = document.createElement('div');
+      box.style.cssText = 'overflow:auto;height:48px';
+      const before = document.createElement('div');
+      before.style.height = '20px';
+      const after = document.createElement('div');
+      after.style.height = '100px';
+      button.before(box);
+      box.append(before, button, after);
+      box.scrollTop = 12;
+    },
+  ],
+  [
+    'under a zoom',
+    button => {
+      const zoom = document.createElement('div');
+      zoom.style.zoom = '1.5';
+      button.before(zoom);
+      zoom.append(button);
+    },
+  ],
+  [
+    'in a slot of a shadow root',
+    button => {
+      const host = document.createElement('div');
+      host.attachShadow({mode: 'open'}).innerHTML =
+        '<div style="position:relative;padding:6px;border:2px solid"><slot></slot></div>';
+      button.before(host);
+      host.append(button);
+    },
+  ],
+  [
+    'in a positioned inline box',
+    button => {
+      // A line box around it, so the row's flex layout does not make the
+      // inline box a block.
+      const line = document.createElement('div');
+      const inline = document.createElement('span');
+      inline.style.cssText = 'position:relative;padding:4px;border:2px solid';
+      line.append('Ask ', inline);
+      button.before(line);
+      inline.append(button);
+    },
+  ],
+  [
+    'in a sticky row',
+    button => {
+      const row = button.parentElement as HTMLElement;
+      row.style.position = 'sticky';
+      row.style.top = '0';
+    },
+  ],
+  [
+    'in a scaled row',
+    button => {
+      (button.parentElement as HTMLElement).style.transform = 'scale(0.8)';
+    },
+  ],
+  [
+    'in a right-to-left row',
+    button => {
+      (button.parentElement as HTMLElement).dir = 'rtl';
+    },
+  ],
+];
+
+test.describe('in other layouts', () => {
+  for (const [where, layout] of LAYOUTS) {
+    test(`a finger press on the Button's own box, ${where}, tints only the Button`, async ({
+      page,
+    }) => {
+      const {driver, button} = await openRow(page);
+      await button.evaluate(layout);
+      const at = await buttonCenter(button);
+      const {states, log} = await pressAndReadBoxes(
+        page,
+        button,
+        fingerHold(driver, at),
+      );
+      for (const state of states) {
+        expect(state.layer, log).toBe('""');
+        expect(
+          edgeDistance(state.layerBox, state.buttonBox),
+          log,
+        ).toBeLessThanOrEqual(1);
+      }
+    });
+  }
 });
