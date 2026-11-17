@@ -29,6 +29,7 @@ import {
 import {currentGesture} from '../Layer/gestureCounter';
 import {useCommittedRef} from './useCommittedRef';
 import {isInputShield} from '../Layer/inputHold';
+import {watchOutsidePress} from '../Layer/outsidePress';
 import {
   IDLE_MENU_PRESS,
   menuPressTransition,
@@ -48,6 +49,7 @@ import {DELAYS_CONTENT_TOUCHES_MS} from '../motion/uikit/scroll';
 import {isInsideScrollView} from '../utils/scrollView';
 import {edgeAutoscroll} from '../utils/edgeAutoscroll';
 import {subscribeInput} from '../utils/inputStream';
+import {isNode, isShadowRoot} from '../utils/nodeType';
 import {focusForLastInput} from '../utils/focusReturn';
 import {useInteractionModalityTrackingFor} from '../utils/interactionModality';
 import {
@@ -1185,4 +1187,109 @@ export function useMenuPress(input: UseMenuPressOptions): UseMenuPressReturn {
     [handleTriggerPointerDown, handleTriggerContextMenu],
   );
   return useMemo(() => ({...surface, triggerProps}), [surface, triggerProps]);
+}
+
+/** The touch outside a menu, as its touchstart named it. */
+interface OutsideTouch {
+  readonly identifier: number;
+  readonly target: EventTarget;
+  readonly cancelable: boolean;
+}
+
+export interface MenuOutsideTapOptions {
+  /** The menu root. The layer that holds it counts as inside. */
+  menuRef: RefObject<HTMLElement | null>;
+  /** The control that opens the menu. A press on it stays the trigger's. */
+  triggerRef?: RefObject<HTMLElement | null>;
+  /** Whether the menu is open under the touch presentation. */
+  isEnabled: boolean;
+  /** Close the menu: a finger or a pen tapped outside it. */
+  onOutsideTap: () => void;
+}
+
+/**
+ * While `isEnabled`, a finger's or a pen's tap or hold outside the menu
+ * closes it at the lift, and nothing beneath gets its click or its
+ * compatibility mouse events. The click guard takes them, as it does for a
+ * pick, and cancels the touch's `touchend`. A cancelled `touchend` brings no
+ * light dismiss, so the menu closes here. A pan that the browser takes as a
+ * scroll ends in `pointercancel`: it closes nothing and cancels nothing. A
+ * mouse keeps the layer's light dismiss and its click. Internal: the hooks
+ * entry point does not export it.
+ */
+export function useMenuOutsideTap({
+  menuRef,
+  triggerRef,
+  isEnabled,
+  onOutsideTap,
+}: MenuOutsideTapOptions): void {
+  const onOutsideTapRef = useCommittedRef(onOutsideTap);
+  // Syncs with the document's pointer and touch input while the menu is
+  // open. Nothing listens once it closes.
+  useEffect(() => {
+    const menu = menuRef.current;
+    const view = menu?.ownerDocument.defaultView;
+    if (!isEnabled || menu == null || view == null) {
+      return;
+    }
+    const doc = menu.ownerDocument;
+    // The layer also holds the menu's header, footer and flyouts.
+    const layer = menu.closest('[popover]') ?? menu;
+    const root = layer.getRootNode();
+    // A press on a live input shield is held input, which closes nothing.
+    const isInside = (path: ReadonlyArray<EventTarget>) => {
+      const trigger = triggerRef?.current ?? null;
+      return path.some(
+        target =>
+          target === layer ||
+          target === trigger ||
+          (isNode(target) && isInputShield(target)),
+      );
+    };
+    // A lone changed touch is the tap's. Several name no touch, and the
+    // guard then cancels the next touchend.
+    let touch: OutsideTouch | null = null;
+    const stopTouchStarts = subscribeInput(view, 'touchstart', event => {
+      const changed = Array.from(event.changedTouches);
+      touch =
+        changed.length === 1
+          ? {
+              identifier: changed[0].identifier,
+              target: changed[0].target,
+              cancelable: event.cancelable,
+            }
+          : null;
+    });
+    const watch = {root: isShadowRoot(root) ? root : null};
+    const stopTouches = watchOutsidePress(
+      layer,
+      isInside,
+      () => {
+        armClickGuard(doc, {
+          staysInstalled: true,
+          cancelsTouchEnd: true,
+          touchIdentifier: touch?.identifier,
+          touchTarget: touch?.target,
+          touchStartCancelable: touch?.cancelable,
+        });
+        onOutsideTapRef.current();
+      },
+      {...watch, pointerTypes: ['touch']},
+    );
+    // A pen sends no touchend. Its mouseup and click follow the lift.
+    const stopPens = watchOutsidePress(
+      layer,
+      isInside,
+      () => {
+        armClickGuard(doc, {staysInstalled: true, takesLateMouse: true});
+        onOutsideTapRef.current();
+      },
+      {...watch, pointerTypes: ['pen']},
+    );
+    return () => {
+      stopTouchStarts();
+      stopTouches();
+      stopPens();
+    };
+  }, [isEnabled, menuRef, triggerRef, onOutsideTapRef]);
 }

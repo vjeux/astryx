@@ -79,7 +79,11 @@ import {
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {useMergedRefs} from '../hooks/useMergedRefs';
 import {useInternalListFocus} from '../hooks/useListFocus';
-import {MENU_PRESS_LONG_PRESS_MS, useMenuPress} from '../hooks/useMenuPress';
+import {
+  MENU_PRESS_LONG_PRESS_MS,
+  useMenuOutsideTap,
+  useMenuPress,
+} from '../hooks/useMenuPress';
 import type {MenuPressPointerType} from '../hooks/menuPressGesture';
 import {useTypeahead} from '../hooks/useTypeahead';
 import {useFocusReturnVisibility} from '../hooks/useFocusReturnVisibility';
@@ -1540,6 +1544,14 @@ function DropdownMenuPopover({
   // The hide's gesture cancel, written at commit before any layout effect.
   // The controlled-open layout effect above can hide the menu then.
   useCommittedRefInto(cancelMenuPressRef, menuPress.cancel);
+  // Under the touch presentation, a finger's tap outside the open menu only
+  // closes it, as a native menu's does.
+  useMenuOutsideTap({
+    menuRef: listRef,
+    triggerRef: buttonRef,
+    isEnabled: pressTouchModel === 'uikit' && isMenuOpenNow,
+    onOutsideTap: closeMenu,
+  });
 
   const handleButtonClick = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
