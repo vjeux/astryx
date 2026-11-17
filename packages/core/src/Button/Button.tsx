@@ -80,7 +80,7 @@ import {
   rowPressLayerStyles,
 } from '../privateAttributes/press.stylex';
 import {usePressFeedback} from '../hooks/usePressFeedback';
-import {setPressLayerBox} from '../utils/pressLayerBox';
+import {registerPressPlace} from '../utils/pressFeedback';
 import type {ButtonVariantMap} from './index';
 import {
   registerEnglishFallback,
@@ -90,6 +90,10 @@ import english from '../i18n/generated-english/Button/Button.generated';
 import {isRenderable} from '../utils/isRenderable';
 
 registerEnglishFallback(english);
+// Registered here, not in the press controller, so a page with no Button
+// carries none of its code. A static Button's press then lands on its own
+// box or on the row it covers.
+registerPressPlace();
 
 /**
  * Written by the press controller or a group's tracker while a press is
@@ -942,13 +946,6 @@ export function Button({
     }
   };
 
-  // Where a press starts decides the box its layer takes when a caller makes
-  // the Button static (utils/pressLayerBox.ts). A caller's handler still runs.
-  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    setPressLayerBox(e.currentTarget, e.clientX, e.clientY, e.pointerType);
-    props.onPointerDown?.(e);
-  };
-
   // A disabled button cancels Enter and Space, its activation keys. Other
   // keys, such as Escape and the arrows, still reach the caller's handler.
   const handleKeyDown = buttonDisabled
@@ -1156,7 +1153,6 @@ export function Button({
         aria-busy={isLoadingState || props['aria-busy'] || undefined}
         aria-disabled={buttonDisabled || props['aria-disabled'] || undefined}
         onClick={handleClick}
-        onPointerDown={handlePointerDown}
         {...(handleKeyDown ? {onKeyDown: handleKeyDown} : null)}>
         {buttonContent}
       </LinkComponent>
@@ -1182,7 +1178,6 @@ export function Button({
         aria-busy={isLoadingState || props['aria-busy'] || undefined}
         aria-disabled={buttonDisabled || props['aria-disabled'] || undefined}
         onClick={handleClick}
-        onPointerDown={handlePointerDown}
         {...(handleKeyDown ? {onKeyDown: handleKeyDown} : null)}>
         {buttonContent}
       </button>

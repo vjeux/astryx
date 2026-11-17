@@ -7,7 +7,9 @@
  *   input clock (inputAge.ts) and the document's pointer, keyboard, scroll
  *   and visibility events
  * @output PRESSABLE_ATTRIBUTE, PRESSED_ATTRIBUTE, pressableProps,
- *   pressFadeMs, installPressFeedback, cancelPress and installBoxHold
+ *   pressFadeMs, installPressFeedback, cancelPress, installBoxHold,
+ *   and registerPressPlace, which only the controls that ask for placement
+ *   call, so other pressables do not carry its code
  * @position The DOM half of the touch press model. usePressFeedback installs
  *   it, and the CSS arms live in interactionOverlay.stylex.ts.
  *
@@ -181,6 +183,36 @@ export interface BoxHold {
 let boxHold: BoxHold | null = null;
 
 /**
+ * Where a press on a stretched control lands. The controller asks it at each
+ * press, once a control has registered it.
+ */
+interface PressPlace {
+  /** At a press's start; `at` is null for a key's press. */
+  readonly place: (
+    element: HTMLElement,
+    at: {x: number; y: number} | null,
+  ) => void;
+  /** As the press paints, `on` and then `fading`. */
+  readonly paint: (element: HTMLElement, paint: PressPaint) => void;
+  /** When the press ends, painted or not. */
+  readonly end: (element: HTMLElement) => void;
+  /** A mouse's press that `:active` paints, and its release. */
+  readonly mouseDown: (event: PointerEvent) => void;
+  readonly mouseUp: (pointerId: number | null) => void;
+}
+
+let pressPlace: PressPlace | null = null;
+
+/**
+ * Installs where presses on stretched controls land. A control whose press
+ * styles ask for placement calls it as its module loads. A page with no such
+ * control then carries none of its code.
+ */
+export function registerPressPlace(): void {
+  pressPlace = stretchedPressPlace;
+}
+
+/**
  * @internal Installs the box hold. Only a page with a box component loads
  * it, so a page of buttons and links carries none of its code.
  */
@@ -312,6 +344,7 @@ function paintElement(element: HTMLElement, paint: PressPaint): void {
     element.removeAttribute(PRESSED_ATTRIBUTE);
     return;
   }
+  pressPlace?.paint(element, paint);
   // A step that keeps the paint writes nothing, so the element sees one
   // change per paint.
   if (element.getAttribute(PRESSED_ATTRIBUTE) !== paint) {
@@ -352,6 +385,7 @@ function apply(slot: Slot, step: PressStep, sinceEventMs = 0): void {
   live.gesture = step.gesture;
   paintElement(live.element, step.paint);
   if (step.gesture.phase === 'idle') {
+    pressPlace?.end(live.element);
     slot.live = null;
     return;
   }
@@ -443,6 +477,7 @@ function scrollerIsBraking(element: HTMLElement): boolean {
 function releaseIfDead(slot: Slot): void {
   if (slot.live?.gesture.phase === 'dead') {
     clearTimer(slot);
+    pressPlace?.end(slot.live.element);
     slot.live = null;
   }
 }
@@ -455,6 +490,7 @@ function finish(slot: Slot): void {
   }
   clearTimer(slot);
   live.element.removeAttribute(PRESSED_ATTRIBUTE);
+  pressPlace?.end(live.element);
   slot.live = null;
   if (slot === button) {
     holdKey(false);
@@ -539,10 +575,14 @@ function buttonSurfaceAt(
   return element;
 }
 
-/** Start a mouse button's or the Space key's press on the surface, if there is one. */
+/**
+ * Start a mouse button's or the Space key's press on the surface, if there is
+ * one. A key's press is on the surface's own box.
+ */
 function pressButton(
   target: EventTarget | null,
   pointerId: number | null,
+  at: {x: number; y: number} | null = null,
 ): void {
   // A press still fading elsewhere goes now: the new one owns the slot.
   finish(button);
@@ -552,6 +592,7 @@ function pressButton(
   }
   takeOver(finger, element);
   button.live = {element, gesture: idlePressGesture(), pointerId, timer: null};
+  pressPlace?.place(element, at);
   holdKey(pointerId == null);
   apply(button, pressGestureStep(button.live.gesture, {kind: 'buttonDown'}));
 }
@@ -606,7 +647,12 @@ function onPointerDown(event: PointerEvent): void {
         ? event.button === 0
         : isPrimaryClick(event) && paintsFinePress(event.target)
     ) {
-      pressButton(event.target, event.pointerId);
+      pressButton(event.target, event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
+    } else if (isPrimaryClick(event)) {
+      pressPlace?.mouseDown(event);
     }
     return;
   }
@@ -679,6 +725,7 @@ function onPointerDown(event: PointerEvent): void {
   }
   takeOver(button, element);
   finger.live = live;
+  pressPlace?.place(element, {x: event.clientX, y: event.clientY});
   apply(
     finger,
     pressGestureStep(live.gesture, {
@@ -720,6 +767,7 @@ function onPointerUp(event: PointerEvent): void {
   // press landing inside the brake window. A coarse pointer and a mouse can
   // both be present on one device.
   if (event.pointerType === 'mouse') {
+    pressPlace?.mouseUp(event.pointerId);
     if (button.live != null && button.live.pointerId === event.pointerId) {
       releaseButton();
     }
@@ -766,6 +814,7 @@ function onCancel(event?: Event): void {
   // A cancelled mouse pointer ends the mouse's press, not a finger's.
   const pointer = event as Partial<PointerEvent> | undefined;
   if (pointer?.pointerType === 'mouse') {
+    pressPlace?.mouseUp(pointer.pointerId ?? null);
     if (button.live != null && button.live.pointerId === pointer.pointerId) {
       cancelButton();
     }
@@ -795,6 +844,7 @@ function onCancel(event?: Event): void {
 function onDragStart(): void {
   onCancel();
   cancelButton();
+  pressPlace?.mouseUp(null);
 }
 
 /** A scroll anywhere above the pressed element, caught in the capture phase. */
@@ -893,6 +943,7 @@ function onVisibilityChange(): void {
     endContact(false);
     finish(finger);
     finish(button);
+    pressPlace?.mouseUp(null);
   }
 }
 
@@ -1034,3 +1085,133 @@ export function installPressFeedback(): () => void {
     lastTouchTarget = null;
   };
 }
+
+/** A control's press styles ask for placement (controlPressLayerStyles). */
+const PLACE_OPT_IN = '--_press-place';
+
+/**
+ * The custom properties that place a press on a static surface. The press
+ * styles (privateAttributes/press.stylex.ts) read them only while a press is
+ * on or fading, or while a mouse button holds `:active`.
+ */
+const PLACE = {
+  /** The surface's own box, as its press layer's `inset`. */
+  inset: '--_press-layer-inset',
+  /** Under any pointer but a coarse primary one: the row's tint and its fade. */
+  rowTint: '--_press-row-tint',
+  rowOpacity: '--_press-row-opacity',
+  /** The surface's own tint, which a press on the row turns off. */
+  ownTint: '--_press-own-tint',
+} as const;
+
+/**
+ * A caller can make a control static, with no transform, so that its
+ * `::after` covers a row as its tap target. Its press layers then have the
+ * row as their containing block too: the row is its nearest positioned
+ * ancestor. A press that starts on the row presses the row, so the row tints
+ * as one surface. The control then shows no tint of its own. A press that
+ * starts on the control's own box presses the control, so only that box
+ * tints. The box is measured once, at the press's start, against the row's
+ * padding box. The reads change no layout and no hit-testing. A positioned
+ * surface reads only its computed position: it is its own layers' containing
+ * block. A key's press (`at` null) is on the control's own box. Returns
+ * whether the press is on the row.
+ */
+function placePress(
+  element: HTMLElement,
+  at: {x: number; y: number} | null,
+): boolean {
+  unplacePress(element);
+  const style = getComputedStyle(element);
+  const row =
+    style.getPropertyValue(PLACE_OPT_IN).trim() === 'control' &&
+    style.position === 'static'
+      ? element.offsetParent
+      : null;
+  if (!(row instanceof HTMLElement)) {
+    return false;
+  }
+  const box = at == null ? null : element.getBoundingClientRect();
+  if (
+    at != null &&
+    box != null &&
+    (at.x < box.left || at.x > box.right || at.y < box.top || at.y > box.bottom)
+  ) {
+    element.style.setProperty(PLACE.ownTint, 'none');
+    return true;
+  }
+  const top = element.offsetTop;
+  const left = element.offsetLeft;
+  const bottom = row.clientHeight - top - element.offsetHeight;
+  const right = row.clientWidth - left - element.offsetWidth;
+  element.style.setProperty(
+    PLACE.inset,
+    `${top}px ${right}px ${bottom}px ${left}px`,
+  );
+  return false;
+}
+
+/** The press's place goes with its paint. */
+function unplacePress(element: HTMLElement): void {
+  for (const name of Object.values(PLACE)) {
+    if (element.style.getPropertyValue(name) !== '') {
+      element.style.removeProperty(name);
+    }
+  }
+}
+
+/**
+ * Under a fine primary pointer, `:active` paints a mouse's press and the
+ * controller does not follow it. Where that press starts still decides what
+ * tints, so its place holds until the button comes up.
+ */
+let mousePlace: {surface: HTMLElement; pointerId: number} | null = null;
+
+function holdMousePlace(event: PointerEvent): void {
+  releaseMousePlace(null);
+  const surface = surfaceAt(event.target);
+  if (surface == null) {
+    return;
+  }
+  if (placePress(surface, {x: event.clientX, y: event.clientY})) {
+    surface.style.setProperty(PLACE.rowTint, '""');
+  }
+  mousePlace = {surface, pointerId: event.pointerId};
+}
+
+/** Ends the mouse's place: `pointerId` names its pointer, or `null` any. */
+function releaseMousePlace(pointerId: number | null): void {
+  if (
+    mousePlace == null ||
+    (pointerId != null && mousePlace.pointerId !== pointerId)
+  ) {
+    return;
+  }
+  unplacePress(mousePlace.surface);
+  mousePlace = null;
+}
+
+/**
+ * The place of a press on a stretched control, for a control whose press
+ * styles ask for it (`controlPressLayerStyles.control`). The place holds from
+ * the press's start to its end: a press in a scroll view starts before it
+ * paints.
+ */
+const stretchedPressPlace: PressPlace = {
+  place: (element, at) => {
+    placePress(element, at);
+  },
+  end: unplacePress,
+  paint: (element, paint) => {
+    // A press on the row tints the row while the press paints, and fades it
+    // with the release, on the same clock.
+    if (element.style.getPropertyValue(PLACE.ownTint) !== '') {
+      element.style.setProperty(PLACE.rowTint, '""');
+      if (paint === 'fading') {
+        element.style.setProperty(PLACE.rowOpacity, '0');
+      }
+    }
+  },
+  mouseDown: holdMousePlace,
+  mouseUp: releaseMousePlace,
+};
