@@ -1080,10 +1080,11 @@ const PLACE = {
  * as one surface. The control then shows no tint of its own. A press that
  * starts on the control's own box presses the control, so only that box
  * tints. The box is measured once, at the press's start, against the row's
- * padding box. The reads change no layout and no hit-testing. A positioned
- * surface reads only its computed position: it is its own layers' containing
- * block. A key's press (`at` null) is on the control's own box. Returns
- * whether the press is on the row.
+ * padding box. Script places the layer because CSS anchor positioning ran
+ * Layout during the release. The reads change no layout and no hit-testing. A
+ * positioned surface, or one with a transform, reads only its computed style:
+ * it is its own layers' containing block. A key's press (`at` null) is on
+ * the control's own box. Returns whether the press is on the row.
  */
 function placePress(
   element: HTMLElement,
@@ -1093,7 +1094,8 @@ function placePress(
   const style = getComputedStyle(element);
   const row =
     style.getPropertyValue(PLACE_OPT_IN).trim() === 'control' &&
-    style.position === 'static'
+    style.position === 'static' &&
+    style.transform === 'none'
       ? element.offsetParent
       : null;
   if (!(row instanceof HTMLElement)) {
@@ -1119,7 +1121,10 @@ function placePress(
   return false;
 }
 
-/** The press's place goes with its paint. */
+/**
+ * Clears the press's place. The press's end calls it, and so does the next
+ * press.
+ */
 function unplacePress(element: HTMLElement): void {
   for (const name of Object.values(PLACE)) {
     if (element.style.getPropertyValue(name) !== '') {

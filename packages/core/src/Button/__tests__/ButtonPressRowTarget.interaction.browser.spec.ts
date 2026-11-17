@@ -286,6 +286,37 @@ for (const gesture of ['held', 'tapped'] as const) {
   });
 }
 
+test('a finger on a static Button that keeps its default transform tints the Button', async ({
+  page,
+}) => {
+  const {driver, button, probes} = await openRow(page);
+  // The Button keeps its own transform, so it stays its layers' containing
+  // block, and its `::after` covers only the Button.
+  await button.evaluate(el => {
+    el.style.transform = 'scale(1)';
+  });
+  const at = await buttonCenter(button);
+  const {states, log} = await pressAndRead(
+    page,
+    button,
+    [at],
+    at,
+    fingerHold(driver, at),
+  );
+  expect(probes.length, log).toBeGreaterThan(0);
+  // The Button is the layer's containing block, so the layer's box reads
+  // against the Button: at its origin, at its size.
+  for (const state of states) {
+    expect(state.layer, log).toBe('""');
+    expect(state.layerBox, log).toEqual([
+      0,
+      0,
+      state.buttonBox[2],
+      state.buttonBox[3],
+    ]);
+  }
+});
+
 test('a tap on the line under the Button activates the Button once', async ({
   page,
 }) => {
