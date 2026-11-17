@@ -436,6 +436,9 @@ gap below is open.
   full-viewport dialog has no scroller, and BottomSheet's keyboard path runs
   only for `height="tall"`, so the field keeps the browser's own reveal; Chrome
   on Android then pans the page (336 px, field 64 px clear).
+- **Gap 21 — Back in Firefox for Android.** With animations removed or on a
+  slow device, Back with the keyboard up can leave the page where the reveal
+  scrolled it, instead of where it was before the reveal (FR9).
 
 ### Follow-up
 
