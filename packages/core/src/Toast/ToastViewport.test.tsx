@@ -3334,6 +3334,47 @@ describe('Toast swipe dismissal under a finger', () => {
     expect(visualToast.style.getPropertyValue('transition-property')).toBe('');
   });
 
+  it("under Reduce Motion gives the card's own transitions back when a still finger catches its fade", async () => {
+    vi.stubGlobal('matchMedia', (query: string): MediaQueryList => ({
+      matches:
+        query === '(pointer: coarse)' ||
+        query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }));
+    const {visualToast, onHide} = await renderSwipeToast();
+    const start = strokeStart();
+    act(() => {
+      pen(visualToast, 'pointerDown', 27, start, 0);
+      pen(visualToast, 'pointerMove', 27, start + 200, 20);
+      pen(visualToast, 'pointerMove', 27, start + 400, 30);
+      pen(visualToast, 'pointerUp', 27, start + 900, 30);
+      // A second finger lands on the card while it fades back to rest, and
+      // lifts without moving: no settle and no exit follow.
+      pen(visualToast, 'pointerDown', 28, start + 950, 30);
+      pen(visualToast, 'pointerUp', 28, start + 1010, 30);
+    });
+    expect(visualToast.style.getPropertyValue('transition-property')).toBe(
+      'none',
+    );
+    await act(async () => {
+      await vi.waitFor(
+        () => {
+          expect(
+            visualToast.style.getPropertyValue('transition-property'),
+          ).toBe('');
+        },
+        {timeout: 3000, interval: 50},
+      );
+    });
+    expect(onHide).not.toHaveBeenCalled();
+  });
+
   it('under Reduce Motion gives a standalone card its own transitions back when its owner keeps it on screen', async () => {
     vi.stubGlobal('matchMedia', (query: string): MediaQueryList => ({
       matches:
