@@ -565,6 +565,20 @@ async function watchCrossFade(page: Page, row: Locator): Promise<void> {
   });
 }
 
+/** How far a confirmed row moves for the finger's travel past the confirm point. */
+const resistedOf = (overshoot: number) =>
+  Math.min(overshoot, swipeActions.resistHalfSpan) * swipeActions.resistHalf +
+  Math.max(0, overshoot - swipeActions.resistHalfSpan) *
+    swipeActions.resistFifth;
+
+/** The opacity animations the row asked for before `until`, with `watchCrossFade` logging. */
+async function fadesBefore(page: Page, until: number): Promise<Fade[]> {
+  const fades = await page.evaluate(
+    () => (window as unknown as {__swipeFades: Fade[]}).__swipeFades,
+  );
+  return fades.filter(fade => fade.at < until);
+}
+
 /**
  * Checks the `nth` dip of the row (from 0) since `since` (the page's clock),
  * with `watchCrossFade` logging. Under Reduce Motion that is an opacity-only
@@ -741,7 +755,7 @@ test("a held row stays under the finger: at every frame from the claim to the li
   }
 });
 
-test("past the confirm point a lead grows to the confirmation offset on UIKit's tracking spring and the row keeps it, while its base stays at the finger's travel, frame by frame", async ({
+test("past the confirm point the row resists the finger: one for one up to the point, then at about half the finger's speed, then at about a fifth, frame by frame (spec:AST-057 FR5)", async ({
   page,
 }) => {
   const opened = await openRow(page);
@@ -751,10 +765,9 @@ test("past the confirm point a lead grows to the confirmation offset on UIKit's 
   const openWidth = await restOpen(opened);
   const start = {x: opened.start.x - openWidth, y: opened.start.y};
   const confirmAt = confirmPointOf(openWidth, rest.width);
-  const confirmedOffset = rest.width - swipeActions.confirmInset;
-  // A slow drag to 40 px past the confirm point on UIKit's measure, held 0.6
-  // s, then lifted.
-  const reach = confirmAt + 40 - openWidth + swipeActions.hysteresis;
+  // A slow drag to 60 px past the confirm point on UIKit's measure, held 0.6
+  // s, then lifted: both stretches of the resistance.
+  const reach = confirmAt + 60 - openWidth + swipeActions.hysteresis;
   const script = drag(
     start,
     {x: start.x - reach, y: start.y},
@@ -785,15 +798,13 @@ test("past the confirm point a lead grows to the confirmation offset on UIKit's 
   );
   // At each frame before the lift, the base is the open width plus the finger's
   // travel since touch-down, as of the last move the page had handled when the
-  // frame read the travel. The swipe is the same on UIKit's measure. The lead
-  // is how far past its base the row is drawn.
+  // frame read the travel. The swipe is the same on UIKit's measure.
   const samples = (await framesOf(page))
     .filter(frame => frame.at < lift)
     .map(frame => {
       const x = moves[frame.moves - 1]?.x;
       const travel = x == null ? 0 : start.x - x;
       return {
-        at: frame.at,
         swipe: openWidth + travel - swipeActions.hysteresis,
         base: openWidth + Math.max(0, travel),
         row: -frame.x,
@@ -804,58 +815,41 @@ test("past the confirm point a lead grows to the confirmation offset on UIKit's 
   const after = samples.filter(sample => sample.swipe >= confirmAt);
   expect(before.length, JSON.stringify(samples)).toBeGreaterThan(5);
   expect(after.length, JSON.stringify(samples)).toBeGreaterThan(5);
-  // Short of the confirm point there is no lead: the row is at its base.
+  // Short of the confirm point the row is at its base, under the finger.
   expect(
     before.filter(sample => Math.abs(sample.row - sample.base) > 1),
     JSON.stringify(before),
   ).toEqual([]);
-  // Past it the lead only grows, and it ends where the base at the confirm
-  // put the confirmation offset. The confirm is the first move past the
-  // confirm point. The first frame drawn after it can be some moves later.
-  const leads = after.map(sample => sample.row - sample.base);
-  const confirmMove = moves.find(
-    move =>
-      openWidth + (start.x - move.x) - swipeActions.hysteresis >= confirmAt,
-  );
-  const baseAtConfirm =
-    openWidth + Math.max(0, start.x - (confirmMove?.x ?? start.x));
+  // Past it the row resists: of the finger's travel past the point it covers
+  // about half, then about a fifth. It never runs ahead of the finger, and the
+  // drag shows both stretches.
+  const resisted = after.map(sample => {
+    const overshoot = sample.swipe - confirmAt;
+    return {
+      ...sample,
+      overshoot,
+      expected: sample.base - overshoot + resistedOf(overshoot),
+    };
+  });
   expect(
-    leads.every((lead, i) => i === 0 || lead >= leads[i - 1] - 0.5),
-    JSON.stringify(leads),
+    resisted.filter(sample => Math.abs(sample.row - sample.expected) > 1),
+    JSON.stringify(resisted),
+  ).toEqual([]);
+  expect(
+    resisted.filter(sample => sample.row > sample.base + 0.5),
+    JSON.stringify(resisted),
+  ).toEqual([]);
+  expect(
+    resisted.some(
+      sample =>
+        sample.overshoot > 2 && sample.overshoot < swipeActions.resistHalfSpan,
+    ),
   ).toBe(true);
   expect(
-    Math.abs((leads.at(-1) ?? 0) - (confirmedOffset - baseAtConfirm)),
-    JSON.stringify(leads),
-  ).toBeLessThan(3);
-  // The lead grows on UIKit's tracking spring from rest. A frame's lead puts
-  // the frame at one point of that curve, so the frame names when the lead
-  // began. Between 10 % and 70 % of the lead, every frame drawn names one
-  // start, within two frames. A jump, or another curve, does not. Three frames
-  // are the fewest that test the curve's shape. How many fall in that span
-  // depends on how often the page draws.
-  const finalLead = leads.at(-1) ?? 0;
-  const msAtProgress = (progress: number) => {
-    let low = 0;
-    let high = 2000;
-    for (let step = 0; step < 40; step += 1) {
-      const middle = (low + high) / 2;
-      if (springStep(SPRING, middle) < progress) {
-        low = middle;
-      } else {
-        high = middle;
-      }
-    }
-    return (low + high) / 2;
-  };
-  const began = after
-    .map((sample, i) => ({at: sample.at, progress: leads[i] / finalLead}))
-    .filter(({progress}) => progress >= 0.1 && progress <= 0.7)
-    .map(({at, progress}) => at - msAtProgress(progress));
-  expect(began.length, JSON.stringify(leads)).toBeGreaterThanOrEqual(3);
-  expect(
-    Math.max(...began) - Math.min(...began),
-    JSON.stringify(began),
-  ).toBeLessThanOrEqual(34);
+    resisted.some(
+      sample => sample.overshoot > swipeActions.resistHalfSpan + 10,
+    ),
+  ).toBe(true);
 });
 
 test('the settle after a held release is UIKit’s spring, frame by frame, with the panel in step', async ({
@@ -1503,7 +1497,7 @@ function confirmPointOf(openWidth: number, rowWidth: number) {
   return openWidth + (confirmAt - openWidth) * swipeActions.confirmFraction;
 }
 
-test('a full swipe from the open row confirms on the finger: the row runs ahead to the confirmation offset, the outermost entry covers the space, and the release fires it', async ({
+test('a full swipe from the open row confirms on the finger: the row resists past the confirm point, the outermost entry covers the space, and the release fires it (spec:AST-057 FR5)', async ({
   page,
 }) => {
   const opened = await openRow(page);
@@ -1561,13 +1555,13 @@ test('a full swipe from the open row confirms on the finger: the row runs ahead 
   expect(short?.outer).toBeCloseTo(0, 1);
   expect(short?.inner).toBeCloseTo(1, 2);
   expect(short?.fill).toBeCloseTo(0, 2);
-  // Past it, the row ran ahead to the confirmation offset and kept that lead.
-  // 40 px more of the finger put it about 40 px past the offset, less part of
-  // one move's step, where the confirm fell. The outermost entry has slid past
-  // the others to the row's edge, and the others hide under its cover at once.
-  expect(past?.root).toBeLessThanOrEqual(-(confirmedOffset + 37));
-  expect(past?.root).toBeGreaterThanOrEqual(-(confirmedOffset + 40.5));
-  expect(past?.outer).toBeCloseTo(-(openWidth - outerWidth), 0);
+  // Past it, the row resisted: of the finger's 40 px past the point it covered
+  // the resisted share, with no run ahead. The outermost entry slides toward
+  // the row's edge with the row, and the others hide under its cover at once.
+  const travelPast = confirmAt + swipeActions.hysteresis + resistedOf(40);
+  expect(past?.root).toBeCloseTo(-travelPast, 0);
+  const slid = (travelPast - confirmAt) / (confirmedOffset - confirmAt);
+  expect(past?.outer).toBeCloseTo(-(openWidth - outerWidth) * slid, 0);
   expect(past?.inner).toBeCloseTo(0, 2);
   // Under them the track shows the outermost entry's colour.
   expect(past?.fill).toBeCloseTo(1, 2);
@@ -1625,11 +1619,11 @@ test('backing out of a full swipe confirmed from the open row closes the row and
   await expect(rows).toHaveCount(before);
 });
 
-test('under Reduce Motion a full swipe confirms with no travel: the row steps to the confirmation offset at the bottom of an opacity dip', async ({
+test('under Reduce Motion a full swipe confirms as it does with motion: the row resists past the confirm point, with no opacity dip (spec:AST-057 FR5)', async ({
   page,
 }) => {
-  // Under Reduce Motion the finger's drag is direct manipulation. But a confirm
-  // is a change of state, so the row cross-fades to it.
+  // Under Reduce Motion the finger's drag is direct manipulation, and the
+  // resistance is part of the drag.
   await page.emulateMedia({reducedMotion: 'reduce'});
   const opened = await openRow(page);
   const {driver, row, rest} = opened;
@@ -1637,31 +1631,28 @@ test('under Reduce Motion a full swipe confirms with no travel: the row steps to
   const openWidth = await restOpen(opened);
   const start = {x: opened.start.x - openWidth, y: opened.start.y};
   const confirmAt = confirmPointOf(openWidth, rest.width);
-  const confirmedOffset = rest.width - swipeActions.confirmInset;
   const h = swipeActions.hysteresis;
   const script = drag(
     start,
-    {x: start.x - (confirmAt + h + 4 - openWidth), y: start.y},
-    {durationMs: 900, hz: 60, restMs: 300},
+    {x: start.x - (confirmAt + h + 30 - openWidth), y: start.y},
+    {durationMs: 900, hz: 60, restMs: 400},
   );
   await watchCrossFade(page, row);
-  let checked = false;
+  let held: number | null = null;
   await driver.play(script, {
     onEvent: async step => {
-      const swipe = openWidth + start.x - (step.fingers[0]?.x ?? start.x) - h;
-      if (!checked && step.type === 'touchMove' && swipe >= confirmAt) {
-        // The move that confirms: the row is now fading out, to land at the
-        // confirmation offset while transparent and fade back in. The first
-        // dip of the drag (before it, the drag is direct manipulation).
-        checked = true;
-        await expectCrossFadeSince(page, row, -confirmedOffset, 0);
+      if (step.type === 'touchEnd') {
+        held = await xOf(row);
       }
     },
   });
-  expect(checked).toBe(true);
+  const lift = await liftOf(page);
+  // No dip before the lift, and the finger held the row at its resisted place.
+  expect(await fadesBefore(page, lift)).toEqual([]);
+  expect(held).toBeCloseTo(-(confirmAt + h + resistedOf(30)), 0);
 });
 
-test('under Reduce Motion backing out of a confirmed full swipe returns to the finger with no travel, at the bottom of an opacity dip', async ({
+test('under Reduce Motion backing out of a confirmed full swipe returns the row to the finger one for one, with no opacity dip; the lift closes the row and fires nothing (spec:AST-057 FR5)', async ({
   page,
 }) => {
   await page.emulateMedia({reducedMotion: 'reduce'});
@@ -1671,12 +1662,9 @@ test('under Reduce Motion backing out of a confirmed full swipe returns to the f
   const start = {x: opened.start.x - openWidth, y: opened.start.y};
   const confirmAt = confirmPointOf(openWidth, rest.width);
   const h = swipeActions.hysteresis;
-  // From the open row out past the confirm point, held there while the
-  // confirm's cross-fade plays out, then back short of it, held, and lifted.
-  // The way back is 39 px, not 40, so no move lands exactly on the confirm
-  // point. The moves straddle it by half a pixel or more. So the move that
-  // backs out is the same for the row and for this test, whatever rounding each
-  // one's sum carries.
+  // From the open row out past the confirm point, then back short of it, held,
+  // and lifted. The way back is 39 px, not 40, so no move lands exactly on the
+  // confirm point.
   const out = drag(
     start,
     {x: start.x - (confirmAt + h + 20 - openWidth), y: start.y},
@@ -1689,32 +1677,25 @@ test('under Reduce Motion backing out of a confirmed full swipe returns to the f
     {durationMs: 300, hz: 60, restMs: 300},
   ).map(frame => ({...frame, t: frame.t + last.t + 16}));
   await watchCrossFade(page, row);
-  let confirmed = false;
-  let checked = false;
+  let short: number | null = null;
   await driver.play([...out, ...back.slice(1)], {
     onEvent: async step => {
-      if (step.type !== 'touchMove' || checked) {
-        return;
-      }
-      const swipe = openWidth + start.x - (step.fingers[0]?.x ?? start.x) - h;
-      if (swipe >= confirmAt) {
-        confirmed = true;
-      } else if (confirmed) {
-        // The move that backs out: the row fades out, lands under the
-        // finger, at its travel since touch-down, while transparent, and fades
-        // back in. The drag's second dip (its first was the confirm's).
-        checked = true;
-        await expectCrossFadeSince(page, row, -(swipe + h), 0, 1);
+      if (step.type === 'touchEnd') {
+        short = await xOf(row);
       }
     },
   });
-  expect(checked).toBe(true);
+  const lift = await liftOf(page);
+  // Backed out, the row is under the finger again, at its travel since
+  // touch-down, and no dip played on the way.
+  expect(await fadesBefore(page, lift)).toEqual([]);
+  expect(short).toBeCloseTo(-(confirmAt + h - 19), 0);
   // Lifted backed out: the row closes and fires nothing.
   await expect.poll(async () => xOf(row)).toBeCloseTo(0, 0);
 });
 
 test(
-  'storyboard: a full swipe confirms, the row runs ahead and the outermost entry covers the space',
+  'storyboard: a full swipe confirms, the row resists and the outermost entry covers the space',
   {tag: '@storyboard'},
   async ({page, browserName}) => {
     test.skip(
@@ -1743,8 +1724,8 @@ test(
     await waitForRest(row);
     const castFrames = await cast.stop();
     const tracked = await trackMarker(page, castFrames);
-    // The trace: the row's edge runs out to the confirmation offset, ahead
-    // of the finger, and on out of the list as Delete fires.
+    // The trace: the row's edge slows under the finger past the confirm point,
+    // then runs out of the list as Delete fires.
     const rights = tracked
       .filter(f => f.t >= began && f.box != null)
       .map(f => (f.box?.x as number) + (f.box?.width as number));
@@ -1786,16 +1767,16 @@ test(
     await waitForRest(row);
     const castFrames = await cast.stop();
     const tracked = await trackMarker(page, castFrames);
-    // The trace: out to the confirmation offset, back with the finger, then
-    // home on the release. The row comes to the offset itself, and screencast
-    // boxes are whole pixels. So its closest frame reads that pixel or the
-    // next: a frame between keyframes sits up to a quarter pixel short.
+    // The trace: out past the confirm point, slowing under the finger, back
+    // with the finger, then home on the release. Screencast boxes are whole
+    // pixels, so the farthest frame reads within a pixel of the resisted
+    // travel, and none runs ahead of it.
     const rights = tracked
       .filter(f => f.t >= began && f.box != null)
       .map(f => (f.box?.x as number) + (f.box?.width as number));
-    expect(Math.min(...rights)).toBeLessThanOrEqual(
-      rest.x + swipeActions.confirmInset + 1,
-    );
+    const farthest = rest.x + rest.width - (confirmAt + h + resistedOf(40));
+    expect(Math.min(...rights)).toBeGreaterThanOrEqual(farthest - 1.5);
+    expect(Math.min(...rights)).toBeLessThanOrEqual(farthest + 1.5);
     expect(rights.at(-1)).toBeCloseTo(rest.x + rest.width, 0);
   },
 );

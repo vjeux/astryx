@@ -37,15 +37,8 @@ import {useCommittedRef} from '../hooks/useCommittedRef';
 import {useIsomorphicLayoutEffect} from '../hooks/useIsomorphicLayoutEffect';
 import {isRtlElement} from '../hooks/isRtlElement';
 import type {MotionHandle} from '../motion/animator';
-import {reducedMotionFade} from '../motion/reducedMotion';
-import {resolveMotion} from '../motion/resolveMotion';
 import {resolveSnapPoint} from '../motion/resolveSnapPoint';
-import {
-  solveSpring,
-  toSpring,
-  type SpringCurve,
-  type SpringDescription,
-} from '../motion/spring';
+import type {SpringDescription} from '../motion/spring';
 import {swipeActions as SWIPE} from '../motion/uikit/swipeActions';
 import {setPressHeld} from '../privateAttributes/pressHeld.stylex';
 import {
@@ -191,6 +184,19 @@ export function confirmPoint(openWidth: number, rowWidth: number): number {
 /** The row's offset once a full swipe has confirmed (UIKit's `confirmationThreshold`). */
 export function confirmedOffset(rowWidth: number): number {
   return rowWidth - SWIPE.confirmInset;
+}
+
+/**
+ * How far a confirmed row moves for `overshoot`, the finger's travel past the
+ * confirm point on UIKit's measure (logical px, ≥ 0). The row resists: it
+ * follows at `resistHalf` of the finger's speed, then at `resistFifth`.
+ */
+export function resistedOvershoot(overshoot: number): number {
+  const half = Math.min(overshoot, SWIPE.resistHalfSpan);
+  return (
+    half * SWIPE.resistHalf +
+    Math.max(0, overshoot - SWIPE.resistHalfSpan) * SWIPE.resistFifth
+  );
 }
 
 // =============================================================================
@@ -340,29 +346,6 @@ export function physicalSign(side: SwipeSide, inlineSign: 1 | -1): 1 | -1 {
  */
 const FINGER_SWIPE_START = SWIPE.claim;
 
-/** How close to its target a lead in flight counts as grown, in px. */
-const LEAD_REST = 0.25;
-
-/** A finger's lead at `now` (performance.now() ms): grown, or in flight. */
-function leadNow(drag: Drag, now: number): number {
-  const motion = drag.leadMotion;
-  if (motion == null) {
-    return drag.lead;
-  }
-  const t = (now - motion.start) / 1000;
-  return t < motion.curve.settleTime(LEAD_REST)
-    ? motion.curve.value(t)
-    : drag.lead;
-}
-
-/** How fast a finger's lead moves at `now`, in px/s. */
-function leadVelocity(drag: Drag, now: number): number {
-  const motion = drag.leadMotion;
-  return motion == null
-    ? 0
-    : motion.curve.velocity((now - motion.start) / 1000);
-}
-
 /** How far out a row goes when an entry fires and the row leaves (logical px). */
 function outTravel(layout: SwipeLayout): number {
   return layout.rowWidth + SWIPE.slideOutOvershoot;
@@ -495,26 +478,14 @@ interface Drag {
    */
   raw: number;
   /**
-   * Where the row is drawn toward the side, less any lead (logical, ≥ 0). A
-   * finger's row is at the finger's travel since touch-down.
+   * The finger's travel since touch-down toward the side (logical, ≥ 0). A
+   * finger's row is drawn there short of the confirm point.
    */
   held: number;
-  /**
-   * How far a confirmed finger's row runs ahead of the finger once its lead
-   * has grown (logical); 0 when not confirmed.
-   */
-  lead: number;
-  /** The lead's growth or shrink in flight, and when it began (ms). */
-  leadMotion: {curve: SpringCurve; start: number} | null;
   /** Confirmed: the swipe is past the confirm point. */
   isArmed: boolean;
   /** The full swipe confirmed at some point in this swipe. */
   wasConfirmed: boolean;
-  /**
-   * Under Reduce Motion, when the cross-fade a confirm or a back-out started
-   * ends (performance.now() ms): until then the moves leave it alone.
-   */
-  dipUntil?: number;
 }
 
 /**
@@ -607,8 +578,8 @@ function focusRowContent(root: HTMLElement): void {
  *   fingers' speed at their last move.
  * - A finger's or a pen's drag begins at the row's 8 px claim. From then until
  *   the release, the row is at the finger's travel since touch-down. The full
- *   swipe confirms on UIKit's measure, from UIKit's 25 px dead zone. The row
- *   then runs ahead to the confirmation offset and keeps that lead. The
+ *   swipe confirms on UIKit's measure, from UIKit's 25 px dead zone. Past the
+ *   confirm point the row then resists the finger. The
  *   release goes by UIKit's rule (resolveRelease, above), on UIKit's settle spring
  *   from the row's own velocity.
  *
@@ -708,8 +679,6 @@ export function useSwipeAction({
   const landedOnRef = useRef<SwipeSide | null>(null);
   /** The shared drag on the root. */
   const snapRef = useRef<SnapDrag | null>(null);
-  /** The frame that draws a finger's lead in flight. */
-  const leadFrameRef = useRef<number | null>(null);
   /** The row is open (see `isSwipeOpen`), read by listeners and recognizers. */
   const isOpen = useCallback(() => isSwipeOpen(stateRef.current), []);
 
@@ -1099,8 +1068,6 @@ export function useSwipeAction({
       isScroll: move.input === 'scroll',
       raw: 0,
       held: 0,
-      lead: 0,
-      leadMotion: null,
       started: false,
       startSign: 1,
       wasConfirmed: false,
@@ -1157,33 +1124,7 @@ export function useSwipeAction({
     // The full swipe confirms on UIKit's measure, where UIKit's own threshold
     // was measured. It confirms only when the outermost entry can fire.
     const isArmed = drag.canConfirm && raw >= drag.confirmAt;
-    const flipped = isArmed !== drag.isArmed;
-    const fade = reducedMotionFade(rootRef.current);
-    const now = performance.now();
-    if (flipped) {
-      // Confirmed, a finger's row gains a lead that grows to UIKit's
-      // confirmation offset on UIKit's tracking spring, as UIKit's row runs
-      // ahead. Backed out, the lead shrinks on it. The base stays at the
-      // finger's travel throughout. Under Reduce Motion the lead changes at
-      // once, inside the cross-fade below.
-      const from = leadNow(drag, now);
-      const velocity = leadVelocity(drag, now);
-      drag.lead = isArmed
-        ? Math.max(0, confirmedOffset(layout.rowWidth) - held)
-        : 0;
-      drag.leadMotion =
-        drag.isScroll || fade != null
-          ? null
-          : {
-              curve: solveSpring(
-                toSpring(resolveMotion(rootRef.current, SWIPE.tracking)),
-                {from, to: drag.lead, velocity},
-              ),
-              start: now,
-            };
-      if (drag.leadMotion != null && leadFrameRef.current == null) {
-        leadFrameRef.current = requestAnimationFrame(drawLeadFrame);
-      }
+    if (isArmed !== drag.isArmed) {
       drag.isArmed = isArmed;
       drag.wasConfirmed ||= isArmed;
       setSwipeState({
@@ -1193,35 +1134,15 @@ export function useSwipeAction({
         side: layout.side,
       });
     }
-    // A confirmed trackpad's row runs ahead to UIKit's confirmation offset and
-    // waits there for its fingers.
-    const travel = drag.isScroll
-      ? isArmed
-        ? Math.max(raw, confirmedOffset(layout.rowWidth))
-        : raw
-      : held + leadNow(drag, now);
-    const offset = sign * travel;
-    if (fade == null) {
-      // A finger's row is drawn where it is, with no spring. A trackpad's
-      // confirm or back-out springs the row to its new place.
-      return drag.isScroll && flipped
-        ? {offset, spring: SWIPE.tracking}
-        : {offset};
-    }
-    if (flipped) {
-      // Confirming and backing out are changes of state, not the drag. Under
-      // Reduce Motion they cross-fade, and the moves leave that fade alone
-      // until it ends.
-      drag.dipUntil = now + fade.duration;
-      return {offset, spring: SWIPE.tracking};
-    }
-    if (drag.dipUntil != null && now < drag.dipUntil) {
-      return null;
-    }
-    // Otherwise the row follows one for one: the drag itself is direct
-    // manipulation.
-    drag.dipUntil = undefined;
-    return {offset};
+    // Past the confirm point a confirmed row resists the finger, as the row in
+    // Notes does, instead of running ahead. The drag stays direct
+    // manipulation, so it is the same under Reduce Motion.
+    const base = drag.isScroll ? raw : held;
+    const overshoot = raw - drag.confirmAt;
+    const travel = isArmed
+      ? base - overshoot + resistedOvershoot(overshoot)
+      : base;
+    return {offset: sign * travel};
   };
 
   // The drag is over: the row's next press waits for the next claim.
@@ -1232,40 +1153,9 @@ export function useSwipeAction({
     }
   };
 
-  const stopLeadFrames = () => {
-    if (leadFrameRef.current != null) {
-      cancelAnimationFrame(leadFrameRef.current);
-      leadFrameRef.current = null;
-    }
-  };
-
-  // Draws a finger's row while its lead grows or shrinks, also on frames with
-  // no move. The base stays at the finger's travel, and the lead moves on.
-  const drawLeadFrame = () => {
-    leadFrameRef.current = null;
-    const drag = dragRef.current;
-    const snap = snapRef.current;
-    if (drag?.leadMotion == null || snap == null) {
-      return;
-    }
-    const {layout, leadMotion} = drag;
-    const now = performance.now();
-    const sign = physicalSign(layout.side, layout.inlineSign);
-    snap.animator.set({x: sign * (drag.held + leadNow(drag, now))});
-    if (
-      (now - leadMotion.start) / 1000 <
-      leadMotion.curve.settleTime(LEAD_REST)
-    ) {
-      leadFrameRef.current = requestAnimationFrame(drawLeadFrame);
-    } else {
-      drag.leadMotion = null;
-    }
-  };
-
   const release = (end: SnapDragRelease): SnapDragLanding | null => {
     const drag = dragRef.current;
     dragRef.current = null;
-    stopLeadFrames();
     awaitNextClaim();
     // A drag that never became a swipe changed nothing: the row stays where
     // it was caught.
@@ -1326,7 +1216,6 @@ export function useSwipeAction({
   const cancel = (): SnapDragLanding | null => {
     const drag = dragRef.current;
     dragRef.current = null;
-    stopLeadFrames();
     awaitNextClaim();
     // The browser took a touch the row was following: it closes.
     if (drag != null && drag.started) {
@@ -1478,15 +1367,11 @@ export function useSwipeAction({
   );
 
   // A row that loses its swipe while open takes presses again, and drops its
-  // closes and the frames of a lead in flight.
+  // closes.
   useIsomorphicLayoutEffect(
     () => () => {
       stopClosesRef.current?.();
       stopClosesRef.current = null;
-      if (leadFrameRef.current != null) {
-        cancelAnimationFrame(leadFrameRef.current);
-        leadFrameRef.current = null;
-      }
       const root = rootRef.current;
       if (root != null) {
         setPressHeld(root, false);
