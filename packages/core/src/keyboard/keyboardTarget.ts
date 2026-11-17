@@ -1437,7 +1437,14 @@ function scrollBack(win: Window, scrolls: Map<Element, AddedScroll>): void {
       continue;
     }
     const top = scrollTopOf(scroller, win);
-    if (Math.abs(top - at) <= KEYBOARD_EPSILON) {
+    // The range can shrink as the keyboard goes, and the browser then clamps
+    // the scroll to it: Firefox for Android does with animations removed.
+    // Core's spot, clamped that way, is still Core's own.
+    const clamped = Math.min(at, scrollRangeOf(scroller, win));
+    if (
+      Math.abs(top - at) <= KEYBOARD_EPSILON ||
+      Math.abs(top - clamped) <= KEYBOARD_EPSILON
+    ) {
       scrollTopTo(scroller, from, scrollBackBehavior(scroller), win);
     } else if (isRoot(scroller) && Math.abs(top - from) <= KEYBOARD_EPSILON) {
       awaitFoldedReveal(win, scroller, from, at);
@@ -1453,13 +1460,14 @@ function scrollBackBehavior(scroller: Element): ScrollBehavior {
 // Firefox for Android can carry the reveal's document scroll as a visual-
 // viewport offset. It then shows the document where it was before the
 // reveal, and turns the offset back into a document scroll after the hide
-// report. The scroll back waits for that one document scroll.
-const FOLD_WAIT_MS = 1000;
+// report. With animations removed or on a slow device, that can take more
+// than one scroll, or more than a second.
+const FOLD_WAIT_MS = 2500;
 
-// The first document scroll decides: one that lands where Core left the
-// document is the browser's own, and the scroll back follows it. A touch, a
-// keyboard that comes back, the field's page going, or the wait's end puts
-// nothing back.
+// A document scroll that lands where Core left the document is the browser's
+// own, and the scroll back follows it. Any other document scroll leaves the
+// wait as it is. A touch, a keyboard that comes back, the field's page going,
+// or the wait's end puts nothing back.
 function awaitFoldedReveal(
   win: Window,
   scroller: Element,
@@ -1471,8 +1479,8 @@ function awaitFoldedReveal(
     if (event.target !== doc && event.target !== win) {
       return;
     }
-    stop();
     if (Math.abs(scrollTopOf(scroller, win) - at) <= KEYBOARD_EPSILON) {
+      stop();
       scrollTopTo(scroller, from, scrollBackBehavior(scroller), win);
     }
   });

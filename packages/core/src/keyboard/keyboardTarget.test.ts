@@ -814,6 +814,27 @@ describe('keepFieldAboveKeyboard', () => {
     Reflect.deleteProperty(window, 'scrollY');
   });
 
+  it('scrolls the page back when the browser clamps its scroll as the keyboard goes', () => {
+    pageScrollRange(window.innerHeight * 2);
+    const fieldTop = window.innerHeight - 100;
+    const {input, page, scrollTo} = pageField(fieldTop, window.innerHeight);
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    keyboard(300);
+    const revealed = page.scrollY;
+    expect(revealed).toBeGreaterThan(43);
+    // Firefox for Android with animations removed: the page's scroll range
+    // shrinks with the keyboard, and the scroll is clamped to it before the
+    // hide report.
+    const range = revealed - 43;
+    pageScrollRange(window.innerHeight + range);
+    page.scrollY = range;
+    keyboard(0);
+    expect(scrollTo).toHaveBeenCalledWith({top: 0, behavior: 'smooth'});
+    expect(page.scrollY).toBe(0);
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
   it('keeps the page where a touch left it while Firefox carried the reveal as an offset', () => {
     pageScrollRange(window.innerHeight * 2);
     const fieldTop = window.innerHeight - 100;
@@ -838,7 +859,7 @@ describe('keepFieldAboveKeyboard', () => {
     Reflect.deleteProperty(window, 'scrollY');
   });
 
-  it('waits for only the first document scroll after the hide report, and only a short while', () => {
+  it('follows a fold that Firefox makes in more than one document scroll', () => {
     pageScrollRange(window.innerHeight * 2);
     const fieldTop = window.innerHeight - 100;
     const {input, page, scrollTo} = pageField(fieldTop, window.innerHeight);
@@ -848,27 +869,49 @@ describe('keepFieldAboveKeyboard', () => {
     const revealed = page.scrollY;
     carryRevealAsOffset(page);
     closeKeyboardBeforeFold();
-    // A first scroll that lands elsewhere ends the wait.
+    // With animations removed, the fold can land short first.
     foldReveal(page, revealed - 40);
-    foldReveal(page, revealed);
     expect(scrollTo).not.toHaveBeenCalled();
-    // Again, with no scroll until the wait is over.
+    foldReveal(page, revealed);
+    expect(scrollTo).toHaveBeenCalledWith({top: 0, behavior: 'smooth'});
+    expect(page.scrollY).toBe(0);
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
+  it('follows a fold that comes up to 2.5 s after the hide report, and puts nothing back after that', () => {
+    pageScrollRange(window.innerHeight * 2);
+    const fieldTop = window.innerHeight - 100;
+    const {input, page, scrollTo} = pageField(fieldTop, window.innerHeight);
+    track(keepFieldAboveKeyboard(input));
     focusOn(input);
-    page.scrollY = 0;
     keyboard(300);
-    const again = page.scrollY;
+    const revealed = page.scrollY;
     carryRevealAsOffset(page);
     vi.useFakeTimers({toFake: ['setTimeout', 'clearTimeout']});
     try {
       closeKeyboardBeforeFold();
+      // A slow device folds the reveal late.
       act(() => {
-        vi.advanceTimersByTime(2000);
+        vi.advanceTimersByTime(1500);
       });
+      foldReveal(page, revealed);
+      expect(scrollTo).toHaveBeenCalledWith({top: 0, behavior: 'smooth'});
+      scrollTo.mockClear();
+      // Again, with no scroll until the wait is over.
+      focusOn(input);
+      page.scrollY = 0;
+      keyboard(300);
+      const again = page.scrollY;
+      carryRevealAsOffset(page);
+      closeKeyboardBeforeFold();
+      act(() => {
+        vi.advanceTimersByTime(2500);
+      });
+      foldReveal(page, again);
+      expect(scrollTo).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
     }
-    foldReveal(page, again);
-    expect(scrollTo).not.toHaveBeenCalled();
     Reflect.deleteProperty(window, 'scrollY');
   });
 
@@ -920,7 +963,7 @@ describe('keepFieldAboveKeyboard', () => {
           keyboard(50);
         } else if (ending === 'time') {
           act(() => {
-            vi.advanceTimersByTime(1000);
+            vi.advanceTimersByTime(2500);
           });
         } else {
           stop();
