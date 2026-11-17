@@ -245,17 +245,20 @@ export function useToastBannerSwipe(
     const root = rootRef.current;
     return root == null ? null : animatorFor(root);
   }, [rootRef]);
-  useIsomorphicLayoutEffect(() => {
-    // Under a finger the card moves by `translate` on every frame of a drag,
-    // so it keeps its own layer and no move repaints it.
-    const root = isNotification ? rootRef.current : null;
-    root?.style.setProperty('will-change', 'translate');
-    return () => {
-      root?.style.removeProperty('will-change');
-      // With a fine pointer the stylesheet's transitions run the card again.
-      root?.style.removeProperty('transition-property');
-    };
-  }, [isNotification, rootRef]);
+  // Gives the card's stylesheet transitions back a frame after a Reduce Motion
+  // fade or a return to rest, so the opacity the fade hands back starts none.
+  // A fade that starts in that frame keeps them off.
+  const resumeTransitions = useCallback(() => {
+    const root = rootRef.current;
+    if (root == null) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      if (settlingRef.current == null && exitHandleRef.current == null) {
+        root.style.removeProperty('transition-property');
+      }
+    });
+  }, [rootRef]);
 
   const pan = useGestureRecognizer(
     rootRef,
@@ -433,7 +436,9 @@ export function useToastBannerSwipe(
           // It fades to the stylesheet's opacity, read once the transitions
           // are off.
           const settler = cardAnimator();
-          if (settler != null && fadesUnderReducedMotion(settler, true)) {
+          const fades =
+            settler != null && fadesUnderReducedMotion(settler, true);
+          if (fades) {
             stillTransitions(settler);
           }
           const handle = settler?.animate(
@@ -446,6 +451,9 @@ export function useToastBannerSwipe(
             void handle.finished.then(() => {
               if (settlingRef.current === handle) {
                 settlingRef.current = null;
+                if (fades) {
+                  resumeTransitions();
+                }
               }
             });
           }
@@ -454,7 +462,7 @@ export function useToastBannerSwipe(
           resumeTimer();
         }
       }),
-    [cardAnimator, optionsRef, pan, playExit, rootRef],
+    [cardAnimator, optionsRef, pan, playExit, resumeTransitions, rootRef],
   );
 
   // Everything before the first await runs in the call, so the retract starts
@@ -505,7 +513,8 @@ export function useToastBannerSwipe(
     retractingRef.current = null;
     exit?.done();
     cardAnimator()?.set({y: 0, opacity: 1});
-  }, [cardAnimator]);
+    resumeTransitions();
+  }, [cardAnimator, resumeTransitions]);
 
   return useMemo(() => ({retract, rest}), [retract, rest]);
 }
