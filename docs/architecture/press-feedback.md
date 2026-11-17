@@ -89,7 +89,9 @@ touch. The recipe styles paint from that attribute.
   and release from the engine. For a press no group or menu profile tracks, a
   control keeps its press until the pointer leaves its bounds expanded by
   UIControl's tracking margin (70 pt, measurement M-G12), and a row, card, or
-  cell ends its press at the cell profile's travel, the pan hysteresis. A group
+  cell ends its press at the cell profile's travel, the pan hysteresis. A swipe
+  row's painted press stays through a drag its swipe claims: the swipe installs
+  the engine's drag-claim profile (`spec:AST-057` FR4). A group
   member follows `family:action-groups` FR2, and a menu row follows
   `spec:AST-094` FR27. Inside a scroll view, a scroll that takes the touch ends
   any press (`spec:AST-094` FR20). Every release that fades plays the theme's

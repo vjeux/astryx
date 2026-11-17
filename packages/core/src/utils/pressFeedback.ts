@@ -189,7 +189,7 @@ export function installBoxHold(hold: BoxHold): void {
   boxHold = hold;
 }
 
-/** The wait for a drag that may still claim a travelled touch (utils/dragClaimWait.ts). */
+/** The swipe's drag-claim profile, which Swipe/useSwipeAction.ts installs. */
 export interface DragClaimWait {
   /** Holds `travel` back while a drag on `element` may claim the touch; false if none may. */
   readonly hold: (element: Element, travel: () => void) => boolean;

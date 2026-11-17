@@ -11,7 +11,8 @@
  * @output Exports useSwipeAction — the stops, the actions and the finger's
  *   model behind a row's swipe actions (where each part sits for the travel
  *   is SwipeActionsLayer's styles). Also the release rules: resolveRelease,
- *   confirmPoint and confirmedOffset
+ *   confirmPoint and confirmedOffset. As it loads, it installs the press
+ *   controller's drag-claim profile
  * @position Internal to swipe actions, through SwipeActionsLayer (the only
  *   module that imports it); tested through Item.test.tsx, the interaction
  *   proofs, and swipeRelease.test.ts for the release rules
@@ -47,16 +48,42 @@ import {
 } from '../motion/spring';
 import {swipeActions as SWIPE} from '../motion/uikit/swipeActions';
 import {setPressHeld} from '../privateAttributes/pressHeld.stylex';
-import {setPressDragHold} from '../privateAttributes/pressHoldsDrag.stylex';
-import {registerDragClaimWait} from '../utils/dragClaimWait';
-import {PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
+import {
+  awaitsDragClaim,
+  setPressDragHold,
+} from '../privateAttributes/pressHoldsDrag.stylex';
+import {installDragClaimWait, PRESSED_ATTRIBUTE} from '../utils/pressFeedback';
 import {subscribeInput} from '../utils/inputStream';
 import {lockSelection} from '../utils/selectionLock';
 import type {CompositorPart} from '../dragToSnapPoints/compositorSettle';
 
-// The module registers the drag-claim wait as it loads, so a page with no
-// swipe carries none of it.
-registerDragClaimWait();
+// The swipe's drag-claim profile. The pan claims the touch from the touch event
+// that follows each pointer event. So a travelled press on a waiting row holds
+// back one frame for the claim. The module installs the profile as it loads, so
+// a page with no swipe carries none of it.
+let heldTravel: (() => void) | null = null;
+let heldFrame = 0;
+
+function settleHeldTravel(): void {
+  cancelAnimationFrame(heldFrame);
+  const travel = heldTravel;
+  heldTravel = null;
+  travel?.();
+}
+
+installDragClaimWait({
+  hold(element, travel) {
+    if (!awaitsDragClaim(element)) {
+      return false;
+    }
+    if (heldTravel == null) {
+      heldFrame = requestAnimationFrame(settleHeldTravel);
+    }
+    heldTravel = travel;
+    return true;
+  },
+  settle: settleHeldTravel,
+});
 
 // A UIKit list row fires its outermost action only from a confirmed full swipe.
 // The finger dragged past the confirm point, and is still past it when it

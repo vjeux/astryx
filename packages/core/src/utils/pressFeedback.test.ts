@@ -45,10 +45,8 @@ import {
 } from './pressGesture';
 import {pointerQuery} from '../gestures/__tests__/pointerQuery';
 import {pressBoxProps} from '../privateAttributes/pressBox.stylex';
-import {registerDragClaimWait} from './dragClaimWait';
-
-// The swipe runtime registers the drag-claim wait as its module loads.
-registerDragClaimWait();
+// The swipe runtime installs the drag-claim profile as its module loads.
+import '../Swipe/useSwipeAction';
 
 /** Gives `surface` a control's box, so it takes the fine-pointer press. */
 function ownBox(surface: HTMLElement): void {

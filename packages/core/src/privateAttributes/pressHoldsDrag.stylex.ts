@@ -10,8 +10,8 @@
  *   file that writes its name. Switch marks its row, and the swipe runtime
  *   marks a swipe row's root (Swipe/useSwipeAction.ts). The press controller
  *   (utils/pressFeedback.ts) keeps the press painted through that drag, and
- *   the drag-claim wait (utils/dragClaimWait.ts) reads the waiting mark. No
- *   package entry exports it.
+ *   the swipe's drag-claim profile reads the waiting mark. No package entry
+ *   exports it.
  */
 
 const PRESS_HOLDS_DRAG = 'data-astryx-press-holds-drag';
