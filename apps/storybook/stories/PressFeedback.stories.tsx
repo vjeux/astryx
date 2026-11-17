@@ -239,3 +239,85 @@ export const ButtonCoveringItsRow: Story = {
     );
   },
 };
+
+/**
+ * Table rows whose whole box is one Button's tap target. Each row is
+ * positioned, so it is the containing block of its Button's `::after`. The
+ * Button sits in a row header or in a data cell, and the last row holds a row
+ * of its own inside its cell.
+ */
+const tableRowTargetStyles = stylex.create({
+  table: {
+    borderCollapse: 'collapse',
+  },
+  row: {
+    position: 'relative',
+  },
+  cell: {
+    padding: 8,
+    textAlign: 'start',
+    borderBottom: '1px solid color-mix(in srgb, currentColor 20%, transparent)',
+  },
+});
+
+export const ButtonCoveringItsTableRow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Table rows whose whole box is a Button's tap target: each row is positioned, so the Button's `::after` covers the row. The Button sits in a row header, in a data cell, or in a row of its own inside a cell. A press on the Button tints the Button, and a press elsewhere on the row tints the row.",
+      },
+    },
+  },
+  render: () => {
+    const [opened, setOpened] = useState('none');
+    return (
+      <VStack gap={3}>
+        <table {...stylex.props(tableRowTargetStyles.table)}>
+          <tbody>
+            <tr {...stylex.props(tableRowTargetStyles.row)}>
+              <th scope="row" {...stylex.props(tableRowTargetStyles.cell)}>
+                <Button
+                  label="Open Ada"
+                  variant="ghost"
+                  xstyle={rowTargetStyles.button}
+                  onClick={() => setOpened('Ada')}
+                />
+              </th>
+              <td {...stylex.props(tableRowTargetStyles.cell)}>
+                Last message a minute ago
+              </td>
+            </tr>
+            <tr {...stylex.props(tableRowTargetStyles.row)}>
+              <td {...stylex.props(tableRowTargetStyles.cell)}>
+                <Button
+                  label="Open Grace"
+                  variant="ghost"
+                  xstyle={rowTargetStyles.button}
+                  onClick={() => setOpened('Grace')}
+                />
+              </td>
+              <td {...stylex.props(tableRowTargetStyles.cell)}>
+                Last message an hour ago
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} {...stylex.props(tableRowTargetStyles.cell)}>
+                <div {...stylex.props(rowTargetStyles.row)}>
+                  <Button
+                    label="Open Alan"
+                    variant="ghost"
+                    xstyle={rowTargetStyles.button}
+                    onClick={() => setOpened('Alan')}
+                  />
+                  <Text>Last message yesterday</Text>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <Text>Opened: {opened}</Text>
+      </VStack>
+    );
+  },
+};

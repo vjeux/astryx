@@ -1079,7 +1079,7 @@ const PLACE = {
  * ancestor. A press that starts on the row presses the row, so the row tints
  * as one surface. The control then shows no tint of its own. A press that
  * starts on the control's own box presses the control, so only that box
- * tints. The box is measured once, at the press's start, against the row's
+ * tints. The box is measured once, at the press's start, in the row's
  * padding box. Script places the layer because CSS anchor positioning ran
  * Layout during the release. The reads change no layout and no hit-testing. A
  * positioned surface, or one that holds its own layers, is its own layers'
@@ -1092,13 +1092,12 @@ function placePress(
 ): boolean {
   unplacePress(element);
   const style = getComputedStyle(element);
-  const row =
-    style.getPropertyValue(PLACE_OPT_IN).trim() === 'control' &&
-    style.position === 'static' &&
-    !holdsItsLayers(element)
-      ? element.offsetParent
-      : null;
-  if (!(row instanceof HTMLElement)) {
+  if (
+    style.getPropertyValue(PLACE_OPT_IN).trim() !== 'control' ||
+    style.position !== 'static' ||
+    element.offsetParent == null ||
+    holdsItsLayers(element)
+  ) {
     return false;
   }
   const box = at == null ? null : element.getBoundingClientRect();
@@ -1110,30 +1109,161 @@ function placePress(
     element.style.setProperty(PLACE.ownTint, 'none');
     return true;
   }
-  const top = element.offsetTop;
-  const left = element.offsetLeft;
-  const bottom = row.clientHeight - top - element.offsetHeight;
-  const right = row.clientWidth - left - element.offsetWidth;
-  element.style.setProperty(
-    PLACE.inset,
-    `${top}px ${right}px ${bottom}px ${left}px`,
-  );
+  const inset = layerInset(element);
+  if (inset != null) {
+    element.style.setProperty(PLACE.inset, inset);
+  }
   return false;
+}
+
+/**
+ * The control's box in its press layers' containing block, as a CSS inset.
+ * The offsets give it when they count from that block. A probe gives it in
+ * every other layout. Returns null when the probe has no box.
+ */
+function layerInset(element: HTMLElement): string | null {
+  const block = element.offsetParent;
+  if (block instanceof HTMLElement && offsetsCountFrom(element, block)) {
+    const top = element.offsetTop;
+    const left = element.offsetLeft;
+    const bottom = block.clientHeight - top - element.offsetHeight;
+    const right = block.clientWidth - left - element.offsetWidth;
+    return `${top}px ${right}px ${bottom}px ${left}px`;
+  }
+  return probedInset(element);
+}
+
+/**
+ * Whether the control's offsets count from its press layers' containing
+ * block, in the layers' units. CSSOM View stops a static element's offset
+ * parent at a table cell or a table that holds nothing. Offsets from the body
+ * count from the initial containing block. The engines measure an inline or
+ * table box in their own ways. Offsets do not move with a scrolled box
+ * between, do not cross a slot, and do not follow a zoom.
+ */
+function offsetsCountFrom(element: HTMLElement, block: HTMLElement): boolean {
+  const display = getComputedStyle(block).display;
+  if (
+    /^(?:td|th|table|body|html)$/.test(block.localName) ||
+    display === 'inline' ||
+    display.includes('table')
+  ) {
+    return false;
+  }
+  for (
+    let node: HTMLElement | null = element;
+    node !== block;
+    node = node.parentElement
+  ) {
+    if (
+      node == null ||
+      node.assignedSlot != null ||
+      hasOwnZoom(node) ||
+      (node !== element && (node.scrollTop !== 0 || node.scrollLeft !== 0))
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Measures the control's box against a probe, whose box is the press layer's
+ * containing block as the engine lays it out. Boxes include transforms and
+ * zoom, and the inset is in the layer's own pixels.
+ */
+function probedInset(element: HTMLElement): string | null {
+  return withProbe(element, probe => {
+    if (probe.offsetParent == null) {
+      return null;
+    }
+    const block = probe.getBoundingClientRect();
+    const box = element.getBoundingClientRect();
+    const size = getComputedStyle(probe);
+    const scaleX = block.width / parseFloat(size.width) || 1;
+    const scaleY = block.height / parseFloat(size.height) || 1;
+    const top = (box.top - block.top) / scaleY;
+    const right = (block.right - box.right) / scaleX;
+    const bottom = (block.bottom - box.bottom) / scaleY;
+    const left = (box.left - block.left) / scaleX;
+    return `${top}px ${right}px ${bottom}px ${left}px`;
+  });
+}
+
+/**
+ * Runs `read` with a probe in the control: a hidden child, absolutely placed
+ * at no inset, with the press layer's containing block. Absolutely placed, it
+ * moves nothing. It leaves before the task ends, so it never paints and no
+ * hit test meets it.
+ */
+function withProbe<T>(
+  element: HTMLElement,
+  read: (probe: HTMLElement) => T,
+): T {
+  const probe = element.ownerDocument.createElement('span');
+  probe.style.cssText = PROBE_STYLE;
+  element.append(probe);
+  try {
+    return read(probe);
+  } finally {
+    probe.remove();
+  }
+}
+
+/**
+ * The probe's box is the press layer's: no box, transform or zoom of its
+ * own, whatever a page's rules give a control's children.
+ */
+const PROBE_STYLE = [
+  'position:absolute',
+  'inset:0',
+  'display:block',
+  'margin:0',
+  'padding:0',
+  'border:none',
+  'width:auto',
+  'height:auto',
+  'min-width:0',
+  'min-height:0',
+  'max-width:none',
+  'max-height:none',
+  'aspect-ratio:auto',
+  'transform:none',
+  'translate:none',
+  'rotate:none',
+  'scale:none',
+  'zoom:1',
+  'float:none',
+  'visibility:hidden',
+  'pointer-events:none',
+]
+  .map(declaration => `${declaration}!important`)
+  .join(';');
+
+/** Whether an element sets a zoom of its own. */
+function hasOwnZoom(element: HTMLElement): boolean {
+  const zoom = getComputedStyle(element).zoom;
+  return zoom !== '' && zoom !== 'normal' && zoom !== '1';
 }
 
 /**
  * Whether a static control is still its own layers' containing block, as a
  * transform, a filter or layout containment makes it. The engine answers: a
- * rendered child's offset parent is then the control. With no rendered child
- * to ask, the control counts as holding them.
+ * rendered child's offset parent is then the control. A child at a zoom of
+ * its own does not count: its parent is its offset parent anyway. With no
+ * child to ask, a probe answers.
  */
 function holdsItsLayers(element: HTMLElement): boolean {
   for (const child of element.children) {
-    if (child instanceof HTMLElement && child.offsetParent != null) {
+    if (
+      child instanceof HTMLElement &&
+      child.offsetParent != null &&
+      !hasOwnZoom(child)
+    ) {
       return child.offsetParent === element;
     }
   }
-  return true;
+  return withProbe(element, probe => probe.offsetParent === element);
 }
 
 /**
