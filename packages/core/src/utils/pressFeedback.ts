@@ -65,7 +65,10 @@ import {msSinceInput} from './inputAge';
 import {TOUCH_QUERY} from './touchPresentation';
 import {pressBoxesIn} from '../privateAttributes/pressBox.stylex';
 import {isPrimaryClick} from './primaryClick';
-import {holdsPressThroughDrag} from '../privateAttributes/pressHoldsDrag.stylex';
+import {
+  awaitsDragClaim,
+  holdsPressThroughDrag,
+} from '../privateAttributes/pressHoldsDrag.stylex';
 import {isTrackedByGroup} from '../privateAttributes/pressGroupItem.stylex';
 
 /**
@@ -703,12 +706,50 @@ function onPointerMove(event: PointerEvent): void {
   if (holdsPressThroughDrag(live.element)) {
     return;
   }
+  const step = pressGestureStep(live.gesture, {
+    kind: 'move',
+    x: event.clientX,
+    y: event.clientY,
+  });
+  // The surface's own drag may claim this touch from the touch event that
+  // follows this pointer event, as a swipe row's pan does. The travel then
+  // waits for the frame, so a claim that comes first keeps the press.
+  if (step.gesture.phase === 'dead' && awaitsDragClaim(live.element)) {
+    awaitDragClaim(live, event.clientX, event.clientY);
+    return;
+  }
+  apply(finger, step);
+}
+
+/** A finger's travel past the slop, held back for a drag that may claim the touch. */
+let travelAwaitingClaim: {live: LiveGesture; x: number; y: number} | null =
+  null;
+
+function awaitDragClaim(live: LiveGesture, x: number, y: number): void {
+  const awaiting = travelAwaitingClaim;
+  travelAwaitingClaim = {live, x, y};
+  if (awaiting == null) {
+    requestAnimationFrame(settleDragClaim);
+  }
+}
+
+/** Acts on the travel held back for a claim, unless the drag claimed the touch. */
+function settleDragClaim(): void {
+  const awaiting = travelAwaitingClaim;
+  travelAwaitingClaim = null;
+  if (
+    awaiting == null ||
+    finger.live !== awaiting.live ||
+    holdsPressThroughDrag(awaiting.live.element)
+  ) {
+    return;
+  }
   apply(
     finger,
-    pressGestureStep(live.gesture, {
+    pressGestureStep(awaiting.live.gesture, {
       kind: 'move',
-      x: event.clientX,
-      y: event.clientY,
+      x: awaiting.x,
+      y: awaiting.y,
     }),
   );
 }
@@ -725,6 +766,9 @@ function onPointerUp(event: PointerEvent): void {
     }
     return;
   }
+  // A travel held back for a drag's claim settles before the lift reads the
+  // press: a drag that travelled and lifted in one frame is not a tap.
+  settleDragClaim();
   // The lift is when momentum starts, so it is the clock the brake wants most.
   lastTouchAt = Date.now();
   if (event.target instanceof Node) {
