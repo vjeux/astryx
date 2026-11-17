@@ -769,6 +769,69 @@ describe('keepFieldAboveKeyboard', () => {
     Reflect.deleteProperty(window, 'scrollY');
   });
 
+  it("scrolls the page back after the browser's own reveal lands before the keyboard's report, as Firefox's can on a slow device", () => {
+    pageScrollRange(window.innerHeight * 2);
+    const fieldTop = window.innerHeight - 100;
+    const {input, page, scrollBy, scrollTo} = pageField(
+      fieldTop,
+      window.innerHeight,
+    );
+    page.scrollY = 20;
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    // The browser scrolls the field into view before the keyboard's first
+    // report, so Core finds it clear and scrolls nothing.
+    page.scrollY = 420;
+    keyboard(300);
+    expect(scrollBy).not.toHaveBeenCalled();
+    act(() => input.blur());
+    keyboard(0);
+    expect(scrollTo).toHaveBeenCalledWith({top: 20, behavior: 'smooth'});
+    expect(page.scrollY).toBe(20);
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
+  it("keeps a document scroll between the focus and the keyboard's report for a field the keyboard leaves clear", () => {
+    pageScrollRange(window.innerHeight * 2);
+    const {input, page, scrollTo} = pageField(100, window.innerHeight);
+    page.scrollY = 20;
+    track(keepFieldAboveKeyboard(input));
+    focusOn(input);
+    // The app scrolls the page; the field sat clear of the keyboard already.
+    page.scrollY = 60;
+    keyboard(300);
+    act(() => input.blur());
+    keyboard(0);
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(page.scrollY).toBe(60);
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
+  it("keeps a scroll the person made between the focus and the keyboard's report", () => {
+    pageScrollRange(window.innerHeight * 2);
+    const fieldTop = window.innerHeight - 100;
+    const {input, page, scrollTo} = pageField(fieldTop, window.innerHeight);
+    page.scrollY = 20;
+    track(keepFieldAboveKeyboard(input));
+    // Another surface already watches, as ChatLayout's composer does, so the
+    // stream counts the person's touches.
+    track(watchRevealPan(window, {owns: () => false}).stop);
+    focusOn(input);
+    act(() => {
+      document.body.dispatchEvent(touchEvent('touchstart', 1));
+    });
+    page.scrollY = 420;
+    act(() => {
+      document.body.dispatchEvent(touchEvent('touchend', 0));
+    });
+    keyboard(300);
+    act(() => input.blur());
+    keyboard(0);
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(page.scrollY).toBe(420);
+    Reflect.deleteProperty(window, 'scrollY');
+  });
+
   // Firefox for Android carries the reveal's document scroll as a visual-
   // viewport offset. At a slow speed it turns that offset back into a document
   // scroll only after the keyboard's hide report.

@@ -721,6 +721,35 @@ function revealWithKeyboard(
   // report a 48 px keyboard first, then its full height, while that press is
   // still down.
   let startsAtReveal = 0;
+  // Where the document sat when the field gained focus with no keyboard up.
+  // A document scroll from there before the keyboard's first report, with no
+  // touch since, that alone places a field the keyboard would cover, is the
+  // browser's own reveal, as Firefox's can be on a slow device. It counts as
+  // Core's scroll, so it goes back with the keyboard. A smaller scroll, as
+  // Safari's at the focus, stays.
+  let restingTop: number | null = null;
+  const takeBrowserReveal = (height: number) => {
+    const from = restingTop;
+    restingTop = null;
+    const focused = field();
+    if (
+      from == null ||
+      focused == null ||
+      isFingerOnScreen(win) ||
+      getTouches(win).starts !== startsAtReveal ||
+      addedScrolls.get(win)?.has(root)
+    ) {
+      return;
+    }
+    const scrolled = scrollTopOf(root, win) - from;
+    if (
+      Math.abs(scrolled) >= 0.5 &&
+      sitsInBand(focused, scroller, height, offset, win) &&
+      !sitsInBand(focused, scroller, height, offset, win, scrolled)
+    ) {
+      noteKeyboardScroll(root, from, win);
+    }
+  };
   const revealNow = (height: number) => {
     const focused = field();
     if (focused == null) {
@@ -778,6 +807,9 @@ function revealWithKeyboard(
   const stopReports = subscribeKeyboardHeight(win, event => {
     if (event.type === 'viewport') {
       if (Math.abs(event.height - lastHeight) > KEYBOARD_EPSILON) {
+        if (lastHeight <= KEYBOARD_EPSILON && event.height > KEYBOARD_EPSILON) {
+          takeBrowserReveal(event.height);
+        }
         lastHeight = event.height;
         if (!hasRevealed || !isLaterPressDown()) {
           revealNow(event.height);
@@ -786,12 +818,17 @@ function revealWithKeyboard(
       pans.report(event.height);
     }
   });
+  const revealAtFocus = () => {
+    revealNow(getKeyboardHeight(win));
+    restingTop =
+      !hasRevealed && field() != null ? scrollTopOf(root, win) : null;
+  };
   const onFocusIn = () => {
     stopKeyboardScrollBack(win);
-    revealNow(getKeyboardHeight(win));
+    revealAtFocus();
   };
   region.addEventListener('focusin', onFocusIn);
-  revealNow(getKeyboardHeight(win));
+  revealAtFocus();
   return () => {
     stopReports();
     pans.stop();
