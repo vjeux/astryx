@@ -69,7 +69,7 @@ with a mouse, trackpad, or keyboard the change is immediate.
 
 - **DR2 — Touch presentations cross-fade.** Under reduced motion, when the
   primary pointer is coarse (`pointer: coarse`), or when the release of a touch
-  drag starts the transition, each DR1 transition MUST change opacity only and MUST finish in 200 ms or less. A transition that dips (fades out, then back in where its element ends) MAY land the element's travel as a single step, with no in-between value, scheduled with the fade at the instant the element is fully transparent, so a busy main thread neither delays the landing nor lengthens the fade. An entering element
+  drag starts the transition, each DR1 transition MUST change opacity only and MUST finish in 200 ms or less. A transition that dips (fades out, then back in where its element ends) MAY land the element's move as a single step, with no in-between value, scheduled with the fade at the instant the element is fully transparent, so a busy main thread neither delays the landing nor lengthens the fade. Such a step is not travel under DR1. An entering element
   appears in its final place and fades in; a leaving element fades out where it
   is. Momentum that continues a throw after release, a decay coast and its
   settle at an edge, is direct movement and does not cross-fade, as scrolling
