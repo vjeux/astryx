@@ -121,7 +121,7 @@ export const swipeActions = {
    * How far the finger must drag from the open width toward the confirmation
    * offset for the full swipe to confirm. The confirmation offset is the row
    * width less `confirmInset`. Judged on the finger's travel, not the row's:
-   * past the confirm point the row runs ahead of the finger.
+   * past the confirm point the row resists the finger.
    * @source measured: UIKit lab (injected host app), iOS 26.2 simulator,
    *   iPhone 17 Pro, 402 pt rows: with a 204.67 pt open width a release
    *   performed from 335 pt of swipe and not from 315, at every velocity
@@ -132,6 +132,32 @@ export const swipeActions = {
    * @measure M-SA02
    */
   confirmFraction: 0.69,
+  /**
+   * Past the confirm point a confirmed row resists the finger. For the first
+   * `resistHalfSpan` of the finger's travel past the point it follows at this
+   * share of the finger's speed.
+   * @source measured: Notes, a physical iPhone 14, iOS 26.2, a 300 pt drag
+   *   over 3 s filmed at 60 fps: the row followed the finger one for one to
+   *   about 188 pt of finger travel, then at about half its speed, then at
+   *   about a fifth, Nov 16 2026
+   */
+  resistHalf: 0.5,
+  /**
+   * How far past the confirm point the finger travels while the row follows
+   * at `resistHalf`.
+   * @source measured: Notes, a physical iPhone 14, iOS 26.2, the same film:
+   *   the row followed at about half the finger's speed from about 195 to
+   *   211 pt of finger travel, Nov 16 2026
+   */
+  resistHalfSpan: 16,
+  /**
+   * Past `resistHalfSpan`, the share of the finger's speed at which the row
+   * follows.
+   * @source measured: Notes, a physical iPhone 14, iOS 26.2, the same film:
+   *   from about 211 pt of finger travel the row followed at about a fifth of
+   *   the finger's speed, Nov 16 2026
+   */
+  resistFifth: 0.2,
   /**
    * How far past the row's edge the row travels when an action fires and
    * the row goes out.
