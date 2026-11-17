@@ -452,6 +452,42 @@ describe('the press reaches the surface the finger landed on', () => {
   });
 });
 
+describe('a press reads where it lands before it writes', () => {
+  it('reads the surface before it clears a place an earlier press left', () => {
+    const row = rows[0];
+    row.style.setProperty('--_press-place', 'control');
+    // A place an earlier press left on the surface.
+    row.style.setProperty('--_press-own-tint', 'none');
+    const order: string[] = [];
+    const computedStyle = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation(
+      (element, pseudo) => {
+        if (element === row) {
+          order.push('read');
+        }
+        return computedStyle(element, pseudo);
+      },
+    );
+    const removeProperty = CSSStyleDeclaration.prototype.removeProperty;
+    vi.spyOn(
+      CSSStyleDeclaration.prototype,
+      'removeProperty',
+    ).mockImplementation(function (this: CSSStyleDeclaration, name: string) {
+      if (this === row.style && name.startsWith('--_press')) {
+        order.push('write');
+      }
+      return removeProperty.call(this, name);
+    });
+    press(row, 'pointerdown', 10, 10);
+    vi.restoreAllMocks();
+    // Reading first keeps the press start from forcing a style
+    // recalculation for the earlier place.
+    expect(order[0]).toBe('read');
+    expect(order).toContain('write');
+    expect(row.style.getPropertyValue('--_press-own-tint')).toBe('');
+  });
+});
+
 describe('an action group whose own tracker paints its actions', () => {
   // The group's tracker follows a held pointer across its actions and paints
   // them. The controller must not write the press attribute there too.

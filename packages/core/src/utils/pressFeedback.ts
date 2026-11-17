@@ -1090,30 +1090,36 @@ function placePress(
   element: HTMLElement,
   at: {x: number; y: number} | null,
 ): boolean {
-  unplacePress(element);
   const style = getComputedStyle(element);
+  let onRow = false;
+  let inset: string | null = null;
   if (
-    style.getPropertyValue(PLACE_OPT_IN).trim() !== 'control' ||
-    style.position !== 'static' ||
-    element.offsetParent == null ||
-    holdsItsLayers(element)
+    style.getPropertyValue(PLACE_OPT_IN).trim() === 'control' &&
+    style.position === 'static' &&
+    element.offsetParent != null &&
+    !holdsItsLayers(element)
   ) {
-    return false;
+    const box = at == null ? null : element.getBoundingClientRect();
+    onRow =
+      at != null &&
+      box != null &&
+      (at.x < box.left ||
+        at.x > box.right ||
+        at.y < box.top ||
+        at.y > box.bottom);
+    if (!onRow) {
+      inset = layerInset(element);
+    }
   }
-  const box = at == null ? null : element.getBoundingClientRect();
-  if (
-    at != null &&
-    box != null &&
-    (at.x < box.left || at.x > box.right || at.y < box.top || at.y > box.bottom)
-  ) {
+  // The place an earlier press left goes after the reads, so it forces no
+  // style recalculation here.
+  unplacePress(element);
+  if (onRow) {
     element.style.setProperty(PLACE.ownTint, 'none');
-    return true;
-  }
-  const inset = layerInset(element);
-  if (inset != null) {
+  } else if (inset != null) {
     element.style.setProperty(PLACE.inset, inset);
   }
-  return false;
+  return onRow;
 }
 
 /**
