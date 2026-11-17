@@ -4,7 +4,8 @@
 
 /**
  * @file TableCell.tsx
- * @input React, StyleX, TableContext, theme tokens, useTableCellStyles
+ * @input React, StyleX, TableContext, theme tokens, useTableCellStyles, and
+ *   the table press place it registers with the press controller
  * @output Exports TableCell component, TableCellProps
  * @position Sub-component; used inside Table children mode
  *
@@ -43,6 +44,11 @@ import {
 import {mergeProps} from '../utils';
 import {glidingDividerStyles} from './glidingDivider';
 import {themeProps} from '../utils/themeProps';
+import {registerTablePressPlace} from './tablePressPlace';
+
+// Registered here, not in the press controller, so a page with no table carries
+// none of its code.
+registerTablePressPlace();
 
 /** Props for TableCell — thin `<td>` wrapper */
 export interface TableCellProps extends BaseProps<HTMLTableCellElement> {
