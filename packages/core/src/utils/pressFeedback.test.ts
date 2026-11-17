@@ -7,7 +7,9 @@
  *   controller, one attribute, and the two properties a per-element hook
  *   would give away — that the paint belongs to the element the finger landed
  *   on and that a list pays nothing per row for it — plus the CSS arms the
- *   attribute drives: the release runs on the machine's own clock
+ *   attribute drives: the release runs on the machine's own clock. A static
+ *   control's press is placed from its offsets, read before any write. In a
+ *   table cell it stays unplaced, unless a table's measurement is installed
  * @position Testing; validates pressFeedback.ts in jsdom
  */
 
@@ -26,6 +28,7 @@ import {
 import {reducedMotionFadeConsts} from '../motion/reducedMotion.stylex';
 import {interactionOverlayStyles} from './interactionOverlay.stylex';
 import {
+  installPlaceMeasure,
   installPressFeedback,
   PRESSABLE_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
@@ -449,6 +452,132 @@ describe('the press reaches the surface the finger landed on', () => {
     press(label, 'pointerdown', 10, 10);
     vi.advanceTimersByTime(PRESS_ONSET_MS);
     expect(pressedRow()).toBe(1);
+  });
+});
+
+describe('a press reads where it lands before it writes', () => {
+  it('reads the surface before it clears a place an earlier press left', () => {
+    const row = rows[0];
+    row.style.setProperty('--_press-place', 'control');
+    // A place an earlier press left on the surface.
+    row.style.setProperty('--_press-own-tint', 'none');
+    const order: string[] = [];
+    const computedStyle = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation(
+      (element, pseudo) => {
+        if (element === row) {
+          order.push('read');
+        }
+        return computedStyle(element, pseudo);
+      },
+    );
+    const removeProperty = CSSStyleDeclaration.prototype.removeProperty;
+    vi.spyOn(
+      CSSStyleDeclaration.prototype,
+      'removeProperty',
+    ).mockImplementation(function (this: CSSStyleDeclaration, name: string) {
+      if (this === row.style && name.startsWith('--_press')) {
+        order.push('write');
+      }
+      return removeProperty.call(this, name);
+    });
+    press(row, 'pointerdown', 10, 10);
+    vi.restoreAllMocks();
+    // Reading first keeps the press start from forcing a style
+    // recalculation for the earlier place.
+    expect(order[0]).toBe('read');
+    expect(order).toContain('write');
+    expect(row.style.getPropertyValue('--_press-own-tint')).toBe('');
+  });
+});
+
+describe('a press on a static control whose ::after covers its row', () => {
+  /**
+   * A static control in `parentTag`, laid out as the engine would: jsdom lays
+   * out nothing. The control asks for placement, and its child's offset
+   * parent is the control's, so the control holds no layer of its own.
+   */
+  function staticControl(parentTag: string) {
+    const parent = document.createElement(parentTag);
+    const control = pressable('button');
+    const child = document.createElement('span');
+    control.append(child);
+    parent.append(control);
+    scroller.append(parent);
+    for (const element of [control, child]) {
+      Object.defineProperty(element, 'offsetParent', {
+        configurable: true,
+        get: () => parent,
+      });
+    }
+    for (const [name, value] of [
+      ['offsetTop', 4],
+      ['offsetLeft', 6],
+      ['offsetWidth', 50],
+      ['offsetHeight', 20],
+    ] as const) {
+      Object.defineProperty(control, name, {configurable: true, value});
+    }
+    Object.defineProperty(parent, 'clientWidth', {
+      configurable: true,
+      value: 200,
+    });
+    Object.defineProperty(parent, 'clientHeight', {
+      configurable: true,
+      value: 40,
+    });
+    control.getBoundingClientRect = () =>
+      ({left: 0, top: 0, right: 50, bottom: 20}) as DOMRect;
+    const computedStyle = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation(
+      (element, pseudo) =>
+        element === control
+          ? ({
+              position: 'static',
+              getPropertyValue: (name: string) =>
+                name === '--_press-place' ? 'control' : '',
+            } as unknown as CSSStyleDeclaration)
+          : computedStyle(element, pseudo),
+    );
+    return {control, parent};
+  }
+
+  const inset = (control: HTMLElement) =>
+    control.style.getPropertyValue('--_press-layer-inset');
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("places the press on the control's own box from its offsets in a positioned row", () => {
+    const {control} = staticControl('div');
+    press(control, 'pointerdown', 10, 10);
+    expect(inset(control)).toBe('4px 144px 16px 6px');
+  });
+
+  it('leaves the press unplaced in a table cell when no table installed a measurement, rather than measure against the cell', () => {
+    for (const tag of ['td', 'th', 'table', 'body']) {
+      const {control} = staticControl(tag === 'body' ? 'section' : tag);
+      if (tag === 'body') {
+        Object.defineProperty(control, 'offsetParent', {
+          configurable: true,
+          get: () => document.body,
+        });
+      }
+      press(control, 'pointerdown', 10, 10);
+      expect(inset(control), tag).toBe('');
+      press(control, 'pointerup', 10, 10);
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('asks the installed measurement for the place, with the control and its offset parent', () => {
+    const {control, parent} = staticControl('td');
+    const measure = vi.fn(() => '1px 2px 3px 4px');
+    installPlaceMeasure(measure);
+    press(control, 'pointerdown', 10, 10);
+    expect(measure).toHaveBeenCalledWith(control, parent);
+    expect(inset(control)).toBe('1px 2px 3px 4px');
   });
 });
 
