@@ -4,7 +4,8 @@
 
 /**
  * @file TableHeaderCell.tsx
- * @input React, StyleX, TableContext, theme tokens, useTableCellStyles
+ * @input React, StyleX, TableContext, theme tokens, useTableCellStyles, and
+ *   the table press place it registers with the press controller
  * @output Exports TableHeaderCell component, TableHeaderCellProps
  * @position Sub-component; used inside Table for header cells
  *
@@ -34,6 +35,11 @@ import {
 } from './tableContextMenu';
 import {mergeProps} from '../utils';
 import {themeProps} from '../utils/themeProps';
+import {registerTablePressPlace} from './tablePressPlace';
+
+// Registered here, not in the press controller, so a page with no table carries
+// none of its code.
+registerTablePressPlace();
 
 /** Props for TableHeaderCell — `<th>` wrapper with context-aware styling */
 export interface TableHeaderCellProps extends BaseProps<HTMLTableCellElement> {
