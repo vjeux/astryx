@@ -5,13 +5,15 @@
  *   the touch and then move it
  * @output pressHoldsDragProps, which marks such a pressable; setPressDragHold,
  *   which marks or unmarks one from code; holdsPressThroughDrag and
- *   awaitsDragClaim, which read the mark
+ *   awaitsDragClaim, which read the mark. installDragClaimWait and
+ *   installedDragClaimWait fill and read the slot of the profile that waits
+ *   for a claim
  * @position Owner module of the private press-holds-drag attribute: the only
  *   file that writes its name. Switch marks its row, and the swipe runtime
  *   marks a swipe row's root (Swipe/useSwipeAction.ts). The press controller
  *   (utils/pressFeedback.ts) keeps the press painted through that drag, and
- *   the drag-claim wait (utils/dragClaimWait.ts) reads the waiting mark. No
- *   package entry exports it.
+ *   the swipe's drag-claim profile reads the waiting mark. The slot lives here
+ *   so the lazy swipe imports no controller code. No package entry exports it.
  */
 
 const PRESS_HOLDS_DRAG = 'data-astryx-press-holds-drag';
@@ -59,4 +61,34 @@ export function holdsPressThroughDrag(element: Element): boolean {
 /** Whether a drag on `element` may still claim the touch and hold its press. */
 export function awaitsDragClaim(element: Element): boolean {
   return element.getAttribute(PRESS_HOLDS_DRAG) === AWAITING_CLAIM;
+}
+
+/** The profile that holds a travelled press for a drag's claim (Swipe/useSwipeAction.ts). */
+export interface DragClaimWait {
+  /**
+   * Holds `travel` back while a drag on `element` may claim the touch; false if
+   * none may. `painted`: the press shows.
+   */
+  readonly hold: (
+    element: Element,
+    travel: () => void,
+    painted: boolean,
+  ) => boolean;
+  /** Runs a held-back travel at once. */
+  readonly settle: () => void;
+}
+
+let dragClaimWait: DragClaimWait | null = null;
+
+/**
+ * @internal Installs the drag-claim profile. Only a page with a swipe loads
+ * it, so a page without one carries none of its code.
+ */
+export function installDragClaimWait(wait: DragClaimWait): void {
+  dragClaimWait = wait;
+}
+
+/** The installed drag-claim profile, if a swipe installed one. */
+export function installedDragClaimWait(): DragClaimWait | null {
+  return dragClaimWait;
 }

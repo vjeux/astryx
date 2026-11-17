@@ -334,11 +334,6 @@ constants.
   can hold it: `Item` statically imports only `swipeHost.ts` and its styles,
   which hold no gesture, animation or rendering code, and `useSwipeAction.ts`
   is the gesture alone.
-- `utils/dragClaimWait.ts` holds a swipe row's travelled press for one frame.
-  The pan claims the touch from the touch event that follows each pointer
-  event, so the claim can come after the press's travel. `useSwipeAction.ts`
-  registers the wait as its module loads. The press controller
-  (`utils/pressFeedback.ts`) carries only the wiring.
 - Implementation gap (FR10): `Item` loads the deprecated swipe layer through
   `import()` for the deprecated `swipeActions` and `swipeBehavior` props; the
   gap closes when those props are removed.

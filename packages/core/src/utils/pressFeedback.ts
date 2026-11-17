@@ -66,7 +66,10 @@ import {msSinceInput} from './inputAge';
 import {TOUCH_QUERY} from './touchPresentation';
 import {pressBoxesIn} from '../privateAttributes/pressBox.stylex';
 import {isPrimaryClick} from './primaryClick';
-import {holdsPressThroughDrag} from '../privateAttributes/pressHoldsDrag.stylex';
+import {
+  holdsPressThroughDrag,
+  installedDragClaimWait,
+} from '../privateAttributes/pressHoldsDrag.stylex';
 import {isTrackedByGroup} from '../privateAttributes/pressGroupItem.stylex';
 
 /**
@@ -189,23 +192,8 @@ export function installBoxHold(hold: BoxHold): void {
   boxHold = hold;
 }
 
-/** The wait for a drag that may still claim a travelled touch (utils/dragClaimWait.ts). */
-export interface DragClaimWait {
-  /** Holds `travel` back while a drag on `element` may claim the touch; false if none may. */
-  readonly hold: (element: Element, travel: () => void) => boolean;
-  /** Runs a held-back travel at once. */
-  readonly settle: () => void;
-}
-
-let dragClaimWait: DragClaimWait | null = null;
-
-/**
- * @internal Installs the drag-claim wait. Only a page with a swipe loads it,
- * so a page without one carries none of its code.
- */
-export function installDragClaimWait(wait: DragClaimWait): void {
-  dragClaimWait = wait;
-}
+/** The drag-claim profile's installer, for the swipe runtime. */
+export {installDragClaimWait} from '../privateAttributes/pressHoldsDrag.stylex';
 const button: Slot = {live: null};
 /** How many callers hold the controller installed; listeners exist while > 0. */
 let holders = 0;
@@ -731,11 +719,15 @@ function onPointerMove(event: PointerEvent): void {
   // pointer event. Its wait holds the travel back to the next frame.
   if (
     step.gesture.phase === 'dead' &&
-    dragClaimWait?.hold(live.element, () => {
-      if (finger.live === live && !holdsPressThroughDrag(live.element)) {
-        apply(finger, step);
-      }
-    })
+    installedDragClaimWait()?.hold(
+      live.element,
+      () => {
+        if (finger.live === live && !holdsPressThroughDrag(live.element)) {
+          apply(finger, step);
+        }
+      },
+      live.element.getAttribute(PRESSED_ATTRIBUTE) === 'on',
+    )
   ) {
     return;
   }
@@ -756,7 +748,7 @@ function onPointerUp(event: PointerEvent): void {
   }
   // A travel held back for a drag's claim settles before the lift reads the
   // press. A drag that travelled and lifted in one frame is not a tap.
-  dragClaimWait?.settle();
+  installedDragClaimWait()?.settle();
   // The lift is when momentum starts, so it is the clock the brake wants most.
   lastTouchAt = Date.now();
   if (event.target instanceof Node) {
