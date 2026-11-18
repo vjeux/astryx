@@ -1,9 +1,10 @@
 //! png-chunks: list each PNG's chunk types, and exit non-zero when a PNG
-//! carries metadata that can leak: a tEXt, iTXt, zTXt, eXIf or tIME chunk, or
-//! bytes after IEND.
+//! carries a chunk outside a short list of content-free types, or bytes after
+//! IEND. Text, Exif, a timestamp, an ICC profile or a private chunk can each
+//! carry what must not leak, so only the known-safe types pass.
 //!
 //! Every chunk's length, type and CRC is checked, so a damaged or misread file
-//! is an error, never a pass.
+//! is an error, never a pass. Nothing under a directory is skipped silently.
 
 use std::fs;
 use std::io::Write as _;
@@ -11,32 +12,45 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 const USAGE: &str = "\
-png-chunks: list each PNG's chunk types; refuse text, Exif and time metadata
+png-chunks: list each PNG's chunk types; refuse every chunk that can carry metadata
 
 USAGE:
-  png-chunks [--quiet] <file or directory>...
+  png-chunks [--quiet] [--allow TYPE]... <file or directory>...
 
-  A directory is walked for files whose name ends in .png (any case), in
-  sorted order. A file named directly is read whatever its name.
-  --quiet   print only the files that fail, and the summary
+  A directory is walked in sorted order, through symbolic links. A file named
+  directly is read whatever its name.
+  --allow TYPE  also accept chunk TYPE (four letters; repeat the flag for more)
+  --quiet       print only the files that fail or are not checked, and the summary
 
 Each PNG gets one line: its chunk types in file order, a run of one type as
-TYPE×N. A PNG FAILS when it has a tEXt, iTXt, zTXt, eXIf or tIME chunk, or
-bytes after IEND. Each one is named on the next line, with the keyword of a
-text chunk; the text itself is never printed. Other chunk types are listed,
-not judged.
+TYPE×N. A PNG FAILS when it has a chunk outside the content-free types
+IHDR PLTE IDAT IEND tRNS gAMA cHRM sRGB sBIT pHYs bKGD hIST, or bytes after
+IEND. Each is named on the next line with its byte offset: a text chunk (tEXt,
+iTXt, zTXt) with its keyword, whose text is never printed; eXIf and tIME by
+name; any other type, iCCP included, as an unknown chunk.
 
 A file is UNREADABLE when its signature is wrong, a chunk's length runs past
 the end of the file, a chunk type is not four letters, a CRC is wrong, the
-first chunk is not IHDR, or no IEND ends it.
+first chunk is not IHDR, or no IEND ends it. A broken symbolic link, a link
+back into a directory being walked, and a directory that cannot be listed are
+UNREADABLE too.
 
-EXIT: 0 every PNG is clean; 1 a PNG carries metadata; 2 a usage error, an
-unreadable file, or no PNG found.
+In a walked directory, each file whose name does not end in .png (any case) is
+named as not checked and counted in the summary. It does not fail the run.
+
+EXIT: 0 every PNG is clean; 1 a PNG fails; 2 a usage error, an unreadable
+file, or no PNG found.
 ";
 
 const SIGNATURE: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
 
-/// Chunk types that carry text, Exif or a timestamp.
+/// The chunk types whose data is pixels, or color and layout numbers only.
+const CONTENT_FREE: [&str; 12] = [
+    "IHDR", "PLTE", "IDAT", "IEND", "tRNS", "gAMA", "cHRM", "sRGB", "sBIT", "pHYs", "bKGD", "hIST",
+];
+
+/// Chunk types with a known meaning that a published image must not carry:
+/// they are named as such rather than as unknown.
 const METADATA: [&str; 5] = ["tEXt", "iTXt", "zTXt", "eXIf", "tIME"];
 
 /// The text chunks, whose data starts with a keyword and a NUL.
@@ -158,16 +172,17 @@ pub fn scan(bytes: &[u8]) -> Result<Png, String> {
     }
 }
 
-/// What makes a PNG fail: each metadata chunk, with its keyword when it has
-/// one, and any bytes after IEND.
-pub fn findings(png: &Png) -> Vec<String> {
+/// What makes a PNG fail: each chunk outside the content-free types and
+/// `allow`, a text chunk with its keyword, and any bytes after IEND.
+pub fn findings(png: &Png, allow: &[String]) -> Vec<String> {
     let mut out: Vec<String> = png
         .chunks
         .iter()
-        .filter(|c| METADATA.contains(&c.kind.as_str()))
-        .map(|c| match &c.keyword {
-            Some(k) => format!("{} \"{k}\" at byte {}", c.kind, c.offset),
-            None => format!("{} at byte {}", c.kind, c.offset),
+        .filter(|c| !CONTENT_FREE.contains(&c.kind.as_str()) && !allow.contains(&c.kind))
+        .map(|c| match (&c.keyword, METADATA.contains(&c.kind.as_str())) {
+            (Some(k), _) => format!("{} \"{k}\" at byte {}", c.kind, c.offset),
+            (None, true) => format!("{} at byte {}", c.kind, c.offset),
+            (None, false) => format!("unknown chunk {} at byte {}", c.kind, c.offset),
         })
         .collect();
     if png.after_iend > 0 {
@@ -196,36 +211,68 @@ fn is_png_name(path: &Path) -> bool {
     path.extension().is_some_and(|e| e.eq_ignore_ascii_case("png"))
 }
 
-/// Adds the PNG files under `dir` in sorted order. A directory reached through
-/// a symbolic link is not entered.
-fn walk(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), String> {
-    let mut entries: Vec<PathBuf> = fs::read_dir(dir)
-        .map_err(|e| format!("{}: {e}", dir.display()))?
-        .map(|entry| entry.map(|e| e.path()).map_err(|e| format!("{}: {e}", dir.display())))
-        .collect::<Result<_, _>>()?;
-    entries.sort();
-    for path in entries {
-        let meta = fs::symlink_metadata(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-        if meta.is_dir() {
-            walk(&path, out)?;
-        } else if is_png_name(&path) {
-            out.push(path);
-        }
-    }
-    Ok(())
+/// What the walk found at one path.
+#[derive(Debug, PartialEq)]
+enum Entry {
+    /// A file to read as a PNG.
+    Png(PathBuf),
+    /// A file in a walked directory whose name does not end in .png.
+    Other(PathBuf),
+    /// A path that cannot be read or walked, and why.
+    Bad(PathBuf, String),
 }
 
-/// The files to read: each file named, and the PNG files under each directory
-/// named.
-fn collect(args: &[String]) -> Result<Vec<PathBuf>, String> {
+/// Adds what is under `dir` in sorted order, following symbolic links.
+/// `stack` holds the real paths of the directories being walked, so a link
+/// back into one is named as a loop instead of being walked again.
+fn walk(dir: &Path, stack: &mut Vec<PathBuf>, out: &mut Vec<Entry>) {
+    let listed: Result<Vec<PathBuf>, std::io::Error> =
+        fs::read_dir(dir).and_then(|entries| entries.map(|e| e.map(|e| e.path())).collect());
+    let mut paths = match listed {
+        Ok(paths) => paths,
+        Err(e) => {
+            out.push(Entry::Bad(dir.to_path_buf(), format!("cannot list the directory: {e}")));
+            return;
+        }
+    };
+    paths.sort();
+    for path in paths {
+        match fs::metadata(&path) {
+            Err(e) => {
+                let link = fs::symlink_metadata(&path).is_ok_and(|m| m.file_type().is_symlink());
+                let why = if link { format!("a broken symbolic link: {e}") } else { e.to_string() };
+                out.push(Entry::Bad(path, why));
+            }
+            Ok(meta) if meta.is_dir() => match fs::canonicalize(&path) {
+                Err(e) => out.push(Entry::Bad(path, e.to_string())),
+                Ok(real) => {
+                    if let Some(ancestor) = stack.iter().find(|a| **a == real) {
+                        let why = format!("a symlink loop back to {}", ancestor.display());
+                        out.push(Entry::Bad(path, why));
+                    } else {
+                        stack.push(real);
+                        walk(&path, stack, out);
+                        stack.pop();
+                    }
+                }
+            },
+            Ok(_) if is_png_name(&path) => out.push(Entry::Png(path)),
+            Ok(_) => out.push(Entry::Other(path)),
+        }
+    }
+}
+
+/// What to read: each file named, and everything under each directory named.
+fn collect(args: &[String]) -> Result<Vec<Entry>, String> {
     let mut out = Vec::new();
     for arg in args {
         let path = PathBuf::from(arg);
         let meta = fs::metadata(&path).map_err(|e| format!("{arg}: {e}"))?;
         if meta.is_dir() {
-            walk(&path, &mut out)?;
+            let real = fs::canonicalize(&path).map_err(|e| format!("{arg}: {e}"))?;
+            walk(&path, &mut vec![real], &mut out);
         } else {
-            out.push(path);
+            out.push(Entry::Png(path));
         }
     }
     Ok(out)
@@ -236,6 +283,7 @@ struct Tally {
     clean: usize,
     failed: usize,
     unreadable: usize,
+    others: usize,
 }
 
 /// Why a run stopped before its summary.
@@ -251,52 +299,87 @@ fn line(out: &mut impl std::io::Write, text: &str) -> Result<(), Stop> {
     writeln!(out, "{text}").map_err(|e| Stop::Io(format!("stdout: {e}")))
 }
 
+/// A chunk type given to `--allow`: four ASCII letters.
+fn allowed_type(text: &str) -> Result<String, Stop> {
+    if text.len() == 4 && text.bytes().all(|b| b.is_ascii_alphabetic()) {
+        Ok(text.to_string())
+    } else {
+        Err(Stop::Usage(format!("--allow: `{text}` is not a chunk type of four letters")))
+    }
+}
+
 fn run(args: &[String], out: &mut impl std::io::Write) -> Result<Tally, Stop> {
     let mut quiet = false;
+    let mut allow: Vec<String> = Vec::new();
     let mut paths = Vec::new();
-    for arg in args {
-        match arg.as_str() {
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
             "--quiet" => quiet = true,
+            "--allow" => {
+                i += 1;
+                let value = args.get(i).ok_or_else(|| Stop::Usage("--allow needs a chunk type".to_string()))?;
+                allow.push(allowed_type(value)?);
+            }
+            a if a.starts_with("--allow=") => allow.push(allowed_type(&a["--allow=".len()..])?),
             a if a.starts_with("--") => return Err(Stop::Usage(format!("unknown option {a}"))),
             a => paths.push(a.to_string()),
         }
+        i += 1;
     }
     if paths.is_empty() {
         return Err(Stop::Usage("name at least one file or directory".to_string()));
     }
-    let files = collect(&paths).map_err(Stop::Io)?;
-    if files.is_empty() {
-        return Err(Stop::Io("no PNG found in the paths given".to_string()));
-    }
+    let entries = collect(&paths).map_err(Stop::Io)?;
     let mut tally = Tally::default();
-    for file in &files {
-        let shown = file.display();
-        match fs::read(file).map_err(|e| e.to_string()).and_then(|b| scan(&b)) {
-            Err(e) => {
-                tally.unreadable += 1;
-                line(out, &format!("{shown}: UNREADABLE: {e}"))?;
+    for entry in &entries {
+        match entry {
+            Entry::Other(path) => {
+                tally.others += 1;
+                line(out, &format!("{}: not checked: not a .png name", path.display()))?;
             }
-            Ok(png) => {
-                let found = findings(&png);
-                if found.is_empty() {
-                    tally.clean += 1;
-                    if !quiet {
-                        line(out, &format!("{shown}: {}", chunk_line(&png)))?;
+            Entry::Bad(path, why) => {
+                tally.unreadable += 1;
+                line(out, &format!("{}: UNREADABLE: {why}", path.display()))?;
+            }
+            Entry::Png(path) => {
+                let shown = path.display();
+                match fs::read(path).map_err(|e| e.to_string()).and_then(|b| scan(&b)) {
+                    Err(e) => {
+                        tally.unreadable += 1;
+                        line(out, &format!("{shown}: UNREADABLE: {e}"))?;
                     }
-                } else {
-                    tally.failed += 1;
-                    line(out, &format!("{shown}: {}", chunk_line(&png)))?;
-                    line(out, &format!("  METADATA: {}", found.join(", ")))?;
+                    Ok(png) => {
+                        let found = findings(&png, &allow);
+                        if found.is_empty() {
+                            tally.clean += 1;
+                            if !quiet {
+                                line(out, &format!("{shown}: {}", chunk_line(&png)))?;
+                            }
+                        } else {
+                            tally.failed += 1;
+                            line(out, &format!("{shown}: {}", chunk_line(&png)))?;
+                            line(out, &format!("  METADATA: {}", found.join(", ")))?;
+                        }
+                    }
                 }
             }
         }
     }
-    let total = files.len();
+    let total = tally.clean + tally.failed + tally.unreadable;
+    if total == 0 {
+        return Err(Stop::Io("no PNG found in the paths given".to_string()));
+    }
     let noun = if total == 1 { "PNG" } else { "PNGs" };
+    let others = match tally.others {
+        0 => String::new(),
+        1 => "; 1 other file not checked".to_string(),
+        n => format!("; {n} other files not checked"),
+    };
     line(
         out,
         &format!(
-            "{total} {noun}: {} clean, {} with metadata, {} unreadable",
+            "{total} {noun}: {} clean, {} with metadata, {} unreadable{others}",
             tally.clean, tally.failed, tally.unreadable
         ),
     )?;
@@ -363,7 +446,7 @@ mod tests {
         let p = scan(&clean()).unwrap();
         assert_eq!(chunk_line(&p), "IHDR sRGB IDAT×2 IEND");
         assert_eq!(p.after_iend, 0);
-        assert!(findings(&p).is_empty());
+        assert!(findings(&p, &[]).is_empty());
     }
 
     #[test]
@@ -377,10 +460,23 @@ mod tests {
         ];
         for (kind, data, named) in cases {
             let p = scan(&png(&[("IHDR", IHDR), (kind, data), ("IDAT", b"a"), ("IEND", b"")])).unwrap();
-            let found = findings(&p);
+            let found = findings(&p, &[]);
             assert_eq!(found, vec![format!("{named} at byte 33")], "{kind}");
             assert!(!found[0].contains("secret"), "the text is never printed");
         }
+    }
+
+    #[test]
+    fn a_chunk_outside_the_content_free_types_fails_unless_allowed() {
+        let p = scan(&png(&[("IHDR", IHDR), ("prIv", b"secret-host.example"), ("iCCP", b"P3\0\0z"), ("IEND", b"")])).unwrap();
+        assert_eq!(findings(&p, &[]), vec!["unknown chunk prIv at byte 33", "unknown chunk iCCP at byte 64"]);
+        assert_eq!(findings(&p, &["prIv".to_string()]), vec!["unknown chunk iCCP at byte 64"]);
+        assert!(findings(&p, &["prIv".to_string(), "iCCP".to_string()]).is_empty());
+        let safe: Vec<(&str, &[u8])> = CONTENT_FREE.iter().map(|k| (*k, &b"x"[..])).collect();
+        let mut all = vec![("IHDR", IHDR)];
+        all.extend(safe.into_iter().filter(|(k, _)| *k != "IHDR" && *k != "IEND"));
+        all.push(("IEND", b""));
+        assert!(findings(&scan(&png(&all)).unwrap(), &[]).is_empty());
     }
 
     #[test]
@@ -388,7 +484,7 @@ mod tests {
         let mut bytes = clean();
         bytes.extend_from_slice(b"hidden");
         let p = scan(&bytes).unwrap();
-        assert_eq!(findings(&p), vec!["6 bytes after IEND".to_string()]);
+        assert_eq!(findings(&p, &[]), vec!["6 bytes after IEND".to_string()]);
     }
 
     #[test]
@@ -429,10 +525,10 @@ mod tests {
     #[test]
     fn real_encoder_output_reads_as_expected() {
         let comment = scan(include_bytes!("../tests/fixtures/imagemagick-comment.png")).unwrap();
-        let found = findings(&comment);
+        let found = findings(&comment, &[]);
         assert!(found.iter().any(|f| f.starts_with("tEXt \"comment\"")), "{found:?}");
         assert!(found.iter().any(|f| f.starts_with("tIME")), "{found:?}");
         let strip = scan(include_bytes!("../tests/fixtures/imagemagick-strip.png")).unwrap();
-        assert!(findings(&strip).is_empty(), "{}", chunk_line(&strip));
+        assert!(findings(&strip, &[]).is_empty(), "{}", chunk_line(&strip));
     }
 }
