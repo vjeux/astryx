@@ -1,0 +1,11 @@
+[package]
+name = "burst-settle"
+version = "0.1.0"
+edition = "2021"
+description = "Motion bursts and settle points in a screen recording's per-frame series (ffprobe signalstats JSON, ffmpeg metadata=print, or a plain series), with exponent-safe number parsing."
+
+# std only: the JSON is read with a small parser of our own.
+[dependencies]
+
+[profile.release]
+opt-level = 2
