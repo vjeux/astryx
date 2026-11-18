@@ -1,0 +1,11 @@
+[package]
+name = "png-chunks"
+version = "0.1.0"
+edition = "2021"
+description = "List each PNG's chunk types, and refuse text, Exif and time metadata (tEXt, iTXt, zTXt, eXIf, tIME) or bytes after IEND."
+
+# std only: the PNG chunk layout and its CRC are small enough to read here.
+[dependencies]
+
+[profile.release]
+opt-level = 2
