@@ -1,9 +1,11 @@
 //! burst-settle: the motion bursts in a screen recording's per-frame series,
-//! and the frame where each one settles, at a stated threshold.
+//! and where each one settles, at a stated threshold.
 //!
 //! Every number is read with Rust's float parser, so `6.17284e-06` is six
 //! millionths, never 6.17. A value that does not parse is an error with its
-//! place, never a skipped frame.
+//! place, never a skipped frame. A recording that writes a frame only on a
+//! change is judged by elapsed time (`--settle-ms`): counting frames there is
+//! refused unless forced.
 
 mod bursts;
 mod input;
@@ -12,7 +14,6 @@ mod json;
 use std::io::{Read, Write};
 use std::process::ExitCode;
 
-use bursts::Burst;
 use input::{Format, Sample};
 
 const USAGE: &str = "\
@@ -23,7 +24,14 @@ USAGE:
 
   --threshold T      a frame MOVES when its motion is over T, and is QUIET at or
                      below it (required; exponents such as 5e-3 are fine)
-  --settle-frames N  a burst ends after N quiet frames in a row (default 3)
+  --settle-ms S      judge by elapsed time: a burst settles once more than S ms
+                     pass after its last moving frame with no moving frame
+                     (needs frame times and the recording's end)
+  --settle-frames N  judge by frame count: a burst settles after N quiet frames
+                     in a row (the default, with N = 3, for a steady frame rate)
+  --force-frames     count frames even when the frame times are irregular
+  --end T            the recording's end in seconds, for --settle-ms (default:
+                     the JSON's format start_time + duration)
   --key NAME         the tag or key to read (default lavfi.signalstats.YDIF)
   --delta            motion is the change of the value from the previous frame,
                      for a level such as lavfi.signalstats.YAVG; without it, the
@@ -39,20 +47,43 @@ INPUTS:
   metadata=print     ffmpeg -i REC -vf signalstats,metadata=print:key=KEY:file=OUT -f null -
   series             one `value` or `time value` per line (comma or space between);
                      # starts a comment, so a header line needs one
+  the end            ffprobe -v error -show_entries format=duration -of csv=p=0 REC
 
-A BURST starts at a moving frame and lasts until N quiet frames follow its last
-moving frame; a shorter pause stays inside it. It SETTLES at the first of those
-quiet frames. Its PEAK is its first frame with the highest motion.
+BY TIME (--settle-ms S): a burst starts at a moving frame, and a moving frame
+at most S ms after the burst's last one joins it. Quiet frames and spans with
+no frame at all both count as quiet. The burst SETTLES at its last moving
+frame once more than S ms pass with no moving frame. The last burst settles
+only when the recording's end comes more than S ms after its last moving frame.
 
-EXIT: 0 every burst settles (or there is none); 1 a burst is still moving when
-the series ends; 2 a usage, read or parse error.
+BY FRAMES (--settle-frames N): a burst lasts until N quiet frames follow its
+last moving frame, and SETTLES at the first of them. When the frame intervals
+are irregular (one over 1.5 times the median or under half of it, as when a
+recording writes a frame only on a change), counting frames is refused unless
+--force-frames is given.
+
+A burst's PEAK is its first frame with the highest motion.
+
+EXIT: 0 every burst settles (or there is none); 1 a burst has not settled by
+the end of the series or the recording; 2 a usage, read or parse error.
 ";
+
+/// How a burst is judged to settle.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Settle {
+    /// After this many quiet frames in a row.
+    Frames(usize),
+    /// Once more than this many milliseconds pass with no moving frame.
+    Ms(f64),
+}
 
 #[derive(Debug)]
 struct Options {
     threshold: f64,
     threshold_text: String,
-    settle: usize,
+    settle: Settle,
+    settle_text: String,
+    force_frames: bool,
+    end: Option<f64>,
     key: String,
     delta: bool,
     format: Option<Format>,
@@ -69,7 +100,10 @@ fn value_of<'a>(args: &'a [String], i: &mut usize, flag: &str) -> Result<&'a str
 
 fn parse_args(args: &[String]) -> Result<Options, String> {
     let mut threshold = None;
-    let mut settle = 3;
+    let mut frames: Option<(usize, String)> = None;
+    let mut ms: Option<(f64, String)> = None;
+    let mut force_frames = false;
+    let mut end = None;
     let mut key = "lavfi.signalstats.YDIF".to_string();
     let mut delta = false;
     let mut format = None;
@@ -97,11 +131,29 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
             }
             "--settle-frames" => {
                 let text = take(&mut i)?;
-                settle = text
+                let n = text
                     .parse()
                     .ok()
                     .filter(|&n: &usize| n >= 1)
                     .ok_or_else(|| format!("--settle-frames: `{text}` is not a whole number of at least 1"))?;
+                frames = Some((n, text));
+            }
+            "--settle-ms" => {
+                let text = take(&mut i)?;
+                let v = input::number(&text, "--settle-ms")?;
+                if v <= 0.0 {
+                    return Err(format!("--settle-ms: `{text}` is not above 0"));
+                }
+                ms = Some((v, text));
+            }
+            "--force-frames" => force_frames = true,
+            "--end" => {
+                let text = take(&mut i)?;
+                let v = input::number(&text, "--end")?;
+                if v < 0.0 {
+                    return Err(format!("--end: `{text}` is before 0"));
+                }
+                end = Some(v);
             }
             "--key" => key = take(&mut i)?,
             "--delta" => delta = true,
@@ -133,7 +185,33 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
     }
     let (threshold, threshold_text) = threshold.ok_or("--threshold is required: state the motion that counts")?;
     let path = path.ok_or("name the input file, or - for stdin")?;
-    Ok(Options { threshold, threshold_text, settle, key, delta, format, fps, list, json, path })
+    let (settle, settle_text) = match (frames, ms) {
+        (Some(_), Some(_)) => return Err("give --settle-ms or --settle-frames, not both".to_string()),
+        (Some((n, text)), None) => (Settle::Frames(n), text),
+        (None, Some((v, text))) => (Settle::Ms(v), text),
+        (None, None) => (Settle::Frames(3), "3".to_string()),
+    };
+    if force_frames && matches!(settle, Settle::Ms(_)) {
+        return Err("--force-frames counts frames, so it does not go with --settle-ms".to_string());
+    }
+    if end.is_some() && matches!(settle, Settle::Frames(_)) {
+        return Err("--end is for --settle-ms; counting frames ends at the last frame".to_string());
+    }
+    Ok(Options {
+        threshold,
+        threshold_text,
+        settle,
+        settle_text,
+        force_frames,
+        end,
+        key,
+        delta,
+        format,
+        fps,
+        list,
+        json,
+        path,
+    })
 }
 
 /// A number as printf's %g writes it, six significant digits.
@@ -196,35 +274,120 @@ fn json_text(s: &str) -> String {
     out
 }
 
-fn report(o: &Options, format: Format, samples: &[Sample], motion: &[f64], found: &[Burst]) -> String {
+/// Milliseconds from microseconds, rounded, for text.
+fn whole_ms(us: i64) -> i64 {
+    (us as f64 / 1000.0).round() as i64
+}
+
+/// One burst, as printed, in either mode.
+struct Row {
+    start: usize,
+    end: usize,
+    peak: usize,
+    /// Where it settles, when it does.
+    settle: Option<usize>,
+    /// What follows the peak on its line.
+    tail: String,
+    /// Its quiet span for the JSON, as `"name":value`.
+    quiet_json: String,
+}
+
+/// The bursts by frame count.
+fn rows_by_frames(samples: &[Sample], motion: &[f64], o: &Options, n: usize) -> Vec<Row> {
+    bursts::find(motion, o.threshold, n)
+        .into_iter()
+        .map(|b| Row {
+            start: b.start,
+            end: b.end,
+            peak: b.peak,
+            settle: b.settle,
+            tail: match b.settle {
+                Some(s) => format!("settles at {}", at(&samples[s])),
+                None => format!(
+                    "NOT SETTLED: the series ends {} quiet frame{} after it, under {n}",
+                    b.quiet_after,
+                    if b.quiet_after == 1 { "" } else { "s" }
+                ),
+            },
+            quiet_json: format!("\"quiet_after_frames\":{}", b.quiet_after),
+        })
+        .collect()
+}
+
+/// The bursts by elapsed time, judged against the recording's end.
+fn rows_by_time(samples: &[Sample], motion: &[f64], o: &Options, ms: f64, times: &[f64], end: f64) -> Vec<Row> {
+    let found = bursts::find_by_time(times, motion, o.threshold, (ms * 1000.0).round() as i64, end);
+    let count = found.len();
+    found
+        .into_iter()
+        .enumerate()
+        .map(|(k, b)| {
+            let quiet = whole_ms(b.quiet_us);
+            let tail = match (b.settled, k + 1 == count) {
+                (true, false) => format!("settles at {}; no frame moves for the next {quiet} ms", at(&samples[b.end])),
+                (true, true) => format!(
+                    "settles at {}; no frame moves in the {quiet} ms before the recording ends",
+                    at(&samples[b.end])
+                ),
+                (false, _) => format!(
+                    "NOT SETTLED: the recording ends {quiet} ms after its last moving frame, under {} ms",
+                    o.settle_text
+                ),
+            };
+            Row {
+                start: b.start,
+                end: b.end,
+                peak: b.peak,
+                settle: b.settled.then_some(b.end),
+                tail,
+                quiet_json: format!("\"quiet_after_ms\":{}", b.quiet_us as f64 / 1000.0),
+            }
+        })
+        .collect()
+}
+
+struct Judged {
+    rows: Vec<Row>,
+    /// The recording's end and where it came from, when judged by time.
+    end: Option<(f64, &'static str)>,
+}
+
+fn report(o: &Options, format: Format, samples: &[Sample], motion: &[f64], judged: &Judged) -> String {
+    let rows = &judged.rows;
     let mut out = String::new();
     let measure = if o.delta { "change from the previous frame" } else { "value" };
+    let null = || "null".to_string();
     if o.json {
-        let bursts: Vec<String> = found
+        let bursts: Vec<String> = rows
             .iter()
             .map(|b| {
                 format!(
-                    "{{\"start\":{},\"end\":{},\"peak\":{{\"frame\":{},\"time\":{},\"motion\":{}}},\"settle\":{}}}",
+                    "{{\"start\":{},\"end\":{},\"peak\":{{\"frame\":{},\"time\":{},\"motion\":{}}},\"settle\":{},{}}}",
                     json_place(&samples[b.start]),
                     json_place(&samples[b.end]),
                     samples[b.peak].frame,
-                    samples[b.peak].time.map_or("null".to_string(), |t| t.to_string()),
+                    samples[b.peak].time.map_or_else(null, |t| t.to_string()),
                     motion[b.peak],
-                    b.settle.map_or("null".to_string(), |s| json_place(&samples[s])),
+                    b.settle.map_or_else(null, |s| json_place(&samples[s])),
+                    b.quiet_json,
                 )
             })
             .collect();
+        let (ms, frames) = match o.settle {
+            Settle::Ms(v) => (v.to_string(), null()),
+            Settle::Frames(n) => (null(), n.to_string()),
+        };
         out.push_str(&format!(
-            "{{\"input\":{},\"format\":{},\"key\":{},\"motion\":{},\"threshold\":{},\"settle_frames\":{},\"frames\":{},\"bursts\":[{}],\"settled\":{}}}\n",
+            "{{\"input\":{},\"format\":{},\"key\":{},\"motion\":{},\"threshold\":{},\"settle_ms\":{ms},\"settle_frames\":{frames},\"end\":{},\"frames\":{},\"bursts\":[{}],\"settled\":{}}}\n",
             json_text(&o.path),
             json_text(format.name()),
             json_text(&o.key),
             json_text(measure),
             o.threshold,
-            o.settle,
+            judged.end.map_or_else(null, |(e, _)| e.to_string()),
             samples.len(),
             bursts.join(","),
-            found.iter().all(|b| b.settle.is_some()),
+            rows.iter().all(|b| b.settle.is_some()),
         ));
         return out;
     }
@@ -238,13 +401,19 @@ fn report(o: &Options, format: Format, samples: &[Sample], motion: &[f64], found
         (Some(a), Some(b)) => format!(", {a:.3}–{b:.3} s"),
         _ => String::new(),
     };
+    let rule = match (o.settle, judged.end) {
+        (Settle::Ms(_), Some((end, from))) => format!(
+            "a burst settles once {} ms pass with no moving frame; the recording ends at {end:.3} s ({from})",
+            o.settle_text
+        ),
+        _ => format!("a burst settles after {} quiet frames", o.settle_text),
+    };
     out.push_str(&format!(
-        "{}: {} frames ({}{span}); motion is {motion_is}; threshold {}; a burst settles after {} quiet frames\n",
+        "{}: {} frames ({}{span}); motion is {motion_is}; threshold {}; {rule}\n",
         o.path,
         samples.len(),
         format.name(),
         o.threshold_text,
-        o.settle
     ));
     if o.list {
         for (i, s) in samples.iter().enumerate() {
@@ -254,25 +423,18 @@ fn report(o: &Options, format: Format, samples: &[Sample], motion: &[f64], found
             out.push_str(&format!("frame {}{time}  value {}{change}{mark}\n", s.frame, s.raw));
         }
     }
-    for (n, b) in found.iter().enumerate() {
-        let tail = match b.settle {
-            Some(s) => format!("settles at {}", at(&samples[s])),
-            None => format!(
-                "STILL MOVING: the series ends {} quiet frame{} after it",
-                b.quiet_after,
-                if b.quiet_after == 1 { "" } else { "s" }
-            ),
-        };
+    for (n, b) in rows.iter().enumerate() {
         out.push_str(&format!(
-            "burst {}: from {} to {}, peak {} at {}; {tail}\n",
+            "burst {}: from {} to {}, peak {} at {}; {}\n",
             n + 1,
             at(&samples[b.start]),
             at(&samples[b.end]),
             shown(samples, motion, b.peak, o.delta),
             at(&samples[b.peak]),
+            b.tail,
         ));
     }
-    match found.last() {
+    match rows.last() {
         None => {
             let top = (0..motion.len()).fold(0, |best, i| if motion[i] > motion[best] { i } else { best });
             out.push_str(&format!(
@@ -283,17 +445,14 @@ fn report(o: &Options, format: Format, samples: &[Sample], motion: &[f64], found
             ));
         }
         Some(last) => {
-            let noun = if found.len() == 1 { "burst" } else { "bursts" };
+            let noun = if rows.len() == 1 { "burst" } else { "bursts" };
+            let ends = if judged.end.is_some() { "recording" } else { "series" };
             match last.settle {
-                Some(s) => out.push_str(&format!(
-                    "{} {noun}; the last settles at {}\n",
-                    found.len(),
-                    at(&samples[s])
-                )),
+                Some(s) => out.push_str(&format!("{} {noun}; the last settles at {}\n", rows.len(), at(&samples[s]))),
                 None => out.push_str(&format!(
-                    "{} {noun}; burst {} is still moving when the series ends\n",
-                    found.len(),
-                    found.len()
+                    "{} {noun}; burst {} has not settled when the {ends} ends\n",
+                    rows.len(),
+                    rows.len()
                 )),
             }
         }
@@ -301,21 +460,72 @@ fn report(o: &Options, format: Format, samples: &[Sample], motion: &[f64], found
     out
 }
 
-fn run(args: &[String]) -> Result<(String, bool), String> {
-    let o = parse_args(args)?;
+/// A failure, and whether the usage helps with it.
+struct Fail {
+    message: String,
+    usage: bool,
+}
+
+fn input_error(message: String) -> Fail {
+    Fail { message, usage: false }
+}
+
+fn run(args: &[String]) -> Result<(String, bool), Fail> {
+    let o = parse_args(args).map_err(|message| Fail { message, usage: true })?;
     let mut text = String::new();
     if o.path == "-" {
-        std::io::stdin().read_to_string(&mut text).map_err(|e| format!("stdin: {e}"))?;
+        std::io::stdin().read_to_string(&mut text).map_err(|e| input_error(format!("stdin: {e}")))?;
     } else {
-        text = std::fs::read_to_string(&o.path).map_err(|e| format!("{}: {e}", o.path))?;
+        text = std::fs::read_to_string(&o.path).map_err(|e| input_error(format!("{}: {e}", o.path)))?;
     }
     let format = o.format.unwrap_or_else(|| input::detect(&text));
-    let samples = input::read(&text, format, &o.key, o.fps).map_err(|e| format!("{}: {e}", o.path))?;
+    let (samples, stated_end) =
+        input::read(&text, format, &o.key, o.fps).map_err(|e| input_error(format!("{}: {e}", o.path)))?;
     let values: Vec<f64> = samples.iter().map(|s| s.value).collect();
     let motion = bursts::motion(&values, o.delta);
-    let found = bursts::find(&motion, o.threshold, o.settle);
-    let settled = found.iter().all(|b| b.settle.is_some());
-    Ok((report(&o, format, &samples, &motion, &found), settled))
+    let times: Option<Vec<f64>> = samples.iter().map(|s| s.time).collect();
+    let judged = match o.settle {
+        Settle::Frames(n) => {
+            if let (Some(t), false) = (&times, o.force_frames) {
+                if let Some((low, median, high)) = bursts::irregular(t) {
+                    let ms = |s: f64| g(s * 1000.0);
+                    return Err(input_error(format!(
+                        "{}: the frame times are irregular (intervals from {} to {} ms, median {} ms), as when a recording writes a frame only on a change, so counting quiet frames would misjudge it: use --settle-ms, or --force-frames to count frames anyway",
+                        o.path,
+                        ms(low),
+                        ms(high),
+                        ms(median)
+                    )));
+                }
+            }
+            Judged { rows: rows_by_frames(&samples, &motion, &o, n), end: None }
+        }
+        Settle::Ms(ms) => {
+            let t = times.ok_or_else(|| {
+                input_error(format!("{}: --settle-ms needs frame times, and this series has none", o.path))
+            })?;
+            let (end, from) = match (o.end, stated_end) {
+                (Some(e), _) => (e, "--end"),
+                (None, Some(e)) => (e, "format.duration"),
+                (None, None) => {
+                    return Err(input_error(format!(
+                        "{}: --settle-ms needs the recording's end: give --end T, from ffprobe -v error -show_entries format=duration -of csv=p=0 REC",
+                        o.path
+                    )))
+                }
+            };
+            let last = t[t.len() - 1];
+            if bursts::micros(end) < bursts::micros(last) {
+                return Err(input_error(format!(
+                    "{}: the recording's end, {end} s ({from}), is before its last frame at {last} s",
+                    o.path
+                )));
+            }
+            Judged { rows: rows_by_time(&samples, &motion, &o, ms, &t, end), end: Some((end, from)) }
+        }
+    };
+    let settled = judged.rows.iter().all(|b| b.settle.is_some());
+    Ok((report(&o, format, &samples, &motion, &judged), settled))
 }
 
 fn main() -> ExitCode {
@@ -336,9 +546,9 @@ fn main() -> ExitCode {
                 ExitCode::from(1)
             }
         }
-        Err(e) => {
-            eprintln!("burst-settle: {e}");
-            if e.contains("--") || e.starts_with("name ") || e.starts_with("unknown") {
+        Err(fail) => {
+            eprintln!("burst-settle: {}", fail.message);
+            if fail.usage {
                 eprint!("{USAGE}");
             }
             ExitCode::from(2)
@@ -367,7 +577,12 @@ mod tests {
         let args = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
         assert!(parse_args(&args(&["in.json"])).unwrap_err().contains("--threshold is required"));
         let o = parse_args(&args(&["--threshold", "5e-3", "--settle-frames=2", "in.json"])).unwrap();
-        assert_eq!((o.threshold, o.threshold_text.as_str(), o.settle), (0.005, "5e-3", 2));
+        assert_eq!((o.threshold, o.threshold_text.as_str(), o.settle), (0.005, "5e-3", Settle::Frames(2)));
+        let o = parse_args(&args(&["--threshold", "0.4", "--settle-ms", "250", "--end=5.16", "x"])).unwrap();
+        assert_eq!((o.settle, o.end), (Settle::Ms(250.0), Some(5.16)));
+        assert!(parse_args(&args(&["--threshold", "1", "--settle-ms", "250", "--force-frames", "x"])).is_err());
+        assert!(parse_args(&args(&["--threshold", "1", "--end", "5", "x"])).is_err());
+        assert!(parse_args(&args(&["--threshold", "1", "--settle-ms", "-1", "x"])).is_err());
         assert!(parse_args(&args(&["--threshold", "1", "--settle-frames", "0", "x"])).is_err());
         assert!(parse_args(&args(&["--threshold", "abc", "x"])).is_err());
         assert!(parse_args(&args(&["--threshold", "1", "a", "b"])).is_err());

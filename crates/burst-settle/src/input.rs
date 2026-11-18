@@ -77,8 +77,32 @@ fn scalar(value: &Json, place: &str) -> Result<String, String> {
 /// The time fields ffprobe writes, in the order they are read.
 const TIME_FIELDS: [&str; 3] = ["pts_time", "pkt_pts_time", "best_effort_timestamp_time"];
 
-fn read_ffprobe(text: &str, key: &str) -> Result<Vec<Sample>, String> {
+/// The recording's end from ffprobe's `format` section: `start_time` (0 when
+/// absent) plus `duration`. ffprobe writes `N/A` for a value it does not
+/// know, which leaves the end unknown.
+fn format_end(root: &Json) -> Result<Option<f64>, String> {
+    let Some(format) = root.get("format") else {
+        return Ok(None);
+    };
+    let field = |name: &str| -> Result<Option<f64>, String> {
+        match format.get(name) {
+            None => Ok(None),
+            Some(v) => {
+                let text = scalar(v, &format!("format.{name}"))?;
+                if text.trim() == "N/A" {
+                    Ok(None)
+                } else {
+                    number(&text, &format!("format.{name}")).map(Some)
+                }
+            }
+        }
+    };
+    Ok(field("duration")?.map(|d| field("start_time").ok().flatten().unwrap_or(0.0) + d))
+}
+
+fn read_ffprobe(text: &str, key: &str) -> Result<(Vec<Sample>, Option<f64>), String> {
     let root = json::parse(text)?;
+    let end = format_end(&root)?;
     let frames = root.get("frames").and_then(Json::as_arr).ok_or(
         "the JSON has no \"frames\" array: run ffprobe with -show_entries frame=pts_time:frame_tags=KEY -of json",
     )?;
@@ -97,7 +121,7 @@ fn read_ffprobe(text: &str, key: &str) -> Result<Vec<Sample>, String> {
         let value = number(&raw, &format!("{place} {key}"))?;
         out.push(Sample { frame: i, time, raw, value });
     }
-    Ok(out)
+    Ok((out, end))
 }
 
 fn read_metadata(text: &str, key: &str) -> Result<Vec<Sample>, String> {
@@ -199,15 +223,17 @@ fn read_series(text: &str, fps: Option<f64>) -> Result<Vec<Sample>, String> {
 }
 
 /// Reads the input in `format`. `key` names the value in ffprobe's JSON and in
-/// ffmpeg's metadata text; `fps` gives a timeless series its times.
-pub fn read(text: &str, format: Format, key: &str, fps: Option<f64>) -> Result<Vec<Sample>, String> {
+/// ffmpeg's metadata text; `fps` gives a timeless series its times. The second
+/// value is the recording's end when the input states it (ffprobe's
+/// `format.duration`).
+pub fn read(text: &str, format: Format, key: &str, fps: Option<f64>) -> Result<(Vec<Sample>, Option<f64>), String> {
     if fps.is_some() && format != Format::Series {
         return Err(format!("--fps applies only to a series; {} carries its own times", format.name()));
     }
-    let samples = match format {
+    let (samples, end) = match format {
         Format::Ffprobe => read_ffprobe(text, key)?,
-        Format::Metadata => read_metadata(text, key)?,
-        Format::Series => read_series(text, fps)?,
+        Format::Metadata => (read_metadata(text, key)?, None),
+        Format::Series => (read_series(text, fps)?, None),
     };
     if samples.is_empty() {
         return Err("no frames in the input".to_string());
@@ -226,7 +252,7 @@ pub fn read(text: &str, format: Format, key: &str, fps: Option<f64>) -> Result<V
             }
         }
     }
-    Ok(samples)
+    Ok((samples, end))
 }
 
 #[cfg(test)]
@@ -259,7 +285,7 @@ mod tests {
             {"pts_time": "0.033333", "tags": {"lavfi.signalstats.YDIF": "6.17284e-06"}},
             {"pkt_pts_time": 0.066667, "tags": {"lavfi.signalstats.YDIF": 1.58958}}
         ]}"#;
-        let s = read(text, Format::Ffprobe, KEY, None).unwrap();
+        let s = read(text, Format::Ffprobe, KEY, None).unwrap().0;
         assert_eq!(s.len(), 3);
         assert_eq!(s[1].value, 6.17284e-6);
         assert_eq!(s[1].raw, "6.17284e-06");
@@ -280,10 +306,23 @@ mod tests {
     }
 
     #[test]
+    fn ffprobe_json_states_the_recordings_end_when_its_format_has_a_duration() {
+        let frames = r#""frames": [{"pts_time": "0", "tags": {"lavfi.signalstats.YDIF": "0"}}]"#;
+        let with = |format: &str| format!("{{{frames}, \"format\": {format}}}");
+        let end = |text: &str| read(text, Format::Ffprobe, KEY, None).map(|r| r.1);
+        assert_eq!(end(&with(r#"{"start_time": "0.5", "duration": "5.160811"}"#)), Ok(Some(5.660811)));
+        assert_eq!(end(&with(r#"{"duration": "2"}"#)), Ok(Some(2.0)));
+        assert_eq!(end(&with(r#"{"start_time": "1.098556"}"#)), Ok(None));
+        assert_eq!(end(&with(r#"{"duration": "N/A"}"#)), Ok(None));
+        assert_eq!(end(&format!("{{{frames}}}")), Ok(None));
+        assert!(end(&with(r#"{"duration": "5.2e"}"#)).unwrap_err().contains("format.duration"));
+    }
+
+    #[test]
     fn metadata_print_reads_each_frame_block() {
         let text = "frame:0    pts:0       pts_time:0\nlavfi.signalstats.YDIF=0\n\
                     frame:1    pts:512     pts_time:0.0333333\nlavfi.other=4\nlavfi.signalstats.YDIF=6.17284e-06\n";
-        let s = read(text, Format::Metadata, KEY, None).unwrap();
+        let s = read(text, Format::Metadata, KEY, None).unwrap().0;
         assert_eq!(s.len(), 2);
         assert_eq!((s[1].frame, s[1].time, s[1].value), (1, Some(0.0333333), 6.17284e-6));
     }
@@ -298,12 +337,12 @@ mod tests {
 
     #[test]
     fn a_series_reads_one_or_two_columns() {
-        let s = read("# YDIF\n0\n6.17284e-06\n2\n", Format::Series, KEY, Some(30.0)).unwrap();
+        let s = read("# YDIF\n0\n6.17284e-06\n2\n", Format::Series, KEY, Some(30.0)).unwrap().0;
         assert_eq!(s.iter().map(|x| x.value).collect::<Vec<_>>(), vec![0.0, 6.17284e-6, 2.0]);
         assert_eq!(s[2].time, Some(2.0 / 30.0));
-        let t = read("0.0, 1\n0.5,2\n", Format::Series, KEY, None).unwrap();
+        let t = read("0.0, 1\n0.5,2\n", Format::Series, KEY, None).unwrap().0;
         assert_eq!((t[1].time, t[1].value), (Some(0.5), 2.0));
-        let untimed = read("1\n2\n", Format::Series, KEY, None).unwrap();
+        let untimed = read("1\n2\n", Format::Series, KEY, None).unwrap().0;
         assert_eq!(untimed[0].time, None);
     }
 

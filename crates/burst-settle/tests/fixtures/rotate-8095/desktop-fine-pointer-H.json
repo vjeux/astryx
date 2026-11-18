@@ -1,0 +1,304 @@
+{
+    "frames": [
+        {
+            "pts_time": "1.106167",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.00597531"
+            }
+        },
+        {
+            "pts_time": "1.145567",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0343025"
+            }
+        },
+        {
+            "pts_time": "1.181656",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0040679"
+            }
+        },
+        {
+            "pts_time": "1.209756",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.013821"
+            }
+        },
+        {
+            "pts_time": "1.246211",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0454259"
+            }
+        },
+        {
+            "pts_time": "1.259789",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0188395"
+            }
+        },
+        {
+            "pts_time": "1.294767",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0247037"
+            }
+        },
+        {
+            "pts_time": "1.343078",
+            "tags": {
+                "lavfi.signalstats.YAVG": "27.889"
+            }
+        },
+        {
+            "pts_time": "1.362011",
+            "tags": {
+                "lavfi.signalstats.YAVG": "9.1167"
+            }
+        },
+        {
+            "pts_time": "1.381300",
+            "tags": {
+                "lavfi.signalstats.YAVG": "18.5582"
+            }
+        },
+        {
+            "pts_time": "1.401267",
+            "tags": {
+                "lavfi.signalstats.YAVG": "28.5177"
+            }
+        },
+        {
+            "pts_time": "1.417467",
+            "tags": {
+                "lavfi.signalstats.YAVG": "19.6557"
+            }
+        },
+        {
+            "pts_time": "1.432144",
+            "tags": {
+                "lavfi.signalstats.YAVG": "10.5541"
+            }
+        },
+        {
+            "pts_time": "1.449078",
+            "tags": {
+                "lavfi.signalstats.YAVG": "201.257"
+            }
+        },
+        {
+            "pts_time": "1.471222",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.925105"
+            }
+        },
+        {
+            "pts_time": "1.485433",
+            "tags": {
+                "lavfi.signalstats.YAVG": "1.7019"
+            }
+        },
+        {
+            "pts_time": "1.498878",
+            "tags": {
+                "lavfi.signalstats.YAVG": "2.0329"
+            }
+        },
+        {
+            "pts_time": "1.518044",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0105309"
+            }
+        },
+        {
+            "pts_time": "1.532033",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0245185"
+            }
+        },
+        {
+            "pts_time": "1.551356",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0419506"
+            }
+        },
+        {
+            "pts_time": "1.597756",
+            "tags": {
+                "lavfi.signalstats.YAVG": "6.61391"
+            }
+        },
+        {
+            "pts_time": "1.646244",
+            "tags": {
+                "lavfi.signalstats.YAVG": "1.75837"
+            }
+        },
+        {
+            "pts_time": "1.675700",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.00462963"
+            }
+        },
+        {
+            "pts_time": "4.523733",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.00637037"
+            }
+        },
+        {
+            "pts_time": "4.566744",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0398765"
+            }
+        },
+        {
+            "pts_time": "4.641989",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0167716"
+            }
+        },
+        {
+            "pts_time": "4.676411",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.000265432"
+            }
+        },
+        {
+            "pts_time": "4.725778",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.00704938"
+            }
+        },
+        {
+            "pts_time": "4.780700",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.000203704"
+            }
+        },
+        {
+            "pts_time": "4.794289",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0"
+            }
+        },
+        {
+            "pts_time": "4.809444",
+            "tags": {
+                "lavfi.signalstats.YAVG": "9.08085"
+            }
+        },
+        {
+            "pts_time": "4.831556",
+            "tags": {
+                "lavfi.signalstats.YAVG": "184.244"
+            }
+        },
+        {
+            "pts_time": "4.842778",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.037679"
+            }
+        },
+        {
+            "pts_time": "4.872467",
+            "tags": {
+                "lavfi.signalstats.YAVG": "20.3226"
+            }
+        },
+        {
+            "pts_time": "4.882233",
+            "tags": {
+                "lavfi.signalstats.YAVG": "36.4503"
+            }
+        },
+        {
+            "pts_time": "4.915344",
+            "tags": {
+                "lavfi.signalstats.YAVG": "28.151"
+            }
+        },
+        {
+            "pts_time": "4.932478",
+            "tags": {
+                "lavfi.signalstats.YAVG": "13.8262"
+            }
+        },
+        {
+            "pts_time": "4.948589",
+            "tags": {
+                "lavfi.signalstats.YAVG": "9.52311"
+            }
+        },
+        {
+            "pts_time": "4.965656",
+            "tags": {
+                "lavfi.signalstats.YAVG": "7.17583"
+            }
+        },
+        {
+            "pts_time": "4.983911",
+            "tags": {
+                "lavfi.signalstats.YAVG": "4.3526"
+            }
+        },
+        {
+            "pts_time": "5.010911",
+            "tags": {
+                "lavfi.signalstats.YAVG": "4.97247"
+            }
+        },
+        {
+            "pts_time": "5.033856",
+            "tags": {
+                "lavfi.signalstats.YAVG": "5.03712"
+            }
+        },
+        {
+            "pts_time": "5.058267",
+            "tags": {
+                "lavfi.signalstats.YAVG": "5.33646"
+            }
+        },
+        {
+            "pts_time": "5.075778",
+            "tags": {
+                "lavfi.signalstats.YAVG": "7.09584"
+            }
+        },
+        {
+            "pts_time": "5.093911",
+            "tags": {
+                "lavfi.signalstats.YAVG": "4.44186"
+            }
+        },
+        {
+            "pts_time": "5.111867",
+            "tags": {
+                "lavfi.signalstats.YAVG": "4.18488"
+            }
+        },
+        {
+            "pts_time": "5.131333",
+            "tags": {
+                "lavfi.signalstats.YAVG": "3.38514"
+            }
+        },
+        {
+            "pts_time": "5.140789",
+            "tags": {
+                "lavfi.signalstats.YAVG": "2.09217"
+            }
+        },
+        {
+            "pts_time": "5.179233",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0228765"
+            }
+        },
+        {
+            "pts_time": "5.189067",
+            "tags": {
+                "lavfi.signalstats.YAVG": "0.0745617"
+            }
+        }
+    ]
+}
