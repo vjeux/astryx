@@ -93,6 +93,20 @@ export function rideKeyboard(
     transition.curve == null ||
     performance.now() >= transition.start + transition.curve.durationMs
   ) {
+    // eslint-disable-next-line no-console
+    console.info(
+      'ASTRYX-RIDE-PROBE ' +
+        JSON.stringify({
+          kind: transition.kind,
+          landsAtOnce: true,
+          animated: transition.animated,
+          edgeFrom: transition.from,
+          edgeTo: transition.to,
+          to,
+          transitionStart: transition.start,
+          now: performance.now(),
+        }),
+    );
     animator.set(to);
     return null;
   }
@@ -122,6 +136,42 @@ export function rideKeyboard(
     number,
   ][]) {
     const from = animator.get(property, start);
+    if (typeof window !== 'undefined') {
+      const active = document.activeElement;
+      // eslint-disable-next-line no-console
+      console.info(
+        'ASTRYX-RIDE-PROBE ' +
+          JSON.stringify({
+            kind: transition.kind,
+            predicted: transition.predicted,
+            edgeFrom: transition.from,
+            edgeTo: transition.to,
+            edge,
+            rising,
+            property,
+            from,
+            target,
+            own: Math.abs(target - from),
+            holds:
+              followsEdge &&
+              Math.abs(target - from) > 0 &&
+              Math.abs(target - from) < edge,
+            followsEdge,
+            durationMs: curve.durationMs,
+            start,
+            transitionStart: transition.start,
+            timeline: timelineTime(),
+            now: performance.now(),
+            innerHeight: window.innerHeight,
+            clientHeight: document.documentElement.clientHeight,
+            vvHeight: window.visualViewport?.height ?? null,
+            vvOffsetTop: window.visualViewport?.offsetTop ?? null,
+            screenHeight: window.screen.height,
+            activeTag: active?.tagName ?? null,
+            activeBottom: active?.getBoundingClientRect().bottom ?? null,
+          }),
+      );
+    }
     const own = followsEdge
       ? edgeProgress(progress, edge, Math.abs(target - from), rising)
       : progress;
