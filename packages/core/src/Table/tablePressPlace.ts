@@ -13,6 +13,7 @@
  */
 
 import {installPlaceMeasure} from '../utils/pressFeedback';
+import {parentAcrossShadow} from '../utils/flatTree';
 import {sharedState} from '../utils/sharedRealm';
 import {observeResize} from '../utils/sharedResizeObserver';
 
@@ -159,7 +160,7 @@ function offsetsCountFrom(element: HTMLElement, block: HTMLElement): boolean {
   ) {
     if (
       node == null ||
-      node.assignedSlot != null ||
+      parentAcrossShadow(node) !== node.parentElement ||
       hasOwnZoom(node) ||
       (node !== element && (node.scrollTop !== 0 || node.scrollLeft !== 0))
     ) {
