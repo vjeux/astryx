@@ -1,0 +1,8506 @@
+{
+ "desktop-1280--text-100--light": {
+  "main": {
+   "file": "desktop-1280--text-100--light--main.png",
+   "rootFontSize": "16px",
+   "pointerCoarse": false,
+   "innerWidth": 1280,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 16,
+       "right": 256,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 268,
+       "right": 508,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 520,
+       "right": 760,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 28,
+       "top": 76,
+       "bottom": 104,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 140,
+       "bottom": 172,
+       "left": 16,
+       "right": 256,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 140,
+       "bottom": 168,
+       "left": 268,
+       "right": 453,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 16,
+       "right": 256,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 268,
+       "right": 508,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 520,
+       "right": 760,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 32,
+       "top": 256,
+       "bottom": 288,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 324,
+       "bottom": 356,
+       "left": 16,
+       "right": 256,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 324,
+       "bottom": 356,
+       "left": 268,
+       "right": 453,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 16,
+       "right": 256,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 268,
+       "right": 508,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 520,
+       "right": 760,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 36,
+       "top": 444,
+       "bottom": 480,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 516,
+       "bottom": 548,
+       "left": 16,
+       "right": 256,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 516,
+       "bottom": 552,
+       "left": 268,
+       "right": 453,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 596,
+       "bottom": 628,
+       "left": 16,
+       "right": 136,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 252.8
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 16,
+       "right": 252.8,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 268.8,
+      "right": 505.59
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 268.8,
+       "right": 505.59,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 521.59,
+      "right": 758.39
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 521.59,
+       "right": 758.39,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 774.39,
+      "right": 1011.19
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 774.39,
+       "right": 1011.19,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1027.19,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 1027.19,
+       "right": 1207,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 632
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 748,
+       "bottom": 780,
+       "left": 16,
+       "right": 632,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 648,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 748,
+       "bottom": 780,
+       "left": 648,
+       "right": 1214,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "topDelta": 0,
+    "bottomDelta": 0,
+    "fillLeft": 0,
+    "fillRight": 0,
+    "rowWidth": 1248,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      32,
+      32,
+      32,
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": 0,
+     "rowWidth": 1248,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": 0,
+     "rowWidth": 1248,
+     "oneLine": true
+    }
+   ],
+   "mode": "light"
+  },
+  "pr": {
+   "file": "desktop-1280--text-100--light--pr.png",
+   "rootFontSize": "16px",
+   "pointerCoarse": false,
+   "innerWidth": 1280,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 16,
+       "right": 256,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 268,
+       "right": 508,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 520,
+       "right": 760,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 28,
+       "top": 76,
+       "bottom": 104,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 140,
+       "bottom": 172,
+       "left": 16,
+       "right": 256,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 140,
+       "bottom": 168,
+       "left": 268,
+       "right": 453,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 16,
+       "right": 256,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 268,
+       "right": 508,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 520,
+       "right": 760,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 216,
+       "bottom": 248,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 32,
+       "top": 256,
+       "bottom": 288,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 324,
+       "bottom": 356,
+       "left": 16,
+       "right": 256,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 324,
+       "bottom": 356,
+       "left": 268,
+       "right": 453,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 16,
+       "right": 256,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 268,
+       "right": 508,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 520,
+       "right": 760,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 400,
+       "bottom": 436,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 36,
+       "top": 444,
+       "bottom": 480,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 516,
+       "bottom": 548,
+       "left": 16,
+       "right": 256,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 516,
+       "bottom": 552,
+       "left": 268,
+       "right": 453,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 596,
+       "bottom": 628,
+       "left": 16,
+       "right": 136,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 252.8
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 16,
+       "right": 252.8,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 268.8,
+      "right": 505.59
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 268.8,
+       "right": 505.59,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 521.59,
+      "right": 758.39
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 521.59,
+       "right": 758.39,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 774.39,
+      "right": 1011.19
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 774.39,
+       "right": 1011.19,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1027.19,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 1027.19,
+       "right": 1207,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 632
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 748,
+       "bottom": 780,
+       "left": 16,
+       "right": 632,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 648,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 748,
+       "bottom": 780,
+       "left": 648,
+       "right": 1214,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "topDelta": 0,
+    "bottomDelta": 0,
+    "fillLeft": 0,
+    "fillRight": 0,
+    "rowWidth": 1248,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      32,
+      32,
+      32,
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": 0,
+     "rowWidth": 1248,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": 0,
+     "rowWidth": 1248,
+     "oneLine": true
+    }
+   ],
+   "mode": "light"
+  }
+ },
+ "desktop-1280--text-200--light": {
+  "main": {
+   "file": "desktop-1280--text-200--light--main.png",
+   "rootFontSize": "32px",
+   "pointerCoarse": false,
+   "innerWidth": 1280,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0",
+        "div clips 6px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      },
+      {
+       "height": 28,
+       "top": 108,
+       "bottom": 136,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 102.0..142.0 outside frame 109.0..135.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 196,
+       "bottom": 228,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 195.0..229.0 outside frame 197.0..227.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 196,
+       "bottom": 224,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 190.0..230.0 outside frame 197.0..223.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0",
+        "div clips 5px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0"
+       ]
+      },
+      {
+       "height": 32,
+       "top": 344,
+       "bottom": 376,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 340.0..380.0 outside frame 345.0..375.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 436,
+       "bottom": 468,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 435.0..469.0 outside frame 437.0..467.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 436,
+       "bottom": 468,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 432.0..472.0 outside frame 437.0..467.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0",
+        "div clips 4px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0"
+       ]
+      },
+      {
+       "height": 36,
+       "top": 588,
+       "bottom": 624,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 586.0..626.0 outside frame 589.0..623.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 684,
+       "bottom": 716,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 683.0..717.0 outside frame 685.0..715.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 684,
+       "bottom": 720,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 682.0..722.0 outside frame 685.0..719.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 828,
+       "bottom": 860,
+       "left": 16,
+       "right": 136,
+       "lineBox": 34,
+       "lines": 2,
+       "issues": [
+        "text \"Choose file\" line 807.0..841.0 outside frame 829.0..859.0",
+        "text \"Choose file\" line 847.0..881.0 outside frame 829.0..859.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 928,
+       "bottom": 970,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 790
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 928,
+       "bottom": 960,
+       "left": 403,
+       "right": 790,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 924.0..964.0 outside frame 929.0..959.0",
+        "div clips 5px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 822,
+      "right": 1225
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 928,
+       "bottom": 960,
+       "left": 822,
+       "right": 1225,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 924.0..964.0 outside frame 929.0..959.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 1257,
+      "right": 1660
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 928,
+       "bottom": 960,
+       "left": 1257,
+       "right": 1660,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 924.0..964.0 outside frame 929.0..959.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1692,
+      "right": 2159
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 928,
+       "bottom": 960,
+       "left": 1692,
+       "right": 2047,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 924.0..964.0 outside frame 929.0..959.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 624
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1038,
+       "bottom": 1070,
+       "left": 16,
+       "right": 624,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1034.0..1074.0 outside frame 1039.0..1069.0",
+        "div clips 5px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 656,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1038,
+       "bottom": 1070,
+       "left": 656,
+       "right": 1165,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1034.0..1074.0 outside frame 1039.0..1069.0"
+       ]
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     42,
+     32,
+     32,
+     32,
+     32
+    ],
+    "topDelta": 0,
+    "bottomDelta": 10,
+    "fillLeft": 0,
+    "fillRight": -895,
+    "rowWidth": 1248,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      42,
+      32,
+      32,
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 10,
+     "fillLeft": 0,
+     "fillRight": -895,
+     "rowWidth": 1248,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": 0,
+     "rowWidth": 1248,
+     "oneLine": true
+    }
+   ],
+   "mode": "light"
+  },
+  "pr": {
+   "file": "desktop-1280--text-200--light--pr.png",
+   "rootFontSize": "32px",
+   "pointerCoarse": false,
+   "innerWidth": 1280,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 64,
+       "bottom": 115,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 122,
+       "bottom": 164,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 224,
+       "bottom": 266,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 224,
+       "bottom": 266,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 334,
+       "bottom": 376,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 334,
+       "bottom": 385,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 334,
+       "bottom": 376,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 334,
+       "bottom": 376,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 334,
+       "bottom": 376,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 392,
+       "bottom": 434,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 494,
+       "bottom": 536,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 494,
+       "bottom": 536,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 604,
+       "bottom": 646,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 604,
+       "bottom": 655,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 604,
+       "bottom": 646,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 604,
+       "bottom": 646,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 604,
+       "bottom": 646,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 662,
+       "bottom": 704,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 764,
+       "bottom": 806,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 764,
+       "bottom": 806,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 82,
+       "top": 914,
+       "bottom": 996,
+       "left": 16,
+       "right": 136,
+       "lineBox": 34,
+       "lines": 2,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1064,
+       "bottom": 1106,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 790
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 1064,
+       "bottom": 1115,
+       "left": 403,
+       "right": 790,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 822,
+      "right": 1225
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1064,
+       "bottom": 1106,
+       "left": 822,
+       "right": 1225,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 1257,
+      "right": 1660
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1064,
+       "bottom": 1106,
+       "left": 1257,
+       "right": 1660,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1692,
+      "right": 2159
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1064,
+       "bottom": 1106,
+       "left": 1692,
+       "right": 2047,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 624
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 1183,
+       "bottom": 1234,
+       "left": 16,
+       "right": 624,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 656,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1183,
+       "bottom": 1225,
+       "left": 656,
+       "right": 1165,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     42,
+     51,
+     42,
+     42,
+     42
+    ],
+    "topDelta": 0,
+    "bottomDelta": 9,
+    "fillLeft": 0,
+    "fillRight": -895,
+    "rowWidth": 1248,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      42,
+      51,
+      42,
+      42,
+      42
+     ],
+     "topDelta": 0,
+     "bottomDelta": 9,
+     "fillLeft": 0,
+     "fillRight": -895,
+     "rowWidth": 1248,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      51,
+      42
+     ],
+     "topDelta": 0,
+     "bottomDelta": 9,
+     "fillLeft": 0,
+     "fillRight": 0,
+     "rowWidth": 1248,
+     "oneLine": true
+    }
+   ],
+   "mode": "light"
+  }
+ },
+ "phone-390--text-100--light": {
+  "main": {
+   "file": "phone-390--text-100--light--main.png",
+   "rootFontSize": "16px",
+   "pointerCoarse": true,
+   "innerWidth": 390,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 104,
+       "bottom": 132,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 168,
+       "bottom": 196,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 232,
+       "bottom": 260,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 296,
+       "bottom": 324,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 28,
+       "top": 332,
+       "bottom": 360,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 396,
+       "bottom": 428,
+       "left": 16,
+       "right": 374,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 464,
+       "bottom": 492,
+       "left": 16,
+       "right": 319,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 536,
+       "bottom": 568,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 604,
+       "bottom": 636,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 740,
+       "bottom": 772,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 808,
+       "bottom": 840,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 32,
+       "top": 848,
+       "bottom": 880,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 916,
+       "bottom": 948,
+       "left": 16,
+       "right": 374,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 984,
+       "bottom": 1016,
+       "left": 16,
+       "right": 319,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1060,
+       "bottom": 1096,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1132,
+       "bottom": 1168,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1204,
+       "bottom": 1240,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1276,
+       "bottom": 1312,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1348,
+       "bottom": 1384,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 36,
+       "top": 1392,
+       "bottom": 1428,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1464,
+       "bottom": 1496,
+       "left": 16,
+       "right": 374,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1532,
+       "bottom": 1568,
+       "left": 16,
+       "right": 319,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1612,
+       "bottom": 1644,
+       "left": 16,
+       "right": 136,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 193
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 16,
+       "right": 193,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 209,
+      "right": 386
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 209,
+       "right": 386,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 402,
+      "right": 582
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 402,
+       "right": 582,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 598,
+      "right": 718
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 598,
+       "right": 718,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 734,
+      "right": 968
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 734,
+       "right": 911,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 193
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1764,
+       "bottom": 1796,
+       "left": 16,
+       "right": 193,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 209,
+      "right": 436
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1764,
+       "bottom": 1796,
+       "left": 209,
+       "right": 386,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "topDelta": 0,
+    "bottomDelta": 0,
+    "fillLeft": 0,
+    "fillRight": -594,
+    "rowWidth": 358,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      32,
+      32,
+      32,
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -594,
+     "rowWidth": 358,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -62,
+     "rowWidth": 358,
+     "oneLine": true
+    }
+   ],
+   "mode": "light"
+  },
+  "pr": {
+   "file": "phone-390--text-100--light--pr.png",
+   "rootFontSize": "16px",
+   "pointerCoarse": true,
+   "innerWidth": 390,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 40,
+       "bottom": 68,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 104,
+       "bottom": 132,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 168,
+       "bottom": 196,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 232,
+       "bottom": 260,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 296,
+       "bottom": 324,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 28,
+       "top": 332,
+       "bottom": 360,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 396,
+       "bottom": 428,
+       "left": 16,
+       "right": 374,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 464,
+       "bottom": 492,
+       "left": 16,
+       "right": 319,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 536,
+       "bottom": 568,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 604,
+       "bottom": 636,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 672,
+       "bottom": 704,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 740,
+       "bottom": 772,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 808,
+       "bottom": 840,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 32,
+       "top": 848,
+       "bottom": 880,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 916,
+       "bottom": 948,
+       "left": 16,
+       "right": 374,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 984,
+       "bottom": 1016,
+       "left": 16,
+       "right": 319,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1060,
+       "bottom": 1096,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1132,
+       "bottom": 1168,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1204,
+       "bottom": 1240,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1276,
+       "bottom": 1312,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1348,
+       "bottom": 1384,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 36,
+       "top": 1392,
+       "bottom": 1428,
+       "left": 16,
+       "right": 374,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1464,
+       "bottom": 1496,
+       "left": 16,
+       "right": 374,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1532,
+       "bottom": 1568,
+       "left": 16,
+       "right": 319,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1612,
+       "bottom": 1644,
+       "left": 16,
+       "right": 136,
+       "lineBox": 17,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 193
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 16,
+       "right": 193,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 209,
+      "right": 386
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 209,
+       "right": 386,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 402,
+      "right": 582
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 402,
+       "right": 582,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 598,
+      "right": 718
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 598,
+       "right": 718,
+       "lineBox": 20,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 734,
+      "right": 968
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1688,
+       "bottom": 1720,
+       "left": 734,
+       "right": 911,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 193
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1764,
+       "bottom": 1796,
+       "left": 16,
+       "right": 193,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 209,
+      "right": 436
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1764,
+       "bottom": 1796,
+       "left": 209,
+       "right": 386,
+       "lineBox": 20,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     32,
+     32,
+     32,
+     32,
+     32
+    ],
+    "topDelta": 0,
+    "bottomDelta": 0,
+    "fillLeft": 0,
+    "fillRight": -594,
+    "rowWidth": 358,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      32,
+      32,
+      32,
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -594,
+     "rowWidth": 358,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -62,
+     "rowWidth": 358,
+     "oneLine": true
+    }
+   ],
+   "mode": "light"
+  }
+ },
+ "phone-390--text-200--light": {
+  "main": {
+   "file": "phone-390--text-200--light--main.png",
+   "rootFontSize": "32px",
+   "pointerCoarse": true,
+   "innerWidth": 390,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 152,
+       "bottom": 180,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 146.0..186.0 outside frame 153.0..179.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 240,
+       "bottom": 268,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 234.0..274.0 outside frame 241.0..267.0",
+        "text \"November 19, 2\" line 237.0..271.0 outside frame 241.0..267.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 328,
+       "bottom": 356,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 322.0..362.0 outside frame 329.0..355.0",
+        "text \"2:30 PM\" line 325.0..359.0 outside frame 329.0..355.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 416,
+       "bottom": 444,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 410.0..450.0 outside frame 417.0..443.0",
+        "text \"November 19, 2\" line 413.0..447.0 outside frame 417.0..443.0"
+       ]
+      },
+      {
+       "height": 28,
+       "top": 460,
+       "bottom": 488,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 454.0..494.0 outside frame 461.0..487.0",
+        "text \"2:30 PM\" line 457.0..491.0 outside frame 461.0..487.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 548,
+       "bottom": 580,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 547.0..581.0 outside frame 549.0..579.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 640,
+       "bottom": 668,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 634.0..674.0 outside frame 641.0..667.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 736,
+       "bottom": 768,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 732.0..772.0 outside frame 737.0..767.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 828,
+       "bottom": 860,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 824.0..864.0 outside frame 829.0..859.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 920,
+       "bottom": 952,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 916.0..956.0 outside frame 921.0..951.0",
+        "text \"November 19, 2\" line 919.0..953.0 outside frame 921.0..951.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1012,
+       "bottom": 1044,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1008.0..1048.0 outside frame 1013.0..1043.0",
+        "text \"2:30 PM\" line 1011.0..1045.0 outside frame 1013.0..1043.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1104,
+       "bottom": 1136,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1100.0..1140.0 outside frame 1105.0..1135.0",
+        "text \"November 19, 2\" line 1103.0..1137.0 outside frame 1105.0..1135.0"
+       ]
+      },
+      {
+       "height": 32,
+       "top": 1152,
+       "bottom": 1184,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1148.0..1188.0 outside frame 1153.0..1183.0",
+        "text \"2:30 PM\" line 1151.0..1185.0 outside frame 1153.0..1183.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1244,
+       "bottom": 1276,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 1243.0..1277.0 outside frame 1245.0..1275.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1336,
+       "bottom": 1368,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1332.0..1372.0 outside frame 1337.0..1367.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1436,
+       "bottom": 1472,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1434.0..1474.0 outside frame 1437.0..1471.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1532,
+       "bottom": 1568,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1530.0..1570.0 outside frame 1533.0..1567.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1628,
+       "bottom": 1664,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1626.0..1666.0 outside frame 1629.0..1663.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1724,
+       "bottom": 1760,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1722.0..1762.0 outside frame 1725.0..1759.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1820,
+       "bottom": 1856,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1818.0..1858.0 outside frame 1821.0..1855.0"
+       ]
+      },
+      {
+       "height": 36,
+       "top": 1872,
+       "bottom": 1908,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1870.0..1910.0 outside frame 1873.0..1907.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1968,
+       "bottom": 2000,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 1967.0..2001.0 outside frame 1969.0..1999.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 2060,
+       "bottom": 2096,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2058.0..2098.0 outside frame 2061.0..2095.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2204,
+       "bottom": 2236,
+       "left": 16,
+       "right": 136,
+       "lineBox": 34,
+       "lines": 2,
+       "issues": [
+        "text \"Choose file\" line 2183.0..2217.0 outside frame 2205.0..2235.0",
+        "text \"Choose file\" line 2223.0..2257.0 outside frame 2205.0..2235.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2304,
+       "bottom": 2346,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 758
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2304,
+       "bottom": 2336,
+       "left": 403,
+       "right": 758,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2300.0..2340.0 outside frame 2305.0..2335.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 790,
+      "right": 1082
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2304,
+       "bottom": 2336,
+       "left": 790,
+       "right": 1082,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 2300.0..2340.0 outside frame 2305.0..2335.0",
+        "text \"November 19, 2\" line 2303.0..2337.0 outside frame 2305.0..2335.0",
+        "text \"November 19, 2\" line 2303.0..2337.0 outside frame 2305.0..2335.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 1114,
+      "right": 1328
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2304,
+       "bottom": 2336,
+       "left": 1114,
+       "right": 1328,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 2300.0..2340.0 outside frame 2305.0..2335.0",
+        "text \"9:15 AM\" line 2303.0..2337.0 outside frame 2305.0..2335.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1360,
+      "right": 1827
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2304,
+       "bottom": 2336,
+       "left": 1360,
+       "right": 1715,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2300.0..2340.0 outside frame 2305.0..2335.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2414,
+       "bottom": 2446,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2410.0..2450.0 outside frame 2415.0..2445.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 857
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2414,
+       "bottom": 2446,
+       "left": 403,
+       "right": 758,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2410.0..2450.0 outside frame 2415.0..2445.0"
+       ]
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     42,
+     32,
+     32,
+     32,
+     32
+    ],
+    "topDelta": 0,
+    "bottomDelta": 10,
+    "fillLeft": 0,
+    "fillRight": -1453,
+    "rowWidth": 358,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      42,
+      32,
+      32,
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 10,
+     "fillLeft": 0,
+     "fillRight": -1453,
+     "rowWidth": 358,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -483,
+     "rowWidth": 358,
+     "oneLine": true
+    }
+   ],
+   "mode": "light"
+  },
+  "pr": {
+   "file": "phone-390--text-200--light--pr.png",
+   "rootFontSize": "32px",
+   "pointerCoarse": true,
+   "innerWidth": 390,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 166,
+       "bottom": 208,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 268,
+       "bottom": 310,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 370,
+       "bottom": 412,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 472,
+       "bottom": 514,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 530,
+       "bottom": 572,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 632,
+       "bottom": 674,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 734,
+       "bottom": 776,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 844,
+       "bottom": 886,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 946,
+       "bottom": 988,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1048,
+       "bottom": 1090,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1150,
+       "bottom": 1192,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1252,
+       "bottom": 1294,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 1310,
+       "bottom": 1352,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1412,
+       "bottom": 1454,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1514,
+       "bottom": 1556,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1624,
+       "bottom": 1666,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1726,
+       "bottom": 1768,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1828,
+       "bottom": 1870,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1930,
+       "bottom": 1972,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2032,
+       "bottom": 2074,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 2090,
+       "bottom": 2132,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2192,
+       "bottom": 2234,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2294,
+       "bottom": 2336,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 82,
+       "top": 2444,
+       "bottom": 2526,
+       "left": 16,
+       "right": 136,
+       "lineBox": 34,
+       "lines": 2,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 758
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 403,
+       "right": 758,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 790,
+      "right": 1082
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 790,
+       "right": 1082,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 1114,
+      "right": 1328
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 1114,
+       "right": 1328,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1360,
+      "right": 1827
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 1360,
+       "right": 1715,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2704,
+       "bottom": 2746,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 857
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2704,
+       "bottom": 2746,
+       "left": 403,
+       "right": 758,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     42,
+     42,
+     42,
+     42,
+     42
+    ],
+    "topDelta": 0,
+    "bottomDelta": 0,
+    "fillLeft": 0,
+    "fillRight": -1453,
+    "rowWidth": 358,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      42,
+      42,
+      42,
+      42,
+      42
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -1453,
+     "rowWidth": 358,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      42,
+      42
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -483,
+     "rowWidth": 358,
+     "oneLine": true
+    }
+   ],
+   "mode": "light"
+  }
+ },
+ "desktop-1280--text-200--dark": {
+  "main": {
+   "file": "desktop-1280--text-200--dark--main.png",
+   "rootFontSize": "32px",
+   "pointerCoarse": false,
+   "innerWidth": 1280,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0",
+        "div clips 6px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      },
+      {
+       "height": 28,
+       "top": 108,
+       "bottom": 136,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 102.0..142.0 outside frame 109.0..135.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 196,
+       "bottom": 228,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 195.0..229.0 outside frame 197.0..227.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 196,
+       "bottom": 224,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 190.0..230.0 outside frame 197.0..223.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0",
+        "div clips 5px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 296,
+       "bottom": 328,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 292.0..332.0 outside frame 297.0..327.0"
+       ]
+      },
+      {
+       "height": 32,
+       "top": 344,
+       "bottom": 376,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 340.0..380.0 outside frame 345.0..375.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 436,
+       "bottom": 468,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 435.0..469.0 outside frame 437.0..467.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 436,
+       "bottom": 468,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 432.0..472.0 outside frame 437.0..467.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0",
+        "div clips 4px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 536,
+       "bottom": 572,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 534.0..574.0 outside frame 537.0..571.0"
+       ]
+      },
+      {
+       "height": 36,
+       "top": 588,
+       "bottom": 624,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 586.0..626.0 outside frame 589.0..623.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 684,
+       "bottom": 716,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 683.0..717.0 outside frame 685.0..715.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 684,
+       "bottom": 720,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 682.0..722.0 outside frame 685.0..719.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 828,
+       "bottom": 860,
+       "left": 16,
+       "right": 136,
+       "lineBox": 34,
+       "lines": 2,
+       "issues": [
+        "text \"Choose file\" line 807.0..841.0 outside frame 829.0..859.0",
+        "text \"Choose file\" line 847.0..881.0 outside frame 829.0..859.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 928,
+       "bottom": 970,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 790
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 928,
+       "bottom": 960,
+       "left": 403,
+       "right": 790,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 924.0..964.0 outside frame 929.0..959.0",
+        "div clips 5px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 822,
+      "right": 1225
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 928,
+       "bottom": 960,
+       "left": 822,
+       "right": 1225,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 924.0..964.0 outside frame 929.0..959.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 1257,
+      "right": 1660
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 928,
+       "bottom": 960,
+       "left": 1257,
+       "right": 1660,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 924.0..964.0 outside frame 929.0..959.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1692,
+      "right": 2159
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 928,
+       "bottom": 960,
+       "left": 1692,
+       "right": 2047,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 924.0..964.0 outside frame 929.0..959.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 624
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1038,
+       "bottom": 1070,
+       "left": 16,
+       "right": 624,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1034.0..1074.0 outside frame 1039.0..1069.0",
+        "div clips 5px (overflow hidden)"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 656,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1038,
+       "bottom": 1070,
+       "left": 656,
+       "right": 1165,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1034.0..1074.0 outside frame 1039.0..1069.0"
+       ]
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     42,
+     32,
+     32,
+     32,
+     32
+    ],
+    "topDelta": 0,
+    "bottomDelta": 10,
+    "fillLeft": 0,
+    "fillRight": -895,
+    "rowWidth": 1248,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      42,
+      32,
+      32,
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 10,
+     "fillLeft": 0,
+     "fillRight": -895,
+     "rowWidth": 1248,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": 0,
+     "rowWidth": 1248,
+     "oneLine": true
+    }
+   ],
+   "mode": "dark"
+  },
+  "pr": {
+   "file": "desktop-1280--text-200--dark--pr.png",
+   "rootFontSize": "32px",
+   "pointerCoarse": false,
+   "innerWidth": 1280,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 64,
+       "bottom": 115,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 122,
+       "bottom": 164,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 224,
+       "bottom": 266,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 224,
+       "bottom": 266,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 334,
+       "bottom": 376,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 334,
+       "bottom": 385,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 334,
+       "bottom": 376,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 334,
+       "bottom": 376,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 334,
+       "bottom": 376,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 392,
+       "bottom": 434,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 494,
+       "bottom": 536,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 494,
+       "bottom": 536,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 604,
+       "bottom": 646,
+       "left": 16,
+       "right": 256,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 604,
+       "bottom": 655,
+       "left": 268,
+       "right": 508,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 520,
+      "right": 760
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 604,
+       "bottom": 646,
+       "left": 520,
+       "right": 760,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 772,
+      "right": 1012
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 604,
+       "bottom": 646,
+       "left": 772,
+       "right": 1012,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 1024,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 604,
+       "bottom": 646,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 662,
+       "bottom": 704,
+       "left": 1024,
+       "right": 1264,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 256
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 764,
+       "bottom": 806,
+       "left": 16,
+       "right": 256,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 268,
+      "right": 508
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 764,
+       "bottom": 806,
+       "left": 268,
+       "right": 399,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 82,
+       "top": 914,
+       "bottom": 996,
+       "left": 16,
+       "right": 136,
+       "lineBox": 34,
+       "lines": 2,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1064,
+       "bottom": 1106,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 790
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 1064,
+       "bottom": 1115,
+       "left": 403,
+       "right": 790,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 822,
+      "right": 1225
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1064,
+       "bottom": 1106,
+       "left": 822,
+       "right": 1225,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 1257,
+      "right": 1660
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1064,
+       "bottom": 1106,
+       "left": 1257,
+       "right": 1660,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1692,
+      "right": 2159
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1064,
+       "bottom": 1106,
+       "left": 1692,
+       "right": 2047,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 624
+     },
+     "frames": [
+      {
+       "height": 51,
+       "top": 1183,
+       "bottom": 1234,
+       "left": 16,
+       "right": 624,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 656,
+      "right": 1264
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1183,
+       "bottom": 1225,
+       "left": 656,
+       "right": 1165,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     42,
+     51,
+     42,
+     42,
+     42
+    ],
+    "topDelta": 0,
+    "bottomDelta": 9,
+    "fillLeft": 0,
+    "fillRight": -895,
+    "rowWidth": 1248,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      42,
+      51,
+      42,
+      42,
+      42
+     ],
+     "topDelta": 0,
+     "bottomDelta": 9,
+     "fillLeft": 0,
+     "fillRight": -895,
+     "rowWidth": 1248,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      51,
+      42
+     ],
+     "topDelta": 0,
+     "bottomDelta": 9,
+     "fillLeft": 0,
+     "fillRight": 0,
+     "rowWidth": 1248,
+     "oneLine": true
+    }
+   ],
+   "mode": "dark"
+  }
+ },
+ "phone-390--text-200--dark": {
+  "main": {
+   "file": "phone-390--text-200--dark--main.png",
+   "rootFontSize": "32px",
+   "pointerCoarse": true,
+   "innerWidth": 390,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 64,
+       "bottom": 92,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 58.0..98.0 outside frame 65.0..91.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 152,
+       "bottom": 180,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 146.0..186.0 outside frame 153.0..179.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 240,
+       "bottom": 268,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 234.0..274.0 outside frame 241.0..267.0",
+        "text \"November 19, 2\" line 237.0..271.0 outside frame 241.0..267.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 328,
+       "bottom": 356,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 322.0..362.0 outside frame 329.0..355.0",
+        "text \"2:30 PM\" line 325.0..359.0 outside frame 329.0..355.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 416,
+       "bottom": 444,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 410.0..450.0 outside frame 417.0..443.0",
+        "text \"November 19, 2\" line 413.0..447.0 outside frame 417.0..443.0"
+       ]
+      },
+      {
+       "height": 28,
+       "top": 460,
+       "bottom": 488,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 454.0..494.0 outside frame 461.0..487.0",
+        "text \"2:30 PM\" line 457.0..491.0 outside frame 461.0..487.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 548,
+       "bottom": 580,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 547.0..581.0 outside frame 549.0..579.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 28,
+       "top": 640,
+       "bottom": 668,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 634.0..674.0 outside frame 641.0..667.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 736,
+       "bottom": 768,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 732.0..772.0 outside frame 737.0..767.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 828,
+       "bottom": 860,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 824.0..864.0 outside frame 829.0..859.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 920,
+       "bottom": 952,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 916.0..956.0 outside frame 921.0..951.0",
+        "text \"November 19, 2\" line 919.0..953.0 outside frame 921.0..951.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1012,
+       "bottom": 1044,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1008.0..1048.0 outside frame 1013.0..1043.0",
+        "text \"2:30 PM\" line 1011.0..1045.0 outside frame 1013.0..1043.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1104,
+       "bottom": 1136,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1100.0..1140.0 outside frame 1105.0..1135.0",
+        "text \"November 19, 2\" line 1103.0..1137.0 outside frame 1105.0..1135.0"
+       ]
+      },
+      {
+       "height": 32,
+       "top": 1152,
+       "bottom": 1184,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1148.0..1188.0 outside frame 1153.0..1183.0",
+        "text \"2:30 PM\" line 1151.0..1185.0 outside frame 1153.0..1183.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1244,
+       "bottom": 1276,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 1243.0..1277.0 outside frame 1245.0..1275.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1336,
+       "bottom": 1368,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1332.0..1372.0 outside frame 1337.0..1367.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1436,
+       "bottom": 1472,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1434.0..1474.0 outside frame 1437.0..1471.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1532,
+       "bottom": 1568,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 1530.0..1570.0 outside frame 1533.0..1567.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1628,
+       "bottom": 1664,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1626.0..1666.0 outside frame 1629.0..1663.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1724,
+       "bottom": 1760,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1722.0..1762.0 outside frame 1725.0..1759.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 1820,
+       "bottom": 1856,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1818.0..1858.0 outside frame 1821.0..1855.0"
+       ]
+      },
+      {
+       "height": 36,
+       "top": 1872,
+       "bottom": 1908,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 1870.0..1910.0 outside frame 1873.0..1907.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 1968,
+       "bottom": 2000,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": [
+        "text \"Choose file\" line 1967.0..2001.0 outside frame 1969.0..1999.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 36,
+       "top": 2060,
+       "bottom": 2096,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2058.0..2098.0 outside frame 2061.0..2095.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2204,
+       "bottom": 2236,
+       "left": 16,
+       "right": 136,
+       "lineBox": 34,
+       "lines": 2,
+       "issues": [
+        "text \"Choose file\" line 2183.0..2217.0 outside frame 2205.0..2235.0",
+        "text \"Choose file\" line 2223.0..2257.0 outside frame 2205.0..2235.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2304,
+       "bottom": 2346,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 758
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2304,
+       "bottom": 2336,
+       "left": 403,
+       "right": 758,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2300.0..2340.0 outside frame 2305.0..2335.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 790,
+      "right": 1082
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2304,
+       "bottom": 2336,
+       "left": 790,
+       "right": 1082,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 2300.0..2340.0 outside frame 2305.0..2335.0",
+        "text \"November 19, 2\" line 2303.0..2337.0 outside frame 2305.0..2335.0",
+        "text \"November 19, 2\" line 2303.0..2337.0 outside frame 2305.0..2335.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 1114,
+      "right": 1328
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2304,
+       "bottom": 2336,
+       "left": 1114,
+       "right": 1328,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": [
+        "input box 2300.0..2340.0 outside frame 2305.0..2335.0",
+        "text \"9:15 AM\" line 2303.0..2337.0 outside frame 2305.0..2335.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1360,
+      "right": 1827
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2304,
+       "bottom": 2336,
+       "left": 1360,
+       "right": 1715,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2300.0..2340.0 outside frame 2305.0..2335.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2414,
+       "bottom": 2446,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2410.0..2450.0 outside frame 2415.0..2445.0"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 857
+     },
+     "frames": [
+      {
+       "height": 32,
+       "top": 2414,
+       "bottom": 2446,
+       "left": 403,
+       "right": 758,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": [
+        "input box 2410.0..2450.0 outside frame 2415.0..2445.0"
+       ]
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     42,
+     32,
+     32,
+     32,
+     32
+    ],
+    "topDelta": 0,
+    "bottomDelta": 10,
+    "fillLeft": 0,
+    "fillRight": -1453,
+    "rowWidth": 358,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      42,
+      32,
+      32,
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 10,
+     "fillLeft": 0,
+     "fillRight": -1453,
+     "rowWidth": 358,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      32,
+      32
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -483,
+     "rowWidth": 358,
+     "oneLine": true
+    }
+   ],
+   "mode": "dark"
+  },
+  "pr": {
+   "file": "phone-390--text-200--dark--pr.png",
+   "rootFontSize": "32px",
+   "pointerCoarse": true,
+   "innerWidth": 390,
+   "fields": [
+    {
+     "kind": "number",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 64,
+       "bottom": 106,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 166,
+       "bottom": 208,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 268,
+       "bottom": 310,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 370,
+       "bottom": 412,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 472,
+       "bottom": 514,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 530,
+       "bottom": 572,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 632,
+       "bottom": 674,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "sm",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 734,
+       "bottom": 776,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 844,
+       "bottom": 886,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 946,
+       "bottom": 988,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1048,
+       "bottom": 1090,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1150,
+       "bottom": 1192,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1252,
+       "bottom": 1294,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 1310,
+       "bottom": 1352,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1412,
+       "bottom": 1454,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1514,
+       "bottom": 1556,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1624,
+       "bottom": 1666,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "number-steppers",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1726,
+       "bottom": 1768,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "date",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1828,
+       "bottom": 1870,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "time",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 1930,
+       "bottom": 1972,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "datetime",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2032,
+       "bottom": 2074,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      },
+      {
+       "height": 42,
+       "top": 2090,
+       "bottom": 2132,
+       "left": 16,
+       "right": 374,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2192,
+       "bottom": 2234,
+       "left": 16,
+       "right": 374,
+       "lineBox": 34,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "group",
+     "size": "lg",
+     "wrapper": {
+      "left": 16,
+      "right": 374
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2294,
+       "bottom": 2336,
+       "left": 16,
+       "right": 265,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "file-narrow",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 136
+     },
+     "frames": [
+      {
+       "height": 82,
+       "top": 2444,
+       "bottom": 2526,
+       "left": 16,
+       "right": 136,
+       "lineBox": 34,
+       "lines": 2,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-text",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-number",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 758
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 403,
+       "right": 758,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-date",
+     "size": "md",
+     "wrapper": {
+      "left": 790,
+      "right": 1082
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 790,
+       "right": 1082,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-time",
+     "size": "md",
+     "wrapper": {
+      "left": 1114,
+      "right": 1328
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 1114,
+       "right": 1328,
+       "lineBox": 40,
+       "lines": 1,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row-group",
+     "size": "md",
+     "wrapper": {
+      "left": 1360,
+      "right": 1827
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2594,
+       "bottom": 2636,
+       "left": 1360,
+       "right": 1715,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-number",
+     "size": "md",
+     "wrapper": {
+      "left": 16,
+      "right": 371
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2704,
+       "bottom": 2746,
+       "left": 16,
+       "right": 371,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    },
+    {
+     "kind": "row2-group",
+     "size": "md",
+     "wrapper": {
+      "left": 403,
+      "right": 857
+     },
+     "frames": [
+      {
+       "height": 42,
+       "top": 2704,
+       "bottom": 2746,
+       "left": 403,
+       "right": 758,
+       "lineBox": 40,
+       "lines": 0,
+       "issues": []
+      }
+     ]
+    }
+   ],
+   "row": {
+    "name": "five",
+    "members": [
+     "row-text",
+     "row-number",
+     "row-date",
+     "row-time",
+     "row-group"
+    ],
+    "heights": [
+     42,
+     42,
+     42,
+     42,
+     42
+    ],
+    "topDelta": 0,
+    "bottomDelta": 0,
+    "fillLeft": 0,
+    "fillRight": -1453,
+    "rowWidth": 358,
+    "oneLine": true
+   },
+   "rows": [
+    {
+     "name": "five",
+     "members": [
+      "row-text",
+      "row-number",
+      "row-date",
+      "row-time",
+      "row-group"
+     ],
+     "heights": [
+      42,
+      42,
+      42,
+      42,
+      42
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -1453,
+     "rowWidth": 358,
+     "oneLine": true
+    },
+    {
+     "name": "two",
+     "members": [
+      "row2-number",
+      "row2-group"
+     ],
+     "heights": [
+      42,
+      42
+     ],
+     "topDelta": 0,
+     "bottomDelta": 0,
+     "fillLeft": 0,
+     "fillRight": -483,
+     "rowWidth": 358,
+     "oneLine": true
+    }
+   ],
+   "mode": "dark"
+  }
+ }
+}
