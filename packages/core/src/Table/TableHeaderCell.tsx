@@ -15,7 +15,7 @@
  * - /packages/cli/assets/templates/blocks/components/Table/ (showcase blocks)
  */
 
-import type {ReactNode} from 'react';
+import {useRef, type ReactNode} from 'react';
 import type {BaseProps} from '../BaseProps';
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -27,7 +27,11 @@ import {
 } from '../theme/tokens.stylex';
 import type {StyleXStyles} from '../theme/types';
 import type {TableContextActions} from './types';
-import {overflowStyles, containerEdgeStyles} from './table.stylex';
+import {
+  headerOverflowStyles,
+  overflowStyles,
+  containerEdgeStyles,
+} from './table.stylex';
 import {useTableContext, mergeXStyle} from './useTableCellStyles';
 import {
   hasTableContextActions,
@@ -35,6 +39,9 @@ import {
 } from './tableContextMenu';
 import {mergeProps} from '../utils';
 import {themeProps} from '../utils/themeProps';
+import {useMergedRefs} from '../hooks/useMergedRefs';
+import {composeEventHandlers} from '../utils/composeEventHandlers';
+import {useCutTextOnKeyboardFocus} from '../Text/TruncationTooltip';
 import {registerTablePressPlace} from './tablePressPlace';
 
 // Registered here, not in the press controller, so a page with no table carries
@@ -61,23 +68,38 @@ export interface TableHeaderCellProps extends BaseProps<HTMLTableCellElement> {
   contextMenuActions?: TableContextActions;
 }
 
+// The end padding is also the room header content may grow into before its
+// label truncates (BaseTable, sort plugin). The last column takes the
+// container edge inset.
 const densityStyles = stylex.create({
   compact: {
     paddingBlock: spacingVars['--spacing-1'],
-    paddingInline: spacingVars['--spacing-2'],
+    '--_table-header-inline': spacingVars['--spacing-2'],
+    paddingInline: 'var(--_table-header-inline)',
+    '--_table-header-end-room':
+      'var(--_table-edge-inline-end, var(--_table-header-inline))',
     fontSize: typeScaleVars['--text-label-size'],
+    lineHeight: typeScaleVars['--text-label-leading'],
     boxSizing: 'border-box',
   },
   balanced: {
     paddingBlock: spacingVars['--spacing-2'],
-    paddingInline: spacingVars['--spacing-3'],
+    '--_table-header-inline': spacingVars['--spacing-3'],
+    paddingInline: 'var(--_table-header-inline)',
+    '--_table-header-end-room':
+      'var(--_table-edge-inline-end, var(--_table-header-inline))',
     fontSize: typeScaleVars['--text-label-size'],
+    lineHeight: typeScaleVars['--text-label-leading'],
     boxSizing: 'border-box',
   },
   spacious: {
     paddingBlock: spacingVars['--spacing-3'],
-    paddingInline: spacingVars['--spacing-4'],
+    '--_table-header-inline': spacingVars['--spacing-4'],
+    paddingInline: 'var(--_table-header-inline)',
+    '--_table-header-end-room':
+      'var(--_table-edge-inline-end, var(--_table-header-inline))',
     fontSize: typeScaleVars['--text-label-size'],
+    lineHeight: typeScaleVars['--text-label-leading'],
     boxSizing: 'border-box',
   },
 });
@@ -156,6 +178,16 @@ export function TableHeaderCell({
 }: TableHeaderCellProps) {
   const ctx = useTableContext();
 
+  // A heading cut short by its column shows in full in a tooltip when keyboard
+  // focus reaches something inside the cell (a sortable header's sort
+  // control). Only a cell inside a Table truncates.
+  const cellRef = useRef<HTMLTableCellElement | null>(null);
+  const mergedRef = useMergedRefs(ref, cellRef);
+  const cutHeading = useCutTextOnKeyboardFocus({
+    anchorRef: cellRef,
+    isEnabled: ctx != null,
+  });
+
   // Header cells always get the bottom divider (separates header from body).
   // When used standalone (no table context) the cell renders plain, with no
   // density/divider styles.
@@ -166,7 +198,9 @@ export function TableHeaderCell({
       headerStyles.cell,
       densityStyles[ctx.density],
       headerDividerStyles.cell,
-      overflowStyles.cell,
+      ctx.textOverflow === 'truncate'
+        ? overflowStyles.cell
+        : headerOverflowStyles.cell,
       containerEdgeStyles[ctx.density],
     );
     // Column dividers come from the shared builder (column axis only).
@@ -190,15 +224,28 @@ export function TableHeaderCell({
 
   return (
     <th
-      ref={ref}
+      ref={mergedRef}
       {...props}
       {...mergeProps(
         themeProps('table-header-cell', {density: ctx?.density}),
         stylex.props(...mergeXStyle(cellStyles, xstyle)),
         incomingClassName,
         incomingStyle,
+      )}
+      onFocus={composeEventHandlers(props.onFocus, cutHeading.onFocus)}
+      onBlur={composeEventHandlers(props.onBlur, cutHeading.onBlur)}
+      onPointerDown={composeEventHandlers(
+        props.onPointerDown,
+        cutHeading.onPointerDown,
       )}>
       {content}
+      {cutHeading.cutText != null && cutHeading.Tooltip ? (
+        <cutHeading.Tooltip
+          anchorRef={cellRef}
+          content={cutHeading.cutText}
+          onHide={cutHeading.hide}
+        />
+      ) : null}
     </th>
   );
 }
