@@ -346,6 +346,10 @@ const styles = stylex.create({
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
+    // A flex item's default `min-width: auto` keeps the body at least as wide
+    // as its content. A wide field then pushes the body past the step. Zero
+    // releases that floor.
+    minWidth: 0,
   },
 
   // ===================== HORIZONTAL LAYOUT =====================
@@ -837,7 +841,9 @@ const styles = stylex.create({
   // Flexible segment (below the node) — grows to fill the step height and
   // meets the next node's leading segment.
   otSegFlexV: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '0%',
     minHeight: spacingVars['--spacing-2'],
   },
   // Fixed leading segment (above the node) — its height offsets the node down
@@ -1435,10 +1441,15 @@ export function Step({
   // complete ordered sequence with `aria-current` intact, while the summary row
   // below it owns the compact navigation controls and remains decorative apart
   // from those buttons.
+  // A compact step has no button to carry `aria-disabled`, and a list item
+  // cannot carry it, so a disabled step adds a hidden status word.
   const compactNameNode = isCompact ? (
     <>
       <VisuallyHidden>{label}</VisuallyHidden>
       {statusTextNode}
+      {isDisabled ? (
+        <VisuallyHidden>{t('@astryx.step.status.unavailable')}</VisuallyHidden>
+      ) : null}
     </>
   ) : null;
 

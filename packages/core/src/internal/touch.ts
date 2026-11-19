@@ -128,6 +128,13 @@ export type {ActionGroupTrackingOptions} from '../hooks/useActionGroupTracking';
 // Lab's TabBar finds a panel's scroll area with Core's scroll test.
 export {measureLogicalScrollAxis} from '../hooks/scrollGeometry';
 
+// A Lab group shares Core's group press tracking and the group-item mark.
+export {
+  useGroupPressTracking,
+  GROUP_PRESS_POINTERS,
+} from '../hooks/useGroupPressTracking';
+export {pressGroupItemProps} from '../privateAttributes/pressGroupItem.stylex';
+
 // Lab's RefreshControl cross-fades its list through a copy under Reduce
 // Motion, so the list shows on every frame.
 export {playReducedMotionCrossFade} from '../motion/reducedMotionCrossFade';

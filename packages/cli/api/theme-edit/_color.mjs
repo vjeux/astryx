@@ -8,7 +8,7 @@
  * @position api/theme-edit — pure helpers
  */
 
-import {CSS_WIDE} from './_tables.mjs';
+import {CSS_WIDE, wordTable} from './_tables.mjs';
 import {
   MATH_FUNCTION,
   cssNumber,
@@ -23,159 +23,169 @@ import {luminance, oklabToLinearRgb} from '../theme/palette/generate/color.mjs';
 /** @typedef {[number, number, number]} Rgb */
 
 /** The CSS named colors. */
-const NAMED = /** @type {Record<string, string>} */ ({
-  aliceblue: '#f0f8ff',
-  antiquewhite: '#faebd7',
-  aqua: '#00ffff',
-  aquamarine: '#7fffd4',
-  azure: '#f0ffff',
-  beige: '#f5f5dc',
-  bisque: '#ffe4c4',
-  black: '#000000',
-  blanchedalmond: '#ffebcd',
-  blue: '#0000ff',
-  blueviolet: '#8a2be2',
-  brown: '#a52a2a',
-  burlywood: '#deb887',
-  cadetblue: '#5f9ea0',
-  chartreuse: '#7fff00',
-  chocolate: '#d2691e',
-  coral: '#ff7f50',
-  cornflowerblue: '#6495ed',
-  cornsilk: '#fff8dc',
-  crimson: '#dc143c',
-  cyan: '#00ffff',
-  darkblue: '#00008b',
-  darkcyan: '#008b8b',
-  darkgoldenrod: '#b8860b',
-  darkgray: '#a9a9a9',
-  darkgreen: '#006400',
-  darkgrey: '#a9a9a9',
-  darkkhaki: '#bdb76b',
-  darkmagenta: '#8b008b',
-  darkolivegreen: '#556b2f',
-  darkorange: '#ff8c00',
-  darkorchid: '#9932cc',
-  darkred: '#8b0000',
-  darksalmon: '#e9967a',
-  darkseagreen: '#8fbc8f',
-  darkslateblue: '#483d8b',
-  darkslategray: '#2f4f4f',
-  darkslategrey: '#2f4f4f',
-  darkturquoise: '#00ced1',
-  darkviolet: '#9400d3',
-  deeppink: '#ff1493',
-  deepskyblue: '#00bfff',
-  dimgray: '#696969',
-  dimgrey: '#696969',
-  dodgerblue: '#1e90ff',
-  firebrick: '#b22222',
-  floralwhite: '#fffaf0',
-  forestgreen: '#228b22',
-  fuchsia: '#ff00ff',
-  gainsboro: '#dcdcdc',
-  ghostwhite: '#f8f8ff',
-  gold: '#ffd700',
-  goldenrod: '#daa520',
-  gray: '#808080',
-  green: '#008000',
-  greenyellow: '#adff2f',
-  grey: '#808080',
-  honeydew: '#f0fff0',
-  hotpink: '#ff69b4',
-  indianred: '#cd5c5c',
-  indigo: '#4b0082',
-  ivory: '#fffff0',
-  khaki: '#f0e68c',
-  lavender: '#e6e6fa',
-  lavenderblush: '#fff0f5',
-  lawngreen: '#7cfc00',
-  lemonchiffon: '#fffacd',
-  lightblue: '#add8e6',
-  lightcoral: '#f08080',
-  lightcyan: '#e0ffff',
-  lightgoldenrodyellow: '#fafad2',
-  lightgray: '#d3d3d3',
-  lightgreen: '#90ee90',
-  lightgrey: '#d3d3d3',
-  lightpink: '#ffb6c1',
-  lightsalmon: '#ffa07a',
-  lightseagreen: '#20b2aa',
-  lightskyblue: '#87cefa',
-  lightslategray: '#778899',
-  lightslategrey: '#778899',
-  lightsteelblue: '#b0c4de',
-  lightyellow: '#ffffe0',
-  lime: '#00ff00',
-  limegreen: '#32cd32',
-  linen: '#faf0e6',
-  magenta: '#ff00ff',
-  maroon: '#800000',
-  mediumaquamarine: '#66cdaa',
-  mediumblue: '#0000cd',
-  mediumorchid: '#ba55d3',
-  mediumpurple: '#9370db',
-  mediumseagreen: '#3cb371',
-  mediumslateblue: '#7b68ee',
-  mediumspringgreen: '#00fa9a',
-  mediumturquoise: '#48d1cc',
-  mediumvioletred: '#c71585',
-  midnightblue: '#191970',
-  mintcream: '#f5fffa',
-  mistyrose: '#ffe4e1',
-  moccasin: '#ffe4b5',
-  navajowhite: '#ffdead',
-  navy: '#000080',
-  oldlace: '#fdf5e6',
-  olive: '#808000',
-  olivedrab: '#6b8e23',
-  orange: '#ffa500',
-  orangered: '#ff4500',
-  orchid: '#da70d6',
-  palegoldenrod: '#eee8aa',
-  palegreen: '#98fb98',
-  paleturquoise: '#afeeee',
-  palevioletred: '#db7093',
-  papayawhip: '#ffefd5',
-  peachpuff: '#ffdab9',
-  peru: '#cd853f',
-  pink: '#ffc0cb',
-  plum: '#dda0dd',
-  powderblue: '#b0e0e6',
-  purple: '#800080',
-  rebeccapurple: '#663399',
-  red: '#ff0000',
-  rosybrown: '#bc8f8f',
-  royalblue: '#4169e1',
-  saddlebrown: '#8b4513',
-  salmon: '#fa8072',
-  sandybrown: '#f4a460',
-  seagreen: '#2e8b57',
-  seashell: '#fff5ee',
-  sienna: '#a0522d',
-  silver: '#c0c0c0',
-  skyblue: '#87ceeb',
-  slateblue: '#6a5acd',
-  slategray: '#708090',
-  slategrey: '#708090',
-  snow: '#fffafa',
-  springgreen: '#00ff7f',
-  steelblue: '#4682b4',
-  tan: '#d2b48c',
-  teal: '#008080',
-  thistle: '#d8bfd8',
-  tomato: '#ff6347',
-  turquoise: '#40e0d0',
-  violet: '#ee82ee',
-  wheat: '#f5deb3',
-  white: '#ffffff',
-  whitesmoke: '#f5f5f5',
-  yellow: '#ffff00',
-  yellowgreen: '#9acd32',
-});
+const NAMED = wordTable(
+  /** @type {Record<string, string>} */ ({
+    aliceblue: '#f0f8ff',
+    antiquewhite: '#faebd7',
+    aqua: '#00ffff',
+    aquamarine: '#7fffd4',
+    azure: '#f0ffff',
+    beige: '#f5f5dc',
+    bisque: '#ffe4c4',
+    black: '#000000',
+    blanchedalmond: '#ffebcd',
+    blue: '#0000ff',
+    blueviolet: '#8a2be2',
+    brown: '#a52a2a',
+    burlywood: '#deb887',
+    cadetblue: '#5f9ea0',
+    chartreuse: '#7fff00',
+    chocolate: '#d2691e',
+    coral: '#ff7f50',
+    cornflowerblue: '#6495ed',
+    cornsilk: '#fff8dc',
+    crimson: '#dc143c',
+    cyan: '#00ffff',
+    darkblue: '#00008b',
+    darkcyan: '#008b8b',
+    darkgoldenrod: '#b8860b',
+    darkgray: '#a9a9a9',
+    darkgreen: '#006400',
+    darkgrey: '#a9a9a9',
+    darkkhaki: '#bdb76b',
+    darkmagenta: '#8b008b',
+    darkolivegreen: '#556b2f',
+    darkorange: '#ff8c00',
+    darkorchid: '#9932cc',
+    darkred: '#8b0000',
+    darksalmon: '#e9967a',
+    darkseagreen: '#8fbc8f',
+    darkslateblue: '#483d8b',
+    darkslategray: '#2f4f4f',
+    darkslategrey: '#2f4f4f',
+    darkturquoise: '#00ced1',
+    darkviolet: '#9400d3',
+    deeppink: '#ff1493',
+    deepskyblue: '#00bfff',
+    dimgray: '#696969',
+    dimgrey: '#696969',
+    dodgerblue: '#1e90ff',
+    firebrick: '#b22222',
+    floralwhite: '#fffaf0',
+    forestgreen: '#228b22',
+    fuchsia: '#ff00ff',
+    gainsboro: '#dcdcdc',
+    ghostwhite: '#f8f8ff',
+    gold: '#ffd700',
+    goldenrod: '#daa520',
+    gray: '#808080',
+    green: '#008000',
+    greenyellow: '#adff2f',
+    grey: '#808080',
+    honeydew: '#f0fff0',
+    hotpink: '#ff69b4',
+    indianred: '#cd5c5c',
+    indigo: '#4b0082',
+    ivory: '#fffff0',
+    khaki: '#f0e68c',
+    lavender: '#e6e6fa',
+    lavenderblush: '#fff0f5',
+    lawngreen: '#7cfc00',
+    lemonchiffon: '#fffacd',
+    lightblue: '#add8e6',
+    lightcoral: '#f08080',
+    lightcyan: '#e0ffff',
+    lightgoldenrodyellow: '#fafad2',
+    lightgray: '#d3d3d3',
+    lightgreen: '#90ee90',
+    lightgrey: '#d3d3d3',
+    lightpink: '#ffb6c1',
+    lightsalmon: '#ffa07a',
+    lightseagreen: '#20b2aa',
+    lightskyblue: '#87cefa',
+    lightslategray: '#778899',
+    lightslategrey: '#778899',
+    lightsteelblue: '#b0c4de',
+    lightyellow: '#ffffe0',
+    lime: '#00ff00',
+    limegreen: '#32cd32',
+    linen: '#faf0e6',
+    magenta: '#ff00ff',
+    maroon: '#800000',
+    mediumaquamarine: '#66cdaa',
+    mediumblue: '#0000cd',
+    mediumorchid: '#ba55d3',
+    mediumpurple: '#9370db',
+    mediumseagreen: '#3cb371',
+    mediumslateblue: '#7b68ee',
+    mediumspringgreen: '#00fa9a',
+    mediumturquoise: '#48d1cc',
+    mediumvioletred: '#c71585',
+    midnightblue: '#191970',
+    mintcream: '#f5fffa',
+    mistyrose: '#ffe4e1',
+    moccasin: '#ffe4b5',
+    navajowhite: '#ffdead',
+    navy: '#000080',
+    oldlace: '#fdf5e6',
+    olive: '#808000',
+    olivedrab: '#6b8e23',
+    orange: '#ffa500',
+    orangered: '#ff4500',
+    orchid: '#da70d6',
+    palegoldenrod: '#eee8aa',
+    palegreen: '#98fb98',
+    paleturquoise: '#afeeee',
+    palevioletred: '#db7093',
+    papayawhip: '#ffefd5',
+    peachpuff: '#ffdab9',
+    peru: '#cd853f',
+    pink: '#ffc0cb',
+    plum: '#dda0dd',
+    powderblue: '#b0e0e6',
+    purple: '#800080',
+    rebeccapurple: '#663399',
+    red: '#ff0000',
+    rosybrown: '#bc8f8f',
+    royalblue: '#4169e1',
+    saddlebrown: '#8b4513',
+    salmon: '#fa8072',
+    sandybrown: '#f4a460',
+    seagreen: '#2e8b57',
+    seashell: '#fff5ee',
+    sienna: '#a0522d',
+    silver: '#c0c0c0',
+    skyblue: '#87ceeb',
+    slateblue: '#6a5acd',
+    slategray: '#708090',
+    slategrey: '#708090',
+    snow: '#fffafa',
+    springgreen: '#00ff7f',
+    steelblue: '#4682b4',
+    tan: '#d2b48c',
+    teal: '#008080',
+    thistle: '#d8bfd8',
+    tomato: '#ff6347',
+    turquoise: '#40e0d0',
+    violet: '#ee82ee',
+    wheat: '#f5deb3',
+    white: '#ffffff',
+    whitesmoke: '#f5f5f5',
+    yellow: '#ffff00',
+    yellowgreen: '#9acd32',
+  }),
+);
 
 /** The CSS named colors, for suggestions. */
 export const COLOR_NAMES = Object.keys(NAMED);
+
+/**
+ * The hex a CSS color name is, or null.
+ * @param {string} name
+ * @returns {string | null}
+ */
+export const namedColorHex = name =>
+  Object.hasOwn(NAMED, name) ? NAMED[name] : null;
 
 /** Color keywords that are valid colors but have no fixed value. */
 const KEYWORDS = ['transparent', 'currentcolor', ...CSS_WIDE];
@@ -283,11 +293,11 @@ const d50ToD65 = ([x, y, z]) => [
 /** One number with its unit, or null. @param {string} part @param {boolean} modern */
 function num(part, modern) {
   if (modern && part.toLowerCase() === 'none') return {n: 0, unit: ''};
-  const m =
-    /^([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)(%|deg|grad|rad|turn)?$/i.exec(
-      part,
-    );
-  return m ? {n: Number(m[1]), unit: (m[2] ?? '').toLowerCase()} : null;
+  // Read as CSS reads a number: `255.` is none.
+  const c = cssNumber(part);
+  return c && ['', '%', 'deg', 'grad', 'rad', 'turn'].includes(c.unit)
+    ? {n: c.value, unit: c.unit}
+    : null;
 }
 
 /**
@@ -324,6 +334,19 @@ function args(fn, body) {
   if (channels.length !== 3) return null;
   const read = channels.map(x => num(x, !legacy));
   if (read.some(x => !x)) return null;
+  // The comma (legacy) syntax as CSS Color 4 takes it: rgb() with all
+  // numbers or all percentages, hsl() with a hue and two percentages. Bare
+  // numbers for saturation and lightness, or mixed rgb() channels, are the
+  // space-separated syntax's only: browsers drop them written with commas.
+  if (legacy) {
+    const units = /** @type {Num[]} */ (read).map(x => x.unit);
+    const ok = /^rgba?$/i.test(fn)
+      ? units.every(u => u === '') || units.every(u => u === '%')
+      : ['', 'deg', 'grad', 'rad', 'turn'].includes(units[0]) &&
+        units[1] === '%' &&
+        units[2] === '%';
+    if (!ok) return null;
+  }
   let a = 1;
   if (alpha !== undefined) {
     const v = num(alpha, !legacy);
@@ -440,6 +463,20 @@ const polar = (c, h) => [
 ];
 
 /**
+ * The colors written inside a value (a shadow's layers, a gradient's
+ * stops): each hex color and each color function, in order.
+ * @param {string} value
+ * @returns {string[]}
+ */
+export function colorsIn(value) {
+  return [...String(value ?? '').matchAll(COLOR_IN_VALUE)].map(m => m[0]);
+}
+
+/** One color written inside a value: a hex color or a color function. */
+export const COLOR_IN_VALUE =
+  /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\((?:[^()]|\([^()]*\))*\)/gi;
+
+/**
  * The opacity of a CSS color, 0 to 1: the alpha of an 8- or 4-digit hex,
  * `rgba()`/`hsla()`, or a `/ alpha` part; 0 for `transparent`; 1 otherwise.
  * @param {unknown} value
@@ -485,6 +522,28 @@ const toLinear = c => {
   return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
 };
 
+/**
+ * A color in OKLab (lightness, a, b), from its sRGB channels: what the eye
+ * sees as close or far ({@link oklabDistance}).
+ * @param {[number, number, number]} rgb
+ * @returns {number[]}
+ */
+export function oklabOf(rgb) {
+  return linearToOklab(rgb.map(toLinear));
+}
+
+/**
+ * How far apart two colors look: their distance in OKLab (0 the same; about
+ * 0.02 the least a person tells apart).
+ * @param {[number, number, number]} a
+ * @param {[number, number, number]} b
+ */
+export function oklabDistance(a, b) {
+  const x = oklabOf(a);
+  const y = oklabOf(b);
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+}
+
 /** Linear sRGB to OKLab. @param {number[]} lin @returns {number[]} */
 function linearToOklab([r, g, b]) {
   const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
@@ -512,7 +571,33 @@ export function mixSide(side) {
     if (w == null) return null;
     const plain = /^calc\(\s*(.*?)\s*\)$/i.exec(w)?.[1] ?? w;
     const n = cssNumber(plain);
-    return n?.unit === '%' ? n.value : null;
+    if (n) return n.unit === '%' ? n.value : null;
+    // Math of two terms that gives a percentage: percentages added or
+    // taken away (`25% + 25%`), a percentage scaled by a number
+    // (`50% * 1`, `100% / 2`).
+    const m = /^(\S+)\s*([*/+-])\s*(\S+)$/.exec(plain);
+    if (!m) return null;
+    const [a, b] = [cssNumber(m[1]), cssNumber(m[3])];
+    if (!a || !b) return null;
+    const pct = (/** @type {{unit: string}} */ x) => x.unit === '%';
+    const plainNum = (/** @type {{unit: string}} */ x) => x.unit === '';
+    const r =
+      m[2] === '+' || m[2] === '-'
+        ? pct(a) && pct(b)
+          ? m[2] === '+'
+            ? a.value + b.value
+            : a.value - b.value
+          : null
+        : m[2] === '*'
+          ? pct(a) && plainNum(b)
+            ? a.value * b.value
+            : plainNum(a) && pct(b)
+              ? a.value * b.value
+              : null
+          : pct(a) && plainNum(b) && b.value !== 0
+            ? a.value / b.value
+            : null;
+    return r != null && Number.isFinite(r) ? r : null;
   };
   if (words.length < 2) return {color: side.trim(), pct: null};
   const last = share(words.at(-1));
@@ -623,17 +708,19 @@ function mixColor(inner, approx = false) {
 }
 
 /** The channel keywords of each relative color function, in order. */
-const RELATIVE_CHANNELS = /** @type {Record<string, string>} */ ({
-  rgb: 'r g b',
-  rgba: 'r g b',
-  hsl: 'h s l',
-  hsla: 'h s l',
-  hwb: 'h w b',
-  lab: 'l a b',
-  lch: 'l c h',
-  oklab: 'l a b',
-  oklch: 'l c h',
-});
+const RELATIVE_CHANNELS = wordTable(
+  /** @type {Record<string, string>} */ ({
+    rgb: 'r g b',
+    rgba: 'r g b',
+    hsl: 'h s l',
+    hsla: 'h s l',
+    hwb: 'h w b',
+    lab: 'l a b',
+    lch: 'l c h',
+    oklab: 'l a b',
+    oklch: 'l c h',
+  }),
+);
 
 /**
  * A fixed CSS color read as CSS Color 4 reads it: hues wrap, saturation,
@@ -788,6 +875,24 @@ export function isClipped(value) {
 }
 
 /**
+ * A comma (legacy) rgb() or hsl() that CSS does not take as written, in the
+ * space-separated syntax CSS reads the same channels in (`hsl(0, 100, 50)`
+ * is `hsl(0 100 50)`); null for any other value.
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+export function colorAsCssReads(value) {
+  const s = String(value ?? '').trim();
+  const fn = /^(rgba?|hsla?)\((.*)\)$/i.exec(s);
+  if (!fn || !fn[2].includes(',') || readColor(s)) return null;
+  const parts = fn[2].split(',').map(x => x.trim());
+  if (parts.length !== 3 && parts.length !== 4) return null;
+  const name = fn[1].toLowerCase().replace(/a$/, '');
+  const modern = `${name}(${parts.slice(0, 3).join(' ')}${parts[3] ? ` / ${parts[3]}` : ''})`;
+  return readColor(modern) ? modern : null;
+}
+
+/**
  * Why a value cannot seed a color dial, or null when it is one fixed,
  * opaque color: `opaque` is the color without its alpha, for a suggestion.
  * @param {unknown} value
@@ -902,6 +1007,15 @@ export function ratio(a, b) {
 }
 
 /**
+ * A value that is one var() of a custom property and nothing else, with
+ * any spaces inside its brackets as CSS reads them (`var( --x )`).
+ */
+export const LONE_VAR = /^var\(\s*--[a-z0-9-]+\s*\)$/i;
+
+/** A var() of a custom property with a fallback: the fallback, captured. */
+const VAR_FALLBACK = /^var\(\s*--[a-z0-9-]+\s*,\s*(.+)\)$/i;
+
+/**
  * Whether a value is one CSS color: a hex, a color function, a named or
  * system color, a color keyword, or a variable. A function with plain
  * numbers must be well formed; one with `var()`, `calc()`, `env()` or a
@@ -924,10 +1038,10 @@ export const isColorValue = v => {
   return (
     /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(s) ||
     FUNCTIONS.test(s) ||
-    /^var\(--[a-z0-9-]+\)$/i.test(s) ||
+    LONE_VAR.test(s) ||
     // A variable with a color to fall back to.
-    (/^var\(--[a-z0-9-]+\s*,\s*(.+)\)$/i.test(s) &&
-      isColorValue(/^var\(--[a-z0-9-]+\s*,\s*(.+)\)$/i.exec(s)?.[1] ?? '')) ||
+    (VAR_FALLBACK.test(s) &&
+      isColorValue(/** @type {string} */ (VAR_FALLBACK.exec(s)?.[1]))) ||
     Object.hasOwn(NAMED, s.toLowerCase()) ||
     KEYWORDS.includes(s.toLowerCase()) ||
     SYSTEM.includes(s.toLowerCase())
@@ -943,16 +1057,14 @@ export const isColorValue = v => {
  */
 export const isSize = (v, name = '') => {
   const s = String(v).trim();
-  const length =
-    /^-?(\d+\.?\d*|\.\d+)(e-?\d+)?(px|rem|em|ex|ch|lh|rlh|cap|ic|pt|pc|cm|mm|in|q|%|vh|vw|vmin|vmax|dvh|dvw|svh|svw|lvh|lvw|cqw|cqh|cqi|cqb)$/i;
   if (s === '0') return true;
-  // Only a property that takes a negative length gets one: an offset, a
-  // letter spacing, an indent.
-  if (length.test(s))
-    return (
-      !s.startsWith('-') || /offset|tracking|letter-spacing|indent/.test(name)
-    );
-  if (/^var\(--[a-z0-9-]+\)$/i.test(s)) return true;
+  // One length or percentage, read as CSS reads it (+4px, 4e+1px; never
+  // 1.px). Only a property that takes a negative length gets one: an
+  // offset, a letter spacing, an indent.
+  const n = cssNumber(s);
+  if (n && n.unit && matchType('length-percentage', s) != null)
+    return n.value >= 0 || /offset|tracking|letter-spacing|indent/.test(name);
+  if (LONE_VAR.test(s)) return true;
   if (/^env\([a-z-]+(,.*)?\)$/i.test(s)) return true;
   return MATH_FUNCTION.test(s) && matchType('length-percentage', s) != null;
 };
@@ -966,7 +1078,7 @@ export const isSize = (v, name = '') => {
  */
 export const isNumber = (v, name = '') => {
   const s = String(v).trim();
-  if (/^var\(--[a-z0-9-]+\)$/i.test(s)) return true;
+  if (LONE_VAR.test(s)) return true;
   const n = cssNumber(s);
   // A weight: a font-weight keyword, or a number from 1 to 1000.
   if (/weight/.test(name))
@@ -988,13 +1100,31 @@ export const isNumber = (v, name = '') => {
 };
 
 /**
+ * A value with each CSS escape (`Gill\ Sans`, `\5FAE`) as one plain
+ * character, as CSS reads it: an escape is part of a name, never a
+ * boundary. A backslash that escapes nothing (at the end, or before a line
+ * break) could join the next declaration, so it stays.
+ * @param {string} v
+ */
+export function withoutCssEscapes(v) {
+  return v.replace(/\\(?:[0-9a-fA-F]{1,6}[ \t]?|[^\n\r\f0-9a-fA-F])/g, 'x');
+}
+
+/** What a value isSafeValue refuses holds, for the refusal's words. */
+export const UNSAFE_VALUE =
+  'it has a ; { } < > or a newline, a comment, !important, an unclosed bracket or quote, or an old browser hack (\\9, \\0) at its end';
+
+/**
  * Whether a value can sit in a CSS declaration as it is: no `<>`, control
  * character, comment or `!important` anywhere; outside a quoted string or a
- * `url(data:…)`, no `;{}`; brackets and quotes closed. So `content: "a;b"`
- * and a base64 data URL are values, and nothing can end the declaration.
+ * `url(data:…)`, no `;{}`; brackets and quotes closed; no old browser hack's
+ * escape at its end (`8px\9`: a browser reads it as part of the last word
+ * and drops the value). So `content: "a;b"` and a base64 data URL are
+ * values, and nothing can end the declaration.
  * @param {string} v
  */
 export function isSafeValue(v) {
+  if (/\\[09]\s*$/.test(v)) return false;
   // A shell comment ("# direct"), as a command run without a shell passes
   // it, is a comment too.
   // `</` (a closing tag), control characters, comments and !important are
@@ -1007,7 +1137,7 @@ export function isSafeValue(v) {
     )
   )
     return false;
-  const outside = v
+  const outside = withoutCssEscapes(v)
     .replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""')
     .replace(/url\(data:[^\s"'()\\]*\)/gi, 'url()');
   if (/[;{}\\<>]/.test(outside)) return false;
