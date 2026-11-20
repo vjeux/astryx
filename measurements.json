@@ -1,0 +1,4366 @@
+{
+ "base": "c1c5cdf03eef3ab9bbd87db0f687fd5f0585d154",
+ "head": "5366392ac97b6c457c5195f19e05b5d53c7cc84d",
+ "story": "lab-mediaplayer--comment-markers",
+ "device": "phone 390x844 touch, scale 2, light",
+ "thisRun": {
+  "cold|main|first": {
+   "summary": {
+    "n": 5,
+    "pressToPaintMs": {
+     "median": 64.9,
+     "range": "48.1–66.1"
+    },
+    "paintedW": {
+     "median": 89.5,
+     "range": "31.3–102.5"
+    },
+    "paintedOpacity": {
+     "median": 0.24,
+     "range": "0.077–0.279"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "0.01–0.1",
+    "expandedFirstTrueMs": "25.7–31.5",
+    "seekMs": "25.7–31.5",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 66.1,
+     "paintedW": 89.5,
+     "paintedH": 25.7,
+     "paintedOpacity": 0.242,
+     "paintedScale": "0.249952 0.229776",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 126,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 30.9,
+     "seekMs": 30.9,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 64.9,
+     "paintedW": 91.2,
+     "paintedH": 26.2,
+     "paintedOpacity": 0.247,
+     "paintedScale": "0.254718 0.234285",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.91,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 29.3,
+     "seekMs": 29.3,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 48.1,
+     "paintedW": 31.3,
+     "paintedH": 8.8,
+     "paintedOpacity": 0.077,
+     "paintedScale": "0.0873073 0.0787121",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 126,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 25.7,
+     "seekMs": 25.7,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 3,
+     "pressToPaintMs": 65,
+     "paintedW": 83.8,
+     "paintedH": 24.1,
+     "paintedOpacity": 0.225,
+     "paintedScale": "0.234066 0.214745",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 31.5,
+     "seekMs": 31.5,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 4,
+     "pressToPaintMs": 64.7,
+     "paintedW": 102.5,
+     "paintedH": 29.6,
+     "paintedOpacity": 0.279,
+     "paintedScale": "0.286308 0.264218",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.95,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 27.7,
+     "seekMs": 27.7,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "cold|main|second": {
+   "summary": {
+    "n": 5,
+    "pressToPaintMs": {
+     "median": 33,
+     "range": "32.5–33.2"
+    },
+    "paintedW": {
+     "median": 104.5,
+     "range": "104.3–105"
+    },
+    "paintedOpacity": {
+     "median": 0.28,
+     "range": "0.284–0.286"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.03–0.05",
+    "expandedFirstTrueMs": "15.3–15.7",
+    "seekMs": "15.3–15.7",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 33,
+     "paintedW": 104.3,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291452 0.269153",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291452 0.269153",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291452,
+      "sy": 0.269153
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.95,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.6,
+     "seekMs": 15.6,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 33,
+     "paintedW": 104.5,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.29195 0.269631",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.29195 0.269631",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.29195,
+      "sy": 0.269631
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.5,
+     "seekMs": 15.5,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 33.2,
+     "paintedW": 104.5,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291905 0.269588",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291905 0.269588",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291905,
+      "sy": 0.269588
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.7,
+     "seekMs": 15.7,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 3,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104.3,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291226 0.268936",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291226 0.268936",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291226,
+      "sy": 0.268936
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.87,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.5,
+     "seekMs": 15.5,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 4,
+     "pressToPaintMs": 32.5,
+     "paintedW": 105,
+     "paintedH": 30.3,
+     "paintedOpacity": 0.286,
+     "paintedScale": "0.293187 0.270818",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.293187 0.270818",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.293187,
+      "sy": 0.270818
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.89,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.3,
+     "seekMs": 15.3,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "cold|pr|first": {
+   "summary": {
+    "n": 5,
+    "pressToPaintMs": {
+     "median": 161,
+     "range": "146–212.5"
+    },
+    "paintedW": {
+     "median": 46.8,
+     "range": "28.1–86.6"
+    },
+    "paintedOpacity": {
+     "median": 0.12,
+     "range": "0.068–0.233"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.02–0.12",
+    "expandedFirstTrueMs": "120.9–176.8",
+    "seekMs": "10.7–12.9",
+    "held": null,
+    "chunkStartAfterPressMs": "-1–-0.3",
+    "chunkEndAfterPressMs": {
+     "median": 49.6,
+     "range": "48.6–69.5"
+    },
+    "paintAfterChunkEndMs": {
+     "median": 111.4,
+     "range": "97.4–143"
+    }
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 149.1,
+     "paintedW": 28.1,
+     "paintedH": 7.9,
+     "paintedOpacity": 0.068,
+     "paintedScale": "0.0784838 0.0706798",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 124.9,
+     "seekMs": 12.9,
+     "chunk": {
+      "url": "MediaMarkerPopover-CbXHFVVN.js",
+      "startAfterPressMs": -0.3,
+      "endAfterPressMs": 48.6
+     },
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 162.9,
+     "paintedW": 86.6,
+     "paintedH": 24.9,
+     "paintedOpacity": 0.233,
+     "paintedScale": "0.242009 0.22226",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.88,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 131.6,
+     "seekMs": 12.3,
+     "chunk": {
+      "url": "MediaMarkerPopover-CbXHFVVN.js",
+      "startAfterPressMs": -0.3,
+      "endAfterPressMs": 50
+     },
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 146,
+     "paintedW": 46.8,
+     "paintedH": 13.3,
+     "paintedOpacity": 0.122,
+     "paintedScale": "0.130701 0.118516",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.89,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 120.9,
+     "seekMs": 12.3,
+     "chunk": {
+      "url": "MediaMarkerPopover-CbXHFVVN.js",
+      "startAfterPressMs": -0.4,
+      "endAfterPressMs": 48.6
+     },
+     "held": null
+    },
+    {
+     "run": 3,
+     "pressToPaintMs": 212.5,
+     "paintedW": 59,
+     "paintedH": 16.8,
+     "paintedOpacity": 0.156,
+     "paintedScale": "0.164872 0.150047",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.91,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 176.8,
+     "seekMs": 12,
+     "chunk": {
+      "url": "MediaMarkerPopover-CbXHFVVN.js",
+      "startAfterPressMs": -1,
+      "endAfterPressMs": 69.5
+     },
+     "held": null
+    },
+    {
+     "run": 4,
+     "pressToPaintMs": 161,
+     "paintedW": 38.1,
+     "paintedH": 10.8,
+     "paintedOpacity": 0.097,
+     "paintedScale": "0.106401 0.0962257",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 126.02,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 132.8,
+     "seekMs": 10.7,
+     "chunk": {
+      "url": "MediaMarkerPopover-CbXHFVVN.js",
+      "startAfterPressMs": -0.9,
+      "endAfterPressMs": 49.6
+     },
+     "held": null
+    }
+   ]
+  },
+  "cold|pr|second": {
+   "summary": {
+    "n": 5,
+    "pressToPaintMs": {
+     "median": 33,
+     "range": "32.9–33.2"
+    },
+    "paintedW": {
+     "median": 104.5,
+     "range": "104.1–104.7"
+    },
+    "paintedOpacity": {
+     "median": 0.28,
+     "range": "0.283–0.285"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.03–0.1",
+    "expandedFirstTrueMs": "15.4–15.7",
+    "seekMs": "15.4–15.7",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 33,
+     "paintedW": 104.1,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.283,
+     "paintedScale": "0.290879 0.268603",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.290879 0.268603",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.290879,
+      "sy": 0.268603
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.4,
+     "seekMs": 15.4,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 32.9,
+     "paintedW": 104.5,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291814 0.269501",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291814 0.269501",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291814,
+      "sy": 0.269501
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 126,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.4,
+     "seekMs": 15.4,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 33,
+     "paintedW": 104.5,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291905 0.269588",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291905 0.269588",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291905,
+      "sy": 0.269588
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.87,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.6,
+     "seekMs": 15.6,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 3,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104.7,
+     "paintedH": 30.3,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292583 0.270239",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292583 0.270239",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292583,
+      "sy": 0.270239
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.9,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.5,
+     "seekMs": 15.5,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 4,
+     "pressToPaintMs": 33.2,
+     "paintedW": 104.4,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291618 0.269313",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291618 0.269313",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291618,
+      "sy": 0.269313
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.97,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.7,
+     "seekMs": 15.7,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "throttled|main|first": {
+   "summary": {
+    "n": 3,
+    "pressToPaintMs": {
+     "median": 49.7,
+     "range": "48.1–65"
+    },
+    "paintedW": {
+     "median": 53,
+     "range": "39.3–82.1"
+    },
+    "paintedOpacity": {
+     "median": 0.14,
+     "range": "0.1–0.22"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "0.01–0.11",
+    "expandedFirstTrueMs": "24.8–30.5",
+    "seekMs": "24.8–30.5",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 49.7,
+     "paintedW": 53,
+     "paintedH": 15.1,
+     "paintedOpacity": 0.139,
+     "paintedScale": "0.148059 0.134437",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 126.01,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 24.8,
+     "seekMs": 24.8,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 48.1,
+     "paintedW": 39.3,
+     "paintedH": 11.1,
+     "paintedOpacity": 0.1,
+     "paintedScale": "0.109872 0.09941",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.91,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 25.9,
+     "seekMs": 25.9,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 65,
+     "paintedW": 82.1,
+     "paintedH": 23.5,
+     "paintedOpacity": 0.22,
+     "paintedScale": "0.2293 0.210236",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 30.5,
+     "seekMs": 30.5,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "throttled|main|second": {
+   "summary": {
+    "n": 3,
+    "pressToPaintMs": {
+     "median": 33.1,
+     "range": "32.8–33.2"
+    },
+    "paintedW": {
+     "median": 104.4,
+     "range": "104–104.5"
+    },
+    "paintedOpacity": {
+     "median": 0.28,
+     "range": "0.283–0.284"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.01–0.07",
+    "expandedFirstTrueMs": "15.6–15.8",
+    "seekMs": "15.6–15.8",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 32.8,
+     "paintedW": 104.4,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291573 0.269269",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291573 0.269269",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291573,
+      "sy": 0.269269
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.97,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.6,
+     "seekMs": 15.6,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104.5,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291874 0.269559",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291874 0.269559",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291874,
+      "sy": 0.269559
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.8,
+     "seekMs": 15.8,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 33.2,
+     "paintedW": 104,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.283,
+     "paintedScale": "0.290577 0.268314",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.290577 0.268314",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.290577,
+      "sy": 0.268314
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.89,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.7,
+     "seekMs": 15.7,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "throttled|pr|first": {
+   "summary": {
+    "n": 3,
+    "pressToPaintMs": {
+     "median": 562.1,
+     "range": "546.1–564.9"
+    },
+    "paintedW": {
+     "median": 34.4,
+     "range": "24.2–44.9"
+    },
+    "paintedOpacity": {
+     "median": 0.09,
+     "range": "0.058–0.116"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.01–0.05",
+    "expandedFirstTrueMs": "522.1–540",
+    "seekMs": "11.8–12.7",
+    "held": {
+     "pausedAfterPressMs": "0–0",
+     "releasedAfterPressMs": "400–401"
+    },
+    "chunkStartAfterPressMs": "-1.3–-0.4",
+    "chunkEndAfterPressMs": {
+     "median": 460.1,
+     "range": "451.9–463.8"
+    },
+    "paintAfterChunkEndMs": {
+     "median": 101.1,
+     "range": "94.2–102"
+    }
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 564.9,
+     "paintedW": 24.2,
+     "paintedH": 6.8,
+     "paintedOpacity": 0.058,
+     "paintedScale": "0.0676705 0.0609299",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.92,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 540,
+     "seekMs": 11.8,
+     "chunk": {
+      "url": "MediaMarkerPopover-CbXHFVVN.js",
+      "startAfterPressMs": -1.3,
+      "endAfterPressMs": 463.8
+     },
+     "held": {
+      "pausedAfterPressMs": 0,
+      "releasedAfterPressMs": 401
+     }
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 546.1,
+     "paintedW": 34.4,
+     "paintedH": 9.7,
+     "paintedOpacity": 0.086,
+     "paintedScale": "0.0959861 0.0866728",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.95,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 522.1,
+     "seekMs": 12.7,
+     "chunk": {
+      "url": "MediaMarkerPopover-CbXHFVVN.js",
+      "startAfterPressMs": -0.7,
+      "endAfterPressMs": 451.9
+     },
+     "held": {
+      "pausedAfterPressMs": 0,
+      "releasedAfterPressMs": 400
+     }
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 562.1,
+     "paintedW": 44.9,
+     "paintedH": 12.7,
+     "paintedOpacity": 0.116,
+     "paintedScale": "0.125494 0.113739",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.89,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 535.3,
+     "seekMs": 11.9,
+     "chunk": {
+      "url": "MediaMarkerPopover-CbXHFVVN.js",
+      "startAfterPressMs": -0.4,
+      "endAfterPressMs": 460.1
+     },
+     "held": {
+      "pausedAfterPressMs": 0,
+      "releasedAfterPressMs": 400
+     }
+    }
+   ]
+  },
+  "throttled|pr|second": {
+   "summary": {
+    "n": 3,
+    "pressToPaintMs": {
+     "median": 32.9,
+     "range": "32.4–33.2"
+    },
+    "paintedW": {
+     "median": 104.6,
+     "range": "104.5–104.7"
+    },
+    "paintedOpacity": {
+     "median": 0.28,
+     "range": "0.284–0.285"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.05–0.03",
+    "expandedFirstTrueMs": "15.2–15.9",
+    "seekMs": "15.2–15.9",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 33.2,
+     "paintedW": 104.7,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292372 0.270036",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292372 0.270036",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292372,
+      "sy": 0.270036
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.9,
+     "seekMs": 15.9,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 32.9,
+     "paintedW": 104.5,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291784 0.269472",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291784 0.269472",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291784,
+      "sy": 0.269472
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.4,
+     "seekMs": 15.4,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 32.4,
+     "paintedW": 104.6,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292086 0.269761",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292086 0.269761",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292086,
+      "sy": 0.269761
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.85,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.2,
+     "seekMs": 15.2,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  }
+ },
+ "earlierRun": {
+  "cold|main|first": {
+   "summary": {
+    "n": 5,
+    "pressToPaintMs": {
+     "median": 48.7,
+     "range": "48.6–49"
+    },
+    "paintedW": {
+     "median": 78.1,
+     "range": "64.4–94.6"
+    },
+    "paintedOpacity": {
+     "median": 0.21,
+     "range": "0.171–0.256"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "0.01–0.1",
+    "expandedFirstTrueMs": "19.8–23.3",
+    "seekMs": "19.8–23.3",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 49,
+     "paintedW": 67.4,
+     "paintedH": 19.2,
+     "paintedOpacity": 0.179,
+     "paintedScale": "0.188176 0.171765",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.91,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 23,
+     "seekMs": 23,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 48.6,
+     "paintedW": 64.4,
+     "paintedH": 18.4,
+     "paintedOpacity": 0.171,
+     "paintedScale": "0.179853 0.164008",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.95,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 23.3,
+     "seekMs": 23.3,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 48.7,
+     "paintedW": 94.6,
+     "paintedH": 27.2,
+     "paintedOpacity": 0.256,
+     "paintedScale": "0.26425 0.243303",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.96,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 19.8,
+     "seekMs": 19.8,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 3,
+     "pressToPaintMs": 48.8,
+     "paintedW": 87.2,
+     "paintedH": 25.1,
+     "paintedOpacity": 0.235,
+     "paintedScale": "0.243597 0.223763",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 126,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 20.1,
+     "seekMs": 20.1,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 4,
+     "pressToPaintMs": 48.7,
+     "paintedW": 78.1,
+     "paintedH": 22.4,
+     "paintedOpacity": 0.209,
+     "paintedScale": "0.218138 0.199689",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.97,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 21.7,
+     "seekMs": 21.7,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "cold|main|second": {
+   "summary": {
+    "n": 5,
+    "pressToPaintMs": {
+     "median": 33.1,
+     "range": "21.3–33.5"
+    },
+    "paintedW": {
+     "median": 104.6,
+     "range": "104.2–104.6"
+    },
+    "paintedOpacity": {
+     "median": 0.28,
+     "range": "0.284–0.285"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.12–0.04",
+    "expandedFirstTrueMs": "7.1–16.4",
+    "seekMs": "7.1–16.4",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104.3,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291271 0.26898",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291271 0.26898",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291271,
+      "sy": 0.26898
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.78,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.8,
+     "seekMs": 15.8,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104.6,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292146 0.269819",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292146 0.269819",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292146,
+      "sy": 0.269819
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.94,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.9,
+     "seekMs": 15.9,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 33,
+     "paintedW": 104.6,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292221 0.269891",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292221 0.269891",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292221,
+      "sy": 0.269891
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.91,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.7,
+     "seekMs": 15.7,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 3,
+     "pressToPaintMs": 21.3,
+     "paintedW": 104.2,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291196 0.268907",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291196 0.268907",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291196,
+      "sy": 0.268907
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.86,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 7.1,
+     "seekMs": 7.1,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 4,
+     "pressToPaintMs": 33.5,
+     "paintedW": 104.6,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292086 0.269761",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292086 0.269761",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292086,
+      "sy": 0.269761
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.83,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 16.4,
+     "seekMs": 16.4,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "cold|pr|first": {
+   "summary": {
+    "n": 5,
+    "pressToPaintMs": {
+     "median": 146.5,
+     "range": "129.8–147.4"
+    },
+    "paintedW": {
+     "median": 45.5,
+     "range": "21.6–91.8"
+    },
+    "paintedOpacity": {
+     "median": 0.12,
+     "range": "0.051–0.248"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "0–0.12",
+    "expandedFirstTrueMs": "108.2–126.3",
+    "seekMs": "12.9–13.9",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 147.4,
+     "paintedW": 86.6,
+     "paintedH": 24.9,
+     "paintedOpacity": 0.233,
+     "paintedScale": "0.242009 0.22226",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.91,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 121,
+     "seekMs": 13.9,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 131.1,
+     "paintedW": 21.6,
+     "paintedH": 6.1,
+     "paintedOpacity": 0.051,
+     "paintedScale": "0.0604617 0.0544299",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.99,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 113.2,
+     "seekMs": 13.3,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 147,
+     "paintedW": 91.8,
+     "paintedH": 26.4,
+     "paintedOpacity": 0.248,
+     "paintedScale": "0.256307 0.235788",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 126.02,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 118,
+     "seekMs": 13.2,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 3,
+     "pressToPaintMs": 146.5,
+     "paintedW": 31.9,
+     "paintedH": 9,
+     "paintedOpacity": 0.079,
+     "paintedScale": "0.089043 0.0803043",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.9,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 126.3,
+     "seekMs": 13,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 4,
+     "pressToPaintMs": 129.8,
+     "paintedW": 45.5,
+     "paintedH": 12.9,
+     "paintedOpacity": 0.118,
+     "paintedScale": "0.12723 0.115331",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.94,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 108.2,
+     "seekMs": 12.9,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "cold|pr|second": {
+   "summary": {
+    "n": 5,
+    "pressToPaintMs": {
+     "median": 33.1,
+     "range": "33–33.8"
+    },
+    "paintedW": {
+     "median": 104.4,
+     "range": "104–104.7"
+    },
+    "paintedOpacity": {
+     "median": 0.28,
+     "range": "0.283–0.285"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.07–0.06",
+    "expandedFirstTrueMs": "15.7–16.2",
+    "seekMs": "15.7–16.2",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 33,
+     "paintedW": 104.7,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292342 0.270007",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292342 0.270007",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292342,
+      "sy": 0.270007
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.9,
+      "y": 469.63,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.7,
+     "seekMs": 15.7,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 33.8,
+     "paintedW": 104.3,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291467 0.269168",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291467 0.269168",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291467,
+      "sy": 0.269168
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.95,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 16.2,
+     "seekMs": 16.2,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104.4,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291633 0.269327",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291633 0.269327",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291633,
+      "sy": 0.269327
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.89,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.9,
+     "seekMs": 15.9,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 3,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.283,
+     "paintedScale": "0.290577 0.268314",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.290577 0.268314",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.290577,
+      "sy": 0.268314
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.83,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.9,
+     "seekMs": 15.9,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 4,
+     "pressToPaintMs": 33.2,
+     "paintedW": 104.7,
+     "paintedH": 30.3,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292583 0.270239",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292583 0.270239",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292583,
+      "sy": 0.270239
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.96,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 16,
+     "seekMs": 16,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "throttled|main|first": {
+   "summary": {
+    "n": 3,
+    "pressToPaintMs": {
+     "median": 48.8,
+     "range": "48.7–49.2"
+    },
+    "paintedW": {
+     "median": 86.1,
+     "range": "80.4–96.3"
+    },
+    "paintedOpacity": {
+     "median": 0.23,
+     "range": "0.215–0.261"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "0.01–0.09",
+    "expandedFirstTrueMs": "19.8–21.6",
+    "seekMs": "19.8–21.6",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 49.2,
+     "paintedW": 96.3,
+     "paintedH": 27.8,
+     "paintedOpacity": 0.261,
+     "paintedScale": "0.269016 0.247812",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.99,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 19.8,
+     "seekMs": 19.8,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 48.8,
+     "paintedW": 86.1,
+     "paintedH": 24.7,
+     "paintedOpacity": 0.232,
+     "paintedScale": "0.24042 0.220757",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.91,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 20.9,
+     "seekMs": 20.9,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 48.7,
+     "paintedW": 80.4,
+     "paintedH": 23,
+     "paintedOpacity": 0.215,
+     "paintedScale": "0.224534 0.205727",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.98,
+      "y": 469.7,
+      "n": 7
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 21.6,
+     "seekMs": 21.6,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "throttled|main|second": {
+   "summary": {
+    "n": 3,
+    "pressToPaintMs": {
+     "median": 33,
+     "range": "33–33.1"
+    },
+    "paintedW": {
+     "median": 104.6,
+     "range": "104–104.7"
+    },
+    "paintedOpacity": {
+     "median": 0.28,
+     "range": "0.283–0.285"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.05–0.03",
+    "expandedFirstTrueMs": "15.7–16",
+    "seekMs": "15.7–16",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 33,
+     "paintedW": 104.7,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292327 0.269993",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292327 0.269993",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292327,
+      "sy": 0.269993
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.93,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.8,
+     "seekMs": 15.8,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104.6,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.292086 0.269761",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.292086 0.269761",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.292086,
+      "sy": 0.269761
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.89,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 16,
+     "seekMs": 16,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 33,
+     "paintedW": 104,
+     "paintedH": 30,
+     "paintedOpacity": 0.283,
+     "paintedScale": "0.290562 0.268299",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.290562 0.268299",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.290562,
+      "sy": 0.268299
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.85,
+      "y": 469.63,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.7,
+     "seekMs": 15.7,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  },
+  "throttled|pr|first": {
+   "summary": {
+    "n": 3,
+    "pressToPaintMs": {
+     "median": 545.9,
+     "range": "530.6–563.4"
+    },
+    "paintedW": {
+     "median": 23.6,
+     "range": "15.2–43.7"
+    },
+    "paintedOpacity": {
+     "median": 0.06,
+     "range": "0.033–0.113"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.04–0.09",
+    "expandedFirstTrueMs": "511.5–538.4",
+    "seekMs": "12.3–13.2",
+    "held": {
+     "pausedAfterPressMs": "0–0",
+     "releasedAfterPressMs": "400–401"
+    },
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 545.9,
+     "paintedW": 43.7,
+     "paintedH": 12.4,
+     "paintedOpacity": 0.113,
+     "paintedScale": "0.122022 0.110555",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.9,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 524,
+     "seekMs": 12.3,
+     "chunk": null,
+     "held": {
+      "pausedAfterPressMs": 0,
+      "releasedAfterPressMs": 401
+     }
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 530.6,
+     "paintedW": 23.6,
+     "paintedH": 6.6,
+     "paintedOpacity": 0.056,
+     "paintedScale": "0.0658683 0.0593049",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.99,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 511.5,
+     "seekMs": 12.9,
+     "chunk": null,
+     "held": {
+      "pausedAfterPressMs": 0,
+      "releasedAfterPressMs": 400
+     }
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 563.4,
+     "paintedW": 15.2,
+     "paintedH": 4.3,
+     "paintedOpacity": 0.033,
+     "paintedScale": "0.0424397 0.0381799",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.01 0.00893",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.01,
+      "sy": 0.00893
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.86,
+      "y": 469.7,
+      "n": 8
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 538.4,
+     "seekMs": 13.2,
+     "chunk": null,
+     "held": {
+      "pausedAfterPressMs": 0,
+      "releasedAfterPressMs": 401
+     }
+    }
+   ]
+  },
+  "throttled|pr|second": {
+   "summary": {
+    "n": 3,
+    "pressToPaintMs": {
+     "median": 33.2,
+     "range": "33.1–34.7"
+    },
+    "paintedW": {
+     "median": 104.5,
+     "range": "104.3–104.9"
+    },
+    "paintedOpacity": {
+     "median": 0.28,
+     "range": "0.284–0.286"
+    },
+    "entranceStartScale": [
+     "0.01 0.00893"
+    ],
+    "entranceStartOpacity": [
+     "0.001"
+    ],
+    "entranceOrigin": [
+     "109.938px 112px"
+    ],
+    "originMinusDotX": "0.04–0.04",
+    "originMinusPopoverBottom": "-0.01–-0.01",
+    "fixedPointMinusDotX": "-0.05–0.05",
+    "expandedFirstTrueMs": "15.7–15.9",
+    "seekMs": "15.7–15.9",
+    "held": null,
+    "chunkStartAfterPressMs": null,
+    "chunkEndAfterPressMs": null,
+    "paintAfterChunkEndMs": null
+   },
+   "runs": [
+    {
+     "run": 0,
+     "pressToPaintMs": 33.1,
+     "paintedW": 104.3,
+     "paintedH": 30.1,
+     "paintedOpacity": 0.284,
+     "paintedScale": "0.291467 0.269168",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291467 0.269168",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291467,
+      "sy": 0.269168
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.95,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.7,
+     "seekMs": 15.7,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 1,
+     "pressToPaintMs": 34.7,
+     "paintedW": 104.9,
+     "paintedH": 30.3,
+     "paintedOpacity": 0.286,
+     "paintedScale": "0.293006 0.270644",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.293006 0.270644",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.293006,
+      "sy": 0.270644
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.94,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.8,
+     "seekMs": 15.8,
+     "chunk": null,
+     "held": null
+    },
+    {
+     "run": 2,
+     "pressToPaintMs": 33.2,
+     "paintedW": 104.5,
+     "paintedH": 30.2,
+     "paintedOpacity": 0.285,
+     "paintedScale": "0.291995 0.269674",
+     "entranceStartScale": "0.01 0.00893",
+     "entranceStartOpacity": "0.001",
+     "firstSampledScale": "0.291995 0.269674",
+     "entranceOrigin": "109.938px 112px",
+     "originInViewport": {
+      "x": 125.94,
+      "y": 469.69,
+      "sx": 0.291995,
+      "sy": 0.269674
+     },
+     "dot": {
+      "x": 125.9,
+      "y": 485.7
+     },
+     "originMinusDotX": 0.04,
+     "originMinusPopoverBottom": -0.01,
+     "fixedPointFromRects": {
+      "x": 125.85,
+      "y": 469.7,
+      "n": 6
+     },
+     "animationsOnSurface": 2,
+     "settledRect": {
+      "x": 16,
+      "y": 357.7,
+      "w": 358,
+      "h": 112,
+      "opacity": 1
+     },
+     "expandedFirstTrueMs": 15.9,
+     "seekMs": 15.9,
+     "chunk": null,
+     "held": null
+    }
+   ]
+  }
+ },
+ "frameByFrame": {
+  "coldMain": [
+   {
+    "i": 0,
+    "atMs": 50.7,
+    "scale": "0.01 0.00893",
+    "opacity": 0.001,
+    "w": 3.6,
+    "h": 1
+   },
+   {
+    "i": 1,
+    "atMs": 66.1,
+    "scale": "0.249952 0.229776",
+    "opacity": 0.242,
+    "w": 89.5,
+    "h": 25.7
+   },
+   {
+    "i": 2,
+    "atMs": 82.6,
+    "scale": "0.485582 0.458616",
+    "opacity": 0.48,
+    "w": 173.8,
+    "h": 51.4
+   },
+   {
+    "i": 3,
+    "atMs": 99.2,
+    "scale": "0.663759 0.639629",
+    "opacity": 0.66,
+    "w": 237.6,
+    "h": 71.6
+   },
+   {
+    "i": 4,
+    "atMs": 116,
+    "scale": "0.787591 0.769486",
+    "opacity": 0.785,
+    "w": 282,
+    "h": 86.2
+   },
+   {
+    "i": 5,
+    "atMs": 132.6,
+    "scale": "0.870296 0.858081",
+    "opacity": 0.869,
+    "w": 311.6,
+    "h": 96.1
+   }
+  ],
+  "coldHead": [
+   {
+    "i": 0,
+    "atMs": 141.8,
+    "scale": "0.01 0.00893",
+    "opacity": 0.001,
+    "w": 3.6,
+    "h": 1
+   },
+   {
+    "i": 1,
+    "atMs": 149.1,
+    "scale": "0.0784838 0.0706798",
+    "opacity": 0.068,
+    "w": 28.1,
+    "h": 7.9
+   },
+   {
+    "i": 2,
+    "atMs": 163.1,
+    "scale": "0.347898 0.323366",
+    "opacity": 0.34,
+    "w": 124.5,
+    "h": 36.2
+   },
+   {
+    "i": 3,
+    "atMs": 179.9,
+    "scale": "0.561945 0.535347",
+    "opacity": 0.556,
+    "w": 201.2,
+    "h": 60
+   },
+   {
+    "i": 4,
+    "atMs": 196.5,
+    "scale": "0.717867 0.695971",
+    "opacity": 0.714,
+    "w": 257,
+    "h": 77.9
+   },
+   {
+    "i": 5,
+    "atMs": 213.1,
+    "scale": "0.82438 0.808722",
+    "opacity": 0.822,
+    "w": 295.1,
+    "h": 90.6
+   }
+  ],
+  "throttledMain": [
+   {
+    "i": 0,
+    "atMs": 40.4,
+    "scale": "0.01 0.00893",
+    "opacity": 0.001,
+    "w": 3.6,
+    "h": 1
+   },
+   {
+    "i": 1,
+    "atMs": 49.7,
+    "scale": "0.148059 0.134437",
+    "opacity": 0.139,
+    "w": 53,
+    "h": 15.1
+   },
+   {
+    "i": 2,
+    "atMs": 65.9,
+    "scale": "0.404654 0.378602",
+    "opacity": 0.399,
+    "w": 144.9,
+    "h": 42.4
+   },
+   {
+    "i": 3,
+    "atMs": 82.5,
+    "scale": "0.604422 0.578579",
+    "opacity": 0.6,
+    "w": 216.4,
+    "h": 64.8
+   },
+   {
+    "i": 4,
+    "atMs": 99.3,
+    "scale": "0.747428 0.727018",
+    "opacity": 0.744,
+    "w": 267.6,
+    "h": 81.4
+   },
+   {
+    "i": 5,
+    "atMs": 115.8,
+    "scale": "0.84349 0.829209",
+    "opacity": 0.841,
+    "w": 302,
+    "h": 92.9
+   }
+  ],
+  "throttledHead": [
+   {
+    "i": 0,
+    "atMs": 557.5,
+    "scale": "0.01 0.00893",
+    "opacity": 0.001,
+    "w": 3.6,
+    "h": 1
+   },
+   {
+    "i": 1,
+    "atMs": 564.9,
+    "scale": "0.0676705 0.0609299",
+    "opacity": 0.058,
+    "w": 24.2,
+    "h": 6.8
+   },
+   {
+    "i": 2,
+    "atMs": 578.5,
+    "scale": "0.340615 0.31632",
+    "opacity": 0.332,
+    "w": 121.9,
+    "h": 35.4
+   },
+   {
+    "i": 3,
+    "atMs": 595.3,
+    "scale": "0.556539 0.529855",
+    "opacity": 0.55,
+    "w": 199.2,
+    "h": 59.3
+   },
+   {
+    "i": 4,
+    "atMs": 612.1,
+    "scale": "0.713272 0.691156",
+    "opacity": 0.709,
+    "w": 255.4,
+    "h": 77.4
+   },
+   {
+    "i": 5,
+    "atMs": 628.8,
+    "scale": "0.821277 0.805403",
+    "opacity": 0.819,
+    "w": 294,
+    "h": 90.2
+   }
+  ]
+ },
+ "screencast": {
+  "cold|main": {
+   "firstPopoverAtMs": 70,
+   "settledPopoverPx": 32105,
+   "videoChangePx": 3474,
+   "frames": [
+    {
+     "atMs": -408,
+     "afterClose": false,
+     "boxPx": 3474,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 60,
+     "afterClose": false,
+     "boxPx": 3474,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 70,
+     "afterClose": false,
+     "boxPx": 3978,
+     "popoverPx": 547,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 87,
+     "afterClose": false,
+     "boxPx": 10517,
+     "popoverPx": 7311,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 105,
+     "afterClose": false,
+     "boxPx": 16722,
+     "popoverPx": 14620,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 121,
+     "afterClose": false,
+     "boxPx": 24100,
+     "popoverPx": 21685,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 138,
+     "afterClose": false,
+     "boxPx": 29881,
+     "popoverPx": 26994,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 156,
+     "afterClose": false,
+     "boxPx": 33292,
+     "popoverPx": 30048,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 171,
+     "afterClose": false,
+     "boxPx": 35080,
+     "popoverPx": 31706,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 188,
+     "afterClose": false,
+     "boxPx": 35248,
+     "popoverPx": 31835,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 204,
+     "afterClose": false,
+     "boxPx": 35267,
+     "popoverPx": 31833,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 221,
+     "afterClose": false,
+     "boxPx": 35576,
+     "popoverPx": 32145,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 239,
+     "afterClose": false,
+     "boxPx": 35616,
+     "popoverPx": 32179,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 255,
+     "afterClose": false,
+     "boxPx": 35589,
+     "popoverPx": 32165,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 272,
+     "afterClose": false,
+     "boxPx": 35580,
+     "popoverPx": 32156,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 291,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 310,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 769,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 846,
+     "afterClose": true,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 854,
+     "afterClose": true,
+     "boxPx": 35340,
+     "popoverPx": 31911,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 871,
+     "afterClose": true,
+     "boxPx": 31724,
+     "popoverPx": 28680,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 887,
+     "afterClose": true,
+     "boxPx": 22956,
+     "popoverPx": 20620,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 905,
+     "afterClose": true,
+     "boxPx": 14138,
+     "popoverPx": 12164,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 922,
+     "afterClose": true,
+     "boxPx": 7138,
+     "popoverPx": 5888,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 938,
+     "afterClose": true,
+     "boxPx": 1272,
+     "popoverPx": 1034,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 955,
+     "afterClose": true,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 971,
+     "afterClose": true,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    }
+   ]
+  },
+  "cold|pr": {
+   "firstPopoverAtMs": 168,
+   "settledPopoverPx": 32105,
+   "videoChangePx": 3474,
+   "frames": [
+    {
+     "atMs": -413,
+     "afterClose": false,
+     "boxPx": 3474,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 21,
+     "afterClose": false,
+     "boxPx": 3474,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 52,
+     "afterClose": false,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 149,
+     "afterClose": false,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 153,
+     "afterClose": false,
+     "boxPx": 5,
+     "popoverPx": 5,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 168,
+     "afterClose": false,
+     "boxPx": 3431,
+     "popoverPx": 2829,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 186,
+     "afterClose": false,
+     "boxPx": 11820,
+     "popoverPx": 10108,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 202,
+     "afterClose": false,
+     "boxPx": 19664,
+     "popoverPx": 17443,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 218,
+     "afterClose": false,
+     "boxPx": 26749,
+     "popoverPx": 24095,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 235,
+     "afterClose": false,
+     "boxPx": 31293,
+     "popoverPx": 28288,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 252,
+     "afterClose": false,
+     "boxPx": 34207,
+     "popoverPx": 30870,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 269,
+     "afterClose": false,
+     "boxPx": 35366,
+     "popoverPx": 31979,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 286,
+     "afterClose": false,
+     "boxPx": 35276,
+     "popoverPx": 31850,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 302,
+     "afterClose": false,
+     "boxPx": 35308,
+     "popoverPx": 31874,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 319,
+     "afterClose": false,
+     "boxPx": 35613,
+     "popoverPx": 32182,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 335,
+     "afterClose": false,
+     "boxPx": 35615,
+     "popoverPx": 32182,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 353,
+     "afterClose": false,
+     "boxPx": 35581,
+     "popoverPx": 32157,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 369,
+     "afterClose": false,
+     "boxPx": 35580,
+     "popoverPx": 32156,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 388,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 406,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 861,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 914,
+     "afterClose": true,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 919,
+     "afterClose": true,
+     "boxPx": 35313,
+     "popoverPx": 31877,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 935,
+     "afterClose": true,
+     "boxPx": 33629,
+     "popoverPx": 30380,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 952,
+     "afterClose": true,
+     "boxPx": 25543,
+     "popoverPx": 22955,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 968,
+     "afterClose": true,
+     "boxPx": 16285,
+     "popoverPx": 14209,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 985,
+     "afterClose": true,
+     "boxPx": 8808,
+     "popoverPx": 7370,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1001,
+     "afterClose": true,
+     "boxPx": 2564,
+     "popoverPx": 2123,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1019,
+     "afterClose": true,
+     "boxPx": 224,
+     "popoverPx": 205,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1035,
+     "afterClose": true,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1053,
+     "afterClose": true,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    }
+   ]
+  },
+  "throttled|main": {
+   "firstPopoverAtMs": 54,
+   "settledPopoverPx": 32105,
+   "videoChangePx": 3474,
+   "frames": [
+    {
+     "atMs": -411,
+     "afterClose": false,
+     "boxPx": 3474,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 49,
+     "afterClose": false,
+     "boxPx": 3474,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 54,
+     "afterClose": false,
+     "boxPx": 3687,
+     "popoverPx": 217,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 69,
+     "afterClose": false,
+     "boxPx": 7742,
+     "popoverPx": 4414,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 87,
+     "afterClose": false,
+     "boxPx": 14995,
+     "popoverPx": 11807,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 105,
+     "afterClose": false,
+     "boxPx": 21510,
+     "popoverPx": 19250,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 120,
+     "afterClose": false,
+     "boxPx": 28057,
+     "popoverPx": 25296,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 137,
+     "afterClose": false,
+     "boxPx": 32258,
+     "popoverPx": 29124,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 154,
+     "afterClose": false,
+     "boxPx": 34529,
+     "popoverPx": 31172,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 170,
+     "afterClose": false,
+     "boxPx": 35425,
+     "popoverPx": 32017,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 187,
+     "afterClose": false,
+     "boxPx": 35072,
+     "popoverPx": 31633,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 204,
+     "afterClose": false,
+     "boxPx": 35320,
+     "popoverPx": 31885,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 220,
+     "afterClose": false,
+     "boxPx": 35617,
+     "popoverPx": 32181,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 237,
+     "afterClose": false,
+     "boxPx": 35610,
+     "popoverPx": 32180,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 254,
+     "afterClose": false,
+     "boxPx": 35581,
+     "popoverPx": 32157,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 270,
+     "afterClose": false,
+     "boxPx": 35521,
+     "popoverPx": 32103,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 290,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 309,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 760,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 801,
+     "afterClose": true,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 806,
+     "afterClose": true,
+     "boxPx": 35610,
+     "popoverPx": 32180,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 820,
+     "afterClose": true,
+     "boxPx": 33977,
+     "popoverPx": 30690,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 836,
+     "afterClose": true,
+     "boxPx": 26409,
+     "popoverPx": 23815,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 853,
+     "afterClose": true,
+     "boxPx": 17190,
+     "popoverPx": 15048,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 871,
+     "afterClose": true,
+     "boxPx": 9512,
+     "popoverPx": 8009,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 886,
+     "afterClose": true,
+     "boxPx": 3156,
+     "popoverPx": 2602,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 904,
+     "afterClose": true,
+     "boxPx": 297,
+     "popoverPx": 263,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 920,
+     "afterClose": true,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 938,
+     "afterClose": true,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    }
+   ]
+  },
+  "throttled|pr": {
+   "firstPopoverAtMs": 583,
+   "settledPopoverPx": 32105,
+   "videoChangePx": 3474,
+   "frames": [
+    {
+     "atMs": -415,
+     "afterClose": false,
+     "boxPx": 3474,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 19,
+     "afterClose": false,
+     "boxPx": 3474,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 79,
+     "afterClose": false,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 565,
+     "afterClose": false,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 569,
+     "afterClose": false,
+     "boxPx": 5,
+     "popoverPx": 5,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 583,
+     "afterClose": false,
+     "boxPx": 3201,
+     "popoverPx": 2637,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 600,
+     "afterClose": false,
+     "boxPx": 11396,
+     "popoverPx": 9730,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 617,
+     "afterClose": false,
+     "boxPx": 19575,
+     "popoverPx": 17356,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 634,
+     "afterClose": false,
+     "boxPx": 26315,
+     "popoverPx": 23721,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 650,
+     "afterClose": false,
+     "boxPx": 31169,
+     "popoverPx": 28168,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 668,
+     "afterClose": false,
+     "boxPx": 34096,
+     "popoverPx": 30792,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 684,
+     "afterClose": false,
+     "boxPx": 35360,
+     "popoverPx": 31973,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 700,
+     "afterClose": false,
+     "boxPx": 35315,
+     "popoverPx": 31888,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 717,
+     "afterClose": false,
+     "boxPx": 35303,
+     "popoverPx": 31870,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 734,
+     "afterClose": false,
+     "boxPx": 35613,
+     "popoverPx": 32182,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 750,
+     "afterClose": false,
+     "boxPx": 35619,
+     "popoverPx": 32185,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 767,
+     "afterClose": false,
+     "boxPx": 35581,
+     "popoverPx": 32157,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 784,
+     "afterClose": false,
+     "boxPx": 35580,
+     "popoverPx": 32156,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 804,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 823,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1275,
+     "afterClose": false,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1332,
+     "afterClose": true,
+     "boxPx": 35523,
+     "popoverPx": 32105,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1337,
+     "afterClose": true,
+     "boxPx": 35613,
+     "popoverPx": 32180,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1349,
+     "afterClose": true,
+     "boxPx": 34249,
+     "popoverPx": 30927,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1365,
+     "afterClose": true,
+     "boxPx": 27474,
+     "popoverPx": 24762,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1382,
+     "afterClose": true,
+     "boxPx": 18140,
+     "popoverPx": 15964,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1399,
+     "afterClose": true,
+     "boxPx": 10210,
+     "popoverPx": 8621,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1415,
+     "afterClose": true,
+     "boxPx": 3653,
+     "popoverPx": 3018,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1433,
+     "afterClose": true,
+     "boxPx": 310,
+     "popoverPx": 266,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1449,
+     "afterClose": true,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    },
+    {
+     "atMs": 1467,
+     "afterClose": true,
+     "boxPx": 0,
+     "popoverPx": 0,
+     "videoStripPx": 0
+    }
+   ]
+  }
+ },
+ "spotChecks": {
+  "phone-light--idle--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  },
+  "phone-light--open--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  },
+  "phone-light--open-second--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  }
+ }
+}
