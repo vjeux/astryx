@@ -1,0 +1,6947 @@
+{
+ "base": "77a11ae0d2305c3f261190161248853f5741b52b",
+ "head": "247a4eedd8632799579a7d83b572b1253b15a392",
+ "versions": {
+  "main": {
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "environment": "production"
+  },
+  "pr": {
+   "commit": "247a4eedd8632799579a7d83b572b1253b15a392",
+   "environment": "preview"
+  }
+ },
+ "stories": [
+  "core-fileinput--default",
+  "core-fileinput--dropzone-mode"
+ ],
+ "browser": "Chromium, Chrome for Testing 149.0.7827.55",
+ "playwright": "1.61.1",
+ "load": "Box load average (1 min): about 2 to 5, on 166 cores.",
+ "stills": [
+  {
+   "key": "narrow--desktop--light--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 2026,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 282,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 345
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 38
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 280
+      },
+      "scrollWidth": 90,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag",
+        "left": 81,
+        "right": 141.7,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 6.7
+       },
+       {
+        "text": "files",
+        "left": 81,
+        "right": 130.8,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       },
+       {
+        "text": "here",
+        "left": 81,
+        "right": 137.05,
+        "top": 149,
+        "bottom": 180,
+        "pastRight": 2.05
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 105.91,
+        "top": 189,
+        "bottom": 220,
+        "pastRight": 0
+       },
+       {
+        "text": "click",
+        "left": 81,
+        "right": 135.45,
+        "top": 229,
+        "bottom": 260,
+        "pastRight": 0.45
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 104.36,
+        "top": 269,
+        "bottom": 300,
+        "pastRight": 0
+       },
+       {
+        "text": "browse",
+        "left": 81,
+        "right": 171.27,
+        "top": 309,
+        "bottom": 340,
+        "pastRight": 36.27
+       }
+      ],
+      "inlineOverflow": 36.27,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 154 > clientWidth 118",
+     "span scrollWidth 90 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": "D…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 20.23,
+       "firstCharShownPx": 20.23,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 17.77
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 38
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 406 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "narrow--desktop--dark--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 2007,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 282,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 345
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 38
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 280
+      },
+      "scrollWidth": 90,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag",
+        "left": 81,
+        "right": 141.7,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 6.7
+       },
+       {
+        "text": "files",
+        "left": 81,
+        "right": 130.8,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       },
+       {
+        "text": "here",
+        "left": 81,
+        "right": 137.05,
+        "top": 149,
+        "bottom": 180,
+        "pastRight": 2.05
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 105.91,
+        "top": 189,
+        "bottom": 220,
+        "pastRight": 0
+       },
+       {
+        "text": "click",
+        "left": 81,
+        "right": 135.45,
+        "top": 229,
+        "bottom": 260,
+        "pastRight": 0.45
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 104.36,
+        "top": 269,
+        "bottom": 300,
+        "pastRight": 0
+       },
+       {
+        "text": "browse",
+        "left": 81,
+        "right": 171.27,
+        "top": 309,
+        "bottom": 340,
+        "pastRight": 36.27
+       }
+      ],
+      "inlineOverflow": 36.27,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 154 > clientWidth 118",
+     "span scrollWidth 90 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": "D…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 20.23,
+       "firstCharShownPx": 20.23,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 17.77
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 38
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 406 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "narrow--phone--light--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 12981,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 338,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 409
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 38
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 336
+      },
+      "scrollWidth": 103,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag",
+        "left": 81,
+        "right": 150.36,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 15.36
+       },
+       {
+        "text": "files",
+        "left": 81,
+        "right": 137.91,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 2.91
+       },
+       {
+        "text": "here",
+        "left": 81,
+        "right": 145.05,
+        "top": 175,
+        "bottom": 211,
+        "pastRight": 10.05
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 109.45,
+        "top": 223,
+        "bottom": 259,
+        "pastRight": 0
+       },
+       {
+        "text": "click",
+        "left": 81,
+        "right": 143.22,
+        "top": 271,
+        "bottom": 307,
+        "pastRight": 8.22
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 107.69,
+        "top": 319,
+        "bottom": 355,
+        "pastRight": 0
+       },
+       {
+        "text": "browse",
+        "left": 81,
+        "right": 184.16,
+        "top": 367,
+        "bottom": 403,
+        "pastRight": 49.16
+       }
+      ],
+      "inlineOverflow": 49.16,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 167 > clientWidth 118",
+     "span scrollWidth 103 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": "D…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 23.11,
+       "firstCharShownPx": 23.11,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 14.89
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 38
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 48
+      },
+      "scrollWidth": 464,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 545.17,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 464 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "narrow--phone--dark--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 12944,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 338,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 409
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 38
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 336
+      },
+      "scrollWidth": 103,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag",
+        "left": 81,
+        "right": 150.36,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 15.36
+       },
+       {
+        "text": "files",
+        "left": 81,
+        "right": 137.91,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 2.91
+       },
+       {
+        "text": "here",
+        "left": 81,
+        "right": 145.05,
+        "top": 175,
+        "bottom": 211,
+        "pastRight": 10.05
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 109.45,
+        "top": 223,
+        "bottom": 259,
+        "pastRight": 0
+       },
+       {
+        "text": "click",
+        "left": 81,
+        "right": 143.22,
+        "top": 271,
+        "bottom": 307,
+        "pastRight": 8.22
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 107.69,
+        "top": 319,
+        "bottom": 355,
+        "pastRight": 0
+       },
+       {
+        "text": "browse",
+        "left": 81,
+        "right": 184.16,
+        "top": 367,
+        "bottom": 403,
+        "pastRight": 49.16
+       }
+      ],
+      "inlineOverflow": 49.16,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 167 > clientWidth 118",
+     "span scrollWidth 103 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": "D…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 23.11,
+       "firstCharShownPx": 23.11,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 14.89
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 38
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 48
+      },
+      "scrollWidth": 464,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 545.17,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 464 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "narrow--default-prompt--desktop--light--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "default",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 866,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 82,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 145
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 79.38,
+       "contentBox": 38
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 80
+      },
+      "scrollWidth": 97,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose",
+        "left": 81,
+        "right": 177.52,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 42.52
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 116.8,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 42.52,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 161 > clientWidth 118",
+     "span scrollWidth 97 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": "C…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 20.23,
+       "firstCharShownPx": 20.23,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 17.77
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 79.38,
+       "contentBox": 38
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 40
+      },
+      "scrollWidth": 140,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose file",
+        "left": 81,
+        "right": 221.09,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 140 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "narrow--default-prompt--desktop--dark--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "default",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 858,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 82,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 145
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 79.38,
+       "contentBox": 38
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 80
+      },
+      "scrollWidth": 97,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose",
+        "left": 81,
+        "right": 177.52,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 42.52
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 116.8,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 42.52,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 161 > clientWidth 118",
+     "span scrollWidth 97 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": "C…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 20.23,
+       "firstCharShownPx": 20.23,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 17.77
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 79.38,
+       "contentBox": 38
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 40
+      },
+      "scrollWidth": 140,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose file",
+        "left": 81,
+        "right": 221.09,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 140 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "narrow--default-prompt--phone--light--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "default",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 5281,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 90.7,
+       "contentBox": 38
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 96
+      },
+      "scrollWidth": 110,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose",
+        "left": 81,
+        "right": 191.3,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 56.3
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 121.91,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 56.3,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 174 > clientWidth 118",
+     "span scrollWidth 110 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": "C…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 23.11,
+       "firstCharShownPx": 23.11,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 14.89
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 90.7,
+       "contentBox": 38
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 48
+      },
+      "scrollWidth": 160,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose file",
+        "left": 81,
+        "right": 241.09,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 160 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "narrow--default-prompt--phone--dark--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "default",
+    "device": "phone",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 5274,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 90.7,
+       "contentBox": 38
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 96
+      },
+      "scrollWidth": 110,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose",
+        "left": 81,
+        "right": 191.3,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 56.3
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 121.91,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 56.3,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 174 > clientWidth 118",
+     "span scrollWidth 110 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": "C…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 23.11,
+       "firstCharShownPx": 23.11,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 14.89
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 90.7,
+       "contentBox": 38
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 48
+      },
+      "scrollWidth": 160,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose file",
+        "left": 81,
+        "right": 241.09,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 160 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "defaults--desktop--light--text-100",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "100",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 24.13,
+       "threeCharsAndEllipsis": 36.56,
+       "contentBox": 1206
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1206,
+       "h": 20
+      },
+      "scrollWidth": 1206,
+      "clientWidth": 1206,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 252.08,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 24.13,
+       "threeCharsAndEllipsis": 36.56,
+       "contentBox": 1206
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1206,
+       "h": 20
+      },
+      "scrollWidth": 1206,
+      "clientWidth": 1206,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 252.08,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "defaults--desktop--light--text-200",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 1166
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1166,
+       "h": 40
+      },
+      "scrollWidth": 1166,
+      "clientWidth": 1166,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 1166
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1166,
+       "h": 40
+      },
+      "scrollWidth": 1166,
+      "clientWidth": 1166,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "defaults--phone--light--text-100",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "100",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 27.56,
+       "threeCharsAndEllipsis": 41.78,
+       "contentBox": 316
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 316,
+       "h": 24
+      },
+      "scrollWidth": 316,
+      "clientWidth": 316,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 281.09,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 27.56,
+       "threeCharsAndEllipsis": 41.78,
+       "contentBox": 316
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 316,
+       "h": 24
+      },
+      "scrollWidth": 316,
+      "clientWidth": 316,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 281.09,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "defaults--phone--light--text-200",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 8773,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 276
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 276,
+       "h": 96
+      },
+      "scrollWidth": 276,
+      "clientWidth": 276,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 81,
+        "right": 326.44,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 81,
+        "right": 290.84,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": "Drag files here o…",
+      "cutInfo": {
+       "charsShown": 17,
+       "keepsFirstCharacter": false,
+       "firstCharWidth": 23.11,
+       "firstCharShownPx": null,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 32
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 276
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 276,
+       "h": 48
+      },
+      "scrollWidth": 464,
+      "clientWidth": 276,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 545.17,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 464 > clientWidth 276"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "defaults--desktop--dark--text-100",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "100",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 24.13,
+       "threeCharsAndEllipsis": 36.56,
+       "contentBox": 1206
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1206,
+       "h": 20
+      },
+      "scrollWidth": 1206,
+      "clientWidth": 1206,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 252.08,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 24.13,
+       "threeCharsAndEllipsis": 36.56,
+       "contentBox": 1206
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1206,
+       "h": 20
+      },
+      "scrollWidth": 1206,
+      "clientWidth": 1206,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 252.08,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "defaults--desktop--dark--text-200",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 1166
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1166,
+       "h": 40
+      },
+      "scrollWidth": 1166,
+      "clientWidth": 1166,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 1166
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1166,
+       "h": 40
+      },
+      "scrollWidth": 1166,
+      "clientWidth": 1166,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "dropzone--dropzone--desktop--light--text-200",
+   "cond": {
+    "group": "dropzone",
+    "story": "dropzone",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 194,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 257
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 406
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 436.92,
+       "y": 169,
+       "w": 406.16,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 406,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 436.92,
+        "right": 843.08,
+        "top": 173,
+        "bottom": 204,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 194,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 257
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 406
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 436.92,
+       "y": 169,
+       "w": 406.16,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 406,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 436.92,
+        "right": 843.08,
+        "top": 173,
+        "bottom": 204,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "dropzone--dropzone--phone--light--text-200",
+   "cond": {
+    "group": "dropzone",
+    "story": "dropzone",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 250,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 321
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 292
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 49,
+       "y": 177,
+       "w": 292,
+       "h": 96
+      },
+      "scrollWidth": 292,
+      "clientWidth": 292,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 72.28,
+        "right": 317.72,
+        "top": 183,
+        "bottom": 219,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 90.08,
+        "right": 299.92,
+        "top": 231,
+        "bottom": 267,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 250,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 321
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 292
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 49,
+       "y": 177,
+       "w": 292,
+       "h": 96
+      },
+      "scrollWidth": 292,
+      "clientWidth": 292,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 72.28,
+        "right": 317.72,
+        "top": 183,
+        "bottom": 219,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 90.08,
+        "right": 299.92,
+        "top": 231,
+        "bottom": 267,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "dropzone--dropzone--desktop--dark--text-200",
+   "cond": {
+    "group": "dropzone",
+    "story": "dropzone",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 194,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 257
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 406
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 436.92,
+       "y": 169,
+       "w": 406.16,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 406,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 436.92,
+        "right": 843.08,
+        "top": 173,
+        "bottom": 204,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 194,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 257
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 406
+      },
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 436.92,
+       "y": 169,
+       "w": 406.16,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 406,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 436.92,
+        "right": 843.08,
+        "top": 173,
+        "bottom": 204,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--desktop--light--text-100--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "100",
+    "width": null,
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 21.8,
+       "threeCharsAndEllipsis": 37.36,
+       "contentBox": 1178
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1178,
+       "h": 20
+      },
+      "scrollWidth": 1178,
+      "clientWidth": 1178,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 49,
+        "right": 168.06,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 21.8,
+       "threeCharsAndEllipsis": 37.36,
+       "contentBox": 1178
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1178,
+       "h": 20
+      },
+      "scrollWidth": 1178,
+      "clientWidth": 1178,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 49,
+        "right": 168.06,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--desktop--light--text-200--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 1130
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1130,
+       "h": 40
+      },
+      "scrollWidth": 1130,
+      "clientWidth": 1130,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 1130
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1130,
+       "h": 40
+      },
+      "scrollWidth": 1130,
+      "clientWidth": 1130,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--desktop--light--text-200--w120--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 15.58,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 2
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 2,
+       "h": 40
+      },
+      "scrollWidth": 238,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 238 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 15.58,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 2
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 2,
+       "h": 40
+      },
+      "scrollWidth": 238,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 238 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--phone--light--text-100--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "100",
+    "width": null,
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 24.91,
+       "threeCharsAndEllipsis": 42.7,
+       "contentBox": 288
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 288,
+       "h": 24
+      },
+      "scrollWidth": 288,
+      "clientWidth": 288,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 49,
+        "right": 185.06,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 360 > clientWidth 356",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 24.91,
+       "threeCharsAndEllipsis": 42.7,
+       "contentBox": 288
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 288,
+       "h": 24
+      },
+      "scrollWidth": 288,
+      "clientWidth": 288,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 49,
+        "right": 185.06,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 360 > clientWidth 356",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "file--phone--light--text-200--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "quarterly-repo…",
+      "cutInfo": {
+       "charsShown": 14,
+       "keepsFirstCharacter": false,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": null,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 32
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 240
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 240,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 240,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 240",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "quarterly-repo…",
+      "cutInfo": {
+       "charsShown": 14,
+       "keepsFirstCharacter": false,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": null,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 32
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 240
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 240,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 240,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 240",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "file--phone--light--text-200--w120--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 2
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 2,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 2
+      },
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 2,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  }
+ ],
+ "interest": {
+  "keyboard--w120|main": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 3,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 4,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 9,
+    "peakChangedPx": 642,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -400,
+      "changedPx": 0
+     },
+     {
+      "atMs": 13,
+      "changedPx": 0
+     },
+     {
+      "atMs": 27,
+      "changedPx": 639
+     },
+     {
+      "atMs": 44,
+      "changedPx": 642
+     },
+     {
+      "atMs": 61,
+      "changedPx": 642
+     },
+     {
+      "atMs": 78,
+      "changedPx": 642
+     },
+     {
+      "atMs": 94,
+      "changedPx": 642
+     },
+     {
+      "atMs": 111,
+      "changedPx": 642
+     },
+     {
+      "atMs": 128,
+      "changedPx": 642
+     },
+     {
+      "atMs": 145,
+      "changedPx": 642
+     },
+     {
+      "atMs": 1640,
+      "changedPx": 642
+     }
+    ]
+   }
+  },
+  "keyboard--w120|pr": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 5,
+    "shownMs": {
+     "median": 32.3,
+     "range": "25.5–33.7"
+    },
+    "fullMs": {
+     "median": 125.8,
+     "range": "123.3–126.7"
+    },
+    "flashes": 0,
+    "positions": [
+     {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 114
+     }
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 33.7,
+     "firstVisibleOpacity": 0.375,
+     "fullOpacityMs": 123.3,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 25.5,
+     "firstVisibleOpacity": 0.377,
+     "fullOpacityMs": 125.3,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 32.4,
+     "firstVisibleOpacity": 0.374,
+     "fullOpacityMs": 126,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 3,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 32.3,
+     "firstVisibleOpacity": 0.374,
+     "fullOpacityMs": 125.8,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 4,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 26.9,
+     "firstVisibleOpacity": 0.374,
+     "fullOpacityMs": 126.7,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 11,
+    "peakChangedPx": 25343,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -400,
+      "changedPx": 0
+     },
+     {
+      "atMs": 28,
+      "changedPx": 0
+     },
+     {
+      "atMs": 41,
+      "changedPx": 23185
+     },
+     {
+      "atMs": 48,
+      "changedPx": 23744
+     },
+     {
+      "atMs": 64,
+      "changedPx": 24196
+     },
+     {
+      "atMs": 83,
+      "changedPx": 24381
+     },
+     {
+      "atMs": 98,
+      "changedPx": 24735
+     },
+     {
+      "atMs": 115,
+      "changedPx": 24665
+     },
+     {
+      "atMs": 131,
+      "changedPx": 24750
+     },
+     {
+      "atMs": 148,
+      "changedPx": 24978
+     },
+     {
+      "atMs": 166,
+      "changedPx": 25343
+     },
+     {
+      "atMs": 181,
+      "changedPx": 25343
+     },
+     {
+      "atMs": 1659,
+      "changedPx": 25343
+     }
+    ]
+   }
+  },
+  "keyboard--default-prompt--w120|main": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 3,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "main",
+     "run": 4,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 9,
+    "peakChangedPx": 259,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -399,
+      "changedPx": 0
+     },
+     {
+      "atMs": 21,
+      "changedPx": 0
+     },
+     {
+      "atMs": 29,
+      "changedPx": 259
+     },
+     {
+      "atMs": 47,
+      "changedPx": 259
+     },
+     {
+      "atMs": 63,
+      "changedPx": 259
+     },
+     {
+      "atMs": 80,
+      "changedPx": 259
+     },
+     {
+      "atMs": 96,
+      "changedPx": 259
+     },
+     {
+      "atMs": 113,
+      "changedPx": 259
+     },
+     {
+      "atMs": 130,
+      "changedPx": 259
+     },
+     {
+      "atMs": 146,
+      "changedPx": 259
+     },
+     {
+      "atMs": 1642,
+      "changedPx": 259
+     }
+    ]
+   }
+  },
+  "keyboard--default-prompt--w120|pr": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 5,
+    "shownMs": {
+     "median": 33.4,
+     "range": "25.9–34.1"
+    },
+    "fullMs": {
+     "median": 126.4,
+     "range": "124.2–127.8"
+    },
+    "flashes": 0,
+    "positions": [
+     {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 114
+     }
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 34.1,
+     "firstVisibleOpacity": 0.376,
+     "fullOpacityMs": 124.2,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 25.9,
+     "firstVisibleOpacity": 0.375,
+     "fullOpacityMs": 125.7,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 33.4,
+     "firstVisibleOpacity": 0.374,
+     "fullOpacityMs": 126.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 3,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 32.6,
+     "firstVisibleOpacity": 0.374,
+     "fullOpacityMs": 126.8,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 4,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 33.5,
+     "firstVisibleOpacity": 0.375,
+     "fullOpacityMs": 127.8,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "below",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 114
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 11,
+    "peakChangedPx": 8091,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -400,
+      "changedPx": 0
+     },
+     {
+      "atMs": 27,
+      "changedPx": 0
+     },
+     {
+      "atMs": 41,
+      "changedPx": 7381
+     },
+     {
+      "atMs": 48,
+      "changedPx": 7517
+     },
+     {
+      "atMs": 65,
+      "changedPx": 7638
+     },
+     {
+      "atMs": 81,
+      "changedPx": 7671
+     },
+     {
+      "atMs": 98,
+      "changedPx": 7752
+     },
+     {
+      "atMs": 115,
+      "changedPx": 7762
+     },
+     {
+      "atMs": 132,
+      "changedPx": 7877
+     },
+     {
+      "atMs": 149,
+      "changedPx": 7916
+     },
+     {
+      "atMs": 165,
+      "changedPx": 8091
+     },
+     {
+      "atMs": 182,
+      "changedPx": 8091
+     },
+     {
+      "atMs": 1660,
+      "changedPx": 8091
+     }
+    ]
+   }
+  },
+  "hover--w120|main": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "body"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 0,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 1,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 2,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 3,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 4,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 345
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 10,
+    "peakChangedPx": 1380,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -458,
+      "changedPx": 0
+     },
+     {
+      "atMs": 8,
+      "changedPx": 0
+     },
+     {
+      "atMs": 21,
+      "changedPx": 0
+     },
+     {
+      "atMs": 38,
+      "changedPx": 677
+     },
+     {
+      "atMs": 55,
+      "changedPx": 746
+     },
+     {
+      "atMs": 71,
+      "changedPx": 929
+     },
+     {
+      "atMs": 88,
+      "changedPx": 1377
+     },
+     {
+      "atMs": 105,
+      "changedPx": 1380
+     },
+     {
+      "atMs": 122,
+      "changedPx": 1380
+     },
+     {
+      "atMs": 139,
+      "changedPx": 1380
+     },
+     {
+      "atMs": 1585,
+      "changedPx": 1380
+     }
+    ]
+   }
+  },
+  "hover--w120|pr": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "body"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 0,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 1,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 2,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 3,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "hover--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 4,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 10,
+    "peakChangedPx": 473,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -457,
+      "changedPx": 0
+     },
+     {
+      "atMs": 8,
+      "changedPx": 0
+     },
+     {
+      "atMs": 22,
+      "changedPx": 0
+     },
+     {
+      "atMs": 38,
+      "changedPx": 217
+     },
+     {
+      "atMs": 55,
+      "changedPx": 282
+     },
+     {
+      "atMs": 71,
+      "changedPx": 470
+     },
+     {
+      "atMs": 88,
+      "changedPx": 471
+     },
+     {
+      "atMs": 105,
+      "changedPx": 473
+     },
+     {
+      "atMs": 122,
+      "changedPx": 473
+     },
+     {
+      "atMs": 138,
+      "changedPx": 473
+     },
+     {
+      "atMs": 1584,
+      "changedPx": 473
+     }
+    ]
+   }
+  },
+  "hover--default-prompt--w120|main": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "body"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 0,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    },
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 1,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    },
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 2,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    },
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 3,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    },
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "main",
+     "run": 4,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 145
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 10,
+    "peakChangedPx": 613,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -457,
+      "changedPx": 0
+     },
+     {
+      "atMs": 8,
+      "changedPx": 0
+     },
+     {
+      "atMs": 22,
+      "changedPx": 0
+     },
+     {
+      "atMs": 39,
+      "changedPx": 288
+     },
+     {
+      "atMs": 55,
+      "changedPx": 350
+     },
+     {
+      "atMs": 72,
+      "changedPx": 539
+     },
+     {
+      "atMs": 89,
+      "changedPx": 611
+     },
+     {
+      "atMs": 105,
+      "changedPx": 613
+     },
+     {
+      "atMs": 122,
+      "changedPx": 613
+     },
+     {
+      "atMs": 139,
+      "changedPx": 613
+     },
+     {
+      "atMs": 1584,
+      "changedPx": 613
+     }
+    ]
+   }
+  },
+  "hover--default-prompt--w120|pr": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "body"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 0,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 1,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 2,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 3,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "hover--default-prompt--w120",
+     "how": "hover",
+     "build": "pr",
+     "run": 4,
+     "focused": {
+      "tag": "body",
+      "inField": false,
+      "label": null,
+      "focusVisible": false
+     },
+     "start": {
+      "type": "pointerover",
+      "tag": "div"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 10,
+    "peakChangedPx": 473,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -458,
+      "changedPx": 0
+     },
+     {
+      "atMs": 8,
+      "changedPx": 0
+     },
+     {
+      "atMs": 21,
+      "changedPx": 0
+     },
+     {
+      "atMs": 39,
+      "changedPx": 217
+     },
+     {
+      "atMs": 55,
+      "changedPx": 282
+     },
+     {
+      "atMs": 71,
+      "changedPx": 470
+     },
+     {
+      "atMs": 88,
+      "changedPx": 471
+     },
+     {
+      "atMs": 105,
+      "changedPx": 473
+     },
+     {
+      "atMs": 122,
+      "changedPx": 473
+     },
+     {
+      "atMs": 138,
+      "changedPx": 473
+     },
+     {
+      "atMs": 1584,
+      "changedPx": 473
+     }
+    ]
+   }
+  },
+  "keyboard--default-width|main": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "main",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "main",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "main",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "main",
+     "run": 3,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "main",
+     "run": 4,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 9,
+    "peakChangedPx": 2444,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -400,
+      "changedPx": 0
+     },
+     {
+      "atMs": 21,
+      "changedPx": 0
+     },
+     {
+      "atMs": 30,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 47,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 63,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 80,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 97,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 114,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 130,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 147,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 1645,
+      "changedPx": 2444
+     }
+    ]
+   }
+  },
+  "keyboard--default-width|pr": {
+   "summary": {
+    "n": 5,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 3,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-width",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 4,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": false,
+     "field": {
+      "x": 16,
+      "y": 64,
+      "w": 1248,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 1263,
+       "top": 65,
+       "bottom": 105
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 9,
+    "peakChangedPx": 2444,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -399,
+      "changedPx": 0
+     },
+     {
+      "atMs": 23,
+      "changedPx": 0
+     },
+     {
+      "atMs": 30,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 48,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 64,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 81,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 97,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 114,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 131,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 148,
+      "changedPx": 2444
+     },
+     {
+      "atMs": 1643,
+      "changedPx": 2444
+     }
+    ]
+   }
+  },
+  "keyboard--w120--room-above|main": {
+   "summary": {
+    "n": 3,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--w120--room-above",
+     "how": "keyboard",
+     "build": "main",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 545
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120--room-above",
+     "how": "keyboard",
+     "build": "main",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 545
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120--room-above",
+     "how": "keyboard",
+     "build": "main",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 282,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 545
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 9,
+    "peakChangedPx": 642,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -401,
+      "changedPx": 0
+     },
+     {
+      "atMs": 14,
+      "changedPx": 0
+     },
+     {
+      "atMs": 28,
+      "changedPx": 639
+     },
+     {
+      "atMs": 45,
+      "changedPx": 642
+     },
+     {
+      "atMs": 61,
+      "changedPx": 642
+     },
+     {
+      "atMs": 78,
+      "changedPx": 642
+     },
+     {
+      "atMs": 95,
+      "changedPx": 642
+     },
+     {
+      "atMs": 112,
+      "changedPx": 642
+     },
+     {
+      "atMs": 128,
+      "changedPx": 642
+     },
+     {
+      "atMs": 145,
+      "changedPx": 642
+     },
+     {
+      "atMs": 1663,
+      "changedPx": 642
+     }
+    ]
+   }
+  },
+  "keyboard--w120--room-above|pr": {
+   "summary": {
+    "n": 3,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 3,
+    "shownMs": {
+     "median": 30.8,
+     "range": "30.2–31"
+    },
+    "fullMs": {
+     "median": 125.4,
+     "range": "123.2–126.4"
+    },
+    "flashes": 0,
+    "positions": [
+     {
+      "side": "above",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 160
+     }
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--w120--room-above",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 31,
+     "firstVisibleOpacity": 0.375,
+     "fullOpacityMs": 123.2,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 160
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 305
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120--room-above",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 30.2,
+     "firstVisibleOpacity": 0.375,
+     "fullOpacityMs": 125.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 160
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 305
+      }
+     }
+    },
+    {
+     "case": "keyboard--w120--room-above",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 30.8,
+     "firstVisibleOpacity": 0.375,
+     "fullOpacityMs": 126.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 8,
+      "centringOffset": 106,
+      "text": "Drag files here or click to browse",
+      "w": 300,
+      "h": 96,
+      "x": 32,
+      "y": 160
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 305
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 11,
+    "peakChangedPx": 24390,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -401,
+      "changedPx": 0
+     },
+     {
+      "atMs": 24,
+      "changedPx": 0
+     },
+     {
+      "atMs": 37,
+      "changedPx": 22717
+     },
+     {
+      "atMs": 47,
+      "changedPx": 23147
+     },
+     {
+      "atMs": 64,
+      "changedPx": 23474
+     },
+     {
+      "atMs": 80,
+      "changedPx": 23559
+     },
+     {
+      "atMs": 97,
+      "changedPx": 23965
+     },
+     {
+      "atMs": 114,
+      "changedPx": 23869
+     },
+     {
+      "atMs": 130,
+      "changedPx": 23784
+     },
+     {
+      "atMs": 147,
+      "changedPx": 23864
+     },
+     {
+      "atMs": 163,
+      "changedPx": 24390
+     },
+     {
+      "atMs": 181,
+      "changedPx": 24365
+     },
+     {
+      "atMs": 1658,
+      "changedPx": 24365
+     }
+    ]
+   }
+  },
+  "keyboard--default-prompt--w120--room-above|main": {
+   "summary": {
+    "n": 3,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 0,
+    "shownMs": {
+     "median": null,
+     "range": "-"
+    },
+    "fullMs": {
+     "median": null,
+     "range": "-"
+    },
+    "flashes": 0,
+    "positions": [
+     null
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--default-prompt--w120--room-above",
+     "how": "keyboard",
+     "build": "main",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120--room-above",
+     "how": "keyboard",
+     "build": "main",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 345
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120--room-above",
+     "how": "keyboard",
+     "build": "main",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 82,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 345
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 9,
+    "peakChangedPx": 259,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -400,
+      "changedPx": 0
+     },
+     {
+      "atMs": 22,
+      "changedPx": 0
+     },
+     {
+      "atMs": 29,
+      "changedPx": 259
+     },
+     {
+      "atMs": 46,
+      "changedPx": 259
+     },
+     {
+      "atMs": 63,
+      "changedPx": 259
+     },
+     {
+      "atMs": 79,
+      "changedPx": 259
+     },
+     {
+      "atMs": 96,
+      "changedPx": 259
+     },
+     {
+      "atMs": 115,
+      "changedPx": 259
+     },
+     {
+      "atMs": 129,
+      "changedPx": 259
+     },
+     {
+      "atMs": 146,
+      "changedPx": 259
+     },
+     {
+      "atMs": 1642,
+      "changedPx": 259
+     }
+    ]
+   }
+  },
+  "keyboard--default-prompt--w120--room-above|pr": {
+   "summary": {
+    "n": 3,
+    "focusedInField": true,
+    "focusedTag": [
+     "button"
+    ],
+    "shownIn": 3,
+    "shownMs": {
+     "median": 31.4,
+     "range": "29.9–31.8"
+    },
+    "fullMs": {
+     "median": 126.1,
+     "range": "124.6–126.5"
+    },
+    "flashes": 0,
+    "positions": [
+     {
+      "side": "above",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 200
+     }
+    ]
+   },
+   "runs": [
+    {
+     "case": "keyboard--default-prompt--w120--room-above",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 0,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 31.8,
+     "firstVisibleOpacity": 0.375,
+     "fullOpacityMs": 124.6,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 200
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 305
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120--room-above",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 1,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 31.4,
+     "firstVisibleOpacity": 0.376,
+     "fullOpacityMs": 126.1,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 200
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 305
+      }
+     }
+    },
+    {
+     "case": "keyboard--default-prompt--w120--room-above",
+     "how": "keyboard",
+     "build": "pr",
+     "run": 2,
+     "focused": {
+      "tag": "button",
+      "inField": true,
+      "label": "Upload file",
+      "focusVisible": true
+     },
+     "start": {
+      "type": "focusin",
+      "tag": "button"
+     },
+     "firstVisibleMs": 29.9,
+     "firstVisibleOpacity": 0.374,
+     "fullOpacityMs": 126.5,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 8,
+      "centringOffset": 42,
+      "text": "Choose file",
+      "w": 172.1,
+      "h": 56,
+      "x": 32,
+      "y": 200
+     },
+     "promptCut": true,
+     "field": {
+      "x": 16,
+      "y": 264,
+      "w": 120,
+      "h": 42,
+      "inner": {
+       "left": 17,
+       "right": 135,
+       "top": 265,
+       "bottom": 305
+      }
+     }
+    }
+   ],
+   "screencast": {
+    "inWindow": 11,
+    "peakChangedPx": 7192,
+    "droppedAfterPeak": false,
+    "frames": [
+     {
+      "atMs": -399,
+      "changedPx": 0
+     },
+     {
+      "atMs": 26,
+      "changedPx": 0
+     },
+     {
+      "atMs": 39,
+      "changedPx": 6975
+     },
+     {
+      "atMs": 49,
+      "changedPx": 7024
+     },
+     {
+      "atMs": 65,
+      "changedPx": 6988
+     },
+     {
+      "atMs": 82,
+      "changedPx": 7002
+     },
+     {
+      "atMs": 99,
+      "changedPx": 7079
+     },
+     {
+      "atMs": 116,
+      "changedPx": 7050
+     },
+     {
+      "atMs": 132,
+      "changedPx": 7034
+     },
+     {
+      "atMs": 149,
+      "changedPx": 7035
+     },
+     {
+      "atMs": 165,
+      "changedPx": 7192
+     },
+     {
+      "atMs": 182,
+      "changedPx": 7166
+     },
+     {
+      "atMs": 1659,
+      "changedPx": 7166
+     }
+    ]
+   }
+  }
+ }
+}
