@@ -353,7 +353,7 @@ describe('clickGuard', () => {
     expect(click(target).defaultPrevented).toBe(true);
   });
 
-  it('armed after a touchstart that was not cancelable, stays armed after the cancelled touchend and takes the compatibility mousedown, mouseup and click that WebKit still sends in a Home Screen web app (spec:AST-094 FR21)', () => {
+  it('armed by the menu press model, stays armed after the cancelled touchend and takes the compatibility mousedown, mouseup and click that WebKit can still send in a Home Screen web app, whether or not the touchstart was cancelable (spec:AST-094 FR21)', () => {
     const target = button();
     const onPage = vi.fn();
     for (const type of ['mousedown', 'mouseup', 'click']) {
@@ -363,7 +363,7 @@ describe('clickGuard', () => {
       armClickGuard(document, {
         staysInstalled: true,
         cancelsTouchEnd: true,
-        touchStartCancelable: false,
+        staysArmedAfterTouchEnd: true,
       });
       expect(touchEnd(target).defaultPrevented).toBe(true);
       expect(isClickGuardArmed(document)).toBe(true);
@@ -385,12 +385,12 @@ describe('clickGuard', () => {
     }
   });
 
-  it("armed after a touchstart that was not cancelable, keeps a full window from the cancelled touchend; after it, and after the next pointerdown, a tap's mouse events and click reach the page", () => {
+  it("armed by the menu press model, keeps a full window from the cancelled touchend; after it, and after the next pointerdown, a tap's mouse events and click reach the page", () => {
     vi.useFakeTimers();
     const target = button();
     armClickGuard(document, {
       cancelsTouchEnd: true,
-      touchStartCancelable: false,
+      staysArmedAfterTouchEnd: true,
     });
     // A busy main thread can hold the touchend until late in the window.
     vi.advanceTimersByTime(CLICK_GUARD_WINDOW_MS - 50);
@@ -412,7 +412,7 @@ describe('clickGuard', () => {
     }
     armClickGuard(document, {
       cancelsTouchEnd: true,
-      touchStartCancelable: false,
+      staysArmedAfterTouchEnd: true,
     });
     expect(touchEnd(target).defaultPrevented).toBe(true);
     // A new press is a new gesture: its click is the page's.

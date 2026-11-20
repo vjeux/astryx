@@ -7,8 +7,9 @@
  * @output A finger's pick in a submenu closes the menu and takes its row out
  *   of the document before the touch's touchend. The touchend is still
  *   cancelled, so the browser sends no click to the control beneath, also
- *   past the click guard's window. When the touchstart was not cancelable,
- *   the compatibility mouse events and click that follow still reach nothing.
+ *   past the click guard's window. Whether or not the touchstart was
+ *   cancelable, the compatibility mouse events and click that follow still
+ *   reach nothing.
  * @position Unit evidence for module:DropdownMenu/useMenuPress FR5 and the
  *   click guard (spec:AST-094 FR21, FR26). The browser half is
  *   __tests__/DropdownMenuPickTapThrough.interaction.browser.spec.ts
@@ -183,6 +184,20 @@ describe("DropdownMenu: a finger's pick in a submenu (spec:AST-094 FR21, FR26)",
     vi.useFakeTimers();
     const picked = menuRow('menuitemradio', 'Oldest');
     tapRow(picked, false);
+    expect(picked.isConnected).toBe(false);
+    expect(fireTouch(picked, 'touchend', 7).defaultPrevented).toBe(true);
+    compatibilityClickAt(beneath);
+    expect(onBeneathPress).not.toHaveBeenCalled();
+    expect(onBeneath).not.toHaveBeenCalled();
+  });
+
+  it('on a radio item, after a cancelable touchstart too, the compatibility mouse events and click that follow the cancelled touchend reach nothing beneath', async () => {
+    const {onBeneath, beneath} = await openSubmenuOver(<SortMenu />, 'Sort');
+    const onBeneathPress = vi.fn();
+    beneath.addEventListener('mousedown', onBeneathPress);
+    vi.useFakeTimers();
+    const picked = menuRow('menuitemradio', 'Oldest');
+    tapRow(picked);
     expect(picked.isConnected).toBe(false);
     expect(fireTouch(picked, 'touchend', 7).defaultPrevented).toBe(true);
     compatibilityClickAt(beneath);
