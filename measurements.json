@@ -1,0 +1,454 @@
+{
+  "route": "/templates/useIndicatorFocusRingHookUsage/",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "chromium": "149.0.7827.55",
+  "stamp": "54a540ee3dc89859db3cef070f2c448bcb3f6ab0",
+  "servedLocally": [
+    "fonts.googleapis.com → the neutral theme's fonts.css",
+    "fonts/figtree-latin-400-normal.woff2",
+    "fonts/figtree-latin-500-normal.woff2",
+    "fonts/figtree-latin-600-normal.woff2",
+    "fonts/figtree-latin-700-normal.woff2"
+  ],
+  "blocked": [],
+  "errors": [],
+  "records": [
+    {
+      "scheme": "light",
+      "url": "/templates/useIndicatorFocusRingHookUsage/?embed=1&theme=neutral&mode=light",
+      "rest": {
+        "active": {
+          "tag": "body",
+          "type": null,
+          "focusVisible": false,
+          "checked": null
+        },
+        "inputChecked": true,
+        "boxes": {
+          "indicator": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "wrapper": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "label": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          },
+          "input": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          }
+        },
+        "rings": {
+          "indicator": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "1px solid rgb(27, 27, 27)"
+          },
+          "wrapper": {
+            "outline": "none 3px rgb(0, 0, 0)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(0, 0, 0)"
+          },
+          "label": {
+            "outline": "none 3px rgb(0, 0, 0)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(0, 0, 0)"
+          },
+          "input": {
+            "outline": "none 3px rgb(0, 0, 0)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px none rgb(0, 0, 0)"
+          }
+        },
+        "supporting": "Checked. Tab here to ring only the indicator.",
+        "cardFound": true
+      },
+      "stops": [
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": ""
+        }
+      ],
+      "tabbed": {
+        "active": {
+          "tag": "input",
+          "type": "checkbox",
+          "focusVisible": true,
+          "checked": true
+        },
+        "inputChecked": true,
+        "boxes": {
+          "indicator": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "wrapper": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "label": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          },
+          "input": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          }
+        },
+        "rings": {
+          "indicator": {
+            "outline": "solid 2px rgb(27, 27, 27)",
+            "outlineOffset": "3px",
+            "boxShadow": "none",
+            "border": "1px solid rgb(27, 27, 27)"
+          },
+          "wrapper": {
+            "outline": "none 3px rgb(0, 0, 0)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(0, 0, 0)"
+          },
+          "label": {
+            "outline": "none 3px rgb(0, 0, 0)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(0, 0, 0)"
+          },
+          "input": {
+            "outline": "auto 1px rgb(16, 16, 16)",
+            "outlineOffset": "2px",
+            "boxShadow": "none",
+            "border": "0px none rgb(0, 0, 0)"
+          }
+        },
+        "supporting": "Checked. Tab here to ring only the indicator.",
+        "cardFound": true
+      },
+      "changed": {
+        "changedPixels": 292,
+        "box": {
+          "x": 471,
+          "y": 178,
+          "w": 34,
+          "h": 34
+        }
+      },
+      "ringReachPx": 5,
+      "ringBox": {
+        "x": 470,
+        "y": 177.2,
+        "w": 36,
+        "h": 36
+      },
+      "changedInsideRingBox": true,
+      "clicked": {
+        "active": {
+          "tag": "input",
+          "type": "checkbox",
+          "focusVisible": false,
+          "checked": false
+        },
+        "inputChecked": false,
+        "boxes": {
+          "indicator": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "wrapper": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "label": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          },
+          "input": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          }
+        },
+        "rings": {
+          "indicator": {
+            "outline": "none 3px rgb(27, 27, 27)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "1px solid rgb(212, 212, 212)"
+          },
+          "wrapper": {
+            "outline": "none 3px rgb(0, 0, 0)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(0, 0, 0)"
+          },
+          "label": {
+            "outline": "none 3px rgb(0, 0, 0)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(0, 0, 0)"
+          },
+          "input": {
+            "outline": "none 3px rgb(0, 0, 0)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px none rgb(0, 0, 0)"
+          }
+        },
+        "supporting": "Unchecked. Tab here to ring only the indicator.",
+        "cardFound": true
+      }
+    },
+    {
+      "scheme": "dark",
+      "url": "/templates/useIndicatorFocusRingHookUsage/?embed=1&theme=neutral&mode=dark",
+      "rest": {
+        "active": {
+          "tag": "body",
+          "type": null,
+          "focusVisible": false,
+          "checked": null
+        },
+        "inputChecked": true,
+        "boxes": {
+          "indicator": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "wrapper": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "label": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          },
+          "input": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          }
+        },
+        "rings": {
+          "indicator": {
+            "outline": "none 3px rgb(17, 17, 17)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "1px solid rgb(241, 241, 241)"
+          },
+          "wrapper": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(255, 255, 255)"
+          },
+          "label": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(255, 255, 255)"
+          },
+          "input": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px none rgb(255, 255, 255)"
+          }
+        },
+        "supporting": "Checked. Tab here to ring only the indicator.",
+        "cardFound": true
+      },
+      "stops": [
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": ""
+        }
+      ],
+      "tabbed": {
+        "active": {
+          "tag": "input",
+          "type": "checkbox",
+          "focusVisible": true,
+          "checked": true
+        },
+        "inputChecked": true,
+        "boxes": {
+          "indicator": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "wrapper": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "label": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          },
+          "input": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          }
+        },
+        "rings": {
+          "indicator": {
+            "outline": "solid 2px rgb(241, 241, 241)",
+            "outlineOffset": "3px",
+            "boxShadow": "none",
+            "border": "1px solid rgb(241, 241, 241)"
+          },
+          "wrapper": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(255, 255, 255)"
+          },
+          "label": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(255, 255, 255)"
+          },
+          "input": {
+            "outline": "auto 1px rgb(16, 16, 16)",
+            "outlineOffset": "2px",
+            "boxShadow": "none",
+            "border": "0px none rgb(255, 255, 255)"
+          }
+        },
+        "supporting": "Checked. Tab here to ring only the indicator.",
+        "cardFound": true
+      },
+      "changed": {
+        "changedPixels": 292,
+        "box": {
+          "x": 471,
+          "y": 178,
+          "w": 34,
+          "h": 34
+        }
+      },
+      "ringReachPx": 5,
+      "ringBox": {
+        "x": 470,
+        "y": 177.2,
+        "w": 36,
+        "h": 36
+      },
+      "changedInsideRingBox": true,
+      "clicked": {
+        "active": {
+          "tag": "input",
+          "type": "checkbox",
+          "focusVisible": false,
+          "checked": false
+        },
+        "inputChecked": false,
+        "boxes": {
+          "indicator": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "wrapper": {
+            "x": 476,
+            "y": 183.2,
+            "w": 24,
+            "h": 24
+          },
+          "label": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          },
+          "input": {
+            "x": 476,
+            "y": 183.2,
+            "w": 328,
+            "h": 24
+          }
+        },
+        "rings": {
+          "indicator": {
+            "outline": "none 3px rgb(241, 241, 241)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "1px solid rgb(82, 82, 82)"
+          },
+          "wrapper": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(255, 255, 255)"
+          },
+          "label": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px solid rgb(255, 255, 255)"
+          },
+          "input": {
+            "outline": "none 3px rgb(255, 255, 255)",
+            "outlineOffset": "0px",
+            "boxShadow": "none",
+            "border": "0px none rgb(255, 255, 255)"
+          }
+        },
+        "supporting": "Unchecked. Tab here to ring only the indicator.",
+        "cardFound": true
+      }
+    }
+  ]
+}
