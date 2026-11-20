@@ -1,0 +1,11020 @@
+{
+ "chromium": "149.0.7827.55",
+ "dpr": 2,
+ "builds": {
+  "before": {
+   "commit": "15ae97ae5a98e36f9561d4639850bb57520c7c41",
+   "environment": "preview",
+   "matches": true
+  },
+  "after": {
+   "commit": "178b38c042756751bbcaf247bc6fcd735eca6dbb",
+   "environment": "preview",
+   "matches": true
+  }
+ },
+ "handle": [
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 1280,
+   "placement": "start",
+   "mode": "rest",
+   "frame": "before-handle-options-start-rest-light-1280.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 1280,
+   "placement": "start",
+   "mode": "rest",
+   "frame": "after-handle-options-start-rest-light-1280.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 860
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 1280,
+   "placement": "start",
+   "mode": "reorder",
+   "frame": "before-handle-options-start-reorder-light-1280.png",
+   "hint": {
+    "l": 24,
+    "t": 87,
+    "r": 124.6875,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 48,
+      "t": 98,
+      "r": 1256,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 1280,
+   "placement": "start",
+   "mode": "reorder",
+   "frame": "after-handle-options-start-reorder-light-1280.png",
+   "hint": {
+    "l": 24,
+    "t": 87,
+    "r": 124.6875,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 48,
+      "t": 98,
+      "r": 1256,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 688
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 1280,
+   "placement": "end",
+   "mode": "rest",
+   "frame": "before-handle-options-end-rest-light-1280.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 26,
+      "r": 1256,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 63,
+      "r": 1256,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 100,
+      "r": 1256,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 137,
+      "r": 1256,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 174,
+      "r": 1256,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 1280,
+   "placement": "end",
+   "mode": "rest",
+   "frame": "after-handle-options-end-rest-light-1280.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 26,
+      "r": 1256,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 63,
+      "r": 1256,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 100,
+      "r": 1256,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 137,
+      "r": 1256,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 174,
+      "r": 1256,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 860
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 1280,
+   "placement": "end",
+   "mode": "reorder",
+   "frame": "before-handle-options-end-reorder-light-1280.png",
+   "hint": {
+    "l": 1155.3125,
+    "t": 87,
+    "r": 1256,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 24,
+      "t": 98,
+      "r": 1232,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 26,
+      "r": 1256,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 63,
+      "r": 1256,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 100,
+      "r": 1256,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 137,
+      "r": 1256,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 174,
+      "r": 1256,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 1280,
+   "placement": "end",
+   "mode": "reorder",
+   "frame": "after-handle-options-end-reorder-light-1280.png",
+   "hint": {
+    "l": 1155.3125,
+    "t": 87,
+    "r": 1256,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 24,
+      "t": 98,
+      "r": 1232,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 26,
+      "r": 1256,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 63,
+      "r": 1256,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 100,
+      "r": 1256,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 137,
+      "r": 1256,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 174,
+      "r": 1256,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 688
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 390,
+   "placement": "start",
+   "mode": "rest",
+   "frame": "before-handle-options-start-rest-light-390.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 390,
+   "placement": "start",
+   "mode": "rest",
+   "frame": "after-handle-options-start-rest-light-390.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 860
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 390,
+   "placement": "start",
+   "mode": "reorder",
+   "frame": "before-handle-options-start-reorder-light-390.png",
+   "hint": {
+    "l": 24,
+    "t": 87,
+    "r": 124.6875,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 48,
+      "t": 98,
+      "r": 366,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 390,
+   "placement": "start",
+   "mode": "reorder",
+   "frame": "after-handle-options-start-reorder-light-390.png",
+   "hint": {
+    "l": 24,
+    "t": 87,
+    "r": 124.6875,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 48,
+      "t": 98,
+      "r": 366,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 688
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 390,
+   "placement": "end",
+   "mode": "rest",
+   "frame": "before-handle-options-end-rest-light-390.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 26,
+      "r": 366,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 63,
+      "r": 366,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 100,
+      "r": 366,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 137,
+      "r": 366,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 174,
+      "r": 366,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 390,
+   "placement": "end",
+   "mode": "rest",
+   "frame": "after-handle-options-end-rest-light-390.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 26,
+      "r": 366,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 63,
+      "r": 366,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 100,
+      "r": 366,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 137,
+      "r": 366,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 174,
+      "r": 366,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 860
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 390,
+   "placement": "end",
+   "mode": "reorder",
+   "frame": "before-handle-options-end-reorder-light-390.png",
+   "hint": {
+    "l": 265.3125,
+    "t": 87,
+    "r": 366,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 24,
+      "t": 98,
+      "r": 342,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 26,
+      "r": 366,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 63,
+      "r": 366,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 100,
+      "r": 366,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 137,
+      "r": 366,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 174,
+      "r": 366,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 390,
+   "placement": "end",
+   "mode": "reorder",
+   "frame": "after-handle-options-end-reorder-light-390.png",
+   "hint": {
+    "l": 265.3125,
+    "t": 87,
+    "r": 366,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 24,
+      "t": 98,
+      "r": 342,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 26,
+      "r": 366,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 63,
+      "r": 366,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 100,
+      "r": 366,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 137,
+      "r": 366,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 174,
+      "r": 366,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 688
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 1280,
+   "placement": "start",
+   "mode": "rest",
+   "frame": "before-handle-options-start-rest-dark-1280.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 1280,
+   "placement": "start",
+   "mode": "rest",
+   "frame": "after-handle-options-start-rest-dark-1280.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 860
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 1280,
+   "placement": "start",
+   "mode": "reorder",
+   "frame": "before-handle-options-start-reorder-dark-1280.png",
+   "hint": {
+    "l": 24,
+    "t": 87,
+    "r": 124.6875,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 48,
+      "t": 98,
+      "r": 1256,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 1280,
+   "placement": "start",
+   "mode": "reorder",
+   "frame": "after-handle-options-start-reorder-dark-1280.png",
+   "hint": {
+    "l": 24,
+    "t": 87,
+    "r": 124.6875,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 48,
+      "t": 98,
+      "r": 1256,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 688
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 1280,
+   "placement": "end",
+   "mode": "rest",
+   "frame": "before-handle-options-end-rest-dark-1280.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 26,
+      "r": 1256,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 63,
+      "r": 1256,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 100,
+      "r": 1256,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 137,
+      "r": 1256,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 174,
+      "r": 1256,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 1280,
+   "placement": "end",
+   "mode": "rest",
+   "frame": "after-handle-options-end-rest-dark-1280.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 26,
+      "r": 1256,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 63,
+      "r": 1256,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 100,
+      "r": 1256,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 137,
+      "r": 1256,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 174,
+      "r": 1256,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 860
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 1280,
+   "placement": "end",
+   "mode": "reorder",
+   "frame": "before-handle-options-end-reorder-dark-1280.png",
+   "hint": {
+    "l": 1155.3125,
+    "t": 87,
+    "r": 1256,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 24,
+      "t": 98,
+      "r": 1232,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 26,
+      "r": 1256,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 63,
+      "r": 1256,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 100,
+      "r": 1256,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 137,
+      "r": 1256,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 174,
+      "r": 1256,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 1280,
+   "placement": "end",
+   "mode": "reorder",
+   "frame": "after-handle-options-end-reorder-dark-1280.png",
+   "hint": {
+    "l": 1155.3125,
+    "t": 87,
+    "r": 1256,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 24,
+      "t": 98,
+      "r": 1232,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 1264,
+    "b": 237,
+    "w": 1248,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 1264,
+      "b": 53,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 26,
+      "r": 1256,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 1264,
+      "b": 90,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 63,
+      "r": 1256,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 1264,
+      "b": 127,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 100,
+      "r": 1256,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 1264,
+      "b": 164,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 137,
+      "r": 1256,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 1264,
+      "b": 201,
+      "w": 1248,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 1240,
+      "t": 174,
+      "r": 1256,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 1264,
+      "b": 237,
+      "w": 1248,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 688
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 390,
+   "placement": "start",
+   "mode": "rest",
+   "frame": "before-handle-options-start-rest-dark-390.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 390,
+   "placement": "start",
+   "mode": "rest",
+   "frame": "after-handle-options-start-rest-dark-390.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 860
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 390,
+   "placement": "start",
+   "mode": "reorder",
+   "frame": "before-handle-options-start-reorder-dark-390.png",
+   "hint": {
+    "l": 24,
+    "t": 87,
+    "r": 124.6875,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 48,
+      "t": 98,
+      "r": 366,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 390,
+   "placement": "start",
+   "mode": "reorder",
+   "frame": "after-handle-options-start-reorder-dark-390.png",
+   "hint": {
+    "l": 24,
+    "t": 87,
+    "r": 124.6875,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 48,
+      "t": 98,
+      "r": 366,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 26,
+      "r": 40,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 26,
+      "r": 82.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 63,
+      "r": 40,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 63,
+      "r": 76.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 100,
+      "r": 40,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 100,
+      "r": 85.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 137,
+      "r": 40,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 137,
+      "r": 94.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 24,
+      "t": 174,
+      "r": 40,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 174,
+      "r": 84.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 48,
+      "t": 211,
+      "r": 83.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "32px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 688
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 390,
+   "placement": "end",
+   "mode": "rest",
+   "frame": "before-handle-options-end-rest-dark-390.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 26,
+      "r": 366,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 63,
+      "r": 366,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 100,
+      "r": 366,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 137,
+      "r": 366,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 174,
+      "r": 366,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 390,
+   "placement": "end",
+   "mode": "rest",
+   "frame": "after-handle-options-end-rest-dark-390.png",
+   "hint": null,
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 26,
+      "r": 366,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 63,
+      "r": 366,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 100,
+      "r": 366,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 137,
+      "r": 366,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 174,
+      "r": 366,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 860
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 390,
+   "placement": "end",
+   "mode": "reorder",
+   "frame": "before-handle-options-end-reorder-dark-390.png",
+   "hint": {
+    "l": 265.3125,
+    "t": 87,
+    "r": 366,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 24,
+      "t": 98,
+      "r": 342,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 26,
+      "r": 366,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 63,
+      "r": 366,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 100,
+      "r": 366,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 137,
+      "r": 366,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 174,
+      "r": 366,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 390,
+   "placement": "end",
+   "mode": "reorder",
+   "frame": "after-handle-options-end-reorder-dark-390.png",
+   "hint": {
+    "l": 265.3125,
+    "t": 87,
+    "r": 366,
+    "b": 116,
+    "text": "↑↓Done",
+    "covers": {
+     "label": "Drafts",
+     "byHint": false,
+     "labelBox": {
+      "l": 24,
+      "t": 98,
+      "r": 342,
+      "b": 118
+     }
+    }
+   },
+   "list": {
+    "l": 16,
+    "t": 16,
+    "r": 374,
+    "b": 237,
+    "w": 358,
+    "h": 221
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 16,
+      "t": 16,
+      "r": 374,
+      "b": 53,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 26,
+      "r": 366,
+      "b": 42,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 26,
+      "r": 58.25,
+      "b": 42,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 16,
+      "t": 53,
+      "r": 374,
+      "b": 90,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 63,
+      "r": 366,
+      "b": 79,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 63,
+      "r": 52.8125,
+      "b": 79,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 16,
+      "t": 90,
+      "r": 374,
+      "b": 127,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 100,
+      "r": 366,
+      "b": 116,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 100,
+      "r": 61.34375,
+      "b": 116,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Archive",
+     "row": {
+      "l": 16,
+      "t": 127,
+      "r": 374,
+      "b": 164,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 137,
+      "r": 366,
+      "b": 153,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 137,
+      "r": 70.6875,
+      "b": 153,
+      "w": 46.6875,
+      "h": 16,
+      "text": "Archive"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Spam",
+     "row": {
+      "l": 16,
+      "t": 164,
+      "r": 374,
+      "b": 201,
+      "w": 358,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 350,
+      "t": 174,
+      "r": 366,
+      "b": 190,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 174,
+      "r": 60.578125,
+      "b": 190,
+      "w": 36.578125,
+      "h": 16,
+      "text": "Spam"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Trash",
+     "row": {
+      "l": 16,
+      "t": 201,
+      "r": 374,
+      "b": 237,
+      "w": 358,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": null,
+     "markerText": null,
+     "label": {
+      "l": 24,
+      "t": 211,
+      "r": 59.28125,
+      "b": 227,
+      "w": 35.28125,
+      "h": 16,
+      "text": "Trash"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 688
+   }
+  }
+ ],
+ "numbered": [
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 1280,
+   "mode": "rest",
+   "frame": "before-numbered-rest-light-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 1280,
+   "mode": "rest",
+   "frame": "after-numbered-rest-light-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 0
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 1280,
+   "mode": "hover",
+   "frame": "before-numbered-hover-light-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 1280,
+   "mode": "hover",
+   "frame": "after-numbered-hover-light-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 172
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 1280,
+   "mode": "reorder",
+   "frame": "before-numbered-reorder-light-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 1280,
+   "mode": "reorder",
+   "frame": "after-numbered-reorder-light-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 172
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 390,
+   "mode": "rest",
+   "frame": "before-numbered-rest-light-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 390,
+   "mode": "rest",
+   "frame": "after-numbered-rest-light-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 0
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 390,
+   "mode": "hover",
+   "frame": "before-numbered-hover-light-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 390,
+   "mode": "hover",
+   "frame": "after-numbered-hover-light-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 168
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "light",
+   "width": 390,
+   "mode": "reorder",
+   "frame": "before-numbered-reorder-light-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "light",
+   "width": 390,
+   "mode": "reorder",
+   "frame": "after-numbered-reorder-light-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 152
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 1280,
+   "mode": "rest",
+   "frame": "before-numbered-rest-dark-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 1280,
+   "mode": "rest",
+   "frame": "after-numbered-rest-dark-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 0
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 1280,
+   "mode": "hover",
+   "frame": "before-numbered-hover-dark-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 1280,
+   "mode": "hover",
+   "frame": "after-numbered-hover-dark-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 172
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 1280,
+   "mode": "reorder",
+   "frame": "before-numbered-reorder-dark-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 1280,
+   "mode": "reorder",
+   "frame": "after-numbered-reorder-dark-1280.png",
+   "list": {
+    "l": 28,
+    "t": 258,
+    "r": 298,
+    "b": 368,
+    "w": 270,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 258,
+      "r": 298,
+      "b": 295,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 268,
+      "r": 76,
+      "b": 284,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": {
+      "l": 36,
+      "t": 266,
+      "r": 52,
+      "b": 286,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 268,
+      "r": 118.25,
+      "b": 284,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 295,
+      "r": 298,
+      "b": 332,
+      "w": 270,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 303,
+      "r": 52,
+      "b": 323,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 305,
+      "r": 112.8125,
+      "b": 321,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 332,
+      "r": 298,
+      "b": 368,
+      "w": 270,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 342,
+      "r": 76,
+      "b": 358,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 340,
+      "r": 52,
+      "b": 360,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 342,
+      "r": 121.34375,
+      "b": 358,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 172
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 390,
+   "mode": "rest",
+   "frame": "before-numbered-rest-dark-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 390,
+   "mode": "rest",
+   "frame": "after-numbered-rest-dark-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 0
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 390,
+   "mode": "hover",
+   "frame": "before-numbered-hover-dark-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 390,
+   "mode": "hover",
+   "frame": "after-numbered-hover-dark-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 156
+   }
+  },
+  {
+   "build": "before",
+   "scheme": "dark",
+   "width": 390,
+   "mode": "reorder",
+   "frame": "before-numbered-reorder-dark-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ]
+  },
+  {
+   "build": "after",
+   "scheme": "dark",
+   "width": 390,
+   "mode": "reorder",
+   "frame": "after-numbered-reorder-dark-390.png",
+   "list": {
+    "l": 28,
+    "t": 762,
+    "r": 362,
+    "b": 872,
+    "w": 334,
+    "h": 110
+   },
+   "rows": [
+    {
+     "key": "Inbox",
+     "row": {
+      "l": 28,
+      "t": 762,
+      "r": 362,
+      "b": 799,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 772,
+      "r": 76,
+      "b": 788,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": true,
+     "handleOpacity": "1",
+     "pressed": "true",
+     "marker": {
+      "l": 36,
+      "t": 770,
+      "r": 52,
+      "b": 790,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 772,
+      "r": 118.25,
+      "b": 788,
+      "w": 34.25,
+      "h": 16,
+      "text": "Inbox"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Sent",
+     "row": {
+      "l": 28,
+      "t": 799,
+      "r": 362,
+      "b": 836,
+      "w": 334,
+      "h": 37
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": null,
+     "handleShown": null,
+     "handleOpacity": null,
+     "pressed": null,
+     "marker": {
+      "l": 36,
+      "t": 807,
+      "r": 52,
+      "b": 827,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 809,
+      "r": 112.8125,
+      "b": 825,
+      "w": 28.8125,
+      "h": 16,
+      "text": "Sent"
+     },
+     "paddingInlineStart": "8px"
+    },
+    {
+     "key": "Drafts",
+     "row": {
+      "l": 28,
+      "t": 836,
+      "r": 362,
+      "b": 872,
+      "w": 334,
+      "h": 36
+     },
+     "box": null,
+     "taskContainer": null,
+     "handle": {
+      "l": 60,
+      "t": 846,
+      "r": 76,
+      "b": 862,
+      "w": 16,
+      "h": 16
+     },
+     "handleShown": false,
+     "handleOpacity": "0",
+     "pressed": "false",
+     "marker": {
+      "l": 36,
+      "t": 844,
+      "r": 52,
+      "b": 864,
+      "w": 16,
+      "h": 20
+     },
+     "markerText": "counter(astryx-list) \".\"",
+     "label": {
+      "l": 84,
+      "t": 846,
+      "r": 121.34375,
+      "b": 862,
+      "w": 37.34375,
+      "h": 16,
+      "text": "Drafts"
+     },
+     "paddingInlineStart": "8px"
+    }
+   ],
+   "pixelCompare": {
+    "sameSize": true,
+    "differ": 156
+   }
+  }
+ ]
+}

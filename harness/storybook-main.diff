@@ -1,0 +1,16 @@
+diff --git a/apps/storybook/.storybook/main.ts b/apps/storybook/.storybook/main.ts
+index 7f50b46115d..536c3ec5044 100644
+--- a/apps/storybook/.storybook/main.ts
++++ b/apps/storybook/.storybook/main.ts
+@@ -147,8 +147,9 @@ const babelWrapperOptions = {
+ 
+ const config: StorybookConfig = {
+   stories: [
+-    '../stories/**/*.mdx',
+-    '../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)',
++    '../stories/TaskListReorderHarness.stories.tsx',
++    '../stories/List.stories.tsx',
++    '../stories/Markdown.stories.tsx',
+   ],
+   addons: ['@storybook/addon-links', '@storybook/addon-docs'],
+   framework: {
