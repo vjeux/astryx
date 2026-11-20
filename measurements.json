@@ -1,0 +1,4222 @@
+{
+ "question": "Do the docsite hook pages show their Parameters and Returns tables after #9832 filters hooks out of the preview registry?",
+ "sites": {
+  "production docsite": {
+   "versionJson": {
+    "commit": "b07619f1809137ee21921922562f90969bf08d1e",
+    "environment": "production"
+   },
+   "deploymentId": "dpl_GvppqPrc4L5KD9XHn1H23epkfee5",
+   "deploymentRecordCreated": "2026-11-20T14:38:50Z"
+  },
+  "canary docsite": {
+   "versionJson": {
+    "commit": "b07619f1809137ee21921922562f90969bf08d1e",
+    "environment": "preview"
+   },
+   "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+   "deploymentRecordCreated": "2026-11-20T14:43:40Z",
+   "previous": {
+    "versionJson": {
+     "commit": "5ebe00f5b273a253c8b5b76ecdf6c5fb5eead74d",
+     "environment": "preview"
+    },
+    "deploymentId": "dpl_BUXEzwSdsQPgZzxib2XCKWnykB32",
+    "deploymentRecordCreated": "2026-11-20T14:00:02Z"
+   }
+  },
+  "later": {
+   "commit": "b9329f65ad200d7d13177b385992914c5d748397",
+   "note": "Both sites moved to this commit during the work. It changes none of the source files cited here. The other-tabbed-pages run and the timing loads used it.",
+   "production docsite": {
+    "versionJson": {
+     "commit": "b9329f65ad200d7d13177b385992914c5d748397",
+     "environment": "production"
+    },
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "deploymentRecordCreated": "2026-11-20T15:03:58Z"
+   },
+   "canary docsite": {
+    "versionJson": {
+     "commit": "b9329f65ad200d7d13177b385992914c5d748397",
+     "environment": "preview"
+    },
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "deploymentRecordCreated": "2026-11-20T14:59:22Z"
+   }
+  },
+  "howIdentified": "version.json on each site. Each page carries its deployment id in its asset URLs; that deployment's own version.json gives the commit listed. The pages print no Next.js build id."
+ },
+ "framesRun": {
+  "window": "2026-11-20T14:57:16Z/2026-11-20T14:57:59Z",
+  "browser": "Chrome for Testing 149.0.7827.55 through Playwright 1.61.1",
+  "viewport": "1280x800, scale 1, light color scheme",
+  "settle": "network idle, then 1.5 s",
+  "boxLoad1min": {
+   "start": 7.45,
+   "end": 7.29,
+   "cores": 166
+  },
+  "stills": [
+   "canary--useAnimator--params.png",
+   "canary--useAnimator--top--no-js.png",
+   "canary--useAnimator--top.png",
+   "canary--useMediaPlaybackTime--params.png",
+   "canary--useMediaPlaybackTime--top.png",
+   "canary--useMediaPlayer--params.png",
+   "canary--useMediaPlayer--top.png",
+   "canary--useMediaQuery--params--no-js.png",
+   "canary--useMediaQuery--params.png",
+   "canary--useMediaQuery--top--no-js.png",
+   "canary--useMediaQuery--top.png",
+   "prod--useAnimator--params.png",
+   "prod--useAnimator--top--no-js.png",
+   "prod--useAnimator--top.png",
+   "prod--useMediaQuery--params--no-js.png",
+   "prod--useMediaQuery--params.png",
+   "prod--useMediaQuery--top--no-js.png",
+   "prod--useMediaQuery--top.png"
+  ],
+  "pages": [
+   {
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_GvppqPrc4L5KD9XHn1H23epkfee5",
+    "documentBytes": 464177,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-ce59849b1dae3484.js"
+    ]
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_GvppqPrc4L5KD9XHn1H23epkfee5",
+    "documentBytes": 464177,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Call the animator from event handlers and effects: it lives outside render, so a"
+       ],
+       [
+        "Do",
+        "Start every animate that follows a drag with the release velocity, so the elemen"
+       ],
+       [
+        "Do",
+        "Reach every state an animation shows without the animation too: a key, a button "
+       ],
+       [
+        "Don't",
+        "Keep the animated values in React state: read them with animator.get() when you "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "refrequired",
+        "RefObject<HTMLElement | null>",
+        "The ref of the one element to animate, the same ref you pass to the element: ano"
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "animator",
+        "AnimatorHandle",
+        "The element's animator, the same object on every render: animate(target, {veloci"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_GvppqPrc4L5KD9XHn1H23epkfee5 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 48,
+    "scrollY": 923
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+    "documentBytes": 562876,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-7e8e64288e45e709.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+    "documentBytes": 562876,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Call the animator from event handlers and effects: it lives outside render, so a"
+       ],
+       [
+        "Do",
+        "Start every animate that follows a drag with the release velocity, so the elemen"
+       ],
+       [
+        "Do",
+        "Reach every state an animation shows without the animation too: a key, a button "
+       ],
+       [
+        "Don't",
+        "Keep the animated values in React state: read them with animator.get() when you "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "refrequired",
+        "RefObject<HTMLElement | null>",
+        "The ref of the one element to animate, the same ref you pass to the element: ano"
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "animator",
+        "AnimatorHandle",
+        "The element's animator, the same object on every render: animate(target, {veloci"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 923
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_GvppqPrc4L5KD9XHn1H23epkfee5",
+    "documentBytes": 498335,
+    "documentHasParametersHtml": true,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Use for responsive layout switching based on viewport width, color scheme, or mo"
+       ],
+       [
+        "Do",
+        "Prefer Astryx responsive tokens and component props over manual breakpoint logic"
+       ],
+       [
+        "Don't",
+        "Use for server-rendered content that must match on first paint; the hook always "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "queryrequired",
+        "string",
+        "CSS media query string to evaluate."
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "matches",
+        "boolean",
+        "Whether the media query currently matches. Always false on first render (SSR-saf"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-ce59849b1dae3484.js"
+    ]
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_GvppqPrc4L5KD9XHn1H23epkfee5",
+    "documentBytes": 498335,
+    "documentHasParametersHtml": true,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Edit profile"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Use for responsive layout switching based on viewport width, color scheme, or mo"
+       ],
+       [
+        "Do",
+        "Prefer Astryx responsive tokens and component props over manual breakpoint logic"
+       ],
+       [
+        "Don't",
+        "Use for server-rendered content that must match on first paint; the hook always "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "queryrequired",
+        "string",
+        "CSS media query string to evaluate."
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "matches",
+        "boolean",
+        "Whether the media query currently matches. Always false on first render (SSR-saf"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_GvppqPrc4L5KD9XHn1H23epkfee5 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 48,
+    "scrollY": 710
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+    "documentBytes": 603744,
+    "documentHasParametersHtml": true,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Use for responsive layout switching based on viewport width, color scheme, or mo"
+       ],
+       [
+        "Do",
+        "Prefer Astryx responsive tokens and component props over manual breakpoint logic"
+       ],
+       [
+        "Don't",
+        "Use for server-rendered content that must match on first paint; the hook always "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "queryrequired",
+        "string",
+        "CSS media query string to evaluate."
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "matches",
+        "boolean",
+        "Whether the media query currently matches. Always false on first render (SSR-saf"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-7e8e64288e45e709.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+    "documentBytes": 603744,
+    "documentHasParametersHtml": true,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Edit profile",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Use for responsive layout switching based on viewport width, color scheme, or mo"
+       ],
+       [
+        "Do",
+        "Prefer Astryx responsive tokens and component props over manual breakpoint logic"
+       ],
+       [
+        "Don't",
+        "Use for server-rendered content that must match on first paint; the hook always "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "queryrequired",
+        "string",
+        "CSS media query string to evaluate."
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "matches",
+        "boolean",
+        "Whether the media query currently matches. Always false on first render (SSR-saf"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 710
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaPlayer",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+    "documentBytes": 588634,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": false,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "state",
+        "MediaPlayerState",
+        "isPaused, isEnded, isWaiting, hasStarted, currentTime, duration (0 before metada"
+       ],
+       [
+        "play / pause / togglePaused",
+        "() => void",
+        "Start and stop playback. play resolves after the browser accepts or refuses."
+       ],
+       [
+        "seek / seekBy",
+        "(seconds: number) => void",
+        "Move the playhead to a time, or by an offset, clamped to the media."
+       ],
+       [
+        "setVolume / setMuted / toggleMuted",
+        "(value) => void",
+        "Change the volume (0 to 1) and mute state."
+       ],
+       [
+        "setPlaybackRate",
+        "(rate: number) => void",
+        "Change the speed."
+       ],
+       [
+        "toggleFullscreen / setTextTrack / toggleCaptions / reload",
+        "function",
+        "Fullscreen, caption track selection, and loading the source again after an error"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-7e8e64288e45e709.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaPlayer",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+    "documentBytes": 588634,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": false,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "state",
+        "MediaPlayerState",
+        "isPaused, isEnded, isWaiting, hasStarted, currentTime, duration (0 before metada"
+       ],
+       [
+        "play / pause / togglePaused",
+        "() => void",
+        "Start and stop playback. play resolves after the browser accepts or refuses."
+       ],
+       [
+        "seek / seekBy",
+        "(seconds: number) => void",
+        "Move the playhead to a time, or by an offset, clamped to the media."
+       ],
+       [
+        "setVolume / setMuted / toggleMuted",
+        "(value) => void",
+        "Change the volume (0 to 1) and mute state."
+       ],
+       [
+        "setPlaybackRate",
+        "(rate: number) => void",
+        "Change the speed."
+       ],
+       [
+        "toggleFullscreen / setTextTrack / toggleCaptions / reload",
+        "function",
+        "Fullscreen, caption track selection, and loading the source again after an error"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Returns",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 363
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaPlaybackTime",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+    "documentBytes": 568877,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": false,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h3:Returns",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "time",
+        "number",
+        "Playback position in seconds."
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-7e8e64288e45e709.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaPlaybackTime",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+    "documentBytes": 568877,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": false,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h3:Returns",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "time",
+        "number",
+        "Playback position in seconds."
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Returns",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 280
+   }
+  ]
+ },
+ "otherTabbedPages": {
+  "window": "2026-11-20T15:10:29Z/2026-11-20T15:12:02Z",
+  "commit": "b9329f65ad200d7d13177b385992914c5d748397",
+  "boxLoad1min": {
+   "start": 53.17,
+   "end": 49.2,
+   "cores": 166
+  },
+  "note": "Numbers only; no stills from this run are published.",
+  "pages": [
+   {
+    "site": "production docsite",
+    "path": "/components/useCombobox",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 470410,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-ce59849b1dae3484.js"
+    ]
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useCombobox",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 470410,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Render each option with id={getItemId(index)} and set the control's aria-actived"
+       ],
+       [
+        "Do",
+        "For type-to-select without a search field, run useTypeahead's handler first and "
+       ],
+       [
+        "Do",
+        "For a field you render, spread the prop getters, and set the active option yours"
+       ],
+       [
+        "Do",
+        "Announce the number of results through useAnnounce when the options change for a"
+       ],
+       [
+        "Don't",
+        "Render controls that are not options, such as a create button or an empty messag"
+       ],
+       [
+        "Don't",
+        "Move DOM focus onto the options; the active option is announced through aria-act"
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "optionsrequired",
+        "UseComboboxOptions",
+        "Configuration object."
+       ],
+       [
+        "options.selectableItemsrequired",
+        "ReadonlyArray<T extends {value: string; disabled?: boolean}>",
+        "The options in the same order as they render: SelectorOptionData, or any option "
+       ],
+       [
+        "options.isOpenrequired",
+        "boolean",
+        "Whether the list is shown. The caller owns this state."
+       ],
+       [
+        "options.onOpenrequired",
+        "() => unknown",
+        "Called to show the list. Return false to refuse; the hook then leaves the highli"
+       ],
+       [
+        "options.onCloserequired",
+        "() => void",
+        "Called when the hook hides the list; the hook resets the highlight first. When t"
+       ],
+       [
+        "options.listboxIdrequired",
+        "string",
+        "The listbox element's id. Option ids are derived from it through getItemId."
+       ],
+       [
+        "options.value",
+        "string",
+        "The selected value. Opening the list highlights it when it is enabled; otherwise"
+       ],
+       [
+        "options.onSelect",
+        "(value: string) => void",
+        "Called with the picked value. Picking also closes the list."
+       ],
+       [
+        "options.onClear",
+        "() => void",
+        "Clears the value. When provided, Delete or Backspace on the closed control clear"
+       ],
+       [
+        "options.hasSearch",
+        "boolean (default: false)",
+        "Whether the list has its own search field. Space then types instead of picking, "
+       ],
+       [
+        "options.onSearchSeed",
+        "(char: string) => void",
+        "With hasSearch, receives each printable character except Space typed while the c"
+       ],
+       [
+        "options.isDisabled",
+        "boolean (default: false)",
+        "Whether the control ignores clicks and keys."
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "highlightedIndex",
+        "number",
+        "Index of the active option, or -1 when none is active. With hasSearch, opening b"
+       ],
+       [
+        "setHighlightedIndex",
+        "(index: number) => void",
+        "Sets the active option, for example from a filter that changes the options."
+       ],
+       [
+        "getItemId",
+        "(index: number) => string",
+        "The id to render on the option at index. Set the control's aria-activedescendant"
+       ],
+       [
+        "onTriggerClick",
+        "() => void",
+        "Toggles the list from a press on the control."
+       ],
+       [
+        "onKeyDown",
+        "(e: React.KeyboardEvent) => void",
+        "Key handler for the control that keeps focus. ArrowDown and ArrowUp open the lis"
+       ],
+       [
+        "onItemSelect",
+        "(item: T) => void",
+        "Picks an option from a press on it, then closes the list."
+       ],
+       [
+        "onItemMouseEnter",
+        "(item: T, index: number) => void",
+        "Makes the hovered option active without scrolling the list or moving focus."
+       ],
+       [
+        "getFieldProps",
+        "(props?: {onKeyDown?(event: React.KeyboardEvent): void}) => object",
+        "Props for a single-line input you render: role=\"combobox\", aria-expanded, aria-a"
+       ],
+       [
+        "getListboxProps",
+        "() => object",
+        "Props for the listbox you render, anywhere in the document, including the page’s"
+       ],
+       [
+        "getOptionProps",
+        "(index: number) => object",
+        "Props for the option at index: its id, role, aria-selected (true on the active o"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_WmB387Jnw7HAq12W4JH7oWZERxXE was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 48,
+    "scrollY": 1162
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useCombobox",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 569109,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-320712180ab95fc7.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useCombobox",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 569109,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Render each option with id={getItemId(index)} and set the control's aria-actived"
+       ],
+       [
+        "Do",
+        "For type-to-select without a search field, run useTypeahead's handler first and "
+       ],
+       [
+        "Do",
+        "For a field you render, spread the prop getters, and set the active option yours"
+       ],
+       [
+        "Do",
+        "Announce the number of results through useAnnounce when the options change for a"
+       ],
+       [
+        "Don't",
+        "Render controls that are not options, such as a create button or an empty messag"
+       ],
+       [
+        "Don't",
+        "Move DOM focus onto the options; the active option is announced through aria-act"
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "optionsrequired",
+        "UseComboboxOptions",
+        "Configuration object."
+       ],
+       [
+        "options.selectableItemsrequired",
+        "ReadonlyArray<T extends {value: string; disabled?: boolean}>",
+        "The options in the same order as they render: SelectorOptionData, or any option "
+       ],
+       [
+        "options.isOpenrequired",
+        "boolean",
+        "Whether the list is shown. The caller owns this state."
+       ],
+       [
+        "options.onOpenrequired",
+        "() => unknown",
+        "Called to show the list. Return false to refuse; the hook then leaves the highli"
+       ],
+       [
+        "options.onCloserequired",
+        "() => void",
+        "Called when the hook hides the list; the hook resets the highlight first. When t"
+       ],
+       [
+        "options.listboxIdrequired",
+        "string",
+        "The listbox element's id. Option ids are derived from it through getItemId."
+       ],
+       [
+        "options.value",
+        "string",
+        "The selected value. Opening the list highlights it when it is enabled; otherwise"
+       ],
+       [
+        "options.onSelect",
+        "(value: string) => void",
+        "Called with the picked value. Picking also closes the list."
+       ],
+       [
+        "options.onClear",
+        "() => void",
+        "Clears the value. When provided, Delete or Backspace on the closed control clear"
+       ],
+       [
+        "options.hasSearch",
+        "boolean (default: false)",
+        "Whether the list has its own search field. Space then types instead of picking, "
+       ],
+       [
+        "options.onSearchSeed",
+        "(char: string) => void",
+        "With hasSearch, receives each printable character except Space typed while the c"
+       ],
+       [
+        "options.isDisabled",
+        "boolean (default: false)",
+        "Whether the control ignores clicks and keys."
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "highlightedIndex",
+        "number",
+        "Index of the active option, or -1 when none is active. With hasSearch, opening b"
+       ],
+       [
+        "setHighlightedIndex",
+        "(index: number) => void",
+        "Sets the active option, for example from a filter that changes the options."
+       ],
+       [
+        "getItemId",
+        "(index: number) => string",
+        "The id to render on the option at index. Set the control's aria-activedescendant"
+       ],
+       [
+        "onTriggerClick",
+        "() => void",
+        "Toggles the list from a press on the control."
+       ],
+       [
+        "onKeyDown",
+        "(e: React.KeyboardEvent) => void",
+        "Key handler for the control that keeps focus. ArrowDown and ArrowUp open the lis"
+       ],
+       [
+        "onItemSelect",
+        "(item: T) => void",
+        "Picks an option from a press on it, then closes the list."
+       ],
+       [
+        "onItemMouseEnter",
+        "(item: T, index: number) => void",
+        "Makes the hovered option active without scrolling the list or moving focus."
+       ],
+       [
+        "getFieldProps",
+        "(props?: {onKeyDown?(event: React.KeyboardEvent): void}) => object",
+        "Props for a single-line input you render: role=\"combobox\", aria-expanded, aria-a"
+       ],
+       [
+        "getListboxProps",
+        "() => object",
+        "Props for the listbox you render, anywhere in the document, including the page’s"
+       ],
+       [
+        "getOptionProps",
+        "(index: number) => object",
+        "Props for the option at index: its id, role, aria-selected (true on the active o"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 1162
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useDragToSnapPoints",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 462155,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-ce59849b1dae3484.js"
+    ]
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useDragToSnapPoints",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 462155,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Offer the same positions without a drag: buttons or keys that call settleTo."
+       ],
+       [
+        "Do",
+        "Keep the settled index in state from onSettle, and render what the position mean"
+       ],
+       [
+        "Don't",
+        "Use it for a sheet or a carousel: their own props already settle the way people "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "refrequired",
+        "RefObject<HTMLElement | null>",
+        "A ref to the element a drag moves, along axis only."
+       ],
+       [
+        "options.axisrequired",
+        "'x' | 'y'",
+        "The axis the element moves along. A new one creates the drag again, starting whe"
+       ],
+       [
+        "options.snapPointsrequired",
+        "number[]",
+        "Offsets in px along axis from the element's resting position, such as [0, 240, 4"
+       ],
+       [
+        "options.flickThreshold",
+        "number (default: 1008)",
+        "A release faster than this, in px/s, carries to the next snap point in its direc"
+       ],
+       [
+        "options.onSettlerequired",
+        "(index: number) => void",
+        "Called with the snap point's index once the element settles on it. The latest fu"
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "settleTo",
+        "(index: number) => void",
+        "Settles the element on the snap point at index without a drag: the keyboard path"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_WmB387Jnw7HAq12W4JH7oWZERxXE was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 48,
+    "scrollY": 775
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useDragToSnapPoints",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 560870,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-320712180ab95fc7.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useDragToSnapPoints",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 560870,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Offer the same positions without a drag: buttons or keys that call settleTo."
+       ],
+       [
+        "Do",
+        "Keep the settled index in state from onSettle, and render what the position mean"
+       ],
+       [
+        "Don't",
+        "Use it for a sheet or a carousel: their own props already settle the way people "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "refrequired",
+        "RefObject<HTMLElement | null>",
+        "A ref to the element a drag moves, along axis only."
+       ],
+       [
+        "options.axisrequired",
+        "'x' | 'y'",
+        "The axis the element moves along. A new one creates the drag again, starting whe"
+       ],
+       [
+        "options.snapPointsrequired",
+        "number[]",
+        "Offsets in px along axis from the element's resting position, such as [0, 240, 4"
+       ],
+       [
+        "options.flickThreshold",
+        "number (default: 1008)",
+        "A release faster than this, in px/s, carries to the next snap point in its direc"
+       ],
+       [
+        "options.onSettlerequired",
+        "(index: number) => void",
+        "Called with the snap point's index once the element settles on it. The latest fu"
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "settleTo",
+        "(index: number) => void",
+        "Settles the element on the snap point at index without a drag: the keyboard path"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 775
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/usePanGesture",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 469904,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-ce59849b1dae3484.js"
+    ]
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/usePanGesture",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 469904,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Move the element from translation added to where it was when the drag began, so "
+       ],
+       [
+        "Do",
+        "At ended, hand velocity to the animation that settles the element, so a flick ca"
+       ],
+       [
+        "Do",
+        "Give every drag another way to do the same thing from a keyboard and from assist"
+       ],
+       [
+        "Do",
+        "Use a component's own prop when it covers the job: BottomSheet's snapPoints for "
+       ],
+       [
+        "Don't",
+        "Hold the drag offset in a large component’s state: each changed event renders th"
+       ],
+       [
+        "Don't",
+        "Recognize taps or long presses with it; useLongPress and the components’ own pre"
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "refrequired",
+        "RefObject<Element | null>",
+        "The element to drag. The hook creates one pan for the element behind the ref, cr"
+       ],
+       [
+        "optionsrequired",
+        "PanGestureOptions",
+        "Configuration object."
+       ],
+       [
+        "options.axis",
+        "'x' | 'y'",
+        "Limits the drag to one axis. A drag along the other axis is not reported, and th"
+       ],
+       [
+        "options.onPanrequired",
+        "(event: PanGestureEvent) => void",
+        "Called with {state, translation, velocity} as the drag begins, changes, ends at "
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "void",
+        "void",
+        "Nothing: the hook hands out no recognizer. Without React, createPanGesture(eleme"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_WmB387Jnw7HAq12W4JH7oWZERxXE was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 48,
+    "scrollY": 1235
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/usePanGesture",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 568607,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-320712180ab95fc7.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/usePanGesture",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 568607,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Move the element from translation added to where it was when the drag began, so "
+       ],
+       [
+        "Do",
+        "At ended, hand velocity to the animation that settles the element, so a flick ca"
+       ],
+       [
+        "Do",
+        "Give every drag another way to do the same thing from a keyboard and from assist"
+       ],
+       [
+        "Do",
+        "Use a component's own prop when it covers the job: BottomSheet's snapPoints for "
+       ],
+       [
+        "Don't",
+        "Hold the drag offset in a large component’s state: each changed event renders th"
+       ],
+       [
+        "Don't",
+        "Recognize taps or long presses with it; useLongPress and the components’ own pre"
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "refrequired",
+        "RefObject<Element | null>",
+        "The element to drag. The hook creates one pan for the element behind the ref, cr"
+       ],
+       [
+        "optionsrequired",
+        "PanGestureOptions",
+        "Configuration object."
+       ],
+       [
+        "options.axis",
+        "'x' | 'y'",
+        "Limits the drag to one axis. A drag along the other axis is not reported, and th"
+       ],
+       [
+        "options.onPanrequired",
+        "(event: PanGestureEvent) => void",
+        "Called with {state, translation, velocity} as the drag begins, changes, ends at "
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "void",
+        "void",
+        "Nothing: the hook hands out no recognizer. Without React, createPanGesture(eleme"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 1235
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/createAnimator",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 463802,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-ce59849b1dae3484.js"
+    ]
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/createAnimator",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 463802,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Start every animate that follows a drag with the release velocity, so the elemen"
+       ],
+       [
+        "Do",
+        "Reach every state an animation shows without the animation too: a key, a button "
+       ],
+       [
+        "Do",
+        "await the promise before removing an element you animate out, and call destroy o"
+       ],
+       [
+        "Don't",
+        "Read the element’s position from layout while it moves: get gives the value on s"
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "elementrequired",
+        "HTMLElement",
+        "The element to animate. The animator writes its translate, scale, rotate and opa"
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "animate",
+        "(target: {x?, y?, scale?, rotate?, opacity?}, options?: {velocity?}) => Promise<",
+        "Springs the given channels to target from wherever they are on screen, on the st"
+       ],
+       [
+        "decay",
+        "(velocity: {x?, y?, scale?, rotate?, opacity?}) => Promise<void>",
+        "Coasts the given channels from a release velocity in their units per second, slo"
+       ],
+       [
+        "set",
+        "(values: {x?, y?, scale?, rotate?, opacity?}) => void",
+        "Puts the given channels at these values at once, ending their motion: follow a f"
+       ],
+       [
+        "get",
+        "() => {x, y, scale, rotate, opacity}",
+        "Every channel's value on screen now."
+       ],
+       [
+        "getVelocity",
+        "() => {x, y, scale, rotate, opacity}",
+        "Every channel's velocity on screen now, in units per second."
+       ],
+       [
+        "stop",
+        "() => void",
+        "Halts every channel where it is on screen."
+       ],
+       [
+        "destroy",
+        "() => void",
+        "Stops every motion and lets the element go; the element keeps the values it show"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_WmB387Jnw7HAq12W4JH7oWZERxXE was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 48,
+    "scrollY": 922
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/createAnimator",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 562507,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-320712180ab95fc7.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/createAnimator",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 562507,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Start every animate that follows a drag with the release velocity, so the elemen"
+       ],
+       [
+        "Do",
+        "Reach every state an animation shows without the animation too: a key, a button "
+       ],
+       [
+        "Do",
+        "await the promise before removing an element you animate out, and call destroy o"
+       ],
+       [
+        "Don't",
+        "Read the element’s position from layout while it moves: get gives the value on s"
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "elementrequired",
+        "HTMLElement",
+        "The element to animate. The animator writes its translate, scale, rotate and opa"
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "animate",
+        "(target: {x?, y?, scale?, rotate?, opacity?}, options?: {velocity?}) => Promise<",
+        "Springs the given channels to target from wherever they are on screen, on the st"
+       ],
+       [
+        "decay",
+        "(velocity: {x?, y?, scale?, rotate?, opacity?}) => Promise<void>",
+        "Coasts the given channels from a release velocity in their units per second, slo"
+       ],
+       [
+        "set",
+        "(values: {x?, y?, scale?, rotate?, opacity?}) => void",
+        "Puts the given channels at these values at once, ending their motion: follow a f"
+       ],
+       [
+        "get",
+        "() => {x, y, scale, rotate, opacity}",
+        "Every channel's value on screen now."
+       ],
+       [
+        "getVelocity",
+        "() => {x, y, scale, rotate, opacity}",
+        "Every channel's velocity on screen now, in units per second."
+       ],
+       [
+        "stop",
+        "() => void",
+        "Halts every channel where it is on screen."
+       ],
+       [
+        "destroy",
+        "() => void",
+        "Stops every motion and lets the element go; the element keeps the values it show"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 922
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/createDragToSnapPoints",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 462290,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-ce59849b1dae3484.js"
+    ]
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/createDragToSnapPoints",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 462290,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Offer the same positions without a drag: buttons or keys that call settleTo."
+       ],
+       [
+        "Do",
+        "Keep the snap points few and far apart, so a release clearly picks one."
+       ],
+       [
+        "Don't",
+        "Use it for a sheet or a carousel: their own props already settle the way people "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "elementrequired",
+        "HTMLElement",
+        "The element a drag moves. It moves along axis only, by translation, so lay it ou"
+       ],
+       [
+        "options.axisrequired",
+        "'x' | 'y'",
+        "The axis the element moves along."
+       ],
+       [
+        "options.snapPointsrequired",
+        "number[]",
+        "Offsets in px along axis from the element's resting position, such as [0, 240, 4"
+       ],
+       [
+        "options.flickThreshold",
+        "number (default: 1008)",
+        "A release faster than this, in px/s, carries to the next snap point in its direc"
+       ],
+       [
+        "options.onSettlerequired",
+        "(index: number) => void",
+        "Called with the snap point's index once the element settles on it, after a drag "
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "settleTo",
+        "(index: number) => void",
+        "Settles the element on the snap point at index without a drag, then calls onSett"
+       ],
+       [
+        "destroy",
+        "() => void",
+        "Removes every listener and stops the element where it is. Call it when you remov"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_WmB387Jnw7HAq12W4JH7oWZERxXE was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 48,
+    "scrollY": 772
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/createDragToSnapPoints",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 561011,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-320712180ab95fc7.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/createDragToSnapPoints",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 561011,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Offer the same positions without a drag: buttons or keys that call settleTo."
+       ],
+       [
+        "Do",
+        "Keep the snap points few and far apart, so a release clearly picks one."
+       ],
+       [
+        "Don't",
+        "Use it for a sheet or a carousel: their own props already settle the way people "
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "elementrequired",
+        "HTMLElement",
+        "The element a drag moves. It moves along axis only, by translation, so lay it ou"
+       ],
+       [
+        "options.axisrequired",
+        "'x' | 'y'",
+        "The axis the element moves along."
+       ],
+       [
+        "options.snapPointsrequired",
+        "number[]",
+        "Offsets in px along axis from the element's resting position, such as [0, 240, 4"
+       ],
+       [
+        "options.flickThreshold",
+        "number (default: 1008)",
+        "A release faster than this, in px/s, carries to the next snap point in its direc"
+       ],
+       [
+        "options.onSettlerequired",
+        "(index: number) => void",
+        "Called with the snap point's index once the element settles on it, after a drag "
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "settleTo",
+        "(index: number) => void",
+        "Settles the element on the snap point at index without a drag, then calls onSett"
+       ],
+       [
+        "destroy",
+        "() => void",
+        "Removes every listener and stops the element where it is. Call it when you remov"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 772
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/createPanGesture",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 465237,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-ce59849b1dae3484.js"
+    ]
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/createPanGesture",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "documentBytes": 465237,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Move the element from translation added to where it was when the drag began, so "
+       ],
+       [
+        "Do",
+        "At ended, hand velocity to the animation that settles the element, so a flick ca"
+       ],
+       [
+        "Do",
+        "Call destroy when the element leaves the page, so no listener outlives it."
+       ],
+       [
+        "Don't",
+        "Read the element’s layout on every changed event to place it; translation alread"
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "elementrequired",
+        "Element",
+        "The element to drag. The pan writes the touch-action its axis needs on it and no"
+       ],
+       [
+        "optionsrequired",
+        "PanGestureOptions",
+        "Configuration object."
+       ],
+       [
+        "options.axis",
+        "'x' | 'y'",
+        "Limits the drag to one axis. A drag along the other axis is not reported, and th"
+       ],
+       [
+        "options.onPanrequired",
+        "(event: PanGestureEvent) => void",
+        "Called with {state, translation, velocity} as the drag begins, changes, ends at "
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "destroy",
+        "() => void",
+        "Removes every listener the pan added and its touch-action. A drag in progress is"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_WmB387Jnw7HAq12W4JH7oWZERxXE was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally."
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 48,
+    "scrollY": 1000
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/createPanGesture",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 563946,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-320712180ab95fc7.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/createPanGesture",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 563946,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Examples",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Move the element from translation added to where it was when the drag began, so "
+       ],
+       [
+        "Do",
+        "At ended, hand velocity to the animation that settles the element, so a flick ca"
+       ],
+       [
+        "Do",
+        "Call destroy when the element leaves the page, so no listener outlives it."
+       ],
+       [
+        "Don't",
+        "Read the element’s layout on every changed event to place it; translation alread"
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "elementrequired",
+        "Element",
+        "The element to drag. The pan writes the touch-action its axis needs on it and no"
+       ],
+       [
+        "optionsrequired",
+        "PanGestureOptions",
+        "Configuration object."
+       ],
+       [
+        "options.axis",
+        "'x' | 'y'",
+        "Limits the drag to one axis. A drag along the other axis is not reported, and th"
+       ],
+       [
+        "options.onPanrequired",
+        "(event: PanGestureEvent) => void",
+        "Called with {state, translation, velocity} as the drag begins, changes, ends at "
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "destroy",
+        "() => void",
+        "Removes every listener the pan added and its touch-action. A drag in progress is"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 1000
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/createSwipe",
+    "javascript": "off",
+    "status": 200,
+    "edgeCache": "PRERENDER",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 566705,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [],
+    "tables": [],
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "pageErrors": [],
+    "failedRequests": [
+     "csp /_next/static/chunks/webpack-320712180ab95fc7.js"
+    ]
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/createSwipe",
+    "javascript": "on",
+    "status": 200,
+    "edgeCache": "HIT",
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "documentBytes": 566705,
+    "documentHasParametersHtml": false,
+    "documentHasParamsProps": true,
+    "documentHiddenStreamedChunks": 0,
+    "headings": [
+     "h2:Usage",
+     "h2:Best practices",
+     "h3:Parameters",
+     "h3:Returns",
+     "h2:Use with shadcn"
+    ],
+    "tables": [
+     {
+      "heading": "Best practices",
+      "header": [
+       "Guidance",
+       "Practices"
+      ],
+      "rows": [
+       [
+        "Do",
+        "Give every swipe action a second home in the row, such as a menu or a button in "
+       ],
+       [
+        "Do",
+        "Put the rows in a List, which clips them in the inline axis; any other container"
+       ],
+       [
+        "Don't",
+        "Give a commit side more than one entry: it fires none of them."
+       ]
+      ]
+     },
+     {
+      "heading": "Parameters",
+      "header": [
+       "Param",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "options.leading",
+        "ReadonlyArray<SwipeAction<Id>>",
+        "The verbs a drag toward the inline end uncovers (rightward in left-to-right text"
+       ],
+       [
+        "options.trailing",
+        "ReadonlyArray<SwipeAction<Id>>",
+        "The verbs a drag toward the inline start uncovers (leftward in left-to-right tex"
+       ],
+       [
+        "options.swipeBehavior",
+        "'reveal' | 'commit' (default: 'reveal')",
+        "What a swipe does, on both sides. reveal rests the row open with every entry a r"
+       ]
+      ]
+     },
+     {
+      "heading": "Returns",
+      "header": [
+       "Field",
+       "Type",
+       "Description"
+      ],
+      "rows": [
+       [
+        "Swipe",
+        "Swipe<Id>",
+        "The row’s swipe actions, with nothing in them to read; its type carries the acti"
+       ]
+      ]
+     }
+    ],
+    "consoleErrors": [],
+    "consoleWarnings": [
+     "The resource /_next/static/css/8821ca1cba5d8786.css?dpl=dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionall"
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+     "net::ERR_ABORTED /api/search"
+    ],
+    "stillScrolledTo": "Parameters",
+    "stickyHeaderBottomPx": 112,
+    "scrollY": 911
+   }
+  ]
+ },
+ "productionCreateSwipe": {
+  "checked": "2026-11-20T15:14Z",
+  "status": 404,
+  "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE"
+ },
+ "hookPageSweep": {
+  "window": "2026-11-20T14:46:27Z/2026-11-20T14:48:43Z",
+  "client": "curl, default user agent",
+  "pagesFrom": "every /components/use* link on each site's /components page",
+  "commit": "b07619f1809137ee21921922562f90969bf08d1e",
+  "production docsite": {
+   "deploymentId": "dpl_GvppqPrc4L5KD9XHn1H23epkfee5",
+   "hookPages": 83,
+   "tablesInHtml": 79,
+   "tablesInHiddenChunk": [
+    "useAnimator",
+    "useCombobox",
+    "useDragToSnapPoints",
+    "usePanGesture"
+   ],
+   "pages": [
+    {
+     "page": "useAnimatedLayout",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useAnimator",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in a hidden streamed chunk",
+     "returns": "in a hidden streamed chunk"
+    },
+    {
+     "page": "useAnnounce",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useAppShellMobile",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCalendarConstraints",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCalendarDays",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCalendarNavigation",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useClickableContainer",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useClipboard",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCollapsible",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCollator",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCombobox",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in a hidden streamed chunk",
+     "returns": "in a hidden streamed chunk"
+    },
+    {
+     "page": "useContainerReveal",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useDevWarning",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useDirection",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useDragToSnapPoints",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in a hidden streamed chunk",
+     "returns": "in a hidden streamed chunk"
+    },
+    {
+     "page": "useEntryAnimation",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useFocusTrap",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useGridFocus",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useHotkeys",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useHoverCard",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useIcon",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useImageMode",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useImperativeAlertDialog",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useImperativeDialog",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useIndicatorFocusRing",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useInputContainer",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useInputStatusIcon",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useInteractiveRole",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useKeyboardHint",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLayer",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLightbox",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLinkComponent",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLinkify",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useListFocus",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLocale",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLongPress",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMediaQuery",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMenuPress",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMergedRefs",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMultiCombobox",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useOutlineFromDOM",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useOutlineFromMarkdown",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useOverflow",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useOverlay",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "usePanGesture",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in a hidden streamed chunk",
+     "returns": "in a hidden streamed chunk"
+    },
+    {
+     "page": "usePopover",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "usePowerSearchConfig",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "usePressFeedback",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useResizable",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useScrollableArea",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useScrollLock",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useScrollOverflow",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useSnapPaging",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useStreamingText",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTableColumnResize",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableColumnSettings",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableColumnSettingsState",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTableColumnsVirtualization",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableFiltering",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableFilterState",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableGroupedRows",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableInfiniteScroll",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTablePagination",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableRowExpansion",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableRowIndex",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableRowStatus",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableRowsVirtualization",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableSelection",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableSelectionState",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableSortable",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableSortableState",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTableStickyColumns",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableTreeData",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableTreeState",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTheme",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useThemeName",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useToast",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTooltip",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTranslator",
+     "hiddenStreamedChunks": 0,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTreeFocus",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTruncation",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTypeahead",
+     "hiddenStreamedChunks": 0,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    }
+   ]
+  },
+  "canary docsite": {
+   "deploymentId": "dpl_4V8ZFY7Hgg7S74B44FkmTDWjEcJZ",
+   "hookPages": 89,
+   "tablesInHtml": 85,
+   "tablesInHiddenChunk": [
+    "useAnimator",
+    "useCombobox",
+    "useDragToSnapPoints",
+    "usePanGesture"
+   ],
+   "pages": [
+    {
+     "page": "useAnimatedLayout",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useAnimator",
+     "hiddenStreamedChunks": 2,
+     "parameters": "in a hidden streamed chunk",
+     "returns": "in a hidden streamed chunk"
+    },
+    {
+     "page": "useAnnounce",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useAppShellMobile",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCalendarConstraints",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCalendarDays",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCalendarNavigation",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useChatDictation",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useChatPasteAsToken",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useClickableContainer",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useClipboard",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCollapsible",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCollator",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useCombobox",
+     "hiddenStreamedChunks": 2,
+     "parameters": "in a hidden streamed chunk",
+     "returns": "in a hidden streamed chunk"
+    },
+    {
+     "page": "useContainerReveal",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useDevWarning",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useDirection",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useDragToSnapPoints",
+     "hiddenStreamedChunks": 2,
+     "parameters": "in a hidden streamed chunk",
+     "returns": "in a hidden streamed chunk"
+    },
+    {
+     "page": "useEntryAnimation",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useFocusTrap",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useGridFocus",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useHotkeys",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useHoverCard",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useIcon",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useImageMode",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useImperativeAlertDialog",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useImperativeDialog",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useIndicatorFocusRing",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useInputContainer",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useInputStatusIcon",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useInteractiveRole",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useKeyboardHint",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLayer",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLightbox",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLinkComponent",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLinkify",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useListFocus",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLocale",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useLongPress",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMediaPlaybackTime",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMediaPlayer",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMediaQuery",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMenuPress",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMergedRefs",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useMultiCombobox",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useOutlineFromDOM",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useOutlineFromMarkdown",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useOverflow",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useOverlay",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "usePanGesture",
+     "hiddenStreamedChunks": 2,
+     "parameters": "in a hidden streamed chunk",
+     "returns": "in a hidden streamed chunk"
+    },
+    {
+     "page": "usePopover",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "usePowerSearchConfig",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "usePressFeedback",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useResizable",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useScrollableArea",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useScrollLock",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useScrollOverflow",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useSnapPaging",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useSpeechRecognition",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useStreamingText",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useSyntaxTheme",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTableColumnResize",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableColumnSettings",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableColumnSettingsState",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTableColumnsVirtualization",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableFiltering",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableFilterState",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableGroupedRows",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableInfiniteScroll",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTablePagination",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableRowExpansion",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableRowIndex",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableRowStatus",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableRowsVirtualization",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableSelection",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableSelectionState",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableSortable",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableSortableState",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTableStickyColumns",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableTreeData",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTableTreeState",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "none"
+    },
+    {
+     "page": "useTheme",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useThemeName",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useToast",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTooltip",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTranslator",
+     "hiddenStreamedChunks": 1,
+     "parameters": "none",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTreeFocus",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTruncation",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    },
+    {
+     "page": "useTypeahead",
+     "hiddenStreamedChunks": 1,
+     "parameters": "in the HTML",
+     "returns": "in the HTML"
+    }
+   ]
+  }
+ },
+ "responsesByClient": {
+  "time": "about 2026-11-20T14:52Z, at b07619f180 on both sites",
+  "note": "Every curl variant got the full server render: the Overview arrives at the end of the document in a hidden element, which an inline script moves into place. Chromium got the cached prerender, which holds the fallback and the page props but no Overview HTML.",
+  "curl": [
+   {
+    "client": "curl, default user agent",
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 507748,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, default user agent",
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "edgeCache": "BYPASS",
+    "documentBytes": 496433,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": false,
+    "hiddenStreamedChunks": 0,
+    "swapScripts": 0
+   },
+   {
+    "client": "curl, default user agent",
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 616862,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 2,
+    "swapScripts": 2
+   },
+   {
+    "client": "curl, default user agent",
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "edgeCache": "BYPASS",
+    "documentBytes": 607457,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": false,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, Chromium headless user agent",
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 507748,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, Chromium headless user agent",
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "edgeCache": "BYPASS",
+    "documentBytes": 496433,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": false,
+    "hiddenStreamedChunks": 0,
+    "swapScripts": 0
+   },
+   {
+    "client": "curl, Chromium headless user agent",
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 616862,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 2,
+    "swapScripts": 2
+   },
+   {
+    "client": "curl, Chromium headless user agent",
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "edgeCache": "BYPASS",
+    "documentBytes": 607457,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": false,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, Chrome user agent",
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 507748,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, Chrome user agent",
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "edgeCache": "BYPASS",
+    "documentBytes": 496433,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": false,
+    "hiddenStreamedChunks": 0,
+    "swapScripts": 0
+   },
+   {
+    "client": "curl, Chrome user agent",
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 616862,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 2,
+    "swapScripts": 2
+   },
+   {
+    "client": "curl, Chrome user agent",
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "edgeCache": "BYPASS",
+    "documentBytes": 607457,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": false,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, compressed",
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 507748,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, Accept text/html",
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 507748,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, Accept text/html and compressed",
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 507748,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   },
+   {
+    "client": "curl, browser-like headers (Chrome user agent, Accept, Accept-Language, Sec-Fetch-*, compressed)",
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "BYPASS",
+    "documentBytes": 507748,
+    "parametersHtml": "yes",
+    "parametersInHiddenStreamedChunk": true,
+    "hiddenStreamedChunks": 1,
+    "swapScripts": 1
+   }
+  ],
+  "chromium": [
+   {
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "HIT",
+    "documentBytes": 464177,
+    "parametersHtml": "no",
+    "paramsInPageProps": true,
+    "hiddenStreamedChunks": 0
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "edgeCache": "HIT",
+    "documentBytes": 562876,
+    "parametersHtml": "no",
+    "paramsInPageProps": true,
+    "hiddenStreamedChunks": 0
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "edgeCache": "HIT",
+    "documentBytes": 498335,
+    "parametersHtml": "yes",
+    "paramsInPageProps": true,
+    "hiddenStreamedChunks": 0
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "edgeCache": "HIT",
+    "documentBytes": 603744,
+    "parametersHtml": "yes",
+    "paramsInPageProps": true,
+    "hiddenStreamedChunks": 0
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaPlayer",
+    "edgeCache": "HIT",
+    "documentBytes": 588634,
+    "parametersHtml": "no",
+    "paramsInPageProps": false,
+    "hiddenStreamedChunks": 0
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaPlaybackTime",
+    "edgeCache": "HIT",
+    "documentBytes": 568877,
+    "parametersHtml": "no",
+    "paramsInPageProps": false,
+    "hiddenStreamedChunks": 0
+   }
+  ]
+ },
+ "timing": {
+  "window": "2026-11-20T15:13:18Z/2026-11-20T15:13:59Z",
+  "commit": "b9329f65ad200d7d13177b385992914c5d748397",
+  "boxLoad1min": {
+   "start": 25.23,
+   "end": 24.84,
+   "cores": 166
+  },
+  "method": "A mutation observer records when an h3 \"Parameters\" first exists, against the navigation start. Three loads per page, each in a new browser context.",
+  "loads": [
+   {
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "parametersHeadingMs": 1218,
+    "domContentLoadedMs": 802,
+    "loadMs": 803,
+    "documentTransferBytes": 43655,
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": 416
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "parametersHeadingMs": 1177,
+    "domContentLoadedMs": 357,
+    "loadMs": 878,
+    "documentTransferBytes": 43655,
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": 820
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useAnimator",
+    "parametersHeadingMs": 1121,
+    "domContentLoadedMs": 455,
+    "loadMs": 740,
+    "documentTransferBytes": 43655,
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": 666
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "parametersHeadingMs": 389,
+    "domContentLoadedMs": 449,
+    "loadMs": 717,
+    "documentTransferBytes": 50127,
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": -60
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "parametersHeadingMs": 471,
+    "domContentLoadedMs": 554,
+    "loadMs": 757,
+    "documentTransferBytes": 50127,
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": -83
+   },
+   {
+    "site": "production docsite",
+    "path": "/components/useMediaQuery",
+    "parametersHeadingMs": 379,
+    "domContentLoadedMs": 454,
+    "loadMs": 672,
+    "documentTransferBytes": 50127,
+    "deploymentId": "dpl_WmB387Jnw7HAq12W4JH7oWZERxXE",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": -75
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "parametersHeadingMs": 1207,
+    "domContentLoadedMs": 550,
+    "loadMs": 1284,
+    "documentTransferBytes": 50009,
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": 657
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "parametersHeadingMs": 1365,
+    "domContentLoadedMs": 429,
+    "loadMs": 1443,
+    "documentTransferBytes": 50009,
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": 936
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useAnimator",
+    "parametersHeadingMs": 1143,
+    "domContentLoadedMs": 379,
+    "loadMs": 1323,
+    "documentTransferBytes": 50009,
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": 764
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "parametersHeadingMs": 355,
+    "domContentLoadedMs": 439,
+    "loadMs": 1351,
+    "documentTransferBytes": 55853,
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": -84
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "parametersHeadingMs": 402,
+    "domContentLoadedMs": 537,
+    "loadMs": 1334,
+    "documentTransferBytes": 55853,
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": -135
+   },
+   {
+    "site": "canary docsite",
+    "path": "/components/useMediaQuery",
+    "parametersHeadingMs": 409,
+    "domContentLoadedMs": 476,
+    "loadMs": 1337,
+    "documentTransferBytes": 55853,
+    "deploymentId": "dpl_64HiuLUTWfjBHfSa5tvzv7GRQrNx",
+    "rscRequests": 0,
+    "headingAfterDomContentLoadedMs": -67
+   }
+  ]
+ },
+ "repository": {
+  "commit": "b07619f1809137ee21921922562f90969bf08d1e",
+  "cited": [
+   {
+    "file": "apps/docsite/next.config.mjs",
+    "lines": "60",
+    "fact": "cacheComponents: true"
+   },
+   {
+    "file": "apps/docsite/src/components/component-detail/ComponentDetailClient.tsx",
+    "lines": "404-413",
+    "fact": "hasTabs = hasPlayground || hasThemingTab || hasAccessibilityTab; hasAccessibilityTab is true when usage.accessibility or usage.accessibilityThemeCoverage is not empty; hasThemingTab is canary only"
+   },
+   {
+    "file": "apps/docsite/src/components/component-detail/ComponentDetailClient.tsx",
+    "lines": "453-478",
+    "fact": "with tabs, ComponentDetailTabs renders inside <Suspense fallback={<ComponentDetailFallback/>}>; without tabs, OverviewContent renders directly"
+   },
+   {
+    "file": "apps/docsite/src/components/component-detail/ComponentDetailClient.tsx",
+    "lines": "247-263",
+    "fact": "ComponentDetailTabs calls useSearchParams(); its comment says the boundary keeps the heading and every component with no tabs in the prerendered shell"
+   },
+   {
+    "file": "apps/docsite/src/components/component-detail/ComponentDetailClient.tsx",
+    "lines": "172",
+    "fact": "OverviewContent renders the hook Parameters and Returns tables"
+   },
+   {
+    "file": "apps/docsite/src/__tests__/static-shell.test.ts",
+    "lines": "10-14, 31",
+    "fact": "everything up to the nearest Suspense boundary of searchParams becomes a PPR hole; the test keeps the component heading outside it"
+   },
+   {
+    "file": "packages/core/src/hooks/useAnimator.doc.mjs",
+    "fact": "usage.accessibility has 2 entries; params: ref (RefObject<HTMLElement | null>); returns: animator (AnimatorHandle)"
+   },
+   {
+    "file": "packages/core/src/hooks/useMediaQuery.doc.mjs",
+    "fact": "no accessibility entries and no playground"
+   },
+   {
+    "file": "apps/docsite/scripts/generate-data.mjs",
+    "lines": "1330-1331",
+    "fact": "#9832 adds .filter(component => component.params == null) to the preview registry's lazy component map: a hook renders nothing to preview"
+   }
+  ],
+  "hookDocsWithAccessibilityLists": [
+   "packages/core/src/hooks/useAnimator.doc.mjs",
+   "packages/core/src/Selector/useCombobox.doc.mjs",
+   "packages/core/src/hooks/useDragToSnapPoints.doc.mjs",
+   "packages/core/src/hooks/usePanGesture.doc.mjs",
+   "packages/core/src/animator/createAnimator.doc.mjs",
+   "packages/core/src/dragToSnapPoints/createDragToSnapPoints.doc.mjs",
+   "packages/core/src/gestures/createPanGesture.doc.mjs",
+   "packages/core/src/Swipe/createSwipe.doc.mjs"
+  ],
+  "history": [
+   {
+    "commit": "a32c01136b",
+    "date": "2026-08-30",
+    "subject": "docs: add component accessibility guidance (#5713)",
+    "fact": "adds hasAccessibilityTab"
+   },
+   {
+    "commit": "9da7cb3f5e",
+    "date": "2026-08-31",
+    "subject": "fix(docsite): stabilize PPR loading states (#5548)",
+    "fact": "puts ComponentDetailTabs inside the Suspense boundary"
+   },
+   {
+    "commit": "871bc3d5e8",
+    "date": "2026-11-03",
+    "subject": "feat(core): createAnimator and useAnimator animate one element (#8653)",
+    "fact": "adds useAnimator.doc.mjs with its accessibility list"
+   },
+   {
+    "commit": "e2b63aeb65",
+    "date": "2026-11-19",
+    "subject": "feat(lab): add VideoPlayer and AudioPlayer media players (#9832)",
+    "fact": "merge"
+   }
+  ]
+ }
+}
