@@ -773,15 +773,18 @@ describe("useMenuPress — a finger's touchend (spec:AST-094 FR21)", () => {
     expect(fireTouchEnd(row('A')).defaultPrevented).toBe(false);
   });
 
-  it('once the touchend is cancelled, the swallower stands down: a later click with no press behind it acts (module FR5)', () => {
+  it('once the touchend is cancelled, the swallower stays armed until the next press or the stray-click window: the late compatibility click is taken, and a click whose detail is 0 acts (module FR5)', () => {
     const onSelect = vi.fn();
     render(<Harness onSelect={onSelect} />);
     fireEvent.pointerDown(row('A'), touch());
     fireEvent.pointerUp(row('A'), touch());
     expect(fireTouchEnd(row('A')).defaultPrevented).toBe(true);
-    // Well inside the stray-click window, a click that no tracked gesture
-    // explains, a script's say.
-    fireEvent.click(row('B'), {detail: 1});
+    // A keyboard's or a screen reader's click acts, as before.
+    fireEvent.click(row('B'), {detail: 0});
+    expect(onSelect.mock.calls).toEqual([['A'], ['B']]);
+    // WebKit can still send the pick's own click after the cancelled
+    // touchend. It acts on nothing.
+    fireEvent.click(row('C'), {detail: 1});
     expect(onSelect.mock.calls).toEqual([['A'], ['B']]);
   });
 
@@ -871,6 +874,31 @@ describe("useMenuPress — a finger's touchend (spec:AST-094 FR21)", () => {
     expect(fireTouch(picked, 'touchend', 7).defaultPrevented).toBe(true);
     // WebKit aims them at the point where the touch began: here, the control
     // that the closed menu covered.
+    fireEvent.mouseDown(outside, {detail: 1});
+    fireEvent.mouseUp(outside, {detail: 1});
+    fireEvent.click(outside, {detail: 1});
+    expect(onOutside).not.toHaveBeenCalled();
+    // A later tap is the page's.
+    fireEvent.pointerDown(outside, touch(8));
+    fireEvent.click(outside, {detail: 1});
+    expect(onOutside).toHaveBeenCalledTimes(1);
+  });
+
+  it('after a cancelable touchstart too, swallows the compatibility mousedown, mouseup and click that WebKit can still send after the cancelled touchend in a Home Screen web app (FR5, spec:AST-094 FR21, FR26)', () => {
+    const onSelect = vi.fn();
+    const onOutside = vi.fn();
+    render(<Harness onSelect={onSelect} />);
+    const outside = screen.getByTestId('outside');
+    for (const type of ['mousedown', 'mouseup', 'click']) {
+      outside.addEventListener(type, onOutside);
+    }
+    const picked = row('A');
+    fireEvent.pointerDown(picked, touch(7));
+    fireTouch(picked, 'touchstart', 7);
+    fireEvent.pointerUp(picked, touch(7));
+    expect(onSelect.mock.calls).toEqual([['A']]);
+    picked.remove();
+    expect(fireTouch(picked, 'touchend', 7).defaultPrevented).toBe(true);
     fireEvent.mouseDown(outside, {detail: 1});
     fireEvent.mouseUp(outside, {detail: 1});
     fireEvent.click(outside, {detail: 1});
