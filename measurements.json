@@ -1,0 +1,1133 @@
+{
+  "chromium": "149.0.7827.55",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "page": "/components/StatusDot?tab=properties",
+  "blocked": [
+    "https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;0,70"
+  ],
+  "errors": [],
+  "records": [
+    {
+      "build": "head",
+      "scheme": "light",
+      "variant": "success",
+      "variantShown": "success",
+      "iconOn": true,
+      "file": "head-light-success.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(47, 125, 51)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(255, 255, 255)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 5.12,
+        "dotVsPage": 4.53,
+        "sampled": {
+          "markVsFill": 5.12,
+          "dotVsPage": 4.53
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          47,
+          125,
+          51
+        ],
+        "ink": [
+          255,
+          255,
+          255
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "variant": "warning",
+      "variantShown": "warning",
+      "iconOn": true,
+      "file": "head-light-warning.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(131, 103, 0)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(255, 255, 255)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 5.38,
+        "dotVsPage": 4.76,
+        "sampled": {
+          "markVsFill": 5.38,
+          "dotVsPage": 4.76
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          131,
+          103,
+          0
+        ],
+        "ink": [
+          255,
+          255,
+          255
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "variant": "error",
+      "variantShown": "error",
+      "iconOn": true,
+      "file": "head-light-error.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(192, 38, 44)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(255, 255, 255)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 5.91,
+        "dotVsPage": 5.23,
+        "sampled": {
+          "markVsFill": 5.91,
+          "dotVsPage": 5.23
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          192,
+          38,
+          44
+        ],
+        "ink": [
+          255,
+          255,
+          255
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "variant": "accent",
+      "variantShown": "accent",
+      "iconOn": true,
+      "file": "head-light-accent.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(27, 27, 27)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(255, 255, 255)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 17.22,
+        "dotVsPage": 15.25,
+        "sampled": {
+          "markVsFill": 17.22,
+          "dotVsPage": 15.25
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          27,
+          27,
+          27
+        ],
+        "ink": [
+          255,
+          255,
+          255
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "variant": "neutral",
+      "variantShown": "neutral",
+      "iconOn": true,
+      "file": "head-light-neutral.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(106, 106, 106)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(255, 255, 255)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 5.41,
+        "dotVsPage": 4.79,
+        "sampled": {
+          "markVsFill": 5.41,
+          "dotVsPage": 4.79
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          106,
+          106,
+          106
+        ],
+        "ink": [
+          255,
+          255,
+          255
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "variant": "success",
+      "variantShown": "success",
+      "iconOn": true,
+      "file": "head-dark-success.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(144, 202, 144)",
+        "ink": "rgb(38, 38, 38)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(38, 38, 38)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 7.95,
+        "dotVsPage": 9.05,
+        "sampled": {
+          "markVsFill": 7.95,
+          "dotVsPage": 9.05
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          144,
+          202,
+          144
+        ],
+        "ink": [
+          38,
+          38,
+          38
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "variant": "warning",
+      "variantShown": "warning",
+      "iconOn": true,
+      "file": "head-dark-warning.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(238, 196, 72)",
+        "ink": "rgb(38, 38, 38)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(38, 38, 38)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 9.1,
+        "dotVsPage": 10.36,
+        "sampled": {
+          "markVsFill": 9.1,
+          "dotVsPage": 10.36
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          238,
+          196,
+          72
+        ],
+        "ink": [
+          38,
+          38,
+          38
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "variant": "error",
+      "variantShown": "error",
+      "iconOn": true,
+      "file": "head-dark-error.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(255, 174, 167)",
+        "ink": "rgb(38, 38, 38)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(38, 38, 38)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 8.55,
+        "dotVsPage": 9.73,
+        "sampled": {
+          "markVsFill": 8.55,
+          "dotVsPage": 9.73
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          255,
+          174,
+          167
+        ],
+        "ink": [
+          38,
+          38,
+          38
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "variant": "accent",
+      "variantShown": "accent",
+      "iconOn": true,
+      "file": "head-dark-accent.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(241, 241, 241)",
+        "ink": "rgb(17, 17, 17)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(17, 17, 17)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 16.72,
+        "dotVsPage": 15.25,
+        "sampled": {
+          "markVsFill": 16.72,
+          "dotVsPage": 15.25
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          241,
+          241,
+          241
+        ],
+        "ink": [
+          17,
+          17,
+          17
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "variant": "neutral",
+      "variantShown": "neutral",
+      "iconOn": true,
+      "file": "head-dark-neutral.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(158, 158, 158)",
+        "ink": "rgb(38, 38, 38)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": {
+          "x": 767,
+          "y": 431,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(38, 38, 38)"
+        }
+      },
+      "contrast": {
+        "markVsFill": 5.65,
+        "dotVsPage": 6.43,
+        "sampled": {
+          "markVsFill": 5.65,
+          "dotVsPage": 6.43
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          158,
+          158,
+          158
+        ],
+        "ink": [
+          38,
+          38,
+          38
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "variant": "success",
+      "variantShown": "success",
+      "iconOn": false,
+      "file": "main-light-success.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(47, 125, 51)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 4.53,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 4.53
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          47,
+          125,
+          51
+        ],
+        "ink": [
+          47,
+          125,
+          51
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "variant": "warning",
+      "variantShown": "warning",
+      "iconOn": false,
+      "file": "main-light-warning.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(131, 103, 0)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 4.76,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 4.76
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          131,
+          103,
+          0
+        ],
+        "ink": [
+          131,
+          103,
+          0
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "variant": "error",
+      "variantShown": "error",
+      "iconOn": false,
+      "file": "main-light-error.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(192, 38, 44)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 5.23,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 5.23
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          192,
+          38,
+          44
+        ],
+        "ink": [
+          192,
+          38,
+          44
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "variant": "accent",
+      "variantShown": "accent",
+      "iconOn": false,
+      "file": "main-light-accent.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(27, 27, 27)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 15.25,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 15.25
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          27,
+          27,
+          27
+        ],
+        "ink": [
+          27,
+          27,
+          27
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "variant": "neutral",
+      "variantShown": "neutral",
+      "iconOn": false,
+      "file": "main-light-neutral.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(106, 106, 106)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 4.79,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 4.79
+        }
+      },
+      "sampled": {
+        "page": [
+          241,
+          241,
+          241
+        ],
+        "fill": [
+          106,
+          106,
+          106
+        ],
+        "ink": [
+          106,
+          106,
+          106
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "variant": "success",
+      "variantShown": "success",
+      "iconOn": false,
+      "file": "main-dark-success.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(144, 202, 144)",
+        "ink": "rgb(38, 38, 38)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 9.05,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 9.05
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          144,
+          202,
+          144
+        ],
+        "ink": [
+          144,
+          202,
+          144
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "variant": "warning",
+      "variantShown": "warning",
+      "iconOn": false,
+      "file": "main-dark-warning.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(238, 196, 72)",
+        "ink": "rgb(38, 38, 38)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 10.36,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 10.36
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          238,
+          196,
+          72
+        ],
+        "ink": [
+          238,
+          196,
+          72
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "variant": "error",
+      "variantShown": "error",
+      "iconOn": false,
+      "file": "main-dark-error.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(255, 174, 167)",
+        "ink": "rgb(38, 38, 38)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 9.73,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 9.73
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          255,
+          174,
+          167
+        ],
+        "ink": [
+          255,
+          174,
+          167
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "variant": "accent",
+      "variantShown": "accent",
+      "iconOn": false,
+      "file": "main-dark-accent.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(241, 241, 241)",
+        "ink": "rgb(17, 17, 17)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 15.25,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 15.25
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          241,
+          241,
+          241
+        ],
+        "ink": [
+          241,
+          241,
+          241
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "variant": "neutral",
+      "variantShown": "neutral",
+      "iconOn": false,
+      "file": "main-dark-neutral.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 766,
+          "y": 430,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(158, 158, 158)",
+        "ink": "rgb(38, 38, 38)",
+        "radius": "50%",
+        "behind": "rgb(27, 27, 27)",
+        "mark": null
+      },
+      "contrast": {
+        "markVsFill": null,
+        "dotVsPage": 6.43,
+        "sampled": {
+          "markVsFill": null,
+          "dotVsPage": 6.43
+        }
+      },
+      "sampled": {
+        "page": [
+          27,
+          27,
+          27
+        ],
+        "fill": [
+          158,
+          158,
+          158
+        ],
+        "ink": [
+          158,
+          158,
+          158
+        ],
+        "size": [
+          192,
+          192
+        ]
+      }
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "variant": "success",
+      "zoom": "200%",
+      "iconOn": true,
+      "file": "head-light-success-zoom200.png",
+      "dot": {
+        "label": "Online",
+        "box": {
+          "x": 316,
+          "y": 141,
+          "w": 8,
+          "h": 8
+        },
+        "fill": "rgb(47, 125, 51)",
+        "ink": "rgb(255, 255, 255)",
+        "radius": "50%",
+        "behind": "rgb(241, 241, 241)",
+        "mark": {
+          "x": 317,
+          "y": 142,
+          "w": 6,
+          "h": 6,
+          "ariaHidden": true,
+          "color": "rgb(255, 255, 255)"
+        }
+      }
+    }
+  ]
+}
