@@ -4,6 +4,8 @@ Frames of the SideNav showcase block from two builds: meta/astryx #11267 at 3ed4
 
 Chromium 149 opened `/templates/SideNavShowcase/?embed=1&theme=neutral&mode=light` (and `mode=dark`) at 1280 × 800 and 390 × 844. The neutral theme's own font files served the fonts. Every number below was measured on those local builds; [measurements.json](measurements.json) has them all.
 
+The frames also stand for the pull request's newer head 993b834d. Its tree differs from the measured merge 4d0322c8 only in `docs/specs/AST-017/spec.md`.
+
 Main has no footer, because the pull request adds it. So main's showcase shows as it is, and the focus and icon checks cover the head only.
 
 ## At rest
