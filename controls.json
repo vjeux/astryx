@@ -1,0 +1,91 @@
+{
+ "mainRun5VsRun4": {
+  "total": 64,
+  "same": 64
+ },
+ "headVsMain100": {
+  "none|1280-fine": {
+   "total": 4,
+   "same": 4
+  },
+  "none|390-touch": {
+   "total": 4,
+   "same": 4
+  },
+  "neutral|1280-fine": {
+   "total": 4,
+   "same": 4
+  },
+  "neutral|390-touch": {
+   "total": 4,
+   "same": 4
+  },
+  "stone|1280-fine": {
+   "total": 4,
+   "same": 4
+  },
+  "stone|390-touch": {
+   "total": 4,
+   "same": 4
+  },
+  "butter|1280-fine": {
+   "total": 4,
+   "same": 4
+  },
+  "butter|390-touch": {
+   "total": 4,
+   "same": 4
+  },
+  "chocolate|1280-fine": {
+   "total": 4,
+   "same": 4
+  },
+  "chocolate|390-touch": {
+   "total": 4,
+   "same": 4
+  },
+  "gothic|1280-fine": {
+   "total": 4,
+   "same": 4
+  },
+  "gothic|390-touch": {
+   "total": 4,
+   "same": 4
+  },
+  "matcha|1280-fine": {
+   "total": 4,
+   "same": 4
+  },
+  "matcha|390-touch": {
+   "total": 4,
+   "same": 4
+  },
+  "y2k|1280-fine": {
+   "total": 4,
+   "same": 4
+  },
+  "y2k|390-touch": {
+   "total": 4,
+   "same": 4
+  }
+ },
+ "labelVs274ac707": {
+  "total": 640,
+  "differ": 0
+ },
+ "markdownHeadVs0252d110": {
+  "total": 64,
+  "same": 64
+ },
+ "markdownImages": {
+  "frames": 192,
+  "allLoaded": 192,
+  "retried": 0,
+  "imagesPerPage": "4"
+ },
+ "maxRatio": {
+  "theme": "gothic",
+  "ratio": 1.4230769230769231
+ },
+ "riseWorseThan0252": []
+}
