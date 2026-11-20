@@ -1,0 +1,541 @@
+{
+  "chromium": "149.0.7827.55",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "builds": {
+    "main": {
+      "base": "https://astryx-g42fdg1du-fbopensource.vercel.app",
+      "version": {
+        "commit": "ee65f4f0a19daef6456874c171e7ff6018512353",
+        "environment": "production"
+      }
+    },
+    "pr": {
+      "base": "https://astryx-dyavqorpr-fbopensource.vercel.app",
+      "version": {
+        "commit": "093afdb8b40f027006d8f0f7f4a28dda8b01667a",
+        "environment": "preview"
+      }
+    }
+  },
+  "frames": [
+    {
+      "file": "light-ref-disabled-message-offset-main.png",
+      "note": "main, for reference: the inline disabled field with a message, 180 px lower, after one Tab"
+    },
+    {
+      "file": "light-ref-disabled-message-offset-pr.png",
+      "note": "the pull request, for reference: the inline disabled field with a message, 180 px lower, after one Tab"
+    },
+    {
+      "file": "dark-ref-disabled-message-offset-main.png",
+      "note": "main, for reference: the inline disabled field with a message, 180 px lower, after one Tab"
+    },
+    {
+      "file": "dark-ref-disabled-message-offset-pr.png",
+      "note": "the pull request, for reference: the inline disabled field with a message, 180 px lower, after one Tab"
+    }
+  ],
+  "records": [
+    {
+      "scheme": "light",
+      "build": "main",
+      "story": "core-tokenizer--disabled-with-message",
+      "step": "reference: 180 px of padding above the story, after one Tab",
+      "frame": "light-ref-disabled-message-offset-main.png",
+      "errors": [],
+      "active": {
+        "tag": "input",
+        "role": "combobox",
+        "tabIndex": 0,
+        "tabindexAttr": null,
+        "label": "Team Members",
+        "ariaDisabled": "true",
+        "disabled": false,
+        "focusVisible": true,
+        "field": "Team Members",
+        "rings": [
+          {
+            "tag": "input",
+            "role": "combobox",
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": "group",
+            "border": "rgb(27, 27, 27)",
+            "borderWidth": "1px",
+            "boxShadow": "rgb(212, 212, 212) 0px 0px 0px 2px inset",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          }
+        ]
+      },
+      "tooltips": [
+        {
+          "tooltip": {
+            "x": 77.9,
+            "y": 188,
+            "w": 276.2,
+            "h": 28
+          },
+          "text": "You need edit access to change members",
+          "labelText": {
+            "x": 16,
+            "y": 198,
+            "w": 100.9,
+            "h": 16
+          },
+          "overlapOfLabelTextPx": 624,
+          "overlapWidth": 39
+        }
+      ],
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "elementsPastViewportNotHeld": 0,
+        "list": []
+      }
+    },
+    {
+      "scheme": "light",
+      "build": "pr",
+      "story": "core-tokenizer--disabled-with-message",
+      "step": "reference: 180 px of padding above the story, after one Tab",
+      "frame": "light-ref-disabled-message-offset-pr.png",
+      "errors": [],
+      "active": {
+        "tag": "input",
+        "role": "combobox",
+        "tabIndex": 0,
+        "tabindexAttr": null,
+        "label": "Team Members",
+        "ariaDisabled": "true",
+        "disabled": false,
+        "focusVisible": true,
+        "field": "Team Members",
+        "rings": [
+          {
+            "tag": "input",
+            "role": "combobox",
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": "group",
+            "border": "rgb(27, 27, 27)",
+            "borderWidth": "1px",
+            "boxShadow": "rgb(212, 212, 212) 0px 0px 0px 2px inset",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          }
+        ]
+      },
+      "tooltips": [
+        {
+          "tooltip": {
+            "x": 77.9,
+            "y": 188,
+            "w": 276.2,
+            "h": 28
+          },
+          "text": "You need edit access to change members",
+          "labelText": {
+            "x": 16,
+            "y": 198,
+            "w": 100.9,
+            "h": 16
+          },
+          "overlapOfLabelTextPx": 624,
+          "overlapWidth": 39
+        }
+      ],
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "elementsPastViewportNotHeld": 0,
+        "list": []
+      }
+    },
+    {
+      "scheme": "light",
+      "build": "pr",
+      "story": "core-tokenizer--overflow-layer-states",
+      "step": "Approvers focused by Tab (measurement only; frame 3-tab-approvers shows it)",
+      "active": {
+        "tag": "div",
+        "role": "group",
+        "tabIndex": 0,
+        "tabindexAttr": "0",
+        "label": "Approvers",
+        "ariaDisabled": "true",
+        "focusVisible": true,
+        "field": "Approvers",
+        "rings": [
+          {
+            "tag": "div",
+            "role": "group",
+            "border": "rgb(27, 27, 27)",
+            "borderWidth": "1px",
+            "boxShadow": "rgb(212, 212, 212) 0px 0px 0px 2px inset",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(0, 0, 0)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          }
+        ]
+      },
+      "tooltips": [
+        {
+          "tooltip": {
+            "x": 75.9,
+            "y": 152,
+            "w": 280.1,
+            "h": 28
+          },
+          "text": "You need edit access to change approvers",
+          "labelText": {
+            "x": 16,
+            "y": 162,
+            "w": 70,
+            "h": 16
+          },
+          "overlapOfLabelTextPx": 162,
+          "overlapWidth": 10.1
+        }
+      ]
+    },
+    {
+      "scheme": "dark",
+      "build": "main",
+      "story": "core-tokenizer--disabled-with-message",
+      "step": "reference: 180 px of padding above the story, after one Tab",
+      "frame": "dark-ref-disabled-message-offset-main.png",
+      "errors": [],
+      "active": {
+        "tag": "input",
+        "role": "combobox",
+        "tabIndex": 0,
+        "tabindexAttr": null,
+        "label": "Team Members",
+        "ariaDisabled": "true",
+        "disabled": false,
+        "focusVisible": true,
+        "field": "Team Members",
+        "rings": [
+          {
+            "tag": "input",
+            "role": "combobox",
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": "group",
+            "border": "rgb(241, 241, 241)",
+            "borderWidth": "1px",
+            "boxShadow": "rgb(71, 71, 71) 0px 0px 0px 2px inset",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          }
+        ]
+      },
+      "tooltips": [
+        {
+          "tooltip": {
+            "x": 77.9,
+            "y": 188,
+            "w": 276.2,
+            "h": 28
+          },
+          "text": "You need edit access to change members",
+          "labelText": {
+            "x": 16,
+            "y": 198,
+            "w": 100.9,
+            "h": 16
+          },
+          "overlapOfLabelTextPx": 624,
+          "overlapWidth": 39
+        }
+      ],
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "elementsPastViewportNotHeld": 0,
+        "list": []
+      }
+    },
+    {
+      "scheme": "dark",
+      "build": "pr",
+      "story": "core-tokenizer--disabled-with-message",
+      "step": "reference: 180 px of padding above the story, after one Tab",
+      "frame": "dark-ref-disabled-message-offset-pr.png",
+      "errors": [],
+      "active": {
+        "tag": "input",
+        "role": "combobox",
+        "tabIndex": 0,
+        "tabindexAttr": null,
+        "label": "Team Members",
+        "ariaDisabled": "true",
+        "disabled": false,
+        "focusVisible": true,
+        "field": "Team Members",
+        "rings": [
+          {
+            "tag": "input",
+            "role": "combobox",
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": "group",
+            "border": "rgb(241, 241, 241)",
+            "borderWidth": "1px",
+            "boxShadow": "rgb(71, 71, 71) 0px 0px 0px 2px inset",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          }
+        ]
+      },
+      "tooltips": [
+        {
+          "tooltip": {
+            "x": 77.9,
+            "y": 188,
+            "w": 276.2,
+            "h": 28
+          },
+          "text": "You need edit access to change members",
+          "labelText": {
+            "x": 16,
+            "y": 198,
+            "w": 100.9,
+            "h": 16
+          },
+          "overlapOfLabelTextPx": 624,
+          "overlapWidth": 39
+        }
+      ],
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "elementsPastViewportNotHeld": 0,
+        "list": []
+      }
+    },
+    {
+      "scheme": "dark",
+      "build": "pr",
+      "story": "core-tokenizer--overflow-layer-states",
+      "step": "Approvers focused by Tab (measurement only; frame 3-tab-approvers shows it)",
+      "active": {
+        "tag": "div",
+        "role": "group",
+        "tabIndex": 0,
+        "tabindexAttr": "0",
+        "label": "Approvers",
+        "ariaDisabled": "true",
+        "focusVisible": true,
+        "field": "Approvers",
+        "rings": [
+          {
+            "tag": "div",
+            "role": "group",
+            "border": "rgb(241, 241, 241)",
+            "borderWidth": "1px",
+            "boxShadow": "rgb(71, 71, 71) 0px 0px 0px 2px inset",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          },
+          {
+            "tag": "div",
+            "role": null,
+            "border": "rgb(255, 255, 255)",
+            "borderWidth": "0px",
+            "boxShadow": "none",
+            "outline": "none"
+          }
+        ]
+      },
+      "tooltips": [
+        {
+          "tooltip": {
+            "x": 75.9,
+            "y": 152,
+            "w": 280.1,
+            "h": 28
+          },
+          "text": "You need edit access to change approvers",
+          "labelText": {
+            "x": 16,
+            "y": 162,
+            "w": 70,
+            "h": 16
+          },
+          "overlapOfLabelTextPx": 162,
+          "overlapWidth": 10.1
+        }
+      ]
+    }
+  ]
+}
