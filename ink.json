@@ -1,0 +1,2642 @@
+[
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 282.609375,
+   "y": 17.296875,
+   "w": 133.40625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 98.1875,
+   "y": 43.25,
+   "w": 112.71875,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 350.234375,
+   "y": 37.296875,
+   "w": 20,
+   "h": 20
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 282.609375,
+   "y": 17.296875,
+   "w": 133.40625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 98.1875,
+   "y": 43.25,
+   "w": 112.71875,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 350.234375,
+   "y": 37.296875,
+   "w": 20,
+   "h": 20
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 88.484375,
+   "y": 57.609375,
+   "w": 264.796875,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 211.484375,
+   "y": 99.21875,
+   "w": 223.4375,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 195.03125,
+   "y": 139.21875,
+   "w": 40,
+   "h": 40
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 88.484375,
+   "y": 57.609375,
+   "w": 264.796875,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 211.484375,
+   "y": 99.21875,
+   "w": 223.4375,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 195.03125,
+   "y": 139.21875,
+   "w": 40,
+   "h": 40
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 86.484375,
+   "y": 67.609375,
+   "w": 248.796875,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 14,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 209.484375,
+   "y": 107.609375,
+   "w": 193.4375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 8.5,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 195.03125,
+   "y": 137.671875,
+   "w": 21.359375,
+   "h": 20
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 86.484375,
+   "y": 57.609375,
+   "w": 248.796875,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 209.484375,
+   "y": 99.21875,
+   "w": 193.4375,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 195.03125,
+   "y": 139.21875,
+   "w": 21.359375,
+   "h": 40
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 282.609375,
+   "y": 17.296875,
+   "w": 133.40625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 98.1875,
+   "y": 43.25,
+   "w": 112.71875,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 350.234375,
+   "y": 37.296875,
+   "w": 20,
+   "h": 20
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 282.609375,
+   "y": 17.296875,
+   "w": 133.40625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 98.1875,
+   "y": 43.25,
+   "w": 112.71875,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 350.234375,
+   "y": 37.296875,
+   "w": 20,
+   "h": 20
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 88.484375,
+   "y": 57.609375,
+   "w": 264.796875,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 211.484375,
+   "y": 99.21875,
+   "w": 223.4375,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 195.03125,
+   "y": 139.21875,
+   "w": 40,
+   "h": 40
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 88.484375,
+   "y": 57.609375,
+   "w": 264.796875,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 211.484375,
+   "y": 99.21875,
+   "w": 223.4375,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 195.03125,
+   "y": 139.21875,
+   "w": 40,
+   "h": 40
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 86.484375,
+   "y": 67.609375,
+   "w": 248.796875,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 13.75,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 209.484375,
+   "y": 107.609375,
+   "w": 193.4375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 8.25,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 195.03125,
+   "y": 137.671875,
+   "w": 21.359375,
+   "h": 20
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "React Documentation",
+  "variant": "label",
+  "box": {
+   "x": 86.484375,
+   "y": 57.609375,
+   "w": 248.796875,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "Documentation",
+  "variant": "label",
+  "box": {
+   "x": 209.484375,
+   "y": 99.21875,
+   "w": 193.4375,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "sentence",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "3",
+  "variant": "number",
+  "box": {
+   "x": 195.03125,
+   "y": 139.21875,
+   "w": 21.359375,
+   "h": 40
+  },
+  "radius": "9999px",
+  "overflow": "visible",
+  "radiusPx": 9999,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 412.578125,
+   "y": 45.296875,
+   "w": 126.03125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 202.4375,
+   "y": 66.59375,
+   "w": 180,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 384.4375,
+   "y": 66.59375,
+   "w": 151.859375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 495.859375,
+   "y": 131.890625,
+   "w": 153.15625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 173.1875,
+   "w": 162.734375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 273.125,
+   "y": 242.484375,
+   "w": 126.03125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 188.296875,
+   "y": 273.78125,
+   "w": 180,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 155.609375,
+   "y": 305.078125,
+   "w": 153.15625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 412.578125,
+   "y": 45.296875,
+   "w": 126.03125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 202.4375,
+   "y": 66.59375,
+   "w": 180,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 384.4375,
+   "y": 66.59375,
+   "w": 151.859375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 495.859375,
+   "y": 131.890625,
+   "w": 153.15625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 173.1875,
+   "w": 162.734375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 273.125,
+   "y": 242.484375,
+   "w": 126.03125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 188.296875,
+   "y": 273.78125,
+   "w": 180,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "100",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 155.609375,
+   "y": 305.078125,
+   "w": 153.15625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 138.28125,
+   "y": 113.609375,
+   "w": 250.0625,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 20,
+   "y": 195.21875,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 384,
+   "y": 195.21875,
+   "w": 301.703125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 377.953125,
+   "y": 364.828125,
+   "w": 304.3125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 20,
+   "y": 447.4375,
+   "w": 323.453125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 68,
+   "y": 625.046875,
+   "w": 250.0625,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 68,
+   "y": 726.65625,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 295.21875,
+   "y": 788.265625,
+   "w": 304.3125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 138.28125,
+   "y": 113.609375,
+   "w": 250.0625,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 20,
+   "y": 195.21875,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 384,
+   "y": 195.21875,
+   "w": 301.703125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 377.953125,
+   "y": 364.828125,
+   "w": 304.3125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 20,
+   "y": 447.4375,
+   "w": 323.453125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 68,
+   "y": 625.046875,
+   "w": 250.0625,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 68,
+   "y": 726.65625,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "root-200",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 295.21875,
+   "y": 788.265625,
+   "w": 304.3125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 136.28125,
+   "y": 115.609375,
+   "w": 220.0625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 54,
+  "clippedInkOutsideBoxCssPx": 17.25
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 195.609375,
+   "w": 360,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 41.75,
+  "clippedInkOutsideBoxCssPx": 12.5
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 380,
+   "y": 195.609375,
+   "w": 285.703125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 40.75,
+  "clippedInkOutsideBoxCssPx": 6.25
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 375.953125,
+   "y": 339.609375,
+   "w": 274.3125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 43.75,
+  "clippedInkOutsideBoxCssPx": 10.25
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 459.609375,
+   "w": 307.453125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 32,
+  "clippedInkOutsideBoxCssPx": 6.25
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 42,
+   "y": 607.609375,
+   "w": 220.0625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 52.25,
+  "clippedInkOutsideBoxCssPx": 16.25
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 334.578125,
+   "y": 657.609375,
+   "w": 360,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 41.5,
+  "clippedInkOutsideBoxCssPx": 12.5
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 269.21875,
+   "y": 707.609375,
+   "w": 274.3125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 44.25,
+  "clippedInkOutsideBoxCssPx": 10.5
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 136.28125,
+   "y": 105.609375,
+   "w": 220.0625,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 187.21875,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 380,
+   "y": 187.21875,
+   "w": 285.703125,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 375.953125,
+   "y": 332.828125,
+   "w": 274.3125,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 454.4375,
+   "w": 307.453125,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 42,
+   "y": 604.046875,
+   "w": 220.0625,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 334.578125,
+   "y": 655.65625,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "light",
+  "size": "text-200",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 269.21875,
+   "y": 707.265625,
+   "w": 274.3125,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 412.578125,
+   "y": 45.296875,
+   "w": 126.03125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 202.4375,
+   "y": 66.59375,
+   "w": 180,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 384.4375,
+   "y": 66.59375,
+   "w": 151.859375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 495.859375,
+   "y": 131.890625,
+   "w": 153.15625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 173.1875,
+   "w": 162.734375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 273.125,
+   "y": 242.484375,
+   "w": 126.03125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 188.296875,
+   "y": 273.78125,
+   "w": 180,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 155.609375,
+   "y": 305.078125,
+   "w": 153.15625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 412.578125,
+   "y": 45.296875,
+   "w": 126.03125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 202.4375,
+   "y": 66.59375,
+   "w": 180,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 384.4375,
+   "y": 66.59375,
+   "w": 151.859375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 495.859375,
+   "y": 131.890625,
+   "w": 153.15625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 173.1875,
+   "w": 162.734375,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 273.125,
+   "y": 242.484375,
+   "w": 126.03125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 188.296875,
+   "y": 273.78125,
+   "w": 180,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "100",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 155.609375,
+   "y": 305.078125,
+   "w": 153.15625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 138.28125,
+   "y": 113.609375,
+   "w": 250.0625,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 20,
+   "y": 195.21875,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 384,
+   "y": 195.21875,
+   "w": 301.703125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 377.953125,
+   "y": 364.828125,
+   "w": 304.3125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 20,
+   "y": 447.4375,
+   "w": 323.453125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 68,
+   "y": 625.046875,
+   "w": 250.0625,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 68,
+   "y": 726.65625,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 295.21875,
+   "y": 788.265625,
+   "w": 304.3125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 138.28125,
+   "y": 113.609375,
+   "w": 250.0625,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 20,
+   "y": 195.21875,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 384,
+   "y": 195.21875,
+   "w": 301.703125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 377.953125,
+   "y": 364.828125,
+   "w": 304.3125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 20,
+   "y": 447.4375,
+   "w": 323.453125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 68,
+   "y": 625.046875,
+   "w": 250.0625,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 68,
+   "y": 726.65625,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "root-200",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 295.21875,
+   "y": 788.265625,
+   "w": 304.3125,
+   "h": 40
+  },
+  "radius": "20px",
+  "overflow": "hidden",
+  "radiusPx": 20,
+  "capsule": true,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 136.28125,
+   "y": 115.609375,
+   "w": 220.0625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 53.5,
+  "clippedInkOutsideBoxCssPx": 17
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 195.609375,
+   "w": 360,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 41,
+  "clippedInkOutsideBoxCssPx": 12.5
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 380,
+   "y": 195.609375,
+   "w": 285.703125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 40.25,
+  "clippedInkOutsideBoxCssPx": 6.25
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 375.953125,
+   "y": 339.609375,
+   "w": 274.3125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 42.75,
+  "clippedInkOutsideBoxCssPx": 10
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 459.609375,
+   "w": 307.453125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 32,
+  "clippedInkOutsideBoxCssPx": 6.25
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 42,
+   "y": 607.609375,
+   "w": 220.0625,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 52,
+  "clippedInkOutsideBoxCssPx": 16.25
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 334.578125,
+   "y": 657.609375,
+   "w": 360,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 41,
+  "clippedInkOutsideBoxCssPx": 12.5
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "main",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 269.21875,
+   "y": 707.609375,
+   "w": 274.3125,
+   "h": 20
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": true,
+  "clippedInkCssPx": 43.5,
+  "clippedInkOutsideBoxCssPx": 10.5
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 136.28125,
+   "y": 105.609375,
+   "w": 220.0625,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 187.21875,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "World Population Review",
+  "variant": "label",
+  "box": {
+   "x": 380,
+   "y": 187.21875,
+   "w": 285.703125,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 375.953125,
+   "y": 332.828125,
+   "w": 274.3125,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "UN Urbanization Prospects",
+  "variant": "label",
+  "box": {
+   "x": 18,
+   "y": 454.4375,
+   "w": 307.453125,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "Tokyo - Wikipedia",
+  "variant": "label",
+  "box": {
+   "x": 42,
+   "y": 604.046875,
+   "w": 220.0625,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "Japan Statistics Bureau - Population",
+  "variant": "label",
+  "box": {
+   "x": 334.578125,
+   "y": 655.65625,
+   "w": 360,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ },
+ {
+  "story": "markdown",
+  "scheme": "dark",
+  "size": "text-200",
+  "build": "head",
+  "text": "Reuters — Tokyo GDP",
+  "variant": "label",
+  "box": {
+   "x": 269.21875,
+   "y": 707.265625,
+   "w": 274.3125,
+   "h": 40
+  },
+  "radius": "10px",
+  "overflow": "hidden",
+  "radiusPx": 10,
+  "capsule": false,
+  "clippedInkCssPx": 0,
+  "clippedInkOutsideBoxCssPx": 0
+ }
+]
