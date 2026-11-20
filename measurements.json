@@ -1,0 +1,4663 @@
+{
+ "base": "c49f8470c0593adee8f5a1d008a61ded8ddaed2d",
+ "head": "61dad6ad5beb3b1c933d111e82bfb56b063c8936",
+ "versions": {
+  "main": {
+   "commit": "c49f8470c0593adee8f5a1d008a61ded8ddaed2d",
+   "environment": "production"
+  },
+  "pr": {
+   "commit": "61dad6ad5beb3b1c933d111e82bfb56b063c8936",
+   "environment": "preview"
+  }
+ },
+ "story": "core-table--overflow-behavior",
+ "browser": "Chromium, Chrome for Testing 149.0.7827.55",
+ "playwright": "1.61.1",
+ "load": "Box load average (1 min): about 12 for the at-rest stills, and 46 falling to 9 during the interaction runs, on 166 cores.",
+ "rest": {
+  "light--main": {
+   "file": "desktop-light--rest--main.png",
+   "tooltips": 0,
+   "attrs": [
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary"
+   ],
+   "cells": [
+    {
+     "text": "Long unbroken string",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "a_very_long_string_like_this_that_overfl",
+     "cut": true,
+     "scrollWidth": 570,
+     "offsetWidth": 296
+    },
+    {
+     "text": "Normal prose",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "This is a longer sentence that might wra",
+     "cut": true,
+     "scrollWidth": 642,
+     "offsetWidth": 296
+    },
+    {
+     "text": "Short text",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "Fits fine.",
+     "cut": false,
+     "scrollWidth": 296,
+     "offsetWidth": 296
+    }
+   ]
+  },
+  "light--pr": {
+   "file": "desktop-light--rest--pr.png",
+   "tooltips": 0,
+   "attrs": [
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary"
+   ],
+   "cells": [
+    {
+     "text": "Long unbroken string",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "a_very_long_string_like_this_that_overfl",
+     "cut": true,
+     "scrollWidth": 570,
+     "offsetWidth": 296
+    },
+    {
+     "text": "Normal prose",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "This is a longer sentence that might wra",
+     "cut": true,
+     "scrollWidth": 642,
+     "offsetWidth": 296
+    },
+    {
+     "text": "Short text",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "Fits fine.",
+     "cut": false,
+     "scrollWidth": 296,
+     "offsetWidth": 296
+    }
+   ]
+  },
+  "light--diff": {
+   "differingPixels": 0,
+   "byteIdentical": true
+  },
+  "dark--main": {
+   "file": "desktop-dark--rest--main.png",
+   "tooltips": 0,
+   "attrs": [
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary"
+   ],
+   "cells": [
+    {
+     "text": "Long unbroken string",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "a_very_long_string_like_this_that_overfl",
+     "cut": true,
+     "scrollWidth": 570,
+     "offsetWidth": 296
+    },
+    {
+     "text": "Normal prose",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "This is a longer sentence that might wra",
+     "cut": true,
+     "scrollWidth": 642,
+     "offsetWidth": 296
+    },
+    {
+     "text": "Short text",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "Fits fine.",
+     "cut": false,
+     "scrollWidth": 296,
+     "offsetWidth": 296
+    }
+   ]
+  },
+  "dark--pr": {
+   "file": "desktop-dark--rest--pr.png",
+   "tooltips": 0,
+   "attrs": [
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary",
+    "data-type=body data-color=primary"
+   ],
+   "cells": [
+    {
+     "text": "Long unbroken string",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "a_very_long_string_like_this_that_overfl",
+     "cut": true,
+     "scrollWidth": 570,
+     "offsetWidth": 296
+    },
+    {
+     "text": "Normal prose",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "This is a longer sentence that might wra",
+     "cut": true,
+     "scrollWidth": 642,
+     "offsetWidth": 296
+    },
+    {
+     "text": "Short text",
+     "cut": false,
+     "scrollWidth": 136,
+     "offsetWidth": 136
+    },
+    {
+     "text": "Fits fine.",
+     "cut": false,
+     "scrollWidth": 296,
+     "offsetWidth": 296
+    }
+   ]
+  },
+  "dark--diff": {
+   "differingPixels": 0,
+   "byteIdentical": true
+  }
+ },
+ "interest": {
+  "hover-cut|main": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": 232.7,
+     "range": "232.4–233.1"
+    },
+    "firstVisibleOpacity": {
+     "median": 0.4,
+     "range": "0.374–0.376"
+    },
+    "fullOpacityMs": {
+     "median": 332.6,
+     "range": "332.2–332.9"
+    },
+    "shownIn": 5,
+    "tooltipCount": [
+     1
+    ],
+    "rafFlashes": 0,
+    "position": [
+     {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "w": 300,
+      "h": 68
+     }
+    ],
+    "tabs": [
+     null
+    ],
+    "chunkAfterNavMs": "1232–1711",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 0,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.7,
+     "firstVisibleOpacity": 0.374,
+     "firstPresentMs": 16.2,
+     "fullOpacityMs": 332.6,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1583,
+       "startAfterInteractionMs": -1669,
+       "endAfterInteractionMs": -1585
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 1,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 233.1,
+     "firstVisibleOpacity": 0.374,
+     "firstPresentMs": 16.5,
+     "fullOpacityMs": 332.9,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1232,
+       "startAfterInteractionMs": -1256,
+       "endAfterInteractionMs": -1178
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0.1
+      }
+     ]
+    },
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 2,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.4,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 15.9,
+     "fullOpacityMs": 332.2,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1449,
+       "startAfterInteractionMs": -1256,
+       "endAfterInteractionMs": -1176
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 3,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.7,
+     "firstVisibleOpacity": 0.374,
+     "firstPresentMs": 16,
+     "fullOpacityMs": 332.5,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1505,
+       "startAfterInteractionMs": -1248,
+       "endAfterInteractionMs": -1168
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 4,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.8,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 16.3,
+     "fullOpacityMs": 332.7,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1711,
+       "startAfterInteractionMs": -1260,
+       "endAfterInteractionMs": -1183
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0.1
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": 240,
+    "firstChangeMs": 240,
+    "tooltipBox": {
+     "x": 186,
+     "y": 284,
+     "w": 300,
+     "h": 67
+    },
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -421,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 229,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 240,
+      "changedPx": 16234,
+      "tooltipBoxPx": 15414
+     },
+     {
+      "atMs": 257,
+      "changedPx": 17121,
+      "tooltipBoxPx": 16571
+     },
+     {
+      "atMs": 273,
+      "changedPx": 17309,
+      "tooltipBoxPx": 17031
+     },
+     {
+      "atMs": 290,
+      "changedPx": 17761,
+      "tooltipBoxPx": 17859
+     },
+     {
+      "atMs": 307,
+      "changedPx": 17757,
+      "tooltipBoxPx": 17861
+     },
+     {
+      "atMs": 324,
+      "changedPx": 17607,
+      "tooltipBoxPx": 17708
+     },
+     {
+      "atMs": 340,
+      "changedPx": 17376,
+      "tooltipBoxPx": 17466
+     },
+     {
+      "atMs": 357,
+      "changedPx": 17371,
+      "tooltipBoxPx": 17461
+     },
+     {
+      "atMs": 374,
+      "changedPx": 17762,
+      "tooltipBoxPx": 17486
+     },
+     {
+      "atMs": 391,
+      "changedPx": 17801,
+      "tooltipBoxPx": 17525
+     },
+     {
+      "atMs": 1634,
+      "changedPx": 17801,
+      "tooltipBoxPx": 17525
+     }
+    ]
+   }
+  },
+  "hover-cut|pr": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": 232.5,
+     "range": "232.2–232.8"
+    },
+    "firstVisibleOpacity": {
+     "median": 0.4,
+     "range": "0.375–0.376"
+    },
+    "fullOpacityMs": {
+     "median": 332.4,
+     "range": "332.2–332.6"
+    },
+    "shownIn": 5,
+    "tooltipCount": [
+     1
+    ],
+    "rafFlashes": 0,
+    "position": [
+     {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "w": 300,
+      "h": 68
+     }
+    ],
+    "tabs": [
+     null
+    ],
+    "chunkAfterNavMs": "1202–1768",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 0,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.5,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 15.9,
+     "fullOpacityMs": 332.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1614,
+       "startAfterInteractionMs": -1675,
+       "endAfterInteractionMs": -1586
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 1,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.7,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 16.2,
+     "fullOpacityMs": 332.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1768,
+       "startAfterInteractionMs": -1254,
+       "endAfterInteractionMs": -1177
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0.1
+      }
+     ]
+    },
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 2,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.8,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 16,
+     "fullOpacityMs": 332.6,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1329,
+       "startAfterInteractionMs": -1272,
+       "endAfterInteractionMs": -1183
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 3,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.4,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 15.8,
+     "fullOpacityMs": 332.2,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1379,
+       "startAfterInteractionMs": -1275,
+       "endAfterInteractionMs": -1179
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-cut",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 4,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": 232.2,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 15.8,
+     "fullOpacityMs": 332.2,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1202,
+       "startAfterInteractionMs": -1290,
+       "endAfterInteractionMs": -1211
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": 241,
+    "firstChangeMs": 241,
+    "tooltipBox": {
+     "x": 186,
+     "y": 284,
+     "w": 300,
+     "h": 67
+    },
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -421,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 230,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 241,
+      "changedPx": 16234,
+      "tooltipBoxPx": 15414
+     },
+     {
+      "atMs": 256,
+      "changedPx": 17121,
+      "tooltipBoxPx": 16571
+     },
+     {
+      "atMs": 273,
+      "changedPx": 17309,
+      "tooltipBoxPx": 17031
+     },
+     {
+      "atMs": 290,
+      "changedPx": 17761,
+      "tooltipBoxPx": 17859
+     },
+     {
+      "atMs": 308,
+      "changedPx": 17757,
+      "tooltipBoxPx": 17861
+     },
+     {
+      "atMs": 324,
+      "changedPx": 17607,
+      "tooltipBoxPx": 17708
+     },
+     {
+      "atMs": 340,
+      "changedPx": 17376,
+      "tooltipBoxPx": 17466
+     },
+     {
+      "atMs": 357,
+      "changedPx": 17371,
+      "tooltipBoxPx": 17461
+     },
+     {
+      "atMs": 374,
+      "changedPx": 17762,
+      "tooltipBoxPx": 17486
+     },
+     {
+      "atMs": 392,
+      "changedPx": 17801,
+      "tooltipBoxPx": 17525
+     },
+     {
+      "atMs": 1631,
+      "changedPx": 17801,
+      "tooltipBoxPx": 17525
+     }
+    ]
+   }
+  },
+  "hover-fits|main": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": null,
+     "range": "-"
+    },
+    "firstVisibleOpacity": {
+     "median": null,
+     "range": "-"
+    },
+    "fullOpacityMs": {
+     "median": null,
+     "range": "-"
+    },
+    "shownIn": 0,
+    "tooltipCount": [
+     0
+    ],
+    "rafFlashes": 0,
+    "position": [
+     null
+    ],
+    "tabs": [
+     null
+    ],
+    "chunkAfterNavMs": "1190–1815",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 0,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1277,
+       "startAfterInteractionMs": -1718,
+       "endAfterInteractionMs": -1568
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 1,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1190,
+       "startAfterInteractionMs": -1260,
+       "endAfterInteractionMs": -1177
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 2,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1349,
+       "startAfterInteractionMs": -1248,
+       "endAfterInteractionMs": -1169
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 3,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1581,
+       "startAfterInteractionMs": -1267,
+       "endAfterInteractionMs": -1173
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "main",
+     "run": 4,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1815,
+       "startAfterInteractionMs": -1250,
+       "endAfterInteractionMs": -1167
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0.1
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": null,
+    "firstChangeMs": null,
+    "tooltipBox": null,
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -422,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     },
+     {
+      "atMs": 1624,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     }
+    ]
+   }
+  },
+  "hover-fits|pr": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": null,
+     "range": "-"
+    },
+    "firstVisibleOpacity": {
+     "median": null,
+     "range": "-"
+    },
+    "fullOpacityMs": {
+     "median": null,
+     "range": "-"
+    },
+    "shownIn": 0,
+    "tooltipCount": [
+     0
+    ],
+    "rafFlashes": 0,
+    "position": [
+     null
+    ],
+    "tabs": [
+     null
+    ],
+    "chunkAfterNavMs": "1091–1530",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 0,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1530,
+       "startAfterInteractionMs": -1653,
+       "endAfterInteractionMs": -1570
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0.1
+      }
+     ]
+    },
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 1,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1091,
+       "startAfterInteractionMs": -1281,
+       "endAfterInteractionMs": -1202
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 2,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1310,
+       "startAfterInteractionMs": -1306,
+       "endAfterInteractionMs": -1181
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0.1
+      }
+     ]
+    },
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 3,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1119,
+       "startAfterInteractionMs": -1263,
+       "endAfterInteractionMs": -1174
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0.1
+      }
+     ]
+    },
+    {
+     "case": "hover-fits",
+     "device": "desktop",
+     "how": "hover",
+     "build": "pr",
+     "run": 4,
+     "tabs": null,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 430,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "pointerenter",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1316,
+       "startAfterInteractionMs": -1249,
+       "endAfterInteractionMs": -1174
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": null,
+    "firstChangeMs": null,
+    "tooltipBox": null,
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -423,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     },
+     {
+      "atMs": 1623,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     }
+    ]
+   }
+  },
+  "focus-cut|main": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": 24.8,
+     "range": "23.5–36.1"
+    },
+    "firstVisibleOpacity": {
+     "median": 0.4,
+     "range": "0.374–0.376"
+    },
+    "fullOpacityMs": {
+     "median": 124.9,
+     "range": "123.5–136"
+    },
+    "shownIn": 5,
+    "tooltipCount": [
+     1
+    ],
+    "rafFlashes": 0,
+    "position": [
+     {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "w": 300,
+      "h": 68
+     }
+    ],
+    "tabs": [
+     1
+    ],
+    "chunkAfterNavMs": "1024–1530",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "main",
+     "run": 0,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 36.1,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 14.6,
+     "fullOpacityMs": 136,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1475,
+       "startAfterInteractionMs": -1637,
+       "endAfterInteractionMs": -1555
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -0.9
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "main",
+     "run": 1,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 25.4,
+     "firstVisibleOpacity": 0.374,
+     "firstPresentMs": 14.5,
+     "fullOpacityMs": 125.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1525,
+       "startAfterInteractionMs": -1224,
+       "endAfterInteractionMs": -1148
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -0.9
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "main",
+     "run": 2,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 24.8,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 15.6,
+     "fullOpacityMs": 124.9,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1204,
+       "startAfterInteractionMs": -1243,
+       "endAfterInteractionMs": -1142
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -0.9
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "main",
+     "run": 3,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 23.5,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 14.4,
+     "fullOpacityMs": 123.5,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1530,
+       "startAfterInteractionMs": -1237,
+       "endAfterInteractionMs": -1158
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -0.9
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "main",
+     "run": 4,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 24.3,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 15.9,
+     "fullOpacityMs": 124.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1024,
+       "startAfterInteractionMs": -1227,
+       "endAfterInteractionMs": -1147
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -1.1
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": 41,
+    "firstChangeMs": 27,
+    "tooltipBox": {
+     "x": 186,
+     "y": 284,
+     "w": 300,
+     "h": 67
+    },
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -399,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 27,
+      "changedPx": 1225,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 41,
+      "changedPx": 17723,
+      "tooltipBoxPx": 15414
+     },
+     {
+      "atMs": 59,
+      "changedPx": 18352,
+      "tooltipBoxPx": 16571
+     },
+     {
+      "atMs": 77,
+      "changedPx": 18534,
+      "tooltipBoxPx": 17031
+     },
+     {
+      "atMs": 93,
+      "changedPx": 18986,
+      "tooltipBoxPx": 17859
+     },
+     {
+      "atMs": 110,
+      "changedPx": 18982,
+      "tooltipBoxPx": 17861
+     },
+     {
+      "atMs": 127,
+      "changedPx": 18832,
+      "tooltipBoxPx": 17708
+     },
+     {
+      "atMs": 144,
+      "changedPx": 18601,
+      "tooltipBoxPx": 17466
+     },
+     {
+      "atMs": 160,
+      "changedPx": 18596,
+      "tooltipBoxPx": 17461
+     },
+     {
+      "atMs": 177,
+      "changedPx": 18987,
+      "tooltipBoxPx": 17486
+     },
+     {
+      "atMs": 194,
+      "changedPx": 19026,
+      "tooltipBoxPx": 17525
+     },
+     {
+      "atMs": 1645,
+      "changedPx": 19026,
+      "tooltipBoxPx": 17525
+     }
+    ]
+   }
+  },
+  "focus-cut|pr": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": 23.6,
+     "range": "20.4–25.3"
+    },
+    "firstVisibleOpacity": {
+     "median": 0.4,
+     "range": "0.374–0.376"
+    },
+    "fullOpacityMs": {
+     "median": 123.5,
+     "range": "120–125.5"
+    },
+    "shownIn": 5,
+    "tooltipCount": [
+     1
+    ],
+    "rafFlashes": 0,
+    "position": [
+     {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "w": 300,
+      "h": 68
+     }
+    ],
+    "tabs": [
+     1
+    ],
+    "chunkAfterNavMs": "1108–1465",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "pr",
+     "run": 0,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 20.4,
+     "firstVisibleOpacity": 0.374,
+     "firstPresentMs": 14.9,
+     "fullOpacityMs": 120,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1171,
+       "startAfterInteractionMs": -1631,
+       "endAfterInteractionMs": -1554
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -1
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "pr",
+     "run": 1,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 23.2,
+     "firstVisibleOpacity": 0.374,
+     "firstPresentMs": 14.6,
+     "fullOpacityMs": 123.3,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1108,
+       "startAfterInteractionMs": -1234,
+       "endAfterInteractionMs": -1157
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -0.8
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "pr",
+     "run": 2,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 25.3,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 14.7,
+     "fullOpacityMs": 125.5,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1360,
+       "startAfterInteractionMs": -1239,
+       "endAfterInteractionMs": -1143
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -0.9
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "pr",
+     "run": 3,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 25,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 15.8,
+     "fullOpacityMs": 124.9,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1465,
+       "startAfterInteractionMs": -1232,
+       "endAfterInteractionMs": -1156
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -0.9
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    },
+    {
+     "case": "focus-cut",
+     "device": "desktop",
+     "how": "focus",
+     "build": "pr",
+     "run": 4,
+     "tabs": 1,
+     "view": {
+      "innerWidth": 1280,
+      "innerHeight": 800,
+      "vvScale": 1,
+      "vvWidth": 1280,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 1280
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 356,
+       "w": 295.5,
+       "h": 20
+      }
+     },
+     "start": {
+      "type": "focusin",
+      "onSpan": true
+     },
+     "firstVisibleMs": 23.6,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 17,
+     "fullOpacityMs": 123.5,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": 0.1,
+      "leftVsText": -2.2,
+      "w": 300,
+      "h": 68,
+      "x": 186.3,
+      "y": 284
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1283,
+       "startAfterInteractionMs": -1234,
+       "endAfterInteractionMs": -1157
+      }
+     ],
+     "events": [
+      {
+       "type": "keydown",
+       "atMs": -0.8
+      },
+      {
+       "type": "focusin",
+       "atMs": 0
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": 42,
+    "firstChangeMs": 27,
+    "tooltipBox": {
+     "x": 186,
+     "y": 284,
+     "w": 300,
+     "h": 67
+    },
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -400,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 27,
+      "changedPx": 1225,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 42,
+      "changedPx": 17723,
+      "tooltipBoxPx": 15414
+     },
+     {
+      "atMs": 59,
+      "changedPx": 18352,
+      "tooltipBoxPx": 16571
+     },
+     {
+      "atMs": 76,
+      "changedPx": 18534,
+      "tooltipBoxPx": 17031
+     },
+     {
+      "atMs": 92,
+      "changedPx": 18986,
+      "tooltipBoxPx": 17859
+     },
+     {
+      "atMs": 109,
+      "changedPx": 18982,
+      "tooltipBoxPx": 17861
+     },
+     {
+      "atMs": 125,
+      "changedPx": 18832,
+      "tooltipBoxPx": 17708
+     },
+     {
+      "atMs": 142,
+      "changedPx": 18601,
+      "tooltipBoxPx": 17466
+     },
+     {
+      "atMs": 159,
+      "changedPx": 18596,
+      "tooltipBoxPx": 17461
+     },
+     {
+      "atMs": 175,
+      "changedPx": 18987,
+      "tooltipBoxPx": 17486
+     },
+     {
+      "atMs": 193,
+      "changedPx": 19026,
+      "tooltipBoxPx": 17525
+     },
+     {
+      "atMs": 1646,
+      "changedPx": 19026,
+      "tooltipBoxPx": 17525
+     }
+    ]
+   }
+  },
+  "tap-cut|main": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": 31.4,
+     "range": "31.2–31.5"
+    },
+    "firstVisibleOpacity": {
+     "median": 0.4,
+     "range": "0.374–0.376"
+    },
+    "fullOpacityMs": {
+     "median": 131.4,
+     "range": "131.1–131.6"
+    },
+    "shownIn": 5,
+    "tooltipCount": [
+     1
+    ],
+    "rafFlashes": 0,
+    "position": [
+     {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "w": 300,
+      "h": 80
+     }
+    ],
+    "tabs": [
+     null
+    ],
+    "chunkAfterNavMs": "1222–1906",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 0,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.5,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 21.2,
+     "fullOpacityMs": 131.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1906,
+       "startAfterInteractionMs": -1636,
+       "endAfterInteractionMs": -1557
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.6
+      },
+      {
+       "type": "click",
+       "atMs": 1.7
+      }
+     ]
+    },
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 1,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.4,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 21.5,
+     "fullOpacityMs": 131.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1222,
+       "startAfterInteractionMs": -1236,
+       "endAfterInteractionMs": -1158
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.3
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.7
+      },
+      {
+       "type": "click",
+       "atMs": 1.9
+      }
+     ]
+    },
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 2,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.5,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 21.3,
+     "fullOpacityMs": 131.6,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1291,
+       "startAfterInteractionMs": -1247,
+       "endAfterInteractionMs": -1166
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.8
+      },
+      {
+       "type": "click",
+       "atMs": 1.9
+      }
+     ]
+    },
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 3,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.2,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 20.9,
+     "fullOpacityMs": 131.1,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1904,
+       "startAfterInteractionMs": -1271,
+       "endAfterInteractionMs": -1166
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.3
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.6
+      },
+      {
+       "type": "click",
+       "atMs": 1.7
+      }
+     ]
+    },
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 4,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.4,
+     "firstVisibleOpacity": 0.374,
+     "firstPresentMs": 21.6,
+     "fullOpacityMs": 131.3,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1493,
+       "startAfterInteractionMs": -1581,
+       "endAfterInteractionMs": -1158
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.9
+      },
+      {
+       "type": "click",
+       "atMs": 2.1
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": 36,
+    "firstChangeMs": 36,
+    "tooltipBox": {
+     "x": 180,
+     "y": 336,
+     "w": 300,
+     "h": 79
+    },
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -411,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 29,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 36,
+      "changedPx": 12753,
+      "tooltipBoxPx": 12159
+     },
+     {
+      "atMs": 52,
+      "changedPx": 13830,
+      "tooltipBoxPx": 13433
+     },
+     {
+      "atMs": 69,
+      "changedPx": 14177,
+      "tooltipBoxPx": 13774
+     },
+     {
+      "atMs": 86,
+      "changedPx": 14244,
+      "tooltipBoxPx": 14038
+     },
+     {
+      "atMs": 103,
+      "changedPx": 14469,
+      "tooltipBoxPx": 14274
+     },
+     {
+      "atMs": 119,
+      "changedPx": 14321,
+      "tooltipBoxPx": 14132
+     },
+     {
+      "atMs": 136,
+      "changedPx": 14180,
+      "tooltipBoxPx": 13986
+     },
+     {
+      "atMs": 152,
+      "changedPx": 14154,
+      "tooltipBoxPx": 13960
+     },
+     {
+      "atMs": 169,
+      "changedPx": 14100,
+      "tooltipBoxPx": 13902
+     },
+     {
+      "atMs": 186,
+      "changedPx": 14073,
+      "tooltipBoxPx": 13875
+     },
+     {
+      "atMs": 1672,
+      "changedPx": 16305,
+      "tooltipBoxPx": 13922
+     },
+     {
+      "atMs": 1677,
+      "changedPx": 14073,
+      "tooltipBoxPx": 13875
+     }
+    ]
+   }
+  },
+  "tap-cut|pr": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": 31.4,
+     "range": "31.3–31.6"
+    },
+    "firstVisibleOpacity": {
+     "median": 0.4,
+     "range": "0.374–0.377"
+    },
+    "fullOpacityMs": {
+     "median": 131.3,
+     "range": "131.3–131.7"
+    },
+    "shownIn": 5,
+    "tooltipCount": [
+     1
+    ],
+    "rafFlashes": 0,
+    "position": [
+     {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "w": 300,
+      "h": 80
+     }
+    ],
+    "tabs": [
+     null
+    ],
+    "chunkAfterNavMs": "1184–2117",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 0,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.4,
+     "firstVisibleOpacity": 0.374,
+     "firstPresentMs": 22.4,
+     "fullOpacityMs": 131.3,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1184,
+       "startAfterInteractionMs": -1634,
+       "endAfterInteractionMs": -1558
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.4
+      },
+      {
+       "type": "click",
+       "atMs": 2.6
+      }
+     ]
+    },
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 1,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.3,
+     "firstVisibleOpacity": 0.377,
+     "firstPresentMs": 22.6,
+     "fullOpacityMs": 131.3,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 2117,
+       "startAfterInteractionMs": -1238,
+       "endAfterInteractionMs": -1160
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.4
+      },
+      {
+       "type": "click",
+       "atMs": 2.6
+      }
+     ]
+    },
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 2,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.5,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 21.8,
+     "fullOpacityMs": 131.4,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1405,
+       "startAfterInteractionMs": -1237,
+       "endAfterInteractionMs": -1160
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.3
+      },
+      {
+       "type": "click",
+       "atMs": 2.5
+      }
+     ]
+    },
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 3,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.6,
+     "firstVisibleOpacity": 0.375,
+     "firstPresentMs": 21.3,
+     "fullOpacityMs": 131.7,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1505,
+       "startAfterInteractionMs": -1253,
+       "endAfterInteractionMs": -1162
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.3
+      },
+      {
+       "type": "click",
+       "atMs": 2.4
+      }
+     ]
+    },
+    {
+     "case": "tap-cut",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 4,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "a_very_long_string_like_this_that_overfl",
+      "cut": true,
+      "span": {
+       "x": 188.5,
+       "y": 420,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": 31.3,
+     "firstVisibleOpacity": 0.376,
+     "firstPresentMs": 21.5,
+     "fullOpacityMs": 131.3,
+     "tooltipCount": 1,
+     "flash": false,
+     "position": {
+      "side": "above",
+      "gap": 4,
+      "centringOffset": -6.3,
+      "leftVsText": -8.5,
+      "w": 300,
+      "h": 80,
+      "x": 180,
+      "y": 336
+     },
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1667,
+       "startAfterInteractionMs": -1273,
+       "endAfterInteractionMs": -1168
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.3
+      },
+      {
+       "type": "click",
+       "atMs": 2.4
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": 35,
+    "firstChangeMs": 35,
+    "tooltipBox": {
+     "x": 180,
+     "y": 336,
+     "w": 300,
+     "h": 79
+    },
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -410,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 30,
+      "changedPx": 0,
+      "tooltipBoxPx": 0
+     },
+     {
+      "atMs": 35,
+      "changedPx": 12753,
+      "tooltipBoxPx": 12159
+     },
+     {
+      "atMs": 52,
+      "changedPx": 13830,
+      "tooltipBoxPx": 13433
+     },
+     {
+      "atMs": 69,
+      "changedPx": 14177,
+      "tooltipBoxPx": 13774
+     },
+     {
+      "atMs": 85,
+      "changedPx": 14244,
+      "tooltipBoxPx": 14038
+     },
+     {
+      "atMs": 102,
+      "changedPx": 14469,
+      "tooltipBoxPx": 14274
+     },
+     {
+      "atMs": 119,
+      "changedPx": 14321,
+      "tooltipBoxPx": 14132
+     },
+     {
+      "atMs": 135,
+      "changedPx": 14180,
+      "tooltipBoxPx": 13986
+     },
+     {
+      "atMs": 153,
+      "changedPx": 14154,
+      "tooltipBoxPx": 13960
+     },
+     {
+      "atMs": 169,
+      "changedPx": 14100,
+      "tooltipBoxPx": 13902
+     },
+     {
+      "atMs": 186,
+      "changedPx": 14073,
+      "tooltipBoxPx": 13875
+     },
+     {
+      "atMs": 1671,
+      "changedPx": 16305,
+      "tooltipBoxPx": 13922
+     },
+     {
+      "atMs": 1676,
+      "changedPx": 14073,
+      "tooltipBoxPx": 13875
+     }
+    ]
+   }
+  },
+  "tap-fits|main": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": null,
+     "range": "-"
+    },
+    "firstVisibleOpacity": {
+     "median": null,
+     "range": "-"
+    },
+    "fullOpacityMs": {
+     "median": null,
+     "range": "-"
+    },
+    "shownIn": 0,
+    "tooltipCount": [
+     0
+    ],
+    "rafFlashes": 0,
+    "position": [
+     null
+    ],
+    "tabs": [
+     null
+    ],
+    "chunkAfterNavMs": "1147–1582",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 0,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1567,
+       "startAfterInteractionMs": -1658,
+       "endAfterInteractionMs": -1560
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.5
+      },
+      {
+       "type": "click",
+       "atMs": 1.6
+      }
+     ]
+    },
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 1,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1419,
+       "startAfterInteractionMs": -1245,
+       "endAfterInteractionMs": -1166
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.3
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.6
+      },
+      {
+       "type": "click",
+       "atMs": 1.7
+      }
+     ]
+    },
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 2,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1147,
+       "startAfterInteractionMs": -1236,
+       "endAfterInteractionMs": -1160
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.5
+      },
+      {
+       "type": "click",
+       "atMs": 1.7
+      }
+     ]
+    },
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 3,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1220,
+       "startAfterInteractionMs": -1245,
+       "endAfterInteractionMs": -1165
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.3
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.5
+      },
+      {
+       "type": "click",
+       "atMs": 1.7
+      }
+     ]
+    },
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "main",
+     "run": 4,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1582,
+       "startAfterInteractionMs": -1251,
+       "endAfterInteractionMs": -1169
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 0.5
+      },
+      {
+       "type": "click",
+       "atMs": 1.7
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": null,
+    "firstChangeMs": null,
+    "tooltipBox": null,
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -410,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     },
+     {
+      "atMs": 19,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     },
+     {
+      "atMs": 1671,
+      "changedPx": 2810,
+      "tooltipBoxPx": null
+     },
+     {
+      "atMs": 1676,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     }
+    ]
+   }
+  },
+  "tap-fits|pr": {
+   "summary": {
+    "n": 5,
+    "startOnText": true,
+    "firstVisibleMs": {
+     "median": null,
+     "range": "-"
+    },
+    "firstVisibleOpacity": {
+     "median": null,
+     "range": "-"
+    },
+    "fullOpacityMs": {
+     "median": null,
+     "range": "-"
+    },
+    "shownIn": 0,
+    "tooltipCount": [
+     0
+    ],
+    "rafFlashes": 0,
+    "position": [
+     null
+    ],
+    "tabs": [
+     null
+    ],
+    "chunkAfterNavMs": "1214–1520",
+    "chunkBeforeInteraction": true
+   },
+   "runs": [
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 0,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1214,
+       "startAfterInteractionMs": -1644,
+       "endAfterInteractionMs": -1562
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.4
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1
+      },
+      {
+       "type": "click",
+       "atMs": 2.2
+      }
+     ]
+    },
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 1,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1494,
+       "startAfterInteractionMs": -1265,
+       "endAfterInteractionMs": -1164
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.2
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.1
+      },
+      {
+       "type": "click",
+       "atMs": 2.3
+      }
+     ]
+    },
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 2,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1520,
+       "startAfterInteractionMs": -1264,
+       "endAfterInteractionMs": -1161
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.4
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.1
+      },
+      {
+       "type": "click",
+       "atMs": 2.2
+      }
+     ]
+    },
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 3,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1321,
+       "startAfterInteractionMs": -1246,
+       "endAfterInteractionMs": -1168
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.3
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerenter",
+       "atMs": -0.1
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.1
+      },
+      {
+       "type": "click",
+       "atMs": 2.2
+      }
+     ]
+    },
+    {
+     "case": "tap-fits",
+     "device": "phone",
+     "how": "tap",
+     "build": "pr",
+     "run": 4,
+     "tabs": null,
+     "view": {
+      "innerWidth": 496,
+      "innerHeight": 1074,
+      "vvScale": 1,
+      "vvWidth": 390,
+      "vvLeft": 0,
+      "vvTop": 0,
+      "docScrollWidth": 496
+     },
+     "cell": {
+      "text": "Fits fine.",
+      "cut": false,
+      "span": {
+       "x": 188.5,
+       "y": 502,
+       "w": 295.5,
+       "h": 24
+      }
+     },
+     "start": {
+      "type": "pointerdown",
+      "onSpan": true
+     },
+     "firstVisibleMs": null,
+     "firstVisibleOpacity": null,
+     "firstPresentMs": null,
+     "fullOpacityMs": null,
+     "tooltipCount": 0,
+     "flash": false,
+     "position": null,
+     "chunks": [
+      {
+       "url": "Tooltip-B-cEYc4P.js",
+       "startAfterNavMs": 1296,
+       "startAfterInteractionMs": -1236,
+       "endAfterInteractionMs": -1154
+      }
+     ],
+     "events": [
+      {
+       "type": "pointerover",
+       "atMs": -1.3
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerenter",
+       "atMs": 0
+      },
+      {
+       "type": "pointerdown",
+       "atMs": 0
+      },
+      {
+       "type": "pointerup",
+       "atMs": 1.1
+      },
+      {
+       "type": "click",
+       "atMs": 2.2
+      }
+     ]
+    }
+   ],
+   "screencast": {
+    "firstTooltipMs": null,
+    "firstChangeMs": null,
+    "tooltipBox": null,
+    "paintedThenRemoved": false,
+    "frames": [
+     {
+      "atMs": -411,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     },
+     {
+      "atMs": 18,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     },
+     {
+      "atMs": 1670,
+      "changedPx": 2810,
+      "tooltipBoxPx": null
+     },
+     {
+      "atMs": 1674,
+      "changedPx": 0,
+      "tooltipBoxPx": null
+     }
+    ]
+   }
+  }
+ },
+ "endStills": {
+  "hover-cut": {
+   "differingPixels": 0,
+   "byteIdentical": true,
+   "size": "1280x800"
+  },
+  "hover-fits": {
+   "differingPixels": 0,
+   "byteIdentical": true,
+   "size": "1280x800"
+  },
+  "focus-cut": {
+   "differingPixels": 0,
+   "byteIdentical": true,
+   "size": "1280x800"
+  },
+  "tap-cut": {
+   "differingPixels": 0,
+   "byteIdentical": true,
+   "size": "780x1688"
+  },
+  "tap-fits": {
+   "differingPixels": 0,
+   "byteIdentical": true,
+   "size": "780x1688"
+  }
+ }
+}
