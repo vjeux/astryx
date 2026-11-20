@@ -1,0 +1,519 @@
+{
+ "chromium": "149.0.7827.55",
+ "dpr": 2,
+ "harnessCss": "#storybook-root div[style*=\"fit-content\"] { width: 448px !important; }",
+ "builds": {
+  "main": {
+   "commit": "e833d923df6691974455e31216026206dec16a97",
+   "environment": "production",
+   "matches": true
+  },
+  "head": {
+   "commit": "6e3fb84cea20e19de931829d44184c7df565b374",
+   "environment": "preview",
+   "matches": true
+  }
+ },
+ "control": [
+  {
+   "build": "main",
+   "story": "core-table--responsive-scroll",
+   "differ": 0
+  },
+  {
+   "build": "head",
+   "story": "core-table--responsive-scroll",
+   "differ": 0
+  }
+ ],
+ "shipped": {
+  "main": {
+   "headers": [
+    {
+     "text": "Name",
+     "title": "Name",
+     "cut": false,
+     "sortControl": false,
+     "box": {
+      "l": 17,
+      "t": 45,
+      "r": 77,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Department",
+     "title": "Department",
+     "cut": true,
+     "sortControl": false,
+     "box": {
+      "l": 77,
+      "t": 45,
+      "r": 137,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Title",
+     "title": "Title",
+     "cut": false,
+     "sortControl": false,
+     "box": {
+      "l": 137,
+      "t": 45,
+      "r": 197,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Location",
+     "title": "Location",
+     "cut": true,
+     "sortControl": false,
+     "box": {
+      "l": 197,
+      "t": 45,
+      "r": 257,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Email",
+     "title": "Email",
+     "cut": false,
+     "sortControl": false,
+     "box": {
+      "l": 257,
+      "t": 45,
+      "r": 317,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Status",
+     "title": "Status",
+     "cut": false,
+     "sortControl": false,
+     "box": {
+      "l": 317,
+      "t": 45,
+      "r": 377,
+      "b": 73.5
+     }
+    }
+   ],
+   "ax": [
+    {
+     "name": "Name",
+     "description": null
+    },
+    {
+     "name": "Department",
+     "description": null
+    },
+    {
+     "name": "Title",
+     "description": null
+    },
+    {
+     "name": "Location",
+     "description": null
+    },
+    {
+     "name": "Email",
+     "description": null
+    },
+    {
+     "name": "Status",
+     "description": null
+    }
+   ],
+   "rest": "main-shipped-rest.png",
+   "cutPlain": {
+    "header": "Department",
+    "title": "Department",
+    "cut": true,
+    "sortControl": false,
+    "tooltips": [],
+    "frame": "main-shipped-hover-cut-plain-department.png"
+   },
+   "fitPlain": {
+    "header": "Name",
+    "title": "Name",
+    "cut": false,
+    "sortControl": false,
+    "tooltips": [],
+    "frame": "main-shipped-hover-fitting-plain-name.png"
+   }
+  },
+  "head": {
+   "headers": [
+    {
+     "text": "Name",
+     "title": null,
+     "cut": false,
+     "sortControl": false,
+     "box": {
+      "l": 17,
+      "t": 45,
+      "r": 77,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Department",
+     "title": null,
+     "cut": true,
+     "sortControl": false,
+     "box": {
+      "l": 77,
+      "t": 45,
+      "r": 137,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Title",
+     "title": null,
+     "cut": false,
+     "sortControl": false,
+     "box": {
+      "l": 137,
+      "t": 45,
+      "r": 197,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Location",
+     "title": null,
+     "cut": true,
+     "sortControl": false,
+     "box": {
+      "l": 197,
+      "t": 45,
+      "r": 257,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Email",
+     "title": null,
+     "cut": false,
+     "sortControl": false,
+     "box": {
+      "l": 257,
+      "t": 45,
+      "r": 317,
+      "b": 73.5
+     }
+    },
+    {
+     "text": "Status",
+     "title": null,
+     "cut": false,
+     "sortControl": false,
+     "box": {
+      "l": 317,
+      "t": 45,
+      "r": 377,
+      "b": 73.5
+     }
+    }
+   ],
+   "ax": [
+    {
+     "name": "Name",
+     "description": null
+    },
+    {
+     "name": "Department",
+     "description": null
+    },
+    {
+     "name": "Title",
+     "description": null
+    },
+    {
+     "name": "Location",
+     "description": null
+    },
+    {
+     "name": "Email",
+     "description": null
+    },
+    {
+     "name": "Status",
+     "description": null
+    }
+   ],
+   "rest": "head-shipped-rest.png",
+   "cutPlain": {
+    "header": "Department",
+    "title": null,
+    "cut": true,
+    "sortControl": false,
+    "tooltips": [],
+    "frame": "head-shipped-hover-cut-plain-department.png"
+   },
+   "fitPlain": {
+    "header": "Name",
+    "title": null,
+    "cut": false,
+    "sortControl": false,
+    "tooltips": [],
+    "frame": "head-shipped-hover-fitting-plain-name.png"
+   }
+  }
+ },
+ "harness": {
+  "main": {
+   "headers": [
+    {
+     "text": "Criterion",
+     "title": "Criterion",
+     "cut": true,
+     "sortControl": false,
+     "box": {
+      "l": 16,
+      "t": 16,
+      "r": 72,
+      "b": 44.5
+     }
+    },
+    {
+     "text": "Obsidian",
+     "title": null,
+     "cut": false,
+     "sortControl": true,
+     "box": {
+      "l": 72,
+      "t": 16,
+      "r": 232,
+      "b": 44.5
+     }
+    },
+    {
+     "text": "Notion",
+     "title": null,
+     "cut": false,
+     "sortControl": true,
+     "box": {
+      "l": 232,
+      "t": 16,
+      "r": 392,
+      "b": 44.5
+     }
+    },
+    {
+     "text": "Apple Notes",
+     "title": null,
+     "cut": true,
+     "sortControl": true,
+     "box": {
+      "l": 392,
+      "t": 16,
+      "r": 464,
+      "b": 44.5
+     }
+    }
+   ],
+   "ax": [
+    {
+     "name": "Criterion",
+     "description": null
+    },
+    {
+     "name": "Obsidian",
+     "description": null
+    },
+    {
+     "name": "Notion",
+     "description": null
+    },
+    {
+     "name": "Apple Notes",
+     "description": null
+    }
+   ],
+   "rest": "main-harness-rest.png",
+   "cutPlainHover": {
+    "header": "Criterion",
+    "title": "Criterion",
+    "cut": true,
+    "sortControl": false,
+    "tooltips": [],
+    "frame": "main-harness-hover-cut-plain-criterion.png"
+   },
+   "fitSortHover": {
+    "header": "Obsidian",
+    "title": null,
+    "cut": false,
+    "sortControl": true,
+    "tooltips": [],
+    "frame": "main-harness-hover-fitting-sortable-obsidian.png"
+   },
+   "cutSortFocus": {
+    "header": "Apple Notes",
+    "title": null,
+    "cut": true,
+    "sortControl": true,
+    "tabsToReach": 3,
+    "focused": {
+     "tag": "button",
+     "th": "Apple Notes"
+    },
+    "tooltips": [
+     {
+      "role": "tooltip",
+      "text": "Apple Notes",
+      "box": {
+       "l": 381.859375,
+       "t": 48.5,
+       "r": 474.140625,
+       "b": 76.5
+      }
+     }
+    ],
+    "frame": "main-harness-focus-cut-sortable-apple-notes.png"
+   },
+   "fitSortFocus": {
+    "header": "Obsidian",
+    "title": null,
+    "cut": false,
+    "sortControl": true,
+    "tabsToReach": 1,
+    "focused": {
+     "tag": "button",
+     "th": "Obsidian"
+    },
+    "tooltips": [],
+    "frame": "main-harness-focus-fitting-sortable-obsidian.png"
+   }
+  },
+  "head": {
+   "headers": [
+    {
+     "text": "Criterion",
+     "title": null,
+     "cut": true,
+     "sortControl": false,
+     "box": {
+      "l": 16,
+      "t": 16,
+      "r": 72,
+      "b": 44.5
+     }
+    },
+    {
+     "text": "Obsidian",
+     "title": null,
+     "cut": false,
+     "sortControl": true,
+     "box": {
+      "l": 72,
+      "t": 16,
+      "r": 232,
+      "b": 44.5
+     }
+    },
+    {
+     "text": "Notion",
+     "title": null,
+     "cut": false,
+     "sortControl": true,
+     "box": {
+      "l": 232,
+      "t": 16,
+      "r": 392,
+      "b": 44.5
+     }
+    },
+    {
+     "text": "Apple Notes",
+     "title": null,
+     "cut": true,
+     "sortControl": true,
+     "box": {
+      "l": 392,
+      "t": 16,
+      "r": 464,
+      "b": 44.5
+     }
+    }
+   ],
+   "ax": [
+    {
+     "name": "Criterion",
+     "description": null
+    },
+    {
+     "name": "Obsidian",
+     "description": null
+    },
+    {
+     "name": "Notion",
+     "description": null
+    },
+    {
+     "name": "Apple Notes",
+     "description": null
+    }
+   ],
+   "rest": "head-harness-rest.png",
+   "cutPlainHover": {
+    "header": "Criterion",
+    "title": null,
+    "cut": true,
+    "sortControl": false,
+    "tooltips": [],
+    "frame": "head-harness-hover-cut-plain-criterion.png"
+   },
+   "fitSortHover": {
+    "header": "Obsidian",
+    "title": null,
+    "cut": false,
+    "sortControl": true,
+    "tooltips": [],
+    "frame": "head-harness-hover-fitting-sortable-obsidian.png"
+   },
+   "cutSortFocus": {
+    "header": "Apple Notes",
+    "title": null,
+    "cut": true,
+    "sortControl": true,
+    "tabsToReach": 3,
+    "focused": {
+     "tag": "button",
+     "th": "Apple Notes"
+    },
+    "tooltips": [
+     {
+      "role": "tooltip",
+      "text": "Apple Notes",
+      "box": {
+       "l": 381.859375,
+       "t": 48.5,
+       "r": 474.140625,
+       "b": 76.5
+      }
+     }
+    ],
+    "frame": "head-harness-focus-cut-sortable-apple-notes.png"
+   },
+   "fitSortFocus": {
+    "header": "Obsidian",
+    "title": null,
+    "cut": false,
+    "sortControl": true,
+    "tabsToReach": 1,
+    "focused": {
+     "tag": "button",
+     "th": "Obsidian"
+    },
+    "tooltips": [],
+    "frame": "head-harness-focus-fitting-sortable-obsidian.png"
+   }
+  }
+ }
+}
