@@ -1,0 +1,691 @@
+{
+ "question": "#12461 at ab745726: where does the number badge's text sit against the badge in CitationTextSize.interaction.browser.spec.ts's enlarged-text case?",
+ "builds": {
+  "main": {
+   "commit": "b9329f65ad200d7d13177b385992914c5d748397",
+   "environment": "production"
+  },
+  "0252d110": {
+   "commit": "0252d110adf7da2783412b6e678d1d982a66e266",
+   "environment": "preview"
+  },
+  "ab745726": {
+   "commit": "ab745726c13d8c720c56add081c8f040fc66028d",
+   "environment": "preview"
+  }
+ },
+ "browser": "Chromium 149.0.7827.55",
+ "story": "core-citation--variants",
+ "method": {
+  "viewport": "1280x800, scale 1, as the spec uses",
+  "read": "the spec's own reading: a DOM Range over each .astryx-citation against the citation's box; above = box top - text top, below = text bottom - box bottom; the spec requires both <= 1",
+  "numberBadge": "the citation whose vertical-align is super (the number variant)",
+  "conditions": {
+   "spec": "the spec's enlarged text: font-size 40px and line-height 60px on .astryx-citation, spacing unchanged",
+   "root-200": "the root font size at 200%: text and rem spacing both double",
+   "default": "the default text size"
+  },
+  "note": "The spec prints no values, only pass or fail. These values come from this harness on the hosted builds, by the same reading."
+ },
+ "rows": [
+  {
+   "build": "main",
+   "condition": "spec",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 20,
+   "above": 20,
+   "below": 20,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "20px",
+   "specRulePasses": false
+  },
+  {
+   "build": "main",
+   "condition": "spec",
+   "kind": "number",
+   "name": "2",
+   "height": 20,
+   "above": 12,
+   "below": 12,
+   "textHeight": 44,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "20px",
+   "specRulePasses": false
+  },
+  {
+   "build": "main",
+   "condition": "spec",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 20,
+   "above": 20,
+   "below": 20,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "20px",
+   "specRulePasses": false
+  },
+  {
+   "build": "main",
+   "condition": "spec",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 20,
+   "above": 20,
+   "below": 20,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "20px",
+   "specRulePasses": false
+  },
+  {
+   "build": "main",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "main",
+   "condition": "root-200",
+   "kind": "number",
+   "name": "2",
+   "height": 40,
+   "above": -6,
+   "below": -7,
+   "textHeight": 27,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "main",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "main",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "main",
+   "condition": "default",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "main",
+   "condition": "default",
+   "kind": "number",
+   "name": "2",
+   "height": 20,
+   "above": -3,
+   "below": -3,
+   "textHeight": 14,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "main",
+   "condition": "default",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "main",
+   "condition": "default",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "spec",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 60,
+   "above": 0,
+   "below": 0,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "60px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "spec",
+   "kind": "number",
+   "name": "2",
+   "height": 60,
+   "above": -8,
+   "below": -8,
+   "textHeight": 44,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "60px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "spec",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 60,
+   "above": 0,
+   "below": 0,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "60px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "spec",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 60,
+   "above": 0,
+   "below": 0,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "60px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "root-200",
+   "kind": "number",
+   "name": "2",
+   "height": 40,
+   "above": -6,
+   "below": -7,
+   "textHeight": 27,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "default",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "default",
+   "kind": "number",
+   "name": "2",
+   "height": 20,
+   "above": -3,
+   "below": -3,
+   "textHeight": 14,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "default",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "0252d110",
+   "condition": "default",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "spec",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 60,
+   "above": 0,
+   "below": 0,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "60px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "spec",
+   "kind": "number",
+   "name": "2",
+   "height": 48,
+   "above": -2,
+   "below": -2,
+   "textHeight": 44,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "48px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "spec",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 60,
+   "above": 0,
+   "below": 0,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "60px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "spec",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 60,
+   "above": 0,
+   "below": 0,
+   "textHeight": 60,
+   "fontSize": "40px",
+   "lineHeight": "60px",
+   "cssHeight": "60px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "root-200",
+   "kind": "number",
+   "name": "2",
+   "height": 40,
+   "above": -6,
+   "below": -7,
+   "textHeight": 27,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "root-200",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 40,
+   "above": 0,
+   "below": 0,
+   "textHeight": 40,
+   "fontSize": "24px",
+   "lineHeight": "40.0008px",
+   "cssHeight": "40px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "default",
+   "kind": "label",
+   "name": "React Docs",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "default",
+   "kind": "number",
+   "name": "2",
+   "height": 20,
+   "above": -3,
+   "below": -3,
+   "textHeight": 14,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "default",
+   "kind": "label",
+   "name": "GitHub",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  },
+  {
+   "build": "ab745726",
+   "condition": "default",
+   "kind": "label",
+   "name": "A very long source title that should be ",
+   "height": 20,
+   "above": 0,
+   "below": 0,
+   "textHeight": 20,
+   "fontSize": "12px",
+   "lineHeight": "20.0004px",
+   "cssHeight": "20px",
+   "specRulePasses": true
+  }
+ ],
+ "stills": [
+  "citation-variants--default-text--0252d110.png",
+  "citation-variants--default-text--ab745726.png",
+  "citation-variants--default-text--main.png",
+  "citation-variants--spec-enlarged-text--0252d110.png",
+  "citation-variants--spec-enlarged-text--ab745726.png",
+  "citation-variants--spec-enlarged-text--main.png"
+ ],
+ "preflight": "CHECK              RESULT  TIME  NOTE\nreview:pre         PASS      0s  checklist above\nbuild              PASS    131s\ntypecheck          PASS    427s\nlint               PASS     43s\nvitest ui          PASS    369s\nvitest node        PASS    720s\nknowledge          PASS      8s\nchangesets         PASS      1s\nstorybook build    PASS     73s\na11y specs         PASS    162s\ninteraction specs  PASS      7s\n\nready to flip\nCI can run more for this change than the checks above: whole-repository lint and its text and comment checks, the build tests, and the browser, visual, WebKit, accessibility and docsite jobs. CI decides.\nPreflight reproduces the pre-review checklist and CI checks; a reviewer still judges the change.\n",
+ "localBuild": {
+  "build": {
+   "local-ab745726": {
+    "commit": "ab745726c13d8c720c56add081c8f040fc66028d",
+    "environment": "local-preflight-build"
+   }
+  },
+  "what": "the Storybook the preflight built at ab745726 (the build the spec ran on), served locally",
+  "rows": [
+   {
+    "condition": "spec",
+    "kind": "label",
+    "name": "React Docs",
+    "height": 60,
+    "above": 0,
+    "below": 0
+   },
+   {
+    "condition": "spec",
+    "kind": "number",
+    "name": "2",
+    "height": 48,
+    "above": -2,
+    "below": -2
+   },
+   {
+    "condition": "spec",
+    "kind": "label",
+    "name": "GitHub",
+    "height": 60,
+    "above": 0,
+    "below": 0
+   },
+   {
+    "condition": "spec",
+    "kind": "label",
+    "name": "A very long source title that should be ",
+    "height": 60,
+    "above": 0,
+    "below": 0
+   },
+   {
+    "condition": "root-200",
+    "kind": "label",
+    "name": "React Docs",
+    "height": 40,
+    "above": 0,
+    "below": 0
+   },
+   {
+    "condition": "root-200",
+    "kind": "number",
+    "name": "2",
+    "height": 40,
+    "above": -6,
+    "below": -7
+   },
+   {
+    "condition": "root-200",
+    "kind": "label",
+    "name": "GitHub",
+    "height": 40,
+    "above": 0,
+    "below": 0
+   },
+   {
+    "condition": "root-200",
+    "kind": "label",
+    "name": "A very long source title that should be ",
+    "height": 40,
+    "above": 0,
+    "below": 0
+   },
+   {
+    "condition": "default",
+    "kind": "label",
+    "name": "React Docs",
+    "height": 20,
+    "above": 0,
+    "below": 0
+   },
+   {
+    "condition": "default",
+    "kind": "number",
+    "name": "2",
+    "height": 20,
+    "above": -3,
+    "below": -3
+   },
+   {
+    "condition": "default",
+    "kind": "label",
+    "name": "GitHub",
+    "height": 20,
+    "above": 0,
+    "below": 0
+   },
+   {
+    "condition": "default",
+    "kind": "label",
+    "name": "A very long source title that should be ",
+    "height": 20,
+    "above": 0,
+    "below": 0
+   }
+  ],
+  "equalToHostedPreview": "12 of 12 citation rows: height, above and below"
+ },
+ "specRun": {
+  "file": "packages/core/src/Citation/__tests__/CitationTextSize.interaction.browser.spec.ts",
+  "tests": [
+   "at the default text size each citation keeps its 20 px height: passed",
+   "a label larger than the pill grows the pill: passed"
+  ],
+  "printsValues": false
+ },
+ "preflightRun": {
+  "head": "ab745726c13d8c720c56add081c8f040fc66028d",
+  "start": "2026-11-20T17:56:32Z",
+  "end": "2026-11-20T18:29:08Z",
+  "tree": "fresh worktree, frozen install, clean before and after",
+  "a11ySpecs": "111 passed",
+  "interactionSpecs": "2 passed",
+  "install": {
+   "command": "pnpm install --frozen-lockfile",
+   "exit": 0,
+   "at": "2026-11-20T17:56:44Z",
+   "treeCleanAfter": true,
+   "logSays": "Lockfile is up to date, resolution step is skipped"
+  },
+  "endRead": {
+   "after": "2026-11-20T18:29:08Z",
+   "pullRequestHead": "ab745726c13d8c720c56add081c8f040fc66028d",
+   "treeClean": true,
+   "source": "the run's own output, printed after the preflight exited"
+  },
+  "laterRead": {
+   "at": "2026-11-20T18:36:39Z",
+   "pullRequestHead": "ab745726c13d8c720c56add081c8f040fc66028d"
+  }
+ },
+ "runs": {
+  "hosted": "2026-11-20T18:02:15Z/2026-11-20T18:02:33Z",
+  "local": "about 2026-11-20T18:30Z",
+  "boxLoad1min": "about 7 to 9, on 166 cores"
+ }
+}
