@@ -1,0 +1,9706 @@
+{
+ "base": "0dad3454117a9528fe42c8e8a8713bb56f95c4c2",
+ "head": "de45e67e192abcd9bbfd2b952438c848dec34708",
+ "story": "lab-mediaplayer--comment-markers",
+ "control": {
+  "differingPixels": 0,
+  "size": "1280x800"
+ },
+ "stills": {
+  "desktop-light--main": {
+   "buffered": true,
+   "beforePlayback": {
+    "reachable": false,
+    "markerChainOpacity": 0,
+    "docScrollWidth": 1280,
+    "docClientWidth": 1280
+   },
+   "states": {
+    "idle": {
+     "file": "desktop-light--idle--main.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    },
+    "hover": {
+     "file": "desktop-light--hover--main.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    },
+    "focus": {
+     "file": "desktop-light--focus--main.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": true,
+     "focusRing": {
+      "outline": "solid 2px rgb(27, 27, 27)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     },
+     "tabs": 3
+    },
+    "open": {
+     "file": "desktop-light--open--main.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0.8,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "true",
+     "popover": {
+      "rect": {
+       "x": 239.64,
+       "y": 454.5,
+       "w": 360,
+       "h": 104
+      },
+      "role": "dialog",
+      "side": "above",
+      "gapToDot": 13,
+      "centringOffset": 0,
+      "width": 360,
+      "inViewport": true,
+      "edgeClearance": {
+       "left": 239.64,
+       "right": 680.36
+      },
+      "overflow": {
+       "horizontal": [],
+       "vertical": []
+      }
+     },
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    }
+   }
+  },
+  "desktop-light--pr": {
+   "buffered": true,
+   "beforePlayback": {
+    "reachable": false,
+    "markerChainOpacity": 0,
+    "docScrollWidth": 1280,
+    "docClientWidth": 1280
+   },
+   "states": {
+    "idle": {
+     "file": "desktop-light--idle--pr.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": false,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    },
+    "hover": {
+     "file": "desktop-light--hover--pr.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    },
+    "focus": {
+     "file": "desktop-light--focus--pr.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": true,
+     "focusRing": {
+      "outline": "solid 2px rgb(27, 27, 27)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     },
+     "tabs": 3
+    },
+    "open": {
+     "file": "desktop-light--open--pr.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0.8,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "true",
+     "popover": {
+      "rect": {
+       "x": 239.64,
+       "y": 454.5,
+       "w": 360,
+       "h": 104
+      },
+      "role": "dialog",
+      "side": "above",
+      "gapToDot": 13,
+      "centringOffset": 0,
+      "width": 360,
+      "inViewport": true,
+      "edgeClearance": {
+       "left": 239.64,
+       "right": 680.36
+      },
+      "overflow": {
+       "horizontal": [],
+       "vertical": []
+      }
+     },
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    }
+   }
+  },
+  "desktop-light--idle--diff": {
+   "differingPixels": 0,
+   "size": "1280x800"
+  },
+  "desktop-light--hover--diff": {
+   "differingPixels": 0,
+   "size": "1280x800"
+  },
+  "desktop-light--focus--diff": {
+   "differingPixels": 0,
+   "size": "1280x800"
+  },
+  "desktop-light--open--diff": {
+   "differingPixels": 0,
+   "size": "1280x800"
+  },
+  "desktop-dark--main": {
+   "buffered": true,
+   "beforePlayback": {
+    "reachable": false,
+    "markerChainOpacity": 0,
+    "docScrollWidth": 1280,
+    "docClientWidth": 1280
+   },
+   "states": {
+    "idle": {
+     "file": "desktop-dark--idle--main.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    },
+    "hover": {
+     "file": "desktop-dark--hover--main.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    },
+    "focus": {
+     "file": "desktop-dark--focus--main.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": true,
+     "focusRing": {
+      "outline": "solid 2px rgb(241, 241, 241)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     },
+     "tabs": 3
+    },
+    "open": {
+     "file": "desktop-dark--open--main.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0.8,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "true",
+     "popover": {
+      "rect": {
+       "x": 239.64,
+       "y": 454.5,
+       "w": 360,
+       "h": 104
+      },
+      "role": "dialog",
+      "side": "above",
+      "gapToDot": 13,
+      "centringOffset": 0,
+      "width": 360,
+      "inViewport": true,
+      "edgeClearance": {
+       "left": 239.64,
+       "right": 680.36
+      },
+      "overflow": {
+       "horizontal": [],
+       "vertical": []
+      }
+     },
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    }
+   }
+  },
+  "desktop-dark--pr": {
+   "buffered": true,
+   "beforePlayback": {
+    "reachable": false,
+    "markerChainOpacity": 0,
+    "docScrollWidth": 1280,
+    "docClientWidth": 1280
+   },
+   "states": {
+    "idle": {
+     "file": "desktop-dark--idle--pr.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": false,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    },
+    "hover": {
+     "file": "desktop-dark--hover--pr.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    },
+    "focus": {
+     "file": "desktop-dark--focus--pr.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": true,
+     "focusRing": {
+      "outline": "solid 2px rgb(241, 241, 241)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     },
+     "tabs": 3
+    },
+    "open": {
+     "file": "desktop-dark--open--pr.png",
+     "viewport": {
+      "w": 1280,
+      "h": 800,
+      "docScrollWidth": 1280,
+      "docClientWidth": 1280
+     },
+     "pointerCoarse": false,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0.8,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 332,
+      "y": 572.5,
+      "w": 511,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 416.64,
+      "y": 571.5,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 407.64,
+      "y": 562.5,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 87.64,
+      "fraction": 0.1715,
+      "expectedX": 80.81,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "true",
+     "popover": {
+      "rect": {
+       "x": 239.64,
+       "y": 454.5,
+       "w": 360,
+       "h": 104
+      },
+      "role": "dialog",
+      "side": "above",
+      "gapToDot": 13,
+      "centringOffset": 0,
+      "width": 360,
+      "inViewport": true,
+      "edgeClearance": {
+       "left": 239.64,
+       "right": 680.36
+      },
+      "overflow": {
+       "horizontal": [],
+       "vertical": []
+      }
+     },
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [],
+      "vertical": []
+     }
+    }
+   }
+  },
+  "desktop-dark--idle--diff": {
+   "differingPixels": 0,
+   "size": "1280x800"
+  },
+  "desktop-dark--hover--diff": {
+   "differingPixels": 0,
+   "size": "1280x800"
+  },
+  "desktop-dark--focus--diff": {
+   "differingPixels": 0,
+   "size": "1280x800"
+  },
+  "desktop-dark--open--diff": {
+   "differingPixels": 0,
+   "size": "1280x800"
+  },
+  "phone-light--main": {
+   "buffered": true,
+   "beforePlayback": {
+    "reachable": false,
+    "markerChainOpacity": 0,
+    "docScrollWidth": 390,
+    "docClientWidth": 390
+   },
+   "states": {
+    "idle": {
+     "file": "phone-light--idle--main.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 36 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     }
+    },
+    "focus": {
+     "file": "phone-light--focus--main.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": true,
+     "focusRing": {
+      "outline": "solid 2px rgb(27, 27, 27)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 36 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     },
+     "tabs": 3
+    },
+    "open": {
+     "file": "phone-light--open--main.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0.8,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "true",
+     "popover": {
+      "rect": {
+       "x": 16,
+       "y": 357.69,
+       "w": 358,
+       "h": 112
+      },
+      "role": "dialog",
+      "side": "above",
+      "gapToDot": 13,
+      "centringOffset": 69.06,
+      "width": 358,
+      "inViewport": true,
+      "edgeClearance": {
+       "left": 16,
+       "right": 16
+      },
+      "overflow": {
+       "horizontal": [
+        "div scrollWidth 166 > clientWidth 158",
+        "div scrollWidth 36 > clientWidth 28",
+        "button scrollWidth 36 > clientWidth 28"
+       ],
+       "vertical": []
+      }
+     },
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 38 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "div scrollWidth 166 > clientWidth 158",
+       "div scrollWidth 36 > clientWidth 28",
+       "button scrollWidth 36 > clientWidth 28",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     }
+    }
+   }
+  },
+  "phone-light--pr": {
+   "buffered": true,
+   "beforePlayback": {
+    "reachable": false,
+    "markerChainOpacity": 0,
+    "docScrollWidth": 390,
+    "docClientWidth": 390
+   },
+   "states": {
+    "idle": {
+     "file": "phone-light--idle--pr.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": false,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 36 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     }
+    },
+    "focus": {
+     "file": "phone-light--focus--pr.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": true,
+     "focusRing": {
+      "outline": "solid 2px rgb(27, 27, 27)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 36 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     },
+     "tabs": 3
+    },
+    "open": {
+     "file": "phone-light--open--pr.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "light",
+     "video": {
+      "currentTime": 0.8,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(0, 0, 0)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "true",
+     "popover": {
+      "rect": {
+       "x": 16,
+       "y": 357.69,
+       "w": 358,
+       "h": 112
+      },
+      "role": "dialog",
+      "side": "above",
+      "gapToDot": 13,
+      "centringOffset": 69.06,
+      "width": 358,
+      "inViewport": true,
+      "edgeClearance": {
+       "left": 16,
+       "right": 16
+      },
+      "overflow": {
+       "horizontal": [
+        "div scrollWidth 166 > clientWidth 158",
+        "div scrollWidth 36 > clientWidth 28",
+        "button scrollWidth 36 > clientWidth 28"
+       ],
+       "vertical": []
+      }
+     },
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 38 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "div scrollWidth 166 > clientWidth 158",
+       "div scrollWidth 36 > clientWidth 28",
+       "button scrollWidth 36 > clientWidth 28",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     }
+    }
+   }
+  },
+  "phone-light--idle--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  },
+  "phone-light--focus--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  },
+  "phone-light--open--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  },
+  "phone-dark--main": {
+   "buffered": true,
+   "beforePlayback": {
+    "reachable": false,
+    "markerChainOpacity": 0,
+    "docScrollWidth": 390,
+    "docClientWidth": 390
+   },
+   "states": {
+    "idle": {
+     "file": "phone-dark--idle--main.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 36 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     }
+    },
+    "focus": {
+     "file": "phone-dark--focus--main.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": true,
+     "focusRing": {
+      "outline": "solid 2px rgb(241, 241, 241)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 36 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     },
+     "tabs": 3
+    },
+    "open": {
+     "file": "phone-dark--open--main.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0.8,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "true",
+     "popover": {
+      "rect": {
+       "x": 16,
+       "y": 357.69,
+       "w": 358,
+       "h": 112
+      },
+      "role": "dialog",
+      "side": "above",
+      "gapToDot": 13,
+      "centringOffset": 69.06,
+      "width": 358,
+      "inViewport": true,
+      "edgeClearance": {
+       "left": 16,
+       "right": 16
+      },
+      "overflow": {
+       "horizontal": [
+        "div scrollWidth 166 > clientWidth 158",
+        "div scrollWidth 36 > clientWidth 28",
+        "button scrollWidth 36 > clientWidth 28"
+       ],
+       "vertical": []
+      }
+     },
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 38 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "div scrollWidth 166 > clientWidth 158",
+       "div scrollWidth 36 > clientWidth 28",
+       "button scrollWidth 36 > clientWidth 28",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     }
+    }
+   }
+  },
+  "phone-dark--pr": {
+   "buffered": true,
+   "beforePlayback": {
+    "reachable": false,
+    "markerChainOpacity": 0,
+    "docScrollWidth": 390,
+    "docClientWidth": 390
+   },
+   "states": {
+    "idle": {
+     "file": "phone-dark--idle--pr.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": false,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 36 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     }
+    },
+    "focus": {
+     "file": "phone-dark--focus--pr.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": true,
+     "focusRing": {
+      "outline": "solid 2px rgb(241, 241, 241)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "false",
+     "popover": null,
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 36 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     },
+     "tabs": 3
+    },
+    "open": {
+     "file": "phone-dark--open--pr.png",
+     "viewport": {
+      "w": 390,
+      "h": 844,
+      "docScrollWidth": 390,
+      "docClientWidth": 390
+     },
+     "pointerCoarse": true,
+     "colorScheme": "dark",
+     "video": {
+      "currentTime": 0.8,
+      "duration": 5.059,
+      "paused": true
+     },
+     "track": {
+      "x": 84,
+      "y": 483.69,
+      "w": 222,
+      "h": 4
+     },
+     "trackFound": true,
+     "dot": {
+      "x": 122.94,
+      "y": 482.69,
+      "w": 6,
+      "h": 6
+     },
+     "button": {
+      "x": 113.94,
+      "y": 473.69,
+      "w": 24,
+      "h": 24
+     },
+     "dotCenterInTrack": {
+      "x": 41.94,
+      "fraction": 0.1889,
+      "expectedX": 35.11,
+      "y": 0
+     },
+     "reachable": true,
+     "topAtDot": "span[aria-hidden]",
+     "markerChainOpacity": 1,
+     "markerPointerEvents": "auto",
+     "focused": false,
+     "focusRing": {
+      "outline": "none 0px rgb(255, 255, 255)",
+      "boxShadow": "none"
+     },
+     "ariaExpanded": "true",
+     "popover": {
+      "rect": {
+       "x": 16,
+       "y": 357.69,
+       "w": 358,
+       "h": 112
+      },
+      "role": "dialog",
+      "side": "above",
+      "gapToDot": 13,
+      "centringOffset": 69.06,
+      "width": 358,
+      "inViewport": true,
+      "edgeClearance": {
+       "left": 16,
+       "right": 16
+      },
+      "overflow": {
+       "horizontal": [
+        "div scrollWidth 166 > clientWidth 158",
+        "div scrollWidth 36 > clientWidth 28",
+        "button scrollWidth 36 > clientWidth 28"
+       ],
+       "vertical": []
+      }
+     },
+     "popoverInDom": true,
+     "playerOverflow": {
+      "horizontal": [
+       "div scrollWidth 312 > clientWidth 310",
+       "button scrollWidth 38 > clientWidth 32",
+       "div scrollWidth 34 > clientWidth 20",
+       "div scrollWidth 166 > clientWidth 158",
+       "div scrollWidth 36 > clientWidth 28",
+       "button scrollWidth 36 > clientWidth 28",
+       "button scrollWidth 38 > clientWidth 32"
+      ],
+      "vertical": []
+     }
+    }
+   }
+  },
+  "phone-dark--idle--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  },
+  "phone-dark--focus--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  },
+  "phone-dark--open--diff": {
+   "differingPixels": 0,
+   "size": "780x1688"
+  }
+ },
+ "opening": {
+  "timing": {
+   "desktop-keyboard|main": {
+    "n": 5,
+    "firstMs": {
+     "median": 38.4,
+     "range": "37.4–38.5"
+    },
+    "firstFrames": 3,
+    "firstOpacity": 0.375,
+    "firstWidth": 348.8,
+    "secondMs": {
+     "median": 20.5,
+     "range": "17.8–21.8"
+    },
+    "secondWidth": 348.8,
+    "preloadLeadMs": 302.6,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": null,
+    "paintedFirstOfRecordedRun": null,
+    "gapTimelineOfRecordedRun": null
+   },
+   "desktop-keyboard|pr": {
+    "n": 5,
+    "firstMs": {
+     "median": 38.5,
+     "range": "37.2–38.9"
+    },
+    "firstFrames": 3,
+    "firstOpacity": 0.375,
+    "firstWidth": 348.7,
+    "secondMs": {
+     "median": 25.9,
+     "range": "17–33.1"
+    },
+    "secondWidth": 348.8,
+    "preloadLeadMs": 304.8,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": null,
+    "paintedFirstOfRecordedRun": null,
+    "gapTimelineOfRecordedRun": null
+   },
+   "desktop-mouse-dwell|main": {
+    "n": 5,
+    "firstMs": {
+     "median": 30.6,
+     "range": "29.7–47.8"
+    },
+    "firstFrames": 2,
+    "firstOpacity": 0.375,
+    "firstWidth": 348.7,
+    "secondMs": {
+     "median": 31,
+     "range": "30.7–31.2"
+    },
+    "secondWidth": 348.8,
+    "preloadLeadMs": -0.6,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": null,
+    "paintedFirstOfRecordedRun": null,
+    "gapTimelineOfRecordedRun": null
+   },
+   "desktop-mouse-dwell|pr": {
+    "n": 5,
+    "firstMs": {
+     "median": 29.4,
+     "range": "27.5–30.1"
+    },
+    "firstFrames": 2,
+    "firstOpacity": 0.375,
+    "firstWidth": 348.8,
+    "secondMs": {
+     "median": 31,
+     "range": "30.6–31.3"
+    },
+    "secondWidth": 348.7,
+    "preloadLeadMs": -0.7,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": null,
+    "paintedFirstOfRecordedRun": null,
+    "gapTimelineOfRecordedRun": null
+   },
+   "desktop-mouse-quick|main": {
+    "n": 5,
+    "firstMs": {
+     "median": 42.9,
+     "range": "42.6–43.7"
+    },
+    "firstFrames": 3,
+    "firstOpacity": 0.376,
+    "firstWidth": 348.8,
+    "secondMs": {
+     "median": 27.6,
+     "range": "27.4–27.9"
+    },
+    "secondWidth": 348.7,
+    "preloadLeadMs": -0.4,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": null,
+    "paintedFirstOfRecordedRun": null,
+    "gapTimelineOfRecordedRun": null
+   },
+   "desktop-mouse-quick|pr": {
+    "n": 5,
+    "firstMs": {
+     "median": 77.5,
+     "range": "76.9–77.9"
+    },
+    "firstFrames": 4,
+    "firstOpacity": 0.376,
+    "firstWidth": 348.8,
+    "secondMs": {
+     "median": 29.4,
+     "range": "29.2–29.5"
+    },
+    "secondWidth": 348.8,
+    "preloadLeadMs": -0.5,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": null,
+    "paintedFirstOfRecordedRun": null,
+    "gapTimelineOfRecordedRun": null
+   },
+   "phone-touch|main": {
+    "n": 5,
+    "firstMs": {
+     "median": 48.9,
+     "range": "48.8–49.2"
+    },
+    "firstFrames": 3,
+    "firstOpacity": 0.276,
+    "firstWidth": 101.4,
+    "secondMs": {
+     "median": 33.3,
+     "range": "32.8–33.4"
+    },
+    "secondWidth": 104.5,
+    "preloadLeadMs": -1.4,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": null,
+    "paintedFirstOfRecordedRun": null,
+    "gapTimelineOfRecordedRun": null
+   },
+   "phone-touch|pr": {
+    "n": 5,
+    "firstMs": {
+     "median": 80.7,
+     "range": "80.3–80.9"
+    },
+    "firstFrames": 4,
+    "firstOpacity": 0.375,
+    "firstWidth": 346.8,
+    "secondMs": {
+     "median": 32.9,
+     "range": "32.7–33.3"
+    },
+    "secondWidth": 104.7,
+    "preloadLeadMs": -1.7,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": null,
+    "paintedFirstOfRecordedRun": null,
+    "gapTimelineOfRecordedRun": null
+   }
+  },
+  "throttle": {
+   "desktop-keyboard-quick|main": {
+    "n": 3,
+    "firstMs": {
+     "median": 39.6,
+     "range": "39.3–39.6"
+    },
+    "firstFrames": 3,
+    "firstOpacity": 0.375,
+    "firstWidth": 348.8,
+    "secondMs": {
+     "median": 43.6,
+     "range": "43.3–45.3"
+    },
+    "secondWidth": 348.8,
+    "preloadLeadMs": 1.6,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": [
+     {
+      "i": 0,
+      "atMs": -419
+     },
+     {
+      "i": 1,
+      "atMs": 1
+     },
+     {
+      "i": 2,
+      "atMs": 27
+     },
+     {
+      "i": 3,
+      "atMs": 36
+     },
+     {
+      "i": 4,
+      "atMs": 47
+     },
+     {
+      "i": 5,
+      "atMs": 67
+     },
+     {
+      "i": 6,
+      "atMs": 87
+     },
+     {
+      "i": 7,
+      "atMs": 97
+     },
+     {
+      "i": 8,
+      "atMs": 119
+     },
+     {
+      "i": 9,
+      "atMs": 129
+     },
+     {
+      "i": 10,
+      "atMs": 150
+     },
+     {
+      "i": 11,
+      "atMs": 162
+     },
+     {
+      "i": 12,
+      "atMs": 183
+     },
+     {
+      "i": 13,
+      "atMs": 204
+     }
+    ],
+    "paintedFirstOfRecordedRun": 39.3,
+    "gapTimelineOfRecordedRun": [
+     {
+      "atMs": -12.3,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 0
+     },
+     {
+      "atMs": 22.1,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 28.4,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 39.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.376,
+      "w": 348.8
+     },
+     {
+      "atMs": 56.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.643,
+      "w": 353.6
+     },
+     {
+      "atMs": 72.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.811,
+      "w": 356.6
+     },
+     {
+      "atMs": 89.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.905,
+      "w": 358.3
+     },
+     {
+      "atMs": 105.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.956,
+      "w": 359.2
+     },
+     {
+      "atMs": 121.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.981,
+      "w": 359.7
+     },
+     {
+      "atMs": 137.8,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.994,
+      "w": 359.9
+     },
+     {
+      "atMs": 154.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.998,
+      "w": 360
+     }
+    ]
+   },
+   "desktop-keyboard-quick|pr": {
+    "n": 3,
+    "firstMs": {
+     "median": 470.1,
+     "range": "470.1–470.2"
+    },
+    "firstFrames": 28,
+    "firstOpacity": 0.376,
+    "firstWidth": 348.8,
+    "secondMs": {
+     "median": 49.4,
+     "range": "40.4–49.5"
+    },
+    "secondWidth": 348.7,
+    "preloadLeadMs": 3.9,
+    "chunkHeld": {
+     "pausedAfterPressMs": -2,
+     "releasedAfterPressMs": 399
+    },
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": [
+     {
+      "i": 0,
+      "atMs": -427
+     },
+     {
+      "i": 1,
+      "atMs": -4
+     },
+     {
+      "i": 2,
+      "atMs": 6
+     },
+     {
+      "i": 3,
+      "atMs": 26
+     },
+     {
+      "i": 4,
+      "atMs": 46
+     },
+     {
+      "i": 5,
+      "atMs": 56
+     },
+     {
+      "i": 6,
+      "atMs": 78
+     },
+     {
+      "i": 7,
+      "atMs": 90
+     },
+     {
+      "i": 8,
+      "atMs": 112
+     },
+     {
+      "i": 9,
+      "atMs": 469
+     },
+     {
+      "i": 10,
+      "atMs": 476
+     },
+     {
+      "i": 11,
+      "atMs": 492
+     },
+     {
+      "i": 12,
+      "atMs": 504
+     },
+     {
+      "i": 13,
+      "atMs": 526
+     },
+     {
+      "i": 14,
+      "atMs": 538
+     },
+     {
+      "i": 15,
+      "atMs": 559
+     },
+     {
+      "i": 16,
+      "atMs": 571
+     },
+     {
+      "i": 17,
+      "atMs": 592
+     },
+     {
+      "i": 18,
+      "atMs": 605
+     },
+     {
+      "i": 19,
+      "atMs": 625
+     }
+    ],
+    "paintedFirstOfRecordedRun": 470.2,
+    "gapTimelineOfRecordedRun": [
+     {
+      "atMs": -17.6,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": -1.5,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 15.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 32.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 48.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 65.3,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 82.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 98.2,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 113.9,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 130.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 147.2,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 163.7,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 180.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 197.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 213.9,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 230.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 247.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 263.7,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 280.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 297.2,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 313.7,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 330.3,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 347.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 363.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 380.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 397.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 457.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 460.5,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 470.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.376,
+      "w": 348.8
+     },
+     {
+      "atMs": 480.5,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.643,
+      "w": 353.6
+     },
+     {
+      "atMs": 497.4,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.811,
+      "w": 356.6
+     },
+     {
+      "atMs": 513.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.905,
+      "w": 358.3
+     },
+     {
+      "atMs": 530.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.956,
+      "w": 359.2
+     },
+     {
+      "atMs": 547.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.981,
+      "w": 359.7
+     },
+     {
+      "atMs": 564,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.994,
+      "w": 359.9
+     },
+     {
+      "atMs": 580.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.998,
+      "w": 360
+     }
+    ]
+   },
+   "desktop-mouse-dwell|main": {
+    "n": 3,
+    "firstMs": {
+     "median": 46.5,
+     "range": "35.2–49.5"
+    },
+    "firstFrames": 3,
+    "firstOpacity": 0.375,
+    "firstWidth": 348.8,
+    "secondMs": {
+     "median": 30.9,
+     "range": "30.6–31.3"
+    },
+    "secondWidth": 348.7,
+    "preloadLeadMs": -0.9,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": [
+     {
+      "i": 0,
+      "atMs": -760
+     },
+     {
+      "i": 1,
+      "atMs": -274
+     },
+     {
+      "i": 2,
+      "atMs": 35
+     },
+     {
+      "i": 3,
+      "atMs": 43
+     },
+     {
+      "i": 4,
+      "atMs": 63
+     },
+     {
+      "i": 5,
+      "atMs": 73
+     },
+     {
+      "i": 6,
+      "atMs": 95
+     },
+     {
+      "i": 7,
+      "atMs": 106
+     },
+     {
+      "i": 8,
+      "atMs": 127
+     },
+     {
+      "i": 9,
+      "atMs": 147
+     },
+     {
+      "i": 10,
+      "atMs": 156
+     },
+     {
+      "i": 11,
+      "atMs": 177
+     },
+     {
+      "i": 12,
+      "atMs": 197
+     }
+    ],
+    "paintedFirstOfRecordedRun": 35.2,
+    "gapTimelineOfRecordedRun": [
+     {
+      "atMs": -19.3,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 0
+     },
+     {
+      "atMs": -2.6,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 0
+     },
+     {
+      "atMs": 21.5,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 35.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.375,
+      "w": 348.7
+     },
+     {
+      "atMs": 47.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.644,
+      "w": 353.6
+     },
+     {
+      "atMs": 63.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.81,
+      "w": 356.6
+     },
+     {
+      "atMs": 80.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.905,
+      "w": 358.3
+     },
+     {
+      "atMs": 97.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.956,
+      "w": 359.2
+     },
+     {
+      "atMs": 113.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.981,
+      "w": 359.7
+     },
+     {
+      "atMs": 130.5,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.994,
+      "w": 359.9
+     },
+     {
+      "atMs": 147.4,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.998,
+      "w": 360
+     }
+    ]
+   },
+   "desktop-mouse-dwell|pr": {
+    "n": 3,
+    "firstMs": {
+     "median": 178.3,
+     "range": "161.8–210.9"
+    },
+    "firstFrames": 9,
+    "firstOpacity": 0.375,
+    "firstWidth": 348.7,
+    "secondMs": {
+     "median": 31.3,
+     "range": "30.9–31.7"
+    },
+    "secondWidth": 348.8,
+    "preloadLeadMs": -0.7,
+    "chunkHeld": {
+     "pausedAfterPressMs": -303,
+     "releasedAfterPressMs": 97
+    },
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": [
+     {
+      "i": 0,
+      "atMs": -763
+     },
+     {
+      "i": 1,
+      "atMs": -277
+     },
+     {
+      "i": 2,
+      "atMs": 20
+     },
+     {
+      "i": 3,
+      "atMs": 46
+     },
+     {
+      "i": 4,
+      "atMs": 169
+     },
+     {
+      "i": 5,
+      "atMs": 190
+     },
+     {
+      "i": 6,
+      "atMs": 212
+     },
+     {
+      "i": 7,
+      "atMs": 219
+     },
+     {
+      "i": 8,
+      "atMs": 242
+     },
+     {
+      "i": 9,
+      "atMs": 253
+     },
+     {
+      "i": 10,
+      "atMs": 273
+     },
+     {
+      "i": 11,
+      "atMs": 294
+     },
+     {
+      "i": 12,
+      "atMs": 302
+     },
+     {
+      "i": 13,
+      "atMs": 323
+     }
+    ],
+    "paintedFirstOfRecordedRun": 161.8,
+    "gapTimelineOfRecordedRun": [
+     {
+      "atMs": -5.1,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 11.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 28.2,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 46.2,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 61.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 78.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 94.9,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 156,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 158.7,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 161.8,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.376,
+      "w": 348.8
+     },
+     {
+      "atMs": 178.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.644,
+      "w": 353.6
+     },
+     {
+      "atMs": 194.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.811,
+      "w": 356.6
+     },
+     {
+      "atMs": 211.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.905,
+      "w": 358.3
+     },
+     {
+      "atMs": 228.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.956,
+      "w": 359.2
+     },
+     {
+      "atMs": 245,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.981,
+      "w": 359.7
+     },
+     {
+      "atMs": 261.7,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.994,
+      "w": 359.9
+     },
+     {
+      "atMs": 278.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.998,
+      "w": 360
+     }
+    ]
+   },
+   "desktop-mouse-quick|main": {
+    "n": 3,
+    "firstMs": {
+     "median": 27.3,
+     "range": "26.9–43.1"
+    },
+    "firstFrames": 2,
+    "firstOpacity": 0.374,
+    "firstWidth": 348.7,
+    "secondMs": {
+     "median": 27.9,
+     "range": "27.8–28"
+    },
+    "secondWidth": 348.8,
+    "preloadLeadMs": -0.4,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": [
+     {
+      "i": 0,
+      "atMs": -414
+     },
+     {
+      "i": 1,
+      "atMs": 35
+     },
+     {
+      "i": 2,
+      "atMs": 42
+     },
+     {
+      "i": 3,
+      "atMs": 55
+     },
+     {
+      "i": 4,
+      "atMs": 75
+     },
+     {
+      "i": 5,
+      "atMs": 85
+     },
+     {
+      "i": 6,
+      "atMs": 107
+     },
+     {
+      "i": 7,
+      "atMs": 118
+     },
+     {
+      "i": 8,
+      "atMs": 139
+     },
+     {
+      "i": 9,
+      "atMs": 151
+     },
+     {
+      "i": 10,
+      "atMs": 172
+     },
+     {
+      "i": 11,
+      "atMs": 192
+     }
+    ],
+    "paintedFirstOfRecordedRun": 27.3,
+    "gapTimelineOfRecordedRun": [
+     {
+      "atMs": -14.8,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 0
+     },
+     {
+      "atMs": -5.8,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 0
+     },
+     {
+      "atMs": 20.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 27.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.374,
+      "w": 348.7
+     },
+     {
+      "atMs": 43.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.643,
+      "w": 353.6
+     },
+     {
+      "atMs": 60.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.81,
+      "w": 356.6
+     },
+     {
+      "atMs": 76.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.905,
+      "w": 358.3
+     },
+     {
+      "atMs": 93.5,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.956,
+      "w": 359.2
+     },
+     {
+      "atMs": 110.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.981,
+      "w": 359.7
+     },
+     {
+      "atMs": 126.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.994,
+      "w": 359.9
+     },
+     {
+      "atMs": 143.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.998,
+      "w": 360
+     }
+    ]
+   },
+   "desktop-mouse-quick|pr": {
+    "n": 3,
+    "firstMs": {
+     "median": 477.4,
+     "range": "460.8–478.1"
+    },
+    "firstFrames": 27,
+    "firstOpacity": 0.375,
+    "firstWidth": 348.7,
+    "secondMs": {
+     "median": 29.3,
+     "range": "29.3–29.4"
+    },
+    "secondWidth": 348.8,
+    "preloadLeadMs": -0.5,
+    "chunkHeld": {
+     "pausedAfterPressMs": -3,
+     "releasedAfterPressMs": 397
+    },
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": [
+     {
+      "i": 0,
+      "atMs": -413
+     },
+     {
+      "i": 1,
+      "atMs": 22
+     },
+     {
+      "i": 2,
+      "atMs": 57
+     },
+     {
+      "i": 3,
+      "atMs": 486
+     },
+     {
+      "i": 4,
+      "atMs": 508
+     },
+     {
+      "i": 5,
+      "atMs": 520
+     },
+     {
+      "i": 6,
+      "atMs": 542
+     },
+     {
+      "i": 7,
+      "atMs": 552
+     },
+     {
+      "i": 8,
+      "atMs": 574
+     },
+     {
+      "i": 9,
+      "atMs": 587
+     },
+     {
+      "i": 10,
+      "atMs": 607
+     },
+     {
+      "i": 11,
+      "atMs": 620
+     },
+     {
+      "i": 12,
+      "atMs": 640
+     }
+    ],
+    "paintedFirstOfRecordedRun": 478.1,
+    "gapTimelineOfRecordedRun": [
+     {
+      "atMs": -13,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": -2.9,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 11.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 27.6,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 44.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 61,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 77.7,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 94.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 111.2,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 127.7,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 144.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 161.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 177.7,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 194.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 211,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 227.7,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 244.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 261.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 277.9,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 294.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 311.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 327.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 344.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 361.3,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 377.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 394.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 459.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 462.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 342
+     },
+     {
+      "atMs": 478.1,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.376,
+      "w": 348.8
+     },
+     {
+      "atMs": 494.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.643,
+      "w": 353.6
+     },
+     {
+      "atMs": 511.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.811,
+      "w": 356.6
+     },
+     {
+      "atMs": 527.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.905,
+      "w": 358.3
+     },
+     {
+      "atMs": 544.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.956,
+      "w": 359.2
+     },
+     {
+      "atMs": 561.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.981,
+      "w": 359.7
+     },
+     {
+      "atMs": 577.8,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.994,
+      "w": 359.9
+     },
+     {
+      "atMs": 594.7,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.998,
+      "w": 360
+     }
+    ]
+   },
+   "phone-touch|main": {
+    "n": 3,
+    "firstMs": {
+     "median": 49.2,
+     "range": "48.8–49.3"
+    },
+    "firstFrames": 3,
+    "firstOpacity": 0.269,
+    "firstWidth": 99.2,
+    "secondMs": {
+     "median": 32.8,
+     "range": "32.7–32.9"
+    },
+    "secondWidth": 104.3,
+    "preloadLeadMs": -1.4,
+    "chunkHeld": null,
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": [
+     {
+      "i": 0,
+      "atMs": -412
+     },
+     {
+      "i": 1,
+      "atMs": 38
+     },
+     {
+      "i": 2,
+      "atMs": 52
+     },
+     {
+      "i": 3,
+      "atMs": 69
+     },
+     {
+      "i": 4,
+      "atMs": 86
+     },
+     {
+      "i": 5,
+      "atMs": 103
+     },
+     {
+      "i": 6,
+      "atMs": 120
+     },
+     {
+      "i": 7,
+      "atMs": 137
+     },
+     {
+      "i": 8,
+      "atMs": 153
+     },
+     {
+      "i": 9,
+      "atMs": 171
+     },
+     {
+      "i": 10,
+      "atMs": 186
+     },
+     {
+      "i": 11,
+      "atMs": 203
+     },
+     {
+      "i": 12,
+      "atMs": 220
+     },
+     {
+      "i": 13,
+      "atMs": 236
+     },
+     {
+      "i": 14,
+      "atMs": 253
+     },
+     {
+      "i": 15,
+      "atMs": 272
+     },
+     {
+      "i": 16,
+      "atMs": 290
+     },
+     {
+      "i": 17,
+      "atMs": 755
+     }
+    ],
+    "paintedFirstOfRecordedRun": 49.3,
+    "gapTimelineOfRecordedRun": [
+     {
+      "atMs": -7.9,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 0
+     },
+     {
+      "atMs": -0.8,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 0
+     },
+     {
+      "atMs": 18.8,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 1,
+      "w": 358
+     },
+     {
+      "atMs": 33.5,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0.001,
+      "w": 3.6
+     },
+     {
+      "atMs": 49.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.26,
+      "w": 95.7
+     },
+     {
+      "atMs": 65.9,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.495,
+      "w": 179.2
+     },
+     {
+      "atMs": 82.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.671,
+      "w": 241.5
+     },
+     {
+      "atMs": 99.2,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.793,
+      "w": 284.7
+     },
+     {
+      "atMs": 115.8,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.873,
+      "w": 313.2
+     },
+     {
+      "atMs": 132.7,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.924,
+      "w": 331.5
+     }
+    ]
+   },
+   "phone-touch|pr": {
+    "n": 3,
+    "firstMs": {
+     "median": 464,
+     "range": "463.7–464.1"
+    },
+    "firstFrames": 27,
+    "firstOpacity": 0.374,
+    "firstWidth": 346.8,
+    "secondMs": {
+     "median": 33,
+     "range": "32.7–33.1"
+    },
+    "secondWidth": 104.5,
+    "preloadLeadMs": -1.7,
+    "chunkHeld": {
+     "pausedAfterPressMs": 0,
+     "releasedAfterPressMs": 401
+    },
+    "expandedAtPaint": [
+     "true",
+     "true",
+     "true"
+    ],
+    "videoTimeAtPaint": 0.8,
+    "frames": [
+     {
+      "i": 0,
+      "atMs": -414
+     },
+     {
+      "i": 1,
+      "atMs": 19
+     },
+     {
+      "i": 2,
+      "atMs": 57
+     },
+     {
+      "i": 3,
+      "atMs": 467
+     },
+     {
+      "i": 4,
+      "atMs": 484
+     },
+     {
+      "i": 5,
+      "atMs": 501
+     },
+     {
+      "i": 6,
+      "atMs": 518
+     },
+     {
+      "i": 7,
+      "atMs": 534
+     },
+     {
+      "i": 8,
+      "atMs": 551
+     },
+     {
+      "i": 9,
+      "atMs": 568
+     },
+     {
+      "i": 10,
+      "atMs": 585
+     },
+     {
+      "i": 11,
+      "atMs": 601
+     },
+     {
+      "i": 12,
+      "atMs": 623
+     },
+     {
+      "i": 13,
+      "atMs": 636
+     }
+    ],
+    "paintedFirstOfRecordedRun": 464.1,
+    "gapTimelineOfRecordedRun": [
+     {
+      "atMs": -10,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": -2.9,
+      "expanded": "false",
+      "videoTime": 0,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 13.9,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 30.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 47.3,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 63.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 80.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 97.2,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 113.9,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 130.6,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 147.2,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 164,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 180.6,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 197.3,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 213.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 230.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 247.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 263.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 280.5,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 297.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 313.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 330.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 347.1,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 363.8,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 380.4,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 397.3,
+      "expanded": "false",
+      "videoTime": 0.8,
+      "present": false,
+      "visible": false,
+      "opacity": null,
+      "w": null
+     },
+     {
+      "atMs": 454.8,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 340.1
+     },
+     {
+      "atMs": 457.8,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": false,
+      "opacity": 0,
+      "w": 340.1
+     },
+     {
+      "atMs": 464.1,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.375,
+      "w": 346.8
+     },
+     {
+      "atMs": 480.6,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.644,
+      "w": 351.6
+     },
+     {
+      "atMs": 497.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.811,
+      "w": 354.6
+     },
+     {
+      "atMs": 514,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.905,
+      "w": 356.3
+     },
+     {
+      "atMs": 530.7,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.956,
+      "w": 357.2
+     },
+     {
+      "atMs": 547.3,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.981,
+      "w": 357.7
+     },
+     {
+      "atMs": 564,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.994,
+      "w": 357.9
+     },
+     {
+      "atMs": 580.8,
+      "expanded": "true",
+      "videoTime": 0.8,
+      "present": true,
+      "visible": true,
+      "opacity": 0.998,
+      "w": 358
+     }
+    ]
+   }
+  }
+ },
+ "overflowInPopover": [
+  {
+   "build": "main",
+   "device": "phone",
+   "found": [
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Copy comment link",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 188.1,
+      "w": 28
+     },
+     "overflowX": "hidden",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "div",
+       "left": 0,
+       "right": 0,
+       "w": 28
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Copy comment link",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 188.1,
+      "w": 28
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "div",
+       "left": -204.1,
+       "right": 232.1,
+       "w": 0
+      },
+      {
+       "tag": "template",
+       "left": -204.1,
+       "right": 232.1,
+       "w": 0
+      },
+      {
+       "tag": "div",
+       "left": -204.1,
+       "right": 232.1,
+       "w": 0
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "button",
+     "role": null,
+     "label": "Copy comment link",
+     "text": "",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 188.1,
+      "w": 28
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "span",
+       "left": 0,
+       "right": 0,
+       "w": 28
+      },
+      {
+       "tag": "span",
+       "left": -1,
+       "right": 28,
+       "w": 1
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Copy comment link",
+     "scrollWidth": 166,
+     "clientWidth": 158,
+     "rect": {
+      "x": 188.1,
+      "w": 157.9
+     },
+     "overflowX": "hidden",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "div",
+       "left": 129.9,
+       "right": 0,
+       "w": 28
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Copy comment link",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 318,
+      "w": 28
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "div",
+       "left": -334,
+       "right": 362,
+       "w": 0
+      },
+      {
+       "tag": "template",
+       "left": -334,
+       "right": 362,
+       "w": 0
+      },
+      {
+       "tag": "div",
+       "left": -334,
+       "right": 362,
+       "w": 0
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "button",
+     "role": null,
+     "label": "Copy comment link",
+     "text": "",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 318,
+      "w": 28
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "span",
+       "left": 0,
+       "right": 0,
+       "w": 28
+      },
+      {
+       "tag": "span",
+       "left": -1,
+       "right": 28,
+       "w": 1
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Close popover",
+     "scrollWidth": 34,
+     "clientWidth": 1,
+     "rect": {
+      "x": 178.5,
+      "w": 1
+     },
+     "overflowX": "hidden",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "button",
+       "left": 0,
+       "right": -23,
+       "w": 24
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "button",
+     "role": null,
+     "label": null,
+     "text": "Close popover",
+     "scrollWidth": 34,
+     "clientWidth": 24,
+     "rect": {
+      "x": 178.5,
+      "w": 24
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "span",
+       "left": 12,
+       "right": 12,
+       "w": 0
+      },
+      {
+       "tag": "span",
+       "left": -1,
+       "right": 24,
+       "w": 1
+      }
+     ],
+     "pseudo": null
+    }
+   ]
+  },
+  {
+   "build": "main",
+   "device": "desktop",
+   "found": [
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Close popover",
+     "scrollWidth": 24,
+     "clientWidth": 1,
+     "rect": {
+      "x": 179.5,
+      "w": 1
+     },
+     "overflowX": "hidden",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "button",
+       "left": 0,
+       "right": -23,
+       "w": 24
+      }
+     ],
+     "pseudo": null
+    }
+   ]
+  },
+  {
+   "build": "pr",
+   "device": "phone",
+   "found": [
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Copy comment link",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 188.1,
+      "w": 28
+     },
+     "overflowX": "hidden",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "div",
+       "left": 0,
+       "right": 0,
+       "w": 28
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Copy comment link",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 188.1,
+      "w": 28
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "div",
+       "left": -204.1,
+       "right": 232.1,
+       "w": 0
+      },
+      {
+       "tag": "template",
+       "left": -204.1,
+       "right": 232.1,
+       "w": 0
+      },
+      {
+       "tag": "div",
+       "left": -204.1,
+       "right": 232.1,
+       "w": 0
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "button",
+     "role": null,
+     "label": "Copy comment link",
+     "text": "",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 188.1,
+      "w": 28
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "span",
+       "left": 0,
+       "right": 0,
+       "w": 28
+      },
+      {
+       "tag": "span",
+       "left": -1,
+       "right": 28,
+       "w": 1
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Copy comment link",
+     "scrollWidth": 166,
+     "clientWidth": 158,
+     "rect": {
+      "x": 188.1,
+      "w": 157.9
+     },
+     "overflowX": "hidden",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "div",
+       "left": 129.9,
+       "right": 0,
+       "w": 28
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Copy comment link",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 318,
+      "w": 28
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "div",
+       "left": -334,
+       "right": 362,
+       "w": 0
+      },
+      {
+       "tag": "template",
+       "left": -334,
+       "right": 362,
+       "w": 0
+      },
+      {
+       "tag": "div",
+       "left": -334,
+       "right": 362,
+       "w": 0
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "button",
+     "role": null,
+     "label": "Copy comment link",
+     "text": "",
+     "scrollWidth": 36,
+     "clientWidth": 28,
+     "rect": {
+      "x": 318,
+      "w": 28
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "span",
+       "left": 0,
+       "right": 0,
+       "w": 28
+      },
+      {
+       "tag": "span",
+       "left": -1,
+       "right": 28,
+       "w": 1
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Close popover",
+     "scrollWidth": 34,
+     "clientWidth": 1,
+     "rect": {
+      "x": 178.5,
+      "w": 1
+     },
+     "overflowX": "hidden",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "button",
+       "left": 0,
+       "right": -23,
+       "w": 24
+      }
+     ],
+     "pseudo": null
+    },
+    {
+     "tag": "button",
+     "role": null,
+     "label": null,
+     "text": "Close popover",
+     "scrollWidth": 34,
+     "clientWidth": 24,
+     "rect": {
+      "x": 178.5,
+      "w": 24
+     },
+     "overflowX": "visible",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "span",
+       "left": 12,
+       "right": 12,
+       "w": 0
+      },
+      {
+       "tag": "span",
+       "left": -1,
+       "right": 24,
+       "w": 1
+      }
+     ],
+     "pseudo": null
+    }
+   ]
+  },
+  {
+   "build": "pr",
+   "device": "desktop",
+   "found": [
+    {
+     "tag": "div",
+     "role": null,
+     "label": null,
+     "text": "Close popover",
+     "scrollWidth": 24,
+     "clientWidth": 1,
+     "rect": {
+      "x": 179.5,
+      "w": 1
+     },
+     "overflowX": "hidden",
+     "insideSurface": true,
+     "kids": [
+      {
+       "tag": "button",
+       "left": 0,
+       "right": -23,
+       "w": 24
+      }
+     ],
+     "pseudo": null
+    }
+   ]
+  }
+ ],
+ "gapTimeline": [
+  {
+   "path": "phone-touch",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -7.9,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": -0.8,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 18.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 1,
+     "w": 358
+    },
+    {
+     "atMs": 33.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0.001,
+     "w": 3.6
+    },
+    {
+     "atMs": 49.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.26,
+     "w": 95.7
+    },
+    {
+     "atMs": 65.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.495,
+     "w": 179.2
+    },
+    {
+     "atMs": 82.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.671,
+     "w": 241.5
+    },
+    {
+     "atMs": 99.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.793,
+     "w": 284.7
+    },
+    {
+     "atMs": 115.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.873,
+     "w": 313.2
+    },
+    {
+     "atMs": 132.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.924,
+     "w": 331.5
+    }
+   ]
+  },
+  {
+   "path": "phone-touch",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -10,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": -2.9,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 13.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 30.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 47.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 63.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 80.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 97.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 113.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 130.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 147.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 164,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 180.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 197.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 213.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 230.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 247.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 263.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 280.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 297.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 313.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 330.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 347.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 363.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 380.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 397.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 454.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 340.1
+    },
+    {
+     "atMs": 457.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 340.1
+    },
+    {
+     "atMs": 464.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 346.8
+    },
+    {
+     "atMs": 480.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 351.6
+    },
+    {
+     "atMs": 497.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 354.6
+    },
+    {
+     "atMs": 514,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 356.3
+    },
+    {
+     "atMs": 530.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 357.2
+    },
+    {
+     "atMs": 547.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 357.7
+    },
+    {
+     "atMs": 564,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 357.9
+    },
+    {
+     "atMs": 580.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 358
+    }
+   ]
+  },
+  {
+   "path": "phone-touch",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -2.9,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 13.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 30.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 46.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 63.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 80.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 96.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 113.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 130.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 146.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 163.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 180.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 196.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 213.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 230.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 246.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 263.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 280.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 296.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 313.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 330.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 346.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 363.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 380.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 396.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 455,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 340.1
+    },
+    {
+     "atMs": 457.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 340.1
+    },
+    {
+     "atMs": 463.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.374,
+     "w": 346.8
+    },
+    {
+     "atMs": 480.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.643,
+     "w": 351.6
+    },
+    {
+     "atMs": 497,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.81,
+     "w": 354.6
+    },
+    {
+     "atMs": 513.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 356.3
+    },
+    {
+     "atMs": 530.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 357.2
+    },
+    {
+     "atMs": 546.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 357.7
+    },
+    {
+     "atMs": 563.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 357.9
+    },
+    {
+     "atMs": 580.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 358
+    }
+   ]
+  },
+  {
+   "path": "phone-touch",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -0.8,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 18.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 1,
+     "w": 358
+    },
+    {
+     "atMs": 32.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0.001,
+     "w": 3.6
+    },
+    {
+     "atMs": 49.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.278,
+     "w": 102
+    },
+    {
+     "atMs": 65.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.507,
+     "w": 183.5
+    },
+    {
+     "atMs": 82.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.679,
+     "w": 244.5
+    },
+    {
+     "atMs": 99.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.798,
+     "w": 286.5
+    },
+    {
+     "atMs": 115.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.876,
+     "w": 314.5
+    },
+    {
+     "atMs": 132.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.927,
+     "w": 332.4
+    }
+   ]
+  },
+  {
+   "path": "phone-touch",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -1.1,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 19.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 1,
+     "w": 358
+    },
+    {
+     "atMs": 32.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0.001,
+     "w": 3.6
+    },
+    {
+     "atMs": 48.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.269,
+     "w": 99.2
+    },
+    {
+     "atMs": 65.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.502,
+     "w": 181.4
+    },
+    {
+     "atMs": 82.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.674,
+     "w": 242.7
+    },
+    {
+     "atMs": 98.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.795,
+     "w": 285.5
+    },
+    {
+     "atMs": 115.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.875,
+     "w": 314
+    },
+    {
+     "atMs": 132.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.926,
+     "w": 331.9
+    }
+   ]
+  },
+  {
+   "path": "phone-touch",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -3,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 13.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 30.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 46.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 63.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 80.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 97,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 113.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 130.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 146.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 163.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 180.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 197,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 213.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 230.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 246.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 263.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 280.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 297,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 313.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 330.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 347,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 363.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 380.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 397,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 453.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 340.1
+    },
+    {
+     "atMs": 456.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 340.1
+    },
+    {
+     "atMs": 464,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.374,
+     "w": 346.8
+    },
+    {
+     "atMs": 480.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 351.6
+    },
+    {
+     "atMs": 497.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 354.6
+    },
+    {
+     "atMs": 513.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 356.3
+    },
+    {
+     "atMs": 530.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 357.2
+    },
+    {
+     "atMs": 547.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 357.7
+    },
+    {
+     "atMs": 563.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 357.9
+    },
+    {
+     "atMs": 580.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 358
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-quick",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -14.8,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": -5.8,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 20.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 27.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.374,
+     "w": 348.7
+    },
+    {
+     "atMs": 43.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.643,
+     "w": 353.6
+    },
+    {
+     "atMs": 60.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.81,
+     "w": 356.6
+    },
+    {
+     "atMs": 76.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 93.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 110.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 126.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 143.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-quick",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -13,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": -2.9,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 11.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 27.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 44.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 61,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 77.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 94.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 111.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 127.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 144.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 161.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 177.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 194.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 211,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 227.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 244.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 261.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 277.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 294.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 311.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 327.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 344.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 361.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 377.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 394.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 459.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 462.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 478.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.376,
+     "w": 348.8
+    },
+    {
+     "atMs": 494.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.643,
+     "w": 353.6
+    },
+    {
+     "atMs": 511.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 527.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 544.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 561.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 577.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 594.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-quick",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -3,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 10.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 27.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 43.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 60.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 77.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 93.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 110.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 127.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 143.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 160.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 177.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 193.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 210.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 227.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 243.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 260.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 277.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 294,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 310.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 327.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 344,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 360.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 377.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 393.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 453,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 455.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 460.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 348.7
+    },
+    {
+     "atMs": 477.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 493.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 510.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 527.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 544,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 560.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 577.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-quick",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -6.1,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 21.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 26.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 43.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.374,
+     "w": 348.7
+    },
+    {
+     "atMs": 59.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.645,
+     "w": 353.6
+    },
+    {
+     "atMs": 76.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 93,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 109.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 126.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 143,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 159.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-quick",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -6,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 20,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 26.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 348.8
+    },
+    {
+     "atMs": 43.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.643,
+     "w": 353.6
+    },
+    {
+     "atMs": 59.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.81,
+     "w": 356.6
+    },
+    {
+     "atMs": 76.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 93.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 110.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 126.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 143.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-quick",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -3.1,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 10.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 26.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 43.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 60.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 77.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 93.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 110.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 127.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 143.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 160.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 177,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 193.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 210.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 227.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 243.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 260.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 277.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 293.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 310.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 327,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 343.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 360.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 377.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 393.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 459.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 462.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 477.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 348.7
+    },
+    {
+     "atMs": 494,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 510.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 527.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 544,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 560.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 577.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 594,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-keyboard-quick",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -12.3,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 22.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 28.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 39.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.376,
+     "w": 348.8
+    },
+    {
+     "atMs": 56.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.643,
+     "w": 353.6
+    },
+    {
+     "atMs": 72.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 89.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 105.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 121.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 137.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 154.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-keyboard-quick",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -17.6,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": -1.5,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 15.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 32.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 48.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 65.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 82.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 98.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 113.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 130.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 147.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 163.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 180.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 197.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 213.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 230.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 247.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 263.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 280.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 297.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 313.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 330.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 347.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 363.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 380.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 397.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 457.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 460.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 470.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.376,
+     "w": 348.8
+    },
+    {
+     "atMs": 480.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.643,
+     "w": 353.6
+    },
+    {
+     "atMs": 497.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 513.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 530.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 547.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 564,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 580.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-keyboard-quick",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -13.4,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 4.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 21.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 37.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 54.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 71.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 87.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 104.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 119.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 136.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 153.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 169.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 186.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 203,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 219.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 236.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 253.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 269.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 286.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 303,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 319.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 336.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 353,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 369.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 386.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 403.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 461.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 464.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 470.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 348.7
+    },
+    {
+     "atMs": 486.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 503.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.81,
+     "w": 356.6
+    },
+    {
+     "atMs": 519.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 536.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 553.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 569.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 586.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-keyboard-quick",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -11.9,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 22.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 28.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 39.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.374,
+     "w": 348.7
+    },
+    {
+     "atMs": 57,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 73.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 90.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 106.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 121.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 138.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 154.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-keyboard-quick",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -9.5,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 22,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 27.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 39.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 348.8
+    },
+    {
+     "atMs": 56.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 72.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 89.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 106.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 121.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 138.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 155,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-keyboard-quick",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -13.4,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 4.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 21.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 37.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 54.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 70.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 87.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 104.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 119.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 136.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 153.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 169.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 186.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 203.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 219.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 236.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 253.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 269.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 286.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 303.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 319.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 336.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 353.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 369.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 386.4,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 403.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 457.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 460.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 470.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.376,
+     "w": 348.8
+    },
+    {
+     "atMs": 486.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 503.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.81,
+     "w": 356.6
+    },
+    {
+     "atMs": 520,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 536.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 553.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 569.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 586.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-dwell",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -19.3,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": -2.6,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 21.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 35.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 348.7
+    },
+    {
+     "atMs": 47.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 63.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.81,
+     "w": 356.6
+    },
+    {
+     "atMs": 80.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 97.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 113.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 130.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 147.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-dwell",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -5.1,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 11.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 28.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 46.2,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 61.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 78.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 94.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 156,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 158.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 161.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.376,
+     "w": 348.8
+    },
+    {
+     "atMs": 178.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 194.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 211.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 228.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 245,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 261.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 278.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-dwell",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -5.3,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 11.5,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 28.1,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 44.8,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 61.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 77.9,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 94.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 156.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 159.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 163.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 178.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.374,
+     "w": 348.7
+    },
+    {
+     "atMs": 194.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.643,
+     "w": 353.6
+    },
+    {
+     "atMs": 211.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.81,
+     "w": 356.6
+    },
+    {
+     "atMs": 228.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 244.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 261.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 278.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 294.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-dwell",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -20,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": -3.2,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 36.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 41.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 49.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 348.8
+    },
+    {
+     "atMs": 63.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.643,
+     "w": 353.6
+    },
+    {
+     "atMs": 80.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 96.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 113.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.955,
+     "w": 359.2
+    },
+    {
+     "atMs": 130.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 146.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 163.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-dwell",
+   "build": "main",
+   "first": [
+    {
+     "atMs": -3.8,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 0
+    },
+    {
+     "atMs": 36.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 41.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 46.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.377,
+     "w": 348.8
+    },
+    {
+     "atMs": 63,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 79.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 96.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 113.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 129.7,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 146.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 163.3,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  },
+  {
+   "path": "desktop-mouse-dwell",
+   "build": "pr",
+   "first": [
+    {
+     "atMs": -6.1,
+     "expanded": "false",
+     "videoTime": 0,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 10.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 27.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 44.7,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 60.6,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 77.3,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 94,
+     "expanded": "false",
+     "videoTime": 0.8,
+     "present": false,
+     "visible": false,
+     "opacity": null,
+     "w": null
+    },
+    {
+     "atMs": 192.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 196.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": false,
+     "opacity": 0,
+     "w": 342
+    },
+    {
+     "atMs": 210.9,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.375,
+     "w": 348.7
+    },
+    {
+     "atMs": 227.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.644,
+     "w": 353.6
+    },
+    {
+     "atMs": 244.4,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.811,
+     "w": 356.6
+    },
+    {
+     "atMs": 260.6,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.905,
+     "w": 358.3
+    },
+    {
+     "atMs": 277.5,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.956,
+     "w": 359.2
+    },
+    {
+     "atMs": 294.1,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.981,
+     "w": 359.7
+    },
+    {
+     "atMs": 310.8,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.994,
+     "w": 359.9
+    },
+    {
+     "atMs": 327.2,
+     "expanded": "true",
+     "videoTime": 0.8,
+     "present": true,
+     "visible": true,
+     "opacity": 0.998,
+     "w": 360
+    }
+   ]
+  }
+ ],
+ "seek": [
+  {
+   "build": "main",
+   "pre": "none",
+   "atOpen": 0.8,
+   "later": {
+    "t": 0.8,
+    "log": [
+     "seeking@0.80",
+     "timeupdate@0.80",
+     "seeked@0.80"
+    ]
+   }
+  },
+  {
+   "build": "main",
+   "pre": "hover-then-away",
+   "atOpen": 0.8,
+   "later": {
+    "t": 0.8,
+    "log": [
+     "seeking@0.80",
+     "timeupdate@0.80",
+     "seeked@0.80"
+    ]
+   }
+  },
+  {
+   "build": "main",
+   "pre": "focus-then-blur",
+   "atOpen": 0.8,
+   "later": {
+    "t": 0.8,
+    "log": [
+     "seeking@0.80",
+     "timeupdate@0.80",
+     "seeked@0.80"
+    ]
+   }
+  },
+  {
+   "build": "pr",
+   "pre": "none",
+   "atOpen": 0.8,
+   "later": {
+    "t": 0.8,
+    "log": [
+     "seeking@0.80",
+     "timeupdate@0.80",
+     "seeked@0.80"
+    ]
+   }
+  },
+  {
+   "build": "pr",
+   "pre": "hover-then-away",
+   "atOpen": 0.8,
+   "later": {
+    "t": 0.8,
+    "log": [
+     "seeking@0.80",
+     "timeupdate@0.80",
+     "seeked@0.80"
+    ]
+   }
+  },
+  {
+   "build": "pr",
+   "pre": "focus-then-blur",
+   "atOpen": 0.8,
+   "later": {
+    "t": 0.8,
+    "log": [
+     "seeking@0.80",
+     "timeupdate@0.80",
+     "seeked@0.80"
+    ]
+   }
+  }
+ ]
+}
