@@ -1,0 +1,1490 @@
+{
+ "chromium": "149.0.7827.55",
+ "dpr": 2,
+ "builds": {
+  "main": {
+   "commit": "4b718430e39b8ff3de48c669c869538ed26b9ca0",
+   "environment": "production",
+   "local": false,
+   "matches": true
+  },
+  "main-local": {
+   "commit": "4b718430e39b8ff3de48c669c869538ed26b9ca0",
+   "environment": "local static build",
+   "local": true,
+   "matches": true
+  },
+  "prev": {
+   "commit": "8b0fe8bd8a2e56ee4ad1e2c31eae0a59ca322085",
+   "environment": "local static build",
+   "local": true,
+   "matches": true
+  },
+  "head": {
+   "commit": "952aa599eb35d3784a63413115b48bd2841bf2f9",
+   "environment": "preview",
+   "local": false,
+   "matches": true
+  }
+ },
+ "control": [
+  {
+   "story": "textinput",
+   "identical": true
+  },
+  {
+   "story": "numberinput",
+   "identical": true
+  },
+  {
+   "story": "dateinput",
+   "identical": true
+  },
+  {
+   "story": "timeinput",
+   "identical": true
+  },
+  {
+   "story": "datetimeinput",
+   "identical": true
+  },
+  {
+   "story": "multiselector",
+   "identical": true
+  }
+ ],
+ "hover": [
+  {
+   "build": "main",
+   "story": "dateinput-themed-clear-icon",
+   "tokens": {
+    "accent": "rgb(27, 27, 27)",
+    "iconSecondary": "rgb(106, 106, 106)"
+   },
+   "before": {
+    "color": "rgb(106, 106, 106)",
+    "icon": {
+     "l": 1239,
+     "t": 50,
+     "r": 1251,
+     "b": 62
+    },
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66
+    }
+   },
+   "after": {
+    "color": "rgb(27, 27, 27)",
+    "iconHover": true,
+    "hit": "path",
+    "hitIsIconOrInside": true
+   },
+   "frame": "main-1-hover-dateinput-themed-clear-icon.png"
+  },
+  {
+   "build": "prev",
+   "story": "dateinput-themed-clear-icon",
+   "tokens": {
+    "accent": "rgb(27, 27, 27)",
+    "iconSecondary": "rgb(106, 106, 106)"
+   },
+   "before": {
+    "color": "rgb(106, 106, 106)",
+    "icon": {
+     "l": 1239,
+     "t": 50,
+     "r": 1251,
+     "b": 62
+    },
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66
+    }
+   },
+   "after": {
+    "color": "rgb(106, 106, 106)",
+    "iconHover": false,
+    "hit": "button.astryx-input-clear-button",
+    "hitIsIconOrInside": false
+   },
+   "frame": "prev-1-hover-dateinput-themed-clear-icon.png"
+  },
+  {
+   "build": "head",
+   "story": "dateinput-themed-clear-icon",
+   "tokens": {
+    "accent": "rgb(27, 27, 27)",
+    "iconSecondary": "rgb(106, 106, 106)"
+   },
+   "before": {
+    "color": "rgb(106, 106, 106)",
+    "icon": {
+     "l": 1239,
+     "t": 50,
+     "r": 1251,
+     "b": 62
+    },
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66
+    }
+   },
+   "after": {
+    "color": "rgb(27, 27, 27)",
+    "iconHover": true,
+    "hit": "path",
+    "hitIsIconOrInside": true
+   },
+   "frame": "head-1-hover-dateinput-themed-clear-icon.png"
+  },
+  {
+   "build": "main",
+   "story": "selector-themed-icons",
+   "tokens": {
+    "accent": "rgb(27, 27, 27)",
+    "iconSecondary": "rgb(106, 106, 106)"
+   },
+   "before": {
+    "color": "rgb(106, 106, 106)",
+    "icon": {
+     "l": 714,
+     "t": 456,
+     "r": 726,
+     "b": 468
+    },
+    "button": {
+     "l": 710,
+     "t": 452,
+     "r": 730,
+     "b": 472
+    }
+   },
+   "after": {
+    "color": "rgb(27, 27, 27)",
+    "iconHover": true,
+    "hit": "path",
+    "hitIsIconOrInside": true
+   },
+   "frame": "main-1-hover-selector-themed-icons.png"
+  },
+  {
+   "build": "prev",
+   "story": "selector-themed-icons",
+   "tokens": {
+    "accent": "rgb(27, 27, 27)",
+    "iconSecondary": "rgb(106, 106, 106)"
+   },
+   "before": {
+    "color": "rgb(106, 106, 106)",
+    "icon": {
+     "l": 714,
+     "t": 456,
+     "r": 726,
+     "b": 468
+    },
+    "button": {
+     "l": 710,
+     "t": 452,
+     "r": 730,
+     "b": 472
+    }
+   },
+   "after": {
+    "color": "rgb(106, 106, 106)",
+    "iconHover": false,
+    "hit": "button.astryx-input-clear-button",
+    "hitIsIconOrInside": false
+   },
+   "frame": "prev-1-hover-selector-themed-icons.png"
+  },
+  {
+   "build": "head",
+   "story": "selector-themed-icons",
+   "tokens": {
+    "accent": "rgb(27, 27, 27)",
+    "iconSecondary": "rgb(106, 106, 106)"
+   },
+   "before": {
+    "color": "rgb(106, 106, 106)",
+    "icon": {
+     "l": 714,
+     "t": 456,
+     "r": 726,
+     "b": 468
+    },
+    "button": {
+     "l": 710,
+     "t": 452,
+     "r": 730,
+     "b": 472
+    }
+   },
+   "after": {
+    "color": "rgb(27, 27, 27)",
+    "iconHover": true,
+    "hit": "path",
+    "hitIsIconOrInside": true
+   },
+   "frame": "head-1-hover-selector-themed-icons.png"
+  }
+ ],
+ "rest": [
+  {
+   "story": "textinput",
+   "dir": "ltr",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "textinput",
+   "dir": "ltr",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "textinput",
+   "dir": "rtl",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "textinput",
+   "dir": "rtl",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "numberinput",
+   "dir": "ltr",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "numberinput",
+   "dir": "ltr",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "numberinput",
+   "dir": "rtl",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "numberinput",
+   "dir": "rtl",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "dateinput",
+   "dir": "ltr",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "dateinput",
+   "dir": "ltr",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "dateinput",
+   "dir": "rtl",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "dateinput",
+   "dir": "rtl",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "timeinput",
+   "dir": "ltr",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "timeinput",
+   "dir": "ltr",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "timeinput",
+   "dir": "rtl",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "timeinput",
+   "dir": "rtl",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "datetimeinput",
+   "dir": "ltr",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "datetimeinput",
+   "dir": "ltr",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "datetimeinput",
+   "dir": "rtl",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "datetimeinput",
+   "dir": "rtl",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "multiselector",
+   "dir": "ltr",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "multiselector",
+   "dir": "ltr",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "multiselector",
+   "dir": "rtl",
+   "scheme": "light",
+   "identical": true,
+   "differ": null
+  },
+  {
+   "story": "multiselector",
+   "dir": "rtl",
+   "scheme": "dark",
+   "identical": true,
+   "differ": null
+  }
+ ],
+ "sweep": [
+  {
+   "story": "textinput",
+   "mode": "390-touch",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031,
+    "frame": "main-3-touch-textinput.png",
+    "bandFrame": "main-3-touch-band-textinput.png"
+   },
+   "head": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031,
+    "frame": "head-3-touch-textinput.png",
+    "bandFrame": "head-3-touch-band-textinput.png"
+   },
+   "identical": true
+  },
+  {
+   "story": "textinput",
+   "mode": "390-touch",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031
+   },
+   "identical": true
+  },
+  {
+   "story": "textinput",
+   "mode": "1280-mouse",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 1234.5,
+     "t": 45.5,
+     "r": 1255,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 1234.5,
+     "t": 44,
+     "r": 1259,
+     "b": 68,
+     "w": 24.5,
+     "h": 24
+    },
+    "points": 2343
+   },
+   "identical": false
+  },
+  {
+   "story": "textinput",
+   "mode": "1280-mouse",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 46,
+     "r": 45,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 24.5,
+     "t": 45.5,
+     "r": 45,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 46,
+     "r": 45,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 21,
+     "t": 44,
+     "r": 45,
+     "b": 68,
+     "w": 24,
+     "h": 24
+    },
+    "points": 2303
+   },
+   "identical": false
+  },
+  {
+   "story": "numberinput",
+   "mode": "390-touch",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031,
+    "frame": "main-3-touch-numberinput.png",
+    "bandFrame": "main-3-touch-band-numberinput.png"
+   },
+   "head": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031,
+    "frame": "head-3-touch-numberinput.png",
+    "bandFrame": "head-3-touch-band-numberinput.png"
+   },
+   "identical": true
+  },
+  {
+   "story": "numberinput",
+   "mode": "390-touch",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031
+   },
+   "identical": true
+  },
+  {
+   "story": "numberinput",
+   "mode": "1280-mouse",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 1234.5,
+     "t": 45.5,
+     "r": 1255,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 1234.5,
+     "t": 44,
+     "r": 1259,
+     "b": 68,
+     "w": 24.5,
+     "h": 24
+    },
+    "points": 2343
+   },
+   "identical": false
+  },
+  {
+   "story": "numberinput",
+   "mode": "1280-mouse",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 46,
+     "r": 45,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 24.5,
+     "t": 45.5,
+     "r": 45,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 46,
+     "r": 45,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 21,
+     "t": 44,
+     "r": 45,
+     "b": 68,
+     "w": 24,
+     "h": 24
+    },
+    "points": 2303
+   },
+   "identical": false
+  },
+  {
+   "story": "dateinput",
+   "mode": "390-touch",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031,
+    "frame": "main-3-touch-dateinput.png",
+    "bandFrame": "main-3-touch-band-dateinput.png"
+   },
+   "head": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031,
+    "frame": "head-3-touch-dateinput.png",
+    "bandFrame": "head-3-touch-band-dateinput.png"
+   },
+   "identical": true
+  },
+  {
+   "story": "dateinput",
+   "mode": "390-touch",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031
+   },
+   "identical": true
+  },
+  {
+   "story": "dateinput",
+   "mode": "1280-mouse",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 1234.5,
+     "t": 45.5,
+     "r": 1255,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 1234.5,
+     "t": 44,
+     "r": 1259,
+     "b": 68,
+     "w": 24.5,
+     "h": 24
+    },
+    "points": 2343
+   },
+   "identical": false
+  },
+  {
+   "story": "dateinput",
+   "mode": "1280-mouse",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 46,
+     "r": 45,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 24.5,
+     "t": 45.5,
+     "r": 45,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 46,
+     "r": 45,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 21,
+     "t": 44,
+     "r": 45,
+     "b": 68,
+     "w": 24,
+     "h": 24
+    },
+    "points": 2303
+   },
+   "identical": false
+  },
+  {
+   "story": "timeinput",
+   "mode": "390-touch",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031,
+    "frame": "main-3-touch-timeinput.png",
+    "bandFrame": "main-3-touch-band-timeinput.png"
+   },
+   "head": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031,
+    "frame": "head-3-touch-timeinput.png",
+    "bandFrame": "head-3-touch-band-timeinput.png"
+   },
+   "identical": true
+  },
+  {
+   "story": "timeinput",
+   "mode": "390-touch",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 82,
+     "w": 34,
+     "h": 37
+    },
+    "points": 5031
+   },
+   "identical": true
+  },
+  {
+   "story": "timeinput",
+   "mode": "1280-mouse",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 1234.5,
+     "t": 45.5,
+     "r": 1255,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 1235,
+     "t": 46,
+     "r": 1255,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 1234.5,
+     "t": 44,
+     "r": 1259,
+     "b": 68,
+     "w": 24.5,
+     "h": 24
+    },
+    "points": 2343
+   },
+   "identical": false
+  },
+  {
+   "story": "timeinput",
+   "mode": "1280-mouse",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 46,
+     "r": 45,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 24.5,
+     "t": 45.5,
+     "r": 45,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 46,
+     "r": 45,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 21,
+     "t": 44,
+     "r": 45,
+     "b": 68,
+     "w": 24,
+     "h": 24
+    },
+    "points": 2303
+   },
+   "identical": false
+  },
+  {
+   "story": "datetimeinput",
+   "mode": "390-touch",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 79,
+     "w": 34,
+     "h": 34
+    },
+    "points": 4623,
+    "frame": "main-3-touch-datetimeinput.png",
+    "bandFrame": "main-3-touch-band-datetimeinput.png"
+   },
+   "head": {
+    "button": {
+     "l": 345,
+     "t": 50,
+     "r": 365,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 343,
+     "t": 45,
+     "r": 377,
+     "b": 79,
+     "w": 34,
+     "h": 34
+    },
+    "points": 4623,
+    "frame": "head-3-touch-datetimeinput.png",
+    "bandFrame": "head-3-touch-band-datetimeinput.png"
+   },
+   "identical": true
+  },
+  {
+   "story": "datetimeinput",
+   "mode": "390-touch",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 79,
+     "w": 34,
+     "h": 34
+    },
+    "points": 4623
+   },
+   "head": {
+    "button": {
+     "l": 25,
+     "t": 50,
+     "r": 45,
+     "b": 70,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 13,
+     "t": 45,
+     "r": 47,
+     "b": 79,
+     "w": 34,
+     "h": 34
+    },
+    "points": 4623
+   },
+   "identical": true
+  },
+  {
+   "story": "datetimeinput",
+   "mode": "1280-mouse",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 607,
+     "t": 46,
+     "r": 627,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 606.5,
+     "t": 45.5,
+     "r": 627,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 607,
+     "t": 46,
+     "r": 627,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 606.5,
+     "t": 44,
+     "r": 631,
+     "b": 68,
+     "w": 24.5,
+     "h": 24
+    },
+    "points": 2343
+   },
+   "identical": false
+  },
+  {
+   "story": "datetimeinput",
+   "mode": "1280-mouse",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 653,
+     "t": 46,
+     "r": 673,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 652.5,
+     "t": 45.5,
+     "r": 673,
+     "b": 66,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 653,
+     "t": 46,
+     "r": 673,
+     "b": 66,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 649,
+     "t": 44,
+     "r": 673,
+     "b": 68,
+     "w": 24,
+     "h": 24
+    },
+    "points": 2303
+   },
+   "identical": false
+  },
+  {
+   "story": "multiselector",
+   "mode": "390-touch",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 288,
+     "t": 454,
+     "r": 308,
+     "b": 474,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 286,
+     "t": 449,
+     "r": 310,
+     "b": 486,
+     "w": 24,
+     "h": 37
+    },
+    "points": 3551,
+    "frame": "main-3-touch-multiselector.png",
+    "bandFrame": "main-3-touch-band-multiselector.png"
+   },
+   "head": {
+    "button": {
+     "l": 288,
+     "t": 454,
+     "r": 308,
+     "b": 474,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 286,
+     "t": 449,
+     "r": 310,
+     "b": 486,
+     "w": 24,
+     "h": 37
+    },
+    "points": 3551,
+    "frame": "head-3-touch-multiselector.png",
+    "bandFrame": "head-3-touch-band-multiselector.png"
+   },
+   "identical": true
+  },
+  {
+   "story": "multiselector",
+   "mode": "390-touch",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 82,
+     "t": 454,
+     "r": 102,
+     "b": 474,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 80,
+     "t": 449,
+     "r": 104,
+     "b": 486,
+     "w": 24,
+     "h": 37
+    },
+    "points": 3551
+   },
+   "head": {
+    "button": {
+     "l": 82,
+     "t": 454,
+     "r": 102,
+     "b": 474,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 80,
+     "t": 449,
+     "r": 104,
+     "b": 486,
+     "w": 24,
+     "h": 37
+    },
+    "points": 3551
+   },
+   "identical": true
+  },
+  {
+   "story": "multiselector",
+   "mode": "1280-mouse",
+   "dir": "ltr",
+   "main": {
+    "button": {
+     "l": 733,
+     "t": 452,
+     "r": 753,
+     "b": 472,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 732.5,
+     "t": 451.5,
+     "r": 753,
+     "b": 472,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 733,
+     "t": 452,
+     "r": 753,
+     "b": 472,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 732.5,
+     "t": 450,
+     "r": 757,
+     "b": 474,
+     "w": 24.5,
+     "h": 24
+    },
+    "points": 2343
+   },
+   "identical": false
+  },
+  {
+   "story": "multiselector",
+   "mode": "1280-mouse",
+   "dir": "rtl",
+   "main": {
+    "button": {
+     "l": 527,
+     "t": 452,
+     "r": 547,
+     "b": 472,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 526.5,
+     "t": 451.5,
+     "r": 547,
+     "b": 472,
+     "w": 20.5,
+     "h": 20.5
+    },
+    "points": 1681
+   },
+   "head": {
+    "button": {
+     "l": 527,
+     "t": 452,
+     "r": 547,
+     "b": 472,
+     "w": 20,
+     "h": 20
+    },
+    "band": {
+     "l": 523,
+     "t": 450,
+     "r": 547,
+     "b": 474,
+     "w": 24,
+     "h": 24
+    },
+    "points": 2303
+   },
+   "identical": false
+  }
+ ]
+}
