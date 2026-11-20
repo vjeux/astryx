@@ -1,0 +1,9618 @@
+{
+ "base": "77a11ae0d2305c3f261190161248853f5741b52b",
+ "head": "bfe2b0d7675c6b5257860677d9083bae7666717f",
+ "anywhereReference": "4fe955001e45bc2a7bc4c5837d80be4c78124ff4",
+ "versions": {
+  "main": {
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "environment": "production"
+  },
+  "pr": {
+   "commit": "bfe2b0d7675c6b5257860677d9083bae7666717f",
+   "environment": "preview"
+  }
+ },
+ "minWidthVersions": {
+  "main": {
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "environment": "production"
+  },
+  "breakword": {
+   "commit": "bfe2b0d7675c6b5257860677d9083bae7666717f",
+   "environment": "preview"
+  },
+  "anywhere": {
+   "commit": "4fe955001e45bc2a7bc4c5837d80be4c78124ff4",
+   "environment": "preview"
+  }
+ },
+ "stories": [
+  "core-fileinput--default",
+  "core-fileinput--dropzone-mode"
+ ],
+ "browser": "Chromium, Chrome for Testing 149.0.7827.55",
+ "playwright": "1.61.1",
+ "load": "Box load average (1 min): about 5 to 14 during the runs, on 166 cores.",
+ "headFramesByteIdenticalToAnywhere": 28,
+ "stills": [
+  {
+   "key": "narrow--desktop--light--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 2562,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 282,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 345
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 38
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 280
+      },
+      "scrollWidth": 90,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag",
+        "left": 81,
+        "right": 141.7,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 6.7
+       },
+       {
+        "text": "files",
+        "left": 81,
+        "right": 130.8,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       },
+       {
+        "text": "here",
+        "left": 81,
+        "right": 137.05,
+        "top": 149,
+        "bottom": 180,
+        "pastRight": 2.05
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 105.91,
+        "top": 189,
+        "bottom": 220,
+        "pastRight": 0
+       },
+       {
+        "text": "click",
+        "left": 81,
+        "right": 135.45,
+        "top": 229,
+        "bottom": 260,
+        "pastRight": 0.45
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 104.36,
+        "top": 269,
+        "bottom": 300,
+        "pastRight": 0
+       },
+       {
+        "text": "browse",
+        "left": 81,
+        "right": 171.27,
+        "top": 309,
+        "bottom": 340,
+        "pastRight": 36.27
+       }
+      ],
+      "inlineOverflow": 36.27,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 154 > clientWidth 118",
+     "span scrollWidth 90 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 522,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 585
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 38
+      },
+      "brokenWords": [
+       {
+        "word": "Drag",
+        "parts": [
+         "Dr",
+         "ag"
+        ]
+       },
+       {
+        "word": "files",
+        "parts": [
+         "file",
+         "s"
+        ]
+       },
+       {
+        "word": "here",
+        "parts": [
+         "he",
+         "re"
+        ]
+       },
+       {
+        "word": "click",
+        "parts": [
+         "cli",
+         "ck"
+        ]
+       },
+       {
+        "word": "browse",
+        "parts": [
+         "br",
+         "ow",
+         "se"
+        ]
+       }
+      ],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 520
+      },
+      "scrollWidth": 38,
+      "clientWidth": 38,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Dr",
+        "left": 81,
+        "right": 110.55,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       },
+       {
+        "text": "ag",
+        "left": 81,
+        "right": 112.16,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 116.8,
+        "top": 149,
+        "bottom": 180,
+        "pastRight": 0
+       },
+       {
+        "text": "s",
+        "left": 81,
+        "right": 95,
+        "top": 189,
+        "bottom": 220,
+        "pastRight": 0
+       },
+       {
+        "text": "he",
+        "left": 81,
+        "right": 112.16,
+        "top": 229,
+        "bottom": 260,
+        "pastRight": 0
+       },
+       {
+        "text": "re",
+        "left": 81,
+        "right": 105.91,
+        "top": 269,
+        "bottom": 300,
+        "pastRight": 0
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 105.91,
+        "top": 309,
+        "bottom": 340,
+        "pastRight": 0
+       },
+       {
+        "text": "cli",
+        "left": 81,
+        "right": 107.45,
+        "top": 349,
+        "bottom": 380,
+        "pastRight": 0
+       },
+       {
+        "text": "ck",
+        "left": 81,
+        "right": 109,
+        "top": 389,
+        "bottom": 420,
+        "pastRight": 0
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 104.36,
+        "top": 429,
+        "bottom": 460,
+        "pastRight": 0
+       },
+       {
+        "text": "br",
+        "left": 81,
+        "right": 105.91,
+        "top": 469,
+        "bottom": 500,
+        "pastRight": 0
+       },
+       {
+        "text": "ow",
+        "left": 81,
+        "right": 116.8,
+        "top": 509,
+        "bottom": 540,
+        "pastRight": 0
+       },
+       {
+        "text": "se",
+        "left": 81,
+        "right": 110.58,
+        "top": 549,
+        "bottom": 580,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "narrow--desktop--dark--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 2507,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 282,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 345
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 38
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 280
+      },
+      "scrollWidth": 90,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag",
+        "left": 81,
+        "right": 141.7,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 6.7
+       },
+       {
+        "text": "files",
+        "left": 81,
+        "right": 130.8,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       },
+       {
+        "text": "here",
+        "left": 81,
+        "right": 137.05,
+        "top": 149,
+        "bottom": 180,
+        "pastRight": 2.05
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 105.91,
+        "top": 189,
+        "bottom": 220,
+        "pastRight": 0
+       },
+       {
+        "text": "click",
+        "left": 81,
+        "right": 135.45,
+        "top": 229,
+        "bottom": 260,
+        "pastRight": 0.45
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 104.36,
+        "top": 269,
+        "bottom": 300,
+        "pastRight": 0
+       },
+       {
+        "text": "browse",
+        "left": 81,
+        "right": 171.27,
+        "top": 309,
+        "bottom": 340,
+        "pastRight": 36.27
+       }
+      ],
+      "inlineOverflow": 36.27,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 154 > clientWidth 118",
+     "span scrollWidth 90 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 522,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 585
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 38
+      },
+      "brokenWords": [
+       {
+        "word": "Drag",
+        "parts": [
+         "Dr",
+         "ag"
+        ]
+       },
+       {
+        "word": "files",
+        "parts": [
+         "file",
+         "s"
+        ]
+       },
+       {
+        "word": "here",
+        "parts": [
+         "he",
+         "re"
+        ]
+       },
+       {
+        "word": "click",
+        "parts": [
+         "cli",
+         "ck"
+        ]
+       },
+       {
+        "word": "browse",
+        "parts": [
+         "br",
+         "ow",
+         "se"
+        ]
+       }
+      ],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 520
+      },
+      "scrollWidth": 38,
+      "clientWidth": 38,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Dr",
+        "left": 81,
+        "right": 110.55,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       },
+       {
+        "text": "ag",
+        "left": 81,
+        "right": 112.16,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 116.8,
+        "top": 149,
+        "bottom": 180,
+        "pastRight": 0
+       },
+       {
+        "text": "s",
+        "left": 81,
+        "right": 95,
+        "top": 189,
+        "bottom": 220,
+        "pastRight": 0
+       },
+       {
+        "text": "he",
+        "left": 81,
+        "right": 112.16,
+        "top": 229,
+        "bottom": 260,
+        "pastRight": 0
+       },
+       {
+        "text": "re",
+        "left": 81,
+        "right": 105.91,
+        "top": 269,
+        "bottom": 300,
+        "pastRight": 0
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 105.91,
+        "top": 309,
+        "bottom": 340,
+        "pastRight": 0
+       },
+       {
+        "text": "cli",
+        "left": 81,
+        "right": 107.45,
+        "top": 349,
+        "bottom": 380,
+        "pastRight": 0
+       },
+       {
+        "text": "ck",
+        "left": 81,
+        "right": 109,
+        "top": 389,
+        "bottom": 420,
+        "pastRight": 0
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 104.36,
+        "top": 429,
+        "bottom": 460,
+        "pastRight": 0
+       },
+       {
+        "text": "br",
+        "left": 81,
+        "right": 105.91,
+        "top": 469,
+        "bottom": 500,
+        "pastRight": 0
+       },
+       {
+        "text": "ow",
+        "left": 81,
+        "right": 116.8,
+        "top": 509,
+        "bottom": 540,
+        "pastRight": 0
+       },
+       {
+        "text": "se",
+        "left": 81,
+        "right": 110.58,
+        "top": 549,
+        "bottom": 580,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "narrow--phone--light--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 16575,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 338,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 409
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 38
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 336
+      },
+      "scrollWidth": 103,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag",
+        "left": 81,
+        "right": 150.36,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 15.36
+       },
+       {
+        "text": "files",
+        "left": 81,
+        "right": 137.91,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 2.91
+       },
+       {
+        "text": "here",
+        "left": 81,
+        "right": 145.05,
+        "top": 175,
+        "bottom": 211,
+        "pastRight": 10.05
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 109.45,
+        "top": 223,
+        "bottom": 259,
+        "pastRight": 0
+       },
+       {
+        "text": "click",
+        "left": 81,
+        "right": 143.22,
+        "top": 271,
+        "bottom": 307,
+        "pastRight": 8.22
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 107.69,
+        "top": 319,
+        "bottom": 355,
+        "pastRight": 0
+       },
+       {
+        "text": "browse",
+        "left": 81,
+        "right": 184.16,
+        "top": 367,
+        "bottom": 403,
+        "pastRight": 49.16
+       }
+      ],
+      "inlineOverflow": 49.16,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 167 > clientWidth 118",
+     "span scrollWidth 103 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 674,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 745
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 38
+      },
+      "brokenWords": [
+       {
+        "word": "Drag",
+        "parts": [
+         "Dr",
+         "ag"
+        ]
+       },
+       {
+        "word": "files",
+        "parts": [
+         "fil",
+         "es"
+        ]
+       },
+       {
+        "word": "here",
+        "parts": [
+         "he",
+         "re"
+        ]
+       },
+       {
+        "word": "click",
+        "parts": [
+         "cli",
+         "ck"
+        ]
+       },
+       {
+        "word": "browse",
+        "parts": [
+         "br",
+         "o",
+         "w",
+         "se"
+        ]
+       }
+      ],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 672
+      },
+      "scrollWidth": 38,
+      "clientWidth": 38,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Dr",
+        "left": 81,
+        "right": 114.77,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "ag",
+        "left": 81,
+        "right": 116.59,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       },
+       {
+        "text": "fil",
+        "left": 81,
+        "right": 104.11,
+        "top": 175,
+        "bottom": 211,
+        "pastRight": 0
+       },
+       {
+        "text": "es",
+        "left": 81,
+        "right": 114.8,
+        "top": 223,
+        "bottom": 259,
+        "pastRight": 0
+       },
+       {
+        "text": "he",
+        "left": 81,
+        "right": 116.59,
+        "top": 271,
+        "bottom": 307,
+        "pastRight": 0
+       },
+       {
+        "text": "re",
+        "left": 81,
+        "right": 109.45,
+        "top": 319,
+        "bottom": 355,
+        "pastRight": 0
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 109.45,
+        "top": 367,
+        "bottom": 403,
+        "pastRight": 0
+       },
+       {
+        "text": "cli",
+        "left": 81,
+        "right": 111.22,
+        "top": 415,
+        "bottom": 451,
+        "pastRight": 0
+       },
+       {
+        "text": "ck",
+        "left": 81,
+        "right": 113,
+        "top": 463,
+        "bottom": 499,
+        "pastRight": 0
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 107.69,
+        "top": 511,
+        "bottom": 547,
+        "pastRight": 0
+       },
+       {
+        "text": "br",
+        "left": 81,
+        "right": 109.45,
+        "top": 559,
+        "bottom": 595,
+        "pastRight": 0
+       },
+       {
+        "text": "o",
+        "left": 81,
+        "right": 98.8,
+        "top": 607,
+        "bottom": 643,
+        "pastRight": 0
+       },
+       {
+        "text": "w",
+        "left": 81,
+        "right": 104.11,
+        "top": 655,
+        "bottom": 691,
+        "pastRight": 0
+       },
+       {
+        "text": "se",
+        "left": 81,
+        "right": 114.8,
+        "top": 703,
+        "bottom": 739,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "narrow--phone--dark--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 16532,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 338,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 409
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 38
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 336
+      },
+      "scrollWidth": 103,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Drag",
+        "left": 81,
+        "right": 150.36,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 15.36
+       },
+       {
+        "text": "files",
+        "left": 81,
+        "right": 137.91,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 2.91
+       },
+       {
+        "text": "here",
+        "left": 81,
+        "right": 145.05,
+        "top": 175,
+        "bottom": 211,
+        "pastRight": 10.05
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 109.45,
+        "top": 223,
+        "bottom": 259,
+        "pastRight": 0
+       },
+       {
+        "text": "click",
+        "left": 81,
+        "right": 143.22,
+        "top": 271,
+        "bottom": 307,
+        "pastRight": 8.22
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 107.69,
+        "top": 319,
+        "bottom": 355,
+        "pastRight": 0
+       },
+       {
+        "text": "browse",
+        "left": 81,
+        "right": 184.16,
+        "top": 367,
+        "bottom": 403,
+        "pastRight": 49.16
+       }
+      ],
+      "inlineOverflow": 49.16,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 167 > clientWidth 118",
+     "span scrollWidth 103 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 674,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 745
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 38
+      },
+      "brokenWords": [
+       {
+        "word": "Drag",
+        "parts": [
+         "Dr",
+         "ag"
+        ]
+       },
+       {
+        "word": "files",
+        "parts": [
+         "fil",
+         "es"
+        ]
+       },
+       {
+        "word": "here",
+        "parts": [
+         "he",
+         "re"
+        ]
+       },
+       {
+        "word": "click",
+        "parts": [
+         "cli",
+         "ck"
+        ]
+       },
+       {
+        "word": "browse",
+        "parts": [
+         "br",
+         "o",
+         "w",
+         "se"
+        ]
+       }
+      ],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 672
+      },
+      "scrollWidth": 38,
+      "clientWidth": 38,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Dr",
+        "left": 81,
+        "right": 114.77,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "ag",
+        "left": 81,
+        "right": 116.59,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       },
+       {
+        "text": "fil",
+        "left": 81,
+        "right": 104.11,
+        "top": 175,
+        "bottom": 211,
+        "pastRight": 0
+       },
+       {
+        "text": "es",
+        "left": 81,
+        "right": 114.8,
+        "top": 223,
+        "bottom": 259,
+        "pastRight": 0
+       },
+       {
+        "text": "he",
+        "left": 81,
+        "right": 116.59,
+        "top": 271,
+        "bottom": 307,
+        "pastRight": 0
+       },
+       {
+        "text": "re",
+        "left": 81,
+        "right": 109.45,
+        "top": 319,
+        "bottom": 355,
+        "pastRight": 0
+       },
+       {
+        "text": "or",
+        "left": 81,
+        "right": 109.45,
+        "top": 367,
+        "bottom": 403,
+        "pastRight": 0
+       },
+       {
+        "text": "cli",
+        "left": 81,
+        "right": 111.22,
+        "top": 415,
+        "bottom": 451,
+        "pastRight": 0
+       },
+       {
+        "text": "ck",
+        "left": 81,
+        "right": 113,
+        "top": 463,
+        "bottom": 499,
+        "pastRight": 0
+       },
+       {
+        "text": "to",
+        "left": 81,
+        "right": 107.69,
+        "top": 511,
+        "bottom": 547,
+        "pastRight": 0
+       },
+       {
+        "text": "br",
+        "left": 81,
+        "right": 109.45,
+        "top": 559,
+        "bottom": 595,
+        "pastRight": 0
+       },
+       {
+        "text": "o",
+        "left": 81,
+        "right": 98.8,
+        "top": 607,
+        "bottom": 643,
+        "pastRight": 0
+       },
+       {
+        "text": "w",
+        "left": 81,
+        "right": 104.11,
+        "top": 655,
+        "bottom": 691,
+        "pastRight": 0
+       },
+       {
+        "text": "se",
+        "left": 81,
+        "right": 114.8,
+        "top": 703,
+        "bottom": 739,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "narrow--default-prompt--desktop--light--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "default",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 1172,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 82,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 145
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 79.38,
+       "contentBox": 38
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 80
+      },
+      "scrollWidth": 97,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose",
+        "left": 81,
+        "right": 177.52,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 42.52
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 116.8,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 42.52,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 161 > clientWidth 118",
+     "span scrollWidth 97 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 162,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 225
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 79.38,
+       "contentBox": 38
+      },
+      "brokenWords": [
+       {
+        "word": "Choose",
+        "parts": [
+         "Ch",
+         "oo",
+         "se"
+        ]
+       }
+      ],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 160
+      },
+      "scrollWidth": 38,
+      "clientWidth": 38,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Ch",
+        "left": 81,
+        "right": 116.8,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       },
+       {
+        "text": "oo",
+        "left": 81,
+        "right": 112.16,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       },
+       {
+        "text": "se",
+        "left": 81,
+        "right": 110.58,
+        "top": 149,
+        "bottom": 180,
+        "pastRight": 0
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 116.8,
+        "top": 189,
+        "bottom": 220,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "narrow--default-prompt--desktop--dark--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "default",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 1147,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 82,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 145
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 79.38,
+       "contentBox": 38
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 80
+      },
+      "scrollWidth": 97,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose",
+        "left": 81,
+        "right": 177.52,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 42.52
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 116.8,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 42.52,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 161 > clientWidth 118",
+     "span scrollWidth 97 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 162,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 225
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 79.38,
+       "contentBox": 38
+      },
+      "brokenWords": [
+       {
+        "word": "Choose",
+        "parts": [
+         "Ch",
+         "oo",
+         "se"
+        ]
+       }
+      ],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 38,
+       "h": 160
+      },
+      "scrollWidth": 38,
+      "clientWidth": 38,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Ch",
+        "left": 81,
+        "right": 116.8,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       },
+       {
+        "text": "oo",
+        "left": 81,
+        "right": 112.16,
+        "top": 109,
+        "bottom": 140,
+        "pastRight": 0
+       },
+       {
+        "text": "se",
+        "left": 81,
+        "right": 110.58,
+        "top": 149,
+        "bottom": 180,
+        "pastRight": 0
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 116.8,
+        "top": 189,
+        "bottom": 220,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "narrow--default-prompt--phone--light--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "default",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 8579,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 90.7,
+       "contentBox": 38
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 96
+      },
+      "scrollWidth": 110,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose",
+        "left": 81,
+        "right": 191.3,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 56.3
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 121.91,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 56.3,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 174 > clientWidth 118",
+     "span scrollWidth 110 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 290,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 361
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 90.7,
+       "contentBox": 38
+      },
+      "brokenWords": [
+       {
+        "word": "Choose",
+        "parts": [
+         "C",
+         "ho",
+         "os",
+         "e"
+        ]
+       },
+       {
+        "word": "file",
+        "parts": [
+         "fil",
+         "e"
+        ]
+       }
+      ],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 288
+      },
+      "scrollWidth": 38,
+      "clientWidth": 38,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "C",
+        "left": 81,
+        "right": 104.11,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "ho",
+        "left": 81,
+        "right": 116.59,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       },
+       {
+        "text": "os",
+        "left": 81,
+        "right": 114.8,
+        "top": 175,
+        "bottom": 211,
+        "pastRight": 0
+       },
+       {
+        "text": "e",
+        "left": 81,
+        "right": 98.8,
+        "top": 223,
+        "bottom": 259,
+        "pastRight": 0
+       },
+       {
+        "text": "fil",
+        "left": 81,
+        "right": 104.11,
+        "top": 271,
+        "bottom": 307,
+        "pastRight": 0
+       },
+       {
+        "text": "e",
+        "left": 81,
+        "right": 98.8,
+        "top": 319,
+        "bottom": 355,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "narrow--default-prompt--phone--dark--text-200--w120",
+   "cond": {
+    "group": "narrow",
+    "story": "input",
+    "prompt": "default",
+    "device": "phone",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": false
+   },
+   "fullPageDifferingPixels": 8565,
+   "fullPageByteIdentical": false,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 90.7,
+       "contentBox": 38
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 96
+      },
+      "scrollWidth": 110,
+      "clientWidth": 38,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "Choose",
+        "left": 81,
+        "right": 191.3,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 56.3
+       },
+       {
+        "text": "file",
+        "left": 81,
+        "right": 121.91,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 56.3,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 174 > clientWidth 118",
+     "span scrollWidth 110 > clientWidth 38"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 290,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 361
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Choose file",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 90.7,
+       "contentBox": 38
+      },
+      "brokenWords": [
+       {
+        "word": "Choose",
+        "parts": [
+         "C",
+         "ho",
+         "os",
+         "e"
+        ]
+       },
+       {
+        "word": "file",
+        "parts": [
+         "fil",
+         "e"
+        ]
+       }
+      ],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 38,
+       "h": 288
+      },
+      "scrollWidth": 38,
+      "clientWidth": 38,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "C",
+        "left": 81,
+        "right": 104.11,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "ho",
+        "left": 81,
+        "right": 116.59,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       },
+       {
+        "text": "os",
+        "left": 81,
+        "right": 114.8,
+        "top": 175,
+        "bottom": 211,
+        "pastRight": 0
+       },
+       {
+        "text": "e",
+        "left": 81,
+        "right": 98.8,
+        "top": 223,
+        "bottom": 259,
+        "pastRight": 0
+       },
+       {
+        "text": "fil",
+        "left": 81,
+        "right": 104.11,
+        "top": 271,
+        "bottom": 307,
+        "pastRight": 0
+       },
+       {
+        "text": "e",
+        "left": 81,
+        "right": 98.8,
+        "top": 319,
+        "bottom": 355,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "defaults--desktop--light--text-100",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "100",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 24.13,
+       "threeCharsAndEllipsis": 36.56,
+       "contentBox": 1206
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1206,
+       "h": 20
+      },
+      "scrollWidth": 1206,
+      "clientWidth": 1206,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 252.08,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 24.13,
+       "threeCharsAndEllipsis": 36.56,
+       "contentBox": 1206
+      },
+      "brokenWords": [],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1206,
+       "h": 20
+      },
+      "scrollWidth": 1206,
+      "clientWidth": 1206,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 252.08,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "defaults--desktop--light--text-200",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 1166
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1166,
+       "h": 40
+      },
+      "scrollWidth": 1166,
+      "clientWidth": 1166,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 1166
+      },
+      "brokenWords": [],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1166,
+       "h": 40
+      },
+      "scrollWidth": 1166,
+      "clientWidth": 1166,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "defaults--phone--light--text-100",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "100",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 27.56,
+       "threeCharsAndEllipsis": 41.78,
+       "contentBox": 316
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 316,
+       "h": 24
+      },
+      "scrollWidth": 316,
+      "clientWidth": 316,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 281.09,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 27.56,
+       "threeCharsAndEllipsis": 41.78,
+       "contentBox": 316
+      },
+      "brokenWords": [],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 316,
+       "h": 24
+      },
+      "scrollWidth": 316,
+      "clientWidth": 316,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 281.09,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "defaults--phone--light--text-200",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 276
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 276,
+       "h": 96
+      },
+      "scrollWidth": 276,
+      "clientWidth": 276,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 81,
+        "right": 326.44,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 81,
+        "right": 290.84,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 276
+      },
+      "brokenWords": [],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 276,
+       "h": 96
+      },
+      "scrollWidth": 276,
+      "clientWidth": 276,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 81,
+        "right": 326.44,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 81,
+        "right": 290.84,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "defaults--desktop--dark--text-100",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "100",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 24.13,
+       "threeCharsAndEllipsis": 36.56,
+       "contentBox": 1206
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1206,
+       "h": 20
+      },
+      "scrollWidth": 1206,
+      "clientWidth": 1206,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 252.08,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 24.13,
+       "threeCharsAndEllipsis": 36.56,
+       "contentBox": 1206
+      },
+      "brokenWords": [],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1206,
+       "h": 20
+      },
+      "scrollWidth": 1206,
+      "clientWidth": 1206,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 252.08,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "defaults--desktop--dark--text-200",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 1166
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1166,
+       "h": 40
+      },
+      "scrollWidth": 1166,
+      "clientWidth": 1166,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 1166
+      },
+      "brokenWords": [],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1166,
+       "h": 40
+      },
+      "scrollWidth": 1166,
+      "clientWidth": 1166,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 81,
+        "right": 487.16,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "dropzone--dropzone--desktop--light--text-200",
+   "cond": {
+    "group": "dropzone",
+    "story": "dropzone",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 194,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 257
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 406
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 436.92,
+       "y": 169,
+       "w": 406.16,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 406,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 436.92,
+        "right": 843.08,
+        "top": 173,
+        "bottom": 204,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 194,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 257
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 406
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 436.92,
+       "y": 169,
+       "w": 406.16,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 406,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 436.92,
+        "right": 843.08,
+        "top": 173,
+        "bottom": 204,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "dropzone--dropzone--phone--light--text-200",
+   "cond": {
+    "group": "dropzone",
+    "story": "dropzone",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 250,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 321
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 292
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 49,
+       "y": 177,
+       "w": 292,
+       "h": 96
+      },
+      "scrollWidth": 292,
+      "clientWidth": 292,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 72.28,
+        "right": 317.72,
+        "top": 183,
+        "bottom": 219,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 90.08,
+        "right": 299.92,
+        "top": 231,
+        "bottom": 267,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 250,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 321
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 292
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 49,
+       "y": 177,
+       "w": 292,
+       "h": 96
+      },
+      "scrollWidth": 292,
+      "clientWidth": 292,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 72.28,
+        "right": 317.72,
+        "top": 183,
+        "bottom": 219,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 90.08,
+        "right": 299.92,
+        "top": 231,
+        "bottom": 267,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "dropzone--dropzone--desktop--dark--text-200",
+   "cond": {
+    "group": "dropzone",
+    "story": "dropzone",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 194,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 257
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 406
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 436.92,
+       "y": 169,
+       "w": 406.16,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 406,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 436.92,
+        "right": 843.08,
+        "top": 173,
+        "bottom": 204,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 194,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 257
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 48.23,
+       "threeCharsAndEllipsis": 73.13,
+       "contentBox": 406
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "28px",
+      "span": {
+       "x": 436.92,
+       "y": 169,
+       "w": 406.16,
+       "h": 40
+      },
+      "scrollWidth": 406,
+      "clientWidth": 406,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 436.92,
+        "right": 843.08,
+        "top": 173,
+        "bottom": 204,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--desktop--light--text-100--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "100",
+    "width": null,
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 21.8,
+       "threeCharsAndEllipsis": 37.36,
+       "contentBox": 1178
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1178,
+       "h": 20
+      },
+      "scrollWidth": 1178,
+      "clientWidth": 1178,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 49,
+        "right": 168.06,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 40,
+     "w": 1248,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 41,
+      "bottom": 71
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 14,
+       "oneCharAndEllipsis": 21.8,
+       "threeCharsAndEllipsis": 37.36,
+       "contentBox": 1178
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "14px",
+      "span": {
+       "x": 49,
+       "y": 46,
+       "w": 1178,
+       "h": 20
+      },
+      "scrollWidth": 1178,
+      "clientWidth": 1178,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 49,
+        "right": 168.06,
+        "top": 48,
+        "bottom": 64,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--desktop--light--text-200--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 1130
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1130,
+       "h": 40
+      },
+      "scrollWidth": 1130,
+      "clientWidth": 1130,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 1248,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 1263,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 1248,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 1130
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 1130,
+       "h": 40
+      },
+      "scrollWidth": 1130,
+      "clientWidth": 1130,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--desktop--light--text-200--w120--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 15.58,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 2
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 2,
+       "h": 40
+      },
+      "scrollWidth": 238,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 238 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 15.58,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 2
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 2,
+       "h": 40
+      },
+      "scrollWidth": 238,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 238 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--phone--light--text-100--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "100",
+    "width": null,
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 24.91,
+       "threeCharsAndEllipsis": 42.7,
+       "contentBox": 288
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 288,
+       "h": 24
+      },
+      "scrollWidth": 288,
+      "clientWidth": 288,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 49,
+        "right": 185.06,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 360 > clientWidth 356",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 24.91,
+       "threeCharsAndEllipsis": 42.7,
+       "contentBox": 288
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 288,
+       "h": 24
+      },
+      "scrollWidth": 288,
+      "clientWidth": 288,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 49,
+        "right": 185.06,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "div scrollWidth 360 > clientWidth 356",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "file--phone--light--text-200--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": null,
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "quarterly-repo…",
+      "cutInfo": {
+       "charsShown": 14,
+       "keepsFirstCharacter": false,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": null,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 32
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 240
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 240,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 240,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 240",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "quarterly-repo…",
+      "cutInfo": {
+       "charsShown": 14,
+       "keepsFirstCharacter": false,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": null,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 32
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 240
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 240,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 240,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 240",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "file--phone--light--text-200--w120--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "light",
+    "size": "200",
+    "width": "120px",
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 2
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 2,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 2
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 2,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "defaults--phone--dark--text-100",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "dark",
+    "size": "100",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 27.56,
+       "threeCharsAndEllipsis": 41.78,
+       "contentBox": 316
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 316,
+       "h": 24
+      },
+      "scrollWidth": 316,
+      "clientWidth": 316,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 281.09,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 44,
+     "w": 358,
+     "h": 32,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 45,
+      "bottom": 75
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "16px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 16,
+       "oneCharAndEllipsis": 27.56,
+       "threeCharsAndEllipsis": 41.78,
+       "contentBox": 316
+      },
+      "brokenWords": [],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "16px",
+      "span": {
+       "x": 49,
+       "y": 48,
+       "w": 316,
+       "h": 24
+      },
+      "scrollWidth": 316,
+      "clientWidth": 316,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or click to browse",
+        "left": 49,
+        "right": 281.09,
+        "top": 51,
+        "bottom": 68,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "defaults--phone--dark--text-200",
+   "cond": {
+    "group": "defaults",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "dark",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 276
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 276,
+       "h": 96
+      },
+      "scrollWidth": 276,
+      "clientWidth": 276,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 81,
+        "right": 326.44,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 81,
+        "right": 290.84,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 98,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 169
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 276
+      },
+      "brokenWords": [],
+      "overflowWrap": "break-word",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 276,
+       "h": 96
+      },
+      "scrollWidth": 276,
+      "clientWidth": 276,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 81,
+        "right": 326.44,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 81,
+        "right": 290.84,
+        "top": 127,
+        "bottom": 163,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "dropzone--dropzone--phone--dark--text-200",
+   "cond": {
+    "group": "dropzone",
+    "story": "dropzone",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "dark",
+    "size": "200",
+    "width": null,
+    "file": false
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 250,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 321
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 292
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 49,
+       "y": 177,
+       "w": 292,
+       "h": 96
+      },
+      "scrollWidth": 292,
+      "clientWidth": 292,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 72.28,
+        "right": 317.72,
+        "top": 183,
+        "bottom": 219,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 90.08,
+        "right": 299.92,
+        "top": 231,
+        "bottom": 267,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 358,
+     "h": 250,
+     "inner": {
+      "left": 17,
+      "right": 373,
+      "top": 73,
+      "bottom": 321
+     }
+    },
+    "parentWidth": 358,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "Drag files here or click to browse",
+      "visibleLabel": null,
+      "cutInfo": null,
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 55.11,
+       "threeCharsAndEllipsis": 83.56,
+       "contentBox": 292
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "normal",
+      "overflowX": "visible",
+      "textOverflow": "clip",
+      "fontSize": "32px",
+      "span": {
+       "x": 49,
+       "y": 177,
+       "w": 292,
+       "h": 96
+      },
+      "scrollWidth": 292,
+      "clientWidth": 292,
+      "isCut": false,
+      "lines": [
+       {
+        "text": "Drag files here or",
+        "left": 72.28,
+        "right": 317.72,
+        "top": 183,
+        "bottom": 219,
+        "pastRight": 0
+       },
+       {
+        "text": "click to browse",
+        "left": 90.08,
+        "right": 299.92,
+        "top": 231,
+        "bottom": 267,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  },
+  {
+   "key": "file--desktop--dark--text-200--w120--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "desktop",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 15.58,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 2
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 2,
+       "h": 40
+      },
+      "scrollWidth": 238,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 238 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 64,
+     "w": 120,
+     "h": 42,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 65,
+      "bottom": 105
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 15.58,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 28,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 28,
+       "oneCharAndEllipsis": 43.58,
+       "threeCharsAndEllipsis": 74.72,
+       "contentBox": 2
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "28px",
+      "span": {
+       "x": 81,
+       "y": 65,
+       "w": 2,
+       "h": 40
+      },
+      "scrollWidth": 238,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 319.11,
+        "top": 69,
+        "bottom": 100,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 238 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 26 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 1280,
+     "clientWidth": 1280
+    }
+   }
+  },
+  {
+   "key": "file--phone--dark--text-200--w120--file",
+   "cond": {
+    "group": "file",
+    "story": "input",
+    "prompt": "story",
+    "device": "phone",
+    "mode": "dark",
+    "size": "200",
+    "width": "120px",
+    "file": true
+   },
+   "fullPageDifferingPixels": 0,
+   "fullPageByteIdentical": true,
+   "main": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 2
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 2,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   },
+   "pr": {
+    "field": {
+     "x": 16,
+     "y": 72,
+     "w": 120,
+     "h": 50,
+     "inner": {
+      "left": 17,
+      "right": 135,
+      "top": 73,
+      "bottom": 121
+     }
+    },
+    "parentWidth": 120,
+    "rootFontSize": "32px",
+    "texts": [
+     {
+      "text": "quarterly-report.pdf",
+      "visibleLabel": "q…",
+      "cutInfo": {
+       "charsShown": 1,
+       "keepsFirstCharacter": true,
+       "firstCharWidth": 17.8,
+       "firstCharShownPx": 2,
+       "ellipsisWidth": 32,
+       "ellipsisShownPx": 0
+      },
+      "fitWidths": {
+       "ellipsis": 32,
+       "oneCharAndEllipsis": 49.8,
+       "threeCharsAndEllipsis": 85.39,
+       "contentBox": 2
+      },
+      "brokenWords": [],
+      "overflowWrap": "normal",
+      "wordBreak": "normal",
+      "whiteSpace": "nowrap",
+      "overflowX": "hidden",
+      "textOverflow": "ellipsis",
+      "fontSize": "32px",
+      "span": {
+       "x": 81,
+       "y": 73,
+       "w": 2,
+       "h": 48
+      },
+      "scrollWidth": 272,
+      "clientWidth": 2,
+      "isCut": true,
+      "lines": [
+       {
+        "text": "quarterly-report.pdf",
+        "left": 81,
+        "right": 353.13,
+        "top": 79,
+        "bottom": 115,
+        "pastRight": 0
+       }
+      ],
+      "inlineOverflow": 0,
+      "blockOverflow": 0
+     }
+    ],
+    "scrollFindings": [
+     "span scrollWidth 272 > clientWidth 2",
+     "button[Clear Upload file] scrollWidth 32 > clientWidth 20",
+     "span scrollWidth 26 > clientWidth 20"
+    ],
+    "doc": {
+     "scrollWidth": 390,
+     "clientWidth": 390
+    }
+   }
+  }
+ ],
+ "interest": [
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "keyboard--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-prompt--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 0,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 0,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 1,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 1,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 2,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 2,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 3,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 3,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 4,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 282,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 345
+    }
+   }
+  },
+  {
+   "case": "hover--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 4,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 13,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "file",
+      "s"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "ow",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 522,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 585
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 0,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 0,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 1,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 1,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 2,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 2,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 3,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 3,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "main",
+   "run": 4,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 82,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 145
+    }
+   }
+  },
+  {
+   "case": "hover--default-prompt--w120",
+   "how": "hover",
+   "build": "pr",
+   "run": 4,
+   "focused": {
+    "tag": "body",
+    "inField": false,
+    "label": null,
+    "focusVisible": false
+   },
+   "start": {
+    "type": "pointerover",
+    "tag": "div"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 4,
+   "promptBrokenWords": [
+    {
+     "word": "Choose",
+     "parts": [
+      "Ch",
+      "oo",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 120,
+    "h": 162,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 65,
+     "bottom": 225
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 1,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 64,
+    "w": 1248,
+    "h": 42,
+    "inner": {
+     "left": 17,
+     "right": 1263,
+     "top": 65,
+     "bottom": 105
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 338,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 409
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 14,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "fil",
+      "es"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "o",
+      "w",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 674,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 745
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 14,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "fil",
+      "es"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "o",
+      "w",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 674,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 745
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 338,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 409
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 338,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 409
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 14,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "fil",
+      "es"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "o",
+      "w",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 674,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 745
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 14,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "fil",
+      "es"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "o",
+      "w",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 674,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 745
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 338,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 409
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "main",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": true,
+   "promptLines": 7,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 338,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 409
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--w120",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 14,
+   "promptBrokenWords": [
+    {
+     "word": "Drag",
+     "parts": [
+      "Dr",
+      "ag"
+     ]
+    },
+    {
+     "word": "files",
+     "parts": [
+      "fil",
+      "es"
+     ]
+    },
+    {
+     "word": "here",
+     "parts": [
+      "he",
+      "re"
+     ]
+    },
+    {
+     "word": "click",
+     "parts": [
+      "cli",
+      "ck"
+     ]
+    },
+    {
+     "word": "browse",
+     "parts": [
+      "br",
+      "o",
+      "w",
+      "se"
+     ]
+    }
+   ],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 120,
+    "h": 674,
+    "inner": {
+     "left": 17,
+     "right": 135,
+     "top": 73,
+     "bottom": 745
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 0,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 1,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 2,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 3,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "main",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  },
+  {
+   "case": "keyboard--phone--default-width",
+   "how": "keyboard",
+   "build": "pr",
+   "run": 4,
+   "focused": {
+    "tag": "button",
+    "inField": true,
+    "label": "Upload file",
+    "focusVisible": true
+   },
+   "start": {
+    "type": "focusin",
+    "tag": "button"
+   },
+   "firstVisibleMs": null,
+   "firstVisibleOpacity": null,
+   "fullOpacityMs": null,
+   "tooltipCount": 0,
+   "flash": false,
+   "position": null,
+   "promptCut": false,
+   "promptLines": 2,
+   "promptBrokenWords": [],
+   "field": {
+    "x": 16,
+    "y": 72,
+    "w": 358,
+    "h": 98,
+    "inner": {
+     "left": 17,
+     "right": 373,
+     "top": 73,
+     "bottom": 169
+    }
+   }
+  }
+ ],
+ "minWidth": [
+  {
+   "build": "main",
+   "device": "desktop",
+   "prompt": "story",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 87.13,
+    "fieldHeight": 111.97,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 45.13,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 87.13
+   },
+   "still": "min-content--desktop--light--text-100--main.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 87.13,
+    "fieldHeight": 111.97,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 45.13,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 87.13
+   },
+   "max-content": {
+    "fieldWidth": 245.08,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 203.08,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 245.08
+   }
+  },
+  {
+   "build": "main",
+   "device": "desktop",
+   "prompt": "story",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 172.27,
+    "fieldHeight": 202,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 90.27,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 172.27
+   },
+   "still": "min-content--desktop--light--text-200--main.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 172.27,
+    "fieldHeight": 202,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 90.27,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 172.27
+   },
+   "max-content": {
+    "fieldWidth": 488.16,
+    "fieldHeight": 42,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 406.16,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 488.16
+   }
+  },
+  {
+   "build": "main",
+   "device": "desktop",
+   "prompt": "default",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 90.27,
+    "fieldHeight": 51.97,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 48.27,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 90.27
+   },
+   "still": "min-content--default-prompt--desktop--light--text-100--main.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 90.27,
+    "fieldHeight": 51.97,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 48.27,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 90.27
+   },
+   "max-content": {
+    "fieldWidth": 112.05,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 70.05,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 112.05
+   }
+  },
+  {
+   "build": "main",
+   "device": "desktop",
+   "prompt": "default",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 178.52,
+    "fieldHeight": 82,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 96.52,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 178.52
+   },
+   "still": "min-content--default-prompt--desktop--light--text-200--main.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 178.52,
+    "fieldHeight": 82,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 96.52,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 178.52
+   },
+   "max-content": {
+    "fieldWidth": 222.09,
+    "fieldHeight": 42,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 140.09,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 222.09
+   }
+  },
+  {
+   "build": "main",
+   "device": "phone",
+   "prompt": "story",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 93.58,
+    "fieldHeight": 128,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 51.58,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 93.58
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 93.58,
+    "fieldHeight": 128,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 51.58,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 93.58
+   },
+   "max-content": {
+    "fieldWidth": 274.09,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 232.09,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 274.09
+   }
+  },
+  {
+   "build": "main",
+   "device": "phone",
+   "prompt": "story",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 185.16,
+    "fieldHeight": 242,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 103.16,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 185.16
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 185.16,
+    "fieldHeight": 242,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 103.16,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 185.16
+   },
+   "max-content": {
+    "fieldWidth": 546.17,
+    "fieldHeight": 50,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 464.17,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 546.17
+   }
+  },
+  {
+   "build": "main",
+   "device": "phone",
+   "prompt": "default",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 97.16,
+    "fieldHeight": 56,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 55.16,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 97.16
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 97.16,
+    "fieldHeight": 56,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 55.16,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 97.16
+   },
+   "max-content": {
+    "fieldWidth": 122.05,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 80.05,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 122.05
+   }
+  },
+  {
+   "build": "main",
+   "device": "phone",
+   "prompt": "default",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 192.3,
+    "fieldHeight": 98,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 110.3,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 192.3
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 192.3,
+    "fieldHeight": 98,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 110.3,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 192.3
+   },
+   "max-content": {
+    "fieldWidth": 242.09,
+    "fieldHeight": 50,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 160.09,
+    "overflowWrap": "normal",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 242.09
+   }
+  },
+  {
+   "build": "head",
+   "device": "desktop",
+   "prompt": "story",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 87.13,
+    "fieldHeight": 111.97,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 45.13,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 87.13
+   },
+   "still": "min-content--desktop--light--text-100--pr.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 87.13,
+    "fieldHeight": 111.97,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 45.13,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 87.13
+   },
+   "max-content": {
+    "fieldWidth": 245.08,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 203.08,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 245.08
+   }
+  },
+  {
+   "build": "head",
+   "device": "desktop",
+   "prompt": "story",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 172.27,
+    "fieldHeight": 202,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 90.27,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 172.27
+   },
+   "still": "min-content--desktop--light--text-200--pr.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 172.27,
+    "fieldHeight": 202,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 90.27,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 172.27
+   },
+   "max-content": {
+    "fieldWidth": 488.16,
+    "fieldHeight": 42,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 406.16,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 488.16
+   }
+  },
+  {
+   "build": "head",
+   "device": "desktop",
+   "prompt": "default",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 90.27,
+    "fieldHeight": 51.97,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 48.27,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 90.27
+   },
+   "still": "min-content--default-prompt--desktop--light--text-100--pr.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 90.27,
+    "fieldHeight": 51.97,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 48.27,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 90.27
+   },
+   "max-content": {
+    "fieldWidth": 112.05,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 70.05,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 112.05
+   }
+  },
+  {
+   "build": "head",
+   "device": "desktop",
+   "prompt": "default",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 178.52,
+    "fieldHeight": 82,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 96.52,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 178.52
+   },
+   "still": "min-content--default-prompt--desktop--light--text-200--pr.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 178.52,
+    "fieldHeight": 82,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 96.52,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 178.52
+   },
+   "max-content": {
+    "fieldWidth": 222.09,
+    "fieldHeight": 42,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 140.09,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 222.09
+   }
+  },
+  {
+   "build": "head",
+   "device": "phone",
+   "prompt": "story",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 93.58,
+    "fieldHeight": 128,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 51.58,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 93.58
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 93.58,
+    "fieldHeight": 128,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 51.58,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 93.58
+   },
+   "max-content": {
+    "fieldWidth": 274.09,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 232.09,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 274.09
+   }
+  },
+  {
+   "build": "head",
+   "device": "phone",
+   "prompt": "story",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 185.16,
+    "fieldHeight": 242,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 103.16,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 185.16
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 185.16,
+    "fieldHeight": 242,
+    "promptLines": 5,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 103.16,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 185.16
+   },
+   "max-content": {
+    "fieldWidth": 546.17,
+    "fieldHeight": 50,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 464.17,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 546.17
+   }
+  },
+  {
+   "build": "head",
+   "device": "phone",
+   "prompt": "default",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 97.16,
+    "fieldHeight": 56,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 55.16,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 97.16
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 97.16,
+    "fieldHeight": 56,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 55.16,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 97.16
+   },
+   "max-content": {
+    "fieldWidth": 122.05,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 80.05,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 122.05
+   }
+  },
+  {
+   "build": "head",
+   "device": "phone",
+   "prompt": "default",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 192.3,
+    "fieldHeight": 98,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 110.3,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 192.3
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 192.3,
+    "fieldHeight": 98,
+    "promptLines": 2,
+    "prompt": "Choose file",
+    "promptWidth": 110.3,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 192.3
+   },
+   "max-content": {
+    "fieldWidth": 242.09,
+    "fieldHeight": 50,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 160.09,
+    "overflowWrap": "break-word",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 242.09
+   }
+  },
+  {
+   "build": "anywhere",
+   "device": "desktop",
+   "prompt": "story",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 52.13,
+    "fieldHeight": 491.97,
+    "promptLines": 24,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 10.13,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 52.13
+   },
+   "still": "min-content--desktop--light--text-100--anywhere.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 52.13,
+    "fieldHeight": 491.97,
+    "promptLines": 24,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 10.13,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 52.13
+   },
+   "max-content": {
+    "fieldWidth": 245.08,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 203.08,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 245.08
+   }
+  },
+  {
+   "build": "anywhere",
+   "device": "desktop",
+   "prompt": "story",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 102.23,
+    "fieldHeight": 962,
+    "promptLines": 24,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 20.23,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 102.23
+   },
+   "still": "min-content--desktop--light--text-200--anywhere.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 102.23,
+    "fieldHeight": 962,
+    "promptLines": 24,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 20.23,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 102.23
+   },
+   "max-content": {
+    "fieldWidth": 488.16,
+    "fieldHeight": 42,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 406.16,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 488.16
+   }
+  },
+  {
+   "build": "anywhere",
+   "device": "desktop",
+   "prompt": "default",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 52.13,
+    "fieldHeight": 171.97,
+    "promptLines": 8,
+    "prompt": "Choose file",
+    "promptWidth": 10.13,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 52.13
+   },
+   "still": "min-content--default-prompt--desktop--light--text-100--anywhere.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 52.13,
+    "fieldHeight": 171.97,
+    "promptLines": 8,
+    "prompt": "Choose file",
+    "promptWidth": 10.13,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 52.13
+   },
+   "max-content": {
+    "fieldWidth": 112.05,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 70.05,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "14px",
+    "parentWidth": 112.05
+   }
+  },
+  {
+   "build": "anywhere",
+   "device": "desktop",
+   "prompt": "default",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 102.23,
+    "fieldHeight": 322,
+    "promptLines": 8,
+    "prompt": "Choose file",
+    "promptWidth": 20.23,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 102.23
+   },
+   "still": "min-content--default-prompt--desktop--light--text-200--anywhere.png",
+   "inline-block-in-zero": {
+    "fieldWidth": 102.23,
+    "fieldHeight": 322,
+    "promptLines": 8,
+    "prompt": "Choose file",
+    "promptWidth": 20.23,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 102.23
+   },
+   "max-content": {
+    "fieldWidth": 222.09,
+    "fieldHeight": 42,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 140.09,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "28px",
+    "parentWidth": 222.09
+   }
+  },
+  {
+   "build": "anywhere",
+   "device": "phone",
+   "prompt": "story",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 53.56,
+    "fieldHeight": 584,
+    "promptLines": 24,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 11.56,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 53.56
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 53.56,
+    "fieldHeight": 584,
+    "promptLines": 24,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 11.56,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 53.56
+   },
+   "max-content": {
+    "fieldWidth": 274.09,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 232.09,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 274.09
+   }
+  },
+  {
+   "build": "anywhere",
+   "device": "phone",
+   "prompt": "story",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 105.11,
+    "fieldHeight": 1154,
+    "promptLines": 24,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 23.11,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 105.11
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 105.11,
+    "fieldHeight": 1154,
+    "promptLines": 24,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 23.11,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 105.11
+   },
+   "max-content": {
+    "fieldWidth": 546.17,
+    "fieldHeight": 50,
+    "promptLines": 1,
+    "prompt": "Drag files here or click to browse",
+    "promptWidth": 464.17,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 546.17
+   }
+  },
+  {
+   "build": "anywhere",
+   "device": "phone",
+   "prompt": "default",
+   "size": "100",
+   "min-content": {
+    "fieldWidth": 53.56,
+    "fieldHeight": 200,
+    "promptLines": 8,
+    "prompt": "Choose file",
+    "promptWidth": 11.56,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 53.56
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 53.56,
+    "fieldHeight": 200,
+    "promptLines": 8,
+    "prompt": "Choose file",
+    "promptWidth": 11.56,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 53.56
+   },
+   "max-content": {
+    "fieldWidth": 122.05,
+    "fieldHeight": 32,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 80.05,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "16px",
+    "parentWidth": 122.05
+   }
+  },
+  {
+   "build": "anywhere",
+   "device": "phone",
+   "prompt": "default",
+   "size": "200",
+   "min-content": {
+    "fieldWidth": 105.11,
+    "fieldHeight": 386,
+    "promptLines": 8,
+    "prompt": "Choose file",
+    "promptWidth": 23.11,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 105.11
+   },
+   "inline-block-in-zero": {
+    "fieldWidth": 105.11,
+    "fieldHeight": 386,
+    "promptLines": 8,
+    "prompt": "Choose file",
+    "promptWidth": 23.11,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 105.11
+   },
+   "max-content": {
+    "fieldWidth": 242.09,
+    "fieldHeight": 50,
+    "promptLines": 1,
+    "prompt": "Choose file",
+    "promptWidth": 160.09,
+    "overflowWrap": "anywhere",
+    "wordBreak": "normal",
+    "fontSize": "32px",
+    "parentWidth": 242.09
+   }
+  }
+ ],
+ "words": [
+  {
+   "promptBox": 38,
+   "fontSize": "28px",
+   "overflowWrap": "normal",
+   "words": [
+    {
+     "word": "Drag",
+     "width": 60.7,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "files",
+     "width": 49.8,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "here",
+     "width": 56.05,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "or",
+     "width": 24.91,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "click",
+     "width": 54.45,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "to",
+     "width": 23.36,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "browse",
+     "width": 90.27,
+     "linesUsed": 1,
+     "broken": false
+    }
+   ],
+   "build": "main",
+   "device": "desktop",
+   "prompt": "story",
+   "brokenButFits": [],
+   "wholeButWider": [
+    "Drag",
+    "files",
+    "here",
+    "click",
+    "browse"
+   ]
+  },
+  {
+   "promptBox": 38,
+   "fontSize": "28px",
+   "overflowWrap": "normal",
+   "words": [
+    {
+     "word": "Choose",
+     "width": 96.52,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "file",
+     "width": 35.8,
+     "linesUsed": 1,
+     "broken": false
+    }
+   ],
+   "build": "main",
+   "device": "desktop",
+   "prompt": "default",
+   "brokenButFits": [],
+   "wholeButWider": [
+    "Choose"
+   ]
+  },
+  {
+   "promptBox": 38,
+   "fontSize": "32px",
+   "overflowWrap": "normal",
+   "words": [
+    {
+     "word": "Drag",
+     "width": 69.36,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "files",
+     "width": 56.91,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "here",
+     "width": 64.05,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "or",
+     "width": 28.45,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "click",
+     "width": 62.22,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "to",
+     "width": 26.69,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "browse",
+     "width": 103.16,
+     "linesUsed": 1,
+     "broken": false
+    }
+   ],
+   "build": "main",
+   "device": "phone",
+   "prompt": "story",
+   "brokenButFits": [],
+   "wholeButWider": [
+    "Drag",
+    "files",
+    "here",
+    "click",
+    "browse"
+   ]
+  },
+  {
+   "promptBox": 38,
+   "fontSize": "32px",
+   "overflowWrap": "normal",
+   "words": [
+    {
+     "word": "Choose",
+     "width": 110.3,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "file",
+     "width": 40.91,
+     "linesUsed": 1,
+     "broken": false
+    }
+   ],
+   "build": "main",
+   "device": "phone",
+   "prompt": "default",
+   "brokenButFits": [],
+   "wholeButWider": [
+    "Choose",
+    "file"
+   ]
+  },
+  {
+   "promptBox": 38,
+   "fontSize": "28px",
+   "overflowWrap": "break-word",
+   "words": [
+    {
+     "word": "Drag",
+     "width": 60.7,
+     "linesUsed": 2,
+     "broken": true
+    },
+    {
+     "word": "files",
+     "width": 49.8,
+     "linesUsed": 2,
+     "broken": true
+    },
+    {
+     "word": "here",
+     "width": 56.05,
+     "linesUsed": 2,
+     "broken": true
+    },
+    {
+     "word": "or",
+     "width": 24.91,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "click",
+     "width": 54.45,
+     "linesUsed": 2,
+     "broken": true
+    },
+    {
+     "word": "to",
+     "width": 23.36,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "browse",
+     "width": 90.27,
+     "linesUsed": 3,
+     "broken": true
+    }
+   ],
+   "build": "head",
+   "device": "desktop",
+   "prompt": "story",
+   "brokenButFits": [],
+   "wholeButWider": []
+  },
+  {
+   "promptBox": 38,
+   "fontSize": "28px",
+   "overflowWrap": "break-word",
+   "words": [
+    {
+     "word": "Choose",
+     "width": 96.52,
+     "linesUsed": 3,
+     "broken": true
+    },
+    {
+     "word": "file",
+     "width": 35.8,
+     "linesUsed": 1,
+     "broken": false
+    }
+   ],
+   "build": "head",
+   "device": "desktop",
+   "prompt": "default",
+   "brokenButFits": [],
+   "wholeButWider": []
+  },
+  {
+   "promptBox": 38,
+   "fontSize": "32px",
+   "overflowWrap": "break-word",
+   "words": [
+    {
+     "word": "Drag",
+     "width": 69.36,
+     "linesUsed": 2,
+     "broken": true
+    },
+    {
+     "word": "files",
+     "width": 56.91,
+     "linesUsed": 2,
+     "broken": true
+    },
+    {
+     "word": "here",
+     "width": 64.05,
+     "linesUsed": 2,
+     "broken": true
+    },
+    {
+     "word": "or",
+     "width": 28.45,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "click",
+     "width": 62.22,
+     "linesUsed": 2,
+     "broken": true
+    },
+    {
+     "word": "to",
+     "width": 26.69,
+     "linesUsed": 1,
+     "broken": false
+    },
+    {
+     "word": "browse",
+     "width": 103.16,
+     "linesUsed": 4,
+     "broken": true
+    }
+   ],
+   "build": "head",
+   "device": "phone",
+   "prompt": "story",
+   "brokenButFits": [],
+   "wholeButWider": []
+  },
+  {
+   "promptBox": 38,
+   "fontSize": "32px",
+   "overflowWrap": "break-word",
+   "words": [
+    {
+     "word": "Choose",
+     "width": 110.3,
+     "linesUsed": 4,
+     "broken": true
+    },
+    {
+     "word": "file",
+     "width": 40.91,
+     "linesUsed": 2,
+     "broken": true
+    }
+   ],
+   "build": "head",
+   "device": "phone",
+   "prompt": "default",
+   "brokenButFits": [],
+   "wholeButWider": []
+  }
+ ]
+}
