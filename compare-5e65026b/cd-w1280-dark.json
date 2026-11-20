@@ -1,0 +1,5664 @@
+{
+  "page": "course-detail",
+  "config": "w1280",
+  "scheme": "dark",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "deviceScaleFactor": 1,
+  "url": "/templates/course-detail/?embed=1&theme=neutral&mode=dark",
+  "chromium": "149.0.7827.55",
+  "stamp": "5e65026bf6b8d42b4f24958f2b23813fa7333d67",
+  "glyphSignatures": 15,
+  "servedLocally": [
+    "fonts/figtree-latin-400-normal.woff2",
+    "fonts/figtree-latin-500-normal.woff2",
+    "fonts/figtree-latin-600-normal.woff2",
+    "fonts/figtree-latin-700-normal.woff2",
+    "https://fonts.googleapis.com/css2?family=Figtree:wght@400;50… → the neutral theme's fonts.css"
+  ],
+  "blocked": [],
+  "errors": [],
+  "states": [
+    {
+      "id": "01-default",
+      "label": "the default page, top to bottom",
+      "h1": "Applied AI: Build with Language Models",
+      "theme": {
+        "colorScheme": "dark",
+        "themeRoot": "neutral",
+        "bodyBg": "rgba(0, 0, 0, 0)",
+        "h1Font": "Figtree, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+        "loadedFaces": [
+          "Figtree 400",
+          "Figtree 500",
+          "Figtree 600",
+          "Figtree 700"
+        ]
+      },
+      "full": {
+        "files": [
+          "cd-w1280-dark-01-default.png"
+        ],
+        "contentHeight": 4946,
+        "windowHeight": 4946,
+        "windows": 1,
+        "scroller": {
+          "kind": "document",
+          "extra": 0,
+          "top": 0,
+          "clientHeight": 4946,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        }
+      },
+      "focusRings": [
+        {
+          "kind": "toggle",
+          "el": "button \"Save\"",
+          "focusVisible": true,
+          "changedPixels": 521,
+          "p95ChangeRatio": 16.59,
+          "ring": "#f1f1f1",
+          "under": "#121212"
+        },
+        {
+          "kind": "ghost button",
+          "el": "button \"Share\"",
+          "focusVisible": true,
+          "changedPixels": 540,
+          "p95ChangeRatio": 16.59,
+          "ring": "#f1f1f1",
+          "under": "#121212"
+        },
+        {
+          "kind": "link",
+          "el": "a \"How reviews work\"",
+          "focusVisible": true,
+          "changedPixels": 536,
+          "p95ChangeRatio": 13.4,
+          "ring": "#f1f1f1",
+          "under": "#262626"
+        },
+        {
+          "kind": "text input",
+          "el": "input \"Search lessons\"",
+          "focusVisible": true,
+          "changedPixels": 2306,
+          "p95ChangeRatio": 6.92,
+          "ring": "#f1f1f1",
+          "under": "#525252"
+        },
+        {
+          "kind": "segment",
+          "el": "button \"All\"",
+          "focusVisible": true,
+          "changedPixels": 355,
+          "p95ChangeRatio": 13.4,
+          "ring": "#f1f1f1",
+          "under": "#262626"
+        },
+        {
+          "kind": "slider",
+          "el": "div \"\"",
+          "focusVisible": true,
+          "changedPixels": 372,
+          "p95ChangeRatio": 17.22,
+          "ring": "#ffffff",
+          "under": "#1b1b1b"
+        },
+        {
+          "kind": "expander",
+          "el": "button \"Foundations and tooling 3 lessons · 48 m\"",
+          "focusVisible": true,
+          "changedPixels": 2512,
+          "p95ChangeRatio": 13.4,
+          "ring": "#f1f1f1",
+          "under": "#262626"
+        }
+      ],
+      "fits": {
+        "cta": {
+          "x": 100,
+          "y": -81.8,
+          "w": 151.5,
+          "h": 20,
+          "clientWidth": 152,
+          "scrollWidth": 152
+        },
+        "ctaButton": {
+          "x": 64,
+          "y": -87.8,
+          "w": 199.5,
+          "h": 32,
+          "clientWidth": 200,
+          "scrollWidth": 200
+        },
+        "note": {
+          "x": 271.5,
+          "y": -81.8,
+          "w": 209,
+          "h": 20,
+          "clientWidth": 209,
+          "scrollWidth": 209
+        },
+        "noteText": "three preview lessons · no card needed",
+        "noteBelowButton": false,
+        "badges": [
+          {
+            "text": "Preview",
+            "x": 405,
+            "y": 428.2,
+            "w": 42.8,
+            "h": 20,
+            "clientWidth": 43,
+            "scrollWidth": 43
+          },
+          {
+            "text": "Preview",
+            "x": 401.8,
+            "y": 456.2,
+            "w": 42.8,
+            "h": 20,
+            "clientWidth": 43,
+            "scrollWidth": 43
+          },
+          {
+            "text": "Preview",
+            "x": 342.4,
+            "y": 484.2,
+            "w": 42.8,
+            "h": 20,
+            "clientWidth": 43,
+            "scrollWidth": 43
+          }
+        ],
+        "faqBadges": [
+          {
+            "text": "1",
+            "shownArea": 0,
+            "x": 72,
+            "y": 3434.2,
+            "w": 5,
+            "h": 20,
+            "clientWidth": 5,
+            "scrollWidth": 5
+          },
+          {
+            "text": "2",
+            "shownArea": 0,
+            "x": 72,
+            "y": 3498.2,
+            "w": 6.8,
+            "h": 20,
+            "clientWidth": 7,
+            "scrollWidth": 7
+          },
+          {
+            "text": "3",
+            "shownArea": 0,
+            "x": 72,
+            "y": 3538.2,
+            "w": 6.6,
+            "h": 20,
+            "clientWidth": 7,
+            "scrollWidth": 7
+          },
+          {
+            "text": "4",
+            "shownArea": 0,
+            "x": 72,
+            "y": 3578.2,
+            "w": 7.5,
+            "h": 20,
+            "clientWidth": 8,
+            "scrollWidth": 8
+          }
+        ]
+      },
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 4146,
+          "top": 797,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 42,
+          "lines": 202,
+          "icons": 87,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 3,
+          "ownScrollNotByDesign": 2,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 44,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(38, 38, 38)",
+              25
+            ],
+            [
+              "rgb(27, 27, 27)",
+              7
+            ],
+            [
+              "rgb(48, 48, 48)",
+              5
+            ],
+            [
+              "rgb(109, 156, 254)",
+              3
+            ],
+            [
+              "rgb(50, 50, 50)",
+              2
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 164,
+        "pixelChecked": 163,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline HeartIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Save\"",
+          "bg": "#121212",
+          "p95": 9.14,
+          "max": 17.03,
+          "strongest": "#f4f4f4",
+          "drawn": 0.2,
+          "atLeast3": 0.15
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ShareIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Share\"",
+          "bg": "#121212",
+          "p95": 10.3,
+          "max": 16,
+          "strongest": "#ededed",
+          "drawn": 0.23,
+          "atLeast3": 0.17
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ClockIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 10.62,
+          "max": 11.17,
+          "strongest": "#d0d0d0",
+          "drawn": 0.3,
+          "atLeast3": 0.21
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline BookOpenIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 10.08,
+          "max": 14.58,
+          "strongest": "#ececec",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline GlobeAltIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 14.98,
+          "max": 17.08,
+          "strongest": "#fefefe",
+          "drawn": 0.44,
+          "atLeast3": 0.39
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline BoltIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.98,
+          "max": 15.52,
+          "strongest": "#f3f3f3",
+          "drawn": 0.23,
+          "atLeast3": 0.2
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline BookOpenIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"See the preview lessons\"",
+          "bg": "#2a2a2a",
+          "p95": 8.58,
+          "max": 12.26,
+          "strongest": "#ededed",
+          "drawn": 0.33,
+          "atLeast3": 0.31
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline MagnifyingGlassIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 8.86,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.21,
+          "atLeast3": 0.14
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"Foundations and tooling 3 lessons · 48 min\"",
+          "bg": "#262626",
+          "p95": 3.63,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 9.91,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 9.91,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 9.91,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"Retrieval that answers the question 4 lessons · 76 min\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"Structured output you can hand to code 3 lessons · 64 min\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"The evaluation harness 3 lessons · 59 min\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"Ship it: the reviewed project 1 project · review included\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline UsersIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 10.4,
+          "max": 16.08,
+          "strongest": "#f7f7f7",
+          "drawn": 0.35,
+          "atLeast3": 0.26
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline BookOpenIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.67,
+          "max": 14.58,
+          "strongest": "#ececec",
+          "drawn": 0.31,
+          "atLeast3": 0.29
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.47,
+          "max": 16.79,
+          "strongest": "#fcfcfc",
+          "drawn": 0.24,
+          "atLeast3": 0.16
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 5.06,
+          "max": 12.56,
+          "strongest": "#dcdcdc",
+          "drawn": 0.1,
+          "atLeast3": 0.08
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 5.06,
+          "max": 12.56,
+          "strongest": "#dcdcdc",
+          "drawn": 0.1,
+          "atLeast3": 0.08
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 5.06,
+          "max": 12.56,
+          "strongest": "#dcdcdc",
+          "drawn": 0.1,
+          "atLeast3": 0.08
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 5.06,
+          "max": 12.56,
+          "strongest": "#dcdcdc",
+          "drawn": 0.1,
+          "atLeast3": 0.08
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline MagnifyingGlassIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 8.86,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.21,
+          "atLeast3": 0.14
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.34
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.34
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.34
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.34
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.34
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Helpful (41)\"",
+          "bg": "#1b1b1b",
+          "p95": 4.99,
+          "max": 9.88,
+          "strongest": "#c4c4c4",
+          "drawn": 0.1,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Helpful (28)\"",
+          "bg": "#1b1b1b",
+          "p95": 4.99,
+          "max": 9.88,
+          "strongest": "#c4c4c4",
+          "drawn": 0.1,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.67,
+          "max": 16.79,
+          "strongest": "#fcfcfc",
+          "drawn": 0.25,
+          "atLeast3": 0.18
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Helpful (19)\"",
+          "bg": "#1b1b1b",
+          "p95": 4.99,
+          "max": 9.88,
+          "strongest": "#c4c4c4",
+          "drawn": 0.1,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Helpful (33)\"",
+          "bg": "#1b1b1b",
+          "p95": 4.99,
+          "max": 9.88,
+          "strongest": "#c4c4c4",
+          "drawn": 0.1,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ArrowRightIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Enroll now\"",
+          "bg": "#f1f1f1",
+          "p95": 3.5,
+          "max": 16.85,
+          "strongest": "#101010",
+          "drawn": 0.14,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Start lesson one free\"",
+          "bg": "#323232",
+          "p95": 8.56,
+          "max": 12.82,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.67,
+          "max": 16.79,
+          "strongest": "#fcfcfc",
+          "drawn": 0.25,
+          "atLeast3": 0.18
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.57,
+          "max": 16.79,
+          "strongest": "#fcfcfc",
+          "drawn": 0.24,
+          "atLeast3": 0.17
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.57,
+          "max": 16.79,
+          "strongest": "#fcfcfc",
+          "drawn": 0.24,
+          "atLeast3": 0.17
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.67,
+          "max": 16.79,
+          "strongest": "#fcfcfc",
+          "drawn": 0.25,
+          "atLeast3": 0.18
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m9 18 6-6-6-6…",
+          "template": false,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Scroll right\"",
+          "bg": "#1b1b1b",
+          "p95": 5.06,
+          "max": 7.33,
+          "strongest": "#a9a9a9",
+          "drawn": 0.1,
+          "atLeast3": 0.08
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"1 Do I need production access to a language model?\"",
+          "bg": "#262626",
+          "p95": 3.63,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"2 How long do I have access?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"3 What if the course is not right for me?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"4 Is there a certificate?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Start lesson one free\"",
+          "bg": "#f1f1f1",
+          "p95": 9.18,
+          "max": 16.72,
+          "strongest": "#111111",
+          "drawn": 0.15,
+          "atLeast3": 0.1
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ChevronRightIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Apply to teach\"",
+          "bg": "#323232",
+          "p95": 4.33,
+          "max": 6.05,
+          "strongest": "#b2b2b2",
+          "drawn": 0.08,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "toggle",
+          "el": "button \"Save\"",
+          "state": "false",
+          "size": "78.8x28",
+          "shape": {
+            "bg": "#121212",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#121212",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"All\"",
+          "state": "true",
+          "size": "40.4x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1.37,
+            "max": 1.37,
+            "strongest": "#262626",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"5 star\"",
+          "state": "false",
+          "size": "59.4x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"4 star\"",
+          "state": "false",
+          "size": "60.1x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Newest\"",
+          "state": "true",
+          "size": "73.3x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1.37,
+            "max": 1.39,
+            "strongest": "#252525",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Helpful\"",
+          "state": "false",
+          "size": "70x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Self-paced\"",
+          "state": "true",
+          "size": "94x24",
+          "shape": {
+            "bg": "#323232",
+            "p95": 1.18,
+            "max": 1.2,
+            "strongest": "#252525",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Cohort\"",
+          "state": "false",
+          "size": "68.5x24",
+          "shape": {
+            "bg": "#323232",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#323232",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "slider",
+          "el": "div[role=slider] \"\"",
+          "state": null,
+          "size": "20x20",
+          "shape": {
+            "bg": "#1b1b1b",
+            "p95": 15.25,
+            "max": 15.25,
+            "strongest": "#f1f1f1",
+            "drawn": 0.82,
+            "atLeast3": 0.79
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "459.3x8",
+          "fillVsTrack": {
+            "value": "81.15264797507788 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "466.5x8",
+          "fillVsTrack": {
+            "value": "14.485981308411214 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "472.6x8",
+          "fillVsTrack": {
+            "value": "2.959501557632399 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "474.6x8",
+          "fillVsTrack": {
+            "value": "0.9345794392523363 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "481.3x8",
+          "fillVsTrack": {
+            "value": "0.46728971962616817 of 0–100",
+            "fill": null,
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": null,
+            "fillVsBg": null,
+            "trackVsBg": 2.2,
+            "note": "the fill is under 4 px at this value"
+          }
+        },
+        {
+          "kind": "input",
+          "el": "input \"\"",
+          "state": "false",
+          "size": "404.6x32",
+          "boundary": {
+            "element": "div \"\"",
+            "computedBorder": "1px solid rgb(82, 82, 82)",
+            "edge": "#525252",
+            "fill": "#262626",
+            "outside": "#262626",
+            "edgeVsOutside": 1.94,
+            "fillVsOutside": 1
+          }
+        },
+        {
+          "kind": "input",
+          "el": "input \"\"",
+          "state": "false",
+          "size": "214.8x32",
+          "boundary": {
+            "element": "div \"\"",
+            "computedBorder": "1px solid rgb(82, 82, 82)",
+            "edge": "#525252",
+            "fill": "#262626",
+            "outside": "#262626",
+            "edgeVsOutside": 1.94,
+            "fillVsOutside": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "02-save-pressed",
+      "label": "the Save toggle pressed (viewport at the top)",
+      "files": [
+        "cd-w1280-dark-02-save-pressed.png"
+      ],
+      "pressed": "true",
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 4146,
+          "top": 0,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 32,
+          "lines": 202,
+          "icons": 87,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 3,
+          "ownScrollNotByDesign": 2,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 33,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 1,
+          "surfaces": [
+            [
+              "rgb(27, 27, 27)",
+              15
+            ],
+            [
+              "rgb(18, 18, 18)",
+              7
+            ],
+            [
+              "rgb(38, 38, 38)",
+              4
+            ],
+            [
+              "rgb(50, 50, 50)",
+              2
+            ],
+            [
+              "rgb(255, 206, 47)",
+              1
+            ],
+            [
+              "rgb(48, 48, 48)",
+              1
+            ],
+            [
+              "rgb(42, 42, 42)",
+              1
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 33,
+        "pixelChecked": 30,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid HeartIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Save\"",
+          "bg": "#353535",
+          "p95": 12.27,
+          "max": 12.27,
+          "strongest": "#ffffff",
+          "drawn": 0.5,
+          "atLeast3": 0.46
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ShareIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Share\"",
+          "bg": "#121212",
+          "p95": 10.3,
+          "max": 16,
+          "strongest": "#ededed",
+          "drawn": 0.23,
+          "atLeast3": 0.17
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ClockIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 10.62,
+          "max": 11.17,
+          "strongest": "#d0d0d0",
+          "drawn": 0.3,
+          "atLeast3": 0.21
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline BookOpenIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 10.08,
+          "max": 14.58,
+          "strongest": "#ececec",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline GlobeAltIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 14.98,
+          "max": 17.08,
+          "strongest": "#fefefe",
+          "drawn": 0.44,
+          "atLeast3": 0.39
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline BoltIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.98,
+          "max": 15.52,
+          "strongest": "#f3f3f3",
+          "drawn": 0.23,
+          "atLeast3": 0.2
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline BookOpenIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"See the preview lessons\"",
+          "bg": "#2a2a2a",
+          "p95": 8.58,
+          "max": 12.26,
+          "strongest": "#ededed",
+          "drawn": 0.33,
+          "atLeast3": 0.31
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ArrowRightIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Enroll now\"",
+          "bg": "#f1f1f1",
+          "p95": 3.5,
+          "max": 16.85,
+          "strongest": "#101010",
+          "drawn": 0.14,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Start lesson one free\"",
+          "bg": "#323232",
+          "p95": 8.56,
+          "max": 12.82,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "toggle",
+          "el": "button \"Save\"",
+          "state": "true",
+          "size": "78.8x28",
+          "shape": {
+            "bg": "#121212",
+            "p95": 1.53,
+            "max": 1.53,
+            "strongest": "#353535",
+            "drawn": 0.94,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Self-paced\"",
+          "state": "true",
+          "size": "94x24",
+          "shape": {
+            "bg": "#323232",
+            "p95": 1.18,
+            "max": 1.2,
+            "strongest": "#252525",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Cohort\"",
+          "state": "false",
+          "size": "68.5x24",
+          "shape": {
+            "bg": "#323232",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#323232",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "slider",
+          "el": "div[role=slider] \"\"",
+          "state": null,
+          "size": "20x20",
+          "shape": {
+            "bg": "#1b1b1b",
+            "p95": 15.25,
+            "max": 15.25,
+            "strongest": "#f1f1f1",
+            "drawn": 0.82,
+            "atLeast3": 0.79
+          }
+        },
+        {
+          "kind": "text over image",
+          "el": "span \"Save\"",
+          "image": "button \"Save\" background-image",
+          "fg": "rgba(255, 255, 255, 1)",
+          "need": 4.5,
+          "pixels": 544,
+          "min": 12.27,
+          "p05": 12.27,
+          "p50": 12.27,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "id": "03-preview-dialog",
+      "label": "the preview dialog open (viewport)",
+      "files": [
+        "cd-w1280-dark-03-preview-dialog.png"
+      ],
+      "title": "Preview lessons",
+      "lessons": [
+        "Preview lessons",
+        "The three preview lessons are free — no card needed.",
+        "What a language model can and cannot promise",
+        "Free preview",
+        "12 min",
+        "The working setup: SDK, keys, and a scratchpad",
+        "Free preview",
+        "18 min",
+        "Tokens, temperature, and the cost dial",
+        "Free preview",
+        "18 min"
+      ],
+      "dialogBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 800
+      },
+      "dialogFit": {
+        "scrollHeight": 800,
+        "clientHeight": 800,
+        "scrollWidth": 1280,
+        "clientWidth": 1280
+      },
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 4146,
+          "top": 0,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 43,
+          "lines": 213,
+          "icons": 87,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 4,
+          "ownScrollNotByDesign": 3,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Preview lessons The three preview lessons are free — no card\"",
+              "scrollWidth": 1256,
+              "clientWidth": 1248,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": "dialog \"Preview lessons The three preview lessons are free — no card\"",
+          "checked": 45,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(27, 27, 27)",
+              21
+            ],
+            [
+              "rgb(18, 18, 18)",
+              8
+            ],
+            [
+              "rgb(38, 38, 38)",
+              6
+            ],
+            [
+              "rgb(48, 48, 48)",
+              4
+            ],
+            [
+              "rgb(50, 50, 50)",
+              2
+            ],
+            [
+              "rgb(255, 206, 47)",
+              1
+            ],
+            [
+              "rgb(42, 42, 42)",
+              1
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 11,
+        "pixelChecked": 11,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "other path M18 6 6 18…",
+          "template": false,
+          "size": "16x16",
+          "paths": 2,
+          "context": "button \"Close\"",
+          "bg": "#262626",
+          "p95": 15.13,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.2,
+          "atLeast3": 0.2
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 10.94,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.15,
+          "atLeast3": 0.13
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 10.94,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.15,
+          "atLeast3": 0.13
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 10.94,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.15,
+          "atLeast3": 0.13
+        }
+      ]
+    },
+    {
+      "id": "04-syllabus-hit",
+      "label": "syllabus search \"reranker\"",
+      "files": [
+        "cd-w1280-dark-04-syllabus-hit.png"
+      ],
+      "expanded": [
+        "Retrieval that answers the question=true",
+        "1=true",
+        "2=false",
+        "3=false",
+        "4=false"
+      ],
+      "lessons": {
+        "count": 4,
+        "rows": [
+          "Chunking strategies that survive real documents 21 min",
+          "Vector search from first principles 19 min",
+          "Rerankers and the relevance ceiling 18 min",
+          "When the model should say it found nothing 18 min"
+        ]
+      },
+      "announced": [
+        "1 lesson match “reranker”"
+      ],
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 3918,
+          "top": 1041,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 37,
+          "lines": 193,
+          "icons": 74,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 3,
+          "ownScrollNotByDesign": 2,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 39,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(38, 38, 38)",
+              17
+            ],
+            [
+              "rgb(27, 27, 27)",
+              14
+            ],
+            [
+              "rgb(48, 48, 48)",
+              3
+            ],
+            [
+              "rgb(50, 50, 50)",
+              3
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 39,
+        "pixelChecked": 14,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline MagnifyingGlassIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 8.86,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.21,
+          "atLeast3": 0.14
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path M18 6 6 18…",
+          "template": false,
+          "size": "16x16",
+          "paths": 2,
+          "context": "button \"Clear Search lessons\"",
+          "bg": "#262626",
+          "p95": 5.65,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.18,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"Retrieval that answers the question 4 lessons · 76 min\"",
+          "bg": "#262626",
+          "p95": 3.63,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 9.91,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 9.91,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 9.91,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 9.91,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.16,
+          "atLeast3": 0.12
+        },
+        {
+          "kind": "input",
+          "el": "input \"\"",
+          "state": "false",
+          "size": "404.6x32",
+          "boundary": {
+            "element": "div \"\"",
+            "computedBorder": "1px solid rgb(241, 241, 241)",
+            "edge": "#f1f1f1",
+            "fill": "#262626",
+            "outside": "#262626",
+            "edgeVsOutside": 13.4,
+            "fillVsOutside": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "05-syllabus-miss",
+      "label": "syllabus search \"kubernetes\"",
+      "files": [
+        "cd-w1280-dark-05-syllabus-miss.png"
+      ],
+      "missText": 2,
+      "announced": [
+        "No lessons match “kubernetes”"
+      ],
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 3782,
+          "top": 1041,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 29,
+          "lines": 186,
+          "icons": 69,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 3,
+          "ownScrollNotByDesign": 2,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 31,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(27, 27, 27)",
+              14
+            ],
+            [
+              "rgb(38, 38, 38)",
+              9
+            ],
+            [
+              "rgb(48, 48, 48)",
+              3
+            ],
+            [
+              "rgb(50, 50, 50)",
+              3
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 31,
+        "pixelChecked": 5,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline MagnifyingGlassIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 8.86,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.21,
+          "atLeast3": 0.14
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path M18 6 6 18…",
+          "template": false,
+          "size": "16x16",
+          "paths": 2,
+          "context": "button \"Clear Search lessons\"",
+          "bg": "#262626",
+          "p95": 5.65,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.18,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "input",
+          "el": "input \"\"",
+          "state": "false",
+          "size": "404.6x32",
+          "boundary": {
+            "element": "div \"\"",
+            "computedBorder": "1px solid rgb(241, 241, 241)",
+            "edge": "#f1f1f1",
+            "fill": "#262626",
+            "outside": "#262626",
+            "edgeVsOutside": 13.4,
+            "fillVsOutside": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "06-review-sort-newest",
+      "label": "review sort \"Newest\" (after \"Helpful\")",
+      "files": [
+        "cd-w1280-dark-06-review-sort-newest.png"
+      ],
+      "toolbar": {
+        "search": {
+          "x": 64,
+          "y": 384.2,
+          "w": 214.8,
+          "h": 32
+        },
+        "rating": {
+          "x": 290.8,
+          "y": 384.2,
+          "w": 172,
+          "h": 32
+        },
+        "sort": {
+          "x": 474.8,
+          "y": 384.2,
+          "w": 153.2,
+          "h": 32
+        },
+        "sortOnSearchRow": true,
+        "ratingOnSearchRow": true
+      },
+      "orderHelpful": [
+        "Drew Young",
+        "Pablo Morales",
+        "Jihoo Song",
+        "Ana Thomas"
+      ],
+      "orderNewest": [
+        "Drew Young",
+        "Jihoo Song",
+        "Ana Thomas",
+        "Pablo Morales"
+      ],
+      "newestChecked": "true",
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 4146,
+          "top": 2369,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 48,
+          "lines": 202,
+          "icons": 87,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 3,
+          "ownScrollNotByDesign": 2,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 50,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(27, 27, 27)",
+              36
+            ],
+            [
+              "rgb(38, 38, 38)",
+              7
+            ],
+            [
+              "rgb(60, 60, 60)",
+              3
+            ],
+            [
+              "rgb(50, 50, 50)",
+              2
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 64,
+        "pixelChecked": 49,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline MagnifyingGlassIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 8.86,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.21,
+          "atLeast3": 0.14
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Helpful (41)\"",
+          "bg": "#1b1b1b",
+          "p95": 4.99,
+          "max": 9.88,
+          "strongest": "#c4c4c4",
+          "drawn": 0.1,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Helpful (28)\"",
+          "bg": "#1b1b1b",
+          "p95": 4.99,
+          "max": 9.98,
+          "strongest": "#c5c5c5",
+          "drawn": 0.1,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 9.67,
+          "max": 16.79,
+          "strongest": "#fcfcfc",
+          "drawn": 0.25,
+          "atLeast3": 0.18
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Helpful (19)\"",
+          "bg": "#1b1b1b",
+          "p95": 4.99,
+          "max": 9.88,
+          "strongest": "#c4c4c4",
+          "drawn": 0.1,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.38,
+          "atLeast3": 0.35
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline CheckIcon",
+          "template": true,
+          "size": "12x12",
+          "paths": 1,
+          "context": "button \"Helpful (33)\"",
+          "bg": "#1b1b1b",
+          "p95": 4.99,
+          "max": 9.88,
+          "strongest": "#c4c4c4",
+          "drawn": 0.1,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"All\"",
+          "state": "true",
+          "size": "40.4x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1.37,
+            "max": 1.37,
+            "strongest": "#262626",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"5 star\"",
+          "state": "false",
+          "size": "59.4x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"4 star\"",
+          "state": "false",
+          "size": "60.1x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Newest\"",
+          "state": "true",
+          "size": "73.3x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1.37,
+            "max": 1.39,
+            "strongest": "#252525",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Helpful\"",
+          "state": "false",
+          "size": "70x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "459.3x8",
+          "fillVsTrack": {
+            "value": "81.15264797507788 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "466.5x8",
+          "fillVsTrack": {
+            "value": "14.485981308411214 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "472.6x8",
+          "fillVsTrack": {
+            "value": "2.959501557632399 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "474.6x8",
+          "fillVsTrack": {
+            "value": "0.9345794392523363 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "481.3x8",
+          "fillVsTrack": {
+            "value": "0.46728971962616817 of 0–100",
+            "fill": null,
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": null,
+            "fillVsBg": null,
+            "trackVsBg": 2.2,
+            "note": "the fill is under 4 px at this value"
+          }
+        },
+        {
+          "kind": "input",
+          "el": "input \"\"",
+          "state": "false",
+          "size": "214.8x32",
+          "boundary": {
+            "element": "div \"\"",
+            "computedBorder": "1px solid rgb(82, 82, 82)",
+            "edge": "#525252",
+            "fill": "#262626",
+            "outside": "#262626",
+            "edgeVsOutside": 1.94,
+            "fillVsOutside": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "07-review-search-miss",
+      "label": "review search \"kubernetes\"",
+      "files": [
+        "cd-w1280-dark-07-review-search-miss.png"
+      ],
+      "toolbar": {
+        "search": {
+          "x": 64,
+          "y": 775.2,
+          "w": 380,
+          "h": 32
+        },
+        "rating": {
+          "x": 456,
+          "y": 775.2,
+          "w": 172,
+          "h": 32
+        },
+        "sort": {
+          "x": 64,
+          "y": 819.2,
+          "w": 153.2,
+          "h": 32
+        },
+        "sortOnSearchRow": false,
+        "ratingOnSearchRow": true
+      },
+      "missText": 2,
+      "announced": [
+        "No reviews match “kubernetes”"
+      ],
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 3298,
+          "top": 2369,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 51,
+          "lines": 179,
+          "icons": 64,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 3,
+          "ownScrollNotByDesign": 2,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 53,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(27, 27, 27)",
+              32
+            ],
+            [
+              "rgb(38, 38, 38)",
+              10
+            ],
+            [
+              "rgb(48, 48, 48)",
+              4
+            ],
+            [
+              "rgb(60, 60, 60)",
+              3
+            ],
+            [
+              "rgb(50, 50, 50)",
+              2
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 53,
+        "pixelChecked": 34,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline MagnifyingGlassIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 8.86,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.21,
+          "atLeast3": 0.14
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path M18 6 6 18…",
+          "template": false,
+          "size": "16x16",
+          "paths": 2,
+          "context": "button \"Clear Search reviews\"",
+          "bg": "#262626",
+          "p95": 5.65,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.19,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"All\"",
+          "state": "true",
+          "size": "40.4x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1.37,
+            "max": 1.37,
+            "strongest": "#262626",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"5 star\"",
+          "state": "false",
+          "size": "59.4x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"4 star\"",
+          "state": "false",
+          "size": "60.1x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Newest\"",
+          "state": "true",
+          "size": "73.3x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1.37,
+            "max": 1.37,
+            "strongest": "#262626",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Helpful\"",
+          "state": "false",
+          "size": "70x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "459.3x8",
+          "fillVsTrack": {
+            "value": "81.15264797507788 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "466.5x8",
+          "fillVsTrack": {
+            "value": "14.485981308411214 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "472.6x8",
+          "fillVsTrack": {
+            "value": "2.959501557632399 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "474.6x8",
+          "fillVsTrack": {
+            "value": "0.9345794392523363 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "481.3x8",
+          "fillVsTrack": {
+            "value": "0.46728971962616817 of 0–100",
+            "fill": null,
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": null,
+            "fillVsBg": null,
+            "trackVsBg": 2.2,
+            "note": "the fill is under 4 px at this value"
+          }
+        },
+        {
+          "kind": "input",
+          "el": "input \"\"",
+          "state": "false",
+          "size": "380x32",
+          "boundary": {
+            "element": "div \"\"",
+            "computedBorder": "1px solid rgb(241, 241, 241)",
+            "edge": "#f1f1f1",
+            "fill": "#262626",
+            "outside": "#262626",
+            "edgeVsOutside": 13.4,
+            "fillVsOutside": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "08-rating-no-match",
+      "label": "rating filter \"5 star\" over the search \"fine-tuning\" (no match)",
+      "files": [
+        "cd-w1280-dark-08-rating-no-match.png"
+      ],
+      "toolbar": {
+        "search": {
+          "x": 64,
+          "y": 772.2,
+          "w": 380.1,
+          "h": 32
+        },
+        "rating": {
+          "x": 456.1,
+          "y": 772.2,
+          "w": 171.9,
+          "h": 32
+        },
+        "sort": {
+          "x": 64,
+          "y": 816.2,
+          "w": 153.2,
+          "h": 32
+        },
+        "sortOnSearchRow": false,
+        "ratingOnSearchRow": true
+      },
+      "announcedAfterSearch": [
+        "1 review match “fine-tuning”"
+      ],
+      "announcedAfterRating": [
+        "No reviews match “fine-tuning”"
+      ],
+      "visibleMessage": 2,
+      "liveRegionsNow": {
+        "count": 16,
+        "withText": [
+          {
+            "live": "polite",
+            "role": "status",
+            "text": "No reviews match “fine-tuning”"
+          }
+        ]
+      },
+      "fiveStarChecked": "true",
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 3298,
+          "top": 2369,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 51,
+          "lines": 179,
+          "icons": 64,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 3,
+          "ownScrollNotByDesign": 2,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 53,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(27, 27, 27)",
+              32
+            ],
+            [
+              "rgb(38, 38, 38)",
+              10
+            ],
+            [
+              "rgb(48, 48, 48)",
+              4
+            ],
+            [
+              "rgb(60, 60, 60)",
+              3
+            ],
+            [
+              "rgb(50, 50, 50)",
+              2
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 53,
+        "pixelChecked": 34,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#1b1b1b",
+          "p95": 17.22,
+          "max": 17.22,
+          "strongest": "#ffffff",
+          "drawn": 0.35,
+          "atLeast3": 0.33
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline MagnifyingGlassIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#262626",
+          "p95": 8.86,
+          "max": 15.13,
+          "strongest": "#ffffff",
+          "drawn": 0.21,
+          "atLeast3": 0.14
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path M18 6 6 18…",
+          "template": false,
+          "size": "16x16",
+          "paths": 2,
+          "context": "button \"Clear Search reviews\"",
+          "bg": "#262626",
+          "p95": 5.65,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.18,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"All\"",
+          "state": "false",
+          "size": "40x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"5 star\"",
+          "state": "true",
+          "size": "59.8x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1.37,
+            "max": 1.39,
+            "strongest": "#252525",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"4 star\"",
+          "state": "false",
+          "size": "60.1x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Newest\"",
+          "state": "true",
+          "size": "73.3x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1.37,
+            "max": 1.37,
+            "strongest": "#262626",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Helpful\"",
+          "state": "false",
+          "size": "70x24",
+          "shape": {
+            "bg": "#3c3c3c",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#3c3c3c",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "459.3x8",
+          "fillVsTrack": {
+            "value": "81.15264797507788 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "466.5x8",
+          "fillVsTrack": {
+            "value": "14.485981308411214 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "472.6x8",
+          "fillVsTrack": {
+            "value": "2.959501557632399 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "474.6x8",
+          "fillVsTrack": {
+            "value": "0.9345794392523363 of 0–100",
+            "fill": "#f1f1f1",
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": 6.92,
+            "fillVsBg": 15.25,
+            "trackVsBg": 2.2,
+            "note": null
+          }
+        },
+        {
+          "kind": "progress",
+          "el": "div[role=progressbar] \"\"",
+          "state": null,
+          "size": "481.3x8",
+          "fillVsTrack": {
+            "value": "0.46728971962616817 of 0–100",
+            "fill": null,
+            "track": "#525252",
+            "bg": "#1b1b1b",
+            "ratio": null,
+            "fillVsBg": null,
+            "trackVsBg": 2.2,
+            "note": "the fill is under 4 px at this value"
+          }
+        },
+        {
+          "kind": "input",
+          "el": "input \"\"",
+          "state": "false",
+          "size": "380.1x32",
+          "boundary": {
+            "element": "div \"\"",
+            "computedBorder": "1px solid rgb(82, 82, 82)",
+            "edge": "#525252",
+            "fill": "#262626",
+            "outside": "#262626",
+            "edgeVsOutside": 1.94,
+            "fillVsOutside": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "09-faq-first-open",
+      "label": "common questions, the first open (default)",
+      "files": [
+        "cd-w1280-dark-09-faq-first-open.png"
+      ],
+      "faq": [
+        "1 Do I need production access to a language model?=true",
+        "2 How long do I have access?=false",
+        "3 What if the course is not right for me?=false",
+        "4 Is there a certificate?=false"
+      ],
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 4146,
+          "top": 4145,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 15,
+          "lines": 202,
+          "icons": 87,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 3,
+          "ownScrollNotByDesign": 2,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 17,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(38, 38, 38)",
+              8
+            ],
+            [
+              "rgb(48, 48, 48)",
+              5
+            ],
+            [
+              "rgb(27, 27, 27)",
+              2
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ],
+            [
+              "rgb(50, 50, 50)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 17,
+        "pixelChecked": 10,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"1 Do I need production access to a language model?\"",
+          "bg": "#262626",
+          "p95": 3.63,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"2 How long do I have access?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"3 What if the course is not right for me?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"4 Is there a certificate?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        }
+      ]
+    },
+    {
+      "id": "10a-closing-lesson-toast",
+      "label": "closing band \"Start lesson one free\" pressed, its toast visible (viewport)",
+      "files": [
+        "cd-w1280-dark-10a-closing-lesson-toast.png"
+      ],
+      "toastText": "Demo: lesson one would play here",
+      "toastBox": {
+        "x": 880,
+        "y": 748,
+        "width": 332,
+        "height": 20
+      },
+      "announced": [
+        "Demo: lesson one would play here"
+      ],
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 4146,
+          "top": 4146,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 16,
+          "lines": 203,
+          "icons": 88,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 4,
+          "ownScrollNotByDesign": 3,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Demo: lesson one would play here\"",
+              "scrollWidth": 372,
+              "clientWidth": 368,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 17,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 1,
+          "surfaces": [
+            [
+              "rgb(38, 38, 38)",
+              8
+            ],
+            [
+              "rgb(48, 48, 48)",
+              5
+            ],
+            [
+              "rgb(27, 27, 27)",
+              2
+            ],
+            [
+              "rgb(50, 50, 50)",
+              1
+            ],
+            [
+              "rgb(255, 255, 255)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 17,
+        "pixelChecked": 15,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"1 Do I need production access to a language model?\"",
+          "bg": "#262626",
+          "p95": 3.63,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"2 How long do I have access?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"3 What if the course is not right for me?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"4 Is there a certificate?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Start lesson one free\"",
+          "bg": "#f2f2f2",
+          "p95": 9.26,
+          "max": 16.87,
+          "strongest": "#111111",
+          "drawn": 0.15,
+          "atLeast3": 0.1
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ChevronRightIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Apply to teach\"",
+          "bg": "#323232",
+          "p95": 4.33,
+          "max": 6.05,
+          "strongest": "#b2b2b2",
+          "drawn": 0.08,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path M18 6 6 18…",
+          "template": false,
+          "size": "16x16",
+          "paths": 2,
+          "context": "button \"Dismiss notification\"",
+          "bg": "#ffffff",
+          "p95": 18.88,
+          "max": 19.03,
+          "strongest": "#101010",
+          "drawn": 0.2,
+          "atLeast3": 0.17
+        },
+        {
+          "kind": "text over image",
+          "el": "span \"Start lesson one free\"",
+          "image": "button \"Start lesson one free\" background-image",
+          "fg": "rgba(17, 17, 17, 1)",
+          "need": 4.5,
+          "pixels": 2358,
+          "min": 16.72,
+          "p05": 16.72,
+          "p50": 16.87,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "id": "10b-closing-teach-toast",
+      "label": "closing band \"Apply to teach\" pressed, its toast visible (viewport)",
+      "files": [
+        "cd-w1280-dark-10b-closing-teach-toast.png"
+      ],
+      "toastText": "Demo: the teaching application would open here",
+      "toastBox": {
+        "x": 880,
+        "y": 748,
+        "width": 332,
+        "height": 20
+      },
+      "announced": [
+        "Demo: the teaching application would open here"
+      ],
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+          "extra": 4146,
+          "top": 4146,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 16,
+          "lines": 203,
+          "icons": 88,
+          "controls": 16
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 11,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [
+            {
+              "el": "div \"\"",
+              "left": -284.5,
+              "right": 182,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -345.1,
+              "right": 127.5,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -356.5,
+              "right": 118.1,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div \"\"",
+              "left": -367.1,
+              "right": 114.2,
+              "heldBy": "div[role=progressbar] \"\""
+            },
+            {
+              "el": "div[role=group] \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1026,
+              "right": 1367.7,
+              "heldBy": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\""
+            },
+            {
+              "el": "div \"Prompting Prompt design that survives production Ines Vogel \"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Prompt design that survives production\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"Ines Vogel\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "div \"4.8 $59\"",
+              "left": 1042,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "el": "span \"$59\"",
+              "left": 1327.7,
+              "right": 1351.7,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ],
+          "ownScrollCount": 4,
+          "ownScrollNotByDesign": 3,
+          "ownScroll": [
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 1176,
+              "clientWidth": 1152,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Bestseller Intermediate Save Share Applied AI: Build with La\"",
+              "scrollWidth": 588,
+              "clientWidth": 564,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div \"Demo: the teaching application would open here\"",
+              "scrollWidth": 372,
+              "clientWidth": 368,
+              "overflowX": "visible",
+              "scrollsByDesign": false
+            },
+            {
+              "el": "div[role=group] \"Evaluation Evaluation suites that catch regressions Gabriela\"",
+              "scrollWidth": 1304,
+              "clientWidth": 1152,
+              "overflowX": "auto",
+              "scrollsByDesign": true
+            }
+          ],
+          "textLinesPast": 2,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": [
+            {
+              "text": "Prompt design that survives production",
+              "left": 1042,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            },
+            {
+              "text": "$59",
+              "left": 1327.7,
+              "right": 1351.7,
+              "pastViewport": true,
+              "pastClip": true,
+              "clipRight": 1216,
+              "heldBy": "div \"Prompting Prompt design that survives production Ines Vogel \""
+            }
+          ]
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 17,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 1,
+          "surfaces": [
+            [
+              "rgb(38, 38, 38)",
+              8
+            ],
+            [
+              "rgb(48, 48, 48)",
+              5
+            ],
+            [
+              "rgb(27, 27, 27)",
+              2
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ],
+            [
+              "rgb(255, 255, 255)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 17,
+        "pixelChecked": 15,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"1 Do I need production access to a language model?\"",
+          "bg": "#262626",
+          "p95": 3.63,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"2 How long do I have access?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"3 What if the course is not right for me?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"4 Is there a certificate?\"",
+          "bg": "#262626",
+          "p95": 3.73,
+          "max": 5.65,
+          "strongest": "#9e9e9e",
+          "drawn": 0.09,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline PlayIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Start lesson one free\"",
+          "bg": "#f1f1f1",
+          "p95": 9.18,
+          "max": 16.72,
+          "strongest": "#111111",
+          "drawn": 0.15,
+          "atLeast3": 0.1
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline ChevronRightIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Apply to teach\"",
+          "bg": "#3c3c3c",
+          "p95": 3.97,
+          "max": 5.38,
+          "strongest": "#b5b5b5",
+          "drawn": 0.08,
+          "atLeast3": 0.07
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path M18 6 6 18…",
+          "template": false,
+          "size": "16x16",
+          "paths": 2,
+          "context": "button \"Dismiss notification\"",
+          "bg": "#ffffff",
+          "p95": 18.88,
+          "max": 19.03,
+          "strongest": "#101010",
+          "drawn": 0.2,
+          "atLeast3": 0.17
+        },
+        {
+          "kind": "text over image",
+          "el": "span \"Apply to teach\"",
+          "image": "button \"Apply to teach\" background-image",
+          "fg": "rgba(255, 255, 255, 0.99)",
+          "need": 4.5,
+          "pixels": 1692,
+          "min": 10.85,
+          "p05": 10.85,
+          "p50": 10.85,
+          "pass": true
+        }
+      ]
+    }
+  ]
+}

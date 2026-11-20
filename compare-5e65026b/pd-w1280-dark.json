@@ -1,0 +1,503 @@
+{
+  "page": "product-detail",
+  "config": "w1280",
+  "scheme": "dark",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "deviceScaleFactor": 1,
+  "url": "/templates/product-detail/?embed=1&theme=neutral&mode=dark",
+  "chromium": "149.0.7827.55",
+  "stamp": "5e65026bf6b8d42b4f24958f2b23813fa7333d67",
+  "glyphSignatures": 15,
+  "servedLocally": [
+    "fonts/figtree-latin-400-normal.woff2",
+    "fonts/figtree-latin-500-normal.woff2",
+    "fonts/figtree-latin-600-normal.woff2",
+    "fonts/figtree-latin-700-normal.woff2",
+    "https://fonts.googleapis.com/css2?family=Figtree:wght@400;50… → the neutral theme's fonts.css"
+  ],
+  "blocked": [],
+  "errors": [],
+  "states": [
+    {
+      "id": "01-default",
+      "label": "the default page, top to bottom",
+      "h1": "Solstice Mug & Plate Set",
+      "theme": {
+        "colorScheme": "dark",
+        "themeRoot": "neutral",
+        "bodyBg": "rgba(0, 0, 0, 0)",
+        "h1Font": "Figtree, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+        "loadedFaces": [
+          "Figtree 400",
+          "Figtree 500",
+          "Figtree 600",
+          "Figtree 700"
+        ]
+      },
+      "full": {
+        "files": [
+          "pd-w1280-dark-01-default.png"
+        ],
+        "contentHeight": 1142,
+        "windowHeight": 1142,
+        "windows": 1,
+        "scroller": {
+          "kind": "document",
+          "extra": 0,
+          "top": 0,
+          "clientHeight": 1142,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        }
+      },
+      "focusRings": [
+        {
+          "kind": "ghost button",
+          "el": "button \"Decrease quantity\"",
+          "focusVisible": true,
+          "changedPixels": 324,
+          "p95ChangeRatio": 4.87,
+          "ring": "#828282",
+          "under": "#121212"
+        },
+        {
+          "kind": "text input",
+          "el": "input \"\"",
+          "focusVisible": true,
+          "changedPixels": 695,
+          "p95ChangeRatio": 6.92,
+          "ring": "#f1f1f1",
+          "under": "#525252"
+        },
+        {
+          "kind": "segment",
+          "el": "button \"Snow\"",
+          "focusVisible": true,
+          "changedPixels": 436,
+          "p95ChangeRatio": 16.59,
+          "ring": "#f1f1f1",
+          "under": "#121212"
+        },
+        {
+          "kind": "expander",
+          "el": "button \"Composition\"",
+          "focusVisible": true,
+          "changedPixels": 2396,
+          "p95ChangeRatio": 16.59,
+          "ring": "#f1f1f1",
+          "under": "#121212"
+        }
+      ],
+      "fits": {
+        "cta": null,
+        "ctaButton": null,
+        "note": null,
+        "noteText": null,
+        "noteBelowButton": null,
+        "badges": null,
+        "faqBadges": null
+      },
+      "measure": {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "scroll": {
+          "kind": "element",
+          "id": "1",
+          "el": "div[role=main] \"Solstice Mug & Plate Set 4.3 (128) $89.00 $119.00 Sale A han\"",
+          "extra": 342,
+          "top": 0,
+          "clientHeight": 800,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        "counts": {
+          "texts": 19,
+          "lines": 32,
+          "icons": 10,
+          "controls": 13
+        },
+        "overflow": {
+          "documentScrollWidth": 1280,
+          "documentClientWidth": 1280,
+          "elementsPastViewport": 0,
+          "elementsPastViewportNotHeld": 0,
+          "elementsPastViewportList": [],
+          "ownScrollCount": 0,
+          "ownScrollNotByDesign": 0,
+          "ownScroll": [],
+          "textLinesPast": 0,
+          "textLinesPastNotHeld": 0,
+          "textLinesPastList": []
+        },
+        "contrast": {
+          "canvas": "rgb(18, 18, 18)",
+          "modal": null,
+          "checked": 20,
+          "flaggedCount": 0,
+          "flagged": [],
+          "overImageCount": 0,
+          "surfaces": [
+            [
+              "rgb(18, 18, 18)",
+              10
+            ],
+            [
+              "rgb(42, 42, 42)",
+              5
+            ],
+            [
+              "rgb(38, 38, 38)",
+              3
+            ],
+            [
+              "rgb(255, 112, 93)",
+              1
+            ],
+            [
+              "rgb(241, 241, 241)",
+              1
+            ]
+          ]
+        }
+      },
+      "textChecks": {
+        "texts": 22,
+        "pixelChecked": 22,
+        "computedUnder": 0,
+        "pixelUnder": 0,
+        "disagree": 0
+      },
+      "textFlags": [],
+      "samples": [
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/solid StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 18.73,
+          "max": 18.73,
+          "strongest": "#ffffff",
+          "drawn": 0.4,
+          "atLeast3": 0.37
+        },
+        {
+          "kind": "icon",
+          "glyph": "heroicons 24/outline StarIcon",
+          "template": true,
+          "size": "16x16",
+          "paths": 1,
+          "context": "",
+          "bg": "#121212",
+          "p95": 10.3,
+          "max": 18.26,
+          "strongest": "#fcfcfc",
+          "drawn": 0.27,
+          "atLeast3": 0.18
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path M5 12h14…",
+          "template": false,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Decrease quantity\"",
+          "bg": "#121212",
+          "p95": 2.22,
+          "max": 2.22,
+          "strongest": "#4d4d4d",
+          "drawn": 0.08,
+          "atLeast3": 0
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path M12 4.5v15m7.5-7…",
+          "template": false,
+          "size": "16x16",
+          "paths": 1,
+          "context": "button \"Increase quantity\"",
+          "bg": "#121212",
+          "p95": 5.36,
+          "max": 10.74,
+          "strongest": "#c4c4c4",
+          "drawn": 0.17,
+          "atLeast3": 0.14
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"Composition\"",
+          "bg": "#121212",
+          "p95": 4.18,
+          "max": 6.99,
+          "strongest": "#9e9e9e",
+          "drawn": 0.1,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"Delivery & Returns\"",
+          "bg": "#121212",
+          "p95": 4.3,
+          "max": 6.99,
+          "strongest": "#9e9e9e",
+          "drawn": 0.1,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "icon",
+          "glyph": "other path m6 9 6 6 6-6…",
+          "template": false,
+          "size": "17x17",
+          "paths": 1,
+          "context": "button \"Dimensions\"",
+          "bg": "#121212",
+          "p95": 4.3,
+          "max": 6.99,
+          "strongest": "#9e9e9e",
+          "drawn": 0.1,
+          "atLeast3": 0.06
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Snow\"",
+          "state": "true",
+          "size": "59.7x24",
+          "shape": {
+            "bg": "#2a2a2a",
+            "p95": 1.05,
+            "max": 1.07,
+            "strongest": "#252525",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Sage\"",
+          "state": "false",
+          "size": "55.8x24",
+          "shape": {
+            "bg": "#2a2a2a",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#2a2a2a",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Charcoal\"",
+          "state": "false",
+          "size": "80.2x24",
+          "shape": {
+            "bg": "#2a2a2a",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#2a2a2a",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Matte\"",
+          "state": "true",
+          "size": "61.9x24",
+          "shape": {
+            "bg": "#2a2a2a",
+            "p95": 1.05,
+            "max": 1.07,
+            "strongest": "#252525",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Satin\"",
+          "state": "false",
+          "size": "56.4x24",
+          "shape": {
+            "bg": "#2a2a2a",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#2a2a2a",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "segment",
+          "el": "button[role=radio] \"Speckled\"",
+          "state": "false",
+          "size": "82.2x24",
+          "shape": {
+            "bg": "#2a2a2a",
+            "p95": 1,
+            "max": 1,
+            "strongest": "#2a2a2a",
+            "drawn": 0,
+            "atLeast3": 0
+          }
+        },
+        {
+          "kind": "checkbox",
+          "el": "input \"Product image 1\"",
+          "state": "true",
+          "size": "183.3x183.3",
+          "shape": {
+            "bg": "#121212",
+            "p95": 16.31,
+            "max": 16.78,
+            "strongest": "#f3f2f3",
+            "drawn": 0.99,
+            "atLeast3": 0.98
+          }
+        },
+        {
+          "kind": "checkbox",
+          "el": "input \"Product image 2\"",
+          "state": "false",
+          "size": "183.3x183.3",
+          "shape": {
+            "bg": "#121212",
+            "p95": 16.17,
+            "max": 16.62,
+            "strongest": "#f1f1f4",
+            "drawn": 0.99,
+            "atLeast3": 0.98
+          }
+        },
+        {
+          "kind": "checkbox",
+          "el": "input \"Product image 3\"",
+          "state": "false",
+          "size": "183.3x183.3",
+          "shape": {
+            "bg": "#121212",
+            "p95": 15.74,
+            "max": 16.32,
+            "strongest": "#efeff2",
+            "drawn": 0.98,
+            "atLeast3": 0.97
+          }
+        },
+        {
+          "kind": "checkbox",
+          "el": "input \"Product image 4\"",
+          "state": "false",
+          "size": "183.3x183.3",
+          "shape": {
+            "bg": "#121212",
+            "p95": 15.18,
+            "max": 15.86,
+            "strongest": "#ececec",
+            "drawn": 0.98,
+            "atLeast3": 0.96
+          }
+        },
+        {
+          "kind": "checkbox",
+          "el": "input \"Product image 5\"",
+          "state": "false",
+          "size": "183.3x183.3",
+          "shape": {
+            "bg": "#121212",
+            "p95": 15.62,
+            "max": 16.2,
+            "strongest": "#efeef0",
+            "drawn": 0.98,
+            "atLeast3": 0.96
+          }
+        },
+        {
+          "kind": "checkbox",
+          "el": "input \"Product image 6\"",
+          "state": "false",
+          "size": "183.3x183.3",
+          "shape": {
+            "bg": "#121212",
+            "p95": 15.74,
+            "max": 16.32,
+            "strongest": "#efeff2",
+            "drawn": 0.98,
+            "atLeast3": 0.97
+          }
+        },
+        {
+          "kind": "input",
+          "el": "input[role=spinbutton] \"\"",
+          "state": "false",
+          "size": "100x32",
+          "boundary": {
+            "element": "div \"\"",
+            "computedBorder": "1px solid rgb(82, 82, 82)",
+            "edge": "#525252",
+            "fill": "#262626",
+            "outside": "#121212",
+            "edgeVsOutside": 2.4,
+            "fillVsOutside": 1.24
+          }
+        }
+      ]
+    }
+  ]
+}
