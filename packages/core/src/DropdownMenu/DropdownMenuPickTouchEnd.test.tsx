@@ -189,4 +189,18 @@ describe("DropdownMenu: a finger's pick in a submenu (spec:AST-094 FR21, FR26)",
     expect(onBeneathPress).not.toHaveBeenCalled();
     expect(onBeneath).not.toHaveBeenCalled();
   });
+
+  it('on a radio item, after a cancelable touchstart too, the compatibility mouse events and click that follow the cancelled touchend reach nothing beneath', async () => {
+    const {onBeneath, beneath} = await openSubmenuOver(<SortMenu />, 'Sort');
+    const onBeneathPress = vi.fn();
+    beneath.addEventListener('mousedown', onBeneathPress);
+    vi.useFakeTimers();
+    const picked = menuRow('menuitemradio', 'Oldest');
+    tapRow(picked);
+    expect(picked.isConnected).toBe(false);
+    expect(fireTouch(picked, 'touchend', 7).defaultPrevented).toBe(true);
+    compatibilityClickAt(beneath);
+    expect(onBeneathPress).not.toHaveBeenCalled();
+    expect(onBeneath).not.toHaveBeenCalled();
+  });
 });

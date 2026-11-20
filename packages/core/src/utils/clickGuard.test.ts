@@ -385,6 +385,33 @@ describe('clickGuard', () => {
     }
   });
 
+  it("armed by the menu press model at a finger's release, stays armed after the cancelled touchend and takes the compatibility mousedown, mouseup and click that WebKit can still send, also after a cancelable touchstart (spec:AST-094 FR21)", () => {
+    const target = button();
+    const onPage = vi.fn();
+    for (const type of ['mousedown', 'mouseup', 'click']) {
+      window.addEventListener(type, onPage);
+    }
+    try {
+      armClickGuard(document, {
+        staysInstalled: true,
+        cancelsTouchEnd: true,
+        staysArmedAfterTouchEnd: true,
+      });
+      expect(touchEnd(target).defaultPrevented).toBe(true);
+      expect(isClickGuardArmed(document)).toBe(true);
+      expect(mouse('mousedown', target).defaultPrevented).toBe(true);
+      expect(mouse('mouseup', target).defaultPrevented).toBe(true);
+      expect(click(target).defaultPrevented).toBe(true);
+      expect(onPage).not.toHaveBeenCalled();
+      // The click spends it.
+      expect(isClickGuardArmed(document)).toBe(false);
+    } finally {
+      for (const type of ['mousedown', 'mouseup', 'click']) {
+        window.removeEventListener(type, onPage);
+      }
+    }
+  });
+
   it("armed after a touchstart that was not cancelable, keeps a full window from the cancelled touchend; after it, and after the next pointerdown, a tap's mouse events and click reach the page", () => {
     vi.useFakeTimers();
     const target = button();
