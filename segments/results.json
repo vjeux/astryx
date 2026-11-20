@@ -1,0 +1,3612 @@
+{
+ "chromium": "149.0.7827.55",
+ "dpr": 4,
+ "step": 0.25,
+ "viewport": "1000x700",
+ "main": "77a11ae0d2305c3f261190161248853f5741b52b",
+ "results": [
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--clickable-with-remove",
+   "button": "Remove Dark landscape",
+   "scheme": "light",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(27, 27, 27)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 56,
+    "t": 20,
+    "r": 76,
+    "b": 40
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 16,
+      "t": 16,
+      "r": 80,
+      "b": 80
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.52,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.25,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.12,
+      "median": 1.13,
+      "max": 1.15,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.07,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0.06
+     },
+     "underThreeBothShare": 0.06
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.1,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.14,
+      "median": 1.7,
+      "max": 1.7,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.57,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0.05
+     },
+     "underThreeBothShare": 0.05
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.86,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.16,
+      "median": 1.7,
+      "max": 1.7,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.17,
+      "median": 1.7,
+      "max": 1.7,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.87,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.12,
+      "median": 1.14,
+      "max": 1.17,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.11,
+      "median": 1.13,
+      "max": 1.17,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    }
+   },
+   "crops": [
+    "thumbnail-clickable-with-remove-1-dark-landscape-light-unfocused.png",
+    "thumbnail-clickable-with-remove-1-dark-landscape-light-focused.png",
+    "thumbnail-clickable-with-remove-1-dark-landscape-light-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--clickable-with-remove",
+   "button": "Remove Dark landscape",
+   "scheme": "dark",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(241, 241, 241)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 56,
+    "t": 20,
+    "r": 76,
+    "b": 40
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 16,
+      "t": 16,
+      "r": 80,
+      "b": 80
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.55,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.3,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.27,
+      "median": 13.47,
+      "max": 13.63,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 10.01,
+      "median": 13.4,
+      "max": 13.66,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.1,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 8.95,
+      "median": 8.95,
+      "max": 13.39,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 6.66,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.89,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 8.95,
+      "median": 8.95,
+      "max": 13.19,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 8.95,
+      "median": 8.95,
+      "max": 13.07,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.91,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.07,
+      "median": 13.43,
+      "max": 13.63,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.07,
+      "median": 13.47,
+      "max": 13.78,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "thumbnail-clickable-with-remove-1-dark-landscape-dark-unfocused.png",
+    "thumbnail-clickable-with-remove-1-dark-landscape-dark-focused.png",
+    "thumbnail-clickable-with-remove-1-dark-landscape-dark-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--clickable-with-remove",
+   "button": "Remove Dark landscape",
+   "scheme": "forced",
+   "forcedColorsActive": true,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgba(5, 0, 73, 0.8)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 56,
+    "t": 20,
+    "r": 76,
+    "b": 40
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 16,
+      "t": 16,
+      "r": 80,
+      "b": 80
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.53,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.28,
+     "ringColour": "#0b0742",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.21,
+      "median": 1.23,
+      "max": 1.25,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.2,
+      "median": 18.7,
+      "max": 18.7,
+      "underThreeShare": 0.06
+     },
+     "underThreeBothShare": 0.06
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.1,
+     "ringColour": "#130d44",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.23,
+      "median": 1.78,
+      "max": 1.78,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.78,
+      "median": 17.97,
+      "max": 18.67,
+      "underThreeShare": 0.05
+     },
+     "underThreeBothShare": 0.05
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.87,
+     "ringColour": "#130d44",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.25,
+      "median": 1.78,
+      "max": 1.85,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.24,
+      "median": 1.78,
+      "max": 1.78,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.88,
+     "ringColour": "#0b0742",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.21,
+      "median": 1.23,
+      "max": 1.26,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.2,
+      "median": 1.23,
+      "max": 1.26,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    }
+   },
+   "crops": [
+    "thumbnail-clickable-with-remove-1-dark-landscape-forced-unfocused.png",
+    "thumbnail-clickable-with-remove-1-dark-landscape-forced-focused.png",
+    "thumbnail-clickable-with-remove-1-dark-landscape-forced-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove dark.jpg — Dark image",
+   "scheme": "light",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(27, 27, 27)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 56,
+    "t": 45.140625,
+    "r": 76,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 16,
+      "t": 41.140625,
+      "r": 80,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.49,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.24,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.12,
+      "median": 1.13,
+      "max": 1.15,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.07,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0.07
+     },
+     "underThreeBothShare": 0.07
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.14,
+      "median": 1.7,
+      "max": 1.7,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.57,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0.06
+     },
+     "underThreeBothShare": 0.06
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.78,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.16,
+      "median": 1.7,
+      "max": 1.7,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.17,
+      "median": 1.7,
+      "max": 1.7,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.84,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.12,
+      "median": 1.14,
+      "max": 1.17,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.11,
+      "median": 1.13,
+      "max": 1.17,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-1-dark-jpg-dark-image-light-unfocused.png",
+    "thumbnail-media-mode-1-dark-jpg-dark-image-light-focused.png",
+    "thumbnail-media-mode-1-dark-jpg-dark-image-light-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove light.jpg — Light image",
+   "scheme": "light",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(27, 27, 27)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 128,
+    "t": 45.140625,
+    "r": 148,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 88,
+      "t": 41.140625,
+      "r": 152,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.53,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.3,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 15.35,
+      "median": 15.45,
+      "max": 15.48,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 12.86,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 15.45,
+      "median": 15.77,
+      "max": 16.06,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 13.45,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.81,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 15.95,
+      "median": 16.09,
+      "max": 16.09,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 16.08,
+      "median": 16.22,
+      "max": 16.25,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.88,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 15.47,
+      "median": 15.77,
+      "max": 16.09,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 15.32,
+      "median": 15.77,
+      "max": 16.09,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-2-light-jpg-light-image-light-unfocused.png",
+    "thumbnail-media-mode-2-light-jpg-light-image-light-focused.png",
+    "thumbnail-media-mode-2-light-jpg-light-image-light-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove mixed.jpg — Mixed tones",
+   "scheme": "light",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(27, 27, 27)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 200,
+    "t": 45.140625,
+    "r": 220,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 160,
+      "t": 41.140625,
+      "r": 224,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.5,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.24,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.13,
+      "median": 1.13,
+      "max": 1.13,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.08,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0.07
+     },
+     "underThreeBothShare": 0.07
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.13,
+      "median": 15.27,
+      "max": 15.27,
+      "underThreeShare": 0.41
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 12.79,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.8,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.13,
+      "median": 15.27,
+      "max": 15.27,
+      "underThreeShare": 0.12
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.13,
+      "median": 15.27,
+      "max": 15.27,
+      "underThreeShare": 0.04
+     },
+     "underThreeBothShare": 0.04
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.84,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.13,
+      "median": 1.13,
+      "max": 1.13,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.13,
+      "median": 1.13,
+      "max": 1.13,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-light-unfocused.png",
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-light-focused.png",
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-light-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove warm.jpg — Warm tones",
+   "scheme": "light",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(27, 27, 27)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 272,
+    "t": 45.140625,
+    "r": 292,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 232,
+      "t": 41.140625,
+      "r": 296,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.53,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.3,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 5.64,
+      "median": 5.97,
+      "max": 6.15,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 5.42,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 4.94,
+      "median": 5.23,
+      "max": 5.64,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 4.05,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.81,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 4.91,
+      "median": 5.07,
+      "max": 8.56,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 4.73,
+      "median": 4.94,
+      "max": 8.47,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.89,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 5.68,
+      "median": 6.08,
+      "max": 8.65,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 5.86,
+      "median": 6.31,
+      "max": 8.8,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-light-unfocused.png",
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-light-focused.png",
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-light-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove dark.jpg — Dark image",
+   "scheme": "dark",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(241, 241, 241)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 56,
+    "t": 45.140625,
+    "r": 76,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 16,
+      "t": 41.140625,
+      "r": 80,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.53,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.3,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.23,
+      "median": 13.47,
+      "max": 13.63,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 10.01,
+      "median": 13.4,
+      "max": 13.78,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 8.95,
+      "median": 8.95,
+      "max": 13.39,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 6.66,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.81,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 8.95,
+      "median": 8.95,
+      "max": 13.19,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 8.95,
+      "median": 8.95,
+      "max": 13.07,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.89,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.07,
+      "median": 13.43,
+      "max": 13.63,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.07,
+      "median": 13.47,
+      "max": 13.78,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-1-dark-jpg-dark-image-dark-unfocused.png",
+    "thumbnail-media-mode-1-dark-jpg-dark-image-dark-focused.png",
+    "thumbnail-media-mode-1-dark-jpg-dark-image-dark-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove light.jpg — Light image",
+   "scheme": "dark",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(241, 241, 241)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 128,
+    "t": 45.140625,
+    "r": 148,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 88,
+      "t": 41.140625,
+      "r": 152,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.45,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.19,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.01,
+      "median": 1.01,
+      "max": 1.02,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0.07
+     },
+     "underThreeBothShare": 0.07
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.08,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.01,
+      "median": 1.03,
+      "max": 1.05,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.93,
+       "image": 0.07
+      },
+      "min": 1.06,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0.06
+     },
+     "underThreeBothShare": 0.06
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.73,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.05,
+      "median": 1.06,
+      "max": 1.06,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.05,
+      "median": 1.06,
+      "max": 1.07,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.78,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.01,
+      "median": 1.03,
+      "max": 1.06,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1,
+      "median": 1.03,
+      "max": 1.06,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-2-light-jpg-light-image-dark-unfocused.png",
+    "thumbnail-media-mode-2-light-jpg-light-image-dark-focused.png",
+    "thumbnail-media-mode-2-light-jpg-light-image-dark-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove mixed.jpg — Mixed tones",
+   "scheme": "dark",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(241, 241, 241)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 200,
+    "t": 45.140625,
+    "r": 220,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 160,
+      "t": 41.140625,
+      "r": 224,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 0.93,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.3,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.55,
+      "median": 13.55,
+      "max": 13.55,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 9.92,
+      "median": 13.4,
+      "max": 13.55,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 0.38,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1,
+      "median": 1,
+      "max": 13.55,
+      "underThreeShare": 0.59
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.01,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0.05
+     },
+     "underThreeBothShare": 0.05
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 0.16,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1,
+      "median": 1,
+      "max": 13.55,
+      "underThreeShare": 0.86
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1,
+      "median": 1,
+      "max": 13.55,
+      "underThreeShare": 0.96
+     },
+     "underThreeBothShare": 0.86
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.89,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.55,
+      "median": 13.55,
+      "max": 13.55,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 13.55,
+      "median": 13.55,
+      "max": 13.55,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-dark-unfocused.png",
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-dark-focused.png",
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-dark-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove warm.jpg — Warm tones",
+   "scheme": "dark",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(241, 241, 241)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 272,
+    "t": 45.140625,
+    "r": 292,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 232,
+      "t": 41.140625,
+      "r": 296,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.52,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.3,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 2.48,
+      "median": 2.55,
+      "max": 2.7,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 2.16,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0.07
+     },
+     "underThreeBothShare": 0.07
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 2.7,
+      "median": 2.92,
+      "max": 3.09,
+      "underThreeShare": 0.64
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 2.79,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0.05
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.8,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.78,
+      "median": 3.01,
+      "max": 3.1,
+      "underThreeShare": 0.47
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.8,
+      "median": 3.09,
+      "max": 3.23,
+      "underThreeShare": 0.41
+     },
+     "underThreeBothShare": 0.41
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.89,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.76,
+      "median": 2.51,
+      "max": 2.68,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.73,
+      "median": 2.42,
+      "max": 2.6,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-dark-unfocused.png",
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-dark-focused.png",
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-dark-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove dark.jpg — Dark image",
+   "scheme": "forced",
+   "forcedColorsActive": true,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgba(5, 0, 73, 0.8)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 56,
+    "t": 45.140625,
+    "r": 76,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 16,
+      "t": 41.140625,
+      "r": 80,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.51,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.27,
+     "ringColour": "#0b0742",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.21,
+      "median": 1.23,
+      "max": 1.25,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.2,
+      "median": 18.7,
+      "max": 18.7,
+      "underThreeShare": 0.07
+     },
+     "underThreeBothShare": 0.07
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#130d44",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.23,
+      "median": 1.78,
+      "max": 1.78,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.78,
+      "median": 17.97,
+      "max": 18.67,
+      "underThreeShare": 0.06
+     },
+     "underThreeBothShare": 0.06
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.79,
+     "ringColour": "#130d44",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.25,
+      "median": 1.78,
+      "max": 1.85,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.25,
+      "median": 1.78,
+      "max": 1.78,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.86,
+     "ringColour": "#0b0742",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.21,
+      "median": 1.23,
+      "max": 1.26,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.2,
+      "median": 1.23,
+      "max": 1.26,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-1-dark-jpg-dark-image-forced-unfocused.png",
+    "thumbnail-media-mode-1-dark-jpg-dark-image-forced-focused.png",
+    "thumbnail-media-mode-1-dark-jpg-dark-image-forced-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove light.jpg — Light image",
+   "scheme": "forced",
+   "forcedColorsActive": true,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgba(5, 0, 73, 0.8)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 128,
+    "t": 45.140625,
+    "r": 148,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 88,
+      "t": 41.140625,
+      "r": 152,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.53,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.3,
+     "ringColour": "#33316c",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 10.41,
+      "median": 10.48,
+      "max": 10.51,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 10.37,
+      "median": 11.69,
+      "max": 11.69,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#34316d",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 10.48,
+      "median": 10.59,
+      "max": 10.75,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 10.73,
+      "median": 11.63,
+      "max": 11.69,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.81,
+     "ringColour": "#35326d",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 10.64,
+      "median": 10.73,
+      "max": 10.73,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 10.72,
+      "median": 10.82,
+      "max": 10.84,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.88,
+     "ringColour": "#34316d",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 10.48,
+      "median": 10.59,
+      "max": 10.75,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 10.37,
+      "median": 10.61,
+      "max": 10.76,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-2-light-jpg-light-image-forced-unfocused.png",
+    "thumbnail-media-mode-2-light-jpg-light-image-forced-focused.png",
+    "thumbnail-media-mode-2-light-jpg-light-image-forced-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove mixed.jpg — Mixed tones",
+   "scheme": "forced",
+   "forcedColorsActive": true,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgba(5, 0, 73, 0.8)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 200,
+    "t": 45.140625,
+    "r": 220,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 160,
+      "t": 41.140625,
+      "r": 224,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.51,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.27,
+     "ringColour": "#0a0743",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.22,
+      "median": 1.22,
+      "max": 1.22,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 1.22,
+      "median": 18.68,
+      "max": 18.68,
+      "underThreeShare": 0.07
+     },
+     "underThreeBothShare": 0.07
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#353069",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.13,
+      "median": 10.47,
+      "max": 10.47,
+      "underThreeShare": 0.41
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 10.47,
+      "median": 11.81,
+      "max": 18.68,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.8,
+     "ringColour": "#353069",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.22,
+      "median": 10.47,
+      "max": 10.47,
+      "underThreeShare": 0.14
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.22,
+      "median": 10.47,
+      "max": 16.56,
+      "underThreeShare": 0.04
+     },
+     "underThreeBothShare": 0.04
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.86,
+     "ringColour": "#0a0743",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.22,
+      "median": 1.22,
+      "max": 1.22,
+      "underThreeShare": 1
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 1.22,
+      "median": 1.22,
+      "max": 1.22,
+      "underThreeShare": 1
+     },
+     "underThreeBothShare": 1
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-forced-unfocused.png",
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-forced-focused.png",
+    "thumbnail-media-mode-3-mixed-jpg-mixed-tones-forced-samples.png"
+   ]
+  },
+  {
+   "component": "Thumbnail",
+   "story": "core-thumbnail--media-mode-test",
+   "button": "Remove warm.jpg — Warm tones",
+   "scheme": "forced",
+   "forcedColorsActive": true,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgba(5, 0, 73, 0.8)",
+    "buttonRadius": 6,
+    "centreRadius": 10,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 272,
+    "t": 45.140625,
+    "r": 292,
+    "b": 65.140625
+   },
+   "clippingAncestors": [
+    {
+     "desc": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+     "box": {
+      "l": 232,
+      "t": 41.140625,
+      "r": 296,
+      "b": 105.140625
+     },
+     "radii": {
+      "tl": 10,
+      "tr": 10,
+      "bl": 10,
+      "br": 10
+     }
+    }
+   ],
+   "otherRings": [
+    "div \"\""
+   ],
+   "samples": 380,
+   "fullWidthShare": 0.58,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.6,
+   "meanPaintedWidth": 1.53,
+   "sides": {
+    "top": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.3,
+     "ringColour": "#311a47",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 5.1,
+      "median": 5.31,
+      "max": 5.48,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 5.64,
+      "median": 15.34,
+      "max": 15.62,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 95,
+     "fullWidthShare": 0.16,
+     "partWidthShare": 0.84,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.21,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.11,
+     "ringColour": "#2f1645",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 4.58,
+      "median": 4.82,
+      "max": 5.12,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.94,
+       "image": 0.06
+      },
+      "min": 4.39,
+      "median": 15.83,
+      "max": 15.98,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.8,
+     "ringColour": "#2f1645",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 4.29,
+      "median": 4.68,
+      "max": 7.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 4.39,
+      "median": 4.56,
+      "max": 7.54,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 95,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.89,
+     "ringColour": "#311a47",
+     "inside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 4.67,
+      "median": 5.42,
+      "max": 7.12,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "image": 1
+      },
+      "min": 5.26,
+      "median": 5.62,
+      "max": 7.9,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-forced-unfocused.png",
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-forced-focused.png",
+    "thumbnail-media-mode-4-warm-jpg-warm-tones-forced-samples.png"
+   ]
+  },
+  {
+   "component": "Token",
+   "story": "core-token--clickable-with-remove",
+   "button": "Remove Design",
+   "scheme": "light",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(27, 27, 27)",
+    "buttonRadius": 9999,
+    "centreRadius": 12,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 65.359375,
+    "t": 20,
+    "r": 81.359375,
+    "b": 36
+   },
+   "clippingAncestors": [
+    {
+     "desc": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+     "box": {
+      "l": 16,
+      "t": 16,
+      "r": 85.359375,
+      "b": 40
+     },
+     "radii": {
+      "tl": 6,
+      "tr": 6,
+      "bl": 6,
+      "br": 6
+     }
+    }
+   ],
+   "otherRings": [],
+   "samples": 304,
+   "fullWidthShare": 0.64,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.74,
+   "meanPaintedWidth": 1.54,
+   "sides": {
+    "top": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.65,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 15.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.86,
+       "token": 0.14
+      },
+      "min": 15.11,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.27,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 15.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.84,
+       "token": 0.16
+      },
+      "min": 17.22,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.54,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 15.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 0.21,
+       "page": 0.79
+      },
+      "min": 15.11,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 76,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.7,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 15.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 1.22,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0.03
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "token-clickable-with-remove-1-design-light-unfocused.png",
+    "token-clickable-with-remove-1-design-light-focused.png",
+    "token-clickable-with-remove-1-design-light-samples.png"
+   ]
+  },
+  {
+   "component": "Token",
+   "story": "core-token--clickable-with-remove",
+   "button": "Remove Docs",
+   "scheme": "light",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(27, 27, 27)",
+    "buttonRadius": 9999,
+    "centreRadius": 12,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 132.703125,
+    "t": 20,
+    "r": 148.703125,
+    "b": 36
+   },
+   "clippingAncestors": [
+    {
+     "desc": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+     "box": {
+      "l": 93.359375,
+      "t": 16,
+      "r": 152.703125,
+      "b": 40
+     },
+     "radii": {
+      "tl": 6,
+      "tr": 6,
+      "bl": 6,
+      "br": 6
+     }
+    }
+   ],
+   "otherRings": [],
+   "samples": 304,
+   "fullWidthShare": 0.64,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.74,
+   "meanPaintedWidth": 1.74,
+   "sides": {
+    "top": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.71,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 15.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.88,
+       "token": 0.12
+      },
+      "min": 15.11,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.72,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 15.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 1
+      },
+      "min": 15.11,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.59,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 15.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.87,
+       "token": 0.13
+      },
+      "min": 15.11,
+      "median": 17.22,
+      "max": 17.22,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 76,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.94,
+     "ringColour": "#1b1b1b",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 15.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 1.11,
+      "median": 15.11,
+      "max": 15.11,
+      "underThreeShare": 0.11
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "token-clickable-with-remove-2-docs-light-unfocused.png",
+    "token-clickable-with-remove-2-docs-light-focused.png",
+    "token-clickable-with-remove-2-docs-light-samples.png"
+   ]
+  },
+  {
+   "component": "Token",
+   "story": "core-token--clickable-with-remove",
+   "button": "Remove Design",
+   "scheme": "dark",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(241, 241, 241)",
+    "buttonRadius": 9999,
+    "centreRadius": 12,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 65.359375,
+    "t": 20,
+    "r": 81.359375,
+    "b": 36
+   },
+   "clippingAncestors": [
+    {
+     "desc": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+     "box": {
+      "l": 16,
+      "t": 16,
+      "r": 85.359375,
+      "b": 40
+     },
+     "radii": {
+      "tl": 6,
+      "tr": 6,
+      "bl": 6,
+      "br": 6
+     }
+    }
+   ],
+   "otherRings": [],
+   "samples": 304,
+   "fullWidthShare": 0.64,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.74,
+   "meanPaintedWidth": 1.54,
+   "sides": {
+    "top": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.65,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 9.77,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.86,
+       "token": 0.14
+      },
+      "min": 9.77,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.27,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 9.77,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.84,
+       "token": 0.16
+      },
+      "min": 13.4,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.54,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 9.77,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 0.21,
+       "page": 0.79
+      },
+      "min": 9.77,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 76,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.7,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 9.77,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 1.13,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0.05
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "token-clickable-with-remove-1-design-dark-unfocused.png",
+    "token-clickable-with-remove-1-design-dark-focused.png",
+    "token-clickable-with-remove-1-design-dark-samples.png"
+   ]
+  },
+  {
+   "component": "Token",
+   "story": "core-token--clickable-with-remove",
+   "button": "Remove Docs",
+   "scheme": "dark",
+   "forcedColorsActive": false,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgb(241, 241, 241)",
+    "buttonRadius": 9999,
+    "centreRadius": 12,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 132.703125,
+    "t": 20,
+    "r": 148.703125,
+    "b": 36
+   },
+   "clippingAncestors": [
+    {
+     "desc": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+     "box": {
+      "l": 93.359375,
+      "t": 16,
+      "r": 152.703125,
+      "b": 40
+     },
+     "radii": {
+      "tl": 6,
+      "tr": 6,
+      "bl": 6,
+      "br": 6
+     }
+    }
+   ],
+   "otherRings": [],
+   "samples": 304,
+   "fullWidthShare": 0.64,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.74,
+   "meanPaintedWidth": 1.74,
+   "sides": {
+    "top": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.71,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 9.77,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.88,
+       "token": 0.12
+      },
+      "min": 9.77,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.72,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 9.77,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 1
+      },
+      "min": 9.77,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.59,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 9.77,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.87,
+       "token": 0.13
+      },
+      "min": 9.77,
+      "median": 13.4,
+      "max": 13.4,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 76,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.94,
+     "ringColour": "#f1f1f1",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 9.77,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 1.06,
+      "median": 9.77,
+      "max": 9.77,
+      "underThreeShare": 0.12
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "token-clickable-with-remove-2-docs-dark-unfocused.png",
+    "token-clickable-with-remove-2-docs-dark-focused.png",
+    "token-clickable-with-remove-2-docs-dark-samples.png"
+   ]
+  },
+  {
+   "component": "Token",
+   "story": "core-token--clickable-with-remove",
+   "button": "Remove Design",
+   "scheme": "forced",
+   "forcedColorsActive": true,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgba(5, 0, 73, 0.8)",
+    "buttonRadius": 9999,
+    "centreRadius": 12,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 65.359375,
+    "t": 20,
+    "r": 81.359375,
+    "b": 36
+   },
+   "clippingAncestors": [
+    {
+     "desc": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+     "box": {
+      "l": 16,
+      "t": 16,
+      "r": 85.359375,
+      "b": 40
+     },
+     "radii": {
+      "tl": 6,
+      "tr": 6,
+      "bl": 6,
+      "br": 6
+     }
+    }
+   ],
+   "otherRings": [],
+   "samples": 304,
+   "fullWidthShare": 0.64,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.74,
+   "meanPaintedWidth": 1.54,
+   "sides": {
+    "top": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.65,
+     "ringColour": "#37336d",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.86,
+       "token": 0.14
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.27,
+     "ringColour": "#37336d",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.84,
+       "token": 0.16
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.54,
+     "ringColour": "#37336d",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 0.21,
+       "page": 0.79
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 76,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.7,
+     "ringColour": "#37336d",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 1.86,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0.03
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "token-clickable-with-remove-1-design-forced-unfocused.png",
+    "token-clickable-with-remove-1-design-forced-focused.png",
+    "token-clickable-with-remove-1-design-forced-samples.png"
+   ]
+  },
+  {
+   "component": "Token",
+   "story": "core-token--clickable-with-remove",
+   "button": "Remove Docs",
+   "scheme": "forced",
+   "forcedColorsActive": true,
+   "outline": {
+    "width": 2,
+    "offset": 3,
+    "style": "solid",
+    "computedColour": "rgba(5, 0, 73, 0.8)",
+    "buttonRadius": 9999,
+    "centreRadius": 12,
+    "centreDistance": 4
+   },
+   "buttonRect": {
+    "l": 132.703125,
+    "t": 20,
+    "r": 148.703125,
+    "b": 36
+   },
+   "clippingAncestors": [
+    {
+     "desc": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+     "box": {
+      "l": 93.359375,
+      "t": 16,
+      "r": 152.703125,
+      "b": 40
+     },
+     "radii": {
+      "tl": 6,
+      "tr": 6,
+      "bl": 6,
+      "br": 6
+     }
+    }
+   ],
+   "otherRings": [],
+   "samples": 304,
+   "fullWidthShare": 0.64,
+   "noneShare": 0,
+   "meanVisibleWidth": 1.74,
+   "meanPaintedWidth": 1.74,
+   "sides": {
+    "top": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.71,
+     "ringColour": "#37336d",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.88,
+       "token": 0.12
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "right": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.72,
+     "ringColour": "#37336d",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "bottom": {
+     "samples": 76,
+     "fullWidthShare": 0.53,
+     "partWidthShare": 0.47,
+     "noneShare": 0,
+     "meanVisibleWidth": 1.65,
+     "minVisibleWidth": 1,
+     "meanPaintedWidth": 1.59,
+     "ringColour": "#37336d",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "page": 0.87,
+       "token": 0.13
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "underThreeBothShare": 0
+    },
+    "left": {
+     "samples": 76,
+     "fullWidthShare": 1,
+     "partWidthShare": 0,
+     "noneShare": 0,
+     "meanVisibleWidth": 2,
+     "minVisibleWidth": 2,
+     "meanPaintedWidth": 1.95,
+     "ringColour": "#37336d",
+     "inside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 11.31,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0
+     },
+     "outside": {
+      "kinds": {
+       "token": 1
+      },
+      "min": 1.08,
+      "median": 11.31,
+      "max": 11.31,
+      "underThreeShare": 0.11
+     },
+     "underThreeBothShare": 0
+    }
+   },
+   "crops": [
+    "token-clickable-with-remove-2-docs-forced-unfocused.png",
+    "token-clickable-with-remove-2-docs-forced-focused.png",
+    "token-clickable-with-remove-2-docs-forced-samples.png"
+   ]
+  }
+ ]
+}

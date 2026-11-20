@@ -28,19 +28,20 @@ Measured on the Storybook of #8872 at 643c67815a89859f06c8f8733a5bd3c3bf53d308 a
 | main at 77a11ae0 | Item | light | 1 (row) | 1 (control); plain row: 1 (control) | 0 | 17.22:1 / 17.22:1 / 17.22:1 | not clipped / plain row: not clipped |
 | main at 77a11ae0 | Item | dark | 1 (row) | 1 (control); plain row: 1 (control) | 0 | 13.40:1 / 13.40:1 / 13.40:1 | not clipped / plain row: not clipped |
 | main at 77a11ae0 | Item | forced colours | 1 (row) | 1 (control); plain row: 1 (control) | 0 | 21.00:1 / 11.31:1 / 11.31:1 | not clipped / plain row: not clipped |
-| main at 77a11ae0 | Token | light | 1 (token) | 1 (control) | 0 | 17.22:1 / 15.11:1 | clipped by the Token's rounded overflow clip (7 of 8 ring points outside); no ring on the right and bottom sides |
-| main at 77a11ae0 | Token | dark | 1 (token) | 1 (control) | 0 | 13.40:1 / 9.77:1 | clipped by the Token's rounded overflow clip (7 of 8 ring points outside); no ring on the right and bottom sides |
-| main at 77a11ae0 | Token | forced colours | 1 (token) | 1 (control) | 0 | 21.00:1 / 11.31:1 | clipped by the Token's rounded overflow clip (7 of 8 ring points outside); no ring on the right and bottom sides |
-| main at 77a11ae0 | Thumbnail | light | 1 (thumbnail) | 2 (thumbnail + control) | 0 | 17.22:1 / 1.13:1 | clipped by the Thumbnail's rounded overflow clip (3 of 8 ring points outside) |
-| main at 77a11ae0 | Thumbnail | dark | 1 (thumbnail) | 2 (thumbnail + control) | 0 | 13.40:1 / 8.95:1 | clipped by the Thumbnail's rounded overflow clip (3 of 8 ring points outside) |
-| main at 77a11ae0 | Thumbnail | forced colours | 1 (thumbnail) | 2 (thumbnail + control) | 0 | 21.00:1 / 1.23:1 | clipped by the Thumbnail's rounded overflow clip (3 of 8 ring points outside) |
+| main at 77a11ae0 | Token | light | 1 (token) | 1 (control) | 0 | 17.22:1 / 15.11:1 | clipped by the Token's rounded overflow clip (7 of 8 ring points outside). It cuts the ring's outer part on the top, right and bottom. |
+| main at 77a11ae0 | Token | dark | 1 (token) | 1 (control) | 0 | 13.40:1 / 9.77:1 | clipped by the Token's rounded overflow clip (7 of 8 ring points outside). It cuts the ring's outer part on the top, right and bottom. |
+| main at 77a11ae0 | Token | forced colours | 1 (token) | 1 (control) | 0 | 21.00:1 / 11.31:1 | clipped by the Token's rounded overflow clip (7 of 8 ring points outside). It cuts the ring's outer part on the top, right and bottom. |
+| main at 77a11ae0 | Thumbnail | light | 1 (thumbnail) | 2 (thumbnail + control) | 0 | 17.22:1 / 1.13:1 | clipped by the Thumbnail's rounded overflow clip (3 of 8 ring points outside). It cuts the ring's outer part on the top and right. |
+| main at 77a11ae0 | Thumbnail | dark | 1 (thumbnail) | 2 (thumbnail + control) | 0 | 13.40:1 / 8.95:1 | clipped by the Thumbnail's rounded overflow clip (3 of 8 ring points outside). It cuts the ring's outer part on the top and right. |
+| main at 77a11ae0 | Thumbnail | forced colours | 1 (thumbnail) | 2 (thumbnail + control) | 0 | 21.00:1 / 1.23:1 | clipped by the Thumbnail's rounded overflow clip (3 of 8 ring points outside). It cuts the ring's outer part on the top and right. |
 
 ## Notes
 
 - #8872's ClickableCard and SelectableCard show one ring at each tab stop: the card for its own control, and only the control for the nested button. Main's ClickableCard shows two rings, the card's and the button's, when the button has focus. Main has no SelectableCard story with a nested control, so SelectableCard is measured on #8872 only.
 - On main, Item shows one ring at each stop, as does Token, for its own button and for its remove button.
-- On main, Thumbnail shows two rings when its remove button has focus: the thumbnail's and the button's. The remove button's ring sits over the image. In light and forced colours, its left and bottom sides measure under 3:1 against the image next to them. The image's container clips the ring at its top right. At the top, the remove button's ring meets the gap inside the thumbnail's ring. On the right, the container clips the button's ring, so the samples fall on that gap and on the thumbnail's ring.
-- On main, Token's remove button ring is clipped by the token's rounded overflow clip. The ring does not show on its right and bottom sides.
+- On main, Thumbnail shows two rings when its remove button has focus: the thumbnail's and the button's. The remove button's ring sits over the image. In light and forced colours, its left and bottom sides measure under 3:1 against the image next to them. Along the top and right, the image's container cuts the ring's outer part, and about 1.2 px of its 2 px show there. On the right, the side sample in results.json falls in the part that is cut. It reads the gap inside the thumbnail's ring and that ring.
+- On main, the token's rounded overflow clip cuts the outer part of the remove button's ring at its top, right and bottom. The ring still shows on every side. On the right and bottom, the side samples in results.json fall in the part that is cut.
+- [segments/README.md](segments/README.md) measures both remove buttons' rings segment by segment, across the ring's width.
 - A pointer click never left a ring. The light-grey fill in (c) frames is the hover state under the mouse.
 
 ## Frames
