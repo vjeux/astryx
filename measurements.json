@@ -1,0 +1,780 @@
+{
+  "story": "core-datetimeinput--with-time-options",
+  "chromium": "149.0.7827.55",
+  "stamps": {
+    "head": "2ba365ac940669ffe4c3672a5ca240aba0b3683a",
+    "main": "f58e64459aa0aa534e8e5913eea8e9c277f3118b"
+  },
+  "touch": "390 px uses Chromium touch emulation (hasTouch, isMobile), not a device",
+  "errors": [],
+  "records": [
+    {
+      "build": "head",
+      "scheme": "light",
+      "mode": "w1280-mouse",
+      "shot": 1,
+      "gesture": "mouse click",
+      "openedAfterMs": 15,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 677,
+          "y": 66,
+          "w": 578,
+          "h": 20
+        }
+      },
+      "list": {
+        "box": {
+          "x": 644,
+          "y": 92,
+          "w": 83.9375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 312,
+        "scrollHeight": 1544,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "4:30 AM – 9:00 AM",
+      "shownCount": 10,
+      "partlyShown": [
+        "4:30 AM (38%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "head-light-w1280-mouse-1.png"
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "mode": "w1280-mouse",
+      "shot": 2,
+      "gesture": "mouse click",
+      "openedAfterMs": 7,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 677,
+          "y": 66,
+          "w": 578,
+          "h": 20
+        }
+      },
+      "list": {
+        "box": {
+          "x": 644,
+          "y": 92,
+          "w": 83.9375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 312,
+        "scrollHeight": 1544,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "4:30 AM – 9:00 AM",
+      "shownCount": 10,
+      "partlyShown": [
+        "4:30 AM (38%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "head-light-w1280-mouse-2.png"
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "mode": "w1280-mouse",
+      "shot": 1,
+      "gesture": "mouse click",
+      "openedAfterMs": 15,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 677,
+          "y": 66,
+          "w": 578,
+          "h": 20
+        }
+      },
+      "list": {
+        "box": {
+          "x": 644,
+          "y": 92,
+          "w": 83.9375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 312,
+        "scrollHeight": 1544,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "4:30 AM – 9:00 AM",
+      "shownCount": 10,
+      "partlyShown": [
+        "4:30 AM (38%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "main-light-w1280-mouse-1.png"
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "mode": "w1280-mouse",
+      "shot": 2,
+      "gesture": "mouse click",
+      "openedAfterMs": 7,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 677,
+          "y": 66,
+          "w": 578,
+          "h": 20
+        }
+      },
+      "list": {
+        "box": {
+          "x": 644,
+          "y": 92,
+          "w": 83.9375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 312,
+        "scrollHeight": 1544,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "4:30 AM – 9:00 AM",
+      "shownCount": 10,
+      "partlyShown": [
+        "4:30 AM (38%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "main-light-w1280-mouse-2.png"
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "mode": "w390-touch",
+      "shot": 1,
+      "gesture": "tap (touch emulation)",
+      "openedAfterMs": 31,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 49,
+          "y": 108,
+          "w": 316,
+          "h": 24
+        }
+      },
+      "list": {
+        "box": {
+          "x": 16,
+          "y": 136,
+          "w": 92.484375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 388,
+        "scrollHeight": 1736,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "5:00 AM – 9:00 AM",
+      "shownCount": 9,
+      "partlyShown": [
+        "5:00 AM (33%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "head-light-w390-touch-1.png"
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "mode": "w390-touch",
+      "shot": 2,
+      "gesture": "tap (touch emulation)",
+      "openedAfterMs": 31,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 49,
+          "y": 108,
+          "w": 316,
+          "h": 24
+        }
+      },
+      "list": {
+        "box": {
+          "x": 16,
+          "y": 136,
+          "w": 92.484375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 388,
+        "scrollHeight": 1736,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "5:00 AM – 9:00 AM",
+      "shownCount": 9,
+      "partlyShown": [
+        "5:00 AM (33%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "head-light-w390-touch-2.png"
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "mode": "w390-touch",
+      "shot": 1,
+      "gesture": "tap (touch emulation)",
+      "openedAfterMs": 32,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 49,
+          "y": 108,
+          "w": 316,
+          "h": 24
+        }
+      },
+      "list": {
+        "box": {
+          "x": 16,
+          "y": 136,
+          "w": 92.484375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 388,
+        "scrollHeight": 1736,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "5:00 AM – 9:00 AM",
+      "shownCount": 9,
+      "partlyShown": [
+        "5:00 AM (33%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "main-light-w390-touch-1.png"
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "mode": "w390-touch",
+      "shot": 2,
+      "gesture": "tap (touch emulation)",
+      "openedAfterMs": 32,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 49,
+          "y": 108,
+          "w": 316,
+          "h": 24
+        }
+      },
+      "list": {
+        "box": {
+          "x": 16,
+          "y": 136,
+          "w": 92.484375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 388,
+        "scrollHeight": 1736,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "5:00 AM – 9:00 AM",
+      "shownCount": 9,
+      "partlyShown": [
+        "5:00 AM (33%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "main-light-w390-touch-2.png"
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "mode": "w1280-mouse",
+      "shot": 1,
+      "gesture": "mouse click",
+      "openedAfterMs": 16,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 677,
+          "y": 66,
+          "w": 578,
+          "h": 20
+        }
+      },
+      "list": {
+        "box": {
+          "x": 644,
+          "y": 92,
+          "w": 83.9375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 312,
+        "scrollHeight": 1544,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "4:30 AM – 9:00 AM",
+      "shownCount": 10,
+      "partlyShown": [
+        "4:30 AM (38%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "head-dark-w1280-mouse-1.png"
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "mode": "w1280-mouse",
+      "shot": 2,
+      "gesture": "mouse click",
+      "openedAfterMs": 7,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 677,
+          "y": 66,
+          "w": 578,
+          "h": 20
+        }
+      },
+      "list": {
+        "box": {
+          "x": 644,
+          "y": 92,
+          "w": 83.9375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 312,
+        "scrollHeight": 1544,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "4:30 AM – 9:00 AM",
+      "shownCount": 10,
+      "partlyShown": [
+        "4:30 AM (38%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "head-dark-w1280-mouse-2.png"
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "mode": "w1280-mouse",
+      "shot": 1,
+      "gesture": "mouse click",
+      "openedAfterMs": 16,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 677,
+          "y": 66,
+          "w": 578,
+          "h": 20
+        }
+      },
+      "list": {
+        "box": {
+          "x": 644,
+          "y": 92,
+          "w": 83.9375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 312,
+        "scrollHeight": 1544,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "4:30 AM – 9:00 AM",
+      "shownCount": 10,
+      "partlyShown": [
+        "4:30 AM (38%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "main-dark-w1280-mouse-1.png"
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "mode": "w1280-mouse",
+      "shot": 2,
+      "gesture": "mouse click",
+      "openedAfterMs": 7,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 677,
+          "y": 66,
+          "w": 578,
+          "h": 20
+        }
+      },
+      "list": {
+        "box": {
+          "x": 644,
+          "y": 92,
+          "w": 83.9375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 312,
+        "scrollHeight": 1544,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "4:30 AM – 9:00 AM",
+      "shownCount": 10,
+      "partlyShown": [
+        "4:30 AM (38%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "main-dark-w1280-mouse-2.png"
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "mode": "w390-touch",
+      "shot": 1,
+      "gesture": "tap (touch emulation)",
+      "openedAfterMs": 31,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 49,
+          "y": 108,
+          "w": 316,
+          "h": 24
+        }
+      },
+      "list": {
+        "box": {
+          "x": 16,
+          "y": 136,
+          "w": 92.484375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 388,
+        "scrollHeight": 1736,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "5:00 AM – 9:00 AM",
+      "shownCount": 9,
+      "partlyShown": [
+        "5:00 AM (33%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "head-dark-w390-touch-1.png"
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "mode": "w390-touch",
+      "shot": 2,
+      "gesture": "tap (touch emulation)",
+      "openedAfterMs": 31,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 49,
+          "y": 108,
+          "w": 316,
+          "h": 24
+        }
+      },
+      "list": {
+        "box": {
+          "x": 16,
+          "y": 136,
+          "w": 92.484375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 388,
+        "scrollHeight": 1736,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "5:00 AM – 9:00 AM",
+      "shownCount": 9,
+      "partlyShown": [
+        "5:00 AM (33%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "head-dark-w390-touch-2.png"
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "mode": "w390-touch",
+      "shot": 1,
+      "gesture": "tap (touch emulation)",
+      "openedAfterMs": 32,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 49,
+          "y": 108,
+          "w": 316,
+          "h": 24
+        }
+      },
+      "list": {
+        "box": {
+          "x": 16,
+          "y": 136,
+          "w": 92.484375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 388,
+        "scrollHeight": 1736,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "5:00 AM – 9:00 AM",
+      "shownCount": 9,
+      "partlyShown": [
+        "5:00 AM (33%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "main-dark-w390-touch-1.png"
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "mode": "w390-touch",
+      "shot": 2,
+      "gesture": "tap (touch emulation)",
+      "openedAfterMs": 31,
+      "open": true,
+      "input": {
+        "value": "9:00 AM",
+        "focused": true,
+        "expanded": "true",
+        "box": {
+          "x": 49,
+          "y": 108,
+          "w": 316,
+          "h": 24
+        }
+      },
+      "list": {
+        "box": {
+          "x": 16,
+          "y": 136,
+          "w": 92.484375,
+          "h": 300
+        },
+        "insideViewport": true,
+        "scrollTop": 388,
+        "scrollHeight": 1736,
+        "clientHeight": 300,
+        "options": 48
+      },
+      "shownRange": "5:00 AM – 9:00 AM",
+      "shownCount": 9,
+      "partlyShown": [
+        "5:00 AM (33%)"
+      ],
+      "selected": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "highlighted": {
+        "text": "9:00 AM",
+        "visible": 1
+      },
+      "truncatedOptions": [],
+      "file": "main-dark-w390-touch-2.png"
+    }
+  ]
+}
